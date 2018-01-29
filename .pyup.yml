@@ -1,0 +1,7 @@
+update: all
+pin: True
+search: True
+
+requirements:
+  - tox.ini:
+      pin: False
