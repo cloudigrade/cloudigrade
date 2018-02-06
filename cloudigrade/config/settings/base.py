@@ -16,12 +16,12 @@ if READ_DOT_ENV_FILE:
     env_file = str(ROOT_DIR.path('.env'))
     print('Loading : {}'.format(env_file))
     env.read_env(env_file)
-print('The .env file has been loaded. See base.py for more information')
+    print('The .env file has been loaded. See base.py for more information')
 
 # Important Security Settings
-SECRET_KEY = env('SECRET_KEY')
-DEBUG = env('DEBUG')
-ALLOWED_HOSTS = env('ALLOWED_HOSTS')
+SECRET_KEY = env('DJANGO_SECRET_KEY', default='j311yd0nut66%')
+DEBUG = env('DJANGO_DEBUG', default=False)
+ALLOWED_HOSTS = env('DJANGO_ALLOWED_HOSTS', default=['*'])
 
 
 # Application definition
@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'account',
 ]
 
 MIDDLEWARE = [
