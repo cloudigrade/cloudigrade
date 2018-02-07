@@ -23,18 +23,28 @@ SECRET_KEY = env('DJANGO_SECRET_KEY', default='base')
 DEBUG = env('DJANGO_DEBUG', default=False)
 ALLOWED_HOSTS = env('DJANGO_ALLOWED_HOSTS', default=['*'])
 
-
-# Application definition
-
-INSTALLED_APPS = [
+# Default apps go here
+DJANGO_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+]
+
+# Any pip installed apps will go here
+THIRD_PARTY_APPS = []
+
+# Apps specific to this project go here
+LOCAL_APPS = [
     'account',
 ]
+
+INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
+
+
+# Middleware
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
