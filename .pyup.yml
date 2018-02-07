@@ -6,4 +6,4 @@ requirements:
   - tox.ini:
       pin: False
   - requirements/test.txt:
-      ping: False
+      pin: False

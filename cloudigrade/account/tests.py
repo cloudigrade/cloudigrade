@@ -7,4 +7,4 @@ class AddAccountTest(TestCase):
     def test_command_output(self):
         out = StringIO()
         call_command('add_account', stdout=out)
-        self.assertIn('AWS Account Added... probably', out.getvalue())
+        self.assertIn('STUB RESPONSE', out.getvalue())

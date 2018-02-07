@@ -5,4 +5,5 @@ class Command(BaseCommand):
     help = 'This adds aws accounts'
 
     def handle(self, *args, **options):
-        self.stdout.write(self.style.SUCCESS('AWS Account Added... probably'))
+        # FIXME: Implement this
+        self.stdout.write(self.style.SUCCESS('STUB RESPONSE'))
