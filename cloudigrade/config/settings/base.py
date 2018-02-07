@@ -19,7 +19,7 @@ if READ_DOT_ENV_FILE:
     print('The .env file has been loaded. See base.py for more information')
 
 # Important Security Settings
-SECRET_KEY = env('DJANGO_SECRET_KEY', default='j311yd0nut66%')
+SECRET_KEY = env('DJANGO_SECRET_KEY', default='base')
 DEBUG = env('DJANGO_DEBUG', default=False)
 ALLOWED_HOSTS = env('DJANGO_ALLOWED_HOSTS', default=['*'])
 
