@@ -38,6 +38,7 @@ THIRD_PARTY_APPS = []
 
 # Apps specific to this project go here
 LOCAL_APPS = [
+    'util',
     'account',
 ]
 

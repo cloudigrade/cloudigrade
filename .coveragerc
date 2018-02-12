@@ -1,0 +1,8 @@
+[run]
+branch = True
+data_file = .coverage
+source = cloudigrade
+omit =
+    *migrations*
+    *static*
+    *templates*
