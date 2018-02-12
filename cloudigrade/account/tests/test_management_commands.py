@@ -5,7 +5,7 @@ from django.utils.translation import gettext as _
 from django.test import TestCase
 
 
-from ..models import Account
+from account.models import Account
 
 
 class AddAccountTest(TestCase):

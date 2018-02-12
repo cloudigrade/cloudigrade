@@ -12,4 +12,4 @@ class Account(BaseModel):
         decimal_places=0,
         db_index=True
     )
-    account_arn = models.CharField(max_length=256)
+    account_arn = models.CharField(max_length=256, unique=True)
