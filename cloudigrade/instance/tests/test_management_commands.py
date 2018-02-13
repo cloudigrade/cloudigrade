@@ -8,6 +8,7 @@ from django.test import TestCase
 from django.utils.translation import gettext as _
 
 from instance.management.commands import check_instances
+from util.tests import helper
 
 
 class CheckInstancesTest(TestCase):
@@ -15,7 +16,7 @@ class CheckInstancesTest(TestCase):
 
     def test_command_output(self):
         """Assert expected command output for ``check_instances``."""
-        mock_arn = 'arn:aws:iam::123456789012:role/test_role_210987654321'
+        mock_arn = helper.generate_dummy_arn()
         mock_instances = {
             f'region-{uuid.uuid4()}': [str(uuid.uuid4())],
         }
