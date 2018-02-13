@@ -1,3 +1,4 @@
 django==2.0.2
 django-environ==0.4.4
 boto3==1.5.31
+django-model-utils==3.1.1
