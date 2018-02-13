@@ -27,7 +27,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         """Extract the account id from the ARN and save both to database."""
         arn = options['arn']
-        account_id = arn.split(':')[4]
+        account_id = aws.extract_account_id_from_arn(arn)
 
         # TODO AWS account permissions verification goes here.
         found_instances = aws.get_running_instances(arn)

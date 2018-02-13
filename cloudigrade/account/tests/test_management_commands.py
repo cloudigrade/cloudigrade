@@ -1,13 +1,13 @@
 """Collection of tests for Account management commands."""
 import uuid
 from io import StringIO
-from unittest import mock
+from unittest.mock import patch
 
 from django.core.management import call_command
-from django.utils.translation import gettext as _
 from django.test import TestCase
+from django.utils.translation import gettext as _
 
-from account.management.commands import add_account
+from account.management.commands.add_account import aws
 from account.models import Account
 from util.tests import helper
 
@@ -28,8 +28,8 @@ class AddAccountTest(TestCase):
         expected_instances = _(f'Instances found include: {mock_instances}')
         expected_account = _('ARN Info Stored')
 
-        with mock.patch.object(add_account, 'aws') as mock_aws:
-            mock_aws.get_running_instances.return_value = mock_instances
+        with patch.object(aws, 'get_running_instances') as mock_get_running:
+            mock_get_running.return_value = mock_instances
             call_command('add_account', mock_arn, stdout=out)
 
         actual_stdout = out.getvalue()
