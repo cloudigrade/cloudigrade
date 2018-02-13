@@ -5,6 +5,7 @@ from unittest.mock import patch
 from django.test import TestCase
 
 from util import aws
+from util.tests import helper
 
 
 class UtilAwsTest(TestCase):
@@ -42,7 +43,7 @@ class UtilAwsTest(TestCase):
 
     def test_get_credentials_for_arn(self):
         """Assert get_credentials_for_arn returns credentials dict."""
-        mock_arn = 'arn:aws:iam::123456789012:role/test_role_210987654321'
+        mock_arn = helper.generate_dummy_arn()
         mock_role = {
             'Credentials': {
                 'AccessKeyId': str(uuid.uuid4()),
@@ -67,7 +68,7 @@ class UtilAwsTest(TestCase):
 
     def test_get_running_instances(self):
         """Assert we get instances in a dict with regions for keys."""
-        mock_arn = 'arn:aws:iam::123456789012:role/test_role_210987654321'
+        mock_arn = helper.generate_dummy_arn()
         mock_regions = [f'region-{uuid.uuid4()}']
         mock_credentials = {
             'AccessKeyId': str(uuid.uuid4()),
