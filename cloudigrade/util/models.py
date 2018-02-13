@@ -1,4 +1,4 @@
-"""Cloudigrade Account Models."""
+"""Cloudigrade Base Models."""
 from django.db import models
 
 
