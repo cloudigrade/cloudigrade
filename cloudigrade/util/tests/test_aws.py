@@ -2,6 +2,7 @@
 import uuid
 from unittest.mock import patch
 
+import faker
 from django.test import TestCase
 
 from util import aws
@@ -10,6 +11,19 @@ from util.tests import helper
 
 class UtilAwsTest(TestCase):
     """AWS utility functions test case."""
+
+    def test_extract_account_id_from_arn(self):
+        """Assert successful account ID extraction from a well-formed ARN."""
+        mock_account_id = helper.generate_dummy_aws_account_id()
+        mock_arn = helper.generate_dummy_arn(mock_account_id)
+        extracted_account_id = aws.extract_account_id_from_arn(mock_arn)
+        self.assertEqual(mock_account_id, extracted_account_id)
+
+    def test_error_extract_account_id_from_invalid_arn(self):
+        """Assert error in account ID extraction from a badly-formed ARN."""
+        mock_arn = faker.Faker().text()
+        with self.assertRaises(Exception):  # TODO more specific exceptions
+            aws.extract_account_id_from_arn(mock_arn)
 
     def test_get_regions_with_no_args(self):
         """Assert get_regions with no args returns expected regions."""

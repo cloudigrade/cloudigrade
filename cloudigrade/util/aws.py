@@ -1,11 +1,26 @@
 """Helper utility module to wrap up common AWS operations."""
 import collections
+import decimal
 import logging
 
 import boto3
 from django.utils.translation import gettext as _
 
 logger = logging.getLogger(__name__)
+
+
+def extract_account_id_from_arn(arn):
+    """
+    Extract the AWS Account ID from the given ARN.
+
+    Args:
+        arn (str): A well-formed Amazon Resource Name.
+
+    Returns:
+        Decimal: The Account ID found in the ARN.
+
+    """
+    return decimal.Decimal(arn.split(':')[4])
 
 
 def get_regions(service_name='ec2'):
