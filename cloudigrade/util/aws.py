@@ -2,8 +2,6 @@
 import collections
 import decimal
 import logging
-import random
-import string
 
 import boto3
 from botocore.exceptions import ClientError
@@ -52,14 +50,8 @@ def get_credentials_for_arn(arn):
 
     """
     sts = boto3.client('sts')
+    session_name = 'temp-session'
 
-    def generate_session_name():
-        char_list = []
-        for __ in range(8):
-            char_list.append(random.choice(string.hexdigits))
-        return ''.join(char_list)
-
-    session_name = generate_session_name()
     # TODO: Decide if we want to limit the session length beyond
     # the default 60 minutes
     # TODO: Decide if we want to handle MFA
