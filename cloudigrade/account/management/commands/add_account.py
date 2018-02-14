@@ -29,9 +29,12 @@ class Command(BaseCommand):
         arn = options['arn']
         account_id = aws.extract_account_id_from_arn(arn)
 
-        # TODO AWS account permissions verification goes here.
-        found_instances = aws.get_running_instances(arn)
-        Account(account_arn=options['arn'], account_id=account_id).save()
+        is_verified = aws.verify_account_access(arn)
+        if is_verified:
+            found_instances = aws.get_running_instances(arn)
+            Account(account_arn=options['arn'], account_id=account_id).save()
 
-        self.stdout.write(self.style.SUCCESS(_('ARN Info Stored')))
-        self.stdout.write(_(f'Instances found include: {found_instances}'))
+            self.stdout.write(self.style.SUCCESS(_('ARN Info Stored')))
+            self.stdout.write(_(f'Instances found include: {found_instances}'))
+        else:
+            self.stdout.write(self.style.WARNING(_('ARN Info Not Stored')))
