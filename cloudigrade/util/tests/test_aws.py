@@ -2,6 +2,7 @@
 import uuid
 from unittest.mock import patch
 
+from botocore.exceptions import ClientError
 import faker
 from django.test import TestCase
 
@@ -116,3 +117,50 @@ class UtilAwsTest(TestCase):
             actual_found = aws.get_running_instances(mock_arn)
 
         self.assertDictEqual(expected_found, actual_found)
+
+    def test_verify_account_access_success(self):
+        """Assert that account access via a IAM role is verified."""
+        mock_arn = helper.generate_dummy_arn()
+        mock_credentials = {
+            'AccessKeyId': str(uuid.uuid4()),
+            'SecretAccessKey': str(uuid.uuid4()),
+            'SessionToken': str(uuid.uuid4()),
+        }
+
+        with patch.object(aws, 'get_credentials_for_arn') as mock_get_creds, \
+                patch.object(aws, 'boto3') as mock_boto3:
+            mock_get_creds.return_value = mock_credentials
+
+            actual_verified = aws.verify_account_access(mock_arn)
+
+        self.assertTrue(actual_verified)
+
+    def test_verify_account_access_failure(self):
+        """Assert that account access via a IAM role is not verified."""
+        mock_arn = helper.generate_dummy_arn()
+        mock_credentials = {
+            'AccessKeyId': str(uuid.uuid4()),
+            'SecretAccessKey': str(uuid.uuid4()),
+            'SessionToken': str(uuid.uuid4()),
+        }
+        errmsg = f'User: {mock_arn} is not authorized to perform: ' + \
+            'ec2:DescribeInstances'
+        error_response = {
+            'Error': {
+                'Message':errmsg,
+                'Code': 'AccessDeniedException'
+            }
+        }
+        operation_name = 'DescribeInstances'
+
+        with patch.object(aws, 'get_credentials_for_arn') as mock_get_creds, \
+                patch.object(aws, 'boto3') as mock_boto3:
+            mock_get_creds.return_value = mock_credentials
+            mock_client = mock_boto3.Session.return_value.client.return_value
+            mock_client.describe_instances.side_effect = ClientError(
+                error_response,
+                operation_name)
+
+            actual_verified = aws.verify_account_access(mock_arn)
+
+        self.assertFalse(actual_verified)
