@@ -6,4 +6,3 @@
 [![Updates](https://pyup.io/repos/github/cloudigrade/cloudigrade/shield.svg)](https://pyup.io/repos/github/cloudigrade/cloudigrade/)
 [![Python 3](https://pyup.io/repos/github/cloudigrade/cloudigrade/python-3-shield.svg)](https://pyup.io/repos/github/cloudigrade/cloudigrade/)
 
-
