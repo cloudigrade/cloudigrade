@@ -4,6 +4,7 @@ import decimal
 import logging
 
 import boto3
+from botocore.exceptions import ClientError
 from django.utils.translation import gettext as _
 
 logger = logging.getLogger(__name__)
@@ -49,7 +50,11 @@ def get_credentials_for_arn(arn):
 
     """
     sts = boto3.client('sts')
-    session_name = 'temp-session'  # TODO Does this need to be a funciton arg?
+    session_name = 'temp-session'
+
+    # TODO: Decide if we want to limit the session length beyond
+    # the default 60 minutes
+    # TODO: Decide if we want to handle MFA
     assume_role_object = sts.assume_role(
         RoleArn=arn,
         RoleSessionName=session_name,
@@ -72,12 +77,7 @@ def get_running_instances(arn):
     found_instances = collections.defaultdict(list)
 
     for region_name in get_regions():
-        role_session = boto3.Session(
-            aws_access_key_id=credentials['AccessKeyId'],
-            aws_secret_access_key=credentials['SecretAccessKey'],
-            aws_session_token=credentials['SessionToken'],
-            region_name=region_name,
-        )
+        role_session = get_assumed_session(arn, region_name, credentials)
 
         ec2 = role_session.client('ec2')
         logger.debug(_(f'Describing instances in {region_name} for {arn}'))
@@ -87,3 +87,51 @@ def get_running_instances(arn):
                 found_instances[region_name].append(instance['InstanceId'])
 
     return dict(found_instances)
+
+
+def get_assumed_session(arn, region_name='us-east-1', credentials=None):
+    """
+    Return a session using the customer AWS account role.
+
+    Args:
+        arn (str): Amazon Resource Name to use for assuming a role.
+        region_name (str): AWS Region to associate the session with.
+        credentials (dict): Credentials returned by STS assume_role call.
+
+    Returns:
+        boto3.Session: A temporary session tied to a customer account
+
+    """
+    if credentials is None:
+        credentials = get_credentials_for_arn(arn)
+
+    return boto3.Session(
+        aws_access_key_id=credentials['AccessKeyId'],
+        aws_secret_access_key=credentials['SecretAccessKey'],
+        aws_session_token=credentials['SessionToken'],
+        region_name=region_name)
+
+
+def verify_account_access(arn):
+    """
+    Check role for proper access to AWS APIs.
+
+    Args:
+            arn (str): Amazon Resource Name to use for assuming a role.
+
+        Returns:
+            bool: Whether role is verifed.
+
+    """
+    role_session = get_assumed_session(arn)
+    # TODO Check against IAM role JSON instead of making API calls
+    try:
+        ec2 = role_session.client('ec2')
+        ec2.describe_instances()
+    except ClientError as e:
+        errmsg = _('Role session does not have required access. ' +
+                   f'Call failed with error "{e}"')
+        logger.error(errmsg)
+        return False
+
+    return True
