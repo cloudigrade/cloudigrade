@@ -128,10 +128,9 @@ class UtilAwsTest(TestCase):
         }
 
         with patch.object(aws, 'get_credentials_for_arn') as mock_get_creds, \
-                patch.object(aws, 'boto3') as mock_boto3:
+                patch.object(aws, 'boto3') as __:  # noqa: F841
             mock_get_creds.return_value = mock_credentials
-            mock_client = mock_boto3.Session.return_value.client.return_value
-            mock_client.describe_instances.return_value = {}
+
             actual_verified = aws.verify_account_access(mock_arn)
 
         self.assertTrue(actual_verified)
