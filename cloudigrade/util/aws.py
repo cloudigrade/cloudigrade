@@ -124,6 +124,7 @@ def verify_account_access(arn):
 
     """
     role_session = get_assumed_session(arn)
+    # TODO Check against IAM role JSON instead of making API calls
     try:
         ec2 = role_session.client('ec2')
         ec2.describe_instances()
@@ -133,5 +134,4 @@ def verify_account_access(arn):
         logger.error(errmsg)
         return False
 
-    logger.info(_('Temporary session acquired for granted AWS account'))
     return True
