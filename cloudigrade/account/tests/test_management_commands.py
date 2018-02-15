@@ -29,7 +29,7 @@ class AddAccountTest(TestCase):
         expected_account = _('ARN Info Stored')
 
         with patch.object(aws, 'verify_account_access') as mock_verify, \
-            patch.object(aws, 'get_running_instances') as mock_get_running:
+                patch.object(aws, 'get_running_instances') as mock_get_running:
             mock_verify.return_value = True
             mock_get_running.return_value = mock_instances
             call_command('add_account', mock_arn, stdout=out)
@@ -49,15 +49,14 @@ class AddAccountTest(TestCase):
         mock_account_id = helper.generate_dummy_aws_account_id()
         mock_arn = helper.generate_dummy_arn(mock_account_id)
 
-        expected_account = _('Account verification failed. ARN Info Not Stored')
+        expected_stdout = _('Account verification failed. ARN Info Not Stored')
 
         with patch.object(aws, 'verify_account_access') as mock_verify:
             mock_verify.return_value = False
             call_command('add_account', mock_arn, stdout=out)
 
         actual_stdout = out.getvalue()
-        self.assertIn(expected_account, actual_stdout)
+        self.assertIn(expected_stdout, actual_stdout)
 
-        self.assertFalse(Account.objects.filter(account_id=mock_account_id)\
-            .exists())
-
+        self.assertFalse(Account.objects.filter(account_id=mock_account_id)
+                         .exists())
