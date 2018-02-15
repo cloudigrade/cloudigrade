@@ -37,4 +37,5 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(_('ARN Info Stored')))
             self.stdout.write(_(f'Instances found include: {found_instances}'))
         else:
-            self.stdout.write(self.style.WARNING(_('ARN Info Not Stored')))
+            msg = 'Account verification failed. ARN Info Not Stored'
+            self.stdout.write(self.style.WARNING(_(msg)))
