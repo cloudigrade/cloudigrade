@@ -1,8 +1,10 @@
 """Management command for storing AWS ARN credentials in the database."""
 from django.core.management.base import BaseCommand
+from django.db import transaction
+from django.utils import timezone
 from django.utils.translation import gettext as _
 
-from account.models import Account
+from account.models import Account, Instance, InstanceEvent
 from util import aws
 
 
@@ -31,7 +33,25 @@ class Command(BaseCommand):
 
         if aws.verify_account_access(arn):
             found_instances = aws.get_running_instances(arn)
-            Account(account_arn=options['arn'], account_id=account_id).save()
+
+            with transaction.atomic():
+                account = Account(account_arn=arn, account_id=account_id)
+                account.save()
+
+                for region, instances in found_instances.items():
+                    for instance_data in instances:
+                        instance, __ = Instance.objects.get_or_create(
+                            account=account,
+                            ec2_instance_id=instance_data['InstanceId']
+                        )
+                        event = InstanceEvent(
+                            instance=instance,
+                            event_type=InstanceEvent.TYPE.power_on,
+                            occurred_at=timezone.now(),
+                            subnet=instance_data['SubnetId'],
+                            ec2_ami_id=instance_data['ImageId'],
+                        )
+                        event.save()
 
             self.stdout.write(self.style.SUCCESS(_('ARN Info Stored')))
             self.stdout.write(_(f'Instances found include: {found_instances}'))

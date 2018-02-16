@@ -90,20 +90,20 @@ class UtilAwsTest(TestCase):
             'SecretAccessKey': str(uuid.uuid4()),
             'SessionToken': str(uuid.uuid4()),
         }
-        mock_instance_id = str(uuid.uuid4())
+        mock_instance = {
+            'ImageId': str(uuid.uuid4()),
+            'InstanceId': str(uuid.uuid4()),
+            'SubnetId': str(uuid.uuid4()),
+        }
         mock_described = {
             'Reservations': [
                 {
-                    'Instances': [
-                        {
-                            'InstanceId': mock_instance_id,
-                        },
-                    ],
+                    'Instances': [mock_instance],
                 },
             ],
         }
         expected_found = {
-            mock_regions[0]: [mock_instance_id]
+            mock_regions[0]: [mock_instance]
         }
 
         with patch.object(aws, 'get_credentials_for_arn') as mock_get_creds, \
