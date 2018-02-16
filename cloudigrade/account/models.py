@@ -40,7 +40,7 @@ class Instance(BaseModel):
 
     def __repr__(self):
         """Get repr of this Instance."""
-        return f"<Instance {self.ec2_instance_id}>"
+        return f'<Instance {self.ec2_instance_id}>'
 
 
 class InstanceEvent(BaseModel):

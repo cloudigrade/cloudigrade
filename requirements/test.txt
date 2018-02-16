@@ -1,5 +1,6 @@
 -r base.txt
 flake8
 flake8-docstrings
+flake8-quotes
 coverage
 Faker
