@@ -1,4 +1,6 @@
 """Management command for storing AWS ARN credentials in the database."""
+import collections
+
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.utils import timezone
@@ -32,17 +34,19 @@ class Command(BaseCommand):
         account_id = aws.extract_account_id_from_arn(arn)
 
         if aws.verify_account_access(arn):
-            found_instances = aws.get_running_instances(arn)
+            running_instances_data = aws.get_running_instances(arn)
+            saved_instances = collections.defaultdict(list)
 
             with transaction.atomic():
                 account = Account(account_arn=arn, account_id=account_id)
                 account.save()
 
-                for region, instances in found_instances.items():
+                for region, instances in running_instances_data.items():
                     for instance_data in instances:
                         instance, __ = Instance.objects.get_or_create(
                             account=account,
-                            ec2_instance_id=instance_data['InstanceId']
+                            ec2_instance_id=instance_data['InstanceId'],
+                            region=region,
                         )
                         event = InstanceEvent(
                             instance=instance,
@@ -52,9 +56,10 @@ class Command(BaseCommand):
                             ec2_ami_id=instance_data['ImageId'],
                         )
                         event.save()
+                        saved_instances[region].append(instance)
 
             self.stdout.write(self.style.SUCCESS(_('ARN Info Stored')))
-            self.stdout.write(_(f'Instances found include: {found_instances}'))
+            self.stdout.write(_(f'Running instances: {saved_instances}'))
         else:
             msg = 'Account verification failed. ARN Info Not Stored'
             self.stdout.write(self.style.WARNING(_(msg)))
