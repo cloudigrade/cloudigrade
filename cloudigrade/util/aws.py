@@ -1,6 +1,7 @@
 """Helper utility module to wrap up common AWS operations."""
 import collections
 import decimal
+import enum
 import logging
 
 import boto3
@@ -8,6 +9,38 @@ from botocore.exceptions import ClientError
 from django.utils.translation import gettext as _
 
 logger = logging.getLogger(__name__)
+
+
+class InstanceState(enum.Enum):
+    """
+    Enumeration of EC2 Instance state codes.
+
+    See also:
+        https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_InstanceState.html
+
+    """
+
+    pending = 0
+    running = 16
+    shutting_down = 32
+    terminated = 48
+    stopping = 64
+    stopped = 80
+
+    @classmethod
+    def is_running(cls, code):
+        """
+        Check if the given code is effectively a running state.
+
+        Args:
+            code (int): The code from an EC2 Instance state.
+
+        Returns:
+            bool: True if we consider the instance to be running else False.
+
+        """
+        return code in (cls.running.value,
+                        cls.shutting_down.value)
 
 
 def extract_account_id_from_arn(arn):
