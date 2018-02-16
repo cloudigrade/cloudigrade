@@ -1,5 +1,4 @@
 """Helper utility module to wrap up common AWS operations."""
-import collections
 import decimal
 import enum
 import logging
@@ -95,7 +94,7 @@ def get_credentials_for_arn(arn):
     return assume_role_object['Credentials']
 
 
-def get_running_instances(arn):
+def get_running_instances(arn):  # TODO filter
     """
     Find all running EC2 instances visible to the given ARN.
 
@@ -107,7 +106,7 @@ def get_running_instances(arn):
 
     """
     credentials = get_credentials_for_arn(arn)
-    found_instances = collections.defaultdict(list)
+    running_instances = {}
 
     for region_name in get_regions():
         role_session = get_assumed_session(arn, region_name, credentials)
@@ -116,10 +115,12 @@ def get_running_instances(arn):
         logger.debug(_(f'Describing instances in {region_name} for {arn}'))
         instances = ec2.describe_instances()
         for reservation in instances.get('Reservations', []):
-            for instance in reservation.get('Instances', []):
-                found_instances[region_name].append(instance)
+            running_instances[region_name] = [
+                instance for instance in reservation.get('Instances', [])
+                if InstanceState.is_running(instance['State']['Code'])
+            ]
 
-    return dict(found_instances)
+    return running_instances
 
 
 def get_assumed_session(arn, region_name='us-east-1', credentials=None):

@@ -82,7 +82,7 @@ class UtilAwsTest(TestCase):
         self.assertDictEqual(mock_role['Credentials'], actual_credentials)
 
     def test_get_running_instances(self):
-        """Assert we get instances in a dict with regions for keys."""
+        """Assert we get expected instances in a dict keyed by regions."""
         mock_arn = helper.generate_dummy_arn()
         mock_regions = [f'region-{uuid.uuid4()}']
         mock_credentials = {
@@ -90,20 +90,24 @@ class UtilAwsTest(TestCase):
             'SecretAccessKey': str(uuid.uuid4()),
             'SessionToken': str(uuid.uuid4()),
         }
-        mock_instance = {
-            'ImageId': str(uuid.uuid4()),
-            'InstanceId': str(uuid.uuid4()),
-            'SubnetId': str(uuid.uuid4()),
-        }
+        mock_running_instance = helper.generate_dummy_describe_instance(
+            state=aws.InstanceState.running
+        )
+        mock_stopped_instance = helper.generate_dummy_describe_instance(
+            state=aws.InstanceState.stopped
+        )
         mock_described = {
             'Reservations': [
                 {
-                    'Instances': [mock_instance],
+                    'Instances': [
+                        mock_running_instance,
+                        mock_stopped_instance,
+                    ],
                 },
             ],
         }
         expected_found = {
-            mock_regions[0]: [mock_instance]
+            mock_regions[0]: [mock_running_instance]
         }
 
         with patch.object(aws, 'get_credentials_for_arn') as mock_get_creds, \

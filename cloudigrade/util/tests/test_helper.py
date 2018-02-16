@@ -2,6 +2,8 @@
 
 Because even test helpers should be tested!
 """
+import uuid
+
 from django.test import TestCase
 
 from util import aws
@@ -28,3 +30,28 @@ class UtilHelperTest(TestCase):
         account_id = 123456789
         arn = helper.generate_dummy_arn(account_id)
         self.assertIn(str(account_id), arn)
+
+    def test_generate_dummy_describe_instance_default(self):
+        """Assert generated instance has values where expected."""
+        instance = helper.generate_dummy_describe_instance()
+        self.assertIsNotNone(instance['ImageId'])
+        self.assertIsNotNone(instance['InstanceId'])
+        self.assertIsNotNone(instance['SubnetId'])
+        self.assertIsNotNone(instance['State'])
+        self.assertIsNotNone(instance['State']['Code'])
+        self.assertIsNotNone(instance['State']['Name'])
+
+    def test_generate_dummy_describe_instance_with_values(self):
+        """Assert generated instance contains given values."""
+        image_id = str(uuid.uuid4())
+        instance_id = str(uuid.uuid4())
+        subnet_id = str(uuid.uuid4())
+        state = aws.InstanceState.shutting_down
+        instance = helper.generate_dummy_describe_instance(
+            instance_id, image_id, subnet_id, state
+        )
+        self.assertEqual(instance['ImageId'], image_id)
+        self.assertEqual(instance['InstanceId'], instance_id)
+        self.assertEqual(instance['SubnetId'], subnet_id)
+        self.assertEqual(instance['State']['Code'], state.value)
+        self.assertEqual(instance['State']['Name'], state.name)
