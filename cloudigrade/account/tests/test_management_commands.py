@@ -22,7 +22,13 @@ class AddAccountTest(TestCase):
         mock_account_id = helper.generate_dummy_aws_account_id()
         mock_arn = helper.generate_dummy_arn(mock_account_id)
         mock_instances = {
-            f'region-{uuid.uuid4()}': [str(uuid.uuid4())],
+            f'region-{uuid.uuid4()}': [
+                {
+                    'ImageId': str(uuid.uuid4()),
+                    'InstanceId': str(uuid.uuid4()),
+                    'SubnetId': str(uuid.uuid4()),
+                }
+            ],
         }
 
         expected_instances = _(f'Instances found include: {mock_instances}')

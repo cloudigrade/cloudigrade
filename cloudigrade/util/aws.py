@@ -84,7 +84,7 @@ def get_running_instances(arn):
         instances = ec2.describe_instances()
         for reservation in instances.get('Reservations', []):
             for instance in reservation.get('Instances', []):
-                found_instances[region_name].append(instance['InstanceId'])
+                found_instances[region_name].append(instance)
 
     return dict(found_instances)
 
