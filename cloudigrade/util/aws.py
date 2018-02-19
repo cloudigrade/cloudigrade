@@ -38,8 +38,7 @@ class InstanceState(enum.Enum):
             bool: True if we consider the instance to be running else False.
 
         """
-        return code in (cls.running.value,
-                        cls.shutting_down.value)
+        return code == cls.running.value
 
 
 def extract_account_id_from_arn(arn):
