@@ -10,6 +10,20 @@ from util import aws
 MAX_AWS_ACCOUNT_ID = 999999999999
 
 
+SOME_EC2_INSTANCE_TYPES = (
+    'c5.xlarge',
+    'm5.24xlarge',
+    'r4.large',
+    't2.large',
+    't2.medium',
+    't2.micro',
+    't2.nano',
+    't2.small',
+    't2.xlarge',
+    'x1e.32xlarge',
+)
+
+
 def generate_dummy_aws_account_id():
     """Generate a dummy AWS Account ID for testing purposes."""
     return decimal.Decimal(random.randrange(MAX_AWS_ACCOUNT_ID))
@@ -34,7 +48,8 @@ def generate_dummy_arn(account_id=None):
 
 
 def generate_dummy_describe_instance(instance_id=None, image_id=None,
-                                     subnet_id=None, state=None):
+                                     subnet_id=None, state=None,
+                                     instance_type=None):
     """
     Generate dummy instance to imitate 'describe instances' API response.
 
@@ -45,6 +60,7 @@ def generate_dummy_describe_instance(instance_id=None, image_id=None,
         image_id (str): Optional AMI ID.
         subnet_id (str): Optional Subnet ID.
         state (aws.InstanceState): Optional known state of the Instance.
+        instance_type (str): Optional known EC2 type of Instance.
 
     Returns:
         dict: Well-formed instance data structure.
@@ -62,9 +78,13 @@ def generate_dummy_describe_instance(instance_id=None, image_id=None,
     if subnet_id is None:
         subnet_id = str(uuid.uuid4())
 
+    if instance_type is None:
+        instance_type = random.choice(SOME_EC2_INSTANCE_TYPES)
+
     mock_instance = {
         'ImageId': image_id,
         'InstanceId': instance_id,
+        'InstanceType': instance_type,
         'State': {
             'Code': state.value,
             'Name': state.name,

@@ -56,6 +56,7 @@ class Command(BaseCommand):
                     occurred_at=timezone.now(),
                     subnet=instance_data['SubnetId'],
                     ec2_ami_id=instance_data['ImageId'],
+                    instance_type=instance_data['InstanceType'],
                 )
                 event.save()
                 saved_instances[region].append(instance)

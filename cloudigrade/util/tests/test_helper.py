@@ -2,6 +2,7 @@
 
 Because even test helpers should be tested!
 """
+import random
 import uuid
 
 from django.test import TestCase
@@ -36,6 +37,7 @@ class UtilHelperTest(TestCase):
         instance = helper.generate_dummy_describe_instance()
         self.assertIsNotNone(instance['ImageId'])
         self.assertIsNotNone(instance['InstanceId'])
+        self.assertIsNotNone(instance['InstanceType'])
         self.assertIsNotNone(instance['SubnetId'])
         self.assertIsNotNone(instance['State'])
         self.assertIsNotNone(instance['State']['Code'])
@@ -47,11 +49,13 @@ class UtilHelperTest(TestCase):
         instance_id = str(uuid.uuid4())
         subnet_id = str(uuid.uuid4())
         state = aws.InstanceState.shutting_down
+        instance_type = random.choice(helper.SOME_EC2_INSTANCE_TYPES)
         instance = helper.generate_dummy_describe_instance(
-            instance_id, image_id, subnet_id, state
+            instance_id, image_id, subnet_id, state, instance_type
         )
         self.assertEqual(instance['ImageId'], image_id)
         self.assertEqual(instance['InstanceId'], instance_id)
+        self.assertEqual(instance['InstanceType'], instance_type)
         self.assertEqual(instance['SubnetId'], subnet_id)
         self.assertEqual(instance['State']['Code'], state.value)
         self.assertEqual(instance['State']['Name'], state.name)
