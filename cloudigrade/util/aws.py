@@ -1,6 +1,9 @@
 """Helper utility module to wrap up common AWS operations."""
 import decimal
 import enum
+import gzip
+import io
+import json
 import logging
 
 import boto3
@@ -168,3 +171,85 @@ def verify_account_access(arn):
         return False
 
     return True
+
+
+def receive_message_from_queue(queue_url):
+    """
+    Get message objects from SQS Queue object.
+
+    Args:
+        queue_url (str): The AWS assigned URL for the queue.
+
+    Returns:
+        list[Message]: A list of message objects.
+
+    """
+    sqs_queue = boto3.resource('sqs').Queue(queue_url)
+
+    messages = sqs_queue.receive_messages(
+        MaxNumberOfMessages=10,
+        WaitTimeSeconds=10
+    )
+
+    return messages
+
+
+def delete_message_from_queue(queue_url, messages):
+    """
+    Delete message objects from SQS queue.
+
+    Args:
+        queue_url (str): The AWS assigned URL for the queue.
+        messages (list[Message]): A list of message objects to delete.
+
+    Returns:
+        dict: The response from the delete call.
+
+    """
+    sqs_queue = boto3.resource('sqs').Queue(queue_url)
+
+    messages_to_delete = [
+        {
+            'Id': message.message_id,
+            'ReceiptHandle': message._receipt_handle
+        }
+        for message in messages
+    ]
+
+    response = sqs_queue.delete_messages(
+        Entries=messages_to_delete
+    )
+
+    #TODO: Deal with success/failure of message deletes
+    return response
+
+
+def get_object_content_from_s3(bucket, key, compression='gzip'):
+    """
+    Get the file contents from an S3 object.
+
+    Args:
+        bucket (str): The S3 bucket the object is stored in.
+        key (str): The S3 object key identified.
+        compression (str): The compression format for the stored file object.
+
+    Returns:
+        str: The string contents of the file object.
+
+    """
+    content = None
+    s3_object = boto3.resource('s3').Object(bucket, key)
+
+    object_bytes = s3_object.get()['Body'].read()
+
+    if compression == 'gzip':
+        content = gzip.decompress(object_bytes).decode('utf-8')
+    elif compression is None:
+        try:
+            content = object_bytes.decode('utf-8')
+        except UnicodeDecodeError as e:
+            logger.error(_(e))
+    else:
+        logger.error(_('Unsupported compression format'))
+
+    return content
