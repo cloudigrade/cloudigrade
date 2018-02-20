@@ -2,8 +2,6 @@
 import decimal
 import enum
 import gzip
-import io
-import json
 import logging
 
 import boto3
@@ -220,7 +218,7 @@ def delete_message_from_queue(queue_url, messages):
         Entries=messages_to_delete
     )
 
-    #TODO: Deal with success/failure of message deletes
+    # TODO: Deal with success/failure of message deletes
     return response
 
 

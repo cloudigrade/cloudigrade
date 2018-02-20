@@ -176,7 +176,7 @@ class UtilAwsTest(TestCase):
     def test_receive_message_from_queue(self):
         """Assert that SQS Message objects are received."""
         mock_queue_url = 'https://123.abc'
-        mock_receipt_handle = uuid.uuid4()
+        mock_receipt_handle = str(uuid.uuid4())
         mock_message = boto3.resource('sqs').Message(mock_queue_url,
                                                      mock_receipt_handle)
         mock_message
@@ -200,28 +200,31 @@ class UtilAwsTest(TestCase):
 
         mock_queue_url = 'https://123.abc'
         mock_messages_to_delete = [
-            create_mock_message(uuid.uuid4(), uuid.uuid4()),
-            create_mock_message(uuid.uuid4(), uuid.uuid4())
+            create_mock_message(str(uuid.uuid4()), str(uuid.uuid4())),
+            create_mock_message(str(uuid.uuid4()), str(uuid.uuid4()))
         ]
         mock_response = {
-            'Successful':
-                [
-                    {'Id': mock_messages_to_delete[0].Id},
-                    {'Id': mock_messages_to_delete[1].Id}
-                ],
             'ResponseMetadata': {
-                'RequestId': '123456',
-                'HTTPStatusCode': 200,
                 'HTTPHeaders': {
-                    'server': 'Server',
-                    'date': 'Mon, 19 Feb 2018 20:31:09 GMT',
-                    'content-type': 'text/xml',
-                    'content-length': '1358',
                     'connection': 'keep-alive',
+                    'content-length': '1358',
+                    'content-type': 'text/xml',
+                    'date': 'Mon, 19 Feb 2018 20:31:09 GMT',
+                    'server': 'Server',
                     'x-amzn-requestid': '1234'
                 },
+                'HTTPStatusCode': 200,
+                'RequestId': '123456',
                 'RetryAttempts': 0
-            }
+            },
+            'Successful': [
+                {
+                    'Id': 'fe3b9df2-416c-4ee2-a04e-7ba8b80490ca'
+                },
+                {
+                    'Id': '3dc419e6-b841-48ad-ae4d-57da10a4315a'
+                }
+            ]
         }
 
         with patch.object(aws, 'boto3') as mock_boto3:
