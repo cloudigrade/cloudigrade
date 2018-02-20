@@ -1,7 +1,11 @@
 """Collection of tests for ``util.aws`` module."""
+import gzip
+import io
 import uuid
+from unittest.mock import Mock
 from unittest.mock import patch
 
+import boto3
 from botocore.exceptions import ClientError
 import faker
 from django.test import TestCase
@@ -168,3 +172,128 @@ class UtilAwsTest(TestCase):
             actual_verified = aws.verify_account_access(mock_arn)
 
         self.assertFalse(actual_verified)
+
+    def test_receive_message_from_queue(self):
+        """Assert that SQS Message objects are received."""
+        mock_queue_url = 'https://123.abc'
+        mock_receipt_handle = uuid.uuid4()
+        mock_message = boto3.resource('sqs').Message(mock_queue_url,
+                                                     mock_receipt_handle)
+        mock_message
+
+        with patch.object(aws, 'boto3') as mock_boto3:
+            mock_resource = mock_boto3.resource.return_value
+            mock_queue = mock_resource.Queue.return_value
+            mock_queue.receive_messages.return_value = [mock_message]
+
+            actual_messages = aws.receive_message_from_queue(mock_queue_url)
+
+        self.assertEqual(mock_message, actual_messages[0])
+
+    def test_delete_message_from_queue(self):
+        """Assert that messages are deleted from SQS queue."""
+        def create_mock_message(id, receipt_handle):
+            mock_message = Mock()
+            mock_message.Id = id
+            mock_message.ReceiptHandle = receipt_handle
+            return mock_message
+
+        mock_queue_url = 'https://123.abc'
+        mock_messages_to_delete = [
+            create_mock_message(uuid.uuid4(), uuid.uuid4()),
+            create_mock_message(uuid.uuid4(), uuid.uuid4())
+        ]
+        mock_response = {
+            'Successful':
+                [
+                    {'Id': mock_messages_to_delete[0].Id},
+                    {'Id': mock_messages_to_delete[1].Id}
+                ],
+            'ResponseMetadata': {
+                'RequestId': '123456',
+                'HTTPStatusCode': 200,
+                'HTTPHeaders': {
+                    'server': 'Server',
+                    'date': 'Mon, 19 Feb 2018 20:31:09 GMT',
+                    'content-type': 'text/xml',
+                    'content-length': '1358',
+                    'connection': 'keep-alive',
+                    'x-amzn-requestid': '1234'
+                },
+                'RetryAttempts': 0
+            }
+        }
+
+        with patch.object(aws, 'boto3') as mock_boto3:
+            mock_resource = mock_boto3.resource.return_value
+            mock_queue = mock_resource.Queue.return_value
+            mock_queue.delete_messages.return_value = mock_response
+
+            actual_response = aws.delete_message_from_queue(
+                mock_queue_url,
+                mock_messages_to_delete
+            )
+
+        self.assertEqual(mock_response, actual_response)
+
+    def test_get_object_content_from_s3_gzipped(self):
+        """Assert that gzipped content is handled."""
+        mock_bucket = 'test_bucket'
+        mock_key = '/path/to/file'
+        mock_content_bytes = b'{"Key": "Value"}'
+        mock_byte_stream = io.BytesIO(gzip.compress(mock_content_bytes))
+        mock_object_body = {'Body': mock_byte_stream}
+
+        with patch.object(aws, 'boto3') as mock_boto3:
+            mock_resource = mock_boto3.resource.return_value
+            mock_s3_object = mock_resource.Object.return_value
+            mock_s3_object.get.return_value = mock_object_body
+
+            actual_content = aws.get_object_content_from_s3(
+                mock_bucket,
+                mock_key
+            )
+
+        self.assertEqual(mock_content_bytes.decode('utf-8'), actual_content)
+
+    def test_get_object_content_from_s3_uncompressed(self):
+        """Assert that uncompressed content is handled."""
+        mock_bucket = 'test_bucket'
+        mock_key = '/path/to/file'
+        mock_content_bytes = b'{"Key": "Value"}'
+        mock_byte_stream = io.BytesIO(mock_content_bytes)
+        mock_object_body = {'Body': mock_byte_stream}
+
+        with patch.object(aws, 'boto3') as mock_boto3:
+            mock_resource = mock_boto3.resource.return_value
+            mock_s3_object = mock_resource.Object.return_value
+            mock_s3_object.get.return_value = mock_object_body
+
+            actual_content = aws.get_object_content_from_s3(
+                mock_bucket,
+                mock_key,
+                compression=None
+            )
+
+        self.assertEqual(mock_content_bytes.decode('utf-8'), actual_content)
+
+    def test_get_object_content_from_s3_unsupported_compression(self):
+        """Assert that unhandled compression does not return content."""
+        mock_bucket = 'test_bucket'
+        mock_key = '/path/to/file'
+        mock_content_bytes = b'{"Key": "Value"}'
+        mock_byte_stream = io.BytesIO(mock_content_bytes)
+        mock_object_body = {'Body': mock_byte_stream}
+
+        with patch.object(aws, 'boto3') as mock_boto3:
+            mock_resource = mock_boto3.resource.return_value
+            mock_s3_object = mock_resource.Object.return_value
+            mock_s3_object.get.return_value = mock_object_body
+
+            actual_content = aws.get_object_content_from_s3(
+                mock_bucket,
+                mock_key,
+                compression='bzip'
+            )
+
+        self.assertIsNone(actual_content)
