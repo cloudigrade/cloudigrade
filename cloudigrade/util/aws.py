@@ -150,10 +150,10 @@ def verify_account_access(arn):
     Check role for proper access to AWS APIs.
 
     Args:
-            arn (str): Amazon Resource Name to use for assuming a role.
+        arn (str): Amazon Resource Name to use for assuming a role.
 
-        Returns:
-            bool: Whether role is verifed.
+    Returns:
+        bool: Whether role is verifed.
 
     """
     role_session = get_assumed_session(arn)
