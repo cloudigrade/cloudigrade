@@ -3,6 +3,10 @@ branch = True
 data_file = .coverage
 source = cloudigrade
 omit =
+    *config/settings/*
+    *config/urls.py
+    *config/wsgi.py
+    *manage.py
     *migrations*
     *static*
     *templates*
