@@ -42,8 +42,8 @@ THIRD_PARTY_APPS = []
 
 # Apps specific to this project go here
 LOCAL_APPS = [
-    'util',
-    'account',
+    'util.apps.UtilConfig',
+    'account.apps.AccountConfig',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
