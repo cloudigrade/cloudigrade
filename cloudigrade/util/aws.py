@@ -2,6 +2,7 @@
 import decimal
 import enum
 import gzip
+import json
 import logging
 
 import boto3
@@ -9,6 +10,25 @@ from botocore.exceptions import ClientError
 from django.utils.translation import gettext as _
 
 logger = logging.getLogger(__name__)
+
+cloudigrade_policy = {
+    'Version': '2012-10-17',
+    'Statement': [
+        {
+            'Sid': 'CloudigradePolicy',
+            'Effect': 'Allow',
+            'Action': [
+                'ec2:DescribeImages',
+                'ec2:DescribeInstances',
+                'ec2:ModifySnapshotAttribute',
+                'ec2:DescribeSnapshotAttribute',
+                'ec2:ModifyImageAttribute',
+                'ec2:DescribeSnapshots'
+            ],
+            'Resource': '*'
+        }
+    ]
+}
 
 
 class InstanceState(enum.Enum):
@@ -56,63 +76,66 @@ def extract_account_id_from_arn(arn):
     return decimal.Decimal(arn.split(':')[4])
 
 
-def get_regions(service_name='ec2'):
+def get_session(arn, region_name='us-east-1'):
+    """
+    Return a session using the customer AWS account role ARN.
+
+    Args:
+        arn (str): Amazon Resource Name to use for assuming a role.
+        region_name (str): Default AWS Region to associate newly
+        created clients with.
+
+    Returns:
+        boto3.Session: A temporary session tied to a customer account
+
+    """
+    sts = boto3.client('sts')
+    response = sts.assume_role(
+        Policy=json.dumps(cloudigrade_policy),
+        RoleArn=arn,
+        RoleSessionName=f'cloudigrade-{extract_account_id_from_arn(arn)}'
+    )
+    response = response['Credentials']
+    return boto3.Session(
+        aws_access_key_id=response['AccessKeyId'],
+        aws_secret_access_key=response['SecretAccessKey'],
+        aws_session_token=response['SessionToken'],
+        region_name=region_name
+    )
+
+
+def get_regions(session, service_name='ec2'):
     """
     Get the full list of available AWS regions for the given service.
 
     Args:
+        session (boto3.Session): A temporary session tied to a customer account
         service_name (str): Name of AWS service. Default is 'ec2'.
 
     Returns:
         list: The available AWS region names.
 
     """
-    return boto3.Session().get_available_regions(service_name)
+    return session.get_available_regions(service_name)
 
 
-def get_credentials_for_arn(arn):
-    """
-    Get the credentials for a given ARN.
-
-    Args:
-        arn (str): Amazon Resource Name to use for assuming a role.
-
-    Returns:
-        dict: The credentials we can use to establish a session.
-
-    """
-    sts = boto3.client('sts')
-    session_name = 'temp-session'
-
-    # TODO: Decide if we want to limit the session length beyond
-    # the default 60 minutes
-    # TODO: Decide if we want to handle MFA
-    assume_role_object = sts.assume_role(
-        RoleArn=arn,
-        RoleSessionName=session_name,
-    )
-    return assume_role_object['Credentials']
-
-
-def get_running_instances(arn):  # TODO filter
+def get_running_instances(session):
     """
     Find all running EC2 instances visible to the given ARN.
 
     Args:
-        arn (str): Amazon Resource Name to use for assuming a role.
+        session (boto3.Session): A temporary session tied to a customer account
 
     Returns:
         dict: Lists of instance IDs keyed by region where they were found.
 
     """
-    credentials = get_credentials_for_arn(arn)
     running_instances = {}
 
-    for region_name in get_regions():
-        role_session = get_assumed_session(arn, region_name, credentials)
+    for region_name in get_regions(session):
 
-        ec2 = role_session.client('ec2')
-        logger.debug(_(f'Describing instances in {region_name} for {arn}'))
+        ec2 = session.client('ec2', region_name=region_name)
+        logger.debug(_(f'Describing instances in {region_name}'))
         instances = ec2.describe_instances()
         for reservation in instances.get('Reservations', []):
             running_instances[region_name] = [
@@ -123,46 +146,81 @@ def get_running_instances(arn):  # TODO filter
     return running_instances
 
 
-def get_assumed_session(arn, region_name='us-east-1', credentials=None):
-    """
-    Return a session using the customer AWS account role.
-
-    Args:
-        arn (str): Amazon Resource Name to use for assuming a role.
-        region_name (str): AWS Region to associate the session with.
-        credentials (dict): Credentials returned by STS assume_role call.
-
-    Returns:
-        boto3.Session: A temporary session tied to a customer account
-
-    """
-    if credentials is None:
-        credentials = get_credentials_for_arn(arn)
-
-    return boto3.Session(
-        aws_access_key_id=credentials['AccessKeyId'],
-        aws_secret_access_key=credentials['SecretAccessKey'],
-        aws_session_token=credentials['SessionToken'],
-        region_name=region_name)
-
-
-def verify_account_access(arn):
+def verify_account_access(session):
     """
     Check role for proper access to AWS APIs.
 
     Args:
-        arn (str): Amazon Resource Name to use for assuming a role.
+        session (boto3.Session): A temporary session tied to a customer account
 
     Returns:
-        bool: Whether role is verifed.
+        bool: Whether role is verified.
 
     """
-    role_session = get_assumed_session(arn)
-    # TODO Check against IAM role JSON instead of making API calls
+    success = True
+    for action in cloudigrade_policy['Statement'][0]['Action']:
+        if not _verify_policy_action(session, action):
+            # Mark as failure, but keep looping so we can see each specific
+            # failure in logs
+            success = False
+    return success
+
+
+def _verify_policy_action(session, action):
+    """
+    Check to see if we have access to a specific action.
+
+    Args:
+        session (boto3.Session): A temporary session tied to a customer account
+        action (str): The policy action to check
+
+    Returns:
+        bool: Whether the action is allowed, or not.
+
+    """
+    dry_run_operation = 'DryRunOperation'
+    unauthorized_operation = 'UnauthorizedOperation'
+
+    ec2 = session.client('ec2')
+
     try:
-        ec2 = role_session.client('ec2')
-        ec2.describe_instances()
+        if action == 'ec2:DescribeImages':
+            ec2.describe_images(DryRun=True)
+        elif action == 'ec2:DescribeInstances':
+            ec2.describe_instances(DryRun=True)
+        elif action == 'ec2:DescribeSnapshotAttribute':
+            ec2.describe_snapshot_attribute(
+                DryRun=True,
+                SnapshotId='string',
+                Attribute='productCodes'
+            )
+        elif action == 'ec2:DescribeSnapshots':
+            ec2.describe_snapshots(DryRun=True)
+        elif action == 'ec2:ModifySnapshotAttribute':
+            ec2.modify_snapshot_attribute(
+                SnapshotId='string',
+                DryRun=True,
+                Attribute='productCodes',
+                GroupNames=['string', ]
+            )
+        elif action == 'ec2:ModifyImageAttribute':
+            ec2.modify_image_attribute(
+                Attribute='description',
+                ImageId='string',
+                DryRun=True
+            )
+        else:
+            logger.warning(_(f'No test case exists for action "{action}"'))
+            return False
     except ClientError as e:
+        if e.response['Error']['Code'] == dry_run_operation:
+            logger.debug(_(f'Verified access to "{action}"'))
+            return True
+        elif e.response['Error']['Code'] == unauthorized_operation:
+            logger.warning(_(f'No access to "{action}"'))
+            return False
+        else:
+            raise e
         errmsg = _('Role session does not have required access. ' +
                    f'Call failed with error "{e}"')
         logger.error(errmsg)

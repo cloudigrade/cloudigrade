@@ -67,8 +67,10 @@ class Command(BaseCommand):
         arn = options['arn']
         account_id = aws.extract_account_id_from_arn(arn)
 
-        if aws.verify_account_access(arn):
-            instances_data = aws.get_running_instances(arn)
+        session = aws.get_session(arn)
+
+        if aws.verify_account_access(session):
+            instances_data = aws.get_running_instances(session)
 
             account = Account(account_arn=arn, account_id=account_id)
             saved_instances = self._do_saves(account, instances_data)

@@ -21,6 +21,14 @@ class AddAccountTest(TestCase):
 
         mock_account_id = helper.generate_dummy_aws_account_id()
         mock_arn = helper.generate_dummy_arn(mock_account_id)
+        mock_role = {
+            'Credentials': {
+                'AccessKeyId': str(uuid.uuid4()),
+                'SecretAccessKey': str(uuid.uuid4()),
+                'SessionToken': str(uuid.uuid4()),
+            },
+            'foo': 'bar',
+        }
         mock_region = f'region-{uuid.uuid4()}'
         mock_instances = {mock_region: [
             helper.generate_dummy_describe_instance(
@@ -34,7 +42,10 @@ class AddAccountTest(TestCase):
         expected_out = _('ARN Info Stored')
 
         with patch.object(aws, 'verify_account_access') as mock_verify, \
+                patch.object(aws, 'boto3') as mock_boto3, \
                 patch.object(aws, 'get_running_instances') as mock_get_running:
+            mock_assume_role = mock_boto3.client.return_value.assume_role
+            mock_assume_role.return_value = mock_role
             mock_verify.return_value = True
             mock_get_running.return_value = mock_instances
             call_command('add_account', mock_arn, stdout=out)
@@ -64,10 +75,21 @@ class AddAccountTest(TestCase):
 
         mock_account_id = helper.generate_dummy_aws_account_id()
         mock_arn = helper.generate_dummy_arn(mock_account_id)
+        mock_role = {
+            'Credentials': {
+                'AccessKeyId': str(uuid.uuid4()),
+                'SecretAccessKey': str(uuid.uuid4()),
+                'SessionToken': str(uuid.uuid4()),
+            },
+            'foo': 'bar',
+        }
 
         expected_stdout = _('Account verification failed. ARN Info Not Stored')
 
-        with patch.object(aws, 'verify_account_access') as mock_verify:
+        with patch.object(aws, 'verify_account_access') as mock_verify, \
+                patch.object(aws, 'boto3') as mock_boto3:
+            mock_assume_role = mock_boto3.client.return_value.assume_role
+            mock_assume_role.return_value = mock_role
             mock_verify.return_value = False
             call_command('add_account', mock_arn, stdout=out)
 
