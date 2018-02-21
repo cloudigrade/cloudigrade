@@ -221,12 +221,6 @@ def _verify_policy_action(session, action):
             return False
         else:
             raise e
-        errmsg = _('Role session does not have required access. ' +
-                   f'Call failed with error "{e}"')
-        logger.error(errmsg)
-        return False
-
-    return True
 
 
 def receive_message_from_queue(queue_url):
