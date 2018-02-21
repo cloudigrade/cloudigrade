@@ -23,6 +23,10 @@ SECRET_KEY = env('DJANGO_SECRET_KEY', default='base')
 DEBUG = env('DJANGO_DEBUG', default=False)
 ALLOWED_HOSTS = env('DJANGO_ALLOWED_HOSTS', default=['*'])
 
+# AWS Defaults
+S3_DEFAULT_REGION = env('S3_DEFAULT_REGION', default='us-east-1')
+SQS_DEFAULT_REGION = env('SQS_DEFAULT_REGION', default='us-east-1')
+
 # Default apps go here
 DJANGO_APPS = [
     'django.contrib.admin',

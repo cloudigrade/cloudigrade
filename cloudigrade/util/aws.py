@@ -7,6 +7,7 @@ import logging
 
 import boto3
 from botocore.exceptions import ClientError
+from django.conf import settings
 from django.utils.translation import gettext as _
 
 logger = logging.getLogger(__name__)
@@ -234,7 +235,8 @@ def receive_message_from_queue(queue_url):
         list[Message]: A list of message objects.
 
     """
-    sqs_queue = boto3.resource('sqs').Queue(queue_url)
+    region = settings.SQS_DEFAULT_REGION
+    sqs_queue = boto3.resource('sqs', region_name=region).Queue(queue_url)
 
     messages = sqs_queue.receive_messages(
         MaxNumberOfMessages=10,
@@ -256,7 +258,8 @@ def delete_message_from_queue(queue_url, messages):
         dict: The response from the delete call.
 
     """
-    sqs_queue = boto3.resource('sqs').Queue(queue_url)
+    region = settings.SQS_DEFAULT_REGION
+    sqs_queue = boto3.resource('sqs', region_name=region).Queue(queue_url)
 
     messages_to_delete = [
         {
@@ -288,7 +291,8 @@ def get_object_content_from_s3(bucket, key, compression='gzip'):
 
     """
     content = None
-    s3_object = boto3.resource('s3').Object(bucket, key)
+    region = settings.S3_DEFAULT_REGION
+    s3_object = boto3.resource('s3', region_name=region).Object(bucket, key)
 
     object_bytes = s3_object.get()['Body'].read()
 

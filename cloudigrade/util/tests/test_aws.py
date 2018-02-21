@@ -8,6 +8,7 @@ from unittest.mock import patch
 
 import boto3
 from botocore.exceptions import ClientError
+from django.conf import settings
 import faker
 from django.test import TestCase
 
@@ -314,9 +315,9 @@ class UtilAwsTest(TestCase):
         """Assert that SQS Message objects are received."""
         mock_queue_url = 'https://123.abc'
         mock_receipt_handle = str(uuid.uuid4())
-        mock_message = boto3.resource('sqs').Message(mock_queue_url,
-                                                     mock_receipt_handle)
-        mock_message
+        region = settings.SQS_DEFAULT_REGION
+        mock_message = boto3.resource('sqs', region_name=region)\
+            .Message(mock_queue_url, mock_receipt_handle)
 
         with patch.object(aws, 'boto3') as mock_boto3:
             mock_resource = mock_boto3.resource.return_value
