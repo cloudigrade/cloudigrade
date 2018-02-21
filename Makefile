@@ -1,7 +1,6 @@
-DATE		= $(shell date)
-PYTHON		= $(shell which python)
+PYTHON	= $(shell which python)
 
-TOPDIR = $(shell pwd)
+TOPDIR  = $(shell pwd)
 PYDIR	= cloudigrade
 
 help:
