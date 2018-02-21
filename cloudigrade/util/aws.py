@@ -167,6 +167,38 @@ def verify_account_access(session):
     return success
 
 
+def _handle_dry_run_response_exception(action, e):
+    """
+    Handle the normal exception that is raised from a dry-run operation.
+
+    This may look weird, but when a boto3 operation is executed with the
+    ``DryRun=True`` argument, the typical behavior is for it to raise a
+    ``ClientError`` exception with an error code buried within to indicate if
+    the operation would have succeeded.
+
+    See also:
+        https://botocore.readthedocs.io/en/latest/client_upgrades.html#error-handling
+
+    Args:
+        action (str): The action that was attempted
+        e (botocore.exceptions.ClientError): The raised exception
+
+    Returns:
+        bool: Whether the operation had access verified, or not.
+
+    """
+    dry_run_operation = 'DryRunOperation'
+    unauthorized_operation = 'UnauthorizedOperation'
+
+    if e.response['Error']['Code'] == dry_run_operation:
+        logger.debug(_(f'Verified access to "{action}"'))
+        return True
+    elif e.response['Error']['Code'] == unauthorized_operation:
+        logger.warning(_(f'No access to "{action}"'))
+        return False
+    raise e
+
+
 def _verify_policy_action(session, action):
     """
     Check to see if we have access to a specific action.
@@ -179,9 +211,6 @@ def _verify_policy_action(session, action):
         bool: Whether the action is allowed, or not.
 
     """
-    dry_run_operation = 'DryRunOperation'
-    unauthorized_operation = 'UnauthorizedOperation'
-
     ec2 = session.client('ec2')
 
     try:
@@ -214,14 +243,7 @@ def _verify_policy_action(session, action):
             logger.warning(_(f'No test case exists for action "{action}"'))
             return False
     except ClientError as e:
-        if e.response['Error']['Code'] == dry_run_operation:
-            logger.debug(_(f'Verified access to "{action}"'))
-            return True
-        elif e.response['Error']['Code'] == unauthorized_operation:
-            logger.warning(_(f'No access to "{action}"'))
-            return False
-        else:
-            raise e
+        return _handle_dry_run_response_exception(action, e)
 
 
 def receive_message_from_queue(queue_url):
