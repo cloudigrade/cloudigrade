@@ -277,9 +277,14 @@ class UtilAwsTest(TestCase):
 
             mock_describe_images.side_effect = ClientError(
                 mock_garbage_exception, 'DescribeImages')
+
             with self.assertRaises(ClientError) as e:
-                    aws.verify_account_access(session)
-                    self.assertContains(e, 'GarbageOperation')
+                aws.verify_account_access(session)
+
+            self.assertEquals(e.exception.response['Error']['Code'],
+                              mock_garbage_exception['Error']['Code'])
+            self.assertEquals(e.exception.response['Error']['Message'],
+                              mock_garbage_exception['Error']['Message'])
 
             with patch.dict(aws.cloudigrade_policy, bad_policy):
                 aws.verify_account_access(session)
