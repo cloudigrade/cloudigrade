@@ -299,10 +299,7 @@ def get_object_content_from_s3(bucket, key, compression='gzip'):
     if compression == 'gzip':
         content = gzip.decompress(object_bytes).decode('utf-8')
     elif compression is None:
-        try:
-            content = object_bytes.decode('utf-8')
-        except UnicodeDecodeError as e:
-            logger.error(_(e))
+        content = object_bytes.decode('utf-8')
     else:
         logger.error(_('Unsupported compression format'))
 
