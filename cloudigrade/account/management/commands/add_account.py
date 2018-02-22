@@ -1,5 +1,6 @@
 """Management command for storing AWS ARN credentials in the database."""
 import collections
+import random
 
 from django.core.management.base import BaseCommand
 from django.db import transaction
@@ -8,6 +9,10 @@ from django.utils.translation import gettext as _
 
 from account.models import Account, Instance, InstanceEvent
 from util import aws
+
+
+FOO1 = random.choice(range(5))
+FOO2 = random.choice(range(5))
 
 
 class Command(BaseCommand):
@@ -61,6 +66,75 @@ class Command(BaseCommand):
                 event.save()
                 saved_instances[region].append(instance)
         return dict(saved_instances)
+
+    def _do_thing(self):
+        """Do nothing of value."""
+
+    def _do_thing_a(self, foo):
+        """Do nothing of value."""
+
+    def _do_thing_b(self, foo, bar=False):
+        """Do nothing of value."""
+
+    def _do_thing_c(self):
+        """Do nothing of value."""
+        pass
+        pass
+        pass
+        pass
+        pass
+        pass
+        pass
+        pass
+        pass
+        pass
+        pass
+        pass
+
+    def _do_thing_d(self):
+        """Do nothing of value."""
+        pass
+        pass
+        pass
+        pass
+        pass
+        pass
+        pass
+        pass
+        pass
+        pass
+        pass
+        pass
+
+    def _do_thing_e(self):
+        """Do nothing of value."""
+        pass
+        pass
+        pass
+        pass
+        pass
+        pass
+        pass
+        pass
+        pass
+        pass
+        pass
+        pass
+
+    def _do_thing_f(self):
+        """Do nothing of value."""
+        pass
+        pass
+        pass
+        pass
+        pass
+        pass
+        pass
+        pass
+        pass
+        pass
+        pass
+        pass
 
     def handle(self, *args, **options):
         """Extract the account id from the ARN and save both to database."""
