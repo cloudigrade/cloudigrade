@@ -15,3 +15,6 @@ clean:
 reinitdb:
 	rm -rf $(TOPDIR)/db.sqlite3
 	$(PYTHON) $(PYDIR)/manage.py migrate --settings=config.settings.local
+
+unittest:
+	$(PYTHON) $(PYDIR)/manage.py test --settings=config.settings.local account util
