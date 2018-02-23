@@ -6,5 +6,5 @@ SECRET_KEY = env('DJANGO_SECRET_KEY', default='local')
 ALLOWED_HOSTS = env('DJANGO_ALLOWED_HOSTS', default=['*'])
 
 DATABASES = {
-    'default': env.db(default='sqlite:///./db.sqlite3')
+    'default': env.db(default='postgres://postgres:postgres@db:5432/postgres')
 }
