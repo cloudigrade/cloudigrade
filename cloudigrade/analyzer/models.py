@@ -1,3 +1,4 @@
-from django.db import models
+"""Cloudigrade Analyzer Models."""
+# from django.db import models
 
 # Create your models here.
