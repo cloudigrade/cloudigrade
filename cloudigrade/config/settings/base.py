@@ -1,5 +1,8 @@
 import environ
 
+from psycopg2cffi import compat
+
+compat.register()
 
 ROOT_DIR = environ.Path(__file__) - 3
 APPS_DIR = ROOT_DIR.path('cloudigrade')
