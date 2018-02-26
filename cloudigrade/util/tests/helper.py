@@ -11,6 +11,15 @@ from util import aws
 MAX_AWS_ACCOUNT_ID = 999999999999
 
 
+SOME_AWS_REGIONS = (
+    'ap-northeast-1',
+    'ca-central-1',
+    'eu-west-1',
+    'us-east-1',
+    'us-east-2',
+)
+
+
 SOME_EC2_INSTANCE_TYPES = (
     'c5.xlarge',
     'm5.24xlarge',
