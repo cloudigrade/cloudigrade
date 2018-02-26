@@ -2,6 +2,7 @@
 import decimal
 import random
 import uuid
+from unittest.mock import Mock
 
 import faker
 
@@ -92,3 +93,23 @@ def generate_dummy_describe_instance(instance_id=None, image_id=None,
         'SubnetId': subnet_id,
     }
     return mock_instance
+
+
+def generate_mock_sqs_message(id, body, receipt_handle):
+    """
+    Generate a mocked SQS Message object.
+
+    Args:
+        id (string): The SQS message id.
+        body (string): The message contents.
+        receipt_handle (string): The SQS receipt handle.
+
+    Returns:
+        Mock: A mock object with Message-like attributes.
+
+    """
+    mock_message = Mock()
+    mock_message.Id = id
+    mock_message.ReceiptHandle = receipt_handle
+    mock_message.body = body
+    return mock_message

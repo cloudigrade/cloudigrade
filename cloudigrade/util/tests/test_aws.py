@@ -3,7 +3,6 @@ import gzip
 import io
 import json
 import uuid
-from unittest.mock import Mock
 from unittest.mock import patch
 
 import boto3
@@ -335,16 +334,14 @@ class UtilAwsTest(TestCase):
 
     def test_delete_message_from_queue(self):
         """Assert that messages are deleted from SQS queue."""
-        def create_mock_message(id, receipt_handle):
-            mock_message = Mock()
-            mock_message.Id = id
-            mock_message.ReceiptHandle = receipt_handle
-            return mock_message
-
         mock_queue_url = 'https://123.abc'
         mock_messages_to_delete = [
-            create_mock_message(str(uuid.uuid4()), str(uuid.uuid4())),
-            create_mock_message(str(uuid.uuid4()), str(uuid.uuid4()))
+            helper.generate_mock_sqs_message(str(uuid.uuid4()),
+                                             '',
+                                             str(uuid.uuid4())),
+            helper.generate_mock_sqs_message(str(uuid.uuid4()),
+                                             '',
+                                             str(uuid.uuid4()))
         ]
         mock_response = {
             'ResponseMetadata': {
