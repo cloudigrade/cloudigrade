@@ -86,9 +86,11 @@ class AnalyzeLogTest(TestCase):
         }
 
         with patch.object(aws, 'receive_message_from_queue') as mock_receive, \
-                patch.object(aws, 'get_object_content_from_s3') as mock_s3:
+                patch.object(aws, 'get_object_content_from_s3') as mock_s3, \
+                patch.object(aws, 'delete_message_from_queue') as mock_delete:
             mock_receive.return_value = [mock_message]
             mock_s3.return_value = json.dumps(mock_cloudtrail_log)
+            mock_delete.return_value = 'Success'
 
             call_command('analyze_log', mock_queue_url, stdout=out)
 
@@ -124,9 +126,11 @@ class AnalyzeLogTest(TestCase):
         mock_cloudtrail_log = ''
 
         with patch.object(aws, 'receive_message_from_queue') as mock_receive, \
-                patch.object(aws, 'get_object_content_from_s3') as mock_s3:
+                patch.object(aws, 'get_object_content_from_s3') as mock_s3, \
+                patch.object(aws, 'delete_message_from_queue') as mock_delete:
             mock_receive.return_value = [mock_message]
             mock_s3.return_value = mock_cloudtrail_log
+            mock_delete.return_value = 'Success'
 
             call_command('analyze_log', mock_queue_url, stdout=out)
 
@@ -174,9 +178,11 @@ class AnalyzeLogTest(TestCase):
         }
 
         with patch.object(aws, 'receive_message_from_queue') as mock_receive, \
-                patch.object(aws, 'get_object_content_from_s3') as mock_s3:
+                patch.object(aws, 'get_object_content_from_s3') as mock_s3, \
+                patch.object(aws, 'delete_message_from_queue') as mock_delete:
             mock_receive.return_value = [mock_message]
             mock_s3.return_value = json.dumps(mock_cloudtrail_log)
+            mock_delete.return_value = 'Success'
 
             call_command('analyze_log', mock_queue_url, stdout=out)
 
