@@ -1,16 +1,39 @@
 sudo: false
-
 language: python
+cache: pip
 
-python:
-  - "3.6"
-  - "pypy3"
+stages:
+  - test
+  - name: build container
+    if: branch != master AND tag IS blank
+  - name: build and push container
+    if: (branch = master) OR (tag IS present)
 
-install:
-  - pip install tox-travis codecov
-
-script:
-  - tox
-
-after_success:
-  - codecov
+jobs:
+  include:
+    - stage: test
+      python: 3.6
+      install: pip install tox-travis codecov
+      script: tox
+      after_success: codecov
+    - stage: test
+      python: pypy3
+      install: pip install tox-travis codecov
+      script: tox
+      after_success: codecov
+    - stage: build container
+      services: docker
+      sudo: required
+      script:
+        - docker build .
+    - stage: build and push container
+      services: docker
+      sudo: required
+      script:
+        - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
+        - if [ $TRAVIS_BRANCH == "master" ]; then
+            docker build -t cloudigrade/cloudigrade:latest .;
+          else
+            docker build -t cloudigrade/cloudigrade:$TRAVIS_TAG .;
+          fi
+        - docker push cloudigrade/cloudigrade
