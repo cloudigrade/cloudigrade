@@ -36,8 +36,8 @@ class AnalyzeLogTest(TestCase):
              mock_ec2_ami_id, mock_instance_type)
         ]
 
-        expected_out = _('Found instances: {i} and events {e}'.format(
-            i=expected_instances, e=expected_instance_events))
+        expected_out = _('Found instances: {i} and events {e}').format(
+            i=expected_instances, e=expected_instance_events)
         mock_sqs_message_body = {
             'Records': [
                 {

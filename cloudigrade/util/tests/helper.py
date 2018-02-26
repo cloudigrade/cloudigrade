@@ -95,7 +95,7 @@ def generate_dummy_describe_instance(instance_id=None, image_id=None,
     return mock_instance
 
 
-def generate_mock_sqs_message(id, body, receipt_handle):
+def generate_mock_sqs_message(message_id, body, receipt_handle):
     """
     Generate a mocked SQS Message object.
 
@@ -109,7 +109,7 @@ def generate_mock_sqs_message(id, body, receipt_handle):
 
     """
     mock_message = Mock()
-    mock_message.Id = id
+    mock_message.Id = message_id
     mock_message.ReceiptHandle = receipt_handle
     mock_message.body = body
     return mock_message

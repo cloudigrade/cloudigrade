@@ -4,7 +4,6 @@ import json
 from django.core.management.base import BaseCommand
 from django.utils.translation import gettext as _
 
-# from account.models import Account, Instance, InstanceEvent
 from util import aws
 
 
@@ -45,12 +44,12 @@ class Command(BaseCommand):
 
         # Parse logs for on/off events
         for log in logs:
-            if log is None or log == '':
-                continue
-            instances, instance_events = self._parse_log_for_ec2_events(log)
-            result = 'Found instances: {i} and events {e}'.format(
-                i=instances, e=instance_events)
-            self.stdout.write(_(result))
+            if log:
+                instances, instance_events = \
+                    self._parse_log_for_ec2_events(log)
+                result = _('Found instances: {i} and events {e}').format(
+                    i=instances, e=instance_events)
+                self.stdout.write(result)
 
         # TODO: Save the messages to the DB
         # TODO: If we haven't seen this instance before we'll
