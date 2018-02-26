@@ -27,19 +27,19 @@ class Command(BaseCommand):
         queue_url = options['queue_url']
 
         logs = []
-        parsed_messages = []
+        extracted_messages = []
 
         # Get messages off of an SQS queue
         messages = aws.receive_message_from_queue(queue_url)
 
         # Parse the SQS messages to get S3 object locations
         for message in messages:
-            parsed_messages.extend(self._parse_sqs_message(message))
+            extracted_messages.extend(aws.extract_sqs_message(message))
 
         # Grab the object contents from S3
-        for parsed_message in parsed_messages:
-            bucket = parsed_message[0]
-            key = parsed_message[1]
+        for extracted_message in extracted_messages:
+            bucket = extracted_message['bucket']['name']
+            key = extracted_message['object']['key']
             logs.append(aws.get_object_content_from_s3(bucket, key))
 
         # Parse logs for on/off events
@@ -57,26 +57,7 @@ class Command(BaseCommand):
         #       Start and stop requests don't have all the
         #       info we need.
 
-        # aws.delete_message_from_queue(queue_url, messages)
-
-    def _parse_sqs_message(self, message):
-        """
-        Parse SQS message for path to log in S3.
-
-        Args:
-            message (boto3.SQS.Message): The Message object.
-
-        Returns:
-            list(tuple): List of (bucket, key) log file locations in S3.
-
-        """
-        parsed_records = []
-        message_body = json.loads(message.body)
-        for record in message_body.get('Records', []):
-            bucket_name = record['s3']['bucket']['name']
-            object_key = record['s3']['object']['key']
-            parsed_records.append((bucket_name, object_key))
-        return parsed_records
+        aws.delete_message_from_queue(queue_url, messages)
 
     def _parse_log_for_ec2_events(self, log):
         """
