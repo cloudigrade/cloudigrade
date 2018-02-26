@@ -330,7 +330,7 @@ def get_object_content_from_s3(bucket, key, compression='gzip'):
 
 def extract_sqs_message(message, service='s3'):
         """
-        Parse SQS message for path to log in S3.
+        Parse SQS message for service-specific content.
 
         Args:
             message (boto3.SQS.Message): The Message object.
