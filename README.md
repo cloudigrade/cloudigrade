@@ -86,6 +86,23 @@ the commands manually:
 
 ## Common commands
 
+### Running
+
+To run the application along with the postgres database run the following:
+
+    docker-compose up --build
+
+If you'd like to run the containers in detached state, use the following:
+
+    docker-compose up --build -d
+
+Finally, if you'd like to run just the database, so you can run the application
+on your local machine, use the following command:
+
+    docker-compose up db
+
+You'll need to make sure your settings file points at the postgres db.
+
 ### Testing
 
 To run all local tests as well as our code-quality checking commands:
