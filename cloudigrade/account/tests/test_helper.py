@@ -2,7 +2,6 @@
 
 Because even test helpers should be tested!
 """
-import datetime
 import random
 import uuid
 
@@ -71,9 +70,9 @@ class AccountHelperTest(TestCase):
         account = helper.generate_account()
         instance = helper.generate_instance(account)
         powered_times = (
-            (None, datetime.datetime(2017, 1, 1)),
-            (datetime.datetime(2017, 1, 2), datetime.datetime(2017, 1, 3)),
-            (datetime.datetime(2017, 1, 4), None),
+            (None, util_helper.utc_dt(2017, 1, 1)),
+            (util_helper.utc_dt(2017, 1, 2), util_helper.utc_dt(2017, 1, 3)),
+            (util_helper.utc_dt(2017, 1, 4), None),
         )
         events = helper.generate_instance_events(instance, powered_times)
 
@@ -103,9 +102,9 @@ class AccountHelperTest(TestCase):
         account = helper.generate_account()
         instance = helper.generate_instance(account)
         powered_times = (
-            (None, datetime.datetime(2017, 1, 1)),
-            (datetime.datetime(2017, 1, 2), datetime.datetime(2017, 1, 3)),
-            (datetime.datetime(2017, 1, 4), None),
+            (None, util_helper.utc_dt(2017, 1, 1)),
+            (util_helper.utc_dt(2017, 1, 2), util_helper.utc_dt(2017, 1, 3)),
+            (util_helper.utc_dt(2017, 1, 4), None),
         )
         ec2_ami_id = str(uuid.uuid4())
         instance_type = random.choice(util_helper.SOME_EC2_INSTANCE_TYPES)
