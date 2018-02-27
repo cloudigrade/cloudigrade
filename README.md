@@ -90,18 +90,16 @@ the commands manually:
 
 To run the application along with the postgres database run the following:
 
-    docker-compose up --build
+    make start-compose
 
-If you'd like to run the containers in detached state, use the following:
-
-    docker-compose up --build -d
-
-Finally, if you'd like to run just the database, so you can run the application
+If you'd like to run just the database, so you can run the application
 on your local machine, use the following command:
 
-    docker-compose up db
+    make start-db
 
-You'll need to make sure your settings file points at the postgres db.
+To reinstantiate the docker psql db, run the following:
+
+    make reinitdb
 
 ### Testing
 
