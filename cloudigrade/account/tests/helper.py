@@ -24,7 +24,7 @@ def generate_account(arn=None, account_id=None):
     if account_id is None:
         account_id = aws.extract_account_id_from_arn(arn)
 
-    return Account(account_arn=arn, account_id=account_id)
+    return Account.objects.create(account_arn=arn, account_id=account_id)
 
 
 def generate_instance(account, ec2_instance_id=None, region=None):
@@ -45,7 +45,7 @@ def generate_instance(account, ec2_instance_id=None, region=None):
     if region is None:
         region = random.choice(helper.SOME_AWS_REGIONS)
 
-    return Instance(
+    return Instance.objects.create(
         account=account,
         ec2_instance_id=ec2_instance_id,
         region=region
@@ -83,7 +83,7 @@ def generate_instance_events(instance, powered_times, ec2_ami_id=None,
     events = []
     for power_on_time, power_off_time in powered_times:
         if power_on_time is not None:
-            event = InstanceEvent(
+            event = InstanceEvent.objects.create(
                 instance=instance,
                 event_type=InstanceEvent.TYPE.power_on,
                 occurred_at=power_on_time,
@@ -93,7 +93,7 @@ def generate_instance_events(instance, powered_times, ec2_ami_id=None,
             )
             events.append(event)
         if power_off_time is not None:
-            event = InstanceEvent(
+            event = InstanceEvent.objects.create(
                 instance=instance,
                 event_type=InstanceEvent.TYPE.power_off,
                 occurred_at=power_off_time,
