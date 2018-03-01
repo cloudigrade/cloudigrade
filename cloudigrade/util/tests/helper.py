@@ -104,12 +104,39 @@ def generate_dummy_describe_instance(instance_id=None, image_id=None,
     return mock_instance
 
 
+def generate_mock_ec2_instance(instance_id=None, image_id=None, subnet_id=None,
+                               state=None, instance_type=None):
+    """
+    Generate a mocked EC2 Instance object.
+
+    Args:
+        instance_id (string): The EC2 instance id.
+        instance_type (string): The EC2 instance type.
+        image_id (string): The EC2 AMI image id.
+        subnet (string): The EC2 subnet.
+
+    Returns:
+        Mock: A mock object with Instance-like attributes.
+
+    """
+    described_instance = generate_dummy_describe_instance(
+        instance_id, image_id, subnet_id, state, instance_type
+    )
+    mock_instance = Mock()
+    mock_instance.instance_id = described_instance['InstanceId']
+    mock_instance.instance_type = described_instance['InstanceType']
+    mock_instance.image_id = described_instance['ImageId']
+    mock_instance.state = described_instance['State']
+    mock_instance.subnet_id = described_instance['SubnetId']
+    return mock_instance
+
+
 def generate_mock_sqs_message(message_id, body, receipt_handle):
     """
     Generate a mocked SQS Message object.
 
     Args:
-        id (string): The SQS message id.
+        message_id (string): The SQS message id.
         body (string): The message contents.
         receipt_handle (string): The SQS receipt handle.
 
