@@ -180,11 +180,13 @@ class Command(BaseCommand):
             instances (dict): Instance data, including a list of events.
 
         """
+        accounts = {}
         for instance_id, instance_dict in instances.items():
             account_id = instance_dict['account_id']
-            # TODO: Don't pull the same account record from the
-            #       DB multiple times. Consider caching.
-            account = Account.objects.get(account_id=account_id)
+            if account_id not in accounts:
+                accounts[account_id] = \
+                    Account.objects.get(account_id=account_id)
+            account = accounts[account_id]
             instance, __ = Instance.objects.get_or_create(
                 account=account,
                 ec2_instance_id=instance_id,
