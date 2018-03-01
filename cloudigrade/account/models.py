@@ -66,3 +66,22 @@ class InstanceEvent(BaseModel):
     subnet = models.CharField(max_length=16, null=False, blank=False)
     ec2_ami_id = models.CharField(max_length=256, null=False, blank=False)
     instance_type = models.CharField(max_length=64, null=False, blank=False)
+
+    @property
+    def product_identifier(self):
+        """Get a relatively unique product identifier.
+
+        This should be unique enough for product usage reporting purposes. For
+        now, this means it's a combination of:
+
+            - AMI ID (until we know what RHEL version it has)
+            - EC2 instance type
+
+        Todo:
+            - use an actual RHEL version
+
+        Returns:
+            str: the computed product identifier
+
+        """
+        return f'RHELX-{self.ec2_ami_id}-{self.instance_type}'

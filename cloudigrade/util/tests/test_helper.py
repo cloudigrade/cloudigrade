@@ -2,6 +2,7 @@
 
 Because even test helpers should be tested!
 """
+import datetime
 import random
 import uuid
 
@@ -87,3 +88,10 @@ class UtilHelperTest(TestCase):
         self.assertEqual(instance.subnet_id, subnet_id)
         self.assertEqual(instance.state['Code'], state.value)
         self.assertEqual(instance.state['Name'], state.name)
+
+    def test_utc_dt(self):
+        """Assert utc_dt adds timezone info."""
+        d_no_tz = datetime.datetime(2018, 1, 1)
+        d_helped = helper.utc_dt(2018, 1, 1)
+        self.assertNotEqual(d_helped, d_no_tz)
+        self.assertIsNotNone(d_helped.tzinfo)

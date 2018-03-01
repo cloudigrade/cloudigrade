@@ -1,10 +1,12 @@
 """Helper functions for generating test data."""
+import datetime
 import decimal
 import random
 import uuid
 from unittest.mock import Mock
 
 import faker
+from dateutil import tz
 
 from util import aws
 
@@ -149,3 +151,15 @@ def generate_mock_sqs_message(message_id, body, receipt_handle):
     mock_message.ReceiptHandle = receipt_handle
     mock_message.body = body
     return mock_message
+
+
+def utc_dt(*args, **kwargs):
+    """Wrap datetime construction to force result to UTC.
+
+    Returns:
+        datetime.datetime
+
+    """
+    return datetime.datetime(*args, **kwargs).replace(
+        tzinfo=tz.tzutc()
+    )
