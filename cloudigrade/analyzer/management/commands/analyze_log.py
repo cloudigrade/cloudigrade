@@ -117,6 +117,18 @@ class Command(BaseCommand):
         return dict(instances)
 
     def _build_instance_event(self, account_id, region, log_record):
+        """
+        Return critical data for an instance on/off event.
+
+        Args:
+            account_id (str): The account_id the instance belongs to.
+            region (str): The AWS region the instance resides in.
+            log_record (str): The instance specific data from the log record.
+
+        Returns:
+            dict: EC2 instance data for the event.
+
+        """
         ec2_ami_id = log_record.get('imageId')
         instance_id = log_record.get('instanceId')
         instance_type = log_record.get('instanceType')
@@ -161,6 +173,13 @@ class Command(BaseCommand):
 
     @transaction.atomic
     def _save_instances_and_events(self, instances):
+        """
+        Save instances and on/off events to the DB.
+
+        Args:
+            instances (dict): Instance data, including a list of events.
+
+        """
         for instance_id, instance_dict in instances.items():
             account_id = instance_dict['account_id']
             # TODO: Don't pull the same account record from the

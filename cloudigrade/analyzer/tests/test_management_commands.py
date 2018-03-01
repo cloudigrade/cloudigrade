@@ -28,7 +28,7 @@ class AnalyzeLogTest(TestCase):
         )
 
     def test_command_output_success_ec2_attributes_included(self):
-        """Test processing a CloudTrail log."""
+        """Test processing a CloudTrail log with all data included."""
         out = StringIO()
         mock_queue_url = 'https://sqs.queue.url'
         mock_receipt_handle = str(uuid.uuid4())
@@ -128,7 +128,7 @@ class AnalyzeLogTest(TestCase):
             self.assertEqual(event.instance_type, mock_instance_type)
 
     def test_command_output_success_lookup_ec2_attributes(self):
-        """Test processing a CloudTrail log."""
+        """Test processing a CloudTrail log with missing instance data."""
         out = StringIO()
         mock_queue_url = 'https://sqs.queue.url'
         mock_receipt_handle = str(uuid.uuid4())
