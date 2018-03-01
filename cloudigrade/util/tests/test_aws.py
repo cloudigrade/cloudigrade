@@ -140,6 +140,22 @@ class UtilAwsTest(TestCase):
 
         self.assertDictEqual(expected_found, actual_found)
 
+    def test_get_ec2_instance(self):
+        """Assert that get_ec2_instance returns an instance object."""
+        mock_arn = helper.generate_dummy_arn()
+        mock_instance_id = str(uuid.uuid4())
+
+        mock_instance = helper.generate_mock_ec2_instance(mock_instance_id)
+
+        with patch.object(aws, 'boto3') as mock_boto3:
+            mock_session = mock_boto3.Session.return_value
+            resource = mock_session.resource.return_value
+            resource.Instance.return_value = mock_instance
+            actual_instance = aws.get_ec2_instance(aws.get_session(mock_arn),
+                                                   mock_instance_id)
+
+        self.assertEqual(actual_instance, mock_instance)
+
     def test_verify_account_access_success(self):
         """Assert that account access via a IAM role is verified."""
         mock_arn = helper.generate_dummy_arn()
