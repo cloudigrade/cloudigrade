@@ -147,6 +147,21 @@ def get_running_instances(session):
     return running_instances
 
 
+def get_ec2_instance(session, instance_id):
+    """
+    Return an EC2 Instance object from the customer account.
+
+    Args:
+        session (boto3.Session): A temporary session tied to a customer account
+        instance_id (str): An EC2 instance ID
+
+    Returns:
+        Instance: A boto3 Instance object.
+
+    """
+    return session.resource('ec2').Instance(instance_id)
+
+
 def verify_account_access(session):
     """
     Check role for proper access to AWS APIs.

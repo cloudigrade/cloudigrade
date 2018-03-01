@@ -1,9 +1,14 @@
 """Management command for analyzing AWS CloutTrail Logs."""
+import collections
+import datetime
 import json
 
+from dateutil import tz
 from django.core.management.base import BaseCommand
+from django.db import transaction
 from django.utils.translation import gettext as _
 
+from account.models import Account, Instance, InstanceEvent
 from util import aws
 
 
@@ -28,6 +33,7 @@ class Command(BaseCommand):
 
         logs = []
         extracted_messages = []
+        instances = {}
 
         # Get messages off of an SQS queue
         messages = aws.receive_message_from_queue(queue_url)
@@ -45,17 +51,15 @@ class Command(BaseCommand):
         # Parse logs for on/off events
         for log in logs:
             if log:
-                instances, instance_events = \
-                    self._parse_log_for_ec2_events(log)
-                result = _('Found instances: {i} and events {e}').format(
-                    i=instances, e=instance_events)
-                self.stdout.write(result)
+                instances = self._parse_log_for_ec2_events(log)
 
-        # TODO: Save the messages to the DB
-        # TODO: If we haven't seen this instance before we'll
-        #       need to run describe_instances on it.
-        #       Start and stop requests don't have all the
-        #       info we need.
+        if instances:
+            self._save_instances_and_events(instances)
+            result = _('Saved instances and/or events to the DB.')
+            self.stdout.write(result)
+        else:
+            result = _('No instances or events to save to the DB.')
+            self.stdout.write(result)
 
         aws.delete_message_from_queue(queue_url, messages)
 
@@ -72,15 +76,16 @@ class Command(BaseCommand):
 
         """
         ec2_event_map = {
-            'RunInstances': 'power_on',
-            'StartInstances': 'power_on',
-            'StopInstances': 'power_off',
-            'TerminateInstances': 'power_off'
+            'RunInstances': InstanceEvent.TYPE.power_on,
+            'StartInstances': InstanceEvent.TYPE.power_on,
+            'StopInstances': InstanceEvent.TYPE.power_off,
+            'TerminateInstances': InstanceEvent.TYPE.power_off
         }
-        instances = []
-        instance_events = []
+        instances = collections.defaultdict(dict)
         log = json.loads(log)
 
+        # Each record is a single API call, but each call can
+        # be made against multiple EC2 instances
         for record in log.get('Records', []):
             if not self._is_on_off_event(record, ec2_event_map.keys()):
                 continue
@@ -93,26 +98,55 @@ class Command(BaseCommand):
                 .get('instancesSet', {})\
                 .get('items', [])
 
+            # Collect the EC2 instances the API was called on
             for item in ec2_info:
                 instance_id = item.get('instanceId')
-                instance_type = item.get('instanceType')
-                ec2_ami_id = item.get('imageId')
-                subnet = item.get('subnetId')
+                instances[instance_id]['account_id'] = account_id
+                instances[instance_id]['region'] = region
 
-                instances.append((account_id, instance_id, region))
+                event = self._build_instance_event(account_id, region, item)
+                # Event type and time are the same for each instance
+                event['event_type'] = event_type
+                event['occurred_at'] = occured_at
 
-                # Subnet, ec2_ami_id, and instance_type will be None
-                # for start/stop events.
-                instance_events.append(
-                    (instance_id,
-                     event_type,
-                     occured_at,
-                     subnet,
-                     ec2_ami_id,
-                     instance_type)
-                )
+                if instances[instance_id].get('events'):
+                    instances[instance_id]['events'].append(event)
+                else:
+                    instances[instance_id]['events'] = [event]
 
-        return list(set(instances)), instance_events
+        return dict(instances)
+
+    def _build_instance_event(self, account_id, region, log_record):
+        """
+        Return critical data for an instance on/off event.
+
+        Args:
+            account_id (str): The account_id the instance belongs to.
+            region (str): The AWS region the instance resides in.
+            log_record (str): The instance specific data from the log record.
+
+        Returns:
+            dict: EC2 instance data for the event.
+
+        """
+        ec2_ami_id = log_record.get('imageId')
+        instance_id = log_record.get('instanceId')
+        instance_type = log_record.get('instanceType')
+        subnet = log_record.get('subnetId')
+
+        if subnet is None \
+                or ec2_ami_id is None \
+                or instance_type is None:
+            account = Account.objects.get(account_id=account_id)
+            session = aws.get_session(account.account_arn, region)
+            instance = aws.get_ec2_instance(session, instance_id)
+            subnet = instance.subnet_id
+            ec2_ami_id = instance.image_id
+            instance_type = instance.instance_type
+
+        return {'subnet': subnet,
+                'ec2_ami_id': ec2_ami_id,
+                'instance_type': instance_type}
 
     def _is_on_off_event(self, record, valid_events):
         """
@@ -136,3 +170,37 @@ class Command(BaseCommand):
             return False
         else:
             return True
+
+    @transaction.atomic
+    def _save_instances_and_events(self, instances):
+        """
+        Save instances and on/off events to the DB.
+
+        Args:
+            instances (dict): Instance data, including a list of events.
+
+        """
+        accounts = {}
+        for instance_id, instance_dict in instances.items():
+            account_id = instance_dict['account_id']
+            if account_id not in accounts:
+                accounts[account_id] = \
+                    Account.objects.get(account_id=account_id)
+            account = accounts[account_id]
+            instance, __ = Instance.objects.get_or_create(
+                account=account,
+                ec2_instance_id=instance_id,
+                region=instance_dict['region'],
+            )
+            for event in instance_dict['events']:
+                occurred_at_dt = datetime.datetime.strptime(
+                    event['occurred_at'], '%Y-%m-%dT%H:%M:%SZ'
+                ).replace(tzinfo=tz.tzutc())
+                InstanceEvent.objects.create(
+                    instance=instance,
+                    event_type=event['event_type'],
+                    occurred_at=occurred_at_dt,
+                    subnet=event['subnet'],
+                    ec2_ami_id=event['ec2_ami_id'],
+                    instance_type=event['instance_type'],
+                )

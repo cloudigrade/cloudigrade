@@ -28,7 +28,7 @@ run-docker-migrations:
 	$(PYTHON) $(PYDIR)/manage.py migrate --settings=config.settings.local
 
 unittest:
-	$(PYTHON) $(PYDIR)/manage.py test --settings=config.settings.local account util
+	$(PYTHON) $(PYDIR)/manage.py test --settings=config.settings.local account analyzer util
 
 start-compose:
 	docker-compose up --build -d
