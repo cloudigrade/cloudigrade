@@ -41,7 +41,9 @@ DJANGO_APPS = [
 ]
 
 # Any pip installed apps will go here
-THIRD_PARTY_APPS = []
+THIRD_PARTY_APPS = [
+    'rest_framework',
+]
 
 # Apps specific to this project go here
 LOCAL_APPS = [
