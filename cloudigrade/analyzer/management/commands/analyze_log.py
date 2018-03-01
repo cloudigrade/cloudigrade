@@ -194,7 +194,7 @@ class Command(BaseCommand):
                 occurred_at_dt = datetime.datetime.strptime(
                     event['occurred_at'], '%Y-%m-%dT%H:%M:%SZ'
                 ).replace(tzinfo=tz.tzutc())
-                instance_event = InstanceEvent(
+                InstanceEvent.objects.create(
                     instance=instance,
                     event_type=event['event_type'],
                     occurred_at=occurred_at_dt,
@@ -202,4 +202,3 @@ class Command(BaseCommand):
                     ec2_ami_id=event['ec2_ami_id'],
                     instance_type=event['instance_type'],
                 )
-                instance_event.save()

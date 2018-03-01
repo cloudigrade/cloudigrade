@@ -1,6 +1,7 @@
 """Collection of tests for Analyzer management commands."""
 import datetime
 import json
+import random
 import uuid
 from io import StringIO
 from unittest.mock import patch
@@ -33,7 +34,7 @@ class AnalyzeLogTest(TestCase):
         mock_queue_url = 'https://sqs.queue.url'
         mock_receipt_handle = str(uuid.uuid4())
         mock_instance_id = str(uuid.uuid4())
-        mock_region = 'us-east-1'
+        mock_region = random.choice(util_helper.SOME_AWS_REGIONS)
         mock_event_type = 'RunInstances'
         now = datetime.datetime.utcnow()
         # Work around for sqlite handling of microseconds
@@ -133,7 +134,7 @@ class AnalyzeLogTest(TestCase):
         mock_queue_url = 'https://sqs.queue.url'
         mock_receipt_handle = str(uuid.uuid4())
         mock_instance_id = str(uuid.uuid4())
-        mock_region = 'us-east-1'
+        mock_region = random.choice(util_helper.SOME_AWS_REGIONS)
         mock_event_type = 'StartInstances'
         now = datetime.datetime.utcnow()
         # Work around for sqlite handling of microseconds
