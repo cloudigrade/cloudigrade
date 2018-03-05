@@ -6,6 +6,24 @@
 [![Updates](https://pyup.io/repos/github/cloudigrade/cloudigrade/shield.svg)](https://pyup.io/repos/github/cloudigrade/cloudigrade/)
 [![Python 3](https://pyup.io/repos/github/cloudigrade/cloudigrade/python-3-shield.svg)](https://pyup.io/repos/github/cloudigrade/cloudigrade/)
 
+# What is cloudigrade?
+
+cloudigrade is an open-source suite of tools for tracking Linux distribution
+use (although chiefly targeting RHEL) in public cloud platforms. cloudigrade
+actively checks a user's account in a particular cloud for running instances,
+tracks when instances are powered on, determines what Linux distributions are
+installed on them, and provides the ability to generate reports to see how
+long different distributions have run in a given window.
+
+## What is this "Doppler" I see referenced in various places?
+
+Doppler is another code name for cloudigrade.
+
+Or is cloudigrade a code name for Doppler?
+
+`cloudigrade == Doppler` for all intents and purposes. 😉
+   
+
 # Developing cloudigrade
 
 This document provides instructions for setting up cloudigrade's development
