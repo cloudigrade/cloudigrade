@@ -38,7 +38,7 @@ Install [homebrew](https://brew.sh/):
 Use homebrew to install modern Python, the AWS CLI, and gettext:
 
     brew update
-    brew install python python3 pypy3 gettext awscli postgresql
+    brew install python pypy3 gettext awscli postgresql
     brew link gettext --force
 
 Get into the cloudigrade project code:
@@ -71,8 +71,8 @@ to use another technology, that's your prerogative!
 
 Install virtualenv and virtualenvwrapper with the system-level pip:
 
-    pip2 install -U pip
-    pip2 install -U virtualenvwrapper virtualenv
+    pip3 install -U pip
+    pip3 install -U virtualenvwrapper virtualenv
 
 Add this command to your `~/.bash_profile` (assuming you use bash) or source it
 each time you want to work with virtualenvwrapper:
@@ -81,7 +81,7 @@ each time you want to work with virtualenvwrapper:
 
 Create a virtualenv for the project's dependencies:
 
-    mkvirtualenv -p python3 cloudigrade
+    mkvirtualenv cloudigrade
 
 If you already have a virtualenv or are working in a _new_ shell, activate it:
 
