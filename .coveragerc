@@ -6,6 +6,7 @@ omit =
     *config/settings/*
     *config/urls.py
     *config/wsgi.py
+    *config/gunicorn.py
     *manage.py
     *migrations*
     *static*

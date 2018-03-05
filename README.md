@@ -22,7 +22,7 @@ Doppler is another code name for cloudigrade.
 Or is cloudigrade a code name for Doppler?
 
 `cloudigrade == Doppler` for all intents and purposes. 😉
-   
+
 
 # Developing cloudigrade
 
@@ -46,6 +46,12 @@ Get into the cloudigrade project code:
     git clone git@github.com:cloudigrade/cloudigrade.git
     cd cloudigrade
 
+Need to run cloudigrade? Use docker-compose!
+
+    make start-compose
+
+This will also mount the `./cloudigrade` folder inside the container, so you can
+continue working on code and it will auto-reload in the container.
 
 ## AWS account setup
 

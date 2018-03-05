@@ -21,7 +21,7 @@ clean:
 reinitdb: stop-compose remove-compose-db start-db run-docker-migrations
 
 remove-compose-db:
-	rm -rf /tmp/postgresql
+	rm -rf $(TOPDIR)/pg_data
 
 run-docker-migrations:
 	sleep 1
