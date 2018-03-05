@@ -1,12 +1,10 @@
 """Management command for storing AWS ARN credentials in the database."""
-import collections
-
 from django.core.management.base import BaseCommand
 from django.db import transaction
-from django.utils import timezone
 from django.utils.translation import gettext as _
 
-from account.models import Account, Instance, InstanceEvent
+from account.models import Account
+from account.util import create_initial_instance_events
 from util import aws
 
 
@@ -28,40 +26,6 @@ class Command(BaseCommand):
         """Require an ARN to be provided."""
         parser.add_argument('arn', help=_('Granted Role ARN'))
 
-    @transaction.atomic
-    def _do_saves(self, account, instances_data):
-        """
-        Save the Account and Instances.
-
-        Args:
-            account (Account): The created Account.
-            instances_data (dict): Data structure with regions and instances.
-
-        Returns:
-            list: List of saved Instance objects.
-
-        """
-        account.save()
-        saved_instances = collections.defaultdict(list)
-        for region, instances in instances_data.items():
-            for instance_data in instances:
-                instance, __ = Instance.objects.get_or_create(
-                    account=account,
-                    ec2_instance_id=instance_data['InstanceId'],
-                    region=region,
-                )
-                event = InstanceEvent(
-                    instance=instance,
-                    event_type=InstanceEvent.TYPE.power_on,
-                    occurred_at=timezone.now(),
-                    subnet=instance_data['SubnetId'],
-                    ec2_ami_id=instance_data['ImageId'],
-                    instance_type=instance_data['InstanceType'],
-                )
-                event.save()
-                saved_instances[region].append(instance)
-        return dict(saved_instances)
-
     def handle(self, *args, **options):
         """Extract the account id from the ARN and save both to database."""
         arn = options['arn']
@@ -73,7 +37,12 @@ class Command(BaseCommand):
             instances_data = aws.get_running_instances(session)
 
             account = Account(account_arn=arn, account_id=account_id)
-            saved_instances = self._do_saves(account, instances_data)
+            with transaction.atomic():
+                account.save()
+                saved_instances = create_initial_instance_events(
+                    account,
+                    instances_data
+                )
 
             self.stdout.write(self.style.SUCCESS(_('ARN Info Stored')))
             self.stdout.write(_(f'Running instances: {saved_instances}'))
