@@ -12,8 +12,9 @@ RUN apk --no-cache --update add --virtual build-deps python3-dev gcc postgresql-
   && apk del build-deps \
   && rm -rf requirements
 
-USER cloudigrade
 COPY cloudigrade .
+RUN PYTHONPATH=. && python manage.py collectstatic --no-input --settings=config.settings.docker
 
-ENTRYPOINT ["python","manage.py"]
-CMD ["runserver","0.0.0.0:8000"]
+USER cloudigrade
+ENTRYPOINT ["gunicorn"]
+CMD ["-c","config/gunicorn.py","config.wsgi"]

@@ -99,5 +99,6 @@ ENV/
 # mypy
 .mypy_cache/
 
-# sqlite
+# databases
 *.sqlite3
+/pg_data
