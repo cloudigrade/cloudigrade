@@ -11,6 +11,8 @@ help:
 	@echo "  remove-compose-db        to remove the temp docker psql directory"
 	@echo "  run-docker-migrations    to run migrations against docker psql"
 	@echo "  unittest                 to run unittests"
+	@echo "  user                     to create a Django super user"
+	@echo "  user-authenticate        to generate an auth token for a user"
 	@echo "  start-compose            to compose all containers in detached state"
 	@echo "  stop-compose             to stop all containers"
 	@echo "  start-db                 to start the psql db in detached state"
@@ -29,6 +31,13 @@ run-docker-migrations:
 
 unittest:
 	$(PYTHON) $(PYDIR)/manage.py test --settings=config.settings.local account analyzer util
+
+user:
+	$(PYTHON) $(PYDIR)/manage.py createsuperuser --settings=config.settings.local
+
+user-authenticate:
+	@read -p "User name: " uname; \
+	$(PYTHON) $(PYDIR)/manage.py drf_create_token $$uname --settings=config.settings.local
 
 start-compose:
 	docker-compose up --build -d
