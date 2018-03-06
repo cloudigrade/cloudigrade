@@ -89,12 +89,12 @@ class UtilAwsTest(TestCase):
                 RoleSessionName=f'cloudigrade-{mock_account_id}'
             )
 
-        self.assertEquals(creds[0], mock_role['Credentials']['AccessKeyId'])
-        self.assertEquals(
+        self.assertEqual(creds[0], mock_role['Credentials']['AccessKeyId'])
+        self.assertEqual(
             creds[1],
             mock_role['Credentials']['SecretAccessKey']
         )
-        self.assertEquals(creds[2], mock_role['Credentials']['SessionToken'])
+        self.assertEqual(creds[2], mock_role['Credentials']['SessionToken'])
 
     def test_get_running_instances(self):
         """Assert we get expected instances in a dict keyed by regions."""
@@ -301,10 +301,10 @@ class UtilAwsTest(TestCase):
             with self.assertRaises(ClientError) as e:
                 aws.verify_account_access(session)
 
-            self.assertEquals(e.exception.response['Error']['Code'],
-                              mock_garbage_exception['Error']['Code'])
-            self.assertEquals(e.exception.response['Error']['Message'],
-                              mock_garbage_exception['Error']['Message'])
+            self.assertEqual(e.exception.response['Error']['Code'],
+                             mock_garbage_exception['Error']['Code'])
+            self.assertEqual(e.exception.response['Error']['Message'],
+                             mock_garbage_exception['Error']['Message'])
 
             with patch.dict(aws.cloudigrade_policy, bad_policy):
                 aws.verify_account_access(session)
