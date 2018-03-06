@@ -344,19 +344,19 @@ def get_object_content_from_s3(bucket, key, compression='gzip'):
 
 
 def extract_sqs_message(message, service='s3'):
-        """
-        Parse SQS message for service-specific content.
+    """
+    Parse SQS message for service-specific content.
 
-        Args:
-            message (boto3.SQS.Message): The Message object.
-            service (str): The AWS service the message refers to.
+    Args:
+        message (boto3.SQS.Message): The Message object.
+        service (str): The AWS service the message refers to.
 
-        Returns:
-            list(dict): List of message records.
+    Returns:
+        list(dict): List of message records.
 
-        """
-        extracted_records = []
-        message_body = json.loads(message.body)
-        for record in message_body.get('Records', []):
-            extracted_records.append(record[service])
-        return extracted_records
+    """
+    extracted_records = []
+    message_body = json.loads(message.body)
+    for record in message_body.get('Records', []):
+        extracted_records.append(record[service])
+    return extracted_records
