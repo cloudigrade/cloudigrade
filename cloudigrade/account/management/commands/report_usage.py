@@ -22,14 +22,14 @@ class Command(BaseCommand):
 
     help = _('Produces report of hourly RHEL usage.')
 
-    def add_arguments(self, parser):
+    def add_arguments(self, argparser):
         """Add arguments for start and end times and list of account IDs."""
-        parser.add_argument('start',
-                            help=_('Start time for reporting (inclusive)'))
-        parser.add_argument('end',
-                            help=_('End time for reporting (exclusive)'))
-        parser.add_argument('account_id', nargs='+', type=int,
-                            help=_('One or more AWS account IDs to report'))
+        argparser.add_argument('start',
+                               help=_('Start time for reporting (inclusive)'))
+        argparser.add_argument('end',
+                               help=_('End time for reporting (exclusive)'))
+        argparser.add_argument('account_id', nargs='+', type=int,
+                               help=_('One or more AWS account IDs to report'))
 
     def handle(self, *args, **options):
         """Get a report for the given arguments and print JSON to stdout."""
