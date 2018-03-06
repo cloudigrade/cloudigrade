@@ -1,19 +1,16 @@
-"""DRF API serializers for the account app."""
-from rest_framework import serializers, viewsets
+"""DRF API views for the account app."""
+from rest_framework import viewsets, mixins
 
+from account import serializers
 from account.models import Account
 
 
-class AccountSerializer(serializers.HyperlinkedModelSerializer):
-    """Serialize a customer Account for the API."""
+class AccountViewSet(mixins.CreateModelMixin, viewsets.ReadOnlyModelViewSet):
+    """
+    List all, retrieve a single, or create a customer Account.
 
-    class Meta:
-        model = Account
-        fields = ('id', 'url', 'account_id', 'account_arn')
-
-
-class AccountViewSet(viewsets.ReadOnlyModelViewSet):
-    """List all or retrieve a single customer Account."""
+    Do not allow to update, replace, or delete an Account.
+    """
 
     queryset = Account.objects.all()
-    serializer_class = AccountSerializer
+    serializer_class = serializers.AccountSerializer

@@ -1,24 +1,22 @@
 """Collection of tests for Account management commands."""
 import uuid
-from io import StringIO
 from unittest.mock import patch
 
-from django.core.management import call_command
 from django.test import TestCase
 from django.utils.translation import gettext as _
+from rest_framework import serializers
 
 from account.management.commands.add_account import aws
 from account.models import Account, Instance, InstanceEvent
+from account.serializers import AccountSerializer
 from util.tests import helper
 
 
-class AddAccountTest(TestCase):
-    """Add Account management command test case."""
+class AccountSerializerTest(TestCase):
+    """Account serializer test case."""
 
-    def test_command_output_account_verified(self):
+    def test_create_succeeds_when_account_verified(self):
         """Test saving and processing of a test ARN."""
-        out = StringIO()
-
         mock_account_id = helper.generate_dummy_aws_account_id()
         mock_arn = helper.generate_dummy_arn(mock_account_id)
         mock_role = helper.generate_dummy_role()
@@ -31,8 +29,9 @@ class AddAccountTest(TestCase):
                 state=aws.InstanceState.stopping
             )
         ]}
-
-        expected_out = _('ARN Info Stored')
+        mock_validated_data = {
+            'account_arn': mock_arn,
+        }
 
         with patch.object(aws, 'verify_account_access') as mock_verify, \
                 patch.object(aws, 'boto3') as mock_boto3, \
@@ -41,10 +40,10 @@ class AddAccountTest(TestCase):
             mock_assume_role.return_value = mock_role
             mock_verify.return_value = True
             mock_get_running.return_value = mock_instances
-            call_command('add_account', mock_arn, stdout=out)
+            serializer = AccountSerializer()
 
-        actual_stdout = out.getvalue()
-        self.assertIn(expected_out, actual_stdout)
+            result = serializer.create(mock_validated_data)
+            self.assertIsInstance(result, Account)
 
         account = Account.objects.get(account_id=mock_account_id)
         self.assertEqual(mock_account_id, account.account_id)
@@ -62,25 +61,26 @@ class AddAccountTest(TestCase):
                 self.assertIsInstance(event, InstanceEvent)
                 self.assertEqual(InstanceEvent.TYPE.power_on, event.event_type)
 
-    def test_command_output_account_not_verified(self):
+    def test_create_fails_when_account_not_verified(self):
         """Test that an account is not saved if verification fails."""
-        out = StringIO()
-
         mock_account_id = helper.generate_dummy_aws_account_id()
         mock_arn = helper.generate_dummy_arn(mock_account_id)
         mock_role = helper.generate_dummy_role()
+        mock_validated_data = {
+            'account_arn': mock_arn,
+        }
 
-        expected_stdout = _('Account verification failed. ARN Info Not Stored')
+        expected_detail = _('Account verification failed. ARN Info Not Stored')
 
         with patch.object(aws, 'verify_account_access') as mock_verify, \
                 patch.object(aws, 'boto3') as mock_boto3:
             mock_assume_role = mock_boto3.client.return_value.assume_role
             mock_assume_role.return_value = mock_role
             mock_verify.return_value = False
-            call_command('add_account', mock_arn, stdout=out)
+            serializer = AccountSerializer()
 
-        actual_stdout = out.getvalue()
-        self.assertIn(expected_stdout, actual_stdout)
+            with self.assertRaises(serializers.ValidationError) as cm:
+                serializer.create(mock_validated_data)
 
-        self.assertFalse(Account.objects.filter(account_id=mock_account_id)
-                         .exists())
+            the_exception = cm.exception
+            self.assertEqual(the_exception.detail, [expected_detail])

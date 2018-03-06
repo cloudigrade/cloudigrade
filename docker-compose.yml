@@ -12,6 +12,9 @@ services:
     entrypoint: /opt/cloudigrade/entrypoint.sh
     environment:
       - DJANGO_SETTINGS_MODULE=config.settings.docker
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
+      - AWS_DEFAULT_REGION
     volumes:
       - ./cloudigrade:/opt/cloudigrade
       - ./docker/entrypoint.sh:/opt/cloudigrade/entrypoint.sh
@@ -26,7 +29,7 @@ services:
       - /tmp/cloudigrade/socket:/var/run/cloudigrade
       - static:/opt/cloudigrade/static
     ports:
-      - "80:80"
+      - "8000:80"
     depends_on:
       - app
 

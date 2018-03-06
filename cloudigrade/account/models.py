@@ -63,7 +63,7 @@ class InstanceEvent(BaseModel):
         blank=False,
     )
     occurred_at = models.DateTimeField(null=False)
-    subnet = models.CharField(max_length=16, null=False, blank=False)
+    subnet = models.CharField(max_length=256, null=False, blank=False)
     ec2_ami_id = models.CharField(max_length=256, null=False, blank=False)
     instance_type = models.CharField(max_length=64, null=False, blank=False)
 

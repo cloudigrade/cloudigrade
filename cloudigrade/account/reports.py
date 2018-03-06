@@ -102,7 +102,7 @@ def get_hourly_usage(start, end, account_id):
     }
 
     product_times = collections.defaultdict(float)
-    for key, group in instance_product_events.items():
+    for group in instance_product_events.values():
         calculated_usage = _calculate_instance_usage(group, start, end)
         product_identifier, time_running = calculated_usage
         product_times[product_identifier] += time_running
