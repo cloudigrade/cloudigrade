@@ -6,9 +6,9 @@ import uuid
 from unittest.mock import patch
 
 import boto3
+import faker
 from botocore.exceptions import ClientError
 from django.conf import settings
-import faker
 from django.test import TestCase
 
 from util import aws

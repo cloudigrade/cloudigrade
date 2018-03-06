@@ -1,8 +1,8 @@
 """Management command for producing an hourly usage report."""
-import dateutil.tz as tz
-import dateutil.parser as parser
 import json
 
+import dateutil.parser as parser
+import dateutil.tz as tz
 from django.core.management.base import BaseCommand
 from django.utils.translation import gettext as _
 
