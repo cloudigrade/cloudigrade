@@ -51,7 +51,9 @@ Need to run cloudigrade? Use docker-compose!
     make start-compose
 
 This will also mount the `./cloudigrade` folder inside the container, so you can
-continue working on code and it will auto-reload in the container.
+continue working on code and it will auto-reload in the container. AWS Access
+within Docker is handled via environment variables. See the AWS account setup
+section for details.
 
 ## AWS account setup
 
@@ -65,6 +67,14 @@ Use the AWS CLI to save that configuration to your local system:
 
 You can verify that settings were stored correctly by checking the files it
 created in your `~/.aws/` directory.
+
+AWS Access within Docker is enabled via environment variables. Set the following
+variables in your local environment prior to running make start-compose. Values
+for these variables can be found in your `~/.aws/` directory.
+
+    AWS_ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY
+    AWS_DEFAULT_REGION
 
 
 ## Python virtual environment setup
@@ -139,9 +149,27 @@ If you wish to run a higher-level suite of integration tests, see
 [integrade](https://github.com/cloudigrade/integrade).
 
 
+### Authentication
+
+Django Rest Framework token authentication is used to authenticate users. API
+access is restricted to authenticated users. All API calls require an
+Authorization header:
+
+    Authorization: "Token `auth_token`"
+
+To create a user run the following make command and follow the prompts:
+
+    make user
+
+To then generate an auth token, run the make command:
+
+    make user-authenticate
+
+This auth token can be supplied in the Authorization header.
+
+
 ### Django management commands
 
 To add an ARN:
 
     ./cloudigrade/manage.py add_account YOUR_ARN_GOES_HERE
-
