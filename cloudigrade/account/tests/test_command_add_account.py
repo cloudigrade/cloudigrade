@@ -21,14 +21,7 @@ class AddAccountTest(TestCase):
 
         mock_account_id = helper.generate_dummy_aws_account_id()
         mock_arn = helper.generate_dummy_arn(mock_account_id)
-        mock_role = {
-            'Credentials': {
-                'AccessKeyId': str(uuid.uuid4()),
-                'SecretAccessKey': str(uuid.uuid4()),
-                'SessionToken': str(uuid.uuid4()),
-            },
-            'foo': 'bar',
-        }
+        mock_role = helper.generate_dummy_role()
         mock_region = f'region-{uuid.uuid4()}'
         mock_instances = {mock_region: [
             helper.generate_dummy_describe_instance(
@@ -75,14 +68,7 @@ class AddAccountTest(TestCase):
 
         mock_account_id = helper.generate_dummy_aws_account_id()
         mock_arn = helper.generate_dummy_arn(mock_account_id)
-        mock_role = {
-            'Credentials': {
-                'AccessKeyId': str(uuid.uuid4()),
-                'SecretAccessKey': str(uuid.uuid4()),
-                'SessionToken': str(uuid.uuid4()),
-            },
-            'foo': 'bar',
-        }
+        mock_role = helper.generate_dummy_role()
 
         expected_stdout = _('Account verification failed. ARN Info Not Stored')
 
