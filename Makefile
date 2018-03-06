@@ -3,10 +3,6 @@ PYTHON	= $(shell which python)
 TOPDIR  = $(shell pwd)
 PYDIR	= cloudigrade
 
-USERNAME= $(shell $(PYTHON) $(PYDIR)/manage.py shell -c \
-	"""from django.contrib.auth.models import User; \
-		print(User.objects.filter(is_superuser=True).first().username);""")
-
 help:
 	@echo "Please use \`make <target>' where <target> is one of:"
 	@echo "  help                     to show this message"
@@ -40,7 +36,8 @@ user:
 	$(PYTHON) $(PYDIR)/manage.py createsuperuser --settings=config.settings.local
 
 user-authenticate:
-	$(PYTHON) $(PYDIR)/manage.py drf_create_token $(USERNAME) --settings=config.settings.local
+	@read -p "User name: " uname; \
+	$(PYTHON) $(PYDIR)/manage.py drf_create_token $$uname --settings=config.settings.local
 
 start-compose:
 	docker-compose up --build -d
