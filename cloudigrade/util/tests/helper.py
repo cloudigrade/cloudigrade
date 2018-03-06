@@ -106,6 +106,18 @@ def generate_dummy_describe_instance(instance_id=None, image_id=None,
     return mock_instance
 
 
+def generate_dummy_role():
+    """Generate a dummy AWS role for testing purposes."""
+    return {
+        'Credentials': {
+            'AccessKeyId': str(uuid.uuid4()),
+            'SecretAccessKey': str(uuid.uuid4()),
+            'SessionToken': str(uuid.uuid4()),
+        },
+        'foo': 'bar',
+    }
+
+
 def generate_mock_ec2_instance(instance_id=None, image_id=None, subnet_id=None,
                                state=None, instance_type=None):
     """

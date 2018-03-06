@@ -66,14 +66,7 @@ class UtilAwsTest(TestCase):
         """Assert get_session returns session object."""
         mock_arn = helper.generate_dummy_arn()
         mock_account_id = extract_account_id_from_arn(mock_arn)
-        mock_role = {
-            'Credentials': {
-                'AccessKeyId': str(uuid.uuid4()),
-                'SecretAccessKey': str(uuid.uuid4()),
-                'SessionToken': str(uuid.uuid4()),
-            },
-            'foo': 'bar',
-        }
+        mock_role = helper.generate_dummy_role()
 
         with patch.object(aws.boto3, 'client') as mock_client:
             mock_assume_role = mock_client.return_value.assume_role
@@ -100,14 +93,7 @@ class UtilAwsTest(TestCase):
         """Assert we get expected instances in a dict keyed by regions."""
         mock_arn = helper.generate_dummy_arn()
         mock_regions = [f'region-{uuid.uuid4()}']
-        mock_role = {
-            'Credentials': {
-                'AccessKeyId': str(uuid.uuid4()),
-                'SecretAccessKey': str(uuid.uuid4()),
-                'SessionToken': str(uuid.uuid4()),
-            },
-            'foo': 'bar',
-        }
+        mock_role = helper.generate_dummy_role()
         mock_running_instance = helper.generate_dummy_describe_instance(
             state=aws.InstanceState.running
         )
@@ -159,14 +145,7 @@ class UtilAwsTest(TestCase):
     def test_verify_account_access_success(self):
         """Assert that account access via a IAM role is verified."""
         mock_arn = helper.generate_dummy_arn()
-        mock_role = {
-            'Credentials': {
-                'AccessKeyId': str(uuid.uuid4()),
-                'SecretAccessKey': str(uuid.uuid4()),
-                'SessionToken': str(uuid.uuid4()),
-            },
-            'foo': 'bar',
-        }
+        mock_role = helper.generate_dummy_role()
         mock_dry_run_exception = {
             'Error': {
                 'Code': 'DryRunOperation',
@@ -229,14 +208,7 @@ class UtilAwsTest(TestCase):
     def test_verify_account_access_failure(self):
         """Assert that account access via a IAM role is not verified."""
         mock_arn = helper.generate_dummy_arn()
-        mock_role = {
-            'Credentials': {
-                'AccessKeyId': str(uuid.uuid4()),
-                'SecretAccessKey': str(uuid.uuid4()),
-                'SessionToken': str(uuid.uuid4()),
-            },
-            'foo': 'bar',
-        }
+        mock_role = helper.generate_dummy_role()
         mock_unauthorized_exception = {
             'Error': {
                 'Code': 'UnauthorizedOperation',
