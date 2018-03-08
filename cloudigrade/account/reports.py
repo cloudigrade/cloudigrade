@@ -6,7 +6,7 @@ import operator
 
 from django.db import models
 
-from account.models import InstanceEvent, Instance
+from account.models import Account, Instance, InstanceEvent
 
 
 def _calculate_instance_usage(instance_events, start, end):
@@ -65,6 +65,10 @@ def get_hourly_usage(start, end, account_id):
         magical combination of Red Hat product version and AWS instance type.
 
     """
+    # Verify that we can get the requested account before proceeding.
+    if not Account.objects.filter(account_id=account_id).exists():
+        raise Account.DoesNotExist()
+
     # Get the nearest event *before* the reporting period for each instance.
     instances_before = Instance.objects.filter(
         account__account_id=account_id,
@@ -107,4 +111,4 @@ def get_hourly_usage(start, end, account_id):
         product_identifier, time_running = calculated_usage
         product_times[product_identifier] += time_running
 
-    return product_times
+    return dict(product_times)

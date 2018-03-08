@@ -2,6 +2,7 @@
 from django.test import TestCase
 
 from account import reports
+from account.models import Account
 from account.tests import helper as account_helper
 from util.tests import helper as util_helper
 
@@ -9,6 +10,19 @@ DAYS_31 = 24. * 60 * 60 * 31
 HOURS_15 = 15. * 60 * 60
 HOURS_10 = 10. * 60 * 60
 HOURS_5 = 5. * 60 * 60
+
+
+class GetHourlyUsageNoDataTest(TestCase):
+    """get_hourly_usage test case for when no data exists."""
+
+    def test_usage_no_account(self):
+        """Assert exception raised when reporting on bogus account ID."""
+        with self.assertRaises(Account.DoesNotExist):
+            reports.get_hourly_usage(
+                account_id=util_helper.generate_dummy_aws_account_id(),
+                start=util_helper.utc_dt(2018, 1, 1, 0, 0, 0),
+                end=util_helper.utc_dt(2018, 2, 1, 0, 0, 0),
+            )
 
 
 class GetHourlyUsageTestMixin(object):
