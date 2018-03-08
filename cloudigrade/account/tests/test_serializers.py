@@ -1,4 +1,4 @@
-"""Collection of tests for Account management commands."""
+"""Collection of tests for custom DRF serializers in the account app."""
 import uuid
 from unittest.mock import patch
 
@@ -6,9 +6,9 @@ from django.test import TestCase
 from django.utils.translation import gettext as _
 from rest_framework import serializers
 
-from account.management.commands.add_account import aws
 from account.models import Account, Instance, InstanceEvent
-from account.serializers import AccountSerializer
+from account.serializers import AccountSerializer, ReportSerializer, reports, \
+    aws
 from util.tests import helper
 
 
@@ -84,3 +84,55 @@ class AccountSerializerTest(TestCase):
 
             the_exception = cm.exception
             self.assertEqual(the_exception.detail, [expected_detail])
+
+
+class ReportSerializerTest(TestCase):
+    """Report serializer test case."""
+
+    def test_report_with_timezones_specified(self):
+        """Test that start/end dates with timezones shift correctly to UTC."""
+        account_id = helper.generate_dummy_aws_account_id()
+        start_no_tz = '2018-01-01T00:00:00-05'
+        end_no_tz = '2018-02-01T00:00:00+04'
+        mock_request_data = {
+            'account_id': account_id,
+            'start': start_no_tz,
+            'end': end_no_tz,
+        }
+        expected_start = helper.utc_dt(2018, 1, 1, 5, 0)
+        expected_end = helper.utc_dt(2018, 1, 31, 20, 0)
+
+        with patch.object(reports, 'get_hourly_usage') as mock_get_hourly:
+            serializer = ReportSerializer(data=mock_request_data)
+            serializer.is_valid(raise_exception=True)
+            results = serializer.create()
+            mock_get_hourly.assert_called_with(
+                account_id=account_id,
+                start=expected_start,
+                end=expected_end
+            )
+            self.assertEqual(results, mock_get_hourly.return_value)
+
+    def test_report_without_timezones_specified(self):
+        """Test that UTC is used if timezones are missing from start/end."""
+        account_id = helper.generate_dummy_aws_account_id()
+        start_no_tz = '2018-01-01T00:00:00'
+        end_no_tz = '2018-02-01T00:00:00'
+        mock_request_data = {
+            'account_id': account_id,
+            'start': start_no_tz,
+            'end': end_no_tz,
+        }
+        expected_start = helper.utc_dt(2018, 1, 1, 0, 0)
+        expected_end = helper.utc_dt(2018, 2, 1, 0, 0)
+
+        with patch.object(reports, 'get_hourly_usage') as mock_get_hourly:
+            serializer = ReportSerializer(data=mock_request_data)
+            serializer.is_valid(raise_exception=True)
+            results = serializer.create()
+            mock_get_hourly.assert_called_with(
+                account_id=account_id,
+                start=expected_start,
+                end=expected_end
+            )
+            self.assertEqual(results, mock_get_hourly.return_value)
