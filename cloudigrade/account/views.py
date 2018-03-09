@@ -22,9 +22,15 @@ class ReportViewSet(viewsets.ViewSet):
 
     serializer_class = serializers.ReportSerializer
 
-    def create(self, request, *args, **kwargs):
-        """Create the usage report and return the results."""
-        serializer = self.serializer_class(data=request.data)
+    def list(self, request, *args, **kwargs):
+        """
+        Create the usage report and return the results.
+
+        Note: this is called "list" to simplify DRF router integration. By
+        using the "list" name, this method automatically gets mapped to the
+        GET handler for the "/" end of the URI (effectively "/api/v1/report/").
+        """
+        serializer = self.serializer_class(data=request.query_params)
         serializer.is_valid(raise_exception=True)
         try:
             result = serializer.create()
