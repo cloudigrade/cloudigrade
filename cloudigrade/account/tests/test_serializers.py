@@ -16,6 +16,7 @@ class AccountSerializerTest(TestCase):
     """Account serializer test case."""
 
     def test_create_succeeds_when_account_verified(self):
+        # pylint: disable=too-many-locals
         """Test saving and processing of a test ARN."""
         mock_account_id = helper.generate_dummy_aws_account_id()
         mock_arn = helper.generate_dummy_arn(mock_account_id)
@@ -79,10 +80,10 @@ class AccountSerializerTest(TestCase):
             mock_verify.return_value = False
             serializer = AccountSerializer()
 
-            with self.assertRaises(serializers.ValidationError) as cm:
+            with self.assertRaises(serializers.ValidationError) as e:
                 serializer.create(mock_validated_data)
 
-            the_exception = cm.exception
+            the_exception = e.exception
             self.assertEqual(the_exception.detail, [expected_detail])
 
 
@@ -105,7 +106,7 @@ class ReportSerializerTest(TestCase):
         with patch.object(reports, 'get_hourly_usage') as mock_get_hourly:
             serializer = ReportSerializer(data=mock_request_data)
             serializer.is_valid(raise_exception=True)
-            results = serializer.create()
+            results = serializer.generate()
             mock_get_hourly.assert_called_with(
                 account_id=account_id,
                 start=expected_start,
@@ -129,7 +130,7 @@ class ReportSerializerTest(TestCase):
         with patch.object(reports, 'get_hourly_usage') as mock_get_hourly:
             serializer = ReportSerializer(data=mock_request_data)
             serializer.is_valid(raise_exception=True)
-            results = serializer.create()
+            results = serializer.generate()
             mock_get_hourly.assert_called_with(
                 account_id=account_id,
                 start=expected_start,

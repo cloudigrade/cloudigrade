@@ -23,7 +23,7 @@ class ReportViewSetTest(TestCase):
         view = ReportViewSet()
         with patch.object(view, 'serializer_class') as mock_serializer_class:
             report_results = mock_serializer_class.return_value\
-                .create.return_value
+                .generate.return_value
             response = view.list(mock_request)
             self.assertEqual(response.data, report_results)
             self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -38,7 +38,7 @@ class ReportViewSetTest(TestCase):
         }
         view = ReportViewSet()
         with patch.object(view, 'serializer_class') as mock_serializer_class:
-            mock_serializer_class.return_value.create = \
+            mock_serializer_class.return_value.generate = \
                 Mock(side_effect=Account.DoesNotExist())
             with self.assertRaises(exceptions.NotFound):
                 view.list(mock_request)

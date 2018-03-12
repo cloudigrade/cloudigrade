@@ -12,7 +12,7 @@ from django.utils.translation import gettext as _
 
 logger = logging.getLogger(__name__)
 
-cloudigrade_policy = {
+CLOUDIGRADE_POLICY = {
     'Version': '2012-10-17',
     'Statement': [
         {
@@ -92,7 +92,7 @@ def get_session(arn, region_name='us-east-1'):
     """
     sts = boto3.client('sts')
     response = sts.assume_role(
-        Policy=json.dumps(cloudigrade_policy),
+        Policy=json.dumps(CLOUDIGRADE_POLICY),
         RoleArn=arn,
         RoleSessionName=f'cloudigrade-{extract_account_id_from_arn(arn)}'
     )
@@ -174,7 +174,7 @@ def verify_account_access(session):
 
     """
     success = True
-    for action in cloudigrade_policy['Statement'][0]['Action']:
+    for action in CLOUDIGRADE_POLICY['Statement'][0]['Action']:
         if not _verify_policy_action(session, action):
             # Mark as failure, but keep looping so we can see each specific
             # failure in logs
@@ -182,6 +182,7 @@ def verify_account_access(session):
     return success
 
 
+# pylint: disable=inconsistent-return-statements
 def _handle_dry_run_response_exception(action, e):
     """
     Handle the normal exception that is raised from a dry-run operation.
@@ -259,6 +260,7 @@ def _verify_policy_action(session, action):
             return False
     except ClientError as e:
         return _handle_dry_run_response_exception(action, e)
+# pylint: enable=inconsistent-return-statements
 
 
 def receive_message_from_queue(queue_url):
@@ -301,7 +303,7 @@ def delete_message_from_queue(queue_url, messages):
     messages_to_delete = [
         {
             'Id': message.message_id,
-            'ReceiptHandle': message._receipt_handle
+            'ReceiptHandle': message._receipt_handle  # pylint: disable=W0212
         }
         for message in messages
     ]
@@ -310,6 +312,7 @@ def delete_message_from_queue(queue_url, messages):
         Entries=messages_to_delete
     )
 
+    # pylint: disable=fixme
     # TODO: Deal with success/failure of message deletes
     return response
 

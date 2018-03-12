@@ -44,13 +44,14 @@ class AccountSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class ReportSerializer(serializers.Serializer):
+    # pylint: disable=abstract-method
     """Serialize a usage report for the API."""
 
     account_id = serializers.DecimalField(max_digits=12, decimal_places=0)
     start = serializers.DateTimeField(default_timezone=tz.tzutc())
     end = serializers.DateTimeField(default_timezone=tz.tzutc())
 
-    def create(self):
+    def generate(self):
         """Create the usage report and return the results."""
         validated_data = self.validated_data
         account_id = validated_data['account_id']
