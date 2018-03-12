@@ -3,19 +3,19 @@ import collections
 
 from django.utils import timezone
 
-from account.models import Instance, InstanceEvent
+from account.models import AwsInstance, InstanceEvent, AwsInstanceEvent
 
 
-def create_initial_instance_events(account, instances_data):
+def create_initial_aws_instance_events(account, instances_data):
     """
-    Create Instance and InstanceEvent for the first time we see each instance.
+    Create AwsInstance and AwsInstanceEvent the first time we see an instance.
 
-    This function is useful for recording InstanceEvents for the first time we
-    discover a running instance and we have to assume that "now" is the
-    earliest known time that the instance was running.
+    This function is a convenience helper for recording the first time we
+    discover a running instance wherein we assume that "now" is the earliest
+    known time that the instance was running.
 
     Args:
-        account (Account): The Account that owns the Instance that spawned
+        account (AwsAccount): The account that owns the instance that spawned
             the data for these InstanceEvents.
         instances_data (dict): Dict whose keys are AWS region IDs and values
             are each a list of dictionaries that represent an instance
@@ -29,12 +29,12 @@ def create_initial_instance_events(account, instances_data):
     saved_instances = collections.defaultdict(list)
     for region, instances in instances_data.items():
         for instance_data in instances:
-            instance, __ = Instance.objects.get_or_create(
+            instance, __ = AwsInstance.objects.get_or_create(
                 account=account,
                 ec2_instance_id=instance_data['InstanceId'],
                 region=region,
             )
-            event = InstanceEvent(
+            event = AwsInstanceEvent(
                 instance=instance,
                 event_type=InstanceEvent.TYPE.power_on,
                 occurred_at=timezone.now(),

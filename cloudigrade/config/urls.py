@@ -4,10 +4,11 @@ from django.contrib import admin
 from django.urls import include, path
 from rest_framework import routers
 
-from account.views import AccountViewSet, ReportViewSet
+from account.views import AwsAccountViewSet, AccountViewSet, ReportViewSet
 
 router = routers.DefaultRouter()
 router.register(r'account', AccountViewSet)
+router.register(r'awsaccount', AwsAccountViewSet)
 router.register(r'report', ReportViewSet, base_name='report')
 
 urlpatterns = [

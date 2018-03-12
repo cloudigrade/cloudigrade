@@ -7,74 +7,82 @@ import uuid
 
 from django.test import TestCase
 
-from account.models import Account, Instance, InstanceEvent
+from account.models import AwsAccount, AwsInstance, InstanceEvent
 from account.tests import helper
 from util.tests import helper as util_helper
 
 
-class AccountHelperTest(TestCase):
-    """Test helper functions test case."""
+class GenerateAwsAccountTest(TestCase):
+    """generate_aws_account tests."""
 
-    def test_generate_account_default(self):
-        """Assert generation of an Account with default/no args."""
-        account = helper.generate_account()
-        self.assertIsInstance(account, Account)
-        self.assertLess(account.account_id, util_helper.MAX_AWS_ACCOUNT_ID)
-        self.assertGreater(account.account_id, 0)
-        self.assertIn(str(account.account_id), account.account_arn)
+    def test_generate_aws_account_default(self):
+        """Assert generation of an AwsAccount with default/no args."""
+        account = helper.generate_aws_account()
+        self.assertIsInstance(account, AwsAccount)
+        self.assertLess(account.aws_account_id, util_helper.MAX_AWS_ACCOUNT_ID)
+        self.assertGreater(account.aws_account_id, 0)
+        self.assertIn(str(account.aws_account_id), account.account_arn)
 
-    def test_generate_account_with_args(self):
-        """Assert generation of an Account with all specified args."""
-        account_id = util_helper.generate_dummy_aws_account_id()
-        arn = util_helper.generate_dummy_arn(account_id)
-        account = helper.generate_account(arn=arn, account_id=account_id)
-        self.assertIsInstance(account, Account)
+    def test_generate_aws_account_with_args(self):
+        """Assert generation of an AwsAccount with all specified args."""
+        aws_account_id = util_helper.generate_dummy_aws_account_id()
+        arn = util_helper.generate_dummy_arn(aws_account_id)
+        account = helper.generate_aws_account(arn, aws_account_id)
+        self.assertIsInstance(account, AwsAccount)
         self.assertEqual(account.account_arn, arn)
-        self.assertEqual(account.account_id, account_id)
+        self.assertEqual(account.aws_account_id, aws_account_id)
 
-    def test_generate_instance_default(self):
-        """Assert generation of an Instance with minimal args."""
-        account = helper.generate_account()
-        instance = helper.generate_instance(account)
-        self.assertIsInstance(instance, Instance)
+
+class GenerateAwsInstanceTest(TestCase):
+    """generate_aws_instance test case."""
+
+    def test_generate_aws_instance_default(self):
+        """Assert generation of an AwsInstance with minimal args."""
+        account = helper.generate_aws_account()
+        instance = helper.generate_aws_instance(account)
+        self.assertIsInstance(instance, AwsInstance)
         self.assertEqual(instance.account, account)
         self.assertIsNotNone(instance.ec2_instance_id)
         self.assertGreater(len(instance.ec2_instance_id), 0)
         self.assertIsNotNone(instance.region)
         self.assertGreater(len(instance.region), 0)
 
-    def test_generate_instance_with_args(self):
-        """Assert generation of an Instance with all specified args."""
-        account = helper.generate_account()
+    def test_generate_aws_instance_with_args(self):
+        """Assert generation of an AwsInstance with all specified args."""
+        account = helper.generate_aws_account()
         ec2_instance_id = str(uuid.uuid4())
         region = str(uuid.uuid4())
-        instance = helper.generate_instance(
+        instance = helper.generate_aws_instance(
             account,
             ec2_instance_id=ec2_instance_id,
-            region=region
+            region=region,
         )
-        self.assertIsInstance(instance, Instance)
+        self.assertIsInstance(instance, AwsInstance)
         self.assertEqual(instance.account, account)
         self.assertEqual(instance.ec2_instance_id, ec2_instance_id)
         self.assertEqual(instance.region, region)
 
-    def test_generate_events_default_and_no_times(self):
+
+class GenerateAwsInstanceEventsTest(TestCase):
+    """generate_aws_instance_events test case."""
+
+    def test_generate_aws_events_default_and_no_times(self):
         """Assert generation of InstanceEvents with minimal args."""
-        account = helper.generate_account()
-        instance = helper.generate_instance(account)
-        events = helper.generate_instance_events(instance, tuple())
+        account = helper.generate_aws_account()
+        instance = helper.generate_aws_instance(account)
+        events = helper.generate_aws_instance_events(instance, tuple())
         self.assertEqual(len(events), 0)
 
-    def test_generate_events_with_some_times(self):
+    def test_generate_aws_events_with_some_times(self):
         """Assert generation of InstanceEvents with some times."""
-        account = helper.generate_account()
-        instance = helper.generate_instance(account)
+        account = helper.generate_aws_account()
+        instance = helper.generate_aws_instance(account)
         powered_times = (
             (None, util_helper.utc_dt(2017, 1, 1)),
             (util_helper.utc_dt(2017, 1, 2), util_helper.utc_dt(2017, 1, 3)),
             (util_helper.utc_dt(2017, 1, 4), None),
         )
-        events = helper.generate_instance_events(instance, powered_times)
+        events = helper.generate_aws_instance_events(instance, powered_times)
 
         self.assertEqual(len(events), 4)
         self.assertEqual(events[0].occurred_at, powered_times[0][1])
@@ -97,10 +105,10 @@ class AccountHelperTest(TestCase):
             self.assertEqual(event.instance_type, events[0].instance_type)
             self.assertEqual(event.subnet, events[0].subnet)
 
-    def test_generate_events_with_args_and_some_times(self):
+    def test_generate_aws_events_with_args_and_some_times(self):
         """Assert generation of InstanceEvents with all specified args."""
-        account = helper.generate_account()
-        instance = helper.generate_instance(account)
+        account = helper.generate_aws_account()
+        instance = helper.generate_aws_instance(account)
         powered_times = (
             (None, util_helper.utc_dt(2017, 1, 1)),
             (util_helper.utc_dt(2017, 1, 2), util_helper.utc_dt(2017, 1, 3)),
@@ -109,11 +117,12 @@ class AccountHelperTest(TestCase):
         ec2_ami_id = str(uuid.uuid4())
         instance_type = random.choice(util_helper.SOME_EC2_INSTANCE_TYPES)
         subnet = str(uuid.uuid4())
-        events = helper.generate_instance_events(
-            instance, powered_times,
+        events = helper.generate_aws_instance_events(
+            instance,
+            powered_times,
             ec2_ami_id=ec2_ami_id,
             instance_type=instance_type,
-            subnet=subnet
+            subnet=subnet,
         )
 
         self.assertEqual(len(events), 4)
