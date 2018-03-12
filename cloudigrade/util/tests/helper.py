@@ -12,7 +12,6 @@ from util import aws
 
 MAX_AWS_ACCOUNT_ID = 999999999999
 
-
 SOME_AWS_REGIONS = (
     'ap-northeast-1',
     'ca-central-1',
@@ -20,7 +19,6 @@ SOME_AWS_REGIONS = (
     'us-east-1',
     'us-east-2',
 )
-
 
 SOME_EC2_INSTANCE_TYPES = (
     'c5.xlarge',
@@ -37,7 +35,7 @@ SOME_EC2_INSTANCE_TYPES = (
 
 
 def generate_dummy_aws_account_id():
-    """Generate a dummy AWS Account ID for testing purposes."""
+    """Generate a dummy AWS AwsAccount ID for testing purposes."""
     return decimal.Decimal(random.randrange(MAX_AWS_ACCOUNT_ID))
 
 
@@ -45,8 +43,10 @@ def generate_dummy_arn(account_id=None):
     """
     Generate a dummy AWS ARN for testing purposes.
 
+    account_id argument is optional, and will be randomly generated if None.
+
     Args:
-        account_id (int): Optional Account ID. Default is randomly generated.
+        account_id (int): Optional account ID.
 
     Returns:
         str: A well-formed, randomized ARN.
@@ -68,11 +68,11 @@ def generate_dummy_describe_instance(instance_id=None, image_id=None,
     All arguments are optional, and any not given will be randomly generated.
 
     Args:
-        instance_id (str): Optional EC2 Instance ID.
+        instance_id (str): Optional EC2 AwsInstance ID.
         image_id (str): Optional AMI ID.
         subnet_id (str): Optional Subnet ID.
-        state (aws.InstanceState): Optional known state of the Instance.
-        instance_type (str): Optional known EC2 type of Instance.
+        state (aws.InstanceState): Optional known state of the AwsInstance.
+        instance_type (str): Optional known EC2 type of AwsInstance.
 
     Returns:
         dict: Well-formed instance data structure.
@@ -121,7 +121,7 @@ def generate_dummy_role():
 def generate_mock_ec2_instance(instance_id=None, image_id=None, subnet_id=None,
                                state=None, instance_type=None):
     """
-    Generate a mocked EC2 Instance object.
+    Generate a mocked EC2 AwsInstance object.
 
     Args:
         instance_id (string): The EC2 instance id.
@@ -130,7 +130,7 @@ def generate_mock_ec2_instance(instance_id=None, image_id=None, subnet_id=None,
         subnet (string): The EC2 subnet.
 
     Returns:
-        Mock: A mock object with Instance-like attributes.
+        Mock: A mock object with AwsInstance-like attributes.
 
     """
     described_instance = generate_dummy_describe_instance(

@@ -16,7 +16,7 @@ class UtilHelperTest(TestCase):
     """Test helper functions test case."""
 
     def test_generate_dummy_aws_account_id(self):
-        """Assert generation of an appropriate AWS Account ID."""
+        """Assert generation of an appropriate AWS AwsAccount ID."""
         account_id = helper.generate_dummy_aws_account_id()
         self.assertLess(account_id, helper.MAX_AWS_ACCOUNT_ID)
         self.assertGreater(account_id, 0)

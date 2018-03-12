@@ -34,7 +34,7 @@ cloudigrade_policy = {
 
 class InstanceState(enum.Enum):
     """
-    Enumeration of EC2 Instance state codes.
+    Enumeration of EC2 instance state codes.
 
     See also:
         https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_InstanceState.html
@@ -54,7 +54,7 @@ class InstanceState(enum.Enum):
         Check if the given code is effectively a running state.
 
         Args:
-            code (int): The code from an EC2 Instance state.
+            code (int): The code from an EC2 AwsInstance state.
 
         Returns:
             bool: True if we consider the instance to be running else False.
@@ -65,13 +65,13 @@ class InstanceState(enum.Enum):
 
 def extract_account_id_from_arn(arn):
     """
-    Extract the AWS Account ID from the given ARN.
+    Extract the AWS account ID from the given ARN.
 
     Args:
         arn (str): A well-formed Amazon Resource Name.
 
     Returns:
-        Decimal: The Account ID found in the ARN.
+        Decimal: The AwsAccount ID found in the ARN.
 
     """
     return decimal.Decimal(arn.split(':')[4])
@@ -149,14 +149,14 @@ def get_running_instances(session):
 
 def get_ec2_instance(session, instance_id):
     """
-    Return an EC2 Instance object from the customer account.
+    Return an EC2 AwsInstance object from the customer account.
 
     Args:
         session (boto3.Session): A temporary session tied to a customer account
         instance_id (str): An EC2 instance ID
 
     Returns:
-        Instance: A boto3 Instance object.
+        AwsInstance: A boto3 AwsInstance object.
 
     """
     return session.resource('ec2').Instance(instance_id)

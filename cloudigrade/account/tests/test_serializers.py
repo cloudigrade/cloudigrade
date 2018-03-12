@@ -5,57 +5,89 @@ from unittest.mock import patch
 from django.test import TestCase
 from django.utils.translation import gettext as _
 from rest_framework import serializers
+from rest_framework.test import APIRequestFactory
 
-from account.models import Account, Instance, InstanceEvent
-from account.serializers import (AccountSerializer, ReportSerializer, aws,
-                                 reports)
-from util.tests import helper
+from account import reports
+from account.models import AwsAccount, AwsInstance, InstanceEvent, Account
+from account.serializers import AwsAccountSerializer, ReportSerializer, aws, \
+    AccountSerializer
+from account.tests import helper as account_helper
+from account.tests.helper import AWS_PROVIDER_STRING
+from util.tests import helper as util_helper
 
 
 class AccountSerializerTest(TestCase):
     """Account serializer test case."""
 
+    def test_get_detail_aws(self):
+        """Test that getting an Account includes an AWS detail link."""
+        aws_account = account_helper.generate_aws_account()
+        request = APIRequestFactory().get(
+            f'/api/v1/account/{aws_account.id}/'
+        )
+        serializer = AccountSerializer(context={'request': request})
+        result = serializer.to_representation(aws_account)
+        expected_url_part = f'/api/v1/awsaccount/{aws_account.id}/'
+        self.assertIn(expected_url_part, result['detail'])
+
+    def test_get_detail_none(self):
+        """Test that getting an Account includes no detail link."""
+        # aws_account = account_helper.generate_aws_account()
+        account = Account.objects.create()
+        request = APIRequestFactory().get(
+            f'/api/v1/account/{account.id}/'
+        )
+        serializer = AccountSerializer(context={'request': request})
+        result = serializer.to_representation(account)
+        self.assertIsNone(result['detail'])
+
+
+class AwsAccountSerializerTest(TestCase):
+    """AwsAccount serializer test case."""
+
     def test_create_succeeds_when_account_verified(self):
         """Test saving and processing of a test ARN."""
-        mock_account_id = helper.generate_dummy_aws_account_id()
-        mock_arn = helper.generate_dummy_arn(mock_account_id)
-        mock_role = helper.generate_dummy_role()
-        mock_region = f'region-{uuid.uuid4()}'
-        mock_instances = {mock_region: [
-            helper.generate_dummy_describe_instance(
-                state=aws.InstanceState.running
-            ),
-            helper.generate_dummy_describe_instance(
-                state=aws.InstanceState.stopping
-            )
-        ]}
-        mock_validated_data = {
-            'account_arn': mock_arn,
+        aws_account_id = util_helper.generate_dummy_aws_account_id()
+        arn = util_helper.generate_dummy_arn(aws_account_id)
+        role = util_helper.generate_dummy_role()
+        region = f'region-{uuid.uuid4()}'
+        running_instances = {
+            region: [
+                util_helper.generate_dummy_describe_instance(
+                    state=aws.InstanceState.running
+                ),
+                util_helper.generate_dummy_describe_instance(
+                    state=aws.InstanceState.stopping
+                )
+            ]
+        }
+        validated_data = {
+            'account_arn': arn,
         }
 
         with patch.object(aws, 'verify_account_access') as mock_verify, \
                 patch.object(aws, 'boto3') as mock_boto3, \
                 patch.object(aws, 'get_running_instances') as mock_get_running:
             mock_assume_role = mock_boto3.client.return_value.assume_role
-            mock_assume_role.return_value = mock_role
+            mock_assume_role.return_value = role
             mock_verify.return_value = True
-            mock_get_running.return_value = mock_instances
-            serializer = AccountSerializer()
+            mock_get_running.return_value = running_instances
+            serializer = AwsAccountSerializer()
 
-            result = serializer.create(mock_validated_data)
-            self.assertIsInstance(result, Account)
+            result = serializer.create(validated_data)
+            self.assertIsInstance(result, AwsAccount)
 
-        account = Account.objects.get(account_id=mock_account_id)
-        self.assertEqual(mock_account_id, account.account_id)
-        self.assertEqual(mock_arn, account.account_arn)
+        account = AwsAccount.objects.get(aws_account_id=aws_account_id)
+        self.assertEqual(aws_account_id, account.aws_account_id)
+        self.assertEqual(arn, account.account_arn)
 
-        instances = Instance.objects.filter(account=account).all()
-        self.assertEqual(len(mock_instances[mock_region]), len(instances))
-        for region, mock_instances_list in mock_instances.items():
+        instances = AwsInstance.objects.filter(account=account).all()
+        self.assertEqual(len(running_instances[region]), len(instances))
+        for region, mock_instances_list in running_instances.items():
             for mock_instance in mock_instances_list:
                 instance_id = mock_instance['InstanceId']
-                instance = Instance.objects.get(ec2_instance_id=instance_id)
-                self.assertIsInstance(instance, Instance)
+                instance = AwsInstance.objects.get(ec2_instance_id=instance_id)
+                self.assertIsInstance(instance, AwsInstance)
                 self.assertEqual(region, instance.region)
                 event = InstanceEvent.objects.get(instance=instance)
                 self.assertIsInstance(event, InstanceEvent)
@@ -63,24 +95,26 @@ class AccountSerializerTest(TestCase):
 
     def test_create_fails_when_account_not_verified(self):
         """Test that an account is not saved if verification fails."""
-        mock_account_id = helper.generate_dummy_aws_account_id()
-        mock_arn = helper.generate_dummy_arn(mock_account_id)
-        mock_role = helper.generate_dummy_role()
-        mock_validated_data = {
-            'account_arn': mock_arn,
+        aws_account_id = util_helper.generate_dummy_aws_account_id()
+        arn = util_helper.generate_dummy_arn(aws_account_id)
+        role = util_helper.generate_dummy_role()
+        validated_data = {
+            'account_arn': arn,
         }
 
-        expected_detail = _('Account verification failed. ARN Info Not Stored')
+        expected_detail = _(
+            'AwsAccount verification failed. ARN Info Not Stored'
+        )
 
         with patch.object(aws, 'verify_account_access') as mock_verify, \
                 patch.object(aws, 'boto3') as mock_boto3:
             mock_assume_role = mock_boto3.client.return_value.assume_role
-            mock_assume_role.return_value = mock_role
+            mock_assume_role.return_value = role
             mock_verify.return_value = False
-            serializer = AccountSerializer()
+            serializer = AwsAccountSerializer()
 
             with self.assertRaises(serializers.ValidationError) as cm:
-                serializer.create(mock_validated_data)
+                serializer.create(validated_data)
 
             the_exception = cm.exception
             self.assertEqual(the_exception.detail, [expected_detail])
@@ -91,23 +125,26 @@ class ReportSerializerTest(TestCase):
 
     def test_report_with_timezones_specified(self):
         """Test that start/end dates with timezones shift correctly to UTC."""
-        account_id = helper.generate_dummy_aws_account_id()
+        cloud_provider = AWS_PROVIDER_STRING
+        cloud_account_id = str(util_helper.generate_dummy_aws_account_id())
         start_no_tz = '2018-01-01T00:00:00-05'
         end_no_tz = '2018-02-01T00:00:00+04'
-        mock_request_data = {
-            'account_id': account_id,
+        request_data = {
+            'cloud_provider': cloud_provider,
+            'cloud_account_id': cloud_account_id,
             'start': start_no_tz,
             'end': end_no_tz,
         }
-        expected_start = helper.utc_dt(2018, 1, 1, 5, 0)
-        expected_end = helper.utc_dt(2018, 1, 31, 20, 0)
+        expected_start = util_helper.utc_dt(2018, 1, 1, 5, 0)
+        expected_end = util_helper.utc_dt(2018, 1, 31, 20, 0)
 
-        with patch.object(reports, 'get_hourly_usage') as mock_get_hourly:
-            serializer = ReportSerializer(data=mock_request_data)
+        with patch.object(reports, 'get_time_usage') as mock_get_hourly:
+            serializer = ReportSerializer(data=request_data)
             serializer.is_valid(raise_exception=True)
-            results = serializer.create()
+            results = serializer.generate()
             mock_get_hourly.assert_called_with(
-                account_id=account_id,
+                cloud_provider=cloud_provider,
+                cloud_account_id=cloud_account_id,
                 start=expected_start,
                 end=expected_end
             )
@@ -115,23 +152,26 @@ class ReportSerializerTest(TestCase):
 
     def test_report_without_timezones_specified(self):
         """Test that UTC is used if timezones are missing from start/end."""
-        account_id = helper.generate_dummy_aws_account_id()
+        cloud_provider = AWS_PROVIDER_STRING
+        cloud_account_id = str(util_helper.generate_dummy_aws_account_id())
         start_no_tz = '2018-01-01T00:00:00'
         end_no_tz = '2018-02-01T00:00:00'
         mock_request_data = {
-            'account_id': account_id,
+            'cloud_provider': cloud_provider,
+            'cloud_account_id': cloud_account_id,
             'start': start_no_tz,
             'end': end_no_tz,
         }
-        expected_start = helper.utc_dt(2018, 1, 1, 0, 0)
-        expected_end = helper.utc_dt(2018, 2, 1, 0, 0)
+        expected_start = util_helper.utc_dt(2018, 1, 1, 0, 0)
+        expected_end = util_helper.utc_dt(2018, 2, 1, 0, 0)
 
-        with patch.object(reports, 'get_hourly_usage') as mock_get_hourly:
+        with patch.object(reports, 'get_time_usage') as mock_get_hourly:
             serializer = ReportSerializer(data=mock_request_data)
             serializer.is_valid(raise_exception=True)
-            results = serializer.create()
+            results = serializer.generate()
             mock_get_hourly.assert_called_with(
-                account_id=account_id,
+                cloud_provider=cloud_provider,
+                cloud_account_id=cloud_account_id,
                 start=expected_start,
                 end=expected_end
             )
