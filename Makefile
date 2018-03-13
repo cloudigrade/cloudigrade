@@ -25,6 +25,9 @@ reinitdb: stop-compose remove-compose-db start-db run-docker-migrations
 remove-compose-db:
 	rm -rf $(TOPDIR)/pg_data
 
+remove-compose-queue:
+	rm -rf $(TOPDIR)/rabbitmq
+
 run-docker-migrations:
 	sleep 1
 	$(PYTHON) $(PYDIR)/manage.py migrate --settings=config.settings.local
@@ -47,3 +50,6 @@ stop-compose:
 
 start-db:
 	docker-compose up -d db
+
+start-queue:
+	docker-compose up -d queue
