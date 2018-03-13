@@ -5,8 +5,8 @@ import json
 import uuid
 from unittest.mock import patch
 
-import decimal
 import boto3
+import faker
 from botocore.exceptions import ClientError
 from django.conf import settings
 from django.test import TestCase
@@ -28,13 +28,11 @@ class UtilAwsTest(TestCase):
 
     def test_error_extract_account_id_from_invalid_arn(self):
         """Assert error in account ID extraction from a badly-formed ARN."""
-        bad_index_arn = 'The quick brown fox jumps over the lazy dog.'
-        empty_arn = '::::'
-
-        with self.assertRaises(IndexError):
-            aws.extract_account_id_from_arn(bad_index_arn)
-        with self.assertRaises(decimal.InvalidOperation):
-            aws.extract_account_id_from_arn(empty_arn)
+        mock_arn = faker.Faker().text()
+        # TODO implement our own situation-appropriate
+        # exception here, e.g. InvalidArnException
+        with self.assertRaises(Exception):
+            aws.extract_account_id_from_arn(mock_arn)
 
     def test_get_regions_with_no_args(self):
         """Assert get_regions with no args returns expected regions."""
