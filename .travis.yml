@@ -13,14 +13,17 @@ jobs:
   include:
     - stage: test
       python: 3.6
-      install: pip install tox-travis codecov
-      script: tox
+      install: pip install tox codecov
+      script: tox -epy36
       after_success: codecov
     - stage: test
+      python: 3.6
+      install: pip install tox
+      script: tox -eflake8
+    - stage: test
       python: pypy3
-      install: pip install tox-travis codecov
-      script: tox
-      after_success: codecov
+      install: pip install tox
+      script: tox -epypy3
     - stage: build container
       services: docker
       sudo: required
