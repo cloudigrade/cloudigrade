@@ -29,7 +29,9 @@ class UtilAwsTest(TestCase):
     def test_error_extract_account_id_from_invalid_arn(self):
         """Assert error in account ID extraction from a badly-formed ARN."""
         mock_arn = faker.Faker().text()
-        with self.assertRaises(Exception):  # TODO more specific exceptions
+        # TODO implement our own situation-appropriate
+        # exception here, e.g. InvalidArnException
+        with self.assertRaises(Exception):
             aws.extract_account_id_from_arn(mock_arn)
 
     def test_get_regions_with_no_args(self):
@@ -77,7 +79,7 @@ class UtilAwsTest(TestCase):
 
             mock_client.assert_called_with('sts')
             mock_assume_role.assert_called_with(
-                Policy=json.dumps(aws.cloudigrade_policy),
+                Policy=json.dumps(aws.CLOUDIGRADE_POLICY),
                 RoleArn=mock_arn,
                 RoleSessionName=f'cloudigrade-{mock_account_id}'
             )
@@ -206,6 +208,7 @@ class UtilAwsTest(TestCase):
         self.assertTrue(actual_verified)
 
     def test_verify_account_access_failure(self):
+        # pylint: disable=too-many-locals
         """Assert that account access via a IAM role is not verified."""
         mock_arn = helper.generate_dummy_arn()
         mock_role = helper.generate_dummy_role()
@@ -278,7 +281,7 @@ class UtilAwsTest(TestCase):
             self.assertEqual(e.exception.response['Error']['Message'],
                              mock_garbage_exception['Error']['Message'])
 
-            with patch.dict(aws.cloudigrade_policy, bad_policy):
+            with patch.dict(aws.CLOUDIGRADE_POLICY, bad_policy):
                 aws.verify_account_access(session)
 
             mock_describe_images.assert_called_with(DryRun=True)

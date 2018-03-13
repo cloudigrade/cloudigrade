@@ -1,0 +1,67 @@
+[MASTER]
+# Pickle collected data for later comparisons.
+persistent=no
+
+# Add files or directories to the blacklist. They should be base names, not
+# paths.
+ignore=migrations,config
+
+[MESSAGES CONTROL]
+# Disable the message, report, category or checker with the given id(s). You
+# can either give multiple identifier separated by comma (,) or put this option
+# multiple time (only on the command line, not in the configuration file where
+# it should appear only once).
+disable=missing-docstring,
+        too-few-public-methods,
+        fixme
+
+[REPORTS]
+# Set the output format. Available formats are text, parseable, colorized, msvs
+# (visual studio) and html
+output-format=colorized
+
+# Tells whether to display a full report or only the messages
+reports=yes
+
+[TYPECHECK]
+# List of class names for which member attributes should not be checked (useful
+# for classes with dynamically set attributes). This supports the use of
+# qualified names.
+ignored-classes=optparse.Values,thread._local,_thread._local,Generator
+
+# List of members which are set dynamically and missed by pylint inference
+# system, and so shouldn't trigger E0201 when accessed. Python regular
+# expressions are accepted.
+generated-members=objects,DoesNotExist
+
+[MISCELLANEOUS]
+# List of note tags to take in consideration, separated by a comma.
+notes=FIXME,HACK,TODO
+
+[SIMILARITIES]
+# Minimum lines number of a similarity.
+min-similarity-lines=5
+
+[BASIC]
+# Regular expression matching correct function names. Overrides function-
+# naming-style
+function-rgx=(([a-z_][a-z0-9_]{2,30})|(_[a-z0-9_]*)|(__[a-z][a-z0-9_]+__)|(generate_.+))$
+
+# Good variable names which should always be accepted, separated by a comma
+good-names=e,
+           _,
+           __,
+           logger
+
+# Regular expression matching correct method names. Overrides method-naming-
+# style
+method-rgx=(([a-z_][a-z0-9_]{2,30})|(_[a-z0-9_]*)|(__[a-z][a-z0-9_]+__)|(test_.+))$
+
+# Regular expression matching correct variable names. Overrides variable-
+# naming-style
+variable-rgx=(([a-z_][a-z0-9_]{2,30})|(_[a-z0-9_]*)|(__[a-z][a-z0-9_]+__)|(mock_.+))$
+
+[VARIABLES]
+# A regular expression matching the beginning of the name of dummy variables
+# (i.e. not used).
+dummy-variables-rgx=_|dummy|args|kwargs

@@ -29,6 +29,7 @@ class GetHourlyUsageTestMixin(object):
     """Mixin for common functions to use in GetHourlyUsage*Test classes."""
 
     def generate_events_get_identifier(self, powered_times, instance):
+        # pylint: disable=no-self-use
         """
         Generate events in the DB and return the first one's identifier.
 
@@ -46,6 +47,7 @@ class GetHourlyUsageTestMixin(object):
         return events[0].product_identifier
 
     def assertHourlyUsage(self, expected_totals):
+        # pylint: disable=invalid-name
         """
         Assert get_hourly_usage produces output matching expected totals.
 
@@ -73,6 +75,7 @@ class GetHourlyUsage1Account1InstanceTest(TestCase, GetHourlyUsageTestMixin):
         self.end = util_helper.utc_dt(2018, 2, 1, 0, 0, 0)
 
     def generate_events_get_identifier(self, powered_times):
+        # pylint: disable=arguments-differ
         """
         Generate events in the DB and return the first one's identifier.
 

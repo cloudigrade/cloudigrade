@@ -7,6 +7,7 @@ from account.models import Account
 
 
 class AccountViewSet(mixins.CreateModelMixin, viewsets.ReadOnlyModelViewSet):
+    # pylint: disable=too-many-ancestors
     """
     List all, retrieve a single, or create a customer Account.
 
@@ -33,7 +34,7 @@ class ReportViewSet(viewsets.ViewSet):
         serializer = self.serializer_class(data=request.query_params)
         serializer.is_valid(raise_exception=True)
         try:
-            result = serializer.create()
+            result = serializer.generate()
         except Account.DoesNotExist:
             raise exceptions.NotFound()
         return Response(result, status=status.HTTP_200_OK)
