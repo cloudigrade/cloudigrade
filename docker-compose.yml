@@ -32,6 +32,16 @@ services:
       - "8000:80"
     depends_on:
       - app
-
+  queue:
+    image: rabbitmq:alpine
+    hostname: cloudiqueue
+    ports:
+      - "5672:5672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=cloudigrade
+      - RABBITMQ_DEFAULT_PASS
+      - RABBITMQ_DISK_FREE_LIMIT={mem_relative, 1.5}
+    volumes:
+      - ./rabbitmq:/var/lib/rabbitmq
 volumes:
   static:
