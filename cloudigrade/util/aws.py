@@ -312,7 +312,6 @@ def delete_message_from_queue(queue_url, messages):
         Entries=messages_to_delete
     )
 
-    # pylint: disable=fixme
     # TODO: Deal with success/failure of message deletes
     return response
 

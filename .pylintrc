@@ -13,6 +13,7 @@ ignore=migrations,config
 # it should appear only once).
 disable=missing-docstring,
         too-few-public-methods,
+        fixme
 
 [REPORTS]
 # Set the output format. Available formats are text, parseable, colorized, msvs
