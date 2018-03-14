@@ -122,11 +122,12 @@ the commands manually:
 
 ### Running
 
-To run the application along with the postgres database run the following:
+To run the application along with the postgres database and queue
+run the following:
 
     make start-compose
 
-If you'd like to run just the database, so you can run the application
+If you would like to run just the database, so you can run the application
 on your local machine, use the following command:
 
     make start-db
@@ -134,6 +135,11 @@ on your local machine, use the following command:
 To reinstantiate the docker psql db, run the following:
 
     make reinitdb
+
+If you would like to run just the queue, so you can interact with the queue on
+your local machine, use the following command:
+
+    make start-queue
 
 ### Testing
 
@@ -167,9 +173,18 @@ To then generate an auth token, run the make command:
 
 This auth token can be supplied in the Authorization header.
 
+### Message Broker
 
-### Django management commands
+RabbitMQ is used to broker messages between cloudigrade and inspectigrade
+services. There are multiple Python packages available to interact with
+RabbitMQ; the officially recommended packaged is [Pika](https://pika.readthedocs.io/en/latest/). Both services serve as producers and consumers of the message queue.
+The cloudigrade docker-compose file requires that a password environment
+variable be set for the RabbitMQ user. Make sure that the following has been
+set in your local environment before starting
 
-To add an ARN:
+    RABBITMQ_DEFAULT_PASS
 
-    ./cloudigrade/manage.py add_account YOUR_ARN_GOES_HERE
+The RabbitMQ container can persist message data in the cloudigrade directory.
+To purge this data use
+
+    make remove-compose-queue

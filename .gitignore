@@ -102,3 +102,6 @@ ENV/
 # databases
 *.sqlite3
 /pg_data
+
+# persisted queue data
+/rabbitmq
