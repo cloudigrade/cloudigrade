@@ -90,26 +90,31 @@ class ReportHelper(ABC):
 class AwsReportHelper(ReportHelper):
     """Report helper for AWS."""
 
-    def assert_account_exists(self):  # noqa: D102, see parent class
+    def assert_account_exists(self):
+        """Assert that the AWS account ID exists in cloudigrade."""
         if not AwsAccount.objects.filter(
                 aws_account_id=self.cloud_account_id
         ).exists():
             raise AwsAccount.DoesNotExist()
 
-    def instance_account_filter(self):  # noqa: D102, see parent class
+    def instance_account_filter(self):
+        """Get a Django query filter to restrict instances to this account."""
         return models.Q(
             account__awsaccount__aws_account_id=self.cloud_account_id
         )
 
-    def event_account_filter(self):  # noqa: D102, see parent class
+    def event_account_filter(self):
+        """Get a Django query filter to restrict events to this account."""
         return models.Q(
             instance__account__awsaccount__aws_account_id=self.cloud_account_id
         )
 
     @staticmethod
-    def get_event_product_identifier(event):  # noqa: D102, see parent class
+    def get_event_product_identifier(event):
+        """Get the AWS instance's product identifier for an event."""
         return event.awsinstanceevent.product_identifier
 
     @staticmethod
-    def get_event_instance_identifier(event):  # noqa: D102, see parent class
+    def get_event_instance_identifier(event):
+        """Get the AWS EC2 instance ID for an event."""
         return event.instance.awsinstance.ec2_instance_id
