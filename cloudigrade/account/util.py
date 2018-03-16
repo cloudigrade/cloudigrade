@@ -45,3 +45,22 @@ def create_initial_aws_instance_events(account, instances_data):
             event.save()
             saved_instances[region].append(instance)
     return dict(saved_instances)
+
+
+def create_new_machine_images(instances_data):
+    platforms = {instance['ImageId']: instance['Platform']
+                 for instance in instance_data
+                 if instance['Platform'] == 'Windows'}
+    seen_amis = set([instance['ImageId'] for instance in instance_data])
+    known_amis = MachineImage.objects.filter(ami_id__in=list(amis))
+    new_amis = list(seen_amis.difference(known_amis))
+
+    for new_ami in new_amis:
+        ami = MachineImage(
+            ami_id = new_ami,
+            platform = MachineImage.TYPE.Windows if platforms.get(new_ami) \
+                else MachineImage.TYPE.Linux
+        )
+        ami.save()
+
+    return new_amis

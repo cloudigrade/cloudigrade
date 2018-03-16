@@ -109,4 +109,21 @@ class AwsInstanceEvent(InstanceEvent):
             str: the computed product identifier
 
         """
+
         return f'aws-{self.ec2_ami_id}-{self.instance_type}'
+
+class MachineImage(BaseModel):
+    """Base Class for A cloud VM image."""
+
+    TYPE = model_utils.Choices(
+        'Windows',
+        'Linux',
+        'Unix-like'
+    )
+
+    platform = models.CharField(
+        max_length=16,
+        choices=TYPE,
+        null=False,
+        blank=False
+    )
