@@ -1,8 +1,8 @@
 """Module to expose our models in Django admin."""
 from django.contrib import admin
 
-from account.models import AwsAccount, AwsInstance, AwsInstanceEvent, \
-    InstanceEvent, Instance, Account
+from account.models import (Account, AwsAccount, AwsInstance, AwsInstanceEvent,
+                            Instance, InstanceEvent)
 
 admin.site.register(Account, admin.ModelAdmin)
 admin.site.register(Instance, admin.ModelAdmin)

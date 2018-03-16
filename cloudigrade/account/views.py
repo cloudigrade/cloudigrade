@@ -4,7 +4,7 @@ from rest_framework.response import Response
 
 from account import serializers
 from account.exceptions import InvalidCloudProviderError
-from account.models import AwsAccount, Account
+from account.models import Account, AwsAccount
 
 
 class AccountViewSet(viewsets.ReadOnlyModelViewSet):

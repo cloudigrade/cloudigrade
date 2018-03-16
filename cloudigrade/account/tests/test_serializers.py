@@ -8,9 +8,9 @@ from rest_framework import serializers
 from rest_framework.test import APIRequestFactory
 
 from account import reports
-from account.models import AwsAccount, AwsInstance, InstanceEvent, Account
-from account.serializers import AwsAccountSerializer, ReportSerializer, aws, \
-    AccountSerializer
+from account.models import Account, AwsAccount, AwsInstance, InstanceEvent
+from account.serializers import (AccountSerializer, AwsAccountSerializer,
+                                 ReportSerializer, aws)
 from account.tests import helper as account_helper
 from account.tests.helper import AWS_PROVIDER_STRING
 from util.tests import helper as util_helper
