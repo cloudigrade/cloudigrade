@@ -7,8 +7,8 @@ from django.utils.translation import gettext as _
 from rest_framework import serializers
 
 from account.models import Account, Instance, InstanceEvent
-from account.serializers import AccountSerializer, ReportSerializer, reports, \
-    aws
+from account.serializers import (AccountSerializer, ReportSerializer, aws,
+                                 reports)
 from util.tests import helper
 
 
