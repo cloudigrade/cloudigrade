@@ -1,5 +1,5 @@
 """DRF API views for the account app."""
-from rest_framework import viewsets, mixins, status, exceptions
+from rest_framework import exceptions, mixins, status, viewsets
 from rest_framework.response import Response
 
 from account import serializers

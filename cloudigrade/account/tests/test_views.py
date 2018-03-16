@@ -1,8 +1,8 @@
 """Collection of tests for custom DRF views in the account app."""
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 from django.test import TestCase
-from rest_framework import status, exceptions
+from rest_framework import exceptions, status
 
 from account.models import Account
 from account.views import ReportViewSet

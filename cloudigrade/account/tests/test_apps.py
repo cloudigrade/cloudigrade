@@ -1,6 +1,7 @@
 """Collection of tests for the App Configuration module."""
 from django.apps import apps
 from django.test import TestCase
+
 from account.apps import AccountConfig
 
 
