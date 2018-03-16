@@ -3,7 +3,7 @@ import collections
 
 from django.utils import timezone
 
-from account.models import AwsInstance, InstanceEvent, AwsInstanceEvent
+from account.models import AwsInstance, AwsInstanceEvent, InstanceEvent
 
 
 def create_initial_aws_instance_events(account, instances_data):

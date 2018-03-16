@@ -2,8 +2,8 @@
 import random
 import uuid
 
-from account.models import AwsAccount, AwsInstance, InstanceEvent, \
-    AwsInstanceEvent
+from account.models import (AwsAccount, AwsInstance, AwsInstanceEvent,
+                            InstanceEvent)
 from util import aws
 from util.tests import helper
 

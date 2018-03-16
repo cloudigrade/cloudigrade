@@ -9,7 +9,7 @@ from rest_framework.reverse import reverse
 
 import account
 from account import reports
-from account.models import AwsAccount, Account
+from account.models import Account, AwsAccount
 from account.util import create_initial_aws_instance_events
 from util import aws
 
