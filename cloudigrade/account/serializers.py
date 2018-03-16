@@ -11,6 +11,7 @@ import account
 from account import reports
 from account.models import Account, AwsAccount
 from account.util import create_initial_aws_instance_events
+from account.validators import validate_cloud_provider_account_id
 from util import aws
 
 logger = logging.getLogger(__name__)
@@ -87,6 +88,9 @@ class ReportSerializer(serializers.Serializer):
 
     start = serializers.DateTimeField(default_timezone=tz.tzutc())
     end = serializers.DateTimeField(default_timezone=tz.tzutc())
+
+    class Meta:
+        validators = [validate_cloud_provider_account_id]
 
     def generate(self):
         """Generate the usage report and return the results."""

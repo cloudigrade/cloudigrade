@@ -7,8 +7,6 @@ from account.models import (AwsAccount, AwsInstance, AwsInstanceEvent,
 from util import aws
 from util.tests import helper
 
-AWS_PROVIDER_STRING = 'aws'
-
 
 def generate_aws_account(arn=None, aws_account_id=None):
     """
