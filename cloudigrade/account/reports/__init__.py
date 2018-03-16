@@ -17,7 +17,9 @@ def get_time_usage(start, end, cloud_provider, cloud_account_id):
         start (datetime.datetime): Start time (inclusive)
         end (datetime.datetime): End time (exclusive)
         cloud_provider (str): The cloud provider for the account
-        cloud_account_id (str): The cloud-specific account ID
+        cloud_account_id (object): The cloud-specific account ID. The type for
+            cloud_account_id is dynamic and will vary according to which
+            cloud_provider was found in validate_cloud_provider_account_id.
 
     Returns:
         dict: Total running time in seconds keyed by product type.

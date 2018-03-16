@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from django.db import models
 from django.utils.translation import gettext as _
 
-from account import CLOUD_PROVIDERS
+from account import AWS_PROVIDER_STRING, CLOUD_PROVIDERS
 from account.exceptions import InvalidCloudProviderError
 from account.models import AwsAccount
 
@@ -15,7 +15,9 @@ def get_report_helper(cloud_provider, cloud_account_id):
 
     Args:
         cloud_provider (str): The cloud provider
-        cloud_account_id (str): The cloud-specific account ID
+        cloud_account_id (object): The cloud-specific account ID. The type for
+            cloud_account_id is dynamic and will vary according to which
+            cloud_provider was found in validate_cloud_provider_account_id.
 
     Returns:
         ReportHelper: An instance of a cloud-specific ReportHelper child class.
@@ -26,7 +28,7 @@ def get_report_helper(cloud_provider, cloud_account_id):
             _('Unsupported cloud provider "{0}".').format(cloud_provider)
         )
 
-    if cloud_provider == 'aws':
+    if cloud_provider == AWS_PROVIDER_STRING:
         return AwsReportHelper(cloud_account_id)
 
     raise NotImplementedError()
@@ -40,7 +42,7 @@ class ReportHelper(ABC):
         Initialize a new ReportHelper instance.
 
         Args:
-            cloud_account_id (str): The cloud-specific account ID
+            cloud_account_id (object): The cloud-specific account ID.
         """
         self.cloud_account_id = cloud_account_id
 

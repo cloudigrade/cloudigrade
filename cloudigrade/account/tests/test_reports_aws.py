@@ -1,10 +1,9 @@
 """Collection of tests for the reports module."""
 from django.test import TestCase
 
-from account import reports
+from account import AWS_PROVIDER_STRING, reports
 from account.models import AwsAccount
 from account.tests import helper as account_helper
-from account.tests.helper import AWS_PROVIDER_STRING
 from util.tests import helper as util_helper
 
 DAYS_31 = 24. * 60 * 60 * 31
