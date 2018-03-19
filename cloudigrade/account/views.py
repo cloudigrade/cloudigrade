@@ -7,31 +7,16 @@ from account.exceptions import InvalidCloudProviderError
 from account.models import Account, AwsAccount
 
 
-class AccountViewSet(viewsets.ReadOnlyModelViewSet):
+class AccountViewSet(mixins.CreateModelMixin, viewsets.ReadOnlyModelViewSet):
     """
     List all, retrieve a single, or create a customer account.
 
     Do not allow to update, replace, or delete an account at this view because
-    this is reading the "base" account from which all cloud-specific account
-    types inherit.
+    we currently **only** allow accounts to be created or retrieved.
     """
 
     queryset = Account.objects.all()
-    serializer_class = serializers.AccountSerializer
-
-
-class AwsAccountViewSet(
-    mixins.CreateModelMixin, viewsets.ReadOnlyModelViewSet
-):
-    """
-    List all, retrieve a single, or create an AWS customer account.
-
-    Do not allow to update, replace, or delete an account at this view because
-    we currently **only** allow accounts to be created.
-    """
-
-    queryset = AwsAccount.objects.all()
-    serializer_class = serializers.AwsAccountSerializer
+    serializer_class = serializers.AccountPolymorphicSerializer
 
 
 class ReportViewSet(viewsets.ViewSet):

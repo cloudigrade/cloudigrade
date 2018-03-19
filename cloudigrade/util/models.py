@@ -1,8 +1,9 @@
 """Cloudigrade Base Models."""
 from django.db import models
+from polymorphic.models import PolymorphicModel
 
 
-class BaseModel(models.Model):
+class BaseModel(PolymorphicModel):
     """Abstract model to add automatic created_at and updated_at fields."""
 
     created_at = models.DateTimeField(auto_now_add=True)
