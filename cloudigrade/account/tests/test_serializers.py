@@ -5,40 +5,11 @@ from unittest.mock import patch
 from django.test import TestCase
 from django.utils.translation import gettext as _
 from rest_framework import serializers
-from rest_framework.test import APIRequestFactory
 
 from account import AWS_PROVIDER_STRING, reports
-from account.models import Account, AwsAccount, AwsInstance, InstanceEvent
-from account.serializers import (AccountSerializer, AwsAccountSerializer,
-                                 ReportSerializer, aws)
-from account.tests import helper as account_helper
+from account.models import AwsAccount, AwsInstance, InstanceEvent
+from account.serializers import AwsAccountSerializer, ReportSerializer, aws
 from util.tests import helper as util_helper
-
-
-class AccountSerializerTest(TestCase):
-    """Account serializer test case."""
-
-    def test_get_detail_aws(self):
-        """Test that getting an Account includes an AWS detail link."""
-        aws_account = account_helper.generate_aws_account()
-        request = APIRequestFactory().get(
-            f'/api/v1/account/{aws_account.id}/'
-        )
-        serializer = AccountSerializer(context={'request': request})
-        result = serializer.to_representation(aws_account)
-        expected_url_part = f'/api/v1/awsaccount/{aws_account.id}/'
-        self.assertIn(expected_url_part, result['detail'])
-
-    def test_get_detail_none(self):
-        """Test that getting an Account includes no detail link."""
-        # aws_account = account_helper.generate_aws_account()
-        account = Account.objects.create()
-        request = APIRequestFactory().get(
-            f'/api/v1/account/{account.id}/'
-        )
-        serializer = AccountSerializer(context={'request': request})
-        result = serializer.to_representation(account)
-        self.assertIsNone(result['detail'])
 
 
 class AwsAccountSerializerTest(TestCase):
