@@ -31,14 +31,8 @@ Overview
 
 The following resource paths are currently available:
 
--  ``/api/v1/account/`` returns cloud-agnostic account data
--  ``/api/v1/awsaccount/`` returns AWS account data
+-  ``/api/v1/account/`` returns account data
 -  ``/api/v1/report/`` returns usage report data
-
-Following in this pattern, future resources may include:
-
--  ``/api/v1/azureaccount/`` may return Azure account data
--  ``/api/v1/gcpaccount/`` may return GCP account data
 
 Customer Account Setup
 ----------------------
@@ -53,7 +47,8 @@ Request:
 
 .. code:: bash
 
-    http post localhost:8000/api/v1/awsaccount/ "${AUTH}" \
+    http post localhost:8000/api/v1/account/ "${AUTH}" \
+        resourcetype="AwsAccount" \
         account_arn="arn:aws:iam::518028203513:role/grant_cloudi_to_372779871274"
 
 Response:
@@ -63,10 +58,10 @@ Response:
     HTTP/1.1 201 Created
     Allow: GET, POST, HEAD, OPTIONS
     Connection: keep-alive
-    Content-Length: 253
+    Content-Length: 278
     Content-Type: application/json
-    Date: Wed, 14 Mar 2018 20:41:30 GMT
-    Location: http://localhost:8000/api/v1/awsaccount/1/
+    Date: Mon, 19 Mar 2018 20:26:10 GMT
+    Location: http://localhost:8000/api/v1/account/1/
     Server: nginx/1.13.9
     Vary: Accept
     X-Frame-Options: SAMEORIGIN
@@ -74,10 +69,11 @@ Response:
     {
         "account_arn": "arn:aws:iam::518028203513:role/grant_cloudi_to_372779871274",
         "aws_account_id": "518028203513",
-        "created_at": "2018-03-14T20:41:30.046376Z",
+        "created_at": "2018-03-19T20:26:10.798690Z",
         "id": 1,
-        "updated_at": "2018-03-14T20:41:30.046487Z",
-        "url": "http://localhost:8000/api/v1/awsaccount/1/"
+        "resourcetype": "AwsAccount",
+        "updated_at": "2018-03-19T20:26:10.798727Z",
+        "url": "http://localhost:8000/api/v1/account/1/"
     }
 
 If you attempt to create an AWS account for an ARN that is already in
@@ -87,8 +83,9 @@ Request:
 
 .. code:: bash
 
-    http post localhost:8000/api/v1/awsaccount/ "${AUTH}" \
-         account_arn="arn:aws:iam::518028203513:role/grant_cloudi_to_372779871274"
+    http post localhost:8000/api/v1/account/ "${AUTH}" \
+        resourcetype="AwsAccount" \
+        account_arn="arn:aws:iam::518028203513:role/grant_cloudi_to_372779871274"
 
 Response:
 
@@ -99,7 +96,7 @@ Response:
     Connection: keep-alive
     Content-Length: 69
     Content-Type: application/json
-    Date: Wed, 14 Mar 2018 20:42:22 GMT
+    Date: Mon, 19 Mar 2018 20:28:31 GMT
     Server: nginx/1.13.9
     Vary: Accept
     X-Frame-Options: SAMEORIGIN
@@ -113,8 +110,8 @@ Response:
 Customer Account Info
 ---------------------
 
-List all accounts irrespective of cloud provider
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+List all accounts
+~~~~~~~~~~~~~~~~~
 
 Request:
 
@@ -127,49 +124,11 @@ Response:
 ::
 
     HTTP/1.1 200 OK
-    Allow: GET, HEAD, OPTIONS
-    Connection: keep-alive
-    Content-Length: 248
-    Content-Type: application/json
-    Date: Wed, 14 Mar 2018 20:54:52 GMT
-    Server: nginx/1.13.9
-    Vary: Accept
-    X-Frame-Options: SAMEORIGIN
-
-    {
-        "count": 1,
-        "next": null,
-        "previous": null,
-        "results": [
-            {
-                "created_at": "2018-03-14T20:41:30.046376Z",
-                "detail": "http://localhost:8000/api/v1/awsaccount/1/",
-                "id": 1,
-                "updated_at": "2018-03-14T20:41:30.046487Z",
-                "url": "http://localhost:8000/api/v1/account/1/"
-            }
-        ]
-    }
-
-List all AWS accounts
-~~~~~~~~~~~~~~~~~~~~~
-
-Request:
-
-.. code:: bash
-
-    http localhost:8000/api/v1/awsaccount/ "${AUTH}"
-
-Response:
-
-::
-
-    HTTP/1.1 200 OK
     Allow: GET, POST, HEAD, OPTIONS
     Connection: keep-alive
-    Content-Length: 305
+    Content-Length: 330
     Content-Type: application/json
-    Date: Wed, 14 Mar 2018 20:55:23 GMT
+    Date: Mon, 19 Mar 2018 20:28:48 GMT
     Server: nginx/1.13.9
     Vary: Accept
     X-Frame-Options: SAMEORIGIN
@@ -182,22 +141,23 @@ Response:
             {
                 "account_arn": "arn:aws:iam::518028203513:role/grant_cloudi_to_372779871274",
                 "aws_account_id": "518028203513",
-                "created_at": "2018-03-14T20:41:30.046376Z",
+                "created_at": "2018-03-19T20:26:10.798690Z",
                 "id": 1,
-                "updated_at": "2018-03-14T20:41:30.046487Z",
-                "url": "http://localhost:8000/api/v1/awsaccount/1/"
+                "resourcetype": "AwsAccount",
+                "updated_at": "2018-03-19T20:26:10.798727Z",
+                "url": "http://localhost:8000/api/v1/account/1/"
             }
         ]
     }
 
-Retrieve a specific AWS account
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Retrieve a specific account
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Request:
 
 .. code:: bash
 
-    http localhost:8000/api/v1/awsaccount/1/ "${AUTH}"
+    http localhost:8000/api/v1/account/1/ "${AUTH}"
 
 Response:
 
@@ -206,9 +166,9 @@ Response:
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
     Connection: keep-alive
-    Content-Length: 253
+    Content-Length: 278
     Content-Type: application/json
-    Date: Wed, 14 Mar 2018 20:55:50 GMT
+    Date: Mon, 19 Mar 2018 20:29:39 GMT
     Server: nginx/1.13.9
     Vary: Accept
     X-Frame-Options: SAMEORIGIN
@@ -216,10 +176,11 @@ Response:
     {
         "account_arn": "arn:aws:iam::518028203513:role/grant_cloudi_to_372779871274",
         "aws_account_id": "518028203513",
-        "created_at": "2018-03-14T20:41:30.046376Z",
+        "created_at": "2018-03-19T20:26:10.798690Z",
         "id": 1,
-        "updated_at": "2018-03-14T20:41:30.046487Z",
-        "url": "http://localhost:8000/api/v1/awsaccount/1/"
+        "resourcetype": "AwsAccount",
+        "updated_at": "2018-03-19T20:26:10.798727Z",
+        "url": "http://localhost:8000/api/v1/account/1/"
     }
 
 Usage Reporting
@@ -245,15 +206,15 @@ Response:
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
     Connection: keep-alive
-    Content-Length: 54
+    Content-Length: 52
     Content-Type: application/json
-    Date: Wed, 14 Mar 2018 20:56:45 GMT
+    Date: Mon, 19 Mar 2018 20:29:54 GMT
     Server: nginx/1.13.9
     Vary: Accept
     X-Frame-Options: SAMEORIGIN
 
     {
-        "RHELX-ami-09648c5666e4f95c7-t2.nano": 1480709.940728
+        "aws-ami-09648c5666e4f95c7-t2.nano": 1049629.191022
     }
 
 If you attempt to retrieve a report for an invalid cloud provider, you
@@ -278,7 +239,7 @@ Response:
     Connection: keep-alive
     Content-Length: 56
     Content-Type: application/json
-    Date: Wed, 14 Mar 2018 21:07:02 GMT
+    Date: Mon, 19 Mar 2018 20:30:16 GMT
     Server: nginx/1.13.9
     Vary: Accept
     X-Frame-Options: SAMEORIGIN
@@ -311,11 +272,47 @@ Response:
     Connection: keep-alive
     Content-Length: 23
     Content-Type: application/json
-    Date: Wed, 14 Mar 2018 21:07:46 GMT
+    Date: Mon, 19 Mar 2018 20:30:31 GMT
     Server: nginx/1.13.9
     Vary: Accept
     X-Frame-Options: SAMEORIGIN
 
     {
         "detail": "Not found."
+    }
+
+If you attempt to retrieve a report for a valid cloud provider but provide an
+account ID that does not match the cloud's format, you should get a 400 error.
+
+Request:
+
+.. code:: bash
+
+    http localhost:8000/api/v1/report/ "${AUTH}" \
+        cloud_provider=="aws" \
+        cloud_account_id=="NX-74205" \
+        start=="2018-03-01T00:00:00" \
+        end=="2018-04-01T00:00:00"
+
+Response:
+
+::
+
+    HTTP/1.1 400 Bad Request
+    Allow: GET, HEAD, OPTIONS
+    Connection: keep-alive
+    Content-Length: 132
+    Content-Type: application/json
+    Date: Mon, 19 Mar 2018 20:34:37 GMT
+    Server: nginx/1.13.9
+    Vary: Accept
+    X-Frame-Options: SAMEORIGIN
+
+    {
+        "cloud_account_id": [
+            "A valid number is required."
+        ],
+        "cloud_provider": [
+            "Incorrect cloud_account_id type for cloud_provider \"aws\""
+        ]
     }

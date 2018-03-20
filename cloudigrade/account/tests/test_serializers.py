@@ -5,41 +5,11 @@ from unittest.mock import patch
 from django.test import TestCase
 from django.utils.translation import gettext as _
 from rest_framework import serializers
-from rest_framework.test import APIRequestFactory
 
-from account import reports
-from account.models import Account, AwsAccount, AwsInstance, InstanceEvent
-from account.serializers import (AccountSerializer, AwsAccountSerializer,
-                                 ReportSerializer, aws)
-from account.tests import helper as account_helper
-from account.tests.helper import AWS_PROVIDER_STRING
+from account import AWS_PROVIDER_STRING, reports
+from account.models import AwsAccount, AwsInstance, InstanceEvent
+from account.serializers import AwsAccountSerializer, ReportSerializer, aws
 from util.tests import helper as util_helper
-
-
-class AccountSerializerTest(TestCase):
-    """Account serializer test case."""
-
-    def test_get_detail_aws(self):
-        """Test that getting an Account includes an AWS detail link."""
-        aws_account = account_helper.generate_aws_account()
-        request = APIRequestFactory().get(
-            f'/api/v1/account/{aws_account.id}/'
-        )
-        serializer = AccountSerializer(context={'request': request})
-        result = serializer.to_representation(aws_account)
-        expected_url_part = f'/api/v1/awsaccount/{aws_account.id}/'
-        self.assertIn(expected_url_part, result['detail'])
-
-    def test_get_detail_none(self):
-        """Test that getting an Account includes no detail link."""
-        # aws_account = account_helper.generate_aws_account()
-        account = Account.objects.create()
-        request = APIRequestFactory().get(
-            f'/api/v1/account/{account.id}/'
-        )
-        serializer = AccountSerializer(context={'request': request})
-        result = serializer.to_representation(account)
-        self.assertIsNone(result['detail'])
 
 
 class AwsAccountSerializerTest(TestCase):
@@ -126,12 +96,12 @@ class ReportSerializerTest(TestCase):
     def test_report_with_timezones_specified(self):
         """Test that start/end dates with timezones shift correctly to UTC."""
         cloud_provider = AWS_PROVIDER_STRING
-        cloud_account_id = str(util_helper.generate_dummy_aws_account_id())
+        cloud_account_id = util_helper.generate_dummy_aws_account_id()
         start_no_tz = '2018-01-01T00:00:00-05'
         end_no_tz = '2018-02-01T00:00:00+04'
         request_data = {
             'cloud_provider': cloud_provider,
-            'cloud_account_id': cloud_account_id,
+            'cloud_account_id': str(cloud_account_id),
             'start': start_no_tz,
             'end': end_no_tz,
         }
@@ -153,12 +123,12 @@ class ReportSerializerTest(TestCase):
     def test_report_without_timezones_specified(self):
         """Test that UTC is used if timezones are missing from start/end."""
         cloud_provider = AWS_PROVIDER_STRING
-        cloud_account_id = str(util_helper.generate_dummy_aws_account_id())
+        cloud_account_id = util_helper.generate_dummy_aws_account_id()
         start_no_tz = '2018-01-01T00:00:00'
         end_no_tz = '2018-02-01T00:00:00'
         mock_request_data = {
             'cloud_provider': cloud_provider,
-            'cloud_account_id': cloud_account_id,
+            'cloud_account_id': str(cloud_account_id),
             'start': start_no_tz,
             'end': end_no_tz,
         }

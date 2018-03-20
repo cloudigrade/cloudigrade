@@ -3,9 +3,9 @@ from unittest.mock import Mock, patch
 
 from django.test import TestCase
 
+from account import AWS_PROVIDER_STRING
 from account.exceptions import InvalidCloudProviderError
 from account.reports import helper
-from account.tests.helper import AWS_PROVIDER_STRING
 
 
 class GetReportHelperTest(TestCase):
