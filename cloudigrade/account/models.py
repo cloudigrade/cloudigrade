@@ -53,6 +53,23 @@ class InstanceEvent(BaseModel):
         """
 
 
+class MachineImage(BaseModel):
+    """Base Class for A cloud VM image."""
+
+    TYPE = model_utils.Choices(
+        'Windows',
+        'Linux',
+        'Unix-like'
+    )
+
+    platform = models.CharField(
+        max_length=16,
+        choices=TYPE,
+        null=False,
+        blank=False
+    )
+
+
 class AwsAccount(Account):
     """Amazon Web Services customer account model."""
 
@@ -85,11 +102,28 @@ class AwsInstance(Instance):
         return f'<AwsInstance {self.ec2_instance_id}>'
 
 
+class AWSMachineImage(MachineImage):
+    """MachineImage model for an AWS EC2 instance."""
+    ec2_ami_id = models.CharField(
+        max_length=256,
+        unique=True,
+        db_index=True,
+        null=False,
+        blank=False
+    )
+
+
 class AwsInstanceEvent(InstanceEvent):
     """Event model for an event triggered by an AwsInstance."""
 
     subnet = models.CharField(max_length=256, null=False, blank=False)
-    ec2_ami_id = models.CharField(max_length=256, null=False, blank=False)
+    ec2_ami_id = models.ForeignKey(
+        AWSMachineImage,
+        on_delete=models.CASCADE,
+        db_index=True,
+        null=False,
+    )
+
     instance_type = models.CharField(max_length=64, null=False, blank=False)
 
     @property
@@ -111,19 +145,3 @@ class AwsInstanceEvent(InstanceEvent):
         """
 
         return f'aws-{self.ec2_ami_id}-{self.instance_type}'
-
-class MachineImage(BaseModel):
-    """Base Class for A cloud VM image."""
-
-    TYPE = model_utils.Choices(
-        'Windows',
-        'Linux',
-        'Unix-like'
-    )
-
-    platform = models.CharField(
-        max_length=16,
-        choices=TYPE,
-        null=False,
-        blank=False
-    )
