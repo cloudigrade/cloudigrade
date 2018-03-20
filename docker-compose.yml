@@ -16,17 +16,17 @@ services:
       - AWS_SECRET_ACCESS_KEY
       - AWS_DEFAULT_REGION
     volumes:
-      - ./cloudigrade:/opt/cloudigrade
-      - ./docker/entrypoint.sh:/opt/cloudigrade/entrypoint.sh
-      - /tmp/cloudigrade/socket:/var/run/cloudigrade
+      - ./cloudigrade:/opt/cloudigrade:Z
+      - ./docker/entrypoint.sh:/opt/cloudigrade/entrypoint.sh:Z
+      - /tmp/cloudigrade/socket:/var/run/cloudigrade:Z
       - static:/opt/cloudigrade/static
     depends_on:
       - db
   web:
     image: nginx:alpine
     volumes:
-      - ./docker/nginx.conf:/etc/nginx/nginx.conf
-      - /tmp/cloudigrade/socket:/var/run/cloudigrade
+      - ./docker/nginx.conf:/etc/nginx/nginx.conf:Z
+      - /tmp/cloudigrade/socket:/var/run/cloudigrade:Z
       - static:/opt/cloudigrade/static
     ports:
       - "8000:80"
