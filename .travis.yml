@@ -5,9 +5,9 @@ cache: pip
 stages:
   - test
   - name: build container
-    if: branch != master AND tag IS blank
+    if: (branch != master AND tag IS blank) OR (type IN (pull_request))
   - name: build and push container
-    if: (branch = master) OR (tag IS present)
+    if: (type IN (push)) AND ((branch = master) OR (tag IS present))
 
 jobs:
   include:
