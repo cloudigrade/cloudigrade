@@ -117,6 +117,26 @@ the commands manually:
     export DJANGO_SETTINGS_MODULE=config.settings.local
     export PYTHONPATH=$(pwd)/cloudigrade
 
+## Coding Style
+
+As a required CI build step, we use `tox -e flake8` to run [flake8](https://pypi.python.org/pypi/flake8) with mostly standard settings plus the following plugins to ensure consistent coding style across the project:
+
+- [flake8-docstrings](https://pypi.python.org/pypi/flake8-docstrings)
+- [flake8-quotes](https://pypi.python.org/pypi/flake8-quotes)
+- [flake8-import-order](https://pypi.python.org/pypi/flake8-import-order)
+
+Imports must follow the `pycharm` style. If you are using PyCharm as your IDE, you can coerce it to use a compliant behavior by configuring your settings as follows:
+
+![](docs/pycharm-settings-imports.png)
+
+Alternatively, you may use the command-line tool [isort](https://pypi.python.org/pypi/isort) which has default settings that match closely enough for cloudigrade. `isort` can be used to automatically clean up imports across many files, but please manually review its changes before committing to ensure that there are no unintended side-effects. Example usage:
+
+    # view diff of suggested changes
+    isort -df -rc ./cloudigrade/
+
+    # apply all changes to files
+    isort -rc ./cloudigrade/
+
 
 ## Common commands
 
