@@ -3,6 +3,7 @@ import logging
 
 from dateutil import tz
 from django.db import transaction
+from django.conf import settings
 from django.utils.translation import gettext as _
 from rest_framework import serializers
 from rest_framework.reverse import reverse
@@ -10,7 +11,10 @@ from rest_framework.reverse import reverse
 import account
 from account import reports
 from account.models import Account, AwsAccount
-from account.util import create_initial_aws_instance_events
+from account.util import (create_initial_aws_instance_events,
+                          create_new_machine_images,
+                          generate_aws_ami_messages,
+                          add_messages_to_queue)
 from util import aws
 
 logger = logging.getLogger(__name__)
@@ -71,7 +75,10 @@ class AwsAccountSerializer(serializers.HyperlinkedModelSerializer):
             instances_data = aws.get_running_instances(session)
             with transaction.atomic():
                 account.save()
+                new_amis = create_new_machine_images(instances_data)
                 create_initial_aws_instance_events(account, instances_data)
+            messages = generate_aws_ami_messages(instances_data, new_amis)
+            add_messages_to_queue(settings.RABBITMQ_QUEUE_NAME, messages)
         else:
             raise serializers.ValidationError(
                 _('AwsAccount verification failed. ARN Info Not Stored')
