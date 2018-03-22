@@ -61,7 +61,12 @@ class MachineImage(BaseModel):
         'Linux',
         'Unix-like'
     )
-
+    account = models.ForeignKey(
+        Account,
+        on_delete=models.CASCADE,
+        db_index=True,
+        null=False,
+    )
     platform = models.CharField(
         max_length=16,
         choices=TYPE,
@@ -102,8 +107,9 @@ class AwsInstance(Instance):
         return f'<AwsInstance {self.ec2_instance_id}>'
 
 
-class AWSMachineImage(MachineImage):
+class AwsMachineImage(MachineImage):
     """MachineImage model for an AWS EC2 instance."""
+
     ec2_ami_id = models.CharField(
         max_length=256,
         unique=True,
@@ -117,13 +123,7 @@ class AwsInstanceEvent(InstanceEvent):
     """Event model for an event triggered by an AwsInstance."""
 
     subnet = models.CharField(max_length=256, null=False, blank=False)
-    ec2_ami_id = models.ForeignKey(
-        AWSMachineImage,
-        on_delete=models.CASCADE,
-        db_index=True,
-        null=False,
-    )
-
+    ec2_ami_id = models.CharField(max_length=256, null=False, blank=False)
     instance_type = models.CharField(max_length=64, null=False, blank=False)
 
     @property
@@ -143,5 +143,4 @@ class AwsInstanceEvent(InstanceEvent):
             str: the computed product identifier
 
         """
-
         return f'aws-{self.ec2_ami_id}-{self.instance_type}'
