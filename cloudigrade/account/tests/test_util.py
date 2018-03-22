@@ -7,7 +7,6 @@ from django.test import TestCase
 
 from account import AWS_PROVIDER_STRING, util
 from account.models import AwsAccount, AwsMachineImage
-# from account.tests import helper
 from util import aws
 from util.tests import helper as util_helper
 
