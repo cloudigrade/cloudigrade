@@ -2,8 +2,8 @@
 import logging
 
 from dateutil import tz
-from django.db import transaction
 from django.conf import settings
+from django.db import transaction
 from django.utils.translation import gettext as _
 from rest_framework import serializers
 from rest_framework.serializers import HyperlinkedModelSerializer, Serializer
@@ -12,10 +12,10 @@ from rest_polymorphic.serializers import PolymorphicSerializer
 import account
 from account import reports
 from account.models import AwsAccount
-from account.util import (create_initial_aws_instance_events,
+from account.util import (add_messages_to_queue,
+                          create_initial_aws_instance_events,
                           create_new_machine_images,
-                          generate_aws_ami_messages,
-                          add_messages_to_queue)
+                          generate_aws_ami_messages)
 from account.validators import validate_cloud_provider_account_id
 from util import aws
 
@@ -50,7 +50,7 @@ class AwsAccountSerializer(HyperlinkedModelSerializer):
             instances_data = aws.get_running_instances(session)
             with transaction.atomic():
                 account.save()
-                new_amis = create_new_machine_images(instances_data)
+                new_amis = create_new_machine_images(account, instances_data)
                 create_initial_aws_instance_events(account, instances_data)
             messages = generate_aws_ami_messages(instances_data, new_amis)
             add_messages_to_queue(settings.RABBITMQ_QUEUE_NAME, messages)
