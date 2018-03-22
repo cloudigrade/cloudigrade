@@ -10,4 +10,4 @@ DATABASES = {
 
 # Message and Task Queues
 
-CELERY_BROKER_URL = 'amqp://guest:guest@queue:5672/%2F'
+RABBITMQ_URL = 'amqp://guest:guest@queue:5672/%2F'

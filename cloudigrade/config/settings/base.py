@@ -155,3 +155,4 @@ REST_FRAMEWORK = {
 
 RABBITMQ_EXCHANGE_NAME = 'cloudigrade_inspectigrade'
 RABBITMQ_QUEUE_NAME = 'machine_images'
+RABBITMQ_URL = 'amqp://guest:guest@localhost:5672/%2F'

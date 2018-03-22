@@ -7,7 +7,3 @@ ALLOWED_HOSTS = env('DJANGO_ALLOWED_HOSTS', default=['*'])
 DATABASES = {
     'default': env.db(default='postgres://postgres:postgres@127.0.0.1:15432/postgres')
 }
-
-# Message and Task Queues
-
-CELERY_BROKER_URL = 'amqp://guest:guest@localhost:5672/%2F'

@@ -145,7 +145,7 @@ def add_messages_to_queue(queue_name, messages):
         routing_key=queue_name
     )
 
-    with kombu.Connection(settings.CELERY_BROKER_URL) as conn:
+    with kombu.Connection(settings.RABBITMQ_URL) as conn:
         producer = conn.Producer(serializer='json')
         for message in messages:
             result = producer.publish(
