@@ -10,8 +10,6 @@ from botocore.exceptions import ClientError
 from django.conf import settings
 from django.utils.translation import gettext as _
 
-from util import tasks
-
 logger = logging.getLogger(__name__)
 
 cloudigrade_policy = {
