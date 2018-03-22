@@ -8,5 +8,6 @@ DATABASES = {
     'default': env.db(default='postgres://postgres:postgres@db:5432/postgres')
 }
 
-CELERY_BROKER_URL = 'amqp://guest:guest@queue:5672//'
-RABBITMQ_QUEUE_NAME = 'machine_images'
+# Message and Task Queues
+
+CELERY_BROKER_URL = 'amqp://guest:guest@queue:5672/%2F'
