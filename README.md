@@ -8,8 +8,8 @@
 
 # What is cloudigrade?
 
-cloudigrade is an open-source suite of tools for tracking Linux distribution
-use (although chiefly targeting RHEL) in public cloud platforms. cloudigrade
+**cloudigrade** is an open-source suite of tools for tracking Linux distribution
+use (although chiefly targeting RHEL) in public cloud platforms. **cloudigrade**
 actively checks a user's account in a particular cloud for running instances,
 tracks when instances are powered on, determines what Linux distributions are
 installed on them, and provides the ability to generate reports to see how
@@ -17,125 +17,88 @@ long different distributions have run in a given window.
 
 ## What is this "Doppler" I see referenced in various places?
 
-Doppler is another code name for cloudigrade.
+Doppler is another code name for **cloudigrade**.
 
-Or is cloudigrade a code name for Doppler?
+Or is **cloudigrade** a code name for Doppler?
 
 `cloudigrade == Doppler` for all intents and purposes. 😉
 
 
-# Developing cloudigrade
+# Running cloudigrade
 
-This document provides instructions for setting up cloudigrade's development
-environment and some commands for testing and running it.
+We do not yet have concise setup notes for running **cloudigrade**, and we currently require setting up a complete development envirionment. Watch this space for changes in the future, but for now, please read the next "Developer Environment" section.
 
-## Local system setup (macOS)
+## Developer Environment
 
-Install [homebrew](https://brew.sh/):
+
+Because **cloudigrade** is actually a suite of interacting services, setting up a development environment may require installing some or all of the following dependencies:
+
+- Python (one of the versions we support)
+- [Docker](https://www.docker.com/community-edition#/download)
+- [docker-compose](https://docs.docker.com/compose/install/)
+- [tox](https://tox.readthedocs.io/)
+- [gettext](https://www.gnu.org/software/gettext/)
+- [PostgreSQL](https://www.postgresql.org/download/)
+- [AWS Command Line Interface](https://aws.amazon.com/cli/)
+
+
+### macOS dependencies
+
+We encourage macOS developers to use [homebrew](https://brew.sh/) to install and manage these dependencies. The following commands should install everything you need:
 
     /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-
-Use homebrew to install modern Python, the AWS CLI, and gettext:
-
     brew update
     brew install python pypy3 gettext awscli postgresql
     brew link gettext --force
-
-Get into the cloudigrade project code:
-
-    git clone git@github.com:cloudigrade/cloudigrade.git
-    cd cloudigrade
-
-Need to run cloudigrade? Use docker-compose!
-
-    make start-compose
-
-This will also mount the `./cloudigrade` folder inside the container, so you can
-continue working on code and it will auto-reload in the container. AWS Access
-within Docker is handled via environment variables. See the AWS account setup
-section for details.
-
-## AWS account setup
-
-Create an [AWS](https://aws.amazon.com/) account for Cloudigrade to use for its
-AWS commands if you don't already have one. You will need the AWS access key ID,
-AWS secret access key, and region name where the account operates.
-
-Use the AWS CLI to save that configuration to your local system:
-
-    aws configure
-
-You can verify that settings were stored correctly by checking the files it
-created in your `~/.aws/` directory.
-
-AWS Access within Docker is enabled via environment variables. Set the following
-variables in your local environment prior to running make start-compose. Values
-for these variables can be found in your `~/.aws/` directory.
-
-    AWS_ACCESS_KEY_ID
-    AWS_SECRET_ACCESS_KEY
-    AWS_DEFAULT_REGION
+    brew cask install docker
 
 
-## Python virtual environment setup
+### Python virtual environment
 
-All of cloudigrade's dependencies should be stored in a virtual environment.
-These instructions assume it is acceptable for you to use
-[virtualenv](https://virtualenv.pypa.io/) and
-[virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/), but if you wish
-to use another technology, that's your prerogative!
+We strongly encourage all developers to use a virtual environment to isolate **cloudigrade**'s Python package dependencies. You may use whatever tooling you feel confortable with, but here are some initial notes for setting up with [virtualenv](https://pypi.python.org/pypi/virtualenv) and [virtualenvwrapper](https://pypi.python.org/pypi/virtualenvwrapper):
 
-Install virtualenv and virtualenvwrapper with the system-level pip:
+    # install virtualenv and virtualenvwrapper
+    pip install -U pip
+    pip install -U virtualenvwrapper virtualenv
+    echo "source \"$(brew --prefix)/bin/virtualenvwrapper.sh\"" >> ~/.bash_profile
+    source $(brew --prefix)/bin/virtualenvwrapper.sh
 
-    pip3 install -U pip
-    pip3 install -U virtualenvwrapper virtualenv
-
-Add this command to your `~/.bash_profile` (assuming you use bash) or source it
-each time you want to work with virtualenvwrapper:
-
-    source /usr/local/bin/virtualenvwrapper.sh
-
-Create a virtualenv for the project's dependencies:
-
+    # create the environment
     mkvirtualenv cloudigrade
 
-If you already have a virtualenv or are working in a _new_ shell, activate it:
-
+    # activate the environment
     workon cloudigrade
 
-Install project dependencies:
+Once you have an environment set up, install our Python package requirements:
 
     pip install -U pip wheel tox
     pip install -r requirements/local.txt
 
 
-## Django setup
+### Configure AWS account credentials
 
-Set these environment variables for Django or else you will need to pass them to
-the commands manually:
+If you haven't already, create an [Amazon Web Services](https://aws.amazon.com/) account for **cloudigrade** to use for its AWS API calls. You will need the AWS access key ID, AWS secret access key, and region name where the account operates.
 
-    export DJANGO_SETTINGS_MODULE=config.settings.local
-    export PYTHONPATH=$(pwd)/cloudigrade
+Use the AWS CLI to save that configuration to your local system:
 
-## Coding Style
+    aws configure
 
-As a required CI build step, we use `tox -e flake8` to run [flake8](https://pypi.python.org/pypi/flake8) with mostly standard settings plus the following plugins to ensure consistent coding style across the project:
+You can verify that settings were stored correctly by checking the files it created in your `~/.aws/` directory.
 
-- [flake8-docstrings](https://pypi.python.org/pypi/flake8-docstrings)
-- [flake8-quotes](https://pypi.python.org/pypi/flake8-quotes)
-- [flake8-import-order](https://pypi.python.org/pypi/flake8-import-order)
+AWS access for running **cloudigrade** inside Docker must be enabled via environment variables. Set the following variables in your local environment *before* you start running in Docker containers. Values for these variables can be found in the files in your `~/.aws/` directory.
 
-Imports must follow the `pycharm` style. If you are using PyCharm as your IDE, you can coerce it to use a compliant behavior by configuring your settings as follows:
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `AWS_DEFAULT_REGION`
 
-![](docs/pycharm-settings-imports.png)
 
-Alternatively, you may use the command-line tool [isort](https://pypi.python.org/pypi/isort) which has default settings that match closely enough for cloudigrade. `isort` can be used to automatically clean up imports across many files, but please manually review its changes before committing to ensure that there are no unintended side-effects. Example usage:
+### Configure Django settings module
 
-    # view diff of suggested changes
-    isort -df -rc ./cloudigrade/
+For convenience, you may want to set the following environment variable:
 
-    # apply all changes to files
-    isort -rc ./cloudigrade/
+    DJANGO_SETTINGS_MODULE=config.settings.local
+
+If you do not set that variable, you may need to include the `--settings=config.settings.local` argument with any Django admin or management commands you run.
 
 
 ## Common commands
@@ -195,16 +158,16 @@ This auth token can be supplied in the Authorization header.
 
 ### Message Broker
 
-RabbitMQ is used to broker messages between cloudigrade and inspectigrade
+RabbitMQ is used to broker messages between **cloudigrade** and inspectigrade
 services. There are multiple Python packages available to interact with
 RabbitMQ; the officially recommended packaged is [Pika](https://pika.readthedocs.io/en/latest/). Both services serve as producers and consumers of the message queue.
-The cloudigrade docker-compose file requires that a password environment
+The **cloudigrade** docker-compose file requires that a password environment
 variable be set for the RabbitMQ user. Make sure that the following has been
 set in your local environment before starting
 
     RABBITMQ_DEFAULT_PASS
 
-The RabbitMQ container can persist message data in the cloudigrade directory.
+The RabbitMQ container can persist message data in the **cloudigrade** directory.
 To purge this data use
 
     make remove-compose-queue
