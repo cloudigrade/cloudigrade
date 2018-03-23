@@ -1,5 +1,5 @@
 """Collection of tests for custom DRF serializers in the account app."""
-import uuid
+import random
 from unittest.mock import patch
 
 from django.test import TestCase
@@ -22,7 +22,7 @@ class AwsAccountSerializerTest(TestCase):
         aws_account_id = util_helper.generate_dummy_aws_account_id()
         arn = util_helper.generate_dummy_arn(aws_account_id)
         role = util_helper.generate_dummy_role()
-        region = f'region-{uuid.uuid4()}'
+        region = random.choice(util_helper.SOME_AWS_REGIONS)
         running_instances = {
             region: [
                 util_helper.generate_dummy_describe_instance(

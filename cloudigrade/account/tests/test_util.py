@@ -1,6 +1,5 @@
 """Collection of tests for utils in the account app."""
 import random
-import uuid
 from unittest.mock import patch
 
 from django.test import TestCase
@@ -9,11 +8,6 @@ from account import AWS_PROVIDER_STRING, util
 from account.models import AwsAccount, AwsMachineImage
 from util import aws
 from util.tests import helper as util_helper
-
-
-def mock_publish(body, exchange, routing_key, declare):
-    """Mock queue publish function."""
-    return True
 
 
 class AccountUtilTest(TestCase):
@@ -26,7 +20,7 @@ class AccountUtilTest(TestCase):
         account = AwsAccount(account_arn=arn, aws_account_id=aws_account_id)
         account.save()
 
-        region = f'region-{uuid.uuid4()}'
+        region = random.choice(util_helper.SOME_AWS_REGIONS)
         running_instances = {
             region: [
                 util_helper.generate_dummy_describe_instance(
@@ -51,7 +45,7 @@ class AccountUtilTest(TestCase):
         account = AwsAccount(account_arn=arn, aws_account_id=aws_account_id)
         account.save()
 
-        region = f'region-{uuid.uuid4()}'
+        region = random.choice(util_helper.SOME_AWS_REGIONS)
         running_instances = {
             region: [
                 util_helper.generate_dummy_describe_instance(
@@ -107,7 +101,7 @@ class AccountUtilTest(TestCase):
             mock_with_conn = mock_conn.__enter__.return_value
             mock_producer = mock_with_conn.Producer.return_value
             mock_pub = mock_producer.publish
-            mock_pub.side_effect = mock_publish
+            mock_pub.return_value = True
 
             result = util.add_messages_to_queue(queue_name, messages)
 
@@ -137,7 +131,7 @@ class AccountUtilTest(TestCase):
             mock_with_conn = mock_conn.__enter__.return_value
             mock_producer = mock_with_conn.Producer.return_value
             mock_pub = mock_producer.publish
-            mock_pub.side_effect = mock_publish
+            mock_pub.return_value = True
 
             result = util.add_messages_to_queue(queue_name, messages)
 
