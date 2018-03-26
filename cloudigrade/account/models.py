@@ -56,11 +56,6 @@ class InstanceEvent(BaseModel):
 class MachineImage(BaseModel):
     """Base Class for A cloud VM image."""
 
-    TYPE = model_utils.Choices(
-        'Windows',
-        'Linux',
-        'Unix-like'
-    )
     account = models.ForeignKey(
         Account,
         on_delete=models.CASCADE,
