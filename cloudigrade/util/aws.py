@@ -136,7 +136,7 @@ def get_running_instances(session):
     for region_name in get_regions(session):
 
         ec2 = session.client('ec2', region_name=region_name)
-        logger.debug(_(f'Describing instances in {region_name}'))
+        logger.debug(_('Describing instances in {0}').format(region_name))
         instances = ec2.describe_instances()
         for reservation in instances.get('Reservations', []):
             running_instances[region_name] = [
@@ -206,10 +206,10 @@ def _handle_dry_run_response_exception(action, e):
     unauthorized_operation = 'UnauthorizedOperation'
 
     if e.response['Error']['Code'] == dry_run_operation:
-        logger.debug(_(f'Verified access to "{action}"'))
+        logger.debug(_('Verified access to "{0}"').format(action))
         return True
     elif e.response['Error']['Code'] == unauthorized_operation:
-        logger.warning(_(f'No access to "{action}"'))
+        logger.warning(_('No access to "{0}"').format(action))
         return False
     raise e
 
@@ -255,7 +255,8 @@ def _verify_policy_action(session, action):
                 DryRun=True
             )
         else:
-            logger.warning(_(f'No test case exists for action "{action}"'))
+            logger.warning(_('No test case exists for action "{0}"')
+                           .format(action))
             return False
     except ClientError as e:
         return _handle_dry_run_response_exception(action, e)
