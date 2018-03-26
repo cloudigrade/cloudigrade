@@ -1,13 +1,15 @@
 """Collection of tests for custom DRF serializers in the account app."""
-import uuid
+import random
 from unittest.mock import patch
 
 from django.test import TestCase
 from django.utils.translation import gettext as _
 from rest_framework import serializers
 
+import account.serializers as account_serializers
 from account import AWS_PROVIDER_STRING, reports
-from account.models import AwsAccount, AwsInstance, InstanceEvent
+from account.models import (AwsAccount, AwsInstance, AwsMachineImage,
+                            InstanceEvent)
 from account.serializers import AwsAccountSerializer, ReportSerializer, aws
 from util.tests import helper as util_helper
 
@@ -20,7 +22,7 @@ class AwsAccountSerializerTest(TestCase):
         aws_account_id = util_helper.generate_dummy_aws_account_id()
         arn = util_helper.generate_dummy_arn(aws_account_id)
         role = util_helper.generate_dummy_role()
-        region = f'region-{uuid.uuid4()}'
+        region = random.choice(util_helper.SOME_AWS_REGIONS)
         running_instances = {
             region: [
                 util_helper.generate_dummy_describe_instance(
@@ -31,17 +33,23 @@ class AwsAccountSerializerTest(TestCase):
                 )
             ]
         }
+        queue_results = [{instance['ImageId']: True}
+                         for instance in running_instances[region]]
+
         validated_data = {
             'account_arn': arn,
         }
 
         with patch.object(aws, 'verify_account_access') as mock_verify, \
                 patch.object(aws, 'boto3') as mock_boto3, \
-                patch.object(aws, 'get_running_instances') as mock_get_running:
+                patch.object(aws, 'get_running_instances') as mock_get_run, \
+                patch.object(account_serializers,
+                             'add_messages_to_queue') as mock_add_messages:
             mock_assume_role = mock_boto3.client.return_value.assume_role
             mock_assume_role.return_value = role
             mock_verify.return_value = True
-            mock_get_running.return_value = running_instances
+            mock_get_run.return_value = running_instances
+            mock_add_messages.return_value = queue_results
             serializer = AwsAccountSerializer()
 
             result = serializer.create(validated_data)
@@ -62,6 +70,9 @@ class AwsAccountSerializerTest(TestCase):
                 event = InstanceEvent.objects.get(instance=instance)
                 self.assertIsInstance(event, InstanceEvent)
                 self.assertEqual(InstanceEvent.TYPE.power_on, event.event_type)
+
+        amis = AwsMachineImage.objects.filter(account=account).all()
+        self.assertEqual(len(running_instances[region]), len(amis))
 
     def test_create_fails_when_account_not_verified(self):
         """Test that an account is not saved if verification fails."""

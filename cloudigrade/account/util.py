@@ -1,9 +1,13 @@
 """Various utility functions for the account app."""
 import collections
 
+import kombu
+from django.conf import settings
 from django.utils import timezone
 
-from account.models import AwsInstance, AwsInstanceEvent, InstanceEvent
+from account import AWS_PROVIDER_STRING
+from account.models import (AwsInstance, AwsInstanceEvent, AwsMachineImage,
+                            InstanceEvent)
 
 
 def create_initial_aws_instance_events(account, instances_data):
@@ -45,3 +49,109 @@ def create_initial_aws_instance_events(account, instances_data):
             event.save()
             saved_instances[region].append(instance)
     return dict(saved_instances)
+
+
+def create_new_machine_images(account, instances_data):
+    """
+    Create AwsMachineImage that have not been seen before.
+
+    Args:
+        account (AwsAccount): The account associated with the machine image
+        instances_data (dict): Dict whose keys are AWS region IDs and values
+            are each a list of dictionaries that represent an instance
+
+    Returns:
+        list: A list of image ids that were added to the database
+
+    """
+    saved_amis = []
+    for __, instances in instances_data.items():
+        platforms = {instance['ImageId']: instance['Platform']
+                     for instance in instances
+                     if instance.get('Platform') == 'Windows'}
+        seen_amis = set([instance['ImageId'] for instance in instances])
+        known_amis = AwsMachineImage.objects.filter(
+            ec2_ami_id__in=list(seen_amis)
+        )
+        new_amis = list(seen_amis.difference(known_amis))
+
+        for new_ami in new_amis:
+            ami = AwsMachineImage(
+                account=account,
+                ec2_ami_id=new_ami,
+                is_windows=True if platforms.get(new_ami) else False
+            )
+            ami.save()
+
+        saved_amis.extend(new_amis)
+    return saved_amis
+
+
+def generate_aws_ami_messages(instances_data, ami_list):
+    """
+    Format information about the machine image for messaging.
+
+    This is a pre-step to sending messages to a message queue.
+
+    Args:
+        instances_data (dict): Dict whose keys are AWS region IDs and values
+            are each a list of dictionaries that represent an instance
+        ami_list (list): A list of machine images that need
+            messages generated.
+
+    Returns:
+        list[dict]: A list of message dictionaries
+
+    """
+    messages = []
+    for region, instances in instances_data.items():
+        for instance in instances:
+            if (instance['ImageId'] in ami_list and
+                    instance.get('Platform') != 'Windows'):
+                messages.append(
+                    {
+                        'cloud_provider': AWS_PROVIDER_STRING,
+                        'region': region,
+                        'image_id': instance['ImageId']
+                    }
+                )
+    return messages
+
+
+def add_messages_to_queue(queue_name, messages):
+    """
+    Send messages to a message queue.
+
+    Args:
+        queue_name (string): The queue to add messages to
+        messages (list[dict]): A list of message dictionaries. The message
+            dicts will be serialized as JSON strings.
+
+    Returns:
+        dict: A mapping of machine image ID to result boolean value
+
+    """
+    results = {}
+    exchange = kombu.Exchange(
+        settings.RABBITMQ_EXCHANGE_NAME,
+        'direct',
+        durable=True
+    )
+    message_queue = kombu.Queue(
+        queue_name,
+        exchange=exchange,
+        routing_key=queue_name
+    )
+
+    with kombu.Connection(settings.RABBITMQ_URL) as conn:
+        producer = conn.Producer(serializer='json')
+        for message in messages:
+            result = producer.publish(
+                message,
+                exchange=exchange,
+                routing_key=queue_name,
+                declare=[message_queue]
+            )
+            results[message['image_id']] = result
+
+    return results
