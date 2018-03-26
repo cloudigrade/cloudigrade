@@ -1,0 +1,10 @@
+seqdiag {
+    'task worker'; cloudigrade; AWS;
+    'task worker' => cloudigrade [label='cleanup cluster'] {
+        cloudigrade => AWS [label='detach volumes'];
+        cloudigrade => AWS [label='set cluster size 0'];
+        cloudigrade => AWS [label='delete volumes'];
+        cloudigrade => AWS [label='delete snapshots'];
+        cloudigrade => AWS [label='unset snapshot ownership'];
+    }
+}

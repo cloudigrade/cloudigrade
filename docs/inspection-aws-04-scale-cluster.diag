@@ -1,0 +1,11 @@
+seqdiag {
+    'cron'; cloudigrade; 'message queue'; 'task queue'; AWS;
+    'cron' => cloudigrade [label='scale cluster'] {
+        cloudigrade => AWS [label='check cluster size', return='0'];
+        === if nonzero, abort and retry later ===
+        cloudigrade => 'message queue' [label='get volume ids', return='volume ids'];
+        === if no messages, abort and retry later ===
+        cloudigrade => AWS [label='set cluster scale'];
+        cloudigrade => 'task queue' [label='async configure cluster'];
+    }
+}
