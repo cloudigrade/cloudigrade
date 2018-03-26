@@ -255,7 +255,8 @@ def _verify_policy_action(session, action):
                 DryRun=True
             )
         else:
-            logger.warning(_('No test case exists for action "{0}"').format(action))
+            logger.warning(_('No test case exists for action "{0}"')
+                           .format(action))
             return False
     except ClientError as e:
         return _handle_dry_run_response_exception(action, e)
