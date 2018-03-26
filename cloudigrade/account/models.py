@@ -53,6 +53,21 @@ class InstanceEvent(BaseModel):
         """
 
 
+class MachineImage(BaseModel):
+    """Base Class for A cloud VM image."""
+
+    account = models.ForeignKey(
+        Account,
+        on_delete=models.CASCADE,
+        db_index=True,
+        null=False,
+    )
+    is_windows = models.BooleanField(
+        null=False,
+        blank=False
+    )
+
+
 class AwsAccount(Account):
     """Amazon Web Services customer account model."""
 
@@ -83,6 +98,18 @@ class AwsInstance(Instance):
     def __repr__(self):
         """Get repr of this AwsInstance."""
         return f'<AwsInstance {self.ec2_instance_id}>'
+
+
+class AwsMachineImage(MachineImage):
+    """MachineImage model for an AWS EC2 instance."""
+
+    ec2_ami_id = models.CharField(
+        max_length=256,
+        unique=True,
+        db_index=True,
+        null=False,
+        blank=False
+    )
 
 
 class AwsInstanceEvent(InstanceEvent):

@@ -150,3 +150,9 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     )
 }
+
+# Message and Task Queues
+
+RABBITMQ_EXCHANGE_NAME = 'cloudigrade_inspectigrade'
+RABBITMQ_QUEUE_NAME = 'machine_images'
+RABBITMQ_URL = 'amqp://guest:guest@localhost:5672/%2F'
