@@ -1,0 +1,8 @@
+seqdiag {
+    'task worker'; cloudigrade; 'message queue'; AWS;
+    'task worker' => cloudigrade [label='enqueue volume'] {
+        cloudigrade => AWS [label='check volume ready', return='true'];
+        === if volume not ready, abort and retry later ===
+        cloudigrade => 'message queue' [label='enqueue volume id'];
+    }
+}

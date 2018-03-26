@@ -1,0 +1,5 @@
+seqdiag {
+    houndigrade; filesystem; 'message queue';
+    houndigrade => filesystem [label='check for products', return='data'];
+    houndigrade => 'message queue' [label='enqueue inspection results'];
+}
