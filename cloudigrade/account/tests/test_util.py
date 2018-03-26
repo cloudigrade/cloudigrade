@@ -63,7 +63,7 @@ class AccountUtilTest(TestCase):
         self.assertEqual(result, [ami_id])
         for ami in amis:
             self.assertEqual(ami.ec2_ami_id, ami_id)
-            self.assertEqual(ami.platform, ami.TYPE.Windows)
+            self.assertTrue(ami.is_windows)
 
     def test_generate_aws_ami_messages(self):
         """Test that messages are formatted correctly."""

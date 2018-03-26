@@ -67,9 +67,7 @@ class MachineImage(BaseModel):
         db_index=True,
         null=False,
     )
-    platform = models.CharField(
-        max_length=16,
-        choices=TYPE,
+    is_windows = models.BooleanField(
         null=False,
         blank=False
     )

@@ -7,7 +7,7 @@ from django.utils import timezone
 
 from account import AWS_PROVIDER_STRING
 from account.models import (AwsInstance, AwsInstanceEvent, AwsMachineImage,
-                            InstanceEvent, MachineImage)
+                            InstanceEvent)
 
 
 def create_initial_aws_instance_events(account, instances_data):
@@ -79,9 +79,7 @@ def create_new_machine_images(account, instances_data):
             ami = AwsMachineImage(
                 account=account,
                 ec2_ami_id=new_ami,
-                platform=(MachineImage.TYPE.Windows
-                          if platforms.get(new_ami)
-                          else MachineImage.TYPE.Linux)
+                is_windows=True if platforms.get(new_ami) else False
             )
             ami.save()
 
