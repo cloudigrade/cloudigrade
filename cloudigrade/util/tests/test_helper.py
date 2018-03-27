@@ -4,6 +4,7 @@ Because even test helpers should be tested!
 """
 import datetime
 import random
+import re
 import uuid
 
 from django.test import TestCase
@@ -18,20 +19,19 @@ class UtilHelperTest(TestCase):
     def test_generate_dummy_aws_account_id(self):
         """Assert generation of an appropriate AWS AwsAccount ID."""
         account_id = helper.generate_dummy_aws_account_id()
-        self.assertLess(account_id, helper.MAX_AWS_ACCOUNT_ID)
-        self.assertGreater(account_id, 0)
+        self.assertNotEqual(re.match(r'\d{12}', account_id), None)
 
     def test_generate_dummy_arn_random_account_id(self):
         """Assert generation of an ARN without a specified account ID."""
-        arn = helper.generate_dummy_arn()
-        account_id = aws.extract_account_id_from_arn(arn)
-        self.assertIn(str(account_id), arn)
+        arn = helper.generate_dummy_arn(generate_account_id=True)
+        account_id = aws.AwsArn(arn).account_id
+        self.assertIn(account_id, arn)
 
     def test_generate_dummy_arn_given_account_id(self):
         """Assert generation of an ARN with a specified account ID."""
-        account_id = 123456789
+        account_id = '012345678901'
         arn = helper.generate_dummy_arn(account_id)
-        self.assertIn(str(account_id), arn)
+        self.assertIn(account_id, arn)
 
     def test_generate_dummy_describe_instance_default(self):
         """Assert generated instance has values where expected."""

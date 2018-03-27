@@ -1,9 +1,9 @@
 """Helper utility module to wrap up common AWS operations."""
-import decimal
 import enum
 import gzip
 import json
 import logging
+import re
 
 import boto3
 from botocore.exceptions import ClientError
@@ -63,18 +63,64 @@ class InstanceState(enum.Enum):
         return code == cls.running.value
 
 
-def extract_account_id_from_arn(arn):
+class AwsArn(object):
     """
-    Extract the AWS account ID from the given ARN.
+    Object representing an AWS ARN.
 
-    Args:
-        arn (str): A well-formed Amazon Resource Name.
+    See also:
+        https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html
 
-    Returns:
-        Decimal: The AwsAccount ID found in the ARN.
+    General ARN formats:
+        arn:partition:service:region:account-id:resource
+        arn:partition:service:region:account-id:resourcetype/resource
+        arn:partition:service:region:account-id:resourcetype:resource
+
+    Example ARNs:
+        <!-- Elastic Beanstalk application version -->
+        arn:aws:elasticbeanstalk:us-east-1:123456789012:environment/My App/MyEnvironment
+
+        <!-- IAM user name -->
+        arn:aws:iam::123456789012:user/David
+
+        <!-- Amazon RDS instance used for tagging -->
+        arn:aws:rds:eu-west-1:123456789012:db:mysql-db
+
+        <!-- Object in an Amazon S3 bucket -->
+        arn:aws:s3:::my_corporate_bucket/exampleobject.png
 
     """
-    return decimal.Decimal(arn.split(':')[4])
+
+    # pylint: disable=line-too-long
+    arn_regex = re.compile(r'^arn:(?P<partition>\w+):(?P<service>\w+):(?P<region>\w+(?:-\w+)+)?:(?P<account_id>\d{12})?:(?P<resource_type>\w+)(?P<resource_separator>[:/])?(?P<resource>.*)')
+
+    partition = None
+    service = None
+    region = None
+    account_id = None
+    resource_type = None
+    resource_separator = None
+    resource = None
+
+    def __init__(self, arn):
+        """
+        Parse ARN string into its component pieces.
+
+        Args:
+            arn (str): Amazon Resource Name
+
+        """
+        self.arn = arn
+        match = self.arn_regex.match(arn)
+
+        if not match:
+            raise ValueError('Invalid ARN: %s' % arn)
+
+        for key, val in match.groupdict().items():
+            setattr(self, key, val)
+
+    def __repr__(self):
+        """Return the ARN itself."""
+        return self.arn
 
 
 def get_session(arn, region_name='us-east-1'):
@@ -91,10 +137,11 @@ def get_session(arn, region_name='us-east-1'):
 
     """
     sts = boto3.client('sts')
+    awsarn = AwsArn(arn)
     response = sts.assume_role(
         Policy=json.dumps(cloudigrade_policy),
-        RoleArn=arn,
-        RoleSessionName=f'cloudigrade-{extract_account_id_from_arn(arn)}'
+        RoleArn=str(awsarn),
+        RoleSessionName=f'cloudigrade-{awsarn.account_id}'
     )
     response = response['Credentials']
     return boto3.Session(

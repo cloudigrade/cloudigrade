@@ -54,7 +54,7 @@ class Migration(migrations.Migration):
             name='AwsAccount',
             fields=[
                 ('account_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='account.Account')),
-                ('aws_account_id', models.DecimalField(db_index=True, decimal_places=0, max_digits=12)),
+                ('aws_account_id', models.CharField(db_index=True, max_length=12)),
                 ('account_arn', models.CharField(max_length=256, unique=True)),
             ],
             options={

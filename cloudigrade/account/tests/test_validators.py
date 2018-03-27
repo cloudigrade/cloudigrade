@@ -1,6 +1,6 @@
 """Collection of tests for custom DRF validators in the account app."""
+import re
 import uuid
-from decimal import Decimal
 
 from django.test import TestCase
 from rest_framework.exceptions import ValidationError
@@ -17,11 +17,13 @@ class ValidatorsTest(TestCase):
         """Assert validator works for valid AWS account ID."""
         input_data = {
             'cloud_provider': AWS_PROVIDER_STRING,
-            'cloud_account_id': str(generate_dummy_aws_account_id()),
+            'cloud_account_id': generate_dummy_aws_account_id(),
         }
         output_data = validate_cloud_provider_account_id(input_data)
         self.assertDictEqual(output_data, input_data)
-        self.assertIsInstance(output_data['cloud_account_id'], Decimal)
+        self.assertIsInstance(output_data['cloud_account_id'], str)
+        self.assertNotEqual(re.match(r'\d{12}',
+                                     output_data['cloud_account_id']), None)
 
     def test_validate_cloud_provider_account_id_aws_bad_number(self):
         """Assert validator reports error for invalid AWS account ID."""

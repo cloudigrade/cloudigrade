@@ -16,20 +16,21 @@ def generate_aws_account(arn=None, aws_account_id=None):
 
     Args:
         arn (str): Optional ARN.
-        aws_account_id (decimal.Decimal): Optional AWS account ID.
+        aws_account_id (12-digit string): Optional AWS account ID.
 
     Returns:
         AwsAccount: The created AwsAccount.
 
     """
     if arn is None:
-        arn = helper.generate_dummy_arn(aws_account_id)
-    if aws_account_id is None:
-        aws_account_id = aws.extract_account_id_from_arn(arn)
+        if aws_account_id is None:
+            arn = helper.generate_dummy_arn(generate_account_id=True)
+        else:
+            arn = helper.generate_dummy_arn(account_id=aws_account_id)
 
     return AwsAccount.objects.create(
         account_arn=arn,
-        aws_account_id=aws_account_id,
+        aws_account_id=aws.AwsArn(arn).account_id,
     )
 
 

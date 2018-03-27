@@ -1,7 +1,7 @@
 """Helper functions for generating test data."""
 import datetime
-import decimal
 import random
+import string
 import uuid
 from unittest.mock import Mock
 
@@ -9,8 +9,6 @@ import faker
 from dateutil import tz
 
 from util import aws
-
-MAX_AWS_ACCOUNT_ID = 999999999999
 
 SOME_AWS_REGIONS = (
     'ap-northeast-1',
@@ -36,26 +34,35 @@ SOME_EC2_INSTANCE_TYPES = (
 
 def generate_dummy_aws_account_id():
     """Generate a dummy AWS AwsAccount ID for testing purposes."""
-    return decimal.Decimal(random.randrange(MAX_AWS_ACCOUNT_ID))
+    return ''.join(random.choice(string.digits) for _ in range(12))
 
 
-def generate_dummy_arn(account_id=None):
+def generate_dummy_arn(account_id='',
+                       region='',
+                       resource_separator=':',
+                       generate_account_id=False):
     """
     Generate a dummy AWS ARN for testing purposes.
 
     account_id argument is optional, and will be randomly generated if None.
 
     Args:
-        account_id (int): Optional account ID.
+        account_id (str): Optional account ID.
+        region (str): Optional region
+        resource_separator (str): A colon ':' or a forward-slash '/'
+        generate_account_id (bool): Whether to generate a random account_id,
+                        This will override any account_id that is passed in
 
     Returns:
         str: A well-formed, randomized ARN.
 
     """
-    if account_id is None:
+    if generate_account_id:
         account_id = generate_dummy_aws_account_id()
-    words = faker.Faker().name().replace(' ', '_')
-    arn = f'arn:aws:iam::{account_id}:role/{words}'
+    resource = faker.Faker().name()
+    resource_type = faker.Faker().name().replace(' ', '_')
+    # pylint: disable=line-too-long
+    arn = f'arn:aws:fakeservice:{region}:{account_id}:{resource_type}{resource_separator}{resource}'
     return arn
 
 
