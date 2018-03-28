@@ -61,8 +61,11 @@ def generate_dummy_arn(account_id='',
         account_id = generate_dummy_aws_account_id()
     resource = faker.Faker().name()
     resource_type = faker.Faker().name().replace(' ', '_')
-    # pylint: disable=line-too-long
-    arn = f'arn:aws:fakeservice:{region}:{account_id}:{resource_type}{resource_separator}{resource}'
+    arn = ('arn:aws:fakeservice:{0}:{1}:{2}{3}{4}').format(region,
+                                                           account_id,
+                                                           resource_type,
+                                                           resource_separator,
+                                                           resource)
     return arn
 
 

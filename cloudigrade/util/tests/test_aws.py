@@ -137,8 +137,8 @@ class UtilAwsTest(TestCase):
             mock_client.assert_called_with('sts')
             mock_assume_role.assert_called_with(
                 Policy=json.dumps(aws.cloudigrade_policy),
-                RoleArn=f'{mock_arn}',
-                RoleSessionName=f'cloudigrade-{mock_account_id}'
+                RoleArn='{0}'.format(mock_arn),
+                RoleSessionName='cloudigrade-{0}'.format(mock_account_id)
             )
 
         self.assertEqual(creds[0], mock_role['Credentials']['AccessKeyId'])

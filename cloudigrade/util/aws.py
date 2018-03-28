@@ -77,7 +77,7 @@ class AwsArn(object):
 
     Example ARNs:
         <!-- Elastic Beanstalk application version -->
-        arn:aws:elasticbeanstalk:us-east-1:123456789012:environment/My App/MyEnvironment
+        arn:aws:elasticbeanstalk:us-east-1:123456789012:environment/My App/foo
 
         <!-- IAM user name -->
         arn:aws:iam::123456789012:user/David
@@ -90,8 +90,10 @@ class AwsArn(object):
 
     """
 
-    # pylint: disable=line-too-long
-    arn_regex = re.compile(r'^arn:(?P<partition>\w+):(?P<service>\w+):(?P<region>\w+(?:-\w+)+)?:(?P<account_id>\d{12})?:(?P<resource_type>\w+)(?P<resource_separator>[:/])?(?P<resource>.*)')
+    arn_regex = re.compile(r'^arn:(?P<partition>\w+):(?P<service>\w+):' +
+                           '(?P<region>\w+(?:-\w+)+)?:' +
+                           '(?P<account_id>\d{12})?:(?P<resource_type>\w+)' +
+                           '(?P<resource_separator>[:/])?(?P<resource>.*)')
 
     partition = None
     service = None
@@ -113,7 +115,7 @@ class AwsArn(object):
         match = self.arn_regex.match(arn)
 
         if not match:
-            raise ValueError('Invalid ARN: %s' % arn)
+            raise ValueError('Invalid ARN: {0}'.format(arn))
 
         for key, val in match.groupdict().items():
             setattr(self, key, val)
@@ -140,8 +142,8 @@ def get_session(arn, region_name='us-east-1'):
     awsarn = AwsArn(arn)
     response = sts.assume_role(
         Policy=json.dumps(cloudigrade_policy),
-        RoleArn=str(awsarn),
-        RoleSessionName=f'cloudigrade-{awsarn.account_id}'
+        RoleArn='{0}'.format(awsarn),
+        RoleSessionName='cloudigrade-{0}'.format(awsarn.account_id)
     )
     response = response['Credentials']
     return boto3.Session(
