@@ -12,25 +12,84 @@ from django.conf import settings
 from django.test import TestCase
 
 from util import aws
-from util.aws import extract_account_id_from_arn
+from util.aws import AwsArn
 from util.tests import helper
 
 
 class UtilAwsTest(TestCase):
     """AWS utility functions test case."""
 
-    def test_extract_account_id_from_arn(self):
-        """Assert successful account ID extraction from a well-formed ARN."""
+    def test_parse_arn_with_region_and_account(self):
+        """Assert successful account ID parsing from a well-formed ARN."""
         mock_account_id = helper.generate_dummy_aws_account_id()
-        mock_arn = helper.generate_dummy_arn(mock_account_id)
-        extracted_account_id = aws.extract_account_id_from_arn(mock_arn)
-        self.assertEqual(mock_account_id, extracted_account_id)
+        mock_arn = helper.generate_dummy_arn(account_id=mock_account_id,
+                                             region='test-region-1')
 
-    def test_error_extract_account_id_from_invalid_arn(self):
-        """Assert error in account ID extraction from a badly-formed ARN."""
+        arn_object = AwsArn(mock_arn)
+
+        partition = arn_object.partition
+        self.assertIsNotNone(partition)
+
+        service = arn_object.service
+        self.assertIsNotNone(service)
+
+        region = arn_object.region
+        self.assertIsNotNone(region)
+
+        account_id = arn_object.account_id
+        self.assertIsNotNone(account_id)
+
+        resource_type = arn_object.resource_type
+        self.assertIsNotNone(resource_type)
+
+        resource_separator = arn_object.resource_separator
+        self.assertIsNotNone(resource_separator)
+
+        resource = arn_object.resource
+        self.assertIsNotNone(resource)
+
+        reconstructed_arn = 'arn:' + \
+                            partition + ':' + \
+                            service + ':' + \
+                            region + ':' + \
+                            account_id + ':' + \
+                            resource_type + \
+                            resource_separator + \
+                            resource
+
+        self.assertEqual(mock_account_id, account_id)
+        self.assertEqual(mock_arn, reconstructed_arn)
+
+    def test_parse_arn_without_region_or_account(self):
+        """Assert successful ARN parsing without a region or an account id."""
+        mock_arn = helper.generate_dummy_arn()
+        arn_object = AwsArn(mock_arn)
+
+        region = arn_object.region
+        self.assertEqual(region, None)
+
+        account_id = arn_object.account_id
+        self.assertEqual(account_id, None)
+
+    def test_parse_arn_with_slash_separator(self):
+        """Assert successful ARN parsing with a slash separator."""
+        mock_arn = helper.generate_dummy_arn(resource_separator='/')
+        arn_object = AwsArn(mock_arn)
+
+        resource_type = arn_object.resource_type
+        self.assertIsNotNone(resource_type)
+
+        resource_separator = arn_object.resource_separator
+        self.assertEqual(resource_separator, '/')
+
+        resource = arn_object.resource
+        self.assertIsNotNone(resource)
+
+    def test_error_from_invalid_arn(self):
+        """Assert error in account ID parsing from a badly-formed ARN."""
         mock_arn = faker.Faker().text()
-        with self.assertRaises(Exception):  # TODO more specific exceptions
-            aws.extract_account_id_from_arn(mock_arn)
+        with self.assertRaises(ValueError):
+            aws.AwsArn(mock_arn)
 
     def test_get_regions_with_no_args(self):
         """Assert get_regions with no args returns expected regions."""
@@ -64,22 +123,22 @@ class UtilAwsTest(TestCase):
 
     def test_get_session(self):
         """Assert get_session returns session object."""
-        mock_arn = helper.generate_dummy_arn()
-        mock_account_id = extract_account_id_from_arn(mock_arn)
+        mock_arn = AwsArn(helper.generate_dummy_arn(generate_account_id=True))
+        mock_account_id = mock_arn.account_id
         mock_role = helper.generate_dummy_role()
 
         with patch.object(aws.boto3, 'client') as mock_client:
             mock_assume_role = mock_client.return_value.assume_role
             mock_assume_role.return_value = mock_role
 
-            session = aws.get_session(mock_arn)
+            session = aws.get_session(str(mock_arn))
             creds = session.get_credentials().get_frozen_credentials()
 
             mock_client.assert_called_with('sts')
             mock_assume_role.assert_called_with(
                 Policy=json.dumps(aws.cloudigrade_policy),
-                RoleArn=mock_arn,
-                RoleSessionName=f'cloudigrade-{mock_account_id}'
+                RoleArn='{0}'.format(mock_arn),
+                RoleSessionName='cloudigrade-{0}'.format(mock_account_id)
             )
 
         self.assertEqual(creds[0], mock_role['Credentials']['AccessKeyId'])

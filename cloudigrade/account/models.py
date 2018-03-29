@@ -71,11 +71,7 @@ class MachineImage(BaseModel):
 class AwsAccount(Account):
     """Amazon Web Services customer account model."""
 
-    aws_account_id = models.DecimalField(
-        max_digits=12,
-        decimal_places=0,
-        db_index=True,
-    )
+    aws_account_id = models.CharField(max_length=16, db_index=True)
     account_arn = models.CharField(max_length=256, unique=True)
 
 

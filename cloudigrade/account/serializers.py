@@ -42,10 +42,11 @@ class AwsAccountSerializer(HyperlinkedModelSerializer):
 
     def create(self, validated_data):
         """Create an AwsAccount."""
-        arn = validated_data['account_arn']
-        aws_account_id = aws.extract_account_id_from_arn(arn)
-        account = AwsAccount(account_arn=arn, aws_account_id=aws_account_id)
-        session = aws.get_session(arn)
+        arn = aws.AwsArn(validated_data['account_arn'])
+        aws_account_id = arn.account_id
+        account = AwsAccount(account_arn=str(arn),
+                             aws_account_id=aws_account_id)
+        session = aws.get_session(str(arn))
         if aws.verify_account_access(session):
             instances_data = aws.get_running_instances(session)
             with transaction.atomic():

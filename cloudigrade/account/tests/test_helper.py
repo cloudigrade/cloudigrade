@@ -3,6 +3,7 @@
 Because even test helpers should be tested!
 """
 import random
+import re
 import uuid
 
 from django.test import TestCase
@@ -19,14 +20,12 @@ class GenerateAwsAccountTest(TestCase):
         """Assert generation of an AwsAccount with default/no args."""
         account = helper.generate_aws_account()
         self.assertIsInstance(account, AwsAccount)
-        self.assertLess(account.aws_account_id, util_helper.MAX_AWS_ACCOUNT_ID)
-        self.assertGreater(account.aws_account_id, 0)
-        self.assertIn(str(account.aws_account_id), account.account_arn)
+        self.assertIsNotNone(re.match(r'\d{12}', account.aws_account_id))
 
     def test_generate_aws_account_with_args(self):
         """Assert generation of an AwsAccount with all specified args."""
         aws_account_id = util_helper.generate_dummy_aws_account_id()
-        arn = util_helper.generate_dummy_arn(aws_account_id)
+        arn = util_helper.generate_dummy_arn(account_id=aws_account_id)
         account = helper.generate_aws_account(arn, aws_account_id)
         self.assertIsInstance(account, AwsAccount)
         self.assertEqual(account.account_arn, arn)
