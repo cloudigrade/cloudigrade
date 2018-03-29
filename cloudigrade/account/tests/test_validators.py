@@ -22,8 +22,8 @@ class ValidatorsTest(TestCase):
         output_data = validate_cloud_provider_account_id(input_data)
         self.assertDictEqual(output_data, input_data)
         self.assertIsInstance(output_data['cloud_account_id'], str)
-        self.assertNotEqual(re.match(r'\d{12}',
-                                     output_data['cloud_account_id']), None)
+        self.assertIsNotNone(re.match(r'\d{12}',
+                                      output_data['cloud_account_id']))
 
     def test_validate_cloud_provider_account_id_aws_bad_number(self):
         """Assert validator reports error for invalid AWS account ID."""

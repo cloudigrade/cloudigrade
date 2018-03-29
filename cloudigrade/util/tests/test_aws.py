@@ -28,25 +28,25 @@ class UtilAwsTest(TestCase):
         arn_object = AwsArn(mock_arn)
 
         partition = arn_object.partition
-        self.assertNotEqual(partition, None)
+        self.assertIsNotNone(partition)
 
         service = arn_object.service
-        self.assertNotEqual(service, None)
+        self.assertIsNotNone(service)
 
         region = arn_object.region
-        self.assertNotEqual(region, None)
+        self.assertIsNotNone(region)
 
         account_id = arn_object.account_id
-        self.assertNotEqual(account_id, None)
+        self.assertIsNotNone(account_id)
 
         resource_type = arn_object.resource_type
-        self.assertNotEqual(resource_type, None)
+        self.assertIsNotNone(resource_type)
 
         resource_separator = arn_object.resource_separator
-        self.assertNotEqual(resource_separator, None)
+        self.assertIsNotNone(resource_separator)
 
         resource = arn_object.resource
-        self.assertNotEqual(resource, None)
+        self.assertIsNotNone(resource)
 
         reconstructed_arn = 'arn:' + \
                             partition + ':' + \
@@ -77,13 +77,13 @@ class UtilAwsTest(TestCase):
         arn_object = AwsArn(mock_arn)
 
         resource_type = arn_object.resource_type
-        self.assertNotEqual(resource_type, None)
+        self.assertIsNotNone(resource_type)
 
         resource_separator = arn_object.resource_separator
         self.assertEqual(resource_separator, '/')
 
         resource = arn_object.resource
-        self.assertNotEqual(resource, None)
+        self.assertIsNotNone(resource)
 
     def test_error_from_invalid_arn(self):
         """Assert error in account ID parsing from a badly-formed ARN."""
