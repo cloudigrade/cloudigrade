@@ -1,13 +1,13 @@
 FROM python:3.6-alpine
 
-RUN addgroup -S cloudigrade
-RUN adduser -S cloudigrade -G cloudigrade
+RUN addgroup -S cloudigrade && \
+    adduser -S cloudigrade -G cloudigrade
 
 WORKDIR /opt/cloudigrade
 
 COPY requirements requirements
-RUN apk --no-cache --update add postgresql-libs
-RUN apk --no-cache --update add --virtual build-deps python3-dev gcc postgresql-dev musl-dev libffi-dev \
+RUN apk --no-cache --update add postgresql-libs \
+  && apk --no-cache --update add --virtual build-deps python3-dev gcc postgresql-dev musl-dev libffi-dev \
   && pip install -r requirements/prod.txt \
   && apk del build-deps \
   && rm -rf requirements
