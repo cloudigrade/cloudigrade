@@ -12,7 +12,7 @@ from django.conf import settings
 from django.test import TestCase
 
 from util import aws
-from util.aws import AwsArn
+from util.aws import AwsArn, InvalidArn
 from util.tests import helper
 
 
@@ -88,7 +88,7 @@ class UtilAwsTest(TestCase):
     def test_error_from_invalid_arn(self):
         """Assert error in account ID parsing from a badly-formed ARN."""
         mock_arn = faker.Faker().text()
-        with self.assertRaises(ValueError):
+        with self.assertRaises(InvalidArn):
             aws.AwsArn(mock_arn)
 
     def test_get_regions_with_no_args(self):
