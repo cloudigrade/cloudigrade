@@ -239,6 +239,8 @@ class UtilAwsTest(TestCase):
             mock_modify_image_attribute.side_effect = ClientError(
                 mock_dry_run_exception, 'ModifyImageAttribute')
 
+            snapshot_id = 'snap-0f423c31dd96866b2'
+
             actual_verified = aws.verify_account_access(
                 aws.get_session(mock_arn))
 
@@ -246,15 +248,15 @@ class UtilAwsTest(TestCase):
             mock_describe_instances.assert_called_with(DryRun=True)
             mock_describe_snapshot_attribute.assert_called_with(
                 DryRun=True,
-                SnapshotId='string',
+                SnapshotId=snapshot_id,
                 Attribute='productCodes'
             )
             mock_describe_snapshots.assert_called_with(DryRun=True)
             mock_modify_snapshot_attribute.assert_called_with(
-                SnapshotId='string',
+                SnapshotId=snapshot_id,
                 DryRun=True,
-                Attribute='productCodes',
-                GroupNames=['string', ]
+                Attribute='createVolumePermission',
+                OperationType='add'
             )
             mock_modify_image_attribute.assert_called_with(
                 Attribute='description',
@@ -323,6 +325,8 @@ class UtilAwsTest(TestCase):
             mock_modify_image_attribute.side_effect = ClientError(
                 mock_unauthorized_exception, 'ModifyImageAttribute')
 
+            snapshot_id = 'snap-0f423c31dd96866b2'
+
             session = aws.get_session(mock_arn)
             actual_verified = aws.verify_account_access(session)
 
@@ -344,15 +348,15 @@ class UtilAwsTest(TestCase):
             mock_describe_instances.assert_called_with(DryRun=True)
             mock_describe_snapshot_attribute.assert_called_with(
                 DryRun=True,
-                SnapshotId='string',
+                SnapshotId=snapshot_id,
                 Attribute='productCodes'
             )
             mock_describe_snapshots.assert_called_with(DryRun=True)
             mock_modify_snapshot_attribute.assert_called_with(
-                SnapshotId='string',
+                SnapshotId=snapshot_id,
                 DryRun=True,
-                Attribute='productCodes',
-                GroupNames=['string', ]
+                Attribute='createVolumePermission',
+                OperationType='add',
             )
             mock_modify_image_attribute.assert_called_with(
                 Attribute='description',
