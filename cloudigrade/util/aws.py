@@ -285,17 +285,17 @@ def _verify_policy_action(session, action):
         elif action == 'ec2:DescribeSnapshotAttribute':
             ec2.describe_snapshot_attribute(
                 DryRun=True,
-                SnapshotId='string',
+                SnapshotId='snap-0f423c31dd96866b2',
                 Attribute='productCodes'
             )
         elif action == 'ec2:DescribeSnapshots':
             ec2.describe_snapshots(DryRun=True)
         elif action == 'ec2:ModifySnapshotAttribute':
             ec2.modify_snapshot_attribute(
-                SnapshotId='string',
+                SnapshotId='snap-0f423c31dd96866b2',
                 DryRun=True,
-                Attribute='productCodes',
-                GroupNames=['string', ]
+                Attribute='createVolumePermission',
+                OperationType='add',
             )
         elif action == 'ec2:ModifyImageAttribute':
             ec2.modify_image_attribute(
