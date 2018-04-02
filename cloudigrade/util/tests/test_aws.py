@@ -246,15 +246,15 @@ class UtilAwsTest(TestCase):
             mock_describe_instances.assert_called_with(DryRun=True)
             mock_describe_snapshot_attribute.assert_called_with(
                 DryRun=True,
-                SnapshotId='string',
+                SnapshotId=aws.SNAPSHOT_ID,
                 Attribute='productCodes'
             )
             mock_describe_snapshots.assert_called_with(DryRun=True)
             mock_modify_snapshot_attribute.assert_called_with(
-                SnapshotId='string',
+                SnapshotId=aws.SNAPSHOT_ID,
                 DryRun=True,
-                Attribute='productCodes',
-                GroupNames=['string', ]
+                Attribute='createVolumePermission',
+                OperationType='add'
             )
             mock_modify_image_attribute.assert_called_with(
                 Attribute='description',
@@ -344,15 +344,15 @@ class UtilAwsTest(TestCase):
             mock_describe_instances.assert_called_with(DryRun=True)
             mock_describe_snapshot_attribute.assert_called_with(
                 DryRun=True,
-                SnapshotId='string',
+                SnapshotId=aws.SNAPSHOT_ID,
                 Attribute='productCodes'
             )
             mock_describe_snapshots.assert_called_with(DryRun=True)
             mock_modify_snapshot_attribute.assert_called_with(
-                SnapshotId='string',
+                SnapshotId=aws.SNAPSHOT_ID,
                 DryRun=True,
-                Attribute='productCodes',
-                GroupNames=['string', ]
+                Attribute='createVolumePermission',
+                OperationType='add',
             )
             mock_modify_image_attribute.assert_called_with(
                 Attribute='description',

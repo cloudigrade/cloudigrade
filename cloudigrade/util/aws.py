@@ -31,6 +31,13 @@ cloudigrade_policy = {
     ]
 }
 
+# AWS has undocumented validation on the SnapshotId field in
+# snapshot related EC2 API calls.
+# We are uncertain what the pattern is. Manual testing revealed
+# that some codes pass and some fail, so for the time being
+# the value is hard-coded.
+SNAPSHOT_ID = 'snap-0f423c31dd96866b2'
+
 
 class InstanceState(enum.Enum):
     """
@@ -285,17 +292,17 @@ def _verify_policy_action(session, action):
         elif action == 'ec2:DescribeSnapshotAttribute':
             ec2.describe_snapshot_attribute(
                 DryRun=True,
-                SnapshotId='string',
+                SnapshotId=SNAPSHOT_ID,
                 Attribute='productCodes'
             )
         elif action == 'ec2:DescribeSnapshots':
             ec2.describe_snapshots(DryRun=True)
         elif action == 'ec2:ModifySnapshotAttribute':
             ec2.modify_snapshot_attribute(
-                SnapshotId='string',
+                SnapshotId=SNAPSHOT_ID,
                 DryRun=True,
-                Attribute='productCodes',
-                GroupNames=['string', ]
+                Attribute='createVolumePermission',
+                OperationType='add',
             )
         elif action == 'ec2:ModifyImageAttribute':
             ec2.modify_image_attribute(
