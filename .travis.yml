@@ -4,8 +4,6 @@ cache: pip
 
 stages:
   - test
-  - name: build container
-    if: (branch != master AND tag IS blank) OR (type IN (pull_request))
   - name: build and push container
     if: (type IN (push)) AND ((branch = master) OR (tag IS present))
 
@@ -24,7 +22,8 @@ jobs:
       python: pypy3
       install: pip install tox
       script: tox -epypy3
-    - stage: build container
+    - stage: test
+      if: (branch != master AND tag IS blank) OR (type IN (pull_request))
       services: docker
       sudo: required
       script:
