@@ -10,6 +10,8 @@ from botocore.exceptions import ClientError
 from django.conf import settings
 from django.utils.translation import gettext as _
 
+from util.exceptions import InvalidArn
+
 logger = logging.getLogger(__name__)
 
 cloudigrade_policy = {
@@ -97,10 +99,10 @@ class AwsArn(object):
 
     """
 
-    arn_regex = re.compile(r'^arn:(?P<partition>\w+):(?P<service>\w+):' +
-                           '(?P<region>\w+(?:-\w+)+)?:' +
-                           '(?P<account_id>\d{12})?:(?P<resource_type>\w+)' +
-                           '(?P<resource_separator>[:/])?(?P<resource>.*)')
+    arn_regex = re.compile(r'^arn:(?P<partition>\w+):(?P<service>\w+):'
+                           r'(?P<region>\w+(?:-\w+)+)?:'
+                           r'(?P<account_id>\d{12})?:(?P<resource_type>\w+)'
+                           r'(?P<resource_separator>[:/])?(?P<resource>.*)')
 
     partition = None
     service = None
@@ -122,7 +124,7 @@ class AwsArn(object):
         match = self.arn_regex.match(arn)
 
         if not match:
-            raise ValueError('Invalid ARN: {0}'.format(arn))
+            raise InvalidArn('Invalid ARN: {0}'.format(arn))
 
         for key, val in match.groupdict().items():
             setattr(self, key, val)
