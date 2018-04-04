@@ -16,7 +16,8 @@ help:
 	@echo "  start-compose            to compose all containers in detached state"
 	@echo "  stop-compose             to stop all containers"
 	@echo "  start-db                 to start the psql db in detached state"
-	@echo "  docs-seqdiag             to regenerate docs .svg files from .diag files"
+	@echo "  doc                      to build all documentation"
+	@echo "  doc-seqdiag              to regenerate docs .svg files from .diag files"
 
 clean:
 	git clean -fdx -e .idea/ -e *env/
@@ -55,5 +56,7 @@ start-db:
 start-queue:
 	docker-compose up -d queue
 
-docs-seqdiag:
+doc-seqdiag:
 	cd docs && for FILE in *.diag; do seqdiag -Tsvg $$FILE; done
+
+doc: doc-seqdiag
