@@ -125,13 +125,15 @@ Pull requests
 
 When you submit your pull request, include a link in the description to the issue that the code change is addressing. Pull requests must be assigned to the **milestone** for the current sprint by a maintainer before we accept it. With ZenHub, pull requests should also be connected to the relevant issue.
 
+You must also include in either the description or a comment a link to a pre-recorded demo that shows the new behavior changes described in your pull request.
+
 **cloudigrade** has enabled the following third-party integrations that must complete for any pull request:
 
 - `Travis CI <https://travis-ci.org/>`_ for running Flake8 and tests and building artifacts
 - `codecov <https://codecov.io/>`_ for tracking and enforcing tested code coverage
 - `pyup <https://pyup.io/>`_ for checking dependency versions
 
-If the person who created the pull request is a project maintainer, that person is also responsible for accepting and closing the pull request after receving review approval from others.
+If the person who created the pull request is a project maintainer, that person is also responsible for accepting and closing the pull request after receving review approval from others. That maintainer must ensure that the linked demo has been reviewed and accepted *before* merging the pull request.
 
 
 Test coverage
