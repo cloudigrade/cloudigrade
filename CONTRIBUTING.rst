@@ -86,6 +86,18 @@ Alternatively, you may use the command-line tool `isort <https://pypi.python.org
     isort -rc ./cloudigrade/
 
 
+Database migrations
+===================
+
+Any new code that includes a change to models may require new database migrations that must be included with those model changes. You can use the Django management commands to create migration files like this:
+
+.. code-block:: sh
+
+    ./cloudigrade/manage.py makemigrations
+
+We generally reject any edits to *existing* migrations because we must assume old migrations have already been applied to running databases, and any new edits to those migrations would never be applied. Editing an old migration implies that everyone running **cloudigrade** must drop its database, recreate it, and run all migrations from scratch. Although there might be some special circumstance when editing existing migrations is OK, the entire team of maintainers *must* agree and understand the consequences before accepting any such edits.
+
+
 Contributing code
 =================
 
