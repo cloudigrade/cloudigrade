@@ -12,8 +12,8 @@ from rest_polymorphic.serializers import PolymorphicSerializer
 import account
 from account import reports
 from account.models import AwsAccount
-from account.util import (add_messages_to_queue,
-                          create_initial_aws_instance_events,
+from account.tasks import copy_ami_snapshot
+from account.util import (create_initial_aws_instance_events,
                           create_new_machine_images,
                           generate_aws_ami_messages)
 from account.validators import validate_cloud_provider_account_id
@@ -54,7 +54,8 @@ class AwsAccountSerializer(HyperlinkedModelSerializer):
                 new_amis = create_new_machine_images(account, instances_data)
                 create_initial_aws_instance_events(account, instances_data)
             messages = generate_aws_ami_messages(instances_data, new_amis)
-            add_messages_to_queue(settings.RABBITMQ_QUEUE_NAME, messages)
+            for message in messages:
+                result = copy_ami_snapshot.delay(str(arn), message['image_id'], message['region'])
         else:
             raise serializers.ValidationError(
                 _('AwsAccount verification failed. ARN Info Not Stored')
