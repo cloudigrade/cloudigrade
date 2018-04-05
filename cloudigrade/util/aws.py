@@ -134,6 +134,13 @@ class AwsArn(object):
         return self.arn
 
 
+def _get_primary_account_id():
+    """
+    Returns the account ID for the primary AWS account.
+    """
+    return boto3.client('sts').get_caller_identity().get('Account')
+
+
 def get_session(arn, region_name='us-east-1'):
     """
     Return a session using the customer AWS account role ARN.
@@ -218,6 +225,59 @@ def get_ec2_instance(session, instance_id):
 
     """
     return session.resource('ec2').Instance(instance_id)
+
+
+def get_ami(session, image_id):
+    """
+    Return an Amazon Machine Image running on an EC2 instance.
+
+    Args:
+        session (boto3.Session): A temporary session tied to a customer account
+        image_id (str): An AMI ID
+
+    Returns:
+        AwsInstance: A boto3 AwsInstance object.
+
+    """
+    return session.resource('ec2').Image(image_id)
+
+
+def get_ami_snapshot_id(ami):
+    """
+    Return the snapshot id from an Image object.
+    """
+    for mapping in ami.block_device_mappings:
+        # For now we are focusing exclusively on the root device
+        if mapping['DeviceName'] != ami.root_device_name:
+            continue
+        ebs = mapping.get('Ebs', {})
+        return mapping.get('Ebs', {}).get('SnapshotId', '')
+
+
+def change_snapshot_ownership(session, snapshot_id, operation='Add'):
+    """
+    Add or remove permissions to a snapshot.
+    """
+
+    snapshot = session.resource('ec2').Snapshot(snapshot_id)
+    attribute = 'createVolumePermission'
+    user_ids = [_get_primary_account_id()]
+
+    return snapshot.modify_attribute(
+        Attribute=attribute,
+        OperationType=operation,
+        UserIds=user_ids
+    )
+
+def copy_snapshot(snapshot_id, source_region):
+    """
+    Copy a machine image snapshot to a primary AWS account.
+
+    Note: This operation is done from the primarmy account.
+    """
+
+    snapshot = boto3.resource('ec2').Snapshot(snapshot_id)
+    return snapshot.copy(SourceRegion=source_region)
 
 
 def verify_account_access(session):
