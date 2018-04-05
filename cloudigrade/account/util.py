@@ -1,7 +1,6 @@
 """Various utility functions for the account app."""
 import collections
 
-import kombu
 from django.conf import settings
 from django.utils import timezone
 
@@ -116,42 +115,3 @@ def generate_aws_ami_messages(instances_data, ami_list):
                     }
                 )
     return messages
-
-
-def add_messages_to_queue(queue_name, messages):
-    """
-    Send messages to a message queue.
-
-    Args:
-        queue_name (string): The queue to add messages to
-        messages (list[dict]): A list of message dictionaries. The message
-            dicts will be serialized as JSON strings.
-
-    Returns:
-        dict: A mapping of machine image ID to result boolean value
-
-    """
-    results = {}
-    exchange = kombu.Exchange(
-        settings.RABBITMQ_EXCHANGE_NAME,
-        'direct',
-        durable=True
-    )
-    message_queue = kombu.Queue(
-        queue_name,
-        exchange=exchange,
-        routing_key=queue_name
-    )
-
-    with kombu.Connection(settings.RABBITMQ_URL) as conn:
-        producer = conn.Producer(serializer='json')
-        for message in messages:
-            result = producer.publish(
-                message,
-                exchange=exchange,
-                routing_key=queue_name,
-                declare=[message_queue]
-            )
-            results[message['image_id']] = result
-
-    return results
