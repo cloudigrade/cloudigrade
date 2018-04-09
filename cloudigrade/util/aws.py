@@ -12,8 +12,8 @@ from django.conf import settings
 from django.utils.translation import gettext as _
 
 from util.exceptions import (AwsSnapshotCopyLimitError,
-                             AwsSnapshotNotOwnedError,
-                             InvalidArn)
+                             AwsSnapshotNotOwnedError)
+from util.exceptions import InvalidArn, SnapshotNotReadyException
 
 logger = logging.getLogger(__name__)
 
@@ -343,6 +343,26 @@ def copy_snapshot(snapshot_id, source_region):
             raise e
     else:
         return response.get('SnapshotId')
+
+
+def create_volume(snapshot_id, zone):
+    """
+    Create a volume on the primary AWS account for the given snapshot.
+
+    Args:
+        snapshot_id (str): The id of the snapshot to use for the volume
+        zone (str): The availability zone in which to create the volume
+
+    Returns:
+        str: The id of the newly created volume
+
+    """
+    ec2 = boto3.resource('ec2')
+    snapshot = ec2.Snapshot(snapshot_id)
+    if snapshot.state != 'completed':
+        raise SnapshotNotReadyException(snapshot_id)
+    volume = ec2.create_volume(SnapshotId=snapshot_id, AvailabilityZone=zone)
+    return volume.id
 
 
 def verify_account_access(session):
