@@ -4,6 +4,7 @@ import gzip
 import json
 import logging
 import re
+from functools import wraps
 
 import boto3
 from botocore.exceptions import ClientError
@@ -543,3 +544,30 @@ def extract_sqs_message(message, service='s3'):
     for record in message_body.get('Records', []):
         extracted_records.append(record[service])
     return extracted_records
+
+
+def rewrap_aws_errors(original_function):
+    """
+    Decorate function to except boto AWS ClientError and raise as RuntimeError.
+
+    This is useful when we have boto calls inside of Celery tasks but Celery
+    cannot serialize boto AWS ClientError using JSON. If we encounter other
+    boto/AWS-specific exceptions that are not serializable, we should add
+    support for them here.
+
+    Args:
+        original_function: The function to decorate.
+
+    Returns:
+        function: The decorated function.
+
+    """
+    @wraps(original_function)
+    def wrapped(*args, **kwargs):
+        try:
+            result = original_function(*args, **kwargs)
+        except ClientError as e:
+            message = _('Unexpected AWS error {0}: {1}').format(type(e), e)
+            raise RuntimeError(message)
+        return result
+    return wrapped
