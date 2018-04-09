@@ -37,6 +37,33 @@ def generate_dummy_aws_account_id():
     return ''.join(random.choice(string.digits) for _ in range(12))
 
 
+def generate_dummy_availability_zone():
+    """Generate a dummy AWS availability zone for testing purposes."""
+    return '{}{}'.format(random.choice(SOME_AWS_REGIONS),
+                         random.choice(string.ascii_lowercase))
+
+
+def generate_dummy_image_id():
+    """Generate a dummy AWS image ID for testing purposes."""
+    return 'ami-{}'.format(
+        ''.join(random.choice(string.hexdigits[:16]) for _ in range(8))
+    )
+
+
+def generate_dummy_snapshot_id():
+    """Generate a dummy AWS snapshot ID for testing purposes."""
+    return 'snap-{}'.format(
+        ''.join(random.choice(string.hexdigits[:16]) for _ in range(17))
+    )
+
+
+def generate_dummy_volume_id():
+    """Generate a dummy AWS volume ID for testing purposes."""
+    return 'vol-{}'.format(
+        ''.join(random.choice(string.hexdigits[:16]) for _ in range(17))
+    )
+
+
 def generate_dummy_arn(account_id='',
                        region='',
                        resource_separator=':',
@@ -188,13 +215,6 @@ def generate_mock_image(image_id=None, encrypted=False):
     mock_image.root_device_type = root_device_type
     mock_image.block_device_mappings = block_device_mappings
     return mock_image
-
-
-def generate_dummy_snapshot_id():
-    """Generate a randomized snapshot id."""
-    return 'snap-{}'.format(
-        ''.join([random.choice(string.hexdigits[:16]) for _ in range(17)])
-    )
 
 
 def generate_mock_snapshot(snapshot_id=None, encrypted=False):

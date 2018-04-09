@@ -135,3 +135,20 @@ class UtilHelperTest(TestCase):
         d_helped = helper.utc_dt(2018, 1, 1)
         self.assertNotEqual(d_helped, d_no_tz)
         self.assertIsNotNone(d_helped.tzinfo)
+
+    def test_generate_dummy_availability_zone(self):
+        """Assert generation of an appropriate availability zone."""
+        zone = helper.generate_dummy_availability_zone()
+        self.assertIn(zone[:-1], helper.SOME_AWS_REGIONS)
+
+    def test_generate_dummy_volume_id(self):
+        """Assert generation of an appropriate volume ID."""
+        volume_id = helper.generate_dummy_volume_id()
+        self.assertTrue(volume_id.startswith('vol-'))
+        self.assertEqual(len(volume_id), 21)
+
+    def test_generate_dummy_image_id(self):
+        """Assert generation of an appropriate image ID."""
+        volume_id = helper.generate_dummy_image_id()
+        self.assertTrue(volume_id.startswith('ami-'))
+        self.assertEqual(len(volume_id), 12)
