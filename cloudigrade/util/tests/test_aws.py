@@ -92,6 +92,17 @@ class UtilAwsTest(TestCase):
         resource = arn_object.resource
         self.assertIsNotNone(resource)
 
+    def test_parse_arn_with_custom_resource_type(self):
+        """Assert valid ARN when resource type contains extra characters."""
+        mock_arn = 'arn:aws:fakeserv:test-reg-1:012345678901:test.res type:foo'
+        arn_object = AwsArn(mock_arn)
+
+        resource_type = arn_object.resource_type
+        self.assertIsNotNone(resource_type)
+
+        resource = arn_object.resource
+        self.assertIsNotNone(resource)
+
     def test_error_from_invalid_arn(self):
         """Assert error in account ID parsing from a badly-formed ARN."""
         mock_arn = faker.Faker().text()

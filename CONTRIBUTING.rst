@@ -86,6 +86,18 @@ Alternatively, you may use the command-line tool `isort <https://pypi.python.org
     isort -rc ./cloudigrade/
 
 
+Database migrations
+===================
+
+Any new code that includes a change to models may require new database migrations that must be included with those model changes. You can use the Django management commands to create migration files like this:
+
+.. code-block:: sh
+
+    ./cloudigrade/manage.py makemigrations
+
+We generally reject any edits to *existing* migrations because we must assume old migrations have already been applied to running databases, and any new edits to those migrations would never be applied. Editing an old migration implies that everyone running **cloudigrade** must drop its database, recreate it, and run all migrations from scratch. Although there might be some special circumstance when editing existing migrations is OK, the entire team of maintainers *must* agree and understand the consequences before accepting any such edits.
+
+
 Contributing code
 =================
 
@@ -113,13 +125,15 @@ Pull requests
 
 When you submit your pull request, include a link in the description to the issue that the code change is addressing. Pull requests must be assigned to the **milestone** for the current sprint by a maintainer before we accept it. With ZenHub, pull requests should also be connected to the relevant issue.
 
+You must also include in either the description or a comment a link to a pre-recorded demo that shows the new behavior changes described in your pull request.
+
 **cloudigrade** has enabled the following third-party integrations that must complete for any pull request:
 
 - `Travis CI <https://travis-ci.org/>`_ for running Flake8 and tests and building artifacts
 - `codecov <https://codecov.io/>`_ for tracking and enforcing tested code coverage
 - `pyup <https://pyup.io/>`_ for checking dependency versions
 
-If the person who created the pull request is a project maintainer, that person is also responsible for accepting and closing the pull request after receving review approval from others.
+If the person who created the pull request is a project maintainer, that person is also responsible for accepting and closing the pull request after receving review approval from others. That maintainer must ensure that the linked demo has been reviewed and accepted *before* merging the pull request.
 
 
 Test coverage
