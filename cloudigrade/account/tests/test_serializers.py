@@ -33,8 +33,6 @@ class AwsAccountSerializerTest(TestCase):
                 )
             ]
         }
-        queue_results = [{instance['ImageId']: True}
-                         for instance in running_instances[region]]
 
         validated_data = {
             'account_arn': arn,
@@ -44,12 +42,12 @@ class AwsAccountSerializerTest(TestCase):
                 patch.object(aws, 'boto3') as mock_boto3, \
                 patch.object(aws, 'get_running_instances') as mock_get_run, \
                 patch.object(account_serializers,
-                             'add_messages_to_queue') as mock_add_messages:
+                             'copy_ami_snapshot') as mock_copy_snapshot:
             mock_assume_role = mock_boto3.client.return_value.assume_role
             mock_assume_role.return_value = role
             mock_verify.return_value = True
             mock_get_run.return_value = running_instances
-            mock_add_messages.return_value = queue_results
+            mock_copy_snapshot.return_value = None
             serializer = AwsAccountSerializer()
 
             result = serializer.create(validated_data)
