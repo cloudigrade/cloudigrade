@@ -10,7 +10,11 @@ from botocore.exceptions import ClientError
 from django.conf import settings
 from django.utils.translation import gettext as _
 
-from util.exceptions import InvalidArn
+from util.exceptions import (AwsSnapshotCopyLimitError,
+                             AwsSnapshotEncryptedError,
+                             AwsSnapshotNotOwnedError,
+                             AwsValueError,
+                             InvalidArn)
 
 logger = logging.getLogger(__name__)
 
@@ -135,9 +139,7 @@ class AwsArn(object):
 
 
 def _get_primary_account_id():
-    """
-    Returns the account ID for the primary AWS account.
-    """
+    """Return the account ID for the primary AWS account."""
     return boto3.client('sts').get_caller_identity().get('Account')
 
 
@@ -227,7 +229,7 @@ def get_ec2_instance(session, instance_id):
     return session.resource('ec2').Instance(instance_id)
 
 
-def get_ami(session, image_id):
+def get_ami(session, image_id, region):
     """
     Return an Amazon Machine Image running on an EC2 instance.
 
@@ -236,48 +238,109 @@ def get_ami(session, image_id):
         image_id (str): An AMI ID
 
     Returns:
-        AwsInstance: A boto3 AwsInstance object.
+        Image: A boto3 EC2 Image object.
 
     """
-    return session.resource('ec2').Image(image_id)
+    return session.resource('ec2', region_name=region).Image(image_id)
 
 
 def get_ami_snapshot_id(ami):
     """
     Return the snapshot id from an Image object.
+
+    Args:
+        ami (boto3.resources.factory.ec2.Image): A machine image object
+
+    Returns:
+        string: The snapshot id for the machine image's root volume
+
     """
     for mapping in ami.block_device_mappings:
         # For now we are focusing exclusively on the root device
         if mapping['DeviceName'] != ami.root_device_name:
             continue
-        ebs = mapping.get('Ebs', {})
         return mapping.get('Ebs', {}).get('SnapshotId', '')
 
 
-def change_snapshot_ownership(session, snapshot_id, operation='Add'):
+def change_snapshot_ownership(session, snapshot_id, region, operation='add'):
     """
     Add or remove permissions to a snapshot.
+
+    Args:
+        session (boto3.Session): A temporary session tied to a customer account
+        snapshot_id (str): The id of the snapshot to modify
+        region (str): The region the machine image and snapshot reside in
+        operation (str): Should be one of 'add'|'remove'
+
+    Returns:
+        bool: Whether ownership has been modified
+
     """
+    acceptable_operations = ('add', 'remove')
+    if operation not in acceptable_operations:
+        raise AwsValueError(_('{o} not one of {ao}').format(
+            o=operation,
+            ao=acceptable_operations)
+        )
 
-    snapshot = session.resource('ec2').Snapshot(snapshot_id)
+    snapshot = session.resource('ec2',
+                                region_name=region).Snapshot(snapshot_id)
+
+    if snapshot.encrypted:
+        logger.warning(_('Snapshot is encrypted. Not copying.'))
+        raise AwsSnapshotEncryptedError
+
     attribute = 'createVolumePermission'
-    user_ids = [_get_primary_account_id()]
+    user_id = _get_primary_account_id()
 
-    return snapshot.modify_attribute(
+    permission = {
+        operation.capitalize(): [
+            {'UserId': user_id},
+        ]
+    }
+
+    snapshot.modify_attribute(
         Attribute=attribute,
+        CreateVolumePermission=permission,
         OperationType=operation,
-        UserIds=user_ids
+        UserIds=[user_id]
     )
+
+    # The modify call returns None. This is a check to make sure
+    # permissions are added successfully.
+    response = snapshot.describe_attribute(Attribute='createVolumePermission')
+
+    for user in response['CreateVolumePermissions']:
+        if user['UserId'] == user_id:
+            return
+
+    raise AwsSnapshotNotOwnedError
+
 
 def copy_snapshot(snapshot_id, source_region):
     """
     Copy a machine image snapshot to a primary AWS account.
 
     Note: This operation is done from the primarmy account.
-    """
 
+    Args:
+        snapshot_id (str): The id of the snapshot to modify
+        source_region (str): The region the source snapshot resides in
+
+    Returns:
+        str: The id of the newly copied snapshot
+
+    """
     snapshot = boto3.resource('ec2').Snapshot(snapshot_id)
-    return snapshot.copy(SourceRegion=source_region)
+    try:
+        response = snapshot.copy(SourceRegion=source_region)
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'ResourceLimitExceeded':
+            raise AwsSnapshotCopyLimitError(e.response['Error']['Message'])
+        else:
+            raise e
+    else:
+        return response.get('SnapshotId')
 
 
 def verify_account_access(session):
