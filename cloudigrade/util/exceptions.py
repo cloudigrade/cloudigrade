@@ -16,3 +16,7 @@ class AwsSnapshotEncryptedError(Exception):
 
 class AwsSnapshotNotOwnedError(Exception):
     """Raise when our account id does not have permissions on the snapshot."""
+
+
+class NotReadyException(Exception):
+    """Something was not ready and may need later retry."""
