@@ -2,7 +2,6 @@
 import logging
 
 from dateutil import tz
-from django.conf import settings
 from django.db import transaction
 from django.utils.translation import gettext as _
 from rest_framework import serializers
@@ -55,7 +54,11 @@ class AwsAccountSerializer(HyperlinkedModelSerializer):
                 create_initial_aws_instance_events(account, instances_data)
             messages = generate_aws_ami_messages(instances_data, new_amis)
             for message in messages:
-                result = copy_ami_snapshot.delay(str(arn), message['image_id'], message['region'])
+                copy_ami_snapshot.delay(
+                    str(arn),
+                    message['image_id'],
+                    message['region']
+                )
         else:
             raise serializers.ValidationError(
                 _('AwsAccount verification failed. ARN Info Not Stored')
