@@ -11,9 +11,7 @@ from django.conf import settings
 from django.utils.translation import gettext as _
 
 from util.exceptions import (AwsSnapshotCopyLimitError,
-                             AwsSnapshotEncryptedError,
                              AwsSnapshotNotOwnedError,
-                             AwsValueError,
                              InvalidArn)
 
 logger = logging.getLogger(__name__)
@@ -262,39 +260,42 @@ def get_ami_snapshot_id(ami):
         return mapping.get('Ebs', {}).get('SnapshotId', '')
 
 
-def change_snapshot_ownership(session, snapshot_id, region, operation='add'):
+def get_snapshot(session, snapshot_id, region):
     """
-    Add or remove permissions to a snapshot.
+    Return an AMI Snapshot for an EC2 instance.
+
+    Args:
+        session (boto3.Session): A temporary session tied to a customer account
+        snapshot_id (str): A snapshot ID
+
+    Returns:
+        Snapshot: A boto3 EC2 Snapshot object.
+
+    """
+    return session.resource('ec2', region_name=region).Snapshot(snapshot_id)
+
+
+def add_snapshot_ownership(session, snapshot, region):
+    """
+    Addpermissions to a snapshot.
 
     Args:
         session (boto3.Session): A temporary session tied to a customer account
         snapshot_id (str): The id of the snapshot to modify
         region (str): The region the machine image and snapshot reside in
-        operation (str): Should be one of 'add'|'remove'
 
     Returns:
-        bool: Whether ownership has been modified
+        None
+
+    Raises:
+        AwsSnapshotNotOwnedError: Ownership was not verified.
 
     """
-    acceptable_operations = ('add', 'remove')
-    if operation not in acceptable_operations:
-        raise AwsValueError(_('{o} not one of {ao}').format(
-            o=operation,
-            ao=acceptable_operations)
-        )
-
-    snapshot = session.resource('ec2',
-                                region_name=region).Snapshot(snapshot_id)
-
-    if snapshot.encrypted:
-        logger.warning(_('Snapshot is encrypted. Not copying.'))
-        raise AwsSnapshotEncryptedError
-
     attribute = 'createVolumePermission'
     user_id = _get_primary_account_id()
 
     permission = {
-        operation.capitalize(): [
+        'Add': [
             {'UserId': user_id},
         ]
     }
@@ -302,7 +303,7 @@ def change_snapshot_ownership(session, snapshot_id, region, operation='add'):
     snapshot.modify_attribute(
         Attribute=attribute,
         CreateVolumePermission=permission,
-        OperationType=operation,
+        OperationType='add',
         UserIds=[user_id]
     )
 

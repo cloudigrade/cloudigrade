@@ -3,7 +3,6 @@ import gzip
 import io
 import json
 import random
-import string
 import uuid
 from unittest.mock import patch
 
@@ -16,9 +15,7 @@ from django.test import TestCase
 from util import aws
 from util.aws import AwsArn
 from util.exceptions import (AwsSnapshotCopyLimitError,
-                             AwsSnapshotEncryptedError,
                              AwsSnapshotNotOwnedError,
-                             AwsValueError,
                              InvalidArn)
 from util.tests import helper
 
@@ -247,7 +244,26 @@ class UtilAwsTest(TestCase):
         actual_id = aws.get_ami_snapshot_id(mock_image)
         self.assertEqual(expected_id, actual_id)
 
-    def test_change_snapshot_ownership_success(self):
+    def test_get_snapshot(self):
+        """Assert that a snapshot is returned."""
+        mock_arn = helper.generate_dummy_arn()
+        mock_region = random.choice(helper.SOME_AWS_REGIONS)
+        mock_snapshot_id = helper.generate_dummy_snapshot_id()
+        mock_snapshot = helper.generate_mock_snapshot(mock_snapshot_id)
+
+        with patch.object(aws, 'boto3') as mock_boto3:
+            mock_session = mock_boto3.Session.return_value
+            resource = mock_session.resource.return_value
+            resource.Snapshot.return_value = mock_snapshot
+            actual_snapshot = aws.get_snapshot(
+                aws.get_session(mock_arn),
+                mock_snapshot_id,
+                mock_region
+            )
+
+        self.assertEqual(actual_snapshot, mock_snapshot)
+
+    def test_add_snapshot_ownership_success(self):
         """Assert that snapshot ownership is modified."""
         mock_user_id = str(uuid.uuid4())
         mock_arn = helper.generate_dummy_arn()
@@ -264,56 +280,15 @@ class UtilAwsTest(TestCase):
             resource.Snapshot.return_value = mock_snapshot
             mock_snapshot.modify_attribute.return_value = {}
             mock_snapshot.describe_attribute.return_value = attributes
-            actual_modified = aws.change_snapshot_ownership(
+            actual_modified = aws.add_snapshot_ownership(
                 aws.get_session(mock_arn),
-                mock_snapshot.snapshot_id,
+                mock_snapshot,
                 mock_region
             )
 
         self.assertIsNone(actual_modified)
 
-    def test_change_snapshot_ownership_encrypted(self):
-        """Assert that we don't modify an encrypted snapshot."""
-        mock_arn = helper.generate_dummy_arn()
-        mock_region = random.choice(helper.SOME_AWS_REGIONS)
-        mock_snapshot = helper.generate_mock_snapshot(encrypted=True)
-
-        with patch.object(aws, 'boto3') as mock_boto3:
-            mock_session = mock_boto3.Session.return_value
-            resource = mock_session.resource.return_value
-            resource.Snapshot.return_value = mock_snapshot
-            mock_snapshot.modify_attribute.return_value = {}
-            with self.assertRaises(AwsSnapshotEncryptedError):
-                aws.change_snapshot_ownership(
-                    aws.get_session(mock_arn),
-                    mock_snapshot.snapshot_id,
-                    mock_region
-                )
-
-    def test_change_snapshot_ownership_invalid_operation(self):
-        """Assert that an excpetion is raised for invalid operations."""
-        mock_arn = helper.generate_dummy_arn()
-        mock_region = random.choice(helper.SOME_AWS_REGIONS)
-        mock_snapshot = helper.generate_mock_snapshot()
-        bad_operation = ''.join(
-            [random.choice(string.ascii_letters) for _ in range(5)]
-        )
-
-        with patch.object(aws, 'boto3') as mock_boto3:
-            mock_session = mock_boto3.Session.return_value
-            resource = mock_session.resource.return_value
-            resource.Snapshot.return_value = mock_snapshot
-            mock_snapshot.modify_attribute.return_value = {}
-
-            with self.assertRaises(AwsValueError):
-                aws.change_snapshot_ownership(
-                    aws.get_session(mock_arn),
-                    mock_snapshot.snapshot_id,
-                    mock_region,
-                    operation=bad_operation
-                )
-
-    def test_change_snapshot_ownership_not_verified(self):
+    def test_add_snapshot_ownership_not_verified(self):
         """Assert an error is raised when ownership is not verified."""
         mock_user_id = str(uuid.uuid4())
         mock_arn = helper.generate_dummy_arn()
@@ -331,9 +306,9 @@ class UtilAwsTest(TestCase):
             mock_snapshot.modify_attribute.return_value = {}
             mock_snapshot.describe_attribute.return_value = attributes
             with self.assertRaises(AwsSnapshotNotOwnedError):
-                aws.change_snapshot_ownership(
+                aws.add_snapshot_ownership(
                     aws.get_session(mock_arn),
-                    mock_snapshot.snapshot_id,
+                    mock_snapshot,
                     mock_region
                 )
 
@@ -341,7 +316,7 @@ class UtilAwsTest(TestCase):
         """Assert that a snapshot copy operation begins."""
         mock_region = random.choice(helper.SOME_AWS_REGIONS)
         mock_snapshot = helper.generate_mock_snapshot()
-        mock_copied_snapshot_id = helper.generate_mock_snapshot_id()
+        mock_copied_snapshot_id = helper.generate_dummy_snapshot_id()
         mock_copy_result = {'SnapshotId': mock_copied_snapshot_id}
 
         with patch.object(aws, 'boto3') as mock_boto3:

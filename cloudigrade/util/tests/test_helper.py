@@ -102,9 +102,9 @@ class UtilHelperTest(TestCase):
         self.assertIsInstance(image.block_device_mappings, list)
         self.assertIsInstance(image.block_device_mappings[0], dict)
 
-    def test_generate_mock_snapshot_id(self):
+    def test_generate_dummy_snapshot_id(self):
         """Assert generated id has the appropriate format."""
-        snapshot_id = helper.generate_mock_snapshot_id()
+        snapshot_id = helper.generate_dummy_snapshot_id()
         hex_part = snapshot_id.split('snap-')[1]
 
         self.assertIn('snap-', snapshot_id)
@@ -120,7 +120,7 @@ class UtilHelperTest(TestCase):
 
     def test_generate_mock_snapshot_id_included(self):
         """Assert snapshots are created with provided id."""
-        snapshot_id = helper.generate_mock_snapshot_id()
+        snapshot_id = helper.generate_dummy_snapshot_id()
         snapshot = helper.generate_mock_snapshot(snapshot_id)
         self.assertEqual(snapshot.snapshot_id, snapshot_id)
 

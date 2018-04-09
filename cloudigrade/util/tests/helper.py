@@ -175,7 +175,7 @@ def generate_mock_image(image_id=None, encrypted=False):
             root_device_type.capitalize(): {
                 'Encrypted': encrypted,
                 'DeleteOnTermination': False,
-                'SnapshotId': generate_mock_snapshot_id(),
+                'SnapshotId': generate_dummy_snapshot_id(),
                 'VolumeSize': random.randint(0, 10),
                 'VolumeType': random.choice(volume_types)
             }
@@ -190,16 +190,17 @@ def generate_mock_image(image_id=None, encrypted=False):
     return mock_image
 
 
-def generate_mock_snapshot_id():
+def generate_dummy_snapshot_id():
     """Generate a randomized snapshot id."""
-    hex_part = ''.join([random.choice(string.hexdigits) for _ in range(17)])
-    return 'snap-' + hex_part
+    return 'snap-{}'.format(
+        ''.join([random.choice(string.hexdigits[:16]) for _ in range(17)])
+    )
 
 
 def generate_mock_snapshot(snapshot_id=None, encrypted=False):
     """Generate a mocked EC2 Image Snapshot object."""
     if snapshot_id is None:
-        snapshot_id = generate_mock_snapshot_id()
+        snapshot_id = generate_dummy_snapshot_id()
 
     mock_snapshot = Mock()
     mock_snapshot.snapshot_id = snapshot_id
