@@ -1,3 +1,4 @@
+"""Celery app for use in Django project."""
 from celery import Celery
 
 app = Celery('config')

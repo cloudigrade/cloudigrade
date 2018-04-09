@@ -1,7 +1,6 @@
 """Various utility functions for the account app."""
 import collections
 
-from django.conf import settings
 from django.utils import timezone
 
 from account import AWS_PROVIDER_STRING
