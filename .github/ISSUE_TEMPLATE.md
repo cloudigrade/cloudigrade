@@ -4,7 +4,6 @@ As X, I want Y so that Z.
 
 - [ ] Verify
 
-## Tech assumptions
+## Assumptions and Questions
 
 - 
-
