@@ -155,6 +155,58 @@ def generate_mock_ec2_instance(instance_id=None, image_id=None, subnet_id=None,
     return mock_instance
 
 
+def generate_mock_image(image_id=None, encrypted=False):
+    """
+    Generate a mocked EC2 Image object.
+
+    Args:
+        image_id (string): The AMI image id.
+
+    Returns:
+        Mock: A mock object with Image-like attributes.
+
+    """
+    root_device_name = '/dev/sda1'
+    root_device_type = 'ebs'
+    volume_types = ('gp2', 'io1', 'st1', 'sc1')
+    block_device_mappings = [
+        {
+            'DeviceName': root_device_name,
+            root_device_type.capitalize(): {
+                'Encrypted': encrypted,
+                'DeleteOnTermination': False,
+                'SnapshotId': generate_mock_snapshot_id(),
+                'VolumeSize': random.randint(0, 10),
+                'VolumeType': random.choice(volume_types)
+            }
+        }
+    ]
+
+    mock_image = Mock()
+    mock_image.image_id = image_id
+    mock_image.root_device_name = root_device_name
+    mock_image.root_device_type = root_device_type
+    mock_image.block_device_mappings = block_device_mappings
+    return mock_image
+
+
+def generate_mock_snapshot_id():
+    """Generate a randomized snapshot id."""
+    hex_part = ''.join([random.choice(string.hexdigits) for _ in range(17)])
+    return 'snap-' + hex_part
+
+
+def generate_mock_snapshot(snapshot_id=None, encrypted=False):
+    """Generate a mocked EC2 Image Snapshot object."""
+    if snapshot_id is None:
+        snapshot_id = generate_mock_snapshot_id()
+
+    mock_snapshot = Mock()
+    mock_snapshot.snapshot_id = snapshot_id
+    mock_snapshot.encrypted = encrypted
+    return mock_snapshot
+
+
 def generate_mock_sqs_message(message_id, body, receipt_handle):
     """
     Generate a mocked SQS Message object.
