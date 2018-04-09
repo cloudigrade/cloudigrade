@@ -20,3 +20,7 @@ class AwsSnapshotNotOwnedError(Exception):
 
 class NotReadyException(Exception):
     """Something was not ready and may need later retry."""
+
+
+class SnapshotNotReadyException(NotReadyException):
+    """The requested snapshot was not ready."""

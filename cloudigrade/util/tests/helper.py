@@ -217,15 +217,45 @@ def generate_mock_image(image_id=None, encrypted=False):
     return mock_image
 
 
-def generate_mock_snapshot(snapshot_id=None, encrypted=False):
+def generate_mock_snapshot(snapshot_id=None, encrypted=False, state=None):
     """Generate a mocked EC2 Image Snapshot object."""
     if snapshot_id is None:
         snapshot_id = generate_dummy_snapshot_id()
+    if state is None:
+        state = 'completed'
 
     mock_snapshot = Mock()
     mock_snapshot.snapshot_id = snapshot_id
     mock_snapshot.encrypted = encrypted
+    mock_snapshot.state = state
     return mock_snapshot
+
+
+def generate_mock_volume(volume_id=None, snapshot_id=None, zone=None):
+    """
+    Generate a mocked EC2 EBS Volume object.
+
+    Args:
+        volume_id (str): Optional volume id.
+        snapshot_id (str): Optional snapshot id.
+        zone (str): Optional availability zone.
+
+    Returns:
+        Mock: A mock object with Volume-like attributes.
+
+    """
+    if volume_id is None:
+        volume_id = generate_dummy_volume_id()
+    if snapshot_id is None:
+        snapshot_id = generate_dummy_snapshot_id()
+    if zone is None:
+        zone = generate_dummy_availability_zone()
+
+    mock_volume = Mock()
+    mock_volume.id = volume_id
+    mock_volume.snapshot_id = snapshot_id
+    mock_volume.zone = zone
+    return mock_volume
 
 
 def generate_mock_sqs_message(message_id, body, receipt_handle):

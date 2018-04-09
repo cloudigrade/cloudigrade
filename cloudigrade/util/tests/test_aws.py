@@ -17,6 +17,7 @@ from util.aws import AwsArn
 from util.exceptions import (AwsSnapshotCopyLimitError,
                              AwsSnapshotNotOwnedError,
                              InvalidArn)
+from util.exceptions import SnapshotNotReadyException
 from util.tests import helper
 
 
@@ -667,3 +668,38 @@ class UtilAwsTest(TestCase):
             )
 
         self.assertIsNone(actual_content)
+
+    @patch('util.aws.boto3')
+    def test_create_volume_snapshot_ready(self, mock_boto3):
+        """Test that volume creation stars with snapshot is ready."""
+        zone = helper.generate_dummy_availability_zone()
+        mock_snapshot = helper.generate_mock_snapshot()
+        mock_volume = helper.generate_mock_volume()
+
+        mock_ec2 = mock_boto3.resource.return_value
+        mock_ec2.Snapshot.return_value = mock_snapshot
+        mock_ec2.create_volume.return_value = mock_volume
+
+        volume_id = aws.create_volume(mock_snapshot.snapshot_id, zone)
+
+        mock_ec2.create_volume.assert_called_with(
+            SnapshotId=mock_snapshot.snapshot_id,
+            AvailabilityZone=zone)
+
+        mock_boto3.resource.assert_called_once_with('ec2')
+        self.assertEqual(volume_id, mock_volume.id)
+
+    @patch('util.aws.boto3')
+    def test_create_volume_snapshot_not_ready(self, mock_boto3):
+        """Test that volume creation stars with snapshot is ready."""
+        zone = helper.generate_dummy_availability_zone()
+        mock_snapshot = helper.generate_mock_snapshot(state='pending')
+
+        mock_ec2 = mock_boto3.resource.return_value
+        mock_ec2.Snapshot.return_value = mock_snapshot
+
+        with self.assertRaises(SnapshotNotReadyException):
+            aws.create_volume(mock_snapshot.snapshot_id, zone)
+
+        mock_boto3.resource.assert_called_once_with('ec2')
+        mock_ec2.create_volume.assert_not_called()

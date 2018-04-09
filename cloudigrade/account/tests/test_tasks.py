@@ -3,13 +3,15 @@ import random
 from unittest.mock import patch
 
 from celery.exceptions import Retry
+from django.conf import settings
 from django.test import TestCase
 
 from account.models import AwsAccount, AwsMachineImage
-from account.tasks import copy_ami_snapshot
+from account.tasks import copy_ami_snapshot, create_volume
 from util.exceptions import (AwsSnapshotCopyLimitError,
                              AwsSnapshotEncryptedError,
-                             AwsSnapshotNotOwnedError)
+                             AwsSnapshotNotOwnedError,
+                             SnapshotNotReadyException)
 from util.tests import helper as util_helper
 
 
@@ -141,3 +143,32 @@ class AccountCeleryTaskTest(TestCase):
 
             with self.assertRaises(Retry):
                 copy_ami_snapshot(mock_arn, mock_image_id, mock_region)
+
+    @patch('account.tasks.aws')
+    def test_create_volume_success(self, mock_aws):
+        """Assert that the volume create task succeeds."""
+        ami_id = util_helper.generate_dummy_image_id()
+        snapshot_id = util_helper.generate_dummy_snapshot_id()
+        zone = settings.HOUNDIGRADE_AVAILABILITY_ZONE
+
+        mock_volume = util_helper.generate_mock_volume()
+        mock_aws.create_volume.return_value = mock_volume.id
+
+        create_volume(ami_id, snapshot_id)
+
+        mock_aws.create_volume.assert_called_with(snapshot_id, zone)
+
+    @patch('account.tasks.aws')
+    def test_create_volume_retry_on_snapshot_not_ready(self, mock_aws):
+        """Assert that the volume create task retries."""
+        ami_id = util_helper.generate_dummy_image_id()
+        snapshot_id = util_helper.generate_dummy_snapshot_id()
+
+        mock_aws.create_volume.side_effect = SnapshotNotReadyException(
+            snapshot_id
+        )
+
+        with patch.object(create_volume, 'retry') as mock_retry:
+            mock_retry.side_effect = Retry()
+            with self.assertRaises(Retry):
+                create_volume(ami_id, snapshot_id)

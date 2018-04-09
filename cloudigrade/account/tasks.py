@@ -1,8 +1,11 @@
 """Celery tasks for use in the account app."""
 from celery import shared_task
+from django.conf import settings
 
 from account.models import AwsMachineImage
 from util import aws
+from util.aws import rewrap_aws_errors
+from util.celery import retriable_shared_task
 from util.exceptions import (AwsSnapshotCopyLimitError,
                              AwsSnapshotEncryptedError,
                              AwsSnapshotNotOwnedError)
@@ -43,3 +46,24 @@ def copy_ami_snapshot(arn, ami_id, source_region):
     )
 
     aws.copy_snapshot(snapshot_id, source_region)
+
+
+@retriable_shared_task
+@rewrap_aws_errors
+def create_volume(ami_id, snapshot_id):
+    """
+    Create an AWS Volume in the primary AWS account.
+
+    Args:
+        ami_id (str): The AWS AMI id for which this request originated
+        snapshot_id (str): The id of the snapshot to use for the volume
+
+    Returns:
+        None: Run as an asynchronous Celery task.
+
+    """
+    zone = settings.HOUNDIGRADE_AVAILABILITY_ZONE
+    volume_id = aws.create_volume(snapshot_id, zone)
+    # TODO Replace the next `print` call with a call to the next task.
+    # Do something like: enqueue_ready_volume(ami_id, volume_id)
+    print('Volume {} is being created for AMI {}'.format(volume_id, ami_id))
