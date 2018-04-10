@@ -1,0 +1,136 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN" "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
+<svg viewBox="0 0 1024 1539" xmlns="http://www.w3.org/2000/svg" xmlns:inkspace="http://www.inkscape.org/namespaces/inkscape" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs id="defs_block">
+    <filter height="1.504" id="filter_blur" inkspace:collect="always" width="1.1575" x="-0.07875" y="-0.252">
+      <feGaussianBlur id="feGaussianBlur3780" inkspace:collect="always" stdDeviation="4.2" />
+    </filter>
+  </defs>
+  <title>blockdiag</title>
+  <desc>seqdiag {
+    client; cloudigrade; db; queue; cloud;
+    client =&gt; cloudigrade [label='POST /api/v1/account/', return='account'] {
+        cloudigrade =&gt; db [label='does account exist', return='false'];
+        cloudigrade =&gt; cloud [label='check access', return='success'];
+        cloudigrade =&gt; cloud [label='describe running instances', return='instances'];
+        cloudigrade =&gt; db [label='save account'];
+        === for each instance ===
+        cloudigrade =&gt; db [label='does image exist', return='false'];
+        cloudigrade =&gt; db [label='save image'];
+        cloudigrade =&gt; db [label='save instance'];
+        cloudigrade =&gt; db [label='save events'];
+        cloudigrade =&gt; queue [label='async inspect image'];
+        === end for each instance ===
+    }
+}
+</desc>
+  <rect fill="rgb(0,0,0)" height="1374" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="127" y="143" />
+  <rect fill="rgb(0,0,0)" height="1328" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="319" y="143" />
+  <rect fill="rgb(0,0,0)" height="65" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="511" y="208" />
+  <rect fill="rgb(0,0,0)" height="50" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="511" y="600" />
+  <rect fill="rgb(0,0,0)" height="65" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="511" y="797" />
+  <rect fill="rgb(0,0,0)" height="50" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="511" y="929" />
+  <rect fill="rgb(0,0,0)" height="50" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="511" y="1044" />
+  <rect fill="rgb(0,0,0)" height="50" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="511" y="1159" />
+  <rect fill="rgb(0,0,0)" height="50" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="703" y="1276" />
+  <rect fill="rgb(0,0,0)" height="65" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="895" y="338" />
+  <rect fill="rgb(0,0,0)" height="65" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="895" y="470" />
+  <rect fill="rgb(0,0,0)" height="40" stroke="rgb(0,0,0)" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="128" x="67" y="46" />
+  <rect fill="rgb(0,0,0)" height="40" stroke="rgb(0,0,0)" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="128" x="259" y="46" />
+  <rect fill="rgb(0,0,0)" height="40" stroke="rgb(0,0,0)" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="128" x="451" y="46" />
+  <rect fill="rgb(0,0,0)" height="40" stroke="rgb(0,0,0)" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="128" x="643" y="46" />
+  <rect fill="rgb(0,0,0)" height="40" stroke="rgb(0,0,0)" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="128" x="835" y="46" />
+  <path d="M 128 80 L 128 1527" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="8 4" />
+  <rect fill="moccasin" height="1374" stroke="rgb(0,0,0)" width="8" x="124" y="137" />
+  <path d="M 320 80 L 320 1527" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="8 4" />
+  <rect fill="moccasin" height="1328" stroke="rgb(0,0,0)" width="8" x="316" y="137" />
+  <path d="M 512 80 L 512 1527" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="8 4" />
+  <rect fill="moccasin" height="65" stroke="rgb(0,0,0)" width="8" x="508" y="202" />
+  <rect fill="moccasin" height="50" stroke="rgb(0,0,0)" width="8" x="508" y="594" />
+  <rect fill="moccasin" height="65" stroke="rgb(0,0,0)" width="8" x="508" y="791" />
+  <rect fill="moccasin" height="50" stroke="rgb(0,0,0)" width="8" x="508" y="923" />
+  <rect fill="moccasin" height="50" stroke="rgb(0,0,0)" width="8" x="508" y="1038" />
+  <rect fill="moccasin" height="50" stroke="rgb(0,0,0)" width="8" x="508" y="1153" />
+  <path d="M 704 80 L 704 1527" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="8 4" />
+  <rect fill="moccasin" height="50" stroke="rgb(0,0,0)" width="8" x="700" y="1270" />
+  <path d="M 896 80 L 896 1527" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="8 4" />
+  <rect fill="moccasin" height="65" stroke="rgb(0,0,0)" width="8" x="892" y="332" />
+  <rect fill="moccasin" height="65" stroke="rgb(0,0,0)" width="8" x="892" y="464" />
+  <rect fill="rgb(255,255,255)" height="40" stroke="rgb(0,0,0)" width="128" x="64" y="40" />
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="42" x="128.0" y="66">client</text>
+  <rect fill="rgb(255,255,255)" height="40" stroke="rgb(0,0,0)" width="128" x="256" y="40" />
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="77" x="320.5" y="67">cloudigrade</text>
+  <rect fill="rgb(255,255,255)" height="40" stroke="rgb(0,0,0)" width="128" x="448" y="40" />
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="14" x="512.0" y="66">db</text>
+  <rect fill="rgb(255,255,255)" height="40" stroke="rgb(0,0,0)" width="128" x="640" y="40" />
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="35" x="704.5" y="67">queue</text>
+  <rect fill="rgb(255,255,255)" height="40" stroke="rgb(0,0,0)" width="128" x="832" y="40" />
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="35" x="896.5" y="66">cloud</text>
+  <path d="M 136 137 L 312 137" fill="none" stroke="rgb(0,0,0)" />
+  <polygon fill="rgb(0,0,0)" points="304,133 312,137 304,141" stroke="rgb(0,0,0)" />
+  <path d="M 328 202 L 504 202" fill="none" stroke="rgb(0,0,0)" />
+  <polygon fill="rgb(0,0,0)" points="496,198 504,202 496,206" stroke="rgb(0,0,0)" />
+  <path d="M 328 267 L 504 267" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
+  <polygon fill="rgb(0,0,0)" points="336,263 328,267 336,271" stroke="rgb(0,0,0)" />
+  <path d="M 328 332 L 888 332" fill="none" stroke="rgb(0,0,0)" />
+  <polygon fill="rgb(0,0,0)" points="880,328 888,332 880,336" stroke="rgb(0,0,0)" />
+  <path d="M 328 397 L 888 397" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
+  <polygon fill="rgb(0,0,0)" points="336,393 328,397 336,401" stroke="rgb(0,0,0)" />
+  <path d="M 328 464 L 888 464" fill="none" stroke="rgb(0,0,0)" />
+  <polygon fill="rgb(0,0,0)" points="880,460 888,464 880,468" stroke="rgb(0,0,0)" />
+  <path d="M 328 529 L 888 529" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
+  <polygon fill="rgb(0,0,0)" points="336,525 328,529 336,533" stroke="rgb(0,0,0)" />
+  <path d="M 328 594 L 504 594" fill="none" stroke="rgb(0,0,0)" />
+  <polygon fill="rgb(0,0,0)" points="496,590 504,594 496,598" stroke="rgb(0,0,0)" />
+  <path d="M 328 644 L 504 644" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
+  <polygon fill="rgb(0,0,0)" points="336,640 328,644 336,648" stroke="rgb(0,0,0)" />
+  <path d="M 328 791 L 504 791" fill="none" stroke="rgb(0,0,0)" />
+  <polygon fill="rgb(0,0,0)" points="496,787 504,791 496,795" stroke="rgb(0,0,0)" />
+  <path d="M 328 856 L 504 856" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
+  <polygon fill="rgb(0,0,0)" points="336,852 328,856 336,860" stroke="rgb(0,0,0)" />
+  <path d="M 328 923 L 504 923" fill="none" stroke="rgb(0,0,0)" />
+  <polygon fill="rgb(0,0,0)" points="496,919 504,923 496,927" stroke="rgb(0,0,0)" />
+  <path d="M 328 973 L 504 973" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
+  <polygon fill="rgb(0,0,0)" points="336,969 328,973 336,977" stroke="rgb(0,0,0)" />
+  <path d="M 328 1038 L 504 1038" fill="none" stroke="rgb(0,0,0)" />
+  <polygon fill="rgb(0,0,0)" points="496,1034 504,1038 496,1042" stroke="rgb(0,0,0)" />
+  <path d="M 328 1088 L 504 1088" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
+  <polygon fill="rgb(0,0,0)" points="336,1084 328,1088 336,1092" stroke="rgb(0,0,0)" />
+  <path d="M 328 1153 L 504 1153" fill="none" stroke="rgb(0,0,0)" />
+  <polygon fill="rgb(0,0,0)" points="496,1149 504,1153 496,1157" stroke="rgb(0,0,0)" />
+  <path d="M 328 1203 L 504 1203" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
+  <polygon fill="rgb(0,0,0)" points="336,1199 328,1203 336,1207" stroke="rgb(0,0,0)" />
+  <path d="M 328 1270 L 696 1270" fill="none" stroke="rgb(0,0,0)" />
+  <polygon fill="rgb(0,0,0)" points="688,1266 696,1270 688,1274" stroke="rgb(0,0,0)" />
+  <path d="M 328 1320 L 696 1320" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
+  <polygon fill="rgb(0,0,0)" points="336,1316 328,1320 336,1324" stroke="rgb(0,0,0)" />
+  <path d="M 136 1465 L 312 1465" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
+  <polygon fill="rgb(0,0,0)" points="144,1461 136,1465 144,1469" stroke="rgb(0,0,0)" />
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="147" x="213.5" y="135">POST /api/v1/account/</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="126" x="395.0" y="200">does account exist</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="35" x="486.5" y="265">false</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="84" x="374.0" y="330">check access</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="49" x="863.5" y="395">success</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="182" x="423.0" y="462">describe running instances</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="63" x="856.5" y="527">instances</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="84" x="374.0" y="592">save account</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="112" x="388.0" y="789">does image exist</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="35" x="486.5" y="854">false</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="70" x="367.0" y="921">save image</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="91" x="377.5" y="1036">save instance</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="77" x="370.5" y="1151">save events</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="133" x="398.5" y="1268">async inspect image</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="49" x="287.5" y="1463">account</text>
+  <path d="M 40 711 L 442 711" fill="none" stroke="rgb(0,0,0)" />
+  <path d="M 40 715 L 442 715" fill="none" stroke="rgb(0,0,0)" />
+  <path d="M 581 711 L 984 711" fill="none" stroke="rgb(0,0,0)" />
+  <path d="M 581 715 L 984 715" fill="none" stroke="rgb(0,0,0)" />
+  <rect fill="rgb(208,208,208)" height="19" stroke="rgb(0,0,0)" width="139" x="442" y="704" />
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="119" x="511.5" y="719">for each instance</text>
+  <path d="M 40 1387 L 428 1387" fill="none" stroke="rgb(0,0,0)" />
+  <path d="M 40 1391 L 428 1391" fill="none" stroke="rgb(0,0,0)" />
+  <path d="M 595 1387 L 984 1387" fill="none" stroke="rgb(0,0,0)" />
+  <path d="M 595 1391 L 984 1391" fill="none" stroke="rgb(0,0,0)" />
+  <rect fill="rgb(208,208,208)" height="19" stroke="rgb(0,0,0)" width="167" x="428" y="1380" />
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="147" x="511.5" y="1395">end for each instance</text>
+</svg>

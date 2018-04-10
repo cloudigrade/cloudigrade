@@ -1,0 +1,9 @@
+seqdiag {
+    'task worker'; cloudigrade; 'task queue'; AWS;
+    'task worker' => cloudigrade [label='create volume'] {
+        cloudigrade => AWS [label='check snapshot ready', return='true'];
+        === if snapshot not ready, abort and retry later ===
+        cloudigrade => AWS [label='start create volume', return='new volume id'];
+        cloudigrade => 'task queue' [label='async enqueue volume'];
+    }
+}

@@ -1,0 +1,9 @@
+seqdiag {
+    'task worker'; cloudigrade; 'task queue'; AWS;
+    'task worker' => cloudigrade [label='copy snapshot'] {
+        cloudigrade => AWS [label='get snapshot id', return='snapshot id'];
+        cloudigrade => AWS [label='set snapshot ownership'];
+        cloudigrade => AWS [label='start copy snapshot', return='new snapshot id'];
+        cloudigrade => 'task queue' [label='async create volume'];
+    }
+}

@@ -153,9 +153,11 @@ REST_FRAMEWORK = {
 
 # Message and Task Queues
 
-RABBITMQ_EXCHANGE_NAME = 'cloudigrade_inspectigrade'
-RABBITMQ_QUEUE_NAME = 'machine_images'
-CELERY_BROKER_URL = 'amqp://guest:guest@localhost:5672/%2F'
+RABBITMQ_EXCHANGE_NAME = env('RABBITMQ_EXCHANGE_NAME', default='cloudigrade_inspectigrade')
+RABBITMQ_QUEUE_NAME = env('RABBITMQ_QUEUE_NAME', default='machine_images')
+RABBITMQ_URL = env('RABBITMQ_URL', default='amqp://guest:guest@localhost:5672/%2F')
+# Celery specific duplicate of RABBITMQ_URL
+CELERY_BROKER_URL = env('RABBITMQ_URL', default='amqp://guest:guest@localhost:5672/%2F')
 
 CELERY_TASK_ROUTES = {
     'account.tasks.copy_ami_snapshot': {'queue': 'copy_ami_snapshot'},

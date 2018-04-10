@@ -1,0 +1,16 @@
+seqdiag {
+    cron; cloudigrade; db; queue; 'AWS SQS'; 'AWS S3';
+    cron => cloudigrade [label='process activity logs'] {
+        cloudigrade => 'AWS SQS' [label='get messages', return='messages'];
+        === for each message ===
+        cloudigrade => db [label='does account exist', return='true'];
+        cloudigrade => 'AWS S3' [label='get cloudtrails log', return='log'];
+        cloudigrade => db [label='does image exist', return='false'];
+        cloudigrade => db [label='save image'];
+        cloudigrade => db [label='does instance exist', return='false'];
+        cloudigrade => db [label='save instance'];
+        cloudigrade => db [label='save event'];
+        cloudigrade => queue [label='async inspect image'];
+        === end for each message ===
+    }
+}
