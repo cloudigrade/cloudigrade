@@ -1,1 +1,1 @@
-seqdiag
+seqdiag==0.9.5
