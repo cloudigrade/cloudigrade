@@ -1,6 +1,5 @@
 """Collection of tests for celery tasks."""
 import random
-import uuid
 from unittest.mock import patch
 
 from celery.exceptions import Retry
@@ -22,7 +21,7 @@ class AccountCeleryTaskTest(TestCase):
         """Assert that the snapshot copy task succeeds."""
         mock_arn = util_helper.generate_dummy_arn()
         mock_region = random.choice(util_helper.SOME_AWS_REGIONS)
-        mock_image_id = str(uuid.uuid4())
+        mock_image_id = util_helper.generate_dummy_image_id()
         mock_image = util_helper.generate_mock_image(mock_image_id)
         block_mapping = mock_image.block_device_mappings
         mock_snapshot_id = block_mapping[0]['Ebs']['SnapshotId']
@@ -62,7 +61,7 @@ class AccountCeleryTaskTest(TestCase):
         mock_region = random.choice(util_helper.SOME_AWS_REGIONS)
         mock_arn = util_helper.generate_dummy_arn(mock_account_id, mock_region)
 
-        mock_image_id = str(uuid.uuid4())
+        mock_image_id = util_helper.generate_dummy_image_id()
         mock_image = util_helper.generate_mock_image(mock_image_id)
         mock_snapshot_id = util_helper.generate_dummy_snapshot_id()
         mock_snapshot = util_helper.generate_mock_snapshot(
@@ -98,7 +97,7 @@ class AccountCeleryTaskTest(TestCase):
         """Assert that the copy task is retried."""
         mock_arn = util_helper.generate_dummy_arn()
         mock_region = random.choice(util_helper.SOME_AWS_REGIONS)
-        mock_image_id = str(uuid.uuid4())
+        mock_image_id = util_helper.generate_dummy_image_id()
         mock_image = util_helper.generate_mock_image(mock_image_id)
         block_mapping = mock_image.block_device_mappings
         mock_snapshot_id = block_mapping[0]['Ebs']['SnapshotId']
@@ -123,7 +122,7 @@ class AccountCeleryTaskTest(TestCase):
         """Assert that the snapshot copy task fails."""
         mock_arn = util_helper.generate_dummy_arn()
         mock_region = random.choice(util_helper.SOME_AWS_REGIONS)
-        mock_image_id = str(uuid.uuid4())
+        mock_image_id = util_helper.generate_dummy_image_id()
         mock_image = util_helper.generate_mock_image(mock_image_id)
         block_mapping = mock_image.block_device_mappings
         mock_snapshot_id = block_mapping[0]['Ebs']['SnapshotId']

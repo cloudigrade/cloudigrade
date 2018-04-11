@@ -119,7 +119,7 @@ def generate_dummy_describe_instance(instance_id=None, image_id=None,
         state = random.choice(list(aws.InstanceState))
 
     if image_id is None:
-        image_id = str(uuid.uuid4())
+        image_id = generate_dummy_image_id()
 
     if instance_id is None:
         instance_id = str(uuid.uuid4())

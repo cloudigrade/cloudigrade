@@ -86,7 +86,7 @@ def generate_aws_instance_events(
 
     """
     if ec2_ami_id is None:
-        ec2_ami_id = str(uuid.uuid4())
+        ec2_ami_id = helper.generate_dummy_image_id()
     if instance_type is None:
         instance_type = random.choice(helper.SOME_EC2_INSTANCE_TYPES)
     if subnet is None:

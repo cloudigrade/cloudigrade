@@ -47,7 +47,7 @@ class UtilHelperTest(TestCase):
 
     def test_generate_dummy_describe_instance_with_values(self):
         """Assert generated instance contains given values."""
-        image_id = str(uuid.uuid4())
+        image_id = helper.generate_dummy_image_id()
         instance_id = str(uuid.uuid4())
         subnet_id = str(uuid.uuid4())
         state = aws.InstanceState.shutting_down
@@ -75,7 +75,7 @@ class UtilHelperTest(TestCase):
 
     def test_generate_mock_ec2_instance_with_values(self):
         """Assert generated instance contains given values."""
-        image_id = str(uuid.uuid4())
+        image_id = helper.generate_dummy_image_id()
         instance_id = str(uuid.uuid4())
         subnet_id = str(uuid.uuid4())
         state = aws.InstanceState.shutting_down
@@ -92,7 +92,7 @@ class UtilHelperTest(TestCase):
 
     def test_generate_mock_image(self):
         """Assert generated image contains given value."""
-        image_id = str(uuid.uuid4())
+        image_id = helper.generate_dummy_image_id()
         encrypted = random.choice((True, False))
         image = helper.generate_mock_image(image_id, encrypted)
 
