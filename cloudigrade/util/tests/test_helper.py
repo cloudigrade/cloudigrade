@@ -6,7 +6,6 @@ import datetime
 import random
 import re
 import string
-import uuid
 
 from django.test import TestCase
 
@@ -48,8 +47,8 @@ class UtilHelperTest(TestCase):
     def test_generate_dummy_describe_instance_with_values(self):
         """Assert generated instance contains given values."""
         image_id = helper.generate_dummy_image_id()
-        instance_id = str(uuid.uuid4())
-        subnet_id = str(uuid.uuid4())
+        instance_id = helper.generate_dummy_instance_id()
+        subnet_id = helper.generate_dummy_subnet_id()
         state = aws.InstanceState.shutting_down
         instance_type = random.choice(helper.SOME_EC2_INSTANCE_TYPES)
         instance = helper.generate_dummy_describe_instance(
@@ -76,8 +75,8 @@ class UtilHelperTest(TestCase):
     def test_generate_mock_ec2_instance_with_values(self):
         """Assert generated instance contains given values."""
         image_id = helper.generate_dummy_image_id()
-        instance_id = str(uuid.uuid4())
-        subnet_id = str(uuid.uuid4())
+        instance_id = helper.generate_dummy_instance_id()
+        subnet_id = helper.generate_dummy_subnet_id()
         state = aws.InstanceState.shutting_down
         instance_type = random.choice(helper.SOME_EC2_INSTANCE_TYPES)
         instance = helper.generate_mock_ec2_instance(
