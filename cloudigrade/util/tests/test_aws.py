@@ -204,7 +204,7 @@ class UtilAwsTest(TestCase):
     def test_get_ec2_instance(self):
         """Assert that get_ec2_instance returns an instance object."""
         mock_arn = helper.generate_dummy_arn()
-        mock_instance_id = str(uuid.uuid4())
+        mock_instance_id = helper.generate_dummy_instance_id()
 
         mock_instance = helper.generate_mock_ec2_instance(mock_instance_id)
 

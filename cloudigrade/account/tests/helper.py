@@ -1,6 +1,5 @@
 """Helper functions for generating test data."""
 import random
-import uuid
 
 from account.models import (AwsAccount, AwsInstance, AwsInstanceEvent,
                             InstanceEvent)
@@ -50,7 +49,7 @@ def generate_aws_instance(account, ec2_instance_id=None, region=None):
 
     """
     if ec2_instance_id is None:
-        ec2_instance_id = str(uuid.uuid4())
+        ec2_instance_id = helper.generate_dummy_instance_id()
     if region is None:
         region = random.choice(helper.SOME_AWS_REGIONS)
 
@@ -90,7 +89,7 @@ def generate_aws_instance_events(
     if instance_type is None:
         instance_type = random.choice(helper.SOME_EC2_INSTANCE_TYPES)
     if subnet is None:
-        subnet = str(uuid.uuid4())
+        subnet = helper.generate_dummy_subnet_id()
 
     events = []
     for power_on_time, power_off_time in powered_times:
