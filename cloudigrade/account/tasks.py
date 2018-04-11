@@ -20,7 +20,7 @@ def copy_ami_snapshot(arn, ami_id, source_region):
         source_region (str): The region the snapshot resides in
 
     Returns:
-        None: Run as an asyncronous Celery task.
+        None: Run as an asynchronous Celery task.
 
     """
     session = aws.get_session(arn)
