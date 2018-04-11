@@ -43,6 +43,20 @@ def generate_dummy_availability_zone():
                          random.choice(string.ascii_lowercase))
 
 
+def generate_dummy_instance_id():
+    """Generate a dummy AWS EC2 instance ID for testing purposes."""
+    return 'i-{}'.format(
+        ''.join(random.choice(string.hexdigits[:16]) for _ in range(17))
+    )
+
+
+def generate_dummy_subnet_id():
+    """Generate a dummy AWS EC2 subnet ID for testing purposes."""
+    return 'subnet-{}'.format(
+        ''.join(random.choice(string.hexdigits[:16]) for _ in range(8))
+    )
+
+
 def generate_dummy_image_id():
     """Generate a dummy AWS image ID for testing purposes."""
     return 'ami-{}'.format(

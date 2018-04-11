@@ -152,3 +152,15 @@ class UtilHelperTest(TestCase):
         volume_id = helper.generate_dummy_image_id()
         self.assertTrue(volume_id.startswith('ami-'))
         self.assertEqual(len(volume_id), 12)
+
+    def test_generate_dummy_instance_id(self):
+        """Assert generation of an appropriate EC2 instance ID."""
+        volume_id = helper.generate_dummy_instance_id()
+        self.assertTrue(volume_id.startswith('i-'))
+        self.assertEqual(len(volume_id), 19)
+
+    def test_generate_dummy_subnet_id(self):
+        """Assert generation of an appropriate EC2 subnet ID."""
+        volume_id = helper.generate_dummy_subnet_id()
+        self.assertTrue(volume_id.startswith('subnet-'))
+        self.assertEqual(len(volume_id), 15)
