@@ -2,6 +2,7 @@
 import gzip
 import io
 import json
+import random
 import uuid
 from unittest.mock import patch
 
@@ -12,7 +13,10 @@ from django.conf import settings
 from django.test import TestCase
 
 from util import aws
-from util.aws import AwsArn, InvalidArn
+from util.aws import AwsArn
+from util.exceptions import (AwsSnapshotCopyLimitError,
+                             AwsSnapshotNotOwnedError,
+                             InvalidArn)
 from util.tests import helper
 
 
@@ -211,6 +215,171 @@ class UtilAwsTest(TestCase):
                                                    mock_instance_id)
 
         self.assertEqual(actual_instance, mock_instance)
+
+    def test_get_ami(self):
+        """Assert that get_ami returns an Image object."""
+        mock_arn = helper.generate_dummy_arn()
+        mock_region = random.choice(helper.SOME_AWS_REGIONS)
+        mock_image_id = str(uuid.uuid4())
+        mock_image = helper.generate_mock_image(mock_image_id)
+
+        with patch.object(aws, 'boto3') as mock_boto3:
+            mock_session = mock_boto3.Session.return_value
+            resource = mock_session.resource.return_value
+            resource.Image.return_value = mock_image
+            actual_image = aws.get_ami(
+                aws.get_session(mock_arn),
+                mock_image_id,
+                mock_region
+            )
+
+        self.assertEqual(actual_image, mock_image)
+
+    def test_get_ami_snapshot_id(self):
+        """Assert that an AMI returns a snapshot id."""
+        mock_image_id = str(uuid.uuid4())
+        mock_image = helper.generate_mock_image(mock_image_id)
+
+        expected_id = mock_image.block_device_mappings[0]['Ebs']['SnapshotId']
+        actual_id = aws.get_ami_snapshot_id(mock_image)
+        self.assertEqual(expected_id, actual_id)
+
+    def test_get_snapshot(self):
+        """Assert that a snapshot is returned."""
+        mock_arn = helper.generate_dummy_arn()
+        mock_region = random.choice(helper.SOME_AWS_REGIONS)
+        mock_snapshot_id = helper.generate_dummy_snapshot_id()
+        mock_snapshot = helper.generate_mock_snapshot(mock_snapshot_id)
+
+        with patch.object(aws, 'boto3') as mock_boto3:
+            mock_session = mock_boto3.Session.return_value
+            resource = mock_session.resource.return_value
+            resource.Snapshot.return_value = mock_snapshot
+            actual_snapshot = aws.get_snapshot(
+                aws.get_session(mock_arn),
+                mock_snapshot_id,
+                mock_region
+            )
+
+        self.assertEqual(actual_snapshot, mock_snapshot)
+
+    def test_add_snapshot_ownership_success(self):
+        """Assert that snapshot ownership is modified."""
+        mock_user_id = str(uuid.uuid4())
+        mock_arn = helper.generate_dummy_arn()
+        mock_region = random.choice(helper.SOME_AWS_REGIONS)
+        mock_snapshot = helper.generate_mock_snapshot()
+
+        attributes = {'CreateVolumePermissions': [{'UserId': mock_user_id}]}
+
+        with patch.object(aws, 'boto3') as mock_boto3, \
+                patch.object(aws, '_get_primary_account_id') as mock_acct_id:
+            mock_acct_id.return_value = mock_user_id
+            mock_session = mock_boto3.Session.return_value
+            resource = mock_session.resource.return_value
+            resource.Snapshot.return_value = mock_snapshot
+            mock_snapshot.modify_attribute.return_value = {}
+            mock_snapshot.describe_attribute.return_value = attributes
+            actual_modified = aws.add_snapshot_ownership(
+                aws.get_session(mock_arn),
+                mock_snapshot,
+                mock_region
+            )
+
+        self.assertIsNone(actual_modified)
+
+    def test_add_snapshot_ownership_not_verified(self):
+        """Assert an error is raised when ownership is not verified."""
+        mock_user_id = str(uuid.uuid4())
+        mock_arn = helper.generate_dummy_arn()
+        mock_region = random.choice(helper.SOME_AWS_REGIONS)
+        mock_snapshot = helper.generate_mock_snapshot()
+
+        attributes = {'CreateVolumePermissions': []}
+
+        with patch.object(aws, 'boto3') as mock_boto3, \
+                patch.object(aws, '_get_primary_account_id') as mock_acct_id:
+            mock_acct_id.return_value = mock_user_id
+            mock_session = mock_boto3.Session.return_value
+            resource = mock_session.resource.return_value
+            resource.Snapshot.return_value = mock_snapshot
+            mock_snapshot.modify_attribute.return_value = {}
+            mock_snapshot.describe_attribute.return_value = attributes
+            with self.assertRaises(AwsSnapshotNotOwnedError):
+                aws.add_snapshot_ownership(
+                    aws.get_session(mock_arn),
+                    mock_snapshot,
+                    mock_region
+                )
+
+    def test_copy_snapshot_success(self):
+        """Assert that a snapshot copy operation begins."""
+        mock_region = random.choice(helper.SOME_AWS_REGIONS)
+        mock_snapshot = helper.generate_mock_snapshot()
+        mock_copied_snapshot_id = helper.generate_dummy_snapshot_id()
+        mock_copy_result = {'SnapshotId': mock_copied_snapshot_id}
+
+        with patch.object(aws, 'boto3') as mock_boto3:
+            resource = mock_boto3.resource.return_value
+            resource.Snapshot.return_value = mock_snapshot
+            mock_snapshot.copy.return_value = mock_copy_result
+
+            actual_copied_snapshot_id = aws.copy_snapshot(
+                mock_snapshot.snapshot_id,
+                mock_region
+            )
+
+        self.assertEqual(actual_copied_snapshot_id, mock_copied_snapshot_id)
+
+    def test_copy_snapshot_limit_reached(self):
+        """Assert that an error is returned when the copy limit is reached."""
+        mock_region = random.choice(helper.SOME_AWS_REGIONS)
+        mock_snapshot = helper.generate_mock_snapshot()
+
+        mock_copy_error = {
+            'Error': {
+                'Code': 'ResourceLimitExceeded',
+                'Message': 'You have exceeded an Amazon EC2 resource limit. '
+                           'For example, you might have too many snapshot '
+                           'copies in progress.'
+            }
+        }
+
+        with patch.object(aws, 'boto3') as mock_boto3:
+            resource = mock_boto3.resource.return_value
+            resource.Snapshot.return_value = mock_snapshot
+            mock_snapshot.copy.side_effect = ClientError(
+                mock_copy_error, 'CopySnapshot')
+
+            with self.assertRaises(AwsSnapshotCopyLimitError):
+                aws.copy_snapshot(
+                    mock_snapshot.snapshot_id,
+                    mock_region
+                )
+
+    def test_copy_snapshot_failure(self):
+        """Assert that an error is given when copy fails."""
+        mock_region = random.choice(helper.SOME_AWS_REGIONS)
+        mock_snapshot = helper.generate_mock_snapshot()
+
+        mock_copy_error = {
+            'Error': {
+                'Code': 'MockError',
+                'Message': 'The operation failed.'
+            }
+        }
+
+        with patch.object(aws, 'boto3') as mock_boto3:
+            resource = mock_boto3.resource.return_value
+            resource.Snapshot.return_value = mock_snapshot
+            mock_snapshot.copy.side_effect = ClientError(
+                mock_copy_error, 'CopySnapshot')
+
+            with self.assertRaises(ClientError):
+                aws.copy_snapshot(
+                    mock_snapshot.snapshot_id,
+                    mock_region
+                )
 
     def test_verify_account_access_success(self):
         """Assert that account access via a IAM role is verified."""

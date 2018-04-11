@@ -10,7 +10,9 @@ from botocore.exceptions import ClientError
 from django.conf import settings
 from django.utils.translation import gettext as _
 
-from util.exceptions import InvalidArn
+from util.exceptions import (AwsSnapshotCopyLimitError,
+                             AwsSnapshotNotOwnedError,
+                             InvalidArn)
 
 logger = logging.getLogger(__name__)
 
@@ -134,6 +136,11 @@ class AwsArn(object):
         return self.arn
 
 
+def _get_primary_account_id():
+    """Return the account ID for the primary AWS account."""
+    return boto3.client('sts').get_caller_identity().get('Account')
+
+
 def get_session(arn, region_name='us-east-1'):
     """
     Return a session using the customer AWS account role ARN.
@@ -218,6 +225,123 @@ def get_ec2_instance(session, instance_id):
 
     """
     return session.resource('ec2').Instance(instance_id)
+
+
+def get_ami(session, image_id, region):
+    """
+    Return an Amazon Machine Image running on an EC2 instance.
+
+    Args:
+        session (boto3.Session): A temporary session tied to a customer account
+        image_id (str): An AMI ID
+
+    Returns:
+        Image: A boto3 EC2 Image object.
+
+    """
+    return session.resource('ec2', region_name=region).Image(image_id)
+
+
+def get_ami_snapshot_id(ami):
+    """
+    Return the snapshot id from an Image object.
+
+    Args:
+        ami (boto3.resources.factory.ec2.Image): A machine image object
+
+    Returns:
+        string: The snapshot id for the machine image's root volume
+
+    """
+    for mapping in ami.block_device_mappings:
+        # For now we are focusing exclusively on the root device
+        if mapping['DeviceName'] != ami.root_device_name:
+            continue
+        return mapping.get('Ebs', {}).get('SnapshotId', '')
+
+
+def get_snapshot(session, snapshot_id, region):
+    """
+    Return an AMI Snapshot for an EC2 instance.
+
+    Args:
+        session (boto3.Session): A temporary session tied to a customer account
+        snapshot_id (str): A snapshot ID
+
+    Returns:
+        Snapshot: A boto3 EC2 Snapshot object.
+
+    """
+    return session.resource('ec2', region_name=region).Snapshot(snapshot_id)
+
+
+def add_snapshot_ownership(session, snapshot, region):
+    """
+    Addpermissions to a snapshot.
+
+    Args:
+        session (boto3.Session): A temporary session tied to a customer account
+        snapshot_id (str): The id of the snapshot to modify
+        region (str): The region the machine image and snapshot reside in
+
+    Returns:
+        None
+
+    Raises:
+        AwsSnapshotNotOwnedError: Ownership was not verified.
+
+    """
+    attribute = 'createVolumePermission'
+    user_id = _get_primary_account_id()
+
+    permission = {
+        'Add': [
+            {'UserId': user_id},
+        ]
+    }
+
+    snapshot.modify_attribute(
+        Attribute=attribute,
+        CreateVolumePermission=permission,
+        OperationType='add',
+        UserIds=[user_id]
+    )
+
+    # The modify call returns None. This is a check to make sure
+    # permissions are added successfully.
+    response = snapshot.describe_attribute(Attribute='createVolumePermission')
+
+    for user in response['CreateVolumePermissions']:
+        if user['UserId'] == user_id:
+            return
+
+    raise AwsSnapshotNotOwnedError
+
+
+def copy_snapshot(snapshot_id, source_region):
+    """
+    Copy a machine image snapshot to a primary AWS account.
+
+    Note: This operation is done from the primarmy account.
+
+    Args:
+        snapshot_id (str): The id of the snapshot to modify
+        source_region (str): The region the source snapshot resides in
+
+    Returns:
+        str: The id of the newly copied snapshot
+
+    """
+    snapshot = boto3.resource('ec2').Snapshot(snapshot_id)
+    try:
+        response = snapshot.copy(SourceRegion=source_region)
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'ResourceLimitExceeded':
+            raise AwsSnapshotCopyLimitError(e.response['Error']['Message'])
+        else:
+            raise e
+    else:
+        return response.get('SnapshotId')
 
 
 def verify_account_access(session):

@@ -5,6 +5,7 @@ Because even test helpers should be tested!
 import datetime
 import random
 import re
+import string
 import uuid
 
 from django.test import TestCase
@@ -88,6 +89,45 @@ class UtilHelperTest(TestCase):
         self.assertEqual(instance.subnet_id, subnet_id)
         self.assertEqual(instance.state['Code'], state.value)
         self.assertEqual(instance.state['Name'], state.name)
+
+    def test_generate_mock_image(self):
+        """Assert generated image contains given value."""
+        image_id = str(uuid.uuid4())
+        encrypted = random.choice((True, False))
+        image = helper.generate_mock_image(image_id, encrypted)
+
+        self.assertEqual(image.image_id, image_id)
+        self.assertIsNotNone(image.root_device_name)
+        self.assertIsNotNone(image.root_device_type)
+        self.assertIsInstance(image.block_device_mappings, list)
+        self.assertIsInstance(image.block_device_mappings[0], dict)
+
+    def test_generate_dummy_snapshot_id(self):
+        """Assert generated id has the appropriate format."""
+        snapshot_id = helper.generate_dummy_snapshot_id()
+        hex_part = snapshot_id.split('snap-')[1]
+
+        self.assertIn('snap-', snapshot_id)
+        self.assertEqual(len(hex_part), 17)
+        for digit in hex_part:
+            self.assertIn(digit, string.hexdigits)
+
+    def test_generate_mock_snapshot_defaults(self):
+        """Assert snapshots are created without provided values."""
+        snapshot = helper.generate_mock_snapshot()
+        self.assertIsNotNone(snapshot.snapshot_id)
+        self.assertIsNotNone(snapshot.encrypted)
+
+    def test_generate_mock_snapshot_id_included(self):
+        """Assert snapshots are created with provided id."""
+        snapshot_id = helper.generate_dummy_snapshot_id()
+        snapshot = helper.generate_mock_snapshot(snapshot_id)
+        self.assertEqual(snapshot.snapshot_id, snapshot_id)
+
+    def test_generate_mock_snapshot_id_encrypted(self):
+        """Assert created snapshots obey the encrypted arg."""
+        snapshot = helper.generate_mock_snapshot(encrypted=True)
+        self.assertTrue(snapshot.encrypted)
 
     def test_utc_dt(self):
         """Assert utc_dt adds timezone info."""

@@ -67,6 +67,8 @@ class MachineImage(BaseModel):
         blank=False
     )
 
+    is_encrypted = models.NullBooleanField()
+
 
 class AwsAccount(Account):
     """Amazon Web Services customer account model."""
