@@ -220,7 +220,7 @@ class UtilAwsTest(TestCase):
         """Assert that get_ami returns an Image object."""
         mock_arn = helper.generate_dummy_arn()
         mock_region = random.choice(helper.SOME_AWS_REGIONS)
-        mock_image_id = str(uuid.uuid4())
+        mock_image_id = helper.generate_dummy_image_id()
         mock_image = helper.generate_mock_image(mock_image_id)
 
         with patch.object(aws, 'boto3') as mock_boto3:
@@ -237,7 +237,7 @@ class UtilAwsTest(TestCase):
 
     def test_get_ami_snapshot_id(self):
         """Assert that an AMI returns a snapshot id."""
-        mock_image_id = str(uuid.uuid4())
+        mock_image_id = helper.generate_dummy_image_id()
         mock_image = helper.generate_mock_image(mock_image_id)
 
         expected_id = mock_image.block_device_mappings[0]['Ebs']['SnapshotId']

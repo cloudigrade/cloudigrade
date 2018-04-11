@@ -113,7 +113,7 @@ class GenerateAwsInstanceEventsTest(TestCase):
             (util_helper.utc_dt(2017, 1, 2), util_helper.utc_dt(2017, 1, 3)),
             (util_helper.utc_dt(2017, 1, 4), None),
         )
-        ec2_ami_id = str(uuid.uuid4())
+        ec2_ami_id = util_helper.generate_dummy_image_id()
         instance_type = random.choice(util_helper.SOME_EC2_INSTANCE_TYPES)
         subnet = str(uuid.uuid4())
         events = helper.generate_aws_instance_events(
