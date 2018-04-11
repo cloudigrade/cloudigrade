@@ -11,3 +11,5 @@ DATABASES = {
 # Message and Task Queues
 
 RABBITMQ_URL = 'amqp://guest:guest@queue:5672/%2F'
+
+STATIC_ROOT = '/srv/cloudigrade/static/'
