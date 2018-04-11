@@ -10,4 +10,7 @@ DATABASES = {
 
 # Message and Task Queues
 
-CELERY_BROKER_URL = 'amqp://guest:guest@queue:5672/%2F'
+RABBITMQ_URL = env('RABBITMQ_URL', default='amqp://guest:guest@localhost:5672/%2F')
+CELERY_BROKER_URL = env('RABBITMQ_URL', default='amqp://guest:guest@localhost:5672/%2F')
+
+STATIC_ROOT = env('STATIC_ROOT', default='/srv/cloudigrade/static/')
