@@ -22,7 +22,7 @@ if READ_DOT_ENV_FILE:
 
 # Important Security Settings
 SECRET_KEY = env('DJANGO_SECRET_KEY', default='base')
-DEBUG = env('DJANGO_DEBUG', default=False)
+DEBUG = env.bool('DJANGO_DEBUG', default=False)
 ALLOWED_HOSTS = env('DJANGO_ALLOWED_HOSTS', default=['*'])
 
 # AWS Defaults
@@ -94,7 +94,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': env.db('DATABASE_URL', default='postgres://localhost/cloudigrade'),
 }
-DATABASES['default']['ATOMIC_REQUESTS'] = True
+DATABASES['default']['ATOMIC_REQUESTS'] = env('DJANGO_ATOMIC_REQUESTS', default=True)
 
 
 # Password validation
@@ -134,7 +134,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = str(ROOT_DIR.path('static'))
+STATIC_ROOT = env('DJANGO_STATIC_ROOT', default=str(ROOT_DIR.path('static')))
 
 
 # Django Rest Framework
@@ -157,7 +157,7 @@ RABBITMQ_EXCHANGE_NAME = env('RABBITMQ_EXCHANGE_NAME', default='cloudigrade_insp
 RABBITMQ_QUEUE_NAME = env('RABBITMQ_QUEUE_NAME', default='machine_images')
 RABBITMQ_URL = env('RABBITMQ_URL', default='amqp://guest:guest@localhost:5672/%2F')
 # Celery specific duplicate of RABBITMQ_URL
-CELERY_BROKER_URL = env('RABBITMQ_URL', default='amqp://guest:guest@localhost:5672/%2F')
+CELERY_BROKER_URL = RABBITMQ_URL
 
 CELERY_TASK_ROUTES = {
     'account.tasks.copy_ami_snapshot': {'queue': 'copy_ami_snapshot'},
