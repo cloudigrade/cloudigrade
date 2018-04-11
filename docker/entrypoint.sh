@@ -1,4 +1,10 @@
 #!/bin/sh
+set -e
+
+cd /opt/cloudigrade
+
+echo "entrypoint.sh: Collecting static files"
+scl enable rh-postgresql96 rh-python36 'python manage.py collectstatic --no-input --settings=config.settings.docker'
 
 while ! nc -w 1 --send-only < /dev/null db 5432;
 do

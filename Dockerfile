@@ -20,9 +20,6 @@ RUN scl enable rh-postgresql96 rh-python36 \
     && rm -rf requirements
 
 COPY cloudigrade .
-RUN scl enable rh-postgresql96 rh-python36 \
-    'python manage.py collectstatic --no-input --settings=config.settings.docker'
-
 USER cloudigrade
 ENTRYPOINT ["scl", "enable", "rh-postgresql96", "rh-python36", "--", "gunicorn"]
 CMD ["-c","config/gunicorn.py","config.wsgi"]
