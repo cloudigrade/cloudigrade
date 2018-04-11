@@ -4,7 +4,7 @@ SECRET_KEY = env('DJANGO_SECRET_KEY')
 ALLOWED_HOSTS = env('DJANGO_ALLOWED_HOSTS')
 DATABASES = {
     'default': {
-        'ENGINE': env('DJANGO_DATABASE_ENGINE', default=django.db.backends.postgresql_psycopg2),
+        'ENGINE': env('DJANGO_DATABASE_ENGINE', default='django.db.backends.postgresql_psycopg2'),
         'NAME': env('DJANGO_DATABASE_NAME'),
         'HOST': env('DJANGO_DATABASE_HOST'),
         'USER': env('DJANGO_DATABASE_USER'),
