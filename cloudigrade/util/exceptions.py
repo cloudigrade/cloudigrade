@@ -6,20 +6,20 @@ class InvalidArn(ParseError):
     """an invalid ARN was detected."""
 
 
-class AwsSnapshotCopyLimitError(Exception):
-    """The limit on concurrent snapshot copy operations has been met."""
+class NotReadyException(Exception):
+    """Something was not ready and may need later retry."""
 
 
 class AwsSnapshotEncryptedError(Exception):
     """Raise when a snapshot is encrypted."""
 
 
-class AwsSnapshotNotOwnedError(Exception):
+class AwsSnapshotCopyLimitError(NotReadyException):
+    """The limit on concurrent snapshot copy operations has been met."""
+
+
+class AwsSnapshotNotOwnedError(NotReadyException):
     """Raise when our account id does not have permissions on the snapshot."""
-
-
-class NotReadyException(Exception):
-    """Something was not ready and may need later retry."""
 
 
 class SnapshotNotReadyException(NotReadyException):
