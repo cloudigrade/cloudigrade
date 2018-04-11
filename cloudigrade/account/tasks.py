@@ -1,20 +1,15 @@
 """Celery tasks for use in the account app."""
-from celery import shared_task
 from django.conf import settings
 
 from account.models import AwsMachineImage
 from util import aws
 from util.aws import rewrap_aws_errors
 from util.celery import retriable_shared_task
-from util.exceptions import (AwsSnapshotCopyLimitError,
-                             AwsSnapshotEncryptedError,
-                             AwsSnapshotNotOwnedError)
+from util.exceptions import AwsSnapshotEncryptedError
 
 
-@shared_task(autoretry_for=(AwsSnapshotCopyLimitError,
-                            AwsSnapshotNotOwnedError),
-             retry_backoff=True,
-             max_retries=10)
+@retriable_shared_task
+@rewrap_aws_errors
 def copy_ami_snapshot(arn, ami_id, source_region):
     """
     Copy an AWS Snapshot to the primary AWS account.
