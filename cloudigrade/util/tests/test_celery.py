@@ -32,10 +32,10 @@ class UtilCeleryTest(TestCase):
         self.assertEqual(my_func, args[0])
         expected_kwargs = {
             'autoretry_for': (NotReadyException,),
-            'max_retries': 3,
+            'max_retries': 35,
             'retry_backoff': True,
             'retry_jitter': True,
-            'retry_backoff_max': 60,
+            'retry_backoff_max': 120,
         }
         self.assertDictEqual(kwargs, expected_kwargs)
 
@@ -65,7 +65,7 @@ class UtilCeleryTest(TestCase):
             'max_retries': 10,
             'retry_backoff': True,
             'retry_jitter': True,
-            'retry_backoff_max': 60,
+            'retry_backoff_max': 120,
         }
         self.assertDictEqual(kwargs, expected_kwargs)
 
