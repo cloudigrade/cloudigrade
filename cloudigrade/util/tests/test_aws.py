@@ -671,7 +671,7 @@ class UtilAwsTest(TestCase):
 
     @patch('util.aws.boto3')
     def test_create_volume_snapshot_ready(self, mock_boto3):
-        """Test that volume creation stars with snapshot is ready."""
+        """Test that volume creation starts when snapshot is ready."""
         zone = helper.generate_dummy_availability_zone()
         mock_snapshot = helper.generate_mock_snapshot()
         mock_volume = helper.generate_mock_volume()
@@ -691,7 +691,7 @@ class UtilAwsTest(TestCase):
 
     @patch('util.aws.boto3')
     def test_create_volume_snapshot_not_ready(self, mock_boto3):
-        """Test that volume creation stars with snapshot is ready."""
+        """Test that volume creation aborts when snapshot is not ready."""
         zone = helper.generate_dummy_availability_zone()
         mock_snapshot = helper.generate_mock_snapshot(state='pending')
 
