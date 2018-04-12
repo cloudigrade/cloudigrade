@@ -137,12 +137,24 @@ specific dependencies can be installed into a virtual environment.
     # Test your docker install by running a "hello world" container
     docker run hello-world
 
+    # To test your docker-compose install, create a test docker-compose.yml
+    mkdir -p ~/tmp/test-compose && cd ~/tmp/test-compose
+    cat >> docker-compose.yml << EOF
+    test-compose:
+        image: hello-world
+    EOF
+    # now attempt to run this with docker compose
+    docker-compose up
+
+    # If all is well, you can destroy this directory
+
+
     # create a virtual environment for python dependencies
     python3 -m venv ~/envs/cloudigrade
     source ~/envs/cloudigrade/activate
 
     # Once operating in a virtual environment,
-    # clone cloudigrade repo and navigate to its root directory
+    # clone the cloudigrade repo and navigate to its root directory
     git clone git@github.com:cloudigrade/cloudigrade.git
     cd cloudigrade
     pip install -U pip awscli wheel tox
