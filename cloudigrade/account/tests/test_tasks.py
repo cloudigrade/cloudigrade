@@ -6,6 +6,7 @@ from celery.exceptions import Retry
 from django.conf import settings
 from django.test import TestCase
 
+from account import tasks
 from account.models import AwsAccount, AwsMachineImage
 from account.tasks import copy_ami_snapshot, create_volume
 from util.exceptions import (AwsSnapshotCopyLimitError,
@@ -37,7 +38,10 @@ class AccountCeleryTaskTest(TestCase):
         mock_aws.get_snapshot.return_value = mock_snapshot
         mock_aws.copy_snapshot.return_value = mock_new_snapshot_id
 
-        copy_ami_snapshot(mock_arn, mock_image_id, mock_region)
+        with patch.object(tasks, 'create_volume') as mock_create_volume:
+            copy_ami_snapshot(mock_arn, mock_image_id, mock_region)
+            mock_create_volume.assert_called_with(mock_image_id,
+                                                  mock_new_snapshot_id)
 
         mock_aws.get_session.assert_called_with(mock_arn)
         mock_aws.get_ami.assert_called_with(
@@ -90,9 +94,11 @@ class AccountCeleryTaskTest(TestCase):
 
         ami.save()
 
-        with self.assertRaises(AwsSnapshotEncryptedError):
+        with patch.object(tasks, 'create_volume') as mock_create_volume,\
+                self.assertRaises(AwsSnapshotEncryptedError):
             copy_ami_snapshot(mock_arn, mock_image_id, mock_region)
             self.assertTrue(ami.is_encrypted)
+            mock_create_volume.assert_not_called()
 
     @patch('account.tasks.aws')
     def test_copy_ami_snapshot_retry_on_copy_limit(self, mock_aws):
@@ -113,11 +119,12 @@ class AccountCeleryTaskTest(TestCase):
         mock_aws.add_snapshot_ownership.return_value = True
         mock_aws.copy_snapshot.side_effect = AwsSnapshotCopyLimitError()
 
-        with patch.object(copy_ami_snapshot, 'retry') as mock_retry:
+        with patch.object(tasks, 'create_volume') as mock_create_volume,\
+                patch.object(copy_ami_snapshot, 'retry') as mock_retry:
             mock_retry.side_effect = Retry()
-
             with self.assertRaises(Retry):
                 copy_ami_snapshot(mock_arn, mock_image_id, mock_region)
+            mock_create_volume.assert_not_called()
 
     @patch('account.tasks.aws')
     def test_copy_ami_snapshot_retry_on_ownership_not_verified(self, mock_aws):
@@ -138,11 +145,12 @@ class AccountCeleryTaskTest(TestCase):
         mock_aws.add_snapshot_ownership.side_effect = \
             AwsSnapshotNotOwnedError()
 
-        with patch.object(copy_ami_snapshot, 'retry') as mock_retry:
+        with patch.object(tasks, 'create_volume') as mock_create_volume,\
+                patch.object(copy_ami_snapshot, 'retry') as mock_retry:
             mock_retry.side_effect = Retry()
-
             with self.assertRaises(Retry):
                 copy_ami_snapshot(mock_arn, mock_image_id, mock_region)
+            mock_create_volume.assert_not_called()
 
     @patch('account.tasks.aws')
     def test_create_volume_success(self, mock_aws):
