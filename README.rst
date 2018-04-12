@@ -108,10 +108,44 @@ specific dependencies can be installed into a virtual environment.
 
 .. code-block:: bash
 
-    sudo dnf install gettext postgresql postgresql-devel python3 libffi-devel libffi
+    # install system dependencies
+    sudo dnf install gettext postgresql python3
+    sudo dnf install postgresql-devel postgresql-contrib postgresql-server
+    sudo dnf install libffi-devel libffi
+
+    # initialize and start the database
+    sudo /usr/bin/postgresql-setup --initdb
+    sudo systemctl enable postgresql
+    sudo systemctl start postgresql
+
+    # install docker and docker compose
+    sudo dnf install docker docker-compose
+
+    # Start the docker daemon and make it start on boot
+    sudo systemctl start docker
+    sudo systemctl enable docker
+
+    # Add yourself to the docker group to enable running docker commands
+    # without prefixing with sudo
+    sudo groupadd docker
+    sudo chown root:docker /var/run/docker.sock
+    sudo usermod -a -G docker $USERNAME
+
+    # You may need to log out and log back in for
+    # these group changes to take effect
+
+    # Test your docker install by running a "hello world" container
+    docker run hello-world
+
+    # create a virtual environment for python dependencies
     python3 -m venv ~/envs/cloudigrade
     source ~/envs/cloudigrade/activate
-    pip install -U pip awscli wheel tox 
+
+    # Once operating in a virtual environment,
+    # clone cloudigrade repo and navigate to its root directory
+    git clone git@github.com:cloudigrade/cloudigrade.git
+    cd cloudigrade
+    pip install -U pip awscli wheel tox
     pip install -r requirements/local.txt
 
 
