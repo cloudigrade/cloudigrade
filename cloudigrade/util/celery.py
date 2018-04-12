@@ -8,13 +8,19 @@ from util.exceptions import NotReadyException
 def retriable_shared_task(original_function=None,
                           retry_max_elapsed_backoff=None,
                           autoretry_for=(NotReadyException,),
-                          max_retries=3,
+                          max_retries=35,
                           retry_backoff=True,
                           retry_jitter=True,
-                          retry_backoff_max=60,
+                          retry_backoff_max=120,
                           **kwargs):
     """
     Decorate function to be a shared task with our standard retry settings.
+
+    The default settings of max_retries=35 and retry_backoff_max=120 allow for
+    a total maximum elapsed backoff time of **one hour** of retries, with a
+    maximum backoff per individual retry of two minutes. If we want to change
+    these defaults to target a different maximum backoff for individual retries
+    or total elapsed, please use calculate_max_retries to find the new values.
 
     This decorator can be used with or without arguments. For example:
 
