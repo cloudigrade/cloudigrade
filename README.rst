@@ -8,7 +8,12 @@ cloudigrade
 What is cloudigrade?
 ====================
 
-**cloudigrade** is an open-source suite of tools for tracking Linux distribution use (although chiefly targeting RHEL) in public cloud platforms. **cloudigrade** actively checks a user's account in a particular cloud for running instances, tracks when instances are powered on, determines what Linux distributions are installed on them, and provides the ability to generate reports to see how long different distributions have run in a given window.
+**cloudigrade** is an open-source suite of tools for tracking Linux
+distribution use (although chiefly targeting RHEL) in public cloud platforms.
+**cloudigrade** actively checks a user's account in a particular cloud for
+running instances, tracks when instances are powered on, determines what Linux
+distributions are installed on them, and provides the ability to generate
+reports to see how long different distributions have run in a given window.
 
 
 What is this "Doppler" I see referenced in various places?
@@ -24,13 +29,18 @@ Or is **cloudigrade** a code name for Doppler?
 Running cloudigrade
 ===================
 
-We do not yet have concise setup notes for running **cloudigrade**, and we currently require setting up a complete development envirionment. Watch this space for changes in the future, but for now, please read the next "Developer Environment" section.
+We do not yet have concise setup notes for running **cloudigrade**, and we
+currently require setting up a complete development envirionment. Watch this
+space for changes in the future, but for now, please read the next "Developer
+Environment" section.
 
 
 Developer Environment
 ---------------------
 
-Because **cloudigrade** is actually a suite of interacting services, setting up a development environment may require installing some or all of the following dependencies:
+Because **cloudigrade** is actually a suite of interacting services, setting up
+a development environment may require installing some or all of the following
+dependencies:
 
 -  Python (one of the versions we support)
 -  `Docker <https://www.docker.com/community-edition#/download>`_
@@ -41,10 +51,12 @@ Because **cloudigrade** is actually a suite of interacting services, setting up 
 -  `AWS Command Line Interface <https://aws.amazon.com/cli/>`_
 
 
-macOS dependencies
-~~~~~~~~~~~~~~~~~~
+macOS environment
+------------------
 
-We encourage macOS developers to use `homebrew <https://brew.sh/>`_ to install and manage these dependencies. The following commands should install everything you need:
+We encourage macOS developers to use `homebrew <https://brew.sh/>`_ to install
+and manage these dependencies. The following commands should install everything
+you need:
 
 .. code-block:: bash
 
@@ -58,7 +70,12 @@ We encourage macOS developers to use `homebrew <https://brew.sh/>`_ to install a
 Python virtual environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-We strongly encourage all developers to use a virtual environment to isolate **cloudigrade**\ 's Python package dependencies. You may use whatever tooling you feel confortable with, but here are some initial notes for setting up with `virtualenv <https://pypi.python.org/pypi/virtualenv>`_ and `virtualenvwrapper <https://pypi.python.org/pypi/virtualenvwrapper>`_:
+We strongly encourage all developers to use a virtual environment to isolate
+**cloudigrade**\ 's Python package dependencies. You may use whatever tooling
+you feel confortable with, but here are some initial notes for setting up with
+`virtualenv <https://pypi.python.org/pypi/virtualenv>`_ and `virtualenvwrapper
+<https://pypi.python.org/pypi/virtualenvwrapper>`_. This is assuming that you
+are using the python installation provided by brew:
 
 .. code-block:: bash
 
@@ -82,10 +99,29 @@ Once you have an environment set up, install our Python package requirements:
     pip install -r requirements/local.txt
 
 
+Fedora Linux environment
+------------------------
+
+The following installation method has been tested on Fedora 26. Some packages
+must be installed on the system level and are available via ``dnf``, the python
+specific dependencies can be installed into a virtual environment.
+
+.. code-block:: bash
+
+    sudo dnf install gettext postgresql postgresql-devel python3 libffi-devel libffi
+    python3 -m venv ~/envs/cloudigrade
+    source ~/envs/cloudigrade/activate
+    pip install -U pip awscli wheel tox 
+    pip install -r requirements/local.txt
+
+
 Configure AWS account credentials
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you haven't already, create an `Amazon Web Services <https://aws.amazon.com/>`_ account for **cloudigrade** to use for its AWS API calls. You will need the AWS access key ID, AWS secret access key, and region name where the account operates.
+If you haven't already, create an `Amazon Web Services
+<https://aws.amazon.com/>`_ account for **cloudigrade** to use for its AWS API
+calls. You will need the AWS access key ID, AWS secret access key, and region
+name where the account operates.
 
 Use the AWS CLI to save that configuration to your local system:
 
@@ -93,9 +129,13 @@ Use the AWS CLI to save that configuration to your local system:
 
     aws configure
 
-You can verify that settings were stored correctly by checking the files it created in your ``~/.aws/`` directory.
+You can verify that settings were stored correctly by checking the files it
+created in your ``~/.aws/`` directory.
 
-AWS access for running **cloudigrade** inside Docker must be enabled via environment variables. Set the following variables in your local environment *before* you start running in Docker containers. Values for these variables can be found in the files in your ``~/.aws/`` directory.
+AWS access for running **cloudigrade** inside Docker must be enabled via
+environment variables. Set the following variables in your local environment
+*before* you start running in Docker containers. Values for these variables can
+be found in the files in your ``~/.aws/`` directory.
 
 -  ``AWS_ACCESS_KEY_ID``
 -  ``AWS_SECRET_ACCESS_KEY``
@@ -111,7 +151,9 @@ For convenience, you may want to set the following environment variable:
 
     DJANGO_SETTINGS_MODULE=config.settings.local
 
-If you do not set that variable, you may need to include the ``--settings=config.settings.local`` argument with any Django admin or management commands you run.
+If you do not set that variable, you may need to include the
+``--settings=config.settings.local`` argument with any Django admin or
+management commands you run.
 
 
 Common commands
@@ -127,7 +169,8 @@ To run the application along with the postgres database and queue run the follow
 
     make start-compose
 
-If you would like to run just the database, so you can run the application on your local machine, use the following command:
+If you would like to run just the database, so you can run the application on
+your local machine, use the following command:
 
 .. code-block:: sh
 
@@ -139,7 +182,8 @@ To reinstantiate the docker psql db, run the following:
 
     make reinitdb
 
-If you would like to run just the queue, so you can interact with the queue on your local machine, use the following command:
+If you would like to run just the queue, so you can interact with the queue on
+your local machine, use the following command:
 
 .. code-block:: sh
 
@@ -161,13 +205,16 @@ If you wish to run *only* the tests:
 
     make unittest
 
-If you wish to run a higher-level suite of integration tests, see `integrade <https://github.com/cloudigrade/integrade>`_.
+If you wish to run a higher-level suite of integration tests, see `integrade
+<https://github.com/cloudigrade/integrade>`_.
 
 
 Authentication
 ==============
 
-Django Rest Framework token authentication is used to authenticate users. API access is restricted to authenticated users. All API calls require an Authorization header:
+Django Rest Framework token authentication is used to authenticate users. API
+access is restricted to authenticated users. All API calls require an
+Authorization header:
 
 .. code-block::
 
@@ -191,13 +238,21 @@ This auth token can be supplied in the Authorization header.
 Message Broker
 ==============
 
-RabbitMQ is used to broker messages between **cloudigrade** and inspectigrade services. There are multiple Python packages available to interact with RabbitMQ; the officially recommended packaged is `Pika <https://pika.readthedocs.io/en/latest/>`_. Both services serve as producers and consumers of the message queue. The **cloudigrade** docker-compose file requires that a password environment variable be set for the RabbitMQ user. Make sure that the following has been set in your local environment before starting
+RabbitMQ is used to broker messages between **cloudigrade** and inspectigrade
+services. There are multiple Python packages available to interact with
+RabbitMQ; the officially recommended packaged is `Pika
+<https://pika.readthedocs.io/en/latest/>`_. Both services serve as producers
+and consumers of the message queue. The **cloudigrade** docker-compose file
+requires that a password environment variable be set for the RabbitMQ user.
+Make sure that the following has been set in your local environment before
+starting
 
 .. code-block:: sh
 
     RABBITMQ_DEFAULT_PASS
 
-The RabbitMQ container can persist message data in the **cloudigrade** directory. To purge this data use
+The RabbitMQ container can persist message data in the **cloudigrade**
+directory. To purge this data use
 
 .. code-block:: sh
 
