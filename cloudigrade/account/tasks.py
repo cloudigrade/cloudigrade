@@ -41,7 +41,7 @@ def copy_ami_snapshot(arn, ami_id, source_region):
     )
 
     new_snapshot_id = aws.copy_snapshot(snapshot_id, source_region)
-    create_volume(ami_id, new_snapshot_id)
+    create_volume.delay(ami_id, new_snapshot_id)
 
 
 @retriable_shared_task
