@@ -157,7 +157,7 @@ class AccountCeleryTaskTest(TestCase):
         """Assert that the volume create task succeeds."""
         ami_id = util_helper.generate_dummy_image_id()
         snapshot_id = util_helper.generate_dummy_snapshot_id()
-        zone = settings.HOUNDIGRADE_AVAILABILITY_ZONE
+        zone = settings.HOUNDIGRADE_AWS_AVAILABILITY_ZONE
 
         mock_volume = util_helper.generate_mock_volume()
         mock_aws.create_volume.return_value = mock_volume.id
