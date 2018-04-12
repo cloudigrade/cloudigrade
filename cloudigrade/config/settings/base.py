@@ -29,8 +29,8 @@ ALLOWED_HOSTS = env('DJANGO_ALLOWED_HOSTS', default=['*'])
 # AWS Defaults
 S3_DEFAULT_REGION = env('S3_DEFAULT_REGION', default='us-east-1')
 SQS_DEFAULT_REGION = env('SQS_DEFAULT_REGION', default='us-east-1')
-HOUNDIGRADE_AVAILABILITY_ZONE = env('HOUNDIGRADE_AVAILABILITY_ZONE',
-                                    default='us-east-1a')
+HOUNDIGRADE_AWS_AVAILABILITY_ZONE = env('HOUNDIGRADE_AWS_AVAILABILITY_ZONE',
+                                        default='us-east-1a')
 
 # Default apps go here
 DJANGO_APPS = [

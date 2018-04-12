@@ -58,7 +58,7 @@ def create_volume(ami_id, snapshot_id):
         None: Run as an asynchronous Celery task.
 
     """
-    zone = settings.HOUNDIGRADE_AVAILABILITY_ZONE
+    zone = settings.HOUNDIGRADE_AWS_AVAILABILITY_ZONE
     volume_id = aws.create_volume(snapshot_id, zone)
     # TODO Replace the next `print` call with a call to the next task.
     # Do something like: enqueue_ready_volume(ami_id, volume_id)
