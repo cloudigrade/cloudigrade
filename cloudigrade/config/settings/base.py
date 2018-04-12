@@ -1,3 +1,4 @@
+"""Base settings file."""
 import environ
 from psycopg2cffi import compat
 
@@ -92,10 +93,17 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
 
 DATABASES = {
-    'default': env.db('DATABASE_URL', default='postgres://localhost/cloudigrade'),
+    'default': {
+        'ATOMIC_REQUESTS': env('DJANGO_ATOMIC_REQUESTS', default=True),
+        'ENGINE': env('DJANGO_DATABASE_ENGINE', default='django.db.backends.postgresql_psycopg2'),
+        'NAME': env('DJANGO_DATABASE_NAME', default='postgres'),
+        'HOST': env('DJANGO_DATABASE_HOST', default='localhost'),
+        'USER': env('DJANGO_DATABASE_USER', default='postgres'),
+        'PASSWORD': env('DJANGO_DATABASE_PASSWORD', default='postgres'),
+        'PORT': env('DJANGO_DATABASE_PORT', default=5432),
+        'CONN_MAX_AGE': env('DJANGO_DATABASE_CONN_MAX_AGE', default=0),
+    }
 }
-DATABASES['default']['ATOMIC_REQUESTS'] = env('DJANGO_ATOMIC_REQUESTS', default=True)
-
 
 # Password validation
 # https://docs.djangoproject.com/en/2.0/ref/settings/#auth-password-validators
@@ -133,7 +141,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
-STATIC_URL = '/static/'
+STATIC_URL = env('DJANGO_STATIC_URL', default='/static/')
 STATIC_ROOT = env('DJANGO_STATIC_ROOT', default=str(ROOT_DIR.path('static')))
 
 
@@ -153,12 +161,28 @@ REST_FRAMEWORK = {
 
 # Message and Task Queues
 
+RABBITMQ_USER = env('RABBITMQ_USER', default='guest')
+RABBITMQ_PASSWORD = env('RABBITMQ_PASSWORD', default='guest')
+RABBITMQ_HOST = env('RABBITMQ_HOST', default='localhost')
+RABBITMQ_PORT = env('RABBITMQ_PORT', default='5672')
+RABBITMQ_VHOST = env('RABBITMQ_VHOST', default='/')
+
+RABBITMQ_URL = env(
+    'RABBITMQ_URL',
+    default='amqp://{}:{}@{}:{}/{}'.format(
+        RABBITMQ_USER,
+        RABBITMQ_PASSWORD,
+        RABBITMQ_HOST,
+        RABBITMQ_PORT,
+        RABBITMQ_VHOST
+    )
+)
 RABBITMQ_EXCHANGE_NAME = env('RABBITMQ_EXCHANGE_NAME', default='cloudigrade_inspectigrade')
 RABBITMQ_QUEUE_NAME = env('RABBITMQ_QUEUE_NAME', default='machine_images')
-RABBITMQ_URL = env('RABBITMQ_URL', default='amqp://guest:guest@localhost:5672/%2F')
-# Celery specific duplicate of RABBITMQ_URL
-CELERY_BROKER_URL = RABBITMQ_URL
 
+# Celery specific duplicate of RABBITMQ_URL
+
+CELERY_BROKER_URL = RABBITMQ_URL
 CELERY_TASK_ROUTES = {
     'account.tasks.copy_ami_snapshot': {'queue': 'copy_ami_snapshot'},
 }

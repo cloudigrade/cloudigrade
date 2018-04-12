@@ -33,10 +33,11 @@ services:
     depends_on:
       - app
   queue:
-    image: rabbitmq:alpine
+    image: rabbitmq:management-alpine
     hostname: cloudiqueue
     ports:
       - "5672:5672"
+      - "15672:15672"
     environment:
       - RABBITMQ_DISK_FREE_LIMIT={mem_relative, 1.5}
     volumes:
