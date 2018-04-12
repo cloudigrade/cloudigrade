@@ -187,4 +187,5 @@ RABBITMQ_QUEUE_NAME = env('RABBITMQ_QUEUE_NAME', default='machine_images')
 CELERY_BROKER_URL = RABBITMQ_URL
 CELERY_TASK_ROUTES = {
     'account.tasks.copy_ami_snapshot': {'queue': 'copy_ami_snapshot'},
+    'account.tasks.create_volume': {'queue': 'create_volume'},
 }
