@@ -146,8 +146,12 @@ specific dependencies can be installed into a virtual environment.
     # now attempt to run this with docker compose
     docker-compose up
 
-    # If all is well, you can destroy this directory
-
+    # If all is well, you can stop the image, remove it
+    # and destroy the directory
+    docker-compose stop
+    docker-compose rm
+    cd ~
+    rm -rf ~/tmp/test-compose
 
     # create a virtual environment for python dependencies
     python3 -m venv ~/envs/cloudigrade
