@@ -1,5 +1,9 @@
 """util.exceptions module."""
+import logging
+
 from rest_framework.exceptions import ParseError
+
+logger = logging.getLogger(__name__)
 
 
 class InvalidArn(ParseError):
@@ -8,6 +12,11 @@ class InvalidArn(ParseError):
 
 class NotReadyException(Exception):
     """Something was not ready and may need later retry."""
+
+    def __init__(self, message=None):
+        """Log the exception message upon creation."""
+        logger.info('%s: %s', self.__class__.__name__, message)
+        self.message = message
 
 
 class AwsSnapshotEncryptedError(Exception):
