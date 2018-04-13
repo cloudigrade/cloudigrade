@@ -316,7 +316,9 @@ def add_snapshot_ownership(session, snapshot, region):
         if user['UserId'] == user_id:
             return
 
-    raise AwsSnapshotNotOwnedError
+    message = _('No CreateVolumePermissions on Snapshot {0} for UserId {1}').\
+        format(snapshot.snapshot_id, user_id)
+    raise AwsSnapshotNotOwnedError(message)
 
 
 def copy_snapshot(snapshot_id, source_region):
