@@ -360,7 +360,10 @@ def create_volume(snapshot_id, zone):
     ec2 = boto3.resource('ec2')
     snapshot = ec2.Snapshot(snapshot_id)
     if snapshot.state != 'completed':
-        raise SnapshotNotReadyException(snapshot_id)
+        message = '{0} {1} {2}'.format(snapshot_id,
+                                       snapshot.state,
+                                       snapshot.progress)
+        raise SnapshotNotReadyException(message)
     volume = ec2.create_volume(SnapshotId=snapshot_id, AvailabilityZone=zone)
     return volume.id
 
