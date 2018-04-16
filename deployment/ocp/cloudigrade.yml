@@ -1,0 +1,297 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: cloudigrade-persistent-template
+labels:
+  template: cloudigrade-persistent-template
+objects:
+- kind: DeploymentConfig
+  apiVersion: v1
+  metadata:
+    name: cloudigrade
+  spec:
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      name: ${NAME}
+    strategy:
+      recreateParams:
+        mid:
+          execNewPod:
+            command:
+            - scl
+            - enable
+            - rh-postgresql96
+            - rh-python36
+            - ./manage.py collectstatic --no-input && ./manage.py migrate
+            containerName: ${NAME}
+            volumes:
+            - ${NAME}-static
+          failurePolicy: Abort
+      type: Recreate
+    template:
+      metadata:
+        labels:
+          name: ${NAME}
+      spec:
+        containers:
+        - env:
+          - name: DJANGO_SETTINGS_MODULE
+            valueFrom:
+              secretKeyRef:
+                key: django-settings-module
+                name: ${NAME}
+          - name: DJANGO_SECRET_KEY
+            valueFrom:
+              secretKeyRef:
+                key: django-secret-key
+                name: ${NAME}
+          - name: DJANGO_ALLOWED_HOSTS
+            valueFrom:
+              secretKeyRef:
+                key: django-allowed-hosts
+                name: ${NAME}
+          - name: DJANGO_DATABASE_NAME
+            valueFrom:
+              secretKeyRef:
+                key: database-name
+                name: ${DB_SECRETS_FILE}
+          - name: DJANGO_DATABASE_HOST
+            valueFrom:
+              secretKeyRef:
+                key: django-database-host
+                name: ${NAME}
+          - name: DJANGO_DATABASE_USER
+            valueFrom:
+              secretKeyRef:
+                key: database-user
+                name: ${DB_SECRETS_FILE}
+          - name: DJANGO_DATABASE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: database-password
+                name: ${DB_SECRETS_FILE}
+          - name: DJANGO_DEBUG
+            valueFrom:
+              secretKeyRef:
+                key: django-debug
+                name: ${NAME}
+          - name: RABBITMQ_USER
+            valueFrom:
+              secretKeyRef:
+                key: username
+                name: ${RABBITMQ_SECRETS_FILE}
+          - name: RABBITMQ_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: password
+                name: ${RABBITMQ_SECRETS_FILE}
+          - name: RABBITMQ_HOST
+            valueFrom:
+              secretKeyRef:
+                key: rabbitmq-host
+                name: ${NAME}
+          image: 172.30.217.42:5000/${NAMESPACE}/${NAME}:latest
+          name: ${NAME}
+          resources:
+            limits:
+              memory: 512Mi
+          volumeMounts:
+          - mountPath: /var/run/cloudigrade
+            name: ${NAME}-socket
+          - mountPath: /srv/cloudigrade/static
+            name: ${NAME}-static
+        - name: nginx
+          image: 172.30.217.42:5000/${NAMESPACE}/${NAME}-nginx:latest
+          ports:
+          - containerPort: 8080
+            protocol: TCP
+          resources:
+            limits:
+              memory: 512Mi
+          volumeMounts:
+          - mountPath: /var/run/cloudigrade
+            name: ${NAME}-socket
+          - mountPath: /srv/cloudigrade/static
+            name: ${NAME}-static
+        volumes:
+        - name: ${NAME}-socket
+          emptyDir: {}
+        - name: ${NAME}-static
+          persistentVolumeClaim:
+            claimName: ${NAME}-static
+  triggers:
+  - type: "ImageChange"
+    imageChangeParams:
+      automatic: true
+      from:
+        kind: "ImageStreamTag"
+        name: ${NAME}
+        namespace: ${NAMESPACE}
+      containerNames:
+        - ${NAME}
+- kind: Secret
+  apiVersion: v1
+  metadata:
+    annotations:
+      template.openshift.io/base64-expose-django-allowed-hosts: "{.data['django-allowed-hosts']}"
+      template.openshift.io/base64-expose-django-database-host: "{.data['django-database-host']}"
+      template.openshift.io/base64-expose-django-debug: "{.data['django-debug']}"
+      template.openshift.io/base64-expose-django-secret-key: "{.data['django-secret-key']}"
+      template.openshift.io/base64-expose-django-settings-module: "{.data['django-settings-module']}"
+      template.openshift.io/base64-expose-rabbitmq-host: "{.data['rabbitmq-host']}"
+    name: ${NAME}
+  stringData:
+    django-allowed-hosts: ${DJANGO_ALLOWED_HOSTS}
+    django-database-host: ${DJANGO_DATABASE_HOST}
+    django-debug: ${DJANGO_DEBUG}
+    django-secret-key: ${DJANGO_SECRET_KEY}
+    django-settings-module: ${DJANGO_SETTINGS_MODULE}
+    rabbitmq-host: ${RABBITMQ_HOST}
+  type: Opaque
+- kind: BuildConfig
+  apiVersion: v1
+  metadata:
+    name: ${NAME}-nginx
+  spec:
+    failedBuildsHistoryLimit: 5
+    output:
+      to:
+        kind: ImageStreamTag
+        name: ${NAME}-nginx:latest
+    runPolicy: Serial
+    source:
+      contextDir: docker
+      git:
+        uri: https://github.com/cloudigrade/cloudigrade.git
+      type: Git
+    strategy:
+      sourceStrategy:
+        from:
+          kind: DockerImage
+          name: centos/nginx-112-centos7:latest
+      type: Source
+    triggers:
+    - github:
+        secret: ${GITHUB_TOKEN}
+      type: GitHub
+    - generic:
+        secret: ${GENERIC_TOKEN}
+      type: Generic
+    - type: ConfigChange
+    - imageChange: {}
+      type: ImageChange
+- kind: ImageStream
+  apiVersion: v1
+  metadata:
+    name: ${NAME}-nginx
+  spec:
+    tags:
+    - from:
+        kind: DockerImage
+        name: 172.30.217.42:5000/${NAMESPACE}/${NAME}-nginx
+      name: latest
+- kind: ImageStream
+  apiVersion: v1
+  metadata:
+    name: cloudigrade
+  spec:
+    tags:
+    - from:
+        kind: DockerImage
+        name: cloudigrade/cloudigrade
+      name: latest
+      referencePolicy:
+        type: Source
+      importPolicy:
+        scheduled: true
+- kind: Route
+  apiVersion: v1
+  metadata:
+    annotations:
+      openshift.io/host.generated: "true"
+    name: ${NAME}
+  spec:
+    port:
+      targetPort: nginx
+    to:
+      kind: Service
+      name: ${NAME}
+      weight: 100
+    wildcardPolicy: None
+- kind: Service
+  apiVersion: v1
+  metadata:
+    name: ${NAME}
+  spec:
+    ports:
+    - name: nginx
+      port: 80
+      protocol: TCP
+      targetPort: 8080
+    selector:
+      name: ${NAME}
+    sessionAffinity: None
+    type: ClusterIP
+- kind: PersistentVolumeClaim
+  apiVersion: v1
+  metadata:
+    annotations:
+      volume.beta.kubernetes.io/storage-class: ${PVC_STORAGE_CLASS}
+      volume.beta.kubernetes.io/storage-provisioner: ${PVC_STORAGE_PROVISIONER}
+    name: ${NAME}-static
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: ${PVC_VOLUME_SIZE}
+parameters:
+- name: NAME
+  description: "Application Name"
+  value: "cloudigrade"
+- name: NAMESPACE
+  description: "Namespace where the application is being deployed"
+  value: "cloudigrade-test"
+- name: DB_SECRETS_FILE
+  description: "Name of DB secrets file"
+  value: "postgresql"
+- name: RABBITMQ_SECRETS_FILE
+  description: "Name of RabbitMQ secrets file"
+  value: "rabbitmq-persistent"
+- name: PVC_STORAGE_CLASS
+  description: "PVC Storage Class"
+  value: "gp2"
+- name: PVC_STORAGE_PROVISIONER
+  description: "PVC Storage Provisioner"
+  value: "kubernetes.io/aws-ebs"
+- name: PVC_VOLUME_SIZE
+  description: "PVC Volume Claim Size"
+  value: "1Gi"
+- name: GITHUB_TOKEN
+  description: "GitHub Webhook Secret Token for nginx build"
+  from: "[\\w]{12}"
+  generate: expression
+- name: GENERIC_TOKEN
+  description: "Generic Webhook Secret Token for nginx build"
+  from: "[\\w]{12}"
+  generate: expression
+- name: DJANGO_ALLOWED_HOSTS
+  description: "Hosts allowed to serve this application"
+  value: .insights.openshiftapps.com
+- name: DJANGO_DEBUG
+  description: "Django Debug Mode"
+  value: "False"
+- name: DJANGO_SECRET_KEY
+  description: "Django Secret Key"
+  from: "[\\w]{64}"
+  generate: expression
+- name: DJANGO_SETTINGS_MODULE
+  description: "Settings file to use"
+  value: config.settings.prod
+- name: DJANGO_DATABASE_HOST
+  description: "Your db instance host"
+  value: postgresql.cloudigrade-investigation.svc
+- name: RABBITMQ_HOST
+  description: "Your rabbitmq host"
+  value: rabbitmq-persistent.cloudigrade-investigation.svc
