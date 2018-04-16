@@ -724,15 +724,18 @@ class UtilAwsTest(TestCase):
         self.assertEqual(actual_volume, mock_volume)
 
     def test_check_volume_state_available(self):
+        """Test that a volue is available."""
         mock_volume = helper.generate_mock_volume(state='available')
         self.assertIsNone(aws.check_volume_state(mock_volume))
 
     def test_check_volume_state_creating(self):
+        """Test the appropriate error for still creating volumes."""
         mock_volume = helper.generate_mock_volume(state='creating')
         with self.assertRaises(AwsVolumeNotReadyError):
             aws.check_volume_state(mock_volume)
 
     def test_check_volume_state_error(self):
+        """Test the appropriate error for other volume states."""
         mock_volume = helper.generate_mock_volume(state='error')
         with self.assertRaises(AwsVolumeError):
             aws.check_volume_state(mock_volume)

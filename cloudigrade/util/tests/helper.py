@@ -273,7 +273,7 @@ def generate_mock_volume(volume_id=None,
         zone = generate_dummy_availability_zone()
     if state is None:
         state = random.choice(
-            ('creating','available','in-use','deleting','deleted','error')
+            ('creating', 'available', 'in-use', 'deleting', 'deleted', 'error')
         )
 
     mock_volume = Mock()

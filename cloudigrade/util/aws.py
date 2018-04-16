@@ -386,6 +386,7 @@ def get_volume(volume_id, region):
     """
     return boto3.resource('ec2', region_name=region).Volume(volume_id)
 
+
 def check_volume_state(volume):
     """Raise an error if volume is not available."""
     if volume.state == 'creating':
@@ -396,6 +397,7 @@ def check_volume_state(volume):
         )
         raise AwsVolumeError(err)
     return
+
 
 def verify_account_access(session):
     """

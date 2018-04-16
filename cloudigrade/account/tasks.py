@@ -1,10 +1,10 @@
 """Celery tasks for use in the account app."""
 from django.conf import settings
-from django.utils.translation import gettext as _
 
-from util import aws
+
 from account.models import AwsMachineImage
 from account.util import add_messages_to_queue
+from util import aws
 from util.aws import rewrap_aws_errors
 from util.celery import retriable_shared_task
 from util.exceptions import AwsSnapshotEncryptedError

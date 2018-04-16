@@ -8,13 +8,15 @@ from django.test import TestCase
 
 from account import tasks
 from account.models import AwsAccount, AwsMachineImage
-from account.tasks import copy_ami_snapshot, create_volume, enqueue_ready_volume
+from account.tasks import (copy_ami_snapshot,
+                           create_volume,
+                           enqueue_ready_volume)
 from util.exceptions import (AwsSnapshotCopyLimitError,
                              AwsSnapshotEncryptedError,
                              AwsSnapshotNotOwnedError,
-                             SnapshotNotReadyException,
                              AwsVolumeError,
-                             AwsVolumeNotReadyError)
+                             AwsVolumeNotReadyError,
+                             SnapshotNotReadyException)
 from util.tests import helper as util_helper
 
 
