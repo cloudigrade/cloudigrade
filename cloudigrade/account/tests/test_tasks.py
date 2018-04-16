@@ -8,11 +8,13 @@ from django.test import TestCase
 
 from account import tasks
 from account.models import AwsAccount, AwsMachineImage
-from account.tasks import copy_ami_snapshot, create_volume
+from account.tasks import copy_ami_snapshot, create_volume, enqueue_ready_volume
 from util.exceptions import (AwsSnapshotCopyLimitError,
                              AwsSnapshotEncryptedError,
                              AwsSnapshotNotOwnedError,
-                             SnapshotNotReadyException)
+                             SnapshotNotReadyException,
+                             AwsVolumeError,
+                             AwsVolumeNotReadyError)
 from util.tests import helper as util_helper
 
 
@@ -180,3 +182,55 @@ class AccountCeleryTaskTest(TestCase):
             mock_retry.side_effect = Retry()
             with self.assertRaises(Retry):
                 create_volume(ami_id, snapshot_id)
+
+    @patch('account.tasks.add_messages_to_queue')
+    @patch('account.tasks.aws')
+    def test_enqueue_ready_volume_success(self, mock_aws, mock_queue):
+        """Assert that volumes are enqueued when ready."""
+        ami_id = util_helper.generate_dummy_image_id()
+        volume_id = util_helper.generate_dummy_volume_id()
+        mock_volume = util_helper.generate_mock_volume(
+            volume_id=volume_id,
+            state='available'
+        )
+
+        mock_aws.get_volume.return_value = mock_volume
+        messages = [{'ami_id': ami_id, 'volume_id': volume_id}]
+
+        enqueue_ready_volume(ami_id, volume_id)
+
+        mock_queue.assert_called_with('ready_volumes', messages, 'ami_id')
+
+    @patch('account.tasks.aws')
+    def test_enqueue_ready_volume_error(self, mock_aws):
+        """Assert that an error is raised on bad volume state."""
+        ami_id = util_helper.generate_dummy_image_id()
+        volume_id = util_helper.generate_dummy_volume_id()
+        mock_volume = util_helper.generate_mock_volume(
+            volume_id=volume_id,
+            state=random.choice(('in-use', 'deleting', 'deleted', 'error'))
+        )
+
+        mock_aws.get_volume.return_value = mock_volume
+        mock_aws.check_volume_state.side_effect = AwsVolumeError()
+
+        with self.assertRaises(AwsVolumeError):
+            enqueue_ready_volume(ami_id, volume_id)
+
+    @patch('account.tasks.aws')
+    def test_enqueue_ready_volume_retry(self, mock_aws):
+        """Assert that the task retries when volume is not available."""
+        ami_id = util_helper.generate_dummy_image_id()
+        volume_id = util_helper.generate_dummy_volume_id()
+        mock_volume = util_helper.generate_mock_volume(
+            volume_id=volume_id,
+            state='creating'
+        )
+
+        mock_aws.get_volume.return_value = mock_volume
+        mock_aws.check_volume_state.side_effect = AwsVolumeNotReadyError()
+
+        with patch.object(enqueue_ready_volume, 'retry') as mock_retry:
+            mock_retry.side_effect = Retry()
+            with self.assertRaises(Retry):
+                enqueue_ready_volume(ami_id, volume_id)
