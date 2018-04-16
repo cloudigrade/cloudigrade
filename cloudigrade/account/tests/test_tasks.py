@@ -164,7 +164,13 @@ class AccountCeleryTaskTest(TestCase):
         mock_volume = util_helper.generate_mock_volume()
         mock_aws.create_volume.return_value = mock_volume.id
 
-        create_volume(ami_id, snapshot_id)
+        with patch.object(tasks, 'enqueue_ready_volume') as mock_enqueue:
+            create_volume(ami_id, snapshot_id)
+            mock_enqueue.delay.assert_called_with(
+                ami_id,
+                mock_volume.id,
+                zone[:-1]
+            )
 
         mock_aws.create_volume.assert_called_with(snapshot_id, zone)
 
@@ -178,10 +184,12 @@ class AccountCeleryTaskTest(TestCase):
             snapshot_id
         )
 
-        with patch.object(create_volume, 'retry') as mock_retry:
+        with patch.object(tasks, 'enqueue_ready_volume') as mock_enqueue,\
+                patch.object(create_volume, 'retry') as mock_retry:
             mock_retry.side_effect = Retry()
             with self.assertRaises(Retry):
                 create_volume(ami_id, snapshot_id)
+            mock_enqueue.delay.assert_not_called()
 
     @patch('account.tasks.add_messages_to_queue')
     @patch('account.tasks.aws')
@@ -193,11 +201,12 @@ class AccountCeleryTaskTest(TestCase):
             volume_id=volume_id,
             state='available'
         )
+        region = mock_volume.zone[:-1]
 
         mock_aws.get_volume.return_value = mock_volume
         messages = [{'ami_id': ami_id, 'volume_id': volume_id}]
 
-        enqueue_ready_volume(ami_id, volume_id)
+        enqueue_ready_volume(ami_id, volume_id, region)
 
         mock_queue.assert_called_with('ready_volumes', messages, 'ami_id')
 
@@ -210,12 +219,13 @@ class AccountCeleryTaskTest(TestCase):
             volume_id=volume_id,
             state=random.choice(('in-use', 'deleting', 'deleted', 'error'))
         )
+        region = mock_volume.zone[:-1]
 
         mock_aws.get_volume.return_value = mock_volume
         mock_aws.check_volume_state.side_effect = AwsVolumeError()
 
         with self.assertRaises(AwsVolumeError):
-            enqueue_ready_volume(ami_id, volume_id)
+            enqueue_ready_volume(ami_id, volume_id, region)
 
     @patch('account.tasks.aws')
     def test_enqueue_ready_volume_retry(self, mock_aws):
@@ -226,6 +236,7 @@ class AccountCeleryTaskTest(TestCase):
             volume_id=volume_id,
             state='creating'
         )
+        region = mock_volume.zone[:-1]
 
         mock_aws.get_volume.return_value = mock_volume
         mock_aws.check_volume_state.side_effect = AwsVolumeNotReadyError()
@@ -233,4 +244,4 @@ class AccountCeleryTaskTest(TestCase):
         with patch.object(enqueue_ready_volume, 'retry') as mock_retry:
             mock_retry.side_effect = Retry()
             with self.assertRaises(Retry):
-                enqueue_ready_volume(ami_id, volume_id)
+                enqueue_ready_volume(ami_id, volume_id, region)

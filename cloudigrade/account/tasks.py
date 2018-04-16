@@ -63,12 +63,12 @@ def create_volume(ami_id, snapshot_id):
     zone = settings.HOUNDIGRADE_AWS_AVAILABILITY_ZONE
     volume_id = aws.create_volume(snapshot_id, zone)
 
-    enqueue_ready_volume.delay(ami_id, volume_id)
+    enqueue_ready_volume.delay(ami_id, volume_id, zone[:-1])
 
 
 @retriable_shared_task
 @rewrap_aws_errors
-def enqueue_ready_volume(ami_id, volume_id):
+def enqueue_ready_volume(ami_id, volume_id, region):
     """
     Enqueues information about an AMI and volume for later use.
 
@@ -80,7 +80,7 @@ def enqueue_ready_volume(ami_id, volume_id):
         None: Run as an asynchronous Celery task.
 
     """
-    volume = aws.get_volume(volume_id)
+    volume = aws.get_volume(volume_id, region)
     aws.check_volume_state(volume)
     messages = [{'ami_id': ami_id, 'volume_id': volume_id}]
 
