@@ -12,7 +12,9 @@ from django.conf import settings
 from django.utils.translation import gettext as _
 
 from util.exceptions import (AwsSnapshotCopyLimitError,
-                             AwsSnapshotNotOwnedError)
+                             AwsSnapshotNotOwnedError,
+                             AwsVolumeError,
+                             AwsVolumeNotReadyError)
 from util.exceptions import InvalidArn, SnapshotNotReadyException
 
 logger = logging.getLogger(__name__)
@@ -369,6 +371,31 @@ def create_volume(snapshot_id, zone):
     volume = ec2.create_volume(SnapshotId=snapshot_id, AvailabilityZone=zone)
     return volume.id
 
+
+def get_volume(volume_id, region):
+    """
+    Return a Volume for an EC2 instance.
+
+    Args:
+        volume_id (str): A volume ID
+        region (str): The AWS region the volume exists in
+
+    Returns:
+        Volume: A boto3 EC2 Volume object.
+
+    """
+    return boto3.resource('ec2', region_name=region).Volume(volume_id)
+
+def check_volume_state(volume):
+    """Raise an error if volume is not available."""
+    if volume.state == 'creating':
+        raise AwsVolumeNotReadyError
+    elif volume.state in ('in-use', 'deleting', 'deleted', 'error'):
+        err = _('Volume {vol_id} has state: {state}').format(
+            vol_id=volume.id, state=volume.state
+        )
+        raise AwsVolumeError(err)
+    return
 
 def verify_account_access(session):
     """
