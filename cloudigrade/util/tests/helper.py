@@ -37,10 +37,14 @@ def generate_dummy_aws_account_id():
     return ''.join(random.choice(string.digits) for _ in range(12))
 
 
-def generate_dummy_availability_zone():
+def generate_dummy_availability_zone(region=None):
     """Generate a dummy AWS availability zone for testing purposes."""
-    return '{}{}'.format(random.choice(SOME_AWS_REGIONS),
-                         random.choice(string.ascii_lowercase))
+    if region:
+            return '{}{}'.format(region,
+                                 random.choice(string.ascii_lowercase))
+    else:
+        return '{}{}'.format(random.choice(SOME_AWS_REGIONS),
+                             random.choice(string.ascii_lowercase))
 
 
 def generate_dummy_instance_id():
@@ -245,7 +249,10 @@ def generate_mock_snapshot(snapshot_id=None, encrypted=False, state=None):
     return mock_snapshot
 
 
-def generate_mock_volume(volume_id=None, snapshot_id=None, zone=None):
+def generate_mock_volume(volume_id=None,
+                         snapshot_id=None,
+                         zone=None,
+                         state=None):
     """
     Generate a mocked EC2 EBS Volume object.
 
@@ -264,11 +271,16 @@ def generate_mock_volume(volume_id=None, snapshot_id=None, zone=None):
         snapshot_id = generate_dummy_snapshot_id()
     if zone is None:
         zone = generate_dummy_availability_zone()
+    if state is None:
+        state = random.choice(
+            ('creating','available','in-use','deleting','deleted','error')
+        )
 
     mock_volume = Mock()
     mock_volume.id = volume_id
     mock_volume.snapshot_id = snapshot_id
     mock_volume.zone = zone
+    mock_volume.state = state
     return mock_volume
 
 

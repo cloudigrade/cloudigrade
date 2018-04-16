@@ -140,6 +140,12 @@ class UtilHelperTest(TestCase):
         zone = helper.generate_dummy_availability_zone()
         self.assertIn(zone[:-1], helper.SOME_AWS_REGIONS)
 
+    def test_generate_dummy_availability_zone_with_region(self):
+        """Assert region is used to generate availability zone."""
+        region = random.choice(helper.SOME_AWS_REGIONS)
+        zone = helper.generate_dummy_availability_zone(region)
+        self.assertEqual(zone[:-1], region)
+
     def test_generate_dummy_volume_id(self):
         """Assert generation of an appropriate volume ID."""
         volume_id = helper.generate_dummy_volume_id()
