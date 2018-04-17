@@ -39,12 +39,9 @@ def generate_dummy_aws_account_id():
 
 def generate_dummy_availability_zone(region=None):
     """Generate a dummy AWS availability zone for testing purposes."""
-    if region:
-            return '{}{}'.format(region,
-                                 random.choice(string.ascii_lowercase))
-    else:
-        return '{}{}'.format(random.choice(SOME_AWS_REGIONS),
-                             random.choice(string.ascii_lowercase))
+    if region is None:
+        region = random.choice(SOME_AWS_REGIONS)
+    return '{}{}'.format(region, random.choice(string.ascii_lowercase))
 
 
 def generate_dummy_instance_id():

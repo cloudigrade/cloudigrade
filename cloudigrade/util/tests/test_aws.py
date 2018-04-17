@@ -139,6 +139,29 @@ class UtilAwsTest(TestCase):
             mock_session.get_available_regions.assert_called_with('tng')
         self.assertListEqual(mock_regions, actual_regions)
 
+    def test_get_region_from_availability_zone(self):
+        """Assert that the proper region is returned for an AZ."""
+        expected_region = random.choice(helper.SOME_AWS_REGIONS)
+        zone = helper.generate_dummy_availability_zone(expected_region)
+
+        az_response = {
+            'AvailabilityZones': [
+                {
+                    'State': 'available',
+                    'RegionName': expected_region,
+                    'ZoneName': zone
+                }
+            ]
+        }
+
+        with patch.object(aws.boto3, 'client') as mock_client:
+            mock_desc = mock_client.return_value.describe_availability_zones
+            mock_desc.return_value = az_response
+
+            actual_region = aws.get_region_from_availability_zone(zone)
+
+        self.assertEqual(expected_region, actual_region)
+
     def test_get_session(self):
         """Assert get_session returns session object."""
         mock_arn = AwsArn(helper.generate_dummy_arn(generate_account_id=True))

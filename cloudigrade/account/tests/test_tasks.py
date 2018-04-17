@@ -162,16 +162,18 @@ class AccountCeleryTaskTest(TestCase):
         ami_id = util_helper.generate_dummy_image_id()
         snapshot_id = util_helper.generate_dummy_snapshot_id()
         zone = settings.HOUNDIGRADE_AWS_AVAILABILITY_ZONE
+        region = zone[:-1]
 
         mock_volume = util_helper.generate_mock_volume()
         mock_aws.create_volume.return_value = mock_volume.id
+        mock_aws.get_region_from_availability_zone.return_value = region
 
         with patch.object(tasks, 'enqueue_ready_volume') as mock_enqueue:
             create_volume(ami_id, snapshot_id)
             mock_enqueue.delay.assert_called_with(
                 ami_id,
                 mock_volume.id,
-                zone[:-1]
+                region
             )
 
         mock_aws.create_volume.assert_called_with(snapshot_id, zone)

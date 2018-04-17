@@ -188,6 +188,23 @@ def get_regions(session, service_name='ec2'):
     return session.get_available_regions(service_name)
 
 
+def get_region_from_availability_zone(zone):
+    """
+    Get the underlying region for an availability zone.
+
+    Args:
+        zone (str): The availability zone to check
+
+    Returns:
+        str: The region associated with the zone
+
+    """
+    response = boto3.client('ec2').describe_availability_zones(
+        ZoneNames=[zone]
+    )
+    return response['AvailabilityZones'][0]['RegionName']
+
+
 def get_running_instances(session):
     """
     Find all running EC2 instances visible to the given ARN.
@@ -389,12 +406,14 @@ def get_volume(volume_id, region):
 
 def check_volume_state(volume):
     """Raise an error if volume is not available."""
-    if volume.state == 'creating':
-        raise AwsVolumeNotReadyError
-    elif volume.state in ('in-use', 'deleting', 'deleted', 'error'):
+    if volume.state != 'available':
         err = _('Volume {vol_id} has state: {state}').format(
-            vol_id=volume.id, state=volume.state
+            vol_id=volume.id,
+            state=volume.state
         )
+    if volume.state == 'creating':
+        raise AwsVolumeNotReadyError(err)
+    elif volume.state not in ('available', 'creating'):
         raise AwsVolumeError(err)
     return
 

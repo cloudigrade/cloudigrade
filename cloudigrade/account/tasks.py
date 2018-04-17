@@ -1,7 +1,6 @@
 """Celery tasks for use in the account app."""
 from django.conf import settings
 
-
 from account.models import AwsMachineImage
 from account.util import add_messages_to_queue
 from util import aws
@@ -62,8 +61,9 @@ def create_volume(ami_id, snapshot_id):
     """
     zone = settings.HOUNDIGRADE_AWS_AVAILABILITY_ZONE
     volume_id = aws.create_volume(snapshot_id, zone)
+    region = aws.get_region_from_availability_zone(zone)
 
-    enqueue_ready_volume.delay(ami_id, volume_id, zone[:-1])
+    enqueue_ready_volume.delay(ami_id, volume_id, region)
 
 
 @retriable_shared_task
@@ -75,6 +75,7 @@ def enqueue_ready_volume(ami_id, volume_id, region):
     Args:
         ami_id (str): The AWS AMI id for which this request originated
         volume_id (str): The id of the volume to mount
+        region (str): The region the volume is being created in
 
     Returns:
         None: Run as an asynchronous Celery task.
