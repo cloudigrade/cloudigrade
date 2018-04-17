@@ -747,7 +747,7 @@ class UtilAwsTest(TestCase):
         self.assertEqual(actual_volume, mock_volume)
 
     def test_check_volume_state_available(self):
-        """Test that a volue is available."""
+        """Test that a volume is available."""
         mock_volume = helper.generate_mock_volume(state='available')
         self.assertIsNone(aws.check_volume_state(mock_volume))
 
