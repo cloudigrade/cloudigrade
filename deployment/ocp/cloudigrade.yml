@@ -106,7 +106,8 @@ objects:
               secretKeyRef:
                 key: rabbitmq-host
                 name: ${NAME}
-          image: 172.30.217.42:5000/${NAMESPACE}/${NAME}:latest
+          image: ' '
+          imagePullPolicy: Always
           name: ${NAME}
           resources:
             limits:
@@ -117,7 +118,8 @@ objects:
           - mountPath: /srv/cloudigrade/static
             name: ${NAME}-static
         - name: nginx
-          image: 172.30.217.42:5000/${NAMESPACE}/${NAME}-nginx:latest
+          image: ' '
+          imagePullPolicy: Always
           ports:
           - containerPort: 8080
             protocol: TCP
@@ -135,16 +137,26 @@ objects:
         - name: ${NAME}-static
           persistentVolumeClaim:
             claimName: ${NAME}-static
-  triggers:
-  - type: "ImageChange"
-    imageChangeParams:
-      automatic: true
-      from:
-        kind: "ImageStreamTag"
-        name: ${NAME}
-        namespace: ${NAMESPACE}
-      containerNames:
-        - ${NAME}
+    triggers:
+      - type: "ImageChange"
+        imageChangeParams:
+          automatic: true
+          containerNames:
+            - ${NAME}
+          from:
+            kind: ImageStreamTag
+            name: ${NAME}:latest
+            namespace: ${NAMESPACE}
+      - type: ImageChange
+        imageChangeParams:
+          automatic: true
+          containerNames:
+            - nginx
+          from:
+            kind: ImageStreamTag
+            name: ${NAME}-nginx:latest
+            namespace: ${NAMESPACE}
+      - type: ConfigChange
 - kind: Secret
   apiVersion: v1
   metadata:
@@ -206,16 +218,10 @@ objects:
   apiVersion: v1
   metadata:
     name: ${NAME}-nginx
-  spec:
-    tags:
-    - from:
-        kind: DockerImage
-        name: 172.30.217.42:5000/${NAMESPACE}/${NAME}-nginx
-      name: latest
 - kind: ImageStream
   apiVersion: v1
   metadata:
-    name: cloudigrade
+    name: ${NAME}
   spec:
     tags:
     - from:
@@ -257,9 +263,6 @@ objects:
 - kind: PersistentVolumeClaim
   apiVersion: v1
   metadata:
-    annotations:
-      volume.beta.kubernetes.io/storage-class: ${PVC_STORAGE_CLASS}
-      volume.beta.kubernetes.io/storage-provisioner: ${PVC_STORAGE_PROVISIONER}
     name: ${NAME}-static
   spec:
     accessModes:
@@ -305,19 +308,9 @@ parameters:
   value: "rabbitmq-persistent"
   required: true
 # PVC Settings - cloudigrade-static
-- name: PVC_STORAGE_CLASS
-  displayName: PVC Storage Class
-  description: "PVC Storage Class"
-  value: "gp2"
-  required: true
-- name: PVC_STORAGE_PROVISIONER
-  displayName: PVC Storage Provisioner
-  description: "PVC Storage Provisioner"
-  value: "kubernetes.io/aws-ebs"
-  required: true
 - name: PVC_VOLUME_SIZE
   displayName: PVC Volume Size
-  description: "PVC Volume Claim Size"
+  description: "Cloudigrade-Static Volume Claim Size"
   value: "1Gi"
   required: true
 # NGINX Container Build Settings
