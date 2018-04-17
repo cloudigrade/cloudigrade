@@ -9,7 +9,7 @@ exact commands, you may need to ``brew install httpie`` or
 ``pip install httpie`` first.
 
 These examples also assume you are running cloudigrade on
-``localhost:8000`` either via ``docker-compose`` or Django’s built-in
+``localhost:8080`` either via ``docker-compose`` or Django’s built-in
 ``runserver`` command and that you have correctly configured
 cloudigrade’s environment with appropriate variables to allow it to talk
 to the various clouds (e.g. ``AWS_ACCESS_KEY_ID``).
@@ -47,7 +47,7 @@ Request:
 
 .. code:: bash
 
-    http post localhost:8000/api/v1/account/ "${AUTH}" \
+    http post localhost:8080/api/v1/account/ "${AUTH}" \
         resourcetype="AwsAccount" \
         account_arn="arn:aws:iam::518028203513:role/grant_cloudi_to_372779871274"
 
@@ -61,7 +61,7 @@ Response:
     Content-Length: 278
     Content-Type: application/json
     Date: Mon, 19 Mar 2018 20:26:10 GMT
-    Location: http://localhost:8000/api/v1/account/1/
+    Location: http://localhost:8080/api/v1/account/1/
     Server: nginx/1.13.9
     Vary: Accept
     X-Frame-Options: SAMEORIGIN
@@ -73,7 +73,7 @@ Response:
         "id": 1,
         "resourcetype": "AwsAccount",
         "updated_at": "2018-03-19T20:26:10.798727Z",
-        "url": "http://localhost:8000/api/v1/account/1/"
+        "url": "http://localhost:8080/api/v1/account/1/"
     }
 
 If you attempt to create an AWS account for an ARN that is already in
@@ -83,7 +83,7 @@ Request:
 
 .. code:: bash
 
-    http post localhost:8000/api/v1/account/ "${AUTH}" \
+    http post localhost:8080/api/v1/account/ "${AUTH}" \
         resourcetype="AwsAccount" \
         account_arn="arn:aws:iam::518028203513:role/grant_cloudi_to_372779871274"
 
@@ -117,7 +117,7 @@ Request:
 
 .. code:: bash
 
-    http localhost:8000/api/v1/account/ "${AUTH}"
+    http localhost:8080/api/v1/account/ "${AUTH}"
 
 Response:
 
@@ -145,7 +145,7 @@ Response:
                 "id": 1,
                 "resourcetype": "AwsAccount",
                 "updated_at": "2018-03-19T20:26:10.798727Z",
-                "url": "http://localhost:8000/api/v1/account/1/"
+                "url": "http://localhost:8080/api/v1/account/1/"
             }
         ]
     }
@@ -157,7 +157,7 @@ Request:
 
 .. code:: bash
 
-    http localhost:8000/api/v1/account/1/ "${AUTH}"
+    http localhost:8080/api/v1/account/1/ "${AUTH}"
 
 Response:
 
@@ -180,7 +180,7 @@ Response:
         "id": 1,
         "resourcetype": "AwsAccount",
         "updated_at": "2018-03-19T20:26:10.798727Z",
-        "url": "http://localhost:8000/api/v1/account/1/"
+        "url": "http://localhost:8080/api/v1/account/1/"
     }
 
 Usage Reporting
@@ -193,7 +193,7 @@ Request:
 
 .. code:: bash
 
-    http localhost:8000/api/v1/report/ "${AUTH}" \
+    http localhost:8080/api/v1/report/ "${AUTH}" \
         cloud_provider=="aws" \
         cloud_account_id=="518028203513" \
         start=="2018-03-01T00:00:00" \
@@ -224,7 +224,7 @@ Request:
 
 .. code:: bash
 
-    http localhost:8000/api/v1/report/ "${AUTH}" \
+    http localhost:8080/api/v1/report/ "${AUTH}" \
         cloud_provider=="foobar" \
         cloud_account_id=="518028203513" \
         start=="2018-03-01T00:00:00" \
@@ -257,7 +257,7 @@ Request:
 
 .. code:: bash
 
-    http localhost:8000/api/v1/report/ "${AUTH}" \
+    http localhost:8080/api/v1/report/ "${AUTH}" \
         cloud_provider=="aws" \
         cloud_account_id=="1234567890" \
         start=="2018-03-01T00:00:00" \
@@ -288,7 +288,7 @@ Request:
 
 .. code:: bash
 
-    http localhost:8000/api/v1/report/ "${AUTH}" \
+    http localhost:8080/api/v1/report/ "${AUTH}" \
         cloud_provider=="aws" \
         cloud_account_id=="NX-74205" \
         start=="2018-03-01T00:00:00" \
