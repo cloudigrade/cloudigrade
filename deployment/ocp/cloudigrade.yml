@@ -36,6 +36,21 @@ objects:
       spec:
         containers:
         - env:
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                key: django-settings-module
+                name: ${NAME}
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                key: django-settings-module
+                name: ${NAME}
+          - name: AWS_DEFAULT_REGION
+            valueFrom:
+              secretKeyRef:
+                key: django-settings-module
+                name: ${NAME}
           - name: DJANGO_SETTINGS_MODULE
             valueFrom:
               secretKeyRef:
@@ -134,6 +149,9 @@ objects:
   apiVersion: v1
   metadata:
     annotations:
+      template.openshift.io/base64-expose-aws-access-key-id: "{.data['aws-access-key-id']}"
+      template.openshift.io/base64-expose-aws-secret-access-key: "{.data['aws-secret-access-key']}"
+      template.openshift.io/base64-expose-aws-default-region: "{.data['aws-default-region']}"
       template.openshift.io/base64-expose-django-allowed-hosts: "{.data['django-allowed-hosts']}"
       template.openshift.io/base64-expose-django-database-host: "{.data['django-database-host']}"
       template.openshift.io/base64-expose-django-debug: "{.data['django-debug']}"
@@ -142,6 +160,9 @@ objects:
       template.openshift.io/base64-expose-rabbitmq-host: "{.data['rabbitmq-host']}"
     name: ${NAME}
   stringData:
+    aws-access-key-id: ${AWS_ACCESS_KEY_ID}
+    aws-secret-access-key: ${AWS_SECRET_ACCESS_KEY}
+    aws-default-region: ${AWS_DEFAULT_REGION}
     django-allowed-hosts: ${DJANGO_ALLOWED_HOSTS}
     django-database-host: ${DJANGO_DATABASE_HOST}
     django-debug: ${DJANGO_DEBUG}
@@ -161,9 +182,9 @@ objects:
         name: ${NAME}-nginx:latest
     runPolicy: Serial
     source:
-      contextDir: docker
+      contextDir: ${NGINX_REPO_CONTEXT_DIR}
       git:
-        uri: https://github.com/cloudigrade/cloudigrade.git
+        uri: ${NGINX_CONFIG_SOURCE_URI}
       type: Git
     strategy:
       sourceStrategy:
@@ -247,51 +268,104 @@ objects:
       requests:
         storage: ${PVC_VOLUME_SIZE}
 parameters:
+# Project Names
 - name: NAME
+  displayName: Name
   description: "Application Name"
   value: "cloudigrade"
+  required: true
 - name: NAMESPACE
+  displayName: Namespace
   description: "Namespace where the application is being deployed"
   value: "cloudigrade-test"
+  required: true
+# AWS Settings
+- name: AWS_ACCESS_KEY_ID
+  displayName: AWS Access Key ID
+  description: "AWS Access Key ID"
+  required: true
+- name: AWS_SECRET_ACCESS_KEY
+  displayName: AWS Secret Access Key
+  description: "AWS Secret Access Key"
+  required: true
+- name: AWS_DEFAULT_REGION
+  displayName: AWS Default Region
+  description: "Default AWS Region"
+  value: "us-east-1"
+  required: true
+# Secret File Names
 - name: DB_SECRETS_FILE
+  displayName: DB Secrets File Name
   description: "Name of DB secrets file"
   value: "postgresql"
+  required: true
 - name: RABBITMQ_SECRETS_FILE
+  displayName: RabbitMQ Secrets File Name
   description: "Name of RabbitMQ secrets file"
   value: "rabbitmq-persistent"
+  required: true
+# PVC Settings - cloudigrade-static
 - name: PVC_STORAGE_CLASS
+  displayName: PVC Storage Class
   description: "PVC Storage Class"
   value: "gp2"
+  required: true
 - name: PVC_STORAGE_PROVISIONER
+  displayName: PVC Storage Provisioner
   description: "PVC Storage Provisioner"
   value: "kubernetes.io/aws-ebs"
+  required: true
 - name: PVC_VOLUME_SIZE
+  displayName: PVC Volume Size
   description: "PVC Volume Claim Size"
   value: "1Gi"
+  required: true
+# NGINX Container Build Settings
+- name: NGINX_CONFIG_SOURCE_URI
+  displayName: NGINX Configuration Source Repository URI
+  description: "Repository containing nginx.conf"
+  value: "https://github.com/cloudigrade/cloudigrade.git"
+  required: true
+- name: NGINX_REPO_CONTEXT_DIR
+  displayName: NGINX Configuration Repo Context Directory
+  description: "Context Directory for nginx.conf"
+  value: "deployment/nginx/"
+  required: true
 - name: GITHUB_TOKEN
+  displayName: GitHub Webhook Token
   description: "GitHub Webhook Secret Token for nginx build"
   from: "[\\w]{12}"
   generate: expression
+  required: true
 - name: GENERIC_TOKEN
+  displayName: Generic Webhook Token
   description: "Generic Webhook Secret Token for nginx build"
   from: "[\\w]{12}"
   generate: expression
+  required: true
+# Cloudigrade Django Settings
 - name: DJANGO_ALLOWED_HOSTS
   description: "Hosts allowed to serve this application"
   value: .insights.openshiftapps.com
+  required: true
 - name: DJANGO_DEBUG
   description: "Django Debug Mode"
   value: "False"
+  required: true
 - name: DJANGO_SECRET_KEY
   description: "Django Secret Key"
   from: "[\\w]{64}"
   generate: expression
+  required: true
 - name: DJANGO_SETTINGS_MODULE
   description: "Settings file to use"
   value: config.settings.prod
+  required: true
 - name: DJANGO_DATABASE_HOST
   description: "Your db instance host"
   value: postgresql.cloudigrade-investigation.svc
+  required: true
 - name: RABBITMQ_HOST
   description: "Your rabbitmq host"
   value: rabbitmq-persistent.cloudigrade-investigation.svc
+  required: true
