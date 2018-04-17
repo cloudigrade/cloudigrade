@@ -92,9 +92,6 @@ objects:
   - kind: PersistentVolumeClaim
     apiVersion: v1
     metadata:
-      annotations:
-        volume.beta.kubernetes.io/storage-class: gp2
-        volume.beta.kubernetes.io/storage-provisioner: kubernetes.io/aws-ebs
       name: ${NAME}
     spec:
       accessModes:
