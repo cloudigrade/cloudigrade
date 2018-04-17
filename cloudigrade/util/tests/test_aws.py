@@ -6,10 +6,8 @@ import random
 import uuid
 from unittest.mock import patch
 
-import boto3
 import faker
 from botocore.exceptions import ClientError
-from django.conf import settings
 from django.test import TestCase
 
 from util import aws
@@ -567,70 +565,6 @@ class UtilAwsTest(TestCase):
             )
 
         self.assertFalse(actual_verified)
-
-    def test_receive_message_from_queue(self):
-        """Assert that SQS Message objects are received."""
-        mock_queue_url = 'https://123.abc'
-        mock_receipt_handle = str(uuid.uuid4())
-        region = settings.SQS_DEFAULT_REGION
-        mock_message = boto3.resource('sqs', region_name=region)\
-            .Message(mock_queue_url, mock_receipt_handle)
-
-        with patch.object(aws, 'boto3') as mock_boto3:
-            mock_resource = mock_boto3.resource.return_value
-            mock_queue = mock_resource.Queue.return_value
-            mock_queue.receive_messages.return_value = [mock_message]
-
-            actual_messages = aws.receive_message_from_queue(mock_queue_url)
-
-        self.assertEqual(mock_message, actual_messages[0])
-
-    def test_delete_message_from_queue(self):
-        """Assert that messages are deleted from SQS queue."""
-        mock_queue_url = 'https://123.abc'
-        mock_messages_to_delete = [
-            helper.generate_mock_sqs_message(str(uuid.uuid4()),
-                                             '',
-                                             str(uuid.uuid4())),
-            helper.generate_mock_sqs_message(str(uuid.uuid4()),
-                                             '',
-                                             str(uuid.uuid4()))
-        ]
-        mock_response = {
-            'ResponseMetadata': {
-                'HTTPHeaders': {
-                    'connection': 'keep-alive',
-                    'content-length': '1358',
-                    'content-type': 'text/xml',
-                    'date': 'Mon, 19 Feb 2018 20:31:09 GMT',
-                    'server': 'Server',
-                    'x-amzn-requestid': '1234'
-                },
-                'HTTPStatusCode': 200,
-                'RequestId': '123456',
-                'RetryAttempts': 0
-            },
-            'Successful': [
-                {
-                    'Id': 'fe3b9df2-416c-4ee2-a04e-7ba8b80490ca'
-                },
-                {
-                    'Id': '3dc419e6-b841-48ad-ae4d-57da10a4315a'
-                }
-            ]
-        }
-
-        with patch.object(aws, 'boto3') as mock_boto3:
-            mock_resource = mock_boto3.resource.return_value
-            mock_queue = mock_resource.Queue.return_value
-            mock_queue.delete_messages.return_value = mock_response
-
-            actual_response = aws.delete_message_from_queue(
-                mock_queue_url,
-                mock_messages_to_delete
-            )
-
-        self.assertEqual(mock_response, actual_response)
 
     def test_get_object_content_from_s3_gzipped(self):
         """Assert that gzipped content is handled."""
