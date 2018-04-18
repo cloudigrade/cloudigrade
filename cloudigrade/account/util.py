@@ -1,6 +1,8 @@
 """Various utility functions for the account app."""
 import collections
 
+import kombu
+from django.conf import settings
 from django.utils import timezone
 
 from account import AWS_PROVIDER_STRING
@@ -114,3 +116,41 @@ def generate_aws_ami_messages(instances_data, ami_list):
                     }
                 )
     return messages
+
+
+def add_messages_to_queue(queue_name, messages, result_key):
+    """
+    Send messages to a message queue.
+
+    Args:
+        queue_name (str): The queue to add messages to
+        messages (list[dict]): A list of message dictionaries. The message
+            dicts will be serialized as JSON strings.
+        result_key (str): What to key the result dict on. This must be
+            a key in the message itself.
+
+    Returns:
+        dict: A mapping of machine image ID to result boolean value
+
+    """
+    exchange = kombu.Exchange(
+        settings.RABBITMQ_EXCHANGE_NAME,
+        'direct',
+        durable=True
+    )
+    message_queue = kombu.Queue(
+        queue_name,
+        exchange=exchange,
+        routing_key=queue_name
+    )
+
+    with kombu.Connection(settings.RABBITMQ_URL) as conn:
+        producer = conn.Producer(serializer='json')
+        for message in messages:
+            producer.publish(
+                message,
+                retry=True,
+                exchange=exchange,
+                routing_key=queue_name,
+                declare=[message_queue]
+            )

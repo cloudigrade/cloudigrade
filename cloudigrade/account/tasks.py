@@ -2,6 +2,7 @@
 from django.conf import settings
 
 from account.models import AwsMachineImage
+from account.util import add_messages_to_queue
 from util import aws
 from util.aws import rewrap_aws_errors
 from util.celery import retriable_shared_task
@@ -60,6 +61,28 @@ def create_volume(ami_id, snapshot_id):
     """
     zone = settings.HOUNDIGRADE_AWS_AVAILABILITY_ZONE
     volume_id = aws.create_volume(snapshot_id, zone)
-    # TODO Replace the next `print` call with a call to the next task.
-    # Do something like: enqueue_ready_volume(ami_id, volume_id)
-    print('Volume {} is being created for AMI {}'.format(volume_id, ami_id))
+    region = aws.get_region_from_availability_zone(zone)
+
+    enqueue_ready_volume.delay(ami_id, volume_id, region)
+
+
+@retriable_shared_task
+@rewrap_aws_errors
+def enqueue_ready_volume(ami_id, volume_id, region):
+    """
+    Enqueues information about an AMI and volume for later use.
+
+    Args:
+        ami_id (str): The AWS AMI id for which this request originated
+        volume_id (str): The id of the volume to mount
+        region (str): The region the volume is being created in
+
+    Returns:
+        None: Run as an asynchronous Celery task.
+
+    """
+    volume = aws.get_volume(volume_id, region)
+    aws.check_volume_state(volume)
+    messages = [{'ami_id': ami_id, 'volume_id': volume_id}]
+
+    add_messages_to_queue('ready_volumes', messages, 'ami_id')

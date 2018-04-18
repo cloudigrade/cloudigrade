@@ -1,5 +1,6 @@
 """Collection of tests for utils in the account app."""
 import random
+from unittest.mock import patch
 
 from django.test import TestCase
 
@@ -78,3 +79,34 @@ class AccountUtilTest(TestCase):
         result = util.generate_aws_ami_messages(instances_data, ami_list)
 
         self.assertEqual(result, expected)
+
+    @patch('account.util.kombu')
+    def test_add_messages_to_queue(self, mock_kombu):
+        """Test that messages get added to a message queue."""
+        queue_name = 'Test Queue'
+        region = random.choice(util_helper.SOME_AWS_REGIONS)
+        instance = util_helper.generate_dummy_describe_instance()
+        instances_data = {region: [instance]}
+        ami_list = [instance['ImageId']]
+
+        messages = util.generate_aws_ami_messages(instances_data, ami_list)
+        mock_routing_key = queue_name
+        mock_body = messages[0]
+        result_key = 'image_id'
+
+        mock_exchange = mock_kombu.Exchange.return_value
+        mock_queue = mock_kombu.Queue.return_value
+        mock_conn = mock_kombu.Connection.return_value
+        mock_with_conn = mock_conn.__enter__.return_value
+        mock_producer = mock_with_conn.Producer.return_value
+        mock_pub = mock_producer.publish
+
+        util.add_messages_to_queue(queue_name, messages, result_key)
+
+        mock_pub.assert_called_with(
+            mock_body,
+            retry=True,
+            exchange=mock_exchange,
+            routing_key=mock_routing_key,
+            declare=[mock_queue]
+        )

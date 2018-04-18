@@ -12,7 +12,9 @@ from django.conf import settings
 from django.utils.translation import gettext as _
 
 from util.exceptions import (AwsSnapshotCopyLimitError,
-                             AwsSnapshotNotOwnedError)
+                             AwsSnapshotNotOwnedError,
+                             AwsVolumeError,
+                             AwsVolumeNotReadyError)
 from util.exceptions import InvalidArn, SnapshotNotReadyException
 
 logger = logging.getLogger(__name__)
@@ -184,6 +186,23 @@ def get_regions(session, service_name='ec2'):
 
     """
     return session.get_available_regions(service_name)
+
+
+def get_region_from_availability_zone(zone):
+    """
+    Get the underlying region for an availability zone.
+
+    Args:
+        zone (str): The availability zone to check
+
+    Returns:
+        str: The region associated with the zone
+
+    """
+    response = boto3.client('ec2').describe_availability_zones(
+        ZoneNames=[zone]
+    )
+    return response['AvailabilityZones'][0]['RegionName']
 
 
 def get_running_instances(session):
@@ -368,6 +387,35 @@ def create_volume(snapshot_id, zone):
         raise SnapshotNotReadyException(message)
     volume = ec2.create_volume(SnapshotId=snapshot_id, AvailabilityZone=zone)
     return volume.id
+
+
+def get_volume(volume_id, region):
+    """
+    Return a Volume for an EC2 instance.
+
+    Args:
+        volume_id (str): A volume ID
+        region (str): The AWS region the volume exists in
+
+    Returns:
+        Volume: A boto3 EC2 Volume object.
+
+    """
+    return boto3.resource('ec2', region_name=region).Volume(volume_id)
+
+
+def check_volume_state(volume):
+    """Raise an error if volume is not available."""
+    if volume.state != 'available':
+        err = _('Volume {vol_id} has state: {state}').format(
+            vol_id=volume.id,
+            state=volume.state
+        )
+    if volume.state == 'creating':
+        raise AwsVolumeNotReadyError(err)
+    elif volume.state not in ('available', 'creating'):
+        raise AwsVolumeError(err)
+    return
 
 
 def verify_account_access(session):

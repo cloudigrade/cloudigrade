@@ -16,6 +16,8 @@ from util import aws
 from util.aws import AwsArn
 from util.exceptions import (AwsSnapshotCopyLimitError,
                              AwsSnapshotNotOwnedError,
+                             AwsVolumeError,
+                             AwsVolumeNotReadyError,
                              InvalidArn)
 from util.exceptions import SnapshotNotReadyException
 from util.tests import helper
@@ -136,6 +138,29 @@ class UtilAwsTest(TestCase):
             self.assertTrue(mock_session.get_available_regions.called)
             mock_session.get_available_regions.assert_called_with('tng')
         self.assertListEqual(mock_regions, actual_regions)
+
+    def test_get_region_from_availability_zone(self):
+        """Assert that the proper region is returned for an AZ."""
+        expected_region = random.choice(helper.SOME_AWS_REGIONS)
+        zone = helper.generate_dummy_availability_zone(expected_region)
+
+        az_response = {
+            'AvailabilityZones': [
+                {
+                    'State': 'available',
+                    'RegionName': expected_region,
+                    'ZoneName': zone
+                }
+            ]
+        }
+
+        with patch.object(aws.boto3, 'client') as mock_client:
+            mock_desc = mock_client.return_value.describe_availability_zones
+            mock_desc.return_value = az_response
+
+            actual_region = aws.get_region_from_availability_zone(zone)
+
+        self.assertEqual(expected_region, actual_region)
 
     def test_get_session(self):
         """Assert get_session returns session object."""
@@ -703,3 +728,37 @@ class UtilAwsTest(TestCase):
 
         mock_boto3.resource.assert_called_once_with('ec2')
         mock_ec2.create_volume.assert_not_called()
+
+    @patch('util.aws.boto3')
+    def test_get_volume(self, mock_boto3):
+        """Test that a Volume is returned."""
+        region = random.choice(helper.SOME_AWS_REGIONS)
+        zone = helper.generate_dummy_availability_zone(region)
+        volume_id = helper.generate_dummy_volume_id()
+        mock_volume = helper.generate_mock_volume(
+            volume_id=volume_id,
+            zone=zone
+        )
+
+        resource = mock_boto3.resource.return_value
+        resource.Volume.return_value = mock_volume
+        actual_volume = aws.get_volume(volume_id, region)
+
+        self.assertEqual(actual_volume, mock_volume)
+
+    def test_check_volume_state_available(self):
+        """Test that a volume is available."""
+        mock_volume = helper.generate_mock_volume(state='available')
+        self.assertIsNone(aws.check_volume_state(mock_volume))
+
+    def test_check_volume_state_creating(self):
+        """Test the appropriate error for still creating volumes."""
+        mock_volume = helper.generate_mock_volume(state='creating')
+        with self.assertRaises(AwsVolumeNotReadyError):
+            aws.check_volume_state(mock_volume)
+
+    def test_check_volume_state_error(self):
+        """Test the appropriate error for other volume states."""
+        mock_volume = helper.generate_mock_volume(state='error')
+        with self.assertRaises(AwsVolumeError):
+            aws.check_volume_state(mock_volume)

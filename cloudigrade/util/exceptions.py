@@ -33,3 +33,11 @@ class AwsSnapshotNotOwnedError(NotReadyException):
 
 class SnapshotNotReadyException(NotReadyException):
     """The requested snapshot was not ready."""
+
+
+class AwsVolumeNotReadyError(NotReadyException):
+    """The requested volume was not ready."""
+
+
+class AwsVolumeError(Exception):
+    """The requested volume is not in an acceptable state."""
