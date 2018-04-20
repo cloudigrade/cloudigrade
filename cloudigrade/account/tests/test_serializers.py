@@ -39,7 +39,7 @@ class AwsAccountSerializerTest(TestCase):
         }
 
         with patch.object(aws, 'verify_account_access') as mock_verify, \
-                patch.object(aws, 'boto3') as mock_boto3, \
+                patch.object(aws.sts, 'boto3') as mock_boto3, \
                 patch.object(aws, 'get_running_instances') as mock_get_run, \
                 patch.object(account_serializers,
                              'copy_ami_snapshot') as mock_copy_snapshot:
@@ -86,7 +86,7 @@ class AwsAccountSerializerTest(TestCase):
         )
 
         with patch.object(aws, 'verify_account_access') as mock_verify, \
-                patch.object(aws, 'boto3') as mock_boto3:
+                patch.object(aws.sts, 'boto3') as mock_boto3:
             mock_assume_role = mock_boto3.client.return_value.assume_role
             mock_assume_role.return_value = role
             mock_verify.return_value = False
