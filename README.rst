@@ -54,6 +54,25 @@ We encourage macOS developers to use `homebrew <https://brew.sh/>`_ to install a
     brew link gettext --force
     brew cask install docker
 
+We currently use Openshift 3.7.X in production, so we need a matching openshift client.
+
+.. code-block:: bash
+
+    brew install https://raw.githubusercontent.com/Homebrew/homebrew-core/9d190ab350ce0b0d00d4968fed4b9fbe68a318ef/Formula/openshift-cli.rb
+    brew pin openshift-cli
+
+Linux dependencies
+~~~~~~~~~~~~~~~~~~
+
+We recommend developing on the latest version of Fedora. Follow the following commands to install the dependencies:
+
+.. code-block:: bash
+
+    sudo dnf install awscli docker pypy3 gettext -y
+    wget -O oc.tar.gz https://github.com/openshift/origin/releases/download/v3.7.2/openshift-origin-client-tools-v3.7.2-282e43f-linux-64bit.tar.gz
+    tar -zxvf oc.tar.gz
+    cp openshift-origin-client-tools-v3.7.2-282e43f-linux-64bit/oc ~/bin
+
 
 Python virtual environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -118,32 +137,42 @@ Common commands
 ===============
 
 
-Running
--------
+Running Locally in OpenShift
+----------------------------
 
-To run the application along with the postgres database and queue run the following:
+To start the local cluster run the following:
 
-.. code-block:: sh
+.. code-block:: bash
 
-    make start-compose
+    make oc-up
 
-If you would like to run just the database, so you can run the application on your local machine, use the following command:
+That will start a barebones OpenShift cluster that will persist configuration between restarts.
 
-.. code-block:: sh
+If you'd like to start the cluster, and deploy Cloudigrade along with supporting services run the following:
 
-    make start-db
+.. code-block:: bash
 
-To reinstantiate the docker psql db, run the following:
+    make-oc-up-all
 
-.. code-block:: sh
+This will create the **ImageStream** to track **PostgreSQL:9.6**, create the templates for **RabbitMQ** and **cloudigrade**, and finally use the templates to create all the objects necessary to deploy **cloudigrade** and the supporting services. There is a chance that the deployment for **cloudigrade** will fail due to the db not being ready before the mid-deployment hook pod is being run. Simply run the following command to trigger a redemployment for **cloudigrade**:
 
-    make reinitdb
+.. code-block:: bash
 
-If you would like to run just the queue, so you can interact with the queue on your local machine, use the following command:
+    oc rollout latest cloudigrade
 
-.. code-block:: sh
+To stop the local cluster run the following:
 
-    make start-queue
+.. code-block:: bash
+
+    make oc-down
+
+If you'd like to remove all your saved settings for your cluster, you can run the following:
+
+.. code-block:: bash
+
+    make oc-clean
+
+There are also other make targets available to deploy just the queue, db, or the project by itself, along with installing the templates and the ImageStream object.
 
 
 Testing
@@ -191,18 +220,7 @@ This auth token can be supplied in the Authorization header.
 Message Broker
 ==============
 
-RabbitMQ is used to broker messages between **cloudigrade** and inspectigrade services. There are multiple Python packages available to interact with RabbitMQ; the officially recommended packaged is `Pika <https://pika.readthedocs.io/en/latest/>`_. Both services serve as producers and consumers of the message queue. The **cloudigrade** docker-compose file requires that a password environment variable be set for the RabbitMQ user. Make sure that the following has been set in your local environment before starting
-
-.. code-block:: sh
-
-    RABBITMQ_DEFAULT_PASS
-
-The RabbitMQ container can persist message data in the **cloudigrade** directory. To purge this data use
-
-.. code-block:: sh
-
-    make remove-compose-queue
-
+RabbitMQ is used to broker messages between **cloudigrade** and inspectigrade services. There are multiple Python packages available to interact with RabbitMQ; the officially recommended packaged is `Pika <https://pika.readthedocs.io/en/latest/>`_. Both services serve as producers and consumers of the message queue.
 
 .. |license| image:: https://img.shields.io/github/license/cloudigrade/cloudigrade.svg
    :target: https://github.com/cloudigrade/cloudigrade/blob/master/LICENSE

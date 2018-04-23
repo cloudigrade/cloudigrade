@@ -1,41 +1,83 @@
-PYTHON	= $(shell which python)
+PYTHON		= $(shell which python)
 
-TOPDIR  = $(shell pwd)
-PYDIR	= cloudigrade
+TOPDIR		= $(shell pwd)
+PYDIR		= cloudigrade
+
+OC_SOURCE	= registry.access.redhat.com/openshift3/ose
+OC_VERSION	= v3.7.23
+OC_DATA_DIR	= ${HOME}/.oc/openshift.local.data
+
+OS := $(shell uname)
+ifeq ($(OS),Darwin)
+	PREFIX	=
+else
+	PREFIX	= sudo
+endif
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of:"
 	@echo "  help                     to show this message"
 	@echo "  clean                    to clean the project directory of any scratch files, bytecode, logs, etc."
-	@echo "  reinitdb                 to drop and recreate the database"
-	@echo "  remove-compose-db        to remove the temp docker psql directory"
-	@echo "  run-docker-migrations    to run migrations against docker psql"
 	@echo "  unittest                 to run unittests"
+	@echo "	 oc-up                    to start the local OpenShift cluster."
+	@echo "	 oc-create-templates      to create the ImageStream and template objects."
+	@echo "	 oc-create-db             to create and deploy the DB."
+	@echo "	 oc-create-queueu         to create and deploy the queue."
+	@echo "	 oc-create-cloudigrade    to create and deploy the cloudigrade."
+	@echo "	 oc-down                  to stop the local OpenShift cluster."
+	@echo "	 oc-clean                 to stop the local OpenShift cluster and delete configuration."
 	@echo "  user                     to create a Django super user"
 	@echo "  user-authenticate        to generate an auth token for a user"
-	@echo "  start-compose            to compose all containers in detached state"
-	@echo "  stop-compose             to stop all containers"
-	@echo "  start-db                 to start the psql db in detached state"
 	@echo "  docs                     to build all documentation"
 	@echo "  docs-seqdiag             to regenerate docs .svg files from .diag files"
 
 clean:
 	git clean -fdx -e .idea/ -e *env/
 
-reinitdb: stop-compose remove-compose-db start-db run-docker-migrations
-
-remove-compose-db:
-	rm -rf $(TOPDIR)/pg_data
-
-remove-compose-queue:
-	rm -rf $(TOPDIR)/rabbitmq
-
-run-docker-migrations:
-	sleep 1
-	$(PYTHON) $(PYDIR)/manage.py migrate --settings=config.settings.local
-
 unittest:
 	$(PYTHON) $(PYDIR)/manage.py test --settings=config.settings.local account analyzer util
+
+oc-up:
+	$(PREFIX) oc cluster up \
+		--image=$(OC_SOURCE) \
+		--version=$(OC_VERSION) \
+		--host-data-dir=$(OC_DATA_DIR) \
+		--use-existing-config
+
+oc-create-templates:
+	oc create istag postgresql:9.6 --from-image=centos/postgresql-96-centos7
+	oc create -f deployment/ocp/rabbitmq.yml
+	oc create -f deployment/ocp/cloudigrade.yml
+
+oc-create-db:
+	oc process openshift//postgresql-persistent \
+		-p NAMESPACE=myproject \
+		-p POSTGRESQL_USER=cloudigrade \
+		-p POSTGRESQL_DATABASE=cloudigrade \
+		-p POSTGRESQL_VERSION=9.6 \
+	| oc create -f -
+
+oc-create-queue:
+	oc process rabbitmq-persistent-template | oc create -f -
+
+oc-create-cloudigrade:
+	oc process cloudigrade-persistent-template \
+		-p NAMESPACE=myproject \
+		-p AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
+		-p AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
+		-p NGINX_REPO_CONTEXT_DIR=docker \
+		-p DJANGO_ALLOWED_HOSTS=* \
+		-p DJANGO_DATABASE_HOST=postgresql.myproject.svc \
+		-p RABBITMQ_HOST=rabbitmq-persistent.myproject.svc \
+	| oc create -f -
+
+oc-up-all: oc-up oc-create-templates oc-create-db oc-create-queue oc-create-cloudigrade
+
+oc-down:
+	$(PREFIX) oc cluster down
+
+oc-clean: oc-down
+	$(PREFIX) rm -rf $(OC_DATA_DIR)
 
 user:
 	$(PYTHON) $(PYDIR)/manage.py createsuperuser --settings=config.settings.local
@@ -43,18 +85,6 @@ user:
 user-authenticate:
 	@read -p "User name: " uname; \
 	$(PYTHON) $(PYDIR)/manage.py drf_create_token $$uname --settings=config.settings.local
-
-start-compose:
-	docker-compose up --build -d
-
-stop-compose:
-	docker-compose down
-
-start-db:
-	docker-compose up -d db
-
-start-queue:
-	docker-compose up -d queue
 
 docs-seqdiag:
 	cd docs && for FILE in *.diag; do seqdiag -Tsvg $$FILE; done
