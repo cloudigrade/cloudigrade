@@ -305,7 +305,7 @@ parameters:
 - name: RABBITMQ_SECRETS_FILE
   displayName: RabbitMQ Secrets File Name
   description: "Name of RabbitMQ secrets file"
-  value: "rabbitmq-persistent"
+  value: "rabbitmq"
   required: true
 # PVC Settings - cloudigrade-static
 - name: PVC_VOLUME_SIZE
@@ -360,5 +360,5 @@ parameters:
   required: true
 - name: RABBITMQ_HOST
   description: "Your rabbitmq host"
-  value: rabbitmq-persistent.cloudigrade-investigation.svc
+  value: rabbitmq.cloudigrade-investigation.svc
   required: true
