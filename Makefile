@@ -22,8 +22,14 @@ help:
 	@echo "	 oc-up                    to start the local OpenShift cluster."
 	@echo "	 oc-create-templates      to create the ImageStream and template objects."
 	@echo "	 oc-create-db             to create and deploy the DB."
-	@echo "	 oc-create-queueu         to create and deploy the queue."
+	@echo "	 oc-create-queue          to create and deploy the queue."
 	@echo "	 oc-create-cloudigrade    to create and deploy the cloudigrade."
+	@echo "	 oc-forward-ports         to forward ports for PostgreSQL and RabbitMQ for local development."
+	@echo "	 oc-stop-forwarding-ports to stop forwarding ports for PostgreSQL and RabbitMQ for local development."
+	@echo "	 oc-up-dev                to start the cluster and deploy supporting services for running a local cloudigrade instance against the cluster."
+	@echo "	 oc-up-all                to start the cluster and deploy supporting services along with cloudigrade."
+	@echo "	 oc-run-migrations        to run migrations from local dev environment against the DB running in the cluster."
+	@echo "	 oc-run-dev               to start the local dev server allowing it to connect to supporting services running in the cluster."
 	@echo "	 oc-down                  to stop the local OpenShift cluster."
 	@echo "	 oc-clean                 to stop the local OpenShift cluster and delete configuration."
 	@echo "  user                     to create a Django super user"
@@ -52,13 +58,17 @@ oc-create-templates:
 oc-create-db:
 	oc process openshift//postgresql-persistent \
 		-p NAMESPACE=myproject \
-		-p POSTGRESQL_USER=cloudigrade \
-		-p POSTGRESQL_DATABASE=cloudigrade \
+		-p POSTGRESQL_USER=postgres \
+		-p POSTGRESQL_PASSWORD=postgres \
+		-p POSTGRESQL_DATABASE=postgres \
 		-p POSTGRESQL_VERSION=9.6 \
 	| oc create -f -
 
 oc-create-queue:
-	oc process rabbitmq-persistent-template | oc create -f -
+	oc process rabbitmq-persistent-template \
+		-p USERNAME=guest \
+		-p PASSWORD=guest \
+	| oc create -f -
 
 oc-create-cloudigrade:
 	oc process cloudigrade-persistent-template \
@@ -71,7 +81,24 @@ oc-create-cloudigrade:
 		-p RABBITMQ_HOST=rabbitmq-persistent.myproject.svc \
 	| oc create -f -
 
+oc-forward-ports:
+	oc port-forward $$(oc get pods -o jsonpath='{.items[*].metadata.name}' -l name=postgresql) 5432 &
+	oc port-forward $$(oc get pods -o jsonpath='{.items[*].metadata.name}' -l name=rabbitmq) 5672 &
+
+oc-stop-forwarding-ports:
+	kill -HUP $$(ps -eo pid,command | grep "oc port-forward" | grep -v grep | awk '{print $$1}')
+
+oc-up-dev: oc-up oc-create-templates oc-create-db oc-create-queue
+
 oc-up-all: oc-up oc-create-templates oc-create-db oc-create-queue oc-create-cloudigrade
+
+oc-run-migrations: oc-forward-ports
+	DJANGO_SETTINGS_MODULE=config.settings.local python cloudigrade/manage.py migrate
+	make oc-stop-forwarding-ports
+
+oc-run-dev: oc-forward-ports
+	DJANGO_SETTINGS_MODULE=config.settings.local python cloudigrade/manage.py runserver
+	make oc-stop-forwarding-ports
 
 oc-down:
 	$(PREFIX) oc cluster down
