@@ -1,7 +1,6 @@
 """Various utility functions for the account app."""
-from queue import Empty
-
 import collections
+from queue import Empty
 
 import kombu
 from django.conf import settings
@@ -144,7 +143,7 @@ def _create_exchange_and_queue(queue_name):
     return exchange, message_queue
 
 
-def add_messages_to_queue(queue_name, messages, result_key):
+def add_messages_to_queue(queue_name, messages):
     """
     Send messages to a message queue.
 
@@ -152,8 +151,6 @@ def add_messages_to_queue(queue_name, messages, result_key):
         queue_name (str): The queue to add messages to
         messages (list[dict]): A list of message dictionaries. The message
             dicts will be serialized as JSON strings.
-        result_key (str): What to key the result dict on. This must be
-            a key in the message itself.
 
     Returns:
         dict: A mapping of machine image ID to result boolean value

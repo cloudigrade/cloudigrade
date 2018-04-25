@@ -85,4 +85,4 @@ def enqueue_ready_volume(ami_id, volume_id, region):
     aws.check_volume_state(volume)
     messages = [{'ami_id': ami_id, 'volume_id': volume_id}]
 
-    add_messages_to_queue('ready_volumes', messages, 'ami_id')
+    add_messages_to_queue('ready_volumes', messages)
