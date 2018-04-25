@@ -31,6 +31,10 @@ jobs:
     - stage: build and push container
       services: docker
       sudo: required
+      before_install:
+        - wget -O oc.tar.gz https://github.com/openshift/origin/releases/download/v3.7.2/openshift-origin-client-tools-v3.7.2-282e43f-linux-64bit.tar.gz
+        - tar -zxvf oc.tar.gz
+        - cp openshift-origin-client-tools-v3.7.2-282e43f-linux-64bit/oc .
       script:
         - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
         - if [ $TRAVIS_BRANCH == "master" ]; then
@@ -39,3 +43,5 @@ jobs:
             docker build -t cloudigrade/cloudigrade:$TRAVIS_TAG .;
           fi
         - docker push cloudigrade/cloudigrade
+        - ./oc login https://api.insights.openshift.com --token=$OPENSHIFT_TOKEN
+        - ./oc import-image cloudigrade
