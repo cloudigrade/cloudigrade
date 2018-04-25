@@ -10,3 +10,4 @@ djangorestframework==3.8.2
 gunicorn==19.7.1
 django-polymorphic==2.0.2
 django-rest-polymorphic==0.1.5
+django-celery-beat==1.1.1

@@ -44,6 +44,7 @@ DJANGO_APPS = [
 
 # Any pip installed apps will go here
 THIRD_PARTY_APPS = [
+    'django_celery_beat',
     'rest_framework',
     'rest_framework.authtoken',
 ]
@@ -190,3 +191,4 @@ CELERY_TASK_ROUTES = {
     'account.tasks.create_volume': {'queue': 'create_volume'},
     'account.tasks.enqueue_ready_volume': {'queue': 'enqueue_ready_volumes'},
 }
+CELERYBEAT_SCHEDULE = {}
