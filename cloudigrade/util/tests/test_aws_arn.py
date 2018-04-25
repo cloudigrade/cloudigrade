@@ -1,4 +1,4 @@
-"""Collection of tests for ``util.aws.helper`` module."""
+"""Collection of tests for ``util.aws.arn`` module."""
 
 import faker
 from django.test import TestCase
