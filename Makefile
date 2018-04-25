@@ -16,9 +16,9 @@ endif
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of:"
-	@echo "  help                     to show this message"
+	@echo "  help                     to show this message."
 	@echo "  clean                    to clean the project directory of any scratch files, bytecode, logs, etc."
-	@echo "  unittest                 to run unittests"
+	@echo "  unittest                 to run unittests."
 	@echo "	 oc-up                    to start the local OpenShift cluster."
 	@echo "	 oc-create-templates      to create the ImageStream and template objects."
 	@echo "	 oc-create-db             to create and deploy the DB."
@@ -32,10 +32,12 @@ help:
 	@echo "	 oc-run-dev               to start the local dev server allowing it to connect to supporting services running in the cluster."
 	@echo "	 oc-down                  to stop the local OpenShift cluster."
 	@echo "	 oc-clean                 to stop the local OpenShift cluster and delete configuration."
-	@echo "  user                     to create a Django super user"
-	@echo "  user-authenticate        to generate an auth token for a user"
-	@echo "  docs                     to build all documentation"
-	@echo "  docs-seqdiag             to regenerate docs .svg files from .diag files"
+	@echo "  user                     to create a Django super user."
+	@echo "  user-authenticate        to generate an auth token for a user."
+	@echo "  oc-user                  to create a Django super user for cloudigrade running in a local OpenShift cluster."
+	@echo "  oc-user-authenticate     to generate an auth token for a user for cloudigrade running in a local OpenShift cluster."
+	@echo "  docs                     to build all documentation."
+	@echo "  docs-seqdiag             to regenerate docs .svg files from .diag files."
 
 clean:
 	git clean -fdx -e .idea/ -e *env/
@@ -115,6 +117,14 @@ user:
 user-authenticate:
 	@read -p "User name: " uname; \
 	$(PYTHON) $(PYDIR)/manage.py drf_create_token $$uname --settings=config.settings.local
+
+oc-user:
+	$(PREFIX) oc rsh -c cloudigrade $$(oc get pods -o jsonpath='{.items[*].metadata.name}' -l name=cloudigrade) scl enable rh-postgresql96 rh-python36 -- python manage.py createsuperuser
+
+oc-user-authenticate:
+	@read -p "User name: " uname; \
+	$(PREFIX) oc rsh -c cloudigrade $$(oc get pods -o jsonpath='{.items[*].metadata.name}' -l name=cloudigrade) scl enable rh-postgresql96 rh-python36 -- python manage.py drf_create_token $$uname
+
 
 docs-seqdiag:
 	cd docs && for FILE in *.diag; do seqdiag -Tsvg $$FILE; done
