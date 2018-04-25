@@ -212,7 +212,7 @@ class AccountCeleryTaskTest(TestCase):
 
         enqueue_ready_volume(ami_id, volume_id, region)
 
-        mock_queue.assert_called_with('ready_volumes', messages, 'ami_id')
+        mock_queue.assert_called_with('ready_volumes', messages)
 
     @patch('account.tasks.aws')
     def test_enqueue_ready_volume_error(self, mock_aws):

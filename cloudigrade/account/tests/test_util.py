@@ -1,7 +1,7 @@
 """Collection of tests for utils in the account app."""
 import random
 from queue import Empty
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 from django.test import TestCase
 
@@ -93,7 +93,6 @@ class AccountUtilTest(TestCase):
         messages = util.generate_aws_ami_messages(instances_data, ami_list)
         mock_routing_key = queue_name
         mock_body = messages[0]
-        result_key = 'image_id'
 
         mock_exchange = mock_kombu.Exchange.return_value
         mock_queue = mock_kombu.Queue.return_value
@@ -102,7 +101,7 @@ class AccountUtilTest(TestCase):
         mock_producer = mock_with_conn.Producer.return_value
         mock_pub = mock_producer.publish
 
-        util.add_messages_to_queue(queue_name, messages, result_key)
+        util.add_messages_to_queue(queue_name, messages)
 
         mock_pub.assert_called_with(
             mock_body,
