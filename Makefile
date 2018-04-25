@@ -91,9 +91,9 @@ oc-forward-ports:
 oc-stop-forwarding-ports:
 	kill -HUP $$(ps -eo pid,command | grep "oc port-forward" | grep -v grep | awk '{print $$1}')
 
-oc-up-dev: oc-up oc-create-templates oc-create-db oc-create-queue
+oc-up-dev: oc-up sleep-60 oc-create-templates oc-create-db oc-create-queue
 
-oc-up-all: oc-up oc-create-templates oc-create-db oc-create-queue oc-create-cloudigrade
+oc-up-all: oc-up sleep-60 oc-create-templates oc-create-db oc-create-queue sleep-30 oc-create-cloudigrade
 
 oc-run-migrations: oc-forward-ports
 	DJANGO_SETTINGS_MODULE=config.settings.local python cloudigrade/manage.py migrate
@@ -120,5 +120,13 @@ docs-seqdiag:
 	cd docs && for FILE in *.diag; do seqdiag -Tsvg $$FILE; done
 
 docs: docs-seqdiag
+
+sleep-60:
+	@echo "Allow the cluster to startup and set all internal services up."
+	sleep 60
+
+sleep-30:
+	@echo "Allow the DB to start before deploying cloudigrade."
+	sleep 30
 
 .PHONY: docs
