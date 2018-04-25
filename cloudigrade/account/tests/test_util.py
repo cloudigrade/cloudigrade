@@ -128,8 +128,8 @@ class AccountUtilTest(TestCase):
         expected_results = [mock_messages[0].payload, mock_messages[1].payload]
         actual_results = util.read_messages_from_queue(queue_name, 5)
         self.assertEqual(actual_results, expected_results)
-        mock_messages[0].ack.assert_called_once()
-        mock_messages[1].ack.assert_called_once()
+        mock_messages[0].ack.assert_called_once_with()
+        mock_messages[1].ack.assert_called_once_with()
 
     @patch('account.util.kombu')
     def test_read_messages_from_queue_once(self, mock_kombu):
@@ -139,5 +139,5 @@ class AccountUtilTest(TestCase):
         expected_results = [mock_messages[0].payload]
         actual_results = util.read_messages_from_queue(queue_name)
         self.assertEqual(actual_results, expected_results)
-        mock_messages[0].ack.assert_called_once()
+        mock_messages[0].ack.assert_called_once_with()
         mock_messages[1].ack.assert_not_called()

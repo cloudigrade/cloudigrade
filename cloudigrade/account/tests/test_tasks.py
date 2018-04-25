@@ -272,6 +272,10 @@ class AccountCeleryTaskTest(TestCase):
         mock_aws.is_scaled_down.assert_called_once_with(
             settings.HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME
         )
+        mock_read_messages_from_queue.assert_called_once_with(
+            'ready_volumes',
+            settings.HOUNDIGRADE_AWS_VOLUME_BATCH_SIZE
+        )
         mock_aws.scale_up.assert_called_once_with(
             settings.HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME
         )
@@ -323,7 +327,10 @@ class AccountCeleryTaskTest(TestCase):
             settings.HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME
         )
         mock_aws.scale_up.assert_not_called()
-        mock_read_messages_from_queue.assert_called_once()
+        mock_read_messages_from_queue.assert_called_once_with(
+            'ready_volumes',
+            settings.HOUNDIGRADE_AWS_VOLUME_BATCH_SIZE
+        )
         mock_run_inspection_cluster.delay.assert_not_called()
         mock_add_messages_to_queue.assert_not_called()
 
