@@ -9,8 +9,7 @@ from django.utils.translation import gettext as _
 from util.aws.helper import get_regions
 from util.aws.sts import _get_primary_account_id
 from util.exceptions import (AwsSnapshotCopyLimitError,
-                             AwsSnapshotNotOwnedError,
-                             AwsVolumeError,
+                             AwsSnapshotNotOwnedError, AwsVolumeError,
                              AwsVolumeNotReadyError)
 from util.exceptions import SnapshotNotReadyException
 

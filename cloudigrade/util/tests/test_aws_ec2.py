@@ -7,9 +7,10 @@ from botocore.exceptions import ClientError
 from django.test import TestCase
 
 from util.aws import ec2
-from util.exceptions import AwsSnapshotCopyLimitError, \
-    AwsSnapshotNotOwnedError, AwsVolumeError, AwsVolumeNotReadyError, \
-    SnapshotNotReadyException
+from util.exceptions import (AwsSnapshotCopyLimitError,
+                             AwsSnapshotNotOwnedError, AwsVolumeError,
+                             AwsVolumeNotReadyError,
+                             SnapshotNotReadyException)
 from util.tests import helper
 
 
