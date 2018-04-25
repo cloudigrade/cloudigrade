@@ -1,8 +1,10 @@
 """Celery tasks for use in the account app."""
+from botocore.exceptions import ClientError
+from celery import shared_task
 from django.conf import settings
 
 from account.models import AwsMachineImage
-from account.util import add_messages_to_queue
+from account.util import add_messages_to_queue, read_messages_from_queue
 from util import aws
 from util.aws import rewrap_aws_errors
 from util.celery import retriable_shared_task
@@ -86,3 +88,51 @@ def enqueue_ready_volume(ami_id, volume_id, region):
     messages = [{'ami_id': ami_id, 'volume_id': volume_id}]
 
     add_messages_to_queue('ready_volumes', messages)
+
+
+@shared_task
+@rewrap_aws_errors
+def scale_up_inspection_cluster():
+    """
+    Scale up the "houndigrade" inspection cluster.
+
+    Returns:
+        None: Run as a scheduled Celery task.
+
+    """
+    if not aws.is_scaled_down(settings.HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME):
+        # Quietly exit and let a future run check the scaling.
+        return
+
+    messages = read_messages_from_queue(
+        'ready_volumes',
+        settings.HOUNDIGRADE_AWS_VOLUME_BATCH_SIZE
+    )
+
+    if len(messages) == 0:
+        # Quietly exit and let a future run check for messages.
+        return
+
+    try:
+        aws.scale_up(settings.HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME)
+    except ClientError:
+        # If scale_up fails unexpectedly, requeue messages so they aren't lost.
+        add_messages_to_queue('ready_volumes', messages)
+        raise
+
+    run_inspection_cluster.delay(messages)
+
+
+@retriable_shared_task
+@rewrap_aws_errors
+def run_inspection_cluster(ami_volume_list):
+    """
+    Run task definition for "houndigrade" on the cluster.
+
+    Todo:
+        - Implement this!
+
+    Returns:
+        None: Run as an asynchronous Celery task.
+
+    """

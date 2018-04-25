@@ -1,7 +1,8 @@
 """Collection of tests for celery tasks."""
 import random
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
+from botocore.exceptions import ClientError
 from celery.exceptions import Retry
 from django.conf import settings
 from django.test import TestCase
@@ -249,3 +250,111 @@ class AccountCeleryTaskTest(TestCase):
             mock_retry.side_effect = Retry()
             with self.assertRaises(Retry):
                 enqueue_ready_volume(ami_id, volume_id, region)
+
+    @patch('account.tasks.add_messages_to_queue')
+    @patch('account.tasks.run_inspection_cluster')
+    @patch('account.tasks.read_messages_from_queue')
+    @patch('account.tasks.aws')
+    def test_scale_up_inspection_cluster_success(
+            self,
+            mock_aws,
+            mock_read_messages_from_queue,
+            mock_run_inspection_cluster,
+            mock_add_messages_to_queue
+    ):
+        """Assert successful scaling with empty cluster and queued messages."""
+        messages = [Mock()]
+        mock_aws.is_scaled_down.return_value = True
+        mock_read_messages_from_queue.return_value = messages
+
+        tasks.scale_up_inspection_cluster()
+
+        mock_aws.is_scaled_down.assert_called_once_with(
+            settings.HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME
+        )
+        mock_aws.scale_up.assert_called_once_with(
+            settings.HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME
+        )
+        mock_run_inspection_cluster.delay.assert_called_once_with(messages)
+        mock_add_messages_to_queue.assert_not_called()
+
+    @patch('account.tasks.add_messages_to_queue')
+    @patch('account.tasks.run_inspection_cluster')
+    @patch('account.tasks.read_messages_from_queue')
+    @patch('account.tasks.aws')
+    def test_scale_up_inspection_cluster_aborts_when_not_scaled_down(
+            self,
+            mock_aws,
+            mock_read_messages_from_queue,
+            mock_run_inspection_cluster,
+            mock_add_messages_to_queue
+    ):
+        """Assert scale up aborts when not scaled down."""
+        mock_aws.is_scaled_down.return_value = False
+
+        tasks.scale_up_inspection_cluster()
+
+        mock_aws.is_scaled_down.assert_called_once_with(
+            settings.HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME
+        )
+        mock_aws.scale_up.assert_not_called()
+        mock_read_messages_from_queue.assert_not_called()
+        mock_run_inspection_cluster.delay.assert_not_called()
+        mock_add_messages_to_queue.assert_not_called()
+
+    @patch('account.tasks.add_messages_to_queue')
+    @patch('account.tasks.run_inspection_cluster')
+    @patch('account.tasks.read_messages_from_queue')
+    @patch('account.tasks.aws')
+    def test_scale_up_inspection_cluster_aborts_when_no_messages(
+            self,
+            mock_aws,
+            mock_read_messages_from_queue,
+            mock_run_inspection_cluster,
+            mock_add_messages_to_queue
+    ):
+        """Assert scale up aborts when not scaled down."""
+        mock_aws.is_scaled_down.return_value = True
+        mock_read_messages_from_queue.return_value = []
+
+        tasks.scale_up_inspection_cluster()
+
+        mock_aws.is_scaled_down.assert_called_once_with(
+            settings.HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME
+        )
+        mock_aws.scale_up.assert_not_called()
+        mock_read_messages_from_queue.assert_called_once()
+        mock_run_inspection_cluster.delay.assert_not_called()
+        mock_add_messages_to_queue.assert_not_called()
+
+    @patch('account.tasks.add_messages_to_queue')
+    @patch('account.tasks.run_inspection_cluster')
+    @patch('account.tasks.read_messages_from_queue')
+    @patch('account.tasks.aws')
+    def test_scale_up_inspection_cluster_requeues_on_aws_error(
+            self,
+            mock_aws,
+            mock_read_messages_from_queue,
+            mock_run_inspection_cluster,
+            mock_add_messages_to_queue
+    ):
+        """Assert messages requeue when scale_up encounters AWS exception."""
+        messages = [Mock()]
+        mock_aws.is_scaled_down.return_value = True
+        mock_read_messages_from_queue.return_value = messages
+        mock_aws.scale_up.side_effect = ClientError({}, Mock())
+
+        with self.assertRaises(RuntimeError):
+            tasks.scale_up_inspection_cluster()
+
+        mock_aws.is_scaled_down.assert_called_once_with(
+            settings.HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME
+        )
+        mock_aws.scale_up.assert_called_once_with(
+            settings.HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME
+        )
+        mock_add_messages_to_queue.assert_called_once_with(
+            'ready_volumes',
+            messages
+        )
+        mock_run_inspection_cluster.delay.assert_not_called()

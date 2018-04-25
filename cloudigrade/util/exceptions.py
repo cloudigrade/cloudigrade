@@ -41,3 +41,11 @@ class AwsVolumeNotReadyError(NotReadyException):
 
 class AwsVolumeError(Exception):
     """The requested volume is not in an acceptable state."""
+
+
+class AwsAutoScalingGroupNotFound(Exception):
+    """The requested AutoScaling group was not found."""
+
+
+class AwsNonZeroAutoScalingGroupSize(Exception):
+    """Raise when AWS auto scaling group has nonzero size."""
