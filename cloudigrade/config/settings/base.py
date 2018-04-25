@@ -30,7 +30,16 @@ ALLOWED_HOSTS = env('DJANGO_ALLOWED_HOSTS', default=['*'])
 S3_DEFAULT_REGION = env('S3_DEFAULT_REGION', default='us-east-1')
 SQS_DEFAULT_REGION = env('SQS_DEFAULT_REGION', default='us-east-1')
 HOUNDIGRADE_AWS_AVAILABILITY_ZONE = env('HOUNDIGRADE_AWS_AVAILABILITY_ZONE',
-                                        default='us-east-1a')
+                                        default='us-east-1b')
+HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME = env(
+    'HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME',
+    default='EC2ContainerService-inspectigrade-test-bws-us-east-1b-'
+            'EcsInstanceAsg-JG9NX9WHX6NU'
+)
+HOUNDIGRADE_AWS_VOLUME_BATCH_SIZE = env.int(
+    'HOUNDIGRADE_AWS_VOLUME_BATCH_SIZE',
+    default=5
+)
 
 # Default apps go here
 DJANGO_APPS = [
@@ -191,4 +200,9 @@ CELERY_TASK_ROUTES = {
     'account.tasks.create_volume': {'queue': 'create_volume'},
     'account.tasks.enqueue_ready_volume': {'queue': 'enqueue_ready_volumes'},
 }
-CELERYBEAT_SCHEDULE = {}
+CELERYBEAT_SCHEDULE = {
+    'scale_up_inspection_cluster_every_5_min': {
+        'task': 'account.tasks.scale_up_inspection_cluster',
+        'schedule': 60 * 5,  # seconds
+    },
+}
