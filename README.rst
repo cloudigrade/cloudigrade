@@ -50,9 +50,12 @@ We encourage macOS developers to use `homebrew <https://brew.sh/>`_ to install a
 
     /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
     brew update
-    brew install python pypy3 gettext awscli postgresql
+    brew install python pypy3 gettext awscli postgresql socat
     brew link gettext --force
-    brew cask install docker
+    # We need to install a specific version of docker since newer ones have a bug around the builtin proxy
+    https://raw.githubusercontent.com/caskroom/homebrew-cask/61f1d33be340e27b91f2a5c88da0496fc24904d3/Casks/docker.rb
+
+After installing Docker, open it, and navigate to Preferences -> Daemon. There add ``172.30.0.0/16`` to the list of insecure registries, then click ``Apply and Restart``.
 
 We currently use Openshift 3.7.X in production, so we need a matching openshift client.
 
@@ -68,10 +71,30 @@ We recommend developing on the latest version of Fedora. Follow the following co
 
 .. code-block:: bash
 
+    # DNF Install AWS-CLI, Docker, PyPy3, and gettext
     sudo dnf install awscli docker pypy3 gettext -y
+    # Install an appropriate version of the OpenShift Client
     wget -O oc.tar.gz https://github.com/openshift/origin/releases/download/v3.7.2/openshift-origin-client-tools-v3.7.2-282e43f-linux-64bit.tar.gz
     tar -zxvf oc.tar.gz
-    cp openshift-origin-client-tools-v3.7.2-282e43f-linux-64bit/oc ~/bin
+    sudo cp openshift-origin-client-tools-v3.7.2-282e43f-linux-64bit/oc /usr/bin
+    # Configure Insecure-Registries in Docker
+    sudo cat > /etc/docker/daemon.json <<EOF
+    {
+       "insecure-registries": [
+         "172.30.0.0/16"
+       ]
+    }
+    EOF
+    sudo systemctl daemon-reload
+    sudo systemctl restart docker
+    # Configure firewalld
+    sudo sysctl -w net.ipv4.ip_forward=1
+    sudo firewall-cmd --permanent --new-zone dockerc
+    sudo firewall-cmd --permanent --zone dockerc --add-source $(docker network inspect -f "{{range .IPAM.Config }}{{ .Subnet }}{{end}}" bridge)
+    sudo firewall-cmd --permanent --zone dockerc --add-port 8443/tcp
+    sudo firewall-cmd --permanent --zone dockerc --add-port 53/udp
+    sudo firewall-cmd --permanent --zone dockerc --add-port 8053/udp
+    sudo firewall-cmd --reload
 
 
 Python virtual environment
@@ -152,6 +175,8 @@ If you'd like to start the cluster, and deploy Cloudigrade along with supporting
 
 .. code-block:: bash
 
+    # When deploying cloudigrade make sure you have AWS_ACCESS_KEY_ID and
+    # AWS_SECRET_ACCESS_KEY set in your environment or the deployment will fail
     make oc-up-all
 
 This will create the **ImageStream** to track **PostgreSQL:9.6**, create the templates for **RabbitMQ** and **cloudigrade**, and finally use the templates to create all the objects necessary to deploy **cloudigrade** and the supporting services. There is a chance that the deployment for **cloudigrade** will fail due to the db not being ready before the mid-deployment hook pod is being run. Simply run the following command to trigger a redemployment for **cloudigrade**:
@@ -166,7 +191,7 @@ To stop the local cluster run the following:
 
     make oc-down
 
-Since all cluster information is preserved, you are then able to start the cluster back up with `make oc-up` and resume right where you have left off.
+Since all cluster information is preserved, you are then able to start the cluster back up with ``make oc-up`` and resume right where you have left off.
 
 If you'd like to remove all your saved settings for your cluster, you can run the following:
 
@@ -180,7 +205,7 @@ There are also other make targets available to deploy just the queue, db, or the
 Developing Locally with OpenShift
 ---------------------------------
 
-By far the best way to develop **cloudigrade** is with it runing locally, allowing you to benefit from quick code reloads and easy debugging while offloading running supporting services to OpenShift. There are multiple make targets available to make this process easy. For example to start a cluster and deploy the supporting services all you'd need to run is:
+By far the best way to develop **cloudigrade** is with it running locally, allowing you to benefit from quick code reloads and easy debugging while offloading running supporting services to OpenShift. There are multiple make targets available to make this process easy. For example to start a cluster and deploy the supporting services all you'd need to run is:
 
 .. code-block:: bash
 
@@ -194,7 +219,7 @@ This will start OpenShift and create deployments for the database and queue. To 
 
 This will also forward ports for the database and queue pods, making them accessible to the development server.
 
-There are other commands available such as `make oc-run-migration` which will run migrations for you against the database in the OpenShift cluster. `make oc-forward-ports` which will just forward the ports without starting the development server, allowing you to start it however you wish, and `make oc-stop-forwarding-ports` which will clean up the port forwards after you're done.
+There are other commands available such as ``make oc-run-migration`` which will run migrations for you against the database in the OpenShift cluster. ``make oc-forward-ports`` which will just forward the ports without starting the development server, allowing you to start it however you wish, and ``make oc-stop-forwarding-ports`` which will clean up the port forwards after you're done.
 
 
 Testing

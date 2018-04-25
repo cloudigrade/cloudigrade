@@ -49,6 +49,9 @@ oc-up:
 		--version=$(OC_VERSION) \
 		--host-data-dir=$(OC_DATA_DIR) \
 		--use-existing-config
+ifeq ($(OS),Linux)
+	oc login -u developer -p developer --insecure-skip-tls-verify
+endif
 
 oc-create-templates:
 	oc create istag postgresql:9.6 --from-image=centos/postgresql-96-centos7
