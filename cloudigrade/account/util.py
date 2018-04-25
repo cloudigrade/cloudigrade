@@ -1,4 +1,6 @@
 """Various utility functions for the account app."""
+from queue import Empty
+
 import collections
 
 import kombu
@@ -118,6 +120,30 @@ def generate_aws_ami_messages(instances_data, ami_list):
     return messages
 
 
+def _create_exchange_and_queue(queue_name):
+    """
+    Create a Kombu message Exchange and Queue.
+
+    Args:
+        queue_name (str): The target queue's name
+
+    Returns:
+        tuple(kombu.Exchange, kombu.Queue)
+
+    """
+    exchange = kombu.Exchange(
+        settings.RABBITMQ_EXCHANGE_NAME,
+        'direct',
+        durable=True
+    )
+    message_queue = kombu.Queue(
+        queue_name,
+        exchange=exchange,
+        routing_key=queue_name
+    )
+    return exchange, message_queue
+
+
 def add_messages_to_queue(queue_name, messages, result_key):
     """
     Send messages to a message queue.
@@ -133,16 +159,7 @@ def add_messages_to_queue(queue_name, messages, result_key):
         dict: A mapping of machine image ID to result boolean value
 
     """
-    exchange = kombu.Exchange(
-        settings.RABBITMQ_EXCHANGE_NAME,
-        'direct',
-        durable=True
-    )
-    message_queue = kombu.Queue(
-        queue_name,
-        exchange=exchange,
-        routing_key=queue_name
-    )
+    exchange, message_queue = _create_exchange_and_queue(queue_name)
 
     with kombu.Connection(settings.RABBITMQ_URL) as conn:
         producer = conn.Producer(serializer='json')
@@ -154,3 +171,29 @@ def add_messages_to_queue(queue_name, messages, result_key):
                 routing_key=queue_name,
                 declare=[message_queue]
             )
+
+
+def read_messages_from_queue(queue_name, max_count=1):
+    """
+    Read messages (up to max_count) from a message queue.
+
+    Args:
+        queue_name (str): The queue to read messages from
+        max_count (int): Max number of messages to read
+
+    Returns:
+        list[object]: The dequeued messages.
+
+    """
+    __, message_queue = _create_exchange_and_queue(queue_name)
+    messages = []
+    with kombu.Connection(settings.RABBITMQ_URL) as conn:
+        try:
+            consumer = conn.SimpleQueue(name=message_queue)
+            while len(messages) < max_count:
+                message = consumer.get_nowait()
+                messages.append(message.payload)
+                message.ack()
+        except Empty:
+            pass
+    return messages

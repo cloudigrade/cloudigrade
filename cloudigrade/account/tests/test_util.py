@@ -1,6 +1,7 @@
 """Collection of tests for utils in the account app."""
 import random
-from unittest.mock import patch
+from queue import Empty
+from unittest.mock import patch, Mock
 
 from django.test import TestCase
 
@@ -110,3 +111,34 @@ class AccountUtilTest(TestCase):
             routing_key=mock_routing_key,
             declare=[mock_queue]
         )
+
+    def prepare_mock_kombu_for_consuming(self, mock_kombu):
+        """Prepare mock_kombu with mock messages."""
+        mock_conn = mock_kombu.Connection.return_value
+        mock_with_conn = mock_conn.__enter__.return_value
+        mock_consumer = mock_with_conn.SimpleQueue.return_value
+        mock_messages = [Mock(), Mock()]
+        mock_consumer.get_nowait.side_effect = mock_messages + [Empty]
+        return mock_messages
+
+    @patch('account.util.kombu')
+    def test_read_messages_from_queue_until_empty(self, mock_kombu):
+        """Test that all messages are read from a message queue."""
+        mock_messages = self.prepare_mock_kombu_for_consuming(mock_kombu)
+        queue_name = 'Test Queue'
+        expected_results = [mock_messages[0].payload, mock_messages[1].payload]
+        actual_results = util.read_messages_from_queue(queue_name, 5)
+        self.assertEqual(actual_results, expected_results)
+        mock_messages[0].ack.assert_called_once()
+        mock_messages[1].ack.assert_called_once()
+
+    @patch('account.util.kombu')
+    def test_read_messages_from_queue_once(self, mock_kombu):
+        """Test that one message is read from a message queue."""
+        mock_messages = self.prepare_mock_kombu_for_consuming(mock_kombu)
+        queue_name = 'Test Queue'
+        expected_results = [mock_messages[0].payload]
+        actual_results = util.read_messages_from_queue(queue_name)
+        self.assertEqual(actual_results, expected_results)
+        mock_messages[0].ack.assert_called_once()
+        mock_messages[1].ack.assert_not_called()
