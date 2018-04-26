@@ -50,7 +50,8 @@ class UtilAwsAutoScalingTest(TestCase):
             'Instances': [],
         }
         name = str(uuid.uuid4())
-        self.assertTrue(autoscaling.is_scaled_down(name))
+        scaled, _ = autoscaling.is_scaled_down(name)
+        self.assertTrue(scaled)
 
     @patch('util.aws.autoscaling.describe_auto_scaling_group')
     def test_is_scaled_down_false_when_scaling_up(self, mock_describe):
@@ -62,7 +63,8 @@ class UtilAwsAutoScalingTest(TestCase):
             'Instances': [],
         }
         name = str(uuid.uuid4())
-        self.assertFalse(autoscaling.is_scaled_down(name))
+        scaled, _ = autoscaling.is_scaled_down(name)
+        self.assertFalse(scaled)
 
     @patch('util.aws.autoscaling.describe_auto_scaling_group')
     def test_is_scaled_down_false_when_scaled_up(self, mock_describe):
@@ -74,7 +76,8 @@ class UtilAwsAutoScalingTest(TestCase):
             'Instances': [Mock()],
         }
         name = str(uuid.uuid4())
-        self.assertFalse(autoscaling.is_scaled_down(name))
+        scaled, _ = autoscaling.is_scaled_down(name)
+        self.assertFalse(scaled)
 
     @patch('util.aws.autoscaling.describe_auto_scaling_group')
     def test_is_scaled_down_false_when_scaling_down(self, mock_describe):
@@ -86,7 +89,8 @@ class UtilAwsAutoScalingTest(TestCase):
             'Instances': [Mock()],
         }
         name = str(uuid.uuid4())
-        self.assertFalse(autoscaling.is_scaled_down(name))
+        scaled, _ = autoscaling.is_scaled_down(name)
+        self.assertFalse(scaled)
 
     @patch('util.aws.autoscaling.boto3')
     def test_set_scale(self, mock_boto3):

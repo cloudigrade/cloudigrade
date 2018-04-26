@@ -1,7 +1,10 @@
 """Celery tasks for use in the account app."""
+import logging
+
 from botocore.exceptions import ClientError
 from celery import shared_task
 from django.conf import settings
+from django.utils.translation import gettext as _
 
 from account.models import AwsMachineImage
 from account.util import add_messages_to_queue, read_messages_from_queue
@@ -9,6 +12,8 @@ from util import aws
 from util.aws import rewrap_aws_errors
 from util.celery import retriable_shared_task
 from util.exceptions import AwsSnapshotEncryptedError
+
+logger = logging.getLogger(__name__)
 
 
 @retriable_shared_task
@@ -100,8 +105,24 @@ def scale_up_inspection_cluster():
         None: Run as a scheduled Celery task.
 
     """
-    if not aws.is_scaled_down(settings.HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME):
+    scaled_down, auto_scaling_group = aws.is_scaled_down(
+        settings.HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME
+    )
+    if not scaled_down:
         # Quietly exit and let a future run check the scaling.
+        args = {
+            'name': settings.HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME,
+            'min_size': auto_scaling_group.get('MinSize'),
+            'max_size': auto_scaling_group.get('MinSize'),
+            'desired_capacity': auto_scaling_group.get('DesiredCapacity'),
+            'len_instances': len(auto_scaling_group.get('Instances', []))
+        }
+        logger.info(_('Auto Scaling group "%(name)s" is not scaled down. '
+                      'MinSize=%(min_size)s MaxSize=%(max_size)s '
+                      'DesiredCapacity=%(desired_capacity)s '
+                      'len(Instances)=%(len_instances)s'), args)
+        for instance in auto_scaling_group.get('Instances', []):
+            logger.info(_('Instance exists: %s'), instance.get('InstanceId'))
         return
 
     messages = read_messages_from_queue(
@@ -111,6 +132,7 @@ def scale_up_inspection_cluster():
 
     if len(messages) == 0:
         # Quietly exit and let a future run check for messages.
+        logger.info(_('Not scaling up because no new volumes were found.'))
         return
 
     try:

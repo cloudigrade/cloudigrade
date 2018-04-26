@@ -264,7 +264,7 @@ class AccountCeleryTaskTest(TestCase):
     ):
         """Assert successful scaling with empty cluster and queued messages."""
         messages = [Mock()]
-        mock_aws.is_scaled_down.return_value = True
+        mock_aws.is_scaled_down.return_value = True, dict()
         mock_read_messages_from_queue.return_value = messages
 
         tasks.scale_up_inspection_cluster()
@@ -294,7 +294,7 @@ class AccountCeleryTaskTest(TestCase):
             mock_add_messages_to_queue
     ):
         """Assert scale up aborts when not scaled down."""
-        mock_aws.is_scaled_down.return_value = False
+        mock_aws.is_scaled_down.return_value = False, {'Instances': [Mock()]}
 
         tasks.scale_up_inspection_cluster()
 
@@ -318,7 +318,7 @@ class AccountCeleryTaskTest(TestCase):
             mock_add_messages_to_queue
     ):
         """Assert scale up aborts when not scaled down."""
-        mock_aws.is_scaled_down.return_value = True
+        mock_aws.is_scaled_down.return_value = True, dict()
         mock_read_messages_from_queue.return_value = []
 
         tasks.scale_up_inspection_cluster()
@@ -347,7 +347,7 @@ class AccountCeleryTaskTest(TestCase):
     ):
         """Assert messages requeue when scale_up encounters AWS exception."""
         messages = [Mock()]
-        mock_aws.is_scaled_down.return_value = True
+        mock_aws.is_scaled_down.return_value = True, dict()
         mock_read_messages_from_queue.return_value = messages
         mock_aws.scale_up.side_effect = ClientError({}, Mock())
 
