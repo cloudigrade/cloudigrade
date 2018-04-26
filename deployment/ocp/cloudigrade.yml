@@ -39,17 +39,17 @@ objects:
           - name: AWS_ACCESS_KEY_ID
             valueFrom:
               secretKeyRef:
-                key: django-settings-module
+                key: aws-access-key-id
                 name: ${NAME}
           - name: AWS_SECRET_ACCESS_KEY
             valueFrom:
               secretKeyRef:
-                key: django-settings-module
+                key: aws-secret-access-key
                 name: ${NAME}
           - name: AWS_DEFAULT_REGION
             valueFrom:
               secretKeyRef:
-                key: django-settings-module
+                key: aws-default-region
                 name: ${NAME}
           - name: DJANGO_SETTINGS_MODULE
             valueFrom:
