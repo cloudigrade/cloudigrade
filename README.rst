@@ -242,6 +242,27 @@ If you wish to run *only* the tests:
 
 If you wish to run a higher-level suite of integration tests, see `integrade <https://github.com/cloudigrade/integrade>`_.
 
+Troubleshooting the local OpenShift Cluster
+-------------------------------------------
+
+Occasionally when first deploying a cluster the PostgreSQL deployment will fail and crash loop, an easy way to resolve that is to kick off a new deployment of PostgreSQL with the following command:
+
+.. code-block:: bash
+
+    oc rollout latest dc/postgresql
+
+If the cloudigrade deployment also failed because the database was not available when the migration midhook ran, you can retry that deployment with the following command:
+
+.. code-block:: bash
+
+    oc rollout retry dc/cloudigrade
+
+If your cloudigrade deployment failed because you didn't have ``AWS_ACCESS_KEY_ID`` or ``AWS_SECRET_ACCESS_KEY`` set, you don't have to torch everything and start over after setting them, you can just recreate the cloudigrade deployment with the following command:
+
+.. code-block:: bash
+
+    make oc-create-cloudigrade
+
 
 Authentication
 ==============
@@ -257,12 +278,16 @@ To create a user run the following make command and follow the prompts:
 .. code-block:: sh
 
     make user
+    # or the below command if you're running against cloudigrade in a local OpenShift cluster
+    make oc-user
 
 To then generate an auth token, run the make command:
 
 .. code-block:: sh
 
     make user-authenticate
+    # or the below command if you're running against cloudigrade in a local OpenShift cluster
+    make oc-user-authenticate
 
 This auth token can be supplied in the Authorization header.
 
