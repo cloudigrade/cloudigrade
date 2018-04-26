@@ -46,7 +46,7 @@ unittest:
 	$(PYTHON) $(PYDIR)/manage.py test --settings=config.settings.local account analyzer util
 
 oc-up:
-	$(PREFIX) oc cluster up \
+	oc cluster up \
 		--image=$(OC_SOURCE) \
 		--version=$(OC_VERSION) \
 		--host-data-dir=$(OC_DATA_DIR) \
@@ -106,7 +106,7 @@ oc-run-dev: oc-forward-ports
 	make oc-stop-forwarding-ports
 
 oc-down:
-	$(PREFIX) oc cluster down
+	oc cluster down
 
 oc-clean: oc-down
 	$(PREFIX) rm -rf $(OC_DATA_DIR)
@@ -119,11 +119,11 @@ user-authenticate:
 	$(PYTHON) $(PYDIR)/manage.py drf_create_token $$uname --settings=config.settings.local
 
 oc-user:
-	$(PREFIX) oc rsh -c cloudigrade $$(oc get pods -o jsonpath='{.items[*].metadata.name}' -l name=cloudigrade) scl enable rh-postgresql96 rh-python36 -- python manage.py createsuperuser
+	oc rsh -c cloudigrade $$(oc get pods -o jsonpath='{.items[*].metadata.name}' -l name=cloudigrade) scl enable rh-postgresql96 rh-python36 -- python manage.py createsuperuser
 
 oc-user-authenticate:
 	@read -p "User name: " uname; \
-	$(PREFIX) oc rsh -c cloudigrade $$(oc get pods -o jsonpath='{.items[*].metadata.name}' -l name=cloudigrade) scl enable rh-postgresql96 rh-python36 -- python manage.py drf_create_token $$uname
+	oc rsh -c cloudigrade $$(oc get pods -o jsonpath='{.items[*].metadata.name}' -l name=cloudigrade) scl enable rh-postgresql96 rh-python36 -- python manage.py drf_create_token $$uname
 
 
 docs-seqdiag:

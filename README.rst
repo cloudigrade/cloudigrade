@@ -77,6 +77,9 @@ We recommend developing on the latest version of Fedora. Follow the following co
     wget -O oc.tar.gz https://github.com/openshift/origin/releases/download/v3.7.2/openshift-origin-client-tools-v3.7.2-282e43f-linux-64bit.tar.gz
     tar -zxvf oc.tar.gz
     sudo cp openshift-origin-client-tools-v3.7.2-282e43f-linux-64bit/oc /usr/bin
+    # Allow interaction with Docker without root
+    sudo groupadd docker && sudo gpasswd -a ${USER} docker
+    newgrp docker
     # Configure Insecure-Registries in Docker
     sudo cat > /etc/docker/daemon.json <<EOF
     {
