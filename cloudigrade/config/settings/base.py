@@ -38,7 +38,7 @@ HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME = env(
 )
 HOUNDIGRADE_AWS_VOLUME_BATCH_SIZE = env.int(
     'HOUNDIGRADE_AWS_VOLUME_BATCH_SIZE',
-    default=5
+    default=32
 )
 
 # Default apps go here
