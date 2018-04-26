@@ -356,9 +356,9 @@ parameters:
   required: true
 - name: DJANGO_DATABASE_HOST
   description: "Your db instance host"
-  value: postgresql.cloudigrade-investigation.svc
+  value: postgresql.cloudigrade-test.svc
   required: true
 - name: RABBITMQ_HOST
   description: "Your rabbitmq host"
-  value: rabbitmq.cloudigrade-investigation.svc
+  value: rabbitmq.cloudigrade-test.svc
   required: true
