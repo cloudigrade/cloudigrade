@@ -19,19 +19,19 @@ help:
 	@echo "  help                     to show this message."
 	@echo "  clean                    to clean the project directory of any scratch files, bytecode, logs, etc."
 	@echo "  unittest                 to run unittests."
-	@echo "	 oc-up                    to start the local OpenShift cluster."
-	@echo "	 oc-create-templates      to create the ImageStream and template objects."
-	@echo "	 oc-create-db             to create and deploy the DB."
-	@echo "	 oc-create-queue          to create and deploy the queue."
-	@echo "	 oc-create-cloudigrade    to create and deploy the cloudigrade."
-	@echo "	 oc-forward-ports         to forward ports for PostgreSQL and RabbitMQ for local development."
-	@echo "	 oc-stop-forwarding-ports to stop forwarding ports for PostgreSQL and RabbitMQ for local development."
-	@echo "	 oc-up-dev                to start the cluster and deploy supporting services for running a local cloudigrade instance against the cluster."
-	@echo "	 oc-up-all                to start the cluster and deploy supporting services along with cloudigrade."
-	@echo "	 oc-run-migrations        to run migrations from local dev environment against the DB running in the cluster."
-	@echo "	 oc-run-dev               to start the local dev server allowing it to connect to supporting services running in the cluster."
-	@echo "	 oc-down                  to stop the local OpenShift cluster."
-	@echo "	 oc-clean                 to stop the local OpenShift cluster and delete configuration."
+	@echo "  oc-up                    to start the local OpenShift cluster."
+	@echo "  oc-create-templates      to create the ImageStream and template objects."
+	@echo "  oc-create-db             to create and deploy the DB."
+	@echo "  oc-create-queue          to create and deploy the queue."
+	@echo "  oc-create-cloudigrade    to create and deploy the cloudigrade."
+	@echo "  oc-forward-ports         to forward ports for PostgreSQL and RabbitMQ for local development."
+	@echo "  oc-stop-forwarding-ports to stop forwarding ports for PostgreSQL and RabbitMQ for local development."
+	@echo "  oc-up-dev                to start the cluster and deploy supporting services for running a local cloudigrade instance against the cluster."
+	@echo "  oc-up-all                to start the cluster and deploy supporting services along with cloudigrade."
+	@echo "  oc-run-migrations        to run migrations from local dev environment against the DB running in the cluster."
+	@echo "  oc-run-dev               to start the local dev server allowing it to connect to supporting services running in the cluster."
+	@echo "  oc-down                  to stop the local OpenShift cluster."
+	@echo "  oc-clean                 to stop the local OpenShift cluster and delete configuration."
 	@echo "  user                     to create a Django super user."
 	@echo "  user-authenticate        to generate an auth token for a user."
 	@echo "  oc-user                  to create a Django super user for cloudigrade running in a local OpenShift cluster."
@@ -87,6 +87,7 @@ oc-create-cloudigrade:
 	| oc create -f -
 
 oc-forward-ports:
+	-make oc-stop-forwarding-ports 2>/dev/null
 	oc port-forward $$(oc get pods -o jsonpath='{.items[*].metadata.name}' -l name=postgresql) 5432 &
 	oc port-forward $$(oc get pods -o jsonpath='{.items[*].metadata.name}' -l name=rabbitmq) 5672 &
 
