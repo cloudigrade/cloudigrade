@@ -53,9 +53,9 @@ We encourage macOS developers to use `homebrew <https://brew.sh/>`_ to install a
     brew install python pypy3 gettext awscli postgresql socat
     brew link gettext --force
     # We need to install a specific version of docker since newer ones have a bug around the builtin proxy
-    https://raw.githubusercontent.com/caskroom/homebrew-cask/61f1d33be340e27b91f2a5c88da0496fc24904d3/Casks/docker.rb
+    brew cask install https://raw.githubusercontent.com/caskroom/homebrew-cask/61f1d33be340e27b91f2a5c88da0496fc24904d3/Casks/docker.rb
 
-After installing Docker, open it, and navigate to Preferences -> Daemon. There add ``172.30.0.0/16`` to the list of insecure registries, then click ``Apply and Restart``.
+After installing Docker, open it, navigate to Preferences -> General and uncheck ``Automatically check for updates`` if it is checked, then navigate to Preferences -> Daemon. There add ``172.30.0.0/16`` to the list of insecure registries, then click ``Apply and Restart``.
 
 We currently use Openshift 3.7.X in production, so we need a matching openshift client.
 
@@ -72,11 +72,11 @@ We recommend developing on the latest version of Fedora. Follow the following co
 .. code-block:: bash
 
     # DNF Install AWS-CLI, Docker, PyPy3, and gettext
-    sudo dnf install awscli docker pypy3 gettext -y
+    sudo dnf install awscli docker pypy3 gettext postgresql-devel -y
     # Install an appropriate version of the OpenShift Client
     wget -O oc.tar.gz https://github.com/openshift/origin/releases/download/v3.7.2/openshift-origin-client-tools-v3.7.2-282e43f-linux-64bit.tar.gz
     tar -zxvf oc.tar.gz
-    sudo cp openshift-origin-client-tools-v3.7.2-282e43f-linux-64bit/oc /usr/bin
+    cp openshift-origin-client-tools-v3.7.2-282e43f-linux-64bit/oc ~/bin
     # Allow interaction with Docker without root
     sudo groupadd docker && sudo gpasswd -a ${USER} docker
     newgrp docker
