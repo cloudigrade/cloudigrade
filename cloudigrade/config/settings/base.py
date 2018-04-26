@@ -201,8 +201,8 @@ CELERY_TASK_ROUTES = {
     'account.tasks.enqueue_ready_volume': {'queue': 'enqueue_ready_volumes'},
 }
 CELERYBEAT_SCHEDULE = {
-    'scale_up_inspection_cluster_every_5_min': {
+    'scale_up_inspection_cluster_every_60_min': {
         'task': 'account.tasks.scale_up_inspection_cluster',
-        'schedule': 60 * 5,  # seconds
+        'schedule': env.int('SCALE_UP_INSPECTION_CLUSTER_SCHEDULE', default=60 * 60),  # seconds
     },
 }
