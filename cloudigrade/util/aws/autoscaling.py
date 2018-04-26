@@ -33,14 +33,17 @@ def is_scaled_down(name):
         name: Auto Scaling group name
 
     Returns:
-        bool: True if group indicates zero size and zero instances
+        tuple(bool, dict): the bool is True if group indicates zero size and
+            zero instances, and the dict has the auto scaling group details
+            that were described to make that determination.
 
     """
     auto_scaling_group = describe_auto_scaling_group(name)
-    return auto_scaling_group['MinSize'] == 0 and \
+    scaled_down = auto_scaling_group['MinSize'] == 0 and \
         auto_scaling_group['MaxSize'] == 0 and \
         auto_scaling_group['DesiredCapacity'] == 0 and \
         len(auto_scaling_group['Instances']) == 0
+    return scaled_down, auto_scaling_group
 
 
 def set_scale(name, min_size, max_size, desired_capacity):
