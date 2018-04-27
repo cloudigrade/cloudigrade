@@ -141,3 +141,14 @@ class AccountUtilTest(TestCase):
         self.assertEqual(actual_results, expected_results)
         mock_messages[0].ack.assert_called_once_with()
         mock_messages[1].ack.assert_not_called()
+
+    @patch('account.util.kombu')
+    def test_read_messages_from_queue_stops_at_limit(self, mock_kombu):
+        """Test that messages up to the batch size are read from the queue."""
+        mock_messages = self.prepare_mock_kombu_for_consuming(mock_kombu)
+        queue_name = 'Test Queue'
+        expected_results = [mock_messages[0].payload]
+        actual_results = util.read_messages_from_queue(queue_name, 1)
+        self.assertEqual(actual_results, expected_results)
+        mock_messages[0].ack.assert_called_once_with()
+        mock_messages[1].ack.assert_not_called()
