@@ -80,7 +80,6 @@ oc-create-cloudigrade:
 		-p NAMESPACE=myproject \
 		-p AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
 		-p AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
-		-p NGINX_REPO_CONTEXT_DIR=docker \
 		-p DJANGO_ALLOWED_HOSTS=* \
 		-p DJANGO_DATABASE_HOST=postgresql.myproject.svc \
 		-p RABBITMQ_HOST=rabbitmq-persistent.myproject.svc \
