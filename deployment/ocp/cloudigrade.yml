@@ -117,6 +117,28 @@ objects:
           resources:
             limits:
               memory: 512Mi
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - 'ps axo command | grep -v grep | grep gunicorn'
+            failureThreshold: 3
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - 'nc -U /var/run/cloudigrade/gunicorn.sock --send-only </dev/null'
+            failureThreshold: 3
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
           volumeMounts:
           - mountPath: /var/run/cloudigrade
             name: ${NAME}-socket
@@ -131,6 +153,24 @@ objects:
           resources:
             limits:
               memory: 512Mi
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            failureThreshold: 3
+            initialDelaySeconds: 3
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthz/
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
           volumeMounts:
           - mountPath: /var/run/cloudigrade
             name: ${NAME}-socket
