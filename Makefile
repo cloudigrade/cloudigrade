@@ -82,7 +82,7 @@ oc-create-cloudigrade:
 		-p AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
 		-p DJANGO_ALLOWED_HOSTS=* \
 		-p DJANGO_DATABASE_HOST=postgresql.myproject.svc \
-		-p RABBITMQ_HOST=rabbitmq-persistent.myproject.svc \
+		-p RABBITMQ_HOST=rabbitmq.myproject.svc \
 	| oc create -f -
 
 oc-forward-ports:
