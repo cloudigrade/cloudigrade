@@ -34,7 +34,6 @@ Because **cloudigrade** is actually a suite of interacting services, setting up 
 
 -  Python (one of the versions we support)
 -  `Docker <https://www.docker.com/community-edition#/download>`_
--  `docker-compose <https://docs.docker.com/compose/install/>`_
 -  `tox <https://tox.readthedocs.io/>`_
 -  `gettext <https://www.gnu.org/software/gettext/>`_
 -  `PostgreSQL <https://www.postgresql.org/download/>`_
