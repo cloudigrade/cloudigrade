@@ -167,6 +167,9 @@ objects:
               path: /healthz/
               port: 8080
               scheme: HTTP
+              httpHeaders:
+                - name: Host
+                  value: health.cloudigrade.insights.openshiftapps.com
             initialDelaySeconds: 5
             periodSeconds: 10
             successThreshold: 1
