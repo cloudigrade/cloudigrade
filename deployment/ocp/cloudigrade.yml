@@ -8,7 +8,123 @@ objects:
 - kind: DeploymentConfig
   apiVersion: v1
   metadata:
-    name: cloudigrade
+    name: ${NAME}-celery
+  spec:
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      name: ${NAME}-celery
+    template:
+      metadata:
+        labels:
+          name: ${NAME}-celery
+      spec:
+        containers:
+        - name: ${NAME}-celery
+          env:
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                key: aws-access-key-id
+                name: ${NAME}
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                key: aws-secret-access-key
+                name: ${NAME}
+          - name: AWS_DEFAULT_REGION
+            valueFrom:
+              secretKeyRef:
+                key: aws-default-region
+                name: ${NAME}
+          - name: DJANGO_SETTINGS_MODULE
+            valueFrom:
+              secretKeyRef:
+                key: django-settings-module
+                name: ${NAME}
+          - name: DJANGO_SECRET_KEY
+            valueFrom:
+              secretKeyRef:
+                key: django-secret-key
+                name: ${NAME}
+          - name: DJANGO_ALLOWED_HOSTS
+            valueFrom:
+              secretKeyRef:
+                key: django-allowed-hosts
+                name: ${NAME}
+          - name: DJANGO_DATABASE_NAME
+            valueFrom:
+              secretKeyRef:
+                key: database-name
+                name: ${DB_SECRETS_FILE}
+          - name: DJANGO_DATABASE_HOST
+            valueFrom:
+              secretKeyRef:
+                key: django-database-host
+                name: ${NAME}
+          - name: DJANGO_DATABASE_USER
+            valueFrom:
+              secretKeyRef:
+                key: database-user
+                name: ${DB_SECRETS_FILE}
+          - name: DJANGO_DATABASE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: database-password
+                name: ${DB_SECRETS_FILE}
+          - name: DJANGO_DEBUG
+            valueFrom:
+              secretKeyRef:
+                key: django-debug
+                name: ${NAME}
+          - name: RABBITMQ_USER
+            valueFrom:
+              secretKeyRef:
+                key: username
+                name: ${RABBITMQ_SECRETS_FILE}
+          - name: RABBITMQ_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: password
+                name: ${RABBITMQ_SECRETS_FILE}
+          - name: RABBITMQ_HOST
+            valueFrom:
+              secretKeyRef:
+                key: rabbitmq-host
+                name: ${NAME}
+          - name: RABBITMQ_PORT
+            valueFrom:
+              secretKeyRef:
+                key: rabbitmq-port
+                name: ${NAME}
+          image: ' '
+          command:
+            - /bin/sh
+            - -c
+            - >
+              PYTHONPATH=. scl enable rh-postgresql96 rh-python36 --
+              celery -l info -A config worker --beat
+              --scheduler django_celery_beat.schedulers:DatabaseScheduler
+              -Q copy_ami_snapshot,create_volume,enqueue_ready_volumes
+          imagePullPolicy: Always
+          resources:
+            limits:
+              memory: 512Mi
+    triggers:
+      - type: "ImageChange"
+        imageChangeParams:
+          automatic: true
+          containerNames:
+            - ${NAME}-celery
+          from:
+            kind: ImageStreamTag
+            name: ${NAME}:latest
+            namespace: ${NAMESPACE}
+      - type: ConfigChange
+- kind: DeploymentConfig
+  apiVersion: v1
+  metadata:
+    name: ${NAME}
   spec:
     replicas: 1
     revisionHistoryLimit: 10
