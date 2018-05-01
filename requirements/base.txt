@@ -11,3 +11,4 @@ gunicorn==19.8.1
 django-polymorphic==2.0.2
 django-rest-polymorphic==0.1.5
 django-celery-beat==1.1.1
+django-health-check==3.5.1
