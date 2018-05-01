@@ -204,6 +204,21 @@ If you'd like to remove all your saved settings for your cluster, you can run th
 
 There are also other make targets available to deploy just the queue, db, or the project by itself, along with installing the templates and the ImageStream object.
 
+Deploying in-progress code to OpenShift
+---------------------------------------
+
+If you'd like to deploy your in progress work to the local openshift cluster you can do so with the following commands:
+
+.. code-block:: bash
+
+    # Assuming the cluster is up and running with cloudigrade and services already deployed
+    # First create a route to the internal registry
+    make oc-create-registry-route
+
+    # Build and Push Cloudigrade to the internal registry
+    make oc-build-and-push-cloudigrade
+
+Repeat the above command ``make oc-build-and-push-cloudigrade`` as often as you need to re-deploy your code.
 
 Developing Locally with OpenShift
 ---------------------------------
