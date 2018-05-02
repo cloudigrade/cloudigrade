@@ -1,7 +1,7 @@
 """Various utility functions for the account app."""
 import collections
-from queue import Empty
 import socket
+from queue import Empty
 
 import kombu
 from django.conf import settings
