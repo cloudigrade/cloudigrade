@@ -89,19 +89,20 @@ def get_ec2_instance(session, instance_id):
     return session.resource('ec2').Instance(instance_id)
 
 
-def get_ami(session, image_id, region):
+def get_ami(session, image_id, source_region):
     """
     Return an Amazon Machine Image running on an EC2 instance.
 
     Args:
         session (boto3.Session): A temporary session tied to a customer account
         image_id (str): An AMI ID
+        source_region (str): The region the snapshot resides in
 
     Returns:
         Image: A boto3 EC2 Image object.
 
     """
-    return session.resource('ec2', region_name=region).Image(image_id)
+    return session.resource('ec2', region_name=source_region).Image(image_id)
 
 
 def get_ami_snapshot_id(ami):
@@ -122,19 +123,21 @@ def get_ami_snapshot_id(ami):
         return mapping.get('Ebs', {}).get('SnapshotId', '')
 
 
-def get_snapshot(session, snapshot_id, region):
+def get_snapshot(session, snapshot_id, source_region):
     """
     Return an AMI Snapshot for an EC2 instance.
 
     Args:
         session (boto3.Session): A temporary session tied to a customer account
         snapshot_id (str): A snapshot ID
+        source_region (str): The region the snapshot resides in
 
     Returns:
         Snapshot: A boto3 EC2 Snapshot object.
 
     """
-    return session.resource('ec2', region_name=region).Snapshot(snapshot_id)
+    return session.resource(
+        'ec2', region_name=source_region).Snapshot(snapshot_id)
 
 
 def add_snapshot_ownership(snapshot):
