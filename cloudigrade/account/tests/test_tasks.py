@@ -55,11 +55,7 @@ class AccountCeleryTaskTest(TestCase):
             mock_region
         )
         mock_aws.get_ami_snapshot_id.assert_called_with(mock_image)
-        mock_aws.add_snapshot_ownership.assert_called_with(
-            mock_session,
-            mock_snapshot,
-            mock_region
-        )
+        mock_aws.add_snapshot_ownership.assert_called_with(mock_snapshot)
         mock_aws.copy_snapshot.assert_called_with(
             mock_snapshot_id,
             mock_region

@@ -142,7 +142,7 @@ def add_snapshot_ownership(snapshot):
     Add permissions to a snapshot.
 
     Args:
-        snapshot_id (str): The id of the snapshot to modify
+        snapshot: A boto3 EC2 Snapshot object.
 
     Returns:
         None
