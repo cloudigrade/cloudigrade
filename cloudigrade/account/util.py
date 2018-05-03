@@ -1,5 +1,6 @@
 """Various utility functions for the account app."""
 import collections
+import socket
 from queue import Empty
 
 import kombu
@@ -7,6 +8,7 @@ from django.conf import settings
 from django.utils import timezone
 
 from account import AWS_PROVIDER_STRING
+from account import exceptions
 from account.models import (AwsInstance, AwsInstanceEvent, AwsMachineImage,
                             InstanceEvent)
 
@@ -159,6 +161,20 @@ def add_messages_to_queue(queue_name, messages):
     exchange, message_queue = _create_exchange_and_queue(queue_name)
 
     with kombu.Connection(settings.RABBITMQ_URL) as conn:
+        # Normally we shouldn't have to do an explicit
+        # conn.connect(). But Kombu 4.1.0 has a bug where if we try to
+        # just use a connection, Kombu will connect ignoring all of
+        # the connection parameters, in particular the timeout. This
+        # means that the connection object can hang indefinitely if it
+        # can't reach RabbitMQ. Work around this by calling
+        # conn.connect() before using conn.
+        try:
+            conn.connect()
+        except socket.gaierror as exc:
+            # The socket error message doesn't include the URL it
+            # couldn't reach, which makes it difficult to debug, so
+            # re-raise a different exception with more information.
+            raise exceptions.RabbitMQUnreachableError() from exc
         producer = conn.Producer(serializer='json')
         for message in messages:
             producer.publish(
