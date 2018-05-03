@@ -42,11 +42,7 @@ def copy_ami_snapshot(arn, ami_id, source_region):
         image.save()
         raise AwsSnapshotEncryptedError
 
-    aws.add_snapshot_ownership(
-        session,
-        snapshot,
-        source_region
-    )
+    aws.add_snapshot_ownership(snapshot)
 
     new_snapshot_id = aws.copy_snapshot(snapshot_id, source_region)
     create_volume.delay(ami_id, new_snapshot_id)
