@@ -10,7 +10,7 @@ objects:
   metadata:
     name: ${NAME}-celery
   spec:
-    replicas: 1
+    replicas: ${CELERY_REPLICA_COUNT}
     revisionHistoryLimit: 10
     selector:
       name: ${NAME}-celery
@@ -556,4 +556,9 @@ parameters:
 - name: RABBITMQ_PORT
   description: "Your rabbitmq port"
   value: "5672"
+  required: true
+# Celery worker settings
+- name: CELERY_REPLICA_COUNT
+  description: "Number of celery replicas"
+  value: "1"
   required: true
