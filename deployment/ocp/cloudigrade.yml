@@ -14,6 +14,8 @@ objects:
     revisionHistoryLimit: 10
     selector:
       name: ${NAME}-celery
+    strategy:
+      type: Recreate
     template:
       metadata:
         labels:
@@ -110,6 +112,30 @@ objects:
           resources:
             limits:
               memory: 512Mi
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - 'ps axo command | grep -v grep | grep celery'
+            failureThreshold: 3
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - >
+                  PYTHONPATH=. scl enable rh-postgresql96 rh-python36 --
+                  celery -A config status | grep ': OK$'
+            failureThreshold: 3
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
     triggers:
       - type: "ImageChange"
         imageChangeParams:
