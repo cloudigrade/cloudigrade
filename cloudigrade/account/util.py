@@ -69,7 +69,7 @@ def create_new_machine_images(account, instances_data):
     for __, instances in instances_data.items():
         platforms = {instance['ImageId']: instance['Platform']
                      for instance in instances
-                     if instance.get('Platform') == 'Windows'}
+                     if instance.get('Platform', '').lower() == 'windows'}
         seen_amis = set([instance['ImageId'] for instance in instances])
         known_amis = AwsMachineImage.objects.filter(
             ec2_ami_id__in=list(seen_amis)
