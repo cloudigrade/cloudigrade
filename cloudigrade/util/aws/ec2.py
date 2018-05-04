@@ -61,15 +61,15 @@ def get_running_instances(session):
     running_instances = {}
 
     for region_name in get_regions(session):
-
         ec2 = session.client('ec2', region_name=region_name)
         logger.debug(_('Describing instances in {0}').format(region_name))
         instances = ec2.describe_instances()
+        running_instances[region_name] = list()
         for reservation in instances.get('Reservations', []):
-            running_instances[region_name] = [
+            running_instances[region_name].extend([
                 instance for instance in reservation.get('Instances', [])
                 if InstanceState.is_running(instance['State']['Code'])
-            ]
+            ])
 
     return running_instances
 
