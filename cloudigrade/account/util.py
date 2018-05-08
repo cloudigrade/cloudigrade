@@ -9,6 +9,7 @@ from django.utils import timezone
 from account import AWS_PROVIDER_STRING
 from account.models import (AwsInstance, AwsInstanceEvent, AwsMachineImage,
                             InstanceEvent)
+from util.aws import is_instance_windows
 
 
 def create_initial_aws_instance_events(account, instances_data):
@@ -70,7 +71,7 @@ def create_new_machine_images(account, instances_data):
         windows_instances = {
             instance['ImageId']
             for instance in instances
-            if instance.get('Platform', '').lower() == 'windows'}
+            if is_instance_windows(instance)}
         seen_amis = set([instance['ImageId'] for instance in instances])
         known_amis = AwsMachineImage.objects.filter(
             ec2_ami_id__in=list(seen_amis)
@@ -109,7 +110,7 @@ def generate_aws_ami_messages(instances_data, ami_list):
     for region, instances in instances_data.items():
         for instance in instances:
             if (instance['ImageId'] in ami_list and
-                    instance.get('Platform') != 'Windows'):
+                    not is_instance_windows(instance)):
                 messages.append(
                     {
                         'cloud_provider': AWS_PROVIDER_STRING,
