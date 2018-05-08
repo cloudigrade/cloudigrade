@@ -50,7 +50,6 @@ class UtilAwsHelperTest(TestCase):
             call(mock_session, 'ec2:DescribeInstances'),
             call(mock_session, 'ec2:ModifySnapshotAttribute'),
             call(mock_session, 'ec2:DescribeSnapshotAttribute'),
-            call(mock_session, 'ec2:ModifyImageAttribute'),
             call(mock_session, 'ec2:DescribeSnapshots'),
         ]
         mock_verify_policy_action.side_effect = [
@@ -69,7 +68,6 @@ class UtilAwsHelperTest(TestCase):
             call(mock_session, 'ec2:DescribeInstances'),
             call(mock_session, 'ec2:ModifySnapshotAttribute'),
             call(mock_session, 'ec2:DescribeSnapshotAttribute'),
-            call(mock_session, 'ec2:ModifyImageAttribute'),
             call(mock_session, 'ec2:DescribeSnapshots'),
         ]
         mock_verify_policy_action.side_effect = [
@@ -155,18 +153,6 @@ class UtilAwsHelperTest(TestCase):
                 'DryRun': True,
                 'Attribute': 'createVolumePermission',
                 'OperationType': 'add',
-            }
-        )
-
-    def test_verify_policy_action_modify_image_attribute(self):
-        """Assert appropriate calls to verify ec2:ModifyImageAttribute."""
-        self.assert_verify_policy_action_success(
-            'ec2:ModifyImageAttribute',
-            'modify_image_attribute',
-            func_kwargs={
-                'Attribute': 'description',
-                'ImageId': 'string',
-                'DryRun': True,
             }
         )
 

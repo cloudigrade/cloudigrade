@@ -119,12 +119,6 @@ def _verify_policy_action(session, action):
                 Attribute='createVolumePermission',
                 OperationType='add',
             )
-        elif action == 'ec2:ModifyImageAttribute':
-            ec2.modify_image_attribute(
-                Attribute='description',
-                ImageId='string',
-                DryRun=True
-            )
         else:
             logger.warning(_('No test case exists for action "{0}"')
                            .format(action))
