@@ -24,17 +24,25 @@ Create Policy
                    "Sid": "VisualEditor0",
                    "Effect": "Allow",
                    "Action": [
-                       "ec2:DescribeImages",
                        "ec2:DescribeInstances",
+                       "ec2:DescribeImages",
+                       "ec2:DescribeSnapshots",
                        "ec2:ModifySnapshotAttribute",
-                       "ec2:DescribeSnapshotAttribute",
-                       "ec2:ModifyImageAttribute",
-                       "ec2:DescribeSnapshots"
+                       "ec2:DescribeSnapshotAttribute"
                    ],
                    "Resource": "*"
                }
            ]
        }
+
+   .. note::
+       cloudigrade needs each of these actions in order to identify and track relevant software products:
+
+       - `ec2:DescribeInstances <https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html>`_ enables cloudigrade to get information about your currently running instances.
+       - `ec2:DescribeImages <https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeImages.html>`_ enables cloudigrade to get information about the AMIs used to start your instances.
+       - `ec2:DescribeSnapshots <https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeSnapshots.html>`_ enables cloudigrade to get information about snapshots for those AMIs.
+       - `ec2:ModifySnapshotAttribute <https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_ModifySnapshotAttribute.html>`_ enables cloudigrade to set an attribute that allows cloudigrade to copy snapshots for inspection.
+       - `ec2:DescribeSnapshotAttribute <https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeSnapshotAttribute.html>`_ enables cloudigrade to verify that it has set the aforementioned attribute.
 
 #. Click "Review policy".
 #. Give the policy a distinct, memorable name such as ``policy-for-cloudigrade``. Copy this name for reference because you will need it soon.
