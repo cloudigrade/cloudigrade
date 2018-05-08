@@ -18,6 +18,16 @@ class AccountViewSet(mixins.CreateModelMixin, viewsets.ReadOnlyModelViewSet):
     queryset = Account.objects.all()
     serializer_class = serializers.AccountPolymorphicSerializer
 
+    def get_queryset(self):
+        """Get the queryset filtered to appropriate user."""
+        user = self.request.user
+        if not user.is_superuser:
+            return self.queryset.filter(user=user)
+        user_id = self.request.query_params.get('user_id', None)
+        if user_id is not None:
+            return self.queryset.filter(user__id=int(user_id))
+        return self.queryset
+
 
 class ReportViewSet(viewsets.ViewSet):
     """Generate a usage report."""
