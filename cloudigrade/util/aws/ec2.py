@@ -257,3 +257,17 @@ def check_volume_state(volume):
         )
         raise AwsVolumeError(err)
     return
+
+
+def is_instance_windows(instance_data):
+    """
+    Check to see if the instance has the windows platform set.
+
+    Args:
+        instance_data (dict): described EC2 instance dict to check
+
+    Returns:
+        bool: True if it appears to be windows, else False.
+
+    """
+    return instance_data.get('Platform', '').lower() == 'windows'

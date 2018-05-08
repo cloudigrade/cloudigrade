@@ -113,7 +113,7 @@ def generate_dummy_arn(account_id='',
 
 def generate_dummy_describe_instance(instance_id=None, image_id=None,
                                      subnet_id=None, state=None,
-                                     instance_type=None):
+                                     instance_type=None, platform=''):
     """
     Generate dummy instance to imitate 'describe instances' API response.
 
@@ -125,6 +125,7 @@ def generate_dummy_describe_instance(instance_id=None, image_id=None,
         subnet_id (str): Optional Subnet ID.
         state (aws.InstanceState): Optional known state of the AwsInstance.
         instance_type (str): Optional known EC2 type of AwsInstance.
+        platform (string): Optional known Platform value.
 
     Returns:
         dict: Well-formed instance data structure.
@@ -149,6 +150,7 @@ def generate_dummy_describe_instance(instance_id=None, image_id=None,
         'ImageId': image_id,
         'InstanceId': instance_id,
         'InstanceType': instance_type,
+        'Platform': platform,
         'State': {
             'Code': state.value,
             'Name': state.name,
@@ -171,7 +173,7 @@ def generate_dummy_role():
 
 
 def generate_mock_ec2_instance(instance_id=None, image_id=None, subnet_id=None,
-                               state=None, instance_type=None):
+                               state=None, instance_type=None, platform=''):
     """
     Generate a mocked EC2 AwsInstance object.
 
@@ -180,13 +182,14 @@ def generate_mock_ec2_instance(instance_id=None, image_id=None, subnet_id=None,
         instance_type (string): The EC2 instance type.
         image_id (string): The EC2 AMI image id.
         subnet (string): The EC2 subnet.
+        platform (string): The Platform value.
 
     Returns:
         Mock: A mock object with AwsInstance-like attributes.
 
     """
     described_instance = generate_dummy_describe_instance(
-        instance_id, image_id, subnet_id, state, instance_type
+        instance_id, image_id, subnet_id, state, instance_type, platform
     )
     mock_instance = Mock()
     mock_instance.instance_id = described_instance['InstanceId']
@@ -194,6 +197,7 @@ def generate_mock_ec2_instance(instance_id=None, image_id=None, subnet_id=None,
     mock_instance.image_id = described_instance['ImageId']
     mock_instance.state = described_instance['State']
     mock_instance.subnet_id = described_instance['SubnetId']
+    mock_instance.platform = described_instance['Platform']
     return mock_instance
 
 
