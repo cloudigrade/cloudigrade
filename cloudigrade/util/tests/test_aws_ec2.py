@@ -334,3 +334,29 @@ class UtilAwsEc2Test(TestCase):
         mock_volume = helper.generate_mock_volume(state='error')
         with self.assertRaises(AwsVolumeError):
             ec2.check_volume_state(mock_volume)
+
+    def test_is_instance_windows_lowercase(self):
+        """Test that an instance with Platform 'windows' is windows."""
+        dummy_instance = helper.generate_dummy_describe_instance(
+            platform='windows'
+        )
+        self.assertTrue(ec2.is_instance_windows(dummy_instance))
+
+    def test_is_instance_windows_with_unexpected_case(self):
+        """Test that an instance with Platform 'WiNdOwS' is windows."""
+        dummy_instance = helper.generate_dummy_describe_instance(
+            platform='WiNdOwS'
+        )
+        self.assertTrue(ec2.is_instance_windows(dummy_instance))
+
+    def test_is_instance_windows_with_empty_platform(self):
+        """Test that an instance with no Platform is not windows."""
+        dummy_instance = helper.generate_dummy_describe_instance()
+        self.assertFalse(ec2.is_instance_windows(dummy_instance))
+
+    def test_is_instance_windows_with_other_platform(self):
+        """Test that an instance with Platform 'other' is not windows."""
+        dummy_instance = helper.generate_dummy_describe_instance(
+            platform='other'
+        )
+        self.assertFalse(ec2.is_instance_windows(dummy_instance))

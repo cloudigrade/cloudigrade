@@ -7,7 +7,7 @@ from util.aws.ec2 import (InstanceState, add_snapshot_ownership,
                           get_ami,
                           get_ami_snapshot_id, get_ec2_instance,
                           get_running_instances, get_snapshot,
-                          get_volume)
+                          get_volume, is_instance_windows)
 from util.aws.helper import (get_region_from_availability_zone, get_regions,
                              rewrap_aws_errors, verify_account_access)
 from util.aws.s3 import get_object_content_from_s3
