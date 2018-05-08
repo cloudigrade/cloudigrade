@@ -84,7 +84,8 @@ class AccountCeleryTaskTest(TestCase):
 
         account = AwsAccount(
             aws_account_id=mock_account_id,
-            account_arn=mock_arn
+            account_arn=mock_arn,
+            user=util_helper.generate_test_user(),
         )
         account.save()
         ami = AwsMachineImage.objects.create(

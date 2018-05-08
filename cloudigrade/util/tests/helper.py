@@ -7,6 +7,7 @@ from unittest.mock import Mock
 
 import faker
 from dateutil import tz
+from django.contrib.auth.models import User
 
 from util import aws
 
@@ -315,3 +316,29 @@ def utc_dt(*args, **kwargs):
     return datetime.datetime(*args, **kwargs).replace(
         tzinfo=tz.tzutc()
     )
+
+
+def generate_test_user(email=None, is_superuser=False):
+    """
+    Generate and save a user for testing.
+
+    Args:
+        email (str): optional email address
+        is_superuser (bool): create as a superuser if True
+
+    Returns:
+        User: created Django auth User
+
+    """
+    if not email:
+        # We're specifically not using faker here because we want to be very
+        # confident that the address domain is not real.
+        name = ''.join(random.choice(string.ascii_letters) for __ in range(32))
+        email = f'{name}@mail.127.0.0.1.nip.io'
+    user = User.objects.create_user(
+        username=email,
+        email=email,
+        password=''.join(random.choice(string.printable) for __ in range(128)),
+        is_superuser=is_superuser,
+    )
+    return user

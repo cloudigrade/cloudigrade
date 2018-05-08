@@ -2,6 +2,7 @@
 from abc import abstractmethod
 
 import model_utils
+from django.contrib.auth.models import User
 from django.db import models
 
 from util.models import BaseModel
@@ -9,6 +10,13 @@ from util.models import BaseModel
 
 class Account(BaseModel):
     """Base customer account model."""
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        db_index=True,
+        null=False,
+    )
 
 
 class Instance(BaseModel):

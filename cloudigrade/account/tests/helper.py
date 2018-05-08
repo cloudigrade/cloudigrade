@@ -7,7 +7,7 @@ from util import aws
 from util.tests import helper
 
 
-def generate_aws_account(arn=None, aws_account_id=None):
+def generate_aws_account(arn=None, aws_account_id=None, user=None):
     """
     Generate an AwsAccount for testing.
 
@@ -16,6 +16,7 @@ def generate_aws_account(arn=None, aws_account_id=None):
     Args:
         arn (str): Optional ARN.
         aws_account_id (12-digit string): Optional AWS account ID.
+        user (User): Optional Django auth User to be this account's owner.
 
     Returns:
         AwsAccount: The created AwsAccount.
@@ -27,9 +28,13 @@ def generate_aws_account(arn=None, aws_account_id=None):
         else:
             arn = helper.generate_dummy_arn(account_id=aws_account_id)
 
+    if user is None:
+        user = helper.generate_test_user()
+
     return AwsAccount.objects.create(
         account_arn=arn,
         aws_account_id=aws.AwsArn(arn).account_id,
+        user=user,
     )
 
 

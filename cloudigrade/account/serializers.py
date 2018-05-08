@@ -43,8 +43,12 @@ class AwsAccountSerializer(HyperlinkedModelSerializer):
         """Create an AwsAccount."""
         arn = aws.AwsArn(validated_data['account_arn'])
         aws_account_id = arn.account_id
-        account = AwsAccount(account_arn=str(arn),
-                             aws_account_id=aws_account_id)
+        user = self.context['request'].user
+        account = AwsAccount(
+            account_arn=str(arn),
+            aws_account_id=aws_account_id,
+            user=user,
+        )
         session = aws.get_session(str(arn))
         if aws.verify_account_access(session):
             instances_data = aws.get_running_instances(session)

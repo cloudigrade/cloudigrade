@@ -1,6 +1,6 @@
 """Collection of tests for custom DRF serializers in the account app."""
 import random
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from django.test import TestCase
 from django.utils.translation import gettext as _
@@ -38,6 +38,10 @@ class AwsAccountSerializerTest(TestCase):
             'account_arn': arn,
         }
 
+        mock_request = Mock()
+        mock_request.user = util_helper.generate_test_user()
+        context = {'request': mock_request}
+
         with patch.object(aws, 'verify_account_access') as mock_verify, \
                 patch.object(aws.sts, 'boto3') as mock_boto3, \
                 patch.object(aws, 'get_running_instances') as mock_get_run, \
@@ -48,7 +52,7 @@ class AwsAccountSerializerTest(TestCase):
             mock_verify.return_value = True
             mock_get_run.return_value = running_instances
             mock_copy_snapshot.return_value = None
-            serializer = AwsAccountSerializer()
+            serializer = AwsAccountSerializer(context=context)
 
             result = serializer.create(validated_data)
             self.assertIsInstance(result, AwsAccount)
@@ -81,6 +85,10 @@ class AwsAccountSerializerTest(TestCase):
             'account_arn': arn,
         }
 
+        mock_request = Mock()
+        mock_request.user = util_helper.generate_test_user()
+        context = {'request': mock_request}
+
         expected_detail = _(
             'AwsAccount verification failed. ARN Info Not Stored'
         )
@@ -90,7 +98,7 @@ class AwsAccountSerializerTest(TestCase):
             mock_assume_role = mock_boto3.client.return_value.assume_role
             mock_assume_role.return_value = role
             mock_verify.return_value = False
-            serializer = AwsAccountSerializer()
+            serializer = AwsAccountSerializer(context=context)
 
             with self.assertRaises(serializers.ValidationError) as cm:
                 serializer.create(validated_data)
