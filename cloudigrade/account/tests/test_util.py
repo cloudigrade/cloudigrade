@@ -18,7 +18,11 @@ class AccountUtilTest(TestCase):
         """Test that new machine images are saved to the DB."""
         aws_account_id = util_helper.generate_dummy_aws_account_id()
         arn = util_helper.generate_dummy_arn(aws_account_id)
-        account = AwsAccount(account_arn=arn, aws_account_id=aws_account_id)
+        account = AwsAccount(
+            account_arn=arn,
+            aws_account_id=aws_account_id,
+            user=util_helper.generate_test_user(),
+        )
         account.save()
 
         region = random.choice(util_helper.SOME_AWS_REGIONS)
@@ -43,7 +47,11 @@ class AccountUtilTest(TestCase):
         """Test that new windows machine images are marked appropriately."""
         aws_account_id = util_helper.generate_dummy_aws_account_id()
         arn = util_helper.generate_dummy_arn(aws_account_id)
-        account = AwsAccount(account_arn=arn, aws_account_id=aws_account_id)
+        account = AwsAccount(
+            account_arn=arn,
+            aws_account_id=aws_account_id,
+            user=util_helper.generate_test_user(),
+        )
         account.save()
 
         region = random.choice(util_helper.SOME_AWS_REGIONS)

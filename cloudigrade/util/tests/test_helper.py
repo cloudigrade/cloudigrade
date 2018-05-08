@@ -6,6 +6,7 @@ import datetime
 import random
 import re
 import string
+import uuid
 
 from django.test import TestCase
 
@@ -169,3 +170,21 @@ class UtilHelperTest(TestCase):
         volume_id = helper.generate_dummy_subnet_id()
         self.assertTrue(volume_id.startswith('subnet-'))
         self.assertEqual(len(volume_id), 15)
+
+    def test_generate_test_user(self):
+        """Assert generation of test user with appropriate defaults."""
+        user = helper.generate_test_user()
+        self.assertEqual(user.email, user.username)
+        self.assertTrue(user.email.endswith('@mail.127.0.0.1.nip.io'))
+        self.assertFalse(user.is_superuser)
+        other_user = helper.generate_test_user()
+        self.assertNotEqual(user, other_user)
+        self.assertNotEqual(user.username, other_user.username)
+
+    def test_generate_test_user_with_args(self):
+        """Assert generation of test user with specified arguments."""
+        email = f'{uuid.uuid4()}@example.com'
+        user = helper.generate_test_user(email=email, is_superuser=True)
+        self.assertEqual(user.email, email)
+        self.assertEqual(user.username, email)
+        self.assertTrue(user.is_superuser)
