@@ -33,8 +33,12 @@ class AwsAccountSerializer(HyperlinkedModelSerializer):
             'id',
             'updated_at',
             'url',
+            'user_id',
         )
-        read_only_fields = ('aws_account_id',)
+        read_only_fields = (
+            'aws_account_id',
+            'user_id',
+        )
         extra_kwargs = {
             'url': {'view_name': 'account-detail', 'lookup_field': 'pk'},
         }
@@ -68,6 +72,10 @@ class AwsAccountSerializer(HyperlinkedModelSerializer):
                 _('AwsAccount verification failed. ARN Info Not Stored')
             )
         return account
+
+    def get_user_id(self, account):
+        """Get the user_id property for serialization."""
+        return account.user_id
 
 
 class AccountPolymorphicSerializer(PolymorphicSerializer):
