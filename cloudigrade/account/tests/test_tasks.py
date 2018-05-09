@@ -13,11 +13,9 @@ from account.tasks import (copy_ami_snapshot,
                            create_volume,
                            enqueue_ready_volume)
 from util.exceptions import (AwsSnapshotCopyLimitError,
-                             AwsSnapshotEncryptedError,
-                             AwsSnapshotNotOwnedError,
-                             AwsVolumeError,
-                             AwsVolumeNotReadyError,
-                             SnapshotNotReadyException)
+                             AwsSnapshotEncryptedError, AwsSnapshotError,
+                             AwsSnapshotNotOwnedError, AwsVolumeError,
+                             AwsVolumeNotReadyError, SnapshotNotReadyException)
 from util.tests import helper as util_helper
 
 
@@ -191,6 +189,23 @@ class AccountCeleryTaskTest(TestCase):
             mock_retry.side_effect = Retry()
             with self.assertRaises(Retry):
                 create_volume(ami_id, snapshot_id)
+            self.assertTrue(mock_retry.called)
+            mock_enqueue.delay.assert_not_called()
+
+    @patch('account.tasks.aws')
+    def test_create_volume_abort_on_snapshot_error(self, mock_aws):
+        """Assert that the volume create task does not retry on error."""
+        ami_id = util_helper.generate_dummy_image_id()
+        snapshot_id = util_helper.generate_dummy_snapshot_id()
+
+        mock_aws.create_volume.side_effect = AwsSnapshotError()
+
+        with patch.object(tasks, 'enqueue_ready_volume') as mock_enqueue,\
+                patch.object(create_volume, 'retry') as mock_retry:
+            mock_retry.side_effect = Retry()
+            with self.assertRaises(AwsSnapshotError):
+                create_volume(ami_id, snapshot_id)
+            mock_retry.assert_not_called()
             mock_enqueue.delay.assert_not_called()
 
     @patch('account.tasks.add_messages_to_queue')
