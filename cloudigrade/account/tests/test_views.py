@@ -80,6 +80,26 @@ class AccountViewSetTest(TestCase):
         self.account4 = account_helper.generate_aws_account(user=self.user2)
         self.factory = APIRequestFactory()
 
+    def assertResponseHasAwsAccountData(self, response, account):
+        """Assert the response has data matching the account object."""
+        self.assertEqual(
+            response.data['id'], account.id
+        )
+        self.assertEqual(
+            response.data['user_id'], account.user_id
+        )
+        self.assertEqual(
+            response.data['resourcetype'], account.__class__.__name__
+        )
+
+        if isinstance(account, AwsAccount):
+            self.assertEqual(
+                response.data['account_arn'], account.account_arn
+            )
+            self.assertEqual(
+                response.data['aws_account_id'], account.aws_account_id
+            )
+
     def get_aws_account_ids_from_list_response(self, response):
         """
         Get the aws_account_id values from the paginated response.
@@ -183,8 +203,7 @@ class AccountViewSetTest(TestCase):
 
         response = self.get_account_get_response(user, account.id)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['id'], account.id)
-        self.assertEqual(response.data['account_arn'], account.account_arn)
+        self.assertResponseHasAwsAccountData(response, account)
 
     def test_get_user1s_account_as_user2_returns_404(self):
         """Assert that user2 cannot get an account belonging to user1."""
@@ -201,5 +220,4 @@ class AccountViewSetTest(TestCase):
 
         response = self.get_account_get_response(user, account.id)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['id'], account.id)
-        self.assertEqual(response.data['account_arn'], account.account_arn)
+        self.assertResponseHasAwsAccountData(response, account)
