@@ -7,10 +7,9 @@ from botocore.exceptions import ClientError
 from django.test import TestCase
 
 from util.aws import ec2
-from util.exceptions import (AwsSnapshotCopyLimitError,
+from util.exceptions import (AwsSnapshotCopyLimitError, AwsSnapshotError,
                              AwsSnapshotNotOwnedError, AwsVolumeError,
-                             AwsVolumeNotReadyError,
-                             SnapshotNotReadyException)
+                             AwsVolumeNotReadyError, SnapshotNotReadyException)
 from util.tests import helper
 
 
@@ -296,6 +295,21 @@ class UtilAwsEc2Test(TestCase):
         mock_ec2.Snapshot.return_value = mock_snapshot
 
         with self.assertRaises(SnapshotNotReadyException):
+            ec2.create_volume(mock_snapshot.snapshot_id, zone)
+
+        mock_boto3.resource.assert_called_once_with('ec2')
+        mock_ec2.create_volume.assert_not_called()
+
+    @patch('util.aws.ec2.boto3')
+    def test_create_volume_snapshot_has_error(self, mock_boto3):
+        """Test that volume creation aborts when snapshot has error."""
+        zone = helper.generate_dummy_availability_zone()
+        mock_snapshot = helper.generate_mock_snapshot(state='error')
+
+        mock_ec2 = mock_boto3.resource.return_value
+        mock_ec2.Snapshot.return_value = mock_snapshot
+
+        with self.assertRaises(AwsSnapshotError):
             ec2.create_volume(mock_snapshot.snapshot_id, zone)
 
         mock_boto3.resource.assert_called_once_with('ec2')

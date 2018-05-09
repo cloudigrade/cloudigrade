@@ -35,6 +35,10 @@ class SnapshotNotReadyException(NotReadyException):
     """The requested snapshot was not ready."""
 
 
+class AwsSnapshotError(Exception):
+    """The requested snapshot is in an error state."""
+
+
 class AwsVolumeNotReadyError(NotReadyException):
     """The requested volume was not ready."""
 

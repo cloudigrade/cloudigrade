@@ -8,10 +8,9 @@ from django.utils.translation import gettext as _
 
 from util.aws.helper import get_regions
 from util.aws.sts import _get_primary_account_id
-from util.exceptions import (AwsSnapshotCopyLimitError,
+from util.exceptions import (AwsSnapshotCopyLimitError, AwsSnapshotError,
                              AwsSnapshotNotOwnedError, AwsVolumeError,
-                             AwsVolumeNotReadyError)
-from util.exceptions import SnapshotNotReadyException
+                             AwsVolumeNotReadyError, SnapshotNotReadyException)
 
 logger = logging.getLogger(__name__)
 
@@ -223,13 +222,23 @@ def create_volume(snapshot_id, zone):
     """
     ec2 = boto3.resource('ec2')
     snapshot = ec2.Snapshot(snapshot_id)
-    if snapshot.state != 'completed':
-        message = '{0} {1} {2}'.format(snapshot_id,
-                                       snapshot.state,
-                                       snapshot.progress)
-        raise SnapshotNotReadyException(message)
+    check_snapshot_state(snapshot)
     volume = ec2.create_volume(SnapshotId=snapshot_id, AvailabilityZone=zone)
     return volume.id
+
+
+def check_snapshot_state(snapshot):
+    """Raise an exception if snapshot state is not completed."""
+    if snapshot.state == 'completed':
+        return
+    message = 'Snapshot {id} has state {state} at {progress}'.format(
+        id=snapshot.snapshot_id,
+        state=snapshot.state,
+        progress=snapshot.progress,
+    )
+    if snapshot.state == 'error':
+        raise AwsSnapshotError(message)
+    raise SnapshotNotReadyException(message)
 
 
 def get_volume(volume_id, region):
