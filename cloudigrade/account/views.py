@@ -40,7 +40,20 @@ class InstanceViewSet(viewsets.ReadOnlyModelViewSet):
     """
 
     queryset = Instance.objects.all()
+    accounts = Account.objects.all()
     serializer_class = serializers.InstancePolymorphicSerializer
+
+    def get_queryset(self):
+        """Get the queryset filtered to appropriate user."""
+        user = self.request.user
+        if not user.is_superuser:
+            account = self.accounts.filter(user=user).first()
+            return self.queryset.filter(account=account)
+        user_id = self.request.query_params.get('user_id', None)
+        if user_id is not None:
+            account = self.accounts.filter(user__id=int(user_id)).first()
+            return self.queryset.filter(account=account)
+        return self.queryset
 
 
 class ReportViewSet(viewsets.ViewSet):
