@@ -4,7 +4,9 @@ from rest_framework.response import Response
 
 from account import serializers
 from account.exceptions import InvalidCloudProviderError
-from account.models import Account, AwsAccount
+from account.models import (Account,
+                            AwsAccount,
+                            Instance)
 
 
 class AccountViewSet(mixins.CreateModelMixin, viewsets.ReadOnlyModelViewSet):
@@ -27,6 +29,18 @@ class AccountViewSet(mixins.CreateModelMixin, viewsets.ReadOnlyModelViewSet):
         if user_id is not None:
             return self.queryset.filter(user__id=int(user_id))
         return self.queryset
+
+
+class InstanceViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    List all or retrieve a single instance.
+
+    Do not allow to create, update, replace, or delete an instance at
+    this view because we currently **only** allow instances to be retrieved.
+    """
+
+    queryset = Instance.objects.all()
+    serializer_class = serializers.InstancePolymorphicSerializer
 
 
 class ReportViewSet(viewsets.ViewSet):
