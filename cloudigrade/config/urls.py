@@ -2,7 +2,6 @@
 from django.conf.urls import url
 from django.contrib import admin
 from django.urls import include, path
-import djoser
 from rest_framework import routers
 
 from account.views import AccountViewSet, ReportViewSet
