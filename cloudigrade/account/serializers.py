@@ -79,7 +79,7 @@ class AwsAccountSerializer(HyperlinkedModelSerializer):
 
 
 class AccountPolymorphicSerializer(PolymorphicSerializer):
-    """Combined polymorphic serializer for all instances types."""
+    """Combined polymorphic serializer for all account types."""
 
     model_serializer_mapping = {
         AwsAccount: AwsAccountSerializer,
@@ -115,7 +115,7 @@ class AwsInstanceSerializer(HyperlinkedModelSerializer):
 
 
 class InstancePolymorphicSerializer(PolymorphicSerializer):
-    """Combined polymorphic serializer for all account types."""
+    """Combined polymorphic serializer for all instance types."""
 
     model_serializer_mapping = {
         AwsInstance: AwsInstanceSerializer,
