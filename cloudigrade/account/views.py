@@ -1,6 +1,5 @@
 """DRF API views for the account app."""
 from django.utils.translation import gettext as _
-
 from rest_framework import exceptions, mixins, status, viewsets
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
@@ -74,13 +73,13 @@ class InstanceViewSet(viewsets.ReadOnlyModelViewSet):
         if not user.is_superuser:
             accounts = self.accounts.filter(user=user)
             account_ids = [account.id for account in accounts]
-            return self.queryset.filter(pk__in=account_ids)
+            return self.queryset.filter(account__in=account_ids)
         user_id = self.request.query_params.get('user_id', None)
         if user_id is not None:
             user_id = convert_param_to_int('user_id', user_id)
             accounts = self.accounts.filter(user__id=int(user_id))
             account_ids = [account.id for account in accounts]
-            return self.queryset.filter(pk__in=account_ids)
+            return self.queryset.filter(account__in=account_ids)
 
         return self.queryset
 
