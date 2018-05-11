@@ -258,8 +258,7 @@ class InstanceViewSetTest(TestCase):
         )
         self.assertEqual(
             response.data['account'],
-            'http://testserver/api/v1/account/' +
-            str(instance.account.id) + '/'
+            f'http://testserver/api/v1/account/{instance.account.id}/'
         )
         self.assertEqual(
             response.data['resourcetype'], instance.__class__.__name__
