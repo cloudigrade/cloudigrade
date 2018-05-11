@@ -196,6 +196,12 @@ class AccountViewSetTest(TestCase):
         actual_accounts = self.get_aws_account_ids_from_list_response(response)
         self.assertEqual(expected_accounts, actual_accounts)
 
+    def test_list_accounts_as_superuser_with_bad_filter(self):
+        """Assert that the list accounts returns 400 with bad user_id."""
+        params = {'user_id': 'not_an_int'}
+        response = self.get_account_list_response(self.superuser, params)
+        self.assertEqual(response.status_code, 400)
+
     def test_get_user1s_account_as_user1_returns_ok(self):
         """Assert that user1 can get one of its own accounts."""
         user = self.user1

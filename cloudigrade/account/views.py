@@ -1,6 +1,5 @@
 """DRF API views for the account app."""
 from django.utils.translation import gettext as _
-
 from rest_framework import exceptions, mixins, status, viewsets
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
