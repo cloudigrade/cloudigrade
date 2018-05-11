@@ -1,12 +1,36 @@
 """DRF API views for the account app."""
+from django.utils.translation import gettext as _
+
 from rest_framework import exceptions, mixins, status, viewsets
 from rest_framework.response import Response
+from rest_framework.serializers import ValidationError
 
 from account import serializers
 from account.exceptions import InvalidCloudProviderError
 from account.models import (Account,
                             AwsAccount,
                             Instance)
+
+
+def convert_param_to_int(name, value):
+    """Check if a value is convertable to int.
+
+    :param name: The field name being validated
+    :param value: The value to convert to int
+    :returns: The int value
+    "raises: ValidationError if value not convertable
+        to an int
+    """
+    if isinstance(value, int):
+        return value
+
+    try:
+        return int(value)
+    except ValueError:
+        error = {
+            name: [_('The id must be an integer.')]
+        }
+        raise ValidationError(error)
 
 
 class AccountViewSet(mixins.CreateModelMixin, viewsets.ReadOnlyModelViewSet):
@@ -27,7 +51,8 @@ class AccountViewSet(mixins.CreateModelMixin, viewsets.ReadOnlyModelViewSet):
             return self.queryset.filter(user=user)
         user_id = self.request.query_params.get('user_id', None)
         if user_id is not None:
-            return self.queryset.filter(user__id=int(user_id))
+            user_id = convert_param_to_int('user_id', user_id)
+            return self.queryset.filter(user__id=user_id)
         return self.queryset
 
 
@@ -47,12 +72,16 @@ class InstanceViewSet(viewsets.ReadOnlyModelViewSet):
         """Get the queryset filtered to appropriate user."""
         user = self.request.user
         if not user.is_superuser:
-            account = self.accounts.filter(user=user).first()
-            return self.queryset.filter(account=account)
+            accounts = self.accounts.filter(user=user)
+            account_ids = [account.id for account in accounts]
+            return self.queryset.filter(pk__in=account_ids)
         user_id = self.request.query_params.get('user_id', None)
         if user_id is not None:
-            account = self.accounts.filter(user__id=int(user_id)).first()
-            return self.queryset.filter(account=account)
+            user_id = convert_param_to_int('user_id', user_id)
+            accounts = self.accounts.filter(user__id=int(user_id))
+            account_ids = [account.id for account in accounts]
+            return self.queryset.filter(pk__in=account_ids)
+
         return self.queryset
 
 
