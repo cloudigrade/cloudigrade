@@ -14,11 +14,15 @@ from account.models import (Account,
 def convert_param_to_int(name, value):
     """Check if a value is convertable to int.
 
-    :param name: The field name being validated
-    :param value: The value to convert to int
-    :returns: The int value
-    "raises: ValidationError if value not convertable
-        to an int
+    Args:
+        name (str): The field name being validated
+        value: The value to convert to int
+
+    Returns:
+        int: The int value
+    Raises:
+        ValidationError if value not convertable to an int
+
     """
     if isinstance(value, int):
         return value
@@ -71,16 +75,11 @@ class InstanceViewSet(viewsets.ReadOnlyModelViewSet):
         """Get the queryset filtered to appropriate user."""
         user = self.request.user
         if not user.is_superuser:
-            accounts = self.accounts.filter(user=user)
-            account_ids = [account.id for account in accounts]
-            return self.queryset.filter(account__in=account_ids)
+            return self.queryset.filter(account__user__id=user.id)
         user_id = self.request.query_params.get('user_id', None)
         if user_id is not None:
             user_id = convert_param_to_int('user_id', user_id)
-            accounts = self.accounts.filter(user__id=int(user_id))
-            account_ids = [account.id for account in accounts]
-            return self.queryset.filter(account__in=account_ids)
-
+            return self.queryset.filter(account__user__id=user_id)
         return self.queryset
 
 
