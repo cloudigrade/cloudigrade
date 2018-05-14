@@ -2,7 +2,7 @@ This is the default new issue template! You may use the next section to enter a 
 
 ---
 
-As X, I want Y so that Z.
+As user X, I want Y to happen so that Z.
 
 ## Acceptance Criteria
 
@@ -14,7 +14,9 @@ As X, I want Y so that Z.
 
 ---
 
-X is a bug because Y happens when I expect Z.
+## Summary
+
+A clear and concise description of what the bug is.
 
 ## Steps to Reproduce
 
@@ -28,3 +30,7 @@ X is a bug because Y happens when I expect Z.
 ## Actual Result
 
 -
+
+## Additional context
+
+Add any other context about the problem here.
