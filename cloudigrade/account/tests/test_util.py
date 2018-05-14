@@ -4,9 +4,11 @@ from queue import Empty
 from unittest.mock import Mock, patch
 
 from django.test import TestCase
+from rest_framework.serializers import ValidationError
 
 from account import AWS_PROVIDER_STRING, util
 from account.models import AwsAccount, AwsMachineImage
+from account.util import convert_param_to_int
 from util import aws
 from util.tests import helper as util_helper
 
@@ -160,3 +162,18 @@ class AccountUtilTest(TestCase):
         self.assertEqual(actual_results, expected_results)
         mock_messages[0].ack.assert_called_once_with()
         mock_messages[1].ack.assert_not_called()
+
+    def test_convert_param_to_int_with_int(self):
+        """Test that convert_param_to_int returns int with int."""
+        result = convert_param_to_int('test_field', 42)
+        self.assertEqual(result, 42)
+
+    def test_convert_param_to_int_with_str_int(self):
+        """Test that convert_param_to_int returns int with str int."""
+        result = convert_param_to_int('test_field', '42')
+        self.assertEqual(result, 42)
+
+    def test_convert_param_to_int_with_str(self):
+        """Test that convert_param_to_int returns int with str."""
+        with self.assertRaises(ValidationError):
+            convert_param_to_int('test_field', 'not_int')

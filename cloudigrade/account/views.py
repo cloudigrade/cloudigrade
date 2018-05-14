@@ -1,39 +1,13 @@
 """DRF API views for the account app."""
-from django.utils.translation import gettext as _
 from rest_framework import exceptions, mixins, status, viewsets
 from rest_framework.response import Response
-from rest_framework.serializers import ValidationError
 
 from account import serializers
 from account.exceptions import InvalidCloudProviderError
 from account.models import (Account,
                             AwsAccount,
                             Instance)
-
-
-def convert_param_to_int(name, value):
-    """Check if a value is convertable to int.
-
-    Args:
-        name (str): The field name being validated
-        value: The value to convert to int
-
-    Returns:
-        int: The int value
-    Raises:
-        ValidationError if value not convertable to an int
-
-    """
-    if isinstance(value, int):
-        return value
-
-    try:
-        return int(value)
-    except ValueError:
-        error = {
-            name: [_('The id must be an integer.')]
-        }
-        raise ValidationError(error)
+from account.util import convert_param_to_int
 
 
 class AccountViewSet(mixins.CreateModelMixin, viewsets.ReadOnlyModelViewSet):
