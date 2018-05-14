@@ -56,6 +56,7 @@ THIRD_PARTY_APPS = [
     'django_celery_beat',
     'rest_framework',
     'rest_framework.authtoken',
+    'djoser',
     'health_check',
     'health_check.db',
 ]
