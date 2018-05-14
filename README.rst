@@ -281,13 +281,18 @@ If your cloudigrade deployment failed because you didn't have ``AWS_ACCESS_KEY_I
 Authentication
 ==============
 
-Django Rest Framework token authentication is used to authenticate users. API access is restricted to authenticated users. All API calls require an Authorization header:
+Django Rest Framework token authentication is used to authenticate
+users, with djoser (http://djoser.readthedocs.io/en/stable/index.html)
+for user account management and login/logout. API access is restricted
+to authenticated users. All API calls require an Authorization header:
 
 .. code-block::
 
     Authorization: "Token `auth_token`"
 
-To create a user run the following make command and follow the prompts:
+In addition to the djoser frontend, it is possible to programmatically
+create users on the command line, for instance for testing. To create
+a user this way, use:
 
 .. code-block:: sh
 

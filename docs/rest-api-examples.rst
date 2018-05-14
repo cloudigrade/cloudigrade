@@ -33,6 +33,97 @@ The following resource paths are currently available:
 
 -  ``/api/v1/account/`` returns account data
 -  ``/api/v1/report/`` returns usage report data
+-  ``/auth/`` is for authentication
+
+User Account Setup
+------------------
+
+This is for accounts with Cloudigrade itself, not telling Cloudigrade
+about a user's AWS account.
+
+Create a Cloudigrade account
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Request:
+
+.. code:: bash
+
+    http post localhost:8080/auth/users/create/ \
+    username=<username> password=<password>
+
+Response:
+
+::
+
+    HTTP/1.1 201 Created
+    Allow: POST, OPTIONS
+    Content-Length: 43
+    Content-Type: application/json
+    Date: Thu, 10 May 2018 20:11:16 GMT
+    Server: nginx/1.12.1
+    Set-Cookie: 4bf7fdd75eecaf09c9580e6ddbe57ad4=3a0a5f9fe4f5acc709f37456c6867643; path=/; HttpOnly
+    Vary: Accept
+    X-Frame-Options: SAMEORIGIN
+
+    {
+        "email": "",
+        "id": <id>,
+        "username": "<username>"
+    }
+
+
+Login to Cloudigrade
+~~~~~~~~~~~~~~~~~~~~
+
+Request:
+
+.. code:: bash
+
+    http post localhost:8080/auth/token/create/ \
+    username=<username> password=<password>
+
+Response:
+
+::
+
+    HTTP/1.1 200 OK
+    Allow: POST, OPTIONS
+    Content-Length: 57
+    Content-Type: application/json
+    Date: Thu, 10 May 2018 20:12:16 GMT
+    Server: nginx/1.12.1
+    Set-Cookie: 4bf7fdd75eecaf09c9580e6ddbe57ad4=3a0a5f9fe4f5acc709f37456c6867643; path=/; HttpOnly
+    Vary: Accept
+    X-Frame-Options: SAMEORIGIN
+
+    {
+        "auth_token": "eb6bedd93ecb158ffdee76f185b90b25ab39a8e9"
+    }
+
+The `auth_token` should be used in the `Authorization:` HTTP header.
+
+Log out of Cloudigrade
+~~~~~~~~~~~~~~~~~~~~~~
+
+Request:
+
+.. code:: bash
+
+    http localhost:8080/auth/token/destroy/ "${AUTH}"
+
+Response:
+
+::
+
+    HTTP/1.1 204 No Content
+    Allow: POST, OPTIONS
+    Content-Length: 0
+    Date: Thu, 10 May 2018 20:13:32 GMT
+    Server: nginx/1.12.1
+    Set-Cookie: 4bf7fdd75eecaf09c9580e6ddbe57ad4=3a0a5f9fe4f5acc709f37456c6867643; path=/; HttpOnly
+    Vary: Accept
+    X-Frame-Options: SAMEORIGIN
+
 
 Customer Account Setup
 ----------------------
