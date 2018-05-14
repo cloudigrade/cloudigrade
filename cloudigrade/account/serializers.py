@@ -10,7 +10,7 @@ from rest_polymorphic.serializers import PolymorphicSerializer
 
 import account
 from account import reports
-from account.models import AwsAccount
+from account.models import AwsAccount, AwsInstance
 from account.tasks import copy_ami_snapshot
 from account.util import (create_initial_aws_instance_events,
                           create_new_machine_images,
@@ -83,6 +83,42 @@ class AccountPolymorphicSerializer(PolymorphicSerializer):
 
     model_serializer_mapping = {
         AwsAccount: AwsAccountSerializer,
+    }
+
+
+class AwsInstanceSerializer(HyperlinkedModelSerializer):
+    """Serialize a customer AwsInstance for the API."""
+
+    class Meta:
+        model = AwsInstance
+        fields = (
+            'account',
+            'id',
+            'created_at',
+            'updated_at',
+            'url',
+            'ec2_instance_id',
+            'region'
+        )
+        read_only_fields = (
+            'account',
+            'id',
+            'created_at',
+            'updated_at',
+            'url',
+            'ec2_instance_id',
+            'region'
+        )
+        extra_kwargs = {
+            'url': {'view_name': 'instance-detail', 'lookup_field': 'pk'},
+        }
+
+
+class InstancePolymorphicSerializer(PolymorphicSerializer):
+    """Combined polymorphic serializer for all instance types."""
+
+    model_serializer_mapping = {
+        AwsInstance: AwsInstanceSerializer,
     }
 
 

@@ -4,7 +4,10 @@ from rest_framework.response import Response
 
 from account import serializers
 from account.exceptions import InvalidCloudProviderError
-from account.models import Account, AwsAccount
+from account.models import (Account,
+                            AwsAccount,
+                            Instance)
+from account.util import convert_param_to_int
 
 
 class AccountViewSet(mixins.CreateModelMixin, viewsets.ReadOnlyModelViewSet):
@@ -25,7 +28,32 @@ class AccountViewSet(mixins.CreateModelMixin, viewsets.ReadOnlyModelViewSet):
             return self.queryset.filter(user=user)
         user_id = self.request.query_params.get('user_id', None)
         if user_id is not None:
-            return self.queryset.filter(user__id=int(user_id))
+            user_id = convert_param_to_int('user_id', user_id)
+            return self.queryset.filter(user__id=user_id)
+        return self.queryset
+
+
+class InstanceViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    List all or retrieve a single instance.
+
+    Do not allow to create, update, replace, or delete an instance at
+    this view because we currently **only** allow instances to be retrieved.
+    """
+
+    queryset = Instance.objects.all()
+    accounts = Account.objects.all()
+    serializer_class = serializers.InstancePolymorphicSerializer
+
+    def get_queryset(self):
+        """Get the queryset filtered to appropriate user."""
+        user = self.request.user
+        if not user.is_superuser:
+            return self.queryset.filter(account__user__id=user.id)
+        user_id = self.request.query_params.get('user_id', None)
+        if user_id is not None:
+            user_id = convert_param_to_int('user_id', user_id)
+            return self.queryset.filter(account__user__id=user_id)
         return self.queryset
 
 

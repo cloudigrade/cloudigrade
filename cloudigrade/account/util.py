@@ -5,6 +5,8 @@ from queue import Empty
 import kombu
 from django.conf import settings
 from django.utils import timezone
+from django.utils.translation import gettext as _
+from rest_framework.serializers import ValidationError
 
 from account import AWS_PROVIDER_STRING
 from account.models import (AwsInstance, AwsInstanceEvent, AwsMachineImage,
@@ -196,3 +198,25 @@ def read_messages_from_queue(queue_name, max_count=1):
         except Empty:
             pass
     return messages
+
+
+def convert_param_to_int(name, value):
+    """Check if a value is convertable to int.
+
+    Args:
+        name (str): The field name being validated
+        value: The value to convert to int
+
+    Returns:
+        int: The int value
+    Raises:
+        ValidationError if value not convertable to an int
+
+    """
+    try:
+        return int(value)
+    except ValueError:
+        error = {
+            name: [_('{} must be an integer.'.format(name))]
+        }
+        raise ValidationError(error)
