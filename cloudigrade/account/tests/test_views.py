@@ -508,7 +508,7 @@ class InstanceEventViewSetTest(TestCase):
             response (Response): Django response object to inspect
 
         Returns:
-            set[int]: the instance id values found in the response
+            set[int]: the event id values found in the response
 
         """
         event_ids = set([
