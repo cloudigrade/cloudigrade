@@ -131,13 +131,19 @@ oc-clean: oc-down
 
 user:
 	http post localhost:8080/auth/users/create/ \
-	    username=user password=password
+	    username=user password=userpassword
+	make user-token
+
+user-token:
 	$(PYTHON) $(PYDIR)/manage.py drf_create_token user --settings=config.settings.local
 
 superuser:
-	-$(PYTHON) $(PYDIR)/manage.py createsuperuser \
+	$(PYTHON) $(PYDIR)/manage.py createsuperuser \
 	    --settings=config.settings.local \
 	    --username=admin --email=admin@example.com --noinput
+	make superuser-token
+
+superuser-token:
 	$(PYTHON) $(PYDIR)/manage.py drf_create_token admin --settings=config.settings.local
 
 user-authenticate:
@@ -145,8 +151,11 @@ user-authenticate:
 	$(PYTHON) $(PYDIR)/manage.py drf_create_token $$uname --settings=config.settings.local
 
 oc-user:
-	http post cloudigrade-myproject.127.0.0.1.nip.io/auth/users/create/ \
+	http post $$(oc get routes -o jsonpath='{.spec.host}' cloudigrade)/auth/users/create/ \
 	    username=user password=userpassword
+	make oc-user-token
+
+oc-user-token:
 	oc rsh -c cloudigrade \
 	    $$(oc get pods -o jsonpath='{.items[*].metadata.name}' \
 	                   -l name=cloudigrade) \
@@ -154,12 +163,15 @@ oc-user:
 	    python manage.py drf_create_token user
 
 oc-superuser:
-	-oc rsh -c cloudigrade \
+	oc rsh -c cloudigrade \
 	    $$(oc get pods -o jsonpath='{.items[*].metadata.name}' \
 	                   -l name=cloudigrade) \
 	    scl enable rh-postgresql96 rh-python36 -- \
 	    python manage.py createsuperuser \
 	        --username=admin --email=admin@example.com --noinput
+	make oc-superuser-token
+
+oc-superuser-token:
 	oc rsh -c cloudigrade \
 	    $$(oc get pods -o jsonpath='{.items[*].metadata.name}' \
 	                   -l name=cloudigrade) \
