@@ -79,7 +79,7 @@ def generate_single_aws_instance_event(
     Args:
         instance (AwsInstance): instance that owns the events.
         powered_time (datetime): Time that the instance is powered on.
-                event_type (str): AWS event type
+        event_type (str): AWS event type
         ec2_ami_id (str): Optional EC2 AMI ID the instance runs.
         instance_type (str): Optional AWS instance type.
         subnet (str): Optional subnet ID where instance runs.
