@@ -440,6 +440,12 @@ class MachineImageViewSetTest(TestCase):
             self.assertEqual(
                 response.data['ec2_ami_id'], image.ec2_ami_id
             )
+            self.assertEqual(
+                response.data['is_windows'], image.is_windows
+            )
+            self.assertEqual(
+                response.data['is_encrypted'], image.is_encrypted
+            )
 
     def get_image_get_response(self, user, image_id):
         """
