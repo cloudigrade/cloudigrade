@@ -137,7 +137,7 @@ user:
 superuser:
 	-$(PYTHON) $(PYDIR)/manage.py createsuperuser \
 	    --settings=config.settings.local \
-	    --username=admin --email=admin@admin.com --noinput
+	    --username=admin --email=admin@example.com --noinput
 	$(PYTHON) $(PYDIR)/manage.py drf_create_token admin --settings=config.settings.local
 
 user-authenticate:
@@ -159,7 +159,7 @@ oc-superuser:
 	                   -l name=cloudigrade) \
 	    scl enable rh-postgresql96 rh-python36 -- \
 	    python manage.py createsuperuser \
-	        --username=admin --email=admin@admin.com --noinput
+	        --username=admin --email=admin@example.com --noinput
 	oc rsh -c cloudigrade \
 	    $$(oc get pods -o jsonpath='{.items[*].metadata.name}' \
 	                   -l name=cloudigrade) \
