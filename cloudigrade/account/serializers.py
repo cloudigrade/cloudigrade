@@ -117,7 +117,7 @@ class AwsMachineImageSerializer(HyperlinkedModelSerializer):
 
 
 class MachineImagePolymorphicSerializer(PolymorphicSerializer):
-    """Combined polymorphic serializer for all iamge types."""
+    """Combined polymorphic serializer for all image types."""
 
     model_serializer_mapping = {
         AwsMachineImage: AwsMachineImageSerializer,
