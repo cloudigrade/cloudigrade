@@ -1,6 +1,6 @@
 """Collection of tests for celery tasks."""
 import random
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from botocore.exceptions import ClientError
 from celery.exceptions import Retry
@@ -12,10 +12,11 @@ from account.models import AwsAccount, AwsMachineImage
 from account.tasks import (copy_ami_snapshot,
                            create_volume,
                            enqueue_ready_volume)
-from util.exceptions import (AwsSnapshotCopyLimitError,
+from util.exceptions import (AwsECSInstanceNotReady, AwsSnapshotCopyLimitError,
                              AwsSnapshotEncryptedError, AwsSnapshotError,
-                             AwsSnapshotNotOwnedError, AwsVolumeError,
-                             AwsVolumeNotReadyError, SnapshotNotReadyException)
+                             AwsSnapshotNotOwnedError, AwsTooManyECSInstances,
+                             AwsVolumeError, AwsVolumeNotReadyError,
+                             SnapshotNotReadyException)
 from util.tests import helper as util_helper
 
 
@@ -377,3 +378,66 @@ class AccountCeleryTaskTest(TestCase):
             messages
         )
         mock_run_inspection_cluster.delay.assert_not_called()
+
+    @patch('account.tasks.boto3')
+    def test_run_inspection_cluster_success(self, mock_boto3):
+        """Asserts successful starting of the houndigrade task."""
+        mock_list_container_instances = {
+            'containerInstanceArns': [util_helper.generate_dummy_instance_id()]
+        }
+        mock_ec2 = Mock()
+        mock_ecs = MagicMock()
+
+        mock_ecs.list_container_instances.return_value = \
+            mock_list_container_instances
+
+        mock_boto3.client.return_value = mock_ecs
+        mock_boto3.resource.return_value = mock_ec2
+
+        messages = [{'ami_id': util_helper.generate_dummy_image_id(),
+                    'volume_id': util_helper.generate_dummy_volume_id()}]
+        tasks.run_inspection_cluster(messages)
+
+        mock_ecs.list_container_instances.assert_called_once_with(
+            cluster=settings.HOUNDIGRADE_ECS_CLUSTER_NAME)
+        mock_ecs.describe_container_instances.assert_called_once_with(
+            containerInstances=[
+                mock_list_container_instances['containerInstanceArns'][0]],
+            cluster=settings.HOUNDIGRADE_ECS_CLUSTER_NAME
+        )
+        mock_ecs.register_task_definition.assert_called_once()
+        mock_ecs.run_task.assert_called_once()
+
+        mock_ec2.Volume.assert_called_once_with(messages[0]['volume_id'])
+        mock_ec2.Volume.return_value.attach_to_instance.assert_called_once()
+
+    @patch('account.tasks.boto3')
+    def test_run_inspection_cluster_with_no_instances(self, mock_boto3):
+        """Assert that an exception is raised if no instance is ready."""
+        mock_list_container_instances = {'containerInstanceArns': []}
+        mock_ecs = MagicMock()
+        mock_ecs.list_container_instances.return_value = \
+            mock_list_container_instances
+
+        mock_boto3.client.return_value = mock_ecs
+
+        with self.assertRaises(AwsECSInstanceNotReady):
+            tasks.run_inspection_cluster([Mock()])
+
+    @patch('account.tasks.boto3')
+    def test_run_inspection_cluster_with_too_many_instances(self, mock_boto3):
+        """Assert that an exception is raised with too many instances."""
+        mock_list_container_instances = {
+            'containerInstanceArns': [
+                util_helper.generate_dummy_instance_id(),
+                util_helper.generate_dummy_instance_id()
+            ]
+        }
+        mock_ecs = MagicMock()
+        mock_ecs.list_container_instances.return_value = \
+            mock_list_container_instances
+
+        mock_boto3.client.return_value = mock_ecs
+
+        with self.assertRaises(AwsTooManyECSInstances):
+            tasks.run_inspection_cluster([Mock()])
