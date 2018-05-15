@@ -53,3 +53,11 @@ class AwsAutoScalingGroupNotFound(Exception):
 
 class AwsNonZeroAutoScalingGroupSize(Exception):
     """Raise when AWS auto scaling group has nonzero size."""
+
+
+class AwsECSInstanceNotReady(NotReadyException):
+    """Raise when AWS ECS Container Instance is not yet ready."""
+
+
+class AwsTooManyECSInstances(NotReadyException):
+    """Raise when there are too many AWS ECS Container Instances."""
