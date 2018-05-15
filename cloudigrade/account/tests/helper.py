@@ -71,10 +71,8 @@ def generate_single_aws_instance_event(
     """
     Generate single AwsInstanceEvent for testing.
 
-    The ``powered_times`` defines when the instance should be considered
-    running for sake of the event types. The first element of the tuple
-    is a datetime.datetime of when a "power on" event occurs, and the second
-    element is a datetime.datetime of when a "power off" event occurs.
+    The ``powered_time`` is a datetime.datetime that defines when
+    the instance event (either powering on or powering off) occurred.
 
     Args:
         instance (AwsInstance): instance that owns the events.
