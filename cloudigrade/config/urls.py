@@ -6,11 +6,13 @@ from rest_framework import routers
 
 from account.views import (AccountViewSet,
                            InstanceViewSet,
+                           MachineImageViewSet,
                            ReportViewSet)
 
 router = routers.DefaultRouter()
 router.register(r'account', AccountViewSet)
 router.register(r'instance', InstanceViewSet)
+router.register(r'image', MachineImageViewSet)
 router.register(r'report', ReportViewSet, base_name='report')
 
 urlpatterns = [
