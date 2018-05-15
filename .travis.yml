@@ -19,10 +19,6 @@ jobs:
       install: pip install tox
       script: tox -eflake8
     - stage: test
-      python: pypy3
-      install: pip install tox
-      script: tox -epypy3
-    - stage: test
       if: (branch != master AND tag IS blank) OR (type IN (pull_request))
       services: docker
       sudo: required
