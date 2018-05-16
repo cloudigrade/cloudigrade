@@ -125,7 +125,6 @@ def generate_aws_instance_events(
 
 
 def generate_aws_image(account,
-                       ec2_ami_id,
                        is_encrypted=False,
                        is_windows=False):
     """
@@ -135,7 +134,6 @@ def generate_aws_image(account,
 
     Args:
         account (AwsAccount): Account that owns the instance.
-        ec2_ami_id (str): Optional EC2 ami id.
         is_encrypted (bool): Optional Indicates if image is encrypted.
         is_windows (bool): Optional Indicates if AMI is Windows.
 
