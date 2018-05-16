@@ -133,7 +133,7 @@ def generate_aws_image(account,
     Any optional arguments not provided will be randomly generated.
 
     Args:
-        account (AwsAccount): Account that owns the instance.
+        account (AwsAccount): Account that owns the image.
         is_encrypted (bool): Optional Indicates if image is encrypted.
         is_windows (bool): Optional Indicates if AMI is Windows.
 
