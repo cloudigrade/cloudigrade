@@ -549,7 +549,7 @@ class InstanceEventViewSetTest(TestCase):
         actual_events = self.get_event_ids_from_list_response(response)
         self.assertEqual(expected_events, actual_events)
 
-    def test_list_events_as_superuser_with_filter(self):
+    def test_list_events_as_superuser_with_user_filter(self):
         """Assert that the superuser sees events filtered by user_id."""
         expected_events = {
             self.event3.id,
@@ -557,6 +557,36 @@ class InstanceEventViewSetTest(TestCase):
         }
         params = {'user_id': self.user2.id}
         response = self.get_event_list_response(self.superuser, params)
+        actual_events = self.get_event_ids_from_list_response(response)
+        self.assertEqual(expected_events, actual_events)
+
+    def test_list_events_as_superuser_with_instance_filter(self):
+        """Assert that the superuser sees events filtered by instance_id."""
+        expected_events = {
+            self.event3.id,
+        }
+        params = {'instance_id': self.instance3.id}
+        response = self.get_event_list_response(self.superuser, params)
+        actual_events = self.get_event_ids_from_list_response(response)
+        self.assertEqual(expected_events, actual_events)
+
+    def test_list_events_as_user1_with_instance_filter(self):
+        """Assert that the user1 sees user1 events filtered by instance_id."""
+        expected_events = {
+            self.event1.id,
+        }
+        params = {'instance_id': self.instance1.id}
+        response = self.get_event_list_response(self.user1, params)
+        actual_events = self.get_event_ids_from_list_response(response)
+        self.assertEqual(expected_events, actual_events)
+
+    def test_list_events_as_user2_with_instance_filter(self):
+        """Assert that the user2 sees user2 events filtered by instance_id."""
+        expected_events = {
+            self.event3.id,
+        }
+        params = {'instance_id': self.instance3.id}
+        response = self.get_event_list_response(self.user2, params)
         actual_events = self.get_event_ids_from_list_response(response)
         self.assertEqual(expected_events, actual_events)
 

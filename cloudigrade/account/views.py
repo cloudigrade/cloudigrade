@@ -73,11 +73,17 @@ class InstanceEventViewSet(viewsets.ReadOnlyModelViewSet):
         """Get the queryset filtered to appropriate user."""
         user = self.request.user
         if not user.is_superuser:
-            return self.queryset.filter(instance__account__user__id=user.id)
+            self.queryset = self.queryset.filter(
+                instance__account__user__id=user.id)
         user_id = self.request.query_params.get('user_id', None)
         if user_id is not None:
             user_id = convert_param_to_int('user_id', user_id)
-            return self.queryset.filter(instance__account__user__id=user_id)
+            self.queryset = self.queryset.filter(
+                instance__account__user__id=user_id)
+        instance_id = self.request.query_params.get('instance_id', None)
+        if instance_id is not None:
+            instance_id = convert_param_to_int('instance_id', instance_id)
+            self.queryset = self.queryset.filter(instance__id=instance_id)
         return self.queryset
 
 
