@@ -7,7 +7,8 @@ from account.exceptions import InvalidCloudProviderError
 from account.models import (Account,
                             AwsAccount,
                             Instance,
-                            InstanceEvent)
+                            InstanceEvent,
+                            MachineImage)
 from account.util import convert_param_to_int
 
 
@@ -43,7 +44,6 @@ class InstanceViewSet(viewsets.ReadOnlyModelViewSet):
     """
 
     queryset = Instance.objects.all()
-    accounts = Account.objects.all()
     serializer_class = serializers.InstancePolymorphicSerializer
 
     def get_queryset(self):
@@ -86,6 +86,30 @@ class InstanceEventViewSet(viewsets.ReadOnlyModelViewSet):
             instance_id = convert_param_to_int('instance_id', instance_id)
             queryset = queryset.filter(instance__id=instance_id)
         return queryset
+
+
+class MachineImageViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    List all or retrieve a single machine image.
+
+    Do not allow to create, update, replace, or delete an image at
+    this view because we currently **only** allow images to be retrieved.
+    """
+
+    queryset = MachineImage.objects.all()
+    serializer_class = serializers.MachineImagePolymorphicSerializer
+
+    def get_queryset(self):
+        """Get the queryset filtered to appropriate user."""
+        user = self.request.user
+
+        if not user.is_superuser:
+            return self.queryset.filter(account__user__id=user.id)
+        user_id = self.request.query_params.get('user_id', None)
+        if user_id is not None:
+            user_id = convert_param_to_int('user_id', user_id)
+            return self.queryset.filter(account__user__id=user_id)
+        return self.queryset
 
 
 class ReportViewSet(viewsets.ViewSet):

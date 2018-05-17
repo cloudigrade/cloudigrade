@@ -1,7 +1,10 @@
 """Helper functions for generating test data."""
 import random
 
-from account.models import (AwsAccount, AwsInstance, AwsInstanceEvent,
+from account.models import (AwsAccount,
+                            AwsInstance,
+                            AwsInstanceEvent,
+                            AwsMachineImage,
                             InstanceEvent)
 from util import aws
 from util.tests import helper
@@ -160,3 +163,30 @@ def generate_aws_instance_events(
             )
             events.append(event)
     return events
+
+
+def generate_aws_image(account,
+                       is_encrypted=False,
+                       is_windows=False):
+    """
+    Generate an AwsMachineImage for the AwsAccount for testing.
+
+    Any optional arguments not provided will be randomly generated.
+
+    Args:
+        account (AwsAccount): Account that owns the image.
+        is_encrypted (bool): Optional Indicates if image is encrypted.
+        is_windows (bool): Optional Indicates if AMI is Windows.
+
+    Returns:
+        AwsMachineImage: The created AwsMachineImage.
+
+    """
+    ec2_ami_id = helper.generate_dummy_image_id()
+
+    return AwsMachineImage.objects.create(
+        account=account,
+        ec2_ami_id=ec2_ami_id,
+        is_windows=is_windows,
+        is_encrypted=is_encrypted
+    )

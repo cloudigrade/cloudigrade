@@ -10,7 +10,10 @@ from rest_polymorphic.serializers import PolymorphicSerializer
 
 import account
 from account import reports
-from account.models import AwsAccount, AwsInstance, AwsInstanceEvent
+from account.models import (AwsAccount,
+                            AwsInstance,
+                            AwsInstanceEvent,
+                            AwsMachineImage)
 from account.tasks import copy_ami_snapshot
 from account.util import (create_initial_aws_instance_events,
                           create_new_machine_images,
@@ -119,6 +122,42 @@ class InstanceEventPolymorphicSerializer(PolymorphicSerializer):
 
     model_serializer_mapping = {
         AwsInstanceEvent: AwsInstanceEventSerializer,
+    }
+
+
+class AwsMachineImageSerializer(HyperlinkedModelSerializer):
+    """Serialize a customer AwsMachineImage for the API."""
+
+    class Meta:
+        model = AwsMachineImage
+        fields = (
+            'id',
+            'created_at',
+            'updated_at',
+            'account',
+            'is_windows',
+            'is_encrypted',
+            'ec2_ami_id'
+        )
+        read_only_fields = (
+            'id',
+            'created_at',
+            'updated_at',
+            'account',
+            'is_windows',
+            'is_encrypted',
+            'ec2_ami_id'
+        )
+        extra_kwargs = {
+            'url': {'view_name': 'image-detail', 'lookup_field': 'pk'},
+        }
+
+
+class MachineImagePolymorphicSerializer(PolymorphicSerializer):
+    """Combined polymorphic serializer for all image types."""
+
+    model_serializer_mapping = {
+        AwsMachineImage: AwsMachineImageSerializer,
     }
 
 
