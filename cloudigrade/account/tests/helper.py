@@ -68,6 +68,47 @@ def generate_aws_instance(account, ec2_instance_id=None, region=None):
     )
 
 
+def generate_single_aws_instance_event(
+        instance, powered_time=None, event_type=None, ec2_ami_id=None,
+        instance_type=None, subnet=None):
+    """
+    Generate single AwsInstanceEvent for testing.
+
+    The ``powered_time`` is a datetime.datetime that defines when
+    the instance event (either powering on or powering off) occurred.
+
+    Args:
+        instance (AwsInstance): instance that owns the events.
+        powered_time (datetime): Time that the instance is powered on.
+        event_type (str): AWS event type
+        ec2_ami_id (str): Optional EC2 AMI ID the instance runs.
+        instance_type (str): Optional AWS instance type.
+        subnet (str): Optional subnet ID where instance runs.
+
+    Returns:
+        AwsInstanceEvent: The created AwsInstanceEvent.
+
+    """
+    if ec2_ami_id is None:
+        ec2_ami_id = helper.generate_dummy_image_id()
+    if instance_type is None:
+        instance_type = random.choice(helper.SOME_EC2_INSTANCE_TYPES)
+    if subnet is None:
+        subnet = helper.generate_dummy_subnet_id()
+    if event_type is None:
+        event_type = InstanceEvent.TYPE.power_off
+
+    event = AwsInstanceEvent.objects.create(
+        instance=instance,
+        event_type=event_type,
+        occurred_at=powered_time,
+        subnet=subnet,
+        ec2_ami_id=ec2_ami_id,
+        instance_type=instance_type,
+    )
+    return event
+
+
 def generate_aws_instance_events(
     instance, powered_times, ec2_ami_id=None, instance_type=None, subnet=None
 ):
@@ -102,23 +143,23 @@ def generate_aws_instance_events(
     events = []
     for power_on_time, power_off_time in powered_times:
         if power_on_time is not None:
-            event = AwsInstanceEvent.objects.create(
+            event = generate_single_aws_instance_event(
                 instance=instance,
+                powered_time=power_on_time,
                 event_type=InstanceEvent.TYPE.power_on,
-                occurred_at=power_on_time,
-                subnet=subnet,
                 ec2_ami_id=ec2_ami_id,
                 instance_type=instance_type,
+                subnet=subnet
             )
             events.append(event)
         if power_off_time is not None:
-            event = AwsInstanceEvent.objects.create(
+            event = generate_single_aws_instance_event(
                 instance=instance,
+                powered_time=power_off_time,
                 event_type=InstanceEvent.TYPE.power_off,
-                occurred_at=power_off_time,
-                subnet=subnet,
                 ec2_ami_id=ec2_ami_id,
                 instance_type=instance_type,
+                subnet=subnet
             )
             events.append(event)
     return events

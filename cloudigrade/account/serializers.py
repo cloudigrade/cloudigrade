@@ -12,6 +12,7 @@ import account
 from account import reports
 from account.models import (AwsAccount,
                             AwsInstance,
+                            AwsInstanceEvent,
                             AwsMachineImage)
 from account.tasks import copy_ami_snapshot
 from account.util import (create_initial_aws_instance_events,
@@ -85,6 +86,42 @@ class AccountPolymorphicSerializer(PolymorphicSerializer):
 
     model_serializer_mapping = {
         AwsAccount: AwsAccountSerializer,
+    }
+
+
+class AwsInstanceEventSerializer(HyperlinkedModelSerializer):
+    """Serialize a customer AwsInstanceEvent for the API."""
+
+    class Meta:
+        model = AwsInstanceEvent
+        fields = (
+            'instance',
+            'id',
+            'subnet',
+            'ec2_ami_id',
+            'instance_type',
+            'event_type',
+            'occurred_at'
+        )
+        read_only_fields = (
+            'instance',
+            'id',
+            'subnet',
+            'ec2_ami_id',
+            'instance_type',
+            'event_type',
+            'occurred_at'
+        )
+        extra_kwargs = {
+            'url': {'view_name': 'event-detail', 'lookup_field': 'pk'},
+        }
+
+
+class InstanceEventPolymorphicSerializer(PolymorphicSerializer):
+    """Combined polymorphic serializer for all instance event types."""
+
+    model_serializer_mapping = {
+        AwsInstanceEvent: AwsInstanceEventSerializer,
     }
 
 

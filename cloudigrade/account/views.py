@@ -7,6 +7,7 @@ from account.exceptions import InvalidCloudProviderError
 from account.models import (Account,
                             AwsAccount,
                             Instance,
+                            InstanceEvent,
                             MachineImage)
 from account.util import convert_param_to_int
 
@@ -57,6 +58,36 @@ class InstanceViewSet(viewsets.ReadOnlyModelViewSet):
         return self.queryset
 
 
+class InstanceEventViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    List all or retrieve a single instance event.
+
+    Do not allow to create, update, replace, or delete an instance event at
+    this view because we currently **only** allow instances to be retrieved.
+    """
+
+    queryset = InstanceEvent.objects.all()
+    serializer_class = serializers.InstanceEventPolymorphicSerializer
+
+    def get_queryset(self):
+        """Get the queryset filtered to appropriate user."""
+        user = self.request.user
+        queryset = self.queryset
+        if not user.is_superuser:
+            queryset = queryset.filter(
+                instance__account__user__id=user.id)
+        user_id = self.request.query_params.get('user_id', None)
+        if user_id is not None:
+            user_id = convert_param_to_int('user_id', user_id)
+            queryset = queryset.filter(
+                instance__account__user__id=user_id)
+        instance_id = self.request.query_params.get('instance_id', None)
+        if instance_id is not None:
+            instance_id = convert_param_to_int('instance_id', instance_id)
+            queryset = queryset.filter(instance__id=instance_id)
+        return queryset
+
+
 class MachineImageViewSet(viewsets.ReadOnlyModelViewSet):
     """
     List all or retrieve a single machine image.
@@ -71,6 +102,7 @@ class MachineImageViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         """Get the queryset filtered to appropriate user."""
         user = self.request.user
+
         if not user.is_superuser:
             return self.queryset.filter(account__user__id=user.id)
         user_id = self.request.query_params.get('user_id', None)
