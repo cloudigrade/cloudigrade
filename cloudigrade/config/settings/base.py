@@ -56,43 +56,6 @@ HOUNDIGRADE_ECS_IMAGE_TAG = env(
     'HOUNDIGRADE_ECS_IMAGE_TAG',
     default='latest'
 )
-HOUNDIGRADE_MOUNT_POINTS = env(
-    'HOUNDIGRADE_MOUNT_POINTS',
-    default=[
-        '/dev/xvdb',
-        '/dev/xvdc',
-        '/dev/xvdd',
-        '/dev/xvde',
-        '/dev/xvdf',
-        '/dev/xvdg',
-        '/dev/xvdh',
-        '/dev/xvdi',
-        '/dev/xvdj',
-        '/dev/xvdk',
-        '/dev/xvdl',
-        '/dev/xvdm',
-        '/dev/xvdn',
-        '/dev/xvdo',
-        '/dev/xvdp',
-        '/dev/xvdq',
-        '/dev/xvdr',
-        '/dev/xvds',
-        '/dev/xvdt',
-        '/dev/xvdu',
-        '/dev/xvdv',
-        '/dev/xvdw',
-        '/dev/xvdx',
-        '/dev/xvdy',
-        '/dev/xvdz',
-        '/dev/xvca',
-        '/dev/xvcb',
-        '/dev/xvcc',
-        '/dev/xvcd',
-        '/dev/xvce',
-        '/dev/xvcf',
-        '/dev/xvcg',
-    ]
-)
 HOUNDIGRADE_DEBUG = env.bool('HOUNDIGRADE_DEBUG', default=False)
 HOUNDIGRADE_RABBITMQ_QUEUE_NAME = env('HOUNDIGRADE_RABBITMQ_QUEUE_NAME',
                                       default='inspection_results')
