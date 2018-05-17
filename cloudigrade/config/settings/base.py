@@ -40,6 +40,27 @@ HOUNDIGRADE_AWS_VOLUME_BATCH_SIZE = env.int(
     'HOUNDIGRADE_AWS_VOLUME_BATCH_SIZE',
     default=32
 )
+HOUNDIGRADE_ECS_CLUSTER_NAME = env(
+    'HOUNDIGRADE_ECS_CLUSTER_NAME',
+    default='inspectigrade-test-bws-us-east-1b'
+)
+HOUNDIGRADE_ECS_FAMILY_NAME = env(
+    'HOUNDIGRADE_ECS_FAMILY_NAME',
+    default='Houndigrade'
+)
+HOUNDIGRADE_ECS_IMAGE_NAME = env(
+    'HOUNDIGRADE_ECS_IMAGE_NAME',
+    default='cloudigrade/houndigrade'
+)
+HOUNDIGRADE_ECS_IMAGE_TAG = env(
+    'HOUNDIGRADE_ECS_IMAGE_TAG',
+    default='latest'
+)
+HOUNDIGRADE_DEBUG = env.bool('HOUNDIGRADE_DEBUG', default=False)
+HOUNDIGRADE_RABBITMQ_QUEUE_NAME = env('HOUNDIGRADE_RABBITMQ_QUEUE_NAME',
+                                      default='inspection_results')
+HOUNDIGRADE_RABBITMQ_EXCHANGE_NAME = env('HOUNDIGRADE_RABBITMQ_EXCHANGE_NAME',
+                                         default='houndigrade_inspectigrade')
 
 # Default apps go here
 DJANGO_APPS = [

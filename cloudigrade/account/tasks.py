@@ -1,6 +1,7 @@
 """Celery tasks for use in the account app."""
 import logging
 
+import boto3
 from botocore.exceptions import ClientError
 from celery import shared_task
 from django.conf import settings
@@ -11,7 +12,10 @@ from account.util import add_messages_to_queue, read_messages_from_queue
 from util import aws
 from util.aws import rewrap_aws_errors
 from util.celery import retriable_shared_task
-from util.exceptions import AwsSnapshotEncryptedError
+from util.exceptions import (AwsECSInstanceNotReady,
+                             AwsSnapshotEncryptedError,
+                             AwsTooManyECSInstances)
+from util.misc import generate_device_name
 
 logger = logging.getLogger(__name__)
 
@@ -143,14 +147,84 @@ def scale_up_inspection_cluster():
 
 @retriable_shared_task
 @rewrap_aws_errors
-def run_inspection_cluster(ami_volume_list):
+def run_inspection_cluster(messages, cloud='aws'):
     """
     Run task definition for "houndigrade" on the cluster.
 
-    Todo:
-        - Implement this!
+    Args:
+        messages (list): A list of dictionary items containing
+            the ami_id and volume_id to be inspected.
+        cloud (str): String key representing what cloud we're inspecting.
 
     Returns:
         None: Run as an asynchronous Celery task.
 
     """
+    task_command = ['-c', cloud]
+    if settings.HOUNDIGRADE_DEBUG:
+        task_command.extend(['--debug'])
+
+    # get ecs container instance id
+    ecs = boto3.client('ecs')
+    result = ecs.list_container_instances(
+        cluster=settings.HOUNDIGRADE_ECS_CLUSTER_NAME)
+
+    # verify we have our single container instance
+    num_instances = len(result['containerInstanceArns'])
+    if num_instances == 0:
+        raise AwsECSInstanceNotReady
+    elif num_instances > 1:
+        raise AwsTooManyECSInstances
+
+    result = ecs.describe_container_instances(
+        containerInstances=[result['containerInstanceArns'][0]],
+        cluster=settings.HOUNDIGRADE_ECS_CLUSTER_NAME
+    )
+    instance_id = result['containerInstances'][0]['ec2InstanceId']
+
+    # attach volumes
+    ec2 = boto3.resource('ec2')
+    for index, message in enumerate(messages):
+        mount_point = generate_device_name(index)
+        volume = ec2.Volume(message['volume_id'])
+        volume.attach_to_instance(Device=mount_point, InstanceId=instance_id)
+        task_command.extend(['-t', message['ami_id'], mount_point])
+
+    # create task definition
+    result = ecs.register_task_definition(
+        family=f'{settings.HOUNDIGRADE_ECS_FAMILY_NAME}',
+        containerDefinitions=[
+            {
+                'name': 'Houndigrade',
+                'image': f'{settings.HOUNDIGRADE_ECS_IMAGE_NAME}:'
+                         f'{settings.HOUNDIGRADE_ECS_IMAGE_TAG}',
+                'cpu': 0,
+                'memoryReservation': 256,
+                'essential': True,
+                'command': task_command,
+                'environment': [
+                    {
+                        'name': 'RABBITMQ_QUEUE_NAME',
+                        'value': settings.HOUNDIGRADE_RABBITMQ_QUEUE_NAME
+                    },
+                    {
+                        'name': 'RABBITMQ_EXCHANGE_NAME',
+                        'value': settings.HOUNDIGRADE_RABBITMQ_EXCHANGE_NAME
+                    },
+                    {
+                        'name': 'RABBITMQ_URL',
+                        'value': settings.RABBITMQ_URL
+                    }
+                ],
+                'privileged': True,
+
+            }
+        ],
+        requiresCompatibilities=['EC2']
+    )
+
+    # release the hounds
+    ecs.run_task(
+        cluster=settings.HOUNDIGRADE_ECS_CLUSTER_NAME,
+        taskDefinition=result['taskDefinition']['taskDefinitionArn'],
+    )
