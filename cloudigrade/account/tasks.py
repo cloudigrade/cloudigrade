@@ -15,6 +15,7 @@ from util.celery import retriable_shared_task
 from util.exceptions import (AwsECSInstanceNotReady,
                              AwsSnapshotEncryptedError,
                              AwsTooManyECSInstances)
+from util.misc import generate_device_name
 
 logger = logging.getLogger(__name__)
 
@@ -184,7 +185,7 @@ def run_inspection_cluster(messages, cloud='aws'):
     # attach volumes
     ec2 = boto3.resource('ec2')
     for index, message in enumerate(messages):
-        mount_point = settings.HOUNDIGRADE_MOUNT_POINTS[index]
+        mount_point = generate_device_name(index)
         volume = ec2.Volume(message['volume_id'])
         volume.attach_to_instance(Device=mount_point, InstanceId=instance_id)
         task_command.extend(['-t', message['ami_id'], mount_point])
