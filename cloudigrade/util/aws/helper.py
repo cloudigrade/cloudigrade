@@ -41,16 +41,19 @@ def verify_account_access(session):
         session (boto3.Session): A temporary session tied to a customer account
 
     Returns:
-        bool: Whether role is verified.
+        tuple[bool, list]: First element of the tuple indicates if role was
+        verified, and the second element is a list of actions that failed.
 
     """
     success = True
+    failed_actions = []
     for action in cloudigrade_policy['Statement'][0]['Action']:
         if not _verify_policy_action(session, action):
             # Mark as failure, but keep looping so we can see each specific
             # failure in logs
+            failed_actions.append(action)
             success = False
-    return success
+    return success, failed_actions
 
 
 def _handle_dry_run_response_exception(action, e):

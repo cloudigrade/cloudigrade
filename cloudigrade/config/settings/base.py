@@ -192,7 +192,8 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
-    )
+    ),
+    'EXCEPTION_HANDLER': 'util.exceptions.api_exception_handler',
 }
 
 # Message and Task Queues
