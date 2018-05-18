@@ -1,7 +1,11 @@
 """util.exceptions module."""
 import logging
 
-from rest_framework.exceptions import ParseError
+from django.core.exceptions import PermissionDenied
+from django.http import Http404
+from rest_framework.exceptions import APIException, NotFound, ParseError
+from rest_framework.exceptions import PermissionDenied as DrfPermissionDenied
+from rest_framework.views import exception_handler
 
 logger = logging.getLogger(__name__)
 
@@ -61,3 +65,23 @@ class AwsECSInstanceNotReady(NotReadyException):
 
 class AwsTooManyECSInstances(NotReadyException):
     """Raise when there are too many AWS ECS Container Instances."""
+
+
+def api_exception_handler(exc, context):
+    """
+    Log exception and return an appropriately formatted response.
+
+    For any exception that doesn't specifically extend DRF's base APIException
+    class, we deliberately suppress the original exception and raise a plain
+    instance of APIException or a specific subclass of APIException. We do this
+    because we do not want to leak details about the underlying error and
+    system state to the end user.
+    """
+    if isinstance(exc, Http404):
+        exc = NotFound()
+    elif isinstance(exc, PermissionDenied):
+        exc = DrfPermissionDenied()
+    elif not isinstance(exc, APIException):
+        logger.exception(exc)
+        exc = APIException()
+    return exception_handler(exc, context)
