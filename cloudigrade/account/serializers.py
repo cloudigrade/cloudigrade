@@ -1,6 +1,7 @@
 """DRF API serializers for the account app."""
 import logging
 
+from botocore.exceptions import ClientError
 from dateutil import tz
 from django.db import transaction
 from django.utils.translation import gettext as _
@@ -56,8 +57,20 @@ class AwsAccountSerializer(HyperlinkedModelSerializer):
             aws_account_id=aws_account_id,
             user=user,
         )
-        session = aws.get_session(str(arn))
-        if aws.verify_account_access(session):
+        try:
+            session = aws.get_session(str(arn))
+        except ClientError as error:
+            if error.response.get('Error', {}).get('Code') == 'AccessDenied':
+                raise serializers.ValidationError(
+                    detail={
+                        'account_arn': [
+                            _('Permission denied for ARN "{0}"').format(arn)
+                        ]
+                    }
+                )
+            raise
+        account_verified, failed_actions = aws.verify_account_access(session)
+        if account_verified:
             instances_data = aws.get_running_instances(session)
             with transaction.atomic():
                 account.save()
@@ -71,8 +84,15 @@ class AwsAccountSerializer(HyperlinkedModelSerializer):
                     message['region']
                 )
         else:
+            failure_details = [_('Account verification failed.')]
+            failure_details += [
+                _('Access denied for policy action "{0}".').format(action)
+                for action in failed_actions
+            ]
             raise serializers.ValidationError(
-                _('AwsAccount verification failed. ARN Info Not Stored')
+                detail={
+                    'account_arn': failure_details
+                }
             )
         return account
 

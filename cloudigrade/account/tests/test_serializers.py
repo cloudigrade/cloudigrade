@@ -1,10 +1,11 @@
 """Collection of tests for custom DRF serializers in the account app."""
 import random
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
+from botocore.exceptions import ClientError
 from django.test import TestCase
-from django.utils.translation import gettext as _
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 import account.serializers as account_serializers
 from account import AWS_PROVIDER_STRING, reports
@@ -49,7 +50,7 @@ class AwsAccountSerializerTest(TestCase):
                              'copy_ami_snapshot') as mock_copy_snapshot:
             mock_assume_role = mock_boto3.client.return_value.assume_role
             mock_assume_role.return_value = role
-            mock_verify.return_value = True
+            mock_verify.return_value = True, []
             mock_get_run.return_value = running_instances
             mock_copy_snapshot.return_value = None
             serializer = AwsAccountSerializer(context=context)
@@ -89,22 +90,78 @@ class AwsAccountSerializerTest(TestCase):
         mock_request.user = util_helper.generate_test_user()
         context = {'request': mock_request}
 
-        expected_detail = _(
-            'AwsAccount verification failed. ARN Info Not Stored'
-        )
+        failed_actions = ['foo', 'bar']
 
         with patch.object(aws, 'verify_account_access') as mock_verify, \
                 patch.object(aws.sts, 'boto3') as mock_boto3:
             mock_assume_role = mock_boto3.client.return_value.assume_role
             mock_assume_role.return_value = role
-            mock_verify.return_value = False
+            mock_verify.return_value = False, failed_actions
             serializer = AwsAccountSerializer(context=context)
 
             with self.assertRaises(serializers.ValidationError) as cm:
                 serializer.create(validated_data)
 
-            the_exception = cm.exception
-            self.assertEqual(the_exception.detail, [expected_detail])
+            exception = cm.exception
+            self.assertIn('account_arn', exception.detail)
+            for index in range(len(failed_actions)):
+                self.assertIn(failed_actions[index],
+                              exception.detail['account_arn'][index + 1])
+
+    def test_create_fails_when_arn_access_denied(self):
+        """Test that an account is not saved if ARN access is denied."""
+        aws_account_id = util_helper.generate_dummy_aws_account_id()
+        arn = util_helper.generate_dummy_arn(aws_account_id)
+        validated_data = {
+            'account_arn': arn,
+        }
+
+        mock_request = Mock()
+        mock_request.user = util_helper.generate_test_user()
+        context = {'request': mock_request}
+
+        client_error = ClientError(
+            error_response={'Error': {'Code': 'AccessDenied'}},
+            operation_name=Mock(),
+        )
+
+        with patch.object(aws.sts, 'boto3') as mock_boto3:
+            mock_assume_role = mock_boto3.client.return_value.assume_role
+            mock_assume_role.side_effect = client_error
+            serializer = AwsAccountSerializer(context=context)
+
+            with self.assertRaises(ValidationError) as cm:
+                serializer.create(validated_data)
+            raised_exception = cm.exception
+            self.assertIn('account_arn', raised_exception.detail)
+            self.assertIn(arn, raised_exception.detail['account_arn'][0])
+
+    def test_create_fails_when_assume_role_fails_unexpectedly(self):
+        """Test that account is not saved if assume_role fails unexpectedly."""
+        aws_account_id = util_helper.generate_dummy_aws_account_id()
+        arn = util_helper.generate_dummy_arn(aws_account_id)
+        validated_data = {
+            'account_arn': arn,
+        }
+
+        mock_request = Mock()
+        mock_request.user = util_helper.generate_test_user()
+        context = {'request': mock_request}
+
+        client_error = ClientError(
+            error_response=MagicMock(),
+            operation_name=Mock(),
+        )
+
+        with patch.object(aws.sts, 'boto3') as mock_boto3:
+            mock_assume_role = mock_boto3.client.return_value.assume_role
+            mock_assume_role.side_effect = client_error
+            serializer = AwsAccountSerializer(context=context)
+
+            with self.assertRaises(ClientError) as cm:
+                serializer.create(validated_data)
+            raised_exception = cm.exception
+            self.assertEqual(raised_exception, client_error)
 
 
 class ReportSerializerTest(TestCase):
