@@ -1,6 +1,7 @@
 """Collection of custom backends to plug into ``django-health-check``."""
 import kombu
 from django.conf import settings
+from django.utils.translation import gettext as _
 from health_check.backends import BaseHealthCheckBackend
 
 
@@ -15,6 +16,6 @@ class MessageBrokerBackend(BaseHealthCheckBackend):
             if conn.connected:
                 conn.release()
             else:
-                self.add_error('Failed to connect.')
+                self.add_error(_('Failed to connect.'))
         except ConnectionError:
-            self.add_error('Failed to connect to Celery/Kombu broker.')
+            self.add_error(_('Failed to connect to Celery/Kombu broker.'))
