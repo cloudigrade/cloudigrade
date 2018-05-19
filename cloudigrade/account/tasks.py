@@ -213,7 +213,7 @@ def run_inspection_cluster(messages, cloud='aws'):
                     },
                     {
                         'name': 'RABBITMQ_URL',
-                        'value': settings.RABBITMQ_URL
+                        'value': settings.CELERY_BROKER_URL
                     }
                 ],
                 'privileged': True,
