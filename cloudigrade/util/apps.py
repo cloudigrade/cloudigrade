@@ -7,5 +7,5 @@ class UtilConfig(AppConfig):
     name = 'util'
 
     def ready(self):
-        from .health import RabbitMQCheckBackend
-        plugin_dir.register(RabbitMQCheckBackend)
+        from .health import MessageBrokerBackend
+        plugin_dir.register(MessageBrokerBackend)

@@ -4,12 +4,12 @@ from django.conf import settings
 from health_check.backends import BaseHealthCheckBackend
 
 
-class RabbitMQCheckBackend(BaseHealthCheckBackend):
-    """RabbitMQ Health Check."""
+class MessageBrokerBackend(BaseHealthCheckBackend):
+    """Celery/Kombu message broker health check."""
 
     def check_status(self):
-        """Test RabbitMQ health check."""
-        conn = kombu.Connection(settings.RABBITMQ_URL)
+        """Test a connection to the Celery/Kombu message broker."""
+        conn = kombu.Connection(settings.CELERY_BROKER_URL)
         try:
             conn.connect()
             if conn.connected:
@@ -17,4 +17,4 @@ class RabbitMQCheckBackend(BaseHealthCheckBackend):
             else:
                 self.add_error('Failed to connect.')
         except ConnectionError:
-            self.add_error('Failed to connect to RabbitMQ')
+            self.add_error('Failed to connect to Celery/Kombu broker.')
