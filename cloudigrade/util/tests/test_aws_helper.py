@@ -53,10 +53,11 @@ class UtilAwsHelperTest(TestCase):
             call(mock_session, 'ec2:DescribeSnapshots'),
         ]
         mock_verify_policy_action.side_effect = [
-            True, True, True, True, True, True
+            True, True, True, True, True
         ]
-        is_verified = helper.verify_account_access(mock_session)
-        self.assertTrue(is_verified)
+        verified, failed_actions = helper.verify_account_access(mock_session)
+        self.assertTrue(verified)
+        self.assertEqual(len(failed_actions), 0)
         mock_verify_policy_action.assert_has_calls(expected_calls)
 
     @patch('util.aws.helper._verify_policy_action')
@@ -71,10 +72,11 @@ class UtilAwsHelperTest(TestCase):
             call(mock_session, 'ec2:DescribeSnapshots'),
         ]
         mock_verify_policy_action.side_effect = [
-            True, True, True, False, True, True
+            True, True, True, False, True
         ]
-        is_verified = helper.verify_account_access(mock_session)
-        self.assertFalse(is_verified)
+        verified, failed_actions = helper.verify_account_access(mock_session)
+        self.assertFalse(verified)
+        self.assertEqual(len(failed_actions), 1)
         mock_verify_policy_action.assert_has_calls(expected_calls)
 
     def assert_verify_policy_action_success(self, action, function_name,
