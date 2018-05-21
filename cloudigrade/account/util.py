@@ -135,7 +135,7 @@ def _create_exchange_and_queue(queue_name):
 
     """
     exchange = kombu.Exchange(
-        settings.RABBITMQ_EXCHANGE_NAME,
+        settings.QUEUE_EXCHANGE_NAME,
         'direct',
         durable=True
     )

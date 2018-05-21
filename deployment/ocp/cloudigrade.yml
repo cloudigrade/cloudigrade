@@ -39,6 +39,11 @@ objects:
               secretKeyRef:
                 key: aws-default-region
                 name: ${NAME}
+          - name: AWS_SQS_URL
+            valueFrom:
+              secretKeyRef:
+                key: aws-sqs-url
+                name: ${NAME}
           - name: DJANGO_SETTINGS_MODULE
             valueFrom:
               secretKeyRef:
@@ -192,6 +197,11 @@ objects:
             valueFrom:
               secretKeyRef:
                 key: aws-default-region
+                name: ${NAME}
+          - name: AWS_SQS_URL
+            valueFrom:
+              secretKeyRef:
+                key: aws-sqs-url
                 name: ${NAME}
           - name: DJANGO_SETTINGS_MODULE
             valueFrom:
@@ -354,6 +364,7 @@ objects:
       template.openshift.io/base64-expose-aws-access-key-id: "{.data['aws-access-key-id']}"
       template.openshift.io/base64-expose-aws-secret-access-key: "{.data['aws-secret-access-key']}"
       template.openshift.io/base64-expose-aws-default-region: "{.data['aws-default-region']}"
+      template.openshift.io/base64-expose-aws-sqs-url: "{.data['aws-sqs-url']}"
       template.openshift.io/base64-expose-django-allowed-hosts: "{.data['django-allowed-hosts']}"
       template.openshift.io/base64-expose-django-database-host: "{.data['django-database-host']}"
       template.openshift.io/base64-expose-django-debug: "{.data['django-debug']}"
@@ -365,6 +376,7 @@ objects:
     aws-access-key-id: ${AWS_ACCESS_KEY_ID}
     aws-secret-access-key: ${AWS_SECRET_ACCESS_KEY}
     aws-default-region: ${AWS_DEFAULT_REGION}
+    aws-sqs-url: ${AWS_SQS_URL}
     django-allowed-hosts: ${DJANGO_ALLOWED_HOSTS}
     django-database-host: ${DJANGO_DATABASE_HOST}
     django-debug: ${DJANGO_DEBUG}
@@ -486,6 +498,11 @@ parameters:
   displayName: AWS Default Region
   description: "Default AWS Region"
   value: "us-east-1"
+  required: true
+- name: AWS_SQS_URL
+  displayName: AWS SQS URL
+  description: "AWS SQS URL"
+  value: "sqs://@"
   required: true
 # Secret File Names
 - name: DB_SECRETS_FILE
