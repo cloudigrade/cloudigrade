@@ -224,6 +224,8 @@ CELERY_TASK_ROUTES = {
     'account.tasks.copy_ami_snapshot': {'queue': 'copy_ami_snapshot'},
     'account.tasks.create_volume': {'queue': 'create_volume'},
     'account.tasks.enqueue_ready_volume': {'queue': 'enqueue_ready_volumes'},
+    'account.tasks.scale_up_inspection_cluster':
+        {'queue': 'scale_up_inspection_cluster'},
 }
 CELERY_BEAT_SCHEDULE = {
     'scale_up_inspection_cluster_every_60_min': {

@@ -107,7 +107,7 @@ objects:
               PYTHONPATH=. scl enable rh-postgresql96 rh-python36 --
               celery -l info -A config worker --beat
               --scheduler django_celery_beat.schedulers:DatabaseScheduler
-              -Q copy_ami_snapshot,create_volume,enqueue_ready_volumes
+              -Q copy_ami_snapshot,create_volume,enqueue_ready_volumes,scale_up_inspection_cluster
           imagePullPolicy: Always
           resources:
             limits:
