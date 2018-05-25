@@ -34,7 +34,6 @@ help:
 	@echo "==[OpenShift/Deployment Shortcuts]==================================="
 	@echo "  oc-create-templates           to create the ImageStream and template objects."
 	@echo "  oc-create-db                  to create and deploy the DB."
-	@echo "  oc-create-queue               to create and deploy the queue."
 	@echo "  oc-create-cloudigrade         to create and deploy the cloudigrade."
 	@echo "  oc-create-registry-route      to create a route for the internal registry."
 	@echo "  oc-run-dev                    to start the local dev server allowing it to connect to supporting services running in the cluster."
@@ -44,8 +43,8 @@ help:
 	@echo "  oc-run-migrations             to run migrations from local dev environment against the DB running in the cluster."
 	@echo "  oc-user                       to create a Django super user for cloudigrade running in a local OpenShift cluster."
 	@echo "  oc-user-authenticate          to generate an auth token for a user for cloudigrade running in a local OpenShift cluster."
-	@echo "  oc-forward-ports              to forward ports for PostgreSQL and RabbitMQ for local development."
-	@echo "  oc-stop-forwarding-ports      to stop forwarding ports for PostgreSQL and RabbitMQ for local development."
+	@echo "  oc-forward-ports              to forward ports for PostgreSQL for local development."
+	@echo "  oc-stop-forwarding-ports      to stop forwarding ports for PostgreSQL for local development."
 	@echo "  oc-get-registry-route         to get the registry URL."
 	@echo "  oc-build-cloudigrade          to build and tag cloudigrade for the local registry."
 	@echo "  oc-push-cloudigrade           to push cloudigrade to the local registry."
@@ -75,7 +74,6 @@ endif
 
 oc-create-templates:
 	oc create istag postgresql:9.6 --from-image=centos/postgresql-96-centos7
-	oc create -f deployment/ocp/rabbitmq.yml
 	oc create -f deployment/ocp/cloudigrade.yml
 
 oc-create-db:
@@ -87,33 +85,29 @@ oc-create-db:
 		-p POSTGRESQL_VERSION=9.6 \
 	| oc create -f -
 
-oc-create-queue:
-	oc process rabbitmq-persistent-template \
-		-p USERNAME=guest \
-		-p PASSWORD=guest \
-	| oc create -f -
-
 oc-create-cloudigrade:
 	oc process cloudigrade-persistent-template \
 		-p NAMESPACE=myproject \
 		-p AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
 		-p AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
+		-p AWS_SQS_ACCESS_KEY_ID=${AWS_SQS_ACCESS_KEY_ID} \
+		-p AWS_SQS_SECRET_ACCESS_KEY=${AWS_SQS_SECRET_ACCESS_KEY} \
+		-p AWS_SQS_REGION=${AWS_SQS_REGION} \
+		-p AWS_SQS_QUEUE_NAME_PREFIX=${AWS_SQS_QUEUE_NAME_PREFIX} \
 		-p DJANGO_ALLOWED_HOSTS=* \
 		-p DJANGO_DATABASE_HOST=postgresql.myproject.svc \
-		-p RABBITMQ_HOST=rabbitmq.myproject.svc \
 	| oc create -f -
 
 oc-forward-ports:
 	-make oc-stop-forwarding-ports 2>/dev/null
 	oc port-forward $$(oc get pods -o jsonpath='{.items[*].metadata.name}' -l name=postgresql) 5432 &
-	oc port-forward $$(oc get pods -o jsonpath='{.items[*].metadata.name}' -l name=rabbitmq) 5672 &
 
 oc-stop-forwarding-ports:
 	kill -HUP $$(ps -eo pid,command | grep "oc port-forward" | grep -v grep | awk '{print $$1}')
 
-oc-up-dev: oc-up sleep-60 oc-create-templates oc-create-db oc-create-queue
+oc-up-dev: oc-up sleep-60 oc-create-templates oc-create-db
 
-oc-up-all: oc-up sleep-60 oc-create-templates oc-create-db oc-create-queue sleep-30 oc-create-cloudigrade
+oc-up-all: oc-up sleep-60 oc-create-templates oc-create-db sleep-30 oc-create-cloudigrade
 
 oc-run-migrations: oc-forward-ports
 	DJANGO_SETTINGS_MODULE=config.settings.local python cloudigrade/manage.py migrate
