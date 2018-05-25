@@ -11,7 +11,7 @@ class UtilHealthTest(TestCase):
 
     @patch('util.health.kombu')
     def test_check_broker_working(self, mock_kombu):
-        """Test with passing conditions."""
+        """Assert good run_check health when connection is okay."""
         mock_conn = mock_kombu.Connection.return_value
         mock_conn.connected.return_value = True
 
@@ -21,8 +21,8 @@ class UtilHealthTest(TestCase):
         self.assertFalse(broker_check.errors)
 
     @patch('util.health.kombu')
-    def test_check_rabbit_kombu_failing(self, mock_kombu):
-        """Test with kombu issue."""
+    def test_check_kombu_failing(self, mock_kombu):
+        """Assert bad run_check health when no kombu connection."""
         mock_conn = mock_kombu.Connection.return_value
         mock_conn.connected = False
 
@@ -33,8 +33,8 @@ class UtilHealthTest(TestCase):
         self.assertIn('Failed to connect.', broker_check.pretty_status())
 
     @patch('util.health.kombu')
-    def test_check_rabbit_conn_failing(self, mock_kombu):
-        """Test with amqp issue."""
+    def test_check_conn_failing(self, mock_kombu):
+        """Assert bad run_check health when kombu connection has error."""
         mock_conn = mock_kombu.Connection.return_value
         mock_conn.connect.side_effect = ConnectionError()
 
