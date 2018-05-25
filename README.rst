@@ -139,11 +139,17 @@ Use the AWS CLI to save that configuration to your local system:
 
 You can verify that settings were stored correctly by checking the files it created in your ``~/.aws/`` directory.
 
-AWS access for running **cloudigrade** inside Docker must be enabled via environment variables. Set the following variables in your local environment *before* you start running in Docker containers. Values for these variables can be found in the files in your ``~/.aws/`` directory.
+AWS access for running **cloudigrade** inside a local OpenShift cluster must be enabled via environment variables. Set the following variables in your local environment *before* you start running in OpenShift. Values for these variables can be found in the files in your ``~/.aws/`` directory.
 
 -  ``AWS_ACCESS_KEY_ID``
 -  ``AWS_SECRET_ACCESS_KEY``
 -  ``AWS_DEFAULT_REGION``
+-  ``AWS_SQS_ACCESS_KEY_ID``
+-  ``AWS_SQS_SECRET_ACCESS_KEY``
+-  ``AWS_SQS_REGION``
+-  ``AWS_SQS_QUEUE_NAME_PREFIX``
+
+The values for ``AWS_`` keys and region may be reused for the ``AWS_SQS_`` variables. ``AWS_SQS_QUEUE_NAME_PREFIX`` should be set to something unique to your environment like ``${USER}-``.
 
 
 Configure Django settings module
@@ -181,7 +187,7 @@ If you'd like to start the cluster, and deploy Cloudigrade along with supporting
     # AWS_SECRET_ACCESS_KEY set in your environment or the deployment will fail
     make oc-up-all
 
-This will create the **ImageStream** to track **PostgreSQL:9.6**, create the templates for **RabbitMQ** and **cloudigrade**, and finally use the templates to create all the objects necessary to deploy **cloudigrade** and the supporting services. There is a chance that the deployment for **cloudigrade** will fail due to the db not being ready before the mid-deployment hook pod is being run. Simply run the following command to trigger a redemployment for **cloudigrade**:
+This will create the **ImageStream** to track **PostgreSQL:9.6**, create the templates for **cloudigrade**, and finally use the templates to create all the objects necessary to deploy **cloudigrade** and the supporting services. There is a chance that the deployment for **cloudigrade** will fail due to the db not being ready before the mid-deployment hook pod is being run. Simply run the following command to trigger a redemployment for **cloudigrade**:
 
 .. code-block:: bash
 
@@ -201,7 +207,7 @@ If you'd like to remove all your saved settings for your cluster, you can run th
 
     make oc-clean
 
-There are also other make targets available to deploy just the queue, db, or the project by itself, along with installing the templates and the ImageStream object.
+There are also other make targets available to deploy just the db or the project by itself, along with installing the templates and the ImageStream object.
 
 Deploying in-progress code to OpenShift
 ---------------------------------------
@@ -228,13 +234,13 @@ By far the best way to develop **cloudigrade** is with it running locally, allow
 
     make oc-up-dev
 
-This will start OpenShift and create deployments for the database and queue. To then run the Django dev server run:
+This will start OpenShift and create deployments for the database. To then run the Django dev server run:
 
 .. code-block:: bash
 
     make oc-run-dev
 
-This will also forward ports for the database and queue pods, making them accessible to the development server.
+This will also forward ports for the database pod, making them accessible to the development server.
 
 There are other commands available such as ``make oc-run-migration`` which will run migrations for you against the database in the OpenShift cluster. ``make oc-forward-ports`` which will just forward the ports without starting the development server, allowing you to start it however you wish, and ``make oc-stop-forwarding-ports`` which will clean up the port forwards after you're done.
 
@@ -314,7 +320,7 @@ This auth token can be supplied in the Authorization header.
 Message Broker
 ==============
 
-RabbitMQ is used to broker messages between **cloudigrade** and inspectigrade services. There are multiple Python packages available to interact with RabbitMQ; the officially recommended packaged is `Pika <https://pika.readthedocs.io/en/latest/>`_. Both services serve as producers and consumers of the message queue.
+Amazon SQS is used to broker messages between **cloudigrade** and inspectigrade services.
 
 .. |license| image:: https://img.shields.io/github/license/cloudigrade/cloudigrade.svg
    :target: https://github.com/cloudigrade/cloudigrade/blob/master/LICENSE

@@ -197,43 +197,17 @@ REST_FRAMEWORK = {
     'EXCEPTION_HANDLER': 'util.exceptions.api_exception_handler',
 }
 
+
 # Message and Task Queues
-if env.bool('ENABLE_LEGACY_RABBITMQ', default=False):
-    # RabbitMQ-specific Celery configuration
-    RABBITMQ_USER = env('RABBITMQ_USER', default='guest')
-    RABBITMQ_PASSWORD = env('RABBITMQ_PASSWORD', default='guest')
-    RABBITMQ_HOST = env('RABBITMQ_HOST', default='localhost')
-    RABBITMQ_PORT = env('RABBITMQ_PORT', default='5672')
-    RABBITMQ_VHOST = env('RABBITMQ_VHOST', default='/')
 
-    RABBITMQ_URL = env(
-        'RABBITMQ_URL',
-        default='amqp://{}:{}@{}:{}/{}'.format(
-            RABBITMQ_USER,
-            RABBITMQ_PASSWORD,
-            RABBITMQ_HOST,
-            RABBITMQ_PORT,
-            RABBITMQ_VHOST
-        )
-    )
-    RABBITMQ_EXCHANGE_NAME = env('RABBITMQ_EXCHANGE_NAME',
-                                 default='cloudigrade_inspectigrade')
-    RABBITMQ_QUEUE_NAME = env('RABBITMQ_QUEUE_NAME', default='machine_images')
-    CELERY_BROKER_URL = RABBITMQ_URL
-    QUEUE_EXCHANGE_NAME = RABBITMQ_EXCHANGE_NAME
-else:
-    # Amazon SQS-specific Celery configuration
-    AWS_SQS_URL = env('AWS_SQS_URL', default='sqs://@')
-    AWS_SQS_QUEUE_NAME_PREFIX = env('AWS_SQS_QUEUE_NAME_PREFIX',
-                                    default=env('USER', default='anonymous') + '-')
-    CELERY_BROKER_TRANSPORT_OPTIONS = {
-        'queue_name_prefix': AWS_SQS_QUEUE_NAME_PREFIX
-    }
-    CELERY_BROKER_URL = AWS_SQS_URL
-
-    # Note: Exchanges are a feature of AMQP brokers like RabbitMQ, not AWS SQS.
-    QUEUE_EXCHANGE_NAME = None
-    HOUNDIGRADE_CELERY_EXCHANGE_NAME = None
+AWS_SQS_URL = env('AWS_SQS_URL', default='sqs://@')
+AWS_SQS_QUEUE_NAME_PREFIX = env('AWS_SQS_QUEUE_NAME_PREFIX',
+                                default=env('USER', default='anonymous') + '-')
+CELERY_BROKER_TRANSPORT_OPTIONS = {
+    'queue_name_prefix': AWS_SQS_QUEUE_NAME_PREFIX
+}
+CELERY_BROKER_URL = AWS_SQS_URL
+QUEUE_EXCHANGE_NAME = None
 
 CELERY_TASK_ROUTES = {
     'account.tasks.copy_ami_snapshot': {'queue': 'copy_ami_snapshot'},
