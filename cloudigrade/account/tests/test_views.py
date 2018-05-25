@@ -801,3 +801,14 @@ class InstanceEventViewSetTest(TestCase):
         params = {'user_id': 'not_an_int'}
         response = self.get_event_list_response(self.superuser, params)
         self.assertEqual(response.status_code, 400)
+
+    def test_list_events_as_superuser_with_user_and_instance_filters(self):
+        """Assert that super user can stack instance & user filters."""
+        expected_events = {
+            self.event3.id,
+        }
+        params = {'instance_id': self.instance3.id,
+                  'user_id': self.user2.id}
+        response = self.get_event_list_response(self.superuser, params)
+        actual_events = self.get_event_ids_from_list_response(response)
+        self.assertEqual(expected_events, actual_events)
