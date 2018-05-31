@@ -11,13 +11,14 @@ DATABASES['default']['HOST'] = env('DJANGO_DATABASE_HOST')
 DATABASES['default']['USER'] = env('DJANGO_DATABASE_USER')
 DATABASES['default']['PASSWORD'] = env('DJANGO_DATABASE_PASSWORD')
 
-AWS_SQS_URL = env('AWS_SQS_URL', default='sqs://@')
-CELERY_BROKER_URL = AWS_SQS_URL
+# Require these AWS_SQS_ variables to be set explicitly. No defaults.
+AWS_SQS_REGION = env('AWS_SQS_REGION')
+AWS_SQS_ACCESS_KEY_ID = env('AWS_SQS_ACCESS_KEY_ID')
+AWS_SQS_SECRET_ACCESS_KEY = env('AWS_SQS_SECRET_ACCESS_KEY')
+
 AWS_SQS_QUEUE_NAME_PREFIX = env('AWS_SQS_QUEUE_NAME_PREFIX',
-                                   default='cloudigrade-prod-')
-CELERY_BROKER_TRANSPORT_OPTIONS = {
-    'queue_name_prefix': AWS_SQS_QUEUE_NAME_PREFIX
-}
+                                default='cloudigrade-prod-')
+CELERY_BROKER_TRANSPORT_OPTIONS['queue_name_prefix'] = AWS_SQS_QUEUE_NAME_PREFIX
 QUEUE_EXCHANGE_NAME = None
 
 STATIC_ROOT = env('DJANGO_STATIC_ROOT', default='/srv/cloudigrade/static/')

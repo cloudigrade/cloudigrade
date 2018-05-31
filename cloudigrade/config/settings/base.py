@@ -1,4 +1,6 @@
 """Base settings file."""
+from urllib.parse import quote
+
 import environ
 from psycopg2cffi import compat
 
@@ -200,11 +202,39 @@ REST_FRAMEWORK = {
 
 # Message and Task Queues
 
-AWS_SQS_URL = env('AWS_SQS_URL', default='sqs://@')
+# For convenience in development environments, find defaults gracefully here.
+AWS_SQS_REGION = env('AWS_SQS_REGION',
+                     default=env('AWS_DEFAULT_REGION',
+                                 default='us-east-1'))
+
+AWS_SQS_ACCESS_KEY_ID = env('AWS_SQS_ACCESS_KEY_ID',
+                            default=env('AWS_ACCESS_KEY_ID',
+                                        default=''))
+AWS_SQS_SECRET_ACCESS_KEY = env('AWS_SQS_SECRET_ACCESS_KEY',
+                                default=env('AWS_SECRET_ACCESS_KEY',
+                                            default=''))
+
+# We still need to ensure we have an access key and secret key for SQS.
+# So, if they were not explicitly set in the environment (for example, if
+# AWS_PROFILE was set instead), try to extract them from boto's session.
+if not AWS_SQS_ACCESS_KEY_ID or not AWS_SQS_SECRET_ACCESS_KEY:
+    import boto3
+    session = boto3.Session()
+    credentials = session.get_credentials()
+    credentials = credentials.get_frozen_credentials()
+    AWS_SQS_ACCESS_KEY_ID = credentials.access_key
+    AWS_SQS_SECRET_ACCESS_KEY = credentials.secret_key
+
+AWS_SQS_URL = env(
+    'AWS_SQS_URL',
+    default='sqs://{}:{}@'.format(quote(AWS_SQS_ACCESS_KEY_ID),
+                                  quote(AWS_SQS_SECRET_ACCESS_KEY))
+)
 AWS_SQS_QUEUE_NAME_PREFIX = env('AWS_SQS_QUEUE_NAME_PREFIX',
                                 default=env('USER', default='anonymous') + '-')
 CELERY_BROKER_TRANSPORT_OPTIONS = {
-    'queue_name_prefix': AWS_SQS_QUEUE_NAME_PREFIX
+    'queue_name_prefix': AWS_SQS_QUEUE_NAME_PREFIX,
+    'region': AWS_SQS_REGION,
 }
 CELERY_BROKER_URL = AWS_SQS_URL
 QUEUE_EXCHANGE_NAME = None
