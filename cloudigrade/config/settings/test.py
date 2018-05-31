@@ -7,3 +7,4 @@ TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 
 DATABASES['default'] = env.db(default='sqlite:////db.sqlite3')
 AWS_SQS_QUEUE_NAME_PREFIX = env('AWS_SQS_QUEUE_NAME_PREFIX', default='cloudigrate-test-')
+CELERY_BROKER_TRANSPORT_OPTIONS['queue_name_prefix'] = AWS_SQS_QUEUE_NAME_PREFIX

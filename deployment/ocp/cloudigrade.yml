@@ -39,6 +39,26 @@ objects:
               secretKeyRef:
                 key: aws-default-region
                 name: ${NAME}
+          - name: AWS_SQS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                key: aws-sqs-access-key-id
+                name: ${NAME}
+          - name: AWS_SQS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                key: aws-sqs-secret-access-key
+                name: ${NAME}
+          - name: AWS_SQS_REGION
+            valueFrom:
+              secretKeyRef:
+                key: aws-sqs-region
+                name: ${NAME}
+          - name: AWS_SQS_QUEUE_NAME_PREFIX
+            valueFrom:
+              secretKeyRef:
+                key: aws-sqs-queue-name-prefix
+                name: ${NAME}
           - name: AWS_SQS_URL
             valueFrom:
               secretKeyRef:
@@ -102,7 +122,7 @@ objects:
               command:
                 - /bin/sh
                 - -c
-                - 'ps axo command | grep -v grep | grep celery'
+                - 'ps axo command | grep -v grep | grep python'
             failureThreshold: 3
             initialDelaySeconds: 5
             periodSeconds: 10
@@ -177,6 +197,26 @@ objects:
             valueFrom:
               secretKeyRef:
                 key: aws-default-region
+                name: ${NAME}
+          - name: AWS_SQS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                key: aws-sqs-access-key-id
+                name: ${NAME}
+          - name: AWS_SQS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                key: aws-sqs-secret-access-key
+                name: ${NAME}
+          - name: AWS_SQS_REGION
+            valueFrom:
+              secretKeyRef:
+                key: aws-sqs-region
+                name: ${NAME}
+          - name: AWS_SQS_QUEUE_NAME_PREFIX
+            valueFrom:
+              secretKeyRef:
+                key: aws-sqs-queue-name-prefix
                 name: ${NAME}
           - name: AWS_SQS_URL
             valueFrom:
@@ -324,6 +364,10 @@ objects:
       template.openshift.io/base64-expose-aws-access-key-id: "{.data['aws-access-key-id']}"
       template.openshift.io/base64-expose-aws-secret-access-key: "{.data['aws-secret-access-key']}"
       template.openshift.io/base64-expose-aws-default-region: "{.data['aws-default-region']}"
+      template.openshift.io/base64-expose-aws-sqs-access-key-id: "{.data['aws-sqs-access-key-id']}"
+      template.openshift.io/base64-expose-aws-sqs-secret-access-key: "{.data['aws-sqs-secret-access-key']}"
+      template.openshift.io/base64-expose-aws-sqs-region: "{.data['aws-sqs-region']}"
+      template.openshift.io/base64-expose-aws-sqs-queue-name-prefix: "{.data['aws-sqs-queue-name-prefix']}"
       template.openshift.io/base64-expose-aws-sqs-url: "{.data['aws-sqs-url']}"
       template.openshift.io/base64-expose-django-allowed-hosts: "{.data['django-allowed-hosts']}"
       template.openshift.io/base64-expose-django-database-host: "{.data['django-database-host']}"
@@ -335,6 +379,10 @@ objects:
     aws-access-key-id: ${AWS_ACCESS_KEY_ID}
     aws-secret-access-key: ${AWS_SECRET_ACCESS_KEY}
     aws-default-region: ${AWS_DEFAULT_REGION}
+    aws-sqs-access-key-id: ${AWS_SQS_ACCESS_KEY_ID}
+    aws-sqs-secret-access-key: ${AWS_SQS_SECRET_ACCESS_KEY}
+    aws-sqs-region: ${AWS_SQS_REGION}
+    aws-sqs-queue-name-prefix: ${AWS_SQS_QUEUE_NAME_PREFIX}
     aws-sqs-url: ${AWS_SQS_URL}
     django-allowed-hosts: ${DJANGO_ALLOWED_HOSTS}
     django-database-host: ${DJANGO_DATABASE_HOST}
@@ -454,6 +502,24 @@ parameters:
 - name: AWS_DEFAULT_REGION
   displayName: AWS Default Region
   description: "Default AWS Region"
+  value: "us-east-1"
+  required: true
+- name: AWS_SQS_ACCESS_KEY_ID
+  displayName: AWS SQS Access Key ID
+  description: "AWS SQS Access Key ID"
+  required: true
+- name: AWS_SQS_SECRET_ACCESS_KEY
+  displayName: AWS SQS Secret Access Key
+  description: "AWS SQS Secret Access Key"
+  required: true
+- name: AWS_SQS_REGION
+  displayName: AWS SQS Region
+  description: "AWS SQS Region"
+  value: "us-east-1"
+  required: true
+- name: AWS_SQS_QUEUE_NAME_PREFIX
+  displayName: AWS SQS Queue Name Prefix
+  description: "Default AWS SQS Queue Name Prefix"
   value: "us-east-1"
   required: true
 - name: AWS_SQS_URL
