@@ -1,4 +1,4 @@
-django==2.0.5
+django==2.0.6
 django-environ==0.4.4
 boto3==1.7.30
 celery==4.2.0rc4
