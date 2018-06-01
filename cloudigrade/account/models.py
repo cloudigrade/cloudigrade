@@ -61,6 +61,16 @@ class InstanceEvent(BaseModel):
         """
 
 
+class ImageTag(BaseModel):
+    """Tag types for images."""
+
+    description = models.CharField(
+        max_length=32,
+        null=False,
+        blank=False
+    )
+
+
 class MachineImage(BaseModel):
     """Base Class for A cloud VM image."""
 
@@ -70,11 +80,9 @@ class MachineImage(BaseModel):
         db_index=True,
         null=False,
     )
-    is_windows = models.BooleanField(
-        null=False,
-        blank=False
-    )
-
+    tags = models.ManyToManyField(ImageTag, blank=True)
+    inspection_json = models.TextField(null=True,
+                                       blank=True)
     is_encrypted = models.NullBooleanField()
 
 
