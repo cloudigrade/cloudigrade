@@ -89,7 +89,6 @@ class AccountCeleryTaskTest(TestCase):
         account.save()
         ami = AwsMachineImage.objects.create(
             account=account,
-            is_windows=False,
             ec2_ami_id=mock_image_id
         )
 

@@ -155,18 +155,18 @@ class AwsMachineImageSerializer(HyperlinkedModelSerializer):
             'created_at',
             'updated_at',
             'account',
-            'is_windows',
             'is_encrypted',
-            'ec2_ami_id'
+            'ec2_ami_id',
+            'tags'
         )
         read_only_fields = (
             'id',
             'created_at',
             'updated_at',
             'account',
-            'is_windows',
             'is_encrypted',
-            'ec2_ami_id'
+            'ec2_ami_id',
+            'tags'
         )
         extra_kwargs = {
             'url': {'view_name': 'image-detail', 'lookup_field': 'pk'},

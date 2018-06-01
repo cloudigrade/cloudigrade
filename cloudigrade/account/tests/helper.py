@@ -166,8 +166,7 @@ def generate_aws_instance_events(
 
 
 def generate_aws_image(account,
-                       is_encrypted=False,
-                       is_windows=False):
+                       is_encrypted=False):
     """
     Generate an AwsMachineImage for the AwsAccount for testing.
 
@@ -176,7 +175,6 @@ def generate_aws_image(account,
     Args:
         account (AwsAccount): Account that owns the image.
         is_encrypted (bool): Optional Indicates if image is encrypted.
-        is_windows (bool): Optional Indicates if AMI is Windows.
 
     Returns:
         AwsMachineImage: The created AwsMachineImage.
@@ -187,6 +185,5 @@ def generate_aws_image(account,
     return AwsMachineImage.objects.create(
         account=account,
         ec2_ami_id=ec2_ami_id,
-        is_windows=is_windows,
-        is_encrypted=is_encrypted
+        is_encrypted=is_encrypted,
     )
