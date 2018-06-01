@@ -227,8 +227,8 @@ if not AWS_SQS_ACCESS_KEY_ID or not AWS_SQS_SECRET_ACCESS_KEY:
 
 AWS_SQS_URL = env(
     'AWS_SQS_URL',
-    default='sqs://{}:{}@'.format(quote(AWS_SQS_ACCESS_KEY_ID),
-                                  quote(AWS_SQS_SECRET_ACCESS_KEY))
+    default='sqs://{}:{}@'.format(quote(AWS_SQS_ACCESS_KEY_ID, safe=''),
+                                  quote(AWS_SQS_SECRET_ACCESS_KEY, safe=''))
 )
 AWS_SQS_QUEUE_NAME_PREFIX = env('AWS_SQS_QUEUE_NAME_PREFIX',
                                 default=env('USER', default='anonymous') + '-')
