@@ -7,7 +7,9 @@ from django.test import TestCase
 from rest_framework.serializers import ValidationError
 
 from account import AWS_PROVIDER_STRING, util
-from account.models import AwsAccount, AwsMachineImage
+from account.models import (AwsAccount,
+                            AwsMachineImage,
+                            ImageTag)
 from account.util import convert_param_to_int
 from util import aws
 from util.tests import helper as util_helper
@@ -74,7 +76,9 @@ class AccountUtilTest(TestCase):
         self.assertEqual(result, [ami_id])
         for ami in amis:
             self.assertEqual(ami.ec2_ami_id, ami_id)
-            self.assertEqual('windows', ami.tags.first().description)
+            self.assertEqual(ImageTag.objects.filter(
+                description='windows').first(),
+                ami.tags.filter(description='windows').first())
 
     def test_generate_aws_ami_messages(self):
         """Test that messages are formatted correctly."""

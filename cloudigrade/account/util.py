@@ -87,9 +87,8 @@ def create_new_machine_images(account, instances_data):
             )
             ami.save()
             if new_ami in windows_instances:
-                windows_tag = ImageTag(description='windows')
-                windows_tag.save()
-                ami.tags.add(windows_tag)
+                ami.tags.add(ImageTag.objects.filter(
+                    description='windows').first())
                 ami.save()
 
         saved_amis.extend(new_amis)
