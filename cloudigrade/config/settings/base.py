@@ -59,10 +59,10 @@ HOUNDIGRADE_ECS_IMAGE_TAG = env(
     default='latest'
 )
 HOUNDIGRADE_DEBUG = env.bool('HOUNDIGRADE_DEBUG', default=False)
-HOUNDIGRADE_RABBITMQ_QUEUE_NAME = env('HOUNDIGRADE_RABBITMQ_QUEUE_NAME',
+HOUNDIGRADE_RESULTS_QUEUE_NAME = env('HOUNDIGRADE_RESULTS_QUEUE_NAME',
                                       default='inspection_results')
-HOUNDIGRADE_RABBITMQ_EXCHANGE_NAME = env('HOUNDIGRADE_RABBITMQ_EXCHANGE_NAME',
-                                         default='houndigrade_inspectigrade')
+HOUNDIGRADE_EXCHANGE_NAME = env('HOUNDIGRADE_EXCHANGE_NAME',
+                                default='houndigrade_inspectigrade')
 
 # Default apps go here
 DJANGO_APPS = [
