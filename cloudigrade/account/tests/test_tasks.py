@@ -398,7 +398,7 @@ class AccountCeleryTaskTest(TestCase):
         mock_boto3.resource.return_value = mock_ec2
 
         messages = [{'ami_id': util_helper.generate_dummy_image_id(),
-                    'volume_id': util_helper.generate_dummy_volume_id()}]
+                     'volume_id': util_helper.generate_dummy_volume_id()}]
         tasks.run_inspection_cluster(messages)
 
         mock_ecs.list_container_instances.assert_called_once_with(
@@ -447,7 +447,7 @@ class AccountCeleryTaskTest(TestCase):
 
     @patch('account.tasks.persist_aws_inspection_cluster_results')
     @patch('account.tasks.read_messages_from_queue')
-    def test_persist_inspection_cluster_results_task_no_messages(
+    def test_persist_inspect_results_no_messages(
             self,
             mock_read_messages_from_queue,
             mock_persist_aws_inspection_cluster_results
@@ -482,14 +482,15 @@ class AccountCeleryTaskTest(TestCase):
                                                   'release_file_contents':
                                                   'RHEL\n',
                                                   'rhel_found': True}]}}}}}
+
         tasks.persist_aws_inspection_cluster_results(inspection_results)
         self.assertEqual(
             machine_image1.tags.filter(description='rhel').first(),
             ImageTag.objects.filter(description='rhel').first())
-        print('\n\n\nMachine Image inspection json:')
-        print(machine_image1.inspection_json)
-        # self.assertEqual(json.loads(machine_image1.inspection_json),
-        #                  inspection_results)
+        self.assertEqual(
+            json.loads(AwsMachineImage.objects.filter(
+                ec2_ami_id=ami_id).first().inspection_json),
+            inspection_results['results'][ami_id])
 
     def test_persist_aws_inspection_cluster_results(self):
         """Assert that non rhel_images are not tagged rhel."""
@@ -516,5 +517,60 @@ class AccountCeleryTaskTest(TestCase):
 
         tasks.persist_aws_inspection_cluster_results(inspection_results)
         self.assertEqual(machine_image1.tags.first(), None)
-        self.assertEqual(json.loads(machine_image1.inspection_json),
-                         inspection_results)
+        self.assertEqual(
+            json.loads(AwsMachineImage.objects.filter(
+                ec2_ami_id=ami_id).first().inspection_json),
+            inspection_results['results'][ami_id])
+
+    @patch('account.tasks.persist_aws_inspection_cluster_results')
+    @patch('account.tasks.read_messages_from_queue')
+    def test_persist_inspect_results_unknown_cloud(
+            self,
+            mock_read_messages_from_queue,
+            mock_persist_aws_inspection_cluster_results
+    ):
+        """Assert no work for unknown cloud."""
+        mock_read_messages_from_queue.return_value = [{'cloud': 'unknown'}]
+        tasks.persist_inspection_cluster_results_task()
+        mock_read_messages_from_queue.assert_called_once_with(
+            settings.HOUNDIGRADE_RABBITMQ_QUEUE_NAME,
+            tasks.HOUNDIGRADE_MESSAGE_READ_LEN
+        )
+        mock_persist_aws_inspection_cluster_results.assert_not_called()
+
+    @patch('account.tasks.persist_aws_inspection_cluster_results')
+    @patch('account.tasks.read_messages_from_queue')
+    def test_persist_inspect_results_aws_cloud_no_images(
+            self,
+            mock_read_messages_from_queue,
+            mock_persist_aws_inspection_cluster_results
+    ):
+        """Assert no work for aws cloud without images."""
+        message = {'cloud': 'aws'}
+        mock_read_messages_from_queue.return_value = [message]
+        tasks.persist_inspection_cluster_results_task()
+        mock_read_messages_from_queue.assert_called_once_with(
+            settings.HOUNDIGRADE_RABBITMQ_QUEUE_NAME,
+            tasks.HOUNDIGRADE_MESSAGE_READ_LEN
+        )
+        mock_persist_aws_inspection_cluster_results.assert_called_once_with(
+            message)
+
+    @patch('account.tasks.persist_aws_inspection_cluster_results')
+    @patch('account.tasks.read_messages_from_queue')
+    def test_persist_inspect_results_aws_cloud_image_not_found(
+            self,
+            mock_read_messages_from_queue,
+            mock_persist_aws_inspection_cluster_results
+    ):
+        """Assert no work for aws cloud with unknown images."""
+        message = {'cloud': 'aws', 'results': {'fake_image': {}}}
+
+        mock_read_messages_from_queue.return_value = [message]
+        tasks.persist_inspection_cluster_results_task()
+        mock_read_messages_from_queue.assert_called_once_with(
+            settings.HOUNDIGRADE_RABBITMQ_QUEUE_NAME,
+            tasks.HOUNDIGRADE_MESSAGE_READ_LEN
+        )
+        mock_persist_aws_inspection_cluster_results.assert_called_once_with(
+            message)

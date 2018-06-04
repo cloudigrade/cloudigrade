@@ -250,7 +250,6 @@ def persist_aws_inspection_cluster_results(inspection_result):
     results = inspection_result.get('results', [])
     for image_id, image_json in results.items():
         ami = AwsMachineImage.objects.filter(ec2_ami_id=image_id).first()
-        ami.inspection_json = json.dumps(image_json)
         if ami is not None:
             ami.tags.clear()
             rhel_found = any([attribute.get('rhel_found')
@@ -258,6 +257,7 @@ def persist_aws_inspection_cluster_results(inspection_result):
                               for attribute in disk_json.values()])
             if rhel_found:
                 ami.tags.add(RHEL_TAG)
+            ami.inspection_json = json.dumps(image_json)
             ami.save()
         else:
             logger.error(_('AwsMachineImage %s is not found.' % image_id))
