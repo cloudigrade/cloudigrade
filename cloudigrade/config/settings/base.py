@@ -87,6 +87,7 @@ LOCAL_APPS = [
     'util.apps.UtilConfig',
     'account.apps.AccountConfig',
     'analyzer.apps.AnalyzerConfig',
+    'dj_auth.apps.DjAuthConfig',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
