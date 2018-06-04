@@ -21,6 +21,11 @@ from util.misc import generate_device_name
 
 logger = logging.getLogger(__name__)
 
+# Constants
+CLOUD_KEY = 'cloud'
+CLOUD_TYPE_AWS = 'aws'
+HOUNDIGRADE_MESSAGE_READ_LEN = 10
+
 
 @retriable_shared_task
 @rewrap_aws_errors
@@ -232,11 +237,6 @@ def run_inspection_cluster(messages, cloud='aws'):
     )
 
 
-CLOUD_KEY = 'cloud'
-CLOUD_TYPE_AWS = 'aws'
-HOUNDIGRADE_MESSAGE_READ_LEN = 10
-
-
 def persist_aws_inspection_cluster_results(inspection_result):
     """
     Persist the aws houndigrade inspection result.
@@ -257,6 +257,7 @@ def persist_aws_inspection_cluster_results(inspection_result):
                               for attribute in disk_json.values()])
             if rhel_found:
                 ami.tags.add(RHEL_TAG)
+            # Add image inspection JSON
             ami.inspection_json = json.dumps(image_json)
             ami.save()
         else:
@@ -266,7 +267,7 @@ def persist_aws_inspection_cluster_results(inspection_result):
 @shared_task
 def persist_inspection_cluster_results_task():
     """
-    Task to run periodically and read messages.
+    Task to run periodically and read houndigrade messages.
 
     Returns:
         None: Run as an asynchronous Celery task.
