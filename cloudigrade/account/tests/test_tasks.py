@@ -1,4 +1,5 @@
 """Collection of tests for celery tasks."""
+import json
 import random
 from unittest.mock import MagicMock, Mock, patch
 
@@ -8,7 +9,9 @@ from django.conf import settings
 from django.test import TestCase
 
 from account import tasks
-from account.models import AwsAccount, AwsMachineImage
+from account.models import (AwsAccount,
+                            AwsMachineImage,
+                            ImageTag)
 from account.tasks import (copy_ami_snapshot,
                            create_volume,
                            enqueue_ready_volume)
@@ -18,6 +21,7 @@ from util.exceptions import (AwsECSInstanceNotReady, AwsSnapshotCopyLimitError,
                              AwsVolumeError, AwsVolumeNotReadyError,
                              SnapshotNotReadyException)
 from util.tests import helper as util_helper
+from . import helper
 
 
 class AccountCeleryTaskTest(TestCase):
@@ -441,7 +445,6 @@ class AccountCeleryTaskTest(TestCase):
         with self.assertRaises(AwsTooManyECSInstances):
             tasks.run_inspection_cluster([Mock()])
 
-
     @patch('account.tasks.persist_aws_inspection_cluster_results')
     @patch('account.tasks.read_messages_from_queue')
     def test_persist_inspection_cluster_results_task_no_messages(
@@ -457,3 +460,61 @@ class AccountCeleryTaskTest(TestCase):
             tasks.HOUNDIGRADE_MESSAGE_READ_LEN
         )
         mock_persist_aws_inspection_cluster_results.assert_not_called()
+
+    def test_persist_aws_inspection_cluster_results_mark_rhel(self):
+        """Assert that rhel_images are tagged rhel."""
+        ami_id = util_helper.generate_dummy_image_id()
+        user1 = util_helper.generate_test_user()
+        account1 = helper.generate_aws_account(user=user1)
+        machine_image1 = \
+            helper.generate_aws_image(account=account1,
+                                      is_encrypted=False,
+                                      is_windows=False,
+                                      ec2_ami_id=ami_id)
+        inspection_results = {'cloud': 'aws',
+                              'results': {
+                                  ami_id: {'drive':
+                                           {'partition':
+                                            {'rhel_found': True,
+                                             'evidence': [
+                                                 {'release_file':
+                                                  '/redhat-release',
+                                                  'release_file_contents':
+                                                  'RHEL\n',
+                                                  'rhel_found': True}]}}}}}
+        tasks.persist_aws_inspection_cluster_results(inspection_results)
+        self.assertEqual(
+            machine_image1.tags.filter(description='rhel').first(),
+            ImageTag.objects.filter(description='rhel').first())
+        print('\n\n\nMachine Image inspection json:')
+        print(machine_image1.inspection_json)
+        # self.assertEqual(json.loads(machine_image1.inspection_json),
+        #                  inspection_results)
+
+    def test_persist_aws_inspection_cluster_results(self):
+        """Assert that non rhel_images are not tagged rhel."""
+        ami_id = util_helper.generate_dummy_image_id()
+        user1 = util_helper.generate_test_user()
+        account1 = helper.generate_aws_account(user=user1)
+        machine_image1 = \
+            helper.generate_aws_image(account=account1,
+                                      is_encrypted=False,
+                                      is_windows=False,
+                                      ec2_ami_id=ami_id)
+
+        inspection_results = {'cloud': 'aws',
+                              'results': {
+                                  ami_id: {'drive':
+                                           {'partition':
+                                            {'rhel_found': False,
+                                             'evidence': [
+                                                 {'release_file':
+                                                  '/centos-release',
+                                                  'release_file_contents':
+                                                  'CentOS\n',
+                                                  'rhel_found': False}]}}}}}
+
+        tasks.persist_aws_inspection_cluster_results(inspection_results)
+        self.assertEqual(machine_image1.tags.first(), None)
+        self.assertEqual(json.loads(machine_image1.inspection_json),
+                         inspection_results)

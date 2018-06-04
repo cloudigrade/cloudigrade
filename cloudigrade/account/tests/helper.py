@@ -168,7 +168,8 @@ def generate_aws_instance_events(
 
 def generate_aws_image(account,
                        is_encrypted=False,
-                       is_windows=False):
+                       is_windows=False,
+                       ec2_ami_id=None):
     """
     Generate an AwsMachineImage for the AwsAccount for testing.
 
@@ -183,7 +184,8 @@ def generate_aws_image(account,
         AwsMachineImage: The created AwsMachineImage.
 
     """
-    ec2_ami_id = helper.generate_dummy_image_id()
+    if not ec2_ami_id:
+        ec2_ami_id = helper.generate_dummy_image_id()
 
     image = AwsMachineImage.objects.create(
         account=account,
