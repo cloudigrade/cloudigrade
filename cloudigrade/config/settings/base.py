@@ -214,7 +214,8 @@ RABBITMQ_URL = env(
         RABBITMQ_VHOST
     )
 )
-RABBITMQ_EXCHANGE_NAME = env('RABBITMQ_EXCHANGE_NAME', default='cloudigrade_inspectigrade')
+RABBITMQ_EXCHANGE_NAME = env(
+    'RABBITMQ_EXCHANGE_NAME', default='cloudigrade_inspectigrade')
 RABBITMQ_QUEUE_NAME = env('RABBITMQ_QUEUE_NAME', default='machine_images')
 
 # Celery specific duplicate of RABBITMQ_URL
@@ -229,13 +230,14 @@ CELERY_TASK_ROUTES = {
 }
 # FIXME put this back to correct state
 CELERY_BEAT_SCHEDULE = {
-    # 'scale_up_inspection_cluster_every_60_min': {
-    #     'task': 'account.tasks.scale_up_inspection_cluster',
-    #     'schedule': env.int('SCALE_UP_INSPECTION_CLUSTER_SCHEDULE', default=60 * 60),  # seconds
-    # },
-    'persist_inspection_cluster_results': {
-        'task': 'account.tasks.persist_inspection_cluster_results',
+    'scale_up_inspection_cluster_every_60_min': {
+        'task': 'account.tasks.scale_up_inspection_cluster',
         # seconds
-        'schedule': env.int('SCALE_UP_INSPECTION_CLUSTER_SCHEDULE', default=5),
+        'schedule': env.int('SCALE_UP_INSPECTION_CLUSTER_SCHEDULE', default=60 * 60),
+    },
+    'persist_inspection_cluster_results': {
+        'task': 'account.tasks.persist_inspection_cluster_results_task',
+        # seconds
+        'schedule': env.int('SCALE_UP_INSPECTION_CLUSTER_SCHEDULE', default=60 * 60),
     },
 }

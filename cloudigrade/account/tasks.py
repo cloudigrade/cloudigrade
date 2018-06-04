@@ -250,7 +250,7 @@ def persist_aws_inspection_cluster_results(inspection_result):
     results = inspection_result.get('results', [])
     for image_id, image_json in results.items():
         ami = AwsMachineImage.objects.filter(ec2_ami_id=image_id).first()
-        ami.inspection_json = image_json
+        ami.inspection_json = json.dumps(image_json)
         if ami is not None:
             ami.tags.clear()
             rhel_found = any([attribute.get('rhel_found') for disk_json in list(
@@ -261,6 +261,7 @@ def persist_aws_inspection_cluster_results(inspection_result):
         else:
             logger.error(_('AwsMachineImage %s is not found.' % image_id))
 
+
 # Verify that when there are any messages from houndigrade on the queue, this process updates the database with the discovered information about the AMI(s).
 #  Verify the update is applied when distro information is absent from the AMI DB record (simulating the first time results come back).
 #  Verify the update is applied when distro information is already present in the AMI DB record (simulating an unexpected case of an inspection happening twice).
@@ -270,18 +271,15 @@ def persist_aws_inspection_cluster_results(inspection_result):
 #  Verify that the "full fact info" for an AMI is stored somewhere (in its original JSON)
 
 
-@shared_task
-def persist_inspection_cluster_results():
+def persist_inspection_cluster_results(messages):
     """
-    Persist the houndigrade inspection result.
+    Process houndigrade JSON by passing to cloud specific
+    function.
 
     Returns:
-        None: Run as an asynchronous Celery task.
+        None
 
     """
-    messages = read_messages_from_queue(
-        settings.HOUNDIGRADE_RABBITMQ_QUEUE_NAME,
-        HOUNDIGRADE_MESSAGE_READ_LEN)
     if bool(messages):
         for message in messages:
             inspection_result = message
@@ -292,3 +290,18 @@ def persist_inspection_cluster_results():
             else:
                 logger.error(_('Unsupported cloud type: %s' %
                                message.get(CLOUD_KEY)))
+
+
+@shared_task
+def persist_inspection_cluster_results_task():
+    """
+    Task to run periodically and read messages.
+
+    Returns:
+        None: Run as an asynchronous Celery task.
+
+    """
+    messages = read_messages_from_queue(
+        settings.HOUNDIGRADE_RABBITMQ_QUEUE_NAME,
+        HOUNDIGRADE_MESSAGE_READ_LEN)
+    persist_inspection_cluster_results(messages)
