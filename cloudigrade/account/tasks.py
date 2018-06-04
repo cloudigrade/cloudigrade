@@ -1,6 +1,6 @@
 """Celery tasks for use in the account app."""
-import logging
 import json
+import logging
 
 import boto3
 from botocore.exceptions import ClientError
@@ -253,43 +253,14 @@ def persist_aws_inspection_cluster_results(inspection_result):
         ami.inspection_json = json.dumps(image_json)
         if ami is not None:
             ami.tags.clear()
-            rhel_found = any([attribute.get('rhel_found') for disk_json in list(
-                image_json.values()) for attribute in disk_json.values()])
+            rhel_found = any([attribute.get('rhel_found')
+                              for disk_json in list(image_json.values())
+                              for attribute in disk_json.values()])
             if rhel_found:
                 ami.tags.add(RHEL_TAG)
             ami.save()
         else:
             logger.error(_('AwsMachineImage %s is not found.' % image_id))
-
-
-# Verify that when there are any messages from houndigrade on the queue, this process updates the database with the discovered information about the AMI(s).
-#  Verify the update is applied when distro information is absent from the AMI DB record (simulating the first time results come back).
-#  Verify the update is applied when distro information is already present in the AMI DB record (simulating an unexpected case of an inspection happening twice).
-#  Verify the update sets the full release string to the database for the AMI.
-#  Verify the update sets some relevant boolean value to True for a RHEL AMI.
-#  Verify the update sets some relevant boolean value to False for a non-RHEL AMI.
-#  Verify that the "full fact info" for an AMI is stored somewhere (in its original JSON)
-
-
-def persist_inspection_cluster_results(messages):
-    """
-    Process houndigrade JSON by passing to cloud specific
-    function.
-
-    Returns:
-        None
-
-    """
-    if bool(messages):
-        for message in messages:
-            inspection_result = message
-            if isinstance(message, str):
-                inspection_result = json.loads(message)
-            if inspection_result.get(CLOUD_KEY) == CLOUD_TYPE_AWS:
-                persist_aws_inspection_cluster_results(inspection_result)
-            else:
-                logger.error(_('Unsupported cloud type: %s' %
-                               message.get(CLOUD_KEY)))
 
 
 @shared_task
@@ -304,4 +275,13 @@ def persist_inspection_cluster_results_task():
     messages = read_messages_from_queue(
         settings.HOUNDIGRADE_RABBITMQ_QUEUE_NAME,
         HOUNDIGRADE_MESSAGE_READ_LEN)
-    persist_inspection_cluster_results(messages)
+    if bool(messages):
+        for message in messages:
+            inspection_result = message
+            if isinstance(message, str):
+                inspection_result = json.loads(message)
+            if inspection_result.get(CLOUD_KEY) == CLOUD_TYPE_AWS:
+                persist_aws_inspection_cluster_results(inspection_result)
+            else:
+                logger.error(_('Unsupported cloud type: %s' %
+                               message.get(CLOUD_KEY)))

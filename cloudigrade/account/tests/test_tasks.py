@@ -440,3 +440,20 @@ class AccountCeleryTaskTest(TestCase):
 
         with self.assertRaises(AwsTooManyECSInstances):
             tasks.run_inspection_cluster([Mock()])
+
+
+    @patch('account.tasks.persist_aws_inspection_cluster_results')
+    @patch('account.tasks.read_messages_from_queue')
+    def test_persist_inspection_cluster_results_task_no_messages(
+            self,
+            mock_read_messages_from_queue,
+            mock_persist_aws_inspection_cluster_results
+    ):
+        """Assert empty results does not work."""
+        mock_read_messages_from_queue.return_value = []
+        tasks.persist_inspection_cluster_results_task()
+        mock_read_messages_from_queue.assert_called_once_with(
+            settings.HOUNDIGRADE_RABBITMQ_QUEUE_NAME,
+            tasks.HOUNDIGRADE_MESSAGE_READ_LEN
+        )
+        mock_persist_aws_inspection_cluster_results.assert_not_called()
