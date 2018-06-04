@@ -5,10 +5,10 @@ import django.db.models.deletion
 
 
 def migrate_is_windows_to_property(apps, schema_editor):
-    """Copy old is_windows value to an image property."""
+    """Copy old is_windows value to an image tag."""
     ContentType = apps.get_model('contenttypes', 'ContentType')
 
-    # Create property types
+    # Create image tags
     ImageTag = apps.get_model('account', 'ImageTag')
     image_tag_ct = ContentType.objects.get_for_model(ImageTag)
 
