@@ -394,7 +394,7 @@ class AccountCeleryTaskTest(TestCase):
         mock_boto3.resource.return_value = mock_ec2
 
         messages = [{'ami_id': util_helper.generate_dummy_image_id(),
-                    'volume_id': util_helper.generate_dummy_volume_id()}]
+                     'volume_id': util_helper.generate_dummy_volume_id()}]
         tasks.run_inspection_cluster(messages)
 
         mock_ecs.list_container_instances.assert_called_once_with(
@@ -441,10 +441,9 @@ class AccountCeleryTaskTest(TestCase):
         with self.assertRaises(AwsTooManyECSInstances):
             tasks.run_inspection_cluster([Mock()])
 
-
     @patch('account.tasks.persist_aws_inspection_cluster_results')
     @patch('account.tasks.read_messages_from_queue')
-    def test_persist_inspection_cluster_results_task_no_messages(
+    def test_persist_inspect_results_no_messages(
             self,
             mock_read_messages_from_queue,
             mock_persist_aws_inspection_cluster_results
@@ -457,3 +456,56 @@ class AccountCeleryTaskTest(TestCase):
             tasks.HOUNDIGRADE_MESSAGE_READ_LEN
         )
         mock_persist_aws_inspection_cluster_results.assert_not_called()
+
+    @patch('account.tasks.persist_aws_inspection_cluster_results')
+    @patch('account.tasks.read_messages_from_queue')
+    def test_persist_inspect_results_unknown_cloud(
+            self,
+            mock_read_messages_from_queue,
+            mock_persist_aws_inspection_cluster_results
+    ):
+        """Assert no work for unknown cloud."""
+        mock_read_messages_from_queue.return_value = [{'cloud': 'unknown'}]
+        tasks.persist_inspection_cluster_results_task()
+        mock_read_messages_from_queue.assert_called_once_with(
+            settings.HOUNDIGRADE_RABBITMQ_QUEUE_NAME,
+            tasks.HOUNDIGRADE_MESSAGE_READ_LEN
+        )
+        mock_persist_aws_inspection_cluster_results.assert_not_called()
+
+    @patch('account.tasks.persist_aws_inspection_cluster_results')
+    @patch('account.tasks.read_messages_from_queue')
+    def test_persist_inspect_results_aws_cloud_no_images(
+            self,
+            mock_read_messages_from_queue,
+            mock_persist_aws_inspection_cluster_results
+    ):
+        """Assert no work for aws cloud without images."""
+        message = {'cloud': 'aws'}
+        mock_read_messages_from_queue.return_value = [message]
+        tasks.persist_inspection_cluster_results_task()
+        mock_read_messages_from_queue.assert_called_once_with(
+            settings.HOUNDIGRADE_RABBITMQ_QUEUE_NAME,
+            tasks.HOUNDIGRADE_MESSAGE_READ_LEN
+        )
+        mock_persist_aws_inspection_cluster_results.assert_called_once_with(
+            message)
+
+    @patch('account.tasks.persist_aws_inspection_cluster_results')
+    @patch('account.tasks.read_messages_from_queue')
+    def test_persist_inspect_results_aws_cloud_image_not_found(
+            self,
+            mock_read_messages_from_queue,
+            mock_persist_aws_inspection_cluster_results
+    ):
+        """Assert no work for aws cloud with unknown images."""
+        message = {'cloud': 'aws', 'results': {'fake_image': {}}}
+
+        mock_read_messages_from_queue.return_value = [message]
+        tasks.persist_inspection_cluster_results_task()
+        mock_read_messages_from_queue.assert_called_once_with(
+            settings.HOUNDIGRADE_RABBITMQ_QUEUE_NAME,
+            tasks.HOUNDIGRADE_MESSAGE_READ_LEN
+        )
+        mock_persist_aws_inspection_cluster_results.assert_called_once_with(
+            message)
