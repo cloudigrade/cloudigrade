@@ -1,5 +1,6 @@
 """Celery tasks for use in the account app."""
 import logging
+import json
 
 import boto3
 from botocore.exceptions import ClientError
@@ -7,7 +8,8 @@ from celery import shared_task
 from django.conf import settings
 from django.utils.translation import gettext as _
 
-from account.models import AwsMachineImage
+from account.models import (AwsMachineImage,
+                            ImageTag)
 from account.util import add_messages_to_queue, read_messages_from_queue
 from util import aws
 from util.aws import rewrap_aws_errors
@@ -228,3 +230,65 @@ def run_inspection_cluster(messages, cloud='aws'):
         cluster=settings.HOUNDIGRADE_ECS_CLUSTER_NAME,
         taskDefinition=result['taskDefinition']['taskDefinitionArn'],
     )
+
+
+CLOUD_KEY = 'cloud'
+CLOUD_TYPE_AWS = 'aws'
+RHEL_TAG = ImageTag.objects.filter(description='rhel').first()
+HOUNDIGRADE_MESSAGE_READ_LEN = 10
+
+
+def persist_aws_inspection_cluster_results(inspection_result):
+    """
+    Persist the aws houndigrade inspection result.
+
+    Args:
+        inspection_result (dict): A dict containing houndigrade results
+    Returns:
+        None
+    """
+    results = inspection_result.get('results', [])
+    for image_id, image_json in results.items():
+        ami = AwsMachineImage.objects.filter(ec2_ami_id=image_id).first()
+        ami.inspection_json = image_json
+        if ami is not None:
+            ami.tags.clear()
+            rhel_found = any([attribute.get('rhel_found') for disk_json in list(
+                image_json.values()) for attribute in disk_json.values()])
+            if rhel_found:
+                ami.tags.add(RHEL_TAG)
+            ami.save()
+        else:
+            logger.error(_('AwsMachineImage %s is not found.' % image_id))
+
+# Verify that when there are any messages from houndigrade on the queue, this process updates the database with the discovered information about the AMI(s).
+#  Verify the update is applied when distro information is absent from the AMI DB record (simulating the first time results come back).
+#  Verify the update is applied when distro information is already present in the AMI DB record (simulating an unexpected case of an inspection happening twice).
+#  Verify the update sets the full release string to the database for the AMI.
+#  Verify the update sets some relevant boolean value to True for a RHEL AMI.
+#  Verify the update sets some relevant boolean value to False for a non-RHEL AMI.
+#  Verify that the "full fact info" for an AMI is stored somewhere (in its original JSON)
+
+
+@shared_task
+def persist_inspection_cluster_results():
+    """
+    Persist the houndigrade inspection result.
+
+    Returns:
+        None: Run as an asynchronous Celery task.
+
+    """
+    messages = read_messages_from_queue(
+        settings.HOUNDIGRADE_RABBITMQ_QUEUE_NAME,
+        HOUNDIGRADE_MESSAGE_READ_LEN)
+    if bool(messages):
+        for message in messages:
+            inspection_result = message
+            if isinstance(message, str):
+                inspection_result = json.loads(message)
+            if inspection_result.get(CLOUD_KEY) == CLOUD_TYPE_AWS:
+                persist_aws_inspection_cluster_results(inspection_result)
+            else:
+                logger.error(_('Unsupported cloud type: %s' %
+                               message.get(CLOUD_KEY)))
