@@ -234,7 +234,6 @@ def run_inspection_cluster(messages, cloud='aws'):
 
 CLOUD_KEY = 'cloud'
 CLOUD_TYPE_AWS = 'aws'
-RHEL_TAG = ImageTag.objects.filter(description='rhel').first()
 HOUNDIGRADE_MESSAGE_READ_LEN = 10
 
 
@@ -247,6 +246,7 @@ def persist_aws_inspection_cluster_results(inspection_result):
     Returns:
         None
     """
+    RHEL_TAG = ImageTag.objects.filter(description='rhel').first()
     results = inspection_result.get('results', [])
     for image_id, image_json in results.items():
         ami = AwsMachineImage.objects.filter(ec2_ami_id=image_id).first()
