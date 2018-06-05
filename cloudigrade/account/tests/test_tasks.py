@@ -558,6 +558,24 @@ class AccountCeleryTaskTest(TestCase):
 
     @patch('account.tasks.persist_aws_inspection_cluster_results')
     @patch('account.tasks.read_messages_from_queue')
+    def test_persist_inspect_results_aws_cloud_str_message(
+            self,
+            mock_read_messages_from_queue,
+            mock_persist_aws_inspection_cluster_results
+    ):
+        """Test case where message is str not python dict."""
+        message = json.dumps({'cloud': 'aws'})
+        mock_read_messages_from_queue.return_value = [message]
+        tasks.persist_inspection_cluster_results_task()
+        mock_read_messages_from_queue.assert_called_once_with(
+            settings.HOUNDIGRADE_RABBITMQ_QUEUE_NAME,
+            tasks.HOUNDIGRADE_MESSAGE_READ_LEN
+        )
+        mock_persist_aws_inspection_cluster_results.assert_called_once_with(
+            json.loads(message))
+
+    @patch('account.tasks.persist_aws_inspection_cluster_results')
+    @patch('account.tasks.read_messages_from_queue')
     def test_persist_inspect_results_aws_cloud_image_not_found(
             self,
             mock_read_messages_from_queue,
