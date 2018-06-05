@@ -424,7 +424,8 @@ class MachineImageViewSetTest(TestCase):
         self.machine_image3 = \
             account_helper.generate_aws_image(account=self.account3)
         self.machine_image4 = \
-            account_helper.generate_aws_image(account=self.account4)
+            account_helper.generate_aws_image(account=self.account4,
+                                              is_windows=True)
         self.factory = APIRequestFactory()
 
     def assertResponseHasImageData(self, response, image):
