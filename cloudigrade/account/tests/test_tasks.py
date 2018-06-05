@@ -574,12 +574,10 @@ class AccountCeleryTaskTest(TestCase):
         mock_persist_aws_inspection_cluster_results.assert_called_once_with(
             json.loads(message))
 
-    @patch('account.tasks.persist_aws_inspection_cluster_results')
     @patch('account.tasks.read_messages_from_queue')
     def test_persist_inspect_results_aws_cloud_image_not_found(
             self,
-            mock_read_messages_from_queue,
-            mock_persist_aws_inspection_cluster_results
+            mock_read_messages_from_queue
     ):
         """Assert no work for aws cloud with unknown images."""
         message = {'cloud': 'aws', 'results': {'fake_image': {}}}
@@ -590,5 +588,3 @@ class AccountCeleryTaskTest(TestCase):
             settings.HOUNDIGRADE_RABBITMQ_QUEUE_NAME,
             tasks.HOUNDIGRADE_MESSAGE_READ_LEN
         )
-        mock_persist_aws_inspection_cluster_results.assert_called_once_with(
-            message)
