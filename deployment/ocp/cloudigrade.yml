@@ -128,19 +128,6 @@ objects:
             periodSeconds: 10
             successThreshold: 1
             timeoutSeconds: 1
-          readinessProbe:
-            exec:
-              command:
-                - /bin/sh
-                - -c
-                - >
-                  PYTHONPATH=. scl enable rh-postgresql96 rh-python36 --
-                  celery -A config status | grep ': OK$'
-            failureThreshold: 3
-            initialDelaySeconds: 5
-            periodSeconds: 10
-            successThreshold: 1
-            timeoutSeconds: 1
     triggers:
       - type: "ImageChange"
         imageChangeParams:
