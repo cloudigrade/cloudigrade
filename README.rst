@@ -320,7 +320,7 @@ This auth token can be supplied in the Authorization header.
 Message Broker
 ==============
 
-Amazon SQS is used to broker messages between **cloudigrade** and inspectigrade services.
+Amazon SQS is used to broker messages between **cloudigrade**, Celery workers, and houndigrade.
 
 .. |license| image:: https://img.shields.io/github/license/cloudigrade/cloudigrade.svg
    :target: https://github.com/cloudigrade/cloudigrade/blob/master/LICENSE
