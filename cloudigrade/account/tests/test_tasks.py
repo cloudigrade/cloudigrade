@@ -456,7 +456,7 @@ class AccountCeleryTaskTest(TestCase):
         mock_read_messages_from_queue.return_value = []
         tasks.persist_inspection_cluster_results_task()
         mock_read_messages_from_queue.assert_called_once_with(
-            settings.HOUNDIGRADE_RABBITMQ_QUEUE_NAME,
+            settings.HOUNDIGRADE_RESULTS_QUEUE_NAME,
             tasks.HOUNDIGRADE_MESSAGE_READ_LEN
         )
         mock_persist_aws_inspection_cluster_results.assert_not_called()
@@ -533,7 +533,7 @@ class AccountCeleryTaskTest(TestCase):
         mock_read_messages_from_queue.return_value = [{'cloud': 'unknown'}]
         tasks.persist_inspection_cluster_results_task()
         mock_read_messages_from_queue.assert_called_once_with(
-            settings.HOUNDIGRADE_RABBITMQ_QUEUE_NAME,
+            settings.HOUNDIGRADE_RESULTS_QUEUE_NAME,
             tasks.HOUNDIGRADE_MESSAGE_READ_LEN
         )
         mock_persist_aws_inspection_cluster_results.assert_not_called()
@@ -550,7 +550,7 @@ class AccountCeleryTaskTest(TestCase):
         mock_read_messages_from_queue.return_value = [message]
         tasks.persist_inspection_cluster_results_task()
         mock_read_messages_from_queue.assert_called_once_with(
-            settings.HOUNDIGRADE_RABBITMQ_QUEUE_NAME,
+            settings.HOUNDIGRADE_RESULTS_QUEUE_NAME,
             tasks.HOUNDIGRADE_MESSAGE_READ_LEN
         )
         mock_persist_aws_inspection_cluster_results.assert_called_once_with(
@@ -568,7 +568,7 @@ class AccountCeleryTaskTest(TestCase):
         mock_read_messages_from_queue.return_value = [message]
         tasks.persist_inspection_cluster_results_task()
         mock_read_messages_from_queue.assert_called_once_with(
-            settings.HOUNDIGRADE_RABBITMQ_QUEUE_NAME,
+            settings.HOUNDIGRADE_RESULTS_QUEUE_NAME,
             tasks.HOUNDIGRADE_MESSAGE_READ_LEN
         )
         mock_persist_aws_inspection_cluster_results.assert_called_once_with(
@@ -585,6 +585,6 @@ class AccountCeleryTaskTest(TestCase):
         mock_read_messages_from_queue.return_value = [message]
         tasks.persist_inspection_cluster_results_task()
         mock_read_messages_from_queue.assert_called_once_with(
-            settings.HOUNDIGRADE_RABBITMQ_QUEUE_NAME,
+            settings.HOUNDIGRADE_RESULTS_QUEUE_NAME,
             tasks.HOUNDIGRADE_MESSAGE_READ_LEN
         )

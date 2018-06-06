@@ -211,16 +211,16 @@ def run_inspection_cluster(messages, cloud='aws'):
                 'command': task_command,
                 'environment': [
                     {
-                        'name': 'RABBITMQ_QUEUE_NAME',
-                        'value': settings.HOUNDIGRADE_RABBITMQ_QUEUE_NAME
+                        'name': 'RESULTS_QUEUE_NAME',
+                        'value': settings.HOUNDIGRADE_RESULTS_QUEUE_NAME
                     },
                     {
-                        'name': 'RABBITMQ_EXCHANGE_NAME',
-                        'value': settings.HOUNDIGRADE_RABBITMQ_EXCHANGE_NAME
+                        'name': 'EXCHANGE_NAME',
+                        'value': settings.HOUNDIGRADE_EXCHANGE_NAME
                     },
                     {
-                        'name': 'RABBITMQ_URL',
-                        'value': settings.RABBITMQ_URL
+                        'name': 'QUEUE_CONNECTION_URL',
+                        'value': settings.CELERY_BROKER_URL
                     }
                 ],
                 'privileged': True,

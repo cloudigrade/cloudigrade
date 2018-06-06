@@ -1,4 +1,6 @@
 """Base settings file."""
+from urllib.parse import quote
+
 import environ
 from psycopg2cffi import compat
 
@@ -57,10 +59,10 @@ HOUNDIGRADE_ECS_IMAGE_TAG = env(
     default='latest'
 )
 HOUNDIGRADE_DEBUG = env.bool('HOUNDIGRADE_DEBUG', default=False)
-HOUNDIGRADE_RABBITMQ_QUEUE_NAME = env('HOUNDIGRADE_RABBITMQ_QUEUE_NAME',
+HOUNDIGRADE_RESULTS_QUEUE_NAME = env('HOUNDIGRADE_RESULTS_QUEUE_NAME',
                                       default='inspection_results')
-HOUNDIGRADE_RABBITMQ_EXCHANGE_NAME = env('HOUNDIGRADE_RABBITMQ_EXCHANGE_NAME',
-                                         default='houndigrade_inspectigrade')
+HOUNDIGRADE_EXCHANGE_NAME = env('HOUNDIGRADE_EXCHANGE_NAME',
+                                default='houndigrade_inspectigrade')
 
 # Default apps go here
 DJANGO_APPS = [
@@ -197,31 +199,46 @@ REST_FRAMEWORK = {
     'EXCEPTION_HANDLER': 'util.exceptions.api_exception_handler',
 }
 
+
 # Message and Task Queues
 
-RABBITMQ_USER = env('RABBITMQ_USER', default='guest')
-RABBITMQ_PASSWORD = env('RABBITMQ_PASSWORD', default='guest')
-RABBITMQ_HOST = env('RABBITMQ_HOST', default='localhost')
-RABBITMQ_PORT = env('RABBITMQ_PORT', default='5672')
-RABBITMQ_VHOST = env('RABBITMQ_VHOST', default='/')
+# For convenience in development environments, find defaults gracefully here.
+AWS_SQS_REGION = env('AWS_SQS_REGION',
+                     default=env('AWS_DEFAULT_REGION',
+                                 default='us-east-1'))
 
-RABBITMQ_URL = env(
-    'RABBITMQ_URL',
-    default='amqp://{}:{}@{}:{}/{}'.format(
-        RABBITMQ_USER,
-        RABBITMQ_PASSWORD,
-        RABBITMQ_HOST,
-        RABBITMQ_PORT,
-        RABBITMQ_VHOST
-    )
+AWS_SQS_ACCESS_KEY_ID = env('AWS_SQS_ACCESS_KEY_ID',
+                            default=env('AWS_ACCESS_KEY_ID',
+                                        default=''))
+AWS_SQS_SECRET_ACCESS_KEY = env('AWS_SQS_SECRET_ACCESS_KEY',
+                                default=env('AWS_SECRET_ACCESS_KEY',
+                                            default=''))
+
+# We still need to ensure we have an access key and secret key for SQS.
+# So, if they were not explicitly set in the environment (for example, if
+# AWS_PROFILE was set instead), try to extract them from boto's session.
+if not AWS_SQS_ACCESS_KEY_ID or not AWS_SQS_SECRET_ACCESS_KEY:
+    import boto3
+    session = boto3.Session()
+    credentials = session.get_credentials()
+    credentials = credentials.get_frozen_credentials()
+    AWS_SQS_ACCESS_KEY_ID = credentials.access_key
+    AWS_SQS_SECRET_ACCESS_KEY = credentials.secret_key
+
+AWS_SQS_URL = env(
+    'AWS_SQS_URL',
+    default='sqs://{}:{}@'.format(quote(AWS_SQS_ACCESS_KEY_ID, safe=''),
+                                  quote(AWS_SQS_SECRET_ACCESS_KEY, safe=''))
 )
-RABBITMQ_EXCHANGE_NAME = env(
-    'RABBITMQ_EXCHANGE_NAME', default='cloudigrade_inspectigrade')
-RABBITMQ_QUEUE_NAME = env('RABBITMQ_QUEUE_NAME', default='machine_images')
+AWS_SQS_QUEUE_NAME_PREFIX = env('AWS_SQS_QUEUE_NAME_PREFIX',
+                                default=env('USER', default='anonymous') + '-')
+CELERY_BROKER_TRANSPORT_OPTIONS = {
+    'queue_name_prefix': AWS_SQS_QUEUE_NAME_PREFIX,
+    'region': AWS_SQS_REGION,
+}
+CELERY_BROKER_URL = AWS_SQS_URL
+QUEUE_EXCHANGE_NAME = None
 
-# Celery specific duplicate of RABBITMQ_URL
-
-CELERY_BROKER_URL = RABBITMQ_URL
 CELERY_TASK_ROUTES = {
     'account.tasks.copy_ami_snapshot': {'queue': 'copy_ami_snapshot'},
     'account.tasks.create_volume': {'queue': 'create_volume'},

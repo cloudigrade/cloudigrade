@@ -1,11 +1,12 @@
 django==2.0.6
 django-environ==0.4.4
-boto3==1.7.32
+boto3==1.7.33
 celery==4.2.0rc4
 django-model-utils==3.1.2
 kombu==4.2.1
 psycopg2cffi==2.7.7
 python-dateutil==2.7.3
+pycurl==7.43.0.1
 djangorestframework==3.8.2
 gunicorn==19.8.1
 django-polymorphic==2.0.2

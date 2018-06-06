@@ -138,7 +138,7 @@ def _create_exchange_and_queue(queue_name):
 
     """
     exchange = kombu.Exchange(
-        settings.RABBITMQ_EXCHANGE_NAME,
+        settings.QUEUE_EXCHANGE_NAME,
         'direct',
         durable=True
     )
@@ -165,7 +165,7 @@ def add_messages_to_queue(queue_name, messages):
     """
     exchange, message_queue = _create_exchange_and_queue(queue_name)
 
-    with kombu.Connection(settings.RABBITMQ_URL) as conn:
+    with kombu.Connection(settings.CELERY_BROKER_URL) as conn:
         producer = conn.Producer(serializer='json')
         for message in messages:
             producer.publish(
@@ -191,7 +191,7 @@ def read_messages_from_queue(queue_name, max_count=1):
     """
     __, message_queue = _create_exchange_and_queue(queue_name)
     messages = []
-    with kombu.Connection(settings.RABBITMQ_URL) as conn:
+    with kombu.Connection(settings.CELERY_BROKER_URL) as conn:
         try:
             consumer = conn.SimpleQueue(name=message_queue)
             while len(messages) < max_count:
