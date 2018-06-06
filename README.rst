@@ -24,7 +24,7 @@ Or is **cloudigrade** a code name for Doppler?
 Running cloudigrade
 ===================
 
-We do not yet have concise setup notes for running **cloudigrade**, and we currently require setting up a complete development envirionment. Watch this space for changes in the future, but for now, please read the next "Developer Environment" section.
+Please refer to the `shiftigrade repo<https://github.com/cloudigrade/shiftigrade#running-cloudigrade>`_ for up to date instructions on how to run cloudigrade. These instructions are prerequisite for setting up your developer environemnt.
 
 
 Developer Environment
@@ -43,25 +43,14 @@ Because **cloudigrade** is actually a suite of interacting services, setting up 
 macOS dependencies
 ~~~~~~~~~~~~~~~~~~
 
-We encourage macOS developers to use `homebrew <https://brew.sh/>`_ to install and manage these dependencies. The following commands should install everything you need:
+The following commands should install everything you need:
 
 .. code-block:: bash
 
-    /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
     brew update
-    brew install python gettext awscli postgresql socat
+    brew install python gettext awscli postgresql
     brew link gettext --force
-    # We need to install a specific version of docker since newer ones have a bug around the builtin proxy
-    brew cask install https://raw.githubusercontent.com/caskroom/homebrew-cask/61f1d33be340e27b91f2a5c88da0496fc24904d3/Casks/docker.rb
 
-After installing Docker, open it, navigate to Preferences -> General and uncheck ``Automatically check for updates`` if it is checked, then navigate to Preferences -> Daemon. There add ``172.30.0.0/16`` to the list of insecure registries, then click ``Apply and Restart``.
-
-We currently use Openshift 3.7.X in production, so we need a matching openshift client.
-
-.. code-block:: bash
-
-    brew install https://raw.githubusercontent.com/Homebrew/homebrew-core/9d190ab350ce0b0d00d4968fed4b9fbe68a318ef/Formula/openshift-cli.rb
-    brew pin openshift-cli
 
 Linux dependencies
 ~~~~~~~~~~~~~~~~~~
@@ -70,33 +59,7 @@ We recommend developing on the latest version of Fedora. Follow the following co
 
 .. code-block:: bash
 
-    # DNF Install AWS-CLI, Docker, and gettext
-    sudo dnf install awscli docker gettext postgresql-devel -y
-    # Install an appropriate version of the OpenShift Client
-    wget -O oc.tar.gz https://github.com/openshift/origin/releases/download/v3.7.2/openshift-origin-client-tools-v3.7.2-282e43f-linux-64bit.tar.gz
-    tar -zxvf oc.tar.gz
-    cp openshift-origin-client-tools-v3.7.2-282e43f-linux-64bit/oc ~/bin
-    # Allow interaction with Docker without root
-    sudo groupadd docker && sudo gpasswd -a ${USER} docker
-    newgrp docker
-    # Configure Insecure-Registries in Docker
-    sudo cat > /etc/docker/daemon.json <<EOF
-    {
-       "insecure-registries": [
-         "172.30.0.0/16"
-       ]
-    }
-    EOF
-    sudo systemctl daemon-reload
-    sudo systemctl restart docker
-    # Configure firewalld
-    sudo sysctl -w net.ipv4.ip_forward=1
-    sudo firewall-cmd --permanent --new-zone dockerc
-    sudo firewall-cmd --permanent --zone dockerc --add-source $(docker network inspect -f "{{range .IPAM.Config }}{{ .Subnet }}{{end}}" bridge)
-    sudo firewall-cmd --permanent --zone dockerc --add-port 8443/tcp
-    sudo firewall-cmd --permanent --zone dockerc --add-port 53/udp
-    sudo firewall-cmd --permanent --zone dockerc --add-port 8053/udp
-    sudo firewall-cmd --reload
+    sudo dnf install awscli gettext postgresql-devel -y
 
 
 Python virtual environment
@@ -184,10 +147,12 @@ If you'd like to start the cluster, and deploy Cloudigrade along with supporting
 .. code-block:: bash
 
     # When deploying cloudigrade make sure you have AWS_ACCESS_KEY_ID and
-    # AWS_SECRET_ACCESS_KEY set in your environment or the deployment will fail
+    # AWS_SECRET_ACCESS_KEY set in your environment or the deployment will
+    # not be able to talk to your AWS account
+    cd <shiftigrade-repo>
     make oc-up-all
 
-This will create the **ImageStream** to track **PostgreSQL:9.6**, create the templates for **cloudigrade**, and finally use the templates to create all the objects necessary to deploy **cloudigrade** and the supporting services. There is a chance that the deployment for **cloudigrade** will fail due to the db not being ready before the mid-deployment hook pod is being run. Simply run the following command to trigger a redemployment for **cloudigrade**:
+This will create the **ImageStream** to track **PostgreSQL:9.6**, template the objects for **cloudigrade**, and apply them to deploy **cloudigrade** and the supporting services. There is a chance that the deployment for **cloudigrade** will fail due to the db not being ready before the mid-deployment hook pod is being run. Simply run the following command to trigger a redemployment for **cloudigrade**:
 
 .. code-block:: bash
 
@@ -212,18 +177,23 @@ There are also other make targets available to deploy just the db or the project
 Deploying in-progress code to OpenShift
 ---------------------------------------
 
-If you'd like to deploy your in progress work to the local openshift cluster you can do so with the following commands:
+If you'd like to deploy your in progress work to the local openshift cluster you can do so by pushing your code to your branch and deploying it with the following commands:
 
 .. code-block:: bash
 
-    # Assuming the cluster is up and running with cloudigrade and services already deployed
-    # First create a route to the internal registry
-    make oc-create-registry-route
+    # Specify the branch where your code is running, use CLOUDIGRADE_REPO_REF
+    # for Cloudigrade and FRONTIGRADE_REPO_REF for frontigrade and execute
+    # the following command
+    export CLOUDIGRADE_REPO_REF=1337-my-special-branch
+    export FRONTIGRADE_REPO_REF=123-the-best-code
+    kontemplate template ocp/local.yaml | oc apply -f -
 
-    # Build and Push Cloudigrade to the internal registry
-    make oc-build-and-push-cloudigrade
+    # Then simply kick off a new build for cloudigrade
+    oc start-build cloudigrade-api
+    # or frontigrade
+    oc start-build frontigrade
 
-Repeat the above command ``make oc-build-and-push-cloudigrade`` as often as you need to re-deploy your code.
+Now everytime you want your code redeployed you can push your code and trigger a new build using ``oc start-build <build-name>``.
 
 Developing Locally with OpenShift
 ---------------------------------
@@ -276,12 +246,6 @@ If the cloudigrade deployment also failed because the database was not available
 .. code-block:: bash
 
     oc rollout retry dc/cloudigrade
-
-If your cloudigrade deployment failed because you didn't have ``AWS_ACCESS_KEY_ID`` or ``AWS_SECRET_ACCESS_KEY`` set, you don't have to torch everything and start over after setting them, you can just recreate the cloudigrade deployment with the following command:
-
-.. code-block:: bash
-
-    make oc-create-cloudigrade
 
 
 Authentication
