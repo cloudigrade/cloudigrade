@@ -567,7 +567,7 @@ parameters:
   required: true
 - name: DJANGO_DEBUG
   description: "Django Debug Mode"
-  value: "False"
+  value: "True"
   required: true
 - name: DJANGO_SECRET_KEY
   description: "Django Secret Key"
