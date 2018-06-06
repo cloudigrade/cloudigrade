@@ -274,7 +274,7 @@ def persist_inspection_cluster_results_task():
 
     """
     messages = read_messages_from_queue(
-        settings.HOUNDIGRADE_RABBITMQ_QUEUE_NAME,
+        settings.HOUNDIGRADE_RESULTS_QUEUE_NAME,
         HOUNDIGRADE_MESSAGE_READ_LEN)
     if bool(messages):
         for message in messages:
