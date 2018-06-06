@@ -24,7 +24,7 @@ Or is **cloudigrade** a code name for Doppler?
 Running cloudigrade
 ===================
 
-Please refer to the `shiftigrade repo<https://github.com/cloudigrade/shiftigrade#running-cloudigrade>`_ for up to date instructions on how to run cloudigrade. These instructions are prerequisite for setting up your developer environemnt.
+Please refer to the `shiftigrade repo <https://github.com/cloudigrade/shiftigrade#running-cloudigrade>`_ for up to date instructions on how to run cloudigrade. These instructions are prerequisite for setting up your developer environemnt.
 
 
 Developer Environment
