@@ -5,10 +5,11 @@ import model_utils
 from django.contrib.auth.models import User
 from django.db import models
 
-from util.models import BaseModel
+from util.models import (BasePolymorphicModel,
+                         BaseModel)
 
 
-class Account(BaseModel):
+class Account(BasePolymorphicModel):
     """Base customer account model."""
 
     user = models.ForeignKey(
@@ -19,7 +20,7 @@ class Account(BaseModel):
     )
 
 
-class Instance(BaseModel):
+class Instance(BasePolymorphicModel):
     """Base model for a compute/VM instance in a cloud."""
 
     account = models.ForeignKey(
@@ -30,7 +31,7 @@ class Instance(BaseModel):
     )
 
 
-class InstanceEvent(BaseModel):
+class InstanceEvent(BasePolymorphicModel):
     """Base model for an event triggered by a Instance."""
 
     TYPE = model_utils.Choices(
@@ -71,7 +72,7 @@ class ImageTag(BaseModel):
     )
 
 
-class MachineImage(BaseModel):
+class MachineImage(BasePolymorphicModel):
     """Base Class for A cloud VM image."""
 
     account = models.ForeignKey(

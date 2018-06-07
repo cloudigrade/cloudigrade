@@ -6,15 +6,11 @@ import django.db.models.deletion
 
 def migrate_is_windows_to_property(apps, schema_editor):
     """Copy old is_windows value to an image tag."""
-    ContentType = apps.get_model('contenttypes', 'ContentType')
 
     # Create image tags
     ImageTag = apps.get_model('account', 'ImageTag')
-    image_tag_ct = ContentType.objects.get_for_model(ImageTag)
-
-    windows_tag = ImageTag.objects.create(
-        description='windows', polymorphic_ctype=image_tag_ct)
-    ImageTag.objects.create(description='rhel', polymorphic_ctype=image_tag_ct)
+    windows_tag = ImageTag.objects.create(description='windows')
+    ImageTag.objects.create(description='rhel')
 
     # Get current machine images
     MachineImage = apps.get_model('account', 'MachineImage')
@@ -30,7 +26,7 @@ def migrate_is_windows_to_property(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contenttypes', '0002_remove_content_type_name'),
+        ('util', '0001_initial'),
         ('account', '0006_account_user'),
     ]
 
@@ -38,18 +34,11 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='ImageTag',
             fields=[
-                ('id', models.AutoField(auto_created=True,
-                                        primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
+                ('basemodel_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE,
+                                                       parent_link=True, primary_key=True, serialize=False, to='util.BaseModel')),
                 ('description', models.CharField(max_length=32)),
-                ('polymorphic_ctype', models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.CASCADE,
-                                                        related_name='polymorphic_account.imagetag_set+', to='contenttypes.ContentType')),
             ],
-            options={
-                'ordering': ('created_at',),
-                'abstract': False,
-            },
+            bases=('util.basemodel',),
         ),
         migrations.AddField(
             model_name='machineimage',
