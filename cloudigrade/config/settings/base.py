@@ -251,6 +251,12 @@ CELERY_TASK_ROUTES = {
 CELERY_BEAT_SCHEDULE = {
     'scale_up_inspection_cluster_every_60_min': {
         'task': 'account.tasks.scale_up_inspection_cluster',
-        'schedule': env.int('SCALE_UP_INSPECTION_CLUSTER_SCHEDULE', default=60 * 60),  # seconds
+        # seconds
+        'schedule': env.int('SCALE_UP_INSPECTION_CLUSTER_SCHEDULE', default=60 * 60),
+    },
+    'persist_inspection_cluster_results': {
+        'task': 'account.tasks.persist_inspection_cluster_results_task',
+        # seconds
+        'schedule': env.int('SCALE_UP_INSPECTION_CLUSTER_SCHEDULE', default=60 * 60),
     },
 }

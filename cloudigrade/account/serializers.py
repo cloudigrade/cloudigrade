@@ -170,7 +170,6 @@ class AwsMachineImageSerializer(HyperlinkedModelSerializer):
             'created_at',
             'updated_at',
             'account',
-            'is_windows',
             'is_encrypted',
             'ec2_ami_id'
         )
@@ -179,7 +178,6 @@ class AwsMachineImageSerializer(HyperlinkedModelSerializer):
             'created_at',
             'updated_at',
             'account',
-            'is_windows',
             'is_encrypted',
             'ec2_ami_id'
         )

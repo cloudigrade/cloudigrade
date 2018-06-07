@@ -5,6 +5,7 @@ from account.models import (AwsAccount,
                             AwsInstance,
                             AwsInstanceEvent,
                             AwsMachineImage,
+                            ImageTag,
                             InstanceEvent)
 from util import aws
 from util.tests import helper
@@ -167,7 +168,8 @@ def generate_aws_instance_events(
 
 def generate_aws_image(account,
                        is_encrypted=False,
-                       is_windows=False):
+                       is_windows=False,
+                       ec2_ami_id=None):
     """
     Generate an AwsMachineImage for the AwsAccount for testing.
 
@@ -182,11 +184,17 @@ def generate_aws_image(account,
         AwsMachineImage: The created AwsMachineImage.
 
     """
-    ec2_ami_id = helper.generate_dummy_image_id()
+    if not ec2_ami_id:
+        ec2_ami_id = helper.generate_dummy_image_id()
 
-    return AwsMachineImage.objects.create(
+    image = AwsMachineImage.objects.create(
         account=account,
         ec2_ami_id=ec2_ami_id,
-        is_windows=is_windows,
-        is_encrypted=is_encrypted
+        is_encrypted=is_encrypted,
     )
+    if is_windows:
+        image.tags.add(ImageTag.objects.filter(
+            description='windows').first())
+        image.save()
+
+    return image

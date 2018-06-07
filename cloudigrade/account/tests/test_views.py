@@ -10,7 +10,8 @@ from account.exceptions import InvalidCloudProviderError
 from account.models import (AwsAccount,
                             AwsInstance,
                             AwsInstanceEvent,
-                            AwsMachineImage)
+                            AwsMachineImage,
+                            ImageTag)
 from account.tests import helper as account_helper
 from account.views import (AccountViewSet,
                            InstanceEventViewSet,
@@ -424,7 +425,8 @@ class MachineImageViewSetTest(TestCase):
         self.machine_image3 = \
             account_helper.generate_aws_image(account=self.account3)
         self.machine_image4 = \
-            account_helper.generate_aws_image(account=self.account4)
+            account_helper.generate_aws_image(account=self.account4,
+                                              is_windows=True)
         self.factory = APIRequestFactory()
 
     def assertResponseHasImageData(self, response, image):
@@ -443,9 +445,6 @@ class MachineImageViewSetTest(TestCase):
         if isinstance(image, AwsMachineImage):
             self.assertEqual(
                 response.data['ec2_ami_id'], image.ec2_ami_id
-            )
-            self.assertEqual(
-                response.data['is_windows'], image.is_windows
             )
             self.assertEqual(
                 response.data['is_encrypted'], image.is_encrypted
@@ -579,6 +578,13 @@ class MachineImageViewSetTest(TestCase):
         params = {'user_id': 'not_an_int'}
         response = self.get_image_list_response(self.superuser, params)
         self.assertEqual(response.status_code, 400)
+
+    def test_marking_images_as_windows_tags_them_as_windows(self):
+        """Assert that creating a windows image tags it appropriately."""
+        image = self.machine_image4  # Image was created as is_windows
+        self.assertEqual(image.tags.filter(description='windows').first(),
+                         ImageTag.objects.filter(
+                             description='windows').first())
 
 
 class InstanceEventViewSetTest(TestCase):

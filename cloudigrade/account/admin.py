@@ -6,11 +6,13 @@ from account.models import (Account,
                             AwsInstance,
                             AwsInstanceEvent,
                             AwsMachineImage,
+                            ImageTag,
                             Instance,
                             InstanceEvent,
                             MachineImage)
 
 admin.site.register(Account, admin.ModelAdmin)
+admin.site.register(ImageTag, admin.ModelAdmin)
 admin.site.register(Instance, admin.ModelAdmin)
 admin.site.register(InstanceEvent, admin.ModelAdmin)
 admin.site.register(MachineImage, admin.ModelAdmin)

@@ -10,7 +10,7 @@ from rest_framework.serializers import ValidationError
 
 from account import AWS_PROVIDER_STRING
 from account.models import (AwsInstance, AwsInstanceEvent, AwsMachineImage,
-                            InstanceEvent)
+                            ImageTag, InstanceEvent)
 from util.aws import is_instance_windows
 
 
@@ -84,9 +84,12 @@ def create_new_machine_images(account, instances_data):
             ami = AwsMachineImage(
                 account=account,
                 ec2_ami_id=new_ami,
-                is_windows=new_ami in windows_instances
             )
             ami.save()
+            if new_ami in windows_instances:
+                ami.tags.add(ImageTag.objects.filter(
+                    description='windows').first())
+                ami.save()
 
         saved_amis.extend(new_amis)
     return saved_amis

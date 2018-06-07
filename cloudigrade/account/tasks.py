@@ -1,4 +1,5 @@
 """Celery tasks for use in the account app."""
+import json
 import logging
 
 import boto3
@@ -7,7 +8,8 @@ from celery import shared_task
 from django.conf import settings
 from django.utils.translation import gettext as _
 
-from account.models import AwsMachineImage
+from account.models import (AwsMachineImage,
+                            ImageTag)
 from account.util import add_messages_to_queue, read_messages_from_queue
 from util import aws
 from util.aws import rewrap_aws_errors
@@ -18,6 +20,11 @@ from util.exceptions import (AwsECSInstanceNotReady,
 from util.misc import generate_device_name
 
 logger = logging.getLogger(__name__)
+
+# Constants
+CLOUD_KEY = 'cloud'
+CLOUD_TYPE_AWS = 'aws'
+HOUNDIGRADE_MESSAGE_READ_LEN = 10
 
 
 @retriable_shared_task
@@ -228,3 +235,55 @@ def run_inspection_cluster(messages, cloud='aws'):
         cluster=settings.HOUNDIGRADE_ECS_CLUSTER_NAME,
         taskDefinition=result['taskDefinition']['taskDefinitionArn'],
     )
+
+
+def persist_aws_inspection_cluster_results(inspection_result):
+    """
+    Persist the aws houndigrade inspection result.
+
+    Args:
+        inspection_result (dict): A dict containing houndigrade results
+    Returns:
+        None
+    """
+    rhel_tag = ImageTag.objects.filter(description='rhel').first()
+    results = inspection_result.get('results', [])
+    for image_id, image_json in results.items():
+        ami = AwsMachineImage.objects.filter(ec2_ami_id=image_id).first()
+        if ami is not None:
+            ami.tags.clear()
+            rhel_found = any([attribute.get('rhel_found')
+                              for disk_json in list(image_json.values())
+                              for attribute in disk_json.values()])
+            if rhel_found:
+                ami.tags.add(rhel_tag)
+            # Add image inspection JSON
+            ami.inspection_json = json.dumps(image_json)
+            ami.save()
+        else:
+            logger.error(
+                _('AwsMachineImage "{0}" is not found.').format(image_id))
+
+
+@shared_task
+def persist_inspection_cluster_results_task():
+    """
+    Task to run periodically and read houndigrade messages.
+
+    Returns:
+        None: Run as an asynchronous Celery task.
+
+    """
+    messages = read_messages_from_queue(
+        settings.HOUNDIGRADE_RESULTS_QUEUE_NAME,
+        HOUNDIGRADE_MESSAGE_READ_LEN)
+    if bool(messages):
+        for message in messages:
+            inspection_result = message
+            if isinstance(message, str):
+                inspection_result = json.loads(message)
+            if inspection_result.get(CLOUD_KEY) == CLOUD_TYPE_AWS:
+                persist_aws_inspection_cluster_results(inspection_result)
+            else:
+                logger.error(_('Unsupported cloud type: "{0}"').format(
+                    message.get(CLOUD_KEY)))
