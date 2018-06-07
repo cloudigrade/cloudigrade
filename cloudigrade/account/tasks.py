@@ -246,7 +246,7 @@ def persist_aws_inspection_cluster_results(inspection_result):
     Returns:
         None
     """
-    RHEL_TAG = ImageTag.objects.filter(description='rhel').first()
+    rhel_tag = ImageTag.objects.filter(description='rhel').first()
     results = inspection_result.get('results', [])
     for image_id, image_json in results.items():
         ami = AwsMachineImage.objects.filter(ec2_ami_id=image_id).first()
@@ -256,7 +256,7 @@ def persist_aws_inspection_cluster_results(inspection_result):
                               for disk_json in list(image_json.values())
                               for attribute in disk_json.values()])
             if rhel_found:
-                ami.tags.add(RHEL_TAG)
+                ami.tags.add(rhel_tag)
             # Add image inspection JSON
             ami.inspection_json = json.dumps(image_json)
             ami.save()

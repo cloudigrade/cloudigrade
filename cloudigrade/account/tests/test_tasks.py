@@ -471,17 +471,25 @@ class AccountCeleryTaskTest(TestCase):
                                       is_encrypted=False,
                                       is_windows=False,
                                       ec2_ami_id=ami_id)
-        inspection_results = {'cloud': 'aws',
-                              'results': {
-                                  ami_id: {'drive':
-                                           {'partition':
-                                            {'rhel_found': True,
-                                             'evidence': [
-                                                 {'release_file':
-                                                  '/redhat-release',
-                                                  'release_file_contents':
-                                                  'RHEL\n',
-                                                  'rhel_found': True}]}}}}}
+        inspection_results = {
+            'cloud': 'aws',
+            'results': {
+                ami_id: {
+                    'drive': {
+                        'partition': {
+                            'rhel_found': True,
+                            'evidence': [
+                                {
+                                    'release_file': '/redhat-release',
+                                    'release_file_contents': 'RHEL\n',
+                                    'rhel_found': True,
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        }
 
         tasks.persist_aws_inspection_cluster_results(inspection_results)
         self.assertEqual(
@@ -503,17 +511,25 @@ class AccountCeleryTaskTest(TestCase):
                                       is_windows=False,
                                       ec2_ami_id=ami_id)
 
-        inspection_results = {'cloud': 'aws',
-                              'results': {
-                                  ami_id: {'drive':
-                                           {'partition':
-                                            {'rhel_found': False,
-                                             'evidence': [
-                                                 {'release_file':
-                                                  '/centos-release',
-                                                  'release_file_contents':
-                                                  'CentOS\n',
-                                                  'rhel_found': False}]}}}}}
+        inspection_results = {
+            'cloud': 'aws',
+            'results': {
+                ami_id: {
+                    'drive': {
+                        'partition': {
+                            'rhel_found': False,
+                            'evidence': [
+                                {
+                                    'release_file': '/centos-release',
+                                    'release_file_contents': 'CentOS\n',
+                                    'rhel_found': False
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        }
 
         tasks.persist_aws_inspection_cluster_results(inspection_results)
         self.assertEqual(machine_image1.tags.first(), None)
