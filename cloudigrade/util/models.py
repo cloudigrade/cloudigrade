@@ -13,6 +13,7 @@ class BasePolymorphicModel(PolymorphicModel):
         abstract = True
         ordering = ('created_at',)
 
+
 class BaseModel(models.Model):
     """Abstract model to add automatic created_at and updated_at fields."""
 

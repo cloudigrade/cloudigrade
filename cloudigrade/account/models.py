@@ -5,8 +5,8 @@ import model_utils
 from django.contrib.auth.models import User
 from django.db import models
 
-from util.models import (BasePolymorphicModel,
-                         BaseModel)
+from util.models import (BaseModel,
+                         BasePolymorphicModel)
 
 
 class Account(BasePolymorphicModel):
