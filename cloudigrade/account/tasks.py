@@ -285,5 +285,5 @@ def persist_inspection_cluster_results_task():
             if inspection_result.get(CLOUD_KEY) == CLOUD_TYPE_AWS:
                 persist_aws_inspection_cluster_results(inspection_result)
             else:
-                logger.error(_('Unsupported cloud type: "{0}"'.format(
-                               message.get(CLOUD_KEY))))
+                logger.error(_('Unsupported cloud type: "{0}"').format(
+                    message.get(CLOUD_KEY)))

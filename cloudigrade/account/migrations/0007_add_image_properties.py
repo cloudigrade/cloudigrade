@@ -14,10 +14,10 @@ def migrate_is_windows_to_property(apps, schema_editor):
 
     # Get current machine images
     MachineImage = apps.get_model('account', 'MachineImage')
-    all_images = MachineImage.objects.filter(is_windows=True)
+    windows_images = MachineImage.objects.filter(is_windows=True)
 
     # Update all windows images
-    for image in all_images:
+    for image in windows_images:
         image.tags.add(windows_tag)
         image.is_windows = None
         image.save()
