@@ -12,6 +12,7 @@ from account import AWS_PROVIDER_STRING, reports
 from account.models import (AwsAccount, AwsInstance, AwsMachineImage,
                             InstanceEvent)
 from account.serializers import AwsAccountSerializer, ReportSerializer, aws
+from account.tests import helper as account_helper
 from util.tests import helper as util_helper
 
 
@@ -162,6 +163,57 @@ class AwsAccountSerializerTest(TestCase):
                 serializer.create(validated_data)
             raised_exception = cm.exception
             self.assertEqual(raised_exception, client_error)
+
+    def test_create_fails_when_another_arn_has_same_aws_account_id(self):
+        """Test that an account is not saved if ARN reuses an AWS account."""
+        user = util_helper.generate_test_user()
+        aws_account_id = util_helper.generate_dummy_aws_account_id()
+        arn = util_helper.generate_dummy_arn(aws_account_id)
+        role = util_helper.generate_dummy_role()
+        region = random.choice(util_helper.SOME_AWS_REGIONS)
+        running_instances = {
+            region: [
+                util_helper.generate_dummy_describe_instance(
+                    state=aws.InstanceState.running
+                ),
+                util_helper.generate_dummy_describe_instance(
+                    state=aws.InstanceState.stopping
+                )
+            ]
+        }
+
+        validated_data = {
+            'account_arn': arn,
+        }
+
+        # Create one with the same AWS account ID but a different ARN.
+        account_helper.generate_aws_account(
+            aws_account_id=aws_account_id,
+            user=user,
+        )
+
+        mock_request = Mock()
+        mock_request.user = util_helper.generate_test_user()
+        context = {'request': mock_request}
+
+        with patch.object(aws, 'verify_account_access') as mock_verify, \
+                patch.object(aws.sts, 'boto3') as mock_boto3, \
+                patch.object(aws, 'get_running_instances') as mock_get_run, \
+                patch.object(account_serializers,
+                             'copy_ami_snapshot') as mock_copy_snapshot:
+            mock_assume_role = mock_boto3.client.return_value.assume_role
+            mock_assume_role.return_value = role
+            mock_verify.return_value = True, []
+            mock_get_run.return_value = running_instances
+            mock_copy_snapshot.return_value = None
+            serializer = AwsAccountSerializer(context=context)
+
+            with self.assertRaises(ValidationError) as cm:
+                serializer.create(validated_data)
+            raised_exception = cm.exception
+            self.assertIn('account_arn', raised_exception.detail)
+            self.assertIn(aws_account_id,
+                          raised_exception.detail['account_arn'][0])
 
 
 class ReportSerializerTest(TestCase):
