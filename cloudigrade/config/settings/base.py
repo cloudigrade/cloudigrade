@@ -59,10 +59,7 @@ HOUNDIGRADE_ECS_IMAGE_TAG = env(
     default='latest'
 )
 HOUNDIGRADE_DEBUG = env.bool('HOUNDIGRADE_DEBUG', default=False)
-HOUNDIGRADE_RESULTS_QUEUE_NAME = env('HOUNDIGRADE_RESULTS_QUEUE_NAME',
-                                      default='inspection_results')
-HOUNDIGRADE_EXCHANGE_NAME = env('HOUNDIGRADE_EXCHANGE_NAME',
-                                default='houndigrade_inspectigrade')
+HOUNDIGRADE_EXCHANGE_NAME = env('HOUNDIGRADE_EXCHANGE_NAME', default='')
 
 # Default apps go here
 DJANGO_APPS = [
@@ -232,6 +229,11 @@ AWS_SQS_URL = env(
 )
 AWS_SQS_QUEUE_NAME_PREFIX = env('AWS_SQS_QUEUE_NAME_PREFIX',
                                 default=env('USER', default='anonymous') + '-')
+
+HOUNDIGRADE_RESULTS_QUEUE_NAME = env('HOUNDIGRADE_RESULTS_QUEUE_NAME',
+                                      default=AWS_SQS_QUEUE_NAME_PREFIX + \
+                                              'inspection_results')
+
 CELERY_BROKER_TRANSPORT_OPTIONS = {
     'queue_name_prefix': AWS_SQS_QUEUE_NAME_PREFIX,
     'region': AWS_SQS_REGION,

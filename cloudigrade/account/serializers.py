@@ -51,6 +51,21 @@ class AwsAccountSerializer(HyperlinkedModelSerializer):
         """Create an AwsAccount."""
         arn = aws.AwsArn(validated_data['account_arn'])
         aws_account_id = arn.account_id
+
+        account = AwsAccount.objects.filter(
+            aws_account_id=aws_account_id
+        ).first()
+        if account is not None:
+            raise serializers.ValidationError(
+                detail={
+                    'account_arn': [
+                        _('An ARN already exists for account "{0}"').format(
+                            aws_account_id
+                        )
+                    ]
+                }
+            )
+
         user = self.context['request'].user
         account = AwsAccount(
             account_arn=str(arn),
