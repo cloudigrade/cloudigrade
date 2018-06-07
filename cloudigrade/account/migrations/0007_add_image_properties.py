@@ -26,7 +26,6 @@ def migrate_is_windows_to_property(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('util', '0001_initial'),
         ('account', '0006_account_user'),
     ]
 
@@ -34,11 +33,16 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='ImageTag',
             fields=[
-                ('basemodel_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE,
-                                                       parent_link=True, primary_key=True, serialize=False, to='util.BaseModel')),
+                ('id', models.AutoField(auto_created=True,
+                                        primary_key=True, serialize=False, verbose_name='ID')),
+                ('created_at', models.DateTimeField(auto_now_add=True)),
+                ('updated_at', models.DateTimeField(auto_now=True)),
                 ('description', models.CharField(max_length=32)),
             ],
-            bases=('util.basemodel',),
+            options={
+                'ordering': ('created_at',),
+                'abstract': False,
+            },
         ),
         migrations.AddField(
             model_name='machineimage',
@@ -54,7 +58,8 @@ class Migration(migrations.Migration):
             model_name='machineimage',
             name='is_windows',
             field=models.NullBooleanField(),
-        ), migrations.RunPython(migrate_is_windows_to_property),
+        ),
+        migrations.RunPython(migrate_is_windows_to_property),
         migrations.RemoveField(
             model_name='machineimage',
             name='is_windows',
