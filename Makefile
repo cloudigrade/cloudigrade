@@ -105,11 +105,11 @@ user-authenticate:
 	$(PYTHON) $(PYDIR)/manage.py drf_create_token $$uname --settings=config.settings.local
 
 oc-user:
-	oc rsh -c cloudigrade $$(oc get pods -o jsonpath='{.items[*].metadata.name}' -l name=cloudigrade) scl enable rh-postgresql96 rh-python36 -- python manage.py createsuperuser
+	oc rsh -c cloudigrade-api $$(oc get pods -o jsonpath='{.items[*].metadata.name}' -l name=cloudigrade-api) scl enable rh-postgresql96 rh-python36 -- python manage.py createsuperuser
 
 oc-user-authenticate:
 	@read -p "User name: " uname; \
-	oc rsh -c cloudigrade $$(oc get pods -o jsonpath='{.items[*].metadata.name}' -l name=cloudigrade) scl enable rh-postgresql96 rh-python36 -- python manage.py drf_create_token $$uname
+	oc rsh -c cloudigrade-api $$(oc get pods -o jsonpath='{.items[*].metadata.name}' -l name=cloudigrade-api) scl enable rh-postgresql96 rh-python36 -- python manage.py drf_create_token $$uname
 
 docs-seqdiag:
 	cd docs && for FILE in *.diag; do seqdiag -Tsvg $$FILE; done
