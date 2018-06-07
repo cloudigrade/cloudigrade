@@ -27,6 +27,12 @@ from . import helper
 class AccountCeleryTaskTest(TestCase):
     """Account app Celery task test cases."""
 
+    def setUp(self):
+        """Set up expected ready_volumes queue name."""
+        self.ready_volumes_queue_name = '{0}ready_volumes'.format(
+            settings.AWS_SQS_QUEUE_NAME_PREFIX
+        )
+
     @patch('account.tasks.aws')
     def test_copy_ami_snapshot_success(self, mock_aws):
         """Assert that the snapshot copy task succeeds."""
@@ -229,7 +235,7 @@ class AccountCeleryTaskTest(TestCase):
 
         enqueue_ready_volume(ami_id, volume_id, region)
 
-        mock_queue.assert_called_with('ready_volumes', messages)
+        mock_queue.assert_called_with(self.ready_volumes_queue_name, messages)
 
     @patch('account.tasks.aws')
     def test_enqueue_ready_volume_error(self, mock_aws):
@@ -289,7 +295,7 @@ class AccountCeleryTaskTest(TestCase):
             settings.HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME
         )
         mock_read_messages_from_queue.assert_called_once_with(
-            'ready_volumes',
+            self.ready_volumes_queue_name,
             settings.HOUNDIGRADE_AWS_VOLUME_BATCH_SIZE
         )
         mock_aws.scale_up.assert_called_once_with(
@@ -344,7 +350,7 @@ class AccountCeleryTaskTest(TestCase):
         )
         mock_aws.scale_up.assert_not_called()
         mock_read_messages_from_queue.assert_called_once_with(
-            'ready_volumes',
+            self.ready_volumes_queue_name,
             settings.HOUNDIGRADE_AWS_VOLUME_BATCH_SIZE
         )
         mock_run_inspection_cluster.delay.assert_not_called()
@@ -377,7 +383,7 @@ class AccountCeleryTaskTest(TestCase):
             settings.HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME
         )
         mock_add_messages_to_queue.assert_called_once_with(
-            'ready_volumes',
+            self.ready_volumes_queue_name,
             messages
         )
         mock_run_inspection_cluster.delay.assert_not_called()

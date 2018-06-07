@@ -99,7 +99,8 @@ def enqueue_ready_volume(ami_id, volume_id, region):
     aws.check_volume_state(volume)
     messages = [{'ami_id': ami_id, 'volume_id': volume_id}]
 
-    add_messages_to_queue('ready_volumes', messages)
+    queue_name = '{0}ready_volumes'.format(settings.AWS_SQS_QUEUE_NAME_PREFIX)
+    add_messages_to_queue(queue_name, messages)
 
 
 @shared_task
@@ -112,6 +113,7 @@ def scale_up_inspection_cluster():
         None: Run as a scheduled Celery task.
 
     """
+    queue_name = '{0}ready_volumes'.format(settings.AWS_SQS_QUEUE_NAME_PREFIX)
     scaled_down, auto_scaling_group = aws.is_scaled_down(
         settings.HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME
     )
@@ -133,7 +135,7 @@ def scale_up_inspection_cluster():
         return
 
     messages = read_messages_from_queue(
-        'ready_volumes',
+        queue_name,
         settings.HOUNDIGRADE_AWS_VOLUME_BATCH_SIZE
     )
 
@@ -146,7 +148,7 @@ def scale_up_inspection_cluster():
         aws.scale_up(settings.HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME)
     except ClientError:
         # If scale_up fails unexpectedly, requeue messages so they aren't lost.
-        add_messages_to_queue('ready_volumes', messages)
+        add_messages_to_queue(queue_name, messages)
         raise
 
     run_inspection_cluster.delay(messages)
