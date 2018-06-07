@@ -261,7 +261,8 @@ def persist_aws_inspection_cluster_results(inspection_result):
             ami.inspection_json = json.dumps(image_json)
             ami.save()
         else:
-            logger.error(_('AwsMachineImage %s is not found.' % image_id))
+            logger.error(
+                _('AwsMachineImage "{0}" is not found.').format(image_id))
 
 
 @shared_task
@@ -284,5 +285,5 @@ def persist_inspection_cluster_results_task():
             if inspection_result.get(CLOUD_KEY) == CLOUD_TYPE_AWS:
                 persist_aws_inspection_cluster_results(inspection_result)
             else:
-                logger.error(_('Unsupported cloud type: %s' %
-                               message.get(CLOUD_KEY)))
+                logger.error(_('Unsupported cloud type: "{0}"'.format(
+                               message.get(CLOUD_KEY))))
