@@ -7,5 +7,6 @@ class UtilConfig(AppConfig):
     name = 'util'
 
     def ready(self):
-        from .health import MessageBrokerBackend
-        plugin_dir.register(MessageBrokerBackend)
+        from .health import CeleryHealthCheckBackend, SqsHealthCheckBackend
+        plugin_dir.register(CeleryHealthCheckBackend)
+        plugin_dir.register(SqsHealthCheckBackend)

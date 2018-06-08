@@ -1,8 +1,9 @@
 """Collection of tests for utils in the account app."""
 import random
-from queue import Empty
+import uuid
 from unittest.mock import Mock, patch
 
+from botocore.exceptions import ClientError
 from django.test import TestCase
 from rest_framework.serializers import ValidationError
 
@@ -95,77 +96,158 @@ class AccountUtilTest(TestCase):
 
         self.assertEqual(result, expected)
 
-    @patch('account.util.kombu')
-    def test_add_messages_to_queue(self, mock_kombu):
+    @patch('account.util.boto3')
+    def test_get_sqs_queue_url_for_existing_queue(self, mock_boto3):
+        """Test getting URL for existing SQS queue."""
+        mock_client = mock_boto3.client.return_value
+        queue_name = Mock()
+        expected_url = Mock()
+        mock_client.get_queue_url.return_value = {'QueueUrl': expected_url}
+        queue_url = util._get_sqs_queue_url(queue_name)
+        self.assertEqual(queue_url, expected_url)
+        mock_client.get_queue_url.assert_called_with(QueueName=queue_name)
+
+    @patch('account.util.boto3')
+    def test_get_sqs_queue_url_creates_new_queue(self, mock_boto3):
+        """Test getting URL for a SQS queue that does not yet exist."""
+        mock_client = mock_boto3.client.return_value
+        queue_name = Mock()
+        expected_url = Mock()
+        error_response = {
+            'Error': {
+                'Code': '.NonExistentQueue'
+            }
+        }
+        exception = ClientError(error_response, Mock())
+        mock_client.get_queue_url.side_effect = exception
+        mock_client.create_queue.return_value = {'QueueUrl': expected_url}
+        queue_url = util._get_sqs_queue_url(queue_name)
+        self.assertEqual(queue_url, expected_url)
+        mock_client.get_queue_url.assert_called_with(QueueName=queue_name)
+        mock_client.create_queue.assert_called_with(QueueName=queue_name)
+
+    def test_sqs_wrap_message(self):
+        """Test SQS message wrapping."""
+        message_decoded = 'hello world'
+        message_encoded = 'ImhlbGxvIHdvcmxkIg=='
+        with patch.object(util, 'uuid') as mock_uuid:
+            wrapped_id = uuid.uuid4()
+            mock_uuid.uuid4.return_value = wrapped_id
+            actual_wrapped = util._sqs_wrap_message(message_decoded)
+        self.assertEqual(actual_wrapped['Id'], str(wrapped_id))
+        self.assertEqual(actual_wrapped['MessageBody'], message_encoded)
+
+    def test_sqs_unwrap_message(self):
+        """Test SQS message unwrapping."""
+        message_decoded = 'hello world'
+        message_encoded = 'ImhlbGxvIHdvcmxkIg=='
+        message_wrapped = {
+            'Body': message_encoded,
+        }
+        actual_unwrapped = util._sqs_unwrap_message(message_wrapped)
+        self.assertEqual(actual_unwrapped, message_decoded)
+
+    def create_messages(self, count=1):
+        """
+        Create lists of messages for testing.
+
+        Args:
+            count (int): number of messages to generate
+
+        Returns:
+            tuple: Three lists. The first list contains the original message
+                payloads. The second list contains the messages wrapped as we
+                would batch send to SQS. The third list contains the messages
+                wrapped as we would received from SQS.
+
+        """
+        payloads = []
+        messages_sent = []
+        messages_received = []
+        for __ in range(count):
+            message = f'Hello, {uuid.uuid4()}!'
+            wrapped = util._sqs_wrap_message(message)
+            payloads.append(message)
+            messages_sent.append(wrapped)
+            received = {
+                'Id': wrapped['Id'],
+                'Body': wrapped['MessageBody'],
+                'ReceiptHandle': uuid.uuid4(),
+            }
+            messages_received.append(received)
+        return payloads, messages_sent, messages_received
+
+    @patch('account.util.boto3')
+    def test_add_messages_to_queue(self, mock_boto3):
         """Test that messages get added to a message queue."""
         queue_name = 'Test Queue'
-        region = random.choice(util_helper.SOME_AWS_REGIONS)
-        instance = util_helper.generate_dummy_describe_instance()
-        instances_data = {region: [instance]}
-        ami_list = [instance['ImageId']]
+        messages, wrapped_messages, __ = self.create_messages()
+        mock_sqs = mock_boto3.client.return_value
+        mock_queue_url = Mock()
+        mock_sqs.get_queue_url.return_value = {'QueueUrl': mock_queue_url}
 
-        messages = util.generate_aws_ami_messages(instances_data, ami_list)
-        mock_routing_key = queue_name
-        mock_body = messages[0]
+        with patch.object(util, '_sqs_wrap_message') as mock_sqs_wrap_message:
+            mock_sqs_wrap_message.return_value = wrapped_messages[0]
+            util.add_messages_to_queue(queue_name, messages)
+            mock_sqs_wrap_message.assert_called_once_with(messages[0])
 
-        mock_exchange = mock_kombu.Exchange.return_value
-        mock_queue = mock_kombu.Queue.return_value
-        mock_conn = mock_kombu.Connection.return_value
-        mock_with_conn = mock_conn.__enter__.return_value
-        mock_producer = mock_with_conn.Producer.return_value
-        mock_pub = mock_producer.publish
-
-        util.add_messages_to_queue(queue_name, messages)
-
-        mock_pub.assert_called_with(
-            mock_body,
-            retry=True,
-            exchange=mock_exchange,
-            routing_key=mock_routing_key,
-            declare=[mock_queue]
+        mock_sqs.send_message_batch.assert_called_with(
+            QueueUrl=mock_queue_url, Entries=wrapped_messages
         )
 
-    def prepare_mock_kombu_for_consuming(self, mock_kombu):
-        """Prepare mock_kombu with mock messages."""
-        mock_conn = mock_kombu.Connection.return_value
-        mock_with_conn = mock_conn.__enter__.return_value
-        mock_consumer = mock_with_conn.SimpleQueue.return_value
-        mock_messages = [Mock(), Mock()]
-        mock_consumer.get_nowait.side_effect = mock_messages + [Empty]
-        return mock_messages
+    @patch('account.util.boto3')
+    def test_read_single_message_from_queue(self, mock_boto3):
+        """Test that messages are read from a message queue."""
+        queue_name = 'Test Queue'
+        actual_count = util.SQS_RECEIVE_BATCH_SIZE + 1
+        requested_count = 1
 
-    @patch('account.util.kombu')
-    def test_read_messages_from_queue_until_empty(self, mock_kombu):
+        messages, __, wrapped_messages = self.create_messages(actual_count)
+        mock_sqs = mock_boto3.client.return_value
+        mock_sqs.receive_message = Mock()
+        mock_sqs.receive_message.side_effect = [
+            {'Messages': wrapped_messages[:requested_count]},
+            {'Messages': []},
+        ]
+        read_messages = util.read_messages_from_queue(queue_name,
+                                                      requested_count)
+        self.assertEqual(set(read_messages), set(messages[:requested_count]))
+
+    @patch('account.util.boto3')
+    def test_read_messages_from_queue_until_empty(self, mock_boto3):
         """Test that all messages are read from a message queue."""
-        mock_messages = self.prepare_mock_kombu_for_consuming(mock_kombu)
         queue_name = 'Test Queue'
-        expected_results = [mock_messages[0].payload, mock_messages[1].payload]
-        actual_results = util.read_messages_from_queue(queue_name, 5)
-        self.assertEqual(actual_results, expected_results)
-        mock_messages[0].ack.assert_called_once_with()
-        mock_messages[1].ack.assert_called_once_with()
+        requested_count = util.SQS_RECEIVE_BATCH_SIZE + 1
+        actual_count = util.SQS_RECEIVE_BATCH_SIZE - 1
 
-    @patch('account.util.kombu')
-    def test_read_messages_from_queue_once(self, mock_kombu):
-        """Test that one message is read from a message queue."""
-        mock_messages = self.prepare_mock_kombu_for_consuming(mock_kombu)
-        queue_name = 'Test Queue'
-        expected_results = [mock_messages[0].payload]
-        actual_results = util.read_messages_from_queue(queue_name)
-        self.assertEqual(actual_results, expected_results)
-        mock_messages[0].ack.assert_called_once_with()
-        mock_messages[1].ack.assert_not_called()
+        messages, __, wrapped_messages = self.create_messages(actual_count)
+        mock_sqs = mock_boto3.client.return_value
+        mock_sqs.receive_message = Mock()
+        mock_sqs.receive_message.side_effect = [
+            {'Messages': wrapped_messages[:util.SQS_RECEIVE_BATCH_SIZE]},
+            {'Messages': []},
+        ]
+        read_messages = util.read_messages_from_queue(queue_name,
+                                                      requested_count)
+        self.assertEqual(set(read_messages), set(messages[:requested_count]))
 
-    @patch('account.util.kombu')
-    def test_read_messages_from_queue_stops_at_limit(self, mock_kombu):
-        """Test that messages up to the batch size are read from the queue."""
-        mock_messages = self.prepare_mock_kombu_for_consuming(mock_kombu)
+    @patch('account.util.boto3')
+    def test_read_messages_from_queue_stops_at_limit(self, mock_boto3):
+        """Test that all messages are read from a message queue."""
         queue_name = 'Test Queue'
-        expected_results = [mock_messages[0].payload]
-        actual_results = util.read_messages_from_queue(queue_name, 1)
-        self.assertEqual(actual_results, expected_results)
-        mock_messages[0].ack.assert_called_once_with()
-        mock_messages[1].ack.assert_not_called()
+        requested_count = util.SQS_RECEIVE_BATCH_SIZE - 1
+        actual_count = util.SQS_RECEIVE_BATCH_SIZE + 1
+
+        messages, __, wrapped_messages = self.create_messages(actual_count)
+        mock_sqs = mock_boto3.client.return_value
+        mock_sqs.receive_message = Mock()
+        mock_sqs.receive_message.side_effect = [
+            {'Messages': wrapped_messages[:requested_count]},
+            {'Messages': []},
+        ]
+        read_messages = util.read_messages_from_queue(queue_name,
+                                                      requested_count)
+        self.assertEqual(set(read_messages), set(messages[:requested_count]))
 
     def test_convert_param_to_int_with_int(self):
         """Test that convert_param_to_int returns int with int."""
