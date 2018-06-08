@@ -1,9 +1,13 @@
 """Various utility functions for the account app."""
+import base64
 import collections
-from queue import Empty
+import logging
+import math
+import uuid
 
-import kombu
-from django.conf import settings
+import boto3
+import jsonpickle
+from botocore.exceptions import ClientError
 from django.utils import timezone
 from django.utils.translation import gettext as _
 from rest_framework.serializers import ValidationError
@@ -12,6 +16,11 @@ from account import AWS_PROVIDER_STRING
 from account.models import (AwsInstance, AwsInstanceEvent, AwsMachineImage,
                             ImageTag, InstanceEvent)
 from util.aws import is_instance_windows
+
+logger = logging.getLogger(__name__)
+
+SQS_SEND_BATCH_SIZE = 10  # boto3 supports sending up to 10 items.
+SQS_RECEIVE_BATCH_SIZE = 10  # boto3 supports receiving of up to 10 items.
 
 
 def create_initial_aws_instance_events(account, instances_data):
@@ -126,80 +135,134 @@ def generate_aws_ami_messages(instances_data, ami_list):
     return messages
 
 
-def _create_exchange_and_queue(queue_name):
+def _get_sqs_queue_url(queue_name):
     """
-    Create a Kombu message Exchange and Queue.
+    Get the SQS queue URL for the given queue name.
+
+    This has the side-effect on ensuring that the queue exists.
 
     Args:
-        queue_name (str): The target queue's name
+        queue_name (str): the name of the target SQS queue
 
     Returns:
-        tuple(kombu.Exchange, kombu.Queue)
+        str: the queue's URL.
 
     """
-    exchange = kombu.Exchange(
-        settings.QUEUE_EXCHANGE_NAME,
-        'direct',
-        durable=True
+    sqs = boto3.client('sqs')
+    try:
+        return sqs.get_queue_url(QueueName=queue_name)['QueueUrl']
+    except ClientError as e:
+        if e.response['Error']['Code'].endswith('.NonExistentQueue'):
+            return sqs.create_queue(QueueName=queue_name)['QueueUrl']
+        raise
+
+
+def _sqs_wrap_message(message):
+    """
+    Wrap the message in a dict for SQS batch sending.
+
+    Args:
+        message (object): message to encode and wrap
+
+    Returns:
+        dict: structured entry for sending to send_message_batch
+
+    """
+    return {
+        'Id': str(uuid.uuid4()),
+        # Yes, the outgoing message uses MessageBody, not Body.
+        'MessageBody': base64.b64encode(
+            jsonpickle.encode(message).encode('utf-8')
+        ).decode('utf-8'),
+    }
+
+
+def _sqs_unwrap_message(sqs_message):
+    """
+    Unwrap the sqs_message to get the original message.
+
+    Args:
+        sqs_message (dict): object to unwrap and decode
+
+    Returns:
+        object: the unwrapped and decoded message object
+
+    """
+    return jsonpickle.decode(
+        base64.b64decode(
+            # Yes, the response has Body, not MessageBody.
+            sqs_message['Body'].encode('utf-8')
+        ).decode('utf-8')
     )
-    message_queue = kombu.Queue(
-        queue_name,
-        exchange=exchange,
-        routing_key=queue_name
-    )
-    return exchange, message_queue
 
 
 def add_messages_to_queue(queue_name, messages):
     """
-    Send messages to a message queue.
+    Send messages to an SQS queue.
 
     Args:
         queue_name (str): The queue to add messages to
         messages (list[dict]): A list of message dictionaries. The message
             dicts will be serialized as JSON strings.
-
-    Returns:
-        dict: A mapping of machine image ID to result boolean value
-
     """
-    exchange, message_queue = _create_exchange_and_queue(queue_name)
+    queue_url = _get_sqs_queue_url(queue_name)
+    sqs = boto3.client('sqs')
 
-    with kombu.Connection(settings.CELERY_BROKER_URL) as conn:
-        producer = conn.Producer(serializer='json')
-        for message in messages:
-            producer.publish(
-                message,
-                retry=True,
-                exchange=exchange,
-                routing_key=queue_name,
-                declare=[message_queue]
-            )
+    wrapped_messages = [_sqs_wrap_message(message) for message in messages]
+    batch_count = math.ceil(len(messages) / SQS_SEND_BATCH_SIZE)
+
+    for batch_num in range(batch_count):
+        start_pos = batch_num * SQS_SEND_BATCH_SIZE
+        end_pos = start_pos + SQS_SEND_BATCH_SIZE - 1
+        batch = wrapped_messages[start_pos:end_pos]
+        sqs.send_message_batch(QueueUrl=queue_url, Entries=batch)
 
 
 def read_messages_from_queue(queue_name, max_count=1):
     """
-    Read messages (up to max_count) from a message queue.
+    Read messages (up to max_count) from an SQS queue.
 
     Args:
         queue_name (str): The queue to read messages from
         max_count (int): Max number of messages to read
 
     Returns:
-        list[object]: The dequeued messages.
+        list[object]: The de-queued messages.
 
     """
-    __, message_queue = _create_exchange_and_queue(queue_name)
+    queue_url = _get_sqs_queue_url(queue_name)
+    sqs = boto3.client('sqs')
+    sqs_messages = []
+    max_batch_size = min(SQS_RECEIVE_BATCH_SIZE, max_count)
+    for __ in range(max_count):
+        # Because receive_message does *not* actually reliably return
+        # MaxNumberOfMessages number of messages especially (read the docs),
+        # our iteration count is actually max_count and we have some
+        # conditions at the end that break us out when we reach the true end.
+        new_messages = sqs.receive_message(
+            QueueUrl=queue_url,
+            MaxNumberOfMessages=max_batch_size
+        ).get('Messages', [])
+        if len(new_messages) == 0:
+            break
+        sqs_messages.extend(new_messages)
+        if len(sqs_messages) >= max_count:
+            break
     messages = []
-    with kombu.Connection(settings.CELERY_BROKER_URL) as conn:
+    for sqs_message in sqs_messages:
         try:
-            consumer = conn.SimpleQueue(name=message_queue)
-            while len(messages) < max_count:
-                message = consumer.get_nowait()
-                messages.append(message.payload)
-                message.ack()
-        except Empty:
-            pass
+            unwrapped = _sqs_unwrap_message(sqs_message)
+            sqs.delete_message(
+                QueueUrl=queue_url,
+                ReceiptHandle=sqs_message['ReceiptHandle'],
+            )
+            messages.append(unwrapped)
+        except ClientError as e:
+            # I'm not sure exactly what exceptions could land here, but we
+            # probably should log them, stop attempting further deletes, and
+            # return what we have received (and thus deleted!) so far.
+            logger.exception(e)
+            break
     return messages
 
 
