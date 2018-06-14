@@ -249,6 +249,31 @@ class AccountUtilTest(TestCase):
                                                       requested_count)
         self.assertEqual(set(read_messages), set(messages[:requested_count]))
 
+    @patch('account.util.boto3')
+    def test_read_messages_from_queue_stops_has_error(self, mock_boto3):
+        """Test we log if an error is raised when deleting from a queue."""
+        queue_name = 'Test Queue'
+        requested_count = util.SQS_RECEIVE_BATCH_SIZE - 1
+        actual_count = util.SQS_RECEIVE_BATCH_SIZE + 1
+
+        messages, __, wrapped_messages = self.create_messages(actual_count)
+        mock_sqs = mock_boto3.client.return_value
+        mock_sqs.receive_message = Mock()
+        mock_sqs.receive_message.side_effect = [
+            {'Messages': wrapped_messages[:requested_count]},
+            {'Messages': []},
+        ]
+        error_response = {
+            'Error': {
+                'Code': 'it is a mystery'
+            }
+        }
+        exception = ClientError(error_response, Mock())
+        mock_sqs.delete_message.side_effect = exception
+        read_messages = util.read_messages_from_queue(queue_name,
+                                                      requested_count)
+        self.assertEqual(set(read_messages), set())
+
     def test_convert_param_to_int_with_int(self):
         """Test that convert_param_to_int returns int with int."""
         result = convert_param_to_int('test_field', 42)
