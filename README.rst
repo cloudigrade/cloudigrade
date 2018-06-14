@@ -88,22 +88,6 @@ Once you have an environment set up, install our Python package requirements:
     pip install -U pip wheel tox
     pip install -r requirements/local.txt
 
-If you plan to run cloudigrade or Celery locally on macOS, the required ``pycurl`` package may fail to install or may install improperly despite ``pip install`` appearing to complete successfully. You can verify that ``pycurl`` is installed correctly by simply importing it in a Python shell like this:
-
-.. code-block:: sh
-
-   python -c 'import pycurl'
-
-If you see no output, everything is okay! Otherwise (e.g. "libcurl link-time ssl backend (openssl) is different from compile-time ssl backend (none/other)"), it may not have installed correctly. Try the following commands force it to rebuild and install with the openssl backend:
-
-.. code-block:: sh
-
-   brew install openssl
-   pip uninstall pycurl
-   PYCURL_SSL_LIBRARY=openssl pip --no-cache-dir install --install-option="--with-openssl" --install-option="--openssl-dir=$(brew --prefix)/opt/openssl" pycurl
-
-Try the aforementioned import command again, and all should be good. If not, kindly reach out to another cloudigrade developer to seek assistance!
-
 
 Configure AWS account credentials
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
