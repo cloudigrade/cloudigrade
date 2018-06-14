@@ -256,6 +256,10 @@ def read_messages_from_queue(queue_name, max_count=1):
             # I'm not sure exactly what exceptions could land here, but we
             # probably should log them, stop attempting further deletes, and
             # return what we have received (and thus deleted!) so far.
+            log_message = _(
+                'Unexpected error when attempting to read from {0}: {1}'
+            ).format(queue_url, getattr(e, 'response', {}).get('Error'))
+            logger.error(log_message)
             logger.exception(e)
             break
     return messages
