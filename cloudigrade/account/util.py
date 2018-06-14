@@ -1,5 +1,4 @@
 """Various utility functions for the account app."""
-import base64
 import collections
 import logging
 import math
@@ -171,9 +170,7 @@ def _sqs_wrap_message(message):
     return {
         'Id': str(uuid.uuid4()),
         # Yes, the outgoing message uses MessageBody, not Body.
-        'MessageBody': base64.b64encode(
-            jsonpickle.encode(message).encode('utf-8')
-        ).decode('utf-8'),
+        'MessageBody': jsonpickle.encode(message),
     }
 
 
@@ -189,10 +186,8 @@ def _sqs_unwrap_message(sqs_message):
 
     """
     return jsonpickle.decode(
-        base64.b64decode(
-            # Yes, the response has Body, not MessageBody.
-            sqs_message['Body'].encode('utf-8')
-        ).decode('utf-8')
+        # Yes, the response has Body, not MessageBody.
+        sqs_message['Body']
     )
 
 

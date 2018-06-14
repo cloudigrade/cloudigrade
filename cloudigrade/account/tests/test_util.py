@@ -128,8 +128,8 @@ class AccountUtilTest(TestCase):
 
     def test_sqs_wrap_message(self):
         """Test SQS message wrapping."""
-        message_decoded = 'hello world'
-        message_encoded = 'ImhlbGxvIHdvcmxkIg=='
+        message_decoded = {'hello': 'world'}
+        message_encoded = '{"hello": "world"}'
         with patch.object(util, 'uuid') as mock_uuid:
             wrapped_id = uuid.uuid4()
             mock_uuid.uuid4.return_value = wrapped_id
@@ -139,8 +139,8 @@ class AccountUtilTest(TestCase):
 
     def test_sqs_unwrap_message(self):
         """Test SQS message unwrapping."""
-        message_decoded = 'hello world'
-        message_encoded = 'ImhlbGxvIHdvcmxkIg=='
+        message_decoded = {'hello': 'world'}
+        message_encoded = '{"hello": "world"}'
         message_wrapped = {
             'Body': message_encoded,
         }
