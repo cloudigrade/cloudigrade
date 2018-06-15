@@ -75,6 +75,16 @@ class ImageTag(BaseModel):
 class MachineImage(BasePolymorphicModel):
     """Base Class for A cloud VM image."""
 
+    PENDING = 'pending'
+    PREPARING = 'preparing'
+    INSPECTING = 'inspecting'
+    INSPECTED = 'inspected'
+    STATUS_CHOICES = (
+        (PENDING, 'Pending Inspection'),
+        (PREPARING, 'Preparing for Inspection'),
+        (INSPECTING, 'Being Inspected'),
+        (INSPECTED, 'Inspected'),
+    )
     account = models.ForeignKey(
         Account,
         on_delete=models.CASCADE,
@@ -85,6 +95,8 @@ class MachineImage(BasePolymorphicModel):
     inspection_json = models.TextField(null=True,
                                        blank=True)
     is_encrypted = models.NullBooleanField()
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES,
+                              default=PENDING)
 
 
 class AwsAccount(Account):
