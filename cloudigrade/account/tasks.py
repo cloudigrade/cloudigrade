@@ -169,6 +169,11 @@ def run_inspection_cluster(messages, cloud='aws'):
         None: Run as an asynchronous Celery task.
 
     """
+    for message in messages:
+        image = AwsMachineImage.objects.get(ec2_ami_id=message['ami_id'])
+        image.status = image.INSPECTING
+        image.save()
+
     task_command = ['-c', cloud]
     if settings.HOUNDIGRADE_DEBUG:
         task_command.extend(['--debug'])
@@ -273,6 +278,7 @@ def persist_aws_inspection_cluster_results(inspection_result):
                 ami.tags.add(rhel_tag)
             # Add image inspection JSON
             ami.inspection_json = json.dumps(image_json)
+            ami.status = ami.INSPECTED
             ami.save()
         else:
             logger.error(

@@ -388,9 +388,16 @@ class AccountCeleryTaskTest(TestCase):
         )
         mock_run_inspection_cluster.delay.assert_not_called()
 
+    @patch('account.models.MachineImage.objects')
     @patch('account.tasks.boto3')
-    def test_run_inspection_cluster_success(self, mock_boto3):
+    def test_run_inspection_cluster_success(self, mock_boto3,
+                                            mock_machine_image_objects):
         """Asserts successful starting of the houndigrade task."""
+        mock_machine_image_objects.get.return_value = \
+            mock_machine_image_objects
+
+        mock_machine_image_objects.INSPECTING.return_value = 'inspecting'
+
         mock_list_container_instances = {
             'containerInstanceArns': [util_helper.generate_dummy_instance_id()]
         }
@@ -403,9 +410,17 @@ class AccountCeleryTaskTest(TestCase):
         mock_boto3.client.return_value = mock_ecs
         mock_boto3.resource.return_value = mock_ec2
 
-        messages = [{'ami_id': util_helper.generate_dummy_image_id(),
+        mock_ami_id = util_helper.generate_dummy_image_id()
+
+        messages = [{'ami_id': mock_ami_id,
                      'volume_id': util_helper.generate_dummy_volume_id()}]
         tasks.run_inspection_cluster(messages)
+
+        mock_machine_image_objects.get.assert_called_once_with(
+            ec2_ami_id=mock_ami_id)
+
+        self.assertEqual(mock_machine_image_objects.status.return_value,
+                         mock_machine_image_objects.INSPECTING.return_value)
 
         mock_ecs.list_container_instances.assert_called_once_with(
             cluster=settings.HOUNDIGRADE_ECS_CLUSTER_NAME)
@@ -420,9 +435,15 @@ class AccountCeleryTaskTest(TestCase):
         mock_ec2.Volume.assert_called_once_with(messages[0]['volume_id'])
         mock_ec2.Volume.return_value.attach_to_instance.assert_called_once()
 
+    @patch('account.models.MachineImage.objects')
     @patch('account.tasks.boto3')
-    def test_run_inspection_cluster_with_no_instances(self, mock_boto3):
+    def test_run_inspection_cluster_with_no_instances(
+            self, mock_boto3, mock_machine_image_objects):
         """Assert that an exception is raised if no instance is ready."""
+        messages = [{'ami_id': util_helper.generate_dummy_image_id(),
+                     'volume_id': util_helper.generate_dummy_volume_id()}]
+        mock_machine_image_objects.get.return_value = \
+            mock_machine_image_objects
         mock_list_container_instances = {'containerInstanceArns': []}
         mock_ecs = MagicMock()
         mock_ecs.list_container_instances.return_value = \
@@ -431,11 +452,17 @@ class AccountCeleryTaskTest(TestCase):
         mock_boto3.client.return_value = mock_ecs
 
         with self.assertRaises(AwsECSInstanceNotReady):
-            tasks.run_inspection_cluster([Mock()])
+            tasks.run_inspection_cluster(messages)
 
+    @patch('account.models.MachineImage.objects')
     @patch('account.tasks.boto3')
-    def test_run_inspection_cluster_with_too_many_instances(self, mock_boto3):
+    def test_run_inspection_cluster_with_too_many_instances(
+            self, mock_boto3, mock_machine_image_objects):
         """Assert that an exception is raised with too many instances."""
+        messages = [{'ami_id': util_helper.generate_dummy_image_id(),
+                     'volume_id': util_helper.generate_dummy_volume_id()}]
+        mock_machine_image_objects.get.return_value = \
+            mock_machine_image_objects
         mock_list_container_instances = {
             'containerInstanceArns': [
                 util_helper.generate_dummy_instance_id(),
@@ -449,7 +476,7 @@ class AccountCeleryTaskTest(TestCase):
         mock_boto3.client.return_value = mock_ecs
 
         with self.assertRaises(AwsTooManyECSInstances):
-            tasks.run_inspection_cluster([Mock()])
+            tasks.run_inspection_cluster(messages)
 
     @patch('account.tasks.persist_aws_inspection_cluster_results')
     @patch('account.tasks.read_messages_from_queue')

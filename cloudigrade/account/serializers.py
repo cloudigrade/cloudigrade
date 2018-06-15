@@ -93,6 +93,10 @@ class AwsAccountSerializer(HyperlinkedModelSerializer):
                 create_initial_aws_instance_events(account, instances_data)
             messages = generate_aws_ami_messages(instances_data, new_amis)
             for message in messages:
+                image = AwsMachineImage.objects.get(
+                    ec2_ami_id=message['image_id'])
+                image.status = image.PREPARING
+                image.save()
                 copy_ami_snapshot.delay(
                     str(arn),
                     message['image_id'],
@@ -171,7 +175,8 @@ class AwsMachineImageSerializer(HyperlinkedModelSerializer):
             'updated_at',
             'account',
             'is_encrypted',
-            'ec2_ami_id'
+            'ec2_ami_id',
+            'status'
         )
         read_only_fields = (
             'id',
@@ -179,7 +184,8 @@ class AwsMachineImageSerializer(HyperlinkedModelSerializer):
             'updated_at',
             'account',
             'is_encrypted',
-            'ec2_ami_id'
+            'ec2_ami_id',
+            'status'
         )
         extra_kwargs = {
             'url': {'view_name': 'image-detail', 'lookup_field': 'pk'},
