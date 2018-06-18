@@ -5,6 +5,7 @@ RUN useradd -r cloudigrade
 RUN yum install centos-release-scl -y \
     && yum-config-manager --enable centos-sclo-rh-testing \
     && yum install \
+        libcurl-devel \
         nmap-ncat \
         rh-postgresql96 \
         rh-postgresql96-postgresql-devel \
@@ -15,7 +16,7 @@ RUN yum install centos-release-scl -y \
 WORKDIR /opt/cloudigrade
 
 COPY requirements requirements
-RUN scl enable rh-postgresql96 rh-python36 \
+RUN PYCURL_SSL_LIBRARY=nss scl enable rh-postgresql96 rh-python36 \
     'pip install -r requirements/prod.txt' \
     && rm -rf requirements
 
