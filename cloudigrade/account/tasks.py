@@ -279,8 +279,8 @@ def persist_inspection_cluster_results_task():
     messages = read_messages_from_queue(
         settings.HOUNDIGRADE_RESULTS_QUEUE_NAME,
         HOUNDIGRADE_MESSAGE_READ_LEN)
-    logger.info(_('{} read {} message(s) for processing'.format(
-        'persist_inspection_cluster_results_task', len(messages))))
+    logger.info(_('{0} read {1} message(s) for processing').format(
+        'persist_inspection_cluster_results_task', len(messages)))
     if bool(messages):
         for message in messages:
             inspection_result = message
