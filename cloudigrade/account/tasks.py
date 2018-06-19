@@ -213,6 +213,18 @@ def run_inspection_cluster(messages, cloud='aws'):
                 'command': task_command,
                 'environment': [
                     {
+                        'name': 'AWS_DEFAULT_REGION',
+                        'value': settings.AWS_SQS_REGION
+                    },
+                    {
+                        'name': 'AWS_ACCESS_KEY_ID',
+                        'value': settings.AWS_SQS_ACCESS_KEY_ID
+                    },
+                    {
+                        'name': 'AWS_SECRET_ACCESS_KEY',
+                        'value': settings.AWS_SQS_SECRET_ACCESS_KEY
+                    },
+                    {
                         'name': 'RESULTS_QUEUE_NAME',
                         'value': settings.HOUNDIGRADE_RESULTS_QUEUE_NAME
                     },
