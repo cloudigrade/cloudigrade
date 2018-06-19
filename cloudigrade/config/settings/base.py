@@ -249,6 +249,8 @@ CELERY_TASK_ROUTES = {
         {'queue': 'scale_up_inspection_cluster'},
     'account.tasks.run_inspection_cluster':
         {'queue': 'run_inspection_cluster'},
+    'account.tasks.persist_inspection_cluster_results_task':
+        {'queue': 'persist_inspection_task'},
 }
 CELERY_BEAT_SCHEDULE = {
     'scale_up_inspection_cluster_every_60_min': {
