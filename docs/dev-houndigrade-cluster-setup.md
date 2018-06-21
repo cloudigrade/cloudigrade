@@ -31,6 +31,14 @@
     ```
     export HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME=EC2ContainerService-brasmith-houndigrade-cluster-2-EcsInstanceAsg-1QZUM5SE255CP
     ```
+1. Celery needs to know what the availability zone is for Houndigrade. Set this in the following manner:
+
+    ```
+    export HOUNDIGRADE_AWS_AVAILABILITY_ZONE=us-east-1f
+    aws autoscaling update-auto-scaling-group \
+        --auto-scaling-group-name $HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME \
+        --availability-zones=$HOUNDIGRADE_AWS_AVAILABILITY_ZONE
+    ```
 
 1. be sure to `export` your `AWS_DEFAULT_REGION`, `AWS_ACCESS_KEY_ID`, and `AWS_SECRET_ACCESS_KEY` if you don't have the default AWS CLI profile configure appropriately.
 1. use some variation of the following to check the current state of the cluster as needed.
