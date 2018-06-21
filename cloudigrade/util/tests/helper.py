@@ -126,7 +126,7 @@ def generate_dummy_describe_instance(instance_id=None, image_id=None,
         subnet_id (str): Optional Subnet ID.
         state (aws.InstanceState): Optional known state of the AwsInstance.
         instance_type (str): Optional known EC2 type of AwsInstance.
-        platform (string): Optional known Platform value.
+        platform (str): Optional known Platform value.
 
     Returns:
         dict: Well-formed instance data structure.
@@ -179,11 +179,11 @@ def generate_mock_ec2_instance(instance_id=None, image_id=None, subnet_id=None,
     Generate a mocked EC2 AwsInstance object.
 
     Args:
-        instance_id (string): The EC2 instance id.
-        instance_type (string): The EC2 instance type.
-        image_id (string): The EC2 AMI image id.
-        subnet (string): The EC2 subnet.
-        platform (string): The Platform value.
+        instance_id (str): The EC2 instance id.
+        instance_type (str): The EC2 instance type.
+        image_id (str): The EC2 AMI image id.
+        subnet (str): The EC2 subnet.
+        platform (str): The Platform value.
 
     Returns:
         Mock: A mock object with AwsInstance-like attributes.
@@ -207,7 +207,7 @@ def generate_mock_image(image_id=None, encrypted=False):
     Generate a mocked EC2 Image object.
 
     Args:
-        image_id (string): The AMI image id.
+        image_id (str): The AMI image id.
 
     Returns:
         Mock: A mock object with Image-like attributes.
@@ -291,9 +291,9 @@ def generate_mock_sqs_message(message_id, body, receipt_handle):
     Generate a mocked SQS Message object.
 
     Args:
-        message_id (string): The SQS message id.
-        body (string): The message contents.
-        receipt_handle (string): The SQS receipt handle.
+        message_id (str): The SQS message id.
+        body (str): The message contents.
+        receipt_handle (str): The SQS receipt handle.
 
     Returns:
         Mock: A mock object with Message-like attributes.
