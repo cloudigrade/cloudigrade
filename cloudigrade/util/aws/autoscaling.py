@@ -82,3 +82,17 @@ def scale_up(name):
 
     """
     return set_scale(name, 1, 1, 1)
+
+
+def scale_down(name):
+    """
+    Set the Auto Scaling group to have exactly 0 instance.
+
+    Args:
+        name: Auto Scaling group name
+
+    Returns:
+        dict: AWS response metadata
+
+    """
+    return set_scale(name, 0, 0, 0,)

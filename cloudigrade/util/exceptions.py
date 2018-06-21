@@ -35,6 +35,10 @@ class AwsSnapshotNotOwnedError(NotReadyException):
     """Raise when our account id does not have permissions on the snapshot."""
 
 
+class AwsSnapshotOwnedError(NotReadyException):
+    """Raise if account id has permissions on the snapshot after removal."""
+
+
 class SnapshotNotReadyException(NotReadyException):
     """The requested snapshot was not ready."""
 
