@@ -217,7 +217,7 @@ def remove_snapshot_ownership(snapshot):
     )
 
     # The modify call returns None. This is a check to make sure
-    # permissions are added successfully.
+    # permissions are removed successfully.
     response = snapshot.describe_attribute(Attribute='createVolumePermission')
 
     for user in response['CreateVolumePermissions']:
