@@ -14,3 +14,4 @@ from util.aws.s3 import get_object_content_from_s3
 from util.aws.sqs import (delete_message_from_queue, extract_sqs_message,
                           receive_message_from_queue)
 from util.aws.sts import get_session
+from util.aws.cloudtrail import configure_cloudtrail

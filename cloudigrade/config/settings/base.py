@@ -30,6 +30,7 @@ ALLOWED_HOSTS = env('DJANGO_ALLOWED_HOSTS', default=['*'])
 
 # AWS Defaults
 S3_DEFAULT_REGION = env('S3_DEFAULT_REGION', default='us-east-1')
+S3_BUCKET_NAME = env('S3_BUCKET_NAME', default='')
 SQS_DEFAULT_REGION = env('SQS_DEFAULT_REGION', default='us-east-1')
 HOUNDIGRADE_AWS_AVAILABILITY_ZONE = env('HOUNDIGRADE_AWS_AVAILABILITY_ZONE',
                                         default='us-east-1b')

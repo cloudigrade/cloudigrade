@@ -86,6 +86,7 @@ class AwsAccountSerializer(HyperlinkedModelSerializer):
             raise
         account_verified, failed_actions = aws.verify_account_access(session)
         if account_verified:
+            aws.configure_cloudtrail(session, aws_account_id)
             instances_data = aws.get_running_instances(session)
             with transaction.atomic():
                 account.save()
