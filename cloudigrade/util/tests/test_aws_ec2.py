@@ -102,7 +102,8 @@ class UtilAwsEc2Test(TestCase):
         mock_session.resource.assert_called_once_with('ec2')
         mock_resource.Instance.assert_called_once_with(mock_instance_id)
 
-    def test_get_ami(self):
+    @patch('util.aws.ec2.check_image_state')
+    def test_get_ami(self, mock_check_image_state):
         """Assert that get_ami returns an Image."""
         mock_image_id = helper.generate_dummy_image_id()
         mock_image = helper.generate_mock_image(mock_image_id)
@@ -119,6 +120,7 @@ class UtilAwsEc2Test(TestCase):
         mock_session.resource.assert_called_once_with('ec2',
                                                       region_name=mock_region)
         mock_resource.Image.assert_called_once_with(mock_image_id)
+        mock_check_image_state.assert_called_once_with(mock_image)
 
     def test_get_ami_snapshot_id(self):
         """Assert that an AMI returns a snapshot id."""

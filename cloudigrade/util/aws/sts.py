@@ -17,6 +17,7 @@ cloudigrade_policy = {
                 'ec2:ModifySnapshotAttribute',
                 'ec2:DescribeSnapshotAttribute',
                 'ec2:DescribeSnapshots',
+                'ec2:CopyImage',
                 'cloudtrail:CreateTrail',
                 'cloudtrail:UpdateTrail',
                 'cloudtrail:PutEventSelectors',
@@ -56,6 +57,11 @@ def get_session(arn, region_name='us-east-1'):
         aws_session_token=response['SessionToken'],
         region_name=region_name
     )
+
+
+def get_session_account_id(session):
+    """Return the account ID for the given AWS session."""
+    return session.client('sts').get_caller_identity().get('Account')
 
 
 def _get_primary_account_id():

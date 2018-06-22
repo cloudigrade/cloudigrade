@@ -51,6 +51,7 @@ class UtilAwsHelperTest(TestCase):
             call(mock_session, 'ec2:ModifySnapshotAttribute'),
             call(mock_session, 'ec2:DescribeSnapshotAttribute'),
             call(mock_session, 'ec2:DescribeSnapshots'),
+            call(mock_session, 'ec2:CopyImage'),
             call(mock_session, 'cloudtrail:CreateTrail'),
             call(mock_session, 'cloudtrail:UpdateTrail'),
             call(mock_session, 'cloudtrail:PutEventSelectors'),
@@ -58,7 +59,7 @@ class UtilAwsHelperTest(TestCase):
             call(mock_session, 'cloudtrail:StartLogging'),
         ]
         mock_verify_policy_action.side_effect = [
-            True, True, True, True, True,
+            True, True, True, True, True, True,
             True, True, True, True, True,
         ]
         verified, failed_actions = helper.verify_account_access(mock_session)
@@ -76,6 +77,7 @@ class UtilAwsHelperTest(TestCase):
             call(mock_session, 'ec2:ModifySnapshotAttribute'),
             call(mock_session, 'ec2:DescribeSnapshotAttribute'),
             call(mock_session, 'ec2:DescribeSnapshots'),
+            call(mock_session, 'ec2:CopyImage'),
             call(mock_session, 'cloudtrail:CreateTrail'),
             call(mock_session, 'cloudtrail:UpdateTrail'),
             call(mock_session, 'cloudtrail:PutEventSelectors'),
@@ -83,7 +85,7 @@ class UtilAwsHelperTest(TestCase):
             call(mock_session, 'cloudtrail:StartLogging'),
         ]
         mock_verify_policy_action.side_effect = [
-            True, True, True, False, True,
+            True, True, True, False, True, True,
             True, True, True, True, True
         ]
         verified, failed_actions = helper.verify_account_access(mock_session)

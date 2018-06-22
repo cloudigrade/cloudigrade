@@ -39,8 +39,16 @@ class AwsSnapshotOwnedError(NotReadyException):
     """Raise if account id has permissions on the snapshot after removal."""
 
 
+class ImageNotReadyException(NotReadyException):
+    """The requested image was not ready."""
+
+
 class SnapshotNotReadyException(NotReadyException):
     """The requested snapshot was not ready."""
+
+
+class AwsImageError(Exception):
+    """The requested image is in a failed state."""
 
 
 class AwsSnapshotError(Exception):
