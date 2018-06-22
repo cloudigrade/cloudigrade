@@ -146,7 +146,7 @@ class UtilAwsHelperTest(TestCase):
             'describe_snapshot_attribute',
             func_kwargs={
                 'DryRun': True,
-                'SnapshotId': helper.SNAPSHOT_ID,
+                'SnapshotId': helper.DRYRUN_SNAPSHOT_ID,
                 'Attribute': 'productCodes',
             }
         )
@@ -165,7 +165,7 @@ class UtilAwsHelperTest(TestCase):
             'ec2:ModifySnapshotAttribute',
             'modify_snapshot_attribute',
             func_kwargs={
-                'SnapshotId': helper.SNAPSHOT_ID,
+                'SnapshotId': helper.DRYRUN_SNAPSHOT_ID,
                 'DryRun': True,
                 'Attribute': 'createVolumePermission',
                 'OperationType': 'add',

@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 # We are uncertain what the pattern is. Manual testing revealed
 # that some codes pass and some fail, so for the time being
 # the value is hard-coded.
-SNAPSHOT_ID = 'snap-0f423c31dd96866b2'
+DRYRUN_SNAPSHOT_ID = 'snap-0f423c31dd96866b2'
 
 
 def get_regions(session, service_name='ec2'):
@@ -109,14 +109,14 @@ def _verify_policy_action(session, action):
         elif action == 'ec2:DescribeSnapshotAttribute':
             ec2.describe_snapshot_attribute(
                 DryRun=True,
-                SnapshotId=SNAPSHOT_ID,
+                SnapshotId=DRYRUN_SNAPSHOT_ID,
                 Attribute='productCodes'
             )
         elif action == 'ec2:DescribeSnapshots':
             ec2.describe_snapshots(DryRun=True)
         elif action == 'ec2:ModifySnapshotAttribute':
             ec2.modify_snapshot_attribute(
-                SnapshotId=SNAPSHOT_ID,
+                SnapshotId=DRYRUN_SNAPSHOT_ID,
                 DryRun=True,
                 Attribute='createVolumePermission',
                 OperationType='add',
