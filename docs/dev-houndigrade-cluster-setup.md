@@ -24,7 +24,7 @@
 ## Checking via the console.
 
 It is important that you have only one availability zone in the Auto Scaling Group, or celery will not get the messages to houndigrade.
-Navigate to EC2 > Under EC2 > AUTO SCALING > Auto Scaling Groups select your Auto Scaling group for the cluster. Under "Details" observe "Availability Zones". There should only be one.
+Navigate to the EC2 console. On the left, under AUTO SCALING > Auto Scaling Groups select your Auto Scaling group for the cluster. Under "Details" observe "Availability Zones". There should only be one.
 Set ``HOUNDIGRADE_AWS_AVAILABILITY_ZONE=<your availability zone>``
 
 If you forgot to give your cluster only one subnet, you will probably have multiple availability zones.
