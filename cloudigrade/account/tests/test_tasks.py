@@ -53,15 +53,16 @@ class AccountCeleryTaskTest(TestCase):
         mock_aws.copy_snapshot.return_value = mock_new_snapshot_id
 
         with patch.object(tasks, 'create_volume') as mock_create_volume:
-            copy_ami_snapshot(mock_arn, mock_image_id, mock_region)
-            mock_volume_information = {
-                'arn': mock_arn,
-                'source_region': mock_region,
-                'ami_id': mock_image_id,
-                'customer_snapshot_id': mock_snapshot_id,
-                'snapshot_copy_id': mock_new_snapshot_id}
-            mock_create_volume.delay.assert_called_with(
-                mock_volume_information)
+            with patch.object(tasks, 'remove_snapshot_ownership') as \
+                    mock_remove_snapshot_ownership:
+                copy_ami_snapshot(mock_arn, mock_image_id, mock_region)
+                mock_create_volume.delay.assert_called_with(
+                    mock_image_id, mock_new_snapshot_id)
+                mock_remove_snapshot_ownership.delay.assert_called_with(
+                    mock_arn,
+                    mock_snapshot_id,
+                    mock_region,
+                    mock_new_snapshot_id)
 
         mock_aws.get_session.assert_called_with(mock_arn)
         mock_aws.get_ami.assert_called_with(
@@ -180,22 +181,20 @@ class AccountCeleryTaskTest(TestCase):
         mock_aws.create_volume.return_value = mock_volume.id
         mock_aws.get_region_from_availability_zone.return_value = region
 
-        mock_arn = util_helper.generate_dummy_arn()
-        mock_image = util_helper.generate_mock_image(ami_id)
-        block_mapping = mock_image.block_device_mappings
-        mock_snapshot_id = block_mapping[0]['Ebs']['SnapshotId']
-        volume_information = {
-            'arn': mock_arn,
-            'source_region': region,
-            'ami_id': ami_id,
-            'customer_snapshot_id': mock_snapshot_id,
-            'snapshot_copy_id': snapshot_id}
-
         with patch.object(tasks, 'enqueue_ready_volume') as mock_enqueue:
-            create_volume(volume_information)
-            mock_enqueue.delay.assert_called_with(
-                volume_information
-            )
+            with patch.object(tasks, 'delete_snapshot') as \
+                    mock_delete_snapshot:
+                create_volume(ami_id, snapshot_id)
+                mock_enqueue.delay.assert_called_with(
+                    ami_id,
+                    mock_volume.id,
+                    region
+                )
+                mock_delete_snapshot.delay.assert_called_with(
+                    snapshot_id,
+                    mock_volume.id,
+                    region
+                )
 
         mock_aws.create_volume.assert_called_with(snapshot_id, zone)
 
@@ -209,24 +208,11 @@ class AccountCeleryTaskTest(TestCase):
             snapshot_id
         )
 
-        zone = settings.HOUNDIGRADE_AWS_AVAILABILITY_ZONE
-        region = zone[:-1]
-        mock_arn = util_helper.generate_dummy_arn()
-        mock_image = util_helper.generate_mock_image(ami_id)
-        block_mapping = mock_image.block_device_mappings
-        mock_snapshot_id = block_mapping[0]['Ebs']['SnapshotId']
-        volume_information = {
-            'arn': mock_arn,
-            'source_region': region,
-            'ami_id': ami_id,
-            'customer_snapshot_id': mock_snapshot_id,
-            'snapshot_copy_id': snapshot_id}
-
         with patch.object(tasks, 'enqueue_ready_volume') as mock_enqueue,\
                 patch.object(create_volume, 'retry') as mock_retry:
             mock_retry.side_effect = Retry()
             with self.assertRaises(Retry):
-                create_volume(volume_information)
+                create_volume(ami_id, snapshot_id)
             self.assertTrue(mock_retry.called)
             mock_enqueue.delay.assert_not_called()
 
@@ -238,24 +224,11 @@ class AccountCeleryTaskTest(TestCase):
 
         mock_aws.create_volume.side_effect = AwsSnapshotError()
 
-        zone = settings.HOUNDIGRADE_AWS_AVAILABILITY_ZONE
-        region = zone[:-1]
-        mock_arn = util_helper.generate_dummy_arn()
-        mock_image = util_helper.generate_mock_image(ami_id)
-        block_mapping = mock_image.block_device_mappings
-        mock_snapshot_id = block_mapping[0]['Ebs']['SnapshotId']
-        volume_information = {
-            'arn': mock_arn,
-            'source_region': region,
-            'ami_id': ami_id,
-            'customer_snapshot_id': mock_snapshot_id,
-            'snapshot_copy_id': snapshot_id}
-
         with patch.object(tasks, 'enqueue_ready_volume') as mock_enqueue,\
                 patch.object(create_volume, 'retry') as mock_retry:
             mock_retry.side_effect = Retry()
             with self.assertRaises(AwsSnapshotError):
-                create_volume(volume_information)
+                create_volume(ami_id, snapshot_id)
             mock_retry.assert_not_called()
             mock_enqueue.delay.assert_not_called()
 
@@ -272,22 +245,9 @@ class AccountCeleryTaskTest(TestCase):
         region = mock_volume.zone[:-1]
 
         mock_aws.get_volume.return_value = mock_volume
-        mock_arn = util_helper.generate_dummy_arn()
-        mock_image = util_helper.generate_mock_image(ami_id)
-        block_mapping = mock_image.block_device_mappings
-        mock_snapshot_id = block_mapping[0]['Ebs']['SnapshotId']
-        mock_new_snapshot_id = util_helper.generate_dummy_snapshot_id()
-        volume_information = {
-            'arn': mock_arn,
-            'source_region': region,
-            'ami_id': ami_id,
-            'customer_snapshot_id': mock_snapshot_id,
-            'snapshot_copy_id': mock_new_snapshot_id,
-            'volume_id': volume_id,
-            'volume_region': region}
-        messages = [volume_information]
 
-        enqueue_ready_volume(volume_information)
+        messages = [{'ami_id': ami_id, 'volume_id': volume_id}]
+        enqueue_ready_volume(ami_id, volume_id, region)
 
         mock_queue.assert_called_with(self.ready_volumes_queue_name, messages)
 
@@ -305,22 +265,8 @@ class AccountCeleryTaskTest(TestCase):
         mock_aws.get_volume.return_value = mock_volume
         mock_aws.check_volume_state.side_effect = AwsVolumeError()
 
-        mock_arn = util_helper.generate_dummy_arn()
-        mock_image = util_helper.generate_mock_image(ami_id)
-        block_mapping = mock_image.block_device_mappings
-        mock_snapshot_id = block_mapping[0]['Ebs']['SnapshotId']
-        mock_new_snapshot_id = util_helper.generate_dummy_snapshot_id()
-        volume_information = {
-            'arn': mock_arn,
-            'source_region': region,
-            'ami_id': ami_id,
-            'customer_snapshot_id': mock_snapshot_id,
-            'snapshot_copy_id': mock_new_snapshot_id,
-            'volume_id': volume_id,
-            'volume_region': region}
-
         with self.assertRaises(AwsVolumeError):
-            enqueue_ready_volume(volume_information)
+            enqueue_ready_volume(ami_id, volume_id, region)
 
     @patch('account.tasks.aws')
     def test_enqueue_ready_volume_retry(self, mock_aws):
@@ -336,24 +282,10 @@ class AccountCeleryTaskTest(TestCase):
         mock_aws.get_volume.return_value = mock_volume
         mock_aws.check_volume_state.side_effect = AwsVolumeNotReadyError()
 
-        mock_arn = util_helper.generate_dummy_arn()
-        mock_image = util_helper.generate_mock_image(ami_id)
-        block_mapping = mock_image.block_device_mappings
-        mock_snapshot_id = block_mapping[0]['Ebs']['SnapshotId']
-        mock_new_snapshot_id = util_helper.generate_dummy_snapshot_id()
-        volume_information = {
-            'arn': mock_arn,
-            'source_region': region,
-            'ami_id': ami_id,
-            'customer_snapshot_id': mock_snapshot_id,
-            'snapshot_copy_id': mock_new_snapshot_id,
-            'volume_id': volume_id,
-            'volume_region': region}
-
         with patch.object(enqueue_ready_volume, 'retry') as mock_retry:
             mock_retry.side_effect = Retry()
             with self.assertRaises(Retry):
-                enqueue_ready_volume(volume_information)
+                enqueue_ready_volume(ami_id, volume_id, region)
 
     @patch('account.tasks.add_messages_to_queue')
     @patch('account.tasks.run_inspection_cluster')
@@ -497,22 +429,11 @@ class AccountCeleryTaskTest(TestCase):
         mock_session = mock_aws.boto3.Session.return_value
         mock_aws.get_session.return_value = mock_session
 
-        mock_arn = util_helper.generate_dummy_arn()
         mock_ami_id = util_helper.generate_dummy_image_id()
-        mock_region = random.choice(util_helper.SOME_AWS_REGIONS)
-        mock_image = util_helper.generate_mock_image(mock_ami_id)
-        block_mapping = mock_image.block_device_mappings
-        mock_snapshot_id = block_mapping[0]['Ebs']['SnapshotId']
-        mock_new_snapshot_id = util_helper.generate_dummy_snapshot_id()
-        mock_volume_information = {
-            'arn': mock_arn,
-            'source_region': mock_region,
-            'ami_id': mock_ami_id,
-            'customer_snapshot_id': mock_snapshot_id,
-            'snapshot_copy_id': mock_new_snapshot_id,
-            'volume_id': util_helper.generate_dummy_volume_id()}
 
-        messages = [mock_volume_information]
+        messages = [{
+            'ami_id': mock_ami_id,
+            'volume_id': util_helper.generate_dummy_volume_id()}]
         tasks.run_inspection_cluster(messages)
 
         mock_machine_image_objects.get.assert_called_once_with(
