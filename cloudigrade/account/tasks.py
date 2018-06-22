@@ -91,11 +91,12 @@ def remove_snapshot_ownership(arn,
         None: Run as an asynchronous Celery task.
     """
     ec2 = boto3.resource('ec2')
+
+    # Wait for snapshot to be ready
     snapshot_copy = ec2.Snapshot(snapshot_copy_id)
     aws.check_snapshot_state(snapshot_copy)
 
     # Remove permissions from customer_snapshot
-    # now that copy is ready
     logger.info(_(
         '{0} remove ownership from customer snapshot {1}').format(
         'remove_snapshot_ownership',
@@ -137,7 +138,7 @@ def create_volume(ami_id, snapshot_copy_id):
 @rewrap_aws_errors
 def delete_snapshot(snapshot_copy_id, volume_id, volume_region):
     """
-    Delete snapshot after volume is read.
+    Delete snapshot after volume is ready.
 
     Args:
         snapshot_copy_id (str): The id of the snapshot to delete
@@ -147,11 +148,13 @@ def delete_snapshot(snapshot_copy_id, volume_id, volume_region):
         None: Run as an asynchronous Celery task.
     """
     ec2 = boto3.resource('ec2')
+
+    # Wait for volume to be ready
     volume = aws.get_volume(
         volume_id,
         volume_region)
-
     aws.check_volume_state(volume)
+
     # Delete snapshot_copy
     logger.info(_('{0} delete cloudigrade snapshot copy {1}').format(
         'delete_snapshot', snapshot_copy_id))
@@ -174,12 +177,7 @@ def enqueue_ready_volume(ami_id, volume_id, volume_region):
     """
     volume = aws.get_volume(volume_id, volume_region)
     aws.check_volume_state(volume)
-    messages = [
-        {
-            'ami_id': ami_id,
-            'volume_id': volume_id
-        }
-    ]
+    messages = [{'ami_id': ami_id, 'volume_id': volume_id}]
 
     queue_name = '{0}ready_volumes'.format(settings.AWS_SQS_QUEUE_NAME_PREFIX)
     add_messages_to_queue(queue_name, messages)
