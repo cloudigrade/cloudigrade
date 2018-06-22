@@ -64,7 +64,8 @@ def copy_ami_snapshot(arn, ami_id, source_region):
         'customer_snapshot_id': customer_snapshot_id,
         'snapshot_copy_id': snapshot_copy_id
     }
-    logger.info(_('{}: customer_snapshot_id={}, snapshot_copy_id={}').format(
+    logger.info(_(
+        '{0}: customer_snapshot_id={1}, snapshot_copy_id={2}').format(
         'copy_ami_snapshot',
         volume_information['customer_snapshot_id'],
         volume_information['snapshot_copy_id']))
@@ -91,7 +92,7 @@ def create_volume(volume_information):
     volume_information['volume_id'] = volume_id
     volume_information['volume_region'] = region
 
-    logger.info(_('{}: volume_id={}, volume_region={}').format(
+    logger.info(_('{0}: volume_id={1}, volume_region={2}').format(
         'create_volume',
         volume_information['volume_id'],
         volume_information['volume_region']))
@@ -223,13 +224,13 @@ def run_inspection_cluster(messages, cloud='aws'):
     ec2 = boto3.resource('ec2')
     ec2_instance = ec2.Instance(ec2_instance_id)
 
-    logger.info(_('{} attaching volumes').format(
+    logger.info(_('{0} attaching volumes').format(
         'run_inspection_cluster'))
     # attach volumes
     for index, message in enumerate(messages):
         mount_point = generate_device_name(index)
         volume = ec2.Volume(message['volume_id'])
-        logger.info(_('{} attaching volume {} to instance {}').format(
+        logger.info(_('{0} attaching volume {1} to instance {2}').format(
             'run_inspection_cluster',
             message['volume_id'],
             ec2_instance_id))
@@ -237,7 +238,7 @@ def run_inspection_cluster(messages, cloud='aws'):
         volume.attach_to_instance(
             Device=mount_point, InstanceId=ec2_instance_id)
 
-        logger.info(_('{} modify volume {} to auto-delete').format(
+        logger.info(_('{0} modify volume {1} to auto-delete').format(
             'run_inspection_cluster',
             message['volume_id']))
         # Configure volumes to delete when instance is scaled down
@@ -251,7 +252,8 @@ def run_inspection_cluster(messages, cloud='aws'):
         ])
 
         # Remove permissions from customer_snapshot
-        logger.info(_('{} remove ownership from customer snapshot {}').format(
+        logger.info(_(
+            '{0} remove ownership from customer snapshot {1}').format(
             'run_inspection_cluster',
             message['customer_snapshot_id']))
         session = aws.get_session(message['arn'])
@@ -262,7 +264,7 @@ def run_inspection_cluster(messages, cloud='aws'):
         aws.remove_snapshot_ownership(customer_snapshot)
 
         # Delete snapshot_copy
-        logger.info(_('{} delete cloudigrade snapshot copy {}').format(
+        logger.info(_('{0} delete cloudigrade snapshot copy {1}').format(
             'run_inspection_cluster',
             message['snapshot_copy_id']))
         snapshot_copy = ec2.Snapshot(message['snapshot_copy_id'])
