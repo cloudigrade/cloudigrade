@@ -54,8 +54,14 @@ class AccountCeleryTaskTest(TestCase):
 
         with patch.object(tasks, 'create_volume') as mock_create_volume:
             copy_ami_snapshot(mock_arn, mock_image_id, mock_region)
-            mock_create_volume.delay.assert_called_with(mock_image_id,
-                                                        mock_new_snapshot_id)
+            mock_volume_information = {
+                'arn': mock_arn,
+                'source_region': mock_region,
+                'ami_id': mock_image_id,
+                'customer_snapshot_id': mock_snapshot_id,
+                'snapshot_copy_id': mock_new_snapshot_id}
+            mock_create_volume.delay.assert_called_with(
+                mock_volume_information)
 
         mock_aws.get_session.assert_called_with(mock_arn)
         mock_aws.get_ami.assert_called_with(
@@ -174,12 +180,21 @@ class AccountCeleryTaskTest(TestCase):
         mock_aws.create_volume.return_value = mock_volume.id
         mock_aws.get_region_from_availability_zone.return_value = region
 
+        mock_arn = util_helper.generate_dummy_arn()
+        mock_image = util_helper.generate_mock_image(ami_id)
+        block_mapping = mock_image.block_device_mappings
+        mock_snapshot_id = block_mapping[0]['Ebs']['SnapshotId']
+        volume_information = {
+            'arn': mock_arn,
+            'source_region': region,
+            'ami_id': ami_id,
+            'customer_snapshot_id': mock_snapshot_id,
+            'snapshot_copy_id': snapshot_id}
+
         with patch.object(tasks, 'enqueue_ready_volume') as mock_enqueue:
-            create_volume(ami_id, snapshot_id)
+            create_volume(volume_information)
             mock_enqueue.delay.assert_called_with(
-                ami_id,
-                mock_volume.id,
-                region
+                volume_information
             )
 
         mock_aws.create_volume.assert_called_with(snapshot_id, zone)
@@ -194,11 +209,24 @@ class AccountCeleryTaskTest(TestCase):
             snapshot_id
         )
 
+        zone = settings.HOUNDIGRADE_AWS_AVAILABILITY_ZONE
+        region = zone[:-1]
+        mock_arn = util_helper.generate_dummy_arn()
+        mock_image = util_helper.generate_mock_image(ami_id)
+        block_mapping = mock_image.block_device_mappings
+        mock_snapshot_id = block_mapping[0]['Ebs']['SnapshotId']
+        volume_information = {
+            'arn': mock_arn,
+            'source_region': region,
+            'ami_id': ami_id,
+            'customer_snapshot_id': mock_snapshot_id,
+            'snapshot_copy_id': snapshot_id}
+
         with patch.object(tasks, 'enqueue_ready_volume') as mock_enqueue,\
                 patch.object(create_volume, 'retry') as mock_retry:
             mock_retry.side_effect = Retry()
             with self.assertRaises(Retry):
-                create_volume(ami_id, snapshot_id)
+                create_volume(volume_information)
             self.assertTrue(mock_retry.called)
             mock_enqueue.delay.assert_not_called()
 
@@ -210,11 +238,24 @@ class AccountCeleryTaskTest(TestCase):
 
         mock_aws.create_volume.side_effect = AwsSnapshotError()
 
+        zone = settings.HOUNDIGRADE_AWS_AVAILABILITY_ZONE
+        region = zone[:-1]
+        mock_arn = util_helper.generate_dummy_arn()
+        mock_image = util_helper.generate_mock_image(ami_id)
+        block_mapping = mock_image.block_device_mappings
+        mock_snapshot_id = block_mapping[0]['Ebs']['SnapshotId']
+        volume_information = {
+            'arn': mock_arn,
+            'source_region': region,
+            'ami_id': ami_id,
+            'customer_snapshot_id': mock_snapshot_id,
+            'snapshot_copy_id': snapshot_id}
+
         with patch.object(tasks, 'enqueue_ready_volume') as mock_enqueue,\
                 patch.object(create_volume, 'retry') as mock_retry:
             mock_retry.side_effect = Retry()
             with self.assertRaises(AwsSnapshotError):
-                create_volume(ami_id, snapshot_id)
+                create_volume(volume_information)
             mock_retry.assert_not_called()
             mock_enqueue.delay.assert_not_called()
 
@@ -231,9 +272,22 @@ class AccountCeleryTaskTest(TestCase):
         region = mock_volume.zone[:-1]
 
         mock_aws.get_volume.return_value = mock_volume
-        messages = [{'ami_id': ami_id, 'volume_id': volume_id}]
+        mock_arn = util_helper.generate_dummy_arn()
+        mock_image = util_helper.generate_mock_image(ami_id)
+        block_mapping = mock_image.block_device_mappings
+        mock_snapshot_id = block_mapping[0]['Ebs']['SnapshotId']
+        mock_new_snapshot_id = util_helper.generate_dummy_snapshot_id()
+        volume_information = {
+            'arn': mock_arn,
+            'source_region': region,
+            'ami_id': ami_id,
+            'customer_snapshot_id': mock_snapshot_id,
+            'snapshot_copy_id': mock_new_snapshot_id,
+            'volume_id': volume_id,
+            'volume_region': region}
+        messages = [volume_information]
 
-        enqueue_ready_volume(ami_id, volume_id, region)
+        enqueue_ready_volume(volume_information)
 
         mock_queue.assert_called_with(self.ready_volumes_queue_name, messages)
 
@@ -251,8 +305,22 @@ class AccountCeleryTaskTest(TestCase):
         mock_aws.get_volume.return_value = mock_volume
         mock_aws.check_volume_state.side_effect = AwsVolumeError()
 
+        mock_arn = util_helper.generate_dummy_arn()
+        mock_image = util_helper.generate_mock_image(ami_id)
+        block_mapping = mock_image.block_device_mappings
+        mock_snapshot_id = block_mapping[0]['Ebs']['SnapshotId']
+        mock_new_snapshot_id = util_helper.generate_dummy_snapshot_id()
+        volume_information = {
+            'arn': mock_arn,
+            'source_region': region,
+            'ami_id': ami_id,
+            'customer_snapshot_id': mock_snapshot_id,
+            'snapshot_copy_id': mock_new_snapshot_id,
+            'volume_id': volume_id,
+            'volume_region': region}
+
         with self.assertRaises(AwsVolumeError):
-            enqueue_ready_volume(ami_id, volume_id, region)
+            enqueue_ready_volume(volume_information)
 
     @patch('account.tasks.aws')
     def test_enqueue_ready_volume_retry(self, mock_aws):
@@ -268,10 +336,24 @@ class AccountCeleryTaskTest(TestCase):
         mock_aws.get_volume.return_value = mock_volume
         mock_aws.check_volume_state.side_effect = AwsVolumeNotReadyError()
 
+        mock_arn = util_helper.generate_dummy_arn()
+        mock_image = util_helper.generate_mock_image(ami_id)
+        block_mapping = mock_image.block_device_mappings
+        mock_snapshot_id = block_mapping[0]['Ebs']['SnapshotId']
+        mock_new_snapshot_id = util_helper.generate_dummy_snapshot_id()
+        volume_information = {
+            'arn': mock_arn,
+            'source_region': region,
+            'ami_id': ami_id,
+            'customer_snapshot_id': mock_snapshot_id,
+            'snapshot_copy_id': mock_new_snapshot_id,
+            'volume_id': volume_id,
+            'volume_region': region}
+
         with patch.object(enqueue_ready_volume, 'retry') as mock_retry:
             mock_retry.side_effect = Retry()
             with self.assertRaises(Retry):
-                enqueue_ready_volume(ami_id, volume_id, region)
+                enqueue_ready_volume(volume_information)
 
     @patch('account.tasks.add_messages_to_queue')
     @patch('account.tasks.run_inspection_cluster')
@@ -390,7 +472,9 @@ class AccountCeleryTaskTest(TestCase):
 
     @patch('account.models.MachineImage.objects')
     @patch('account.tasks.boto3')
-    def test_run_inspection_cluster_success(self, mock_boto3,
+    @patch('account.tasks.aws')
+    def test_run_inspection_cluster_success(self, mock_aws,
+                                            mock_boto3,
                                             mock_machine_image_objects):
         """Asserts successful starting of the houndigrade task."""
         mock_machine_image_objects.get.return_value = \
@@ -410,10 +494,25 @@ class AccountCeleryTaskTest(TestCase):
         mock_boto3.client.return_value = mock_ecs
         mock_boto3.resource.return_value = mock_ec2
 
-        mock_ami_id = util_helper.generate_dummy_image_id()
+        mock_session = mock_aws.boto3.Session.return_value
+        mock_aws.get_session.return_value = mock_session
 
-        messages = [{'ami_id': mock_ami_id,
-                     'volume_id': util_helper.generate_dummy_volume_id()}]
+        mock_arn = util_helper.generate_dummy_arn()
+        mock_ami_id = util_helper.generate_dummy_image_id()
+        mock_region = random.choice(util_helper.SOME_AWS_REGIONS)
+        mock_image = util_helper.generate_mock_image(mock_ami_id)
+        block_mapping = mock_image.block_device_mappings
+        mock_snapshot_id = block_mapping[0]['Ebs']['SnapshotId']
+        mock_new_snapshot_id = util_helper.generate_dummy_snapshot_id()
+        mock_volume_information = {
+            'arn': mock_arn,
+            'source_region': mock_region,
+            'ami_id': mock_ami_id,
+            'customer_snapshot_id': mock_snapshot_id,
+            'snapshot_copy_id': mock_new_snapshot_id,
+            'volume_id': util_helper.generate_dummy_volume_id()}
+
+        messages = [mock_volume_information]
         tasks.run_inspection_cluster(messages)
 
         mock_machine_image_objects.get.assert_called_once_with(
@@ -483,7 +582,7 @@ class AccountCeleryTaskTest(TestCase):
     def test_persist_inspect_results_no_messages(
             self,
             mock_read_messages_from_queue,
-            mock_persist_aws_inspection_cluster_results
+            mock_persist_inspection_results
     ):
         """Assert empty results does not work."""
         mock_read_messages_from_queue.return_value = []
@@ -492,7 +591,7 @@ class AccountCeleryTaskTest(TestCase):
             settings.HOUNDIGRADE_RESULTS_QUEUE_NAME,
             tasks.HOUNDIGRADE_MESSAGE_READ_LEN
         )
-        mock_persist_aws_inspection_cluster_results.assert_not_called()
+        mock_persist_inspection_results.assert_not_called()
 
     def test_persist_aws_inspection_cluster_results_mark_rhel(self):
         """Assert that rhel_images are tagged rhel."""
@@ -576,52 +675,58 @@ class AccountCeleryTaskTest(TestCase):
     def test_persist_inspect_results_unknown_cloud(
             self,
             mock_read_messages_from_queue,
-            mock_persist_aws_inspection_cluster_results
+            mock_persist_inspection_results
     ):
         """Assert no work for unknown cloud."""
-        mock_read_messages_from_queue.return_value = [{'cloud': 'unknown'}]
-        tasks.persist_inspection_cluster_results_task()
-        mock_read_messages_from_queue.assert_called_once_with(
-            settings.HOUNDIGRADE_RESULTS_QUEUE_NAME,
-            tasks.HOUNDIGRADE_MESSAGE_READ_LEN
-        )
-        mock_persist_aws_inspection_cluster_results.assert_not_called()
+        with patch.object(tasks, 'scale_down_cluster') as mock_scale_down:
+            mock_read_messages_from_queue.return_value = [{'cloud': 'unknown'}]
+            tasks.persist_inspection_cluster_results_task()
+            mock_read_messages_from_queue.assert_called_once_with(
+                settings.HOUNDIGRADE_RESULTS_QUEUE_NAME,
+                tasks.HOUNDIGRADE_MESSAGE_READ_LEN
+            )
+            mock_persist_inspection_results.assert_not_called()
+            mock_scale_down.delay.assert_called_once()
 
     @patch('account.tasks.persist_aws_inspection_cluster_results')
     @patch('account.tasks.read_messages_from_queue')
     def test_persist_inspect_results_aws_cloud_no_images(
             self,
             mock_read_messages_from_queue,
-            mock_persist_aws_inspection_cluster_results
+            mock_persist_inspection_results
     ):
         """Assert no work for aws cloud without images."""
-        message = {'cloud': 'aws'}
-        mock_read_messages_from_queue.return_value = [message]
-        tasks.persist_inspection_cluster_results_task()
-        mock_read_messages_from_queue.assert_called_once_with(
-            settings.HOUNDIGRADE_RESULTS_QUEUE_NAME,
-            tasks.HOUNDIGRADE_MESSAGE_READ_LEN
-        )
-        mock_persist_aws_inspection_cluster_results.assert_called_once_with(
-            message)
+        with patch.object(tasks, 'scale_down_cluster') as mock_scale_down:
+            message = {'cloud': 'aws'}
+            mock_read_messages_from_queue.return_value = [message]
+            tasks.persist_inspection_cluster_results_task()
+            mock_read_messages_from_queue.assert_called_once_with(
+                settings.HOUNDIGRADE_RESULTS_QUEUE_NAME,
+                tasks.HOUNDIGRADE_MESSAGE_READ_LEN
+            )
+            mock_persist_inspection_results.assert_called_once_with(
+                message)
+            mock_scale_down.delay.assert_called_once()
 
     @patch('account.tasks.persist_aws_inspection_cluster_results')
     @patch('account.tasks.read_messages_from_queue')
     def test_persist_inspect_results_aws_cloud_str_message(
             self,
             mock_read_messages_from_queue,
-            mock_persist_aws_inspection_cluster_results
+            mock_persist_inspection_results
     ):
         """Test case where message is str not python dict."""
-        message = json.dumps({'cloud': 'aws'})
-        mock_read_messages_from_queue.return_value = [message]
-        tasks.persist_inspection_cluster_results_task()
-        mock_read_messages_from_queue.assert_called_once_with(
-            settings.HOUNDIGRADE_RESULTS_QUEUE_NAME,
-            tasks.HOUNDIGRADE_MESSAGE_READ_LEN
-        )
-        mock_persist_aws_inspection_cluster_results.assert_called_once_with(
-            json.loads(message))
+        with patch.object(tasks, 'scale_down_cluster') as mock_scale_down:
+            message = json.dumps({'cloud': 'aws'})
+            mock_read_messages_from_queue.return_value = [message]
+            tasks.persist_inspection_cluster_results_task()
+            mock_read_messages_from_queue.assert_called_once_with(
+                settings.HOUNDIGRADE_RESULTS_QUEUE_NAME,
+                tasks.HOUNDIGRADE_MESSAGE_READ_LEN
+            )
+            mock_persist_inspection_results.assert_called_once_with(
+                json.loads(message))
+            mock_scale_down.delay.assert_called_once()
 
     @patch('account.tasks.read_messages_from_queue')
     def test_persist_inspect_results_aws_cloud_image_not_found(
@@ -629,11 +734,13 @@ class AccountCeleryTaskTest(TestCase):
             mock_read_messages_from_queue
     ):
         """Assert no work for aws cloud with unknown images."""
-        message = {'cloud': 'aws', 'results': {'fake_image': {}}}
+        with patch.object(tasks, 'scale_down_cluster') as mock_scale_down:
+            message = {'cloud': 'aws', 'results': {'fake_image': {}}}
 
-        mock_read_messages_from_queue.return_value = [message]
-        tasks.persist_inspection_cluster_results_task()
-        mock_read_messages_from_queue.assert_called_once_with(
-            settings.HOUNDIGRADE_RESULTS_QUEUE_NAME,
-            tasks.HOUNDIGRADE_MESSAGE_READ_LEN
-        )
+            mock_read_messages_from_queue.return_value = [message]
+            tasks.persist_inspection_cluster_results_task()
+            mock_read_messages_from_queue.assert_called_once_with(
+                settings.HOUNDIGRADE_RESULTS_QUEUE_NAME,
+                tasks.HOUNDIGRADE_MESSAGE_READ_LEN
+            )
+            mock_scale_down.delay.assert_called_once()
