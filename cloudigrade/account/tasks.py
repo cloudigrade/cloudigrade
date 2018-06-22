@@ -29,24 +29,24 @@ HOUNDIGRADE_MESSAGE_READ_LEN = 10
 
 @retriable_shared_task
 @rewrap_aws_errors
-def copy_ami_snapshot(arn, ami_id, source_region):
+def copy_ami_snapshot(arn, ami_id, snapshot_region):
     """
     Copy an AWS Snapshot to the primary AWS account.
 
     Args:
         arn (str): The AWS Resource Number for the account with the snapshot
         ami_id (str): The AWS ID for the machine image
-        source_region (str): The region the snapshot resides in
+        snapshot_region (str): The region the snapshot resides in
 
     Returns:
         None: Run as an asynchronous Celery task.
 
     """
     session = aws.get_session(arn)
-    ami = aws.get_ami(session, ami_id, source_region)
+    ami = aws.get_ami(session, ami_id, snapshot_region)
     customer_snapshot_id = aws.get_ami_snapshot_id(ami)
     customer_snapshot = aws.get_snapshot(
-        session, customer_snapshot_id, source_region)
+        session, customer_snapshot_id, snapshot_region)
 
     if customer_snapshot.encrypted:
         image = AwsMachineImage.objects.get(ec2_ami_id=ami_id)
@@ -56,70 +56,129 @@ def copy_ami_snapshot(arn, ami_id, source_region):
 
     aws.add_snapshot_ownership(customer_snapshot)
 
-    snapshot_copy_id = aws.copy_snapshot(customer_snapshot_id, source_region)
-    volume_information = {
-        'arn': arn,
-        'source_region': source_region,
-        'ami_id': ami_id,
-        'customer_snapshot_id': customer_snapshot_id,
-        'snapshot_copy_id': snapshot_copy_id
-    }
+    snapshot_copy_id = aws.copy_snapshot(customer_snapshot_id, snapshot_region)
     logger.info(_(
         '{0}: customer_snapshot_id={1}, snapshot_copy_id={2}').format(
         'copy_ami_snapshot',
-        volume_information['customer_snapshot_id'],
-        volume_information['snapshot_copy_id']))
-    create_volume.delay(volume_information)
+        customer_snapshot_id,
+        snapshot_copy_id))
+
+    # Schedule removal of ownership on customer snapshot
+    remove_snapshot_ownership.delay(
+        arn, customer_snapshot_id, snapshot_region, snapshot_copy_id)
+
+    # Create volume from snapshot copy
+    create_volume.delay(ami_id, snapshot_copy_id)
 
 
 @retriable_shared_task
 @rewrap_aws_errors
-def create_volume(volume_information):
+def remove_snapshot_ownership(arn,
+                              customer_snapshot_id,
+                              customer_snapshot_region,
+                              snapshot_copy_id):
+    """
+    Remove cloudigrade ownership from customer snapshot.
+
+    Args:
+        arn (str): The AWS Resource Number for the account with the snapshot
+        customer_snapshot_id (str): The id of the snapshot to remove ownership
+        customer_snapshot_region (str): The region where
+            customer_snapshot_id resides
+        snapshot_copy_id (str): The id of the snapshot that must
+            be ready to continue
+    Returns:
+        None: Run as an asynchronous Celery task.
+    """
+    ec2 = boto3.resource('ec2')
+    snapshot_copy = ec2.Snapshot(snapshot_copy_id)
+    aws.check_snapshot_state(snapshot_copy)
+
+    # Remove permissions from customer_snapshot
+    # now that copy is ready
+    logger.info(_(
+        '{0} remove ownership from customer snapshot {1}').format(
+        'remove_snapshot_ownership',
+        customer_snapshot_id))
+    session = aws.get_session(arn)
+    customer_snapshot = aws.get_snapshot(
+        session,
+        customer_snapshot_id,
+        customer_snapshot_region)
+    aws.remove_snapshot_ownership(customer_snapshot)
+
+
+@retriable_shared_task
+@rewrap_aws_errors
+def create_volume(ami_id, snapshot_copy_id):
     """
     Create an AWS Volume in the primary AWS account.
 
     Args:
-        volume_information (dict): Meta-data about scanned instances (arn,
-            source_region, ami_id, customer_snapshot_id, snapshot_copy_id)
-
+        ami_id (str): The AWS AMI id for which this request originated
+        snapshot_copy_id (str): The id of the snapshot to use for the volume
     Returns:
         None: Run as an asynchronous Celery task.
-
     """
     zone = settings.HOUNDIGRADE_AWS_AVAILABILITY_ZONE
-    volume_id = aws.create_volume(volume_information['snapshot_copy_id'], zone)
+    volume_id = aws.create_volume(snapshot_copy_id, zone)
     region = aws.get_region_from_availability_zone(zone)
-    volume_information['volume_id'] = volume_id
-    volume_information['volume_region'] = region
 
     logger.info(_('{0}: volume_id={1}, volume_region={2}').format(
         'create_volume',
-        volume_information['volume_id'],
-        volume_information['volume_region']))
-    enqueue_ready_volume.delay(volume_information)
+        volume_id,
+        region))
+
+    delete_snapshot.delay(snapshot_copy_id, volume_id, region)
+    enqueue_ready_volume.delay(ami_id, volume_id, region)
 
 
 @retriable_shared_task
 @rewrap_aws_errors
-def enqueue_ready_volume(volume_information):
+def delete_snapshot(snapshot_copy_id, volume_id, volume_region):
+    """
+    Delete snapshot after volume is read.
+
+    Args:
+        snapshot_copy_id (str): The id of the snapshot to delete
+        volume_id (str): The id of the volume that must be ready
+        volume_region (str): The region of the volume
+    Returns:
+        None: Run as an asynchronous Celery task.
+    """
+    ec2 = boto3.resource('ec2')
+    volume = aws.get_volume(
+        volume_id,
+        volume_region)
+
+    aws.check_volume_state(volume)
+    # Delete snapshot_copy
+    logger.info(_('{0} delete cloudigrade snapshot copy {1}').format(
+        'delete_snapshot', snapshot_copy_id))
+    snapshot_copy = ec2.Snapshot(snapshot_copy_id)
+    snapshot_copy.delete(DryRun=False)
+
+
+@retriable_shared_task
+@rewrap_aws_errors
+def enqueue_ready_volume(ami_id, volume_id, volume_region):
     """
     Enqueues information about an AMI and volume for later use.
 
     Args:
-        volume_information (dict): Meta-data about scanned instances (arn,
-            source_region, ami_id, customer_snapshot_id, snapshot_copy_id,
-            volume_id, volume_region)
-
+        ami_id (str): The AWS AMI id for which this request originated
+        volume_id (str): The id of the volume that must be ready
+        volume_region (str): The region of the volume
     Returns:
         None: Run as an asynchronous Celery task.
-
     """
-    volume = aws.get_volume(
-        volume_information['volume_id'],
-        volume_information['volume_region'])
+    volume = aws.get_volume(volume_id, volume_region)
     aws.check_volume_state(volume)
     messages = [
-        volume_information
+        {
+            'ami_id': ami_id,
+            'volume_id': volume_id
+        }
     ]
 
     queue_name = '{0}ready_volumes'.format(settings.AWS_SQS_QUEUE_NAME_PREFIX)
@@ -250,25 +309,6 @@ def run_inspection_cluster(messages, cloud='aws'):
                 }
             }
         ])
-
-        # Remove permissions from customer_snapshot
-        logger.info(_(
-            '{0} remove ownership from customer snapshot {1}').format(
-            'run_inspection_cluster',
-            message['customer_snapshot_id']))
-        session = aws.get_session(message['arn'])
-        customer_snapshot = aws.get_snapshot(
-            session,
-            message['customer_snapshot_id'],
-            message['source_region'])
-        aws.remove_snapshot_ownership(customer_snapshot)
-
-        # Delete snapshot_copy
-        logger.info(_('{0} delete cloudigrade snapshot copy {1}').format(
-            'run_inspection_cluster',
-            message['snapshot_copy_id']))
-        snapshot_copy = ec2.Snapshot(message['snapshot_copy_id'])
-        snapshot_copy.delete(DryRun=False)
 
         task_command.extend(['-t', message['ami_id'], mount_point])
 
