@@ -39,15 +39,20 @@ class AccountCeleryTaskTest(TestCase):
     @patch('account.tasks.aws')
     def test_copy_ami_snapshot_success(self, mock_aws):
         """Assert that the snapshot copy task succeeds."""
+        mock_session = mock_aws.boto3.Session.return_value
+        mock_account_id = mock_aws.get_session_account_id.return_value
+
         mock_arn = util_helper.generate_dummy_arn()
         mock_region = random.choice(util_helper.SOME_AWS_REGIONS)
         mock_image_id = util_helper.generate_dummy_image_id()
         mock_image = util_helper.generate_mock_image(mock_image_id)
         block_mapping = mock_image.block_device_mappings
         mock_snapshot_id = block_mapping[0]['Ebs']['SnapshotId']
-        mock_snapshot = util_helper.generate_mock_snapshot(mock_snapshot_id)
+        mock_snapshot = util_helper.generate_mock_snapshot(
+            mock_snapshot_id,
+            owner_id=mock_account_id
+        )
         mock_new_snapshot_id = util_helper.generate_dummy_snapshot_id()
-        mock_session = mock_aws.boto3.Session.return_value
 
         mock_aws.get_session.return_value = mock_session
         mock_aws.get_ami.return_value = mock_image
@@ -123,14 +128,19 @@ class AccountCeleryTaskTest(TestCase):
     @patch('account.tasks.aws')
     def test_copy_ami_snapshot_retry_on_copy_limit(self, mock_aws):
         """Assert that the copy task is retried."""
+        mock_session = mock_aws.boto3.Session.return_value
+        mock_account_id = mock_aws.get_session_account_id.return_value
+
         mock_arn = util_helper.generate_dummy_arn()
         mock_region = random.choice(util_helper.SOME_AWS_REGIONS)
         mock_image_id = util_helper.generate_dummy_image_id()
         mock_image = util_helper.generate_mock_image(mock_image_id)
         block_mapping = mock_image.block_device_mappings
         mock_snapshot_id = block_mapping[0]['Ebs']['SnapshotId']
-        mock_snapshot = util_helper.generate_mock_snapshot(mock_snapshot_id)
-        mock_session = mock_aws.boto3.Session.return_value
+        mock_snapshot = util_helper.generate_mock_snapshot(
+            mock_snapshot_id,
+            owner_id=mock_account_id
+        )
 
         mock_aws.get_session.return_value = mock_session
         mock_aws.get_ami.return_value = mock_image
@@ -149,14 +159,19 @@ class AccountCeleryTaskTest(TestCase):
     @patch('account.tasks.aws')
     def test_copy_ami_snapshot_retry_on_ownership_not_verified(self, mock_aws):
         """Assert that the snapshot copy task fails."""
+        mock_session = mock_aws.boto3.Session.return_value
+        mock_account_id = mock_aws.get_session_account_id.return_value
+
         mock_arn = util_helper.generate_dummy_arn()
         mock_region = random.choice(util_helper.SOME_AWS_REGIONS)
         mock_image_id = util_helper.generate_dummy_image_id()
         mock_image = util_helper.generate_mock_image(mock_image_id)
         block_mapping = mock_image.block_device_mappings
         mock_snapshot_id = block_mapping[0]['Ebs']['SnapshotId']
-        mock_snapshot = util_helper.generate_mock_snapshot(mock_snapshot_id)
-        mock_session = mock_aws.boto3.Session.return_value
+        mock_snapshot = util_helper.generate_mock_snapshot(
+            mock_snapshot_id,
+            owner_id=mock_account_id
+        )
 
         mock_aws.get_session.return_value = mock_session
         mock_aws.get_ami.return_value = mock_image

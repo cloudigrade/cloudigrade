@@ -1,5 +1,6 @@
 """Helper utility module to wrap up common AWS operations."""
 import logging
+import uuid
 from functools import wraps
 
 import boto3
@@ -10,12 +11,14 @@ from util.aws.sts import cloudigrade_policy
 
 logger = logging.getLogger(__name__)
 
-# AWS has undocumented validation on the SnapshotId field in
-# snapshot related EC2 API calls.
+# AWS has undocumented validation on the Snapshot and Image Ids
+# when executing some "dryrun" commands.
 # We are uncertain what the pattern is. Manual testing revealed
 # that some codes pass and some fail, so for the time being
-# the value is hard-coded.
+# the values are hard-coded.
 DRYRUN_SNAPSHOT_ID = 'snap-0f423c31dd96866b2'
+DRYRUN_IMAGE_ID = 'ami-0f94fa2a144c74cf1'
+DRYRUN_IMAGE_REGION = 'us-east-1'
 
 
 def get_regions(session, service_name='ec2'):
@@ -120,6 +123,13 @@ def _verify_policy_action(session, action):
                 DryRun=True,
                 Attribute='createVolumePermission',
                 OperationType='add',
+            )
+        elif action == 'ec2:CopyImage':
+            ec2.copy_image(
+                Name=f'{uuid.uuid4()}',
+                DryRun=True,
+                SourceImageId=DRYRUN_IMAGE_ID,
+                SourceRegion=DRYRUN_IMAGE_REGION,
             )
         elif action.startswith('cloudtrail:'):
             # unfortunately, CloudTrail does not have a DryRun option like ec2

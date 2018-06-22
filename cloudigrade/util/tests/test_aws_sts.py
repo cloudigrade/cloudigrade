@@ -1,6 +1,6 @@
 """Collection of tests for ``util.aws.sts`` module."""
 import json
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from django.test import TestCase
 
@@ -38,3 +38,13 @@ class UtilAwsStsTest(TestCase):
             mock_role['Credentials']['SecretAccessKey']
         )
         self.assertEqual(creds[2], mock_role['Credentials']['SessionToken'])
+
+    def test_get_session_account_id(self):
+        """Assert successful return of the account ID through the session."""
+        mock_session = Mock()
+        mock_client = mock_session.client.return_value
+        mock_identity = mock_client.get_caller_identity.return_value
+        mock_account_id = mock_identity.get.return_value
+        returned_account_id = sts.get_session_account_id(mock_session)
+        self.assertEqual(mock_account_id, returned_account_id)
+        mock_identity.get.assert_called_with('Account')

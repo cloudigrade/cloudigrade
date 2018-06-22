@@ -237,8 +237,21 @@ def generate_mock_image(image_id=None, encrypted=False):
     return mock_image
 
 
-def generate_mock_snapshot(snapshot_id=None, encrypted=False, state=None):
-    """Generate a mocked EC2 Image Snapshot object."""
+def generate_mock_snapshot(snapshot_id=None, encrypted=False, state=None,
+                           owner_id=None):
+    """
+    Generate a mocked EC2 Image Snapshot object.
+
+    Args:
+        snapshot_id (str): The AWS snapshot id.
+        encrypted (bool): Indicate if the image is encrypted.
+        state (str): The AWS state of the snapshot.
+        owner_id (str): The AWS account ID that owns this image.
+
+    Returns:
+        Mock: A mock object with Snapshot-like attributes.
+
+    """
     if snapshot_id is None:
         snapshot_id = generate_dummy_snapshot_id()
     if state is None:
@@ -248,6 +261,7 @@ def generate_mock_snapshot(snapshot_id=None, encrypted=False, state=None):
     mock_snapshot.snapshot_id = snapshot_id
     mock_snapshot.encrypted = encrypted
     mock_snapshot.state = state
+    mock_snapshot.owner_id = owner_id
     return mock_snapshot
 
 

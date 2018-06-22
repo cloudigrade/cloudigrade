@@ -29,7 +29,7 @@ HOUNDIGRADE_MESSAGE_READ_LEN = 10
 
 @retriable_shared_task
 @rewrap_aws_errors
-def copy_ami_snapshot(arn, ami_id, snapshot_region):
+def copy_ami_snapshot(arn, ami_id, snapshot_region, reference_ami_id=None):
     """
     Copy an AWS Snapshot to the primary AWS account.
 
@@ -37,6 +37,11 @@ def copy_ami_snapshot(arn, ami_id, snapshot_region):
         arn (str): The AWS Resource Number for the account with the snapshot
         ami_id (str): The AWS ID for the machine image
         snapshot_region (str): The region the snapshot resides in
+        reference_ami_id (str): Optional. The id of the original image from
+            which this image was copied. We need to know this in some cases
+            where we create a copy of the image in the customer's account
+            before we can copy its snapshot, and we must pass this information
+            forward for appropriate reference and cleanup.
 
     Returns:
         None: Run as an asynchronous Celery task.
@@ -54,6 +59,23 @@ def copy_ami_snapshot(arn, ami_id, snapshot_region):
         image.save()
         raise AwsSnapshotEncryptedError
 
+    session_account_id = aws.get_session_account_id(session)
+    logger.info(
+        _('AWS snapshot "{snapshot_id}" for image "{image_id}" has owner '
+          '"{owner_id}"; current session is account "{account_id}"').format(
+            snapshot_id=customer_snapshot.snapshot_id,
+            image_id=ami.id,
+            owner_id=customer_snapshot.owner_id,
+            account_id=session_account_id
+        )
+    )
+    if customer_snapshot.owner_id != session_account_id and \
+            reference_ami_id is None:
+        copy_ami_to_customer_account(arn, ami_id, snapshot_region)
+        # Early return because we need to stop processing the current AMI.
+        # A future call will process this new copy of the current AMI instead.
+        return
+
     aws.add_snapshot_ownership(customer_snapshot)
 
     snapshot_copy_id = aws.copy_snapshot(customer_snapshot_id, snapshot_region)
@@ -67,8 +89,54 @@ def copy_ami_snapshot(arn, ami_id, snapshot_region):
     remove_snapshot_ownership.delay(
         arn, customer_snapshot_id, snapshot_region, snapshot_copy_id)
 
+    if reference_ami_id is not None:
+        # If a reference ami exists, that means we have been working with a
+        # copy in here. That means we need to remove that copy and pass the
+        # original reference AMI ID through the rest of the task chain so the
+        # results get reported for that original reference AMI, not our copy.
+        # TODO FIXME Do we or don't we clean up?
+        # If we do, we need permissions to include `ec2:DeregisterImage` and
+        # `ec2:DeleteSnapshot` but those are both somewhat scary...
+        # clean_up_customer_image_copy.delay(arn, ami_id, source_region)
+        ami_id = reference_ami_id
+
     # Create volume from snapshot copy
     create_volume.delay(ami_id, snapshot_copy_id)
+
+
+@retriable_shared_task
+@rewrap_aws_errors
+def copy_ami_to_customer_account(arn, reference_ami_id, snapshot_region):
+    """
+    Copy an AWS Image to the customer's AWS account.
+
+    This is an intermediate step that we occasionally need to use when the
+    customer has an instance based on a image that has been privately shared
+    by a third party, and that means we cannot directly copy its snapshot. We
+    can, however, create a copy of the image in the customer's account and use
+    that copy for the remainder of the inspection process.
+
+    Args:
+        arn (str): The AWS Resource Number for the account with the snapshot
+        reference_ami_id (str): The AWS ID for the original image to copy
+        snapshot_region (str): The region the snapshot resides in
+
+    Returns:
+        None: Run as an asynchronous Celery task.
+
+    """
+    session = aws.get_session(arn)
+    reference_ami = aws.get_ami(session, reference_ami_id, snapshot_region)
+    new_ami_id = aws.copy_ami(session, reference_ami.id, snapshot_region)
+    copy_ami_snapshot.delay(arn, new_ami_id, snapshot_region, reference_ami_id)
+
+
+@retriable_shared_task
+@rewrap_aws_errors
+def clean_up_customer_image_copy(arn, ami_id, snapshot_region):
+    """Remove the image and its snapshots from the customer's account."""
+    session = aws.get_session(arn)
+    aws.deregister_ami_and_destroy_snapshots(session, ami_id, snapshot_region)
 
 
 @retriable_shared_task
