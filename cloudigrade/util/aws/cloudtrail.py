@@ -29,16 +29,19 @@ def configure_cloudtrail(session, aws_account_id,
     """
     cloudtrail = session.client('cloudtrail')
     name = f'cloudigrade-{aws_account_id}'
-    trail_exists = lookup_trail(cloudtrail, name)
-    if trail_exists:
-        update_trail(cloudtrail, name, include_global_service_events,
-                     is_multi_region_trail)
+
+    if lookup_trail(cloudtrail, name):
+        response = update_cloudtrail(cloudtrail, name,
+                                     include_global_service_events,
+                                     is_multi_region_trail)
     else:
-        create_cloudtrail(cloudtrail, name, include_global_service_events,
-                          is_multi_region_trail)
+        response = create_cloudtrail(cloudtrail, name,
+                                     include_global_service_events,
+                                     is_multi_region_trail)
     # limit to write only events & turn on logging
     put_event_selectors(cloudtrail, name)
     cloudtrail.start_logging(Name=name)
+    return response
 
 
 def lookup_trail(cloudtrail, name):
@@ -66,10 +69,14 @@ def put_event_selectors(cloudtrail, name):
         name (string): The name of the cloudtrail to configure
     """
     event_selector = [{'ReadWriteType': 'WriteOnly'}]
-    cloudtrail.put_event_selectors(
-        TrailName=name,
-        EventSelectors=event_selector
-    )
+    try:
+        response = cloudtrail.put_event_selectors(
+            TrailName=name,
+            EventSelectors=event_selector
+        )
+        return response
+    except ClientError as e:
+        raise e
 
 
 def create_cloudtrail(cloudtrail, name, include_global_service_events,
@@ -86,18 +93,19 @@ def create_cloudtrail(cloudtrail, name, include_global_service_events,
     """
     logger.debug(_('Creating the cloudtrail {0}').format(name))
     try:
-        cloudtrail.create_trail(
+        response = cloudtrail.create_trail(
             Name=name,
             S3BucketName=settings.S3_BUCKET_NAME,
             IncludeGlobalServiceEvents=include_global_service_events,
             IsMultiRegionTrail=is_multi_region_trail,
         )
+        return response
     except ClientError as e:
         raise e
 
 
-def update_trail(cloudtrail, name, include_global_service_events,
-                 is_multi_region_trail):
+def update_cloudtrail(cloudtrail, name, include_global_service_events,
+                      is_multi_region_trail):
     """
     Update the existing CloudTrail in the customer account.
 
@@ -111,11 +119,12 @@ def update_trail(cloudtrail, name, include_global_service_events,
     """
     logger.debug(_('Updating the cloudtrail {0}').format(name))
     try:
-        cloudtrail.update_trail(
+        response = cloudtrail.update_trail(
             Name=name,
             S3BucketName=settings.S3_BUCKET_NAME,
             IncludeGlobalServiceEvents=include_global_service_events,
             IsMultiRegionTrail=is_multi_region_trail
         )
+        return response
     except ClientError as e:
         raise e

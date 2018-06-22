@@ -2,68 +2,340 @@
 
 from unittest.mock import Mock, patch
 
+from botocore.exceptions import ClientError
 from django.test import TestCase
 
-from util.aws import configure_cloudtrail
+from util.aws import cloudtrail
 from util.tests import helper
+
 
 class UtilAwsCloudTrailTest(TestCase):
     """AWS CloudTrail utility functions test case."""
 
-    def test_configure_cloudtrail(self):
+    @patch('util.aws.cloudtrail.lookup_trail', return_value=True)
+    def test_configure_cloudtrail_update(self, mock_lookup_trail):
         """
-        Assert we get expected instances in a dict keyed by regions.
+        Test the configure_cloudtrail function.
 
-        The setup here is a little complicated, and it's important to
-        understand what's going into it. The mock response from the client's
-        `describe_instances` includes a Reservations list of **three** elements
-        with different Instances in each. It is unclear to us how AWS divides
-        Instances into Reservations; so, we must ensure in our tests that we
-        are checking for Instances in potentially multiple Reservations.
+        Assert that update_trail is called if the CloudTrail previously
+        exists and that the response is the output of update_trail.
         """
-        mock_role = helper.generate_dummy_role()
-
         mock_session = Mock()
-        mock_assume_role = mock_session.client.return_value.assume_role
-        mock_assume_role.return_value = mock_role
         aws_account_id = helper.generate_dummy_aws_account_id()
+        name = 'cloudigrade-' + aws_account_id
 
-        mock_described = {
-            'Reservations': [
-                {
-                    'Instances': [
-                        mock_running_instance_1,
-                        mock_stopped_instance_1,
-                    ],
+        expected_response = {
+            'Name': name,
+            'S3BucketName': 'foo-s3',
+            'IncludeGlobalServiceEvents': True,
+            'IsMultiRegionTrail': True,
+            'TrailARN': 'arn:aws:cloudtrail:us-east-1:' +
+                        aws_account_id + ':trail/' + name,
+            'LogFileValidationEnabled': False,
+            'ResponseMetadata': {
+                'RequestId': '398432984738',
+                'HTTPStatusCode': 200,
+                'HTTPHeaders': {
+                    'x-amzn-requestid': '56564546',
+                    'content-type': 'application/x-amz-json-1.1',
+                    'content-length': '253'
                 },
-                {
-                    'Instances': [
-                        mock_running_instance_2,
-                    ],
-                },
-                {
-                    'Instances': [
-                        mock_stopped_instance_2,
-                    ],
-                },
-            ],
+                'RetryAttempts': 0
+            }
         }
 
         mock_client = mock_session.client.return_value
-        mock_client.configure_cloudtrail.return_value = mock_described
+        mock_client.update_trail.return_value = expected_response
+        mock_client.put_event_selectors.return_value = None
 
-        expected_found = {
-            mock_regions[0]: [
-                mock_running_instance_1,
-                mock_running_instance_2,
-            ]
+        actual_response = cloudtrail.configure_cloudtrail(mock_session,
+                                                          aws_account_id)
+
+        self.assertEqual(expected_response, actual_response)
+
+    @patch('util.aws.cloudtrail.lookup_trail', return_value=False)
+    def test_configure_cloudtrail_create(self, mock_lookup_trail):
+        """
+        Test the configure_cloudtrail function.
+
+        Assert that create_cloudtrail function is called if the CloudTrail
+        does not exist and the response is the output of create_trail.
+        """
+        mock_session = Mock()
+        aws_account_id = helper.generate_dummy_aws_account_id()
+        name = 'cloudigrade-' + aws_account_id
+
+        expected_response = {
+            'Name': name,
+            'S3BucketName': 'foo-s3',
+            'IncludeGlobalServiceEvents': True,
+            'IsMultiRegionTrail': True,
+            'TrailARN': 'arn:aws:cloudtrail:us-east-1:' +
+                        aws_account_id + ':trail/' + name,
+            'LogFileValidationEnabled': False,
+            'ResponseMetadata': {
+                'RequestId': '398432984738',
+                'HTTPStatusCode': 200,
+                'HTTPHeaders': {
+                    'x-amzn-requestid': '56564546',
+                    'content-type': 'application/x-amz-json-1.1',
+                    'content-length': '253',
+                },
+                'RetryAttempts': 0
+            }
         }
 
-        with patch.object(ec2, 'get_regions') as mock_get_regions:
-            mock_get_regions.return_value = mock_regions
-            actual_found = ec2.get_running_instances(mock_session)
+        mock_client = mock_session.client.return_value
+        mock_client.create_trail.return_value = expected_response
+        mock_client.put_event_selectors.return_value = None
 
-        cloudtrail = configure_cloudtrail(mock_session,
-                                          aws_account_id)
+        actual_response = cloudtrail.configure_cloudtrail(mock_session,
+                                                          aws_account_id)
 
-        self.assertDictEqual(expected_found, actual_found)
+        self.assertEqual(expected_response, actual_response)
+
+    def test_lookup_trail_found(self):
+        """Test the lookup_trail function.
+
+        Assert that the lookup_trail function returns True when the CloudTrail
+        name is found within the trail list returned from the describe_trails
+        function.
+        """
+        aws_account_id = helper.generate_dummy_aws_account_id()
+        name = f'cloudigrade-{aws_account_id}'
+
+        mock_session = Mock()
+
+        mock_traillist = {
+            'trailList': [{
+                'Name': name,
+                'S3BucketName': 'foo-s3',
+                'IncludeGlobalServiceEvents': True,
+                'IsMultiRegionTrail': True,
+                'HomeRegion': 'us-east-1',
+                'TrailARN': 'arn:aws:cloudtrail:us-east-1:' +
+                            aws_account_id + ':trail/' + name,
+                'LogFileValidationEnabled': False,
+                'HasCustomEventSelectors': True
+            }]
+        }
+
+        mock_client = mock_session.client.return_value
+        mock_client.describe_trails.return_value = mock_traillist
+
+        expected_lookup_trail_value = True
+        actual_lookup_trail_value = cloudtrail.lookup_trail(mock_client, name)
+        self.assertEqual(expected_lookup_trail_value,
+                         actual_lookup_trail_value)
+
+    def test_lookup_trail_not_found(self):
+        """Test the lookup_trail function.
+
+        Assert that the lookup_trail function returns False when the CloudTrail
+        name is found within the trail list returned from the describe_trails
+        function.
+        """
+        aws_account_id = helper.generate_dummy_aws_account_id()
+        name = f'cloudigrade-{aws_account_id}'
+
+        mock_session = Mock()
+
+        mock_trailList = {
+            'trailList': []
+        }
+
+        mock_client = mock_session.client.return_value
+        mock_client.describe_trails.return_value = mock_trailList
+
+        expected_lookup_trail_value = False
+        actual_lookup_trail_value = cloudtrail.lookup_trail(mock_client, name)
+        self.assertEqual(expected_lookup_trail_value,
+                         actual_lookup_trail_value)
+
+    def test_put_event_selectors(self):
+        """Test the put_event_selectors function.
+
+        Assert that put_event_selectors returns the response returned from
+        calling the cloudtrail put_event_selectors function.
+        """
+        aws_account_id = helper.generate_dummy_aws_account_id()
+        name = f'cloudigrade-{aws_account_id}'
+
+        mock_session = Mock()
+
+        mock_response = {
+            'TrailARN': 'arn:aws:cloudtrail:us-east-1:' +
+                        aws_account_id + ':trail/' + name,
+            'EventSelectors': [{
+                'ReadWriteType': 'WriteOnly',
+                'IncludeManagementEvents': True,
+                'DataResources': []
+            }],
+        }
+
+        mock_client = mock_session.client.return_value
+        # set the aws put_event_selectors function response as mock_response
+        mock_client.put_event_selectors.return_value = mock_response
+
+        # set the expected response as the mock_response as well
+        expected_return_value = mock_response
+
+        actual_return_value = cloudtrail.put_event_selectors(mock_client, name)
+        self.assertEqual(expected_return_value, actual_return_value)
+
+    def test_put_event_selectors_exception(self):
+        """Test the put_event_selectors function.
+
+        Assert that an error is returned when the CloudTrail does not exist.
+        """
+        aws_account_id = helper.generate_dummy_aws_account_id()
+        name = f'cloudigrade-{aws_account_id}'
+
+        mock_session = Mock()
+
+        mock_error = {
+            'Error': {
+                'Code': 'TrailNotFoundException',
+                'Message':
+                    f'Unknown trail: {name} for the user {aws_account_id}'
+            }
+        }
+
+        mock_client = mock_session.client.return_value
+        mock_client.put_event_selectors.side_effect = ClientError(
+            mock_error, 'PutEventSelectors')
+
+        with self.assertRaises(ClientError):
+            cloudtrail.put_event_selectors(mock_client, name)
+
+    def test_create_cloudtrail(self):
+        """Test the create_cloudtrail function.
+
+        Assert that create_cloudtrail function returns the response returned
+        from calling the cloudtrail create_cloudtrail function.
+        """
+        aws_account_id = helper.generate_dummy_aws_account_id()
+        name = f'cloudigrade-{aws_account_id}'
+
+        mock_session = Mock()
+
+        mock_response = {
+            'TrailARN': 'arn:aws:cloudtrail:us-east-1:' +
+                        aws_account_id + ':trail/' + name,
+            'EventSelectors': [{
+                'ReadWriteType': 'WriteOnly',
+                'IncludeManagementEvents': True,
+                'DataResources': []
+            }],
+            'ResponseMetadata': {
+                'RequestId': '02280e28-06ba-4384-af0e-b8f72b9a8a53',
+                'HTTPStatusCode': 200,
+                'HTTPHeaders': {
+                    'x-amzn-requestid': '02280e28-06ba-4384-af0e-b8f72b9a8a53',
+                    'content-type': 'application/x-amz-json-1.1',
+                    'content-length': '186',
+                    'date': 'Fri, 22 Jun 2018 14:29:56 GMT'
+                },
+                'RetryAttempts': 0
+            }
+        }
+
+        mock_client = mock_session.client.return_value
+        mock_client.create_trail.return_value = mock_response
+
+        expected_value = mock_response
+        actual_value = cloudtrail.create_cloudtrail(mock_client, name,
+                                                    True, True)
+        self.assertEqual(expected_value, actual_value)
+
+    def test_create_cloudtrail_exception(self):
+        """Test the create_cloudtrail function.
+
+        Assert that an error is returned when the trail already exists
+        """
+        aws_account_id = helper.generate_dummy_aws_account_id()
+        name = f'cloudigrade-{aws_account_id}'
+
+        mock_session = Mock()
+
+        mock_error = {
+            'Error': {
+                'Code': 'TrailAlreadyExistsException',
+                'Message':
+                    f'Trail {name} already exists'
+                    f'for customer: {aws_account_id}'
+            }
+        }
+
+        mock_client = mock_session.client.return_value
+        mock_client.create_trail.side_effect = ClientError(
+            mock_error, 'CreateTrail')
+
+        with self.assertRaises(ClientError):
+            cloudtrail.create_cloudtrail(mock_client, name, True, True)
+
+    def test_update_cloudtrail(self):
+        """Test the update_cloudtrail function.
+
+        Assert that update_cloudtrail function returns the response returned
+        from calling the cloudtrail update_trail function.
+        """
+        aws_account_id = helper.generate_dummy_aws_account_id()
+        name = f'cloudigrade-{aws_account_id}'
+
+        mock_session = Mock()
+
+        mock_response = {
+            'Name': name,
+            'S3BucketName': 'foo-s3',
+            'IncludeGlobalServiceEvents': True,
+            'IsMultiRegionTrail': True,
+            'TrailARN': 'arn:aws:cloudtrail:us-east-1:' +
+                        aws_account_id + ':trail/' + name,
+            'LogFileValidationEnabled': False,
+            'ResponseMetadata': {
+                'RequestId': '398432984738',
+                'HTTPStatusCode': 200,
+                'HTTPHeaders': {
+                    'x-amzn-requestid': '56564546',
+                    'content-type': 'application/x-amz-json-1.1',
+                    'content-length': '253',
+                },
+                'RetryAttempts': 0
+            }
+        }
+
+        mock_client = mock_session.client.return_value
+        mock_client.update_trail.return_value = mock_response
+
+        expected_value = mock_response
+        actual_value = cloudtrail.update_cloudtrail(mock_client, name,
+                                                    True, True)
+        self.assertEqual(expected_value, actual_value)
+
+    def test_update_cloudtrail_exception(self):
+        """
+        Test the update_cloudtrail function.
+
+        Assert that an error is returned when the CloudTrail does not exist.
+        """
+        aws_account_id = helper.generate_dummy_aws_account_id()
+        name = f'cloudigrade-{aws_account_id}'
+
+        mock_session = Mock()
+
+        mock_copy_error = {
+            'Error': {
+                'Code': 'TrailNotFoundException',
+                'Message':
+                    f'Unknown trail: {name} for the user {aws_account_id}'
+            }
+        }
+
+        mock_client = mock_session.client.return_value
+
+        mock_client.update_trail.side_effect = ClientError(mock_copy_error,
+                                                           'UpdateTrail')
+
+        with self.assertRaises(ClientError):
+            cloudtrail.update_cloudtrail(mock_client, name, True, True)
