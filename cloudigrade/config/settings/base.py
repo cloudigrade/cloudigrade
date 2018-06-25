@@ -191,7 +191,7 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
+        'dj_auth.permissions.IsAuthenticated',
     ),
     'EXCEPTION_HANDLER': 'util.exceptions.api_exception_handler',
 }

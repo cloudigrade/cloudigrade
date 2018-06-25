@@ -17,7 +17,8 @@ from account.views import (AccountViewSet,
                            InstanceEventViewSet,
                            InstanceViewSet,
                            MachineImageViewSet,
-                           ReportViewSet)
+                           ReportViewSet,
+                           SysconfigViewSet)
 from util.tests import helper as util_helper
 
 
@@ -818,3 +819,23 @@ class InstanceEventViewSetTest(TestCase):
         response = self.get_event_list_response(self.superuser, params)
         actual_events = self.get_event_ids_from_list_response(response)
         self.assertEqual(expected_events, actual_events)
+
+
+class SysconfigViewSetTest(TestCase):
+    """SysconfigViewSet test case."""
+
+    @patch('account.views._get_primary_account_id')
+    def test_list_accounts_success(self, mock_get_primary_account_id):
+        """Test listing account ids."""
+        account_id = account_helper.generate_aws_account()
+        mock_get_primary_account_id.return_value = account_id
+        user = util_helper.generate_test_user()
+        factory = APIRequestFactory()
+        request = factory.get('/sysconfig/')
+        force_authenticate(request, user=user)
+        view = SysconfigViewSet.as_view(actions={'get': 'list'})
+
+        response = view(request)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, {'aws_account_id': account_id})
