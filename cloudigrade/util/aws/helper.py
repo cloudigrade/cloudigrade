@@ -91,13 +91,21 @@ def _handle_dry_run_response_exception(action, e):
     raise e
 
 
-def _verify_policy_action(session, action):
+def _verify_policy_action(session, action):  # noqa: C901
     """
     Check to see if we have access to a specific action.
 
     Args:
         session (boto3.Session): A temporary session tied to a customer account
         action (str): The policy action to check
+
+    Note:
+        The "noqa: C901" comment on this function breaks my heart a little,
+        but it's an exception to make our complexity checker be quiet when
+        looking at this massive pile of "elif" blocks. Perhaps in an ideal
+        world we would split up this function into a clever "policy action
+        verifier factory" of sorts that might break the calls into separate
+        functions, but for now, #JustTechnicalDebtThings.
 
     Returns:
         bool: Whether the action is allowed, or not.
@@ -130,6 +138,17 @@ def _verify_policy_action(session, action):
                 DryRun=True,
                 SourceImageId=DRYRUN_IMAGE_ID,
                 SourceRegion=DRYRUN_IMAGE_REGION,
+            )
+        elif action == 'ec2:CreateTags':
+            ec2.create_tags(
+                DryRun=True,
+                Resources=[DRYRUN_IMAGE_ID],
+                Tags=[
+                    {
+                        'Key': 'Example',
+                        'Value': 'Hello world',
+                    },
+                ]
             )
         elif action.startswith('cloudtrail:'):
             # unfortunately, CloudTrail does not have a DryRun option like ec2
