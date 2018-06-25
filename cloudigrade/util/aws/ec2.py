@@ -137,12 +137,33 @@ def copy_ami(session, image_id, source_region):
     """
     old_image = get_ami(session, image_id, source_region)
     # Note: AWS image names are limited to 128 characters in length.
-    new_name = f'Temporary reference copy ({old_image.name})'[:128]
-    new_image = session.client('ec2', region_name=source_region).copy_image(
+    new_name = f'cloudigrade reference copy ({old_image.name})'[:128]
+    ec2 = session.client('ec2', region_name=source_region)
+    new_image = ec2.copy_image(
         Name=new_name,
         SourceImageId=image_id,
         SourceRegion=source_region,
     )
+    ec2.create_tags(
+        Resources=[new_image['ImageId']],
+        Tags=[
+            {
+                # "Name" is a special tag in AWS that displays in the main AWS
+                # console list view of the images.
+                'Key': 'Name',
+                'Value': new_name,
+            },
+            {
+                'Key': 'cloudigrade original image id',
+                'Value': old_image.id,
+            },
+            {
+                'Key': 'cloudigrade original image name',
+                'Value': old_image.name,
+            },
+        ]
+    )
+
     return new_image['ImageId']
 
 
