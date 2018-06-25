@@ -12,8 +12,8 @@ from util.tests import helper
 class UtilAwsCloudTrailTest(TestCase):
     """AWS CloudTrail utility functions test case."""
 
-    @patch('util.aws.cloudtrail.lookup_trail', return_value=True)
-    def test_configure_cloudtrail_update(self, mock_lookup_trail):
+    @patch('util.aws.cloudtrail.trail_exists', return_value=True)
+    def test_configure_cloudtrail_update(self, mock_trail_exists):
         """
         Test the configure_cloudtrail function.
 
@@ -22,15 +22,15 @@ class UtilAwsCloudTrailTest(TestCase):
         """
         mock_session = Mock()
         aws_account_id = helper.generate_dummy_aws_account_id()
-        name = 'cloudigrade-' + aws_account_id
+        name = 'cloudigrade-{0}'.format(aws_account_id)
 
         expected_response = {
             'Name': name,
             'S3BucketName': 'foo-s3',
             'IncludeGlobalServiceEvents': True,
             'IsMultiRegionTrail': True,
-            'TrailARN': 'arn:aws:cloudtrail:us-east-1:' +
-                        aws_account_id + ':trail/' + name,
+            'TrailARN': 'arn:aws:cloudtrail:us-east-1:'
+            '{0}:trail/{1}'.format(aws_account_id, name),
             'LogFileValidationEnabled': False,
             'ResponseMetadata': {
                 'RequestId': '398432984738',
@@ -53,8 +53,8 @@ class UtilAwsCloudTrailTest(TestCase):
 
         self.assertEqual(expected_response, actual_response)
 
-    @patch('util.aws.cloudtrail.lookup_trail', return_value=False)
-    def test_configure_cloudtrail_create(self, mock_lookup_trail):
+    @patch('util.aws.cloudtrail.trail_exists', return_value=False)
+    def test_configure_cloudtrail_create(self, mock_trail_exists):
         """
         Test the configure_cloudtrail function.
 
@@ -63,15 +63,15 @@ class UtilAwsCloudTrailTest(TestCase):
         """
         mock_session = Mock()
         aws_account_id = helper.generate_dummy_aws_account_id()
-        name = 'cloudigrade-' + aws_account_id
+        name = 'cloudigrade-{0}'.format(aws_account_id)
 
         expected_response = {
             'Name': name,
             'S3BucketName': 'foo-s3',
             'IncludeGlobalServiceEvents': True,
             'IsMultiRegionTrail': True,
-            'TrailARN': 'arn:aws:cloudtrail:us-east-1:' +
-                        aws_account_id + ':trail/' + name,
+            'TrailARN': 'arn:aws:cloudtrail:us-east-1:'
+            '{0}:trail/{1}'.format(aws_account_id, name),
             'LogFileValidationEnabled': False,
             'ResponseMetadata': {
                 'RequestId': '398432984738',
@@ -94,15 +94,15 @@ class UtilAwsCloudTrailTest(TestCase):
 
         self.assertEqual(expected_response, actual_response)
 
-    def test_lookup_trail_found(self):
-        """Test the lookup_trail function.
+    def test_trail_exists_found(self):
+        """Test the trail_exists function.
 
-        Assert that the lookup_trail function returns True when the CloudTrail
+        Assert that the trail_exists function returns True when the CloudTrail
         name is found within the trail list returned from the describe_trails
         function.
         """
         aws_account_id = helper.generate_dummy_aws_account_id()
-        name = f'cloudigrade-{aws_account_id}'
+        name = 'cloudigrade-{0}'.format(aws_account_id)
 
         mock_session = Mock()
 
@@ -113,8 +113,8 @@ class UtilAwsCloudTrailTest(TestCase):
                 'IncludeGlobalServiceEvents': True,
                 'IsMultiRegionTrail': True,
                 'HomeRegion': 'us-east-1',
-                'TrailARN': 'arn:aws:cloudtrail:us-east-1:' +
-                            aws_account_id + ':trail/' + name,
+                'TrailARN': 'arn:aws:cloudtrail:us-east-1:'
+                '{0}:trail/{1}'.format(aws_account_id, name),
                 'LogFileValidationEnabled': False,
                 'HasCustomEventSelectors': True
             }]
@@ -123,20 +123,20 @@ class UtilAwsCloudTrailTest(TestCase):
         mock_client = mock_session.client.return_value
         mock_client.describe_trails.return_value = mock_traillist
 
-        expected_lookup_trail_value = True
-        actual_lookup_trail_value = cloudtrail.lookup_trail(mock_client, name)
-        self.assertEqual(expected_lookup_trail_value,
-                         actual_lookup_trail_value)
+        expected_trail_exists_value = True
+        actual_trail_exists_value = cloudtrail.trail_exists(mock_client, name)
+        self.assertEqual(expected_trail_exists_value,
+                         actual_trail_exists_value)
 
-    def test_lookup_trail_not_found(self):
-        """Test the lookup_trail function.
+    def test_trail_exists_not_found(self):
+        """Test the trail_exists function.
 
-        Assert that the lookup_trail function returns False when the CloudTrail
+        Assert that the trail_exists function returns False when the CloudTrail
         name is found within the trail list returned from the describe_trails
         function.
         """
         aws_account_id = helper.generate_dummy_aws_account_id()
-        name = f'cloudigrade-{aws_account_id}'
+        name = 'cloudigrade-{0}'.format(aws_account_id)
 
         mock_session = Mock()
 
@@ -147,10 +147,10 @@ class UtilAwsCloudTrailTest(TestCase):
         mock_client = mock_session.client.return_value
         mock_client.describe_trails.return_value = mock_trailList
 
-        expected_lookup_trail_value = False
-        actual_lookup_trail_value = cloudtrail.lookup_trail(mock_client, name)
-        self.assertEqual(expected_lookup_trail_value,
-                         actual_lookup_trail_value)
+        expected_trail_exists_value = False
+        actual_trail_exists_value = cloudtrail.trail_exists(mock_client, name)
+        self.assertEqual(expected_trail_exists_value,
+                         actual_trail_exists_value)
 
     def test_put_event_selectors(self):
         """Test the put_event_selectors function.
@@ -159,13 +159,13 @@ class UtilAwsCloudTrailTest(TestCase):
         calling the cloudtrail put_event_selectors function.
         """
         aws_account_id = helper.generate_dummy_aws_account_id()
-        name = f'cloudigrade-{aws_account_id}'
+        name = 'cloudigrade-{0}'.format(aws_account_id)
 
         mock_session = Mock()
 
         mock_response = {
-            'TrailARN': 'arn:aws:cloudtrail:us-east-1:' +
-                        aws_account_id + ':trail/' + name,
+            'TrailARN': 'arn:aws:cloudtrail:us-east-1:'
+            '{0}:trail/{1}'.format(aws_account_id, name),
             'EventSelectors': [{
                 'ReadWriteType': 'WriteOnly',
                 'IncludeManagementEvents': True,
@@ -189,7 +189,7 @@ class UtilAwsCloudTrailTest(TestCase):
         Assert that an error is returned when the CloudTrail does not exist.
         """
         aws_account_id = helper.generate_dummy_aws_account_id()
-        name = f'cloudigrade-{aws_account_id}'
+        name = 'cloudigrade-{0}'.format(aws_account_id)
 
         mock_session = Mock()
 
@@ -197,7 +197,8 @@ class UtilAwsCloudTrailTest(TestCase):
             'Error': {
                 'Code': 'TrailNotFoundException',
                 'Message':
-                    f'Unknown trail: {name} for the user {aws_account_id}'
+                    'Unknown trail: {0} for the user '
+                    '{1}'.format(name, aws_account_id)
             }
         }
 
@@ -215,13 +216,13 @@ class UtilAwsCloudTrailTest(TestCase):
         from calling the cloudtrail create_cloudtrail function.
         """
         aws_account_id = helper.generate_dummy_aws_account_id()
-        name = f'cloudigrade-{aws_account_id}'
+        name = 'cloudigrade-{0}'.format(aws_account_id)
 
         mock_session = Mock()
 
         mock_response = {
-            'TrailARN': 'arn:aws:cloudtrail:us-east-1:' +
-                        aws_account_id + ':trail/' + name,
+            'TrailARN': 'arn:aws:cloudtrail:us-east-1:'
+            '{0}:trail/{1}'.format(aws_account_id, name),
             'EventSelectors': [{
                 'ReadWriteType': 'WriteOnly',
                 'IncludeManagementEvents': True,
@@ -244,8 +245,7 @@ class UtilAwsCloudTrailTest(TestCase):
         mock_client.create_trail.return_value = mock_response
 
         expected_value = mock_response
-        actual_value = cloudtrail.create_cloudtrail(mock_client, name,
-                                                    True, True)
+        actual_value = cloudtrail.create_cloudtrail(mock_client, name)
         self.assertEqual(expected_value, actual_value)
 
     def test_create_cloudtrail_exception(self):
@@ -254,7 +254,7 @@ class UtilAwsCloudTrailTest(TestCase):
         Assert that an error is returned when the trail already exists
         """
         aws_account_id = helper.generate_dummy_aws_account_id()
-        name = f'cloudigrade-{aws_account_id}'
+        name = 'cloudigrade-{0}'.format(aws_account_id)
 
         mock_session = Mock()
 
@@ -262,8 +262,9 @@ class UtilAwsCloudTrailTest(TestCase):
             'Error': {
                 'Code': 'TrailAlreadyExistsException',
                 'Message':
-                    f'Trail {name} already exists'
-                    f'for customer: {aws_account_id}'
+                    'Trail {0} already exists'
+                    'for customer: {1}'.format(name,
+                                               aws_account_id)
             }
         }
 
@@ -272,7 +273,7 @@ class UtilAwsCloudTrailTest(TestCase):
             mock_error, 'CreateTrail')
 
         with self.assertRaises(ClientError):
-            cloudtrail.create_cloudtrail(mock_client, name, True, True)
+            cloudtrail.create_cloudtrail(mock_client, name)
 
     def test_update_cloudtrail(self):
         """Test the update_cloudtrail function.
@@ -281,7 +282,7 @@ class UtilAwsCloudTrailTest(TestCase):
         from calling the cloudtrail update_trail function.
         """
         aws_account_id = helper.generate_dummy_aws_account_id()
-        name = f'cloudigrade-{aws_account_id}'
+        name = 'cloudigrade-{0}'.format(aws_account_id)
 
         mock_session = Mock()
 
@@ -290,8 +291,8 @@ class UtilAwsCloudTrailTest(TestCase):
             'S3BucketName': 'foo-s3',
             'IncludeGlobalServiceEvents': True,
             'IsMultiRegionTrail': True,
-            'TrailARN': 'arn:aws:cloudtrail:us-east-1:' +
-                        aws_account_id + ':trail/' + name,
+            'TrailARN': 'arn:aws:cloudtrail:us-east-1:'
+            '{0}:trail/{1}'.format(aws_account_id, name),
             'LogFileValidationEnabled': False,
             'ResponseMetadata': {
                 'RequestId': '398432984738',
@@ -309,8 +310,7 @@ class UtilAwsCloudTrailTest(TestCase):
         mock_client.update_trail.return_value = mock_response
 
         expected_value = mock_response
-        actual_value = cloudtrail.update_cloudtrail(mock_client, name,
-                                                    True, True)
+        actual_value = cloudtrail.update_cloudtrail(mock_client, name)
         self.assertEqual(expected_value, actual_value)
 
     def test_update_cloudtrail_exception(self):
@@ -320,7 +320,7 @@ class UtilAwsCloudTrailTest(TestCase):
         Assert that an error is returned when the CloudTrail does not exist.
         """
         aws_account_id = helper.generate_dummy_aws_account_id()
-        name = f'cloudigrade-{aws_account_id}'
+        name = 'cloudigrade-{0}'.format(aws_account_id)
 
         mock_session = Mock()
 
@@ -328,7 +328,8 @@ class UtilAwsCloudTrailTest(TestCase):
             'Error': {
                 'Code': 'TrailNotFoundException',
                 'Message':
-                    f'Unknown trail: {name} for the user {aws_account_id}'
+                    'Unknown trail: {0} for the user '
+                    '{1}'.format(name, aws_account_id)
             }
         }
 
@@ -338,4 +339,4 @@ class UtilAwsCloudTrailTest(TestCase):
                                                            'UpdateTrail')
 
         with self.assertRaises(ClientError):
-            cloudtrail.update_cloudtrail(mock_client, name, True, True)
+            cloudtrail.update_cloudtrail(mock_client, name)

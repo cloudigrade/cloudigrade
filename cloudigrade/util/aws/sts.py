@@ -16,18 +16,12 @@ cloudigrade_policy = {
                 'ec2:DescribeInstances',
                 'ec2:ModifySnapshotAttribute',
                 'ec2:DescribeSnapshotAttribute',
-                'ec2:DescribeSnapshots'
-            ],
-            'Resource': '*'
-        },
-        {
-            'Effect': 'Allow',
-            'Action': [
-                'cloudtrail:StartLogging',
-                'cloudtrail:DescribeTrails',
+                'ec2:DescribeSnapshots',
                 'cloudtrail:CreateTrail',
                 'cloudtrail:UpdateTrail',
-                'cloudtrail:PutEventSelectors'
+                'cloudtrail:PutEventSelectors',
+                'cloudtrail:DescribeTrails',
+                'cloudtrail:StartLogging',
             ],
             'Resource': '*'
         }

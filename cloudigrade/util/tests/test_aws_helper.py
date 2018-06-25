@@ -51,9 +51,15 @@ class UtilAwsHelperTest(TestCase):
             call(mock_session, 'ec2:ModifySnapshotAttribute'),
             call(mock_session, 'ec2:DescribeSnapshotAttribute'),
             call(mock_session, 'ec2:DescribeSnapshots'),
+            call(mock_session, 'cloudtrail:CreateTrail'),
+            call(mock_session, 'cloudtrail:UpdateTrail'),
+            call(mock_session, 'cloudtrail:PutEventSelectors'),
+            call(mock_session, 'cloudtrail:DescribeTrails'),
+            call(mock_session, 'cloudtrail:StartLogging'),
         ]
         mock_verify_policy_action.side_effect = [
-            True, True, True, True, True
+            True, True, True, True, True,
+            True, True, True, True, True,
         ]
         verified, failed_actions = helper.verify_account_access(mock_session)
         self.assertTrue(verified)
@@ -70,9 +76,15 @@ class UtilAwsHelperTest(TestCase):
             call(mock_session, 'ec2:ModifySnapshotAttribute'),
             call(mock_session, 'ec2:DescribeSnapshotAttribute'),
             call(mock_session, 'ec2:DescribeSnapshots'),
+            call(mock_session, 'cloudtrail:CreateTrail'),
+            call(mock_session, 'cloudtrail:UpdateTrail'),
+            call(mock_session, 'cloudtrail:PutEventSelectors'),
+            call(mock_session, 'cloudtrail:DescribeTrails'),
+            call(mock_session, 'cloudtrail:StartLogging'),
         ]
         mock_verify_policy_action.side_effect = [
-            True, True, True, False, True
+            True, True, True, False, True,
+            True, True, True, True, True
         ]
         verified, failed_actions = helper.verify_account_access(mock_session)
         self.assertFalse(verified)
@@ -164,6 +176,46 @@ class UtilAwsHelperTest(TestCase):
         bogus_action = str(uuid.uuid4())
         result = helper._verify_policy_action(mock_session, bogus_action)
         self.assertFalse(result)
+
+    def test_verify_policy_action_create_trail(self):
+        """Assert appropriate calls to verify cloudtrail:create_trail."""
+        self.assert_verify_policy_action_success(
+            'cloudtrail:CreateTrail',
+            'create_trail',
+            func_kwargs={'DryRun': True}
+        )
+
+    def test_verify_policy_action_update_trail(self):
+        """Assert appropriate calls to verify cloudtrail:update_trail."""
+        self.assert_verify_policy_action_success(
+            'cloudtrail:UpdateTrail',
+            'update_trail',
+            func_kwargs={'DryRun': True}
+        )
+
+    def test_verify_policy_action_describe_trails(self):
+        """Assert appropriate calls to verify cloudtrail:describe_trails."""
+        self.assert_verify_policy_action_success(
+            'cloudtrail:DescribeTrails',
+            'describe_trails',
+            func_kwargs={'DryRun': True}
+        )
+
+    def test_verify_policy_action_put_event_selectors(self):
+        """Assert calls to verify cloudtrail:put_event_selectors."""
+        self.assert_verify_policy_action_success(
+            'cloudtrail:PutEventSelectors',
+            'put_event_selectors',
+            func_kwargs={'DryRun': True}
+        )
+
+    def test_verify_policy_action_start_logging(self):
+        """Assert appropriate calls to verify cloudtrail:start_logging."""
+        self.assert_verify_policy_action_success(
+            'cloudtrail:StartLogging',
+            'start_logging',
+            func_kwargs={'DryRun': True}
+        )
 
     def test_verify_account_access_failure_unauthorized(self):
         """Assert that account access fails for an unauthorized operation."""

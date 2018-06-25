@@ -29,12 +29,6 @@ Create Policy
                        "ec2:DescribeSnapshots",
                        "ec2:ModifySnapshotAttribute",
                        "ec2:DescribeSnapshotAttribute"
-                   ],
-                   "Resource": "*"
-               },
-               {
-                   "Effect": "Allow",
-                   "Action": [
                        "cloudtrail:CreateTrail",
                        "cloudtrail:UpdateTrail",
                        "cloudtrail:PutEventSelectors",

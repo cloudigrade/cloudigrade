@@ -99,7 +99,7 @@ def enqueue_ready_volume(ami_id, volume_id, region):
     aws.check_volume_state(volume)
     messages = [{'ami_id': ami_id, 'volume_id': volume_id}]
 
-    queue_name = '{0}ready_volumes'.format(settings.AWS_SQS_QUEUE_NAME_PREFIX)
+    queue_name = '{0}ready_volumes'.format(settings.AWS_NAME_PREFIX)
     add_messages_to_queue(queue_name, messages)
 
 
@@ -113,7 +113,7 @@ def scale_up_inspection_cluster():
         None: Run as a scheduled Celery task.
 
     """
-    queue_name = '{0}ready_volumes'.format(settings.AWS_SQS_QUEUE_NAME_PREFIX)
+    queue_name = '{0}ready_volumes'.format(settings.AWS_NAME_PREFIX)
     scaled_down, auto_scaling_group = aws.is_scaled_down(
         settings.HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME
     )
