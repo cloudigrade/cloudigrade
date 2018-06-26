@@ -97,7 +97,6 @@ def copy_ami_snapshot(arn, ami_id, snapshot_region, reference_ami_id=None):
         # TODO FIXME Do we or don't we clean up?
         # If we do, we need permissions to include `ec2:DeregisterImage` and
         # `ec2:DeleteSnapshot` but those are both somewhat scary...
-        # clean_up_customer_image_copy.delay(arn, ami_id, source_region)
         ami_id = reference_ami_id
 
     # Create volume from snapshot copy
@@ -129,14 +128,6 @@ def copy_ami_to_customer_account(arn, reference_ami_id, snapshot_region):
     reference_ami = aws.get_ami(session, reference_ami_id, snapshot_region)
     new_ami_id = aws.copy_ami(session, reference_ami.id, snapshot_region)
     copy_ami_snapshot.delay(arn, new_ami_id, snapshot_region, reference_ami_id)
-
-
-@retriable_shared_task
-@rewrap_aws_errors
-def clean_up_customer_image_copy(arn, ami_id, snapshot_region):
-    """Remove the image and its snapshots from the customer's account."""
-    session = aws.get_session(arn)
-    aws.deregister_ami_and_destroy_snapshots(session, ami_id, snapshot_region)
 
 
 @retriable_shared_task
