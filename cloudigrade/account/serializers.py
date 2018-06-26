@@ -92,11 +92,13 @@ class AwsAccountSerializer(HyperlinkedModelSerializer):
                 try:
                     aws.configure_cloudtrail(session, aws_account_id)
                 except ClientError as error:
-                    if error.response.get('Error', {}).get('Code') == 'AccessDeniedException':
+                    if error.response.get('Error', {}).get('Code') == \
+                            'AccessDeniedException':
                         raise serializers.ValidationError(
                             detail={
                                 'account_arn': [
-                                    _('Permission denied for ARN "{0}"').format(arn)
+                                    _('Permission denied for ARN '
+                                      '"{0}"').format(arn)
                                 ]
                             }
                         )
