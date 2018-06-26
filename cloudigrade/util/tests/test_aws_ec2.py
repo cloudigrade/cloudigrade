@@ -7,9 +7,13 @@ from botocore.exceptions import ClientError
 from django.test import TestCase
 
 from util.aws import ec2
-from util.exceptions import (AwsSnapshotCopyLimitError, AwsSnapshotError,
-                             AwsSnapshotNotOwnedError, AwsVolumeError,
-                             AwsVolumeNotReadyError, SnapshotNotReadyException)
+from util.exceptions import (AwsSnapshotCopyLimitError,
+                             AwsSnapshotError,
+                             AwsSnapshotNotOwnedError,
+                             AwsSnapshotOwnedError,
+                             AwsVolumeError,
+                             AwsVolumeNotReadyError,
+                             SnapshotNotReadyException)
 from util.tests import helper
 
 
@@ -191,6 +195,84 @@ class UtilAwsEc2Test(TestCase):
             Attribute='createVolumePermission',
             CreateVolumePermission=expected_permission,
             OperationType='add',
+            UserIds=expected_user_ids
+        )
+        mock_snapshot.describe_attribute.assert_called_once_with(
+            Attribute='createVolumePermission'
+        )
+
+    def test_remove_snapshot_ownership_success(self):
+        """Assert that snapshot ownership is removed successfully."""
+        mock_user_id = str(uuid.uuid4())
+
+        mock_snapshot = helper.generate_mock_snapshot()
+        mock_snapshot.describe_attribute.return_value = {
+            'CreateVolumePermissions': [],
+        }
+
+        with patch.object(ec2, '_get_primary_account_id') as mock_get_acct_id:
+            mock_get_acct_id.return_value = mock_user_id
+            actual_modified = ec2.remove_snapshot_ownership(mock_snapshot)
+
+        self.assertIsNone(actual_modified)
+
+        expected_permission = {'Remove': [{'UserId': mock_user_id}]}
+        expected_user_ids = [mock_user_id]
+        mock_snapshot.modify_attribute.assert_called_once_with(
+            Attribute='createVolumePermission',
+            CreateVolumePermission=expected_permission,
+            OperationType='remove',
+            UserIds=expected_user_ids
+        )
+        mock_snapshot.describe_attribute.assert_called_once_with(
+            Attribute='createVolumePermission'
+        )
+
+    def test_remove_snapshot_ownership_not_verified(self):
+        """Assert an error is raised when ownership is not removed."""
+        mock_user_id = str(uuid.uuid4())
+
+        mock_snapshot = helper.generate_mock_snapshot()
+        mock_snapshot.describe_attribute.return_value = {
+            'CreateVolumePermissions': [{'UserId': mock_user_id}],
+        }
+
+        with patch.object(ec2, '_get_primary_account_id') as mock_get_acct_id:
+            mock_get_acct_id.return_value = mock_user_id
+            with self.assertRaises(AwsSnapshotOwnedError):
+                ec2.remove_snapshot_ownership(mock_snapshot)
+
+        expected_permission = {'Remove': [{'UserId': mock_user_id}]}
+        expected_user_ids = [mock_user_id]
+        mock_snapshot.modify_attribute.assert_called_once_with(
+            Attribute='createVolumePermission',
+            CreateVolumePermission=expected_permission,
+            OperationType='remove',
+            UserIds=expected_user_ids
+        )
+        mock_snapshot.describe_attribute.assert_called_once_with(
+            Attribute='createVolumePermission'
+        )
+
+    def test_remove_snapshot_ownership_other_user(self):
+        """Assert an error is not raised when other user has ownership."""
+        mock_user_id = str(uuid.uuid4())
+
+        mock_snapshot = helper.generate_mock_snapshot()
+        mock_snapshot.describe_attribute.return_value = {
+            'CreateVolumePermissions': [{'UserId': 'mock_user_id'}],
+        }
+
+        with patch.object(ec2, '_get_primary_account_id') as mock_get_acct_id:
+            mock_get_acct_id.return_value = mock_user_id
+            ec2.remove_snapshot_ownership(mock_snapshot)
+
+        expected_permission = {'Remove': [{'UserId': mock_user_id}]}
+        expected_user_ids = [mock_user_id]
+        mock_snapshot.modify_attribute.assert_called_once_with(
+            Attribute='createVolumePermission',
+            CreateVolumePermission=expected_permission,
+            OperationType='remove',
             UserIds=expected_user_ids
         )
         mock_snapshot.describe_attribute.assert_called_once_with(
