@@ -108,6 +108,12 @@ class UtilAwsHelperTest(TestCase):
             func_kwargs (dict): keyword arguments that would be sent to the ec2
                 method called by _verify_policy_action
         """
+        cloudtrail_actions = ['cloudtrail:DescribeTrails',
+                              'cloudtrail:CreateTrail',
+                              'cloudtrail:UpdateTrail',
+                              'cloudtrail:PutEventSelectors',
+                              'cloudtrail:StartLogging']
+
         mock_dryrun_function = Mock()
         mock_dryrun_function.side_effect = ClientError(
             error_response={'Error': {'Code': 'DryRunOperation'}},
@@ -119,7 +125,9 @@ class UtilAwsHelperTest(TestCase):
 
         result = helper._verify_policy_action(mock_session, action)
         self.assertTrue(result)
-        mock_dryrun_function.assert_called_once_with(*func_args, **func_kwargs)
+        if action not in cloudtrail_actions:
+            mock_dryrun_function.assert_called_once_with(*func_args,
+                                                         **func_kwargs)
 
     def test_verify_policy_action_describe_images(self):
         """Assert appropriate calls to verify ec2:DescribeImages."""
@@ -181,40 +189,35 @@ class UtilAwsHelperTest(TestCase):
         """Assert appropriate calls to verify cloudtrail:create_trail."""
         self.assert_verify_policy_action_success(
             'cloudtrail:CreateTrail',
-            'create_trail',
-            func_kwargs={'DryRun': True}
+            'create_trail'
         )
 
     def test_verify_policy_action_update_trail(self):
         """Assert appropriate calls to verify cloudtrail:update_trail."""
         self.assert_verify_policy_action_success(
             'cloudtrail:UpdateTrail',
-            'update_trail',
-            func_kwargs={'DryRun': True}
+            'update_trail'
         )
 
     def test_verify_policy_action_describe_trails(self):
         """Assert appropriate calls to verify cloudtrail:describe_trails."""
         self.assert_verify_policy_action_success(
             'cloudtrail:DescribeTrails',
-            'describe_trails',
-            func_kwargs={'DryRun': True}
+            'describe_trails'
         )
 
     def test_verify_policy_action_put_event_selectors(self):
         """Assert calls to verify cloudtrail:put_event_selectors."""
         self.assert_verify_policy_action_success(
             'cloudtrail:PutEventSelectors',
-            'put_event_selectors',
-            func_kwargs={'DryRun': True}
+            'put_event_selectors'
         )
 
     def test_verify_policy_action_start_logging(self):
         """Assert appropriate calls to verify cloudtrail:start_logging."""
         self.assert_verify_policy_action_success(
             'cloudtrail:StartLogging',
-            'start_logging',
-            func_kwargs={'DryRun': True}
+            'start_logging'
         )
 
     def test_verify_account_access_failure_unauthorized(self):

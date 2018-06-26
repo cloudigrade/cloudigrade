@@ -7,9 +7,7 @@ S3 setup
 #. log in to the AWS web console for the account running the ECS houndigrade cluster
 #. go to the s3 (Simple Storage Service) page
 #. click "Create bucket"
-#. enter a name for your bucket matching the following format "`AWS_NAME_PREFIX`cloudigrade-s3"
-.. note::
-       the `AWS_NAME_PREFIX` already has a "-" at the end so for example if my `AWS_NAME_PREFIX` is "aaiken-" then I would name my s3 bucket "aaiken-cloudigrade-s3"
+#. enter a name for your bucket matching the following format "`AWS_NAME_PREFIX`cloudigrade-s3" the `AWS_NAME_PREFIX` already has a "-" at the end so for example if my `AWS_NAME_PREFIX` is "aaiken-" then I would name my s3 bucket "aaiken-cloudigrade-s3"
 #. select a region (us-east-1) and click "Next"
 #. the default properties and permissions are OK, click "Next" until you reach the "Review" step
 #. click "Create bucket"
@@ -27,7 +25,6 @@ SQS setup
 #. copy your queue ARN and save it for use later in the setup
 #. with your queue still selected, click on the "Permissions" tab
 #. click "Edit Policy Document (Advanced)"
-#. click JSON to switch to the text editor.
 #. replace the contents of the text editor with the following:
 
    .. code-block:: json
@@ -54,7 +51,7 @@ SQS setup
         }
 
    .. note::
-       change the CHANGE_TO_UNIQUE_ID values for "Id" and "Sid" to reflect unique identifiers. You must also replace the CHANGE_TO_ARN_FOR_YOUR_QUEUE & CHANGE_TO_ARN_FOR_YOUR_BUCKET with the arns to your queue and to your s3 bucket respectively
+       change the `CHANGE_TO_UNIQUE_ID` values for "Id" and "Sid" to reflect unique identifiers. You must also replace the `CHANGE_TO_ARN_FOR_YOUR_QUEUE` & `CHANGE_TO_ARN_FOR_YOUR_BUCKET` with the arns to your queue and to your s3 bucket respectively
 #. click "Review Policy"
 #. click "Save Changes"
 
@@ -99,9 +96,9 @@ s3 configuration
             ]
         }
    .. note::
-       change the CHANGE_TO_UNIQUE_ID values for "Id" and "Sid" to reflect unique identifiers. You must also replace CHANGE_TO_ARN_FOR_YOUR_BUCKET with your bucket arn.
+       change the `CHANGE_TO_UNIQUE_ID` values for "Sid" to reflect unique identifiers. You must also replace `CHANGE_TO_ARN_FOR_YOUR_BUCKET` with your bucket arn.
 #. click "Save"
-#. navigate to the "Policies" tab
+#. navigate to the "Properties" tab
 #. scroll down to the Advanced settings
 #. select Events
 #. click on "Add notification"
@@ -112,8 +109,3 @@ s3 configuration
     - select "SQS Queue" as the notification destination under "Send to"
     - select your queue under SQS
 #. click "Save"
-
-Adding your S3 bucket environment variable
-==========================================
-#. you must provide your bucket name to cloudigrade
-#. ``export S3_BUCKET_NAME=your-bucket-name``

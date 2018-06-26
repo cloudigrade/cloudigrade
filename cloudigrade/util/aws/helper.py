@@ -88,7 +88,7 @@ def _handle_dry_run_response_exception(action, e):
     raise e
 
 
-def _verify_policy_action(session, action):  # noqa: C901
+def _verify_policy_action(session, action):
     """
     Check to see if we have access to a specific action.
 
@@ -101,7 +101,15 @@ def _verify_policy_action(session, action):  # noqa: C901
 
     """
     ec2 = session.client('ec2')
-    cloudtrail = session.client('cloudtrail')
+    # unfortunately, CloudTrail does not have a DryRun option like ec2
+    # so we cannot verify whether or not our policy gives us the correct
+    # permissions without carrying out the action
+
+    cloudtrail_actions = ['cloudtrail:DescribeTrails',
+                          'cloudtrail:CreateTrail',
+                          'cloudtrail:UpdateTrail',
+                          'cloudtrail:PutEventSelectors',
+                          'cloudtrail:StartLogging']
 
     try:
         if action == 'ec2:DescribeImages':
@@ -123,16 +131,8 @@ def _verify_policy_action(session, action):  # noqa: C901
                 Attribute='createVolumePermission',
                 OperationType='add',
             )
-        elif action == 'cloudtrail:DescribeTrails':
-            cloudtrail.describe_trails(DryRun=True)
-        elif action == 'cloudtrail:CreateTrail':
-            cloudtrail.create_trail(DryRun=True)
-        elif action == 'cloudtrail:UpdateTrail':
-            cloudtrail.update_trail(DryRun=True)
-        elif action == 'cloudtrail:PutEventSelectors':
-            cloudtrail.put_event_selectors(DryRun=True)
-        elif action == 'cloudtrail:StartLogging':
-            cloudtrail.start_logging(DryRun=True)
+        elif action in cloudtrail_actions:
+            return True
         else:
             logger.warning(_('No test case exists for action "{0}"')
                            .format(action))
