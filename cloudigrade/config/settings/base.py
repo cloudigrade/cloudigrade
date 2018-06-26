@@ -242,13 +242,18 @@ CELERY_BROKER_URL = AWS_SQS_URL
 QUEUE_EXCHANGE_NAME = None
 
 CELERY_TASK_ROUTES = {
-    'account.tasks.copy_ami_snapshot': {'queue': 'copy_ami_snapshot'},
+    'account.tasks.copy_ami_snapshot':
+        {'queue': 'copy_ami_snapshot'},
     'account.tasks.copy_ami_to_customer_account':
         {'queue': 'copy_ami_to_customer_account'},
-    'account.tasks.remove_snapshot_ownership': {'queue': 'remove_snapshot_ownership'},
-    'account.tasks.create_volume': {'queue': 'create_volume'},
-    'account.tasks.enqueue_ready_volume': {'queue': 'enqueue_ready_volumes'},
-    'account.tasks.delete_snapshot': {'queue': 'delete_snapshot'},
+    'account.tasks.remove_snapshot_ownership':
+        {'queue': 'remove_snapshot_ownership'},
+    'account.tasks.create_volume':
+        {'queue': 'create_volume'},
+    'account.tasks.enqueue_ready_volume':
+        {'queue': 'enqueue_ready_volumes'},
+    'account.tasks.delete_snapshot':
+        {'queue': 'delete_snapshot'},
     'account.tasks.scale_up_inspection_cluster':
         {'queue': 'scale_up_inspection_cluster'},
     'account.tasks.run_inspection_cluster':
