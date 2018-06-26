@@ -176,6 +176,37 @@ class UtilAwsHelperTest(TestCase):
             }
         )
 
+    def test_verify_policy_action_copy_image(self):
+        """Assert appropriate calls to verify ec2:CopyImage."""
+        with patch.object(helper, 'uuid') as mock_uuid:
+            self.assert_verify_policy_action_success(
+                'ec2:CopyImage',
+                'copy_image',
+                func_kwargs={
+                    'Name': f'{mock_uuid.uuid4.return_value}',
+                    'DryRun': True,
+                    'SourceImageId': helper.DRYRUN_IMAGE_ID,
+                    'SourceRegion': helper.DRYRUN_IMAGE_REGION,
+                }
+            )
+
+    def test_verify_policy_action_create_tags(self):
+        """Assert appropriate calls to verify ec2:CreateTags."""
+        self.assert_verify_policy_action_success(
+            'ec2:CreateTags',
+            'create_tags',
+            func_kwargs={
+                'DryRun': True,
+                'Resources': [helper.DRYRUN_IMAGE_ID],
+                'Tags': [
+                    {
+                        'Key': 'Example',
+                        'Value': 'Hello world',
+                    },
+                ]
+            }
+        )
+
     def test_verify_policy_action_unknown(self):
         """Assert trying to verify an unknown action returns False."""
         mock_session = Mock()

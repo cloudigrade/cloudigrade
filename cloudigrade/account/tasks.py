@@ -71,7 +71,7 @@ def copy_ami_snapshot(arn, ami_id, snapshot_region, reference_ami_id=None):
     )
     if customer_snapshot.owner_id != session_account_id and \
             reference_ami_id is None:
-        copy_ami_to_customer_account(arn, ami_id, snapshot_region)
+        copy_ami_to_customer_account.delay(arn, ami_id, snapshot_region)
         # Early return because we need to stop processing the current AMI.
         # A future call will process this new copy of the current AMI instead.
         return

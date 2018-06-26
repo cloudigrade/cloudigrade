@@ -7,12 +7,14 @@ from botocore.exceptions import ClientError
 from django.test import TestCase
 
 from util.aws import ec2
-from util.exceptions import (AwsSnapshotCopyLimitError,
+from util.exceptions import (AwsImageError,
+                             AwsSnapshotCopyLimitError,
                              AwsSnapshotError,
                              AwsSnapshotNotOwnedError,
                              AwsSnapshotOwnedError,
                              AwsVolumeError,
                              AwsVolumeNotReadyError,
+                             ImageNotReadyException,
                              SnapshotNotReadyException)
 from util.tests import helper
 
@@ -121,6 +123,23 @@ class UtilAwsEc2Test(TestCase):
                                                       region_name=mock_region)
         mock_resource.Image.assert_called_once_with(mock_image_id)
         mock_check_image_state.assert_called_once_with(mock_image)
+
+    def test_check_image_state_available(self):
+        """Assert clean return when image state is available."""
+        mock_image = helper.generate_mock_image(state='available')
+        ec2.check_image_state(mock_image)
+
+    def test_check_image_state_failed(self):
+        """Assert raised exception when image state is failed."""
+        mock_image = helper.generate_mock_image(state='failed')
+        with self.assertRaises(AwsImageError):
+            ec2.check_image_state(mock_image)
+
+    def test_check_image_state_unhandled(self):
+        """Assert raised exception when image state is unhandled."""
+        mock_image = helper.generate_mock_image(state='itisamystery.gif')
+        with self.assertRaises(ImageNotReadyException):
+            ec2.check_image_state(mock_image)
 
     def test_get_ami_snapshot_id(self):
         """Assert that an AMI returns a snapshot id."""
@@ -458,3 +477,21 @@ class UtilAwsEc2Test(TestCase):
             platform='other'
         )
         self.assertFalse(ec2.is_instance_windows(dummy_instance))
+
+    def test_copy_ami(self):
+        """Test that an image is copied via the boto session successfully."""
+        mock_session = Mock()
+        mock_ec2_client = mock_session.client.return_value
+        mock_original_image = Mock()
+        mock_copied_image_dict = helper.generate_mock_image_dict()
+        mock_ec2_client.copy_image.return_value = mock_copied_image_dict
+
+        image_id = mock_original_image.id
+        source_region = random.choice(helper.SOME_AWS_REGIONS)
+        with patch.object(ec2, 'get_ami') as mock_get_ami:
+            mock_get_ami.return_value = mock_original_image
+            result = ec2.copy_ami(mock_session, image_id, source_region)
+
+        mock_ec2_client.copy_image.assert_called_once()
+        mock_ec2_client.create_tags.assert_called_once()
+        self.assertEqual(result, mock_copied_image_dict['ImageId'])

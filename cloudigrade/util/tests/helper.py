@@ -202,12 +202,14 @@ def generate_mock_ec2_instance(instance_id=None, image_id=None, subnet_id=None,
     return mock_instance
 
 
-def generate_mock_image(image_id=None, encrypted=False):
+def generate_mock_image(image_id=None, encrypted=False, state=None):
     """
     Generate a mocked EC2 Image object.
 
     Args:
         image_id (str): The AMI image id.
+        encrypted (bool): Is the image's device encrypted.
+        state (str): The state of the image.
 
     Returns:
         Mock: A mock object with Image-like attributes.
@@ -234,6 +236,30 @@ def generate_mock_image(image_id=None, encrypted=False):
     mock_image.root_device_name = root_device_name
     mock_image.root_device_type = root_device_type
     mock_image.block_device_mappings = block_device_mappings
+    mock_image.state = state
+    return mock_image
+
+
+def generate_mock_image_dict(image_id=None):
+    """
+    Generate a mocked EC2 image dict.
+
+    Some of the AWS/boto3 APIs return a dict object like this instead of the
+    EC2 Image object.
+
+    Args:
+        image_id (str): The AMI image id.
+
+    Returns:
+        Mock: A dict with attributes similar to what boto3 produces.
+
+    """
+    if image_id is None:
+        image_id = generate_dummy_image_id()
+
+    mock_image = {
+        'ImageId': image_id
+    }
     return mock_image
 
 
