@@ -101,16 +101,6 @@ def _verify_policy_action(session, action):
 
     """
     ec2 = session.client('ec2')
-    # unfortunately, CloudTrail does not have a DryRun option like ec2
-    # so we cannot verify whether or not our policy gives us the correct
-    # permissions without carrying out the action
-
-    cloudtrail_actions = ['cloudtrail:DescribeTrails',
-                          'cloudtrail:CreateTrail',
-                          'cloudtrail:UpdateTrail',
-                          'cloudtrail:PutEventSelectors',
-                          'cloudtrail:StartLogging']
-
     try:
         if action == 'ec2:DescribeImages':
             ec2.describe_images(DryRun=True)
@@ -131,7 +121,10 @@ def _verify_policy_action(session, action):
                 Attribute='createVolumePermission',
                 OperationType='add',
             )
-        elif action in cloudtrail_actions:
+        elif action.startswith('cloudtrail:'):
+            # unfortunately, CloudTrail does not have a DryRun option like ec2
+            # so we cannot verify whether or not our policy gives us the
+            # correct permissions without carrying out the action
             logger.warning(_('Unable to verify the policy action "{0}" '
                              'due to CloudTrail not providing a DryRun '
                              'option.')

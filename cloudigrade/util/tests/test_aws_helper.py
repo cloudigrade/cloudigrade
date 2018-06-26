@@ -108,12 +108,6 @@ class UtilAwsHelperTest(TestCase):
             func_kwargs (dict): keyword arguments that would be sent to the ec2
                 method called by _verify_policy_action
         """
-        cloudtrail_actions = ['cloudtrail:DescribeTrails',
-                              'cloudtrail:CreateTrail',
-                              'cloudtrail:UpdateTrail',
-                              'cloudtrail:PutEventSelectors',
-                              'cloudtrail:StartLogging']
-
         mock_dryrun_function = Mock()
         mock_dryrun_function.side_effect = ClientError(
             error_response={'Error': {'Code': 'DryRunOperation'}},
@@ -125,7 +119,7 @@ class UtilAwsHelperTest(TestCase):
 
         result = helper._verify_policy_action(mock_session, action)
         self.assertTrue(result)
-        if action not in cloudtrail_actions:
+        if not action.startswith('cloudtrail:'):
             mock_dryrun_function.assert_called_once_with(*func_args,
                                                          **func_kwargs)
 

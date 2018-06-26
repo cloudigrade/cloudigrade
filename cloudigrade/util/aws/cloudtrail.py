@@ -16,10 +16,6 @@ def configure_cloudtrail(session, aws_account_id):
     Args:
         session (boto3.Session): A temporary session tied to a customer account
         aws_account_id (string): The aws account id to include in the name
-        include_global_service_events (bool): Specifies whether trail is
-            publishing events from global services to log files
-        is_multi_region_trail (bool): Specifies whether the trail is created in
-            all regions or current region
 
     Returns:
         The response code of creating cloudtrail.
@@ -80,10 +76,6 @@ def create_cloudtrail(cloudtrail, name):
     Args:
         cloudtrail (botocore client): The cloudtrail client
         name (string): The name of the cloudtrail to configure
-        include_global_service_events (bool): Specifies whether trail is
-            publishing events from global services to log files
-        is_multi_region_trail (bool): Specifies whether the trail is created in
-            all regions or current region
     """
     logger.debug(_('Creating the cloudtrail {0}').format(name))
     try:
@@ -106,10 +98,6 @@ def update_cloudtrail(cloudtrail, name):
     Args:
         cloudtrail (botocore client): The cloudtrail client
         name (string): The name of the cloudtrail to configure
-        include_global_service_events (bool): Specifies whether trail is
-            publishing events from global services to log files
-        is_multi_region_trail (bool): Specifies whether the trail is created in
-            all regions or current region
     """
     logger.debug(_('Updating the cloudtrail {0}').format(name))
     try:

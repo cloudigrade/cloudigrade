@@ -97,8 +97,8 @@ class AwsAccountSerializer(HyperlinkedModelSerializer):
                         raise serializers.ValidationError(
                             detail={
                                 'account_arn': [
-                                    _('Permission denied for ARN '
-                                      '"{0}"').format(arn)
+                                    _('Access denied to create CloudTrail for '
+                                      'ARN "{0}"').format(arn)
                                 ]
                             }
                         )
