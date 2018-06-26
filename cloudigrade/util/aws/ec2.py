@@ -185,46 +185,6 @@ def get_ami_snapshot_id(ami):
         return mapping.get('Ebs', {}).get('SnapshotId', '')
 
 
-def get_ami_all_ebs_snapshot_ids(ami):
-    """
-    Return all EBS-backed snapshot ids from AWS Image object.
-
-    Args:
-        ami (boto3.resources.factory.ec2.Image): A machine image object
-
-    Returns:
-        list[str]: List of all EBS-backed snapshot ids
-
-    """
-    snapshot_ids = [
-        mapping.get('Ebs', {}).get('SnapshotId', '')
-        for mapping in ami.block_device_mappings
-        if mapping.get('Ebs', {}).get('SnapshotId', '') != ''
-    ]
-    return snapshot_ids
-
-
-def deregister_ami_and_destroy_snapshots(session, ami_id, source_region):
-    """
-    Deregister the given AMI and delete all of its snapshots.
-
-    This is effectively a "fire and forget" function. We send the requests to
-    AWS to do these operations, but we are not actively checking whether or not
-    they actually succeed.
-
-    Args:
-        session (boto3.Session): A temporary session tied to a customer account
-        image_id (str): An AWS image ID
-        source_region (str): The region the image and snapshots reside in
-    """
-    ami = get_ami(session, ami_id, source_region)
-    snapshot_ids = get_ami_all_ebs_snapshot_ids(ami)
-    ec2 = session.client('ec2', region_name=source_region)
-    ec2.deregister_image(image_id=ami_id)
-    for snapshot_id in snapshot_ids:
-        ec2.delete_snapshot(snapshot_id=snapshot_id)
-
-
 def get_snapshot(session, snapshot_id, source_region):
     """
     Return an AMI Snapshot for an EC2 instance.
