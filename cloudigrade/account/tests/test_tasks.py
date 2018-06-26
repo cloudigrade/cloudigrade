@@ -33,7 +33,7 @@ class AccountCeleryTaskTest(TestCase):
     def setUp(self):
         """Set up expected ready_volumes queue name."""
         self.ready_volumes_queue_name = '{0}ready_volumes'.format(
-            settings.AWS_SQS_QUEUE_NAME_PREFIX
+            settings.AWS_NAME_PREFIX
         )
 
     @patch('account.tasks.aws')

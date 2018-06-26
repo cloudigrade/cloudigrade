@@ -137,6 +137,40 @@ class AwsAccountSerializerTest(TestCase):
             self.assertIn('account_arn', raised_exception.detail)
             self.assertIn(arn, raised_exception.detail['account_arn'][0])
 
+    def test_create_fails_when_cloudtrail_fails(self):
+        """Test that an account is not saved if cloudtrails errors."""
+        aws_account_id = util_helper.generate_dummy_aws_account_id()
+        arn = util_helper.generate_dummy_arn(aws_account_id)
+        role = util_helper.generate_dummy_role()
+
+        validated_data = {
+            'account_arn': arn,
+        }
+
+        client_error = ClientError(
+            error_response={'Error': {'Code': 'AccessDeniedException'}},
+            operation_name=Mock(),
+        )
+
+        mock_request = Mock()
+        mock_request.user = util_helper.generate_test_user()
+        context = {'request': mock_request}
+
+        with patch.object(aws, 'verify_account_access') as mock_verify, \
+                patch.object(aws.sts, 'boto3') as mock_boto3, \
+                patch.object(aws, 'configure_cloudtrail') as mock_cloudtrail:
+            mock_assume_role = mock_boto3.client.return_value.assume_role
+            mock_assume_role.return_value = role
+            mock_verify.return_value = True, []
+            mock_cloudtrail.side_effect = client_error
+            serializer = AwsAccountSerializer(context=context)
+
+            with self.assertRaises(ValidationError) as cm:
+                serializer.create(validated_data)
+            raised_exception = cm.exception
+            self.assertIn('account_arn', raised_exception.detail)
+            self.assertIn(arn, raised_exception.detail['account_arn'][0])
+
     def test_create_fails_when_assume_role_fails_unexpectedly(self):
         """Test that account is not saved if assume_role fails unexpectedly."""
         aws_account_id = util_helper.generate_dummy_aws_account_id()

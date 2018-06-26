@@ -227,15 +227,15 @@ AWS_SQS_URL = env(
     default='sqs://{}:{}@'.format(quote(AWS_SQS_ACCESS_KEY_ID, safe=''),
                                   quote(AWS_SQS_SECRET_ACCESS_KEY, safe=''))
 )
-AWS_SQS_QUEUE_NAME_PREFIX = env('AWS_SQS_QUEUE_NAME_PREFIX',
-                                default=env('USER', default='anonymous') + '-')
+AWS_NAME_PREFIX = env('AWS_NAME_PREFIX',
+                      default=env('USER', default='anonymous') + '-')
 
 HOUNDIGRADE_RESULTS_QUEUE_NAME = env('HOUNDIGRADE_RESULTS_QUEUE_NAME',
-                                      default=AWS_SQS_QUEUE_NAME_PREFIX + \
+                                      default=AWS_NAME_PREFIX + \
                                               'inspection_results')
 
 CELERY_BROKER_TRANSPORT_OPTIONS = {
-    'queue_name_prefix': AWS_SQS_QUEUE_NAME_PREFIX,
+    'queue_name_prefix': AWS_NAME_PREFIX,
     'region': AWS_SQS_REGION,
 }
 CELERY_BROKER_URL = AWS_SQS_URL

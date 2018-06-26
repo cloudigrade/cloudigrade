@@ -126,9 +126,9 @@ AWS access for running **cloudigrade** inside a local OpenShift cluster must be 
 -  ``AWS_SQS_ACCESS_KEY_ID``
 -  ``AWS_SQS_SECRET_ACCESS_KEY``
 -  ``AWS_SQS_REGION``
--  ``AWS_SQS_QUEUE_NAME_PREFIX``
+-  ``AWS_NAME_PREFIX``
 
-The values for ``AWS_`` keys and region may be reused for the ``AWS_SQS_`` variables. ``AWS_SQS_QUEUE_NAME_PREFIX`` should be set to something unique to your environment like ``${USER}-``.
+The values for ``AWS_`` keys and region may be reused for the ``AWS_SQS_`` variables. ``AWS_NAME_PREFIX`` should be set to something unique to your environment like ``${USER}-``.
 
 
 Configure Django settings module

@@ -29,6 +29,11 @@ Create Policy
                        "ec2:DescribeSnapshots",
                        "ec2:ModifySnapshotAttribute",
                        "ec2:DescribeSnapshotAttribute"
+                       "cloudtrail:CreateTrail",
+                       "cloudtrail:UpdateTrail",
+                       "cloudtrail:PutEventSelectors",
+                       "cloudtrail:DescribeTrails",
+                       "cloudtrail:StartLogging"
                    ],
                    "Resource": "*"
                }
@@ -43,6 +48,11 @@ Create Policy
        - `ec2:DescribeSnapshots <https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeSnapshots.html>`_ enables cloudigrade to get information about snapshots for those AMIs.
        - `ec2:ModifySnapshotAttribute <https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_ModifySnapshotAttribute.html>`_ enables cloudigrade to set an attribute that allows cloudigrade to copy snapshots for inspection.
        - `ec2:DescribeSnapshotAttribute <https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeSnapshotAttribute.html>`_ enables cloudigrade to verify that it has set the aforementioned attribute.
+       - `cloudtrail:CreateTrail <https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_CreateTrail.html>`_ enables cloudigrade to get information about existing cloudtrails
+       - `cloudtrail:UpdateTrail <https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_UpdateTrail.html>`_ enables cloudigrade to turn on logging for cloudtrail
+       - `cloudtrail:PutEventSelectors <https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_PutEventSelectors.html>`_ enables cloudigrade to create a cloudtrail in your account
+       - `cloudtrail:DescribeTrails <https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_DescribeTrails.html>`_ enables cloudigrade to update a cloudtrail in your account
+       - `cloudtrail:StartLogging <https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_StartLogging.html>`_ enables cloudigrade to select the events that cloudtrail cares about
 
 #. Click "Review policy".
 #. Give the policy a distinct, memorable name such as ``policy-for-cloudigrade``. Copy this name for reference because you will need it soon.
