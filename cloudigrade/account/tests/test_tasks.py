@@ -16,7 +16,8 @@ from account.tasks import (copy_ami_snapshot,
                            create_volume,
                            delete_snapshot,
                            enqueue_ready_volume,
-                           remove_snapshot_ownership)
+                           remove_snapshot_ownership,
+                           scale_down_cluster)
 from util.exceptions import (AwsECSInstanceNotReady, AwsSnapshotCopyLimitError,
                              AwsSnapshotEncryptedError, AwsSnapshotError,
                              AwsSnapshotNotOwnedError, AwsTooManyECSInstances,
@@ -213,9 +214,6 @@ class AccountCeleryTaskTest(TestCase):
 
         resource = mock_boto3.resource.return_value
         resource.Snapshot.return_value = mock_snapshot_copy
-
-        # mock_aws.check_snapshot_state.return_value = None
-        # mock_aws.get_snapshot.return_value = mock_customer_snapshot
 
         volume_id = util_helper.generate_dummy_volume_id()
         mock_volume = util_helper.generate_mock_volume(
@@ -727,3 +725,9 @@ class AccountCeleryTaskTest(TestCase):
                 tasks.HOUNDIGRADE_MESSAGE_READ_LEN
             )
             mock_scale_down.delay.assert_called_once()
+
+    @patch('account.tasks.aws')
+    def test_scale_donw_cluster_success(self, mock_aws):
+        """Test the scale down cluster function."""
+        mock_aws.scale_down.return_value = None
+        scale_down_cluster()
