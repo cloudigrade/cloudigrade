@@ -13,6 +13,7 @@ from account.models import (AwsAccount,
                             AwsMachineImage,
                             ImageTag)
 from account.tasks import (copy_ami_snapshot,
+                           copy_ami_to_customer_account,
                            create_volume,
                            delete_snapshot,
                            enqueue_ready_volume,
@@ -71,6 +72,67 @@ class AccountCeleryTaskTest(TestCase):
                     mock_snapshot_id,
                     mock_region,
                     mock_new_snapshot_id)
+
+        mock_aws.get_session.assert_called_with(mock_arn)
+        mock_aws.get_ami.assert_called_with(
+            mock_session,
+            mock_image_id,
+            mock_region
+        )
+        mock_aws.get_ami_snapshot_id.assert_called_with(mock_image)
+        mock_aws.add_snapshot_ownership.assert_called_with(mock_snapshot)
+        mock_aws.copy_snapshot.assert_called_with(
+            mock_snapshot_id,
+            mock_region
+        )
+
+    @patch('account.tasks.aws')
+    def test_copy_ami_snapshot_success_with_reference(self, mock_aws):
+        """Assert the snapshot copy task succeeds using a reference AMI ID."""
+        mock_session = mock_aws.boto3.Session.return_value
+        mock_account_id = mock_aws.get_session_account_id.return_value
+
+        mock_arn = util_helper.generate_dummy_arn()
+        mock_region = random.choice(util_helper.SOME_AWS_REGIONS)
+        mock_image_id = util_helper.generate_dummy_image_id()
+        mock_image = util_helper.generate_mock_image(mock_image_id)
+        block_mapping = mock_image.block_device_mappings
+        mock_snapshot_id = block_mapping[0]['Ebs']['SnapshotId']
+        mock_snapshot = util_helper.generate_mock_snapshot(
+            mock_snapshot_id,
+            owner_id=mock_account_id
+        )
+        mock_new_snapshot_id = util_helper.generate_dummy_snapshot_id()
+
+        # This is the original ID of a private/shared image.
+        mock_reference_image_id = util_helper.generate_dummy_image_id()
+
+        mock_aws.get_session.return_value = mock_session
+        mock_aws.get_ami.return_value = mock_image
+        mock_aws.get_ami_snapshot_id.return_value = mock_snapshot_id
+        mock_aws.get_snapshot.return_value = mock_snapshot
+        mock_aws.copy_snapshot.return_value = mock_new_snapshot_id
+
+        with patch.object(tasks, 'create_volume') as mock_create_volume, \
+                patch.object(tasks, 'remove_snapshot_ownership') as \
+                mock_remove_snapshot_ownership:
+            tasks.copy_ami_snapshot(
+                mock_arn,
+                mock_image_id,
+                mock_region,
+                mock_reference_image_id,
+            )
+            # arn, customer_snapshot_id, snapshot_region, snapshot_copy_id
+            mock_remove_snapshot_ownership.delay.assert_called_with(
+                mock_arn,
+                mock_snapshot_id,
+                mock_region,
+                mock_new_snapshot_id,
+            )
+            mock_create_volume.delay.assert_called_with(
+                mock_reference_image_id,
+                mock_new_snapshot_id,
+            )
 
         mock_aws.get_session.assert_called_with(mock_arn)
         mock_aws.get_ami.assert_called_with(
@@ -309,6 +371,80 @@ class AccountCeleryTaskTest(TestCase):
         delete_snapshot(mock_snapshot_copy_id,
                         volume_id,
                         volume_region)
+
+    @patch('account.tasks.aws')
+    def test_copy_ami_snapshot_private_shared(self, mock_aws):
+        """Assert that the task copies the image when it is private/shared."""
+        mock_account_id = util_helper.generate_dummy_aws_account_id()
+        mock_session = mock_aws.boto3.Session.return_value
+        mock_aws.get_session_account_id.return_value = mock_account_id
+
+        # the account id to use as the private shared image owner
+        other_account_id = util_helper.generate_dummy_aws_account_id()
+
+        mock_region = random.choice(util_helper.SOME_AWS_REGIONS)
+        mock_arn = util_helper.generate_dummy_arn(mock_account_id, mock_region)
+
+        mock_image_id = util_helper.generate_dummy_image_id()
+        mock_image = util_helper.generate_mock_image(mock_image_id)
+        mock_snapshot_id = util_helper.generate_dummy_snapshot_id()
+        mock_snapshot = util_helper.generate_mock_snapshot(
+            mock_snapshot_id,
+            encrypted=False,
+            owner_id=other_account_id
+        )
+
+        mock_aws.get_session.return_value = mock_session
+        mock_aws.get_ami.return_value = mock_image
+        mock_aws.get_ami_snapshot_id.return_value = mock_snapshot_id
+        mock_aws.get_snapshot.return_value = mock_snapshot
+
+        account = AwsAccount(
+            aws_account_id=mock_account_id,
+            account_arn=mock_arn,
+            user=util_helper.generate_test_user(),
+        )
+        account.save()
+        ami = AwsMachineImage.objects.create(
+            account=account,
+            ec2_ami_id=mock_image_id
+        )
+
+        ami.save()
+
+        with patch.object(tasks, 'create_volume') as mock_create_volume, \
+                patch.object(tasks, 'copy_ami_to_customer_account') as \
+                mock_copy_ami_to_customer_account:
+            copy_ami_snapshot(mock_arn, mock_image_id, mock_region, )
+            mock_create_volume.delay.assert_not_called()
+            mock_copy_ami_to_customer_account.delay.assert_called_with(
+                mock_arn, mock_image_id, mock_region
+            )
+
+    @patch('account.tasks.aws')
+    def test_copy_ami_to_customer_account_success(self, mock_aws):
+        """Assert that the task copies image using appropriate boto calls."""
+        arn = util_helper.generate_dummy_arn()
+        reference_ami_id = util_helper.generate_dummy_image_id()
+        source_region = random.choice(util_helper.SOME_AWS_REGIONS)
+
+        new_ami_id = mock_aws.copy_ami.return_value
+
+        with patch.object(tasks, 'copy_ami_snapshot') as \
+                mock_copy_ami_snapshot:
+            copy_ami_to_customer_account(arn, reference_ami_id, source_region)
+            mock_copy_ami_snapshot.delay.assert_called_with(
+                arn, new_ami_id, source_region, reference_ami_id
+            )
+
+        mock_aws.get_session.assert_called_with(arn)
+        mock_aws.get_ami.assert_called_with(
+            mock_aws.get_session.return_value, reference_ami_id, source_region
+        )
+        reference_ami = mock_aws.get_ami.return_value
+        mock_aws.copy_ami.assert_called_with(
+            mock_aws.get_session.return_value, reference_ami.id, source_region
+        )
 
     @patch('account.tasks.aws')
     def test_create_volume_success(self, mock_aws):
