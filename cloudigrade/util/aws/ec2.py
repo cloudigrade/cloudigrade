@@ -8,9 +8,13 @@ from django.utils.translation import gettext as _
 
 from util.aws.helper import get_regions
 from util.aws.sts import _get_primary_account_id
-from util.exceptions import (AwsSnapshotCopyLimitError, AwsSnapshotError,
-                             AwsSnapshotNotOwnedError, AwsVolumeError,
-                             AwsVolumeNotReadyError, SnapshotNotReadyException)
+from util.exceptions import (AwsSnapshotCopyLimitError,
+                             AwsSnapshotError,
+                             AwsSnapshotNotOwnedError,
+                             AwsSnapshotOwnedError,
+                             AwsVolumeError,
+                             AwsVolumeNotReadyError,
+                             SnapshotNotReadyException)
 
 logger = logging.getLogger(__name__)
 
@@ -180,6 +184,48 @@ def add_snapshot_ownership(snapshot):
     message = _('No CreateVolumePermissions on Snapshot {0} for UserId {1}').\
         format(snapshot.snapshot_id, user_id)
     raise AwsSnapshotNotOwnedError(message)
+
+
+def remove_snapshot_ownership(snapshot):
+    """
+    Remove permissions to a snapshot.
+
+    Args:
+        snapshot: A boto3 EC2 Snapshot object.
+
+    Returns:
+        None
+
+    Raises:
+        AwsSnapshotNotOwnedError: Ownership was not verified.
+
+    """
+    attribute = 'createVolumePermission'
+    user_id = _get_primary_account_id()
+
+    permission = {
+        'Remove': [
+            {'UserId': user_id},
+        ]
+    }
+
+    snapshot.modify_attribute(
+        Attribute=attribute,
+        CreateVolumePermission=permission,
+        OperationType='remove',
+        UserIds=[user_id]
+    )
+
+    # The modify call returns None. This is a check to make sure
+    # permissions are removed successfully.
+    response = snapshot.describe_attribute(Attribute='createVolumePermission')
+
+    for user in response['CreateVolumePermissions']:
+        if user['UserId'] == user_id:
+            message = _('Failed to remove CreateVolumePermissions'
+                        ' on Snapshot {0} for user {1}').\
+                format(snapshot.snapshot_id, user_id)
+            raise AwsSnapshotOwnedError(message)
 
 
 def copy_snapshot(snapshot_id, source_region):

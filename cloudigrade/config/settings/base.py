@@ -243,14 +243,18 @@ QUEUE_EXCHANGE_NAME = None
 
 CELERY_TASK_ROUTES = {
     'account.tasks.copy_ami_snapshot': {'queue': 'copy_ami_snapshot'},
+    'account.tasks.remove_snapshot_ownership': {'queue': 'remove_snapshot_ownership'},
     'account.tasks.create_volume': {'queue': 'create_volume'},
     'account.tasks.enqueue_ready_volume': {'queue': 'enqueue_ready_volumes'},
+    'account.tasks.delete_snapshot': {'queue': 'delete_snapshot'},
     'account.tasks.scale_up_inspection_cluster':
         {'queue': 'scale_up_inspection_cluster'},
     'account.tasks.run_inspection_cluster':
         {'queue': 'run_inspection_cluster'},
     'account.tasks.persist_inspection_cluster_results_task':
         {'queue': 'persist_inspection_cluster_results_task'},
+    'account.tasks.scale_down_cluster':
+        {'queue': 'scale_down_cluster'},
 }
 CELERY_BEAT_SCHEDULE = {
     'scale_up_inspection_cluster_every_60_min': {
