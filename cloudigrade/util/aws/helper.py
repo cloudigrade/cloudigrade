@@ -132,6 +132,10 @@ def _verify_policy_action(session, action):
                 OperationType='add',
             )
         elif action in cloudtrail_actions:
+            logger.warning(_('Unable to verify the policy action "{0}"'
+                             'due to CloudTrail not providing a DryRun'
+                             'option.')
+                           .format(action))
             return True
         else:
             logger.warning(_('No test case exists for action "{0}"')
