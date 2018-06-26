@@ -93,8 +93,18 @@ def remove_snapshot_ownership(arn,
     ec2 = boto3.resource('ec2')
 
     # Wait for snapshot to be ready
-    snapshot_copy = ec2.Snapshot(snapshot_copy_id)
-    aws.check_snapshot_state(snapshot_copy)
+    try:
+        snapshot_copy = ec2.Snapshot(snapshot_copy_id)
+        aws.check_snapshot_state(snapshot_copy)
+    except ClientError as error:
+        if error.response.get(
+                'Error', {}).get('Code') == 'InvalidSnapshot.NotFound':
+            logger.info(_(
+                '{0} detected snapshot_copy_id {1} already deleted.').format(
+                'remove_snapshot_ownership',
+                snapshot_copy_id))
+        else:
+            raise
 
     # Remove permissions from customer_snapshot
     logger.info(_(
@@ -241,9 +251,8 @@ def run_inspection_cluster(messages, cloud='aws'):
     Run task definition for "houndigrade" on the cluster.
 
     Args:
-        messages (list): A list of dictionary items containing meta-data (arn,
-            source_region, ami_id, customer_snapshot_id, snapshot_copy_id,
-            volume_id, volume_region)
+        messages (list): A list of dictionary items containing
+            meta-data (ami_id, volume_id)
         cloud (str): String key representing what cloud we're inspecting.
 
     Returns:

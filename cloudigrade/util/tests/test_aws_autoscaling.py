@@ -126,7 +126,7 @@ class UtilAwsAutoScalingTest(TestCase):
 
     @patch('util.aws.autoscaling.set_scale')
     def test_scale_down(self, mock_set_scale):
-        """Assert scale_up sets the scale to exactly 1."""
+        """Assert scale_down sets the scale to exactly 0."""
         name = str(uuid.uuid4())
         actual_response = autoscaling.scale_down(name)
         self.assertEqual(actual_response, mock_set_scale.return_value)
