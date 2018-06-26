@@ -14,7 +14,9 @@ from account.models import (AwsAccount,
                             ImageTag)
 from account.tasks import (copy_ami_snapshot,
                            create_volume,
-                           enqueue_ready_volume)
+                           delete_snapshot,
+                           enqueue_ready_volume,
+                           remove_snapshot_ownership)
 from util.exceptions import (AwsECSInstanceNotReady, AwsSnapshotCopyLimitError,
                              AwsSnapshotEncryptedError, AwsSnapshotError,
                              AwsSnapshotNotOwnedError, AwsTooManyECSInstances,
@@ -168,6 +170,66 @@ class AccountCeleryTaskTest(TestCase):
             with self.assertRaises(Retry):
                 copy_ami_snapshot(mock_arn, mock_image_id, mock_region)
             mock_create_volume.delay.assert_not_called()
+
+    @patch('account.tasks.boto3')
+    @patch('account.tasks.aws')
+    def test_create_remove_snapshot_ownership_success(self,
+                                                      mock_aws,
+                                                      mock_boto3):
+        """Assert that the remove snapshot ownership task succeeds."""
+        mock_arn = util_helper.generate_dummy_arn()
+        mock_customer_snapshot_id = util_helper.generate_dummy_snapshot_id()
+        mock_customer_snapshot = util_helper.generate_mock_snapshot(
+            mock_customer_snapshot_id)
+        mock_snapshot_copy_id = util_helper.generate_dummy_snapshot_id()
+        mock_snapshot_copy = util_helper.generate_mock_snapshot(
+            mock_snapshot_copy_id)
+        zone = settings.HOUNDIGRADE_AWS_AVAILABILITY_ZONE
+        region = zone[:-1]
+
+        resource = mock_boto3.resource.return_value
+        resource.Snapshot.return_value = mock_snapshot_copy
+
+        mock_aws.check_snapshot_state.return_value = None
+        mock_aws.get_snapshot.return_value = mock_customer_snapshot
+
+        mock_aws.get_region_from_availability_zone.return_value = region
+
+        remove_snapshot_ownership(mock_arn,
+                                  mock_customer_snapshot_id,
+                                  region,
+                                  mock_snapshot_copy_id)
+
+        mock_aws.remove_snapshot_ownership.assert_called_with(
+            mock_customer_snapshot)
+
+    @patch('account.tasks.boto3')
+    @patch('account.tasks.aws')
+    def test_delete_snapshot_success(self, mock_aws, mock_boto3):
+        """Assert that the delete snapshot succeeds."""
+        mock_snapshot_copy_id = util_helper.generate_dummy_snapshot_id()
+        mock_snapshot_copy = util_helper.generate_mock_snapshot(
+            mock_snapshot_copy_id)
+
+        resource = mock_boto3.resource.return_value
+        resource.Snapshot.return_value = mock_snapshot_copy
+
+        # mock_aws.check_snapshot_state.return_value = None
+        # mock_aws.get_snapshot.return_value = mock_customer_snapshot
+
+        volume_id = util_helper.generate_dummy_volume_id()
+        mock_volume = util_helper.generate_mock_volume(
+            volume_id=volume_id,
+            state='available'
+        )
+        volume_region = mock_volume.zone[:-1]
+
+        mock_aws.get_volume.return_value = mock_volume
+        mock_aws.check_volume_state.return_value = None
+
+        delete_snapshot(mock_snapshot_copy_id,
+                        volume_id,
+                        volume_region)
 
     @patch('account.tasks.aws')
     def test_create_volume_success(self, mock_aws):
