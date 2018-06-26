@@ -86,10 +86,21 @@ class AwsAccountSerializer(HyperlinkedModelSerializer):
             raise
         account_verified, failed_actions = aws.verify_account_access(session)
         if account_verified:
-            aws.configure_cloudtrail(session, aws_account_id)
             instances_data = aws.get_running_instances(session)
             with transaction.atomic():
                 account.save()
+                try:
+                    aws.configure_cloudtrail(session, aws_account_id)
+                except ClientError as error:
+                    if error.response.get('Error', {}).get('Code') == 'AccessDeniedException':
+                        raise serializers.ValidationError(
+                            detail={
+                                'account_arn': [
+                                    _('Permission denied for ARN "{0}"').format(arn)
+                                ]
+                            }
+                        )
+                    raise
                 new_amis = create_new_machine_images(account, instances_data)
                 create_initial_aws_instance_events(account, instances_data)
             messages = generate_aws_ami_messages(instances_data, new_amis)
