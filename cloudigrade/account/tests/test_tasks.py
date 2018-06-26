@@ -175,8 +175,8 @@ class AccountCeleryTaskTest(TestCase):
     @patch('account.tasks.boto3')
     @patch('account.tasks.aws')
     def test_remove_snapshot_ownership_success(self,
-                                                mock_aws,
-                                                mock_boto3):
+                                               mock_aws,
+                                               mock_boto3):
         """Assert that the remove snapshot ownership task succeeds."""
         mock_arn = util_helper.generate_dummy_arn()
         mock_customer_snapshot_id = util_helper.generate_dummy_snapshot_id()
