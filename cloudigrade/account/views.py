@@ -10,6 +10,7 @@ from account.models import (Account,
                             InstanceEvent,
                             MachineImage)
 from account.util import convert_param_to_int
+from util.aws.sts import _get_primary_account_id
 
 
 class AccountViewSet(mixins.CreateModelMixin, viewsets.ReadOnlyModelViewSet):
@@ -134,3 +135,14 @@ class ReportViewSet(viewsets.ViewSet):
         except InvalidCloudProviderError as e:
             raise exceptions.ValidationError(detail=str(e))
         return Response(result, status=status.HTTP_200_OK)
+
+
+class SysconfigViewSet(viewsets.ViewSet):
+    """View to display our cloud account ids."""
+
+    def list(self, *args, **kwargs):
+        """Get cloud account ids currently used by this installation."""
+        response = {
+            'aws_account_id': _get_primary_account_id()
+        }
+        return Response(response)

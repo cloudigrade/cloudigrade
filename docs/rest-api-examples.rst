@@ -407,3 +407,34 @@ Response:
             "Incorrect cloud_account_id type for cloud_provider \"aws\""
         ]
     }
+
+Miscellaneous Commands
+---------------
+
+Retrieve current cloud account ids used by the application
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Request:
+
+.. code:: bash
+
+    http localhost:8080/api/v1/sysconfig/ "${AUTH}"
+
+Response:
+
+::
+
+    HTTP/1.1 200 OK
+    Allow: GET, HEAD, OPTIONS
+    Content-Length: 33
+    Content-Type: application/json
+    Date: Mon, 25 Jun 2018 17:22:50 GMT
+    Server: WSGIServer/0.2 CPython/3.6.5
+    Vary: Accept
+    X-Frame-Options: SAMEORIGIN
+
+    {
+        "aws_account_id": "123456789012"
+    }
+
+If you attempt to retrieve account ids without authentication you'll receive a 401 error.
