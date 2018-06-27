@@ -28,7 +28,7 @@ Create Policy
                        "ec2:DescribeImages",
                        "ec2:DescribeSnapshots",
                        "ec2:ModifySnapshotAttribute",
-                       "ec2:DescribeSnapshotAttribute"
+                       "ec2:DescribeSnapshotAttribute",
                        "cloudtrail:CreateTrail",
                        "cloudtrail:UpdateTrail",
                        "cloudtrail:PutEventSelectors",
