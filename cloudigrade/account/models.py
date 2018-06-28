@@ -139,6 +139,28 @@ class AwsMachineImage(MachineImage):
     )
 
 
+class AwsMachineImageCopy(AwsMachineImage):
+    """
+    Special machine image model for when we needed to make a copy.
+
+    There are some cases in which we have to create and leave in the customer's
+    AWS account a copy of an AWS image, but we need to keep track of this and
+    somehow notify the customer about its existence.
+
+    This model class extends all the same attributes of AwsMachineImage but
+    adds a foreign key to point to the original reference image from which this
+    copy was made.
+    """
+
+    reference_awsmachineimage = models.ForeignKey(
+        AwsMachineImage,
+        on_delete=models.CASCADE,
+        db_index=True,
+        null=False,
+        related_name='+'
+    )
+
+
 class AwsInstanceEvent(InstanceEvent):
     """Event model for an event triggered by an AwsInstance."""
 
