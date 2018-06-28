@@ -137,7 +137,7 @@ def copy_ami(session, image_id, source_region):
     """
     old_image = get_ami(session, image_id, source_region)
     # Note: AWS image names are limited to 128 characters in length.
-    new_name = f'cloudigrade reference copy ({old_image.name})'[:128]
+    new_name = 'cloudigrade reference copy ({0})'.format(old_image.name)[:128]
     ec2 = session.client('ec2', region_name=source_region)
     new_image = ec2.copy_image(
         Name=new_name,
