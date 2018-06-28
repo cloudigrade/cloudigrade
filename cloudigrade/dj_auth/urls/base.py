@@ -14,11 +14,6 @@ urlpatterns = [
         name='user-create'
     ),
     url(
-        r'^users/delete/$',
-        views.UserDeleteView.as_view(),
-        name='user-delete'
-    ),
-    url(
         r'^users/activate/$',
         views.ActivationView.as_view(),
         name='user-activate'

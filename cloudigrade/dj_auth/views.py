@@ -9,7 +9,6 @@ from djoser.views import (
     TokenCreateView as OriginalTokenCreateView,
     TokenDestroyView as OriginalTokenDestroyView,
     UserCreateView as OriginalUserCreateView,
-    UserDeleteView as OriginalUserDeleteView,
     UserView as OriginalUserView
 )
 
@@ -24,13 +23,6 @@ class UserCreateView(OriginalUserCreateView):
     """
     Use this endpoint to register new user.
     """
-
-
-class UserDeleteView(OriginalUserDeleteView):
-    """
-    Use this endpoint to remove actually authenticated user
-    """
-    permission_classes = [permissions.IsAuthenticated]
 
 
 class TokenCreateView(OriginalTokenCreateView):
