@@ -10,7 +10,8 @@ from django.utils.translation import gettext as _
 
 from account.models import (AwsMachineImage,
                             ImageTag)
-from account.util import add_messages_to_queue, read_messages_from_queue
+from account.util import (add_messages_to_queue, create_aws_machine_image_copy,
+                          read_messages_from_queue)
 from util import aws
 from util.aws import rewrap_aws_errors
 from util.celery import retriable_shared_task
@@ -97,6 +98,11 @@ def copy_ami_snapshot(arn, ami_id, snapshot_region, reference_ami_id=None):
         # TODO FIXME Do we or don't we clean up?
         # If we do, we need permissions to include `ec2:DeregisterImage` and
         # `ec2:DeleteSnapshot` but those are both somewhat scary...
+        #
+        # For now, since we are not deleting the copy image from AWS, we need
+        # to record a reference to our database that we can look at later to
+        # indicate the relationship between the original AMI and the copy.
+        create_aws_machine_image_copy(ami_id, reference_ami_id)
         ami_id = reference_ami_id
 
     # Create volume from snapshot copy

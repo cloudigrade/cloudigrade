@@ -13,7 +13,7 @@ from rest_framework.serializers import ValidationError
 
 from account import AWS_PROVIDER_STRING
 from account.models import (AwsInstance, AwsInstanceEvent, AwsMachineImage,
-                            ImageTag, InstanceEvent)
+                            AwsMachineImageCopy, ImageTag, InstanceEvent)
 from util.aws import is_instance_windows
 
 logger = logging.getLogger(__name__)
@@ -102,6 +102,20 @@ def create_new_machine_images(account, instances_data):
 
         saved_amis.extend(new_amis)
     return saved_amis
+
+
+def create_aws_machine_image_copy(copy_ami_id, reference_ami_id):
+    """
+    Create an AwsMachineImageCopy given the copy and reference AMI IDs.
+
+    Args:
+        copy_ami_id (str): the AMI IS of the copied image
+        reference_ami_id (str): the AMI ID of the original reference image
+    """
+    reference = AwsMachineImage.objects.get(ec2_ami_id=reference_ami_id)
+    AwsMachineImageCopy.objects.create(ec2_ami_id=copy_ami_id,
+                                       account=reference.account,
+                                       reference_awsmachineimage=reference)
 
 
 def generate_aws_ami_messages(instances_data, ami_list):

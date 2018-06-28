@@ -9,8 +9,7 @@ from django.conf import settings
 from django.test import TestCase
 
 from account import tasks
-from account.models import (AwsAccount,
-                            AwsMachineImage,
+from account.models import (AwsAccount, AwsMachineImage, AwsMachineImageCopy,
                             ImageTag)
 from account.tasks import (copy_ami_snapshot,
                            copy_ami_to_customer_account,
@@ -19,6 +18,7 @@ from account.tasks import (copy_ami_snapshot,
                            enqueue_ready_volume,
                            remove_snapshot_ownership,
                            scale_down_cluster)
+from account.tests import helper as account_helper
 from util.exceptions import (AwsECSInstanceNotReady, AwsSnapshotCopyLimitError,
                              AwsSnapshotEncryptedError, AwsSnapshotError,
                              AwsSnapshotNotOwnedError, AwsTooManyECSInstances,
@@ -92,10 +92,12 @@ class AccountCeleryTaskTest(TestCase):
         mock_session = mock_aws.boto3.Session.return_value
         mock_account_id = mock_aws.get_session_account_id.return_value
 
-        mock_arn = util_helper.generate_dummy_arn()
-        mock_region = random.choice(util_helper.SOME_AWS_REGIONS)
-        mock_image_id = util_helper.generate_dummy_image_id()
-        mock_image = util_helper.generate_mock_image(mock_image_id)
+        account = account_helper.generate_aws_account()
+        arn = account.account_arn
+
+        region = random.choice(util_helper.SOME_AWS_REGIONS)
+        new_image_id = util_helper.generate_dummy_image_id()
+        mock_image = util_helper.generate_mock_image(new_image_id)
         block_mapping = mock_image.block_device_mappings
         mock_snapshot_id = block_mapping[0]['Ebs']['SnapshotId']
         mock_snapshot = util_helper.generate_mock_snapshot(
@@ -105,7 +107,9 @@ class AccountCeleryTaskTest(TestCase):
         mock_new_snapshot_id = util_helper.generate_dummy_snapshot_id()
 
         # This is the original ID of a private/shared image.
-        mock_reference_image_id = util_helper.generate_dummy_image_id()
+        # It would have been saved to our DB upon initial discovery.
+        reference_image = account_helper.generate_aws_image(account=account)
+        reference_image_id = reference_image.ec2_ami_id
 
         mock_aws.get_session.return_value = mock_session
         mock_aws.get_ami.return_value = mock_image
@@ -117,35 +121,41 @@ class AccountCeleryTaskTest(TestCase):
                 patch.object(tasks, 'remove_snapshot_ownership') as \
                 mock_remove_snapshot_ownership:
             tasks.copy_ami_snapshot(
-                mock_arn,
-                mock_image_id,
-                mock_region,
-                mock_reference_image_id,
+                arn,
+                new_image_id,
+                region,
+                reference_image_id,
             )
             # arn, customer_snapshot_id, snapshot_region, snapshot_copy_id
             mock_remove_snapshot_ownership.delay.assert_called_with(
-                mock_arn,
+                arn,
                 mock_snapshot_id,
-                mock_region,
+                region,
                 mock_new_snapshot_id,
             )
             mock_create_volume.delay.assert_called_with(
-                mock_reference_image_id,
+                reference_image_id,
                 mock_new_snapshot_id,
             )
 
-        mock_aws.get_session.assert_called_with(mock_arn)
+        mock_aws.get_session.assert_called_with(arn)
         mock_aws.get_ami.assert_called_with(
             mock_session,
-            mock_image_id,
-            mock_region
+            new_image_id,
+            region
         )
         mock_aws.get_ami_snapshot_id.assert_called_with(mock_image)
         mock_aws.add_snapshot_ownership.assert_called_with(mock_snapshot)
         mock_aws.copy_snapshot.assert_called_with(
             mock_snapshot_id,
-            mock_region
+            region
         )
+
+        # Verify that the copy object was stored correctly to reference later.
+        copied_image = AwsMachineImageCopy.objects.get(ec2_ami_id=new_image_id)
+        self.assertIsNotNone(copied_image)
+        self.assertEqual(copied_image.reference_awsmachineimage.ec2_ami_id,
+                         reference_image_id)
 
     @patch('account.tasks.aws')
     def test_copy_ami_snapshot_encrypted(self, mock_aws):
@@ -415,7 +425,7 @@ class AccountCeleryTaskTest(TestCase):
         with patch.object(tasks, 'create_volume') as mock_create_volume, \
                 patch.object(tasks, 'copy_ami_to_customer_account') as \
                 mock_copy_ami_to_customer_account:
-            copy_ami_snapshot(mock_arn, mock_image_id, mock_region, )
+            copy_ami_snapshot(mock_arn, mock_image_id, mock_region)
             mock_create_volume.delay.assert_not_called()
             mock_copy_ami_to_customer_account.delay.assert_called_with(
                 mock_arn, mock_image_id, mock_region
