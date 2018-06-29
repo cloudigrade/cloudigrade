@@ -464,7 +464,7 @@ def persist_aws_inspection_cluster_results(inspection_result):
     for image_id, image_json in results.items():
         ami = AwsMachineImage.objects.filter(ec2_ami_id=image_id).first()
         if ami is not None:
-            ami.tags.clear()
+            ami.tags.remove(rhel_tag)
             rhel_found = any([attribute.get('rhel_found')
                               for disk_json in list(image_json.values())
                               for attribute in disk_json.values()])
