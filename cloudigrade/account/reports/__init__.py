@@ -1,5 +1,6 @@
 """Cloud provider-agnostic report-building functionality."""
 import collections
+import datetime
 import functools
 import logging
 import operator
@@ -8,7 +9,7 @@ from django.db import models
 from django.utils.translation import gettext as _
 
 from account import AWS_PROVIDER_STRING
-from account.models import (AwsAccount, Instance, InstanceEvent)
+from account.models import Account, AwsAccount, Instance, InstanceEvent
 from account.reports import helper
 
 logger = logging.getLogger(__name__)
@@ -53,6 +54,73 @@ def get_time_usage(start, end, cloud_provider, cloud_account_id):
     return dict(product_times)
 
 
+def get_daily_usage(user_id, start, end, name_pattern=None):
+    """
+    Calculate daily usage over the designated period.
+
+    Args:
+        user_id (int): user_id for filtering cloud accounts
+        start (datetime.datetime): Start time (inclusive)
+        end (datetime.datetime): End time (exclusive)
+        name_pattern (str): pattern to filter against cloud account names
+
+    Returns:
+        dict: Data structure representing each day in the period and its
+            constituent representative parts in terms of product usage.
+    """
+
+    if name_pattern is not None:
+        names = set(
+            [word for word in name_pattern.split(' ') if len(word) > 0]
+        )
+    else:
+        names = None
+    accounts = _filter_accounts(user_id, names)
+    events = _get_relevant_events(start, end, accounts)
+
+    instance_events = collections.defaultdict(list)
+    for event in events:
+        instance_events[event.instance].append(event)
+    instance_events = dict(instance_events)
+
+    usage = _calculate_daily_usage(start, end, instance_events)
+    return usage
+
+
+def _filter_accounts(user_id, names=None, account_ids=None):
+    """
+    Get accounts filtered by user_id and matching name.
+
+    Args:
+        user_id (int): required user_id to filter against
+        names (list[str]): optional name patterns to filter against
+        account_ids (list[int]): optional account ids to filter against
+
+    Returns:
+        PolymorphicQuerySet for the filtered Account objects.
+    """
+    account_filter = models.Q(
+        user_id=user_id
+    )
+
+    if names:
+        # Combine all the name matches with "ior" operators.
+        account_name_filter = functools.reduce(
+            operator.ior,
+            [models.Q(name__icontains=name) for name in names]
+        )
+        account_filter &= account_name_filter
+
+    if account_ids:
+        account_ids_filter = models.Q(
+            id__in=account_ids
+        )
+        account_filter &= account_ids_filter
+
+    accounts = Account.objects.filter(account_filter)
+    return accounts
+
+
 def _get_relevant_events(start, end, account_ids):
     """
     Get all InstanceEvents relevant to the report parameters.
@@ -88,6 +156,81 @@ def _get_relevant_events(start, end, account_ids):
     events = InstanceEvent.objects.filter(event_filter).select_related()\
         .order_by('instance__id')
     return events
+
+
+def _calculate_daily_usage(start, end, instance_events):
+    """
+    Get all InstanceEvents relevant to the report parameters.
+
+    Args:
+        start (datetime.datetime): Start time (inclusive)
+        end (datetime.datetime): End time (exclusive)
+        instance_events (list[InstanceEvent]): events to use for calculations
+    """
+    periods = []
+    for day_number in range((end - start).days):
+        period_start = start + datetime.timedelta(days=day_number)
+        period_end = period_start + datetime.timedelta(days=1)
+        periods.append((period_start, period_end))
+
+    image_ids_seen = set()
+    image_ids_seen_with_rhel = set()
+    image_ids_seen_with_openshift = set()
+    instance_ids_seen_with_rhel = set()
+    instance_ids_seen_with_openshift = set()
+
+    daily_usage = []
+    for period_start, period_end in periods:
+        rhel_instance_count = 0
+        openshift_instance_count = 0
+        rhel_seconds = 0.0
+        openshift_seconds = 0.0
+
+        for instance, events in instance_events.items():
+            runtime = _calculate_instance_usage(
+                period_start,
+                period_end,
+                events,
+            )
+
+            if runtime == 0.0:
+                # No runtime? No updates to counters.
+                continue
+
+            # Since all events for AWS have the same image, we can short-
+            # circuit the logic here and look at only 1 event. We may need
+            # to revisit this logic in the future if we add support for a
+            # cloud provider that allows you to change the image on an
+            # existing instance.
+            image = events[0].machineimage
+            if image.id not in image_ids_seen:
+                image_ids_seen.add(image.id)
+                if image.rhel:
+                    image_ids_seen_with_rhel.add(image.id)
+                if image.openshift:
+                    image_ids_seen_with_openshift.add(image.id)
+            if image.id in image_ids_seen_with_rhel:
+                rhel_instance_count += 1
+                instance_ids_seen_with_rhel.add(instance.id)
+                rhel_seconds += runtime
+            if image.id in image_ids_seen_with_openshift:
+                openshift_instance_count += 1
+                instance_ids_seen_with_openshift.add(instance.id)
+                openshift_seconds += runtime
+
+        daily_usage.append({
+            'date': period_start,
+            'rhel_instances': rhel_instance_count,
+            'openshift_instances': openshift_instance_count,
+            'rhel_runtime_seconds':rhel_seconds,
+            'openshift_runtime_seconds': openshift_seconds,
+        })
+
+    return {
+        'instances_seen_with_rhel': len(instance_ids_seen_with_rhel),
+        'instances_seen_with_openshift': len(instance_ids_seen_with_openshift),
+        'daily_usage': daily_usage,
+    }
 
 
 def _group_related_events(events, cloud_helper):
