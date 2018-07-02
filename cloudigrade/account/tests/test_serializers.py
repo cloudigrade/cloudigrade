@@ -9,9 +9,13 @@ from rest_framework.exceptions import ValidationError
 
 import account.serializers as account_serializers
 from account import AWS_PROVIDER_STRING, reports
-from account.models import (AwsAccount, AwsInstance, AwsMachineImage,
+from account.models import (AwsAccount,
+                            AwsInstance,
+                            AwsMachineImage,
                             InstanceEvent)
-from account.serializers import AwsAccountSerializer, ReportSerializer, aws
+from account.serializers import (AwsAccountSerializer,
+                                 ReportSerializer,
+                                 aws)
 from account.tests import helper as account_helper
 from util.tests import helper as util_helper
 
@@ -47,6 +51,7 @@ class AwsAccountSerializerTest(TestCase):
         with patch.object(aws, 'verify_account_access') as mock_verify, \
                 patch.object(aws.sts, 'boto3') as mock_boto3, \
                 patch.object(aws, 'get_running_instances') as mock_get_run, \
+                patch.object(aws, 'get_ami'), \
                 patch.object(account_serializers,
                              'copy_ami_snapshot') as mock_copy_snapshot:
             mock_assume_role = mock_boto3.client.return_value.assume_role
@@ -136,6 +141,74 @@ class AwsAccountSerializerTest(TestCase):
             raised_exception = cm.exception
             self.assertIn('account_arn', raised_exception.detail)
             self.assertIn(arn, raised_exception.detail['account_arn'][0])
+
+    @patch('util.aws.ec2.check_image_state')
+    @patch('account.tasks.aws')
+    def test_openshift_tag_added(self, mock_aws, mock_check_image_state):
+        """Test openshift tag added to MachineImage."""
+        mock_session = mock_aws.boto3.Session.return_value
+
+        ami_id = util_helper.generate_dummy_image_id()
+        ami_region = random.choice(util_helper.SOME_AWS_REGIONS)
+        mock_ami = util_helper.generate_mock_image(ami_id)
+        mock_ami.tags = [{'Key': 'cloudigrade-ocp-present',
+                          'Value': 'cloudigrade-ocp-present'}]
+        mock_resource = mock_session.resource.return_value
+        mock_resource.Image.return_value = mock_ami
+
+        test_user = util_helper.generate_test_user()
+        test_account = AwsAccount.objects.create(
+            user=test_user,
+            aws_account_id=util_helper.generate_dummy_aws_account_id,
+            account_arn=util_helper.generate_dummy_arn)
+        test_image = AwsMachineImage.objects.create(
+            account=test_account,
+            ec2_ami_id=ami_id
+        )
+
+        serializer = AwsAccountSerializer()
+        openshift_tag = test_image.tags.filter(description='openshift').first()
+        self.assertEqual(openshift_tag, None)
+
+        serializer.add_openshift_tag(
+            mock_session, ami_id, ami_region, test_image)
+
+        openshift_tag = test_image.tags.filter(description='openshift').first()
+        self.assertNotEqual(openshift_tag, None)
+
+    @patch('util.aws.ec2.check_image_state')
+    @patch('account.tasks.aws')
+    def test_openshift_tag_not_added(self, mock_aws, mock_check_image_state):
+        """Test openshift tag not added to MachineImage."""
+        mock_session = mock_aws.boto3.Session.return_value
+
+        ami_id = util_helper.generate_dummy_image_id()
+        ami_region = random.choice(util_helper.SOME_AWS_REGIONS)
+        mock_ami = util_helper.generate_mock_image(ami_id)
+        mock_ami.tags = [{'Key': 'random',
+                          'Value': 'random'}]
+        mock_resource = mock_session.resource.return_value
+        mock_resource.Image.return_value = mock_ami
+
+        test_user = util_helper.generate_test_user()
+        test_account = AwsAccount.objects.create(
+            user=test_user,
+            aws_account_id=util_helper.generate_dummy_aws_account_id,
+            account_arn=util_helper.generate_dummy_arn)
+        test_image = AwsMachineImage.objects.create(
+            account=test_account,
+            ec2_ami_id=ami_id
+        )
+
+        serializer = AwsAccountSerializer()
+        openshift_tag = test_image.tags.filter(description='openshift').first()
+        self.assertEqual(openshift_tag, None)
+
+        serializer.add_openshift_tag(
+            mock_session, ami_id, ami_region, test_image)
+
+        openshift_tag = test_image.tags.filter(description='openshift').first()
+        self.assertEqual(openshift_tag, None)
 
     def test_create_fails_when_cloudtrail_fails(self):
         """Test that an account is not saved if cloudtrails errors."""
