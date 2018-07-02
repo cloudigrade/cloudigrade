@@ -7,7 +7,6 @@ from django.test import TestCase
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-import account.serializers as account_serializers
 from account import AWS_PROVIDER_STRING, reports
 from account.models import (AwsAccount,
                             AwsInstance,
@@ -23,7 +22,8 @@ from util.tests import helper as util_helper
 class AwsAccountSerializerTest(TestCase):
     """AwsAccount serializer test case."""
 
-    def test_create_succeeds_when_account_verified(self):
+    @patch('account.serializers.start_image_inspection')
+    def test_create_succeeds_when_account_verified(self, mock_copy_snapshot):
         """Test saving and processing of a test ARN."""
         aws_account_id = util_helper.generate_dummy_aws_account_id()
         arn = util_helper.generate_dummy_arn(aws_account_id)
@@ -51,9 +51,7 @@ class AwsAccountSerializerTest(TestCase):
         with patch.object(aws, 'verify_account_access') as mock_verify, \
                 patch.object(aws.sts, 'boto3') as mock_boto3, \
                 patch.object(aws, 'get_running_instances') as mock_get_run, \
-                patch.object(aws, 'get_ami'), \
-                patch.object(account_serializers,
-                             'copy_ami_snapshot') as mock_copy_snapshot:
+                patch.object(aws, 'get_ami'):
             mock_assume_role = mock_boto3.client.return_value.assume_role
             mock_assume_role.return_value = role
             mock_verify.return_value = True, []
@@ -305,14 +303,11 @@ class AwsAccountSerializerTest(TestCase):
 
         with patch.object(aws, 'verify_account_access') as mock_verify, \
                 patch.object(aws.sts, 'boto3') as mock_boto3, \
-                patch.object(aws, 'get_running_instances') as mock_get_run, \
-                patch.object(account_serializers,
-                             'copy_ami_snapshot') as mock_copy_snapshot:
+                patch.object(aws, 'get_running_instances') as mock_get_run:
             mock_assume_role = mock_boto3.client.return_value.assume_role
             mock_assume_role.return_value = role
             mock_verify.return_value = True, []
             mock_get_run.return_value = running_instances
-            mock_copy_snapshot.return_value = None
             serializer = AwsAccountSerializer(context=context)
 
             with self.assertRaises(ValidationError) as cm:

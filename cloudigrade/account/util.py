@@ -45,22 +45,55 @@ def create_initial_aws_instance_events(account, instances_data):
     saved_instances = collections.defaultdict(list)
     for region, instances in instances_data.items():
         for instance_data in instances:
-            instance, __ = AwsInstance.objects.get_or_create(
-                account=account,
-                ec2_instance_id=instance_data['InstanceId'],
-                region=region,
-            )
+            saved_instances[region].append(
+                save_instance_events(account, instance_data, region))
+    return dict(saved_instances)
+
+
+def save_instance_events(account, instance_data, region, events=None):
+    """
+    Save provided events, and create the instance object if it does not exist.
+
+    Args:
+        account (AwsAccount): The account that owns the instance that spawned
+            the data for these InstanceEvents.
+        instance_data (dict): Dictionary containing instance information.
+        region (str): AWS Region.
+        events (list): List of Events to be saved.
+
+    Returns:
+        AwsInstance: Object representing the saved instance.
+
+    """
+    instance, __ = AwsInstance.objects.get_or_create(
+        account=account,
+        ec2_instance_id=instance_data['InstanceId'] if isinstance(
+            instance_data, dict) else instance_data.instance_id,
+        region=region,
+    )
+    if events is None:
+        # Assume this is the initial event
+        event = AwsInstanceEvent(
+            instance=instance,
+            event_type=InstanceEvent.TYPE.power_on,
+            occurred_at=timezone.now(),
+            subnet=instance_data['SubnetId'],
+            ec2_ami_id=instance_data['ImageId'],
+            instance_type=instance_data['InstanceType'],
+        )
+        event.save()
+    else:
+        for event in events:
             event = AwsInstanceEvent(
                 instance=instance,
-                event_type=InstanceEvent.TYPE.power_on,
-                occurred_at=timezone.now(),
-                subnet=instance_data['SubnetId'],
-                ec2_ami_id=instance_data['ImageId'],
-                instance_type=instance_data['InstanceType'],
+                event_type=event['event_type'],
+                occurred_at=event['occurred_at'],
+                subnet=event['subnet'],
+                ec2_ami_id=event['ec2_ami_id'],
+                instance_type=event['instance_type'],
             )
             event.save()
-            saved_instances[region].append(instance)
-    return dict(saved_instances)
+    return instance
 
 
 def create_new_machine_images(account, instances_data):
@@ -88,20 +121,69 @@ def create_new_machine_images(account, instances_data):
         )
         new_amis = list(seen_amis.difference(known_amis))
 
-        for new_ami in new_amis:
-            ami = AwsMachineImage(
-                account=account,
-                ec2_ami_id=new_ami,
-            )
-            ami.save()
-            if new_ami in windows_instances:
-                ami.tags.add(ImageTag.objects.filter(
-                    description='windows').first())
-                ami.status = ami.INSPECTED
-                ami.save()
+        for ami_id in new_amis:
+            ami, __ = save_machine_images(account, ami_id)
+            if ami_id in windows_instances:
+                tag_windows(ami)
 
         saved_amis.extend(new_amis)
     return saved_amis
+
+
+def save_machine_images(account, ami_id):
+    """
+    Save the image object.
+
+    Args:
+        account (AwsAccount): The account associated with the machine image
+        ami_id (str): The AWS AMI ID.
+
+    Returns:
+
+    """
+    ami, new = AwsMachineImage.objects.get_or_create(
+        account=account,
+        ec2_ami_id=ami_id,
+    )
+
+    return ami, new
+
+
+def tag_windows(ami):
+    """
+    Tags the provided image with the windows tag.
+
+    Args:
+        ami (AwsMachineImage): Object representing the image.
+
+    Returns:
+        AwsMachineImage: Updated object.
+
+    """
+    ami.tags.add(ImageTag.objects.filter(description='windows').first())
+    ami.status = ami.INSPECTED
+    ami.save()
+
+    return ami
+
+
+def start_image_inspection(arn, image_id, region):
+    """
+    Start image inspection of the provided image.
+
+    Args:
+        arn (str):  The AWS Resource Number for the account with the snapshot
+        image_id (str): The AWS ID for the machine image
+        region (str): The region the snapshot resides in
+
+    """
+    image = AwsMachineImage.objects.get(ec2_ami_id=image_id)
+    image.status = image.PREPARING
+    image.save()
+
+    from account.tasks import copy_ami_snapshot
+
+    copy_ami_snapshot.delay(str(arn), image_id, region)
 
 
 def create_aws_machine_image_copy(copy_ami_id, reference_ami_id):
