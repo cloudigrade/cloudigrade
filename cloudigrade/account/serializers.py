@@ -14,7 +14,8 @@ from account import reports
 from account.models import (AwsAccount,
                             AwsInstance,
                             AwsInstanceEvent,
-                            AwsMachineImage)
+                            AwsMachineImage,
+                            ImageTag)
 from account.tasks import copy_ami_snapshot
 from account.util import (create_initial_aws_instance_events,
                           create_new_machine_images,
@@ -111,6 +112,10 @@ class AwsAccountSerializer(HyperlinkedModelSerializer):
                     ec2_ami_id=message['image_id'])
                 image.status = image.PREPARING
                 image.save()
+                self.add_openshift_tag(session,
+                                       message['image_id'],
+                                       message['region'],
+                                       image)
                 copy_ami_snapshot.delay(
                     str(arn),
                     message['image_id'],
@@ -128,6 +133,27 @@ class AwsAccountSerializer(HyperlinkedModelSerializer):
                 }
             )
         return account
+
+    def add_openshift_tag(self, session, ami_id, ami_region, image):
+        """
+        Tag image with openshift tag if AWS AMI is tagged.
+
+        Args:
+            session (boto3.session.Session): Session using customer
+                ARN.
+            ami_id (str): AWS AMI id.
+            ami_region (str): AMS AMI region.
+            image (MachineImage): Image model to be tagged.
+        Returns:
+            None
+
+        """
+        ec2_image = aws.get_ami(session, ami_id, ami_region)
+        has_openshift = 'cloudigrade-ocp-present' in [
+            tags['Key'] for tags in ec2_image.tags]
+        if has_openshift:
+            image.tags.add(ImageTag.objects.filter(
+                description='openshift').first())
 
     def get_user_id(self, account):
         """Get the user_id property for serialization."""
