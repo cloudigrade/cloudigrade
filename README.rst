@@ -130,6 +130,8 @@ AWS access for running **cloudigrade** inside a local OpenShift cluster must be 
 
 The values for ``AWS_`` keys and region may be reused for the ``AWS_SQS_`` variables. ``AWS_NAME_PREFIX`` should be set to something unique to your environment like ``${USER}-``.
 
+You'll also need to set the SQS URL for the log analyzer for the variable ``CLOUDTRAIL_EVENT_URL``. This URL can be found in the queue details pane and will look something like ``https://sqs.us-east-1.amazonaws.com/977153484089/iwhite-cloudigrade-sqs-s3``
+
 
 Configure Django settings module
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

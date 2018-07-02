@@ -234,6 +234,11 @@ HOUNDIGRADE_RESULTS_QUEUE_NAME = env('HOUNDIGRADE_RESULTS_QUEUE_NAME',
                                       default=AWS_NAME_PREFIX + \
                                               'inspection_results')
 
+CLOUDTRAIL_EVENT_URL = env(
+    'CLOUDTRAIL_EVENT_URL',
+    default='https://sqs.us-east-1.amazonaws.com/123456789/test-cloudigrade-s3'
+)
+
 CELERY_BROKER_TRANSPORT_OPTIONS = {
     'queue_name_prefix': AWS_NAME_PREFIX,
     'region': AWS_SQS_REGION,
@@ -262,6 +267,8 @@ CELERY_TASK_ROUTES = {
         {'queue': 'persist_inspection_cluster_results_task'},
     'account.tasks.scale_down_cluster':
         {'queue': 'scale_down_cluster'},
+    'analyzer.tasks.analyze_log':
+        {'queue': 'analyze_log'},
 }
 CELERY_BEAT_SCHEDULE = {
     'scale_up_inspection_cluster_every_60_min': {
@@ -273,5 +280,10 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'account.tasks.persist_inspection_cluster_results_task',
         # seconds
         'schedule': env.int('SCALE_UP_INSPECTION_CLUSTER_SCHEDULE', default=60 * 60),
+    },
+    'analyze_log_every_2_mins': {
+        'task': 'analyzer.tasks.analyze_log',
+        # seconds
+        'schedule': env.int('ANALYZE_LOG_SCHEDULE', default=2 * 60),
     },
 }
