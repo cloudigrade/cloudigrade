@@ -5,7 +5,7 @@ import django.db.models.deletion
 
 
 def add_openshift_tag(apps, schema_editor):
-    """Copy old is_windows value to an image tag."""
+    """Add openshift image tag."""
 
     # Create image tags
     ImageTag = apps.get_model('account', 'ImageTag')
