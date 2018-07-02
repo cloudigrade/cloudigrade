@@ -138,7 +138,8 @@ def save_machine_images(account, ami_id):
         account (AwsAccount): The account associated with the machine image
         ami_id (str): The AWS AMI ID.
 
-    Returns:
+    Returns (AwsMachineImage, bool): The object representing the saved model
+        and a boolean of whether it was new or not.
 
     """
     ami, new = AwsMachineImage.objects.get_or_create(
@@ -167,23 +168,24 @@ def tag_windows(ami):
     return ami
 
 
-def start_image_inspection(arn, image_id, region):
+def start_image_inspection(arn, ami_id, region):
     """
     Start image inspection of the provided image.
 
     Args:
         arn (str):  The AWS Resource Number for the account with the snapshot
-        image_id (str): The AWS ID for the machine image
+        ami_id (str): The AWS ID for the machine image
         region (str): The region the snapshot resides in
 
     """
-    image = AwsMachineImage.objects.get(ec2_ami_id=image_id)
-    image.status = image.PREPARING
-    image.save()
+    ami = AwsMachineImage.objects.get(ec2_ami_id=ami_id)
+    ami.status = ami.PREPARING
+    ami.save()
 
+    # Local import to get around a circular import issue
     from account.tasks import copy_ami_snapshot
 
-    copy_ami_snapshot.delay(str(arn), image_id, region)
+    copy_ami_snapshot.delay(arn, ami_id, region)
 
 
 def create_aws_machine_image_copy(copy_ami_id, reference_ami_id):
