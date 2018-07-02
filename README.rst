@@ -197,10 +197,10 @@ If you'd like to deploy your in progress work to the local openshift cluster you
 
 .. code-block:: bash
 
-    # Specify the branch where your code is running, use CLOUDIGRADE_REPO_REF
+    # Specify the branch where your code is running, use API_REPO_REF
     # for Cloudigrade and FRONTIGRADE_REPO_REF for frontigrade and execute
     # the following command
-    export CLOUDIGRADE_REPO_REF=1337-my-special-branch
+    export API_REPO_REF=1337-my-special-branch
     export FRONTIGRADE_REPO_REF=123-the-best-code
     kontemplate template ocp/local.yaml | oc apply -f -
 
