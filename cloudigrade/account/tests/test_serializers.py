@@ -211,7 +211,7 @@ class AwsAccountSerializerTest(TestCase):
     @patch('util.aws.ec2.check_image_state')
     @patch('account.tasks.aws')
     def test_openshift_no_tags(self, mock_aws, mock_check_image_state):
-        """Test case where AMI has no tagsblue."""
+        """Test case where AMI has no tags."""
         mock_session = mock_aws.boto3.Session.return_value
 
         ami_id = util_helper.generate_dummy_image_id()
