@@ -109,7 +109,7 @@ class AwsAccountSerializer(HyperlinkedModelSerializer):
             messages = generate_aws_ami_messages(instances_data, new_amis)
             for message in messages:
                 image = start_image_inspection(
-                    arn, message['image_id'], message['region'])
+                    str(arn), message['image_id'], message['region'])
                 self.add_openshift_tag(session,
                                        message['image_id'],
                                        message['region'],
