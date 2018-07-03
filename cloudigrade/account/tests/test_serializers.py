@@ -80,6 +80,7 @@ class AwsAccountSerializerTest(TestCase):
 
         amis = AwsMachineImage.objects.filter(account=account).all()
         self.assertEqual(len(running_instances[region]), len(amis))
+        self.assertIsInstance(mock_copy_snapshot.call_args[0][0], str)
 
     def test_create_fails_when_account_not_verified(self):
         """Test that an account is not saved if verification fails."""
