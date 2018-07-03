@@ -16,10 +16,10 @@ from account.models import (AwsAccount,
                             AwsInstanceEvent,
                             AwsMachineImage,
                             ImageTag)
-from account.tasks import copy_ami_snapshot
 from account.util import (create_initial_aws_instance_events,
                           create_new_machine_images,
-                          generate_aws_ami_messages)
+                          generate_aws_ami_messages,
+                          start_image_inspection)
 from account.validators import validate_cloud_provider_account_id
 from util import aws
 
@@ -108,19 +108,12 @@ class AwsAccountSerializer(HyperlinkedModelSerializer):
                 create_initial_aws_instance_events(account, instances_data)
             messages = generate_aws_ami_messages(instances_data, new_amis)
             for message in messages:
-                image = AwsMachineImage.objects.get(
-                    ec2_ami_id=message['image_id'])
-                image.status = image.PREPARING
-                image.save()
+                image = start_image_inspection(
+                    arn, message['image_id'], message['region'])
                 self.add_openshift_tag(session,
                                        message['image_id'],
                                        message['region'],
                                        image)
-                copy_ami_snapshot.delay(
-                    str(arn),
-                    message['image_id'],
-                    message['region']
-                )
         else:
             failure_details = [_('Account verification failed.')]
             failure_details += [

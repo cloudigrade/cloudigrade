@@ -240,7 +240,7 @@ def add_snapshot_ownership(snapshot):
         if user['UserId'] == user_id:
             return
 
-    message = _('No CreateVolumePermissions on Snapshot {0} for UserId {1}').\
+    message = _('No CreateVolumePermissions on Snapshot {0} for UserId {1}'). \
         format(snapshot.snapshot_id, user_id)
     raise AwsSnapshotNotOwnedError(message)
 
@@ -282,7 +282,7 @@ def remove_snapshot_ownership(snapshot):
     for user in response['CreateVolumePermissions']:
         if user['UserId'] == user_id:
             message = _('Failed to remove CreateVolumePermissions'
-                        ' on Snapshot {0} for user {1}').\
+                        ' on Snapshot {0} for user {1}'). \
                 format(snapshot.snapshot_id, user_id)
             raise AwsSnapshotOwnedError(message)
 
@@ -378,10 +378,14 @@ def is_instance_windows(instance_data):
     Check to see if the instance has the windows platform set.
 
     Args:
-        instance_data (dict): described EC2 instance dict to check
+        instance_data (object): Can either be a dict or an ec2.instance
+            object depending what the source of the data was. Describes the
+            ec2 instance.
 
     Returns:
         bool: True if it appears to be windows, else False.
 
     """
-    return instance_data.get('Platform', '').lower() == 'windows'
+    return instance_data.get('Platform', '').lower() == 'windows' if \
+        isinstance(instance_data, dict) \
+        else instance_data.platform == 'windows'
