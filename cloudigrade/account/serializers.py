@@ -49,6 +49,14 @@ class AwsAccountSerializer(HyperlinkedModelSerializer):
             'url': {'view_name': 'account-detail', 'lookup_field': 'pk'},
         }
 
+    def validate_account_arn(self, value):
+        """Validate the input account_arn."""
+        if self.instance is not None and value != self.instance.account_arn:
+            raise serializers.ValidationError(
+                _('You cannot change this field.')
+            )
+        return value
+
     def create(self, validated_data):
         """Create an AwsAccount."""
         arn = aws.AwsArn(validated_data['account_arn'])
