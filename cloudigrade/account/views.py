@@ -13,12 +13,16 @@ from account.util import convert_param_to_int
 from util.aws.sts import _get_primary_account_id
 
 
-class AccountViewSet(mixins.CreateModelMixin, viewsets.ReadOnlyModelViewSet):
+class AccountViewSet(mixins.CreateModelMixin,
+                     mixins.RetrieveModelMixin,
+                     mixins.UpdateModelMixin,
+                     mixins.ListModelMixin,
+                     viewsets.GenericViewSet):
     """
-    List all, retrieve a single, or create a customer account.
+    Create, retrieve, update, or list customer accounts.
 
-    Do not allow to update, replace, or delete an account at this view because
-    we currently **only** allow accounts to be created or retrieved.
+    Do not allow to delete an account at this view because we have not yet
+    defined how we want account "soft" deletion to behave.
     """
 
     queryset = Account.objects.all()
