@@ -1,11 +1,13 @@
 """Collection of tests for custom DRF views in the account app."""
 from unittest.mock import Mock, patch
 
+import faker
 from django.test import TestCase
 from rest_framework import exceptions, status
 from rest_framework.test import APIRequestFactory, force_authenticate
 
 from account import AWS_PROVIDER_STRING
+from account import views
 from account.exceptions import InvalidCloudProviderError
 from account.models import (AwsAccount,
                             AwsInstance,
@@ -19,6 +21,7 @@ from account.views import (AccountViewSet,
                            MachineImageViewSet,
                            ReportViewSet,
                            SysconfigViewSet)
+from util.aws import AwsArn
 from util.tests import helper as util_helper
 
 
@@ -88,6 +91,7 @@ class AccountViewSetTest(TestCase):
         self.account3 = account_helper.generate_aws_account(user=self.user2)
         self.account4 = account_helper.generate_aws_account(user=self.user2)
         self.factory = APIRequestFactory()
+        self.faker = faker.Faker()
 
     def assertResponseHasAwsAccountData(self, response, account):
         """Assert the response has data matching the account object."""
@@ -99,6 +103,9 @@ class AccountViewSetTest(TestCase):
         )
         self.assertEqual(
             response.data['resourcetype'], account.__class__.__name__
+        )
+        self.assertEqual(
+            response.data['name'], account.name
         )
 
         if isinstance(account, AwsAccount):
@@ -236,6 +243,88 @@ class AccountViewSetTest(TestCase):
         response = self.get_account_get_response(user, account.id)
         self.assertEqual(response.status_code, 200)
         self.assertResponseHasAwsAccountData(response, account)
+
+    @patch.object(views.serializers, 'aws')
+    def test_create_account_with_name_success(self, mock_aws):
+        """Test create account with a name succeeds."""
+        mock_aws.verify_account_access.return_value = True, []
+        mock_aws.AwsArn = AwsArn
+
+        data = {
+            'resourcetype': 'AwsAccount',
+            'account_arn': util_helper.generate_dummy_arn(),
+            'name': faker.Faker().bs()[:256],
+        }
+
+        request = self.factory.post('/account/', data=data)
+        force_authenticate(request, user=self.user2)
+
+        view = views.AccountViewSet.as_view(actions={'post': 'create'})
+        response = view(request)
+
+        self.assertEqual(response.status_code, 201)
+        for key, value in data.items():
+            self.assertEqual(response.data[key], value)
+        self.assertIsNotNone(response.data['name'])
+
+    @patch.object(views.serializers, 'aws')
+    def test_create_account_without_name_success(self, mock_aws):
+        """Test create account without a name succeeds."""
+        mock_aws.verify_account_access.return_value = True, []
+        mock_aws.AwsArn = AwsArn
+
+        data = {
+            'resourcetype': 'AwsAccount',
+            'account_arn': util_helper.generate_dummy_arn(),
+        }
+
+        request = self.factory.post('/account/', data=data)
+        force_authenticate(request, user=self.user2)
+
+        view = views.AccountViewSet.as_view(actions={'post': 'create'})
+        response = view(request)
+
+        self.assertEqual(response.status_code, 201)
+        for key, value in data.items():
+            self.assertEqual(response.data[key], value)
+        self.assertIsNone(response.data['name'])
+
+    def test_update_account_patch_name_success(self):
+        """Test updating an account with a name succeeds."""
+        data = {
+            'resourcetype': 'AwsAccount',
+            'name': faker.Faker().bs()[:256],
+        }
+
+        account_id = self.account4.id
+        request = self.factory.patch('/account/', data=data)
+        force_authenticate(request, user=self.user2)
+
+        view = views.AccountViewSet.as_view(
+            actions={'patch': 'partial_update'}
+        )
+        response = view(request, pk=account_id)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(data['name'], response.data['name'])
+
+    def test_update_account_patch_arn_fails(self):
+        """Test that updating to change the arn fails."""
+        data = {
+            'resourcetype': 'AwsAccount',
+            'account_arn': util_helper.generate_dummy_arn(),
+        }
+
+        account_id = self.account4.id
+        request = self.factory.patch('/account/', data=data)
+        force_authenticate(request, user=self.user2)
+
+        view = views.AccountViewSet.as_view(
+            actions={'patch': 'partial_update'}
+        )
+        response = view(request, pk=account_id)
+
+        self.assertEqual(response.status_code, 400)
 
 
 class InstanceViewSetTest(TestCase):
