@@ -80,35 +80,33 @@ def generate_dummy_volume_id():
     )
 
 
-def generate_dummy_arn(account_id='',
+def generate_dummy_arn(account_id=None,
                        region='',
-                       resource_separator=':',
-                       generate_account_id=False):
+                       partition='aws',
+                       service='iam',
+                       resource_type='role',
+                       resource_separator='/'):
     """
     Generate a dummy AWS ARN for testing purposes.
 
-    account_id argument is optional, and will be randomly generated if None.
-
     Args:
-        account_id (str): Optional account ID.
-        region (str): Optional region
+        account_id (str): Optional account ID. Default is None. If None, an
+            account ID will be randomly generated.
+        region (str): Optional region. Default is ''.
+        partition (str): Optional partition. Default is 'aws'.
+        service (str): Optional partition. Default is 'iam'.
+        resource_type (str): Optional resource type. Default is 'role'.
         resource_separator (str): A colon ':' or a forward-slash '/'
-        generate_account_id (bool): Whether to generate a random account_id,
-                        This will override any account_id that is passed in
 
     Returns:
         str: A well-formed, randomized ARN.
 
     """
-    if generate_account_id:
+    if account_id is None:
         account_id = generate_dummy_aws_account_id()
     resource = faker.Faker().name()
-    resource_type = faker.Faker().name().replace(' ', '_')
-    arn = ('arn:aws:fakeservice:{0}:{1}:{2}{3}{4}').format(region,
-                                                           account_id,
-                                                           resource_type,
-                                                           resource_separator,
-                                                           resource)
+    arn = f'arn:{partition}:{service}:{region}:{account_id}:' \
+          f'{resource_type}{resource_separator}{resource}'
     return arn
 
 

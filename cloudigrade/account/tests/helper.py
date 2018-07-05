@@ -27,10 +27,7 @@ def generate_aws_account(arn=None, aws_account_id=None, user=None):
 
     """
     if arn is None:
-        if aws_account_id is None:
-            arn = helper.generate_dummy_arn(generate_account_id=True)
-        else:
-            arn = helper.generate_dummy_arn(account_id=aws_account_id)
+        arn = helper.generate_dummy_arn(account_id=aws_account_id)
 
     if user is None:
         user = helper.generate_test_user()

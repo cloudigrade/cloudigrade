@@ -15,7 +15,7 @@ class UtilAwsStsTest(TestCase):
     @patch('util.aws.sts.boto3.client')
     def test_get_session(self, mock_client):
         """Assert get_session returns session object."""
-        mock_arn = AwsArn(helper.generate_dummy_arn(generate_account_id=True))
+        mock_arn = AwsArn(helper.generate_dummy_arn())
         mock_account_id = mock_arn.account_id
         mock_role = helper.generate_dummy_role()
 
