@@ -36,6 +36,7 @@ class AwsAccountSerializer(HyperlinkedModelSerializer):
             'aws_account_id',
             'created_at',
             'id',
+            'name',
             'updated_at',
             'url',
             'user_id',
@@ -68,9 +69,11 @@ class AwsAccountSerializer(HyperlinkedModelSerializer):
             )
 
         user = self.context['request'].user
+        name = validated_data.get('name')
         account = AwsAccount(
             account_arn=str(arn),
             aws_account_id=aws_account_id,
+            name=name,
             user=user,
         )
         try:
@@ -126,6 +129,12 @@ class AwsAccountSerializer(HyperlinkedModelSerializer):
                 }
             )
         return account
+
+    def update(self, instance, validated_data):
+        """Update the instance with the name from validated_data."""
+        instance.name = validated_data.get('name', instance.name)
+        instance.save()
+        return instance
 
     def add_openshift_tag(self, session, ami_id, ami_region, image):
         """
