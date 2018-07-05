@@ -80,6 +80,7 @@ class AwsAccountSerializerTest(TestCase):
 
         amis = AwsMachineImage.objects.filter(account=account).all()
         self.assertEqual(len(running_instances[region]), len(amis))
+        self.assertIsInstance(mock_copy_snapshot.call_args[0][0], str)
 
     def test_create_fails_when_account_not_verified(self):
         """Test that an account is not saved if verification fails."""
@@ -185,6 +186,39 @@ class AwsAccountSerializerTest(TestCase):
         mock_ami = util_helper.generate_mock_image(ami_id)
         mock_ami.tags = [{'Key': 'random',
                           'Value': 'random'}]
+        mock_resource = mock_session.resource.return_value
+        mock_resource.Image.return_value = mock_ami
+
+        test_user = util_helper.generate_test_user()
+        test_account = AwsAccount.objects.create(
+            user=test_user,
+            aws_account_id=util_helper.generate_dummy_aws_account_id,
+            account_arn=util_helper.generate_dummy_arn)
+        test_image = AwsMachineImage.objects.create(
+            account=test_account,
+            ec2_ami_id=ami_id
+        )
+
+        serializer = AwsAccountSerializer()
+        openshift_tag = test_image.tags.filter(description='openshift').first()
+        self.assertEqual(openshift_tag, None)
+
+        serializer.add_openshift_tag(
+            mock_session, ami_id, ami_region, test_image)
+
+        openshift_tag = test_image.tags.filter(description='openshift').first()
+        self.assertEqual(openshift_tag, None)
+
+    @patch('util.aws.ec2.check_image_state')
+    @patch('account.tasks.aws')
+    def test_openshift_no_tags(self, mock_aws, mock_check_image_state):
+        """Test case where AMI has no tags."""
+        mock_session = mock_aws.boto3.Session.return_value
+
+        ami_id = util_helper.generate_dummy_image_id()
+        ami_region = random.choice(util_helper.SOME_AWS_REGIONS)
+        mock_ami = util_helper.generate_mock_image(ami_id)
+        mock_ami.tags = None
         mock_resource = mock_session.resource.return_value
         mock_resource.Image.return_value = mock_ami
 

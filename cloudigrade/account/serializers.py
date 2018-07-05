@@ -109,7 +109,7 @@ class AwsAccountSerializer(HyperlinkedModelSerializer):
             messages = generate_aws_ami_messages(instances_data, new_amis)
             for message in messages:
                 image = start_image_inspection(
-                    arn, message['image_id'], message['region'])
+                    str(arn), message['image_id'], message['region'])
                 self.add_openshift_tag(session,
                                        message['image_id'],
                                        message['region'],
@@ -142,11 +142,12 @@ class AwsAccountSerializer(HyperlinkedModelSerializer):
 
         """
         ec2_image = aws.get_ami(session, ami_id, ami_region)
-        has_openshift = 'cloudigrade-ocp-present' in [
-            tags['Key'] for tags in ec2_image.tags]
-        if has_openshift:
-            image.tags.add(ImageTag.objects.filter(
-                description='openshift').first())
+        if ec2_image.tags is not None:
+            has_openshift = 'cloudigrade-ocp-present' in [
+                tags['Key'] for tags in ec2_image.tags]
+            if has_openshift:
+                image.tags.add(ImageTag.objects.filter(
+                    description='openshift').first())
 
     def get_user_id(self, account):
         """Get the user_id property for serialization."""
