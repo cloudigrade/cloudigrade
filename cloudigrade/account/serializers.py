@@ -22,6 +22,7 @@ from account.util import (create_initial_aws_instance_events,
                           start_image_inspection)
 from account.validators import validate_cloud_provider_account_id
 from util import aws
+from util.exceptions import InvalidArn
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +55,12 @@ class AwsAccountSerializer(HyperlinkedModelSerializer):
         if self.instance is not None and value != self.instance.account_arn:
             raise serializers.ValidationError(
                 _('You cannot change this field.')
+            )
+        try:
+            aws.AwsArn(value)
+        except InvalidArn:
+            raise serializers.ValidationError(
+                _('Invalid ARN.')
             )
         return value
 

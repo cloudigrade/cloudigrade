@@ -326,6 +326,22 @@ class AccountViewSetTest(TestCase):
 
         self.assertEqual(response.status_code, 400)
 
+    def test_create_with_malformed_arn_fails(self):
+        """Test create account with malformed arn returns validation error."""
+        data = {
+            'resourcetype': 'AwsAccount',
+            'account_arn': self.faker.bs(),
+        }
+
+        request = self.factory.post('/account/', data=data)
+        force_authenticate(request, user=self.user2)
+
+        view = views.AccountViewSet.as_view(actions={'post': 'create'})
+        response = view(request)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('account_arn', response.data)
+
 
 class InstanceViewSetTest(TestCase):
     """InstanceViewSet test case."""
