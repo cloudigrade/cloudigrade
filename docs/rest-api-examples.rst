@@ -132,7 +132,8 @@ Create an AWS account
 ~~~~~~~~~~~~~~~~~~~~~
 
 This request may take a few seconds because of multiple round-trip calls
-to the AWS APIs for each region.
+to the AWS APIs for each region. The "name" attribute is optional and has a
+maximum supported length of 256 characters.
 
 Request:
 
@@ -140,7 +141,8 @@ Request:
 
     http post localhost:8080/api/v1/account/ "${AUTH}" \
         resourcetype="AwsAccount" \
-        account_arn="arn:aws:iam::518028203513:role/grant_cloudi_to_372779871274"
+        account_arn="arn:aws:iam::273470430754:role/role-for-cloudigrade" \
+        name="My Favorite Account"
 
 Response:
 
@@ -148,23 +150,60 @@ Response:
 
     HTTP/1.1 201 Created
     Allow: GET, POST, HEAD, OPTIONS
-    Connection: keep-alive
-    Content-Length: 278
+    Content-Length: 311
     Content-Type: application/json
-    Date: Mon, 19 Mar 2018 20:26:10 GMT
-    Location: http://localhost:8080/api/v1/account/1/
-    Server: nginx/1.13.9
+    Date: Thu, 05 Jul 2018 16:00:25 GMT
+    Location: http://localhost:8080/api/v1/account/3/
+    Server: WSGIServer/0.2 CPython/3.6.5
     Vary: Accept
     X-Frame-Options: SAMEORIGIN
 
     {
-        "account_arn": "arn:aws:iam::518028203513:role/grant_cloudi_to_372779871274",
-        "aws_account_id": "518028203513",
-        "created_at": "2018-03-19T20:26:10.798690Z",
-        "id": 1,
+        "account_arn": "arn:aws:iam::273470430754:role/role-for-cloudigrade",
+        "aws_account_id": "273470430754",
+        "created_at": "2018-07-05T16:00:24.473331Z",
+        "id": 3,
+        "name": "My Favorite Account",
         "resourcetype": "AwsAccount",
-        "updated_at": "2018-03-19T20:26:10.798727Z",
-        "url": "http://localhost:8080/api/v1/account/1/"
+        "updated_at": "2018-07-05T16:00:24.473360Z",
+        "url": "http://localhost:8080/api/v1/account/3/",
+        "user_id": 2
+    }
+
+If not specified, the account is created with a ``null`` value for "name".
+
+Request:
+
+.. code:: bash
+
+    http post localhost:8080/api/v1/account/ "${AUTH}" \
+        resourcetype="AwsAccount" \
+        account_arn="arn:aws:iam::273470430754:role/role-for-cloudigrade"
+
+Response:
+
+::
+
+    HTTP/1.1 201 Created
+    Allow: GET, POST, HEAD, OPTIONS
+    Content-Length: 294
+    Content-Type: application/json
+    Date: Thu, 05 Jul 2018 16:01:30 GMT
+    Location: http://localhost:8080/api/v1/account/4/
+    Server: WSGIServer/0.2 CPython/3.6.5
+    Vary: Accept
+    X-Frame-Options: SAMEORIGIN
+
+    {
+        "account_arn": "arn:aws:iam::273470430754:role/role-for-cloudigrade",
+        "aws_account_id": "273470430754",
+        "created_at": "2018-07-05T16:01:30.046877Z",
+        "id": 4,
+        "name": null,
+        "resourcetype": "AwsAccount",
+        "updated_at": "2018-07-05T16:01:30.046910Z",
+        "url": "http://localhost:8080/api/v1/account/4/",
+        "user_id": 2
     }
 
 If you attempt to create an AWS account for an ARN that is already in
@@ -176,7 +215,7 @@ Request:
 
     http post localhost:8080/api/v1/account/ "${AUTH}" \
         resourcetype="AwsAccount" \
-        account_arn="arn:aws:iam::518028203513:role/grant_cloudi_to_372779871274"
+        account_arn="arn:aws:iam::273470430754:role/role-for-cloudigrade"
 
 Response:
 
@@ -198,6 +237,7 @@ Response:
         ]
     }
 
+
 Customer Account Info
 ---------------------
 
@@ -216,11 +256,10 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, POST, HEAD, OPTIONS
-    Connection: keep-alive
-    Content-Length: 330
+    Content-Length: 346
     Content-Type: application/json
-    Date: Mon, 19 Mar 2018 20:28:48 GMT
-    Server: nginx/1.13.9
+    Date: Thu, 05 Jul 2018 16:06:47 GMT
+    Server: WSGIServer/0.2 CPython/3.6.5
     Vary: Accept
     X-Frame-Options: SAMEORIGIN
 
@@ -230,13 +269,15 @@ Response:
         "previous": null,
         "results": [
             {
-                "account_arn": "arn:aws:iam::518028203513:role/grant_cloudi_to_372779871274",
-                "aws_account_id": "518028203513",
-                "created_at": "2018-03-19T20:26:10.798690Z",
-                "id": 1,
+                "account_arn": "arn:aws:iam::273470430754:role/role-for-cloudigrade",
+                "aws_account_id": "273470430754",
+                "created_at": "2018-07-05T16:01:30.046877Z",
+                "id": 4,
+                "name": null,
                 "resourcetype": "AwsAccount",
-                "updated_at": "2018-03-19T20:26:10.798727Z",
-                "url": "http://localhost:8080/api/v1/account/1/"
+                "updated_at": "2018-07-05T16:01:30.046910Z",
+                "url": "http://localhost:8080/api/v1/account/4/",
+                "user_id": 2
             }
         ]
     }
@@ -248,31 +289,141 @@ Request:
 
 .. code:: bash
 
-    http localhost:8080/api/v1/account/1/ "${AUTH}"
+    http localhost:8080/api/v1/account/4/ "${AUTH}"
 
 Response:
 
 ::
 
     HTTP/1.1 200 OK
-    Allow: GET, HEAD, OPTIONS
-    Connection: keep-alive
-    Content-Length: 278
+    Allow: GET, PUT, PATCH, HEAD, OPTIONS
+    Content-Length: 294
     Content-Type: application/json
-    Date: Mon, 19 Mar 2018 20:29:39 GMT
-    Server: nginx/1.13.9
+    Date: Thu, 05 Jul 2018 16:07:16 GMT
+    Server: WSGIServer/0.2 CPython/3.6.5
     Vary: Accept
     X-Frame-Options: SAMEORIGIN
 
     {
-        "account_arn": "arn:aws:iam::518028203513:role/grant_cloudi_to_372779871274",
-        "aws_account_id": "518028203513",
-        "created_at": "2018-03-19T20:26:10.798690Z",
-        "id": 1,
+        "account_arn": "arn:aws:iam::273470430754:role/role-for-cloudigrade",
+        "aws_account_id": "273470430754",
+        "created_at": "2018-07-05T16:01:30.046877Z",
+        "id": 4,
+        "name": null,
         "resourcetype": "AwsAccount",
-        "updated_at": "2018-03-19T20:26:10.798727Z",
-        "url": "http://localhost:8080/api/v1/account/1/"
+        "updated_at": "2018-07-05T16:01:30.046910Z",
+        "url": "http://localhost:8080/api/v1/account/4/",
+        "user_id": 2
     }
+
+Update a specific account
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can update the account object via either HTTP PATCH or HTTP PUT. All
+updates require you to specify the "resourcetype".
+
+At the time of this writing, only the "name" property can be changed on the
+account object.
+
+Request:
+
+.. code:: bash
+
+    http patch localhost:8080/api/v1/account/4/ "${AUTH}" \
+        resourcetype="AwsAccount" \
+        name="another name PATCHed in"
+
+Response:
+
+::
+
+    HTTP/1.1 200 OK
+    Allow: GET, PUT, PATCH, HEAD, OPTIONS
+    Content-Length: 315
+    Content-Type: application/json
+    Date: Thu, 05 Jul 2018 16:07:47 GMT
+    Server: WSGIServer/0.2 CPython/3.6.5
+    Vary: Accept
+    X-Frame-Options: SAMEORIGIN
+
+    {
+        "account_arn": "arn:aws:iam::273470430754:role/role-for-cloudigrade",
+        "aws_account_id": "273470430754",
+        "created_at": "2018-07-05T16:01:30.046877Z",
+        "id": 4,
+        "name": "another name PATCHed in",
+        "resourcetype": "AwsAccount",
+        "updated_at": "2018-07-05T16:07:47.078088Z",
+        "url": "http://localhost:8080/api/v1/account/4/",
+        "user_id": 2
+    }
+
+Because PATCH is intended to replace objects, it must include all potentially
+writable fields, which includes "name" and "account_arn".
+
+Request:
+
+.. code:: bash
+
+    http put localhost:8080/api/v1/account/4/ "${AUTH}" \
+        resourcetype="AwsAccount" \
+        name="this name was PUT in its place" \
+        account_arn="arn:aws:iam::273470430754:role/role-for-cloudigrade"
+
+Response:
+
+::
+
+    HTTP/1.1 200 OK
+    Allow: GET, PUT, PATCH, HEAD, OPTIONS
+    Content-Length: 322
+    Content-Type: application/json
+    Date: Thu, 05 Jul 2018 16:08:44 GMT
+    Server: WSGIServer/0.2 CPython/3.6.5
+    Vary: Accept
+    X-Frame-Options: SAMEORIGIN
+
+    {
+        "account_arn": "arn:aws:iam::273470430754:role/role-for-cloudigrade",
+        "aws_account_id": "273470430754",
+        "created_at": "2018-07-05T16:01:30.046877Z",
+        "id": 4,
+        "name": "this name was PUT in its place",
+        "resourcetype": "AwsAccount",
+        "updated_at": "2018-07-05T16:08:44.004473Z",
+        "url": "http://localhost:8080/api/v1/account/4/",
+        "user_id": 2
+    }
+
+You cannot change the ARN via PUT or PATCH.
+
+Request:
+
+.. code:: bash
+
+    http patch localhost:8080/api/v1/account/4/ "${AUTH}" \
+        resourcetype="AwsAccount" \
+        account_arn="arn:aws:iam::999999999999:role/role-for-cloudigrade"
+
+Response:
+
+::
+
+    HTTP/1.1 400 Bad Request
+    Allow: GET, PUT, PATCH, HEAD, OPTIONS
+    Content-Length: 49
+    Content-Type: application/json
+    Date: Thu, 05 Jul 2018 16:12:12 GMT
+    Server: WSGIServer/0.2 CPython/3.6.5
+    Vary: Accept
+    X-Frame-Options: SAMEORIGIN
+
+    {
+        "account_arn": [
+            "You cannot change this field."
+        ]
+    }
+
 
 Usage Reporting
 ---------------
