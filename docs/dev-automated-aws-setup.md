@@ -28,6 +28,14 @@ cat > cloudigrade-aws-resources.yaml << 'EOL'
 EOL
 ```
 
+### Keeping roles up to date
+If at a later time you want to ensure your ansible roles are up to date, you can force the update with the `--force` flag to `ansible-galaxy install`.
+
+```
+ansible-galaxy install --force kdelee.aws_ecs_autoscale_role
+ansible-galaxy install --force kdelee.aws_cloudtrail_bucket
+```
+
 ## Set up variables
 
 ### Specific Names To Identify Your Resources
