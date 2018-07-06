@@ -22,6 +22,7 @@ from account.util import (create_initial_aws_instance_events,
                           start_image_inspection)
 from account.validators import validate_cloud_provider_account_id
 from util import aws
+from util.exceptions import InvalidArn
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +37,7 @@ class AwsAccountSerializer(HyperlinkedModelSerializer):
             'aws_account_id',
             'created_at',
             'id',
+            'name',
             'updated_at',
             'url',
             'user_id',
@@ -47,6 +49,20 @@ class AwsAccountSerializer(HyperlinkedModelSerializer):
         extra_kwargs = {
             'url': {'view_name': 'account-detail', 'lookup_field': 'pk'},
         }
+
+    def validate_account_arn(self, value):
+        """Validate the input account_arn."""
+        if self.instance is not None and value != self.instance.account_arn:
+            raise serializers.ValidationError(
+                _('You cannot change this field.')
+            )
+        try:
+            aws.AwsArn(value)
+        except InvalidArn:
+            raise serializers.ValidationError(
+                _('Invalid ARN.')
+            )
+        return value
 
     def create(self, validated_data):
         """Create an AwsAccount."""
@@ -68,9 +84,11 @@ class AwsAccountSerializer(HyperlinkedModelSerializer):
             )
 
         user = self.context['request'].user
+        name = validated_data.get('name')
         account = AwsAccount(
             account_arn=str(arn),
             aws_account_id=aws_account_id,
+            name=name,
             user=user,
         )
         try:
@@ -126,6 +144,12 @@ class AwsAccountSerializer(HyperlinkedModelSerializer):
                 }
             )
         return account
+
+    def update(self, instance, validated_data):
+        """Update the instance with the name from validated_data."""
+        instance.name = validated_data.get('name', instance.name)
+        instance.save()
+        return instance
 
     def add_openshift_tag(self, session, ami_id, ami_region, image):
         """
