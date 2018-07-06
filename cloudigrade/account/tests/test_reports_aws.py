@@ -1,8 +1,10 @@
 """Collection of tests for the reports module."""
+import datetime
+
 from django.test import TestCase
 
 from account import AWS_PROVIDER_STRING, reports
-from account.models import AwsAccount
+from account.models import AwsAccount, InstanceEvent
 from account.tests import helper as account_helper
 from util.tests import helper as util_helper
 
@@ -342,3 +344,343 @@ class GetTimeUsageAws1a2iTest(TestCase, GetTimeUsageAwsTestMixin):
         )
         expected = {identifier: HOURS_10}
         self.assertHourlyUsage(expected)
+
+
+class GetCloudAccountOverview(TestCase):
+    """Test that the CloudAccountOverview functions act correctly."""
+
+    def setUp(self):
+        """Set up commonly used data for each test."""
+        self.account = account_helper.generate_aws_account()
+        self.start = util_helper.utc_dt(2018, 1, 1, 0, 0, 0)
+        self.end = util_helper.utc_dt(2018, 2, 1, 0, 0, 0)
+        self.rhel_image = account_helper.generate_aws_image(
+            self.account,
+            is_encrypted=False,
+            is_windows=False,
+            ec2_ami_id=None,
+            is_rhel=True,
+            is_openshift=False)
+        self.openshift_image = account_helper.generate_aws_image(
+            self.account,
+            is_encrypted=False,
+            is_windows=False,
+            ec2_ami_id=None,
+            is_rhel=False,
+            is_openshift=True)
+        self.openshift_and_rhel_image = account_helper.generate_aws_image(
+            self.account,
+            is_encrypted=False,
+            is_windows=False,
+            ec2_ami_id=None,
+            is_rhel=True,
+            is_openshift=True)
+        self.instance_1 = account_helper.generate_aws_instance(self.account)
+        self.instance_2 = account_helper.generate_aws_instance(self.account)
+
+    # The following tests are assuming that the events have been returned
+    # from the _get_relevant_events() function which will only return events
+    # during the specified time period **or** if no events exist during the
+    # time period, the last event that occurred. Therefore, the validate method
+    # makes sure that we ignore out the off events that occurred before start
+    def test_validate_event_off_after_start(self):
+        """Test that an off event after start is a valid event to inspect."""
+        powered_time = util_helper.utc_dt(2018, 1, 10, 0, 0, 0)
+
+        event = account_helper.generate_single_aws_instance_event(
+            self.instance_1, powered_time, InstanceEvent.TYPE.power_off
+        )
+        is_valid = reports.validate_event(event, self.start)
+        self.assertEqual(is_valid, True)
+
+    def test_validate_event_on_after_start(self):
+        """Test that an on event after start is a valid event to inspect."""
+        powered_time = util_helper.utc_dt(2018, 1, 10, 0, 0, 0)
+
+        event = account_helper.generate_single_aws_instance_event(
+            self.instance_1, powered_time, InstanceEvent.TYPE.power_on
+        )
+        is_valid = reports.validate_event(event, self.start)
+        self.assertEqual(is_valid, True)
+
+    def test_validate_event_on_before_start(self):
+        """Test that an on event before start is a valid event to inspect."""
+        powered_time = util_helper.utc_dt(2017, 12, 10, 0, 0, 0)
+
+        event = account_helper.generate_single_aws_instance_event(
+            self.instance_1, powered_time, InstanceEvent.TYPE.power_on
+        )
+        is_valid = reports.validate_event(event, self.start)
+        self.assertEqual(is_valid, True)
+
+    def test_validate_event_off_before_start(self):
+        """Test that an off event before start is not a valid event."""
+        powered_time = util_helper.utc_dt(2017, 12, 10, 0, 0, 0)
+
+        event = account_helper.generate_single_aws_instance_event(
+            self.instance_1, powered_time, InstanceEvent.TYPE.power_off
+        )
+        is_valid = reports.validate_event(event, self.start)
+        self.assertEqual(is_valid, False)
+
+    def test_convert_string_to_datetime(self):
+        """Test that we successfully convert the str time to a datetime."""
+        start = '2018-06-29T14:46:51.491164Z'
+        start = reports.convert_str_to_datetime(start)
+        self.assertTrue(isinstance(start, datetime.datetime))
+
+    def test_get_cloud_account_overview_no_events(self):
+        """Assert an overview of an account with no events returns 0s."""
+        overview = reports.get_account_overview(
+            self.start, self.end, self.account)
+        expected_overview = \
+            {'id': self.account.aws_account_id,
+             'user_id': self.account.user_id,
+             'type': 'aws',
+             'arn': self.account.account_arn,
+             'creation_date': self.account.created_at,
+             'name': None,
+             'images': 0,
+             'instances': 0,
+             'rhel_instances': 0,
+             'openshift_instances': 0}
+        self.assertEqual(expected_overview, overview)
+
+    def test_get_cloud_account_overview_no_events_start_end_strings(self):
+        """Assert an overview of an account with no events returns 0s."""
+        start = '2018-01-01T14:46:51.491164Z'
+        end = '2018-02-01T00:00:00.00Z'
+        overview = reports.get_account_overview(start, end, self.account)
+        expected_overview = \
+            {'id': self.account.aws_account_id,
+             'user_id': self.account.user_id,
+             'type': 'aws',
+             'arn': self.account.account_arn,
+             'creation_date': self.account.created_at,
+             'name': None,
+             'images': 0,
+             'instances': 0,
+             'rhel_instances': 0,
+             'openshift_instances': 0}
+        self.assertEqual(expected_overview, overview)
+
+    def test_get_cloud_account_overview_with_events(self):
+        """Assert an account overview with events reports correctly."""
+        powered_times = (
+            (
+                util_helper.utc_dt(2018, 1, 10, 0, 0, 0),
+                util_helper.utc_dt(2018, 1, 10, 5, 0, 0)
+            ),
+        )
+        account_helper.generate_aws_instance_events(
+            self.instance_1, powered_times
+        )
+        overview = reports.get_account_overview(
+            self.start, self.end, self.account)
+        expected_overview = \
+            {'id': self.account.aws_account_id,
+             'user_id': self.account.user_id,
+             'type': 'aws',
+             'arn': self.account.account_arn,
+             'creation_date': self.account.created_at,
+             'name': None,
+             'images': 1,
+             'instances': 1,
+             'rhel_instances': 0,
+             'openshift_instances': 0}
+        self.assertEqual(expected_overview, overview)
+
+    def test_get_cloud_account_overview_with_rhel_image(self):
+        """Assert an account overview with events reports correctly."""
+        powered_times = (
+            (
+                util_helper.utc_dt(2018, 1, 10, 0, 0, 0),
+                util_helper.utc_dt(2018, 1, 10, 5, 0, 0)
+            ),
+        )
+        account_helper.generate_aws_instance_events(
+            self.instance_1, powered_times
+        )
+        # in addition to instance_1's events, we are creating an event for
+        # instance_2 with a rhel_image
+        account_helper.generate_single_aws_instance_event(
+            self.instance_2, self.start, InstanceEvent.TYPE.power_on,
+            self.rhel_image.ec2_ami_id)
+        overview = reports.get_account_overview(
+            self.start, self.end, self.account)
+        # we expect to find 2 total images, 2 total instances and 1 rhel
+        # instance
+        expected_overview = \
+            {'id': self.account.aws_account_id,
+             'user_id': self.account.user_id,
+             'type': 'aws',
+             'arn': self.account.account_arn,
+             'creation_date': self.account.created_at,
+             'name': None,
+             'images': 2,
+             'instances': 2,
+             'rhel_instances': 1,
+             'openshift_instances': 0}
+        self.assertEqual(expected_overview, overview)
+
+    def test_get_cloud_account_overview_with_openshift_image(self):
+        """Assert an account overview with events reports correctly."""
+        powered_times = (
+            (
+                util_helper.utc_dt(2018, 1, 10, 0, 0, 0),
+                util_helper.utc_dt(2018, 1, 10, 5, 0, 0)
+            ),
+        )
+        account_helper.generate_aws_instance_events(
+            self.instance_1, powered_times
+        )
+        # in addition to instance_1's events, we are creating an event for
+        # instance_2 with an openshift_image
+        account_helper.generate_single_aws_instance_event(
+            self.instance_2, self.start, InstanceEvent.TYPE.power_on,
+            self.openshift_image.ec2_ami_id)
+        overview = reports.get_account_overview(
+            self.start, self.end, self.account)
+        # we expect to find 2 total images, 2 total instances and 1
+        # openshift instance
+        expected_overview = \
+            {'id': self.account.aws_account_id,
+             'user_id': self.account.user_id,
+             'type': 'aws',
+             'arn': self.account.account_arn,
+             'creation_date': self.account.created_at,
+             'name': None,
+             'images': 2,
+             'instances': 2,
+             'rhel_instances': 0,
+             'openshift_instances': 1}
+        self.assertEqual(expected_overview, overview)
+
+    def test_get_cloud_account_overview_with_openshift_and_rhel_image(self):
+        """Assert an account overview with events reports correctly."""
+        powered_times = (
+            (
+                util_helper.utc_dt(2018, 1, 10, 0, 0, 0),
+                util_helper.utc_dt(2018, 1, 10, 5, 0, 0)
+            ),
+        )
+        account_helper.generate_aws_instance_events(
+            self.instance_1, powered_times
+        )
+        # in addition to instance_1's events, we are creating an event for
+        # instance_2 with a rhel & openshift_image
+        account_helper.generate_single_aws_instance_event(
+            self.instance_2, self.start, InstanceEvent.TYPE.power_on,
+            self.openshift_and_rhel_image.ec2_ami_id)
+        overview = reports.get_account_overview(
+            self.start, self.end, self.account)
+        # we expect to find 2 total images, 2 total instances, 1 rhel instance
+        # and 1 openshift instance
+        expected_overview = \
+            {'id': self.account.aws_account_id,
+             'user_id': self.account.user_id,
+             'type': 'aws',
+             'arn': self.account.account_arn,
+             'creation_date': self.account.created_at,
+             'name': None,
+             'images': 2,
+             'instances': 2,
+             'rhel_instances': 1,
+             'openshift_instances': 1}
+        self.assertEqual(expected_overview, overview)
+
+    def test_get_cloud_account_overview_with_two_instances_same_image(self):
+        """Assert an account overview with events reports correctly."""
+        # generate event for instance_1 with the rhel/openshift image
+        account_helper.generate_single_aws_instance_event(
+            self.instance_1, self.start, InstanceEvent.TYPE.power_on,
+            self.openshift_and_rhel_image.ec2_ami_id)
+        # generate event for instance_2 with the rhel/openshift image
+        account_helper.generate_single_aws_instance_event(
+            self.instance_2, self.start, InstanceEvent.TYPE.power_on,
+            self.openshift_and_rhel_image.ec2_ami_id)
+        overview = reports.get_account_overview(
+            self.start, self.end, self.account)
+        # assert that we only find the one image
+        expected_overview = \
+            {'id': self.account.aws_account_id,
+             'user_id': self.account.user_id,
+             'type': 'aws',
+             'arn': self.account.account_arn,
+             'creation_date': self.account.created_at,
+             'name': None,
+             'images': 1,
+             'instances': 2,
+             'rhel_instances': 1,
+             'openshift_instances': 1}
+        self.assertEqual(expected_overview, overview)
+
+    def test_get_cloud_account_overview_with_rhel(self):
+        """Assert an account overview with events reports correctly."""
+        # generate event for instance_1 with the rhel/openshift image
+        account_helper.generate_single_aws_instance_event(
+            self.instance_1, self.start, InstanceEvent.TYPE.power_on,
+            self.openshift_and_rhel_image.ec2_ami_id)
+        # generate event for instance_2 with the rhel image
+        account_helper.generate_single_aws_instance_event(
+            self.instance_2, self.start, InstanceEvent.TYPE.power_on,
+            self.rhel_image.ec2_ami_id)
+        overview = reports.get_account_overview(
+            self.start, self.end, self.account)
+        # assert that we only find the two rhel images
+        expected_overview = \
+            {'id': self.account.aws_account_id,
+             'user_id': self.account.user_id,
+             'type': 'aws',
+             'arn': self.account.account_arn,
+             'creation_date': self.account.created_at,
+             'name': None,
+             'images': 2,
+             'instances': 2,
+             'rhel_instances': 2,
+             'openshift_instances': 1}
+        self.assertEqual(expected_overview, overview)
+
+    def test_get_cloud_account_overview_with_openshift(self):
+        """Assert an account overview with events reports correctly."""
+        # generate event for instance_1 with the rhel/openshift image
+        account_helper.generate_single_aws_instance_event(
+            self.instance_1, self.start, InstanceEvent.TYPE.power_on,
+            self.openshift_and_rhel_image.ec2_ami_id)
+        # generate event for instance_2 with the openshift image
+        account_helper.generate_single_aws_instance_event(
+            self.instance_2, self.start, InstanceEvent.TYPE.power_on,
+            self.openshift_image.ec2_ami_id)
+        overview = reports.get_account_overview(
+            self.start, self.end, self.account)
+        # assert that we only find the two openshift images
+        expected_overview = \
+            {'id': self.account.aws_account_id,
+             'user_id': self.account.user_id,
+             'type': 'aws',
+             'arn': self.account.account_arn,
+             'creation_date': self.account.created_at,
+             'name': None,
+             'images': 2,
+             'instances': 2,
+             'rhel_instances': 1,
+             'openshift_instances': 2}
+        self.assertEqual(expected_overview, overview)
+
+    def test_get_cloud_account_overview_unsupported_cloud(self):
+        """Assert an overview of an unsupported cloud returns 0s."""
+        account = account_helper.generate_account()
+        overview = reports.get_account_overview(
+            self.start, self.end, account)
+        expected_overview = \
+            {'id': account.id,
+             'user_id': account.user_id,
+             'type': 'unknown',
+             'arn': 'unsupported',
+             'creation_date': account.created_at,
+             'name': None,
+             'images': 0,
+             'instances': 0,
+             'rhel_instances': 0,
+             'openshift_instances': 0}
+        self.assertEqual(expected_overview, overview)

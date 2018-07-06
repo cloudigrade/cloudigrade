@@ -9,6 +9,7 @@ from account.models import (Account,
                             Instance,
                             InstanceEvent,
                             MachineImage)
+from account.reports import get_account_overview
 from account.util import convert_param_to_int
 from util.aws.sts import _get_primary_account_id
 
@@ -146,3 +147,36 @@ class SysconfigViewSet(viewsets.ViewSet):
             'aws_account_id': _get_primary_account_id()
         }
         return Response(response)
+
+
+class CloudAccountOverviewViewSet(viewsets.ReadOnlyModelViewSet):
+    """List all or view a single Cloud Account Overview.
+
+    Do not allow to create, update, replace, or delete an image at
+    this view because we currently **only** allows overviews to be retrieved.
+    """
+
+    queryset = Account.objects.all()
+    serializer_class = serializers.CloudAccountOverviewSerializer
+
+    def list(self, request, *args, **kwargs):
+        """Get the queryset filtered to appropriate user."""
+        user = request.user
+        accounts = self.queryset
+        serializer = self.serializer_class(data=request.query_params)
+        serializer.is_valid(raise_exception=True)
+        start = request.query_params.get('start')
+        end = request.query_params.get('end')
+        if not user.is_superuser:
+            accounts = self.accounts.filter(user=user)
+        user_id = request.query_params.get('user_id', None)
+        if user_id is not None:
+            user_id = convert_param_to_int('user_id', user_id)
+            accounts = self.accounts.accounts(user__id=user_id)
+        overviews = {'cloud_account_overviews': []}
+        # iterate through each account in our queryset and get an overview
+        for account in accounts:
+            account_overview = get_account_overview(start, end, account)
+            if account_overview:
+                overviews['cloud_account_overviews'].append(account_overview)
+        return Response(overviews, status=status.HTTP_200_OK)

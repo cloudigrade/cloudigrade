@@ -1,12 +1,21 @@
 """Cloud provider-agnostic report-building functionality."""
 import collections
+import datetime, pytz
 import functools
+import logging
 import operator
 
 from django.db import models
+from django.utils.translation import gettext as _
 
-from account.models import Instance, InstanceEvent
+from account import AWS_PROVIDER_STRING
+from account.models import (Instance,
+                            AwsAccount,
+                            AwsMachineImage,
+                            InstanceEvent)
 from account.reports import helper
+
+logger = logging.getLogger(__name__)
 
 
 def get_time_usage(start, end, cloud_provider, cloud_account_id):
@@ -179,3 +188,101 @@ def _calculate_instance_usage(start, end, events):
         time_running += diff.total_seconds()
 
     return time_running
+
+
+def convert_str_to_datetime(time):
+    """
+    Convert a string datetime to a datetime object.
+
+    Args:
+        time: (str) the string to convert to a datetime
+    """
+    local = pytz.timezone("America/Los_Angeles")
+    time = datetime.datetime.strptime(time, '%Y-%m-%dT%H:%M:%S.%fZ')
+    local_dt = local.localize(time, is_dst=None)
+    utc_dt = local_dt.astimezone(pytz.utc)
+    return utc_dt
+
+
+def validate_event(event, start):
+    """
+    Ensure that the event is relevant to our time frame.
+
+    Args:
+        event: (InstanceEvent): The event object to evaluate
+        start (str): Start time (inclusive)
+
+    Returns:
+        bool: A boolean regarding whether or not we should inspect the event further.
+    """
+    valid_event = True
+    # if the event occurred outside of our specified period (ie. before start) we should
+    # only inspect it if it was a power on event
+    if event.occurred_at < start:
+        if event.event_type == InstanceEvent.TYPE.power_off:
+            valid_event = False
+    return valid_event
+
+def get_account_overview(start, end, account):
+    """
+    Generate an overview of an account over a specified amount of time.
+
+    Args:
+        start (str): Start time (inclusive)
+        end (str): End time (exclusive)
+        cloud_helper (helper.ReportHelper): Helper for cloud-specific things
+
+    Returns:
+        dict: An overview of the instances/images/rhel & openshift images for the specified
+        account during the specified time period."""
+    machine_images = AwsMachineImage.objects.all()
+
+    if isinstance(start, str):
+        start = convert_str_to_datetime(start)
+    if isinstance(end, str):
+        end = convert_str_to_datetime(end)
+    instances = []
+    images = []
+    rhel = []
+    openshift = []
+    cloud_type = 'unknown'
+    arn = 'unsupported'
+
+    # make sure that this is a supported cloud type (aws at this time)
+    if isinstance(account, AwsAccount):
+        cloud_helper = helper.get_report_helper(AWS_PROVIDER_STRING, account.aws_account_id)
+        cloud_type = AWS_PROVIDER_STRING
+        arn = account.account_arn
+        id = account.aws_account_id
+        # _get_relevant_events will return the events in between the start & end times & if
+        # no events are present during this period, it will return the last event that occurred
+        events = _get_relevant_events(start, end, cloud_helper)
+        for event in events:
+            valid_event = validate_event(event, start)
+            if valid_event:
+                instances.append(event.instance.id)
+                images.append(event.ec2_ami_id)
+                image = machine_images.filter(ec2_ami_id=event.ec2_ami_id).first()
+                if image:
+                    for tag in image.tags.all():
+                        if tag.description == 'rhel':
+                            rhel.append(image)
+                        if tag.description == 'openshift':
+                            openshift.append(image)
+    else:
+        id = account.id
+        logger.warning(_('Account "{0}" has an unsupported cloud type "{1}".').format(account,
+                                                                                      cloud_type))
+
+    cloud_account = {'id': id,
+                     'user_id': account.user_id,
+                     'type': cloud_type,
+                     'arn': arn,
+                     'creation_date': account.created_at,
+                     'name': None,
+                     'images': len(set(images)),
+                     'instances': len(set(instances)),
+                     'rhel_instances': len(set(rhel)),
+                     'openshift_instances': len(set(openshift))}
+
+    return cloud_account

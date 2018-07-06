@@ -1,7 +1,8 @@
 """Helper functions for generating test data."""
 import random
 
-from account.models import (AwsAccount,
+from account.models import (Account,
+                            AwsAccount,
                             AwsInstance,
                             AwsInstanceEvent,
                             AwsMachineImage,
@@ -38,6 +39,27 @@ def generate_aws_account(arn=None, aws_account_id=None, user=None):
     return AwsAccount.objects.create(
         account_arn=arn,
         aws_account_id=aws.AwsArn(arn).account_id,
+        user=user,
+    )
+
+
+def generate_account(user=None):
+    """
+    Generate an Account for testing.
+
+    Any optional arguments not provided will be randomly generated.
+
+    Args:
+        user (User): Optional Django auth User to be this account's owner.
+
+    Returns:
+        Account: The created Account.
+
+    """
+    if user is None:
+        user = helper.generate_test_user()
+
+    return Account.objects.create(
         user=user,
     )
 
@@ -169,7 +191,9 @@ def generate_aws_instance_events(
 def generate_aws_image(account,
                        is_encrypted=False,
                        is_windows=False,
-                       ec2_ami_id=None):
+                       ec2_ami_id=None,
+                       is_rhel=False,
+                       is_openshift=False):
     """
     Generate an AwsMachineImage for the AwsAccount for testing.
 
@@ -195,6 +219,14 @@ def generate_aws_image(account,
     if is_windows:
         image.tags.add(ImageTag.objects.filter(
             description='windows').first())
+        image.save()
+    if is_rhel:
+        image.tags.add(ImageTag.objects.filter(
+            description='rhel').first())
+        image.save()
+    if is_openshift:
+        image.tags.add(ImageTag.objects.filter(
+            description='openshift').first())
         image.save()
 
     return image
