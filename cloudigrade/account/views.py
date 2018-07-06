@@ -153,17 +153,13 @@ class SysconfigViewSet(viewsets.ViewSet):
 
 
 class CloudAccountOverviewViewSet(viewsets.ReadOnlyModelViewSet):
-    """List all or view a single Cloud Account Overview.
-
-    Do not allow to create, update, replace, or delete an image at
-    this view because we currently **only** allows overviews to be retrieved.
-    """
+    """List all or view a single Cloud Account Overview."""
 
     queryset = Account.objects.all()
     serializer_class = serializers.CloudAccountOverviewSerializer
 
     def list(self, request, *args, **kwargs):
-        """Get the queryset filtered to appropriate user."""
+        """Get overview of accounts filtered to appropriate user."""
         user = request.user
         accounts = self.queryset
         serializer = self.serializer_class(data=request.query_params)
