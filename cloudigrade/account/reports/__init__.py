@@ -1,6 +1,5 @@
 """Cloud provider-agnostic report-building functionality."""
 import collections
-import datetime, pytz
 import functools
 import logging
 import operator
@@ -230,8 +229,8 @@ def get_account_overview(account, start, end):
     Generate an overview of an account over a specified amount of time.
 
     Args:
-        start (str): Start time (inclusive)
-        end (str): End time (exclusive)
+        start (datetime.datetime): Start time (inclusive)
+        end (datetime.datetime): End time (exclusive)
         account (Account or AwsAccount): Account or AwsAccount object
 
     Returns:
