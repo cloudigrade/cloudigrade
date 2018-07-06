@@ -33,6 +33,7 @@ The following resource paths are currently available:
 
 -  ``/api/v1/account/`` returns account data
 -  ``/api/v1/report/`` returns usage report data
+-  ``/api/v1/report/accounts`` returns account overview data
 -  ``/auth/`` is for authentication
 
 User Account Setup
@@ -558,6 +559,80 @@ Response:
             "Incorrect cloud_account_id type for cloud_provider \"aws\""
         ]
     }
+
+Retrieve an account overview
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Request:
+
+.. code:: bash
+
+    http localhost:8080/api/v1/report/accounts/ "${AUTH}" \
+        start=="2018-03-01T00:00:00" \
+        end=="2018-04-01T00:00:00"
+
+Response:
+
+::
+
+    HTTP/1.1 200 OK
+    Allow: GET, HEAD, OPTIONS
+    Content-Length: 483
+    Content-Type: application/json
+    Date: Fri, 06 Jul 2018 18:32:16 GMT
+    Server: WSGIServer/0.2 CPython/3.6.4
+    Vary: Accept
+    X-Frame-Options: SAMEORIGIN
+
+    {
+        "cloud_account_overviews": [
+            {
+                "arn": "arn:aws:iam::114204391493:role/role-for-cloudigrade",
+                "creation_date": "2018-07-06T15:09:21.442412Z",
+                "id": "1",
+                "images": null,
+                "instances": null,
+                "name": "account-for-aiken",
+                "openshift_instances": null,
+                "rhel_instances": null,
+                "type": "aws",
+                "user_id": 1
+            },
+            ...
+        ]
+    }
+
+If you attempt to retrieve cloud account overviews without specifying a
+start and end date, you should get a 400 error.
+
+Request:
+
+.. code:: bash
+
+    http localhost:8080/api/v1/report/accounts/ "${AUTH}"
+
+Response:
+
+::
+
+    HTTP/1.1 400 Bad Request
+    Allow: GET, HEAD, OPTIONS
+    Content-Length: 71
+    Content-Type: application/json
+    Date: Fri, 06 Jul 2018 18:37:58 GMT
+    Server: WSGIServer/0.2 CPython/3.6.4
+    Vary: Accept
+    X-Frame-Options: SAMEORIGIN
+
+    {
+        "end": [
+            "This field is required."
+        ],
+        "start": [
+            "This field is required."
+        ]
+    }
+
 
 Miscellaneous Commands
 ---------------

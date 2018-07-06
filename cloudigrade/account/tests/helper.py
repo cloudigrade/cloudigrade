@@ -42,7 +42,7 @@ def generate_aws_account(arn=None, aws_account_id=None, user=None, name=None):
     )
 
 
-def generate_account(user=None):
+def generate_account(user=None, name=None):
     """
     Generate an Account for testing.
 
@@ -50,6 +50,7 @@ def generate_account(user=None):
 
     Args:
         user (User): Optional Django auth User to be this account's owner.
+        name (str): Optional name given to the account.
 
     Returns:
         Account: The created Account.
@@ -60,6 +61,7 @@ def generate_account(user=None):
 
     return Account.objects.create(
         user=user,
+        name=name
     )
 
 

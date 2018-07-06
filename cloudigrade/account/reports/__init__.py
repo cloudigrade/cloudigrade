@@ -189,28 +189,13 @@ def _calculate_instance_usage(start, end, events):
 
     return time_running
 
-
-def convert_str_to_datetime(time):
-    """
-    Convert a string datetime to a datetime object.
-
-    Args:
-        time: (str) the string to convert to a datetime
-    """
-    local = pytz.timezone("America/Los_Angeles")
-    time = datetime.datetime.strptime(time, '%Y-%m-%dT%H:%M:%S.%fZ')
-    local_dt = local.localize(time, is_dst=None)
-    utc_dt = local_dt.astimezone(pytz.utc)
-    return utc_dt
-
-
 def validate_event(event, start):
     """
     Ensure that the event is relevant to our time frame.
 
     Args:
         event: (InstanceEvent): The event object to evaluate
-        start (str): Start time (inclusive)
+        start (datetime.datetime): Start time (inclusive)
 
     Returns:
         bool: A boolean regarding whether or not we should inspect the event further.
@@ -223,37 +208,45 @@ def validate_event(event, start):
             valid_event = False
     return valid_event
 
-def get_account_overview(start, end, account):
+def validate_account_creation(account, end):
+    """
+    Ensure that the event is relevant to our time frame.
+
+    Args:
+        account: (Account): The event object to evaluate
+        end (datetime.datetime): End time (exclusive)
+
+    Returns:
+        bool: A boolean regarding whether or not the account was created after the end
+        time.
+    """
+    if end <= account.created_at:
+        return False
+    return True
+
+
+def get_account_overview(account, start, end):
     """
     Generate an overview of an account over a specified amount of time.
 
     Args:
         start (str): Start time (inclusive)
         end (str): End time (exclusive)
-        cloud_helper (helper.ReportHelper): Helper for cloud-specific things
+        account (Account or AwsAccount): Account or AwsAccount object
 
     Returns:
         dict: An overview of the instances/images/rhel & openshift images for the specified
         account during the specified time period."""
     machine_images = AwsMachineImage.objects.all()
-
-    if isinstance(start, str):
-        start = convert_str_to_datetime(start)
-    if isinstance(end, str):
-        end = convert_str_to_datetime(end)
     instances = []
     images = []
     rhel = []
     openshift = []
     cloud_type = 'unknown'
     arn = 'unsupported'
-
     # make sure that this is a supported cloud type (aws at this time)
     if isinstance(account, AwsAccount):
         cloud_helper = helper.get_report_helper(AWS_PROVIDER_STRING, account.aws_account_id)
-        cloud_type = AWS_PROVIDER_STRING
-        arn = account.account_arn
-        id = account.aws_account_id
         # _get_relevant_events will return the events in between the start & end times & if
         # no events are present during this period, it will return the last event that occurred
         events = _get_relevant_events(start, end, cloud_helper)
@@ -269,20 +262,39 @@ def get_account_overview(start, end, account):
                             rhel.append(image)
                         if tag.description == 'openshift':
                             openshift.append(image)
+        # set aws account info & grab the totals
+        cloud_type = AWS_PROVIDER_STRING
+        arn = account.account_arn
+        id = account.aws_account_id
+        total_images = len(set(images))
+        total_instances = len(set(instances))
+        total_rhel = len(set(rhel))
+        total_openshift = len(set(openshift))
     else:
         id = account.id
-        logger.warning(_('Account "{0}" has an unsupported cloud type "{1}".').format(account,
-                                                                                      cloud_type))
-
+        logger.warning(_('Account "{0}" has an unsupported cloud type "{1}", therefore'
+                         'there is no data on its images/instances during the specified'
+                         'start and end dates').format(account, cloud_type))
+        total_images, total_instances, total_rhel, total_openshift = None, None, None, None
+    # if the account was created right at or after the end time, we cannot give meaningful
+    # data about the instances/images seen during the period, therefore we need to make sure
+    # that we return None for those values
+    valid_account_data = validate_account_creation(account, end)
+    if not valid_account_data:
+        logger.info(_('Account "{0}" was created after "{1}", therefore there is no data on '
+                      'its images/instances during the specified start and end dates.').format(
+            account,
+            end))
+        total_images, total_instances, total_rhel, total_openshift = None, None, None, None
     cloud_account = {'id': id,
                      'user_id': account.user_id,
                      'type': cloud_type,
                      'arn': arn,
                      'creation_date': account.created_at,
-                     'name': None,
-                     'images': len(set(images)),
-                     'instances': len(set(instances)),
-                     'rhel_instances': len(set(rhel)),
-                     'openshift_instances': len(set(openshift))}
+                     'name': account.name,
+                     'images': total_images,
+                     'instances': total_instances,
+                     'rhel_instances': total_rhel,
+                     'openshift_instances': total_openshift}
 
     return cloud_account
