@@ -113,7 +113,7 @@ oc start-build cloudigrade-api
 
 ## Clean up
 _We can also tear down everything we made with the same roles._
-_This does not remove the ecsInstanceRole becaues that is a default role that Amazon provides and would interfere with other clusters that may also be using it._
+_This does not remove the ecsInstanceRole because that is a default role that Amazon provides and would interfere with other clusters that may also be using it._
 ```
 # Remove resources created
 ansible-playbook -e ecs_cluster_name=$HOUNDIGRADE_ECS_CLUSTER_NAME -e ec2_asg_name=$HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME -e ec2_launch_configuration_name=$HOUNDIGRADE_LAUNCH_CONFIG_NAME -e ecs_state=absent -e ec2_lc_state=absent -e ec2_asg_state=absent -e bucket_state=absent -e sqs_state=absent -e aws_prefix=$AWS_NAME_PREFIX cloudigrade-aws-resources.yaml
