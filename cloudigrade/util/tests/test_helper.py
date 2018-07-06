@@ -24,7 +24,7 @@ class UtilHelperTest(TestCase):
 
     def test_generate_dummy_arn_random_account_id(self):
         """Assert generation of an ARN without a specified account ID."""
-        arn = helper.generate_dummy_arn(generate_account_id=True)
+        arn = helper.generate_dummy_arn()
         account_id = aws.AwsArn(arn).account_id
         self.assertIn(account_id, arn)
 

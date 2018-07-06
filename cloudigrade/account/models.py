@@ -18,6 +18,12 @@ class Account(BasePolymorphicModel):
         db_index=True,
         null=False,
     )
+    name = models.CharField(
+        max_length=256,
+        null=True,
+        blank=True,
+        db_index=True
+    )
 
 
 class Instance(BasePolymorphicModel):

@@ -54,7 +54,7 @@ class UtilAwsArnTest(TestCase):
 
     def test_parse_arn_without_region_or_account(self):
         """Assert successful ARN parsing without a region or an account id."""
-        mock_arn = helper.generate_dummy_arn()
+        mock_arn = helper.generate_dummy_arn(account_id='')
         arn_object = AwsArn(mock_arn)
 
         region = arn_object.region
