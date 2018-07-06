@@ -39,8 +39,8 @@ class AnalyzeLogTest(TestCase):
         """Test processing a CloudTrail log with all data included."""
         mock_queue_url = 'https://sqs.queue.url'
         mock_receipt_handle = str(uuid.uuid4())
-        mock_instance_id = str(uuid.uuid4())
-        mock_instance_id2 = str(uuid.uuid4())
+        mock_instance_id = util_helper.generate_dummy_instance_id()
+        mock_instance_id2 = util_helper.generate_dummy_instance_id()
         mock_region = random.choice(util_helper.SOME_AWS_REGIONS)
         mock_event_type = 'RunInstances'
         now = datetime.datetime.utcnow()
@@ -50,7 +50,7 @@ class AnalyzeLogTest(TestCase):
             minute=now.minute, second=now.second, tzinfo=tz.tzutc()
         )
         mock_subnet = 'subnet-9000'
-        mock_ec2_ami_id = str(uuid.uuid4())
+        mock_ec2_ami_id = util_helper.generate_dummy_image_id()
         mock_instance_type = 't2.nano'
 
         mock_instance = util_helper.generate_mock_ec2_instance(
@@ -179,7 +179,7 @@ class AnalyzeLogTest(TestCase):
             self.assertEqual(event.event_type, InstanceEvent.TYPE.power_on)
             self.assertEqual(event.occurred_at, mock_occurred_at)
             self.assertEqual(event.subnet, mock_subnet)
-            self.assertEqual(event.ec2_ami_id, mock_ec2_ami_id)
+            self.assertEqual(event.machineimage.ec2_ami_id, mock_ec2_ami_id)
             self.assertEqual(event.instance_type, mock_instance_type)
 
     @patch('analyzer.tasks.start_image_inspection')
@@ -194,7 +194,7 @@ class AnalyzeLogTest(TestCase):
         """Test processing a CloudTrail log with missing instance data."""
         mock_queue_url = 'https://sqs.queue.url'
         mock_receipt_handle = str(uuid.uuid4())
-        mock_instance_id = str(uuid.uuid4())
+        mock_instance_id = util_helper.generate_dummy_instance_id()
         mock_region = random.choice(util_helper.SOME_AWS_REGIONS)
         mock_event_type = 'StartInstances'
         now = datetime.datetime.utcnow()
@@ -204,7 +204,7 @@ class AnalyzeLogTest(TestCase):
             minute=now.minute, second=now.second, tzinfo=tz.tzutc()
         )
         mock_subnet = 'subnet-9000'
-        mock_ec2_ami_id = str(uuid.uuid4())
+        mock_ec2_ami_id = util_helper.generate_dummy_image_id()
         mock_instance_type = 't2.nano'
 
         mock_instance = util_helper.generate_mock_ec2_instance(
@@ -334,7 +334,7 @@ class AnalyzeLogTest(TestCase):
             self.assertEqual(event.event_type, InstanceEvent.TYPE.power_on)
             self.assertEqual(event.occurred_at, mock_occurred_at)
             self.assertEqual(event.subnet, mock_subnet)
-            self.assertEqual(event.ec2_ami_id, mock_ec2_ami_id)
+            self.assertEqual(event.machineimage.ec2_ami_id, mock_ec2_ami_id)
             self.assertEqual(event.instance_type, mock_instance_type)
 
     @patch('analyzer.tasks.aws.delete_message_from_queue')
@@ -343,7 +343,7 @@ class AnalyzeLogTest(TestCase):
     def test_command_output_no_log_content(
             self, mock_receive, mock_s3, mock_del):
         """Test that a non-log is not processed."""
-        mock_instance_id = str(uuid.uuid4())
+        mock_instance_id = util_helper.generate_dummy_instance_id()
         mock_queue_url = 'https://sqs.queue.url'
         mock_receipt_handle = str(uuid.uuid4())
 
@@ -389,7 +389,7 @@ class AnalyzeLogTest(TestCase):
     def test_command_output_non_on_off_events(
             self, mock_receive, mock_s3, mock_del):
         """Test that non on/off events are not processed."""
-        mock_instance_id = str(uuid.uuid4())
+        mock_instance_id = util_helper.generate_dummy_instance_id()
         mock_queue_url = 'https://sqs.queue.url'
         mock_receipt_handle = str(uuid.uuid4())
 

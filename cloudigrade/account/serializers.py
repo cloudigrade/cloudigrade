@@ -195,7 +195,7 @@ class AwsInstanceEventSerializer(HyperlinkedModelSerializer):
             'instance',
             'id',
             'subnet',
-            'ec2_ami_id',
+            'machineimage',
             'instance_type',
             'event_type',
             'occurred_at'
@@ -204,7 +204,7 @@ class AwsInstanceEventSerializer(HyperlinkedModelSerializer):
             'instance',
             'id',
             'subnet',
-            'ec2_ami_id',
+            'machineimage',
             'instance_type',
             'event_type',
             'occurred_at'

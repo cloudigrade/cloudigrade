@@ -54,6 +54,9 @@ def save_instance_events(account, instance_data, region, events=None):
     """
     Save provided events, and create the instance object if it does not exist.
 
+    Note: This function assumes the images related to the instance events have
+    already been created and saved.
+
     Args:
         account (AwsAccount): The account that owns the instance that spawned
             the data for these InstanceEvents.
@@ -71,29 +74,46 @@ def save_instance_events(account, instance_data, region, events=None):
             instance_data, dict) else instance_data.instance_id,
         region=region,
     )
+
     if events is None:
         # Assume this is the initial event
+        machineimage = AwsMachineImage.objects.get(
+            ec2_ami_id=instance_data['ImageId']
+        )
         event = AwsInstanceEvent(
             instance=instance,
+            machineimage=machineimage,
             event_type=InstanceEvent.TYPE.power_on,
             occurred_at=timezone.now(),
             subnet=instance_data['SubnetId'],
-            ec2_ami_id=instance_data['ImageId'],
             instance_type=instance_data['InstanceType'],
         )
         event.save()
     else:
         for event in events:
+            machineimage = AwsMachineImage.objects.get(
+                ec2_ami_id=event['ec2_ami_id']
+            )
             event = AwsInstanceEvent(
                 instance=instance,
+                machineimage=machineimage,
                 event_type=event['event_type'],
                 occurred_at=event['occurred_at'],
                 subnet=event['subnet'],
-                ec2_ami_id=event['ec2_ami_id'],
                 instance_type=event['instance_type'],
             )
             event.save()
     return instance
+
+
+# def get_or_create_awsmachineimage(account, ec2_ami_id):
+#     image = AwsMachineImage.objects.get(ec2_ami_id=ec2_ami_id)
+#     if image is None:
+#         image = AwsMachineImage.objects.create(
+#             account=account,
+#             ec2_ami_id=ec2_ami_id
+#         )
+#     return image
 
 
 def create_new_machine_images(account, instances_data):
