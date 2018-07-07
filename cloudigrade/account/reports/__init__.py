@@ -245,9 +245,9 @@ def get_account_overview(account, start, end):
                 image = AwsMachineImage.objects.get(ec2_ami_id=event.ec2_ami_id)
                 for tag in image.tags.all():
                     if tag.description == 'rhel':
-                        rhel.append(image)
+                        rhel.append(image.id)
                     if tag.description == 'openshift':
-                        openshift.append(image)
+                        openshift.append(image.id)
         # grab the totals
         total_images = len(set(images))
         total_instances = len(set(instances))
