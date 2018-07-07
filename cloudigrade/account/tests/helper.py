@@ -1,8 +1,7 @@
 """Helper functions for generating test data."""
 import random
 
-from account.models import (Account,
-                            AwsAccount,
+from account.models import (AwsAccount,
                             AwsInstance,
                             AwsInstanceEvent,
                             AwsMachineImage,
@@ -39,29 +38,6 @@ def generate_aws_account(arn=None, aws_account_id=None, user=None, name=None):
         aws_account_id=aws.AwsArn(arn).account_id,
         user=user,
         name=name,
-    )
-
-
-def generate_account(user=None, name=None):
-    """
-    Generate an Account for testing.
-
-    Any optional arguments not provided will be randomly generated.
-
-    Args:
-        user (User): Optional Django auth User to be this account's owner.
-        name (str): Optional name given to the account.
-
-    Returns:
-        Account: The created Account.
-
-    """
-    if user is None:
-        user = helper.generate_test_user()
-
-    return Account.objects.create(
-        user=user,
-        name=name
     )
 
 

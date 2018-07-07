@@ -365,6 +365,11 @@ class GetCloudAccountOverview(TestCase):
         self.account_on_end = account_helper.generate_aws_account()
         self.account_on_end.created_at = self.end
         self.account_on_end.save()
+        self.windows_image = account_helper.generate_aws_image(
+            self.account,
+            is_encrypted=False,
+            is_windows=True,
+        )
         self.rhel_image = account_helper.generate_aws_image(
             self.account,
             is_encrypted=False,
@@ -388,23 +393,6 @@ class GetCloudAccountOverview(TestCase):
             is_openshift=True)
         self.instance_1 = account_helper.generate_aws_instance(self.account)
         self.instance_2 = account_helper.generate_aws_instance(self.account)
-
-    def test_validate_account_created_before_end(self):
-        """Test that an account created before the end date is valid."""
-        is_valid = reports.validate_account_creation(self.account, self.end)
-        self.assertEqual(is_valid, True)
-
-    def test_validate_account_created_after_end(self):
-        """Test that an account created after the end is not valid."""
-        is_valid = reports.validate_account_creation(self.account_after_end,
-                                                     self.end)
-        self.assertEqual(is_valid, False)
-
-    def test_validate_account_created_on_end(self):
-        """Test that an account created on the end date is not valid."""
-        is_valid = reports.validate_account_creation(self.account_on_end,
-                                                     self.end)
-        self.assertEqual(is_valid, False)
 
     def test_get_cloud_account_overview_no_events(self):
         """Assert an overview of an account with no events returns 0s."""
@@ -432,7 +420,8 @@ class GetCloudAccountOverview(TestCase):
             ),
         )
         account_helper.generate_aws_instance_events(
-            self.instance_1, powered_times
+            self.instance_1, powered_times,
+            self.windows_image.ec2_ami_id
         )
         overview = reports.get_account_overview(
             self.account, self.start, self.end)
@@ -458,7 +447,8 @@ class GetCloudAccountOverview(TestCase):
             ),
         )
         account_helper.generate_aws_instance_events(
-            self.instance_1, powered_times
+            self.instance_1, powered_times,
+            self.windows_image.ec2_ami_id
         )
         # in addition to instance_1's events, we are creating an event for
         # instance_2 with a rhel_image
@@ -491,7 +481,8 @@ class GetCloudAccountOverview(TestCase):
             ),
         )
         account_helper.generate_aws_instance_events(
-            self.instance_1, powered_times
+            self.instance_1, powered_times,
+            self.windows_image.ec2_ami_id
         )
         # in addition to instance_1's events, we are creating an event for
         # instance_2 with an openshift_image
@@ -524,7 +515,8 @@ class GetCloudAccountOverview(TestCase):
             ),
         )
         account_helper.generate_aws_instance_events(
-            self.instance_1, powered_times
+            self.instance_1, powered_times,
+            self.windows_image.ec2_ami_id
         )
         # in addition to instance_1's events, we are creating an event for
         # instance_2 with a rhel & openshift_image
@@ -624,25 +616,6 @@ class GetCloudAccountOverview(TestCase):
              'instances': 2,
              'rhel_instances': 1,
              'openshift_instances': 2}
-        self.assertEqual(expected_overview, overview)
-
-    def test_get_cloud_account_overview_unsupported_cloud(self):
-        """Assert an overview of an unsupported cloud returns None."""
-        account = account_helper.generate_account(user=None,
-                                                  name='test-account')
-        overview = reports.get_account_overview(
-            account, self.start, self.end)
-        expected_overview = \
-            {'id': account.id,
-             'user_id': account.user_id,
-             'type': 'unknown',
-             'arn': 'unsupported',
-             'creation_date': account.created_at,
-             'name': account.name,
-             'images': None,
-             'instances': None,
-             'rhel_instances': None,
-             'openshift_instances': None}
         self.assertEqual(expected_overview, overview)
 
     def test_get_cloud_account_overview_account_creation_after(self):

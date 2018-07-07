@@ -979,6 +979,11 @@ class CloudAccountOverviewViewSetTest(TestCase):
             account_helper.generate_aws_instance(account=self.account3)
         self.instance4 = \
             account_helper.generate_aws_instance(account=self.account4)
+        self.windows_image = account_helper.generate_aws_image(
+            self.account1,
+            is_encrypted=False,
+            is_windows=True,
+        )
         self.rhel_image = account_helper.generate_aws_image(
             self.account2,
             is_encrypted=False,
@@ -1002,7 +1007,9 @@ class CloudAccountOverviewViewSetTest(TestCase):
             is_openshift=True)
         self.event1 = \
             account_helper.generate_single_aws_instance_event(
-                instance=self.instance1, powered_time=powered_time)
+                instance=self.instance1, powered_time=powered_time,
+                event_type=InstanceEvent.TYPE.power_on,
+                ec2_ami_id=self.windows_image.ec2_ami_id)
         self.event2 = \
             account_helper.generate_single_aws_instance_event(
                 instance=self.instance2, powered_time=powered_time,
