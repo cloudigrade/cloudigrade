@@ -39,6 +39,9 @@ def delete_message_from_queue(queue_url, messages):
         dict: The response from the delete call.
 
     """
+    if not bool(messages):
+        return {}
+
     region = settings.SQS_DEFAULT_REGION
     sqs_queue = boto3.resource('sqs', region_name=region).Queue(queue_url)
 
