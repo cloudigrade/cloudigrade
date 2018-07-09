@@ -45,7 +45,8 @@ def delete_message_from_queue(queue_url, messages):
     """
     if not messages:
         logger.debug(
-            _('No messages to delete because messages list was empty.'))
+            _('{0} received no messages for deletion.   Queue URL {1}').format(
+                'delete_message_from_queue', queue_url))
         return {}
 
     region = settings.SQS_DEFAULT_REGION
