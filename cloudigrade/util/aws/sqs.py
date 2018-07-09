@@ -1,8 +1,12 @@
 """Helper utility module to wrap up common AWS SQS operations."""
 import json
+import logging
 
 import boto3
 from django.conf import settings
+from django.utils.translation import gettext as _
+
+logger = logging.getLogger(__name__)
 
 
 def receive_message_from_queue(queue_url):
@@ -39,7 +43,9 @@ def delete_message_from_queue(queue_url, messages):
         dict: The response from the delete call.
 
     """
-    if not bool(messages):
+    if not messages:
+        logger.debug(
+            _('No messages to delete because messages list was empty.'))
         return {}
 
     region = settings.SQS_DEFAULT_REGION
