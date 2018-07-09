@@ -309,3 +309,14 @@ class ReportSerializer(Serializer):
     def generate(self):
         """Generate the usage report and return the results."""
         return reports.get_time_usage(**self.validated_data)
+
+
+class CloudAccountOverviewSerializer(Serializer):
+    """Serialize a cloud account overview for the API."""
+
+    start = serializers.DateTimeField(default_timezone=tz.tzutc())
+    end = serializers.DateTimeField(default_timezone=tz.tzutc())
+
+    def get_overview(self, account):
+        """Generate the cloud account overview and return the results."""
+        return reports.get_account_overview(account, **self.validated_data)
