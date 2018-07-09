@@ -96,13 +96,13 @@ class GenerateAwsInstanceEventsTest(TestCase):
         self.assertEqual(events[2].event_type, InstanceEvent.TYPE.power_off)
         self.assertEqual(events[3].event_type, InstanceEvent.TYPE.power_on)
 
-        self.assertIsNotNone(events[0].ec2_ami_id)
+        self.assertIsNotNone(events[0].machineimage)
         self.assertIsNotNone(events[0].instance_type)
         self.assertIsNotNone(events[0].subnet)
 
         # Assert they all have the same AMI, subnet, and instance type.
         for event in events[1:]:
-            self.assertEqual(event.ec2_ami_id, events[0].ec2_ami_id)
+            self.assertEqual(event.machineimage, events[0].machineimage)
             self.assertEqual(event.instance_type, events[0].instance_type)
             self.assertEqual(event.subnet, events[0].subnet)
 
@@ -131,6 +131,6 @@ class GenerateAwsInstanceEventsTest(TestCase):
         # already be covered by ``test_generate_events_with_some_times``.
         # Here we only care that argument values were set correctly.
         for event in events:
-            self.assertEqual(event.ec2_ami_id, ec2_ami_id)
+            self.assertEqual(event.machineimage.ec2_ami_id, ec2_ami_id)
             self.assertEqual(event.instance_type, instance_type)
             self.assertEqual(event.subnet, subnet)

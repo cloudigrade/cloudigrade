@@ -1,8 +1,10 @@
 """Collection of tests for custom DRF views in the account app."""
 from unittest.mock import Mock, patch
+from urllib.parse import urlparse
 
 import faker
 from django.test import TestCase
+from django.urls import resolve
 from rest_framework import exceptions, status
 from rest_framework.test import APIRequestFactory, force_authenticate
 
@@ -745,9 +747,13 @@ class InstanceEventViewSetTest(TestCase):
             self.assertEqual(
                 response.data['subnet'], event.subnet
             )
-            self.assertEqual(
-                response.data['ec2_ami_id'], event.ec2_ami_id
+            __, machineimage_args, machineimage_kwargs = resolve(
+                urlparse(response.data['machineimage'])[2]
             )
+            machineimage = AwsMachineImage.objects.get(
+                *machineimage_args, **machineimage_kwargs
+            )
+            self.assertEqual(machineimage, event.machineimage)
             self.assertEqual(
                 response.data['event_type'], event.event_type
             )
