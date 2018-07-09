@@ -26,6 +26,43 @@ class Account(BasePolymorphicModel):
     )
 
 
+class ImageTag(BaseModel):
+    """Tag types for images."""
+
+    description = models.CharField(
+        max_length=32,
+        null=False,
+        blank=False
+    )
+
+
+class MachineImage(BasePolymorphicModel):
+    """Base model for a cloud VM image."""
+
+    PENDING = 'pending'
+    PREPARING = 'preparing'
+    INSPECTING = 'inspecting'
+    INSPECTED = 'inspected'
+    STATUS_CHOICES = (
+        (PENDING, 'Pending Inspection'),
+        (PREPARING, 'Preparing for Inspection'),
+        (INSPECTING, 'Being Inspected'),
+        (INSPECTED, 'Inspected'),
+    )
+    account = models.ForeignKey(
+        Account,
+        on_delete=models.CASCADE,
+        db_index=True,
+        null=False,
+    )
+    tags = models.ManyToManyField(ImageTag, blank=True)
+    inspection_json = models.TextField(null=True,
+                                       blank=True)
+    is_encrypted = models.NullBooleanField()
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES,
+                              default=PENDING)
+
+
 class Instance(BasePolymorphicModel):
     """Base model for a compute/VM instance in a cloud."""
 
@@ -50,6 +87,12 @@ class InstanceEvent(BasePolymorphicModel):
         db_index=True,
         null=False,
     )
+    machineimage = models.ForeignKey(
+        MachineImage,
+        on_delete=models.CASCADE,
+        db_index=True,
+        null=False,
+    )
     event_type = models.CharField(
         max_length=32,
         choices=TYPE,
@@ -66,43 +109,6 @@ class InstanceEvent(BasePolymorphicModel):
 
         This may be implementation-specific to particular cloud providers.
         """
-
-
-class ImageTag(BaseModel):
-    """Tag types for images."""
-
-    description = models.CharField(
-        max_length=32,
-        null=False,
-        blank=False
-    )
-
-
-class MachineImage(BasePolymorphicModel):
-    """Base Class for A cloud VM image."""
-
-    PENDING = 'pending'
-    PREPARING = 'preparing'
-    INSPECTING = 'inspecting'
-    INSPECTED = 'inspected'
-    STATUS_CHOICES = (
-        (PENDING, 'Pending Inspection'),
-        (PREPARING, 'Preparing for Inspection'),
-        (INSPECTING, 'Being Inspected'),
-        (INSPECTED, 'Inspected'),
-    )
-    account = models.ForeignKey(
-        Account,
-        on_delete=models.CASCADE,
-        db_index=True,
-        null=False,
-    )
-    tags = models.ManyToManyField(ImageTag, blank=True)
-    inspection_json = models.TextField(null=True,
-                                       blank=True)
-    is_encrypted = models.NullBooleanField()
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES,
-                              default=PENDING)
 
 
 class AwsAccount(Account):
@@ -171,7 +177,6 @@ class AwsInstanceEvent(InstanceEvent):
     """Event model for an event triggered by an AwsInstance."""
 
     subnet = models.CharField(max_length=256, null=False, blank=False)
-    ec2_ami_id = models.CharField(max_length=256, null=False, blank=False)
     instance_type = models.CharField(max_length=64, null=False, blank=False)
 
     @property
@@ -191,4 +196,4 @@ class AwsInstanceEvent(InstanceEvent):
             str: the computed product identifier
 
         """
-        return f'aws-{self.ec2_ami_id}-{self.instance_type}'
+        return f'aws-{self.machineimage.id}-{self.instance_type}'

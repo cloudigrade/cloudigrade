@@ -98,12 +98,16 @@ def generate_single_aws_instance_event(
     if event_type is None:
         event_type = InstanceEvent.TYPE.power_off
 
+    image, __ = AwsMachineImage.objects.get_or_create(
+        account=instance.account,
+        ec2_ami_id=ec2_ami_id,
+    )
     event = AwsInstanceEvent.objects.create(
         instance=instance,
+        machineimage=image,
         event_type=event_type,
         occurred_at=powered_time,
         subnet=subnet,
-        ec2_ami_id=ec2_ami_id,
         instance_type=instance_type,
     )
     return event

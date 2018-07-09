@@ -281,7 +281,7 @@ class GetTimeUsageAws1a2iTest(TestCase, GetTimeUsageAwsTestMixin):
         )
 
         identifier = events[0].product_identifier
-        ec2_ami_id = events[0].ec2_ami_id
+        ec2_ami_id = events[0].machineimage.ec2_ami_id
         instance_type = events[0].instance_type
         subnet = events[0].subnet
 
@@ -324,7 +324,7 @@ class GetTimeUsageAws1a2iTest(TestCase, GetTimeUsageAwsTestMixin):
         )
 
         identifier = events[0].product_identifier
-        ec2_ami_id = events[0].ec2_ami_id
+        ec2_ami_id = events[0].machineimage.ec2_ami_id
         instance_type = events[0].instance_type
         subnet = events[0].subnet
 

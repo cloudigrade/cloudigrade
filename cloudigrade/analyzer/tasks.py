@@ -159,14 +159,14 @@ def _save_results(instances):
                 AwsAccount.objects.get(aws_account_id=account_id)
         account = accounts[account_id]
 
+        image, created = save_machine_images(
+            account, data['instance_details'].image_id)
         save_instance_events(
             account,
             data['instance_details'],
             data['region'],
             data['events']
         )
-        image, created = save_machine_images(
-            account, data['instance_details'].image_id)
         if is_instance_windows(data['instance_details']):
             image = tag_windows(image)
         if image.status is not image.INSPECTED and created:
