@@ -5,6 +5,7 @@ from django.urls import include, path
 from rest_framework import routers
 
 from account.views import (AccountViewSet,
+                           CloudAccountOverviewViewSet,
                            InstanceEventViewSet,
                            InstanceViewSet,
                            MachineImageViewSet,
@@ -18,6 +19,8 @@ router.register(r'instance', InstanceViewSet)
 router.register(r'image', MachineImageViewSet)
 router.register(r'report', ReportViewSet, base_name='report')
 router.register(r'sysconfig', SysconfigViewSet, base_name='sysconfig')
+router.register(r'report/accounts', CloudAccountOverviewViewSet,
+                base_name='report-accounts')
 
 urlpatterns = [
     url(r'^api/v1/', include(router.urls)),

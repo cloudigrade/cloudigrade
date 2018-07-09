@@ -172,7 +172,9 @@ def generate_aws_instance_events(
 def generate_aws_image(account,
                        is_encrypted=False,
                        is_windows=False,
-                       ec2_ami_id=None):
+                       ec2_ami_id=None,
+                       is_rhel=False,
+                       is_openshift=False):
     """
     Generate an AwsMachineImage for the AwsAccount for testing.
 
@@ -198,6 +200,14 @@ def generate_aws_image(account,
     if is_windows:
         image.tags.add(ImageTag.objects.filter(
             description='windows').first())
+        image.save()
+    if is_rhel:
+        image.tags.add(ImageTag.objects.filter(
+            description='rhel').first())
+        image.save()
+    if is_openshift:
+        image.tags.add(ImageTag.objects.filter(
+            description='openshift').first())
         image.save()
 
     return image

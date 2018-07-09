@@ -1,12 +1,20 @@
 """Cloud provider-agnostic report-building functionality."""
 import collections
 import functools
+import logging
 import operator
 
 from django.db import models
+from django.utils.translation import gettext as _
 
-from account.models import Instance, InstanceEvent
+from account import AWS_PROVIDER_STRING
+from account.models import (Instance,
+                            AwsAccount,
+                            AwsMachineImage,
+                            InstanceEvent)
 from account.reports import helper
+
+logger = logging.getLogger(__name__)
 
 
 def get_time_usage(start, end, cloud_provider, cloud_account_id):
@@ -179,3 +187,81 @@ def _calculate_instance_usage(start, end, events):
         time_running += diff.total_seconds()
 
     return time_running
+
+def validate_event(event, start):
+    """
+    Ensure that the event is relevant to our time frame.
+
+    Args:
+        event: (InstanceEvent): The event object to evaluate
+        start (datetime.datetime): Start time (inclusive)
+
+    Returns:
+        bool: A boolean regarding whether or not we should inspect the event further.
+    """
+    valid_event = True
+    # if the event occurred outside of our specified period (ie. before start) we should
+    # only inspect it if it was a power on event
+    if event.occurred_at < start:
+        if event.event_type == InstanceEvent.TYPE.power_off:
+            valid_event = False
+    return valid_event
+
+def get_account_overview(account, start, end):
+    """
+    Generate an overview of an account over a specified amount of time.
+
+    Args:
+        account (AwsAccount): AwsAccount object
+        start (datetime.datetime): Start time (inclusive)
+        end (datetime.datetime): End time (exclusive)
+
+    Returns:
+        dict: An overview of the instances/images/rhel & openshift images for the specified
+        account during the specified time period."""
+    instances = []
+    images = []
+    rhel = []
+    openshift = []
+    # if the account was created right at or after the end time, we cannot give meaningful
+    # data about the instances/images seen during the period, therefore we need to make sure
+    # that we return None for those values
+    if end <= account.created_at:
+        logger.info(_('Account "{0}" was created after "{1}", therefore there is no data on '
+                      'its images/instances during the specified start and end dates.').format(
+            account,
+            end))
+        total_images, total_instances, total_rhel, total_openshift = None, None, None, None
+    else:
+        cloud_helper = helper.get_report_helper(AWS_PROVIDER_STRING, account.aws_account_id)
+        # _get_relevant_events will return the events in between the start & end times & if
+        # no events are present during this period, it will return the last event that occurred
+        events = _get_relevant_events(start, end, cloud_helper)
+        for event in events:
+            valid_event = validate_event(event, start)
+            if valid_event:
+                instances.append(event.instance.id)
+                images.append(event.machineimage.id)
+                for tag in event.machineimage.tags.all():
+                    if tag.description == 'rhel':
+                        rhel.append(event.machineimage.id)
+                    if tag.description == 'openshift':
+                        openshift.append(event.machineimage.id)
+        # grab the totals
+        total_images = len(set(images))
+        total_instances = len(set(instances))
+        total_rhel = len(set(rhel))
+        total_openshift = len(set(openshift))
+
+    cloud_account = {'id': account.aws_account_id,
+                     'user_id': account.user_id,
+                     'type': AWS_PROVIDER_STRING,
+                     'arn': account.account_arn,
+                     'creation_date': account.created_at,
+                     'name': account.name,
+                     'images': total_images,
+                     'instances': total_instances,
+                     'rhel_instances': total_rhel,
+                     'openshift_instances': total_openshift}
+
+    return cloud_account
