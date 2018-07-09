@@ -166,7 +166,14 @@ def _calculate_instance_usage(start, end, events):
     time_running = 0.0
 
     sorted_events = sorted(events, key=lambda e: e.occurred_at)
-    for event in sorted_events:
+
+    before_start = [event for event in sorted_events
+                    if event.occurred_at < start][-1:]
+    after_start = [event for event in sorted_events
+                   if event.occurred_at >= start and event.occurred_at < end]
+    sorted_trimmed_events = before_start + after_start
+
+    for event in sorted_trimmed_events:
         # whichever is later: the first event or the reported period start
         event_time = max(start, event.occurred_at)
 
