@@ -1026,50 +1026,50 @@ class CloudAccountOverviewViewSetTest(TestCase):
                 event_type=InstanceEvent.TYPE.power_on,
                 ec2_ami_id=self.openshift_and_rhel_image.ec2_ami_id)
         self.factory = APIRequestFactory()
-        self.account1_expected_overview = \
-            {'id': self.account1.aws_account_id,
-             'user_id': self.account1.user_id,
-             'type': 'aws',
-             'arn': self.account1.account_arn,
-             'creation_date': self.account1.created_at,
-             'name': self.account1.name,
-             'images': 1,
-             'instances': 1,
-             'rhel_instances': 0,
-             'openshift_instances': 0}
-        self.account2_expected_overview = \
-            {'id': self.account2.aws_account_id,
-             'user_id': self.account2.user_id,
-             'type': 'aws',
-             'arn': self.account2.account_arn,
-             'creation_date': self.account2.created_at,
-             'name': self.account2.name,
-             'images': 1,
-             'instances': 1,
-             'rhel_instances': 1,
-             'openshift_instances': 0}
-        self.account3_expected_overview = \
-            {'id': self.account3.aws_account_id,
-             'user_id': self.account3.user_id,
-             'type': 'aws',
-             'arn': self.account3.account_arn,
-             'creation_date': self.account3.created_at,
-             'name': self.account3.name,
-             'images': 1,
-             'instances': 1,
-             'rhel_instances': 0,
-             'openshift_instances': 1}
-        self.account4_expected_overview = \
-            {'id': self.account4.aws_account_id,
-             'user_id': self.account4.user_id,
-             'type': 'aws',
-             'arn': self.account4.account_arn,
-             'creation_date': self.account4.created_at,
-             'name': self.account4.name,
-             'images': 1,
-             'instances': 1,
-             'rhel_instances': 1,
-             'openshift_instances': 1}
+        self.account1_expected_overview = {
+            'id': self.account1.aws_account_id,
+            'user_id': self.account1.user_id,
+            'type': 'aws',
+            'arn': self.account1.account_arn,
+            'creation_date': self.account1.created_at,
+            'name': self.account1.name,
+            'images': 1,
+            'instances': 1,
+            'rhel_instances': 0,
+            'openshift_instances': 0}
+        self.account2_expected_overview = {
+            'id': self.account2.aws_account_id,
+            'user_id': self.account2.user_id,
+            'type': 'aws',
+            'arn': self.account2.account_arn,
+            'creation_date': self.account2.created_at,
+            'name': self.account2.name,
+            'images': 1,
+            'instances': 1,
+            'rhel_instances': 1,
+            'openshift_instances': 0}
+        self.account3_expected_overview = {
+            'id': self.account3.aws_account_id,
+            'user_id': self.account3.user_id,
+            'type': 'aws',
+            'arn': self.account3.account_arn,
+            'creation_date': self.account3.created_at,
+            'name': self.account3.name,
+            'images': 1,
+            'instances': 1,
+            'rhel_instances': 0,
+            'openshift_instances': 1}
+        self.account4_expected_overview = {
+            'id': self.account4.aws_account_id,
+            'user_id': self.account4.user_id,
+            'type': 'aws',
+            'arn': self.account4.account_arn,
+            'creation_date': self.account4.created_at,
+            'name': self.account4.name,
+            'images': 1,
+            'instances': 1,
+            'rhel_instances': 1,
+            'openshift_instances': 1}
 
     def get_overview_list_response(self, user, data=None):
         """
