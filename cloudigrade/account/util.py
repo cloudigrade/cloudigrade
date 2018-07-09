@@ -106,16 +106,6 @@ def save_instance_events(account, instance_data, region, events=None):
     return instance
 
 
-# def get_or_create_awsmachineimage(account, ec2_ami_id):
-#     image = AwsMachineImage.objects.get(ec2_ami_id=ec2_ami_id)
-#     if image is None:
-#         image = AwsMachineImage.objects.create(
-#             account=account,
-#             ec2_ami_id=ec2_ami_id
-#         )
-#     return image
-
-
 def create_new_machine_images(account, instances_data):
     """
     Create AwsMachineImage that have not been seen before.
