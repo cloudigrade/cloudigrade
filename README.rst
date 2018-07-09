@@ -108,7 +108,7 @@ If using a system that has dnf, try the following commands:
     sudo dnf install openssl
     pip uninstall pycurl
     export PYCURL_SSL_LIBRARY=openssl
-    pip --no-cache-dir install-option="--with-openssl" pycurl
+    pip install --no-cache-dir install-option="--with-openssl" pycurl
 
 Try the aforementioned import commands again, and all should be good. If not, kindly reach out to another cloudigrade developer to seek assistance!
 
