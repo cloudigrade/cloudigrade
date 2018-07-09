@@ -412,7 +412,7 @@ class GetCloudAccountOverview(TestCase):
         self.assertEqual(expected_overview, overview)
 
     def test_get_cloud_account_overview_with_events(self):
-        """Assert an account overview with events reports correctly."""
+        """Assert an account overview reports instances/images correctly."""
         powered_times = (
             (
                 util_helper.utc_dt(2018, 1, 10, 0, 0, 0),
@@ -439,7 +439,7 @@ class GetCloudAccountOverview(TestCase):
         self.assertEqual(expected_overview, overview)
 
     def test_get_cloud_account_overview_with_rhel_image(self):
-        """Assert an account overview with events reports correctly."""
+        """Assert an account overview with events reports rhel correctly."""
         powered_times = (
             (
                 util_helper.utc_dt(2018, 1, 10, 0, 0, 0),
@@ -507,7 +507,7 @@ class GetCloudAccountOverview(TestCase):
         self.assertEqual(expected_overview, overview)
 
     def test_get_cloud_account_overview_with_openshift_and_rhel_image(self):
-        """Assert an account overview with events reports correctly."""
+        """Assert an account overview reports openshift and rhel correctly."""
         powered_times = (
             (
                 util_helper.utc_dt(2018, 1, 10, 0, 0, 0),
@@ -541,7 +541,7 @@ class GetCloudAccountOverview(TestCase):
         self.assertEqual(expected_overview, overview)
 
     def test_get_cloud_account_overview_with_two_instances_same_image(self):
-        """Assert an account overview with events reports correctly."""
+        """Assert an account overview reports images correctly."""
         # generate event for instance_1 with the rhel/openshift image
         account_helper.generate_single_aws_instance_event(
             self.instance_1, self.start, InstanceEvent.TYPE.power_on,
@@ -567,7 +567,7 @@ class GetCloudAccountOverview(TestCase):
         self.assertEqual(expected_overview, overview)
 
     def test_get_cloud_account_overview_with_rhel(self):
-        """Assert an account overview with events reports correctly."""
+        """Assert an account overview reports rhel correctly."""
         # generate event for instance_1 with the rhel/openshift image
         account_helper.generate_single_aws_instance_event(
             self.instance_1, self.start, InstanceEvent.TYPE.power_on,
@@ -593,7 +593,7 @@ class GetCloudAccountOverview(TestCase):
         self.assertEqual(expected_overview, overview)
 
     def test_get_cloud_account_overview_with_openshift(self):
-        """Assert an account overview with events reports correctly."""
+        """Assert an account overview reports openshift correctly."""
         # generate event for instance_1 with the rhel/openshift image
         account_helper.generate_single_aws_instance_event(
             self.instance_1, self.start, InstanceEvent.TYPE.power_on,

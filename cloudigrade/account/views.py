@@ -176,4 +176,4 @@ class CloudAccountOverviewViewSet(viewsets.ReadOnlyModelViewSet):
         for account in accounts:
             account_overview = serializer.get_overview(account)
             overviews['cloud_account_overviews'].append(account_overview)
-        return Response(overviews, status=status.HTTP_200_OK)
+        return Response(overviews)

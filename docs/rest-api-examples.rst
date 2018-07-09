@@ -33,7 +33,7 @@ The following resource paths are currently available:
 
 -  ``/api/v1/account/`` returns account data
 -  ``/api/v1/report/`` returns usage report data
--  ``/api/v1/report/accounts`` returns account overview data
+-  ``/api/v1/report/accounts/`` returns account overview data
 -  ``/auth/`` is for authentication
 
 User Account Setup

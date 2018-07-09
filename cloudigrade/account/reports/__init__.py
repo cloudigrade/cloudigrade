@@ -212,9 +212,9 @@ def get_account_overview(account, start, end):
     Generate an overview of an account over a specified amount of time.
 
     Args:
+        account (AwsAccount): AwsAccount object
         start (datetime.datetime): Start time (inclusive)
         end (datetime.datetime): End time (exclusive)
-        account (AwsAccount): AwsAccount object
 
     Returns:
         dict: An overview of the instances/images/rhel & openshift images for the specified
