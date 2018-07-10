@@ -46,6 +46,11 @@ class ReportHelper(ABC):
         """
         self.cloud_account_id = cloud_account_id
 
+    @property
+    @abstractmethod
+    def account(self):
+        """Property referencing the relevant Account object."""
+
     @abstractmethod
     def assert_account_exists(self):
         """Assert that the cloud-specific account ID exists in cloudigrade."""
@@ -92,11 +97,15 @@ class ReportHelper(ABC):
 class AwsReportHelper(ReportHelper):
     """Report helper for AWS."""
 
+    @property
+    def account(self):
+        """Property referencing the relevant Account object."""
+        return AwsAccount.objects.filter(aws_account_id=self.cloud_account_id)\
+            .first()
+
     def assert_account_exists(self):
         """Assert that the AWS account ID exists in cloudigrade."""
-        if not AwsAccount.objects.filter(
-                aws_account_id=self.cloud_account_id
-        ).exists():
+        if not self.account:
             raise AwsAccount.DoesNotExist()
 
     def instance_account_filter(self):
