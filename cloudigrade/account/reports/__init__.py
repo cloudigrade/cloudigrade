@@ -8,10 +8,7 @@ from django.db import models
 from django.utils.translation import gettext as _
 
 from account import AWS_PROVIDER_STRING
-from account.models import (Instance,
-                            AwsAccount,
-                            AwsMachineImage,
-                            InstanceEvent)
+from account.models import (AwsAccount, Instance, InstanceEvent)
 from account.reports import helper
 
 logger = logging.getLogger(__name__)
@@ -39,7 +36,7 @@ def get_time_usage(start, end, cloud_provider, cloud_account_id):
     cloud_helper.assert_account_exists()
 
     # Retrieve all relevant events and group into reporting-relevant buckets.
-    events = _get_relevant_events(start, end, cloud_helper)
+    events = _get_relevant_events(start, end, [cloud_helper.account.id])
     grouped_events = _group_related_events(events, cloud_helper)
 
     # Sum the calculated usage by product.
@@ -56,20 +53,20 @@ def get_time_usage(start, end, cloud_provider, cloud_account_id):
     return dict(product_times)
 
 
-def _get_relevant_events(start, end, cloud_helper):
+def _get_relevant_events(start, end, account_ids):
     """
     Get all InstanceEvents relevant to the report parameters.
 
     Args:
         start (datetime.datetime): Start time (inclusive)
         end (datetime.datetime): End time (exclusive)
-        cloud_helper (helper.ReportHelper): Helper for cloud-specific things
+        account_ids (list[int]): the relevant account ids
 
     Returns:
         list(InstanceEvent): All events relevant to the report parameters.
     """
     # Get the nearest event before the reporting period for each instance.
-    account_filter = cloud_helper.instance_account_filter()
+    account_filter = models.Q(account__id__in=account_ids)
     instances_before = Instance.objects.filter(
         account_filter & models.Q(instanceevent__occurred_at__lt=start)
     ).annotate(occurred_at=models.Max('instanceevent__occurred_at'))
@@ -82,7 +79,7 @@ def _get_relevant_events(start, end, cloud_helper):
 
     # Add a filter for the events *during* the reporting period.
     event_filters.append(
-        cloud_helper.event_account_filter() &
+        models.Q(instance__account__id__in=account_ids) &
         models.Q(occurred_at__gte=start, occurred_at__lt=end)
     )
 
@@ -240,10 +237,9 @@ def get_account_overview(account, start, end):
             end))
         total_images, total_instances, total_rhel, total_openshift = None, None, None, None
     else:
-        cloud_helper = helper.get_report_helper(AWS_PROVIDER_STRING, account.aws_account_id)
         # _get_relevant_events will return the events in between the start & end times & if
         # no events are present during this period, it will return the last event that occurred
-        events = _get_relevant_events(start, end, cloud_helper)
+        events = _get_relevant_events(start, end, [account.id])
         for event in events:
             valid_event = validate_event(event, start)
             if valid_event:
