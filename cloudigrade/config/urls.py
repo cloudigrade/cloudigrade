@@ -6,6 +6,7 @@ from rest_framework import routers
 
 from account.views import (AccountViewSet,
                            CloudAccountOverviewViewSet,
+                           DailyInstanceActivityViewSet,
                            InstanceEventViewSet,
                            InstanceViewSet,
                            MachineImageViewSet,
@@ -21,6 +22,8 @@ router.register(r'report', ReportViewSet, base_name='report')
 router.register(r'sysconfig', SysconfigViewSet, base_name='sysconfig')
 router.register(r'report/accounts', CloudAccountOverviewViewSet,
                 base_name='report-accounts')
+router.register(r'report/instances', DailyInstanceActivityViewSet,
+                base_name='report-instances')
 
 urlpatterns = [
     url(r'^api/v1/', include(router.urls)),

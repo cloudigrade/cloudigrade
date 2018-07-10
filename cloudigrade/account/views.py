@@ -177,3 +177,21 @@ class CloudAccountOverviewViewSet(viewsets.ReadOnlyModelViewSet):
             account_overview = serializer.get_overview(account)
             overviews['cloud_account_overviews'].append(account_overview)
         return Response(overviews)
+
+
+class DailyInstanceActivityViewSet(viewsets.GenericViewSet):
+    """Generate a report of daily instance activity within a time frame."""
+
+    serializer_class = serializers.DailyInstanceActivitySerializer
+
+    def list(self, request, *args, **kwargs):
+        """Run the daily instance activity report and return the results."""
+        serializer = self.get_serializer(data=request.query_params)
+        serializer.is_valid(raise_exception=True)
+        try:
+            result = serializer.generate()
+        except AwsAccount.DoesNotExist:
+            raise exceptions.NotFound()
+        except InvalidCloudProviderError as e:
+            raise exceptions.ValidationError(detail=str(e))
+        return Response(result, status=status.HTTP_200_OK)

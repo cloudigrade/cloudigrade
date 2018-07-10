@@ -1,4 +1,5 @@
 """Collection of tests for custom DRF views in the account app."""
+import uuid
 from unittest.mock import Mock, patch
 from urllib.parse import urlparse
 
@@ -6,7 +7,8 @@ import faker
 from django.test import TestCase
 from django.urls import resolve
 from rest_framework import exceptions, status
-from rest_framework.test import APIRequestFactory, force_authenticate
+from rest_framework.test import (APIClient, APIRequestFactory,
+                                 force_authenticate)
 
 from account import AWS_PROVIDER_STRING
 from account import views
@@ -1161,3 +1163,133 @@ class CloudAccountOverviewViewSetTest(TestCase):
                   'end': 'February 1'}
         response = self.get_overview_list_response(self.superuser, params)
         self.assertEqual(response.status_code, 400)
+
+
+class DailyInstanceActivityViewSetTest(TestCase):
+    """DailyInstanceActivityViewSet test case."""
+
+    def setUp(self):
+        """Set up commonly used data for each test."""
+        self.user = util_helper.generate_test_user()
+        self.other_user = util_helper.generate_test_user()
+        self.super_user = util_helper.generate_test_user(is_superuser=True)
+
+        name = faker.Faker().bs()
+        self.account = account_helper.generate_aws_account(user=self.user,
+                                                           name=name)
+
+        self.instance_rhel = account_helper.generate_aws_instance(self.account)
+        self.instance_oc = account_helper.generate_aws_instance(self.account)
+
+        self.image_plain = account_helper.generate_aws_image(self.account)
+        self.image_rhel = account_helper.generate_aws_image(
+            self.account, is_rhel=True, is_openshift=False)
+        self.image_os = account_helper.generate_aws_image(
+            self.account, is_rhel=False, is_openshift=True)
+        self.image_rhel_openshift = account_helper.generate_aws_image(
+            self.account, is_rhel=True, is_openshift=True)
+
+        # Generate activity for an instance belonging to self.user.
+        powered_times = (
+            (
+                util_helper.utc_dt(2018, 1, 2, 19, 0, 0),
+                util_helper.utc_dt(2018, 1, 4, 5, 0, 0)
+            ),
+        )
+        account_helper.generate_aws_instance_events(
+            self.instance_rhel,
+            powered_times,
+            ec2_ami_id=self.image_rhel.ec2_ami_id,
+        )
+
+        self.start = util_helper.utc_dt(2018, 1, 1, 0, 0, 0)
+        self.end = util_helper.utc_dt(2018, 2, 1, 0, 0, 0)
+
+    def get_report_response(self, as_user, start, end, user_id=None,
+                            name_pattern=None):
+        """
+        Get the daily instance activity API response for the given inputs.
+
+        Args:
+            as_user (User): Django auth user performing the request
+            start (datetime.datetime): Start time request arg
+            end (datetime.datetime): End time request arg
+            user_id (int): Optional user_id request arg
+            name_pattern (string): Optional name_pattern request arg
+
+        Returns:
+            Response for this request.
+
+        """
+        data = {
+            'start': start,
+            'end': end,
+        }
+        if user_id:
+            data['user_id'] = user_id
+        if name_pattern:
+            data['name_pattern'] = name_pattern
+
+        client = APIClient()
+        client.force_authenticate(user=as_user)
+        response = client.get('/api/v1/report/instances/', data, format='json')
+        return response
+
+    def assertNoActivity(self, response):
+        """Assert report response to include no activity."""
+        data = response.json()
+        self.assertEqual(data['instances_seen_with_rhel'], 0)
+        self.assertEqual(data['instances_seen_with_openshift'], 0)
+        self.assertEqual(sum((
+            day['rhel_runtime_seconds']
+            for day in data['daily_usage']
+        )), 0)
+        self.assertEqual(sum((
+            day['openshift_runtime_seconds']
+            for day in data['daily_usage']
+        )), 0)
+
+    def assertActivityForRhelInstance(self, response):
+        """Assert report response to include the RHEL instance from setUp."""
+        data = response.json()
+        self.assertEqual(data['instances_seen_with_rhel'], 1)
+        self.assertEqual(data['instances_seen_with_openshift'], 0)
+        self.assertEqual(sum((
+            day['rhel_runtime_seconds']
+            for day in data['daily_usage']
+        )), 122400.0)  # 122400 is the 34 hours for the powered time in setup.
+        self.assertEqual(sum((
+            day['openshift_runtime_seconds']
+            for day in data['daily_usage']
+        )), 0)
+
+    def test_no_activity_report_success(self):
+        """Assert report data when there is no activity in the period."""
+        response = self.get_report_response(self.other_user, self.start,
+                                            self.end)
+        self.assertNoActivity(response)
+
+    def test_typical_activity_report_success(self):
+        """Assert report data when there is some activity in the period."""
+        response = self.get_report_response(self.user, self.start, self.end)
+        self.assertActivityForRhelInstance(response)
+
+    def test_report_superuser_can_filter_specific_user_success(self):
+        """Assert superuser can get activity filtered for another user."""
+        response = self.get_report_response(self.super_user, self.start,
+                                            self.end, self.user.id)
+        self.assertActivityForRhelInstance(response)
+
+    def test_activity_report_with_no_matching_name_filter_success(self):
+        """Assert report data excludes not-matching account names."""
+        name_pattern = str(uuid.uuid4())
+        response = self.get_report_response(self.user, self.start, self.end,
+                                            name_pattern=name_pattern)
+        self.assertNoActivity(response)
+
+    def test_activity_report_with_matching_name_filter_success(self):
+        """Assert report data includes matching account names."""
+        name_pattern = self.account.name.split(' ')[2][:3]
+        response = self.get_report_response(self.user, self.start, self.end,
+                                            name_pattern=name_pattern)
+        self.assertActivityForRhelInstance(response)
