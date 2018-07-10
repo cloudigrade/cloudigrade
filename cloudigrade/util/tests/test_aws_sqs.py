@@ -72,3 +72,16 @@ class UtilAwsSqsTest(TestCase):
             )
 
         self.assertEqual(mock_response, actual_response)
+
+    def test_delete_message_from_queue_with_empty_list(self):
+        """Assert an empty list of messages handled by delete."""
+        mock_queue_url = 'https://123.abc'
+        mock_messages_to_delete = []
+        mock_response = {}
+
+        actual_response = sqs.delete_message_from_queue(
+            mock_queue_url,
+            mock_messages_to_delete
+        )
+
+        self.assertEqual(mock_response, actual_response)
