@@ -102,7 +102,15 @@ If you see no output, everything is okay! Otherwise (e.g. "libcurl link-time ssl
    pip uninstall pycurl
    PYCURL_SSL_LIBRARY=openssl pip --no-cache-dir install --install-option="--with-openssl" --install-option="--openssl-dir=$(brew --prefix)/opt/openssl" pycurl
 
-Try the aforementioned import command again, and all should be good. If not, kindly reach out to another cloudigrade developer to seek assistance!
+If using a system that has dnf, try the following commands:
+
+.. code-block:: sh
+    sudo dnf install openssl
+    pip uninstall pycurl
+    export PYCURL_SSL_LIBRARY=openssl
+    pip install --no-cache-dir install-option="--with-openssl" pycurl
+
+Try the aforementioned import commands again, and all should be good. If not, kindly reach out to another cloudigrade developer to seek assistance!
 
 
 Configure AWS account credentials
