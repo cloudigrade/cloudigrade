@@ -49,33 +49,45 @@ def copy_ami_snapshot(arn, ami_id, snapshot_region, reference_ami_id=None):
 
     """
     session = aws.get_session(arn)
-    ami = aws.get_ami(session, ami_id, snapshot_region)
-    customer_snapshot_id = aws.get_ami_snapshot_id(ami)
-    customer_snapshot = aws.get_snapshot(
-        session, customer_snapshot_id, snapshot_region)
-
-    if customer_snapshot.encrypted:
-        image = AwsMachineImage.objects.get(ec2_ami_id=ami_id)
-        image.is_encrypted = True
-        image.save()
-        raise AwsSnapshotEncryptedError
-
     session_account_id = aws.get_session_account_id(session)
-    logger.info(
-        _('AWS snapshot "{snapshot_id}" for image "{image_id}" has owner '
-          '"{owner_id}"; current session is account "{account_id}"').format(
-            snapshot_id=customer_snapshot.snapshot_id,
-            image_id=ami.id,
-            owner_id=customer_snapshot.owner_id,
-            account_id=session_account_id
+    ami = aws.get_ami(session, ami_id, snapshot_region)
+
+    customer_snapshot_id = aws.get_ami_snapshot_id(ami)
+    try:
+        customer_snapshot = aws.get_snapshot(
+            session, customer_snapshot_id, snapshot_region)
+
+        if customer_snapshot.encrypted:
+            image = AwsMachineImage.objects.get(ec2_ami_id=ami_id)
+            image.is_encrypted = True
+            image.save()
+            raise AwsSnapshotEncryptedError
+
+        logger.info(
+            _('AWS snapshot "{snapshot_id}" for image "{image_id}" has owner '
+              '"{owner_id}"; current session is account "{account_id}"')
+            .format(
+                snapshot_id=customer_snapshot.snapshot_id,
+                image_id=ami.id,
+                owner_id=customer_snapshot.owner_id,
+                account_id=session_account_id
+            )
         )
-    )
-    if customer_snapshot.owner_id != session_account_id and \
-            reference_ami_id is None:
-        copy_ami_to_customer_account.delay(arn, ami_id, snapshot_region)
-        # Early return because we need to stop processing the current AMI.
-        # A future call will process this new copy of the current AMI instead.
-        return
+
+        if customer_snapshot.owner_id != session_account_id and \
+                reference_ami_id is None:
+            copy_ami_to_customer_account.delay(arn, ami_id, snapshot_region)
+            # Early return because we need to stop processing the current AMI.
+            # A future call will process this new copy of the
+            # current AMI instead.
+            return
+    except ClientError as e:
+        if e.response.get('Error').get('Code') == 'InvalidSnapshot.NotFound':
+            # Possibly a marketplace AMI, try to handle it by copying.
+            copy_ami_to_customer_account.delay(arn, ami_id, snapshot_region,
+                                               maybe_marketplace=True)
+            return
+        raise e
 
     aws.add_snapshot_ownership(customer_snapshot)
 
@@ -111,7 +123,8 @@ def copy_ami_snapshot(arn, ami_id, snapshot_region, reference_ami_id=None):
 
 @retriable_shared_task
 @rewrap_aws_errors
-def copy_ami_to_customer_account(arn, reference_ami_id, snapshot_region):
+def copy_ami_to_customer_account(arn, reference_ami_id, snapshot_region,
+                                 maybe_marketplace=False):
     """
     Copy an AWS Image to the customer's AWS account.
 
@@ -125,6 +138,8 @@ def copy_ami_to_customer_account(arn, reference_ami_id, snapshot_region):
         arn (str): The AWS Resource Number for the account with the snapshot
         reference_ami_id (str): The AWS ID for the original image to copy
         snapshot_region (str): The region the snapshot resides in
+        maybe_marketplace (bool): Set to True if we suspect this to be a
+            marketplace image.
 
     Returns:
         None: Run as an asynchronous Celery task.
@@ -132,7 +147,24 @@ def copy_ami_to_customer_account(arn, reference_ami_id, snapshot_region):
     """
     session = aws.get_session(arn)
     reference_ami = aws.get_ami(session, reference_ami_id, snapshot_region)
-    new_ami_id = aws.copy_ami(session, reference_ami.id, snapshot_region)
+
+    try:
+        new_ami_id = aws.copy_ami(session, reference_ami.id, snapshot_region)
+    except ClientError as e:
+        if maybe_marketplace \
+                and e.response.get('Error').get('Code') == 'InvalidRequest' \
+                and 'Images with EC2 BillingProduct codes cannot be copied ' \
+                    'to another AWS account' in \
+                e.response.get('Error').get('Message'):
+            # This appears to be a marketplace AMI, mark it as inspected.
+            logger.info(_('Found a marketplace image "{0}", marking as '
+                          'inspected').format(reference_ami_id))
+            ami = AwsMachineImage.objects.get(ec2_ami_id=reference_ami_id)
+            ami.status = ami.INSPECTED
+            ami.save()
+            return
+        raise e
+
     copy_ami_snapshot.delay(arn, new_ami_id, snapshot_region, reference_ami_id)
 
 
