@@ -839,6 +839,8 @@ class AccountCeleryTaskTest(TestCase):
             json.loads(AwsMachineImage.objects.filter(
                 ec2_ami_id=ami_id).first().inspection_json),
             inspection_results['results'][ami_id])
+        self.assertTrue(machine_image1.rhel)
+        self.assertFalse(machine_image1.openshift)
 
     def test_persist_aws_inspection_cluster_results(self):
         """Assert that non rhel_images are not tagged rhel."""
@@ -877,6 +879,8 @@ class AccountCeleryTaskTest(TestCase):
             json.loads(AwsMachineImage.objects.filter(
                 ec2_ami_id=ami_id).first().inspection_json),
             inspection_results['results'][ami_id])
+        self.assertFalse(machine_image1.rhel)
+        self.assertFalse(machine_image1.openshift)
 
     @patch('account.tasks.persist_aws_inspection_cluster_results')
     @patch('account.tasks.read_messages_from_queue')

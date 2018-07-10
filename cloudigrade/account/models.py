@@ -62,6 +62,28 @@ class MachineImage(BasePolymorphicModel):
     status = models.CharField(max_length=10, choices=STATUS_CHOICES,
                               default=PENDING)
 
+    @property
+    def rhel(self):
+        """
+        Indicate if the image is tagged for RHEL.
+
+        Returns:
+            bool: True if a 'rhel' tag exists for this image, else False.
+
+        """
+        return self.tags.filter(description='rhel').exists()
+
+    @property
+    def openshift(self):
+        """
+        Indicate if the image is tagged for OpenShift.
+
+        Returns:
+            bool: True if an 'openshift' tag exists for this image, else False.
+
+        """
+        return self.tags.filter(description='openshift').exists()
+
 
 class Instance(BasePolymorphicModel):
     """Base model for a compute/VM instance in a cloud."""
