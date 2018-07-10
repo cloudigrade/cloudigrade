@@ -179,8 +179,10 @@ def _parse_log_for_ami_tag_events(log):
                     ami.save()
                 else:
                     logger.info(
-                        'Tag create/delete event referenced AMI {}, '
-                        'but no AMI with this ID is known to cloudigrade.')
+                        _(
+                            'Tag create/delete event referenced AMI {}, '
+                            'but no AMI with this ID is known to cloudigrade.'
+                        ).format(ami_id))
 
 
 def _is_valid_event(record, valid_events):
