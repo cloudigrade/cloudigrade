@@ -432,6 +432,82 @@ class AccountCeleryTaskTest(TestCase):
             )
 
     @patch('account.tasks.aws')
+    def test_copy_ami_snapshot_marketplace(self, mock_aws):
+        """Assert that a suspected marketplace image is checked."""
+        mock_account_id = util_helper.generate_dummy_aws_account_id()
+        mock_session = mock_aws.boto3.Session.return_value
+        mock_aws.get_session_account_id.return_value = mock_account_id
+
+        mock_region = random.choice(util_helper.SOME_AWS_REGIONS)
+        mock_arn = util_helper.generate_dummy_arn(mock_account_id, mock_region)
+
+        mock_image_id = util_helper.generate_dummy_image_id()
+        mock_image = util_helper.generate_mock_image(mock_image_id)
+        mock_snapshot_id = util_helper.generate_dummy_snapshot_id()
+
+        mock_aws.get_session.return_value = mock_session
+        mock_aws.get_ami.return_value = mock_image
+        mock_aws.get_ami_snapshot_id.return_value = mock_snapshot_id
+        mock_aws.get_snapshot.side_effect = ClientError(
+            error_response={'Error': {'Code': 'InvalidSnapshot.NotFound'}},
+            operation_name=Mock(),
+        )
+
+        account = AwsAccount(
+            aws_account_id=mock_account_id,
+            account_arn=mock_arn,
+            user=util_helper.generate_test_user(),
+        )
+        account.save()
+        ami = AwsMachineImage.objects.create(
+            account=account,
+            ec2_ami_id=mock_image_id
+        )
+
+        ami.save()
+
+        with patch.object(tasks, 'create_volume') as mock_create_volume, \
+                patch.object(tasks, 'copy_ami_to_customer_account') as \
+                mock_copy_ami_to_customer_account:
+            copy_ami_snapshot(mock_arn, mock_image_id, mock_region)
+            mock_create_volume.delay.assert_not_called()
+            mock_copy_ami_to_customer_account.delay.assert_called_with(
+                mock_arn, mock_image_id, mock_region, maybe_marketplace=True
+            )
+
+    @patch('account.tasks.aws')
+    def test_copy_ami_snapshot_not_marketplace(self, mock_aws):
+        """Assert that an exception is raised when there is an error."""
+        mock_account_id = util_helper.generate_dummy_aws_account_id()
+        mock_session = mock_aws.boto3.Session.return_value
+        mock_aws.get_session_account_id.return_value = mock_account_id
+
+        mock_region = random.choice(util_helper.SOME_AWS_REGIONS)
+        mock_arn = util_helper.generate_dummy_arn(mock_account_id, mock_region)
+
+        mock_image_id = util_helper.generate_dummy_image_id()
+        mock_image = util_helper.generate_mock_image(mock_image_id)
+        mock_snapshot_id = util_helper.generate_dummy_snapshot_id()
+
+        mock_aws.get_session.return_value = mock_session
+        mock_aws.get_ami.return_value = mock_image
+        mock_aws.get_ami_snapshot_id.return_value = mock_snapshot_id
+        mock_aws.get_snapshot.side_effect = ClientError(
+            error_response={'Error': {
+                'Code': 'ItIsAMystery',
+                'Message': 'Mystery Error',
+            }},
+            operation_name=Mock(),
+        )
+
+        with self.assertRaises(RuntimeError) as e:
+            copy_ami_snapshot(mock_arn, mock_image_id, mock_region)
+
+        self.assertIn('ClientError', e.exception.args[0])
+        self.assertIn('ItIsAMystery', e.exception.args[0])
+        self.assertIn('Mystery Error', e.exception.args[0])
+
+    @patch('account.tasks.aws')
     def test_copy_ami_to_customer_account_success(self, mock_aws):
         """Assert that the task copies image using appropriate boto calls."""
         arn = util_helper.generate_dummy_arn()
@@ -454,6 +530,67 @@ class AccountCeleryTaskTest(TestCase):
         reference_ami = mock_aws.get_ami.return_value
         mock_aws.copy_ami.assert_called_with(
             mock_aws.get_session.return_value, reference_ami.id, source_region
+        )
+
+    @patch('account.models.AwsMachineImage.objects')
+    @patch('account.tasks.aws')
+    def test_copy_ami_to_customer_account_marketplace(
+            self, mock_aws, mock_aws_machine_image_objects):
+        """Assert that the task marks marketplace image as inspected."""
+        arn = util_helper.generate_dummy_arn()
+        reference_ami_id = util_helper.generate_dummy_image_id()
+        source_region = random.choice(util_helper.SOME_AWS_REGIONS)
+        mock_ami = Mock()
+        mock_ami.INSPECTED = 'Inspected'
+        mock_aws_machine_image_objects.get.return_value = mock_ami
+
+        mock_aws.copy_ami.side_effect = ClientError(
+            error_response={'Error': {
+                'Code': 'InvalidRequest',
+                'Message': 'Images with EC2 BillingProduct codes cannot be '
+                           'copied to another AWS account',
+            }},
+            operation_name=Mock(),
+        )
+
+        copy_ami_to_customer_account(arn, reference_ami_id, source_region,
+                                     True)
+
+        mock_aws.get_session.assert_called_with(arn)
+        mock_aws.get_ami.assert_called_with(
+            mock_aws.get_session.return_value, reference_ami_id, source_region
+        )
+        mock_aws_machine_image_objects.get.assert_called_with(
+            ec2_ami_id=reference_ami_id)
+        self.assertEqual(mock_ami.status, mock_ami.INSPECTED)
+        mock_ami.save.assert_called_once()
+
+    @patch('account.tasks.aws')
+    def test_copy_ami_to_customer_account_not_marketplace(self, mock_aws):
+        """Assert that the task marks marketplace image as inspected."""
+        arn = util_helper.generate_dummy_arn()
+        reference_ami_id = util_helper.generate_dummy_image_id()
+        source_region = random.choice(util_helper.SOME_AWS_REGIONS)
+
+        mock_aws.copy_ami.side_effect = ClientError(
+            error_response={'Error': {
+                'Code': 'ItIsAMystery',
+                'Message': 'Mystery Error',
+            }},
+            operation_name=Mock(),
+        )
+
+        with self.assertRaises(RuntimeError) as e:
+            copy_ami_to_customer_account(arn, reference_ami_id, source_region,
+                                         True)
+
+        self.assertIn('ClientError', e.exception.args[0])
+        self.assertIn('ItIsAMystery', e.exception.args[0])
+        self.assertIn('Mystery Error', e.exception.args[0])
+
+        mock_aws.get_session.assert_called_with(arn)
+        mock_aws.get_ami.assert_called_with(
+            mock_aws.get_session.return_value, reference_ami_id, source_region
         )
 
     @patch('account.tasks.aws')
