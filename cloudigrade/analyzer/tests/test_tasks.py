@@ -8,7 +8,12 @@ from unittest.mock import patch
 from dateutil import tz
 from django.test import TestCase
 
-from account.models import AwsInstance, AwsInstanceEvent, InstanceEvent
+from account.models import (AwsAccount,
+                            AwsInstance,
+                            AwsInstanceEvent,
+                            AwsMachineImage,
+                            ImageTag,
+                            InstanceEvent)
 from account.tests import helper as account_helper
 from analyzer import tasks
 from util.tests import helper as util_helper
@@ -440,3 +445,339 @@ class AnalyzeLogTest(TestCase):
 
         self.assertListEqual(instances, [])
         self.assertListEqual(instance_events, [])
+
+    @patch('analyzer.tasks.aws.delete_message_from_queue')
+    @patch('analyzer.tasks.aws.get_object_content_from_s3')
+    @patch('analyzer.tasks.aws.receive_message_from_queue')
+    def test_ami_tags_added_success(
+            self, mock_receive, mock_s3, mock_del):
+        """Test processing a CloudTrail log for ami tags added."""
+        mock_user = util_helper.generate_test_user()
+        mock_arn = util_helper.generate_dummy_arn()
+        aws_account = AwsAccount(
+            user=mock_user,
+            name='test',
+            aws_account_id='1234',
+            account_arn=mock_arn)
+        aws_account.save()
+
+        mock_ec2_ami_id = util_helper.generate_dummy_image_id()
+        aws_machine_image = AwsMachineImage(
+            account=aws_account, ec2_ami_id=mock_ec2_ami_id)
+        aws_machine_image.save()
+
+        mock_sqs_message_body = {
+            'Records': [
+                {
+                    's3': {
+                        'bucket': {
+                            'name': 'test-bucket',
+                        },
+                        'object': {
+                            'key': 'path/to/log/log.json.gz',
+                        },
+                    },
+                }
+            ]
+        }
+
+        mock_queue_url = 'https://sqs.queue.url'
+        mock_receipt_handle = str(uuid.uuid4())
+        mock_region = random.choice(util_helper.SOME_AWS_REGIONS)
+
+        now = datetime.datetime.utcnow()
+        mock_occurred_at = datetime.datetime(
+            year=now.year, month=now.month, day=now.day, hour=now.hour,
+            minute=now.minute, second=now.second, tzinfo=tz.tzutc()
+        )
+
+        mock_message = util_helper.generate_mock_sqs_message(
+            mock_queue_url,
+            json.dumps(mock_sqs_message_body),
+            mock_receipt_handle
+        )
+
+        mock_cloudtrail_log = {
+            'Records': [
+                {
+                    'eventTime': mock_occurred_at.strftime(
+                        '%Y-%m-%dT%H:%M:%SZ'
+                    ),
+                    'eventSource': 'ec2.amazonaws.com',
+                    'awsRegion': mock_region,
+                    'eventName': tasks.CREATE_TAG,
+                    'requestParameters': {
+                        'resourcesSet': {
+                            'items': [
+                                {
+                                    'resourceId': mock_ec2_ami_id
+                                }
+                            ]
+                        },
+                        'tagSet': {
+                            'items': [
+                                {
+                                    'key': tasks.AWS_OPENSHIFT_TAG,
+                                    'value': tasks.AWS_OPENSHIFT_TAG
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+
+        mock_receive.return_value = [mock_message]
+        mock_s3.return_value = json.dumps(mock_cloudtrail_log)
+
+        tasks.analyze_log()
+
+        self.assertNotEqual(None, aws_machine_image.tags.filter(
+            description=tasks.OPENSHIFT_MODEL_TAG).first())
+
+    @patch('analyzer.tasks.aws.delete_message_from_queue')
+    @patch('analyzer.tasks.aws.get_object_content_from_s3')
+    @patch('analyzer.tasks.aws.receive_message_from_queue')
+    def test_ami_tags_removed_success(
+            self, mock_receive, mock_s3, mock_del):
+        """Test processing a CloudTrail log for ami tags removed."""
+        mock_user = util_helper.generate_test_user()
+        mock_arn = util_helper.generate_dummy_arn()
+        aws_account = AwsAccount(
+            user=mock_user,
+            name='test',
+            aws_account_id='1234',
+            account_arn=mock_arn)
+        aws_account.save()
+
+        mock_ec2_ami_id = util_helper.generate_dummy_image_id()
+        aws_machine_image = AwsMachineImage(
+            account=aws_account, ec2_ami_id=mock_ec2_ami_id)
+        aws_machine_image.save()
+
+        openshift_tag = ImageTag.objects.filter(
+            description=tasks.OPENSHIFT_MODEL_TAG).first()
+        aws_machine_image.tags.add(openshift_tag)
+
+        mock_sqs_message_body = {
+            'Records': [
+                {
+                    's3': {
+                        'bucket': {
+                            'name': 'test-bucket',
+                        },
+                        'object': {
+                            'key': 'path/to/log/log.json.gz',
+                        },
+                    },
+                }
+            ]
+        }
+
+        mock_queue_url = 'https://sqs.queue.url'
+        mock_receipt_handle = str(uuid.uuid4())
+        mock_region = random.choice(util_helper.SOME_AWS_REGIONS)
+
+        now = datetime.datetime.utcnow()
+        mock_occurred_at = datetime.datetime(
+            year=now.year, month=now.month, day=now.day, hour=now.hour,
+            minute=now.minute, second=now.second, tzinfo=tz.tzutc()
+        )
+
+        mock_message = util_helper.generate_mock_sqs_message(
+            mock_queue_url,
+            json.dumps(mock_sqs_message_body),
+            mock_receipt_handle
+        )
+
+        mock_cloudtrail_log = {
+            'Records': [
+                {
+                    'eventTime': mock_occurred_at.strftime(
+                        '%Y-%m-%dT%H:%M:%SZ'
+                    ),
+                    'eventSource': 'ec2.amazonaws.com',
+                    'awsRegion': mock_region,
+                    'eventName': tasks.DELETE_TAG,
+                    'requestParameters': {
+                        'resourcesSet': {
+                            'items': [
+                                {
+                                    'resourceId': mock_ec2_ami_id
+                                }
+                            ]
+                        },
+                        'tagSet': {
+                            'items': [
+                                {
+                                    'key': tasks.AWS_OPENSHIFT_TAG,
+                                    'value': tasks.AWS_OPENSHIFT_TAG
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+
+        mock_receive.return_value = [mock_message]
+        mock_s3.return_value = json.dumps(mock_cloudtrail_log)
+
+        tasks.analyze_log()
+
+        self.assertEqual(None, aws_machine_image.tags.filter(
+            description=tasks.OPENSHIFT_MODEL_TAG).first())
+
+    @patch('analyzer.tasks.aws.delete_message_from_queue')
+    @patch('analyzer.tasks.aws.get_object_content_from_s3')
+    @patch('analyzer.tasks.aws.receive_message_from_queue')
+    def test_ami_tags_missing_failure(
+            self, mock_receive, mock_s3, mock_del):
+        """Test processing a log for ami tags reference bad ami_id."""
+        mock_ec2_ami_id = util_helper.generate_dummy_image_id()
+
+        mock_sqs_message_body = {
+            'Records': [
+                {
+                    's3': {
+                        'bucket': {
+                            'name': 'test-bucket',
+                        },
+                        'object': {
+                            'key': 'path/to/log/log.json.gz',
+                        },
+                    },
+                }
+            ]
+        }
+
+        mock_queue_url = 'https://sqs.queue.url'
+        mock_receipt_handle = str(uuid.uuid4())
+        mock_region = random.choice(util_helper.SOME_AWS_REGIONS)
+
+        now = datetime.datetime.utcnow()
+        mock_occurred_at = datetime.datetime(
+            year=now.year, month=now.month, day=now.day, hour=now.hour,
+            minute=now.minute, second=now.second, tzinfo=tz.tzutc()
+        )
+
+        mock_message = util_helper.generate_mock_sqs_message(
+            mock_queue_url,
+            json.dumps(mock_sqs_message_body),
+            mock_receipt_handle
+        )
+
+        mock_cloudtrail_log = {
+            'Records': [
+                {
+                    'eventTime': mock_occurred_at.strftime(
+                        '%Y-%m-%dT%H:%M:%SZ'
+                    ),
+                    'eventSource': 'ec2.amazonaws.com',
+                    'awsRegion': mock_region,
+                    'eventName': tasks.DELETE_TAG,
+                    'requestParameters': {
+                        'resourcesSet': {
+                            'items': [
+                                {
+                                    'resourceId': mock_ec2_ami_id
+                                }
+                            ]
+                        },
+                        'tagSet': {
+                            'items': [
+                                {
+                                    'key': tasks.AWS_OPENSHIFT_TAG,
+                                    'value': tasks.AWS_OPENSHIFT_TAG
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+
+        mock_receive.return_value = [mock_message]
+        mock_s3.return_value = json.dumps(mock_cloudtrail_log)
+
+        try:
+            tasks.analyze_log()
+        except Exception:
+            self.fail('Should not raise exceptions when ami not found')
+
+    @patch('analyzer.tasks.aws.delete_message_from_queue')
+    @patch('analyzer.tasks.aws.get_object_content_from_s3')
+    @patch('analyzer.tasks.aws.receive_message_from_queue')
+    def test_other_tags_ignored(
+            self, mock_receive, mock_s3, mock_del):
+        """Test processing a CloudTrail log for other tags ignored."""
+        mock_instance_id = util_helper.generate_dummy_instance_id()
+
+        mock_sqs_message_body = {
+            'Records': [
+                {
+                    's3': {
+                        'bucket': {
+                            'name': 'test-bucket',
+                        },
+                        'object': {
+                            'key': 'path/to/log/log.json.gz',
+                        },
+                    },
+                }
+            ]
+        }
+
+        mock_queue_url = 'https://sqs.queue.url'
+        mock_receipt_handle = str(uuid.uuid4())
+        mock_region = random.choice(util_helper.SOME_AWS_REGIONS)
+
+        now = datetime.datetime.utcnow()
+        mock_occurred_at = datetime.datetime(
+            year=now.year, month=now.month, day=now.day, hour=now.hour,
+            minute=now.minute, second=now.second, tzinfo=tz.tzutc()
+        )
+
+        mock_message = util_helper.generate_mock_sqs_message(
+            mock_queue_url,
+            json.dumps(mock_sqs_message_body),
+            mock_receipt_handle
+        )
+
+        mock_cloudtrail_log = {
+            'Records': [
+                {
+                    'eventTime': mock_occurred_at.strftime(
+                        '%Y-%m-%dT%H:%M:%SZ'
+                    ),
+                    'eventSource': 'ec2.amazonaws.com',
+                    'awsRegion': mock_region,
+                    'eventName': tasks.DELETE_TAG,
+                    'requestParameters': {
+                        'resourcesSet': {
+                            'items': [
+                                {
+                                    'resourceId': mock_instance_id
+                                }
+                            ]
+                        },
+                        'tagSet': {
+                            'items': [
+                                {
+                                    'key': tasks.AWS_OPENSHIFT_TAG,
+                                    'value': tasks.AWS_OPENSHIFT_TAG
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+
+        mock_receive.return_value = [mock_message]
+        mock_s3.return_value = json.dumps(mock_cloudtrail_log)
+
+        try:
+            tasks.analyze_log()
+        except Exception:
+            self.fail('Should not raise exceptions for ignored tag events.')

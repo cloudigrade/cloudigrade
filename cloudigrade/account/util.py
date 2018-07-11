@@ -187,6 +187,9 @@ def start_image_inspection(arn, ami_id, region):
         ami_id (str): The AWS ID for the machine image
         region (str): The region the snapshot resides in
 
+    Returns:
+        AwsMachineImage: Image being inspected
+
     """
     ami = AwsMachineImage.objects.get(ec2_ami_id=ami_id)
     ami.status = ami.PREPARING
@@ -196,6 +199,8 @@ def start_image_inspection(arn, ami_id, region):
     from account.tasks import copy_ami_snapshot
 
     copy_ami_snapshot.delay(arn, ami_id, region)
+
+    return ami
 
 
 def create_aws_machine_image_copy(copy_ami_id, reference_ami_id):

@@ -6,7 +6,10 @@ from django.conf import settings
 from django.db import transaction
 from django.utils.translation import gettext as _
 
-from account.models import AwsAccount, InstanceEvent
+from account.models import (AwsAccount,
+                            AwsMachineImage,
+                            ImageTag,
+                            InstanceEvent)
 from account.util import save_instance_events, save_machine_images, \
     start_image_inspection, tag_windows
 from util import aws
@@ -15,12 +18,22 @@ from util.celery import retriable_shared_task
 
 logger = logging.getLogger(__name__)
 
-ec2_event_map = {
+ec2_instance_event_map = {
     'RunInstances': InstanceEvent.TYPE.power_on,
     'StartInstances': InstanceEvent.TYPE.power_on,
     'StopInstances': InstanceEvent.TYPE.power_off,
     'TerminateInstances': InstanceEvent.TYPE.power_off
 }
+
+AWS_OPENSHIFT_TAG = 'cloudigrade-ocp-present'
+OPENSHIFT_MODEL_TAG = 'openshift'
+CREATE_TAG = 'CreateTags'
+DELETE_TAG = 'DeleteTags'
+
+ec2_ami_tag_event_list = [
+    CREATE_TAG,
+    DELETE_TAG
+]
 
 
 @retriable_shared_task
@@ -49,7 +62,8 @@ def analyze_log():
     # Parse logs for on/off events
     for log in logs:
         if log:
-            instances = _parse_log_for_ec2_events(log)
+            instances = _parse_log_for_ec2_instance_events(log)
+            _parse_log_for_ami_tag_events(log)
 
     if instances:
         _save_results(instances)
@@ -60,7 +74,7 @@ def analyze_log():
     aws.delete_message_from_queue(queue_url, messages)
 
 
-def _parse_log_for_ec2_events(log):
+def _parse_log_for_ec2_instance_events(log):
     """
     Parse S3 log for EC2 on/off events.
 
@@ -78,14 +92,14 @@ def _parse_log_for_ec2_events(log):
     # Each record is a single API call, but each call can
     # be made against multiple EC2 instances
     for record in log.get('Records', []):
-        if not _is_on_off_event(record, ec2_event_map.keys()):
+        if not _is_valid_event(record, ec2_instance_event_map.keys()):
             continue
 
         account_id = record.get('userIdentity', {}).get('accountId')
         account = AwsAccount.objects.get(aws_account_id=account_id)
         region = record.get('awsRegion')
         session = aws.get_session(account.account_arn, region)
-        event_type = ec2_event_map[record.get('eventName')]
+        event_type = ec2_instance_event_map[record.get('eventName')]
         occurred_at = record.get('eventTime')
         ec2_info = record.get('responseElements', {})\
             .get('instancesSet', {})\
@@ -118,7 +132,60 @@ def _parse_log_for_ec2_events(log):
     return dict(instances)
 
 
-def _is_on_off_event(record, valid_events):
+def _parse_log_for_ami_tag_events(log):
+    """
+    Parse S3 log for AMI tag create/delete events.
+
+    Args:
+        log (str): The JSON string contents of the log file.
+
+    Returns:
+        None: Images are updated if needed
+
+    """
+    log = json.loads(log)
+
+    for record in log.get('Records', []):
+        if not _is_valid_event(record, ec2_ami_tag_event_list):
+            continue
+
+        add_openshift_tag = record.get('eventName') == CREATE_TAG
+        ami_list = [ami.get('resourceId') for ami in record.get(
+            'requestParameters', {})
+            .get('resourcesSet', {})
+            .get('items', []) if ami.get('resourceId', '').startswith('ami-')]
+
+        tag_list = [tag for tag in record.get(
+            'requestParameters', {})
+            .get('tagSet', {})
+            .get('items', []) if tag.get('key', '') == AWS_OPENSHIFT_TAG]
+
+        if ami_list and tag_list:
+            openshift_tag = ImageTag.objects.filter(
+                description=OPENSHIFT_MODEL_TAG).first()
+            for ami_id in ami_list:
+                ami = AwsMachineImage.objects.filter(ec2_ami_id=ami_id).first()
+                if ami:
+                    if add_openshift_tag:
+                        logger.info(
+                            _('Adding openshift tag to AMI {}').format(
+                                ami_id))
+                        ami.tags.add(openshift_tag)
+                    else:
+                        logger.info(_(
+                            'Removing openshift tag from AMI {}').format(
+                                ami_id))
+                        ami.tags.remove(openshift_tag)
+                    ami.save()
+                else:
+                    logger.info(
+                        _(
+                            'Tag create/delete event referenced AMI {}, '
+                            'but no AMI with this ID is known to cloudigrade.'
+                        ).format(ami_id))
+
+
+def _is_valid_event(record, valid_events):
     """
     Determine if a log event is an EC2 on/off event.
 
