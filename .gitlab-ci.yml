@@ -1,0 +1,22 @@
+image: python:3.6
+
+Unit Tests:
+  stage: test
+  before_script:
+    - pip install tox codecov
+  script: tox -epy36
+  after_script:
+    - codecov
+
+Flake8:
+  stage: test
+  before_script:
+    - pip install tox
+  script: tox -eflake8
+
+Docker:
+  image: docker
+  stage: test
+  services:
+    - docker:dind
+  script: docker build .
