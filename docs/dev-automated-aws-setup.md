@@ -53,7 +53,8 @@ export EC2_HOST_NAME="${HOUNDIGRADE_ECS_CLUSTER_NAME}-host"
 ### Sane defaults
 ```
 export RECOMMENDED_AMI="ami-5253c32d" # recommended by AWS for ECS
-export INSTANCE_TYPE="t2.micro" # recommended by cloudigrade devs
+export INSTANCE_TYPE="t2.micro" # recommended by cloudigrade dev
+export AWS_DEFAULT_REGION="us-east-1"
 ```
 
 ### Variables that are dependent on your account
@@ -114,7 +115,16 @@ _To use these resources, you must create the OpenShift deployment configs and co
 
 **must have `oc` logged into the OpenShift cluster you desire to use**
 
+To apply these changes to the OpenShift cluster where you are serving cloudigrade, you should have all other needed environment variables set as described in the [shiftigrade README](https://github.com/cloudigrade/shiftigrade) as well as the environment variables set as described above. 
+
+Additionally you need to provide the URL for the SQS queue that the s3 bucket sends notifications to. This can be constructed out of information you have in your environment from running the playbooks above, as well as the AWS account number.
+
 ```
+# must be in same environment where other variables are set.
+# additionally, need to know the CLOUDTRAIL_EVENT_URL, which is the url for the sqs queue
+# that the s3 notification set up to send events to
+export AWS_ACCOUNT_NUMBER=$number_for_your_cloudigrade_aws_account
+export CLOUDTRAIL_EVENT_URL=	"https://sqs.${AWS_DEFAULT_REGION}.amazonaws.com/${AWS_ACCOUNT_NUMBER}/${AWS_NAME_PREFIX}-cloudigrade-cloudtrail-sqs"
 make oc-create-cloudigrade-all
 oc start-build cloudigrade-api
 ```
