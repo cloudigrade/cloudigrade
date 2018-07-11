@@ -320,3 +320,16 @@ class CloudAccountOverviewSerializer(Serializer):
     def get_overview(self, account):
         """Generate the cloud account overview and return the results."""
         return reports.get_account_overview(account, **self.validated_data)
+
+
+class DailyInstanceActivitySerializer(Serializer):
+    """Serialize a report of daily instance activity over time for the API."""
+
+    user_id = serializers.IntegerField()
+    start = serializers.DateTimeField(default_timezone=tz.tzutc())
+    end = serializers.DateTimeField(default_timezone=tz.tzutc())
+    name_pattern = serializers.CharField()
+
+    def generate(self):
+        """Generate the usage report and return the results."""
+        return reports.get_daily_usage(**self.validated_data)
