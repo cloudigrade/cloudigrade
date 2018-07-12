@@ -4,8 +4,9 @@ TOPDIR		= $(shell pwd)
 PYDIR		= cloudigrade
 
 OC_SOURCE	= registry.access.redhat.com/openshift3/ose
-OC_VERSION	= v3.7.23
+OC_VERSION	= v3.9.31
 OC_DATA_DIR	= ${HOME}/.oc/openshift.local.data
+OC_IS_OS	= rhel7
 
 OS := $(shell uname)
 ifeq ($(OS),Darwin)
@@ -68,6 +69,7 @@ oc-up:
 	oc cluster up \
 		--image=$(OC_SOURCE) \
 		--version=$(OC_VERSION) \
+		--image-streams=$(OC_IS_OS) \
 		--host-data-dir=$(OC_DATA_DIR) \
 		--use-existing-config
 ifeq ($(OS),Linux)
