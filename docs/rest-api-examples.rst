@@ -32,7 +32,7 @@ Overview
 The following resource paths are currently available:
 
 -  ``/api/v1/account/`` returns account data
--  ``/api/v1/report/`` returns usage report data
+-  ``/api/v1/report/instances/`` returns daily instance usage data
 -  ``/api/v1/report/accounts/`` returns account overview data
 -  ``/auth/`` is for authentication
 
@@ -429,18 +429,23 @@ Response:
 Usage Reporting
 ---------------
 
-Retrieve a usage report
-~~~~~~~~~~~~~~~~~~~~~~~
+Retrieve a daily instance usage report
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You may include an optional "user_id" query string argument to filter results
+down to a specific user if your request is authenticated as a superuser.
+
+You may include an optional "name_pattern" query string argument to filter
+results down to activity under accounts whose names match at least one of the
+words in that argument.
 
 Request:
 
 .. code:: bash
 
-    http localhost:8080/api/v1/report/ "${AUTH}" \
-        cloud_provider=="aws" \
-        cloud_account_id=="518028203513" \
+    http localhost:8080/api/v1/report/instances/ "${AUTH}" \
         start=="2018-03-01T00:00:00" \
-        end=="2018-04-01T00:00:00"
+        end=="2018-03-04T00:00:00"
 
 Response:
 
@@ -448,117 +453,41 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Connection: keep-alive
-    Content-Length: 52
+    Content-Length: 482
     Content-Type: application/json
-    Date: Mon, 19 Mar 2018 20:29:54 GMT
-    Server: nginx/1.13.9
+    Date: Thu, 12 Jul 2018 22:10:35 GMT
+    Server: WSGIServer/0.2 CPython/3.6.5
     Vary: Accept
     X-Frame-Options: SAMEORIGIN
 
     {
-        "aws-ami-09648c5666e4f95c7-t2.nano": 1049629.191022
-    }
-
-If you attempt to retrieve a report for an invalid cloud provider, you
-should get a 400 error.
-
-Request:
-
-.. code:: bash
-
-    http localhost:8080/api/v1/report/ "${AUTH}" \
-        cloud_provider=="foobar" \
-        cloud_account_id=="518028203513" \
-        start=="2018-03-01T00:00:00" \
-        end=="2018-04-01T00:00:00"
-
-Response:
-
-::
-
-    HTTP/1.1 400 Bad Request
-    Allow: GET, HEAD, OPTIONS
-    Connection: keep-alive
-    Content-Length: 56
-    Content-Type: application/json
-    Date: Mon, 19 Mar 2018 20:30:16 GMT
-    Server: nginx/1.13.9
-    Vary: Accept
-    X-Frame-Options: SAMEORIGIN
-
-    {
-        "cloud_provider": [
-            "\"foobar\" is not a valid choice."
-        ]
-    }
-
-If you attempt to retrieve a report for an account that does not exist,
-you should get a 404 error.
-
-Request:
-
-.. code:: bash
-
-    http localhost:8080/api/v1/report/ "${AUTH}" \
-        cloud_provider=="aws" \
-        cloud_account_id=="1234567890" \
-        start=="2018-03-01T00:00:00" \
-        end=="2018-04-01T00:00:00"
-
-Response:
-
-::
-
-    HTTP/1.1 404 Not Found
-    Allow: GET, HEAD, OPTIONS
-    Connection: keep-alive
-    Content-Length: 23
-    Content-Type: application/json
-    Date: Mon, 19 Mar 2018 20:30:31 GMT
-    Server: nginx/1.13.9
-    Vary: Accept
-    X-Frame-Options: SAMEORIGIN
-
-    {
-        "detail": "Not found."
-    }
-
-If you attempt to retrieve a report for a valid cloud provider but provide an
-account ID that does not match the cloud's format, you should get a 400 error.
-
-Request:
-
-.. code:: bash
-
-    http localhost:8080/api/v1/report/ "${AUTH}" \
-        cloud_provider=="aws" \
-        cloud_account_id=="NX-74205" \
-        start=="2018-03-01T00:00:00" \
-        end=="2018-04-01T00:00:00"
-
-Response:
-
-::
-
-    HTTP/1.1 400 Bad Request
-    Allow: GET, HEAD, OPTIONS
-    Connection: keep-alive
-    Content-Length: 132
-    Content-Type: application/json
-    Date: Mon, 19 Mar 2018 20:34:37 GMT
-    Server: nginx/1.13.9
-    Vary: Accept
-    X-Frame-Options: SAMEORIGIN
-
-    {
-        "cloud_account_id": [
-            "A valid number is required."
+        "daily_usage": [
+            {
+                "date": "2018-03-01T00:00:00Z",
+                "openshift_instances": 0,
+                "openshift_runtime_seconds": 0.0,
+                "rhel_instances": 0,
+                "rhel_runtime_seconds": 0.0
+            },
+            {
+                "date": "2018-03-02T00:00:00Z",
+                "openshift_instances": 0,
+                "openshift_runtime_seconds": 0.0,
+                "rhel_instances": 0,
+                "rhel_runtime_seconds": 0.0
+            },
+            {
+                "date": "2018-03-03T00:00:00Z",
+                "openshift_instances": 0,
+                "openshift_runtime_seconds": 0.0,
+                "rhel_instances": 0,
+                "rhel_runtime_seconds": 0.0
+            }
         ],
-        "cloud_provider": [
-            "Incorrect cloud_account_id type for cloud_provider \"aws\""
-        ]
+        "instances_seen_with_openshift": 0,
+        "instances_seen_with_rhel": 0
     }
+
 
 Retrieve an account overview
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
