@@ -567,7 +567,7 @@ class AccountCeleryTaskTest(TestCase):
 
     @patch('account.tasks.aws')
     def test_copy_ami_to_customer_account_not_marketplace(self, mock_aws):
-        """Assert that the task marks marketplace image as inspected."""
+        """Assert that the task fails when non-marketplace error occurs."""
         arn = util_helper.generate_dummy_arn()
         reference_ami_id = util_helper.generate_dummy_image_id()
         source_region = random.choice(util_helper.SOME_AWS_REGIONS)
