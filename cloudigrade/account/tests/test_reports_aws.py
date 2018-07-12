@@ -1,9 +1,9 @@
 """Collection of tests for the reports module."""
-
+import faker
 from django.test import TestCase
 
 from account import AWS_PROVIDER_STRING, reports
-from account.models import AwsAccount, InstanceEvent
+from account.models import InstanceEvent
 from account.tests import helper as account_helper
 from util.tests import helper as util_helper
 
@@ -14,89 +14,198 @@ HOURS_10 = HOUR * 10
 HOURS_15 = HOUR * 15
 DAYS_31 = DAY * 31
 
-
-class GetTimeUsageAwsNoDataTest(TestCase):
-    """_get_time_usage_aws test case for when no data exists."""
-
-    def test_usage_no_account(self):
-        """Assert exception raised when reporting on bogus account ID."""
-        with self.assertRaises(AwsAccount.DoesNotExist):
-            reports.get_time_usage(
-                util_helper.utc_dt(2018, 1, 1, 0, 0, 0),
-                util_helper.utc_dt(2018, 2, 1, 0, 0, 0),
-                AWS_PROVIDER_STRING,
-                util_helper.generate_dummy_aws_account_id(),
-            )
+_faker = faker.Faker()
 
 
-class GetTimeUsageAwsTestMixin(object):
-    """Mixin for common functions to use in GetTimeUsageAws*Test classes."""
-
-    def generate_events_for_instance(self, powered_times, instance):
-        """
-        Generate events in the DB and return the first one's identifier.
-
-        Args:
-            powered_times (list[tuple]): Time periods instance is powered on.
-            instance (AwsInstance): Which instance has the events.
-
-        Returns:
-            str: The first event's product_identifier.
-
-        """
-        events = account_helper.generate_aws_instance_events(
-            instance, powered_times
-        )
-        return events[0].product_identifier
-
-    def assertHourlyUsage(self, expected_totals):
-        """
-        Assert _get_time_usage_aws produces output matching expected totals.
-
-        Note: this function is mixedCase to match Django TestCase style.
-
-        Args:
-            expected_totals (dict): the expected totals data struct
-        """
-        actual_results = reports.get_time_usage(
-            self.start, self.end, AWS_PROVIDER_STRING,
-            self.account.aws_account_id
-        )
-        self.assertEqual(actual_results, expected_totals)
-
-
-class GetTimeUsageAws1a1iTest(TestCase, GetTimeUsageAwsTestMixin):
-    """_get_time_usage_aws tests for 1 account with 1 instance."""
+class ReportTestBase(TestCase):
+    """Base class for reporting tests that require some data setup."""
 
     def setUp(self):
-        """Set up commonly used data for each test."""
-        self.account = account_helper.generate_aws_account()
-        self.instance = account_helper.generate_aws_instance(self.account)
+        """
+        Set up commonly used data for each test.
+
+        From this rich combination of data, we should have enough data for some
+        interesting tests! If you think your test needs more, consider adding
+        to this based class setup.
+
+        The rough hierarchy of initial objects looks something like this:
+
+            user_1:
+                image_plain
+                image_rhel
+                image_ocp
+                image_rhel_ocp
+                image_windows
+                account_1:
+                    instance_1
+                    instance_2
+                    instance_3
+                    instance_4
+                    instance_5
+                account_2:
+                    None
+
+            user_2:
+                account_3:
+                    None
+                account_4:
+                    None
+
+            user_super:
+                None
+        """
+        self.user_1 = util_helper.generate_test_user()
+        self.user_2 = util_helper.generate_test_user()
+        self.user_super = util_helper.generate_test_user(is_superuser=True)
+
+        self.account_1 = account_helper.generate_aws_account(
+            user=self.user_1, name=_faker.bs())
+        self.account_2 = account_helper.generate_aws_account(
+            user=self.user_1, name=_faker.bs())
+        self.account_3 = account_helper.generate_aws_account(
+            user=self.user_2, name=_faker.bs())
+        self.account_4 = account_helper.generate_aws_account(
+            user=self.user_2, name=_faker.bs())
+
+        self.instance_1 = account_helper.generate_aws_instance(self.account_1)
+        self.instance_2 = account_helper.generate_aws_instance(self.account_1)
+        self.instance_3 = account_helper.generate_aws_instance(self.account_1)
+        self.instance_4 = account_helper.generate_aws_instance(self.account_1)
+        self.instance_5 = account_helper.generate_aws_instance(self.account_1)
+
+        self.image_plain = account_helper.generate_aws_image(self.account_1)
+        self.image_windows = account_helper.generate_aws_image(
+            self.account_1, is_windows=True)
+        self.image_rhel = account_helper.generate_aws_image(
+            self.account_1, is_rhel=True)
+        self.image_ocp = account_helper.generate_aws_image(
+            self.account_1, is_openshift=True)
+        self.image_rhel_ocp = account_helper.generate_aws_image(
+            self.account_1, is_rhel=True, is_openshift=True)
+
+        # Report on "month of January in 2018"
         self.start = util_helper.utc_dt(2018, 1, 1, 0, 0, 0)
         self.end = util_helper.utc_dt(2018, 2, 1, 0, 0, 0)
 
-    def generate_events(self, powered_times):
+    def generate_events(self, powered_times, instance=None, image=None):
         """
-        Generate events in the DB and return the first one's identifier.
+        Generate events saved to the DB and returned.
 
         Args:
             powered_times (list[tuple]): Time periods instance is powered on.
+            instance (Instance): Optional which instance has the events. If
+                not specified, default is self.instance_1.
+            image (AwsMachineImage): Optional which image seen in the events.
+                If not specified, default is self.image_plain.
 
         Returns:
-            str: If any were created, the first event's product_identifier.
+            list[InstanceEvent]: The list of events
 
         """
-        return super(GetTimeUsageAws1a1iTest, self)\
-            .generate_events_for_instance(powered_times, self.instance)
+        if instance is None:
+            instance = self.instance_1
+        if image is None:
+            image = self.image_plain
+        events = account_helper.generate_aws_instance_events(
+            instance, powered_times, image.ec2_ami_id,
+        )
+        return events
 
-    def test_usage_no_events(self):
-        """
-        Assert empty-like report when no events exist.
 
-        The instance's running time in the window would look like:
-            [                               ]
-        """
-        self.assertHourlyUsage({})
+class GetDailyUsageTestBase(ReportTestBase):
+    """Base class for testing get_daily_usage with additional assertions."""
+
+    def assertTotalRunningTimes(self, results, rhel=0, openshift=0):
+        """Assert total expected running times for rhel and openshift."""
+        self.assertEqual(sum((
+            day['rhel_runtime_seconds'] for day in results['daily_usage']
+        )), rhel)
+        self.assertEqual(sum((
+            day['openshift_runtime_seconds'] for day in results['daily_usage']
+        )), openshift)
+
+    def assertDaysSeen(self, results, rhel=0, openshift=0):
+        """Assert expected days seen having rhel and openshift instances."""
+        self.assertEqual(sum((
+            1 for day in results['daily_usage']
+            if day['rhel_instances'] > 0
+        )), rhel)
+        self.assertEqual(sum((
+            1 for day in results['daily_usage']
+            if day['openshift_instances'] > 0
+        )), openshift)
+
+    def assertInstancesSeen(self, results, rhel=0, openshift=0):
+        """Assert total expected numbers of rhel and openshift instances."""
+        self.assertEqual(results['instances_seen_with_rhel'], rhel)
+        self.assertEqual(results['instances_seen_with_openshift'], openshift)
+
+    def assertNoActivityFound(self, results):
+        """Assert no relevant activity found in the report results."""
+        self.assertTotalRunningTimes(results)
+        self.assertDaysSeen(results)
+        self.assertInstancesSeen(results)
+
+
+class GetDailyUsageNoReportableActivity(GetDailyUsageTestBase):
+    """get_daily_usage for cases that should produce no report output."""
+
+    def test_no_events(self):
+        """Assert empty report when no events exist."""
+        results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
+        self.assertNoActivityFound(results)
+
+    def test_events_only_in_past(self):
+        """Assert empty report when events exist only in the past."""
+        powered_times = (
+            (
+                util_helper.utc_dt(2017, 1, 9, 0, 0, 0),
+                util_helper.utc_dt(2017, 1, 10, 0, 0, 0)
+            ),
+        )
+        self.generate_events(powered_times, self.instance_1, self.image_rhel)
+        results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
+        self.assertNoActivityFound(results)
+
+    def test_events_only_in_future(self):
+        """Assert empty report when events exist only in the past."""
+        powered_times = (
+            (
+                util_helper.utc_dt(2019, 1, 9, 0, 0, 0),
+                util_helper.utc_dt(2019, 1, 10, 0, 0, 0)
+            ),
+        )
+        self.generate_events(powered_times, self.instance_1, self.image_rhel)
+        results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
+        self.assertNoActivityFound(results)
+
+    def test_events_in_other_user_account(self):
+        """Assert empty report when events exist only for a different user."""
+        powered_times = (
+            (
+                util_helper.utc_dt(2019, 1, 9, 0, 0, 0),
+                util_helper.utc_dt(2019, 1, 10, 0, 0, 0)
+            ),
+        )
+        self.generate_events(powered_times, self.instance_1, self.image_rhel)
+        results = reports.get_daily_usage(self.user_2.id, self.start, self.end)
+        self.assertNoActivityFound(results)
+
+    def test_events_not_rhel_not_openshift(self):
+        """Assert empty report when events exist only for plain images."""
+        powered_times = (
+            (
+                util_helper.utc_dt(2018, 1, 9, 0, 0, 0),
+                util_helper.utc_dt(2018, 1, 10, 0, 0, 0)
+            ),
+        )
+        self.generate_events(powered_times, self.instance_1, self.image_plain)
+        results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
+        self.assertNoActivityFound(results)
+
+
+class GetDailyUsageBasicInstanceTest(GetDailyUsageTestBase):
+    """get_daily_usage tests for an account with one relevant RHEL instance."""
 
     def test_usage_on_in_off_in(self):
         """
@@ -114,9 +223,11 @@ class GetTimeUsageAws1a1iTest(TestCase, GetTimeUsageAwsTestMixin):
                 util_helper.utc_dt(2018, 1, 10, 5, 0, 0)
             ),
         )
-        identifier = self.generate_events(powered_times)
-        expected = {identifier: HOURS_5}
-        self.assertHourlyUsage(expected)
+        self.generate_events(powered_times, self.instance_1, self.image_rhel)
+        results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
+        self.assertTotalRunningTimes(results, rhel=HOURS_5)
+        self.assertDaysSeen(results, rhel=1)
+        self.assertInstancesSeen(results, rhel=1)
 
     def test_usage_on_in_on_in_off_in(self):
         """
@@ -136,9 +247,11 @@ class GetTimeUsageAws1a1iTest(TestCase, GetTimeUsageAwsTestMixin):
                 util_helper.utc_dt(2018, 1, 10, 5, 0, 0)
             ),
         )
-        identifier = self.generate_events(powered_times)
-        expected = {identifier: HOURS_5}
-        self.assertHourlyUsage(expected)
+        self.generate_events(powered_times, self.instance_1, self.image_rhel)
+        results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
+        self.assertTotalRunningTimes(results, rhel=HOURS_5)
+        self.assertDaysSeen(results, rhel=1)
+        self.assertInstancesSeen(results, rhel=1)
 
     def test_usage_on_before_off_in(self):
         """
@@ -156,9 +269,11 @@ class GetTimeUsageAws1a1iTest(TestCase, GetTimeUsageAwsTestMixin):
                 util_helper.utc_dt(2018, 1, 1, 5, 0, 0)
             ),
         )
-        identifier = self.generate_events(powered_times)
-        expected = {identifier: HOURS_5}
-        self.assertHourlyUsage(expected)
+        self.generate_events(powered_times, self.instance_1, self.image_rhel)
+        results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
+        self.assertTotalRunningTimes(results, rhel=HOURS_5)
+        self.assertDaysSeen(results, rhel=1)
+        self.assertInstancesSeen(results, rhel=1)
 
     def test_usage_on_in(self):
         """
@@ -171,9 +286,34 @@ class GetTimeUsageAws1a1iTest(TestCase, GetTimeUsageAwsTestMixin):
             [                             ##]
         """
         powered_times = ((util_helper.utc_dt(2018, 1, 31, 19, 0, 0), None),)
-        identifier = self.generate_events(powered_times)
-        expected = {identifier: HOURS_5}
-        self.assertHourlyUsage(expected)
+        self.generate_events(powered_times, self.instance_1, self.image_rhel)
+        results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
+        self.assertTotalRunningTimes(results, rhel=HOURS_5)
+        self.assertDaysSeen(results, rhel=1)
+        self.assertInstancesSeen(results, rhel=1)
+
+    def test_usage_on_over_multiple_days_then_off(self):
+        """
+        Assert usage when powered on over multiple days.
+
+        This test asserts counting when there was a power-on event at the start
+        of the reporting window start, several days pass, and then a power-off
+        event before the window ends.
+
+        The instance's running time in the window would look like:
+            [######                         ]
+        """
+        powered_times = (
+            (
+                util_helper.utc_dt(2017, 1, 1, 0, 0, 0),
+                util_helper.utc_dt(2018, 1, 6, 5, 0, 0)
+            ),
+        )
+        self.generate_events(powered_times, self.instance_1, self.image_rhel)
+        results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
+        self.assertTotalRunningTimes(results, rhel=DAY * 5 + HOURS_5)
+        self.assertDaysSeen(results, rhel=6)
+        self.assertInstancesSeen(results, rhel=1)
 
     def test_usage_on_before_off_never(self):
         """
@@ -186,9 +326,11 @@ class GetTimeUsageAws1a1iTest(TestCase, GetTimeUsageAwsTestMixin):
             [###############################]
         """
         powered_times = ((util_helper.utc_dt(2017, 1, 1), None),)
-        identifier = self.generate_events(powered_times)
-        expected = {identifier: DAYS_31}
-        self.assertHourlyUsage(expected)
+        self.generate_events(powered_times, self.instance_1, self.image_rhel)
+        results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
+        self.assertTotalRunningTimes(results, rhel=DAYS_31)
+        self.assertDaysSeen(results, rhel=31)
+        self.assertInstancesSeen(results, rhel=1)
 
     def test_usage_on_before_off_after(self):
         """
@@ -203,9 +345,11 @@ class GetTimeUsageAws1a1iTest(TestCase, GetTimeUsageAwsTestMixin):
         powered_times = (
             (util_helper.utc_dt(2017, 1, 1), util_helper.utc_dt(2019, 1, 1)),
         )
-        identifier = self.generate_events(powered_times)
-        expected = {identifier: DAYS_31}
-        self.assertHourlyUsage(expected)
+        self.generate_events(powered_times, self.instance_1, self.image_rhel)
+        results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
+        self.assertTotalRunningTimes(results, rhel=DAYS_31)
+        self.assertDaysSeen(results, rhel=31)
+        self.assertInstancesSeen(results, rhel=1)
 
     def test_usage_on_before_off_in_on_in_off_in_on_in(self):
         """
@@ -230,36 +374,20 @@ class GetTimeUsageAws1a1iTest(TestCase, GetTimeUsageAwsTestMixin):
             ),
             (util_helper.utc_dt(2018, 1, 31, 19, 0, 0), None),
         )
-        identifier = self.generate_events(powered_times)
-        expected = {identifier: HOURS_15}
-        self.assertHourlyUsage(expected)
+        self.generate_events(powered_times, self.instance_1, self.image_rhel)
+        results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
+        self.assertTotalRunningTimes(results, rhel=HOURS_15)
+        self.assertDaysSeen(results, rhel=3)
+        self.assertInstancesSeen(results, rhel=1)
 
 
-class GetTimeUsageAws1a2iTest(TestCase, GetTimeUsageAwsTestMixin):
+class GetDailyUsageTwoRhelInstancesTest(GetDailyUsageTestBase):
     """
-    _get_time_usage_aws tests for 1 account with 2 similar instances.
+    get_daily_usage tests for 1 account with 2 RHEL instances.
 
     This simulates the case of one customer having two instances running the
-    same version of RHEL using the same AMI in the same subnet of the same
-    instance size.
+    same RHEL image at different times.
     """
-
-    def setUp(self):
-        """Set up commonly used data for each test."""
-        self.account = account_helper.generate_aws_account()
-        self.instance_1 = account_helper.generate_aws_instance(self.account)
-        self.instance_2 = account_helper.generate_aws_instance(self.account)
-        self.start = util_helper.utc_dt(2018, 1, 1, 0, 0, 0)
-        self.end = util_helper.utc_dt(2018, 2, 1, 0, 0, 0)
-
-    def test_usage_no_events(self):
-        """Assert empty-like report when no events exist.
-
-        The instances' running times in the window would look like:
-            [                               ]
-            [                               ]
-        """
-        self.assertHourlyUsage({})
 
     def test_usage_on_times_not_overlapping(self):
         """
@@ -278,14 +406,7 @@ class GetTimeUsageAws1a2iTest(TestCase, GetTimeUsageAwsTestMixin):
                 util_helper.utc_dt(2018, 1, 10, 5, 0, 0)
             ),
         )
-        events = account_helper.generate_aws_instance_events(
-            self.instance_1, powered_times
-        )
-
-        identifier = events[0].product_identifier
-        ec2_ami_id = events[0].machineimage.ec2_ami_id
-        instance_type = events[0].instance_type
-        subnet = events[0].subnet
+        self.generate_events(powered_times, self.instance_1, self.image_rhel)
 
         powered_times = (
             (
@@ -293,15 +414,12 @@ class GetTimeUsageAws1a2iTest(TestCase, GetTimeUsageAwsTestMixin):
                 util_helper.utc_dt(2018, 1, 20, 5, 0, 0)
             ),
         )
-        account_helper.generate_aws_instance_events(
-            self.instance_2,
-            powered_times,
-            ec2_ami_id=ec2_ami_id,
-            instance_type=instance_type,
-            subnet=subnet,
-        )
-        expected = {identifier: HOURS_10}
-        self.assertHourlyUsage(expected)
+        self.generate_events(powered_times, self.instance_2, self.image_rhel)
+
+        results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
+        self.assertTotalRunningTimes(results, rhel=HOURS_10)
+        self.assertDaysSeen(results, rhel=2)
+        self.assertInstancesSeen(results, rhel=2)
 
     def test_usage_on_times_overlapping(self):
         """
@@ -321,14 +439,7 @@ class GetTimeUsageAws1a2iTest(TestCase, GetTimeUsageAwsTestMixin):
                 util_helper.utc_dt(2018, 1, 10, 5, 0, 0)
             ),
         )
-        events = account_helper.generate_aws_instance_events(
-            self.instance_1, powered_times
-        )
-
-        identifier = events[0].product_identifier
-        ec2_ami_id = events[0].machineimage.ec2_ami_id
-        instance_type = events[0].instance_type
-        subnet = events[0].subnet
+        self.generate_events(powered_times, self.instance_1, self.image_rhel)
 
         powered_times = (
             (
@@ -336,15 +447,224 @@ class GetTimeUsageAws1a2iTest(TestCase, GetTimeUsageAwsTestMixin):
                 util_helper.utc_dt(2018, 1, 10, 7, 30, 0)
             ),
         )
+        self.generate_events(powered_times, self.instance_2, self.image_rhel)
+
+        results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
+        self.assertTotalRunningTimes(results, rhel=HOURS_10)
+        self.assertDaysSeen(results, rhel=1)
+        self.assertInstancesSeen(results, rhel=2)
+
+
+class GetDailyUsageOneRhelOneOpenShiftInstanceTest(GetDailyUsageTestBase):
+    """
+    get_daily_usage tests for 1 account with 1 RHEL and 1 OpenShift instance.
+
+    This simulates the case of one customer having one instance using a RHEL
+    image and one instance using an OpenShift image running at different times.
+    """
+
+    def test_usage_on_times_not_overlapping(self):
+        """
+        Assert usage for 5 hours RHEL and 5 hours OpenShift in the period.
+
+        This test asserts counting when the RHEL instance was on for 5 hours
+        and the OpenShift instance was on for 5 hours at a different time.
+
+        The instances' running times in the window would look like:
+            [        ##                     ]
+            [                    ##         ]
+        """
+        powered_times = (
+            (
+                util_helper.utc_dt(2018, 1, 10, 0, 0, 0),
+                util_helper.utc_dt(2018, 1, 10, 5, 0, 0)
+            ),
+        )
+        self.generate_events(powered_times, self.instance_1, self.image_rhel)
+
+        powered_times = (
+            (
+                util_helper.utc_dt(2018, 1, 20, 0, 0, 0),
+                util_helper.utc_dt(2018, 1, 20, 5, 0, 0)
+            ),
+        )
+        self.generate_events(powered_times, self.instance_2, self.image_ocp)
+
+        results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
+        self.assertTotalRunningTimes(results, rhel=HOURS_5, openshift=HOURS_5)
+        self.assertDaysSeen(results, rhel=1, openshift=1)
+        self.assertInstancesSeen(results, rhel=1, openshift=1)
+
+    def test_usage_on_times_overlapping(self):
+        """
+        Assert overlapping RHEL and OpenShift times are reported separately.
+
+        This test asserts counting when the RHEL instance was on for 5 hours
+        and the OpenShift instance was on for 5 hours at a another time that
+        overlaps with the first by 2.5 hours.
+
+        The instances' running times in the window would look like:
+            [        ##                     ]
+            [         ##                    ]
+        """
+        powered_times = (
+            (
+                util_helper.utc_dt(2018, 1, 10, 0, 0, 0),
+                util_helper.utc_dt(2018, 1, 10, 5, 0, 0)
+            ),
+        )
+        self.generate_events(powered_times, self.instance_1, self.image_rhel)
+
+        powered_times = (
+            (
+                util_helper.utc_dt(2018, 1, 10, 2, 30, 0),
+                util_helper.utc_dt(2018, 1, 10, 7, 30, 0)
+            ),
+        )
+        self.generate_events(powered_times, self.instance_2, self.image_ocp)
+
+        results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
+        self.assertTotalRunningTimes(results, rhel=HOURS_5, openshift=HOURS_5)
+        self.assertDaysSeen(results, rhel=1, openshift=1)
+        self.assertInstancesSeen(results, rhel=1, openshift=1)
+
+
+class GetDailyUsageComplexInstancesTest(GetDailyUsageTestBase):
+    """get_time_usage tests for 1 account and several instances."""
+
+    def test_several_instances_with_whole_days(self):
+        """
+        Assert correct report for instances with various run times.
+
+        The RHEL-only running times over the month would look like:
+
+            [ ####      ##                  ]
+            [  ##                ##         ]
+
+        The plain running times over the month would look like:
+
+            [  #####                        ]
+
+        The OpenShift-only running times over the month would look like:
+
+            [                  ###          ]
+
+        The RHEL+OpenShift running times over the month would look like:
+
+            [        #          ##          ]
+        """
+        powered_times_1 = (
+            (
+                util_helper.utc_dt(2018, 1, 2, 0, 0, 0),
+                util_helper.utc_dt(2018, 1, 6, 0, 0, 0)
+            ),
+            (
+                util_helper.utc_dt(2018, 1, 12, 0, 0, 0),
+                util_helper.utc_dt(2018, 1, 14, 0, 0, 0)
+            ),
+        )
+        account_helper.generate_aws_instance_events(
+            self.instance_1,
+            powered_times_1,
+            ec2_ami_id=self.image_rhel.ec2_ami_id,
+        )
+
+        powered_times_2 = (
+            (
+                util_helper.utc_dt(2018, 1, 3, 0, 0, 0),
+                util_helper.utc_dt(2018, 1, 5, 0, 0, 0)
+            ),
+            (
+                util_helper.utc_dt(2018, 1, 21, 0, 0, 0),
+                util_helper.utc_dt(2018, 1, 23, 0, 0, 0)
+            ),
+        )
         account_helper.generate_aws_instance_events(
             self.instance_2,
-            powered_times,
-            ec2_ami_id=ec2_ami_id,
-            instance_type=instance_type,
-            subnet=subnet,
+            powered_times_2,
+            ec2_ami_id=self.image_rhel.ec2_ami_id,
         )
-        expected = {identifier: HOURS_10}
-        self.assertHourlyUsage(expected)
+
+        powered_times_3 = (
+            (
+                util_helper.utc_dt(2018, 1, 3, 0, 0, 0),
+                util_helper.utc_dt(2018, 1, 8, 0, 0, 0)
+            ),
+        )
+        account_helper.generate_aws_instance_events(
+            self.instance_3,
+            powered_times_3,
+            ec2_ami_id=self.image_plain.ec2_ami_id,
+        )
+
+        powered_times_4 = (
+            (
+                util_helper.utc_dt(2018, 1, 19, 0, 0, 0),
+                util_helper.utc_dt(2018, 1, 22, 0, 0, 0)
+            ),
+        )
+        account_helper.generate_aws_instance_events(
+            self.instance_4,
+            powered_times_4,
+            ec2_ami_id=self.image_ocp.ec2_ami_id,
+        )
+
+        powered_times_5 = (
+            (
+                util_helper.utc_dt(2018, 1, 9, 0, 0, 0),
+                util_helper.utc_dt(2018, 1, 10, 0, 0, 0)
+            ),
+            (
+                util_helper.utc_dt(2018, 1, 20, 0, 0, 0),
+                util_helper.utc_dt(2018, 1, 22, 0, 0, 0)
+            ),
+        )
+        account_helper.generate_aws_instance_events(
+            self.instance_5,
+            powered_times_5,
+            ec2_ami_id=self.image_rhel_ocp.ec2_ami_id,
+        )
+
+        results = reports.get_daily_usage(
+            self.account_1.user_id,
+            self.start,
+            self.end,
+        )
+
+        self.assertEqual(len(results['daily_usage']), 31)
+        self.assertInstancesSeen(results, rhel=3, openshift=2)
+
+        # total of rhel seconds should be 13 days worth of seconds.
+        # total of openshift seconds should be 6 days worth of seconds.
+        self.assertTotalRunningTimes(results, rhel=DAY * 13, openshift=DAY * 6)
+
+        # number of individual days in which we saw anything rhel is 10
+        # number of individual days in which we saw anything openshift is 4
+        self.assertDaysSeen(results, rhel=10, openshift=4)
+
+        # number of days in which we saw 2 rhel running all day is 3
+        self.assertEqual(sum((
+            1 for day in results['daily_usage']
+            if day['rhel_runtime_seconds'] == DAY * 2
+        )), 3)
+
+        # number of days in which we saw 1 rhel running all day is 7
+        self.assertEqual(sum((
+            1 for day in results['daily_usage']
+            if day['rhel_runtime_seconds'] == DAY
+        )), 7)
+
+        # number of days in which we saw 1 openshift running all day is 2
+        self.assertEqual(sum((
+            1 for day in results['daily_usage']
+            if day['openshift_runtime_seconds'] == DAY * 2
+        )), 2)
+
+        # number of days in which we saw 2 openshift running all day is 2
+        self.assertEqual(sum((
+            1 for day in results['daily_usage']
+            if day['openshift_runtime_seconds'] == DAY * 2
+        )), 2)
 
 
 class GetCloudAccountOverview(TestCase):
@@ -698,318 +1018,3 @@ class GetCloudAccountOverview(TestCase):
         )
         is_valid = reports.validate_event(event, self.start)
         self.assertEqual(is_valid, False)
-
-
-class GetDailyUsageTest(TestCase, GetTimeUsageAwsTestMixin):
-    """Test get_time_usage with 1 account, 4 instances, and 4 images."""
-
-    def setUp(self):
-        """Set up commonly used data for each test."""
-        self.account = account_helper.generate_aws_account()
-
-        self.instance_1 = account_helper.generate_aws_instance(self.account)
-        self.instance_2 = account_helper.generate_aws_instance(self.account)
-        self.instance_3 = account_helper.generate_aws_instance(self.account)
-        self.instance_4 = account_helper.generate_aws_instance(self.account)
-        self.instance_5 = account_helper.generate_aws_instance(self.account)
-
-        self.plain_image = account_helper.generate_aws_image(self.account)
-        self.rhel_image = account_helper.generate_aws_image(
-            self.account, is_rhel=True)
-        self.openshift_image = account_helper.generate_aws_image(
-            self.account, is_openshift=True)
-        self.rhel_openshift_image = account_helper.generate_aws_image(
-            self.account, is_rhel=True, is_openshift=True)
-
-        self.start = util_helper.utc_dt(2018, 1, 1, 0, 0, 0)
-        self.end = util_helper.utc_dt(2018, 2, 1, 0, 0, 0)
-
-    def assertTotalRuntimes(self, results, rhel, openshift):
-        """Assert total expected runtimes for rhel and openshift."""
-        self.assertEqual(sum((
-            day['rhel_runtime_seconds'] for day in results['daily_usage']
-        )), rhel)
-        self.assertEqual(sum((
-            day['openshift_runtime_seconds'] for day in results['daily_usage']
-        )), openshift)
-
-    def assertDaysSeen(self, results, rhel, openshift):
-        """Assert expected days seen having rhel and openshift instances."""
-        self.assertEqual(sum((
-            1 for day in results['daily_usage']
-            if day['rhel_instances'] > 0
-        )), rhel)
-        self.assertEqual(sum((
-            1 for day in results['daily_usage']
-            if day['openshift_instances'] > 0
-        )), openshift)
-
-    def assertInstancesSeen(self, results, rhel, openshift):
-        """Assert total expected numbers of rhel and openshift instances."""
-        self.assertEqual(results['instances_seen_with_rhel'], rhel)
-        self.assertEqual(results['instances_seen_with_openshift'], openshift)
-
-    def test_single_instance_spanning_multiple_days(self):
-        """
-        Assert correct report for a RHEL instance running over multiple days.
-
-        The instance is running the last five hours of the first day, all of
-        the second day, and the first five hours of the third day.
-        """
-        powered_times = (
-            (
-                util_helper.utc_dt(2018, 1, 2, 19, 0, 0),
-                util_helper.utc_dt(2018, 1, 4, 5, 0, 0)
-            ),
-        )
-        account_helper.generate_aws_instance_events(
-            self.instance_1,
-            powered_times,
-            ec2_ami_id=self.rhel_image.ec2_ami_id,
-        )
-
-        results = reports.get_daily_usage(
-            self.account.user_id,
-            self.start,
-            self.end,
-        )
-
-        self.assertEqual(len(results['daily_usage']), 31)
-        self.assertInstancesSeen(results, rhel=1, openshift=0)
-
-        # total of rhel seconds should be 13 days worth of seconds.
-        # total of openshift seconds should be 6 days worth of seconds.
-        self.assertTotalRuntimes(results, rhel=DAY + HOURS_10, openshift=0)
-
-        # number of individual days in which we saw anything rhel is 10
-        # number of individual days in which we saw anything openshift is 4
-        self.assertDaysSeen(results, rhel=3, openshift=0)
-
-        # number of days in which we saw rhel running all day is 1
-        self.assertEqual(sum((
-            1 for day in results['daily_usage']
-            if day['rhel_runtime_seconds'] == DAY
-        )), 1)
-
-        # number of days in which we saw rhel running for 5 hours is 2
-        self.assertEqual(sum((
-            1 for day in results['daily_usage']
-            if day['rhel_runtime_seconds'] == HOURS_5
-        )), 2)
-
-    def test_single_instance_spanning_entire_month_never_off(self):
-        """
-        Assert report for instance started in the past and never stopped.
-
-        The instance started in the previous month and has never powered off.
-        """
-        powered_times = (
-            (
-                util_helper.utc_dt(2017, 12, 25, 0, 0, 0),
-                None
-            ),
-        )
-        account_helper.generate_aws_instance_events(
-            self.instance_1,
-            powered_times,
-            ec2_ami_id=self.rhel_image.ec2_ami_id,
-        )
-
-        results = reports.get_daily_usage(
-            self.account.user_id,
-            self.start,
-            self.end,
-        )
-
-        self.assertEqual(len(results['daily_usage']), 31)
-        self.assertInstancesSeen(results, rhel=1, openshift=0)
-
-        # total of rhel seconds should be 13 days worth of seconds.
-        # total of openshift seconds should be 6 days worth of seconds.
-        self.assertTotalRuntimes(results, rhel=DAYS_31, openshift=0)
-
-        # number of individual days in which we saw anything rhel is 10
-        # number of individual days in which we saw anything openshift is 4
-        self.assertDaysSeen(results, rhel=31, openshift=0)
-
-        # number of days in which we saw rhel running all day is 31
-        self.assertEqual(sum((
-            1 for day in results['daily_usage']
-            if day['rhel_runtime_seconds'] == DAY
-        )), 31)
-
-    def test_single_instance_spanning_entire_month_off_in_future(self):
-        """
-        Assert report for instance started in the past and stopped in future.
-
-        The instance started in the previous month and has a power-off event
-        in the month after the report ends.
-        """
-        powered_times = (
-            (
-                util_helper.utc_dt(2017, 12, 25, 0, 0, 0),
-                util_helper.utc_dt(2018, 2, 14, 0, 0, 0),
-            ),
-        )
-        account_helper.generate_aws_instance_events(
-            self.instance_1,
-            powered_times,
-            ec2_ami_id=self.rhel_image.ec2_ami_id,
-        )
-
-        results = reports.get_daily_usage(
-            self.account.user_id,
-            self.start,
-            self.end,
-        )
-
-        self.assertEqual(len(results['daily_usage']), 31)
-        self.assertInstancesSeen(results, rhel=1, openshift=0)
-
-        # total of rhel seconds should be 13 days worth of seconds.
-        # total of openshift seconds should be 6 days worth of seconds.
-        self.assertTotalRuntimes(results, rhel=DAYS_31, openshift=0)
-
-        # number of individual days in which we saw anything rhel is 10
-        # number of individual days in which we saw anything openshift is 4
-        self.assertDaysSeen(results, rhel=31, openshift=0)
-
-        # number of days in which we saw rhel running all day is 31
-        self.assertEqual(sum((
-            1 for day in results['daily_usage']
-            if day['rhel_runtime_seconds'] == DAY
-        )), 31)
-
-    def test_several_instances_with_whole_days(self):
-        """
-        Assert correct report for instances with various run times.
-
-        The RHEL-only running times over the month would look like:
-
-            [ ####      ##                  ]
-            [  ##                ##         ]
-
-        The plain running times over the month would look like:
-
-            [  #####                        ]
-
-        The OpenShift-only running times over the month would look like:
-
-            [                  ###          ]
-
-        The RHEL+OpenShift running times over the month would look like:
-
-            [        #          ##          ]
-        """
-        powered_times_1 = (
-            (
-                util_helper.utc_dt(2018, 1, 2, 0, 0, 0),
-                util_helper.utc_dt(2018, 1, 6, 0, 0, 0)
-            ),
-            (
-                util_helper.utc_dt(2018, 1, 12, 0, 0, 0),
-                util_helper.utc_dt(2018, 1, 14, 0, 0, 0)
-            ),
-        )
-        account_helper.generate_aws_instance_events(
-            self.instance_1,
-            powered_times_1,
-            ec2_ami_id=self.rhel_image.ec2_ami_id,
-        )
-
-        powered_times_2 = (
-            (
-                util_helper.utc_dt(2018, 1, 3, 0, 0, 0),
-                util_helper.utc_dt(2018, 1, 5, 0, 0, 0)
-            ),
-            (
-                util_helper.utc_dt(2018, 1, 21, 0, 0, 0),
-                util_helper.utc_dt(2018, 1, 23, 0, 0, 0)
-            ),
-        )
-        account_helper.generate_aws_instance_events(
-            self.instance_2,
-            powered_times_2,
-            ec2_ami_id=self.rhel_image.ec2_ami_id,
-        )
-
-        powered_times_3 = (
-            (
-                util_helper.utc_dt(2018, 1, 3, 0, 0, 0),
-                util_helper.utc_dt(2018, 1, 8, 0, 0, 0)
-            ),
-        )
-        account_helper.generate_aws_instance_events(
-            self.instance_3,
-            powered_times_3,
-            ec2_ami_id=self.plain_image.ec2_ami_id,
-        )
-
-        powered_times_4 = (
-            (
-                util_helper.utc_dt(2018, 1, 19, 0, 0, 0),
-                util_helper.utc_dt(2018, 1, 22, 0, 0, 0)
-            ),
-        )
-        account_helper.generate_aws_instance_events(
-            self.instance_4,
-            powered_times_4,
-            ec2_ami_id=self.openshift_image.ec2_ami_id,
-        )
-
-        powered_times_5 = (
-            (
-                util_helper.utc_dt(2018, 1, 9, 0, 0, 0),
-                util_helper.utc_dt(2018, 1, 10, 0, 0, 0)
-            ),
-            (
-                util_helper.utc_dt(2018, 1, 20, 0, 0, 0),
-                util_helper.utc_dt(2018, 1, 22, 0, 0, 0)
-            ),
-        )
-        account_helper.generate_aws_instance_events(
-            self.instance_5,
-            powered_times_5,
-            ec2_ami_id=self.rhel_openshift_image.ec2_ami_id,
-        )
-
-        results = reports.get_daily_usage(
-            self.account.user_id,
-            self.start,
-            self.end,
-        )
-
-        self.assertEqual(len(results['daily_usage']), 31)
-        self.assertInstancesSeen(results, rhel=3, openshift=2)
-
-        # total of rhel seconds should be 13 days worth of seconds.
-        # total of openshift seconds should be 6 days worth of seconds.
-        self.assertTotalRuntimes(results, rhel=DAY * 13, openshift=DAY * 6)
-
-        # number of individual days in which we saw anything rhel is 10
-        # number of individual days in which we saw anything openshift is 4
-        self.assertDaysSeen(results, rhel=10, openshift=4)
-
-        # number of days in which we saw 2 rhel running all day is 3
-        self.assertEqual(sum((
-            1 for day in results['daily_usage']
-            if day['rhel_runtime_seconds'] == DAY * 2
-        )), 3)
-
-        # number of days in which we saw 1 rhel running all day is 7
-        self.assertEqual(sum((
-            1 for day in results['daily_usage']
-            if day['rhel_runtime_seconds'] == DAY
-        )), 7)
-
-        # number of days in which we saw 1 openshift running all day is 2
-        self.assertEqual(sum((
-            1 for day in results['daily_usage']
-            if day['openshift_runtime_seconds'] == DAY * 2
-        )), 2)
-
-        # number of days in which we saw 2 openshift running all day is 2
-        self.assertEqual(sum((
-            1 for day in results['daily_usage']
-            if day['openshift_runtime_seconds'] == DAY * 2
-        )), 2)

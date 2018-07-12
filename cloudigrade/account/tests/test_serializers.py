@@ -7,13 +7,11 @@ from django.test import TestCase
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from account import AWS_PROVIDER_STRING, reports
 from account.models import (AwsAccount,
                             AwsInstance,
                             AwsMachineImage,
                             InstanceEvent)
 from account.serializers import (AwsAccountSerializer,
-                                 ReportSerializer,
                                  aws)
 from account.tests import helper as account_helper
 from util.tests import helper as util_helper
@@ -350,61 +348,3 @@ class AwsAccountSerializerTest(TestCase):
             self.assertIn('account_arn', raised_exception.detail)
             self.assertIn(aws_account_id,
                           raised_exception.detail['account_arn'][0])
-
-
-class ReportSerializerTest(TestCase):
-    """Report serializer test case."""
-
-    def test_report_with_timezones_specified(self):
-        """Test that start/end dates with timezones shift correctly to UTC."""
-        cloud_provider = AWS_PROVIDER_STRING
-        cloud_account_id = util_helper.generate_dummy_aws_account_id()
-        start_no_tz = '2018-01-01T00:00:00-05'
-        end_no_tz = '2018-02-01T00:00:00+04'
-        request_data = {
-            'cloud_provider': cloud_provider,
-            'cloud_account_id': str(cloud_account_id),
-            'start': start_no_tz,
-            'end': end_no_tz,
-        }
-        expected_start = util_helper.utc_dt(2018, 1, 1, 5, 0)
-        expected_end = util_helper.utc_dt(2018, 1, 31, 20, 0)
-
-        with patch.object(reports, 'get_time_usage') as mock_get_hourly:
-            serializer = ReportSerializer(data=request_data)
-            serializer.is_valid(raise_exception=True)
-            results = serializer.generate()
-            mock_get_hourly.assert_called_with(
-                cloud_provider=cloud_provider,
-                cloud_account_id=cloud_account_id,
-                start=expected_start,
-                end=expected_end
-            )
-            self.assertEqual(results, mock_get_hourly.return_value)
-
-    def test_report_without_timezones_specified(self):
-        """Test that UTC is used if timezones are missing from start/end."""
-        cloud_provider = AWS_PROVIDER_STRING
-        cloud_account_id = util_helper.generate_dummy_aws_account_id()
-        start_no_tz = '2018-01-01T00:00:00'
-        end_no_tz = '2018-02-01T00:00:00'
-        mock_request_data = {
-            'cloud_provider': cloud_provider,
-            'cloud_account_id': str(cloud_account_id),
-            'start': start_no_tz,
-            'end': end_no_tz,
-        }
-        expected_start = util_helper.utc_dt(2018, 1, 1, 0, 0)
-        expected_end = util_helper.utc_dt(2018, 2, 1, 0, 0)
-
-        with patch.object(reports, 'get_time_usage') as mock_get_hourly:
-            serializer = ReportSerializer(data=mock_request_data)
-            serializer.is_valid(raise_exception=True)
-            results = serializer.generate()
-            mock_get_hourly.assert_called_with(
-                cloud_provider=cloud_provider,
-                cloud_account_id=cloud_account_id,
-                start=expected_start,
-                end=expected_end
-            )
-            self.assertEqual(results, mock_get_hourly.return_value)

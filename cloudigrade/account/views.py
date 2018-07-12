@@ -117,30 +117,6 @@ class MachineImageViewSet(viewsets.ReadOnlyModelViewSet):
         return self.queryset
 
 
-class ReportViewSet(viewsets.ViewSet):
-    """Generate a usage report."""
-
-    serializer_class = serializers.ReportSerializer
-
-    def list(self, request, *args, **kwargs):
-        """
-        Create the usage report and return the results.
-
-        Note: this is called "list" to simplify DRF router integration. By
-        using the "list" name, this method automatically gets mapped to the
-        GET handler for the "/" end of the URI (effectively "/api/v1/report/").
-        """
-        serializer = self.serializer_class(data=request.query_params)
-        serializer.is_valid(raise_exception=True)
-        try:
-            result = serializer.generate()
-        except AwsAccount.DoesNotExist:
-            raise exceptions.NotFound()
-        except InvalidCloudProviderError as e:
-            raise exceptions.ValidationError(detail=str(e))
-        return Response(result, status=status.HTTP_200_OK)
-
-
 class SysconfigViewSet(viewsets.ViewSet):
     """View to display our cloud account ids."""
 
@@ -185,7 +161,13 @@ class DailyInstanceActivityViewSet(viewsets.GenericViewSet):
     serializer_class = serializers.DailyInstanceActivitySerializer
 
     def list(self, request, *args, **kwargs):
-        """Run the daily instance activity report and return the results."""
+        """
+        Run the daily instance activity report and return the results.
+
+        Note: this is called "list" to simplify DRF router integration. By
+        using the "list" name, this method automatically gets mapped to the
+        GET handler for the "/" end of the URI (effectively "/api/v1/report/").
+        """
         serializer = self.get_serializer(data=request.query_params)
         serializer.is_valid(raise_exception=True)
         try:

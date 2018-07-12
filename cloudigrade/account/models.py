@@ -1,6 +1,4 @@
 """Cloudigrade Account Models."""
-from abc import abstractmethod
-
 import model_utils
 from django.contrib.auth.models import User
 from django.db import models
@@ -123,15 +121,6 @@ class InstanceEvent(BasePolymorphicModel):
     )
     occurred_at = models.DateTimeField(null=False)
 
-    @property
-    @abstractmethod
-    def product_identifier(self):
-        """
-        Get a relatively unique product identifier.
-
-        This may be implementation-specific to particular cloud providers.
-        """
-
 
 class AwsAccount(Account):
     """Amazon Web Services customer account model."""
@@ -155,10 +144,6 @@ class AwsInstance(Instance):
         null=False,
         blank=False,
     )
-
-    def __repr__(self):
-        """Get repr of this AwsInstance."""
-        return f'<AwsInstance {self.ec2_instance_id}>'
 
 
 class AwsMachineImage(MachineImage):
@@ -200,22 +185,3 @@ class AwsInstanceEvent(InstanceEvent):
 
     subnet = models.CharField(max_length=256, null=False, blank=False)
     instance_type = models.CharField(max_length=64, null=False, blank=False)
-
-    @property
-    def product_identifier(self):
-        """Get a relatively unique product identifier.
-
-        This should be unique enough for product usage reporting purposes. For
-        now, this means it's a combination of:
-
-            - AMI ID (until we know what RHEL version it has)
-            - EC2 instance type
-
-        Todo:
-            - use an actual RHEL version
-
-        Returns:
-            str: the computed product identifier
-
-        """
-        return f'aws-{self.machineimage.id}-{self.instance_type}'

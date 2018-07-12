@@ -9,7 +9,6 @@ from rest_framework import serializers
 from rest_framework.serializers import HyperlinkedModelSerializer, Serializer
 from rest_polymorphic.serializers import PolymorphicSerializer
 
-import account
 from account import reports
 from account.models import (AwsAccount,
                             AwsInstance,
@@ -20,7 +19,6 @@ from account.util import (create_initial_aws_instance_events,
                           create_new_machine_images,
                           generate_aws_ami_messages,
                           start_image_inspection)
-from account.validators import validate_cloud_provider_account_id
 from util import aws
 from util.exceptions import InvalidArn
 
@@ -292,23 +290,6 @@ class InstancePolymorphicSerializer(PolymorphicSerializer):
     model_serializer_mapping = {
         AwsInstance: AwsInstanceSerializer,
     }
-
-
-class ReportSerializer(Serializer):
-    """Serialize a usage report for the API."""
-
-    cloud_provider = serializers.ChoiceField(choices=account.CLOUD_PROVIDERS)
-    cloud_account_id = serializers.CharField()
-
-    start = serializers.DateTimeField(default_timezone=tz.tzutc())
-    end = serializers.DateTimeField(default_timezone=tz.tzutc())
-
-    class Meta:
-        validators = [validate_cloud_provider_account_id]
-
-    def generate(self):
-        """Generate the usage report and return the results."""
-        return reports.get_time_usage(**self.validated_data)
 
 
 class CloudAccountOverviewSerializer(Serializer):

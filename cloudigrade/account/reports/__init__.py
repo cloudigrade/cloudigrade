@@ -10,48 +10,8 @@ from django.utils.translation import gettext as _
 
 from account import AWS_PROVIDER_STRING
 from account.models import Account, AwsAccount, Instance, InstanceEvent
-from account.reports import helper
 
 logger = logging.getLogger(__name__)
-
-
-def get_time_usage(start, end, cloud_provider, cloud_account_id):
-    """
-    Calculate total time any products have run for the given cloud account.
-
-    Args:
-        start (datetime.datetime): Start time (inclusive)
-        end (datetime.datetime): End time (exclusive)
-        cloud_provider (str): The cloud provider for the account
-        cloud_account_id (object): The cloud-specific account ID. The type for
-            cloud_account_id is dynamic and will vary according to which
-            cloud_provider was found in validate_cloud_provider_account_id.
-
-    Returns:
-        dict: Total running time in seconds keyed by product type.
-
-    """
-    cloud_helper = helper.get_report_helper(cloud_provider, cloud_account_id)
-
-    # Verify that we can get the requested account before proceeding.
-    cloud_helper.assert_account_exists()
-
-    # Retrieve all relevant events and group into reporting-relevant buckets.
-    events = _get_relevant_events(start, end, [cloud_helper.account.id])
-    grouped_events = _group_related_events(events, cloud_helper)
-
-    # Sum the calculated usage by product.
-    product_times = collections.defaultdict(float)
-    for product_identifier, instance_events in grouped_events.items():
-        run_time = sum(
-            map(
-                functools.partial(_calculate_instance_usage, start, end),
-                instance_events.values()
-            )
-        )
-        product_times[product_identifier] += run_time
-
-    return dict(product_times)
 
 
 def get_daily_usage(user_id, start, end, name_pattern=None):
@@ -231,59 +191,6 @@ def _calculate_daily_usage(start, end, instance_events):
         'instances_seen_with_openshift': len(instance_ids_seen_with_openshift),
         'daily_usage': daily_usage,
     }
-
-
-def _group_related_events(events, cloud_helper):
-    """
-    Group the events by multiple dimensions in nested dicts.
-
-    At the outer later, the keys are "product type" strings. These are a
-    combination of (virtual) hardware definition and found software product
-    that ultimately each needs to be reported with a sum total of running time.
-    At the next layer, the keys are the instance IDs. Finally, each of those
-    instance ID keys points to a list of InstanceEvents that belong to it.
-
-    This "double nesting" of product+instance is necessary because instance IDs
-    alone would not be sufficient for grouping because some cloud providers
-    allow resizing of an existing instance without changing/replacing its ID.
-
-    For example, a returned structure might look like:
-
-        {
-            'aws-t2.micro-rhel7': {
-                'i-05f78714782d7979b': [
-                    <InstanceEvent object>
-                ]
-            },
-            'aws-t2.nano-rhel7': {
-                'i-05f64764381d6970a': [
-                    <InstanceEvent object>
-                ],
-                'i-05f78714782d7979b': [
-                    <InstanceEvent object>,
-                    <InstanceEvent object>,
-                    <InstanceEvent object>
-                ]
-            }
-        }
-
-    Args:
-        events (list(InstanceEvent)): Events to group
-        cloud_helper (helper.ReportHelper): Helper for cloud-specific things
-
-    Returns:
-        dict: Results as a dict-of-dicts-of-lists as described above.
-    """
-    grouped_events = collections.defaultdict(
-        functools.partial(collections.defaultdict, list)
-    )
-
-    for event in events:
-        product_key = cloud_helper.get_event_product_identifier(event)
-        instance_key = cloud_helper.get_event_instance_identifier(event)
-        grouped_events[product_key][instance_key].append(event)
-
-    return grouped_events
 
 
 def _calculate_instance_usage(start, end, events):
