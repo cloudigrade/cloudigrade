@@ -55,16 +55,6 @@ class ReportHelper(ABC):
     def assert_account_exists(self):
         """Assert that the cloud-specific account ID exists in cloudigrade."""
 
-    @property
-    @abstractmethod
-    def instance_account_filter(self):
-        """Get a Django query filter to restrict instances to this account."""
-
-    @property
-    @abstractmethod
-    def event_account_filter(self):
-        """Get a Django query filter to restrict events to this account."""
-
     @staticmethod
     @abstractmethod
     def get_event_product_identifier(event):
@@ -107,18 +97,6 @@ class AwsReportHelper(ReportHelper):
         """Assert that the AWS account ID exists in cloudigrade."""
         if not self.account:
             raise AwsAccount.DoesNotExist()
-
-    def instance_account_filter(self):
-        """Get a Django query filter to restrict instances to this account."""
-        return models.Q(
-            account__awsaccount__aws_account_id=self.cloud_account_id
-        )
-
-    def event_account_filter(self):
-        """Get a Django query filter to restrict events to this account."""
-        return models.Q(
-            instance__account__awsaccount__aws_account_id=self.cloud_account_id
-        )
 
     @staticmethod
     def get_event_product_identifier(event):
