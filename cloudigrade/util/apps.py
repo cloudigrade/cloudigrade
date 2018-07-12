@@ -1,12 +1,9 @@
 from django.apps import AppConfig
 
-from health_check.plugins import plugin_dir
-
 
 class UtilConfig(AppConfig):
     name = 'util'
 
-    def ready(self):
-        from .health import CeleryHealthCheckBackend, SqsHealthCheckBackend
-        plugin_dir.register(CeleryHealthCheckBackend)
-        plugin_dir.register(SqsHealthCheckBackend)
+    # TODO FIXME: Health checks previously present here
+    # were causing a memory leak issue, when the time comes we need
+    # to come back and refactor or replace these health checks.

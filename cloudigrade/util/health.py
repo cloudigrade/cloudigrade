@@ -11,6 +11,9 @@ from account.util import _get_sqs_queue_url
 logger = logging.getLogger(__name__)
 
 
+# TODO FIXME: These health checks were causing (or highlighting)
+# a memory leak issue, when the time comes we need to come back
+# and refactor or replace these health checks.
 class CeleryHealthCheckBackend(BaseHealthCheckBackend):
     """Celery connection health check."""
 
@@ -25,6 +28,7 @@ class CeleryHealthCheckBackend(BaseHealthCheckBackend):
             app = self._get_app()
             connection = app.connection()
             connection.heartbeat_check()
+            connection.release()
         except ClientError as e:
             logger.exception(e)
             self.add_error(_('Celery heartbeat failed due to boto3 error.'))
