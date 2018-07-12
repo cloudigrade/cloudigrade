@@ -1,11 +1,9 @@
 """DRF API views for the account app."""
-from rest_framework import exceptions, mixins, status, viewsets
+from rest_framework import mixins, status, viewsets
 from rest_framework.response import Response
 
 from account import serializers
-from account.exceptions import InvalidCloudProviderError
 from account.models import (Account,
-                            AwsAccount,
                             Instance,
                             InstanceEvent,
                             MachineImage)
@@ -170,10 +168,5 @@ class DailyInstanceActivityViewSet(viewsets.GenericViewSet):
         """
         serializer = self.get_serializer(data=request.query_params)
         serializer.is_valid(raise_exception=True)
-        try:
-            result = serializer.generate()
-        except AwsAccount.DoesNotExist:
-            raise exceptions.NotFound()
-        except InvalidCloudProviderError as e:
-            raise exceptions.ValidationError(detail=str(e))
+        result = serializer.generate()
         return Response(result, status=status.HTTP_200_OK)
