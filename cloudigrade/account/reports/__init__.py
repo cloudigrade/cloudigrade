@@ -29,13 +29,7 @@ def get_daily_usage(user_id, start, end, name_pattern=None):
             constituent representative parts in terms of product usage.
     """
 
-    if name_pattern is not None:
-        names = set(
-            [word for word in name_pattern.split(' ') if len(word) > 0]
-        )
-    else:
-        names = None
-    accounts = _filter_accounts(user_id, names)
+    accounts = _filter_accounts(user_id, name_pattern)
     events = _get_relevant_events(start, end, accounts)
 
     instance_events = collections.defaultdict(list)
@@ -47,13 +41,13 @@ def get_daily_usage(user_id, start, end, name_pattern=None):
     return usage
 
 
-def _filter_accounts(user_id, names=None, account_ids=None):
+def _filter_accounts(user_id, name_pattern=None, account_ids=None):
     """
     Get accounts filtered by user_id and matching name.
 
     Args:
         user_id (int): required user_id to filter against
-        names (list[str]): optional name patterns to filter against
+        name_pattern (str): optional cloud name pattern to filter against
         account_ids (list[int]): optional account ids to filter against
 
     Returns:
@@ -63,11 +57,16 @@ def _filter_accounts(user_id, names=None, account_ids=None):
         user_id=user_id
     )
 
-    if names:
-        # Combine all the name matches with "ior" operators.
+    if name_pattern is not None and len(name_pattern.strip()):
+        # Build a set of unique words to use in the query.
+        words = set(
+            [word.lower() for word in name_pattern.split(' ') if len(word) > 0]
+        )
+
+        # Combine each the words with "ior" operators.
         account_name_filter = functools.reduce(
             operator.ior,
-            [models.Q(name__icontains=name) for name in names]
+            [models.Q(name__icontains=word) for word in words]
         )
         account_filter &= account_name_filter
 
