@@ -41,14 +41,13 @@ def get_daily_usage(user_id, start, end, name_pattern=None):
     return usage
 
 
-def _filter_accounts(user_id, name_pattern=None, account_ids=None):
+def _filter_accounts(user_id, name_pattern=None):
     """
     Get accounts filtered by user_id and matching name.
 
     Args:
         user_id (int): required user_id to filter against
         name_pattern (str): optional cloud name pattern to filter against
-        account_ids (list[int]): optional account ids to filter against
 
     Returns:
         PolymorphicQuerySet for the filtered Account objects.
@@ -69,12 +68,6 @@ def _filter_accounts(user_id, name_pattern=None, account_ids=None):
             [models.Q(name__icontains=word) for word in words]
         )
         account_filter &= account_name_filter
-
-    if account_ids:
-        account_ids_filter = models.Q(
-            id__in=account_ids
-        )
-        account_filter &= account_ids_filter
 
     accounts = Account.objects.filter(account_filter)
     return accounts
