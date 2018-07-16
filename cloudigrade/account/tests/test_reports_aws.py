@@ -96,7 +96,7 @@ class ReportTestBase(TestCase):
             instance (Instance): Optional which instance has the events. If
                 not specified, default is self.instance_1.
             image (AwsMachineImage): Optional which image seen in the events.
-                If not specified, default is self.image_plain.
+                If not specified, default is self.image_rhel.
 
         Returns:
             list[InstanceEvent]: The list of events
@@ -105,7 +105,7 @@ class ReportTestBase(TestCase):
         if instance is None:
             instance = self.instance_1
         if image is None:
-            image = self.image_plain
+            image = self.image_rhel
         events = account_helper.generate_aws_instance_events(
             instance, powered_times, image.ec2_ami_id,
         )
@@ -163,7 +163,7 @@ class GetDailyUsageNoReportableActivity(GetDailyUsageTestBase):
                 util_helper.utc_dt(2017, 1, 10, 0, 0, 0)
             ),
         )
-        self.generate_events(powered_times, self.instance_1, self.image_rhel)
+        self.generate_events(powered_times)
         results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
         self.assertNoActivityFound(results)
 
@@ -175,7 +175,7 @@ class GetDailyUsageNoReportableActivity(GetDailyUsageTestBase):
                 util_helper.utc_dt(2019, 1, 10, 0, 0, 0)
             ),
         )
-        self.generate_events(powered_times, self.instance_1, self.image_rhel)
+        self.generate_events(powered_times)
         results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
         self.assertNoActivityFound(results)
 
@@ -187,7 +187,7 @@ class GetDailyUsageNoReportableActivity(GetDailyUsageTestBase):
                 util_helper.utc_dt(2019, 1, 10, 0, 0, 0)
             ),
         )
-        self.generate_events(powered_times, self.instance_1, self.image_rhel)
+        self.generate_events(powered_times)
         results = reports.get_daily_usage(self.user_2.id, self.start, self.end)
         self.assertNoActivityFound(results)
 
@@ -199,7 +199,7 @@ class GetDailyUsageNoReportableActivity(GetDailyUsageTestBase):
                 util_helper.utc_dt(2018, 1, 10, 0, 0, 0)
             ),
         )
-        self.generate_events(powered_times, self.instance_1, self.image_plain)
+        self.generate_events(powered_times, image=self.image_plain)
         results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
         self.assertNoActivityFound(results)
 
@@ -223,7 +223,7 @@ class GetDailyUsageBasicInstanceTest(GetDailyUsageTestBase):
                 util_helper.utc_dt(2018, 1, 10, 5, 0, 0)
             ),
         )
-        self.generate_events(powered_times, self.instance_1, self.image_rhel)
+        self.generate_events(powered_times)
         results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
         self.assertTotalRunningTimes(results, rhel=HOURS_5)
         self.assertDaysSeen(results, rhel=1)
@@ -247,7 +247,7 @@ class GetDailyUsageBasicInstanceTest(GetDailyUsageTestBase):
                 util_helper.utc_dt(2018, 1, 10, 5, 0, 0)
             ),
         )
-        self.generate_events(powered_times, self.instance_1, self.image_rhel)
+        self.generate_events(powered_times)
         results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
         self.assertTotalRunningTimes(results, rhel=HOURS_5)
         self.assertDaysSeen(results, rhel=1)
@@ -269,7 +269,7 @@ class GetDailyUsageBasicInstanceTest(GetDailyUsageTestBase):
                 util_helper.utc_dt(2018, 1, 1, 5, 0, 0)
             ),
         )
-        self.generate_events(powered_times, self.instance_1, self.image_rhel)
+        self.generate_events(powered_times)
         results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
         self.assertTotalRunningTimes(results, rhel=HOURS_5)
         self.assertDaysSeen(results, rhel=1)
@@ -286,7 +286,7 @@ class GetDailyUsageBasicInstanceTest(GetDailyUsageTestBase):
             [                             ##]
         """
         powered_times = ((util_helper.utc_dt(2018, 1, 31, 19, 0, 0), None),)
-        self.generate_events(powered_times, self.instance_1, self.image_rhel)
+        self.generate_events(powered_times)
         results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
         self.assertTotalRunningTimes(results, rhel=HOURS_5)
         self.assertDaysSeen(results, rhel=1)
@@ -309,7 +309,7 @@ class GetDailyUsageBasicInstanceTest(GetDailyUsageTestBase):
                 util_helper.utc_dt(2018, 1, 6, 5, 0, 0)
             ),
         )
-        self.generate_events(powered_times, self.instance_1, self.image_rhel)
+        self.generate_events(powered_times)
         results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
         self.assertTotalRunningTimes(results, rhel=DAY * 5 + HOURS_5)
         self.assertDaysSeen(results, rhel=6)
@@ -326,7 +326,7 @@ class GetDailyUsageBasicInstanceTest(GetDailyUsageTestBase):
             [###############################]
         """
         powered_times = ((util_helper.utc_dt(2017, 1, 1), None),)
-        self.generate_events(powered_times, self.instance_1, self.image_rhel)
+        self.generate_events(powered_times)
         results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
         self.assertTotalRunningTimes(results, rhel=DAYS_31)
         self.assertDaysSeen(results, rhel=31)
@@ -345,7 +345,7 @@ class GetDailyUsageBasicInstanceTest(GetDailyUsageTestBase):
         powered_times = (
             (util_helper.utc_dt(2017, 1, 1), util_helper.utc_dt(2019, 1, 1)),
         )
-        self.generate_events(powered_times, self.instance_1, self.image_rhel)
+        self.generate_events(powered_times)
         results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
         self.assertTotalRunningTimes(results, rhel=DAYS_31)
         self.assertDaysSeen(results, rhel=31)
@@ -374,7 +374,7 @@ class GetDailyUsageBasicInstanceTest(GetDailyUsageTestBase):
             ),
             (util_helper.utc_dt(2018, 1, 31, 19, 0, 0), None),
         )
-        self.generate_events(powered_times, self.instance_1, self.image_rhel)
+        self.generate_events(powered_times)
         results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
         self.assertTotalRunningTimes(results, rhel=HOURS_15)
         self.assertDaysSeen(results, rhel=3)
@@ -406,7 +406,7 @@ class GetDailyUsageTwoRhelInstancesTest(GetDailyUsageTestBase):
                 util_helper.utc_dt(2018, 1, 10, 5, 0, 0)
             ),
         )
-        self.generate_events(powered_times, self.instance_1, self.image_rhel)
+        self.generate_events(powered_times)
 
         powered_times = (
             (
@@ -414,7 +414,7 @@ class GetDailyUsageTwoRhelInstancesTest(GetDailyUsageTestBase):
                 util_helper.utc_dt(2018, 1, 20, 5, 0, 0)
             ),
         )
-        self.generate_events(powered_times, self.instance_2, self.image_rhel)
+        self.generate_events(powered_times, instance=self.instance_2)
 
         results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
         self.assertTotalRunningTimes(results, rhel=HOURS_10)
@@ -439,7 +439,7 @@ class GetDailyUsageTwoRhelInstancesTest(GetDailyUsageTestBase):
                 util_helper.utc_dt(2018, 1, 10, 5, 0, 0)
             ),
         )
-        self.generate_events(powered_times, self.instance_1, self.image_rhel)
+        self.generate_events(powered_times, self.instance_1)
 
         powered_times = (
             (
@@ -447,7 +447,7 @@ class GetDailyUsageTwoRhelInstancesTest(GetDailyUsageTestBase):
                 util_helper.utc_dt(2018, 1, 10, 7, 30, 0)
             ),
         )
-        self.generate_events(powered_times, self.instance_2, self.image_rhel)
+        self.generate_events(powered_times, self.instance_2)
 
         results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
         self.assertTotalRunningTimes(results, rhel=HOURS_10)
