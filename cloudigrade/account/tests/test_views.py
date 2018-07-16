@@ -1236,3 +1236,15 @@ class DailyInstanceActivityViewSetTest(TestCase):
         response = self.get_report_response(self.user, self.start, self.end,
                                             name_pattern=name_pattern)
         self.assertActivityForRhelInstance(response)
+
+    def test_user_cannot_filter_to_see_other_user_activity_success(self):
+        """Assert one user cannot filter to see data for another user."""
+        response = self.get_report_response(self.other_user, self.start,
+                                            self.end, user_id=self.user.id)
+        self.assertNoActivity(response)
+
+    def test_super_can_filter_to_see_other_user_activity_success(self):
+        """Assert super user can filter to see data for another user."""
+        response = self.get_report_response(self.super_user, self.start,
+                                            self.end, user_id=self.user.id)
+        self.assertActivityForRhelInstance(response)

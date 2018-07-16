@@ -313,11 +313,13 @@ class DailyInstanceActivitySerializer(Serializer):
 
     def generate(self):
         """Generate the usage report and return the results."""
-        user_id = self.validated_data.get('user_id', None)
         start = self.validated_data['start']
         end = self.validated_data['end']
         name_pattern = self.validated_data.get('name_pattern', None)
 
-        if not user_id:
-            user_id = self.context['request'].user.id
+        user = self.context['request'].user
+        user_id = user.id
+        if user.is_superuser:
+            user_id = self.validated_data.get('user_id', user.id)
+
         return reports.get_daily_usage(user_id, start, end, name_pattern)
