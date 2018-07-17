@@ -209,7 +209,7 @@ def _calculate_instance_usage(start, end, events):
     before_start = [event for event in sorted_events
                     if event.occurred_at < start][-1:]
     after_start = [event for event in sorted_events
-                   if event.occurred_at >= start and event.occurred_at < end]
+                   if start <= event.occurred_at < end]
     sorted_trimmed_events = before_start + after_start
 
     for event in sorted_trimmed_events:
