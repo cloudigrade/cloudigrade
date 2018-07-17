@@ -9,7 +9,7 @@ from django.db import models
 from django.utils.translation import gettext as _
 
 from account import AWS_PROVIDER_STRING
-from account.models import Account, AwsAccount, Instance, InstanceEvent
+from account.models import Account, Instance, InstanceEvent
 
 logger = logging.getLogger(__name__)
 
@@ -27,8 +27,8 @@ def get_daily_usage(user_id, start, end, name_pattern=None):
     Returns:
         dict: Data structure representing each day in the period and its
             constituent representative parts in terms of product usage.
-    """
 
+    """
     accounts = _filter_accounts(user_id, name_pattern)
     events = _get_relevant_events(start, end, accounts)
 
@@ -51,6 +51,7 @@ def _filter_accounts(user_id, name_pattern=None):
 
     Returns:
         PolymorphicQuerySet for the filtered Account objects.
+
     """
     account_filter = models.Q(
         user_id=user_id
@@ -84,6 +85,7 @@ def _get_relevant_events(start, end, account_ids):
 
     Returns:
         list(InstanceEvent): All events relevant to the report parameters.
+
     """
     # Get the nearest event before the reporting period for each instance.
     account_filter = models.Q(account__id__in=account_ids)
@@ -174,7 +176,7 @@ def _calculate_daily_usage(start, end, instance_events):
             'date': period_start,
             'rhel_instances': rhel_instance_count,
             'openshift_instances': openshift_instance_count,
-            'rhel_runtime_seconds':rhel_seconds,
+            'rhel_runtime_seconds': rhel_seconds,
             'openshift_runtime_seconds': openshift_seconds,
         })
 
@@ -234,6 +236,7 @@ def _calculate_instance_usage(start, end, events):
 
     return time_running
 
+
 def validate_event(event, start):
     """
     Ensure that the event is relevant to our time frame.
@@ -243,15 +246,18 @@ def validate_event(event, start):
         start (datetime.datetime): Start time (inclusive)
 
     Returns:
-        bool: A boolean regarding whether or not we should inspect the event further.
+        bool: A boolean regarding whether or not we should inspect the event
+            further.
+
     """
     valid_event = True
-    # if the event occurred outside of our specified period (ie. before start) we should
-    # only inspect it if it was a power on event
+    # if the event occurred outside of our specified period (ie. before start)
+    # we should only inspect it if it was a power on event
     if event.occurred_at < start:
         if event.event_type == InstanceEvent.TYPE.power_off:
             valid_event = False
     return valid_event
+
 
 def get_account_overview(account, start, end):
     """
@@ -263,24 +269,30 @@ def get_account_overview(account, start, end):
         end (datetime.datetime): End time (exclusive)
 
     Returns:
-        dict: An overview of the instances/images/rhel & openshift images for the specified
-        account during the specified time period."""
+        dict: An overview of the instances/images/rhel & openshift images for
+            the specified account during the specified time period.
+
+    """
     instances = []
     images = []
     rhel = []
     openshift = []
-    # if the account was created right at or after the end time, we cannot give meaningful
-    # data about the instances/images seen during the period, therefore we need to make sure
-    # that we return None for those values
+    # if the account was created right at or after the end time, we cannot give
+    # meaningful data about the instances/images seen during the period,
+    # therefore we need to make sure that we return None for those values
     if end <= account.created_at:
-        logger.info(_('Account "{0}" was created after "{1}", therefore there is no data on '
-                      'its images/instances during the specified start and end dates.').format(
-            account,
-            end))
-        total_images, total_instances, total_rhel, total_openshift = None, None, None, None
+        logger.info(_(
+            'Account "{0}" was created after "{1}", therefore there is no '
+            'data on its images/instances during the specified start and end '
+            ' dates.'
+        ).format(account, end))
+        total_images, total_instances, total_rhel, total_openshift = (
+            None, None, None, None
+        )
     else:
-        # _get_relevant_events will return the events in between the start & end times & if
-        # no events are present during this period, it will return the last event that occurred
+        # _get_relevant_events will return the events in between the start &
+        # end times & if no events are present during this period, it will
+        # return the last event that occurred.
         events = _get_relevant_events(start, end, [account.id])
         for event in events:
             valid_event = validate_event(event, start)
@@ -298,15 +310,17 @@ def get_account_overview(account, start, end):
         total_rhel = len(set(rhel))
         total_openshift = len(set(openshift))
 
-    cloud_account = {'id': account.aws_account_id,
-                     'user_id': account.user_id,
-                     'type': AWS_PROVIDER_STRING,
-                     'arn': account.account_arn,
-                     'creation_date': account.created_at,
-                     'name': account.name,
-                     'images': total_images,
-                     'instances': total_instances,
-                     'rhel_instances': total_rhel,
-                     'openshift_instances': total_openshift}
+    cloud_account = {
+        'id': account.aws_account_id,
+        'user_id': account.user_id,
+        'type': AWS_PROVIDER_STRING,
+        'arn': account.account_arn,
+        'creation_date': account.created_at,
+        'name': account.name,
+        'images': total_images,
+        'instances': total_instances,
+        'rhel_instances': total_rhel,
+        'openshift_instances': total_openshift,
+    }
 
     return cloud_account
