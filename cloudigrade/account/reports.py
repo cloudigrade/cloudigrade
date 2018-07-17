@@ -299,11 +299,10 @@ def get_account_overview(account, start, end):
             if valid_event:
                 instances.append(event.instance.id)
                 images.append(event.machineimage.id)
-                for tag in event.machineimage.tags.all():
-                    if tag.description == 'rhel':
-                        rhel.append(event.machineimage.id)
-                    if tag.description == 'openshift':
-                        openshift.append(event.machineimage.id)
+                if event.machineimage.rhel:
+                    rhel.append(event.machineimage.id)
+                if event.machineimage.openshift:
+                    openshift.append(event.machineimage.id)
         # grab the totals
         total_images = len(set(images))
         total_instances = len(set(instances))
