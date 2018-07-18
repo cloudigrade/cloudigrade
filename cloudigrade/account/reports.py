@@ -259,12 +259,35 @@ def validate_event(event, start):
     return valid_event
 
 
+def get_account_overviews(user_id, start, end):
+    """
+    Generate overviews for accounts belonging to user_id in a specified time.
+
+    This is effectively a simple wrapper to iterate `get_account_overview` for
+    all of the matching accounts under the target user.
+
+    Args:
+        user_id (int): user_id for filtering cloud accounts
+        start (datetime.datetime): Start time (inclusive)
+        end (datetime.datetime): End time (exclusive)
+
+    Returns:
+
+    """
+    accounts = _filter_accounts(user_id)
+    overviews = [
+        get_account_overview(account, start, end)
+        for account in accounts
+    ]
+    return {'cloud_account_overviews': overviews}
+
+
 def get_account_overview(account, start, end):
     """
     Generate an overview of an account over a specified amount of time.
 
     Args:
-        account (AwsAccount): AwsAccount object
+        account (Account): Account object
         start (datetime.datetime): Start time (inclusive)
         end (datetime.datetime): End time (exclusive)
 

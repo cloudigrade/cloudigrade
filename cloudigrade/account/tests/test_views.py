@@ -1048,13 +1048,11 @@ class CloudAccountOverviewViewSetTest(TestCase):
         return response
 
     def test_list_overviews_as_superuser(self):
-        """Assert that the superuser sees all overviews regardless of owner."""
+        """Assert that the superuser sees its own accounts overviews."""
         expected_response = {
             'cloud_account_overviews': [
-                self.account1_expected_overview,
-                self.account2_expected_overview,
-                self.account3_expected_overview,
-                self.account4_expected_overview
+                # The data in setUp belongs to all of the other users.
+                # So, when the superuser requests, it gets an empty set here.
             ]
         }
         response = self.get_overview_list_response(self.superuser)

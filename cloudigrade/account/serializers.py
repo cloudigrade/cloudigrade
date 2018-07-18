@@ -294,14 +294,23 @@ class InstancePolymorphicSerializer(PolymorphicSerializer):
 
 
 class CloudAccountOverviewSerializer(Serializer):
-    """Serialize a cloud account overview for the API."""
+    """Serialize the cloud accounts overviews for the API."""
 
+    user_id = serializers.IntegerField(required=False)
     start = serializers.DateTimeField(default_timezone=tz.tzutc())
     end = serializers.DateTimeField(default_timezone=tz.tzutc())
 
-    def get_overview(self, account):
-        """Generate the cloud account overview and return the results."""
-        return reports.get_account_overview(account, **self.validated_data)
+    def generate(self):
+        """Generate the cloud accounts overviews and return the results."""
+        start = self.validated_data['start']
+        end = self.validated_data['end']
+
+        user = self.context['request'].user
+        user_id = user.id
+        if user.is_superuser:
+            user_id = self.validated_data.get('user_id', user.id)
+
+        return reports.get_account_overviews(user_id, start, end)
 
 
 class DailyInstanceActivitySerializer(Serializer):
