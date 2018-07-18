@@ -911,10 +911,18 @@ class CloudAccountOverviewViewSetTest(TestCase):
         self.end = util_helper.utc_dt(2018, 2, 1, 0, 0, 0)
         powered_time = util_helper.utc_dt(2018, 1, 10, 0, 0, 0)
         self.superuser = util_helper.generate_test_user(is_superuser=True)
-        self.account1 = account_helper.generate_aws_account(user=self.user1)
+
+        # These names are not randomly generated because we need to test
+        # against specific combinations of names.
+        self.name1 = 'greatest account ever'
+        self.name2 = 'this account is just okay'
+
+        self.account1 = account_helper.generate_aws_account(user=self.user1,
+                                                            name=self.name1)
         self.account1.created_at = util_helper.utc_dt(2017, 12, 1, 0, 0, 0)
         self.account1.save()
-        self.account2 = account_helper.generate_aws_account(user=self.user1)
+        self.account2 = account_helper.generate_aws_account(user=self.user1,
+                                                            name=self.name2)
         self.account2.created_at = util_helper.utc_dt(2017, 12, 1, 0, 0, 0)
         self.account2.save()
         self.account3 = account_helper.generate_aws_account(user=self.user2)
@@ -1023,13 +1031,14 @@ class CloudAccountOverviewViewSetTest(TestCase):
             'rhel_instances': 1,
             'openshift_instances': 1}
 
-    def get_overview_list_response(self, user, data=None):
+    def get_overview_list_response(self, user, data=None, name_pattern=None):
         """
         Generate a response for a get-list on the InstanceEventViewSet.
 
         Args:
             user (User): Django auth user performing the request
             data (dict): optional data to use as query params
+            name_pattern (string): optional name_filter to use for query param
 
         Returns:
             Response: the generated response for this request
@@ -1037,9 +1046,12 @@ class CloudAccountOverviewViewSetTest(TestCase):
         """
         if data is None:
             # start and end date are required
-            data = {'start': self.start,
-                    'end': self.end
-                    }
+            data = {
+                'start': self.start,
+                'end': self.end
+            }
+        if name_pattern is not None:
+            data['name_pattern'] = name_pattern
 
         request = self.factory.get('/report/accounts/', data)
         force_authenticate(request, user=user)
@@ -1068,6 +1080,41 @@ class CloudAccountOverviewViewSetTest(TestCase):
             ]
         }
         response = self.get_overview_list_response(self.user1)
+        actual_response = response.data
+        self.assertEqual(expected_response, actual_response)
+
+    def test_list_overviews_as_user1_name_filter_to_one(self):
+        """Assert that the user1 sees one account filtered by name."""
+        expected_response = {
+            'cloud_account_overviews': [
+                self.account1_expected_overview,
+            ]
+        }
+        response = self.get_overview_list_response(self.user1,
+                                                   name_pattern='greatest')
+        actual_response = response.data
+        self.assertEqual(expected_response, actual_response)
+
+    def test_list_overviews_as_user1_name_filter_to_multiple(self):
+        """Assert that the user1 sees multiple accounts filtered by name."""
+        expected_response = {
+            'cloud_account_overviews': [
+                self.account1_expected_overview,
+                self.account2_expected_overview,
+            ]
+        }
+        response = self.get_overview_list_response(self.user1,
+                                                   name_pattern='account')
+        actual_response = response.data
+        self.assertEqual(expected_response, actual_response)
+
+    def test_list_overviews_as_user1_name_filter_to_none(self):
+        """Assert that the user1 sees zero accounts filtered by name."""
+        expected_response = {
+            'cloud_account_overviews': []
+        }
+        response = self.get_overview_list_response(self.user1,
+                                                   name_pattern='bananas')
         actual_response = response.data
         self.assertEqual(expected_response, actual_response)
 

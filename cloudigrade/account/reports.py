@@ -259,7 +259,7 @@ def validate_event(event, start):
     return valid_event
 
 
-def get_account_overviews(user_id, start, end):
+def get_account_overviews(user_id, start, end, name_pattern=None):
     """
     Generate overviews for accounts belonging to user_id in a specified time.
 
@@ -270,11 +270,12 @@ def get_account_overviews(user_id, start, end):
         user_id (int): user_id for filtering cloud accounts
         start (datetime.datetime): Start time (inclusive)
         end (datetime.datetime): End time (exclusive)
+        name_pattern (str): pattern to filter against cloud account names
 
     Returns:
 
     """
-    accounts = _filter_accounts(user_id)
+    accounts = _filter_accounts(user_id, name_pattern)
     overviews = [
         get_account_overview(account, start, end)
         for account in accounts
