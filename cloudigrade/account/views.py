@@ -1,7 +1,7 @@
 """DRF API views for the account app."""
 from django.contrib.auth import get_user_model
 from django.http import HttpResponseForbidden, HttpResponseNotFound
-from rest_framework import mixins, status, viewsets
+from rest_framework import mixins, viewsets
 from rest_framework.response import Response
 
 from account import serializers
@@ -158,7 +158,7 @@ class DailyInstanceActivityViewSet(viewsets.GenericViewSet):
         serializer = self.get_serializer(data=request.query_params)
         serializer.is_valid(raise_exception=True)
         result = serializer.generate()
-        return Response(result, status=status.HTTP_200_OK)
+        return Response(result)
 
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
