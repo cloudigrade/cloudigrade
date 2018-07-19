@@ -562,6 +562,52 @@ Response:
         ]
     }
 
+You may include an optional "name_pattern" query string argument to filter
+results down to activity under accounts whose names match at least one of the
+words in that argument.
+
+In this example, an account named "greatest account ever" is included because
+it contains the word "eat" even though it does not contain the word "tofu".
+
+Request:
+
+.. code:: bash
+
+    http localhost:8080/api/v1/report/accounts/ "${AUTH}" \
+        start=="2018-01-10T00:00:00" \
+        end=="2018-01-15T00:00:00" \
+        name_pattern=="eat tofu"
+
+Response:
+
+::
+
+    HTTP/1.1 200 OK
+    Allow: GET, HEAD, OPTIONS
+    Content-Length: 266
+    Content-Type: application/json
+    Date: Thu, 19 Jul 2018 21:13:57 GMT
+    Server: WSGIServer/0.2 CPython/3.6.5
+    Vary: Accept
+    X-Frame-Options: SAMEORIGIN
+
+    {
+        "cloud_account_overviews": [
+            {
+                "arn": "arn:aws:iam::058091732613:role/Marcus Colon",
+                "creation_date": "2018-01-01T00:00:00Z",
+                "id": "058091732613",
+                "images": 3,
+                "instances": 4,
+                "name": "greatest account ever",
+                "openshift_instances": 0,
+                "rhel_instances": 2,
+                "type": "aws",
+                "user_id": 1
+            }
+        ]
+    }
+
 
 User Info
 ---------------------
