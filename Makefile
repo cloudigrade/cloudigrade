@@ -29,6 +29,7 @@ help:
 	@echo "==[OpenShift/Administration]========================================="
 	@echo "  oc-up                         to start the local OpenShift cluster."
 	@echo "  oc-up-dev                     to start the local OpenShift cluster and deploy the db."
+	@echo "  oc-check-cluster              to check the cluster status."
 	@echo "  oc-down                       to stop the local OpenShift cluster."
 	@echo "  oc-clean                      to stop the local OpenShift cluster and delete configuration."
 	@echo "==[OpenShift/Dev Shortcuts]=========================================="
@@ -53,17 +54,15 @@ oc-login-admin:
 oc-login-developer:
 	oc login -u developer -p developer --insecure-skip-tls-verify
 
-oc-add-imagestream:
-	oc create istag postgresql:9.6 --from-image=centos/postgresql-96-centos7
-
 oc-deploy-db:
 	oc process openshift//postgresql-persistent \
-		-p NAMESPACE=myproject \
+		-p NAMESPACE=openshift \
 		-p POSTGRESQL_USER=postgres \
 		-p POSTGRESQL_PASSWORD=postgres \
 		-p POSTGRESQL_DATABASE=postgres \
 		-p POSTGRESQL_VERSION=9.6 \
 	| oc create -f -
+	oc rollout status dc/postgresql
 
 oc-up:
 	oc cluster up \
@@ -76,7 +75,7 @@ ifeq ($(OS),Linux)
 	make oc-login-developer
 endif
 
-oc-up-dev: oc-up oc-add-imagestream oc-deploy-db
+oc-up-dev: oc-up oc-check-cluster oc-deploy-db
 
 oc-forward-ports:
 	-make oc-stop-forwarding-ports 2>/dev/null
@@ -118,12 +117,7 @@ docs-seqdiag:
 
 docs: docs-seqdiag
 
-sleep-60:
-	@echo "Allow the cluster to startup and set all internal services up."
-	sleep 60
-
-sleep-30:
-	@echo "Allow the DB to start before deploying cloudigrade."
-	sleep 30
+oc-check-cluster:
+	while true; do oc cluster status > /dev/null; if [ $$? == "0" ]; then echo "Cluster is up!"; break; fi; echo "Waiting for cluster to start up..."; sleep 5; done;
 
 .PHONY: docs
