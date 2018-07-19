@@ -11,6 +11,10 @@ from djoser.views import (
     UserCreateView as OriginalUserCreateView,
     UserView as OriginalUserView
 )
+from django.contrib.auth import get_user_model
+from rest_framework.response import Response
+from djoser import utils
+from djoser.conf import settings
 
 
 class RootView(OriginalRootView):
@@ -29,6 +33,21 @@ class TokenCreateView(OriginalTokenCreateView):
     """
     Use this endpoint to obtain user authentication token.
     """
+    Users = get_user_model()
+
+    serializer_class = OriginalTokenCreateView.serializer_class
+    permission_classes = OriginalTokenCreateView.permission_classes
+
+    def _action(self, serializer):
+        token = utils.login_user(self.request, serializer.user)
+        token_serializer_class = settings.SERIALIZERS.token
+        request_user = self.Users.objects.get(
+            username=self.request.data.get('username'))
+        content = {
+            'auth_token': token_serializer_class(token).data['auth_token'],
+            'is_superuser': request_user.is_superuser
+        }
+        return Response(content)
 
 
 class TokenDestroyView(OriginalTokenDestroyView):
