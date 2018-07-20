@@ -8,7 +8,6 @@ import operator
 from django.db import models
 from django.utils.translation import gettext as _
 
-from account import AWS_PROVIDER_STRING
 from account.models import Account, Instance, InstanceEvent
 
 logger = logging.getLogger(__name__)
@@ -343,7 +342,7 @@ def get_account_overview(account, start, end):
         'id': account.id,
         'cloud_account_id': account.cloud_account_id,
         'user_id': account.user_id,
-        'type': AWS_PROVIDER_STRING,
+        'type': account.cloud_type,
         'arn': account.account_arn,
         'creation_date': account.created_at,
         'name': account.name,

@@ -5,6 +5,7 @@ import model_utils
 from django.contrib.auth.models import User
 from django.db import models
 
+from account import AWS_PROVIDER_STRING
 from util.models import (BaseModel,
                          BasePolymorphicModel)
 
@@ -29,6 +30,11 @@ class Account(BasePolymorphicModel):
     @abstractmethod
     def cloud_account_id(self):
         """Get the external cloud provider's ID for this account."""
+
+    @property
+    @abstractmethod
+    def cloud_type(self):
+        """Get the external cloud provider type."""
 
 
 class ImageTag(BaseModel):
@@ -139,6 +145,11 @@ class AwsAccount(Account):
     def cloud_account_id(self):
         """Get the AWS Account ID for this account."""
         return self.aws_account_id
+
+    @property
+    def cloud_type(self):
+        """Get the cloud type to indicate this account uses AWS."""
+        return AWS_PROVIDER_STRING
 
 
 class AwsInstance(Instance):
