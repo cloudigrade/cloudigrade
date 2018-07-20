@@ -1,4 +1,6 @@
 """DRF API views for the account app."""
+from django.contrib.auth import get_user_model
+from django.http import HttpResponseForbidden, HttpResponseNotFound
 from rest_framework import mixins, status, viewsets
 from rest_framework.response import Response
 
@@ -6,7 +8,8 @@ from account import serializers
 from account.models import (Account,
                             Instance,
                             InstanceEvent,
-                            MachineImage)
+                            MachineImage,
+                            User)
 from account.util import convert_param_to_int
 from util.aws.sts import _get_primary_account_id
 
@@ -170,3 +173,38 @@ class DailyInstanceActivityViewSet(viewsets.GenericViewSet):
         serializer.is_valid(raise_exception=True)
         result = serializer.generate()
         return Response(result, status=status.HTTP_200_OK)
+
+
+class UserViewSet(viewsets.ReadOnlyModelViewSet):
+    """List all users and their basic metadata."""
+
+    queryset = User.objects.all()
+    serializer_class = serializers.UserSerializer
+
+    def list(self, request, *args, **kwargs):
+        """Get list of users and their basic metadata."""
+        user = request.user
+        if not user.is_superuser:
+            return HttpResponseForbidden()
+        users = get_user_model().objects.all().values(
+            'id',
+            'username',
+            'is_superuser')
+        return Response(users)
+
+    def retrieve(self, request, pk=None):
+        """Get a single user."""
+        user = request.user
+        if str(user.id) == pk:
+            serializer = serializers.UserSerializer(user)
+            return Response(serializer.data)
+
+        if not user.is_superuser:
+            return HttpResponseForbidden()
+        user = get_user_model().objects.filter(id=pk).values(
+            'id',
+            'username',
+            'is_superuser').first()
+        if user is None:
+            return HttpResponseNotFound()
+        return Response(user)

@@ -10,7 +10,8 @@ from account.views import (AccountViewSet,
                            InstanceEventViewSet,
                            InstanceViewSet,
                            MachineImageViewSet,
-                           SysconfigViewSet)
+                           SysconfigViewSet,
+                           UserViewSet)
 
 router = routers.DefaultRouter()
 router.register(r'account', AccountViewSet)
@@ -20,6 +21,7 @@ router.register(r'image', MachineImageViewSet)
 router.register(r'sysconfig', SysconfigViewSet, base_name='sysconfig')
 router.register(r'report/accounts', CloudAccountOverviewViewSet,
                 base_name='report-accounts')
+router.register(r'user', UserViewSet)
 router.register(r'report/instances', DailyInstanceActivityViewSet,
                 base_name='report-instances')
 

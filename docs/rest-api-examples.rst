@@ -563,6 +563,73 @@ Response:
     }
 
 
+User Info
+---------------------
+
+List all users
+~~~~~~~~~~~~~~~~~
+
+Request:
+
+.. code:: bash
+
+    http localhost:8080/api/v1/user/ "${AUTH}"
+
+Response:
+
+::
+
+    HTTP/1.1 200 OK
+    Allow: GET, HEAD
+    Content-Length: 346
+    Content-Type: application/json
+    Date: Thu, 19 Jul 2018 16:06:47 GMT
+    Server: WSGIServer/0.2 CPython/3.6.5
+    Vary: Accept
+    X-Frame-Options: SAMEORIGIN
+
+    [
+        {
+            "id": 1,
+            "username": "user1",
+            "is_superuser": true
+        },
+        {
+            "id": 34,
+            "username": "customer1",
+            "is_superuser": false
+        }
+    ]
+
+Retrieve a specific user
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Request:
+
+.. code:: bash
+
+    http localhost:8080/api/v1/user/1/ "${AUTH}"
+
+Response:
+
+::
+
+    HTTP/1.1 200 OK
+    Allow: GET, HEAD
+    Content-Length: 294
+    Content-Type: application/json
+    Date: Thu, 19 Jul 2018 16:07:16 GMT
+    Server: WSGIServer/0.2 CPython/3.6.5
+    Vary: Accept
+    X-Frame-Options: SAMEORIGIN
+
+    {
+        "id": 1,
+        "username": "user1",
+        "is_superuser": true
+    }
+
+
 Miscellaneous Commands
 ---------------
 

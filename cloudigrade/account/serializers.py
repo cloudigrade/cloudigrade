@@ -6,7 +6,8 @@ from dateutil import tz
 from django.db import transaction
 from django.utils.translation import gettext as _
 from rest_framework import serializers
-from rest_framework.serializers import HyperlinkedModelSerializer, Serializer
+from rest_framework.serializers import (HyperlinkedModelSerializer,
+                                        Serializer)
 from rest_polymorphic.serializers import PolymorphicSerializer
 
 from account import reports
@@ -311,6 +312,10 @@ class DailyInstanceActivitySerializer(Serializer):
     end = serializers.DateTimeField(default_timezone=tz.tzutc())
     name_pattern = serializers.CharField(required=False)
 
+    def get_overview(self, account):
+        """Generate the cloud account overview and return the results."""
+        return reports.get_account_overview(account, **self.validated_data)
+
     def generate(self):
         """Generate the usage report and return the results."""
         start = self.validated_data['start']
@@ -323,3 +328,11 @@ class DailyInstanceActivitySerializer(Serializer):
             user_id = self.validated_data.get('user_id', user.id)
 
         return reports.get_daily_usage(user_id, start, end, name_pattern)
+
+
+class UserSerializer(Serializer):
+    """Serialize a user."""
+
+    id = serializers.CharField(read_only=True)
+    username = serializers.CharField(read_only=True)
+    is_superuser = serializers.BooleanField(read_only=True)
