@@ -2,7 +2,7 @@
 import faker
 from django.test import TestCase
 
-from account import AWS_PROVIDER_STRING, reports
+from account import reports
 from account.models import InstanceEvent
 from account.tests import helper as account_helper
 from util.tests import helper as util_helper
@@ -716,24 +716,30 @@ class GetCloudAccountOverview(TestCase):
         self.instance_1 = account_helper.generate_aws_instance(self.account)
         self.instance_2 = account_helper.generate_aws_instance(self.account)
 
+    def assertExpectedAccountOverview(self, overview, account,
+                                      images=0, instances=0,
+                                      rhel_instances=0, openshift_instances=0):
+        """Assert results match the expected account info and counters."""
+        expected_overview = {
+            'id': account.id,
+            'cloud_account_id': account.aws_account_id,
+            'user_id': account.user_id,
+            'type': account.cloud_type,
+            'arn': account.account_arn,
+            'creation_date': account.created_at,
+            'name': account.name,
+            'images': images,
+            'instances': instances,
+            'rhel_instances': rhel_instances,
+            'openshift_instances': openshift_instances,
+        }
+        self.assertEqual(expected_overview, overview)
+
     def test_get_cloud_account_overview_no_events(self):
         """Assert an overview of an account with no events returns 0s."""
         overview = reports.get_account_overview(
             self.account, self.start, self.end)
-        expected_overview = {
-            'id': self.account.id,
-            'cloud_account_id': self.account.aws_account_id,
-            'user_id': self.account.user_id,
-            'type': AWS_PROVIDER_STRING,
-            'arn': self.account.account_arn,
-            'creation_date': self.account.created_at,
-            'name': self.account.name,
-            'images': 0,
-            'instances': 0,
-            'rhel_instances': 0,
-            'openshift_instances': 0,
-        }
-        self.assertEqual(expected_overview, overview)
+        self.assertExpectedAccountOverview(overview, self.account)
 
     def test_get_cloud_account_overview_with_events(self):
         """Assert an account overview reports instances/images correctly."""
@@ -749,20 +755,8 @@ class GetCloudAccountOverview(TestCase):
         )
         overview = reports.get_account_overview(
             self.account, self.start, self.end)
-        expected_overview = {
-            'id': self.account.id,
-            'cloud_account_id': self.account.aws_account_id,
-            'user_id': self.account.user_id,
-            'type': AWS_PROVIDER_STRING,
-            'arn': self.account.account_arn,
-            'creation_date': self.account.created_at,
-            'name': self.account.name,
-            'images': 1,
-            'instances': 1,
-            'rhel_instances': 0,
-            'openshift_instances': 0,
-        }
-        self.assertEqual(expected_overview, overview)
+        self.assertExpectedAccountOverview(overview, self.account,
+                                           images=1, instances=1)
 
     def test_get_cloud_account_overview_with_rhel_image(self):
         """Assert an account overview with events reports rhel correctly."""
@@ -785,20 +779,9 @@ class GetCloudAccountOverview(TestCase):
             self.account, self.start, self.end)
         # we expect to find 2 total images, 2 total instances and 1 rhel
         # instance
-        expected_overview = {
-            'id': self.account.id,
-            'cloud_account_id': self.account.aws_account_id,
-            'user_id': self.account.user_id,
-            'type': AWS_PROVIDER_STRING,
-            'arn': self.account.account_arn,
-            'creation_date': self.account.created_at,
-            'name': self.account.name,
-            'images': 2,
-            'instances': 2,
-            'rhel_instances': 1,
-            'openshift_instances': 0,
-        }
-        self.assertEqual(expected_overview, overview)
+        self.assertExpectedAccountOverview(overview, self.account,
+                                           images=2, instances=2,
+                                           rhel_instances=1)
 
     def test_get_cloud_account_overview_with_openshift_image(self):
         """Assert an account overview with events reports correctly."""
@@ -821,20 +804,9 @@ class GetCloudAccountOverview(TestCase):
             self.account, self.start, self.end)
         # we expect to find 2 total images, 2 total instances and 1
         # openshift instance
-        expected_overview = {
-            'id': self.account.id,
-            'cloud_account_id': self.account.aws_account_id,
-            'user_id': self.account.user_id,
-            'type': AWS_PROVIDER_STRING,
-            'arn': self.account.account_arn,
-            'creation_date': self.account.created_at,
-            'name': self.account.name,
-            'images': 2,
-            'instances': 2,
-            'rhel_instances': 0,
-            'openshift_instances': 1,
-        }
-        self.assertEqual(expected_overview, overview)
+        self.assertExpectedAccountOverview(overview, self.account,
+                                           images=2, instances=2,
+                                           openshift_instances=1)
 
     def test_get_cloud_account_overview_with_openshift_and_rhel_image(self):
         """Assert an account overview reports openshift and rhel correctly."""
@@ -857,20 +829,10 @@ class GetCloudAccountOverview(TestCase):
             self.account, self.start, self.end)
         # we expect to find 2 total images, 2 total instances, 1 rhel instance
         # and 1 openshift instance
-        expected_overview = {
-            'id': self.account.id,
-            'cloud_account_id': self.account.aws_account_id,
-            'user_id': self.account.user_id,
-            'type': AWS_PROVIDER_STRING,
-            'arn': self.account.account_arn,
-            'creation_date': self.account.created_at,
-            'name': self.account.name,
-            'images': 2,
-            'instances': 2,
-            'rhel_instances': 1,
-            'openshift_instances': 1,
-        }
-        self.assertEqual(expected_overview, overview)
+        self.assertExpectedAccountOverview(overview, self.account,
+                                           images=2, instances=2,
+                                           rhel_instances=1,
+                                           openshift_instances=1)
 
     def test_get_cloud_account_overview_with_two_instances_same_image(self):
         """Assert an account overview reports images correctly."""
@@ -885,20 +847,10 @@ class GetCloudAccountOverview(TestCase):
         overview = reports.get_account_overview(
             self.account, self.start, self.end)
         # assert that we only find the one image
-        expected_overview = {
-            'id': self.account.id,
-            'cloud_account_id': self.account.aws_account_id,
-            'user_id': self.account.user_id,
-            'type': AWS_PROVIDER_STRING,
-            'arn': self.account.account_arn,
-            'creation_date': self.account.created_at,
-            'name': self.account.name,
-            'images': 1,
-            'instances': 2,
-            'rhel_instances': 1,
-            'openshift_instances': 1,
-        }
-        self.assertEqual(expected_overview, overview)
+        self.assertExpectedAccountOverview(overview, self.account,
+                                           images=1, instances=2,
+                                           rhel_instances=1,
+                                           openshift_instances=1)
 
     def test_get_cloud_account_overview_with_rhel(self):
         """Assert an account overview reports rhel correctly."""
@@ -913,20 +865,10 @@ class GetCloudAccountOverview(TestCase):
         overview = reports.get_account_overview(
             self.account, self.start, self.end)
         # assert that we only find the two rhel images
-        expected_overview = {
-            'id': self.account.id,
-            'cloud_account_id': self.account.aws_account_id,
-            'user_id': self.account.user_id,
-            'type': AWS_PROVIDER_STRING,
-            'arn': self.account.account_arn,
-            'creation_date': self.account.created_at,
-            'name': self.account.name,
-            'images': 2,
-            'instances': 2,
-            'rhel_instances': 2,
-            'openshift_instances': 1,
-        }
-        self.assertEqual(expected_overview, overview)
+        self.assertExpectedAccountOverview(overview, self.account,
+                                           images=2, instances=2,
+                                           rhel_instances=2,
+                                           openshift_instances=1)
 
     def test_get_cloud_account_overview_with_openshift(self):
         """Assert an account overview reports openshift correctly."""
@@ -941,58 +883,28 @@ class GetCloudAccountOverview(TestCase):
         overview = reports.get_account_overview(
             self.account, self.start, self.end)
         # assert that we only find the two openshift images
-        expected_overview = {
-            'id': self.account.id,
-            'cloud_account_id': self.account.aws_account_id,
-            'user_id': self.account.user_id,
-            'type': AWS_PROVIDER_STRING,
-            'arn': self.account.account_arn,
-            'creation_date': self.account.created_at,
-            'name': self.account.name,
-            'images': 2,
-            'instances': 2,
-            'rhel_instances': 1,
-            'openshift_instances': 2,
-        }
-        self.assertEqual(expected_overview, overview)
+        self.assertExpectedAccountOverview(overview, self.account,
+                                           images=2, instances=2,
+                                           rhel_instances=1,
+                                           openshift_instances=2)
 
     def test_get_cloud_account_overview_account_creation_after(self):
         """Assert an overview of an account created after end reports None."""
         overview = reports.get_account_overview(
             self.account_after_end, self.start, self.end)
-        expected_overview = {
-            'id': self.account_after_end.id,
-            'cloud_account_id': self.account_after_end.aws_account_id,
-            'user_id': self.account_after_end.user_id,
-            'type': AWS_PROVIDER_STRING,
-            'arn': self.account_after_end.account_arn,
-            'creation_date': self.account_after_end.created_at,
-            'name': self.account_after_end.name,
-            'images': None,
-            'instances': None,
-            'rhel_instances': None,
-            'openshift_instances': None,
-        }
-        self.assertEqual(expected_overview, overview)
+        self.assertExpectedAccountOverview(overview, self.account_after_end,
+                                           images=None, instances=None,
+                                           rhel_instances=None,
+                                           openshift_instances=None)
 
     def test_get_cloud_account_overview_account_creation_on(self):
         """Assert an overview of an account created on end reports None."""
         overview = reports.get_account_overview(
             self.account_on_end, self.start, self.end)
-        expected_overview = {
-            'id': self.account_on_end.id,
-            'cloud_account_id': self.account_on_end.aws_account_id,
-            'user_id': self.account_on_end.user_id,
-            'type': AWS_PROVIDER_STRING,
-            'arn': self.account_on_end.account_arn,
-            'creation_date': self.account_on_end.created_at,
-            'name': self.account_on_end.name,
-            'images': None,
-            'instances': None,
-            'rhel_instances': None,
-            'openshift_instances': None,
-        }
-        self.assertEqual(expected_overview, overview)
+        self.assertExpectedAccountOverview(overview, self.account_on_end,
+                                           images=None, instances=None,
+                                           rhel_instances=None,
+                                           openshift_instances=None)
 
     # the following tests are assuming that the events have been returned
     # from the _get_relevant_events() function which will only return events
