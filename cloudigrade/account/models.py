@@ -1,4 +1,6 @@
 """Cloudigrade Account Models."""
+from abc import abstractmethod
+
 import model_utils
 from django.contrib.auth.models import User
 from django.db import models
@@ -22,6 +24,11 @@ class Account(BasePolymorphicModel):
         blank=True,
         db_index=True
     )
+
+    @property
+    @abstractmethod
+    def cloud_account_id(self):
+        """Get the external cloud provider's ID for this account."""
 
 
 class ImageTag(BaseModel):
@@ -127,6 +134,11 @@ class AwsAccount(Account):
 
     aws_account_id = models.CharField(max_length=16, db_index=True)
     account_arn = models.CharField(max_length=256, unique=True)
+
+    @property
+    def cloud_account_id(self):
+        """Get the AWS Account ID for this account."""
+        return self.aws_account_id
 
 
 class AwsInstance(Instance):

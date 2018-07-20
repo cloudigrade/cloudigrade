@@ -987,7 +987,8 @@ class CloudAccountOverviewViewSetTest(TestCase):
                 ec2_ami_id=self.openshift_and_rhel_image.ec2_ami_id)
         self.factory = APIRequestFactory()
         self.account1_expected_overview = {
-            'id': self.account1.aws_account_id,
+            'id': self.account1.id,
+            'cloud_account_id': self.account1.aws_account_id,
             'user_id': self.account1.user_id,
             'type': 'aws',
             'arn': self.account1.account_arn,
@@ -998,7 +999,8 @@ class CloudAccountOverviewViewSetTest(TestCase):
             'rhel_instances': 0,
             'openshift_instances': 0}
         self.account2_expected_overview = {
-            'id': self.account2.aws_account_id,
+            'id': self.account2.id,
+            'cloud_account_id': self.account2.aws_account_id,
             'user_id': self.account2.user_id,
             'type': 'aws',
             'arn': self.account2.account_arn,
@@ -1009,7 +1011,8 @@ class CloudAccountOverviewViewSetTest(TestCase):
             'rhel_instances': 1,
             'openshift_instances': 0}
         self.account3_expected_overview = {
-            'id': self.account3.aws_account_id,
+            'id': self.account3.id,
+            'cloud_account_id': self.account3.aws_account_id,
             'user_id': self.account3.user_id,
             'type': 'aws',
             'arn': self.account3.account_arn,
@@ -1020,7 +1023,8 @@ class CloudAccountOverviewViewSetTest(TestCase):
             'rhel_instances': 0,
             'openshift_instances': 1}
         self.account4_expected_overview = {
-            'id': self.account4.aws_account_id,
+            'id': self.account4.id,
+            'cloud_account_id': self.account4.aws_account_id,
             'user_id': self.account4.user_id,
             'type': 'aws',
             'arn': self.account4.account_arn,

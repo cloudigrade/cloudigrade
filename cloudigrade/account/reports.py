@@ -340,7 +340,8 @@ def get_account_overview(account, start, end):
         total_openshift = len(set(openshift))
 
     cloud_account = {
-        'id': account.aws_account_id,
+        'id': account.id,
+        'cloud_account_id': account.cloud_account_id,
         'user_id': account.user_id,
         'type': AWS_PROVIDER_STRING,
         'arn': account.account_arn,
