@@ -566,6 +566,11 @@ You may include an optional "name_pattern" query string argument to filter
 results down to activity under accounts whose names match at least one of the
 words in that argument.
 
+You may include an optional "account_id" query string argument to filter
+results down to activity for a specific clount (Cloud Account). This can be
+combined with the "user_id" argument if the caller is a superuser to get
+information specific to a different user.
+
 In this example, an account named "greatest account ever" is included because
 it contains the word "eat" even though it does not contain the word "tofu".
 
