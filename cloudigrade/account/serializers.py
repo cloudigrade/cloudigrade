@@ -300,6 +300,7 @@ class CloudAccountOverviewSerializer(Serializer):
     start = serializers.DateTimeField(default_timezone=tz.tzutc())
     end = serializers.DateTimeField(default_timezone=tz.tzutc())
     name_pattern = serializers.CharField(required=False)
+    account_id = serializers.IntegerField(required=False)
 
     def generate(self):
         """Generate the cloud accounts overviews and return the results."""
@@ -309,10 +310,13 @@ class CloudAccountOverviewSerializer(Serializer):
 
         user = self.context['request'].user
         user_id = user.id
+        account_id = self.validated_data.get('account_id', None)
+
         if user.is_superuser:
             user_id = self.validated_data.get('user_id', user.id)
 
-        return reports.get_account_overviews(user_id, start, end, name_pattern)
+        return reports.get_account_overviews(user_id, start, end,
+                                             name_pattern, account_id)
 
 
 class DailyInstanceActivitySerializer(Serializer):
@@ -322,6 +326,7 @@ class DailyInstanceActivitySerializer(Serializer):
     start = serializers.DateTimeField(default_timezone=tz.tzutc())
     end = serializers.DateTimeField(default_timezone=tz.tzutc())
     name_pattern = serializers.CharField(required=False)
+    account_id = serializers.IntegerField(required=False)
 
     def get_overview(self, account):
         """Generate the cloud account overview and return the results."""
@@ -335,10 +340,13 @@ class DailyInstanceActivitySerializer(Serializer):
 
         user = self.context['request'].user
         user_id = user.id
+        account_id = self.validated_data.get('account_id', None)
+
         if user.is_superuser:
             user_id = self.validated_data.get('user_id', user.id)
 
-        return reports.get_daily_usage(user_id, start, end, name_pattern)
+        return reports.get_daily_usage(user_id, start, end,
+                                       name_pattern, account_id)
 
 
 class UserSerializer(Serializer):

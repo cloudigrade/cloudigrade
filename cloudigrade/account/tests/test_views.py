@@ -1031,7 +1031,8 @@ class CloudAccountOverviewViewSetTest(TestCase):
             'rhel_instances': 1,
             'openshift_instances': 1}
 
-    def get_overview_list_response(self, user, data=None, name_pattern=None):
+    def get_overview_list_response(self, user, data=None, name_pattern=None,
+                                   account_id=None):
         """
         Generate a response for a get-list on the InstanceEventViewSet.
 
@@ -1039,6 +1040,7 @@ class CloudAccountOverviewViewSetTest(TestCase):
             user (User): Django auth user performing the request
             data (dict): optional data to use as query params
             name_pattern (string): optional name_filter to use for query param
+            account_id (int): optional account_id to filter against
 
         Returns:
             Response: the generated response for this request
@@ -1048,10 +1050,12 @@ class CloudAccountOverviewViewSetTest(TestCase):
             # start and end date are required
             data = {
                 'start': self.start,
-                'end': self.end
+                'end': self.end,
             }
-        if name_pattern is not None:
+        if name_pattern:
             data['name_pattern'] = name_pattern
+        if account_id:
+            data['account_id'] = account_id
 
         request = self.factory.get('/report/accounts/', data)
         force_authenticate(request, user=user)
@@ -1153,32 +1157,101 @@ class CloudAccountOverviewViewSetTest(TestCase):
         response = self.get_overview_list_response(self.superuser, params)
         self.assertEqual(response.status_code, 400)
 
+    def test_get_user1_account1_overview(self):
+        """Assert that user1 can see a specific account belonging to them."""
+        expected_response = {
+            'cloud_account_overviews': [
+                self.account1_expected_overview
+            ]
+        }
+        params = {
+            'account_id': self.account1.id,
+            'user_id': self.user1.id,
+            'start': self.start,
+            'end': self.end
+        }
+        response = self.get_overview_list_response(self.user1, params)
+        self.assertEqual(expected_response, response.data)
+
+    def test_get_user2_account3_as_user1_returns_empty(self):
+        """Assert that user1 can't see specific account belonging to user2."""
+        expected_response = {
+            'cloud_account_overviews': []
+        }
+        params = {
+            'account_id': self.account3.id,
+            'user_id': self.user2.id,
+            'start': self.start,
+            'end': self.end
+        }
+        response = self.get_overview_list_response(self.user1, params)
+        self.assertEqual(expected_response, response.data)
+
+    def test_get_user2_account3_as_superuser_returns_ok(self):
+        """Assert that superuser can see account belonging to user2."""
+        expected_response = {
+            'cloud_account_overviews': [
+                self.account3_expected_overview
+            ]
+        }
+        params = {
+            'account_id': self.account3.id,
+            'user_id': self.user2.id,
+            'start': self.start,
+            'end': self.end
+        }
+        response = self.get_overview_list_response(self.superuser, params)
+        self.assertEqual(expected_response, response.data)
+
 
 class DailyInstanceActivityViewSetTest(TestCase):
     """DailyInstanceActivityViewSet test case."""
 
     def setUp(self):
         """Set up commonly used data for each test."""
+        # Users
         self.user = util_helper.generate_test_user()
         self.other_user = util_helper.generate_test_user()
+        self.multi_account_user = util_helper.generate_test_user()
         self.super_user = util_helper.generate_test_user(is_superuser=True)
 
-        name = faker.Faker().bs()
-        self.account = account_helper.generate_aws_account(user=self.user,
-                                                           name=name)
+        # Clounts
+        self.account = account_helper.generate_aws_account(
+            user=self.user, name=faker.Faker().bs())
+        self.u3_first_account = account_helper.generate_aws_account(
+            user=self.multi_account_user, name=faker.Faker().bs())
+        self.u3_second_account = account_helper.generate_aws_account(
+            user=self.multi_account_user, name=faker.Faker().bs())
 
-        self.instance_rhel = account_helper.generate_aws_instance(self.account)
-        self.instance_oc = account_helper.generate_aws_instance(self.account)
+        # Instances
+        self.u1a1_instance_rhel = account_helper.generate_aws_instance(
+            self.account)
+        self.u1a1_instance_oc = account_helper.generate_aws_instance(
+            self.account)
+        self.u3a1_instance_rhel = account_helper.generate_aws_instance(
+            self.u3_first_account)
+        self.u3a1_instance_oc = account_helper.generate_aws_instance(
+            self.u3_first_account)
+        self.u3a2_instance_rhel = account_helper.generate_aws_instance(
+            self.u3_second_account)
+        self.u3a2_instance_oc = account_helper.generate_aws_instance(
+            self.u3_second_account)
 
+        # Images
         self.image_plain = account_helper.generate_aws_image(self.account)
         self.image_rhel = account_helper.generate_aws_image(
             self.account, is_rhel=True, is_openshift=False)
+        self.u3a1_image_rhel = account_helper.generate_aws_image(
+            self.u3_first_account, is_rhel=True, is_openshift=False)
+        self.u3a2_image_rhel = account_helper.generate_aws_image(
+            self.u3_second_account, is_rhel=True, is_openshift=False)
         self.image_os = account_helper.generate_aws_image(
             self.account, is_rhel=False, is_openshift=True)
         self.image_rhel_openshift = account_helper.generate_aws_image(
             self.account, is_rhel=True, is_openshift=True)
 
-        # Generate activity for an instance belonging to self.user.
+        # Generate activity for instances belonging to
+        # self.user and self.multi_account_user
         powered_times = (
             (
                 util_helper.utc_dt(2018, 1, 2, 19, 0, 0),
@@ -1186,16 +1259,26 @@ class DailyInstanceActivityViewSetTest(TestCase):
             ),
         )
         account_helper.generate_aws_instance_events(
-            self.instance_rhel,
+            self.u1a1_instance_rhel,
             powered_times,
             ec2_ami_id=self.image_rhel.ec2_ami_id,
+        )
+        account_helper.generate_aws_instance_events(
+            self.u3a1_instance_rhel,
+            powered_times,
+            ec2_ami_id=self.u3a1_image_rhel.ec2_ami_id,
+        )
+        account_helper.generate_aws_instance_events(
+            self.u3a2_instance_rhel,
+            powered_times,
+            ec2_ami_id=self.u3a2_image_rhel.ec2_ami_id,
         )
 
         self.start = util_helper.utc_dt(2018, 1, 1, 0, 0, 0)
         self.end = util_helper.utc_dt(2018, 2, 1, 0, 0, 0)
 
     def get_report_response(self, as_user, start, end, user_id=None,
-                            name_pattern=None):
+                            name_pattern=None, account_id=None):
         """
         Get the daily instance activity API response for the given inputs.
 
@@ -1205,6 +1288,7 @@ class DailyInstanceActivityViewSetTest(TestCase):
             end (datetime.datetime): End time request arg
             user_id (int): Optional user_id request arg
             name_pattern (string): Optional name_pattern request arg
+            account_id (int): optional account_id to filter against
 
         Returns:
             Response for this request.
@@ -1218,6 +1302,8 @@ class DailyInstanceActivityViewSetTest(TestCase):
             data['user_id'] = user_id
         if name_pattern:
             data['name_pattern'] = name_pattern
+        if account_id:
+            data['account_id'] = account_id
 
         client = APIClient()
         client.force_authenticate(user=as_user)
@@ -1238,15 +1324,18 @@ class DailyInstanceActivityViewSetTest(TestCase):
             for day in data['daily_usage']
         )), 0)
 
-    def assertActivityForRhelInstance(self, response):
+    def assertActivityForRhelInstance(self, response, expected_count=1):
         """Assert report response to include the RHEL instance from setUp."""
+        # 122400 is the 34 hours for the powered time in setup.
+        expected_hours = 122400.0 * expected_count
+
         data = response.json()
-        self.assertEqual(data['instances_seen_with_rhel'], 1)
+        self.assertEqual(data['instances_seen_with_rhel'], expected_count)
         self.assertEqual(data['instances_seen_with_openshift'], 0)
         self.assertEqual(sum((
             day['rhel_runtime_seconds']
             for day in data['daily_usage']
-        )), 122400.0)  # 122400 is the 34 hours for the powered time in setup.
+        )), expected_hours)
         self.assertEqual(sum((
             day['openshift_runtime_seconds']
             for day in data['daily_usage']
@@ -1289,10 +1378,43 @@ class DailyInstanceActivityViewSetTest(TestCase):
                                             self.end, user_id=self.user.id)
         self.assertNoActivity(response)
 
+    def test_user_cannot_filter_to_see_other_user_specific_activity(self):
+        """Assert that user cannot filter results of another users account."""
+        response = self.get_report_response(
+            self.other_user, self.start, self.end, self.multi_account_user.id,
+            None, self.u3_first_account.id)
+        self.assertNoActivity(response)
+
     def test_super_can_filter_to_see_other_user_activity_success(self):
         """Assert super user can filter to see data for another user."""
         response = self.get_report_response(self.super_user, self.start,
                                             self.end, user_id=self.user.id)
+        self.assertActivityForRhelInstance(response)
+
+    def test_super_can_filter_to_see_specific_user_activity_success(self):
+        """Assert super user can filter to see specific user account data."""
+        response = self.get_report_response(
+            self.super_user, self.start, self.end, self.multi_account_user.id,
+            None, self.u3_first_account.id)
+        self.assertActivityForRhelInstance(response)
+
+    def test_user_can_see_both_accounts(self):
+        """Assert report data for one user with multiple accounts."""
+        response = self.get_report_response(self.multi_account_user,
+                                            self.start, self.end,
+                                            self.multi_account_user.id)
+        self.assertActivityForRhelInstance(response, 2)
+
+    def test_user_can_filter_to_see_specific_account(self):
+        """Assert one user can filter which clount they get data from."""
+        response = self.get_report_response(
+            self.multi_account_user, self.start, self.end,
+            self.multi_account_user.id, None, self.u3_first_account.id)
+        self.assertActivityForRhelInstance(response)
+
+        response = self.get_report_response(
+            self.multi_account_user, self.start, self.end,
+            self.multi_account_user.id, None, self.u3_second_account.id)
         self.assertActivityForRhelInstance(response)
 
 

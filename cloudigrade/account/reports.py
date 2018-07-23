@@ -14,7 +14,7 @@ from account.models import Account, Instance, InstanceEvent
 logger = logging.getLogger(__name__)
 
 
-def get_daily_usage(user_id, start, end, name_pattern=None):
+def get_daily_usage(user_id, start, end, name_pattern=None, account_id=None):
     """
     Calculate daily usage over the designated period.
 
@@ -23,13 +23,14 @@ def get_daily_usage(user_id, start, end, name_pattern=None):
         start (datetime.datetime): Start time (inclusive)
         end (datetime.datetime): End time (exclusive)
         name_pattern (str): pattern to filter against cloud account names
+        account_id (int): account_id for filtering cloud accounts
 
     Returns:
         dict: Data structure representing each day in the period and its
             constituent representative parts in terms of product usage.
 
     """
-    accounts = _filter_accounts(user_id, name_pattern)
+    accounts = _filter_accounts(user_id, name_pattern, account_id)
     events = _get_relevant_events(start, end, accounts)
 
     instance_events = collections.defaultdict(list)
@@ -41,21 +42,23 @@ def get_daily_usage(user_id, start, end, name_pattern=None):
     return usage
 
 
-def _filter_accounts(user_id, name_pattern=None):
+def _filter_accounts(user_id, name_pattern=None, account_id=None):
     """
     Get accounts filtered by user_id and matching name.
 
     Args:
         user_id (int): required user_id to filter against
         name_pattern (str): optional cloud name pattern to filter against
+        account_id (int): optional account_id to filter against
 
     Returns:
         PolymorphicQuerySet for the filtered Account objects.
 
     """
-    account_filter = models.Q(
-        user_id=user_id
-    )
+    account_filter = models.Q(user_id=user_id)
+
+    if account_id:
+        account_filter &= models.Q(id=account_id)
 
     if name_pattern is not None and len(name_pattern.strip()):
         # Build a set of unique words to use in the query.
@@ -259,7 +262,8 @@ def validate_event(event, start):
     return valid_event
 
 
-def get_account_overviews(user_id, start, end, name_pattern=None):
+def get_account_overviews(user_id, start, end, name_pattern=None,
+                          account_id=None):
     """
     Generate overviews for accounts belonging to user_id in a specified time.
 
@@ -271,11 +275,13 @@ def get_account_overviews(user_id, start, end, name_pattern=None):
         start (datetime.datetime): Start time (inclusive)
         end (datetime.datetime): End time (exclusive)
         name_pattern (str): pattern to filter against cloud account names
+        account_id (int): account_id for filtering cloud accounts
 
     Returns:
 
     """
-    accounts = _filter_accounts(user_id, name_pattern)
+    accounts = _filter_accounts(user_id, name_pattern=name_pattern,
+                                account_id=account_id)
     overviews = [
         get_account_overview(account, start, end)
         for account in accounts
