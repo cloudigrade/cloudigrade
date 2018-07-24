@@ -4,7 +4,7 @@ boto3==1.7.69
 celery==4.2.1
 django-model-utils==3.1.2
 jsonpickle==0.9.6
-psycopg2cffi==2.8.1
+psycopg2-binary==2.7.5
 python-dateutil==2.7.3
 djangorestframework==3.8.2
 gunicorn==19.9.0

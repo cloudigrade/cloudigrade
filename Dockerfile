@@ -1,26 +1,25 @@
 FROM centos:7
 
+WORKDIR /opt/cloudigrade
 RUN useradd -r cloudigrade
 
 RUN yum install centos-release-scl -y \
     && yum-config-manager --enable centos-sclo-rh-testing \
-    && yum install \
-        libcurl-devel \
-        nmap-ncat \
-        rh-postgresql96 \
-        rh-postgresql96-postgresql-devel \
-        rh-python36 \
-        rh-python36-python-pip \
-        libffi-devel gcc -y
-
-WORKDIR /opt/cloudigrade
+    && yum install rh-python36 rh-python36-python-pip -y \
+    && yum clean all \
+    && rm -rf /var/cache/yum
 
 COPY requirements requirements
-RUN PYCURL_SSL_LIBRARY=nss scl enable rh-postgresql96 rh-python36 \
-    'pip install -r requirements/prod.txt' \
-    && rm -rf requirements
+RUN yum install libcurl-devel gcc -y \
+    && PYCURL_SSL_LIBRARY=nss scl enable rh-python36 \
+        'pip install -r requirements/prod.txt' \
+    && yum erase libcurl-devel gcc -y \
+    && yum autoremove -y \
+    && yum clean all \
+    && rm -rf /var/cache/yum
 
 COPY cloudigrade .
 USER cloudigrade
-ENTRYPOINT ["scl", "enable", "rh-postgresql96", "rh-python36", "--", "gunicorn"]
+
+ENTRYPOINT ["scl", "enable", "rh-python36", "--", "gunicorn"]
 CMD ["-c","config/gunicorn.py","config.wsgi"]
