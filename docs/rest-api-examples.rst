@@ -517,8 +517,9 @@ Response:
         "cloud_account_overviews": [
             {
                 "arn": "arn:aws:iam::114204391493:role/role-for-cloudigrade",
+                "cloud_account_id": "114204391493",
                 "creation_date": "2018-07-06T15:09:21.442412Z",
-                "id": "1",
+                "id": 1,
                 "images": null,
                 "instances": null,
                 "name": "account-for-aiken",
@@ -600,8 +601,9 @@ Response:
         "cloud_account_overviews": [
             {
                 "arn": "arn:aws:iam::058091732613:role/Marcus Colon",
+                "cloud_account_id": "058091732613",
                 "creation_date": "2018-01-01T00:00:00Z",
-                "id": "058091732613",
+                "id": 5,
                 "images": 3,
                 "instances": 4,
                 "name": "greatest account ever",
