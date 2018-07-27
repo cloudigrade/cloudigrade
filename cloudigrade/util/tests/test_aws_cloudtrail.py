@@ -3,6 +3,7 @@
 from unittest.mock import Mock, patch
 
 from botocore.exceptions import ClientError
+from django.conf import settings
 from django.test import TestCase
 
 from util.aws import cloudtrail
@@ -22,7 +23,8 @@ class UtilAwsCloudTrailTest(TestCase):
         """
         mock_session = Mock()
         aws_account_id = helper.generate_dummy_aws_account_id()
-        name = 'cloudigrade-{0}'.format(aws_account_id)
+        name = '{0}{1}'.format(settings.CLOUDTRAIL_NAME_PREFIX,
+                               aws_account_id)
 
         expected_response = {
             'Name': name,
@@ -63,7 +65,8 @@ class UtilAwsCloudTrailTest(TestCase):
         """
         mock_session = Mock()
         aws_account_id = helper.generate_dummy_aws_account_id()
-        name = 'cloudigrade-{0}'.format(aws_account_id)
+        name = '{0}{1}'.format(settings.CLOUDTRAIL_NAME_PREFIX,
+                               aws_account_id)
 
         expected_response = {
             'Name': name,
@@ -102,7 +105,8 @@ class UtilAwsCloudTrailTest(TestCase):
         function.
         """
         aws_account_id = helper.generate_dummy_aws_account_id()
-        name = 'cloudigrade-{0}'.format(aws_account_id)
+        name = '{0}{1}'.format(settings.CLOUDTRAIL_NAME_PREFIX,
+                               aws_account_id)
 
         mock_session = Mock()
 
@@ -136,7 +140,8 @@ class UtilAwsCloudTrailTest(TestCase):
         function.
         """
         aws_account_id = helper.generate_dummy_aws_account_id()
-        name = 'cloudigrade-{0}'.format(aws_account_id)
+        name = '{0}{1}'.format(settings.CLOUDTRAIL_NAME_PREFIX,
+                               aws_account_id)
 
         mock_session = Mock()
 
@@ -159,7 +164,8 @@ class UtilAwsCloudTrailTest(TestCase):
         calling the cloudtrail put_event_selectors function.
         """
         aws_account_id = helper.generate_dummy_aws_account_id()
-        name = 'cloudigrade-{0}'.format(aws_account_id)
+        name = '{0}{1}'.format(settings.CLOUDTRAIL_NAME_PREFIX,
+                               aws_account_id)
 
         mock_session = Mock()
 
@@ -189,7 +195,8 @@ class UtilAwsCloudTrailTest(TestCase):
         Assert that an error is returned when the CloudTrail does not exist.
         """
         aws_account_id = helper.generate_dummy_aws_account_id()
-        name = 'cloudigrade-{0}'.format(aws_account_id)
+        name = '{0}{1}'.format(settings.CLOUDTRAIL_NAME_PREFIX,
+                               aws_account_id)
 
         mock_session = Mock()
 
@@ -216,7 +223,8 @@ class UtilAwsCloudTrailTest(TestCase):
         from calling the cloudtrail create_cloudtrail function.
         """
         aws_account_id = helper.generate_dummy_aws_account_id()
-        name = 'cloudigrade-{0}'.format(aws_account_id)
+        name = '{0}{1}'.format(settings.CLOUDTRAIL_NAME_PREFIX,
+                               aws_account_id)
 
         mock_session = Mock()
 
@@ -254,7 +262,8 @@ class UtilAwsCloudTrailTest(TestCase):
         Assert that an error is returned when the trail already exists
         """
         aws_account_id = helper.generate_dummy_aws_account_id()
-        name = 'cloudigrade-{0}'.format(aws_account_id)
+        name = '{0}{1}'.format(settings.CLOUDTRAIL_NAME_PREFIX,
+                               aws_account_id)
 
         mock_session = Mock()
 
@@ -282,7 +291,8 @@ class UtilAwsCloudTrailTest(TestCase):
         from calling the cloudtrail update_trail function.
         """
         aws_account_id = helper.generate_dummy_aws_account_id()
-        name = 'cloudigrade-{0}'.format(aws_account_id)
+        name = '{0}{1}'.format(settings.CLOUDTRAIL_NAME_PREFIX,
+                               aws_account_id)
 
         mock_session = Mock()
 
@@ -320,7 +330,8 @@ class UtilAwsCloudTrailTest(TestCase):
         Assert that an error is returned when the CloudTrail does not exist.
         """
         aws_account_id = helper.generate_dummy_aws_account_id()
-        name = 'cloudigrade-{0}'.format(aws_account_id)
+        name = '{0}{1}'.format(settings.CLOUDTRAIL_NAME_PREFIX,
+                               aws_account_id)
 
         mock_session = Mock()
 

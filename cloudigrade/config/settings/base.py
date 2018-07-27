@@ -239,6 +239,8 @@ CLOUDTRAIL_EVENT_URL = env(
     default='https://sqs.us-east-1.amazonaws.com/123456789/test-cloudigrade-s3'
 )
 
+CLOUDTRAIL_NAME_PREFIX = 'cloudigrade-'
+
 CELERY_BROKER_TRANSPORT_OPTIONS = {
     'queue_name_prefix': AWS_NAME_PREFIX,
     'region': AWS_SQS_REGION,

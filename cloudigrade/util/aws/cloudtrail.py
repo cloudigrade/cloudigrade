@@ -22,7 +22,7 @@ def configure_cloudtrail(session, aws_account_id):
 
     """
     cloudtrail = session.client('cloudtrail')
-    name = 'cloudigrade-{0}'.format(aws_account_id)
+    name = '{0}{1}'.format(settings.CLOUDTRAIL_NAME_PREFIX, aws_account_id)
 
     if trail_exists(cloudtrail, name):
         response = update_cloudtrail(cloudtrail, name)
