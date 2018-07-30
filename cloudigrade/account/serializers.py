@@ -14,8 +14,7 @@ from account import reports
 from account.models import (AwsAccount,
                             AwsInstance,
                             AwsInstanceEvent,
-                            AwsMachineImage,
-                            ImageTag)
+                            AwsMachineImage)
 from account.util import (create_initial_aws_instance_events,
                           create_new_machine_images,
                           generate_aws_ami_messages,
@@ -169,8 +168,8 @@ class AwsAccountSerializer(HyperlinkedModelSerializer):
             has_openshift = 'cloudigrade-ocp-present' in [
                 tags['Key'] for tags in ec2_image.tags]
             if has_openshift:
-                image.tags.add(ImageTag.objects.filter(
-                    description='openshift').first())
+                image.openshift_detected = True
+                image.save()
 
     def get_user_id(self, account):
         """Get the user_id property for serialization."""
@@ -224,6 +223,9 @@ class InstanceEventPolymorphicSerializer(PolymorphicSerializer):
 class AwsMachineImageSerializer(HyperlinkedModelSerializer):
     """Serialize a customer AwsMachineImage for the API."""
 
+    rhel_challenged = serializers.BooleanField(required=False)
+    openshift_challenged = serializers.BooleanField(required=False)
+
     class Meta:
         model = AwsMachineImage
         fields = (
@@ -233,7 +235,13 @@ class AwsMachineImageSerializer(HyperlinkedModelSerializer):
             'account',
             'is_encrypted',
             'ec2_ami_id',
-            'status'
+            'status',
+            'rhel',
+            'rhel_detected',
+            'rhel_challenged',
+            'openshift',
+            'openshift_detected',
+            'openshift_challenged',
         )
         read_only_fields = (
             'id',
@@ -242,11 +250,40 @@ class AwsMachineImageSerializer(HyperlinkedModelSerializer):
             'account',
             'is_encrypted',
             'ec2_ami_id',
-            'status'
+            'status',
+            'rhel',
+            'rhel_detected',
+            'openshift',
+            'openshift_detected',
         )
         extra_kwargs = {
             'url': {'view_name': 'image-detail', 'lookup_field': 'pk'},
         }
+
+    def update(self, image, validated_data):
+        """
+        Update the AwsMachineImage challenge properties.
+
+        Args:
+            image (AwsMachineImage: Image to be updated.
+            validated_data (dict): Dictionary of properties to be updated.
+
+        Returns (AwsMachineImage): Updated object.
+
+        """
+        rhel_challenged = validated_data.get('rhel_challenged', None)
+        openshift_challenged = validated_data.get('openshift_challenged', None)
+
+        if rhel_challenged is not None:
+            image.rhel_challenged = rhel_challenged
+
+        if openshift_challenged is not None:
+            image.openshift_challenged = openshift_challenged
+
+        if (rhel_challenged or openshift_challenged) is not None:
+            image.save()
+
+        return image
 
 
 class MachineImagePolymorphicSerializer(PolymorphicSerializer):

@@ -6,10 +6,7 @@ from django.conf import settings
 from django.db import transaction
 from django.utils.translation import gettext as _
 
-from account.models import (AwsAccount,
-                            AwsMachineImage,
-                            ImageTag,
-                            InstanceEvent)
+from account.models import AwsAccount, AwsMachineImage, InstanceEvent
 from account.util import save_instance_events, save_machine_images, \
     start_image_inspection, tag_windows
 from util import aws
@@ -161,28 +158,20 @@ def _parse_log_for_ami_tag_events(log):
             .get('items', []) if tag.get('key', '') == AWS_OPENSHIFT_TAG]
 
         if ami_list and tag_list:
-            openshift_tag = ImageTag.objects.filter(
-                description=OPENSHIFT_MODEL_TAG).first()
             for ami_id in ami_list:
-                ami = AwsMachineImage.objects.filter(ec2_ami_id=ami_id).first()
-                if ami:
-                    if add_openshift_tag:
-                        logger.info(
-                            _('Adding openshift tag to AMI {}').format(
-                                ami_id))
-                        ami.tags.add(openshift_tag)
-                    else:
-                        logger.info(_(
-                            'Removing openshift tag from AMI {}').format(
-                                ami_id))
-                        ami.tags.remove(openshift_tag)
-                    ami.save()
-                else:
-                    logger.info(
-                        _(
-                            'Tag create/delete event referenced AMI {}, '
-                            'but no AMI with this ID is known to cloudigrade.'
-                        ).format(ami_id))
+                try:
+                    ami = AwsMachineImage.objects.get(ec2_ami_id=ami_id)
+                except AwsMachineImage.DoesNotExist:
+                    logger.warning(_(
+                        'Tag create/delete event referenced AMI {0}, '
+                        'but no AMI with this ID is known to cloudigrade.'
+                    ).format(ami_id))
+                    continue
+
+                logger.info(_('Setting "openshift_detected" property with'
+                              'value "{0}".').format(add_openshift_tag))
+                ami.openshift_detected = add_openshift_tag
+                ami.save()
 
 
 def _is_valid_event(record, valid_events):

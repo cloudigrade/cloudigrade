@@ -13,7 +13,7 @@ from rest_framework.serializers import ValidationError
 
 from account import AWS_PROVIDER_STRING
 from account.models import (AwsInstance, AwsInstanceEvent, AwsMachineImage,
-                            AwsMachineImageCopy, ImageTag, InstanceEvent)
+                            AwsMachineImageCopy, InstanceEvent)
 from util.aws import is_instance_windows
 
 logger = logging.getLogger(__name__)
@@ -171,7 +171,7 @@ def tag_windows(ami):
         AwsMachineImage: Updated object.
 
     """
-    ami.tags.add(ImageTag.objects.filter(description='windows').first())
+    ami.platform = ami.WINDOWS
     ami.status = ami.INSPECTED
     ami.save()
 

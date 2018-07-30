@@ -9,8 +9,7 @@ from django.conf import settings
 from django.test import TestCase
 
 from account import tasks
-from account.models import (AwsAccount, AwsMachineImage, AwsMachineImageCopy,
-                            ImageTag)
+from account.models import AwsAccount, AwsMachineImage, AwsMachineImageCopy
 from account.tasks import (copy_ami_snapshot,
                            copy_ami_to_customer_account,
                            create_volume,
@@ -943,11 +942,10 @@ class AccountCeleryTaskTest(TestCase):
         ami_id = util_helper.generate_dummy_image_id()
         user1 = util_helper.generate_test_user()
         account1 = helper.generate_aws_account(user=user1)
-        machine_image1 = \
-            helper.generate_aws_image(account=account1,
-                                      is_encrypted=False,
-                                      is_windows=False,
-                                      ec2_ami_id=ami_id)
+        helper.generate_aws_image(account=account1,
+                                  is_encrypted=False,
+                                  is_windows=False,
+                                  ec2_ami_id=ami_id)
         inspection_results = {
             'cloud': 'aws',
             'results': {
@@ -969,9 +967,8 @@ class AccountCeleryTaskTest(TestCase):
         }
 
         tasks.persist_aws_inspection_cluster_results(inspection_results)
-        self.assertEqual(
-            machine_image1.tags.filter(description='rhel').first(),
-            ImageTag.objects.filter(description='rhel').first())
+        machine_image1 = AwsMachineImage.objects.get(ec2_ami_id=ami_id)
+        self.assertTrue(machine_image1.rhel_detected)
         self.assertEqual(
             json.loads(AwsMachineImage.objects.filter(
                 ec2_ami_id=ami_id).first().inspection_json),
@@ -984,11 +981,10 @@ class AccountCeleryTaskTest(TestCase):
         ami_id = util_helper.generate_dummy_image_id()
         user1 = util_helper.generate_test_user()
         account1 = helper.generate_aws_account(user=user1)
-        machine_image1 = \
-            helper.generate_aws_image(account=account1,
-                                      is_encrypted=False,
-                                      is_windows=False,
-                                      ec2_ami_id=ami_id)
+        helper.generate_aws_image(account=account1,
+                                  is_encrypted=False,
+                                  is_windows=False,
+                                  ec2_ami_id=ami_id)
 
         inspection_results = {
             'cloud': 'aws',
@@ -1011,7 +1007,9 @@ class AccountCeleryTaskTest(TestCase):
         }
 
         tasks.persist_aws_inspection_cluster_results(inspection_results)
-        self.assertEqual(machine_image1.tags.first(), None)
+        machine_image1 = AwsMachineImage.objects.get(ec2_ami_id=ami_id)
+        self.assertFalse(machine_image1.rhel_detected)
+        self.assertFalse(machine_image1.openshift_detected)
         self.assertEqual(
             json.loads(AwsMachineImage.objects.filter(
                 ec2_ami_id=ami_id).first().inspection_json),

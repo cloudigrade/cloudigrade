@@ -5,7 +5,6 @@ from account.models import (AwsAccount,
                             AwsInstance,
                             AwsInstanceEvent,
                             AwsMachineImage,
-                            ImageTag,
                             InstanceEvent)
 from util import aws
 from util.tests import helper
@@ -198,16 +197,13 @@ def generate_aws_image(account,
         is_encrypted=is_encrypted,
     )
     if is_windows:
-        image.tags.add(ImageTag.objects.filter(
-            description='windows').first())
+        image.platform = image.WINDOWS
         image.save()
     if is_rhel:
-        image.tags.add(ImageTag.objects.filter(
-            description='rhel').first())
+        image.rhel_detected = True
         image.save()
     if is_openshift:
-        image.tags.add(ImageTag.objects.filter(
-            description='openshift').first())
+        image.openshift_detected = True
         image.save()
 
     return image

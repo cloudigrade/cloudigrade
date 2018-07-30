@@ -1,7 +1,7 @@
 """DRF API views for the account app."""
 from django.contrib.auth import get_user_model
 from django.http import HttpResponseForbidden, HttpResponseNotFound
-from rest_framework import mixins, viewsets
+from rest_framework import exceptions, mixins, viewsets
 from rest_framework.response import Response
 
 from account import serializers
@@ -94,12 +94,13 @@ class InstanceEventViewSet(viewsets.ReadOnlyModelViewSet):
         return queryset
 
 
-class MachineImageViewSet(viewsets.ReadOnlyModelViewSet):
+class MachineImageViewSet(viewsets.ReadOnlyModelViewSet,
+                          mixins.UpdateModelMixin):
     """
     List all or retrieve a single machine image.
 
-    Do not allow to create, update, replace, or delete an image at
-    this view because we currently **only** allow images to be retrieved.
+    Do not allow to create or delete a machine image object at this view
+    because we currently **only** allow them to be retrieved or updated.
     """
 
     queryset = MachineImage.objects.all()
@@ -116,6 +117,20 @@ class MachineImageViewSet(viewsets.ReadOnlyModelViewSet):
             user_id = convert_param_to_int('user_id', user_id)
             return self.queryset.filter(account__user__id=user_id)
         return self.queryset
+
+    def get_object(self):
+        """Get the object filtered to the appropriate user."""
+        user = self.request.user
+
+        if not user.is_superuser:
+            return super(MachineImageViewSet, self).get_object()
+        obj = super(MachineImageViewSet, self).get_object()
+        if self.request.method in ('PATCH', 'PUT') \
+                and obj.account.user_id != user.id:
+            # Superusers are NOT allowed to issue
+            # challenges on behalf of other users
+            raise exceptions.PermissionDenied()
+        return obj
 
 
 class SysconfigViewSet(viewsets.ViewSet):

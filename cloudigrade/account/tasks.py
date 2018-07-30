@@ -8,8 +8,7 @@ from celery import shared_task
 from django.conf import settings
 from django.utils.translation import gettext as _
 
-from account.models import (AwsMachineImage,
-                            ImageTag)
+from account.models import AwsMachineImage
 from account.util import (add_messages_to_queue, create_aws_machine_image_copy,
                           read_messages_from_queue)
 from util import aws
@@ -491,24 +490,23 @@ def persist_aws_inspection_cluster_results(inspection_result):
     Returns:
         None
     """
-    rhel_tag = ImageTag.objects.filter(description='rhel').first()
     results = inspection_result.get('results', [])
     for image_id, image_json in results.items():
-        ami = AwsMachineImage.objects.filter(ec2_ami_id=image_id).first()
-        if ami is not None:
-            ami.tags.remove(rhel_tag)
-            rhel_found = any([attribute.get('rhel_found')
-                              for disk_json in list(image_json.values())
-                              for attribute in disk_json.values()])
-            if rhel_found:
-                ami.tags.add(rhel_tag)
-            # Add image inspection JSON
-            ami.inspection_json = json.dumps(image_json)
-            ami.status = ami.INSPECTED
-            ami.save()
-        else:
+        try:
+            ami = AwsMachineImage.objects.get(ec2_ami_id=image_id)
+        except AwsMachineImage.DoesNotExist:
             logger.error(
                 _('AwsMachineImage "{0}" is not found.').format(image_id))
+            continue
+
+        ami.rhel_detected = any([attribute.get('rhel_found')
+                                 for disk_json in list(image_json.values())
+                                 for attribute in disk_json.values()])
+
+        # Add image inspection JSON
+        ami.inspection_json = json.dumps(image_json)
+        ami.status = ami.INSPECTED
+        ami.save()
 
 
 @shared_task

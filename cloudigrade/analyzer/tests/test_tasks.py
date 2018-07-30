@@ -12,7 +12,6 @@ from account.models import (AwsAccount,
                             AwsInstance,
                             AwsInstanceEvent,
                             AwsMachineImage,
-                            ImageTag,
                             InstanceEvent)
 from account.tests import helper as account_helper
 from analyzer import tasks
@@ -532,8 +531,9 @@ class AnalyzeLogTest(TestCase):
 
         tasks.analyze_log()
 
-        self.assertNotEqual(None, aws_machine_image.tags.filter(
-            description=tasks.OPENSHIFT_MODEL_TAG).first())
+        aws_machine_image = AwsMachineImage.objects.get(
+            ec2_ami_id=mock_ec2_ami_id)
+        self.assertTrue(aws_machine_image.openshift_detected)
 
     @patch('analyzer.tasks.aws.delete_message_from_queue')
     @patch('analyzer.tasks.aws.get_object_content_from_s3')
@@ -552,12 +552,10 @@ class AnalyzeLogTest(TestCase):
 
         mock_ec2_ami_id = util_helper.generate_dummy_image_id()
         aws_machine_image = AwsMachineImage(
-            account=aws_account, ec2_ami_id=mock_ec2_ami_id)
+            account=aws_account,
+            ec2_ami_id=mock_ec2_ami_id,
+            openshift_detected=True)
         aws_machine_image.save()
-
-        openshift_tag = ImageTag.objects.filter(
-            description=tasks.OPENSHIFT_MODEL_TAG).first()
-        aws_machine_image.tags.add(openshift_tag)
 
         mock_sqs_message_body = {
             'Records': [
@@ -625,8 +623,9 @@ class AnalyzeLogTest(TestCase):
 
         tasks.analyze_log()
 
-        self.assertEqual(None, aws_machine_image.tags.filter(
-            description=tasks.OPENSHIFT_MODEL_TAG).first())
+        aws_machine_image = AwsMachineImage.objects.get(
+            ec2_ami_id=mock_ec2_ami_id)
+        self.assertFalse(aws_machine_image.openshift_detected)
 
     @patch('analyzer.tasks.aws.delete_message_from_queue')
     @patch('analyzer.tasks.aws.get_object_content_from_s3')

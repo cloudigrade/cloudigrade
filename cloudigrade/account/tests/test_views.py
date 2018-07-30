@@ -15,7 +15,6 @@ from account.models import (AwsAccount,
                             AwsInstance,
                             AwsInstanceEvent,
                             AwsMachineImage,
-                            ImageTag,
                             InstanceEvent)
 from account.tests import helper as account_helper
 from account.views import (AccountViewSet,
@@ -474,15 +473,24 @@ class MachineImageViewSetTest(TestCase):
         self.account2 = account_helper.generate_aws_account(user=self.user1)
         self.account3 = account_helper.generate_aws_account(user=self.user2)
         self.account4 = account_helper.generate_aws_account(user=self.user2)
+        self.account5 = \
+            account_helper.generate_aws_account(user=self.superuser)
         self.machine_image1 = \
-            account_helper.generate_aws_image(account=self.account1)
+            account_helper.generate_aws_image(account=self.account1,
+                                              is_rhel=True)
         self.machine_image2 = \
-            account_helper.generate_aws_image(account=self.account2)
+            account_helper.generate_aws_image(account=self.account2,
+                                              is_openshift=True)
         self.machine_image3 = \
-            account_helper.generate_aws_image(account=self.account3)
+            account_helper.generate_aws_image(account=self.account3,
+                                              is_rhel=True,
+                                              is_openshift=True)
         self.machine_image4 = \
             account_helper.generate_aws_image(account=self.account4,
                                               is_windows=True)
+        self.machine_image5 = \
+            account_helper.generate_aws_image(account=self.account5,
+                                              is_rhel=True)
         self.factory = APIRequestFactory()
 
     def assertResponseHasImageData(self, response, image):
@@ -513,7 +521,6 @@ class MachineImageViewSetTest(TestCase):
         Args:
             user (User): Django auth user performing the request
             image_id (int): the id of the image to retrieve
-            data (dict): optional data to use as query params
 
         Returns:
             Response: the generated response for this request
@@ -522,6 +529,44 @@ class MachineImageViewSetTest(TestCase):
         request = self.factory.get('/image/')
         force_authenticate(request, user=user)
         view = MachineImageViewSet.as_view(actions={'get': 'retrieve'})
+        response = view(request, pk=image_id)
+        return response
+
+    def get_image_put_response(self, user, image_id, data):
+        """
+        Generate a response for a put-update on the MachineImageViewSet.
+
+        Args:
+            user (User): Django auth user performing the request.
+            image_id (int): ID of the image to update.
+            data (dict): Data to update the image with.
+
+        Returns:
+            Response: the generated response for this request
+
+        """
+        request = self.factory.put('/image/', data)
+        force_authenticate(request, user=user)
+        view = MachineImageViewSet.as_view(actions={'put': 'update'})
+        response = view(request, pk=image_id)
+        return response
+
+    def get_image_patch_response(self, user, image_id, data):
+        """
+        Generate a response for a patch-update on the MachineImageViewSet.
+
+        Args:
+            user (User): Django auth user performing the request.
+            image_id (int): ID of the image to update.
+            data (dict): Data to update the image with.
+
+        Returns:
+            Response: the generated response for this request
+
+        """
+        request = self.factory.patch('/image/', data)
+        force_authenticate(request, user=user)
+        view = MachineImageViewSet.as_view(actions={'patch': 'partial_update'})
         response = view(request, pk=image_id)
         return response
 
@@ -585,7 +630,8 @@ class MachineImageViewSetTest(TestCase):
             self.machine_image1.id,
             self.machine_image2.id,
             self.machine_image3.id,
-            self.machine_image4.id
+            self.machine_image4.id,
+            self.machine_image5.id
         }
         response = self.get_image_list_response(self.superuser)
         actual_images = self.get_image_ids_from_list_response(response)
@@ -638,9 +684,192 @@ class MachineImageViewSetTest(TestCase):
     def test_marking_images_as_windows_tags_them_as_windows(self):
         """Assert that creating a windows image tags it appropriately."""
         image = self.machine_image4  # Image was created as is_windows
-        self.assertEqual(image.tags.filter(description='windows').first(),
-                         ImageTag.objects.filter(
-                             description='windows').first())
+        self.assertEqual(image.platform, image.WINDOWS)
+
+    def test_user1_challenge_non_rhel_returns_ok(self):
+        """Assert that user can challenge RHEL image as non RHEL."""
+        data = {
+            'resourcetype': 'AwsMachineImage',
+            'rhel_challenged': True
+        }
+
+        response = self.get_image_patch_response(self.user1,
+                                                 self.machine_image1.id,
+                                                 data)
+        self.assertTrue(response.data['rhel_challenged'])
+        self.assertFalse(response.data['rhel'])
+
+    def test_user1_challenge_using_put_returns_ok(self):
+        """Assert that user can challenge RHEL image as non RHEL."""
+        data1 = {
+            'resourcetype': 'AwsMachineImage',
+            'rhel_challenged': True
+        }
+        data2 = {
+            'resourcetype': 'AwsMachineImage',
+            'openshift_challenged': True
+        }
+
+        response = self.get_image_put_response(self.user1,
+                                               self.machine_image1.id,
+                                               data1)
+        self.assertTrue(response.data['rhel_challenged'])
+        self.assertFalse(response.data['rhel'])
+
+        response = self.get_image_put_response(self.user1,
+                                               self.machine_image1.id,
+                                               data2)
+        self.assertTrue(response.data['openshift_challenged'])
+        self.assertTrue(response.data['openshift'])
+        self.assertFalse(response.data['rhel_challenged'])
+        self.assertTrue(response.data['rhel'])
+
+    def test_user1_challenge_rhel_returns_ok(self):
+        """Assert that user can challenge non RHEL image as RHEL."""
+        data = {
+            'resourcetype': 'AwsMachineImage',
+            'rhel_challenged': True
+        }
+
+        response = self.get_image_patch_response(self.user1,
+                                                 self.machine_image2.id,
+                                                 data)
+        self.assertTrue(response.data['rhel_challenged'])
+        self.assertTrue(response.data['rhel'])
+
+    def test_user1_challenge_non_ocp_returns_ok(self):
+        """Assert that user can challenge OCP image as non OCP."""
+        data = {
+            'resourcetype': 'AwsMachineImage',
+            'openshift_challenged': True
+        }
+
+        response = self.get_image_patch_response(self.user1,
+                                                 self.machine_image2.id,
+                                                 data)
+        self.assertTrue(response.data['openshift_challenged'])
+        self.assertFalse(response.data['openshift'])
+
+    def test_user1_challenge_ocp_returns_ok(self):
+        """Assert that user can challenge non OCP image as OCP."""
+        data = {
+            'resourcetype': 'AwsMachineImage',
+            'openshift_challenged': True
+        }
+
+        response = self.get_image_patch_response(self.user1,
+                                                 self.machine_image1.id,
+                                                 data)
+        self.assertTrue(response.data['openshift_challenged'])
+        self.assertTrue(response.data['openshift'])
+
+    def test_user1_challenge_user2_returns_404(self):
+        """Assert that normal user can not challenge another users image."""
+        data = {
+            'resourcetype': 'AwsMachineImage',
+            'rhel_challenged': True
+        }
+
+        response = self.get_image_patch_response(self.user1,
+                                                 self.machine_image3.id,
+                                                 data)
+        self.assertEqual(response.status_code, 404)
+
+    def test_super_challenge_user1_returns_403(self):
+        """Assert that a superuser can not challenge another users image."""
+        data = {
+            'resourcetype': 'AwsMachineImage',
+            'rhel_challenged': True
+        }
+
+        response = self.get_image_patch_response(self.superuser,
+                                                 self.machine_image1.id,
+                                                 data)
+        self.assertEqual(response.status_code, 403)
+
+        response = self.get_image_get_response(self.user1,
+                                               self.machine_image1.id)
+        self.assertFalse(response.data['rhel_challenged'])
+        self.assertTrue(response.data['rhel'])
+
+    def test_user2_challenge_both_individually_returns_ok(self):
+        """Assert that user can challenge RHEL and OCP individually."""
+        data1 = {
+            'resourcetype': 'AwsMachineImage',
+            'rhel_challenged': True
+        }
+        data2 = {
+            'resourcetype': 'AwsMachineImage',
+            'openshift_challenged': True
+        }
+
+        response = self.get_image_patch_response(self.user2,
+                                                 self.machine_image3.id,
+                                                 data1)
+        self.assertTrue(response.data['rhel_challenged'])
+        self.assertFalse(response.data['rhel'])
+        self.assertFalse(response.data['openshift_challenged'])
+        self.assertTrue(response.data['openshift'])
+
+        response = self.get_image_patch_response(self.user2,
+                                                 self.machine_image3.id,
+                                                 data2)
+        self.assertTrue(response.data['openshift_challenged'])
+        self.assertFalse(response.data['openshift'])
+        self.assertTrue(response.data['rhel_challenged'])
+        self.assertFalse(response.data['rhel'])
+
+    def test_user2_challenge_both_together_returns_ok(self):
+        """Assert that user can challenge RHEL and OCP at the same time."""
+        data = {
+            'resourcetype': 'AwsMachineImage',
+            'rhel_challenged': True,
+            'openshift_challenged': True
+        }
+
+        response = self.get_image_patch_response(self.user2,
+                                                 self.machine_image3.id,
+                                                 data)
+        self.assertTrue(response.data['rhel_challenged'])
+        self.assertFalse(response.data['rhel'])
+        self.assertTrue(response.data['openshift_challenged'])
+        self.assertFalse(response.data['openshift'])
+
+    def test_user1_undo_challenge_returns_ok(self):
+        """Assert that user can redact a challenge RHEL."""
+        data1 = {
+            'resourcetype': 'AwsMachineImage',
+            'rhel_challenged': True
+        }
+        data2 = {
+            'resourcetype': 'AwsMachineImage',
+            'rhel_challenged': False
+        }
+
+        response = self.get_image_patch_response(self.user1,
+                                                 self.machine_image1.id,
+                                                 data1)
+        self.assertTrue(response.data['rhel_challenged'])
+        self.assertFalse(response.data['rhel'])
+
+        response = self.get_image_patch_response(self.user1,
+                                                 self.machine_image1.id,
+                                                 data2)
+        self.assertFalse(response.data['rhel_challenged'])
+        self.assertTrue(response.data['rhel'])
+
+    def test_superuser_can_challenge_own_account_returns_ok(self):
+        """Assert that superuser can challenge own RHEL image as non RHEL."""
+        data = {
+            'resourcetype': 'AwsMachineImage',
+            'rhel_challenged': True
+        }
+
+        response = self.get_image_patch_response(self.superuser,
+                                                 self.machine_image5.id,
+                                                 data)
+        self.assertTrue(response.data['rhel_challenged'])
+        self.assertFalse(response.data['rhel'])
 
 
 class InstanceEventViewSetTest(TestCase):

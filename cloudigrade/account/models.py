@@ -1,4 +1,5 @@
 """Cloudigrade Account Models."""
+import operator
 from abc import abstractmethod
 
 import model_utils
@@ -6,8 +7,7 @@ from django.contrib.auth.models import User
 from django.db import models
 
 from account import AWS_PROVIDER_STRING
-from util.models import (BaseModel,
-                         BasePolymorphicModel)
+from util.models import BasePolymorphicModel
 
 
 class Account(BasePolymorphicModel):
@@ -37,16 +37,6 @@ class Account(BasePolymorphicModel):
         """Get the external cloud provider type."""
 
 
-class ImageTag(BaseModel):
-    """Tag types for images."""
-
-    description = models.CharField(
-        max_length=32,
-        null=False,
-        blank=False
-    )
-
-
 class MachineImage(BasePolymorphicModel):
     """Base model for a cloud VM image."""
 
@@ -66,34 +56,38 @@ class MachineImage(BasePolymorphicModel):
         db_index=True,
         null=False,
     )
-    tags = models.ManyToManyField(ImageTag, blank=True)
     inspection_json = models.TextField(null=True,
                                        blank=True)
     is_encrypted = models.NullBooleanField()
     status = models.CharField(max_length=10, choices=STATUS_CHOICES,
                               default=PENDING)
+    rhel_detected = models.BooleanField(default=False)
+    rhel_challenged = models.BooleanField(default=False)
+    openshift_detected = models.BooleanField(default=False)
+    openshift_challenged = models.BooleanField(default=False)
 
     @property
     def rhel(self):
         """
-        Indicate if the image is tagged for RHEL.
+        Indicate if the image contains RHEL.
 
         Returns:
-            bool: True if a 'rhel' tag exists for this image, else False.
+            bool: XOR of `rhel_detected` and `rhel_challenged` properties.
 
         """
-        return self.tags.filter(description='rhel').exists()
+        return operator.xor(self.rhel_detected, self.rhel_challenged)
 
     @property
     def openshift(self):
         """
-        Indicate if the image is tagged for OpenShift.
+        Indicate if the image contains OpenShift.
 
         Returns:
-            bool: True if an 'openshift' tag exists for this image, else False.
+            bool: XOR of `openshift_detected` and `openshift_challenged`
+                properties.
 
         """
-        return self.tags.filter(description='openshift').exists()
+        return operator.xor(self.openshift_detected, self.openshift_challenged)
 
 
 class Instance(BasePolymorphicModel):
@@ -172,12 +166,23 @@ class AwsInstance(Instance):
 class AwsMachineImage(MachineImage):
     """MachineImage model for an AWS EC2 instance."""
 
+    NONE = 'none'
+    WINDOWS = 'windows'
+    PLATFORM_CHOICES = (
+        (NONE, 'None'),
+        (WINDOWS, 'Windows'),
+    )
     ec2_ami_id = models.CharField(
         max_length=256,
         unique=True,
         db_index=True,
         null=False,
         blank=False
+    )
+    platform = models.CharField(
+        max_length=7,
+        choices=PLATFORM_CHOICES,
+        default=NONE
     )
 
 

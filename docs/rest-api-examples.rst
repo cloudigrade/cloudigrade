@@ -655,7 +655,7 @@ Response:
     ]
 
 Retrieve a specific user
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 Request:
 
@@ -683,8 +683,477 @@ Response:
     }
 
 
+Machine Images
+--------------
+Listing Images
+~~~~~~~~~~~~~~
+
+Below command will return all images belonging to the user that makes the request.
+
+Request:
+
+.. code:: bash
+
+    http get http://cloudigrade.127.0.0.1.nip.io/api/v1/image/ Authorization:"Token ${USER_TOKEN}"
+
+Response:
+
+::
+
+    HTTP/1.1 200 OK
+    Allow: GET, HEAD, OPTIONS
+    Cache-control: private
+    Content-Length: 1610
+    Content-Type: application/json
+    Date: Mon, 30 Jul 2018 15:20:26 GMT
+    Server: nginx/1.12.1
+    Set-Cookie: 7ff040c48489ca1dd99b0528a4d40fe5=7ce0ca28d38f4fd407c4e0bdb29358ae; path=/; HttpOnly
+    Vary: Accept
+    X-Frame-Options: SAMEORIGIN
+
+    {
+        "count": 4,
+        "next": null,
+        "previous": null,
+        "results": [
+            {
+                "account": "http://cloudigrade.127.0.0.1.nip.io/api/v1/account/1/",
+                "created_at": "2018-07-30T15:41:16.310031Z",
+                "ec2_ami_id": "ami-plain",
+                "id": 1,
+                "is_encrypted": false,
+                "openshift": false,
+                "openshift_challenged": false,
+                "openshift_detected": false,
+                "resourcetype": "AwsMachineImage",
+                "rhel": false,
+                "rhel_challenged": false,
+                "rhel_detected": false,
+                "status": "pending",
+                "updated_at": "2018-07-30T15:15:11.214092Z"
+            },
+            {
+                "account": "http://cloudigrade.127.0.0.1.nip.io/api/v1/account/1/",
+                "created_at": "2018-07-30T15:41:16.317326Z",
+                "ec2_ami_id": "ami-rhel7",
+                "id": 2,
+                "is_encrypted": false,
+                "openshift": true,
+                "openshift_challenged": true,
+                "openshift_detected": false,
+                "resourcetype": "AwsMachineImage",
+                "rhel": false,
+                "rhel_challenged": true,
+                "rhel_detected": true,
+                "status": "pending",
+                "updated_at": "2018-07-30T15:14:19.829340Z"
+            },
+            {
+                "account": "http://cloudigrade.127.0.0.1.nip.io/api/v1/account/1/",
+                "created_at": "2018-07-30T15:41:16.330278Z",
+                "ec2_ami_id": "ami-openshift",
+                "id": 3,
+                "is_encrypted": false,
+                "openshift": false,
+                "openshift_challenged": true,
+                "openshift_detected": true,
+                "resourcetype": "AwsMachineImage",
+                "rhel": true,
+                "rhel_challenged": true,
+                "rhel_detected": false,
+                "status": "pending",
+                "updated_at": "2018-07-30T15:14:06.164469Z"
+            },
+            {
+                "account": "http://cloudigrade.127.0.0.1.nip.io/api/v1/account/1/",
+                "created_at": "2018-07-30T15:41:16.343734Z",
+                "ec2_ami_id": "ami-both",
+                "id": 4,
+                "is_encrypted": false,
+                "openshift": true,
+                "openshift_challenged": false,
+                "openshift_detected": true,
+                "resourcetype": "AwsMachineImage",
+                "rhel": true,
+                "rhel_challenged": false,
+                "rhel_detected": true,
+                "status": "pending",
+                "updated_at": "2018-07-30T15:41:16.355784Z"
+            }
+        ]
+    }
+
+A superuser will see all images belonging to all accounts.
+
+Request:
+
+.. code:: bash
+
+    http get http://cloudigrade.127.0.0.1.nip.io/api/v1/image/ Authorization:"Token ${SUPER_TOKEN}"
+
+Response:
+
+::
+
+    HTTP/1.1 200 OK
+    Allow: GET, HEAD, OPTIONS
+    Cache-control: private
+    Content-Length: 2005
+    Content-Type: application/json
+    Date: Mon, 30 Jul 2018 15:23:25 GMT
+    Server: nginx/1.12.1
+    Set-Cookie: 7ff040c48489ca1dd99b0528a4d40fe5=7ce0ca28d38f4fd407c4e0bdb29358ae; path=/; HttpOnly
+    Vary: Accept
+    X-Frame-Options: SAMEORIGIN
+
+    {
+        "count": 5,
+        "next": null,
+        "previous": null,
+        "results": [
+            {
+                "account": "http://cloudigrade.127.0.0.1.nip.io/api/v1/account/1/",
+                "created_at": "2018-07-30T15:41:16.310031Z",
+                "ec2_ami_id": "ami-plain",
+                "id": 1,
+                "is_encrypted": false,
+                "openshift": false,
+                "openshift_challenged": false,
+                "openshift_detected": false,
+                "resourcetype": "AwsMachineImage",
+                "rhel": false,
+                "rhel_challenged": false,
+                "rhel_detected": false,
+                "status": "pending",
+                "updated_at": "2018-07-30T15:15:11.214092Z"
+            },
+            {
+                "account": "http://cloudigrade.127.0.0.1.nip.io/api/v1/account/1/",
+                "created_at": "2018-07-30T15:41:16.317326Z",
+                "ec2_ami_id": "ami-rhel7",
+                "id": 2,
+                "is_encrypted": false,
+                "openshift": true,
+                "openshift_challenged": true,
+                "openshift_detected": false,
+                "resourcetype": "AwsMachineImage",
+                "rhel": false,
+                "rhel_challenged": true,
+                "rhel_detected": true,
+                "status": "pending",
+                "updated_at": "2018-07-30T15:14:19.829340Z"
+            },
+            {
+                "account": "http://cloudigrade.127.0.0.1.nip.io/api/v1/account/1/",
+                "created_at": "2018-07-30T15:41:16.330278Z",
+                "ec2_ami_id": "ami-openshift",
+                "id": 3,
+                "is_encrypted": false,
+                "openshift": false,
+                "openshift_challenged": true,
+                "openshift_detected": true,
+                "resourcetype": "AwsMachineImage",
+                "rhel": true,
+                "rhel_challenged": true,
+                "rhel_detected": false,
+                "status": "pending",
+                "updated_at": "2018-07-30T15:14:06.164469Z"
+            },
+            {
+                "account": "http://cloudigrade.127.0.0.1.nip.io/api/v1/account/1/",
+                "created_at": "2018-07-30T15:41:16.343734Z",
+                "ec2_ami_id": "ami-both",
+                "id": 4,
+                "is_encrypted": false,
+                "openshift": true,
+                "openshift_challenged": false,
+                "openshift_detected": true,
+                "resourcetype": "AwsMachineImage",
+                "rhel": true,
+                "rhel_challenged": false,
+                "rhel_detected": true,
+                "status": "pending",
+                "updated_at": "2018-07-30T15:41:16.355784Z"
+            },
+            {
+                "account": "http://cloudigrade.127.0.0.1.nip.io/api/v1/account/2/",
+                "created_at": "2018-07-30T15:41:16.362110Z",
+                "ec2_ami_id": "ami-rhel_other",
+                "id": 5,
+                "is_encrypted": false,
+                "openshift": false,
+                "openshift_challenged": false,
+                "openshift_detected": false,
+                "resourcetype": "AwsMachineImage",
+                "rhel": true,
+                "rhel_challenged": false,
+                "rhel_detected": true,
+                "status": "pending",
+                "updated_at": "2018-07-30T15:41:16.367853Z"
+            }
+        ]
+    }
+
+A superuser can also filter the images down to a specific user by using the optional
+``user_id`` query string argument.
+
+Request:
+
+.. code:: bash
+
+    http get http://cloudigrade.127.0.0.1.nip.io/api/v1/image/ user_id==2 Authorization:"Token ${SUPER_TOKEN}"
+
+Response:
+
+::
+
+    HTTP/1.1 200 OK
+    Allow: GET, HEAD, OPTIONS
+    Cache-control: private
+    Content-Length: 446
+    Content-Type: application/json
+    Date: Mon, 30 Jul 2018 15:26:30 GMT
+    Server: nginx/1.12.1
+    Set-Cookie: 7ff040c48489ca1dd99b0528a4d40fe5=7ce0ca28d38f4fd407c4e0bdb29358ae; path=/; HttpOnly
+    Vary: Accept
+    X-Frame-Options: SAMEORIGIN
+
+    {
+        "count": 1,
+        "next": null,
+        "previous": null,
+        "results": [
+            {
+                "account": "http://cloudigrade.127.0.0.1.nip.io/api/v1/account/2/",
+                "created_at": "2018-07-30T15:41:16.362110Z",
+                "ec2_ami_id": "ami-rhel_other",
+                "id": 5,
+                "is_encrypted": false,
+                "openshift": false,
+                "openshift_challenged": false,
+                "openshift_detected": false,
+                "resourcetype": "AwsMachineImage",
+                "rhel": true,
+                "rhel_challenged": false,
+                "rhel_detected": true,
+                "status": "pending",
+                "updated_at": "2018-07-30T15:41:16.367853Z"
+            }
+        ]
+    }
+
+Listing a Specific Image
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Request:
+
+.. code:: bash
+
+    http get http://cloudigrade.127.0.0.1.nip.io/api/v1/image/1/ Authorization:"Token ${USER_TOKEN}"
+
+Response:
+
+::
+
+    HTTP/1.1 200 OK
+    Allow: GET, PUT, PATCH, HEAD, OPTIONS
+    Cache-control: private
+    Content-Length: 391
+    Content-Type: application/json
+    Date: Mon, 30 Jul 2018 15:29:04 GMT
+    Server: nginx/1.12.1
+    Set-Cookie: 7ff040c48489ca1dd99b0528a4d40fe5=7ce0ca28d38f4fd407c4e0bdb29358ae; path=/; HttpOnly
+    Vary: Accept
+    X-Frame-Options: SAMEORIGIN
+
+    {
+        "account": "http://cloudigrade.127.0.0.1.nip.io/api/v1/account/1/",
+        "created_at": "2018-07-30T15:41:16.310031Z",
+        "ec2_ami_id": "ami-plain",
+        "id": 1,
+        "is_encrypted": false,
+        "openshift": false,
+        "openshift_challenged": false,
+        "openshift_detected": false,
+        "resourcetype": "AwsMachineImage",
+        "rhel": false,
+        "rhel_challenged": false,
+        "rhel_detected": false,
+        "status": "pending",
+        "updated_at": "2018-07-30T15:15:11.214092Z"
+    }
+
+Same, as a superuser.
+
+Request:
+
+.. code:: bash
+
+    http get http://cloudigrade.127.0.0.1.nip.io/api/v1/image/1/ Authorization:"Token ${SUPER_TOKEN}"
+
+Response:
+
+::
+
+    HTTP/1.1 200 OK
+    Allow: GET, PUT, PATCH, HEAD, OPTIONS
+    Cache-control: private
+    Content-Length: 391
+    Content-Type: application/json
+    Date: Mon, 30 Jul 2018 15:28:16 GMT
+    Server: nginx/1.12.1
+    Set-Cookie: 7ff040c48489ca1dd99b0528a4d40fe5=7ce0ca28d38f4fd407c4e0bdb29358ae; path=/; HttpOnly
+    Vary: Accept
+    X-Frame-Options: SAMEORIGIN
+
+    {
+        "account": "http://cloudigrade.127.0.0.1.nip.io/api/v1/account/1/",
+        "created_at": "2018-07-30T15:41:16.310031Z",
+        "ec2_ami_id": "ami-plain",
+        "id": 1,
+        "is_encrypted": false,
+        "openshift": false,
+        "openshift_challenged": false,
+        "openshift_detected": false,
+        "resourcetype": "AwsMachineImage",
+        "rhel": false,
+        "rhel_challenged": false,
+        "rhel_detected": false,
+        "status": "pending",
+        "updated_at": "2018-07-30T15:15:11.214092Z"
+    }
+
+Issuing Challenges
+~~~~~~~~~~~~~~~~~~
+Note that ``resourcetype`` is required when making these calls.
+
+Request:
+
+.. code:: bash
+
+    http patch http://cloudigrade.127.0.0.1.nip.io/api/v1/image/1/ \
+        resourcetype=AwsMachineImage \
+        rhel_challenged=True \
+        Authorization:"Token ${USER_TOKEN}"
+
+Response:
+
+::
+
+    HTTP/1.1 200 OK
+    Allow: GET, PUT, PATCH, HEAD, OPTIONS
+    Content-Length: 389
+    Content-Type: application/json
+    Date: Mon, 30 Jul 2018 15:31:02 GMT
+    Server: nginx/1.12.1
+    Set-Cookie: 7ff040c48489ca1dd99b0528a4d40fe5=7ce0ca28d38f4fd407c4e0bdb29358ae; path=/; HttpOnly
+    Vary: Accept
+    X-Frame-Options: SAMEORIGIN
+
+    {
+        "account": "http://cloudigrade.127.0.0.1.nip.io/api/v1/account/1/",
+        "created_at": "2018-07-30T15:41:16.310031Z",
+        "ec2_ami_id": "ami-plain",
+        "id": 1,
+        "is_encrypted": false,
+        "openshift": false,
+        "openshift_challenged": false,
+        "openshift_detected": false,
+        "resourcetype": "AwsMachineImage",
+        "rhel": true,
+        "rhel_challenged": true,
+        "rhel_detected": false,
+        "status": "pending",
+        "updated_at": "2018-07-30T15:31:02.026393Z"
+    }
+
+If you'd like to remove a challenge, simply send the same challenge with False as the value.
+
+Request:
+
+.. code:: bash
+
+    http patch http://cloudigrade.127.0.0.1.nip.io/api/v1/image/1/ \
+        resourcetype=AwsMachineImage \
+        rhel_challenged=False \
+        Authorization:"Token ${USER_TOKEN}"
+
+Response:
+
+::
+
+    HTTP/1.1 200 OK
+    Allow: GET, PUT, PATCH, HEAD, OPTIONS
+    Content-Length: 389
+    Content-Type: application/json
+    Date: Mon, 30 Jul 2018 15:31:02 GMT
+    Server: nginx/1.12.1
+    Set-Cookie: 7ff040c48489ca1dd99b0528a4d40fe5=7ce0ca28d38f4fd407c4e0bdb29358ae; path=/; HttpOnly
+    Vary: Accept
+    X-Frame-Options: SAMEORIGIN
+
+    {
+        "account": "http://cloudigrade.127.0.0.1.nip.io/api/v1/account/1/",
+        "created_at": "2018-07-30T15:41:16.310031Z",
+        "ec2_ami_id": "ami-plain",
+        "id": 1,
+        "is_encrypted": false,
+        "openshift": false,
+        "openshift_challenged": false,
+        "openshift_detected": false,
+        "resourcetype": "AwsMachineImage",
+        "rhel": false,
+        "rhel_challenged": false,
+        "rhel_detected": false,
+        "status": "pending",
+        "updated_at": "2018-07-30T15:31:02.026393Z"
+    }
+
+You can challenge both at the same time.
+
+Request:
+
+.. code:: bash
+
+    http patch http://cloudigrade.127.0.0.1.nip.io/api/v1/image/1/ \
+        resourcetype=AwsMachineImage \
+        rhel_challenged=True \
+        openshift_challenged=True \
+        Authorization:"Token ${USER_TOKEN}"
+
+Response:
+
+::
+
+    HTTP/1.1 200 OK
+    Allow: GET, PUT, PATCH, HEAD, OPTIONS
+    Content-Length: 389
+    Content-Type: application/json
+    Date: Mon, 30 Jul 2018 15:31:02 GMT
+    Server: nginx/1.12.1
+    Set-Cookie: 7ff040c48489ca1dd99b0528a4d40fe5=7ce0ca28d38f4fd407c4e0bdb29358ae; path=/; HttpOnly
+    Vary: Accept
+    X-Frame-Options: SAMEORIGIN
+
+    {
+        "account": "http://cloudigrade.127.0.0.1.nip.io/api/v1/account/1/",
+        "created_at": "2018-07-30T15:41:16.310031Z",
+        "ec2_ami_id": "ami-plain",
+        "id": 1,
+        "is_encrypted": false,
+        "openshift": true,
+        "openshift_challenged": true,
+        "openshift_detected": false,
+        "resourcetype": "AwsMachineImage",
+        "rhel": true,
+        "rhel_challenged": true,
+        "rhel_detected": false,
+        "status": "pending",
+        "updated_at": "2018-07-30T15:31:02.026393Z"
+    }
+
 Miscellaneous Commands
----------------
+----------------------
 
 Retrieve current cloud account ids used by the application
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

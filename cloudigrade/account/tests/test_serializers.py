@@ -164,14 +164,11 @@ class AwsAccountSerializerTest(TestCase):
         )
 
         serializer = AwsAccountSerializer()
-        openshift_tag = test_image.tags.filter(description='openshift').first()
-        self.assertEqual(openshift_tag, None)
+        self.assertFalse(test_image.openshift_detected)
 
         serializer.add_openshift_tag(
             mock_session, ami_id, ami_region, test_image)
-
-        openshift_tag = test_image.tags.filter(description='openshift').first()
-        self.assertNotEqual(openshift_tag, None)
+        self.assertTrue(test_image.openshift_detected)
 
     @patch('util.aws.ec2.check_image_state')
     @patch('account.tasks.aws')
@@ -198,14 +195,11 @@ class AwsAccountSerializerTest(TestCase):
         )
 
         serializer = AwsAccountSerializer()
-        openshift_tag = test_image.tags.filter(description='openshift').first()
-        self.assertEqual(openshift_tag, None)
+        self.assertFalse(test_image.openshift_detected)
 
         serializer.add_openshift_tag(
             mock_session, ami_id, ami_region, test_image)
-
-        openshift_tag = test_image.tags.filter(description='openshift').first()
-        self.assertEqual(openshift_tag, None)
+        self.assertFalse(test_image.openshift_detected)
 
     @patch('util.aws.ec2.check_image_state')
     @patch('account.tasks.aws')
@@ -231,14 +225,11 @@ class AwsAccountSerializerTest(TestCase):
         )
 
         serializer = AwsAccountSerializer()
-        openshift_tag = test_image.tags.filter(description='openshift').first()
-        self.assertEqual(openshift_tag, None)
+        self.assertFalse(test_image.openshift_detected)
 
         serializer.add_openshift_tag(
             mock_session, ami_id, ami_region, test_image)
-
-        openshift_tag = test_image.tags.filter(description='openshift').first()
-        self.assertEqual(openshift_tag, None)
+        self.assertFalse(test_image.openshift_detected)
 
     def test_create_fails_when_cloudtrail_fails(self):
         """Test that an account is not saved if cloudtrails errors."""
