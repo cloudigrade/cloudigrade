@@ -19,6 +19,7 @@ AWS_SQS_SECRET_ACCESS_KEY = env('AWS_SQS_SECRET_ACCESS_KEY')
 AWS_NAME_PREFIX = env('AWS_NAME_PREFIX',
                                 default='cloudigrade-prod-')
 CELERY_BROKER_TRANSPORT_OPTIONS['queue_name_prefix'] = AWS_NAME_PREFIX
+CLOUDTRAIL_NAME_PREFIX = AWS_NAME_PREFIX
 QUEUE_EXCHANGE_NAME = None
 
 STATIC_ROOT = env('DJANGO_STATIC_ROOT', default='/srv/cloudigrade/static/')
