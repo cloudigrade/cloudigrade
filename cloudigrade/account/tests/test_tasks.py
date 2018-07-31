@@ -564,6 +564,39 @@ class AccountCeleryTaskTest(TestCase):
         self.assertEqual(mock_ami.status, mock_ami.INSPECTED)
         mock_ami.save.assert_called_once()
 
+    @patch('account.models.AwsMachineImage.objects')
+    @patch('account.tasks.aws')
+    def test_copy_ami_to_customer_account_community(
+            self, mock_aws, mock_aws_machine_image_objects):
+        """Assert that the task marks community image as inspected."""
+        arn = util_helper.generate_dummy_arn()
+        reference_ami_id = util_helper.generate_dummy_image_id()
+        source_region = random.choice(util_helper.SOME_AWS_REGIONS)
+        mock_ami = Mock()
+        mock_ami.INSPECTED = 'Inspected'
+        mock_aws_machine_image_objects.get.return_value = mock_ami
+
+        mock_aws.copy_ami.side_effect = ClientError(
+            error_response={'Error': {
+                'Code': 'InvalidRequest',
+                'Message': 'Images from AWS Marketplace cannot be copied to '
+                           'another AWS account',
+            }},
+            operation_name=Mock(),
+        )
+
+        copy_ami_to_customer_account(arn, reference_ami_id, source_region,
+                                     True)
+
+        mock_aws.get_session.assert_called_with(arn)
+        mock_aws.get_ami.assert_called_with(
+            mock_aws.get_session.return_value, reference_ami_id, source_region
+        )
+        mock_aws_machine_image_objects.get.assert_called_with(
+            ec2_ami_id=reference_ami_id)
+        self.assertEqual(mock_ami.status, mock_ami.INSPECTED)
+        mock_ami.save.assert_called_once()
+
     @patch('account.tasks.aws')
     def test_copy_ami_to_customer_account_not_marketplace(self, mock_aws):
         """Assert that the task fails when non-marketplace error occurs."""

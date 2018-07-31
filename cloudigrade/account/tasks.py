@@ -150,11 +150,15 @@ def copy_ami_to_customer_account(arn, reference_ami_id, snapshot_region,
     try:
         new_ami_id = aws.copy_ami(session, reference_ami.id, snapshot_region)
     except ClientError as e:
+        handled_errors = (
+            'Images from AWS Marketplace cannot be copied to another AWS '
+            'account',
+            'Images with EC2 BillingProduct codes cannot be copied '
+            'to another AWS account'
+        )
         if maybe_marketplace \
                 and e.response.get('Error').get('Code') == 'InvalidRequest' \
-                and 'Images with EC2 BillingProduct codes cannot be copied ' \
-                    'to another AWS account' in \
-                e.response.get('Error').get('Message'):
+                and e.response.get('Error').get('Message') in handled_errors:
             # This appears to be a marketplace AMI, mark it as inspected.
             logger.info(_('Found a marketplace image "{0}", marking as '
                           'inspected').format(reference_ami_id))
