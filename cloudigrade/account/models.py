@@ -211,5 +211,5 @@ class AwsMachineImageCopy(AwsMachineImage):
 class AwsInstanceEvent(InstanceEvent):
     """Event model for an event triggered by an AwsInstance."""
 
-    subnet = models.CharField(max_length=256, null=False, blank=False)
+    subnet = models.CharField(max_length=256, null=True, blank=True)
     instance_type = models.CharField(max_length=64, null=False, blank=False)
