@@ -74,6 +74,7 @@ class MachineImage(BasePolymorphicModel):
     rhel_challenged = models.BooleanField(default=False)
     openshift_detected = models.BooleanField(default=False)
     openshift_challenged = models.BooleanField(default=False)
+    name = models.CharField(max_length=256, null=True, blank=True)
 
     @property
     def rhel(self):
