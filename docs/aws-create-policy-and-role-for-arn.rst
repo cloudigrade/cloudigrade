@@ -5,6 +5,8 @@ Steps for customer to create an AWS Role ARN
 Create Policy
 =============
 
+The AWS Policy defines a set of permissions for particular actions in the customer's AWS account. These permissions will allow an entity to perform actions necessary for tracking various EC2 activities.
+
 #. Go `here to start creating the policy <https://console.aws.amazon.com/iam/home#/policies$new?step=edit>`_  *or*
 
    #. log in to AWS console
@@ -65,6 +67,8 @@ Create Policy
 
 Create Role
 ===========
+
+The AWS Role is an entity that will be assigned the aforementioned Policy, thereby granting it all of the appropriate permissions. cloudigrade will assume the Role provided by the customer to interact with the customer's AWS account to collect various data about EC2 activities.
 
 #. Go `here to start creating the role <https://console.aws.amazon.com/iam/home?#/roles$new?step=type&roleType=crossAccount&accountID=372779871274>`_  *or*
 
