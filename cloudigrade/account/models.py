@@ -98,6 +98,16 @@ class MachineImage(BasePolymorphicModel):
         """
         return operator.xor(self.openshift_detected, self.openshift_challenged)
 
+    @property
+    def cloud_image_id(self):
+        """
+        Get the external cloud provider's ID for this image.
+
+        This should be treated like an abstract method, but we can't actually
+        extend ABC here because it conflicts with Django's Meta class.
+        """
+        raise NotImplementedError
+
 
 class Instance(BasePolymorphicModel):
     """Base model for a compute/VM instance in a cloud."""
@@ -193,6 +203,11 @@ class AwsMachineImage(MachineImage):
         choices=PLATFORM_CHOICES,
         default=NONE
     )
+
+    @property
+    def cloud_image_id(self):
+        """Get the AWS EC2 AMI ID."""
+        return self.ec2_ami_id
 
 
 class AwsMachineImageCopy(AwsMachineImage):
