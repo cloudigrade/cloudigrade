@@ -365,10 +365,6 @@ class DailyInstanceActivitySerializer(Serializer):
     name_pattern = serializers.CharField(required=False)
     account_id = serializers.IntegerField(required=False)
 
-    def get_overview(self, account):
-        """Generate the cloud account overview and return the results."""
-        return reports.get_account_overview(account, **self.validated_data)
-
     def generate(self):
         """Generate the usage report and return the results."""
         start = self.validated_data['start']
