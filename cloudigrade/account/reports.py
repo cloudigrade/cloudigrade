@@ -109,7 +109,7 @@ def _get_relevant_events(start, end, account_ids):
 
     # Reduce all the filters with the "or" operator.
     event_filter = functools.reduce(operator.ior, event_filters)
-    events = InstanceEvent.objects.filter(event_filter).select_related()\
+    events = InstanceEvent.objects.filter(event_filter) \
         .order_by('instance__id')
     return events
 
@@ -210,8 +210,16 @@ def _calculate_instance_usage(start, end, events):
 
     sorted_events = sorted(events, key=lambda e: e.occurred_at)
 
-    before_start = [event for event in sorted_events
-                    if event.occurred_at < start][-1:]
+    # Get the last event before the start date only if that event is power_on.
+    before_start = list(
+        filter(
+            lambda event: event.event_type == InstanceEvent.TYPE.power_on,
+            list(
+                filter(lambda event: event.occurred_at < start, sorted_events)
+            )[-1:]
+        )
+    )
+
     after_start = [event for event in sorted_events
                    if start <= event.occurred_at < end]
     sorted_trimmed_events = before_start + after_start
@@ -353,3 +361,102 @@ def get_account_overview(account, start, end):
     }
 
     return cloud_account
+
+
+class ImageActivityData():
+    """Helper data structure for counting image activity."""
+
+    _machine_image_iterable_keys = (
+        'id',
+        'cloud_image_id',
+        'name',
+        'status',
+        'is_encrypted',
+        'rhel',
+        'rhel_detected',
+        'rhel_challenged',
+        'openshift',
+        'openshift_detected',
+        'openshift_challenged',
+    )
+    _self_iterable_keys = (
+        'instances_seen',
+        'runtime_seconds',
+    )
+
+    def __init__(self):
+        """Initialize an empty instance."""
+        self.machine_image = None
+        self.instance_ids = set()
+        self.runtime_seconds = 0.0
+
+    def __iter__(self):
+        """Generate iterable to convert self to a dict."""
+        for key in self._machine_image_iterable_keys:
+            yield key, getattr(self.machine_image, key)
+        for key in self._self_iterable_keys:
+            yield key, getattr(self, key)
+
+    @property
+    def instances_seen(self):
+        """Get number of instances seen."""
+        return len(self.instance_ids)
+
+
+def get_image_usages_for_account(start, end, account_id):
+    """
+    Calculate usage data for images in a specified time in the account.
+
+    Args:
+        start (datetime.datetime): Start time (inclusive)
+        end (datetime.datetime): End time (exclusive)
+        account_id (int): account_id for filtering image activity
+
+    Returns:
+        dict: ImageActivityData objects keyed by machine image ID.
+
+    """
+    events = _get_relevant_events(start, end, [account_id])
+
+    instance_events = collections.defaultdict(list)
+    for event in events:
+        instance_events[event.instance].append(event)
+    instance_events = dict(instance_events)
+
+    images = collections.defaultdict(ImageActivityData)
+    for instance, events in instance_events.items():
+        runtime = _calculate_instance_usage(start, end, events)
+        if not runtime:
+            continue
+        machineimage = events[0].machineimage
+        image_id = machineimage.id
+        images[image_id].machine_image = machineimage
+        images[image_id].instance_ids.add(instance.id)
+        images[image_id].runtime_seconds += runtime
+
+    return dict(images)
+
+
+def get_images_overviews(user_id, start, end, account_id):
+    """
+    Generate overviews for images belonging to account_id in a specified time.
+
+    This is effectively a simple wrapper to call `get_image_usages_for_account`
+    after verifying that the account_id is actually valid for the user_id.
+
+    Args:
+        user_id (int): user_id for filtering cloud accounts
+        start (datetime.datetime): Start time (inclusive)
+        end (datetime.datetime): End time (exclusive)
+        account_id (int): account_id for filtering cloud accounts
+
+    Returns:
+        dict: Data structure representing each found image with the image's
+            own metadata, the number of instances seen, and the cumulative
+            elapsed time that instances were seen running.
+
+    """
+    images = {}
+    if _filter_accounts(user_id, account_id=account_id):
+        images = get_image_usages_for_account(start, end, account_id)
+    return {'images': [dict(image) for image in images.values()]}

@@ -950,3 +950,131 @@ class GetCloudAccountOverview(TestCase):
         )
         is_valid = reports.validate_event(event, self.start)
         self.assertEqual(is_valid, False)
+
+
+class GetImageOverviewsTestCase(ReportTestBase):
+    """Test various uses of get_image_overviews."""
+
+    def assertImageGeneralMetadata(self, result, image):
+        """Assert the image's various general metadata are as expected."""
+        self.assertEqual(image.cloud_image_id, result['cloud_image_id'])
+        self.assertEqual(image.id, result['id'])
+        self.assertEqual(image.is_encrypted, result['is_encrypted'])
+        self.assertEqual(image.name, result['name'])
+        self.assertEqual(image.status, result['status'])
+
+    def assertImageProductFindings(self, result, rhel=False,
+                                   rhel_challenged=False, rhel_detected=False,
+                                   openshift=False, openshift_challenged=False,
+                                   openshift_detected=False, instances_seen=0,
+                                   runtime_seconds=0.0):
+        """Assert the image's various product findings are as expected."""
+        self.assertEqual(rhel, result['rhel'])
+        self.assertEqual(rhel_challenged, result['rhel_challenged'])
+        self.assertEqual(rhel_detected, result['rhel_detected'])
+        self.assertEqual(openshift, result['openshift'])
+        self.assertEqual(openshift_challenged, result['openshift_challenged'])
+        self.assertEqual(openshift_detected, result['openshift_detected'])
+        self.assertEqual(instances_seen, result['instances_seen'])
+        self.assertEqual(runtime_seconds, result['runtime_seconds'])
+
+    def test_with_active_instance_usage_times(self):
+        """
+        Assert usage for RHEL, OpenShift, and "plain" images in the period.
+
+        In this test, there are three active images. All instances for the
+        images run for the same five-hour period for convenience. Other tests
+        assert the more interesting handling of complex time calculations.
+
+        The RHEL image is used by two instances, resulting in 10 hours.
+        The OpenShift and plain images are each used by one instance, resulting
+        in 5 hours for each of them.
+        """
+        powered_times = (
+            (
+                util_helper.utc_dt(2018, 1, 10, 0, 0, 0),
+                util_helper.utc_dt(2018, 1, 10, 5, 0, 0)
+            ),
+        )
+        self.generate_events(powered_times, self.instance_1, self.image_rhel)
+        self.generate_events(powered_times, self.instance_2, self.image_rhel)
+        self.generate_events(powered_times, self.instance_3, self.image_ocp)
+        self.generate_events(powered_times, self.instance_4, self.image_plain)
+
+        results = reports.get_images_overviews(self.user_1.id, self.start,
+                                               self.end, self.account_1.id)
+
+        self.assertEqual(3, len(results['images']))
+        rhel_image_result = [obj for obj in results['images']
+                             if obj['id'] == self.image_rhel.id][0]
+
+        self.assertImageGeneralMetadata(rhel_image_result, self.image_rhel)
+        self.assertImageProductFindings(rhel_image_result,
+                                        rhel=True, rhel_detected=True,
+                                        instances_seen=2,
+                                        runtime_seconds=HOURS_10)
+
+        ocp_image_result = [obj for obj in results['images']
+                            if obj['id'] == self.image_ocp.id][0]
+        self.assertImageGeneralMetadata(ocp_image_result, self.image_ocp)
+        self.assertImageProductFindings(ocp_image_result, openshift=True,
+                                        openshift_detected=True,
+                                        instances_seen=1,
+                                        runtime_seconds=HOURS_5)
+
+        plain_image_result = [obj for obj in results['images']
+                              if obj['id'] == self.image_plain.id][0]
+        self.assertImageGeneralMetadata(plain_image_result, self.image_plain)
+        self.assertImageProductFindings(plain_image_result,
+                                        instances_seen=1,
+                                        runtime_seconds=HOURS_5)
+
+    def test_with_no_active_instance_usage_times(self):
+        """
+        Assert appropriate response when no instance activity is seen.
+
+        In this test, instances using RHEL, OCP, and plain images all have
+        activity, but that activity was before the report query time period.
+        So, the results should include none of them.
+        """
+        powered_times = (
+            (
+                util_helper.utc_dt(2017, 1, 10, 0, 0, 0),
+                util_helper.utc_dt(2017, 1, 10, 5, 0, 0)
+            ),
+        )
+        self.generate_events(powered_times, self.instance_1, self.image_rhel)
+        self.generate_events(powered_times, self.instance_2, self.image_rhel)
+        self.generate_events(powered_times, self.instance_3, self.image_ocp)
+        self.generate_events(powered_times, self.instance_4, self.image_plain)
+
+        results = reports.get_images_overviews(self.user_1.id, self.start,
+                                               self.end, self.account_1.id)
+
+        self.assertEqual(0, len(results['images']))
+
+    def test_no_images_for_bogus_account_id(self):
+        """
+        Assert appropriate response when no account is found.
+
+        This case generally should not happen when frontigrade is making
+        requests, but in case another client crafts a request with an account
+        id that does not belong to the user, we should return an empty list.
+        """
+        powered_times = (
+            (
+                util_helper.utc_dt(2018, 1, 10, 0, 0, 0),
+                util_helper.utc_dt(2018, 1, 10, 5, 0, 0)
+            ),
+        )
+        self.generate_events(powered_times, self.instance_1, self.image_rhel)
+        self.generate_events(powered_times, self.instance_2, self.image_rhel)
+        self.generate_events(powered_times, self.instance_3, self.image_ocp)
+        self.generate_events(powered_times, self.instance_4, self.image_plain)
+
+        bad_account_id = util_helper.generate_dummy_aws_account_id()
+
+        results = reports.get_images_overviews(self.user_1.id, self.start,
+                                               self.end, bad_account_id)
+
+        self.assertEqual(0, len(results['images']))

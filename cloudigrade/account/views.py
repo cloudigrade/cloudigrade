@@ -176,6 +176,19 @@ class DailyInstanceActivityViewSet(viewsets.GenericViewSet):
         return Response(result)
 
 
+class ImagesActivityOverviewViewSet(viewsets.GenericViewSet):
+    """Generate report of images activity overviews within a time frame."""
+
+    serializer_class = serializers.CloudAccountImagesSerializer
+
+    def list(self, request, *args, **kwargs):
+        """Get list of machine images filtered to appropriate account."""
+        serializer = self.get_serializer(data=request.query_params)
+        serializer.is_valid(raise_exception=True)
+        result = serializer.generate()
+        return Response(result)
+
+
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
     """List all users and their basic metadata."""
 

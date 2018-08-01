@@ -7,6 +7,7 @@ from rest_framework import routers
 from account.views import (AccountViewSet,
                            CloudAccountOverviewViewSet,
                            DailyInstanceActivityViewSet,
+                           ImagesActivityOverviewViewSet,
                            InstanceEventViewSet,
                            InstanceViewSet,
                            MachineImageViewSet,
@@ -22,6 +23,8 @@ router.register(r'sysconfig', SysconfigViewSet, base_name='sysconfig')
 router.register(r'report/accounts', CloudAccountOverviewViewSet,
                 base_name='report-accounts')
 router.register(r'user', UserViewSet)
+router.register(r'report/images', ImagesActivityOverviewViewSet,
+                base_name='report-images')
 router.register(r'report/instances', DailyInstanceActivityViewSet,
                 base_name='report-instances')
 

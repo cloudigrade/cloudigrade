@@ -382,6 +382,29 @@ class DailyInstanceActivitySerializer(Serializer):
                                        name_pattern, account_id)
 
 
+class CloudAccountImagesSerializer(Serializer):
+    """Serialize the cloud machine images with usage over time for the API."""
+
+    user_id = serializers.IntegerField(required=False)
+    start = serializers.DateTimeField(default_timezone=tz.tzutc())
+    end = serializers.DateTimeField(default_timezone=tz.tzutc())
+    account_id = serializers.IntegerField(required=True)
+
+    def generate(self):
+        """Generate the usage report and return the results."""
+        start = self.validated_data['start']
+        end = self.validated_data['end']
+
+        user = self.context['request'].user
+        user_id = user.id
+        account_id = self.validated_data.get('account_id', None)
+
+        if user.is_superuser:
+            user_id = self.validated_data.get('user_id', user.id)
+
+        return reports.get_images_overviews(user_id, start, end, account_id)
+
+
 class UserSerializer(Serializer):
     """Serialize a user."""
 

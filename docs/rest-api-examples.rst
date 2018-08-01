@@ -34,6 +34,7 @@ The following resource paths are currently available:
 -  ``/api/v1/account/`` returns account data
 -  ``/api/v1/report/instances/`` returns daily instance usage data
 -  ``/api/v1/report/accounts/`` returns account overview data
+-  ``/api/v1/report/images/`` returns active images overview data
 -  ``/auth/`` is for authentication
 
 User Account Setup
@@ -611,6 +612,86 @@ Response:
                 "rhel_instances": 2,
                 "type": "aws",
                 "user_id": 1
+            }
+        ]
+    }
+
+
+Retrieve an account's active images overview
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The "start", "end", and "account_id" query string arguments are all required.
+If authenticated as a superuser, you may include an optional "user_id" query
+string argument to get the results for that user.
+
+Request:
+
+.. code:: bash
+
+    http localhost:8080/api/v1/report/instances/ "${AUTH}" \
+        start=="2018-01-10T00:00:00" \
+        end=="2018-01-15T00:00:00" \
+        account_id==1
+
+Response:
+
+::
+
+    HTTP/1.1 200 OK
+    Allow: GET, HEAD, OPTIONS
+    Content-Length: 815
+    Content-Type: application/json
+    Date: Thu, 02 Aug 2018 18:51:10 GMT
+    Server: WSGIServer/0.2 CPython/3.6.5
+    Vary: Accept
+    X-Frame-Options: SAMEORIGIN
+
+    {
+        "images": [
+            {
+                "cloud_image_id": "ami-rhel7",
+                "id": 2,
+                "instances_seen": 2,
+                "is_encrypted": false,
+                "name": null,
+                "openshift": false,
+                "openshift_challenged": false,
+                "openshift_detected": false,
+                "rhel": true,
+                "rhel_challenged": false,
+                "rhel_detected": true,
+                "runtime_seconds": 7200.0,
+                "status": "inspected"
+            },
+            {
+                "cloud_image_id": "ami-rhel8",
+                "id": 3,
+                "instances_seen": 1,
+                "is_encrypted": false,
+                "name": null,
+                "openshift": false,
+                "openshift_challenged": false,
+                "openshift_detected": false,
+                "rhel": true,
+                "rhel_challenged": false,
+                "rhel_detected": true,
+                "runtime_seconds": 3600.0,
+                "status": "inspected"
+            },
+            {
+                "cloud_image_id": "ami-plain",
+                "id": 1,
+                "instances_seen": 1,
+                "is_encrypted": false,
+                "name": null,
+                "openshift": false,
+                "openshift_challenged": false,
+                "openshift_detected": false,
+                "rhel": false,
+                "rhel_challenged": false,
+                "rhel_detected": false,
+                "runtime_seconds": 3600.0,
+                "status": "inspected"
             }
         ]
     }
