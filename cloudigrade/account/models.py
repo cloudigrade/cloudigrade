@@ -1,6 +1,5 @@
 """Cloudigrade Account Models."""
 import operator
-from abc import abstractmethod
 
 import model_utils
 from django.contrib.auth.models import User
@@ -27,14 +26,24 @@ class Account(BasePolymorphicModel):
     )
 
     @property
-    @abstractmethod
     def cloud_account_id(self):
-        """Get the external cloud provider's ID for this account."""
+        """
+        Get the external cloud provider's ID for this account.
+
+        This should be treated like an abstract method, but we can't actually
+        extend ABC here because it conflicts with Django's Meta class.
+        """
+        raise NotImplementedError
 
     @property
-    @abstractmethod
     def cloud_type(self):
-        """Get the external cloud provider type."""
+        """
+        Get the external cloud provider type.
+
+        This should be treated like an abstract method, but we can't actually
+        extend ABC here because it conflicts with Django's Meta class.
+        """
+        raise NotImplementedError
 
 
 class MachineImage(BasePolymorphicModel):
