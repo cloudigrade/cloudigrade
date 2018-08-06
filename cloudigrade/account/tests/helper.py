@@ -5,7 +5,8 @@ from account.models import (AwsAccount,
                             AwsInstance,
                             AwsInstanceEvent,
                             AwsMachineImage,
-                            InstanceEvent)
+                            InstanceEvent,
+                            MachineImage)
 from util import aws
 from util.tests import helper
 
@@ -169,11 +170,13 @@ def generate_aws_instance_events(
 
 
 def generate_aws_image(account,
-                       is_encrypted=False,
+                       is_encrypted=None,
                        is_windows=False,
                        ec2_ami_id=None,
                        is_rhel=False,
-                       is_openshift=False):
+                       is_openshift=False,
+                       name=None,
+                       status=MachineImage.INSPECTED):
     """
     Generate an AwsMachineImage for the AwsAccount for testing.
 
@@ -183,6 +186,11 @@ def generate_aws_image(account,
         account (AwsAccount): Account that owns the image.
         is_encrypted (bool): Optional Indicates if image is encrypted.
         is_windows (bool): Optional Indicates if AMI is Windows.
+        ec2_ami_id (str): Optional EC2 AMI ID of the image
+        is_rhel (bool): Optional Indicates if RHEL is detected.
+        is_openshift (bool): Optional Indicates if OpenShift is detected.
+        name (str): Optional AMI name.
+        status (str): Optional MachineImage inspection status.
 
     Returns:
         AwsMachineImage: The created AwsMachineImage.
@@ -191,19 +199,17 @@ def generate_aws_image(account,
     if not ec2_ami_id:
         ec2_ami_id = helper.generate_dummy_image_id()
 
+    platform = AwsMachineImage.WINDOWS if is_windows else AwsMachineImage.NONE
+
     image = AwsMachineImage.objects.create(
         account=account,
         ec2_ami_id=ec2_ami_id,
         is_encrypted=is_encrypted,
+        rhel_detected=is_rhel,
+        openshift_detected=is_openshift,
+        platform=platform,
+        name=name,
+        status=status
     )
-    if is_windows:
-        image.platform = image.WINDOWS
-        image.save()
-    if is_rhel:
-        image.rhel_detected = True
-        image.save()
-    if is_openshift:
-        image.openshift_detected = True
-        image.save()
 
     return image
