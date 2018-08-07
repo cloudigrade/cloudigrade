@@ -1,22 +1,223 @@
-image: python:3.6
+### STAGES ###
+stages:
+  - test
+  - build
+  - deploy
+  - release
 
-Unit Tests:
+### GLOBAL VARS ###
+variables:
+  IMAGE_NAME: registry.gitlab.com/${CI_PROJECT_PATH}
+  IMAGE_NAME_COMMIT: registry.gitlab.com/${CI_PROJECT_PATH}/commits/${CI_PROJECT_NAME}:${CI_BUILD_REF}
+  NGINX_NAME: registry.gitlab.com/${CI_PROJECT_PATH}/nginx/${CI_PROJECT_NAME}-nginx
+  NGINX_NAME_COMMIT: registry.gitlab.com/${CI_PROJECT_PATH}/nginx-commits/${CI_PROJECT_NAME}-nginx:${CI_BUILD_REF}
+  DOCKER_DRIVER: overlay2
+
+### TEST STAGE ###
+py36:
   stage: test
+  image: registry.gitlab.com/cloudigrade/images/build-container:latest
   before_script:
     - pip install tox codecov
-  script: tox -epy36
-  after_script:
+  script:
+    - tox -e py36
     - codecov
 
-Flake8:
+flake8:
   stage: test
+  image: registry.gitlab.com/cloudigrade/images/build-container:latest
   before_script:
     - pip install tox
-  script: tox -eflake8
+  script: tox -e flake8
 
-Docker:
-  image: docker
+Cloudigrade Docker:
   stage: test
+  image: docker:stable
   services:
     - docker:dind
-  script: docker build .
+  script:
+    - docker pull ${IMAGE_NAME}:latest || true
+    - docker build --cache-from ${IMAGE_NAME}:latest .
+
+NGINX S2i:
+  stage: test
+  image: docker:stable
+  services:
+    - docker:dind
+  variables:
+    CONTEXT_DIR: deployment
+    NGINX_S2I_IMAGE: centos/nginx-112-centos7:latest
+    S2I_VERSION: v1.1.10
+    S2I_RELEASE: source-to-image-v1.1.10-27f0729d-linux-amd64
+  before_script:
+    - apk --no-cache add git
+    - mkdir /opt && cd /opt
+    - wget https://github.com/openshift/source-to-image/releases/download/${S2I_VERSION}/${S2I_RELEASE}.tar.gz -O /opt/s2i.tar.gz
+    - tar --strip-components=1 -xzvf /opt/s2i.tar.gz -C /opt/
+    - mv /opt/s2i /usr/bin/
+  script:
+    - s2i build --context-dir=${CONTEXT_DIR} ${CI_PROJECT_URL} ${NGINX_S2I_IMAGE} ${IMAGE_NAME}:latest
+
+### BUILD STAGE ###
+Push Cloudigrade Image:
+  stage: build
+  image: docker:stable
+  services:
+    - docker:dind
+  only:
+    - master@cloudigrade/cloudigrade
+  except:
+    - branches
+    - tags@cloudigrade/cloudigrade
+  before_script:
+    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
+  script:
+    - docker pull ${IMAGE_NAME}:latest || true
+    - docker build --cache-from ${IMAGE_NAME}:latest --tag ${IMAGE_NAME_COMMIT} --tag ${IMAGE_NAME}:latest .
+    - docker push ${IMAGE_NAME_COMMIT}
+    - docker push ${IMAGE_NAME}:latest
+
+Push Cloudigrade Tagged Image:
+  stage: build
+  image: docker:stable
+  services:
+    - docker:dind
+  only:
+    - tags@cloudigrade/cloudigrade
+  except:
+    - branches
+  before_script:
+    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
+  script:
+    - docker pull ${IMAGE_NAME}:latest || true
+    - docker build --cache-from ${IMAGE_NAME}:latest --tag ${IMAGE_NAME}:${CI_COMMIT_TAG} .
+    - docker push ${IMAGE_NAME}:${CI_COMMIT_TAG}
+
+Push NGINX Image:
+  stage: build
+  image: docker:stable
+  services:
+    - docker:dind
+  only:
+    - master@cloudigrade/cloudigrade
+  except:
+    - branches
+    - tags@cloudigrade/cloudigrade
+  variables:
+    CONTEXT_DIR: deployment
+    NGINX_S2I_IMAGE: centos/nginx-112-centos7:latest
+    S2I_VERSION: v1.1.10
+    S2I_RELEASE: source-to-image-v1.1.10-27f0729d-linux-amd64
+  before_script:
+    - apk --no-cache add git
+    - mkdir /opt && cd /opt
+    - wget https://github.com/openshift/source-to-image/releases/download/${S2I_VERSION}/${S2I_RELEASE}.tar.gz -O /opt/s2i.tar.gz
+    - tar --strip-components=1 -xzvf /opt/s2i.tar.gz -C /opt/
+    - mv /opt/s2i /usr/bin/
+    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
+  script:
+    - s2i build --context-dir=$CONTEXT_DIR ${CI_PROJECT_URL} ${NGINX_S2I_IMAGE} ${NGINX_NAME_COMMIT}
+    - docker tag ${NGINX_NAME_COMMIT} ${NGINX_NAME}:latest
+    - docker push ${NGINX_NAME_COMMIT}
+    - docker push ${NGINX_NAME}:latest
+
+Push NGINX Tagged Image:
+  stage: build
+  image: docker:stable
+  services:
+    - docker:dind
+  only:
+    - tags@cloudigrade/cloudigrade
+  except:
+    - branches
+  variables:
+    CONTEXT_DIR: deployment
+    NGINX_S2I_IMAGE: centos/nginx-112-centos7:latest
+    S2I_VERSION: v1.1.10
+    S2I_RELEASE: source-to-image-v1.1.10-27f0729d-linux-amd64
+  before_script:
+    - apk --no-cache add git
+    - mkdir /opt && cd /opt
+    - wget https://github.com/openshift/source-to-image/releases/download/${S2I_VERSION}/${S2I_RELEASE}.tar.gz -O /opt/s2i.tar.gz
+    - tar --strip-components=1 -xzvf /opt/s2i.tar.gz -C /opt/
+    - mv /opt/s2i /usr/bin/
+    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
+  script:
+    - s2i build --context-dir=${CONTEXT_DIR} ${CI_PROJECT_URL} ${NGINX_S2I_IMAGE} ${NGINX_NAME}:${CI_COMMIT_TAG}
+    - docker push ${NGINX_NAME}:${CI_COMMIT_TAG}
+
+### DEPLOY STAGE ###
+### MASTER ONLY ###
+Deploy to Test:
+  stage: deploy
+  image: registry.gitlab.com/cloudigrade/images/deploy-container:latest
+  variables:
+    GIT_STRATEGY: none
+    API_IMAGE: registry.gitlab.com/${CI_PROJECT_PATH}/commits/${CI_PROJECT_NAME}:${CI_BUILD_REF}
+    NGINX_IMAGE: registry.gitlab.com/${CI_PROJECT_PATH}/nginx-commits/${CI_PROJECT_NAME}-nginx:${CI_BUILD_REF}
+    CELERY_IMAGE: registry.gitlab.com/${CI_PROJECT_PATH}/commits/${CI_PROJECT_NAME}:${CI_BUILD_REF}
+  only:
+    - master@cloudigrade/cloudigrade
+  except:
+    - branches
+  before_script:
+    - oc login --token ${KUBE_TOKEN}
+    - git clone https://gitlab.com/cloudigrade/shiftigrade.git
+    - cd shiftigrade
+  script:
+    - kontemplate template ocp/test.yaml -i cloudigrade | oc apply -f -
+    - if ! oc rollout status dc/cloudigrade-api; then oc rollout latest dc/cloudigrade-api && oc rollout status dc/cloudigrade-api; fi;
+    - if ! oc rollout status dc/cloudigrade-celery; then oc rollout latest dc/cloudigrade-celery && oc rollout status dc/cloudigrade-celery; fi;
+  environment:
+    name: test
+    url: https://test.cloudigra.de/
+
+Deploy to Stage:
+  stage: deploy
+  image: registry.gitlab.com/cloudigrade/images/deploy-container:latest
+  variables:
+    GIT_STRATEGY: none
+    API_IMAGE: registry.gitlab.com/${CI_PROJECT_PATH}:${CI_COMMIT_TAG}
+    NGINX_IMAGE: registry.gitlab.com/${CI_PROJECT_PATH}/nginx/${CI_PROJECT_NAME}-nginx:${CI_COMMIT_TAG}
+    CELERY_IMAGE: registry.gitlab.com/${CI_PROJECT_PATH}:${CI_COMMIT_TAG}
+  only:
+    - tags@cloudigrade/cloudigrade
+  except:
+    - branches
+  before_script:
+    - oc login --token ${KUBE_TOKEN}
+    - git clone https://gitlab.com/cloudigrade/shiftigrade.git
+    - cd shiftigrade
+  script:
+    - kontemplate template ocp/stage.yaml -i cloudigrade | oc apply -f -
+    - if ! oc rollout status dc/cloudigrade-api; then oc rollout latest dc/cloudigrade-api && oc rollout status dc/cloudigrade-api; fi;
+    - if ! oc rollout status dc/cloudigrade-celery; then oc rollout latest dc/cloudigrade-celery && oc rollout status dc/cloudigrade-celery; fi;
+  environment:
+    name: stage
+    url: https://stage.cloudigra.de/
+
+### RELEASE STAGE ###
+Deploy to Production:
+  stage: release
+  image: registry.gitlab.com/cloudigrade/images/deploy-container:latest
+  variables:
+    GIT_STRATEGY: none
+    API_IMAGE: registry.gitlab.com/${CI_PROJECT_PATH}:${CI_COMMIT_TAG}
+    NGINX_IMAGE: registry.gitlab.com/${CI_PROJECT_PATH}/nginx/${CI_PROJECT_NAME}-nginx:${CI_COMMIT_TAG}
+    CELERY_IMAGE: registry.gitlab.com/${CI_PROJECT_PATH}:${CI_COMMIT_TAG}
+  only:
+    - tags@cloudigrade/cloudigrade
+  except:
+    - branches
+  before_script:
+    - oc login --token ${KUBE_TOKEN}
+    - git clone https://gitlab.com/cloudigrade/shiftigrade.git
+    - cd shiftigrade
+  script:
+    - kontemplate template ocp/prod.yaml -i cloudigrade | oc apply -f -
+    - if ! oc rollout status dc/cloudigrade-api; then oc rollout latest dc/cloudigrade-api && oc rollout status dc/cloudigrade-api; fi;
+    - if ! oc rollout status dc/cloudigrade-celery; then oc rollout latest dc/cloudigrade-celery && oc rollout status dc/cloudigrade-celery; fi;
+  when: manual
+  environment:
+    name: production
+    url: https://www.cloudigra.de/
