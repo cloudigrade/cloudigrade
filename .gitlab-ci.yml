@@ -67,7 +67,6 @@ Push Cloudigrade Image:
   only:
     - master@cloudigrade/cloudigrade
   except:
-    - branches
     - tags@cloudigrade/cloudigrade
   before_script:
     - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
@@ -84,8 +83,6 @@ Push Cloudigrade Tagged Image:
     - docker:dind
   only:
     - tags@cloudigrade/cloudigrade
-  except:
-    - branches
   before_script:
     - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
   script:
@@ -101,7 +98,6 @@ Push NGINX Image:
   only:
     - master@cloudigrade/cloudigrade
   except:
-    - branches
     - tags@cloudigrade/cloudigrade
   variables:
     CONTEXT_DIR: deployment
@@ -128,8 +124,6 @@ Push NGINX Tagged Image:
     - docker:dind
   only:
     - tags@cloudigrade/cloudigrade
-  except:
-    - branches
   variables:
     CONTEXT_DIR: deployment
     NGINX_S2I_IMAGE: centos/nginx-112-centos7:latest
@@ -158,8 +152,6 @@ Deploy to Test:
     CELERY_IMAGE: registry.gitlab.com/${CI_PROJECT_PATH}/commits/${CI_PROJECT_NAME}:${CI_BUILD_REF}
   only:
     - master@cloudigrade/cloudigrade
-  except:
-    - branches
   before_script:
     - oc login --token ${KUBE_TOKEN}
     - git clone https://gitlab.com/cloudigrade/shiftigrade.git
@@ -182,8 +174,6 @@ Deploy to Stage:
     CELERY_IMAGE: registry.gitlab.com/${CI_PROJECT_PATH}:${CI_COMMIT_TAG}
   only:
     - tags@cloudigrade/cloudigrade
-  except:
-    - branches
   before_script:
     - oc login --token ${KUBE_TOKEN}
     - git clone https://gitlab.com/cloudigrade/shiftigrade.git
@@ -207,8 +197,6 @@ Deploy to Production:
     CELERY_IMAGE: registry.gitlab.com/${CI_PROJECT_PATH}:${CI_COMMIT_TAG}
   only:
     - tags@cloudigrade/cloudigrade
-  except:
-    - branches
   before_script:
     - oc login --token ${KUBE_TOKEN}
     - git clone https://gitlab.com/cloudigrade/shiftigrade.git
