@@ -9,11 +9,6 @@ User = get_user_model()
 urlpatterns = [
     url(r'^me/$', views.UserView.as_view(), name='user'),
     url(
-        r'^users/create/$',
-        views.UserCreateView.as_view(),
-        name='user-create'
-    ),
-    url(
         r'^users/activate/$',
         views.ActivationView.as_view(),
         name='user-activate'

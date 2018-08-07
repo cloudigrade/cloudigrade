@@ -8,7 +8,6 @@ from djoser.views import (
     SetUsernameView as OriginalSetUsernameView,
     TokenCreateView as OriginalTokenCreateView,
     TokenDestroyView as OriginalTokenDestroyView,
-    UserCreateView as OriginalUserCreateView,
     UserView as OriginalUserView
 )
 from django.contrib.auth import get_user_model
@@ -20,12 +19,6 @@ from djoser.conf import settings
 class RootView(OriginalRootView):
     """
     Root endpoint - use one of sub endpoints.
-    """
-
-
-class UserCreateView(OriginalUserCreateView):
-    """
-    Use this endpoint to register new user.
     """
 
 
