@@ -19,6 +19,7 @@ from account.util import (create_initial_aws_instance_events,
                           create_new_machine_images,
                           generate_aws_ami_messages,
                           start_image_inspection)
+from account.validators import in_the_past
 from util import aws
 from util.exceptions import InvalidArn
 
@@ -349,7 +350,8 @@ class CloudAccountOverviewSerializer(Serializer):
 
     user_id = serializers.IntegerField(required=False)
     start = serializers.DateTimeField(default_timezone=tz.tzutc())
-    end = serializers.DateTimeField(default_timezone=tz.tzutc())
+    end = serializers.DateTimeField(default_timezone=tz.tzutc(),
+                                    validators=[in_the_past])
     name_pattern = serializers.CharField(required=False)
     account_id = serializers.IntegerField(required=False)
 
@@ -375,7 +377,8 @@ class DailyInstanceActivitySerializer(Serializer):
 
     user_id = serializers.IntegerField(required=False)
     start = serializers.DateTimeField(default_timezone=tz.tzutc())
-    end = serializers.DateTimeField(default_timezone=tz.tzutc())
+    end = serializers.DateTimeField(default_timezone=tz.tzutc(),
+                                    validators=[in_the_past])
     name_pattern = serializers.CharField(required=False)
     account_id = serializers.IntegerField(required=False)
 
@@ -401,7 +404,8 @@ class CloudAccountImagesSerializer(Serializer):
 
     user_id = serializers.IntegerField(required=False)
     start = serializers.DateTimeField(default_timezone=tz.tzutc())
-    end = serializers.DateTimeField(default_timezone=tz.tzutc())
+    end = serializers.DateTimeField(default_timezone=tz.tzutc(),
+                                    validators=[in_the_past])
     account_id = serializers.IntegerField(required=True)
 
     def generate(self):
