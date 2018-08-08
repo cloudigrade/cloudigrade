@@ -1,10 +1,9 @@
 """Collection of tests for UserViewSet."""
 from django.contrib.auth import get_user_model
-from django.db.models import Q
 from django.test import TestCase
 from rest_framework.test import APIClient
 
-from account.models import AwsAccount, AwsMachineImage
+from account.models import AwsAccount
 from account.tests import helper as account_helper
 from util.tests import helper as util_helper
 
@@ -14,29 +13,77 @@ class UserViewSetTest(TestCase):
 
     def setUp(self):
         """Set up test data."""
+        # Users
         self.user = util_helper.generate_test_user()
         self.super_user = util_helper.generate_test_user(is_superuser=True)
 
+        # Accounts
         self.account_one = account_helper.generate_aws_account(user=self.user)
         self.account_two = account_helper.generate_aws_account(user=self.user)
         self.su_account = account_helper.generate_aws_account(
             user=self.super_user)
 
+        # Images
+        # This image will be used only by su_account:
         self.su_ami_rhel7 = account_helper.generate_aws_image(
-            self.su_account, is_rhel=True, ec2_ami_id='su_ami-rhel7',
+            is_rhel=True, ec2_ami_id='su_ami-rhel7',
             rhel_challenged=False)
 
+        # These two images will be used only by user's account_one:
         self.ami_plain = account_helper.generate_aws_image(
-            self.account_one, ec2_ami_id='ami-plain')
+            ec2_ami_id='ami-plain')
         self.ami_rhel7 = account_helper.generate_aws_image(
-            self.account_one, is_rhel=True, ec2_ami_id='ami-rhel7',
+            is_rhel=True, ec2_ami_id='ami-rhel7',
             rhel_challenged=True)
+
+        # These two images will be used only by user's account_two:
         self.ami_openshift = account_helper.generate_aws_image(
-            self.account_two, is_openshift=True, ec2_ami_id='ami-openshift',
+            is_openshift=True, ec2_ami_id='ami-openshift',
             openshift_challenged=True)
         self.ami_both = account_helper.generate_aws_image(
-            self.account_two, is_rhel=True, is_openshift=True,
+            is_rhel=True, is_openshift=True,
             ec2_ami_id='ami-both')
+
+        # Instances
+        self.instance_su_1 = account_helper.generate_aws_instance(
+            self.su_account)
+        self.instance_a1_1 = account_helper.generate_aws_instance(
+            self.account_one)
+        self.instance_a1_2 = account_helper.generate_aws_instance(
+            self.account_one)
+        self.instance_a2_1 = account_helper.generate_aws_instance(
+            self.account_two)
+        self.instance_a2_2 = account_helper.generate_aws_instance(
+            self.account_two)
+
+        powered_times = (
+            (
+                util_helper.utc_dt(2018, 1, 1, 0, 0, 0),
+                util_helper.utc_dt(2018, 2, 1, 0, 0, 0)
+            ),
+        )
+
+        # Events to associate the images to the users
+        account_helper.generate_aws_instance_events(
+            self.instance_su_1, powered_times, self.su_ami_rhel7.ec2_ami_id,
+        )
+        account_helper.generate_aws_instance_events(
+            self.instance_a1_1, powered_times, self.ami_plain.ec2_ami_id,
+        )
+        account_helper.generate_aws_instance_events(
+            self.instance_a1_2, powered_times, self.ami_rhel7.ec2_ami_id,
+        )
+        account_helper.generate_aws_instance_events(
+            self.instance_a2_1, powered_times, self.ami_openshift.ec2_ami_id,
+        )
+        account_helper.generate_aws_instance_events(
+            self.instance_a2_2, powered_times, self.ami_both.ec2_ami_id,
+        )
+
+        self.challenged_image_counts = {
+            self.user.id: 2,
+            self.super_user.id: 0,
+        }
 
         self.client = APIClient()
         self.client.force_authenticate(user=self.super_user)
@@ -50,9 +97,7 @@ class UserViewSetTest(TestCase):
             AwsAccount.objects.filter(user=expected_user).count(),
             user.get('accounts'))
         self.assertEqual(
-            AwsMachineImage.objects.filter(account__user=expected_user).filter(
-                Q(rhel_challenged=True) |
-                Q(openshift_challenged=True)).count(),
+            self.challenged_image_counts[user.get('id')],
             user.get('challenged_images'))
 
     def test_list_users_as_non_super(self):

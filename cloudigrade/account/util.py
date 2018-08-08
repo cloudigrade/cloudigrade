@@ -3,6 +3,7 @@ import collections
 import logging
 import math
 import uuid
+from decimal import Decimal
 
 import boto3
 import jsonpickle
@@ -14,7 +15,7 @@ from rest_framework.serializers import ValidationError
 from account import AWS_PROVIDER_STRING
 from account.models import (AwsInstance, AwsInstanceEvent, AwsMachineImage,
                             AwsMachineImageCopy, InstanceEvent)
-from util.aws import is_instance_windows
+from util import aws
 
 logger = logging.getLogger(__name__)
 
@@ -90,6 +91,7 @@ def save_instance_events(account, instance_data, region, events=None):
         )
         event.save()
     else:
+        logger.info('saving %s new event(s) for %s', len(events), instance)
         for event in events:
             machineimage = AwsMachineImage.objects.get(
                 ec2_ami_id=event['ec2_ami_id']
@@ -106,12 +108,18 @@ def save_instance_events(account, instance_data, region, events=None):
     return instance
 
 
-def create_new_machine_images(account, instances_data):
+def create_new_machine_images(session, instances_data):
     """
-    Create AwsMachineImage that have not been seen before.
+    Create AwsMachineImage objects that have not been seen before.
+
+    Note:
+        During processing, this makes AWS API calls to describe all images
+        for the instances found for each region, and we bundle bits of those
+        responses with the actual AwsMachineImage creation. We do this all at
+        once here to minimize the number of AWS API calls.
 
     Args:
-        account (AwsAccount): The account associated with the machine image
+        session (boto3.Session): The session that found the machine image
         instances_data (dict): Dict whose keys are AWS region IDs and values
             are each a list of dictionaries that represent an instance
 
@@ -119,63 +127,97 @@ def create_new_machine_images(account, instances_data):
         list: A list of image ids that were added to the database
 
     """
-    saved_amis = []
-    for __, instances in instances_data.items():
-        windows_instances = {
+    log_prefix = 'create_new_machine_images'
+    seen_ami_ids = {
+        instance['ImageId']
+        for instances in instances_data.values()
+        for instance in instances
+    }
+    logger.info('%s: all AMI IDs found: %s', log_prefix, seen_ami_ids)
+    known_images = AwsMachineImage.objects.filter(
+        ec2_ami_id__in=list(seen_ami_ids)
+    )
+    known_ami_ids = {
+        image.ec2_ami_id for image in known_images
+    }
+    logger.info('%s: Skipping known AMI IDs: %s', log_prefix, known_ami_ids)
+
+    new_described_images = []
+    windows_ami_ids = []
+
+    for region_id, instances in instances_data.items():
+        ami_ids = set([instance['ImageId'] for instance in instances])
+        new_ami_ids = ami_ids - known_ami_ids
+        if new_ami_ids:
+            new_described_images.extend(
+                aws.describe_images(session, new_ami_ids, region_id)
+            )
+        windows_ami_ids.extend({
             instance['ImageId']
             for instance in instances
-            if is_instance_windows(instance)}
-        seen_amis = set([instance['ImageId'] for instance in instances])
-        known_amis = AwsMachineImage.objects.filter(
-            ec2_ami_id__in=list(seen_amis)
-        )
-        new_amis = list(seen_amis.difference(known_amis))
+            if aws.is_instance_windows(instance)
+        })
+    logger.info('%s: Windows AMI IDs found: %s', log_prefix, windows_ami_ids)
 
-        for ami_id in new_amis:
-            ami, __ = save_machine_images(account, ami_id)
-            if ami_id in windows_instances:
-                tag_windows(ami)
+    new_image_ids = []
+    for described_image in new_described_images:
+        ami_id = described_image['ImageId']
+        owner_id = Decimal(described_image['OwnerId'])
+        name = described_image['Name']
+        windows = ami_id in windows_ami_ids
+        openshift = len([
+            tag for tag in described_image['Tags']
+            if tag['Key'] == 'cloudigrade-ocp-present'
+        ]) > 0
 
-        saved_amis.extend(new_amis)
-    return saved_amis
+        logger.info('%s: Saving new AMI ID: %s', log_prefix, ami_id)
+        image, new = save_new_aws_machine_image(
+            ami_id, name, owner_id, openshift, windows)
+        if new:
+            new_image_ids.append(ami_id)
+
+    return new_image_ids
 
 
-def save_machine_images(account, ami_id):
+def save_new_aws_machine_image(ami_id, name, owner_aws_account_id,
+                               openshift_detected, windows_detected):
     """
-    Save the image object.
+    Save a new AwsMachineImage image object.
+
+    Note:
+        If an AwsMachineImage already exists with the provided ami_id, we do
+        not create a new image nor do we modify the existing one. In that case,
+        we simply fetch and return the image with the matching ami_id.
 
     Args:
-        account (AwsAccount): The account associated with the machine image
         ami_id (str): The AWS AMI ID.
+        name (str): the name of the image
+        owner_aws_account_id (Decimal): the AWS account ID that owns this image
+        openshift_detected (bool): was openshift detected for this image
+        windows_detected (bool): was windows detected for this image
 
     Returns (AwsMachineImage, bool): The object representing the saved model
         and a boolean of whether it was new or not.
 
     """
+    platform = AwsMachineImage.NONE
+    status = AwsMachineImage.PENDING
+    if windows_detected:
+        platform = AwsMachineImage.WINDOWS
+        status = AwsMachineImage.INSPECTED
+
     ami, new = AwsMachineImage.objects.get_or_create(
-        account=account,
         ec2_ami_id=ami_id,
+        defaults={
+            'platform': platform,
+            'owner_aws_account_id': owner_aws_account_id,
+            'name': name,
+            'status': status,
+            'openshift_detected': openshift_detected,
+        }
     )
 
     return ami, new
-
-
-def tag_windows(ami):
-    """
-    Tags the provided image with the windows tag.
-
-    Args:
-        ami (AwsMachineImage): Object representing the image.
-
-    Returns:
-        AwsMachineImage: Updated object.
-
-    """
-    ami.platform = ami.WINDOWS
-    ami.status = ami.INSPECTED
-    ami.save()
-
-    return ami
 
 
 def start_image_inspection(arn, ami_id, region):
@@ -212,12 +254,13 @@ def create_aws_machine_image_copy(copy_ami_id, reference_ami_id):
         reference_ami_id (str): the AMI ID of the original reference image
     """
     reference = AwsMachineImage.objects.get(ec2_ami_id=reference_ami_id)
-    AwsMachineImageCopy.objects.create(ec2_ami_id=copy_ami_id,
-                                       account=reference.account,
-                                       reference_awsmachineimage=reference)
+    AwsMachineImageCopy.objects.create(
+        ec2_ami_id=copy_ami_id,
+        owner_aws_account_id=reference.owner_aws_account_id,
+        reference_awsmachineimage=reference)
 
 
-def generate_aws_ami_messages(instances_data, ami_list):
+def generate_aws_ami_messages(instances_data, ami_id_list):
     """
     Format information about the machine image for messaging.
 
@@ -226,7 +269,7 @@ def generate_aws_ami_messages(instances_data, ami_list):
     Args:
         instances_data (dict): Dict whose keys are AWS region IDs and values
             are each a list of dictionaries that represent an instance
-        ami_list (list): A list of machine images that need
+        ami_id_list (list): A list of machine image IDs that need
             messages generated.
 
     Returns:
@@ -236,8 +279,8 @@ def generate_aws_ami_messages(instances_data, ami_list):
     messages = []
     for region, instances in instances_data.items():
         for instance in instances:
-            if (instance['ImageId'] in ami_list and
-                    not is_instance_windows(instance)):
+            if (instance['ImageId'] in ami_id_list and
+                    not aws.is_instance_windows(instance)):
                 messages.append(
                     {
                         'cloud_provider': AWS_PROVIDER_STRING,

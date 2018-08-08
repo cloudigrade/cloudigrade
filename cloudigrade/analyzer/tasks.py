@@ -1,14 +1,16 @@
 """Celery tasks for analyzing incoming logs."""
 import json
 import logging
+from decimal import Decimal
 
 from django.conf import settings
 from django.db import transaction
 from django.utils.translation import gettext as _
 
 from account.models import AwsAccount, AwsMachineImage, InstanceEvent
-from account.util import save_instance_events, save_machine_images, \
-    start_image_inspection, tag_windows
+from account.util import (save_instance_events,
+                          save_new_aws_machine_image,
+                          start_image_inspection)
 from util import aws
 from util.aws import is_instance_windows, rewrap_aws_errors
 from util.celery import retriable_shared_task
@@ -64,11 +66,12 @@ def analyze_log():
             logger.info(
                 _('Parsing log from s3 bucket {0} with path {1}.').format(
                     bucket, key))
-            instances = _parse_log_for_ec2_instance_events(log)
+            instances, described_images = \
+                _parse_log_for_ec2_instance_events(log)
             _parse_log_for_ami_tag_events(log)
 
     if instances:
-        _save_results(instances)
+        _save_results(instances, described_images)
         logger.debug(_('Saved instances and/or events to the DB.'))
     else:
         logger.debug(_('No instances or events to save to the DB.'))
@@ -84,11 +87,11 @@ def _parse_log_for_ec2_instance_events(log):
         log (str): The string contents of the log file.
 
     Returns:
-        list(tuple): List of instance data seen in log.
-        list(tuple): List of instance_event data seen in log.
+        list(tuple): Dict of instance data seen in log and list of images data
 
     """
     instances = {}
+    described_images = {}
     log = json.loads(log)
 
     # Each record is a single API call, but each call can
@@ -118,9 +121,10 @@ def _parse_log_for_ec2_instance_events(log):
             }
 
         for __, data in instances.items():
+            ami_id = data['instance_details'].image_id
             event = {
                 'subnet': data['instance_details'].subnet_id,
-                'ec2_ami_id': data['instance_details'].image_id,
+                'ec2_ami_id': ami_id,
                 'instance_type': data['instance_details'].instance_type,
                 'event_type': event_type,
                 'occurred_at': occurred_at
@@ -131,7 +135,13 @@ def _parse_log_for_ec2_instance_events(log):
             else:
                 data['events'] = [event]
 
-    return dict(instances)
+            # Describe each found image only once.
+            if ami_id not in described_images:
+                described_images[ami_id] = aws.describe_image(
+                    session, ami_id, region
+                )
+
+    return instances, described_images
 
 
 def _parse_log_for_ami_tag_events(log):
@@ -204,14 +214,59 @@ def _is_valid_event(record, valid_events):
 
 
 @transaction.atomic
-def _save_results(instances):
+def _save_results(instances, described_images):
     """
     Save instances and events to the DB.
 
     Args:
-        instances (dict): Of instance and event information to be persisted.
+        instances (list[dict]): instance and event information to be persisted.
+        described_images (list[dict]): image information to be persisted.
 
     """
+    # Step 0: Log some basic information about what we're saving.
+    instance_ids = set(instances.keys())
+    logger.info('analyzer: all EC2 Instance IDs found: %s', instance_ids)
+    ami_ids = set(described_images.keys())
+    logger.info('analyzer: all AMI IDs found: %s', ami_ids)
+
+    # Step 1: Which images have Windows based on the instance platform?
+    windows_ami_ids = {
+        instance['instance_details'].image_id
+        for instance in instances.values()
+        if is_instance_windows(instance['instance_details'])
+    }
+    logger.info('analyzer: Windows AMI IDs found: %s', windows_ami_ids)
+
+    # Step 2: Determine which images we actually need to save.
+    known_ami_ids = {
+        image.ec2_ami_id for image in
+        AwsMachineImage.objects.filter(
+            ec2_ami_id__in=list(described_images.keys())
+        )
+    }
+
+    # Step 3: Save only the new images.
+    new_images = {}
+    for ami_id, described_image in described_images.items():
+        if ami_id in known_ami_ids:
+            logger.info('analyzer: Skipping known AMI ID: %s', ami_id)
+            continue
+
+        owner_id = Decimal(described_image['OwnerId'])
+        name = described_image['Name']
+        windows = ami_id in windows_ami_ids
+        openshift = len({
+            tag for tag in described_image['Tags']
+            if tag['Key'] == 'cloudigrade-ocp-present'
+        }) > 0
+
+        logger.info('analyzer: Saving new AMI ID: %s', ami_id)
+        image, new = save_new_aws_machine_image(
+            ami_id, name, owner_id, openshift, windows)
+        if new and image.status is not image.INSPECTED:
+            new_images[ami_id] = image
+
+    # Step 4: Save instances and their events.
     accounts = {}
     for instance_id, data in instances.items():
         account_id = data['account_id']
@@ -220,16 +275,12 @@ def _save_results(instances):
                 AwsAccount.objects.get(aws_account_id=account_id)
         account = accounts[account_id]
 
-        image, created = save_machine_images(
-            account, data['instance_details'].image_id)
+        ami_id = data['instance_details'].image_id
         save_instance_events(
             account,
             data['instance_details'],
             data['region'],
             data['events']
         )
-        if is_instance_windows(data['instance_details']):
-            image = tag_windows(image)
-        if image.status is not image.INSPECTED and created:
-            start_image_inspection(
-                account.account_arn, image.ec2_ami_id, data['region'])
+        if ami_id in new_images:
+            start_image_inspection(account.account_arn, ami_id, data['region'])

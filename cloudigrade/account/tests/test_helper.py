@@ -142,10 +142,8 @@ class GenerateAwsImageTest(TestCase):
 
     def test_generate_aws_image_default(self):
         """Assert generation of an AwsMachineImage with minimal args."""
-        account = helper.generate_aws_account()
-        image = helper.generate_aws_image(account)
-        self.assertIsInstance(image, AwsMachineImage)
-        self.assertEqual(image.account, account)
+        image = helper.generate_aws_image()
+        self.assertIsInstance(image.owner_aws_account_id, str)
         self.assertEqual(image.platform, image.NONE)
         self.assertIsNotNone(image.ec2_ami_id)
         self.assertGreater(len(image.ec2_ami_id), 0)
@@ -157,12 +155,12 @@ class GenerateAwsImageTest(TestCase):
 
     def test_generate_aws_image_with_args(self):
         """Assert generation of an AwsMachineImage with all specified args."""
-        account = helper.generate_aws_account()
+        account_id = util_helper.generate_dummy_aws_account_id()
         ec2_ami_id = util_helper.generate_dummy_image_id()
         name = 'Taters'
 
         image = helper.generate_aws_image(
-            account,
+            account_id,
             is_encrypted=True,
             is_windows=True,
             ec2_ami_id=ec2_ami_id,
@@ -175,7 +173,7 @@ class GenerateAwsImageTest(TestCase):
         )
 
         self.assertIsInstance(image, AwsMachineImage)
-        self.assertEqual(image.account, account)
+        self.assertEqual(image.owner_aws_account_id, account_id)
         self.assertEqual(image.platform, image.WINDOWS)
         self.assertEqual(image.ec2_ami_id, ec2_ami_id)
         self.assertTrue(image.rhel_detected)

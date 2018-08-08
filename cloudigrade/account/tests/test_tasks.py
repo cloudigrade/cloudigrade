@@ -9,7 +9,7 @@ from django.conf import settings
 from django.test import TestCase
 
 from account import tasks
-from account.models import AwsAccount, AwsMachineImage, AwsMachineImageCopy
+from account.models import AwsMachineImage, AwsMachineImageCopy
 from account.tasks import (copy_ami_snapshot,
                            copy_ami_to_customer_account,
                            create_volume,
@@ -107,7 +107,7 @@ class AccountCeleryTaskTest(TestCase):
 
         # This is the original ID of a private/shared image.
         # It would have been saved to our DB upon initial discovery.
-        reference_image = account_helper.generate_aws_image(account=account)
+        reference_image = account_helper.generate_aws_image()
         reference_image_id = reference_image.ec2_ami_id
 
         mock_aws.get_session.return_value = mock_session
@@ -177,18 +177,7 @@ class AccountCeleryTaskTest(TestCase):
         mock_aws.get_ami_snapshot_id.return_value = mock_snapshot_id
         mock_aws.get_snapshot.return_value = mock_snapshot
 
-        account = AwsAccount(
-            aws_account_id=mock_account_id,
-            account_arn=mock_arn,
-            user=util_helper.generate_test_user(),
-        )
-        account.save()
-        ami = AwsMachineImage.objects.create(
-            account=account,
-            ec2_ami_id=mock_image_id
-        )
-
-        ami.save()
+        ami = account_helper.generate_aws_image(ec2_ami_id=mock_image_id)
 
         with patch.object(tasks, 'create_volume') as mock_create_volume,\
                 self.assertRaises(AwsSnapshotEncryptedError):
@@ -408,18 +397,7 @@ class AccountCeleryTaskTest(TestCase):
         mock_aws.get_ami_snapshot_id.return_value = mock_snapshot_id
         mock_aws.get_snapshot.return_value = mock_snapshot
 
-        account = AwsAccount(
-            aws_account_id=mock_account_id,
-            account_arn=mock_arn,
-            user=util_helper.generate_test_user(),
-        )
-        account.save()
-        ami = AwsMachineImage.objects.create(
-            account=account,
-            ec2_ami_id=mock_image_id
-        )
-
-        ami.save()
+        account_helper.generate_aws_image(ec2_ami_id=mock_image_id)
 
         with patch.object(tasks, 'create_volume') as mock_create_volume, \
                 patch.object(tasks, 'copy_ami_to_customer_account') as \
@@ -452,18 +430,7 @@ class AccountCeleryTaskTest(TestCase):
             operation_name=Mock(),
         )
 
-        account = AwsAccount(
-            aws_account_id=mock_account_id,
-            account_arn=mock_arn,
-            user=util_helper.generate_test_user(),
-        )
-        account.save()
-        ami = AwsMachineImage.objects.create(
-            account=account,
-            ec2_ami_id=mock_image_id
-        )
-
-        ami.save()
+        account_helper.generate_aws_image(ec2_ami_id=mock_image_id)
 
         with patch.object(tasks, 'create_volume') as mock_create_volume, \
                 patch.object(tasks, 'copy_ami_to_customer_account') as \
@@ -973,10 +940,7 @@ class AccountCeleryTaskTest(TestCase):
     def test_persist_aws_inspection_cluster_results_mark_rhel(self):
         """Assert that rhel_images are tagged rhel."""
         ami_id = util_helper.generate_dummy_image_id()
-        user1 = util_helper.generate_test_user()
-        account1 = helper.generate_aws_account(user=user1)
-        helper.generate_aws_image(account=account1,
-                                  is_encrypted=False,
+        helper.generate_aws_image(is_encrypted=False,
                                   is_windows=False,
                                   ec2_ami_id=ami_id)
         inspection_results = {
@@ -1012,10 +976,7 @@ class AccountCeleryTaskTest(TestCase):
     def test_persist_aws_inspection_cluster_results(self):
         """Assert that non rhel_images are not tagged rhel."""
         ami_id = util_helper.generate_dummy_image_id()
-        user1 = util_helper.generate_test_user()
-        account1 = helper.generate_aws_account(user=user1)
-        helper.generate_aws_image(account=account1,
-                                  is_encrypted=False,
+        helper.generate_aws_image(is_encrypted=False,
                                   is_windows=False,
                                   ec2_ami_id=ami_id)
 

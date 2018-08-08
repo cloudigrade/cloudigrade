@@ -138,16 +138,13 @@ class AwsAccountSerializer(HyperlinkedModelSerializer):
                             }
                         )
                     raise
-                new_amis = create_new_machine_images(account, instances_data)
+                new_ami_ids = create_new_machine_images(session,
+                                                        instances_data)
                 create_initial_aws_instance_events(account, instances_data)
-            messages = generate_aws_ami_messages(instances_data, new_amis)
+            messages = generate_aws_ami_messages(instances_data, new_ami_ids)
             for message in messages:
-                image = start_image_inspection(
+                start_image_inspection(
                     str(arn), message['image_id'], message['region'])
-                self.add_ami_metadata(session,
-                                      message['image_id'],
-                                      message['region'],
-                                      image)
         else:
             failure_details = [_('Account verification failed.')]
             failure_details += [
@@ -166,42 +163,6 @@ class AwsAccountSerializer(HyperlinkedModelSerializer):
         instance.name = validated_data.get('name', instance.name)
         instance.save()
         return instance
-
-    def add_ami_metadata(self, session, ami_id, ami_region, image):
-        """
-        Update our MachineImage with various AWS AMI metadata.
-
-        This includes:
-        - Set openshift detected bool if the AWS AMI is tagged for it.
-        - Set name string if the AWS AMI has a name set.
-
-        Args:
-            session (boto3.session.Session): Session using customer
-                ARN.
-            ami_id (str): AWS AMI id.
-            ami_region (str): AMS AMI region.
-            image (MachineImage): MachineImage instance to be tagged.
-
-        Returns:
-            None
-
-        """
-        ec2_image = aws.get_ami(session, ami_id, ami_region)
-        dirty = False
-
-        if ec2_image.name:
-            image.name = ec2_image.name
-            dirty = True
-
-        if ec2_image.tags is not None:
-            has_openshift = 'cloudigrade-ocp-present' in [
-                tags['Key'] for tags in ec2_image.tags]
-            if has_openshift:
-                image.openshift_detected = True
-                dirty = True
-
-        if dirty:
-            image.save()
 
     def get_user_id(self, account):
         """Get the user_id property for serialization."""
@@ -264,7 +225,7 @@ class AwsMachineImageSerializer(HyperlinkedModelSerializer):
             'id',
             'created_at',
             'updated_at',
-            'account',
+            'owner_aws_account_id',
             'is_encrypted',
             'ec2_ami_id',
             'status',
@@ -279,7 +240,7 @@ class AwsMachineImageSerializer(HyperlinkedModelSerializer):
             'id',
             'created_at',
             'updated_at',
-            'account',
+            'owner_aws_account_id',
             'is_encrypted',
             'ec2_ami_id',
             'status',

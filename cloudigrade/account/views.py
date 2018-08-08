@@ -2,7 +2,7 @@
 from django.contrib.auth import get_user_model
 from django.db.models import Count, Q
 from django.http import HttpResponseNotFound
-from rest_framework import exceptions, mixins, viewsets
+from rest_framework import mixins, viewsets
 from rest_framework.response import Response
 
 from account import serializers
@@ -97,41 +97,39 @@ class InstanceEventViewSet(viewsets.ReadOnlyModelViewSet):
 
 class MachineImageViewSet(viewsets.ReadOnlyModelViewSet,
                           mixins.UpdateModelMixin):
-    """
-    List all or retrieve a single machine image.
-
-    Do not allow to create or delete a machine image object at this view
-    because we currently **only** allow them to be retrieved or updated.
-    """
+    """List all, retrieve, or update a single machine image."""
 
     queryset = MachineImage.objects.all()
     serializer_class = serializers.MachineImagePolymorphicSerializer
 
     def get_queryset(self):
-        """Get the queryset filtered to appropriate user."""
-        user = self.request.user
+        """
+        Get the queryset of MachineImages filtered to appropriate user.
 
+        Superusers by default see *all* objects unfiltered, but a superuser may
+        optionally provide a `user_id` argument in order to see what that user
+        would normally see. This argument is ignored for normal users.
+
+        Because users don't necessarily own the images they have been using, we
+        have the filter join across instanceevent to instance to account so
+        that we return the set of images that any of their instances have used.
+
+        If we ever support archiving activity from specific accounts or
+        instances, we will need to expand the conditions on this filter to
+        exclude images used by archived instances (via archived accounts).
+        """
+        user = self.request.user
         if not user.is_superuser:
-            return self.queryset.filter(account__user__id=user.id)
+            return self.queryset.filter(
+                instanceevent__instance__account__user_id=user.id
+            ).order_by('id').distinct()
         user_id = self.request.query_params.get('user_id', None)
         if user_id is not None:
             user_id = convert_param_to_int('user_id', user_id)
-            return self.queryset.filter(account__user__id=user_id)
-        return self.queryset
-
-    def get_object(self):
-        """Get the object filtered to the appropriate user."""
-        user = self.request.user
-
-        if not user.is_superuser:
-            return super(MachineImageViewSet, self).get_object()
-        obj = super(MachineImageViewSet, self).get_object()
-        if self.request.method in ('PATCH', 'PUT') \
-                and obj.account.user_id != user.id:
-            # Superusers are NOT allowed to issue
-            # challenges on behalf of other users
-            raise exceptions.PermissionDenied()
-        return obj
+            return self.queryset.filter(
+                instanceevent__instance__account__user_id=user_id
+            ).order_by('id').distinct()
+        return self.queryset.order_by('id')
 
 
 class SysconfigViewSet(viewsets.ViewSet):
@@ -196,13 +194,21 @@ class UserViewSet(viewsets.ViewSet):
     permission_classes = (IsSuperUser,)
 
     def list(self, request):
-        """Get list of users and their basic metadata."""
+        """
+        Get list of users and their basic metadata.
+
+        Note:
+            Unfortunately, we have "noqa" statements in this function because
+            the relationship for building the Q filter is so long. We tried a
+            few variations in formatting, but they were all significantly less
+            legible than keeping these on single long lines.
+        """
         queryset = get_user_model().objects.annotate(
             accounts=Count('account', distinct=True),
             challenged_images=Count(
                 'account__machineimage', distinct=True, filter=(
-                    Q(account__machineimage__rhel_challenged=True) |
-                    Q(account__machineimage__openshift_challenged=True))),
+                    Q(account__instance__instanceevent__machineimage__rhel_challenged=True) |  # noqa: E501
+                    Q(account__instance__instanceevent__machineimage__openshift_challenged=True))),  # noqa: E501
         ).values('id', 'username', 'is_superuser', 'accounts',
                  'challenged_images')
 
@@ -211,15 +217,23 @@ class UserViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
     def retrieve(self, request, pk=None):
-        """Get a single user."""
+        """
+        Get a single user.
+
+        Note:
+            Unfortunately, we have "noqa" statements in this function because
+            the relationship for building the Q filter is so long. We tried a
+            few variations in formatting, but they were all significantly less
+            legible than keeping these on single long lines.
+        """
         # .annotate() only operates on a queryset, so we have to filter by
         # id first, and then grab the first (and only) result.
         user = get_user_model().objects.filter(id=pk).annotate(
             accounts=Count('account', distinct=True),
             challenged_images=Count(
                 'account__machineimage', distinct=True, filter=(
-                    Q(account__machineimage__rhel_challenged=True) |
-                    Q(account__machineimage__openshift_challenged=True)))
+                    Q(account__instance__instanceevent__machineimage__rhel_challenged=True) |  # noqa: E501
+                    Q(account__instance__instanceevent__machineimage__openshift_challenged=True)))  # noqa: E501
         ).values('id', 'username', 'is_superuser', 'accounts',
                  'challenged_images').first()
 

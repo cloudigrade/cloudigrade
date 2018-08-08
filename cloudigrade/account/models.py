@@ -62,12 +62,6 @@ class MachineImage(BasePolymorphicModel):
         (INSPECTING, 'Being Inspected'),
         (INSPECTED, 'Inspected'),
     )
-    account = models.ForeignKey(
-        Account,
-        on_delete=models.CASCADE,
-        db_index=True,
-        null=False,
-    )
     inspection_json = models.TextField(null=True,
                                        blank=True)
     is_encrypted = models.NullBooleanField()
@@ -206,6 +200,11 @@ class AwsMachineImage(MachineImage):
         max_length=7,
         choices=PLATFORM_CHOICES,
         default=NONE
+    )
+    owner_aws_account_id = models.DecimalField(
+        max_digits=12,
+        decimal_places=0,
+        null=False
     )
 
     @property

@@ -90,14 +90,52 @@ def get_ec2_instance(session, instance_id):
     return session.resource('ec2').Instance(instance_id)
 
 
+def describe_images(session, image_ids, source_region):
+    """
+    Describe multiple AWS Amazon Machine Images.
+
+    Args:
+        session (boto3.Session): A temporary session tied to a customer account
+        image_id (list[str]): The AMI IDs
+        source_region (str): The region the images reside in
+
+    Returns:
+        list(dict): List of dicts that describe the requested AMIs
+
+    """
+    ec2 = session.client('ec2', region_name=source_region)
+    return ec2.describe_images(ImageIds=list(image_ids))['Images']
+
+
+def describe_image(session, image_id, source_region):
+    """
+    Describe a single AWS Amazon Machine Image.
+
+    Args:
+        session (boto3.Session): A temporary session tied to a customer account
+        image_id (list[str]): The AMI ID
+        source_region (str): The region the image resides in
+
+    Returns:
+        dict: the described AMI
+
+    """
+    return describe_images(session, [image_id], source_region)[0]
+
+
 def get_ami(session, image_id, source_region):
     """
-    Return an Amazon Machine Image running on an EC2 instance.
+    Retrieve an AWS Amazon Machine Image.
+
+    Note:
+        Calling this function has the side-effect of checking that the image
+        has state == 'available', effectively ensuring that the image is ready
+        to be copied (for the async inspection process).
 
     Args:
         session (boto3.Session): A temporary session tied to a customer account
         image_id (str): An AMI ID
-        source_region (str): The region the snapshot resides in
+        source_region (str): The region the image resides in
 
     Returns:
         Image: A boto3 EC2 Image object.

@@ -1,10 +1,12 @@
 """Collection of tests for MachineImageViewSet."""
+from decimal import Decimal
+
 from django.test import TestCase
 from rest_framework.test import APIRequestFactory, force_authenticate
 
-from account.models import (AwsMachineImage)
+from account.models import AwsMachineImage
 from account.tests import helper as account_helper
-from account.views import (MachineImageViewSet)
+from account.views import MachineImageViewSet
 from util.tests import helper as util_helper
 
 
@@ -12,33 +14,87 @@ class MachineImageViewSetTest(TestCase):
     """MachineImageViewSet test case."""
 
     def setUp(self):
-        """Set up a bunch of test data."""
+        """
+        Set up a bunch of test data.
+
+        This gets very noisy very quickly because we need users who have
+        accounts that have instances that have events that used various image
+        types.
+        """
+        # Users
         self.user1 = util_helper.generate_test_user()
         self.user2 = util_helper.generate_test_user()
         self.superuser = util_helper.generate_test_user(is_superuser=True)
-        self.account1 = account_helper.generate_aws_account(user=self.user1)
-        self.account2 = account_helper.generate_aws_account(user=self.user1)
-        self.account3 = account_helper.generate_aws_account(user=self.user2)
-        self.account4 = account_helper.generate_aws_account(user=self.user2)
-        self.account5 = \
-            account_helper.generate_aws_account(user=self.superuser)
-        self.machine_image1 = \
-            account_helper.generate_aws_image(account=self.account1,
-                                              is_rhel=True)
-        self.machine_image2 = \
-            account_helper.generate_aws_image(account=self.account2,
-                                              is_openshift=True)
-        self.machine_image3 = \
-            account_helper.generate_aws_image(account=self.account3,
-                                              is_rhel=True,
-                                              is_openshift=True)
-        self.machine_image4 = \
-            account_helper.generate_aws_image(account=self.account4,
-                                              is_windows=True)
-        self.machine_image5 = \
-            account_helper.generate_aws_image(account=self.account5,
-                                              is_rhel=True)
+
+        # Accounts for the users
+        self.account_u1_1 = account_helper.generate_aws_account(
+            user=self.user1)
+        self.account_u1_2 = account_helper.generate_aws_account(
+            user=self.user1)
+        self.account_u2_1 = account_helper.generate_aws_account(
+            user=self.user2)
+        self.account_u2_2 = account_helper.generate_aws_account(
+            user=self.user2)
+        self.account_su = account_helper.generate_aws_account(
+            user=self.superuser)
+
+        # Instances for the accounts
+        self.instance_u1_1 = account_helper.generate_aws_instance(
+            account=self.account_u1_1)
+        self.instance_u1_2 = account_helper.generate_aws_instance(
+            account=self.account_u1_2)
+        self.instance_u2_1 = account_helper.generate_aws_instance(
+            account=self.account_u2_1)
+        self.instance_u2_2 = account_helper.generate_aws_instance(
+            account=self.account_u2_2)
+        self.instance_su = account_helper.generate_aws_instance(
+            account=self.account_su)
+
+        # Images wih various contents
+        self.image_plain = account_helper.generate_aws_image()
+        self.image_windows = account_helper.generate_aws_image(is_windows=True)
+        self.image_rhel = account_helper.generate_aws_image(is_rhel=True)
+        self.image_ocp = account_helper.generate_aws_image(
+            is_openshift=True)
+        self.image_rhel_ocp = account_helper.generate_aws_image(
+            is_rhel=True, is_openshift=True)
+
+        # Some initial event activity spread across the accounts
+        powered_times = (
+            (
+                util_helper.utc_dt(2018, 1, 9, 0, 0, 0),
+                util_helper.utc_dt(2018, 1, 10, 0, 0, 0)
+            ),
+        )
+        instance_images = (
+            (self.instance_u1_1, self.image_plain),
+            (self.instance_u1_2, self.image_rhel),
+            (self.instance_u2_1, self.image_ocp),
+            (self.instance_u2_2, self.image_rhel_ocp),
+            (self.instance_su, self.image_windows),
+        )
+        for instance, image in instance_images:
+            self.generate_events(powered_times, instance, image)
+
         self.factory = APIRequestFactory()
+
+    def generate_events(self, powered_times, instance, image):
+        """
+        Generate events saved to the DB and returned.
+
+        Args:
+            powered_times (list[tuple]): Time periods instance is powered on.
+            instance (Instance): which instance has the events.
+            image (AwsMachineImage): which image seen in the events.
+
+        Returns:
+            list[InstanceEvent]: The list of events
+
+        """
+        events = account_helper.generate_aws_instance_events(
+            instance, powered_times, image.ec2_ami_id,
+        )
+        return events
 
     def assertResponseHasImageData(self, response, image):
         """Assert the response has data matching the image object."""
@@ -46,8 +102,8 @@ class MachineImageViewSetTest(TestCase):
             response.data['id'], image.id
         )
         self.assertEqual(
-            response.data['account'],
-            f'http://testserver/api/v1/account/{image.account.id}/'
+            Decimal(response.data['owner_aws_account_id']),
+            Decimal(image.owner_aws_account_id)
         )
         self.assertEqual(
             response.data['resourcetype'], image.__class__.__name__
@@ -152,33 +208,23 @@ class MachineImageViewSetTest(TestCase):
         return image_ids
 
     def test_list_images_as_user1(self):
-        """Assert that user1 sees only its own images."""
+        """Assert that a user sees only its images relevant to its events."""
         expected_images = {
-            self.machine_image1.id,
-            self.machine_image2.id,
+            self.image_plain.id,
+            self.image_rhel.id,
         }
         response = self.get_image_list_response(self.user1)
-        actual_images = self.get_image_ids_from_list_response(response)
-        self.assertEqual(expected_images, actual_images)
-
-    def test_list_images_as_user2(self):
-        """Assert that user2 sees only its own images."""
-        expected_images = {
-            self.machine_image3.id,
-            self.machine_image4.id,
-        }
-        response = self.get_image_list_response(self.user2)
         actual_images = self.get_image_ids_from_list_response(response)
         self.assertEqual(expected_images, actual_images)
 
     def test_list_images_as_superuser(self):
         """Assert that the superuser sees all images regardless of owner."""
         expected_images = {
-            self.machine_image1.id,
-            self.machine_image2.id,
-            self.machine_image3.id,
-            self.machine_image4.id,
-            self.machine_image5.id
+            self.image_plain.id,
+            self.image_windows.id,
+            self.image_rhel.id,
+            self.image_ocp.id,
+            self.image_rhel_ocp.id
         }
         response = self.get_image_list_response(self.superuser)
         actual_images = self.get_image_ids_from_list_response(response)
@@ -187,36 +233,36 @@ class MachineImageViewSetTest(TestCase):
     def test_list_images_as_superuser_with_filter(self):
         """Assert that the superuser sees images filtered by user_id."""
         expected_images = {
-            self.machine_image3.id,
-            self.machine_image4.id
+            self.image_ocp.id,
+            self.image_rhel_ocp.id
         }
         params = {'user_id': self.user2.id}
         response = self.get_image_list_response(self.superuser, params)
         actual_images = self.get_image_ids_from_list_response(response)
         self.assertEqual(expected_images, actual_images)
 
-    def test_get_user1s_image_as_user1_returns_ok(self):
+    def test_get_image_used_by_user_returns_ok(self):
         """Assert that user1 can get one of its own images."""
         user = self.user1
-        image = self.machine_image2  # Image belongs to user1.
+        image = self.image_plain  # Image used by user1.
 
         response = self.get_image_get_response(user, image.id)
         self.assertEqual(response.status_code, 200)
         self.assertResponseHasImageData(response, image)
 
-    def test_get_user1s_image_as_user2_returns_404(self):
-        """Assert that user2 cannot get an image belonging to user1."""
+    def test_get_image_not_used_by_user_returns_404(self):
+        """Assert that user2 cannot get an image it hasn't used."""
         user = self.user2
-        image = self.machine_image2  # Image belongs to user1, NOT user2.
+        image = self.image_plain  # Image used by user1, NOT user2.
 
         response = self.get_image_get_response(user, image.id)
         self.assertEqual(response.status_code, 404)
 
-    def test_get_user1s_image_as_superuser_returns_ok(self):
-        """Assert that superuser can get another user's images."""
+    def test_get_image_used_by_user_as_superuser_returns_ok(self):
+        """Assert that superuser can get an image used by another user."""
         user = self.superuser
-        # Image belongs to user1, NOT superuser.
-        image = self.machine_image2
+        # Image used by user1, NOT superuser.
+        image = self.image_plain
 
         response = self.get_image_get_response(user, image.id)
         self.assertEqual(response.status_code, 200)
@@ -229,8 +275,8 @@ class MachineImageViewSetTest(TestCase):
         self.assertEqual(response.status_code, 400)
 
     def test_marking_images_as_windows_tags_them_as_windows(self):
-        """Assert that creating a windows image tags it appropriately."""
-        image = self.machine_image4  # Image was created as is_windows
+        """Assert that a windows image has an appropriate property."""
+        image = self.image_windows
         self.assertEqual(image.platform, image.WINDOWS)
 
     def test_user1_challenge_non_rhel_returns_ok(self):
@@ -241,7 +287,7 @@ class MachineImageViewSetTest(TestCase):
         }
 
         response = self.get_image_patch_response(self.user1,
-                                                 self.machine_image1.id,
+                                                 self.image_rhel.id,
                                                  data)
         self.assertTrue(response.data['rhel_challenged'])
         self.assertFalse(response.data['rhel'])
@@ -258,13 +304,13 @@ class MachineImageViewSetTest(TestCase):
         }
 
         response = self.get_image_put_response(self.user1,
-                                               self.machine_image1.id,
+                                               self.image_rhel.id,
                                                data1)
         self.assertTrue(response.data['rhel_challenged'])
         self.assertFalse(response.data['rhel'])
 
         response = self.get_image_put_response(self.user1,
-                                               self.machine_image1.id,
+                                               self.image_rhel.id,
                                                data2)
         self.assertTrue(response.data['openshift_challenged'])
         self.assertTrue(response.data['openshift'])
@@ -279,20 +325,20 @@ class MachineImageViewSetTest(TestCase):
         }
 
         response = self.get_image_patch_response(self.user1,
-                                                 self.machine_image2.id,
+                                                 self.image_plain.id,
                                                  data)
         self.assertTrue(response.data['rhel_challenged'])
         self.assertTrue(response.data['rhel'])
 
-    def test_user1_challenge_non_ocp_returns_ok(self):
+    def test_user2_challenge_non_ocp_returns_ok(self):
         """Assert that user can challenge OCP image as non OCP."""
         data = {
             'resourcetype': 'AwsMachineImage',
             'openshift_challenged': True
         }
 
-        response = self.get_image_patch_response(self.user1,
-                                                 self.machine_image2.id,
+        response = self.get_image_patch_response(self.user2,
+                                                 self.image_ocp.id,
                                                  data)
         self.assertTrue(response.data['openshift_challenged'])
         self.assertFalse(response.data['openshift'])
@@ -305,39 +351,22 @@ class MachineImageViewSetTest(TestCase):
         }
 
         response = self.get_image_patch_response(self.user1,
-                                                 self.machine_image1.id,
+                                                 self.image_plain.id,
                                                  data)
         self.assertTrue(response.data['openshift_challenged'])
         self.assertTrue(response.data['openshift'])
 
     def test_user1_challenge_user2_returns_404(self):
-        """Assert that normal user can not challenge another users image."""
+        """Assert that user can not challenge image it hasn't used."""
         data = {
             'resourcetype': 'AwsMachineImage',
             'rhel_challenged': True
         }
 
         response = self.get_image_patch_response(self.user1,
-                                                 self.machine_image3.id,
+                                                 self.image_ocp.id,
                                                  data)
         self.assertEqual(response.status_code, 404)
-
-    def test_super_challenge_user1_returns_403(self):
-        """Assert that a superuser can not challenge another users image."""
-        data = {
-            'resourcetype': 'AwsMachineImage',
-            'rhel_challenged': True
-        }
-
-        response = self.get_image_patch_response(self.superuser,
-                                                 self.machine_image1.id,
-                                                 data)
-        self.assertEqual(response.status_code, 403)
-
-        response = self.get_image_get_response(self.user1,
-                                               self.machine_image1.id)
-        self.assertFalse(response.data['rhel_challenged'])
-        self.assertTrue(response.data['rhel'])
 
     def test_user2_challenge_both_individually_returns_ok(self):
         """Assert that user can challenge RHEL and OCP individually."""
@@ -351,7 +380,7 @@ class MachineImageViewSetTest(TestCase):
         }
 
         response = self.get_image_patch_response(self.user2,
-                                                 self.machine_image3.id,
+                                                 self.image_rhel_ocp.id,
                                                  data1)
         self.assertTrue(response.data['rhel_challenged'])
         self.assertFalse(response.data['rhel'])
@@ -359,7 +388,7 @@ class MachineImageViewSetTest(TestCase):
         self.assertTrue(response.data['openshift'])
 
         response = self.get_image_patch_response(self.user2,
-                                                 self.machine_image3.id,
+                                                 self.image_rhel_ocp.id,
                                                  data2)
         self.assertTrue(response.data['openshift_challenged'])
         self.assertFalse(response.data['openshift'])
@@ -375,7 +404,7 @@ class MachineImageViewSetTest(TestCase):
         }
 
         response = self.get_image_patch_response(self.user2,
-                                                 self.machine_image3.id,
+                                                 self.image_rhel_ocp.id,
                                                  data)
         self.assertTrue(response.data['rhel_challenged'])
         self.assertFalse(response.data['rhel'])
@@ -394,26 +423,26 @@ class MachineImageViewSetTest(TestCase):
         }
 
         response = self.get_image_patch_response(self.user1,
-                                                 self.machine_image1.id,
+                                                 self.image_rhel.id,
                                                  data1)
         self.assertTrue(response.data['rhel_challenged'])
         self.assertFalse(response.data['rhel'])
 
         response = self.get_image_patch_response(self.user1,
-                                                 self.machine_image1.id,
+                                                 self.image_rhel.id,
                                                  data2)
         self.assertFalse(response.data['rhel_challenged'])
         self.assertTrue(response.data['rhel'])
 
-    def test_superuser_can_challenge_own_account_returns_ok(self):
-        """Assert that superuser can challenge own RHEL image as non RHEL."""
+    def test_superuser_can_challenge_image_returns_ok(self):
+        """Assert that superuser can challenge image it hasn't used."""
         data = {
             'resourcetype': 'AwsMachineImage',
             'rhel_challenged': True
         }
 
         response = self.get_image_patch_response(self.superuser,
-                                                 self.machine_image5.id,
+                                                 self.image_rhel.id,
                                                  data)
         self.assertTrue(response.data['rhel_challenged'])
         self.assertFalse(response.data['rhel'])

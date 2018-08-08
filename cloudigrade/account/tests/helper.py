@@ -99,8 +99,10 @@ def generate_single_aws_instance_event(
         event_type = InstanceEvent.TYPE.power_off
 
     image, __ = AwsMachineImage.objects.get_or_create(
-        account=instance.account,
         ec2_ami_id=ec2_ami_id,
+        defaults={
+            'owner_aws_account_id': instance.account.aws_account_id,
+        }
     )
     event = AwsInstanceEvent.objects.create(
         instance=instance,
@@ -169,7 +171,7 @@ def generate_aws_instance_events(
     return events
 
 
-def generate_aws_image(account,
+def generate_aws_image(owner_aws_account_id=None,
                        is_encrypted=None,
                        is_windows=False,
                        ec2_ami_id=None,
@@ -180,12 +182,12 @@ def generate_aws_image(account,
                        rhel_challenged=False,
                        openshift_challenged=False):
     """
-    Generate an AwsMachineImage for the AwsAccount for testing.
+    Generate an AwsMachineImage.
 
     Any optional arguments not provided will be randomly generated.
 
     Args:
-        account (AwsAccount): Account that owns the image.
+        owner_aws_account_id (int): Optional AWS account that owns the image.
         is_encrypted (bool): Optional Indicates if image is encrypted.
         is_windows (bool): Optional Indicates if AMI is Windows.
         ec2_ami_id (str): Optional EC2 AMI ID of the image
@@ -200,13 +202,14 @@ def generate_aws_image(account,
         AwsMachineImage: The created AwsMachineImage.
 
     """
+    if not owner_aws_account_id:
+        owner_aws_account_id = helper.generate_dummy_aws_account_id()
     if not ec2_ami_id:
         ec2_ami_id = helper.generate_dummy_image_id()
-
     platform = AwsMachineImage.WINDOWS if is_windows else AwsMachineImage.NONE
 
     image = AwsMachineImage.objects.create(
-        account=account,
+        owner_aws_account_id=owner_aws_account_id,
         ec2_ami_id=ec2_ami_id,
         is_encrypted=is_encrypted,
         rhel_detected=is_rhel,
@@ -217,5 +220,4 @@ def generate_aws_image(account,
         rhel_challenged=rhel_challenged,
         openshift_challenged=openshift_challenged
     )
-
     return image

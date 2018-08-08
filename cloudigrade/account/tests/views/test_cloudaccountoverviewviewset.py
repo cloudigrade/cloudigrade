@@ -48,26 +48,21 @@ class CloudAccountOverviewViewSetTest(TestCase):
         self.instance4 = \
             account_helper.generate_aws_instance(account=self.account4)
         self.windows_image = account_helper.generate_aws_image(
-            self.account1,
             is_encrypted=False,
-            is_windows=True,
-        )
+            is_windows=True)
         self.rhel_image = account_helper.generate_aws_image(
-            self.account2,
             is_encrypted=False,
             is_windows=False,
             ec2_ami_id=None,
             is_rhel=True,
             is_openshift=False)
         self.openshift_image = account_helper.generate_aws_image(
-            self.account3,
             is_encrypted=False,
             is_windows=False,
             ec2_ami_id=None,
             is_rhel=False,
             is_openshift=True)
         self.openshift_and_rhel_image = account_helper.generate_aws_image(
-            self.account4,
             is_encrypted=False,
             is_windows=False,
             ec2_ami_id=None,

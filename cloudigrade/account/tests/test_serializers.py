@@ -25,20 +25,35 @@ class AwsAccountSerializerTest(TestCase):
 
     @patch('account.serializers.start_image_inspection')
     def test_create_succeeds_when_account_verified(self, mock_copy_snapshot):
-        """Test saving and processing of a test ARN."""
+        """
+        Test saving and processing of a test ARN.
+
+        This is a somewhat comprehensive test that includes finding two
+        instances upon initial account discovery. Both instances should get a
+        "power on" event. The images for these instances both have random names
+        and are owned by other random account IDs. One image has OpenShift.
+        """
         aws_account_id = util_helper.generate_dummy_aws_account_id()
         arn = util_helper.generate_dummy_arn(aws_account_id)
         role = util_helper.generate_dummy_role()
         region = random.choice(util_helper.SOME_AWS_REGIONS)
+
+        described_ami1 = util_helper.generate_dummy_describe_image()
+        described_ami2 = util_helper.generate_dummy_describe_image(
+            openshift=True,
+        )
+
         running_instances = {
             region: [
                 util_helper.generate_dummy_describe_instance(
+                    image_id=described_ami1['ImageId'],
                     state=aws.InstanceState.running
                 ),
                 util_helper.generate_dummy_describe_instance(
-                    state=aws.InstanceState.stopping
+                    image_id=described_ami2['ImageId'],
+                    state=aws.InstanceState.running
                 )
-            ]
+            ],
         }
 
         validated_data = {
@@ -56,24 +71,33 @@ class AwsAccountSerializerTest(TestCase):
         with patch.object(aws, 'verify_account_access') as mock_verify, \
                 patch.object(aws.sts, 'boto3') as mock_boto3, \
                 patch.object(aws, 'get_running_instances') as mock_get_run, \
-                patch.object(aws, 'get_ami') as mock_get_ami:
+                patch.object(aws, 'get_ami') as mock_get_ami, \
+                patch.object(aws, 'describe_images') as mock_describe_images:
             mock_assume_role = mock_boto3.client.return_value.assume_role
             mock_assume_role.return_value = role
             mock_verify.return_value = True, []
             mock_get_run.return_value = running_instances
             mock_get_ami.return_value = mock_ami
             mock_copy_snapshot.return_value = None
+
+            mock_describe_images.return_value = [
+                described_ami1,
+                described_ami2,
+            ]
+
             serializer = AwsAccountSerializer(context=context)
 
             result = serializer.create(validated_data)
             self.assertIsInstance(result, AwsAccount)
 
+        # Verify that we created the account.
         account = AwsAccount.objects.get(aws_account_id=aws_account_id)
         self.assertEqual(aws_account_id, account.aws_account_id)
         self.assertEqual(arn, account.account_arn)
 
+        # Verify that we created both of the instances.
         instances = AwsInstance.objects.filter(account=account).all()
-        self.assertEqual(len(running_instances[region]), len(instances))
+        self.assertEqual(len(instances), 2)
         for region, mock_instances_list in running_instances.items():
             for mock_instance in mock_instances_list:
                 instance_id = mock_instance['InstanceId']
@@ -84,8 +108,20 @@ class AwsAccountSerializerTest(TestCase):
                 self.assertIsInstance(event, InstanceEvent)
                 self.assertEqual(InstanceEvent.TYPE.power_on, event.event_type)
 
-        amis = AwsMachineImage.objects.filter(account=account).all()
-        self.assertEqual(len(running_instances[region]), len(amis))
+        # Verify that we saved both images used by the running instances.
+        amis = AwsMachineImage.objects.all()
+        self.assertEqual(len(amis), 2)
+
+        ami = AwsMachineImage.objects.get(ec2_ami_id=described_ami1['ImageId'])
+        self.assertFalse(ami.rhel_detected)
+        self.assertFalse(ami.openshift_detected)
+        self.assertEqual(ami.name, described_ami1['Name'])
+
+        ami = AwsMachineImage.objects.get(ec2_ami_id=described_ami2['ImageId'])
+        self.assertFalse(ami.rhel_detected)
+        self.assertTrue(ami.openshift_detected)
+        self.assertEqual(ami.name, described_ami2['Name'])
+
         self.assertIsInstance(mock_copy_snapshot.call_args[0][0], str)
 
     def test_create_fails_when_account_not_verified(self):
@@ -146,136 +182,6 @@ class AwsAccountSerializerTest(TestCase):
             raised_exception = cm.exception
             self.assertIn('account_arn', raised_exception.detail)
             self.assertIn(arn, raised_exception.detail['account_arn'][0])
-
-    @patch('util.aws.ec2.check_image_state')
-    @patch('account.tasks.aws')
-    def test_ami_name_added(self, mock_aws, mock_check_image_state):
-        """Test AMI name added to MachineImage."""
-        mock_session = mock_aws.boto3.Session.return_value
-
-        ami_id = util_helper.generate_dummy_image_id()
-        ami_region = random.choice(util_helper.SOME_AWS_REGIONS)
-        ami_name = _faker.bs()
-        mock_ami = util_helper.generate_mock_image(ami_id)
-        mock_ami.tags = []
-        mock_ami.name = ami_name
-        mock_resource = mock_session.resource.return_value
-        mock_resource.Image.return_value = mock_ami
-
-        test_user = util_helper.generate_test_user()
-        test_account = AwsAccount.objects.create(
-            user=test_user,
-            aws_account_id=util_helper.generate_dummy_aws_account_id,
-            account_arn=util_helper.generate_dummy_arn)
-        test_image = AwsMachineImage.objects.create(
-            account=test_account,
-            ec2_ami_id=ami_id
-        )
-
-        serializer = AwsAccountSerializer()
-        self.assertIsNone(test_image.name)
-
-        serializer.add_ami_metadata(
-            mock_session, ami_id, ami_region, test_image)
-        self.assertEqual(test_image.name, ami_name)
-
-    @patch('util.aws.ec2.check_image_state')
-    @patch('account.tasks.aws')
-    def test_openshift_tag_added(self, mock_aws, mock_check_image_state):
-        """Test openshift tag added to MachineImage."""
-        mock_session = mock_aws.boto3.Session.return_value
-
-        ami_id = util_helper.generate_dummy_image_id()
-        ami_region = random.choice(util_helper.SOME_AWS_REGIONS)
-        mock_ami = util_helper.generate_mock_image(ami_id)
-        mock_ami.tags = [{'Key': 'cloudigrade-ocp-present',
-                          'Value': 'cloudigrade-ocp-present'}]
-        mock_ami.name = None
-        mock_resource = mock_session.resource.return_value
-        mock_resource.Image.return_value = mock_ami
-
-        test_user = util_helper.generate_test_user()
-        test_account = AwsAccount.objects.create(
-            user=test_user,
-            aws_account_id=util_helper.generate_dummy_aws_account_id,
-            account_arn=util_helper.generate_dummy_arn)
-        test_image = AwsMachineImage.objects.create(
-            account=test_account,
-            ec2_ami_id=ami_id
-        )
-
-        serializer = AwsAccountSerializer()
-        self.assertFalse(test_image.openshift_detected)
-
-        serializer.add_ami_metadata(
-            mock_session, ami_id, ami_region, test_image)
-        self.assertIsNone(test_image.name)
-        self.assertTrue(test_image.openshift_detected)
-
-    @patch('util.aws.ec2.check_image_state')
-    @patch('account.tasks.aws')
-    def test_openshift_tag_not_added(self, mock_aws, mock_check_image_state):
-        """Test openshift tag not added to MachineImage."""
-        mock_session = mock_aws.boto3.Session.return_value
-
-        ami_id = util_helper.generate_dummy_image_id()
-        ami_region = random.choice(util_helper.SOME_AWS_REGIONS)
-        mock_ami = util_helper.generate_mock_image(ami_id)
-        mock_ami.tags = [{'Key': 'random',
-                          'Value': 'random'}]
-        mock_ami.name = None
-        mock_resource = mock_session.resource.return_value
-        mock_resource.Image.return_value = mock_ami
-
-        test_user = util_helper.generate_test_user()
-        test_account = AwsAccount.objects.create(
-            user=test_user,
-            aws_account_id=util_helper.generate_dummy_aws_account_id,
-            account_arn=util_helper.generate_dummy_arn)
-        test_image = AwsMachineImage.objects.create(
-            account=test_account,
-            ec2_ami_id=ami_id
-        )
-
-        serializer = AwsAccountSerializer()
-        self.assertFalse(test_image.openshift_detected)
-
-        serializer.add_ami_metadata(
-            mock_session, ami_id, ami_region, test_image)
-        self.assertIsNone(test_image.name)
-        self.assertFalse(test_image.openshift_detected)
-
-    @patch('util.aws.ec2.check_image_state')
-    @patch('account.tasks.aws')
-    def test_openshift_no_tags(self, mock_aws, mock_check_image_state):
-        """Test case where AMI has no tags."""
-        mock_session = mock_aws.boto3.Session.return_value
-
-        ami_id = util_helper.generate_dummy_image_id()
-        ami_region = random.choice(util_helper.SOME_AWS_REGIONS)
-        mock_ami = util_helper.generate_mock_image(ami_id)
-        mock_ami.tags = None
-        mock_ami.name = None
-        mock_resource = mock_session.resource.return_value
-        mock_resource.Image.return_value = mock_ami
-
-        test_user = util_helper.generate_test_user()
-        test_account = AwsAccount.objects.create(
-            user=test_user,
-            aws_account_id=util_helper.generate_dummy_aws_account_id,
-            account_arn=util_helper.generate_dummy_arn)
-        test_image = AwsMachineImage.objects.create(
-            account=test_account,
-            ec2_ami_id=ami_id
-        )
-
-        serializer = AwsAccountSerializer()
-        self.assertFalse(test_image.openshift_detected)
-
-        serializer.add_ami_metadata(
-            mock_session, ami_id, ami_region, test_image)
-        self.assertIsNone(test_image.name)
-        self.assertFalse(test_image.openshift_detected)
 
     def test_create_fails_when_cloudtrail_fails(self):
         """Test that an account is not saved if cloudtrails errors."""

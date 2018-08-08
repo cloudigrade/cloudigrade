@@ -178,17 +178,20 @@ def generate_dummy_describe_image(image_id=None, owner_id=None, name=None,
 
     """
     if image_id is None:
-        image_id = Decimal(generate_dummy_image_id())
+        image_id = generate_dummy_image_id()
 
     if owner_id is None:
-        owner_id = generate_dummy_aws_account_id()
+        owner_id = Decimal(generate_dummy_aws_account_id())
 
     if name is None:
         name = faker.Faker().bs()
 
     tags = []
     if openshift:
-        tags.append({'Name': 'cloudigrade-ocp-present'})
+        tags.append({
+            'Key': 'cloudigrade-ocp-present',
+            'Value': 'cloudigrade-ocp-present',
+        })
 
     mock_image = {
         'ImageId': image_id,
