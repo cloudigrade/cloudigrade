@@ -239,6 +239,8 @@ CLOUDTRAIL_EVENT_URL = env(
     default='https://sqs.us-east-1.amazonaws.com/123456789/test-cloudigrade-s3'
 )
 
+S3_BUCKET_NAME = env('S3_BUCKET_NAME', default='{0}cloudigrade'.format(AWS_NAME_PREFIX))
+
 CLOUDTRAIL_NAME_PREFIX = 'cloudigrade-'
 
 CELERY_BROKER_TRANSPORT_OPTIONS = {
