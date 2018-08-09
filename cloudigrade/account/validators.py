@@ -1,5 +1,4 @@
 """DRF API validators for the account app."""
-import datetime
 import re
 
 from django.utils.translation import gettext as _
@@ -43,20 +42,3 @@ def validate_cloud_provider_account_id(data):
                 e.detail,
             }
         )
-
-
-def in_the_past(base):
-    """
-    Ensure the date is in the past or present, not the future.
-
-    Args:
-        base (datetime): some datetime to check
-
-    Returns:
-        datetime: base or "now" if base is in the future
-
-    """
-    now = datetime.datetime.now(tz=base.tzinfo)
-    if now < base:
-        return now
-    return base

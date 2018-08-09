@@ -1,4 +1,5 @@
 """Miscellaneous utility functions."""
+import datetime
 
 
 def generate_device_name(index, prefix='/dev/xvd'):
@@ -14,3 +15,18 @@ def generate_device_name(index, prefix='/dev/xvd'):
     """
     return f'{prefix}' \
            f'{chr(ord("b") + int(index / 26)) + chr(ord("a") + index % 26)}'
+
+
+def truncate_date(original):
+    """
+    Ensure the date is in the past or present, not the future.
+
+    Args:
+        original (datetime): some datetime to optionally truncate
+
+    Returns:
+        datetime: original or "now" if base is in the future
+
+    """
+    now = datetime.datetime.now(tz=original.tzinfo)
+    return min(original, now)

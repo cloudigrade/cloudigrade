@@ -1,10 +1,12 @@
 """Collection of tests for custom DRF views in the account app."""
+import datetime
 import operator
 import uuid
 from unittest.mock import patch
 from urllib.parse import urlparse
 
 import faker
+from dateutil import tz
 from django.test import TestCase
 from django.urls import resolve
 from rest_framework.test import (APIClient,
@@ -1689,33 +1691,43 @@ class ImagesActivityOverviewViewSetTestCase(TestCase):
             self.account_plain)
 
         # Generate activity for instances belonging to self.user
-        powered_times = (
+        self.powered_times = (
             (
                 util_helper.utc_dt(2018, 1, 10, 0, 0, 0),
                 util_helper.utc_dt(2018, 1, 10, 5, 0, 0)
             ),
+            (
+                util_helper.utc_dt(2018, 5, 10, 0, 0, 0),
+                None
+            ),
         )
         account_helper.generate_aws_instance_events(
             self.a1_instance_rhel,
-            powered_times,
+            self.powered_times,
             ec2_ami_id=self.image_rhel.ec2_ami_id,
         )
         account_helper.generate_aws_instance_events(
             self.a1_instance_oc,
-            powered_times,
+            self.powered_times,
             ec2_ami_id=self.image_ocp.ec2_ami_id,
         )
         account_helper.generate_aws_instance_events(
             self.a2_instance_plain,
-            powered_times,
+            self.powered_times,
             ec2_ami_id=self.image_plain.ec2_ami_id,
         )
 
         self.start = util_helper.utc_dt(2018, 1, 1, 0, 0, 0)
         self.end = util_helper.utc_dt(2018, 2, 1, 0, 0, 0)
 
-        self.start_future = util_helper.utc_dt(2019, 1, 1, 0, 0, 0)
-        self.end_future = util_helper.utc_dt(2019, 2, 1, 0, 0, 0)
+        self.start_inactive = util_helper.utc_dt(2018, 3, 1, 0, 0, 0)
+        self.end_inactive = util_helper.utc_dt(2018, 4, 1, 0, 0, 0)
+
+        self.now = datetime.datetime.now(tz=tz.tzutc())
+        future_year = self.now.year + 2
+
+        self.start_future = util_helper.utc_dt(future_year, 1, 1, 0, 0, 0)
+        self.end_future = util_helper.utc_dt(future_year, 2, 1, 0, 0, 0)
 
         self.factory = APIRequestFactory()
 
@@ -1804,10 +1816,22 @@ class ImagesActivityOverviewViewSetTestCase(TestCase):
 
     def test_no_images_for_account_with_images_previously_active(self):
         """Assert no images when no images were active in the time."""
-        response = self.get_report_response(self.user, self.start_future,
-                                            self.end_future,
+        response = self.get_report_response(self.user, self.start_inactive,
+                                            self.end_inactive,
                                             account_id=self.account_mixed.id)
         self.assertNoImages(response)
+
+    @patch.object(views.serializers.misc, 'datetime')
+    def test_future_seconds_truncated_for_unending_activity(self, mock_dt):
+        """Assert we stop counting up runtime later than "now"."""
+        delta_hours_5 = datetime.timedelta(seconds=HOURS_5)
+        now = self.powered_times[1][0] + delta_hours_5
+        near_future = now + delta_hours_5
+        mock_dt.datetime.now.return_value = now
+        response = self.get_report_response(self.user, self.start_inactive,
+                                            near_future,
+                                            account_id=self.account_mixed.id)
+        self.assertUser1MixedAccount(response)
 
     def test_no_images_for_account_with_no_relevant_images(self):
         """Assert no images when no images were active in the account."""

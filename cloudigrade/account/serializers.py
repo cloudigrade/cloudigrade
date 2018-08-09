@@ -19,8 +19,7 @@ from account.util import (create_initial_aws_instance_events,
                           create_new_machine_images,
                           generate_aws_ami_messages,
                           start_image_inspection)
-from account.validators import in_the_past
-from util import aws
+from util import aws, misc
 from util.exceptions import InvalidArn
 
 logger = logging.getLogger(__name__)
@@ -350,15 +349,14 @@ class CloudAccountOverviewSerializer(Serializer):
 
     user_id = serializers.IntegerField(required=False)
     start = serializers.DateTimeField(default_timezone=tz.tzutc())
-    end = serializers.DateTimeField(default_timezone=tz.tzutc(),
-                                    validators=[in_the_past])
+    end = serializers.DateTimeField(default_timezone=tz.tzutc())
     name_pattern = serializers.CharField(required=False)
     account_id = serializers.IntegerField(required=False)
 
     def generate(self):
         """Generate the cloud accounts overviews and return the results."""
         start = self.validated_data['start']
-        end = self.validated_data['end']
+        end = misc.truncate_date(self.validated_data['end'])
         name_pattern = self.validated_data.get('name_pattern', None)
 
         user = self.context['request'].user
@@ -377,15 +375,14 @@ class DailyInstanceActivitySerializer(Serializer):
 
     user_id = serializers.IntegerField(required=False)
     start = serializers.DateTimeField(default_timezone=tz.tzutc())
-    end = serializers.DateTimeField(default_timezone=tz.tzutc(),
-                                    validators=[in_the_past])
+    end = serializers.DateTimeField(default_timezone=tz.tzutc())
     name_pattern = serializers.CharField(required=False)
     account_id = serializers.IntegerField(required=False)
 
     def generate(self):
         """Generate the usage report and return the results."""
         start = self.validated_data['start']
-        end = self.validated_data['end']
+        end = misc.truncate_date(self.validated_data['end'])
         name_pattern = self.validated_data.get('name_pattern', None)
 
         user = self.context['request'].user
@@ -404,14 +401,13 @@ class CloudAccountImagesSerializer(Serializer):
 
     user_id = serializers.IntegerField(required=False)
     start = serializers.DateTimeField(default_timezone=tz.tzutc())
-    end = serializers.DateTimeField(default_timezone=tz.tzutc(),
-                                    validators=[in_the_past])
+    end = serializers.DateTimeField(default_timezone=tz.tzutc())
     account_id = serializers.IntegerField(required=True)
 
     def generate(self):
         """Generate the usage report and return the results."""
         start = self.validated_data['start']
-        end = self.validated_data['end']
+        end = misc.truncate_date(self.validated_data['end'])
 
         user = self.context['request'].user
         user_id = user.id
