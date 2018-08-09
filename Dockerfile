@@ -5,7 +5,7 @@ RUN useradd -r cloudigrade
 
 RUN yum install centos-release-scl -y \
     && yum-config-manager --enable centos-sclo-rh-testing \
-    && yum install rh-python36 rh-python36-python-pip -y \
+    && yum install nmap-ncat rh-python36 rh-python36-python-pip -y \
     && yum clean all \
     && rm -rf /var/cache/yum
 
