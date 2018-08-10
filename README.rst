@@ -250,6 +250,14 @@ To run all local tests as well as our code-quality checking commands:
 
     tox
 
+If ``tox`` cannot create its environment due to errors installing pycurl, try setting these environment variables first:
+
+.. code-block:: sh
+
+    export LDFLAGS=-L/usr/local/opt/openssl/lib
+    export CPPFLAGS=-I/usr/local/opt/openssl/include
+    export PYCURL_SSL_LIBRARY=openssl
+
 If you wish to run *only* the tests:
 
 .. code-block:: sh
