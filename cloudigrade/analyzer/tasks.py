@@ -54,11 +54,16 @@ def analyze_log():
     for extracted_message in extracted_messages:
         bucket = extracted_message['bucket']['name']
         key = extracted_message['object']['key']
-        logs.append(aws.get_object_content_from_s3(bucket, key))
+        logs.append((aws.get_object_content_from_s3(bucket, key), bucket, key))
 
     # Parse logs for on/off events
-    for log in logs:
+    for log, bucket, key in logs:
         if log:
+            # FIXME: When it comes time to fix up logging for production,
+            # this should get revisted.
+            logger.info(
+                _('Parsing log from s3 bucket {0} with path {1}.').format(
+                    bucket, key))
             instances = _parse_log_for_ec2_instance_events(log)
             _parse_log_for_ami_tag_events(log)
 
