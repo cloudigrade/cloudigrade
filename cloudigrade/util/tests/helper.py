@@ -3,6 +3,7 @@ import datetime
 import random
 import string
 import uuid
+from decimal import Decimal
 from unittest.mock import Mock
 
 import faker
@@ -157,6 +158,45 @@ def generate_dummy_describe_instance(instance_id=None, image_id=None,
         'SubnetId': subnet_id,
     }
     return mock_instance
+
+
+def generate_dummy_describe_image(image_id=None, owner_id=None, name=None,
+                                  openshift=False):
+    """
+    Generate dummy image to imitate 'describe images' API response.
+
+    Optional arguments not given may be randomly generated.
+
+    Args:
+        image_id (str): Optional AMI ID.
+        owner_id (str): Optional AWS Account ID.
+        name (str): Optional image name.
+        openshift (bool): Optional indicator for openshift.
+
+    Returns:
+        dict: Well-formed image data structure.
+
+    """
+    if image_id is None:
+        image_id = Decimal(generate_dummy_image_id())
+
+    if owner_id is None:
+        owner_id = generate_dummy_aws_account_id()
+
+    if name is None:
+        name = faker.Faker().bs()
+
+    tags = []
+    if openshift:
+        tags.append({'Name': 'cloudigrade-ocp-present'})
+
+    mock_image = {
+        'ImageId': image_id,
+        'OwnerId': owner_id,
+        'Name': name,
+        'Tags': tags,
+    }
+    return mock_image
 
 
 def generate_dummy_role():
