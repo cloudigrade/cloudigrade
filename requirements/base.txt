@@ -12,5 +12,5 @@ django-polymorphic==2.0.2
 django-rest-polymorphic==0.1.7
 django-celery-beat==1.1.1
 django-health-check==3.7.0
-djoser==1.2.0
+djoser==1.2.1
 pycurl==7.43.0.2
