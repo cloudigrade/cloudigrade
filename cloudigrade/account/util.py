@@ -166,8 +166,8 @@ def create_new_machine_images(session, instances_data):
         name = described_image['Name']
         windows = ami_id in windows_ami_ids
         openshift = len([
-            tag for tag in described_image['Tags']
-            if tag['Key'] == 'cloudigrade-ocp-present'
+            tag for tag in described_image.get('Tags', [])
+            if tag.get('Key') == aws.OPENSHIFT_TAG
         ]) > 0
 
         logger.info('%s: Saving new AMI ID: %s', log_prefix, ami_id)

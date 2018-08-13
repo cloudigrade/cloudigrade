@@ -27,3 +27,6 @@ from util.aws.s3 import get_object_content_from_s3
 from util.aws.sqs import (delete_message_from_queue, extract_sqs_message,
                           receive_message_from_queue)
 from util.aws.sts import get_session, get_session_account_id
+
+
+OPENSHIFT_TAG = 'cloudigrade-ocp-present'

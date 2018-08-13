@@ -24,7 +24,6 @@ ec2_instance_event_map = {
     'TerminateInstances': InstanceEvent.TYPE.power_off
 }
 
-AWS_OPENSHIFT_TAG = 'cloudigrade-ocp-present'
 OPENSHIFT_MODEL_TAG = 'openshift'
 CREATE_TAG = 'CreateTags'
 DELETE_TAG = 'DeleteTags'
@@ -170,7 +169,7 @@ def _parse_log_for_ami_tag_events(log):
         tag_list = [tag for tag in record.get(
             'requestParameters', {})
             .get('tagSet', {})
-            .get('items', []) if tag.get('key', '') == AWS_OPENSHIFT_TAG]
+            .get('items', []) if tag.get('key', '') == aws.OPENSHIFT_TAG]
 
         if ami_list and tag_list:
             for ami_id in ami_list:
@@ -255,10 +254,10 @@ def _save_results(instances, described_images):
         owner_id = Decimal(described_image['OwnerId'])
         name = described_image['Name']
         windows = ami_id in windows_ami_ids
-        openshift = len({
-            tag for tag in described_image['Tags']
-            if tag['Key'] == 'cloudigrade-ocp-present'
-        }) > 0
+        openshift = len([
+            tag for tag in described_image.get('Tags', [])
+            if tag.get('Key') == aws.OPENSHIFT_TAG
+        ]) > 0
 
         logger.info('analyzer: Saving new AMI ID: %s', ami_id)
         image, new = save_new_aws_machine_image(

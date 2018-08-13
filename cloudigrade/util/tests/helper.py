@@ -189,8 +189,8 @@ def generate_dummy_describe_image(image_id=None, owner_id=None, name=None,
     tags = []
     if openshift:
         tags.append({
-            'Key': 'cloudigrade-ocp-present',
-            'Value': 'cloudigrade-ocp-present',
+            'Key': aws.OPENSHIFT_TAG,
+            'Value': aws.OPENSHIFT_TAG,
         })
 
     mock_image = {

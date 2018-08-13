@@ -514,8 +514,8 @@ class AnalyzeLogTest(TestCase):
                         'tagSet': {
                             'items': [
                                 {
-                                    'key': tasks.AWS_OPENSHIFT_TAG,
-                                    'value': tasks.AWS_OPENSHIFT_TAG
+                                    'key': tasks.aws.OPENSHIFT_TAG,
+                                    'value': tasks.aws.OPENSHIFT_TAG
                                 }
                             ]
                         }
@@ -592,8 +592,8 @@ class AnalyzeLogTest(TestCase):
                         'tagSet': {
                             'items': [
                                 {
-                                    'key': tasks.AWS_OPENSHIFT_TAG,
-                                    'value': tasks.AWS_OPENSHIFT_TAG
+                                    'key': tasks.aws.OPENSHIFT_TAG,
+                                    'value': tasks.aws.OPENSHIFT_TAG
                                 }
                             ]
                         }
@@ -669,8 +669,8 @@ class AnalyzeLogTest(TestCase):
                         'tagSet': {
                             'items': [
                                 {
-                                    'key': tasks.AWS_OPENSHIFT_TAG,
-                                    'value': tasks.AWS_OPENSHIFT_TAG
+                                    'key': tasks.aws.OPENSHIFT_TAG,
+                                    'value': tasks.aws.OPENSHIFT_TAG
                                 }
                             ]
                         }
@@ -746,8 +746,8 @@ class AnalyzeLogTest(TestCase):
                         'tagSet': {
                             'items': [
                                 {
-                                    'key': tasks.AWS_OPENSHIFT_TAG,
-                                    'value': tasks.AWS_OPENSHIFT_TAG
+                                    'key': tasks.aws.OPENSHIFT_TAG,
+                                    'value': tasks.aws.OPENSHIFT_TAG
                                 }
                             ]
                         }
