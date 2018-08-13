@@ -2,7 +2,7 @@
 ## Superuser account
 Make a superuser account if you don't already have one
 ```
-$ oc rsh -c cloudigrade-api $(oc get pods -o jsonpath='{.items[*].metadata.name}' -l name=cloudigrade-api) scl enable rh-postgresql96 rh-python36 -- python manage.py createsuperuser
+$ oc rsh -c cloudigrade-api $(oc get pods -o jsonpath='{.items[*].metadata.name}' -l name=cloudigrade-api | awk '{print $1}') scl enable rh-python36 -- python manage.py createsuperuser
 Username: ilya.white@redhat.com
 Email address: ilya.white@redhat.com
 Password:
