@@ -175,8 +175,8 @@ def generate_aws_image(owner_aws_account_id=None,
                        is_encrypted=None,
                        is_windows=False,
                        ec2_ami_id=None,
-                       is_rhel=False,
-                       is_openshift=False,
+                       rhel_detected=False,
+                       openshift_detected=False,
                        name=None,
                        status=MachineImage.INSPECTED,
                        rhel_challenged=False,
@@ -191,8 +191,8 @@ def generate_aws_image(owner_aws_account_id=None,
         is_encrypted (bool): Optional Indicates if image is encrypted.
         is_windows (bool): Optional Indicates if AMI is Windows.
         ec2_ami_id (str): Optional EC2 AMI ID of the image
-        is_rhel (bool): Optional Indicates if RHEL is detected.
-        is_openshift (bool): Optional Indicates if OpenShift is detected.
+        rhel_detected (bool): Optional Indicates if RHEL is detected.
+        openshift_detected (bool): Optional Indicates if OpenShift is detected.
         name (str): Optional AMI name.
         status (str): Optional MachineImage inspection status.
         rhel_challenged (bool): Optional indicates if RHEL is challenged.
@@ -212,8 +212,8 @@ def generate_aws_image(owner_aws_account_id=None,
         owner_aws_account_id=owner_aws_account_id,
         ec2_ami_id=ec2_ami_id,
         is_encrypted=is_encrypted,
-        rhel_detected=is_rhel,
-        openshift_detected=is_openshift,
+        rhel_detected=rhel_detected,
+        openshift_detected=openshift_detected,
         platform=platform,
         name=name,
         status=status,

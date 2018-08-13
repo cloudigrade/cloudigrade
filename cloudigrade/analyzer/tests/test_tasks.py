@@ -538,7 +538,7 @@ class AnalyzeLogTest(TestCase):
     def test_ami_tags_removed_success(
             self, mock_receive, mock_s3, mock_del):
         """Test processing a CloudTrail log for ami tags removed."""
-        ami = account_helper.generate_aws_image(is_openshift=True)
+        ami = account_helper.generate_aws_image(openshift_detected=True)
         ami_id = ami.ec2_ami_id
 
         mock_sqs_message_body = {

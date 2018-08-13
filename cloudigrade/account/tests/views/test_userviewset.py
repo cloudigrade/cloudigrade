@@ -26,22 +26,22 @@ class UserViewSetTest(TestCase):
         # Images
         # This image will be used only by su_account:
         self.su_ami_rhel7 = account_helper.generate_aws_image(
-            is_rhel=True, ec2_ami_id='su_ami-rhel7',
+            rhel_detected=True, ec2_ami_id='su_ami-rhel7',
             rhel_challenged=False)
 
         # These two images will be used only by user's account_one:
         self.ami_plain = account_helper.generate_aws_image(
             ec2_ami_id='ami-plain')
         self.ami_rhel7 = account_helper.generate_aws_image(
-            is_rhel=True, ec2_ami_id='ami-rhel7',
+            rhel_detected=True, ec2_ami_id='ami-rhel7',
             rhel_challenged=True)
 
         # These two images will be used only by user's account_two:
         self.ami_openshift = account_helper.generate_aws_image(
-            is_openshift=True, ec2_ami_id='ami-openshift',
+            openshift_detected=True, ec2_ami_id='ami-openshift',
             openshift_challenged=True)
         self.ami_both = account_helper.generate_aws_image(
-            is_rhel=True, is_openshift=True,
+            rhel_detected=True, openshift_detected=True,
             ec2_ami_id='ami-both')
 
         # Instances

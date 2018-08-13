@@ -54,20 +54,20 @@ class CloudAccountOverviewViewSetTest(TestCase):
             is_encrypted=False,
             is_windows=False,
             ec2_ami_id=None,
-            is_rhel=True,
-            is_openshift=False)
+            rhel_detected=True,
+            openshift_detected=False)
         self.openshift_image = account_helper.generate_aws_image(
             is_encrypted=False,
             is_windows=False,
             ec2_ami_id=None,
-            is_rhel=False,
-            is_openshift=True)
+            rhel_detected=False,
+            openshift_detected=True)
         self.openshift_and_rhel_image = account_helper.generate_aws_image(
             is_encrypted=False,
             is_windows=False,
             ec2_ami_id=None,
-            is_rhel=True,
-            is_openshift=True)
+            rhel_detected=True,
+            openshift_detected=True)
         self.event1 = \
             account_helper.generate_single_aws_instance_event(
                 instance=self.instance1, powered_time=powered_time,

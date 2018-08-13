@@ -43,9 +43,9 @@ class ImagesActivityOverviewViewSetTestCase(TestCase):
             self.account_plain)
 
         # Images
-        self.image_rhel = account_helper.generate_aws_image(is_rhel=True)
+        self.image_rhel = account_helper.generate_aws_image(rhel_detected=True)
         self.image_ocp = account_helper.generate_aws_image(
-            is_openshift=True)
+            openshift_detected=True)
         self.image_plain = account_helper.generate_aws_image()
 
         # Generate activity for instances belonging to self.user

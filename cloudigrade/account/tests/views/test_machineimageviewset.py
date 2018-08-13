@@ -53,11 +53,11 @@ class MachineImageViewSetTest(TestCase):
         # Images wih various contents
         self.image_plain = account_helper.generate_aws_image()
         self.image_windows = account_helper.generate_aws_image(is_windows=True)
-        self.image_rhel = account_helper.generate_aws_image(is_rhel=True)
+        self.image_rhel = account_helper.generate_aws_image(rhel_detected=True)
         self.image_ocp = account_helper.generate_aws_image(
-            is_openshift=True)
+            openshift_detected=True)
         self.image_rhel_ocp = account_helper.generate_aws_image(
-            is_rhel=True, is_openshift=True)
+            rhel_detected=True, openshift_detected=True)
 
         # Some initial event activity spread across the accounts
         powered_times = (

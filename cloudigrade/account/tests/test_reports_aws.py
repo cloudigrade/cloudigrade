@@ -78,12 +78,12 @@ class ReportTestBase(TestCase):
         self.image_windows = account_helper.generate_aws_image(
             self.account_1.aws_account_id, is_windows=True)
         self.image_rhel = account_helper.generate_aws_image(
-            self.account_1.aws_account_id, is_rhel=True)
+            self.account_1.aws_account_id, rhel_detected=True)
         self.image_ocp = account_helper.generate_aws_image(
-            self.account_1.aws_account_id, is_openshift=True)
+            self.account_1.aws_account_id, openshift_detected=True)
         self.image_rhel_ocp = account_helper.generate_aws_image(
-            self.account_1.aws_account_id, is_rhel=True,
-            is_openshift=True)
+            self.account_1.aws_account_id, rhel_detected=True,
+            openshift_detected=True)
 
         # Report on "month of January in 2018"
         self.start = util_helper.utc_dt(2018, 1, 1, 0, 0, 0)
@@ -697,22 +697,22 @@ class GetCloudAccountOverview(TestCase):
             is_encrypted=False,
             is_windows=False,
             ec2_ami_id=None,
-            is_rhel=True,
-            is_openshift=False,
+            rhel_detected=True,
+            openshift_detected=False,
         )
         self.openshift_image = account_helper.generate_aws_image(
             is_encrypted=False,
             is_windows=False,
             ec2_ami_id=None,
-            is_rhel=False,
-            is_openshift=True,
+            rhel_detected=False,
+            openshift_detected=True,
         )
         self.openshift_and_rhel_image = account_helper.generate_aws_image(
             is_encrypted=False,
             is_windows=False,
             ec2_ami_id=None,
-            is_rhel=True,
-            is_openshift=True,
+            rhel_detected=True,
+            openshift_detected=True,
         )
         self.instance_1 = account_helper.generate_aws_instance(self.account)
         self.instance_2 = account_helper.generate_aws_instance(self.account)

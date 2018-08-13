@@ -45,15 +45,15 @@ class DailyInstanceActivityViewSetTest(TestCase):
         # Images
         self.image_plain = account_helper.generate_aws_image()
         self.image_rhel = account_helper.generate_aws_image(
-            is_rhel=True, is_openshift=False)
+            rhel_detected=True, openshift_detected=False)
         self.u3a1_image_rhel = account_helper.generate_aws_image(
-            is_rhel=True, is_openshift=False)
+            rhel_detected=True, openshift_detected=False)
         self.u3a2_image_rhel = account_helper.generate_aws_image(
-            is_rhel=True, is_openshift=False)
+            rhel_detected=True, openshift_detected=False)
         self.image_os = account_helper.generate_aws_image(
-            is_rhel=False, is_openshift=True)
+            rhel_detected=False, openshift_detected=True)
         self.image_rhel_openshift = account_helper.generate_aws_image(
-            is_rhel=True, is_openshift=True)
+            rhel_detected=True, openshift_detected=True)
 
         # Generate activity for instances belonging to
         # self.user and self.multi_account_user
