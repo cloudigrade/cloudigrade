@@ -1,5 +1,4 @@
 """Various utility functions for the account app."""
-import collections
 import logging
 import math
 import uuid
@@ -36,19 +35,10 @@ def create_initial_aws_instance_events(account, instances_data):
             the data for these InstanceEvents.
         instances_data (dict): Dict whose keys are AWS region IDs and values
             are each a list of dictionaries that represent an instance
-
-    Returns:
-        dict: Similar to the incoming instances_data dict, the returned dict
-        has keys that are AWS region IDs and values that are each a list of the
-        created InstanceEvent objects.
-
     """
-    saved_instances = collections.defaultdict(list)
     for region, instances in instances_data.items():
         for instance_data in instances:
-            saved_instances[region].append(
-                save_instance_events(account, instance_data, region))
-    return dict(saved_instances)
+            save_instance_events(account, instance_data, region)
 
 
 def save_instance_events(account, instance_data, region, events=None):
