@@ -176,7 +176,9 @@ def generate_aws_image(account,
                        is_rhel=False,
                        is_openshift=False,
                        name=None,
-                       status=MachineImage.INSPECTED):
+                       status=MachineImage.INSPECTED,
+                       rhel_challenged=False,
+                       openshift_challenged=False):
     """
     Generate an AwsMachineImage for the AwsAccount for testing.
 
@@ -191,6 +193,8 @@ def generate_aws_image(account,
         is_openshift (bool): Optional Indicates if OpenShift is detected.
         name (str): Optional AMI name.
         status (str): Optional MachineImage inspection status.
+        rhel_challenged (bool): Optional indicates if RHEL is challenged.
+        openshift_challenged (bool): Optional indicates if OCP is challenged.
 
     Returns:
         AwsMachineImage: The created AwsMachineImage.
@@ -209,7 +213,9 @@ def generate_aws_image(account,
         openshift_detected=is_openshift,
         platform=platform,
         name=name,
-        status=status
+        status=status,
+        rhel_challenged=rhel_challenged,
+        openshift_challenged=openshift_challenged
     )
 
     return image

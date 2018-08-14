@@ -8,7 +8,8 @@ import uuid
 
 from django.test import TestCase
 
-from account.models import AwsAccount, AwsInstance, InstanceEvent
+from account.models import (AwsAccount, AwsInstance, AwsMachineImage,
+                            InstanceEvent)
 from account.tests import helper
 from util.tests import helper as util_helper
 
@@ -134,3 +135,52 @@ class GenerateAwsInstanceEventsTest(TestCase):
             self.assertEqual(event.machineimage.ec2_ami_id, ec2_ami_id)
             self.assertEqual(event.instance_type, instance_type)
             self.assertEqual(event.subnet, subnet)
+
+
+class GenerateAwsImageTest(TestCase):
+    """generate_aws_image test case."""
+
+    def test_generate_aws_image_default(self):
+        """Assert generation of an AwsMachineImage with minimal args."""
+        account = helper.generate_aws_account()
+        image = helper.generate_aws_image(account)
+        self.assertIsInstance(image, AwsMachineImage)
+        self.assertEqual(image.account, account)
+        self.assertEqual(image.platform, image.NONE)
+        self.assertIsNotNone(image.ec2_ami_id)
+        self.assertGreater(len(image.ec2_ami_id), 0)
+        self.assertFalse(image.rhel_detected)
+        self.assertFalse(image.openshift_detected)
+        self.assertIsNone(image.name)
+        self.assertFalse(image.rhel_challenged)
+        self.assertFalse(image.openshift_challenged)
+
+    def test_generate_aws_image_with_args(self):
+        """Assert generation of an AwsMachineImage with all specified args."""
+        account = helper.generate_aws_account()
+        ec2_ami_id = util_helper.generate_dummy_image_id()
+        name = 'Taters'
+
+        image = helper.generate_aws_image(
+            account,
+            is_encrypted=True,
+            is_windows=True,
+            ec2_ami_id=ec2_ami_id,
+            is_rhel=True,
+            is_openshift=True,
+            name=name,
+            status=AwsMachineImage.PREPARING,
+            rhel_challenged=True,
+            openshift_challenged=True
+        )
+
+        self.assertIsInstance(image, AwsMachineImage)
+        self.assertEqual(image.account, account)
+        self.assertEqual(image.platform, image.WINDOWS)
+        self.assertEqual(image.ec2_ami_id, ec2_ami_id)
+        self.assertTrue(image.rhel_detected)
+        self.assertTrue(image.openshift_detected)
+        self.assertEqual(image.name, name)
+        self.assertEqual(image.status, AwsMachineImage.PREPARING)
+        self.assertTrue(image.rhel_challenged)
+        self.assertTrue(image.openshift_challenged)
