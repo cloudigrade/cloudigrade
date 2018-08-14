@@ -4,6 +4,7 @@ import logging
 
 import boto3
 from django.conf import settings
+from django.utils.translation import gettext as _
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +33,8 @@ def get_object_content_from_s3(bucket, key):
         else:
             content = object_bytes.decode('utf-8')
     except UnicodeDecodeError as ex:
-        logger.exception('Failed to decode content of %s: %s', key, ex)
+        logger.exception(_('Failed to decode content of {key}: {error}')
+                         .format(key=key, error=ex))
         raise
 
     return content

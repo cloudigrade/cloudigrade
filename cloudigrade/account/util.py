@@ -81,7 +81,8 @@ def save_instance_events(account, instance_data, region, events=None):
         )
         event.save()
     else:
-        logger.info('saving %s new event(s) for %s', len(events), instance)
+        logger.info(_('saving {count} new event(s) for {instance}')
+                    .format(count=len(events), instance=instance))
         for event in events:
             machineimage = AwsMachineImage.objects.get(
                 ec2_ami_id=event['ec2_ami_id']
@@ -123,14 +124,16 @@ def create_new_machine_images(session, instances_data):
         for instances in instances_data.values()
         for instance in instances
     }
-    logger.info('%s: all AMI IDs found: %s', log_prefix, seen_ami_ids)
+    logger.info(_('{prefix}: all AMI IDs found: {seen_ami_ids}')
+                .format(prefix=log_prefix, seen_ami_ids=seen_ami_ids))
     known_images = AwsMachineImage.objects.filter(
         ec2_ami_id__in=list(seen_ami_ids)
     )
     known_ami_ids = {
         image.ec2_ami_id for image in known_images
     }
-    logger.info('%s: Skipping known AMI IDs: %s', log_prefix, known_ami_ids)
+    logger.info(_('{prefix}: Skipping known AMI IDs: {known_ami_ids}')
+                .format(prefix=log_prefix, known_ami_ids=known_ami_ids))
 
     new_described_images = []
     windows_ami_ids = []
@@ -147,7 +150,8 @@ def create_new_machine_images(session, instances_data):
             for instance in instances
             if aws.is_instance_windows(instance)
         })
-    logger.info('%s: Windows AMI IDs found: %s', log_prefix, windows_ami_ids)
+    logger.info(_('{prefix}: Windows AMI IDs found: {windows_ami_ids}')
+                .format(prefix=log_prefix, windows_ami_ids=windows_ami_ids))
 
     new_image_ids = []
     for described_image in new_described_images:
@@ -160,7 +164,8 @@ def create_new_machine_images(session, instances_data):
             if tag.get('Key') == aws.OPENSHIFT_TAG
         ]) > 0
 
-        logger.info('%s: Saving new AMI ID: %s', log_prefix, ami_id)
+        logger.info(_('{prefix}: Saving new AMI ID: {ami_id}')
+                    .format(prefix=log_prefix, ami_id=ami_id))
         image, new = save_new_aws_machine_image(
             ami_id, name, owner_id, openshift, windows)
         if new:

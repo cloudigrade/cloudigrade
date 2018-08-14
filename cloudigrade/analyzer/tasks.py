@@ -223,10 +223,13 @@ def _save_results(instances, described_images):
 
     """
     # Step 0: Log some basic information about what we're saving.
+    log_prefix = 'analyzer'
     instance_ids = set(instances.keys())
-    logger.info('analyzer: all EC2 Instance IDs found: %s', instance_ids)
+    logger.info(_('{prefix}: all EC2 Instance IDs found: {instance_ids}')
+                .format(prefix=log_prefix, instance_ids=instance_ids))
     ami_ids = set(described_images.keys())
-    logger.info('analyzer: all AMI IDs found: %s', ami_ids)
+    logger.info(_('{prefix}: all AMI IDs found: {ami_ids}')
+                .format(prefix=log_prefix, ami_ids=ami_ids))
 
     # Step 1: Which images have Windows based on the instance platform?
     windows_ami_ids = {
@@ -234,7 +237,8 @@ def _save_results(instances, described_images):
         for instance in instances.values()
         if is_instance_windows(instance['instance_details'])
     }
-    logger.info('analyzer: Windows AMI IDs found: %s', windows_ami_ids)
+    logger.info(_('{prefix}: Windows AMI IDs found: {windows_ami_ids}')
+                .format(prefix=log_prefix, windows_ami_ids=windows_ami_ids))
 
     # Step 2: Determine which images we actually need to save.
     known_ami_ids = {
@@ -248,7 +252,8 @@ def _save_results(instances, described_images):
     new_images = {}
     for ami_id, described_image in described_images.items():
         if ami_id in known_ami_ids:
-            logger.info('analyzer: Skipping known AMI ID: %s', ami_id)
+            logger.info(_('{prefix}: Skipping known AMI ID: {ami_id}')
+                        .format(prefix=log_prefix, ami_id=ami_id))
             continue
 
         owner_id = Decimal(described_image['OwnerId'])
@@ -259,7 +264,8 @@ def _save_results(instances, described_images):
             if tag.get('Key') == aws.OPENSHIFT_TAG
         ]) > 0
 
-        logger.info('analyzer: Saving new AMI ID: %s', ami_id)
+        logger.info(_('{prefix}: Saving new AMI ID: {ami_id}')
+                    .format(prefix=log_prefix, ami_id=ami_id))
         image, new = save_new_aws_machine_image(
             ami_id, name, owner_id, openshift, windows)
         if new and image.status is not image.INSPECTED:
