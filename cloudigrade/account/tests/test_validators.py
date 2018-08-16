@@ -17,12 +17,12 @@ class ValidatorsTest(TestCase):
         """Assert validator works for valid AWS account ID."""
         input_data = {
             'cloud_provider': AWS_PROVIDER_STRING,
-            'cloud_account_id': generate_dummy_aws_account_id(),
+            'cloud_account_id': str(generate_dummy_aws_account_id()),
         }
         output_data = validate_cloud_provider_account_id(input_data)
         self.assertDictEqual(output_data, input_data)
         self.assertIsInstance(output_data['cloud_account_id'], str)
-        self.assertIsNotNone(re.match(r'\d{12}',
+        self.assertIsNotNone(re.match(r'\d{1,12}',
                                       output_data['cloud_account_id']))
 
     def test_validate_cloud_provider_account_id_aws_bad_number(self):

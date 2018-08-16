@@ -49,7 +49,7 @@ class UtilAwsArnTest(TestCase):
                             resource_separator + \
                             resource
 
-        self.assertEqual(mock_account_id, account_id)
+        self.assertEqual(str(mock_account_id), account_id)
         self.assertEqual(mock_arn, reconstructed_arn)
 
     def test_parse_arn_without_region_or_account(self):

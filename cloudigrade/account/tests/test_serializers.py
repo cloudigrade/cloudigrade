@@ -92,7 +92,7 @@ class AwsAccountSerializerTest(TestCase):
 
         # Verify that we created the account.
         account = AwsAccount.objects.get(aws_account_id=aws_account_id)
-        self.assertEqual(aws_account_id, account.aws_account_id)
+        self.assertEqual(str(aws_account_id), account.aws_account_id)
         self.assertEqual(arn, account.account_arn)
 
         # Verify that we created both of the instances.
@@ -289,5 +289,5 @@ class AwsAccountSerializerTest(TestCase):
                 serializer.create(validated_data)
             raised_exception = cm.exception
             self.assertIn('account_arn', raised_exception.detail)
-            self.assertIn(aws_account_id,
+            self.assertIn(str(aws_account_id),
                           raised_exception.detail['account_arn'][0])

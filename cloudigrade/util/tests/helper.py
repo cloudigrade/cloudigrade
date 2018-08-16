@@ -36,7 +36,7 @@ SOME_EC2_INSTANCE_TYPES = (
 
 def generate_dummy_aws_account_id():
     """Generate a dummy AWS AwsAccount ID for testing purposes."""
-    return ''.join(random.choice(string.digits) for _ in range(12))
+    return Decimal(''.join(random.choice(string.digits) for _ in range(12)))
 
 
 def generate_dummy_availability_zone(region=None):

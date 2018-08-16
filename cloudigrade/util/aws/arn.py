@@ -33,7 +33,8 @@ class AwsArn(object):
 
     arn_regex = re.compile(r'^arn:(?P<partition>\w+):(?P<service>\w+):'
                            r'(?P<region>\w+(?:-\w+)+)?:'
-                           r'(?P<account_id>\d{12})?:(?P<resource_type>[^:/]+)'
+                           r'(?P<account_id>\d{1,12})?:'
+                           r'(?P<resource_type>[^:/]+)'
                            r'(?P<resource_separator>[:/])?(?P<resource>.*)')
 
     partition = None

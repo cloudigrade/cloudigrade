@@ -27,8 +27,13 @@ def get_object_content_from_s3(bucket, key):
 
     object_bytes = s3_object['Body'].read()
 
+    gzipped = (
+        key.endswith('.gz') or
+        s3_object.get('ContentType', None) == 'application/x-gzip'
+    )
+
     try:
-        if s3_object.get('ContentType', None) == 'application/x-gzip':
+        if gzipped:
             content = gzip.decompress(object_bytes).decode('utf-8')
         else:
             content = object_bytes.decode('utf-8')

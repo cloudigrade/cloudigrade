@@ -11,8 +11,27 @@ from util.aws import s3
 class UtilAwsS3Test(TestCase):
     """AWS S3 utility functions test case."""
 
-    def test_get_object_content_from_s3_gzipped(self):
-        """Assert that gzipped content is handled."""
+    def test_get_object_content_from_s3_gzipped_name(self):
+        """Assert that .gz file name is handled as gzipped data."""
+        bucket = 'test_bucket'
+        key = '/path/to/file.gz'
+        content_bytes = b'{"Key": "Value"}'
+        byte_stream = io.BytesIO(gzip.compress(content_bytes))
+        object_body = {
+            'Body': byte_stream,
+        }
+
+        with patch.object(s3, 'boto3') as mock_boto3:
+            mock_resource = mock_boto3.resource.return_value
+            mock_s3_object = mock_resource.Object.return_value
+            mock_s3_object.get.return_value = object_body
+
+            actual_content = s3.get_object_content_from_s3(bucket, key)
+
+        self.assertEqual(content_bytes.decode('utf-8'), actual_content)
+
+    def test_get_object_content_from_s3_gzipped_content_type(self):
+        """Assert that gzip content type is handled."""
         bucket = 'test_bucket'
         key = '/path/to/file'
         content_bytes = b'{"Key": "Value"}'

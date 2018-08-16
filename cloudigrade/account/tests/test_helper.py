@@ -5,6 +5,7 @@ Because even test helpers should be tested!
 import random
 import re
 import uuid
+from decimal import Decimal
 
 from django.test import TestCase
 
@@ -21,7 +22,7 @@ class GenerateAwsAccountTest(TestCase):
         """Assert generation of an AwsAccount with default/no args."""
         account = helper.generate_aws_account()
         self.assertIsInstance(account, AwsAccount)
-        self.assertIsNotNone(re.match(r'\d{12}', account.aws_account_id))
+        self.assertIsNotNone(re.match(r'\d{1,12}', account.aws_account_id))
 
     def test_generate_aws_account_with_args(self):
         """Assert generation of an AwsAccount with all specified args."""
@@ -31,7 +32,7 @@ class GenerateAwsAccountTest(TestCase):
         account = helper.generate_aws_account(arn, aws_account_id, user)
         self.assertIsInstance(account, AwsAccount)
         self.assertEqual(account.account_arn, arn)
-        self.assertEqual(account.aws_account_id, aws_account_id)
+        self.assertEqual(account.aws_account_id, str(aws_account_id))
         self.assertEqual(account.user, user)
 
 
@@ -143,7 +144,7 @@ class GenerateAwsImageTest(TestCase):
     def test_generate_aws_image_default(self):
         """Assert generation of an AwsMachineImage with minimal args."""
         image = helper.generate_aws_image()
-        self.assertIsInstance(image.owner_aws_account_id, str)
+        self.assertIsInstance(image.owner_aws_account_id, Decimal)
         self.assertEqual(image.platform, image.NONE)
         self.assertIsNotNone(image.ec2_ami_id)
         self.assertGreater(len(image.ec2_ami_id), 0)
