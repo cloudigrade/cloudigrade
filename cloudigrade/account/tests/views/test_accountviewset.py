@@ -26,6 +26,8 @@ class AccountViewSetTest(TestCase):
         self.account2 = account_helper.generate_aws_account(user=self.user1)
         self.account3 = account_helper.generate_aws_account(user=self.user2)
         self.account4 = account_helper.generate_aws_account(user=self.user2)
+        self.account5 = account_helper.generate_aws_account(user=self.user2,
+                                                            name='unique')
         self.factory = APIRequestFactory()
         self.faker = faker.Faker()
 
@@ -120,6 +122,7 @@ class AccountViewSetTest(TestCase):
         expected_accounts = {
             self.account3.aws_account_id,
             self.account4.aws_account_id,
+            self.account5.aws_account_id,
         }
         response = self.get_account_list_response(self.user2)
         actual_accounts = self.get_aws_account_ids_from_list_response(response)
@@ -131,7 +134,8 @@ class AccountViewSetTest(TestCase):
             self.account1.aws_account_id,
             self.account2.aws_account_id,
             self.account3.aws_account_id,
-            self.account4.aws_account_id
+            self.account4.aws_account_id,
+            self.account5.aws_account_id
         }
         response = self.get_account_list_response(self.superuser)
         actual_accounts = self.get_aws_account_ids_from_list_response(response)
@@ -141,7 +145,8 @@ class AccountViewSetTest(TestCase):
         """Assert that the superuser sees accounts filtered by user_id."""
         expected_accounts = {
             self.account3.aws_account_id,
-            self.account4.aws_account_id
+            self.account4.aws_account_id,
+            self.account5.aws_account_id
         }
         params = {'user_id': self.user2.id}
         response = self.get_account_list_response(self.superuser, params)
@@ -204,6 +209,27 @@ class AccountViewSetTest(TestCase):
         self.assertIsNotNone(response.data['name'])
 
     @patch.object(views.serializers, 'aws')
+    def test_create_account_with_duplicate_name_fail(self, mock_aws):
+        """Test create account with a duplicate name fails."""
+        mock_aws.verify_account_access.return_value = True, []
+        mock_aws.AwsArn = AwsArn
+
+        data = {
+            'resourcetype': 'AwsAccount',
+            'account_arn': util_helper.generate_dummy_arn(),
+            'name': 'unique',
+        }
+
+        request = self.factory.post('/account/', data=data)
+        force_authenticate(request, user=self.user2)
+
+        view = views.AccountViewSet.as_view(actions={'post': 'create'})
+        response = view(request)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('non_field_errors', response.data)
+
+    @patch.object(views.serializers, 'aws')
     def test_create_account_without_name_success(self, mock_aws):
         """Test create account without a name succeeds."""
         mock_aws.verify_account_access.return_value = True, []
@@ -243,6 +269,25 @@ class AccountViewSetTest(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(data['name'], response.data['name'])
+
+    def test_update_account_patch_duplicate_name_fail(self):
+        """Test updating an account with a duplicate name fails."""
+        data = {
+            'resourcetype': 'AwsAccount',
+            'name': 'unique',
+        }
+
+        account_id = self.account3.id
+        request = self.factory.patch('/account/', data=data)
+        force_authenticate(request, user=self.user2)
+
+        view = views.AccountViewSet.as_view(
+            actions={'patch': 'partial_update'}
+        )
+        response = view(request, pk=account_id)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('non_field_errors', response.data)
 
     def test_update_account_patch_arn_fails(self):
         """Test that updating to change the arn fails."""

@@ -25,6 +25,9 @@ class Account(BasePolymorphicModel):
         db_index=True
     )
 
+    class Meta:
+        unique_together = ('user', 'name')
+
     @property
     def cloud_account_id(self):
         """

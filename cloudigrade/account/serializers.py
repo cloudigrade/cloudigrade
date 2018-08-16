@@ -48,6 +48,24 @@ class AwsAccountSerializer(HyperlinkedModelSerializer):
             'url': {'view_name': 'account-detail', 'lookup_field': 'pk'},
         }
 
+    def validate(self, data):
+        """Validate that clount name is unique per user."""
+        user = self.context['request'].user
+        name = data.get('name')
+
+        if not name:
+            # We want to allow None/null named accounts to still be saved.
+            return data
+
+        try:
+            AwsAccount.objects.get(user=user, name=name)
+        except AwsAccount.DoesNotExist:
+            return data
+
+        raise serializers.ValidationError(_(
+            "Account with name '{0}' for user '{1}' already exists").format(
+            name, user))
+
     def validate_account_arn(self, value):
         """Validate the input account_arn."""
         if self.instance is not None and value != self.instance.account_arn:
