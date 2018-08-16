@@ -22,7 +22,7 @@ router.register(r'image', MachineImageViewSet)
 router.register(r'sysconfig', SysconfigViewSet, base_name='sysconfig')
 router.register(r'report/accounts', CloudAccountOverviewViewSet,
                 base_name='report-accounts')
-router.register(r'user', UserViewSet)
+router.register(r'user', UserViewSet, base_name='user')
 router.register(r'report/images', ImagesActivityOverviewViewSet,
                 base_name='report-images')
 router.register(r'report/instances', DailyInstanceActivityViewSet,

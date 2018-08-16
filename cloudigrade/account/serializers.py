@@ -440,6 +440,8 @@ class CloudAccountImagesSerializer(Serializer):
 class UserSerializer(Serializer):
     """Serialize a user."""
 
-    id = serializers.CharField(read_only=True)
+    id = serializers.IntegerField(read_only=True)
     username = serializers.CharField(read_only=True)
     is_superuser = serializers.BooleanField(read_only=True)
+    accounts = serializers.IntegerField(read_only=True)
+    challenged_images = serializers.IntegerField(read_only=True)

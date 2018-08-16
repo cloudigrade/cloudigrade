@@ -1,6 +1,7 @@
 """DRF API views for the account app."""
 from django.contrib.auth import get_user_model
-from django.http import HttpResponseForbidden, HttpResponseNotFound
+from django.db.models import Count, Q
+from django.http import HttpResponseNotFound
 from rest_framework import exceptions, mixins, viewsets
 from rest_framework.response import Response
 
@@ -8,10 +9,10 @@ from account import serializers
 from account.models import (Account,
                             Instance,
                             InstanceEvent,
-                            MachineImage,
-                            User)
+                            MachineImage)
 from account.util import convert_param_to_int
 from util.aws.sts import _get_primary_account_id
+from util.permissions import IsSuperUser
 
 
 class AccountViewSet(mixins.CreateModelMixin,
@@ -189,36 +190,41 @@ class ImagesActivityOverviewViewSet(viewsets.GenericViewSet):
         return Response(result)
 
 
-class UserViewSet(viewsets.ReadOnlyModelViewSet):
+class UserViewSet(viewsets.ViewSet):
     """List all users and their basic metadata."""
 
-    queryset = User.objects.all()
-    serializer_class = serializers.UserSerializer
+    permission_classes = (IsSuperUser,)
 
-    def list(self, request, *args, **kwargs):
+    def list(self, request):
         """Get list of users and their basic metadata."""
-        user = request.user
-        if not user.is_superuser:
-            return HttpResponseForbidden()
-        users = get_user_model().objects.all().values(
-            'id',
-            'username',
-            'is_superuser')
-        return Response(users)
+        queryset = get_user_model().objects.annotate(
+            accounts=Count('account', distinct=True),
+            challenged_images=Count(
+                'account__machineimage', distinct=True, filter=(
+                    Q(account__machineimage__rhel_challenged=True) |
+                    Q(account__machineimage__openshift_challenged=True))),
+        ).values('id', 'username', 'is_superuser', 'accounts',
+                 'challenged_images')
+
+        serializer = serializers.UserSerializer(queryset, many=True)
+
+        return Response(serializer.data)
 
     def retrieve(self, request, pk=None):
         """Get a single user."""
-        user = request.user
-        if str(user.id) == pk:
-            serializer = serializers.UserSerializer(user)
-            return Response(serializer.data)
+        # .annotate() only operates on a queryset, so we have to filter by
+        # id first, and then grab the first (and only) result.
+        user = get_user_model().objects.filter(id=pk).annotate(
+            accounts=Count('account', distinct=True),
+            challenged_images=Count(
+                'account__machineimage', distinct=True, filter=(
+                    Q(account__machineimage__rhel_challenged=True) |
+                    Q(account__machineimage__openshift_challenged=True)))
+        ).values('id', 'username', 'is_superuser', 'accounts',
+                 'challenged_images').first()
 
-        if not user.is_superuser:
-            return HttpResponseForbidden()
-        user = get_user_model().objects.filter(id=pk).values(
-            'id',
-            'username',
-            'is_superuser').first()
         if user is None:
             return HttpResponseNotFound()
-        return Response(user)
+        serializer = serializers.UserSerializer(user)
+
+        return Response(serializer.data)

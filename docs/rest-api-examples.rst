@@ -714,24 +714,37 @@ Response:
 ::
 
     HTTP/1.1 200 OK
-    Allow: GET, HEAD
-    Content-Length: 346
+    Allow: GET, HEAD, OPTIONS
+    Cache-control: private
+    Content-Length: 399
     Content-Type: application/json
-    Date: Thu, 19 Jul 2018 16:06:47 GMT
-    Server: WSGIServer/0.2 CPython/3.6.5
+    Date: Thu, 16 Aug 2018 01:11:16 GMT
+    Server: nginx/1.12.1
+    Set-Cookie: 7ff040c48489ca1dd99b0528a4d40fe5=9d142a0cc3d9498f8726c1d498f28b7a; path=/; HttpOnly
     Vary: Accept
     X-Frame-Options: SAMEORIGIN
 
     [
         {
+            "accounts": 0,
+            "challenged_images": 0,
             "id": 1,
-            "username": "user1",
-            "is_superuser": true
+            "is_superuser": true,
+            "username": "XiTleKxGfiqoiTFbEZJnWJnhYJlxioAO@mail.127.0.0.1.nip.io"
         },
         {
-            "id": 34,
-            "username": "customer1",
-            "is_superuser": false
+            "accounts": 1,
+            "challenged_images": 2,
+            "id": 2,
+            "is_superuser": false,
+            "username": "iLdlWmZciaaQifUEyDSTXlmMLpbhQXhc@mail.127.0.0.1.nip.io"
+        },
+        {
+            "accounts": 1,
+            "challenged_images": 1,
+            "id": 3,
+            "is_superuser": false,
+            "username": "ehURjMBDhhbeSxcYdrGPVTJQoxGBfYUh@mail.127.0.0.1.nip.io"
         }
     ]
 
@@ -742,25 +755,29 @@ Request:
 
 .. code:: bash
 
-    http localhost:8080/api/v1/user/1/ "${AUTH}"
+    http localhost:8080/api/v1/user/2/ "${AUTH}"
 
 Response:
 
 ::
 
     HTTP/1.1 200 OK
-    Allow: GET, HEAD
-    Content-Length: 294
+    Allow: GET, HEAD, OPTIONS
+    Cache-control: private
+    Content-Length: 132
     Content-Type: application/json
-    Date: Thu, 19 Jul 2018 16:07:16 GMT
-    Server: WSGIServer/0.2 CPython/3.6.5
+    Date: Thu, 16 Aug 2018 01:11:27 GMT
+    Server: nginx/1.12.1
+    Set-Cookie: 7ff040c48489ca1dd99b0528a4d40fe5=9d142a0cc3d9498f8726c1d498f28b7a; path=/; HttpOnly
     Vary: Accept
     X-Frame-Options: SAMEORIGIN
 
     {
-        "id": 1,
-        "username": "user1",
-        "is_superuser": true
+        "accounts": 1,
+        "challenged_images": 2,
+        "id": 2,
+        "is_superuser": false,
+        "username": "iLdlWmZciaaQifUEyDSTXlmMLpbhQXhc@mail.127.0.0.1.nip.io"
     }
 
 
