@@ -32,6 +32,11 @@ Overview
 The following resource paths are currently available:
 
 -  ``/api/v1/account/`` returns account data
+-  ``/api/v1/event/`` returns event data
+-  ``/api/v1/instance/`` returns instance data
+-  ``/api/v1/image/`` returns image data
+-  ``/api/v1/sysconfig/`` returns sysconfig data
+-  ``/api/v1/user/`` returns user data
 -  ``/api/v1/report/instances/`` returns daily instance usage data
 -  ``/api/v1/report/accounts/`` returns account overview data
 -  ``/api/v1/report/images/`` returns active images overview data
@@ -426,6 +431,380 @@ Response:
         ]
     }
 
+Instance Info
+-------------
+
+List all instances
+~~~~~~~~~~~~~~~~~~
+
+Request:
+
+.. code:: bash
+
+    http https://test.cloudigra.de/api/v1/instance/ "${AUTH}"
+
+Response:
+
+::
+
+    HTTP/1.1 200 OK
+    Allow: GET, HEAD, OPTIONS
+    Cache-control: private
+    Content-Length: 3053
+    Content-Type: application/json
+    Date: Thu, 16 Aug 2018 17:41:39 GMT
+    Server: nginx/1.12.1
+    Set-Cookie: 0363cac70e8248650afc0b0855f64be8=fb0364ad8de0070c1eb515b3b092ee1c; path=/; HttpOnly; Secure
+    Vary: Accept
+    X-Frame-Options: SAMEORIGIN
+
+    {
+        "count": 3,
+        "next": null,
+        "previous": null,
+        "results": [
+            {
+                "account": "https://test.cloudigra.de/api/v1/account/3/",
+                "created_at": "2018-08-08T17:09:22.879395Z",
+                "ec2_instance_id": "i-08f57804410734024",
+                "id": 1,
+                "region": "us-east-1",
+                "resourcetype": "AwsInstance",
+                "updated_at": "2018-08-08T17:09:22.879414Z",
+                "url": "https://test.cloudigra.de/api/v1/instance/1/"
+            },
+            {
+                "account": "https://test.cloudigra.de/api/v1/account/3/",
+                "created_at": "2018-08-08T17:41:35.437117Z",
+                "ec2_instance_id": "i-09f905a808748efc7",
+                "id": 2,
+                "region": "us-east-1",
+                "resourcetype": "AwsInstance",
+                "updated_at": "2018-08-08T17:41:35.437135Z",
+                "url": "https://test.cloudigra.de/api/v1/instance/2/"
+            },
+            {
+                "account": "https://test.cloudigra.de/api/v1/account/3/",
+                "created_at": "2018-08-08T18:03:35.524515Z",
+                "ec2_instance_id": "i-01b6d5b1c7c60bf18",
+                "id": 3,
+                "region": "us-east-1",
+                "resourcetype": "AwsInstance",
+                "updated_at": "2018-08-08T18:03:35.524532Z",
+                "url": "https://test.cloudigra.de/api/v1/instance/3/"
+            }
+        ]
+    }
+
+Retrieve a specific instance
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Request:
+
+.. code:: bash
+
+    http https://test.cloudigra.de/api/v1/instance/1/ "${AUTH}"
+
+Response:
+
+::
+
+    HTTP/1.1 200 OK
+    Allow: GET, HEAD, OPTIONS
+    Cache-control: private
+    Content-Length: 293
+    Content-Type: application/json
+    Date: Thu, 16 Aug 2018 17:43:56 GMT
+    Server: nginx/1.12.1
+    Set-Cookie: 0363cac70e8248650afc0b0855f64be8=fb0364ad8de0070c1eb515b3b092ee1c; path=/; HttpOnly; Secure
+    Vary: Accept
+    X-Frame-Options: SAMEORIGIN
+
+    {
+        "account": "https://test.cloudigra.de/api/v1/account/3/",
+        "created_at": "2018-08-08T17:09:22.879395Z",
+        "ec2_instance_id": "i-08f57804410734024",
+        "id": 1,
+        "region": "us-east-1",
+        "resourcetype": "AwsInstance",
+        "updated_at": "2018-08-08T17:09:22.879414Z",
+        "url": "https://test.cloudigra.de/api/v1/instance/1/"
+    }
+
+Filtering instances
+~~~~~~~~~~~~~~~~~~~
+
+You may include an optional "user_id" query string argument to filter results
+down to a specific user.
+
+Request:
+
+.. code:: bash
+
+    http https://test.cloudigra.de/api/v1/instance/ "${AUTH}" \
+        user_id==6
+
+Response:
+
+::
+
+    HTTP/1.1 200 OK
+    Allow: GET, HEAD, OPTIONS
+    Cache-control: private
+    Content-Length: 345
+    Content-Type: application/json
+    Date: Thu, 16 Aug 2018 17:46:43 GMT
+    Server: nginx/1.12.1
+    Set-Cookie: 0363cac70e8248650afc0b0855f64be8=cfa68a8ba45bf7df1382f5de98e2204f; path=/; HttpOnly; Secure
+    Vary: Accept
+    X-Frame-Options: SAMEORIGIN
+
+    {
+        "count": 1,
+        "next": null,
+        "previous": null,
+        "results": [
+            {
+                "account": "https://test.cloudigra.de/api/v1/account/4/",
+                "created_at": "2018-08-09T18:48:37.444729Z",
+                "ec2_instance_id": "i-0e0eb03041e117b2d",
+                "id": 7,
+                "region": "us-east-2",
+                "resourcetype": "AwsInstance",
+                "updated_at": "2018-08-09T18:48:37.444747Z",
+                "url": "https://test.cloudigra.de/api/v1/instance/7/"
+            }
+        ]
+    }
+
+Instance Event Info
+-------------------
+
+List all events
+~~~~~~~~~~~~~~~
+
+Request:
+
+.. code:: bash
+
+    http https://test.cloudigra.de/api/v1/event/ "${AUTH}"
+
+Response:
+
+::
+
+    HTTP/1.1 200 OK
+    Allow: GET, HEAD, OPTIONS
+    Cache-control: private
+    Content-Length: 2825
+    Content-Type: application/json
+    Date: Thu, 16 Aug 2018 14:58:24 GMT
+    Server: nginx/1.12.1
+    Set-Cookie: 0363cac70e8248650afc0b0855f64be8=fb0364ad8de0070c1eb515b3b092ee1c; path=/; HttpOnly; Secure
+    Vary: Accept
+    X-Frame-Options: SAMEORIGIN
+
+    {
+        "count": 5,
+        "next": "https://test.cloudigra.de/api/v1/event/?limit=10&offset=10",
+        "previous": null,
+        "results": [
+            {
+                "event_type": "power_on",
+                "id": 1,
+                "instance": "https://test.cloudigra.de/api/v1/instance/1/",
+                "instance_type": "t2.micro",
+                "machineimage": "https://test.cloudigra.de/api/v1/image/1/",
+                "occurred_at": "2018-08-08T17:02:55Z",
+                "resourcetype": "AwsInstanceEvent",
+                "subnet": "subnet-8134e1af"
+            },
+            {
+                "event_type": "power_off",
+                "id": 2,
+                "instance": "https://test.cloudigra.de/api/v1/instance/1/",
+                "instance_type": "t2.micro",
+                "machineimage": "https://test.cloudigra.de/api/v1/image/1/",
+                "occurred_at": "2018-08-08T17:11:52Z",
+                "resourcetype": "AwsInstanceEvent",
+                "subnet": null
+            },
+            {
+                "event_type": "power_on",
+                "id": 3,
+                "instance": "https://test.cloudigra.de/api/v1/instance/2/",
+                "instance_type": "t2.micro",
+                "machineimage": "https://test.cloudigra.de/api/v1/image/2/",
+                "occurred_at": "2018-08-08T17:29:54Z",
+                "resourcetype": "AwsInstanceEvent",
+                "subnet": "subnet-8134e1af"
+            },
+            {
+                "event_type": "power_on",
+                "id": 4,
+                "instance": "https://test.cloudigra.de/api/v1/instance/3/",
+                "instance_type": "t2.micro",
+                "machineimage": "https://test.cloudigra.de/api/v1/image/3/",
+                "occurred_at": "2018-08-08T17:56:02Z",
+                "resourcetype": "AwsInstanceEvent",
+                "subnet": "subnet-26fe357a"
+            },
+            {
+                "event_type": "power_on",
+                "id": 5,
+                "instance": "https://test.cloudigra.de/api/v1/instance/4/",
+                "instance_type": "t1.micro",
+                "machineimage": "https://test.cloudigra.de/api/v1/image/4/",
+                "occurred_at": "2018-08-08T18:20:59Z",
+                "resourcetype": "AwsInstanceEvent",
+                "subnet": "subnet-e6059aac"
+            }
+        ]
+    }
+
+Retrieve a specific event
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Request:
+
+.. code:: bash
+
+    http https://test.cloudigra.de/api/v1/event/1/ "${AUTH}"
+
+Response:
+
+::
+
+    HTTP/1.1 200 OK
+    Allow: GET, HEAD, OPTIONS
+    Cache-control: private
+    Content-Length: 274
+    Content-Type: application/json
+    Date: Thu, 16 Aug 2018 15:04:00 GMT
+    Server: nginx/1.12.1
+    Set-Cookie: 0363cac70e8248650afc0b0855f64be8=fb0364ad8de0070c1eb515b3b092ee1c; path=/; HttpOnly; Secure
+    Vary: Accept
+    X-Frame-Options: SAMEORIGIN
+
+    {
+        "event_type": "power_on",
+        "id": 1,
+        "instance": "https://test.cloudigra.de/api/v1/instance/1/",
+        "instance_type": "t2.micro",
+        "machineimage": "https://test.cloudigra.de/api/v1/image/1/",
+        "occurred_at": "2018-08-08T17:02:55Z",
+        "resourcetype": "AwsInstanceEvent",
+        "subnet": "subnet-8134e1af"
+    }
+
+Filtering events
+~~~~~~~~~~~~~~~~
+
+You may include an optional "instance_id" query string argument to filter results
+down to a specific instance.
+
+Request:
+
+.. code:: bash
+
+    http https://test.cloudigra.de/api/v1/event/ "${AUTH}" \
+        instance_id==1
+
+Response:
+
+::
+
+    HTTP/1.1 200 OK
+    Allow: GET, HEAD, OPTIONS
+    Cache-control: private
+    Content-Length: 589
+    Content-Type: application/json
+    Date: Thu, 16 Aug 2018 15:21:21 GMT
+    Server: nginx/1.12.1
+    Set-Cookie: 0363cac70e8248650afc0b0855f64be8=cfa68a8ba45bf7df1382f5de98e2204f; path=/; HttpOnly; Secure
+    Vary: Accept
+    X-Frame-Options: SAMEORIGIN
+
+    {
+        "count": 2,
+        "next": null,
+        "previous": null,
+        "results": [
+            {
+                "event_type": "power_on",
+                "id": 1,
+                "instance": "https://test.cloudigra.de/api/v1/instance/1/",
+                "instance_type": "t2.micro",
+                "machineimage": "https://test.cloudigra.de/api/v1/image/1/",
+                "occurred_at": "2018-08-08T17:02:55Z",
+                "resourcetype": "AwsInstanceEvent",
+                "subnet": "subnet-8134e1af"
+            },
+            {
+                "event_type": "power_off",
+                "id": 2,
+                "instance": "https://test.cloudigra.de/api/v1/instance/1/",
+                "instance_type": "t2.micro",
+                "machineimage": "https://test.cloudigra.de/api/v1/image/1/",
+                "occurred_at": "2018-08-08T17:11:52Z",
+                "resourcetype": "AwsInstanceEvent",
+                "subnet": null
+            }
+        ]
+    }
+
+You may include an optional "user_id" query string argument to filter results
+down to a specific user.
+
+Request:
+
+.. code:: bash
+
+    http https://test.cloudigra.de/api/v1/event/ "${AUTH}" \
+        user_id==4
+
+Response:
+
+::
+
+    HTTP/1.1 200 OK
+    Allow: GET, HEAD, OPTIONS
+    Cache-control: private
+    Content-Length: 929
+    Content-Type: application/json
+    Date: Thu, 16 Aug 2018 15:22:57 GMT
+    Server: nginx/1.12.1
+    Set-Cookie: 0363cac70e8248650afc0b0855f64be8=fb0364ad8de0070c1eb515b3b092ee1c; path=/; HttpOnly; Secure
+    Vary: Accept
+    X-Frame-Options: SAMEORIGIN
+
+    {
+        "count": 2,
+        "next": null,
+        "previous": null,
+        "results": [
+            {
+                "event_type": "power_on",
+                "id": 1,
+                "instance": "https://test.cloudigra.de/api/v1/instance/1/",
+                "instance_type": "t2.micro",
+                "machineimage": "https://test.cloudigra.de/api/v1/image/1/",
+                "occurred_at": "2018-08-08T17:02:55Z",
+                "resourcetype": "AwsInstanceEvent",
+                "subnet": "subnet-8134e1af"
+            },
+            {
+                "event_type": "power_off",
+                "id": 2,
+                "instance": "https://test.cloudigra.de/api/v1/instance/1/",
+                "instance_type": "t2.micro",
+                "machineimage": "https://test.cloudigra.de/api/v1/image/1/",
+                "occurred_at": "2018-08-08T17:11:52Z",
+                "resourcetype": "AwsInstanceEvent",
+                "subnet": null
+            }
+        ]
+    }
 
 Usage Reporting
 ---------------
@@ -628,7 +1007,7 @@ Request:
 
 .. code:: bash
 
-    http localhost:8080/api/v1/report/instances/ "${AUTH}" \
+    http localhost:8080/api/v1/report/images/ "${AUTH}" \
         start=="2018-01-10T00:00:00" \
         end=="2018-01-15T00:00:00" \
         account_id==1
