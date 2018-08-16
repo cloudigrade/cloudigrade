@@ -1165,7 +1165,7 @@ Machine Images
 Listing Images
 ~~~~~~~~~~~~~~
 
-Below command will return all images belonging to the user that makes the request.
+Below command will return all images that have been seen used by any instance for any account belonging to the user that makes the request.
 
 Request:
 
@@ -1194,7 +1194,6 @@ Response:
         "previous": null,
         "results": [
             {
-                "account": "http://cloudigrade.127.0.0.1.nip.io/api/v1/account/1/",
                 "created_at": "2018-07-30T15:41:16.310031Z",
                 "ec2_ami_id": "ami-plain",
                 "id": 1,
@@ -1202,6 +1201,7 @@ Response:
                 "openshift": false,
                 "openshift_challenged": false,
                 "openshift_detected": false,
+                "owner_aws_account_id": "273470430754",
                 "resourcetype": "AwsMachineImage",
                 "rhel": false,
                 "rhel_challenged": false,
@@ -1210,7 +1210,6 @@ Response:
                 "updated_at": "2018-07-30T15:15:11.214092Z"
             },
             {
-                "account": "http://cloudigrade.127.0.0.1.nip.io/api/v1/account/1/",
                 "created_at": "2018-07-30T15:41:16.317326Z",
                 "ec2_ami_id": "ami-rhel7",
                 "id": 2,
@@ -1218,6 +1217,7 @@ Response:
                 "openshift": true,
                 "openshift_challenged": true,
                 "openshift_detected": false,
+                "owner_aws_account_id": "273470430754",
                 "resourcetype": "AwsMachineImage",
                 "rhel": false,
                 "rhel_challenged": true,
@@ -1226,7 +1226,6 @@ Response:
                 "updated_at": "2018-07-30T15:14:19.829340Z"
             },
             {
-                "account": "http://cloudigrade.127.0.0.1.nip.io/api/v1/account/1/",
                 "created_at": "2018-07-30T15:41:16.330278Z",
                 "ec2_ami_id": "ami-openshift",
                 "id": 3,
@@ -1234,6 +1233,7 @@ Response:
                 "openshift": false,
                 "openshift_challenged": true,
                 "openshift_detected": true,
+                "owner_aws_account_id": "273470430754",
                 "resourcetype": "AwsMachineImage",
                 "rhel": true,
                 "rhel_challenged": true,
@@ -1242,7 +1242,6 @@ Response:
                 "updated_at": "2018-07-30T15:14:06.164469Z"
             },
             {
-                "account": "http://cloudigrade.127.0.0.1.nip.io/api/v1/account/1/",
                 "created_at": "2018-07-30T15:41:16.343734Z",
                 "ec2_ami_id": "ami-both",
                 "id": 4,
@@ -1250,6 +1249,7 @@ Response:
                 "openshift": true,
                 "openshift_challenged": false,
                 "openshift_detected": true,
+                "owner_aws_account_id": "273470430754",
                 "resourcetype": "AwsMachineImage",
                 "rhel": true,
                 "rhel_challenged": false,
@@ -1260,7 +1260,7 @@ Response:
         ]
     }
 
-A superuser will see all images belonging to all accounts.
+A superuser will see all images used by instances in all accounts.
 
 Request:
 
@@ -1289,7 +1289,6 @@ Response:
         "previous": null,
         "results": [
             {
-                "account": "http://cloudigrade.127.0.0.1.nip.io/api/v1/account/1/",
                 "created_at": "2018-07-30T15:41:16.310031Z",
                 "ec2_ami_id": "ami-plain",
                 "id": 1,
@@ -1297,6 +1296,7 @@ Response:
                 "openshift": false,
                 "openshift_challenged": false,
                 "openshift_detected": false,
+                "owner_aws_account_id": "273470430754",
                 "resourcetype": "AwsMachineImage",
                 "rhel": false,
                 "rhel_challenged": false,
@@ -1305,7 +1305,6 @@ Response:
                 "updated_at": "2018-07-30T15:15:11.214092Z"
             },
             {
-                "account": "http://cloudigrade.127.0.0.1.nip.io/api/v1/account/1/",
                 "created_at": "2018-07-30T15:41:16.317326Z",
                 "ec2_ami_id": "ami-rhel7",
                 "id": 2,
@@ -1313,6 +1312,7 @@ Response:
                 "openshift": true,
                 "openshift_challenged": true,
                 "openshift_detected": false,
+                "owner_aws_account_id": "273470430754",
                 "resourcetype": "AwsMachineImage",
                 "rhel": false,
                 "rhel_challenged": true,
@@ -1321,7 +1321,6 @@ Response:
                 "updated_at": "2018-07-30T15:14:19.829340Z"
             },
             {
-                "account": "http://cloudigrade.127.0.0.1.nip.io/api/v1/account/1/",
                 "created_at": "2018-07-30T15:41:16.330278Z",
                 "ec2_ami_id": "ami-openshift",
                 "id": 3,
@@ -1329,6 +1328,7 @@ Response:
                 "openshift": false,
                 "openshift_challenged": true,
                 "openshift_detected": true,
+                "owner_aws_account_id": "273470430754",
                 "resourcetype": "AwsMachineImage",
                 "rhel": true,
                 "rhel_challenged": true,
@@ -1337,7 +1337,6 @@ Response:
                 "updated_at": "2018-07-30T15:14:06.164469Z"
             },
             {
-                "account": "http://cloudigrade.127.0.0.1.nip.io/api/v1/account/1/",
                 "created_at": "2018-07-30T15:41:16.343734Z",
                 "ec2_ami_id": "ami-both",
                 "id": 4,
@@ -1345,6 +1344,7 @@ Response:
                 "openshift": true,
                 "openshift_challenged": false,
                 "openshift_detected": true,
+                "owner_aws_account_id": "273470430754",
                 "resourcetype": "AwsMachineImage",
                 "rhel": true,
                 "rhel_challenged": false,
@@ -1353,7 +1353,6 @@ Response:
                 "updated_at": "2018-07-30T15:41:16.355784Z"
             },
             {
-                "account": "http://cloudigrade.127.0.0.1.nip.io/api/v1/account/2/",
                 "created_at": "2018-07-30T15:41:16.362110Z",
                 "ec2_ami_id": "ami-rhel_other",
                 "id": 5,
@@ -1361,6 +1360,7 @@ Response:
                 "openshift": false,
                 "openshift_challenged": false,
                 "openshift_detected": false,
+                "owner_aws_account_id": "518028203513",
                 "resourcetype": "AwsMachineImage",
                 "rhel": true,
                 "rhel_challenged": false,
@@ -1371,7 +1371,7 @@ Response:
         ]
     }
 
-A superuser can also filter the images down to a specific user by using the optional
+A superuser can also filter the images down to a those used by instances for accounts belonging to a specific user by using the optional
 ``user_id`` query string argument.
 
 Request:
@@ -1401,7 +1401,6 @@ Response:
         "previous": null,
         "results": [
             {
-                "account": "http://cloudigrade.127.0.0.1.nip.io/api/v1/account/2/",
                 "created_at": "2018-07-30T15:41:16.362110Z",
                 "ec2_ami_id": "ami-rhel_other",
                 "id": 5,
@@ -1409,6 +1408,7 @@ Response:
                 "openshift": false,
                 "openshift_challenged": false,
                 "openshift_detected": false,
+                "owner_aws_account_id": "518028203513",
                 "resourcetype": "AwsMachineImage",
                 "rhel": true,
                 "rhel_challenged": false,
@@ -1444,7 +1444,6 @@ Response:
     X-Frame-Options: SAMEORIGIN
 
     {
-        "account": "http://cloudigrade.127.0.0.1.nip.io/api/v1/account/1/",
         "created_at": "2018-07-30T15:41:16.310031Z",
         "ec2_ami_id": "ami-plain",
         "id": 1,
@@ -1452,6 +1451,7 @@ Response:
         "openshift": false,
         "openshift_challenged": false,
         "openshift_detected": false,
+        "owner_aws_account_id": "273470430754",
         "resourcetype": "AwsMachineImage",
         "rhel": false,
         "rhel_challenged": false,
@@ -1484,7 +1484,6 @@ Response:
     X-Frame-Options: SAMEORIGIN
 
     {
-        "account": "http://cloudigrade.127.0.0.1.nip.io/api/v1/account/1/",
         "created_at": "2018-07-30T15:41:16.310031Z",
         "ec2_ami_id": "ami-plain",
         "id": 1,
@@ -1492,6 +1491,7 @@ Response:
         "openshift": false,
         "openshift_challenged": false,
         "openshift_detected": false,
+        "owner_aws_account_id": "273470430754",
         "resourcetype": "AwsMachineImage",
         "rhel": false,
         "rhel_challenged": false,
@@ -1528,7 +1528,6 @@ Response:
     X-Frame-Options: SAMEORIGIN
 
     {
-        "account": "http://cloudigrade.127.0.0.1.nip.io/api/v1/account/1/",
         "created_at": "2018-07-30T15:41:16.310031Z",
         "ec2_ami_id": "ami-plain",
         "id": 1,
@@ -1536,6 +1535,7 @@ Response:
         "openshift": false,
         "openshift_challenged": false,
         "openshift_detected": false,
+        "owner_aws_account_id": "273470430754",
         "resourcetype": "AwsMachineImage",
         "rhel": true,
         "rhel_challenged": true,
@@ -1570,7 +1570,6 @@ Response:
     X-Frame-Options: SAMEORIGIN
 
     {
-        "account": "http://cloudigrade.127.0.0.1.nip.io/api/v1/account/1/",
         "created_at": "2018-07-30T15:41:16.310031Z",
         "ec2_ami_id": "ami-plain",
         "id": 1,
@@ -1578,6 +1577,7 @@ Response:
         "openshift": false,
         "openshift_challenged": false,
         "openshift_detected": false,
+        "owner_aws_account_id": "273470430754",
         "resourcetype": "AwsMachineImage",
         "rhel": false,
         "rhel_challenged": false,
@@ -1613,7 +1613,6 @@ Response:
     X-Frame-Options: SAMEORIGIN
 
     {
-        "account": "http://cloudigrade.127.0.0.1.nip.io/api/v1/account/1/",
         "created_at": "2018-07-30T15:41:16.310031Z",
         "ec2_ami_id": "ami-plain",
         "id": 1,
@@ -1621,6 +1620,7 @@ Response:
         "openshift": true,
         "openshift_challenged": true,
         "openshift_detected": false,
+        "owner_aws_account_id": "273470430754",
         "resourcetype": "AwsMachineImage",
         "rhel": true,
         "rhel_challenged": true,
