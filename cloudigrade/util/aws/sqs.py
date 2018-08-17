@@ -9,6 +9,22 @@ from django.utils.translation import gettext as _
 logger = logging.getLogger(__name__)
 
 
+def _get_queue(queue_url):
+    """
+    Get the SQS Queue object.
+
+    Args:
+        queue_url (str): The AWS assigned URL for the queue.
+
+    Returns:
+        Queue: The SQS Queue boto3 resource for the given queue_url.
+
+    """
+    region = settings.SQS_DEFAULT_REGION
+    queue = boto3.resource('sqs', region_name=region).Queue(queue_url)
+    return queue
+
+
 def receive_message_from_queue(queue_url):
     """
     Get message objects from SQS Queue object.
@@ -20,9 +36,7 @@ def receive_message_from_queue(queue_url):
         list[Message]: A list of message objects.
 
     """
-    region = settings.SQS_DEFAULT_REGION
-    sqs_queue = boto3.resource('sqs', region_name=region).Queue(queue_url)
-
+    sqs_queue = _get_queue(queue_url)
     messages = sqs_queue.receive_messages(
         MaxNumberOfMessages=10,
         WaitTimeSeconds=10
@@ -49,8 +63,7 @@ def delete_message_from_queue(queue_url, messages):
                 'delete_message_from_queue', queue_url))
         return {}
 
-    region = settings.SQS_DEFAULT_REGION
-    sqs_queue = boto3.resource('sqs', region_name=region).Queue(queue_url)
+    sqs_queue = _get_queue(queue_url)
 
     messages_to_delete = [
         {
