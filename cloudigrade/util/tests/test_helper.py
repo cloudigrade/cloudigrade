@@ -20,7 +20,7 @@ class UtilHelperTest(TestCase):
     def test_generate_dummy_aws_account_id(self):
         """Assert generation of an appropriate AWS AwsAccount ID."""
         account_id = str(helper.generate_dummy_aws_account_id())
-        self.assertIsNotNone(re.match(r'\d{12}', account_id))
+        self.assertIsNotNone(re.match(r'\d{1,12}', account_id))
 
     def test_generate_dummy_arn_random_account_id(self):
         """Assert generation of an ARN without a specified account ID."""
