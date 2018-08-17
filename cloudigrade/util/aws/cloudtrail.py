@@ -5,6 +5,7 @@ from botocore.exceptions import ClientError
 from django.conf import settings
 from django.utils.translation import gettext as _
 
+from util.exceptions import MaximumNumberOfTrailsExceededException
 
 logger = logging.getLogger(__name__)
 
@@ -87,6 +88,10 @@ def create_cloudtrail(cloudtrail, name):
         )
         return response
     except ClientError as e:
+        if 'MaximumNumberOfTrailsExceededException' == \
+                e.response['Error']['Code']:
+            raise MaximumNumberOfTrailsExceededException(
+                e.response['Error']['Message'])
         raise e
 
 

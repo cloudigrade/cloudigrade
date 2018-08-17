@@ -7,6 +7,7 @@ from django.conf import settings
 from django.test import TestCase
 
 from util.aws import cloudtrail
+from util.exceptions import MaximumNumberOfTrailsExceededException
 from util.tests import helper
 
 
@@ -282,6 +283,32 @@ class UtilAwsCloudTrailTest(TestCase):
             mock_error, 'CreateTrail')
 
         with self.assertRaises(ClientError):
+            cloudtrail.create_cloudtrail(mock_client, name)
+
+    def test_create_cloudtrail_limit_exception(self):
+        """Test the create_cloudtrail function.
+
+        Assert that an error is returned when trail limit is reached
+        """
+        aws_account_id = helper.generate_dummy_aws_account_id()
+        name = '{0}{1}'.format(settings.CLOUDTRAIL_NAME_PREFIX,
+                               aws_account_id)
+
+        mock_session = Mock()
+
+        mock_error = {
+            'Error': {
+                'Code': 'MaximumNumberOfTrailsExceededException',
+                'Message':
+                    'User: 123456789012 already has 1337 trails in us-east-1.'
+            }
+        }
+
+        mock_client = mock_session.client.return_value
+        mock_client.create_trail.side_effect = ClientError(
+            mock_error, 'CreateTrail')
+
+        with self.assertRaises(MaximumNumberOfTrailsExceededException):
             cloudtrail.create_cloudtrail(mock_client, name)
 
     def test_update_cloudtrail(self):
