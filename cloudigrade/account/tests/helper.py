@@ -173,7 +173,7 @@ def generate_aws_instance_events(
 
 
 def generate_aws_image(owner_aws_account_id=None,
-                       is_encrypted=None,
+                       is_encrypted=False,
                        is_windows=False,
                        ec2_ami_id=None,
                        rhel_detected=False,

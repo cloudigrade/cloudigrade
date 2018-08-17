@@ -67,7 +67,7 @@ class MachineImage(BasePolymorphicModel):
     )
     inspection_json = models.TextField(null=True,
                                        blank=True)
-    is_encrypted = models.NullBooleanField()
+    is_encrypted = models.BooleanField(default=False)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES,
                               default=PENDING)
     rhel_challenged = models.BooleanField(default=False)
