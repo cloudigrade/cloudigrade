@@ -35,7 +35,7 @@ class AnalyzeLogTest(TestCase):
     @patch('analyzer.tasks.aws.get_session')
     @patch('analyzer.tasks.aws.delete_message_from_queue')
     @patch('analyzer.tasks.aws.get_object_content_from_s3')
-    @patch('analyzer.tasks.aws.receive_message_from_queue')
+    @patch('analyzer.tasks.aws.receive_messages_from_queue')
     @patch('analyzer.tasks.aws.describe_image')
     def test_command_output_success_ec2_attributes_included(
             self, mock_describe, mock_receive, mock_s3, mock_del, mock_session,
@@ -193,7 +193,7 @@ class AnalyzeLogTest(TestCase):
     @patch('analyzer.tasks.aws.get_session')
     @patch('analyzer.tasks.aws.delete_message_from_queue')
     @patch('analyzer.tasks.aws.get_object_content_from_s3')
-    @patch('analyzer.tasks.aws.receive_message_from_queue')
+    @patch('analyzer.tasks.aws.receive_messages_from_queue')
     @patch('analyzer.tasks.aws.describe_image')
     def test_command_output_success_lookup_ec2_attributes(
             self, mock_describe, mock_receive, mock_s3, mock_del, mock_session,
@@ -349,7 +349,7 @@ class AnalyzeLogTest(TestCase):
 
     @patch('analyzer.tasks.aws.delete_message_from_queue')
     @patch('analyzer.tasks.aws.get_object_content_from_s3')
-    @patch('analyzer.tasks.aws.receive_message_from_queue')
+    @patch('analyzer.tasks.aws.receive_messages_from_queue')
     def test_command_output_no_log_content(
             self, mock_receive, mock_s3, mock_del):
         """Test that a non-log is not processed."""
@@ -395,7 +395,7 @@ class AnalyzeLogTest(TestCase):
 
     @patch('analyzer.tasks.aws.delete_message_from_queue')
     @patch('analyzer.tasks.aws.get_object_content_from_s3')
-    @patch('analyzer.tasks.aws.receive_message_from_queue')
+    @patch('analyzer.tasks.aws.receive_messages_from_queue')
     def test_command_output_non_on_off_events(
             self, mock_receive, mock_s3, mock_del):
         """Test that non on/off events are not processed."""
@@ -453,7 +453,7 @@ class AnalyzeLogTest(TestCase):
 
     @patch('analyzer.tasks.aws.delete_message_from_queue')
     @patch('analyzer.tasks.aws.get_object_content_from_s3')
-    @patch('analyzer.tasks.aws.receive_message_from_queue')
+    @patch('analyzer.tasks.aws.receive_messages_from_queue')
     def test_ami_tags_added_success(
             self, mock_receive, mock_s3, mock_del):
         """Test processing a CloudTrail log for ami tags added."""
@@ -531,7 +531,7 @@ class AnalyzeLogTest(TestCase):
 
     @patch('analyzer.tasks.aws.delete_message_from_queue')
     @patch('analyzer.tasks.aws.get_object_content_from_s3')
-    @patch('analyzer.tasks.aws.receive_message_from_queue')
+    @patch('analyzer.tasks.aws.receive_messages_from_queue')
     def test_ami_tags_removed_success(
             self, mock_receive, mock_s3, mock_del):
         """Test processing a CloudTrail log for ami tags removed."""
@@ -609,7 +609,7 @@ class AnalyzeLogTest(TestCase):
 
     @patch('analyzer.tasks.aws.delete_message_from_queue')
     @patch('analyzer.tasks.aws.get_object_content_from_s3')
-    @patch('analyzer.tasks.aws.receive_message_from_queue')
+    @patch('analyzer.tasks.aws.receive_messages_from_queue')
     def test_ami_tags_missing_failure(
             self, mock_receive, mock_s3, mock_del):
         """Test processing a log for ami tags reference bad ami_id."""
@@ -686,7 +686,7 @@ class AnalyzeLogTest(TestCase):
 
     @patch('analyzer.tasks.aws.delete_message_from_queue')
     @patch('analyzer.tasks.aws.get_object_content_from_s3')
-    @patch('analyzer.tasks.aws.receive_message_from_queue')
+    @patch('analyzer.tasks.aws.receive_messages_from_queue')
     def test_other_tags_ignored(
             self, mock_receive, mock_s3, mock_del):
         """Test processing a CloudTrail log for other tags ignored."""

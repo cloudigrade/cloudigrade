@@ -21,7 +21,7 @@ class UtilAwsSqsTest(TestCase):
             mock_queue = mock_resource.Queue.return_value
             mock_queue.receive_messages.return_value = [mock_message]
 
-            actual_messages = sqs.receive_message_from_queue(mock_queue_url)
+            actual_messages = sqs.receive_messages_from_queue(mock_queue_url)
             mock_resource.Queue.assert_called_with(mock_queue_url)
 
         self.assertEqual(mock_message, actual_messages[0])

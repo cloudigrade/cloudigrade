@@ -25,12 +25,14 @@ def _get_queue(queue_url):
     return queue
 
 
-def receive_message_from_queue(queue_url):
+def receive_messages_from_queue(queue_url, max_number=10, wait_time=10):
     """
     Get message objects from SQS Queue object.
 
     Args:
         queue_url (str): The AWS assigned URL for the queue.
+        max_number (int): Maximum number of messages to receive.
+        wait_time (int): Wait time in seconds to receive any messages.
 
     Returns:
         list[Message]: A list of message objects.
@@ -38,8 +40,8 @@ def receive_message_from_queue(queue_url):
     """
     sqs_queue = _get_queue(queue_url)
     messages = sqs_queue.receive_messages(
-        MaxNumberOfMessages=10,
-        WaitTimeSeconds=10
+        MaxNumberOfMessages=max_number,
+        WaitTimeSeconds=wait_time,
     )
 
     return messages

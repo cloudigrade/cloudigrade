@@ -47,7 +47,7 @@ def analyze_log():
     instances = {}
 
     # Get messages off of an SQS queue
-    messages = aws.receive_message_from_queue(queue_url)
+    messages = aws.receive_messages_from_queue(queue_url)
 
     # Parse the SQS messages to get S3 object locations
     for message in messages:
