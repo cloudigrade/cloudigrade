@@ -171,20 +171,17 @@ class AnalyzeLogTest(TestCase):
 
         tasks.analyze_log()
 
-        instances = list(AwsInstance.objects.filter(
-            ec2_instance_id=mock_instance_id).all())
+        instance = AwsInstance.objects.get(ec2_instance_id=mock_instance_id)
         instance_events = list(AwsInstanceEvent.objects.filter(
-            instance=instances[0]).all()) if instances else []
+            instance=instance).all())
 
-        self.assertEqual(len(instances), 1)
-        instance = instances[0]
         self.assertEqual(instance.account, self.mock_account)
         self.assertEqual(instance.ec2_instance_id, mock_instance_id)
         self.assertEqual(instance.region, mock_region)
 
         self.assertEqual(len(instance_events), 3)
         for event in instance_events:
-            self.assertEqual(event.instance, instances[0])
+            self.assertEqual(event.instance, instance)
             self.assertEqual(event.event_type, InstanceEvent.TYPE.power_on)
             self.assertEqual(event.occurred_at, mock_occurred_at)
             self.assertEqual(event.subnet, mock_subnet)

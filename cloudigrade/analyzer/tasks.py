@@ -104,7 +104,6 @@ def _parse_log_for_ec2_instance_events(log):
         account_id = record.get('userIdentity', {}).get('accountId')
         account = AwsAccount.objects.get(aws_account_id=account_id)
         region = record.get('awsRegion')
-        session = aws.get_session(account.account_arn, region)
         event_type = ec2_instance_event_map[record.get('eventName')]
         occurred_at = record.get('eventTime')
         ec2_info = record.get('responseElements', {})\
@@ -112,29 +111,31 @@ def _parse_log_for_ec2_instance_events(log):
             .get('items', [])
 
         # Collect the EC2 instances the API was called on
-        for item in ec2_info:
-            instance_id = item.get('instanceId')
+        session = aws.get_session(account.account_arn, region)
+        new_instance_ids = set([item['instanceId'] for item in ec2_info])
+        new_instance_ids -= set(instances.keys())
+        for instance_id in new_instance_ids:
             instance = aws.get_ec2_instance(session, instance_id)
             instances[instance_id] = {
                 'account_id': account_id,
                 'instance_details': instance,
-                'region': region
+                'region': region,
+                'events': []
             }
 
-        for __, data in instances.items():
-            ami_id = data['instance_details'].image_id
+        # Build the list of events for each instance
+        for item in ec2_info:
+            instance_id = item['instanceId']
+            instance_details = instances[instance_id]['instance_details']
+            ami_id = instance_details.image_id
             event = {
-                'subnet': data['instance_details'].subnet_id,
+                'subnet': instance_details.subnet_id,
                 'ec2_ami_id': ami_id,
-                'instance_type': data['instance_details'].instance_type,
+                'instance_type': instance_details.instance_type,
                 'event_type': event_type,
                 'occurred_at': occurred_at
             }
-
-            if data.get('events'):
-                data['events'].append(event)
-            else:
-                data['events'] = [event]
+            instances[instance_id]['events'].append(event)
 
             # Describe each found image only once.
             if ami_id not in described_images:
