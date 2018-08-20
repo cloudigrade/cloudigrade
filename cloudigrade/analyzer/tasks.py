@@ -122,26 +122,24 @@ def _parse_log_for_ec2_instance_events(log):
                 'region': region,
                 'events': []
             }
+            # Describe each found image only once.
+            if instance.image_id not in described_images:
+                described_images[instance.image_id] = aws.describe_image(
+                    session, instance.image_id, region
+                )
 
         # Build the list of events for each instance
         for item in ec2_info:
             instance_id = item['instanceId']
             instance_details = instances[instance_id]['instance_details']
-            ami_id = instance_details.image_id
             event = {
                 'subnet': instance_details.subnet_id,
-                'ec2_ami_id': ami_id,
+                'ec2_ami_id': instance_details.image_id,
                 'instance_type': instance_details.instance_type,
                 'event_type': event_type,
                 'occurred_at': occurred_at
             }
             instances[instance_id]['events'].append(event)
-
-            # Describe each found image only once.
-            if ami_id not in described_images:
-                described_images[ami_id] = aws.describe_image(
-                    session, ami_id, region
-                )
 
     return instances, described_images
 
