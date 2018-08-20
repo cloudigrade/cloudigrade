@@ -47,6 +47,33 @@ def receive_messages_from_queue(queue_url, max_number=10, wait_time=10):
     return messages
 
 
+def yield_messages_from_queue(queue_url, max_number=10, wait_time=10):
+    """
+    Yield message objects from SQS Queue object.
+
+    Args:
+        queue_url (str): The AWS assigned URL for the queue.
+        max_number (int): Maximum number of messages to receive.
+        wait_time (int): Wait time in seconds to receive any messages.
+
+    Yields:
+        Message: An SQS message object.
+
+    """
+    sqs_queue = _get_queue(queue_url)
+    messages_received = 0
+    while messages_received < max_number:
+        messages = sqs_queue.receive_messages(
+            MaxNumberOfMessages=1,
+            WaitTimeSeconds=wait_time,
+        )
+        if not messages:
+            break
+        for message in messages:
+            messages_received += 1
+            yield message
+
+
 def delete_messages_from_queue(queue_url, messages):
     """
     Delete message objects from SQS queue.

@@ -2,10 +2,13 @@
 import uuid
 from unittest.mock import Mock, patch
 
+import faker
 from django.test import TestCase
 
 from util.aws import sqs
 from util.tests import helper
+
+_faker = faker.Faker()
 
 
 class UtilAwsSqsTest(TestCase):
@@ -25,6 +28,50 @@ class UtilAwsSqsTest(TestCase):
             mock_resource.Queue.assert_called_with(mock_queue_url)
 
         self.assertEqual(mock_message, actual_messages[0])
+
+    def test_yield_messages_from_queue(self):
+        """Assert that yield_messages_from_queue yields messages."""
+        queue_url = _faker.url()
+        available_messages = [Mock(), Mock(), Mock()]
+
+        with patch.object(sqs, 'boto3') as mock_boto3:
+            mock_resource = mock_boto3.resource.return_value
+            mock_queue = mock_resource.Queue.return_value
+            mock_queue.receive_messages.side_effect = [
+                [available_messages[0]],
+                [available_messages[1]],
+                [available_messages[2]],
+            ]
+
+            yielded_messages = []
+            for message in sqs.yield_messages_from_queue(queue_url):
+                yielded_messages.append(message)
+
+            self.assertEqual(yielded_messages, available_messages)
+
+    def test_yield_messages_from_queue_max_number_stop(self):
+        """Assert that yield_messages_from_queue yields messages."""
+        queue_url = _faker.url()
+        available_messages = [Mock(), Mock(), Mock()]
+        max_count = 2
+
+        with patch.object(sqs, 'boto3') as mock_boto3:
+            mock_resource = mock_boto3.resource.return_value
+            mock_queue = mock_resource.Queue.return_value
+            mock_queue.receive_messages.side_effect = [
+                [available_messages[0]],
+                [available_messages[1]],
+                [available_messages[2]],
+            ]
+
+            yield_counter = 0
+            yielded_messages = []
+            for message in sqs.yield_messages_from_queue(queue_url, max_count):
+                yield_counter += 1
+                yielded_messages.append(message)
+
+            self.assertEqual(yield_counter, max_count)
+            self.assertEqual(yielded_messages, available_messages[:max_count])
 
     def test_delete_message_from_queue(self):
         """Assert that messages are deleted from SQS queue."""
