@@ -66,7 +66,7 @@ class UtilAwsSqsTest(TestCase):
             mock_queue = mock_resource.Queue.return_value
             mock_queue.delete_messages.return_value = mock_response
 
-            actual_response = sqs.delete_message_from_queue(
+            actual_response = sqs.delete_messages_from_queue(
                 mock_queue_url,
                 mock_messages_to_delete
             )
@@ -79,7 +79,7 @@ class UtilAwsSqsTest(TestCase):
         mock_messages_to_delete = []
         mock_response = {}
 
-        actual_response = sqs.delete_message_from_queue(
+        actual_response = sqs.delete_messages_from_queue(
             mock_queue_url,
             mock_messages_to_delete
         )

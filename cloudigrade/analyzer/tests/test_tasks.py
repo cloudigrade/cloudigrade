@@ -33,7 +33,7 @@ class AnalyzeLogTest(TestCase):
     @patch('analyzer.tasks.start_image_inspection')
     @patch('analyzer.tasks.aws.get_ec2_instance')
     @patch('analyzer.tasks.aws.get_session')
-    @patch('analyzer.tasks.aws.delete_message_from_queue')
+    @patch('analyzer.tasks.aws.delete_messages_from_queue')
     @patch('analyzer.tasks.aws.get_object_content_from_s3')
     @patch('analyzer.tasks.aws.receive_messages_from_queue')
     @patch('analyzer.tasks.aws.describe_image')
@@ -191,7 +191,7 @@ class AnalyzeLogTest(TestCase):
     @patch('analyzer.tasks.start_image_inspection')
     @patch('analyzer.tasks.aws.get_ec2_instance')
     @patch('analyzer.tasks.aws.get_session')
-    @patch('analyzer.tasks.aws.delete_message_from_queue')
+    @patch('analyzer.tasks.aws.delete_messages_from_queue')
     @patch('analyzer.tasks.aws.get_object_content_from_s3')
     @patch('analyzer.tasks.aws.receive_messages_from_queue')
     @patch('analyzer.tasks.aws.describe_image')
@@ -347,7 +347,7 @@ class AnalyzeLogTest(TestCase):
             self.assertEqual(event.machineimage.ec2_ami_id, mock_ec2_ami_id)
             self.assertEqual(event.instance_type, mock_instance_type)
 
-    @patch('analyzer.tasks.aws.delete_message_from_queue')
+    @patch('analyzer.tasks.aws.delete_messages_from_queue')
     @patch('analyzer.tasks.aws.get_object_content_from_s3')
     @patch('analyzer.tasks.aws.receive_messages_from_queue')
     def test_command_output_no_log_content(
@@ -393,7 +393,7 @@ class AnalyzeLogTest(TestCase):
         self.assertListEqual(instances, [])
         self.assertListEqual(instance_events, [])
 
-    @patch('analyzer.tasks.aws.delete_message_from_queue')
+    @patch('analyzer.tasks.aws.delete_messages_from_queue')
     @patch('analyzer.tasks.aws.get_object_content_from_s3')
     @patch('analyzer.tasks.aws.receive_messages_from_queue')
     def test_command_output_non_on_off_events(
@@ -451,7 +451,7 @@ class AnalyzeLogTest(TestCase):
         self.assertListEqual(instances, [])
         self.assertListEqual(instance_events, [])
 
-    @patch('analyzer.tasks.aws.delete_message_from_queue')
+    @patch('analyzer.tasks.aws.delete_messages_from_queue')
     @patch('analyzer.tasks.aws.get_object_content_from_s3')
     @patch('analyzer.tasks.aws.receive_messages_from_queue')
     def test_ami_tags_added_success(
@@ -529,7 +529,7 @@ class AnalyzeLogTest(TestCase):
         updated_ami = AwsMachineImage.objects.get(ec2_ami_id=ami_id)
         self.assertTrue(updated_ami.openshift_detected)
 
-    @patch('analyzer.tasks.aws.delete_message_from_queue')
+    @patch('analyzer.tasks.aws.delete_messages_from_queue')
     @patch('analyzer.tasks.aws.get_object_content_from_s3')
     @patch('analyzer.tasks.aws.receive_messages_from_queue')
     def test_ami_tags_removed_success(
@@ -607,7 +607,7 @@ class AnalyzeLogTest(TestCase):
         updated_ami = AwsMachineImage.objects.get(ec2_ami_id=ami_id)
         self.assertFalse(updated_ami.openshift_detected)
 
-    @patch('analyzer.tasks.aws.delete_message_from_queue')
+    @patch('analyzer.tasks.aws.delete_messages_from_queue')
     @patch('analyzer.tasks.aws.get_object_content_from_s3')
     @patch('analyzer.tasks.aws.receive_messages_from_queue')
     def test_ami_tags_missing_failure(
@@ -684,7 +684,7 @@ class AnalyzeLogTest(TestCase):
         except Exception:
             self.fail('Should not raise exceptions when ami not found')
 
-    @patch('analyzer.tasks.aws.delete_message_from_queue')
+    @patch('analyzer.tasks.aws.delete_messages_from_queue')
     @patch('analyzer.tasks.aws.get_object_content_from_s3')
     @patch('analyzer.tasks.aws.receive_messages_from_queue')
     def test_other_tags_ignored(

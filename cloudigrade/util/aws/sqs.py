@@ -47,7 +47,7 @@ def receive_messages_from_queue(queue_url, max_number=10, wait_time=10):
     return messages
 
 
-def delete_message_from_queue(queue_url, messages):
+def delete_messages_from_queue(queue_url, messages):
     """
     Delete message objects from SQS queue.
 
@@ -62,7 +62,7 @@ def delete_message_from_queue(queue_url, messages):
     if not messages:
         logger.debug(
             _('{0} received no messages for deletion.   Queue URL {1}').format(
-                'delete_message_from_queue', queue_url))
+                'delete_messages_from_queue', queue_url))
         return {}
 
     sqs_queue = _get_queue(queue_url)

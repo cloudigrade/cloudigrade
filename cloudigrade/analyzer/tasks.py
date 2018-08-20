@@ -77,7 +77,7 @@ def analyze_log():
     else:
         logger.debug(_('No instances or events to save to the DB.'))
 
-    aws.delete_message_from_queue(queue_url, messages)
+    aws.delete_messages_from_queue(queue_url, messages)
 
 
 def _parse_log_for_ec2_instance_events(log):
