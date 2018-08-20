@@ -3,6 +3,7 @@ import json
 import logging
 from decimal import Decimal
 
+from celery import shared_task
 from django.conf import settings
 from django.db import transaction
 from django.utils.translation import gettext as _
@@ -13,7 +14,6 @@ from account.util import (save_instance_events,
                           start_image_inspection)
 from util import aws
 from util.aws import is_instance_windows, rewrap_aws_errors
-from util.celery import retriable_shared_task
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ ec2_ami_tag_event_list = [
 ]
 
 
-@retriable_shared_task
+@shared_task
 @rewrap_aws_errors
 def analyze_log():
     """Read SQS Queue for log location, and parse log for events."""
