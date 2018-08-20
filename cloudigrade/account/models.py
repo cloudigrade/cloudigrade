@@ -57,11 +57,13 @@ class MachineImage(BasePolymorphicModel):
     PREPARING = 'preparing'
     INSPECTING = 'inspecting'
     INSPECTED = 'inspected'
+    ERROR = 'error'
     STATUS_CHOICES = (
         (PENDING, 'Pending Inspection'),
         (PREPARING, 'Preparing for Inspection'),
         (INSPECTING, 'Being Inspected'),
         (INSPECTED, 'Inspected'),
+        (ERROR, 'Error'),
     )
     inspection_json = models.TextField(null=True,
                                        blank=True)

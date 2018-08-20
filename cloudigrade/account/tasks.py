@@ -84,7 +84,7 @@ def copy_ami_snapshot(arn, ami_id, snapshot_region, reference_ami_id=None):
         if e.response.get('Error').get('Code') == 'InvalidSnapshot.NotFound':
             # Possibly a marketplace AMI, try to handle it by copying.
             copy_ami_to_customer_account.delay(arn, ami_id, snapshot_region,
-                                               maybe_marketplace=True)
+                                               maybe_trouble=True)
             return
         raise e
 
@@ -123,7 +123,7 @@ def copy_ami_snapshot(arn, ami_id, snapshot_region, reference_ami_id=None):
 @retriable_shared_task
 @rewrap_aws_errors
 def copy_ami_to_customer_account(arn, reference_ami_id, snapshot_region,
-                                 maybe_marketplace=False):
+                                 maybe_trouble=False):
     """
     Copy an AWS Image to the customer's AWS account.
 
@@ -137,8 +137,9 @@ def copy_ami_to_customer_account(arn, reference_ami_id, snapshot_region,
         arn (str): The AWS Resource Number for the account with the snapshot
         reference_ami_id (str): The AWS ID for the original image to copy
         snapshot_region (str): The region the snapshot resides in
-        maybe_marketplace (bool): Set to True if we suspect this to be a
-            marketplace image.
+        maybe_trouble (bool): Set to True if we suspect this to be a
+            marketplace, community, or private image (with restricted
+            storage access).
 
     Returns:
         None: Run as an asynchronous Celery task.
@@ -150,22 +151,36 @@ def copy_ami_to_customer_account(arn, reference_ami_id, snapshot_region,
     try:
         new_ami_id = aws.copy_ami(session, reference_ami.id, snapshot_region)
     except ClientError as e:
-        handled_errors = (
+        public_errors = (
             'Images from AWS Marketplace cannot be copied to another AWS '
             'account',
             'Images with EC2 BillingProduct codes cannot be copied '
-            'to another AWS account'
+            'to another AWS account',
         )
-        if maybe_marketplace \
-                and e.response.get('Error').get('Code') == 'InvalidRequest' \
-                and e.response.get('Error').get('Message') in handled_errors:
-            # This appears to be a marketplace AMI, mark it as inspected.
-            logger.info(_('Found a marketplace image "{0}", marking as '
-                          'inspected').format(reference_ami_id))
-            ami = AwsMachineImage.objects.get(ec2_ami_id=reference_ami_id)
-            ami.status = ami.INSPECTED
-            ami.save()
-            return
+        private_errors = (
+            'You do not have permission to access the storage of this ami',
+        )
+        if maybe_trouble and \
+                e.response.get('Error').get('Code') == 'InvalidRequest':
+            if e.response.get('Error').get('Message') in public_errors:
+                # This appears to be a marketplace AMI, mark it as inspected.
+                logger.info(_('Found a marketplace image "{0}", marking as '
+                              'inspected').format(reference_ami_id))
+                ami = AwsMachineImage.objects.get(ec2_ami_id=reference_ami_id)
+                ami.status = ami.INSPECTED
+                ami.save()
+                return
+            elif not reference_ami.public and \
+                    e.response.get('Error').get('Message') in private_errors:
+                # This appears to be a private AMI, shared with our customer,
+                # but not given access to the storage.
+                logger.info(_(
+                    'Found a private image "{0}" with inaccessible storage, '
+                    'marking as erred').format(reference_ami_id))
+                ami = AwsMachineImage.objects.get(ec2_ami_id=reference_ami_id)
+                ami.status = ami.ERROR
+                ami.save()
+                return
         raise e
 
     copy_ami_snapshot.delay(arn, new_ami_id, snapshot_region, reference_ami_id)
