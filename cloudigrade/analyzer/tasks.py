@@ -19,9 +19,11 @@ logger = logging.getLogger(__name__)
 
 ec2_instance_event_map = {
     'RunInstances': InstanceEvent.TYPE.power_on,
+    'StartInstance': InstanceEvent.TYPE.power_on,
     'StartInstances': InstanceEvent.TYPE.power_on,
     'StopInstances': InstanceEvent.TYPE.power_off,
-    'TerminateInstances': InstanceEvent.TYPE.power_off
+    'TerminateInstances': InstanceEvent.TYPE.power_off,
+    'TerminateInstanceInAutoScalingGroup': InstanceEvent.TYPE.power_off
 }
 
 OPENSHIFT_MODEL_TAG = 'openshift'
