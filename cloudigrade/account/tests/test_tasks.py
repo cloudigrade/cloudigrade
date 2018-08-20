@@ -945,11 +945,12 @@ class AccountCeleryTaskTest(TestCase):
                                   ec2_ami_id=ami_id)
         inspection_results = {
             'cloud': 'aws',
-            'results': {
+            'images': {
                 ami_id: {
+                    'rhel_found': True,
+                    'rhel_release_files_found': True,
                     'drive': {
                         'partition': {
-                            'rhel_found': True,
                             'evidence': [
                                 {
                                     'release_file': '/redhat-release',
@@ -969,7 +970,7 @@ class AccountCeleryTaskTest(TestCase):
         self.assertEqual(
             json.loads(AwsMachineImage.objects.filter(
                 ec2_ami_id=ami_id).first().inspection_json),
-            inspection_results['results'][ami_id])
+            inspection_results['images'][ami_id])
         self.assertTrue(machine_image1.rhel)
         self.assertFalse(machine_image1.openshift)
 
@@ -982,11 +983,11 @@ class AccountCeleryTaskTest(TestCase):
 
         inspection_results = {
             'cloud': 'aws',
-            'results': {
+            'images': {
                 ami_id: {
+                    'rhel_found': False,
                     'drive': {
                         'partition': {
-                            'rhel_found': False,
                             'evidence': [
                                 {
                                     'release_file': '/centos-release',
@@ -1007,7 +1008,7 @@ class AccountCeleryTaskTest(TestCase):
         self.assertEqual(
             json.loads(AwsMachineImage.objects.filter(
                 ec2_ami_id=ami_id).first().inspection_json),
-            inspection_results['results'][ami_id])
+            inspection_results['images'][ami_id])
         self.assertFalse(machine_image1.rhel)
         self.assertFalse(machine_image1.openshift)
 
@@ -1076,7 +1077,7 @@ class AccountCeleryTaskTest(TestCase):
     ):
         """Assert no work for aws cloud with unknown images."""
         with patch.object(tasks, 'scale_down_cluster') as mock_scale_down:
-            message = {'cloud': 'aws', 'results': {'fake_image': {}}}
+            message = {'cloud': 'aws', 'images': {'fake_image': {}}}
 
             mock_read_messages_from_queue.return_value = [message]
             tasks.persist_inspection_cluster_results_task()

@@ -1,4 +1,5 @@
 """Cloudigrade Account Models."""
+import json
 import operator
 
 import model_utils
@@ -67,7 +68,6 @@ class MachineImage(BasePolymorphicModel):
     is_encrypted = models.NullBooleanField()
     status = models.CharField(max_length=10, choices=STATUS_CHOICES,
                               default=PENDING)
-    rhel_detected = models.BooleanField(default=False)
     rhel_challenged = models.BooleanField(default=False)
     openshift_detected = models.BooleanField(default=False)
     openshift_challenged = models.BooleanField(default=False)
@@ -83,6 +83,79 @@ class MachineImage(BasePolymorphicModel):
 
         """
         return operator.xor(self.rhel_detected, self.rhel_challenged)
+
+    @property
+    def rhel_enabled_repos_found(self):
+        """
+        Indicate if the image contains RHEL enabled repos.
+
+        Returns:
+            bool: Value of `rhel_enabled_repos_found` from inspection_json.
+
+        """
+        if self.inspection_json:
+            image_json = json.loads(self.inspection_json)
+            return image_json.get('rhel_enabled_repos_found', False)
+        return False
+
+    @property
+    def rhel_product_certs_found(self):
+        """
+        Indicate if the image contains Red Hat produc certs.
+
+        Returns:
+            bool: Value of `rhel_product_certs_found` from inspection_json.
+
+        """
+        if self.inspection_json:
+            image_json = json.loads(self.inspection_json)
+            return image_json.get('rhel_product_certs_found', False)
+        return False
+
+    @property
+    def rhel_release_files_found(self):
+        """
+        Indicate if the image contains RHEL release files.
+
+        Returns:
+            bool: Value of `rhel_release_files_found` from inspection_json.
+
+        """
+        if self.inspection_json:
+            image_json = json.loads(self.inspection_json)
+            return image_json.get('rhel_release_files_found', False)
+        return False
+
+    @property
+    def rhel_signed_packages_found(self):
+        """
+        Indicate if the image contains Red Hat signed packages.
+
+        Returns:
+            bool: Value of `rhel_signed_packages_found` from inspection_json.
+
+        """
+        if self.inspection_json:
+            image_json = json.loads(self.inspection_json)
+            return image_json.get('rhel_signed_packages_found', False)
+        return False
+
+    @property
+    def rhel_detected(self):
+        """
+        Indicate if the image detected RHEL.
+
+        Returns:
+            bool: OR of `rhel_enabled_repos_found`,
+                `rhel_product_certs_found`,
+                `rhel_release_files_found` and
+                `rhel_signed_packages_found` properties.
+
+        """
+        return self.rhel_enabled_repos_found or \
+            self.rhel_product_certs_found or \
+            self.rhel_release_files_found or \
+            self.rhel_signed_packages_found
 
     @property
     def openshift(self):

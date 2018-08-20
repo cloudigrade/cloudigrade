@@ -1,4 +1,5 @@
 """Helper functions for generating test data."""
+import json
 import random
 
 from account.models import (AwsAccount,
@@ -208,11 +209,16 @@ def generate_aws_image(owner_aws_account_id=None,
         ec2_ami_id = helper.generate_dummy_image_id()
     platform = AwsMachineImage.WINDOWS if is_windows else AwsMachineImage.NONE
 
+    if rhel_detected:
+        image_json = json.dumps({'rhel_release_files_found': rhel_detected})
+    else:
+        image_json = None
+
     image = AwsMachineImage.objects.create(
         owner_aws_account_id=owner_aws_account_id,
         ec2_ami_id=ec2_ami_id,
         is_encrypted=is_encrypted,
-        rhel_detected=rhel_detected,
+        inspection_json=image_json,
         openshift_detected=openshift_detected,
         platform=platform,
         name=name,
