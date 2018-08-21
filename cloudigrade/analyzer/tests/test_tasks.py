@@ -1,9 +1,9 @@
-"""Collection of tests for Analyzer management commands."""
+"""Collection of tests for Analyzer tasks."""
 import datetime
 import json
 import random
 import uuid
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 from dateutil import tz
 from django.conf import settings
@@ -32,6 +32,48 @@ class AnalyzeLogTest(TestCase):
             aws_account_id=self.mock_account_id,
             user=self.user)
 
+    def assertExpectedInstance(self, ec2_instance, region):
+        """Assert we created an Instance model matching expectations."""
+        instance = AwsInstance.objects.get(
+            ec2_instance_id=ec2_instance.instance_id)
+        self.assertEqual(instance.ec2_instance_id,
+                         ec2_instance.instance_id)
+        self.assertEqual(instance.account, self.mock_account)
+        self.assertEqual(instance.region, region)
+
+    def assertExpectedInstanceEvents(self, ec2_instance, expected_count,
+                                     event_type, occurred_at):
+        """Assert we created InstanceEvents matching expectations."""
+        instanceevents = list(AwsInstanceEvent.objects.filter(
+            instance__awsinstance__ec2_instance_id=ec2_instance.instance_id))
+
+        self.assertEqual(len(instanceevents), expected_count)
+        for instanceevent in instanceevents:
+            self.assertEqual(instanceevent.instance.ec2_instance_id,
+                             ec2_instance.instance_id)
+            self.assertEqual(instanceevent.subnet, ec2_instance.subnet_id)
+            self.assertEqual(instanceevent.instance_type,
+                             ec2_instance.instance_type)
+            self.assertEqual(instanceevent.event_type, event_type)
+            self.assertEqual(instanceevent.occurred_at, occurred_at)
+            self.assertEqual(instanceevent.machineimage.ec2_ami_id,
+                             ec2_instance.image_id)
+
+    def assertExpectedImage(self, ec2_instance, described_image,
+                            is_windows=False):
+        """Assert we created a MachineImage matching expectations."""
+        image = AwsMachineImage.objects.get(ec2_ami_id=ec2_instance.image_id)
+        self.assertEqual(image.ec2_ami_id, ec2_instance.image_id)
+        self.assertEqual(image.ec2_ami_id, described_image['ImageId'])
+        self.assertEqual(image.owner_aws_account_id,
+                         described_image['OwnerId'])
+        self.assertEqual(image.name,
+                         described_image['Name'])
+        if is_windows:
+            self.assertEqual(image.platform, AwsMachineImage.WINDOWS)
+        else:
+            self.assertEqual(image.platform, AwsMachineImage.NONE)
+
     @patch('analyzer.tasks.start_image_inspection')
     @patch('analyzer.tasks.aws.get_ec2_instance')
     @patch('analyzer.tasks.aws.get_session')
@@ -43,177 +85,149 @@ class AnalyzeLogTest(TestCase):
             self, mock_describe, mock_receive, mock_s3, mock_del, mock_session,
             mock_ec2, mock_inspection):
         """
-        Test processing a CloudTrail log with all data included.
+        Test processing a CloudTrail log with some interesting data included.
 
         This test simulates receiving a CloudTrail log that has three records.
-        The first two records include power-on events for the same instance.
-        The third record includes a power-on event for a different instance.
-        Both instances are windows. All events reference the same AMI ID.
+        The first record includes power-on events for two instances. The second
+        record includes a power-on event for a windows platform instance. The
+        third record includes a power-on event for all three instances plus a
+        fourth instance. The first instance's image is already known to us.
+        The others are all new.
+
+        All events happen simultaneously. This is unusual and probably will not
+        happen in practice, but our code should handle it.
         """
-        mock_queue_url = 'https://sqs.queue.url'
-        mock_receipt_handle = str(uuid.uuid4())
-        mock_instance_id = util_helper.generate_dummy_instance_id()
-        mock_instance_id2 = util_helper.generate_dummy_instance_id()
-        mock_region = random.choice(util_helper.SOME_AWS_REGIONS)
-        mock_event_type = 'RunInstances'
-        now = datetime.datetime.utcnow()
-        # Work around for sqlite handling of microseconds
-        mock_occurred_at = datetime.datetime(
-            year=now.year, month=now.month, day=now.day, hour=now.hour,
-            minute=now.minute, second=now.second, tzinfo=tz.tzutc()
-        )
-        mock_subnet = 'subnet-9000'
-        mock_ec2_ami_id = util_helper.generate_dummy_image_id()
-        mock_instance_type = 't2.nano'
+        sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
+        mock_receive.return_value = [sqs_message]
 
-        mock_instance = util_helper.generate_mock_ec2_instance(
-            mock_instance_id, mock_ec2_ami_id, mock_subnet, None,
-            mock_instance_type, 'windows'
-        )
-        mock_instance2 = util_helper.generate_mock_ec2_instance(
-            mock_instance_id2, mock_ec2_ami_id, mock_subnet, None,
-            mock_instance_type, 'windows'
-        )
-        mock_inspection.delay.return_value = True
+        # Put all the activity in the same region for testing.
+        region = random.choice(util_helper.SOME_AWS_REGIONS)
 
-        mock_sqs_message_body = {
-            'Records': [
-                {
-                    's3': {
-                        'bucket': {
-                            'name': 'test-bucket',
-                        },
-                        'object': {
-                            'key': 'path/to/log/log.json.gz',
-                        },
-                    },
-                }
-            ]
+        # Generate the known image for the first instance.
+        image_1 = account_helper.generate_aws_image()
+
+        # Define the mocked EC2 instances.
+        mock_instance_1 = util_helper.generate_mock_ec2_instance(
+            image_id=image_1.ec2_ami_id)
+        mock_instance_2 = util_helper.generate_mock_ec2_instance()
+        mock_instance_w = util_helper.generate_mock_ec2_instance(
+            platform='windows')
+        mock_instance_4 = util_helper.generate_mock_ec2_instance()
+
+        # Define the three Record entries for the S3 log file.
+        occurred_at = util_helper.utc_dt(2018, 1, 1, 0, 0, 0)
+        trail_record_1 = analyzer_helper.generate_cloudtrail_log_record(
+            aws_account_id=self.mock_account_id,
+            instance_ids=[
+                mock_instance_1.instance_id,
+                mock_instance_w.instance_id,
+            ],
+            region=region,
+            event_time=occurred_at,
+        )
+        trail_record_2 = analyzer_helper.generate_cloudtrail_log_record(
+            aws_account_id=self.mock_account_id,
+            instance_ids=[
+                mock_instance_2.instance_id,
+            ],
+            region=region,
+            event_time=occurred_at,
+        )
+        trail_record_3 = analyzer_helper.generate_cloudtrail_log_record(
+            aws_account_id=self.mock_account_id,
+            instance_ids=[
+                mock_instance_1.instance_id,
+                mock_instance_2.instance_id,
+                mock_instance_w.instance_id,
+                mock_instance_4.instance_id,
+            ],
+            region=region,
+            event_time=occurred_at,
+        )
+        s3_content = {
+            'Records': [trail_record_1, trail_record_2, trail_record_3]
         }
-        mock_message = util_helper.generate_mock_sqs_message(
-            mock_queue_url,
-            json.dumps(mock_sqs_message_body),
-            mock_receipt_handle
-        )
+        mock_s3.return_value = json.dumps(s3_content)
 
-        mock_cloudtrail_log = {
-            'Records': [
-                {
-                    'awsRegion': mock_region,
-                    'eventName': mock_event_type,
-                    'eventSource': 'ec2.amazonaws.com',
-                    'eventTime': mock_occurred_at.strftime(
-                        '%Y-%m-%dT%H:%M:%SZ'
-                    ),
-                    'eventType': 'AwsApiCall',
-                    'responseElements': {
-                        'instancesSet': {
-                            'items': [
-                                {
-                                    'imageId': mock_ec2_ami_id,
-                                    'instanceId': mock_instance_id,
-                                    'instanceType': mock_instance_type,
-                                    'subnetId': mock_subnet
-                                }
-                            ]
-                        },
-                    },
-                    'userIdentity': {
-                        'accountId': self.mock_account_id
-                    }
-                },
-                {
-                    'awsRegion': mock_region,
-                    'eventName': mock_event_type,
-                    'eventSource': 'ec2.amazonaws.com',
-                    'eventTime': mock_occurred_at.strftime(
-                        '%Y-%m-%dT%H:%M:%SZ'
-                    ),
-                    'eventType': 'AwsApiCall',
-                    'responseElements': {
-                        'instancesSet': {
-                            'items': [
-                                {
-                                    'imageId': mock_ec2_ami_id,
-                                    'instanceId': mock_instance_id,
-                                    'instanceType': mock_instance_type,
-                                    'subnetId': mock_subnet
-                                }
-                            ]
-                        },
-                    },
-                    'userIdentity': {
-                        'accountId': self.mock_account_id
-                    }
-                },
-                {
-                    'awsRegion': mock_region,
-                    'eventName': mock_event_type,
-                    'eventSource': 'ec2.amazonaws.com',
-                    'eventTime': mock_occurred_at.strftime(
-                        '%Y-%m-%dT%H:%M:%SZ'
-                    ),
-                    'eventType': 'DifferentAwsApiCall',
-                    'responseElements': {
-                        'instancesSet': {
-                            'items': [
-                                {
-                                    'imageId': mock_ec2_ami_id,
-                                    'instanceId': mock_instance_id2,
-                                    'instanceType': mock_instance_type,
-                                    'subnetId': mock_subnet
-                                }
-                            ]
-                        },
-                    },
-                    'userIdentity': {
-                        'accountId': self.mock_account_id
-                    }
-                }
-            ]
-        }
-
-        mock_receive.return_value = [mock_message]
-        mock_s3.return_value = json.dumps(mock_cloudtrail_log)
-        mock_del.return_value = 'Success'
+        # Define the mocked "get instance" behavior.
         mock_instances = {
-            mock_instance_id: mock_instance,
-            mock_instance_id2: mock_instance2,
+            mock_instance_1.instance_id: mock_instance_1,
+            mock_instance_2.instance_id: mock_instance_2,
+            mock_instance_w.instance_id: mock_instance_w,
+            mock_instance_4.instance_id: mock_instance_4,
         }
 
         def get_ec2_instance_side_effect(session, instance_id):
             return mock_instances[instance_id]
-
         mock_ec2.side_effect = get_ec2_instance_side_effect
-        image_data = util_helper.generate_dummy_describe_image(
-            image_id=mock_ec2_ami_id,
+
+        # Define the mocked "describe images" behavior.
+        described_image_2 = util_helper.generate_dummy_describe_image(
+            image_id=mock_instance_2.image_id,
         )
-        mock_describe.return_value = [image_data]
+        described_image_w = util_helper.generate_dummy_describe_image(
+            image_id=mock_instance_w.image_id,
+        )
+        described_image_4 = util_helper.generate_dummy_describe_image(
+            image_id=mock_instance_4.image_id,
+        )
+        mock_images_data = {
+            mock_instance_2.image_id: described_image_2,
+            mock_instance_w.image_id: described_image_w,
+            mock_instance_4.image_id: described_image_4,
+        }
 
-        tasks.analyze_log()
+        def describe_images_side_effect(session, image_ids, source_region):
+            return [
+                mock_images_data[image_id]
+                for image_id in image_ids
+            ]
+        mock_describe.side_effect = describe_images_side_effect
 
-        instance = AwsInstance.objects.get(ec2_instance_id=mock_instance_id)
-        instance_events = list(AwsInstanceEvent.objects.filter(
-            instance=instance))
-        instance2 = AwsInstance.objects.get(ec2_instance_id=mock_instance_id2)
-        instance2_events = list(AwsInstanceEvent.objects.filter(
-            instance=instance2))
+        successes, failures = tasks.analyze_log()
 
-        self.assertEqual(instance.account, self.mock_account)
-        self.assertEqual(instance.ec2_instance_id, mock_instance_id)
-        self.assertEqual(instance.region, mock_region)
-
-        self.assertEqual(len(instance_events), 2)
-        self.assertEqual(len(instance2_events), 1)
-        for event in instance_events:
-            self.assertEqual(event.instance, instance)
-            self.assertEqual(event.event_type, InstanceEvent.TYPE.power_on)
-            self.assertEqual(event.occurred_at, mock_occurred_at)
-            self.assertEqual(event.subnet, mock_subnet)
-            self.assertEqual(event.machineimage.ec2_ami_id, mock_ec2_ami_id)
-            self.assertEqual(event.instance_type, mock_instance_type)
+        self.assertEqual(len(successes), 1)
+        self.assertEqual(len(failures), 0)
 
         mock_del.assert_called()
+        mock_inspection.assert_called()
+        inspection_calls = mock_inspection.call_args_list
+        # Note: We do not start inspection for the image we already knew about
+        # or the image for the windows instance. We only start inspection for
+        # new not-windows images.
+        self.assertEqual(len(inspection_calls), 2)
+        instance_2_call = call(self.mock_arn, mock_instance_2.image_id, region)
+        instance_4_call = call(self.mock_arn, mock_instance_4.image_id, region)
+        self.assertIn(instance_2_call, inspection_calls)
+        self.assertIn(instance_4_call, inspection_calls)
+
+        # Check the objects we created around the first instance.
+        self.assertExpectedInstance(mock_instance_1, region)
+        self.assertExpectedInstanceEvents(
+            mock_instance_1, 2, InstanceEvent.TYPE.power_on, occurred_at)
+        # Unlike the other cases, we should not have created a new image here.
+        image_1_after = AwsMachineImage.objects.get(
+            ec2_ami_id=mock_instance_1.image_id)
+        self.assertEqual(image_1, image_1_after)
+
+        # Check the objects we created around the second instance.
+        self.assertExpectedInstance(mock_instance_2, region)
+        self.assertExpectedInstanceEvents(
+            mock_instance_2, 2, InstanceEvent.TYPE.power_on, occurred_at)
+        self.assertExpectedImage(mock_instance_2, described_image_2)
+
+        # Check the objects we created around the windows instance.
+        self.assertExpectedInstance(mock_instance_w, region)
+        self.assertExpectedInstanceEvents(
+            mock_instance_w, 2, InstanceEvent.TYPE.power_on, occurred_at)
+        self.assertExpectedImage(mock_instance_w, described_image_w,
+                                 is_windows=True)
+
+        # Check the objects we created around the fourth instance.
+        self.assertExpectedInstance(mock_instance_4, region)
+        self.assertExpectedInstanceEvents(
+            mock_instance_4, 1, InstanceEvent.TYPE.power_on, occurred_at)
+        self.assertExpectedImage(mock_instance_4, described_image_4)
 
     @patch('analyzer.tasks.start_image_inspection')
     @patch('analyzer.tasks.aws.get_ec2_instance')
