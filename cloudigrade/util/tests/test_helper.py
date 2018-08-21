@@ -199,3 +199,31 @@ class UtilHelperTest(TestCase):
         image_id = helper.generate_dummy_image_id()
         image_dict = helper.generate_mock_image_dict(image_id)
         self.assertEqual(image_dict['ImageId'], image_id)
+
+    def assertIncompleteInstanceRaisesAttributeErrors(self, instance):
+        """Check that accessing certain attributes will raise an exception."""
+        with self.assertRaises(AttributeError):
+            foo = instance.image_id
+        with self.assertRaises(AttributeError):
+            foo = instance.subnet_id
+        with self.assertRaises(AttributeError):
+            foo = instance.instance_type
+        with self.assertRaises(AttributeError):
+            foo = instance.platform
+
+        foo = instance.instance_id
+        self.assertIsNotNone(foo)
+
+        foo = getattr(instance, 'subnet_id', None)
+        self.assertIsNone(foo)
+
+    def test_generate_mock_ec2_instance_incomplete(self):
+        """Test generate_mock_ec2_instance_incomplete with default no args."""
+        instance = helper.generate_mock_ec2_instance_incomplete()
+        self.assertIncompleteInstanceRaisesAttributeErrors(instance)
+
+    def test_generate_mock_ec2_instance_incomplete_with_args(self):
+        """Test generate_mock_ec2_instance_incomplete with all args."""
+        instance_id = helper.generate_dummy_instance_id()
+        instance = helper.generate_mock_ec2_instance_incomplete(instance_id)
+        self.assertIncompleteInstanceRaisesAttributeErrors(instance)

@@ -426,4 +426,4 @@ def is_instance_windows(instance_data):
     """
     return instance_data.get('Platform', '').lower() == 'windows' if \
         isinstance(instance_data, dict) \
-        else instance_data.platform == 'windows'
+        else getattr(instance_data, 'platform', None) == 'windows'

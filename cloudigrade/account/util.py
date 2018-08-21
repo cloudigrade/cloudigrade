@@ -84,9 +84,16 @@ def save_instance_events(account, instance_data, region, events=None):
         logger.info(_('saving {count} new event(s) for {instance}')
                     .format(count=len(events), instance=instance))
         for event in events:
-            machineimage = AwsMachineImage.objects.get(
-                ec2_ami_id=event['ec2_ami_id']
-            )
+            # When processing events, it's possible that we get information
+            # about an instance but we don't know what image was under it
+            # because the instance may have been terminated and cleaned up
+            # before we could look at it. In that case, we (correctly) have to
+            # save the event with no known image.
+            machineimage = None
+            if event['ec2_ami_id']:
+                machineimage = AwsMachineImage.objects.get(
+                    ec2_ami_id=event['ec2_ami_id']
+                )
             event = AwsInstanceEvent(
                 instance=instance,
                 machineimage=machineimage,

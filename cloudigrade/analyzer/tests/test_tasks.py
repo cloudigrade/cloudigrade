@@ -6,6 +6,7 @@ import uuid
 from unittest.mock import patch
 
 from dateutil import tz
+from django.conf import settings
 from django.test import TestCase
 
 from account.models import (AwsInstance,
@@ -14,6 +15,7 @@ from account.models import (AwsInstance,
                             InstanceEvent)
 from account.tests import helper as account_helper
 from analyzer import tasks
+from analyzer.tests import helper as analyzer_helper
 from util.tests import helper as util_helper
 
 
@@ -212,6 +214,71 @@ class AnalyzeLogTest(TestCase):
             self.assertEqual(event.instance_type, mock_instance_type)
 
         mock_del.assert_called()
+
+    @patch('analyzer.tasks.start_image_inspection')
+    @patch('analyzer.tasks.aws.get_ec2_instance')
+    @patch('analyzer.tasks.aws.get_session')
+    @patch('analyzer.tasks.aws.delete_messages_from_queue')
+    @patch('analyzer.tasks.aws.get_object_content_from_s3')
+    @patch('analyzer.tasks.aws.yield_messages_from_queue')
+    def test_analyze_log_when_instance_was_terminated(
+            self, mock_receive, mock_s3, mock_del, mock_session,
+            mock_ec2, mock_inspection):
+        """
+        Test appropriate handling when the AWS instance is not accessible.
+
+        This can happen when we receive an event but the instance has been
+        terminated and erased from AWS before we get to request its data.
+
+        Starting with a database that has only a user and its cloud account,
+        this test should result in a new instance and one event for it, but
+        no images should be created.
+        """
+        sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
+        mock_instance = util_helper.generate_mock_ec2_instance_incomplete()
+        trail_record = analyzer_helper.generate_cloudtrail_log_record(
+            aws_account_id=self.mock_account_id,
+            instance_ids=[mock_instance.instance_id],
+            event_name='TerminateInstances',
+        )
+        s3_content = {'Records': [trail_record]}
+        mock_receive.return_value = [sqs_message]
+        mock_s3.return_value = json.dumps(s3_content)
+        mock_instances = {
+            mock_instance.instance_id: mock_instance,
+        }
+
+        def get_ec2_instance_side_effect(session, instance_id):
+            return mock_instances[instance_id]
+
+        mock_ec2.side_effect = get_ec2_instance_side_effect
+
+        successes, failures = tasks.analyze_log()
+
+        self.assertEqual(len(successes), 1)
+        self.assertEqual(len(failures), 0)
+        mock_inspection.assert_not_called()
+        mock_del.assert_called_with(settings.CLOUDTRAIL_EVENT_URL,
+                                    [sqs_message])
+
+        instances = list(AwsInstance.objects.all())
+        self.assertEqual(len(instances), 1)
+        instance = instances[0]
+        self.assertEqual(instance.ec2_instance_id, mock_instance.instance_id)
+        self.assertEqual(instance.account_id, self.mock_account.id)
+
+        # Note that the event is stored in a partially known state.
+        events = list(AwsInstanceEvent.objects.all())
+        self.assertEqual(len(events), 1)
+        event = events[0]
+        self.assertEqual(event.instance, instance)
+        self.assertIsNone(event.subnet)
+        self.assertIsNone(event.instance_type)
+        self.assertIsNone(event.machineimage)
+
+        # Note that no image is stored at all.
+        images = list(AwsMachineImage.objects.all())
+        self.assertEqual(len(images), 0)
 
     @patch('analyzer.tasks.start_image_inspection')
     @patch('analyzer.tasks.aws.get_ec2_instance')

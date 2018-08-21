@@ -54,6 +54,7 @@ CloudTrailImageTagEvent = collections.namedtuple(
 def analyze_log():
     """Read SQS Queue for log location, and parse log for events."""
     queue_url = settings.CLOUDTRAIL_EVENT_URL
+    successes, failures = [], []
     for message in aws.yield_messages_from_queue(queue_url):
         success = False
         try:
@@ -67,6 +68,7 @@ def analyze_log():
                 'Successfully processed message id {0}; deleting from queue.'
             ).format(message.message_id))
             aws.delete_messages_from_queue(queue_url, [message])
+            successes.append(message)
         else:
             logger.error(_(
                 'Failed to process message id {0}; leaving on queue.'
@@ -74,6 +76,8 @@ def analyze_log():
             logger.debug(_(
                 'Failed message body is: {0}'
             ).format(message.body))
+            failures.append(message)
+    return successes, failures
 
 
 def _process_cloudtrail_message(message):
@@ -140,7 +144,7 @@ def _process_cloudtrail_message(message):
         return False
 
 
-def _get_aws_data_for_trail_events(instance_events, ami_tag_events):
+def _get_aws_data_for_trail_events(instance_events, ami_tag_events):  # noqa: C901, E501
     """
     Get additional AWS data so we can process the given event data.
 
@@ -169,11 +173,23 @@ def _get_aws_data_for_trail_events(instance_events, ami_tag_events):
 
         # Fetch each instance's latest information from AWS.
         for instance_id in set([e.instance_id for e in _instance_events]):
-            # TODO What happens if the instance has been terminated by now?
             instance = aws.get_ec2_instance(session, instance_id)
             seen_aws_instances[instance_id] = instance
-            if instance.image_id not in known_image_ids:
-                seen_image_ids.add(instance.image_id)
+            try:
+                if instance.image_id not in known_image_ids:
+                    seen_image_ids.add(instance.image_id)
+            except AttributeError as e:
+                relevant_events = [
+                    event for event in _instance_events
+                    if e.instance_id == instance_id
+                ]
+                logger.info(_(
+                    'Instance {0} has no image_id from AWS. It may have been '
+                    'terminated before we processed it. Found in events: {1}.'
+                ).format(instance_id, relevant_events))
+
+        if not seen_image_ids:
+            continue
 
         # Do we already have the image in our database?
         known_image_ids = known_image_ids.union([
@@ -358,7 +374,14 @@ def _sanity_check_cloudtrail_findings(instance_events, ami_tag_events,
             raise CloudTrailLogAnalysisMissingData(_(
                 'Missing instance data for {0}'
             ).format(instance_event))
-        image_id = aws_instances[instance_event.instance_id].image_id
+        try:
+            image_id = aws_instances[instance_event.instance_id].image_id
+        except AttributeError:
+            logger.info(_(
+                'Instance event {0} has no image_id from AWS. It may have '
+                'been terminated before we processed it.'
+            ).format(instance_event))
+            continue
         if image_id not in described_images and \
                 not AwsMachineImage.objects.filter(
                     ec2_ami_id=image_id).exists():
@@ -481,9 +504,9 @@ def _save_results(instance_events, ami_tag_events, aws_instances,
         # Build a list of event data
         events = [
             {
-                'subnet': aws_instance.subnet_id,
-                'ec2_ami_id': aws_instance.image_id,
-                'instance_type': aws_instance.instance_type,
+                'subnet': getattr(aws_instance, 'subnet_id', None),
+                'ec2_ami_id': getattr(aws_instance, 'image_id', None),
+                'instance_type': getattr(aws_instance, 'instance_type', None),
                 'event_type': instance_event.event_type,
                 'occurred_at': instance_event.occurred_at
             }

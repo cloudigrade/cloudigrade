@@ -1,4 +1,5 @@
 """Helper functions for generating test data."""
+import collections
 import datetime
 import random
 import string
@@ -243,6 +244,42 @@ def generate_mock_ec2_instance(instance_id=None, image_id=None, subnet_id=None,
     mock_instance.subnet_id = described_instance['SubnetId']
     mock_instance.platform = described_instance['Platform']
     return mock_instance
+
+
+def generate_mock_ec2_instance_incomplete(instance_id=None):
+    """
+    Generate an EC2 Instance-like object for when it is no longer available.
+
+    This can happen in practice when performing a "get instance" API call for
+    an instance ID that has been terminated and cleaned up, making the instance
+    object data mostly missing.
+
+    Args:
+        instance_id (str): optional EC2 instance id
+
+    Returns:
+        DummyInstance: An EC2 Instance-like object that will raise an
+            AttributeError on all attributes except instance_id.
+
+    """
+    if instance_id is None:
+        instance_id = generate_dummy_instance_id()
+
+    # HISTORIC NOTE FOR CONTEXT:
+    # It would be nice to use the Mock object instead of defining a new class
+    # as we are here, and the following example **should** work, as it works
+    # for other exception types in the `side_effect` definition, but this
+    # pattern **does not work** when using `AttributeError` specifically.
+    # instance = MagicMock()
+    # type(instance).instance_type = PropertyMock(side_effect=AttributeError)
+    # type(instance).image_id = PropertyMock(side_effect=AttributeError)
+    # type(instance).state = PropertyMock(side_effect=AttributeError)
+    # type(instance).subnet_id = PropertyMock(side_effect=AttributeError)
+    # type(instance).platform = PropertyMock(side_effect=AttributeError)
+
+    DummyInstance = collections.namedtuple('DummyInstance', ['instance_id'])
+    instance = DummyInstance(instance_id)
+    return instance
 
 
 def generate_mock_image(image_id=None, encrypted=False, state=None):
