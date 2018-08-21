@@ -45,7 +45,7 @@ NGINX S2i:
   services:
     - docker:dind
   variables:
-    CONTEXT_DIR: deployment
+    CONTEXT_DIR: deployment/prod/
     NGINX_S2I_IMAGE: centos/nginx-112-centos7:latest
     S2I_VERSION: v1.1.10
     S2I_RELEASE: source-to-image-v1.1.10-27f0729d-linux-amd64
@@ -56,7 +56,7 @@ NGINX S2i:
     - tar --strip-components=1 -xzvf /opt/s2i.tar.gz -C /opt/
     - mv /opt/s2i /usr/bin/
   script:
-    - s2i build --context-dir=${CONTEXT_DIR} ${CI_PROJECT_URL} ${NGINX_S2I_IMAGE} ${IMAGE_NAME}:latest
+    - s2i build --context-dir=${CONTEXT_DIR} --ref ${CI_COMMIT_REF_NAME} ${CI_PROJECT_URL} ${NGINX_S2I_IMAGE} ${IMAGE_NAME}:latest
 
 ### BUILD STAGE ###
 Push Cloudigrade Image:
@@ -100,7 +100,7 @@ Push NGINX Image:
   except:
     - tags@cloudigrade/cloudigrade
   variables:
-    CONTEXT_DIR: deployment
+    CONTEXT_DIR: deployment/prod/
     NGINX_S2I_IMAGE: centos/nginx-112-centos7:latest
     S2I_VERSION: v1.1.10
     S2I_RELEASE: source-to-image-v1.1.10-27f0729d-linux-amd64
@@ -112,7 +112,7 @@ Push NGINX Image:
     - mv /opt/s2i /usr/bin/
     - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
   script:
-    - s2i build --context-dir=$CONTEXT_DIR ${CI_PROJECT_URL} ${NGINX_S2I_IMAGE} ${NGINX_NAME_COMMIT}
+    - s2i build --context-dir=${CONTEXT_DIR} ${CI_PROJECT_URL} ${NGINX_S2I_IMAGE} ${NGINX_NAME_COMMIT}
     - docker tag ${NGINX_NAME_COMMIT} ${NGINX_NAME}:latest
     - docker push ${NGINX_NAME_COMMIT}
     - docker push ${NGINX_NAME}:latest
@@ -125,7 +125,7 @@ Push NGINX Tagged Image:
   only:
     - tags@cloudigrade/cloudigrade
   variables:
-    CONTEXT_DIR: deployment
+    CONTEXT_DIR: deployment/prod/
     NGINX_S2I_IMAGE: centos/nginx-112-centos7:latest
     S2I_VERSION: v1.1.10
     S2I_RELEASE: source-to-image-v1.1.10-27f0729d-linux-amd64
