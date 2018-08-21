@@ -210,7 +210,7 @@ class InstanceEvent(BasePolymorphicModel):
         MachineImage,
         on_delete=models.CASCADE,
         db_index=True,
-        null=False,
+        null=True,
     )
     event_type = models.CharField(
         max_length=32,
@@ -314,4 +314,4 @@ class AwsInstanceEvent(InstanceEvent):
     """Event model for an event triggered by an AwsInstance."""
 
     subnet = models.CharField(max_length=256, null=True, blank=True)
-    instance_type = models.CharField(max_length=64, null=False, blank=False)
+    instance_type = models.CharField(max_length=64, null=True, blank=True)
