@@ -229,6 +229,52 @@ class AnalyzeLogTest(TestCase):
             mock_instance_4, 1, InstanceEvent.TYPE.power_on, occurred_at)
         self.assertExpectedImage(mock_instance_4, described_image_4)
 
+    @patch('analyzer.tasks.aws.delete_messages_from_queue')
+    @patch('analyzer.tasks.aws.get_object_content_from_s3')
+    @patch('analyzer.tasks.aws.yield_messages_from_queue')
+    def test_analyze_log_with_multiple_sqs_messages(
+            self, mock_receive, mock_s3, mock_del):
+        """
+        Test that analyze_log correctly handles multiple SQS messages.
+
+        This test simplifies the content of the individual messages and intends
+        to focus specifically on the aspect that handles more than one.
+
+        Specifically, we are testing the handling of three messages. The first
+        and third messages are valid and should complete successfully. The
+        second (middle) message is malformed and should be left on the queue
+        for retry later (in practice).
+        """
+        sqs_messages = [
+            analyzer_helper.generate_mock_cloudtrail_sqs_message(),
+            analyzer_helper.generate_mock_cloudtrail_sqs_message(),
+            analyzer_helper.generate_mock_cloudtrail_sqs_message()
+        ]
+        mock_receive.return_value = sqs_messages
+        simple_content = {'Records': []}
+        mock_s3.side_effect = [
+            json.dumps(simple_content),
+            'hello world',  # invalid CloudTrail S3 log file content
+            json.dumps(simple_content),
+        ]
+
+        successes, failures = tasks.analyze_log()
+
+        self.assertEqual(len(successes), 2)
+        self.assertIn(sqs_messages[0], successes)
+        self.assertIn(sqs_messages[2], successes)
+        self.assertEqual(len(failures), 1)
+        self.assertIn(sqs_messages[1], failures)
+
+        mock_del.assert_called()
+        delete_message_calls = mock_del.call_args_list
+        # Only the first and third message should be deleted.
+        self.assertEqual(len(delete_message_calls), 2)
+        delete_1_call = call(settings.CLOUDTRAIL_EVENT_URL, [sqs_messages[0]])
+        delete_3_call = call(settings.CLOUDTRAIL_EVENT_URL, [sqs_messages[2]])
+        self.assertIn(delete_1_call, delete_message_calls)
+        self.assertIn(delete_3_call, delete_message_calls)
+
     @patch('analyzer.tasks.start_image_inspection')
     @patch('analyzer.tasks.aws.get_ec2_instance')
     @patch('analyzer.tasks.aws.get_session')
