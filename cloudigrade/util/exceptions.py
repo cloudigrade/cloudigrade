@@ -87,6 +87,10 @@ class MaximumNumberOfTrailsExceededException(APIException):
     default_detail = _('Exceeded maximum number of cloud trails')
 
 
+class CloudTrailLogAnalysisMissingData(Exception):
+    """Raise when log analysis is missing data upon attempted save."""
+
+
 def api_exception_handler(exc, context):
     """
     Log exception and return an appropriately formatted response.

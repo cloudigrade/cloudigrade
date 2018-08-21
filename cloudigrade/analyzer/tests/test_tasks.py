@@ -35,12 +35,19 @@ class AnalyzeLogTest(TestCase):
     @patch('analyzer.tasks.aws.get_session')
     @patch('analyzer.tasks.aws.delete_messages_from_queue')
     @patch('analyzer.tasks.aws.get_object_content_from_s3')
-    @patch('analyzer.tasks.aws.receive_messages_from_queue')
-    @patch('analyzer.tasks.aws.describe_image')
+    @patch('analyzer.tasks.aws.yield_messages_from_queue')
+    @patch('analyzer.tasks.aws.describe_images')
     def test_command_output_success_ec2_attributes_included(
             self, mock_describe, mock_receive, mock_s3, mock_del, mock_session,
             mock_ec2, mock_inspection):
-        """Test processing a CloudTrail log with all data included."""
+        """
+        Test processing a CloudTrail log with all data included.
+
+        This test simulates receiving a CloudTrail log that has three records.
+        The first two records include power-on events for the same instance.
+        The third record includes a power-on event for a different instance.
+        Both instances are windows. All events reference the same AMI ID.
+        """
         mock_queue_url = 'https://sqs.queue.url'
         mock_receipt_handle = str(uuid.uuid4())
         mock_instance_id = util_helper.generate_dummy_instance_id()
@@ -59,6 +66,10 @@ class AnalyzeLogTest(TestCase):
 
         mock_instance = util_helper.generate_mock_ec2_instance(
             mock_instance_id, mock_ec2_ami_id, mock_subnet, None,
+            mock_instance_type, 'windows'
+        )
+        mock_instance2 = util_helper.generate_mock_ec2_instance(
+            mock_instance_id2, mock_ec2_ami_id, mock_subnet, None,
             mock_instance_type, 'windows'
         )
         mock_inspection.delay.return_value = True
@@ -163,23 +174,35 @@ class AnalyzeLogTest(TestCase):
         mock_receive.return_value = [mock_message]
         mock_s3.return_value = json.dumps(mock_cloudtrail_log)
         mock_del.return_value = 'Success'
-        mock_ec2.return_value = mock_instance
+        mock_instances = {
+            mock_instance_id: mock_instance,
+            mock_instance_id2: mock_instance2,
+        }
+
+        def get_ec2_instance_side_effect(session, instance_id):
+            return mock_instances[instance_id]
+
+        mock_ec2.side_effect = get_ec2_instance_side_effect
         image_data = util_helper.generate_dummy_describe_image(
             image_id=mock_ec2_ami_id,
         )
-        mock_describe.return_value = image_data
+        mock_describe.return_value = [image_data]
 
         tasks.analyze_log()
 
         instance = AwsInstance.objects.get(ec2_instance_id=mock_instance_id)
         instance_events = list(AwsInstanceEvent.objects.filter(
-            instance=instance).all())
+            instance=instance))
+        instance2 = AwsInstance.objects.get(ec2_instance_id=mock_instance_id2)
+        instance2_events = list(AwsInstanceEvent.objects.filter(
+            instance=instance2))
 
         self.assertEqual(instance.account, self.mock_account)
         self.assertEqual(instance.ec2_instance_id, mock_instance_id)
         self.assertEqual(instance.region, mock_region)
 
-        self.assertEqual(len(instance_events), 3)
+        self.assertEqual(len(instance_events), 2)
+        self.assertEqual(len(instance2_events), 1)
         for event in instance_events:
             self.assertEqual(event.instance, instance)
             self.assertEqual(event.event_type, InstanceEvent.TYPE.power_on)
@@ -188,12 +211,14 @@ class AnalyzeLogTest(TestCase):
             self.assertEqual(event.machineimage.ec2_ami_id, mock_ec2_ami_id)
             self.assertEqual(event.instance_type, mock_instance_type)
 
+        mock_del.assert_called()
+
     @patch('analyzer.tasks.start_image_inspection')
     @patch('analyzer.tasks.aws.get_ec2_instance')
     @patch('analyzer.tasks.aws.get_session')
     @patch('analyzer.tasks.aws.delete_messages_from_queue')
     @patch('analyzer.tasks.aws.get_object_content_from_s3')
-    @patch('analyzer.tasks.aws.receive_messages_from_queue')
+    @patch('analyzer.tasks.aws.yield_messages_from_queue')
     @patch('analyzer.tasks.aws.describe_image')
     def test_command_output_success_lookup_ec2_attributes(
             self, mock_describe, mock_receive, mock_s3, mock_del, mock_session,
@@ -349,10 +374,19 @@ class AnalyzeLogTest(TestCase):
 
     @patch('analyzer.tasks.aws.delete_messages_from_queue')
     @patch('analyzer.tasks.aws.get_object_content_from_s3')
-    @patch('analyzer.tasks.aws.receive_messages_from_queue')
+    @patch('analyzer.tasks.aws.yield_messages_from_queue')
     def test_command_output_no_log_content(
             self, mock_receive, mock_s3, mock_del):
-        """Test that a non-log is not processed."""
+        """
+        Test that a malformed (not JSON) log is not processed.
+
+        This is a "supported" failure case. If somehow we cannot process the
+        log file, the expected behavior is to log an exception message and not
+        delete the SQS message that led us to that message. This means that the
+        message would be picked up again and again with each task run. This is
+        okay and expected, and we will (eventually) configure a DLQ to take any
+        messages that we repeatedly fail to process.
+        """
         mock_instance_id = util_helper.generate_dummy_instance_id()
         mock_queue_url = 'https://sqs.queue.url'
         mock_receipt_handle = str(uuid.uuid4())
@@ -377,11 +411,10 @@ class AnalyzeLogTest(TestCase):
             mock_receipt_handle
         )
 
-        mock_cloudtrail_log = ''
+        mock_cloudtrail_log = 'hello world'
 
         mock_receive.return_value = [mock_message]
         mock_s3.return_value = mock_cloudtrail_log
-        mock_del.return_value = 'Success'
 
         tasks.analyze_log()
 
@@ -393,9 +426,11 @@ class AnalyzeLogTest(TestCase):
         self.assertListEqual(instances, [])
         self.assertListEqual(instance_events, [])
 
+        mock_del.assert_not_called()
+
     @patch('analyzer.tasks.aws.delete_messages_from_queue')
     @patch('analyzer.tasks.aws.get_object_content_from_s3')
-    @patch('analyzer.tasks.aws.receive_messages_from_queue')
+    @patch('analyzer.tasks.aws.yield_messages_from_queue')
     def test_command_output_non_on_off_events(
             self, mock_receive, mock_s3, mock_del):
         """Test that non on/off events are not processed."""
@@ -414,6 +449,9 @@ class AnalyzeLogTest(TestCase):
                             'key': 'path/to/log',
                         },
                     },
+                    'userIdentity': {
+                        'accountId': self.mock_account_id
+                    }
                 }
             ]
         }
@@ -450,10 +488,11 @@ class AnalyzeLogTest(TestCase):
 
         self.assertListEqual(instances, [])
         self.assertListEqual(instance_events, [])
+        mock_del.assert_called()
 
     @patch('analyzer.tasks.aws.delete_messages_from_queue')
     @patch('analyzer.tasks.aws.get_object_content_from_s3')
-    @patch('analyzer.tasks.aws.receive_messages_from_queue')
+    @patch('analyzer.tasks.aws.yield_messages_from_queue')
     def test_ami_tags_added_success(
             self, mock_receive, mock_s3, mock_del):
         """Test processing a CloudTrail log for ami tags added."""
@@ -516,7 +555,10 @@ class AnalyzeLogTest(TestCase):
                                 }
                             ]
                         }
-                    }
+                    },
+                    'userIdentity': {
+                        'accountId': self.mock_account_id
+                    },
                 }
             ]
         }
@@ -528,10 +570,11 @@ class AnalyzeLogTest(TestCase):
 
         updated_ami = AwsMachineImage.objects.get(ec2_ami_id=ami_id)
         self.assertTrue(updated_ami.openshift_detected)
+        mock_del.assert_called()
 
     @patch('analyzer.tasks.aws.delete_messages_from_queue')
     @patch('analyzer.tasks.aws.get_object_content_from_s3')
-    @patch('analyzer.tasks.aws.receive_messages_from_queue')
+    @patch('analyzer.tasks.aws.yield_messages_from_queue')
     def test_ami_tags_removed_success(
             self, mock_receive, mock_s3, mock_del):
         """Test processing a CloudTrail log for ami tags removed."""
@@ -594,7 +637,10 @@ class AnalyzeLogTest(TestCase):
                                 }
                             ]
                         }
-                    }
+                    },
+                    'userIdentity': {
+                        'accountId': self.mock_account_id
+                    },
                 }
             ]
         }
@@ -606,14 +652,29 @@ class AnalyzeLogTest(TestCase):
 
         updated_ami = AwsMachineImage.objects.get(ec2_ami_id=ami_id)
         self.assertFalse(updated_ami.openshift_detected)
+        mock_del.assert_called()
 
+    @patch('analyzer.tasks.start_image_inspection')
+    @patch('analyzer.tasks.aws.get_session')
     @patch('analyzer.tasks.aws.delete_messages_from_queue')
     @patch('analyzer.tasks.aws.get_object_content_from_s3')
-    @patch('analyzer.tasks.aws.receive_messages_from_queue')
-    def test_ami_tags_missing_failure(
-            self, mock_receive, mock_s3, mock_del):
-        """Test processing a log for ami tags reference bad ami_id."""
+    @patch('analyzer.tasks.aws.yield_messages_from_queue')
+    @patch('analyzer.tasks.aws.describe_images')
+    def test_ami_tags_unknown_ami_is_added(
+            self, mock_describe, mock_receive, mock_s3, mock_del,
+            mock_session, mock_inspection):
+        """
+        Test processing a log for ami tags reference a new ami_id.
+
+        In this case, we should attempt to describe the image and save it to
+        our image model.
+        """
         mock_ec2_ami_id = util_helper.generate_dummy_image_id()
+
+        image_data = util_helper.generate_dummy_describe_image(
+            image_id=mock_ec2_ami_id,
+        )
+        mock_describe.return_value = [image_data]
 
         mock_sqs_message_body = {
             'Records': [
@@ -671,7 +732,10 @@ class AnalyzeLogTest(TestCase):
                                 }
                             ]
                         }
-                    }
+                    },
+                    'userIdentity': {
+                        'accountId': self.mock_account_id
+                    },
                 }
             ]
         }
@@ -684,9 +748,14 @@ class AnalyzeLogTest(TestCase):
         except Exception:
             self.fail('Should not raise exceptions when ami not found')
 
+        mock_inspection.assert_called_once_with(self.mock_arn,
+                                                mock_ec2_ami_id,
+                                                mock_region)
+        mock_del.assert_called()
+
     @patch('analyzer.tasks.aws.delete_messages_from_queue')
     @patch('analyzer.tasks.aws.get_object_content_from_s3')
-    @patch('analyzer.tasks.aws.receive_messages_from_queue')
+    @patch('analyzer.tasks.aws.yield_messages_from_queue')
     def test_other_tags_ignored(
             self, mock_receive, mock_s3, mock_del):
         """Test processing a CloudTrail log for other tags ignored."""
@@ -748,7 +817,10 @@ class AnalyzeLogTest(TestCase):
                                 }
                             ]
                         }
-                    }
+                    },
+                    'userIdentity': {
+                        'accountId': self.mock_account_id
+                    },
                 }
             ]
         }
@@ -760,3 +832,4 @@ class AnalyzeLogTest(TestCase):
             tasks.analyze_log()
         except Exception:
             self.fail('Should not raise exceptions for ignored tag events.')
+        mock_del.assert_called()
