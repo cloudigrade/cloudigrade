@@ -286,6 +286,46 @@ class AnalyzeLogTest(TestCase):
     @patch('analyzer.tasks.aws.delete_messages_from_queue')
     @patch('analyzer.tasks.aws.get_object_content_from_s3')
     @patch('analyzer.tasks.aws.yield_messages_from_queue')
+    def test_analyze_log_when_account_is_not_known(
+            self, mock_receive, mock_s3, mock_del, mock_session,
+            mock_ec2, mock_inspection):
+        """
+        Test appropriate handling when the account ID in the log is unknown.
+
+        It is unclear exactly how this can happen in practice, but if this
+        does happen, we should stop processing the file, report an error, and
+        leave the corresponding message on the queue to try again later.
+        """
+        sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
+        mock_instance = util_helper.generate_mock_ec2_instance_incomplete()
+        trail_record = analyzer_helper.generate_cloudtrail_log_record(
+            aws_account_id=util_helper.generate_dummy_aws_account_id(),
+            instance_ids=[mock_instance.instance_id],
+        )
+        s3_content = {'Records': [trail_record]}
+        mock_receive.return_value = [sqs_message]
+        mock_s3.return_value = json.dumps(s3_content)
+
+        successes, failures = tasks.analyze_log()
+
+        self.assertEqual(len(successes), 0)
+        self.assertEqual(len(failures), 1)
+        mock_inspection.assert_not_called()
+        mock_del.assert_not_called()
+
+        instances = list(AwsInstance.objects.all())
+        self.assertEqual(len(instances), 0)
+        events = list(AwsInstanceEvent.objects.all())
+        self.assertEqual(len(events), 0)
+        images = list(AwsMachineImage.objects.all())
+        self.assertEqual(len(images), 0)
+
+    @patch('analyzer.tasks.start_image_inspection')
+    @patch('analyzer.tasks.aws.get_ec2_instance')
+    @patch('analyzer.tasks.aws.get_session')
+    @patch('analyzer.tasks.aws.delete_messages_from_queue')
+    @patch('analyzer.tasks.aws.get_object_content_from_s3')
+    @patch('analyzer.tasks.aws.yield_messages_from_queue')
     @patch('analyzer.tasks.aws.describe_image')
     def test_command_output_success_lookup_ec2_attributes(
             self, mock_describe, mock_receive, mock_s3, mock_del, mock_session,

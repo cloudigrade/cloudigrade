@@ -89,7 +89,7 @@ def generate_cloudtrail_log_record(aws_account_id, instance_ids, region=None,
             },
         },
         'userIdentity': {
-            'accountId': aws_account_id
+            'accountId': int(aws_account_id)
         }
     }
     return record
