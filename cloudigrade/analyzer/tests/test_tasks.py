@@ -543,3 +543,28 @@ class AnalyzeLogTest(TestCase):
         all_images = list(AwsMachineImage.objects.all())
         self.assertEqual(len(all_images), 0)
         mock_del.assert_called()
+
+    @patch('analyzer.tasks.aws.delete_messages_from_queue')
+    @patch('analyzer.tasks.aws.get_object_content_from_s3')
+    @patch('analyzer.tasks.aws.yield_messages_from_queue')
+    def test_non_ami_resources_with_tags_ignored(
+            self, mock_receive, mock_s3, mock_del):
+        """Test tag processing where non-AMI resources should be ignored."""
+        some_ignored_id = _faker.uuid4()
+
+        sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
+        trail_record = analyzer_helper.generate_cloudtrail_tag_set_record(
+            aws_account_id=self.mock_account_id, image_ids=[some_ignored_id],
+            tag_names=[_faker.slug()], event_name=tasks.CREATE_TAG)
+        s3_content = {'Records': [trail_record]}
+        mock_receive.return_value = [sqs_message]
+        mock_s3.return_value = json.dumps(s3_content)
+
+        successes, failures = tasks.analyze_log()
+
+        self.assertEqual(len(successes), 1)
+        self.assertEqual(len(failures), 0)
+
+        all_images = list(AwsMachineImage.objects.all())
+        self.assertEqual(len(all_images), 0)
+        mock_del.assert_called()
