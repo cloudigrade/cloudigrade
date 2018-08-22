@@ -181,6 +181,7 @@ Deploy to Stage:
     - cd shiftigrade
   script:
     - kontemplate template ocp/stage.yaml -i cloudigrade | oc apply -f -
+    - if ! oc rollout status dc/cloudigrade-api; then oc rollout latest dc/cloudigrade-api && oc rollout status dc/cloudigrade-api; fi;
     - if ! oc rollout status dc/cloudigrade-celery-beat; then oc rollout latest dc/cloudigrade-celery-beat && oc rollout status dc/cloudigrade-celery-beat; fi;
     - if ! oc rollout status dc/cloudigrade-celery-worker; then oc rollout latest dc/cloudigrade-celery-worker && oc rollout status dc/cloudigrade-celery-worker; fi;
   environment:
@@ -204,6 +205,7 @@ Deploy to Production:
     - cd shiftigrade
   script:
     - kontemplate template ocp/prod.yaml -i cloudigrade | oc apply -f -
+    - if ! oc rollout status dc/cloudigrade-api; then oc rollout latest dc/cloudigrade-api && oc rollout status dc/cloudigrade-api; fi;
     - if ! oc rollout status dc/cloudigrade-celery-beat; then oc rollout latest dc/cloudigrade-celery-beat && oc rollout status dc/cloudigrade-celery-beat; fi;
     - if ! oc rollout status dc/cloudigrade-celery-worker; then oc rollout latest dc/cloudigrade-celery-worker && oc rollout status dc/cloudigrade-celery-worker; fi;
   when: manual
