@@ -1,10 +1,9 @@
 """Collection of tests for Analyzer tasks."""
-import datetime
 import json
 import random
 from unittest.mock import call, patch
 
-from dateutil import tz
+import faker
 from django.conf import settings
 from django.test import TestCase
 
@@ -16,6 +15,8 @@ from account.tests import helper as account_helper
 from analyzer import tasks
 from analyzer.tests import helper as analyzer_helper
 from util.tests import helper as util_helper
+
+_faker = faker.Faker()
 
 
 class AnalyzeLogTest(TestCase):
@@ -115,34 +116,22 @@ class AnalyzeLogTest(TestCase):
 
         # Define the three Record entries for the S3 log file.
         occurred_at = util_helper.utc_dt(2018, 1, 1, 0, 0, 0)
-        trail_record_1 = analyzer_helper.generate_cloudtrail_log_record(
-            aws_account_id=self.mock_account_id,
-            instance_ids=[
+        trail_record_1 = analyzer_helper.generate_cloudtrail_instances_record(
+            aws_account_id=self.mock_account_id, instance_ids=[
                 mock_instance_1.instance_id,
                 mock_instance_w.instance_id,
-            ],
-            region=region,
-            event_time=occurred_at,
-        )
-        trail_record_2 = analyzer_helper.generate_cloudtrail_log_record(
-            aws_account_id=self.mock_account_id,
-            instance_ids=[
+            ], event_time=occurred_at, region=region)
+        trail_record_2 = analyzer_helper.generate_cloudtrail_instances_record(
+            aws_account_id=self.mock_account_id, instance_ids=[
                 mock_instance_2.instance_id,
-            ],
-            region=region,
-            event_time=occurred_at,
-        )
-        trail_record_3 = analyzer_helper.generate_cloudtrail_log_record(
-            aws_account_id=self.mock_account_id,
-            instance_ids=[
+            ], event_time=occurred_at, region=region)
+        trail_record_3 = analyzer_helper.generate_cloudtrail_instances_record(
+            aws_account_id=self.mock_account_id, instance_ids=[
                 mock_instance_1.instance_id,
                 mock_instance_2.instance_id,
                 mock_instance_w.instance_id,
                 mock_instance_4.instance_id,
-            ],
-            region=region,
-            event_time=occurred_at,
-        )
+            ], event_time=occurred_at, region=region)
         s3_content = {
             'Records': [trail_record_1, trail_record_2, trail_record_3]
         }
@@ -295,11 +284,10 @@ class AnalyzeLogTest(TestCase):
         """
         sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
         mock_instance = util_helper.generate_mock_ec2_instance_incomplete()
-        trail_record = analyzer_helper.generate_cloudtrail_log_record(
+        trail_record = analyzer_helper.generate_cloudtrail_instances_record(
             aws_account_id=self.mock_account_id,
             instance_ids=[mock_instance.instance_id],
-            event_name='TerminateInstances',
-        )
+            event_name='TerminateInstances')
         s3_content = {'Records': [trail_record]}
         mock_receive.return_value = [sqs_message]
         mock_s3.return_value = json.dumps(s3_content)
@@ -357,10 +345,9 @@ class AnalyzeLogTest(TestCase):
         """
         sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
         mock_instance = util_helper.generate_mock_ec2_instance_incomplete()
-        trail_record = analyzer_helper.generate_cloudtrail_log_record(
+        trail_record = analyzer_helper.generate_cloudtrail_instances_record(
             aws_account_id=util_helper.generate_dummy_aws_account_id(),
-            instance_ids=[mock_instance.instance_id],
-        )
+            instance_ids=[mock_instance.instance_id])
         s3_content = {'Records': [trail_record]}
         mock_receive.return_value = [sqs_message]
         mock_s3.return_value = json.dumps(s3_content)
@@ -438,56 +425,22 @@ class AnalyzeLogTest(TestCase):
             self, mock_receive, mock_s3, mock_del):
         """Test processing a CloudTrail log for ami tags added."""
         ami = account_helper.generate_aws_image()
-        ami_id = ami.ec2_ami_id
+        self.assertFalse(ami.openshift_detected)
 
         sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
-        mock_region = random.choice(util_helper.SOME_AWS_REGIONS)
-
-        now = datetime.datetime.utcnow()
-        mock_occurred_at = datetime.datetime(
-            year=now.year, month=now.month, day=now.day, hour=now.hour,
-            minute=now.minute, second=now.second, tzinfo=tz.tzutc()
-        )
-
-        mock_cloudtrail_log = {
-            'Records': [
-                {
-                    'eventTime': mock_occurred_at.strftime(
-                        '%Y-%m-%dT%H:%M:%SZ'
-                    ),
-                    'eventSource': 'ec2.amazonaws.com',
-                    'awsRegion': mock_region,
-                    'eventName': tasks.CREATE_TAG,
-                    'requestParameters': {
-                        'resourcesSet': {
-                            'items': [
-                                {
-                                    'resourceId': ami_id
-                                }
-                            ]
-                        },
-                        'tagSet': {
-                            'items': [
-                                {
-                                    'key': tasks.aws.OPENSHIFT_TAG,
-                                    'value': tasks.aws.OPENSHIFT_TAG
-                                }
-                            ]
-                        }
-                    },
-                    'userIdentity': {
-                        'accountId': self.mock_account_id
-                    },
-                }
-            ]
-        }
-
+        trail_record = analyzer_helper.generate_cloudtrail_tag_set_record(
+            aws_account_id=self.mock_account_id, image_ids=[ami.ec2_ami_id],
+            tag_names=[tasks.aws.OPENSHIFT_TAG], event_name=tasks.CREATE_TAG)
+        s3_content = {'Records': [trail_record]}
         mock_receive.return_value = [sqs_message]
-        mock_s3.return_value = json.dumps(mock_cloudtrail_log)
+        mock_s3.return_value = json.dumps(s3_content)
 
-        tasks.analyze_log()
+        successes, failures = tasks.analyze_log()
 
-        updated_ami = AwsMachineImage.objects.get(ec2_ami_id=ami_id)
+        self.assertEqual(len(successes), 1)
+        self.assertEqual(len(failures), 0)
+
+        updated_ami = AwsMachineImage.objects.get(ec2_ami_id=ami.ec2_ami_id)
         self.assertTrue(updated_ami.openshift_detected)
         mock_del.assert_called()
 
@@ -498,56 +451,22 @@ class AnalyzeLogTest(TestCase):
             self, mock_receive, mock_s3, mock_del):
         """Test processing a CloudTrail log for ami tags removed."""
         ami = account_helper.generate_aws_image(openshift_detected=True)
-        ami_id = ami.ec2_ami_id
+        self.assertTrue(ami.openshift_detected)
 
         sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
-        mock_region = random.choice(util_helper.SOME_AWS_REGIONS)
-
-        now = datetime.datetime.utcnow()
-        mock_occurred_at = datetime.datetime(
-            year=now.year, month=now.month, day=now.day, hour=now.hour,
-            minute=now.minute, second=now.second, tzinfo=tz.tzutc()
-        )
-
-        mock_cloudtrail_log = {
-            'Records': [
-                {
-                    'eventTime': mock_occurred_at.strftime(
-                        '%Y-%m-%dT%H:%M:%SZ'
-                    ),
-                    'eventSource': 'ec2.amazonaws.com',
-                    'awsRegion': mock_region,
-                    'eventName': tasks.DELETE_TAG,
-                    'requestParameters': {
-                        'resourcesSet': {
-                            'items': [
-                                {
-                                    'resourceId': ami_id
-                                }
-                            ]
-                        },
-                        'tagSet': {
-                            'items': [
-                                {
-                                    'key': tasks.aws.OPENSHIFT_TAG,
-                                    'value': tasks.aws.OPENSHIFT_TAG
-                                }
-                            ]
-                        }
-                    },
-                    'userIdentity': {
-                        'accountId': self.mock_account_id
-                    },
-                }
-            ]
-        }
-
+        trail_record = analyzer_helper.generate_cloudtrail_tag_set_record(
+            aws_account_id=self.mock_account_id, image_ids=[ami.ec2_ami_id],
+            tag_names=[tasks.aws.OPENSHIFT_TAG], event_name=tasks.DELETE_TAG)
+        s3_content = {'Records': [trail_record]}
         mock_receive.return_value = [sqs_message]
-        mock_s3.return_value = json.dumps(mock_cloudtrail_log)
+        mock_s3.return_value = json.dumps(s3_content)
 
-        tasks.analyze_log()
+        successes, failures = tasks.analyze_log()
 
-        updated_ami = AwsMachineImage.objects.get(ec2_ami_id=ami_id)
+        self.assertEqual(len(successes), 1)
+        self.assertEqual(len(failures), 0)
+
+        updated_ami = AwsMachineImage.objects.get(ec2_ami_id=ami.ec2_ami_id)
         self.assertFalse(updated_ami.openshift_detected)
         mock_del.assert_called()
 
@@ -566,123 +485,61 @@ class AnalyzeLogTest(TestCase):
         In this case, we should attempt to describe the image and save it to
         our image model.
         """
-        mock_ec2_ami_id = util_helper.generate_dummy_image_id()
-
+        new_ami_id = util_helper.generate_dummy_image_id()
         image_data = util_helper.generate_dummy_describe_image(
-            image_id=mock_ec2_ami_id,
+            image_id=new_ami_id,
         )
         mock_describe.return_value = [image_data]
 
         sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
-        mock_region = random.choice(util_helper.SOME_AWS_REGIONS)
-
-        now = datetime.datetime.utcnow()
-        mock_occurred_at = datetime.datetime(
-            year=now.year, month=now.month, day=now.day, hour=now.hour,
-            minute=now.minute, second=now.second, tzinfo=tz.tzutc()
-        )
-
-        mock_cloudtrail_log = {
-            'Records': [
-                {
-                    'eventTime': mock_occurred_at.strftime(
-                        '%Y-%m-%dT%H:%M:%SZ'
-                    ),
-                    'eventSource': 'ec2.amazonaws.com',
-                    'awsRegion': mock_region,
-                    'eventName': tasks.DELETE_TAG,
-                    'requestParameters': {
-                        'resourcesSet': {
-                            'items': [
-                                {
-                                    'resourceId': mock_ec2_ami_id
-                                }
-                            ]
-                        },
-                        'tagSet': {
-                            'items': [
-                                {
-                                    'key': tasks.aws.OPENSHIFT_TAG,
-                                    'value': tasks.aws.OPENSHIFT_TAG
-                                }
-                            ]
-                        }
-                    },
-                    'userIdentity': {
-                        'accountId': self.mock_account_id
-                    },
-                }
-            ]
-        }
-
+        region = random.choice(util_helper.SOME_AWS_REGIONS)
+        trail_record = analyzer_helper.generate_cloudtrail_tag_set_record(
+            aws_account_id=self.mock_account_id, image_ids=[new_ami_id],
+            tag_names=[tasks.aws.OPENSHIFT_TAG], event_name=tasks.CREATE_TAG,
+            region=region)
+        s3_content = {'Records': [trail_record]}
         mock_receive.return_value = [sqs_message]
-        mock_s3.return_value = json.dumps(mock_cloudtrail_log)
+        mock_s3.return_value = json.dumps(s3_content)
 
-        try:
-            tasks.analyze_log()
-        except Exception:
-            self.fail('Should not raise exceptions when ami not found')
+        successes, failures = tasks.analyze_log()
 
-        mock_inspection.assert_called_once_with(self.mock_arn,
-                                                mock_ec2_ami_id,
-                                                mock_region)
+        self.assertEqual(len(successes), 1)
+        self.assertEqual(len(failures), 0)
+
+        new_ami = AwsMachineImage.objects.get(ec2_ami_id=new_ami_id)
+        self.assertTrue(new_ami.openshift_detected)
         mock_del.assert_called()
+        mock_inspection.assert_called_once_with(self.mock_arn, new_ami_id,
+                                                region)
 
     @patch('analyzer.tasks.aws.delete_messages_from_queue')
     @patch('analyzer.tasks.aws.get_object_content_from_s3')
     @patch('analyzer.tasks.aws.yield_messages_from_queue')
     def test_other_tags_ignored(
             self, mock_receive, mock_s3, mock_del):
-        """Test processing a CloudTrail log for other tags ignored."""
-        mock_instance_id = util_helper.generate_dummy_instance_id()
+        """
+        Test tag processing where unknown tags should be ignored.
+
+        In this case, the log data includes a new AMI ID. If we cared about the
+        referenced tag, this operation would also describe that AMI and add it
+        to our model database. However, since the tags in the log are not
+        relevant to our interests, we should completely ignore the new AMI.
+        """
+        new_ami_id = util_helper.generate_dummy_image_id()
 
         sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
-        mock_region = random.choice(util_helper.SOME_AWS_REGIONS)
-
-        now = datetime.datetime.utcnow()
-        mock_occurred_at = datetime.datetime(
-            year=now.year, month=now.month, day=now.day, hour=now.hour,
-            minute=now.minute, second=now.second, tzinfo=tz.tzutc()
-        )
-
-        mock_cloudtrail_log = {
-            'Records': [
-                {
-                    'eventTime': mock_occurred_at.strftime(
-                        '%Y-%m-%dT%H:%M:%SZ'
-                    ),
-                    'eventSource': 'ec2.amazonaws.com',
-                    'awsRegion': mock_region,
-                    'eventName': tasks.DELETE_TAG,
-                    'requestParameters': {
-                        'resourcesSet': {
-                            'items': [
-                                {
-                                    'resourceId': mock_instance_id
-                                }
-                            ]
-                        },
-                        'tagSet': {
-                            'items': [
-                                {
-                                    'key': tasks.aws.OPENSHIFT_TAG,
-                                    'value': tasks.aws.OPENSHIFT_TAG
-                                }
-                            ]
-                        }
-                    },
-                    'userIdentity': {
-                        'accountId': self.mock_account_id
-                    },
-                }
-            ]
-        }
-
+        trail_record = analyzer_helper.generate_cloudtrail_tag_set_record(
+            aws_account_id=self.mock_account_id, image_ids=[new_ami_id],
+            tag_names=[_faker.slug()], event_name=tasks.CREATE_TAG)
+        s3_content = {'Records': [trail_record]}
         mock_receive.return_value = [sqs_message]
-        mock_s3.return_value = json.dumps(mock_cloudtrail_log)
+        mock_s3.return_value = json.dumps(s3_content)
 
-        try:
-            tasks.analyze_log()
-        except Exception:
-            self.fail('Should not raise exceptions for ignored tag events.')
+        successes, failures = tasks.analyze_log()
+
+        self.assertEqual(len(successes), 1)
+        self.assertEqual(len(failures), 0)
+
+        all_images = list(AwsMachineImage.objects.all())
+        self.assertEqual(len(all_images), 0)
         mock_del.assert_called()

@@ -3,7 +3,9 @@
 Because even test helpers should be tested!
 """
 import json
+import random
 import uuid
+from unittest.mock import Mock
 
 import faker
 from django.test import TestCase
@@ -19,7 +21,7 @@ class AnalyzerHelperTest(TestCase):
 
     def test_generate_mock_cloudtrail_sqs_message_all_args(self):
         """Test generate_mock_cloudtrail_sqs_message with all arguments."""
-        bucket_name = _faker.bs()
+        bucket_name = _faker.slug()
         object_key = _faker.file_path()
         receipt_handle = str(uuid.uuid4())
         message_id = str(uuid.uuid4())
@@ -43,16 +45,45 @@ class AnalyzerHelperTest(TestCase):
         self.assertIsNotNone(s3_data['bucket']['name'])
         self.assertIsNotNone(s3_data['object']['key'])
 
-    def test_generate_cloudtrail_log_record_all_args(self):
-        """Test generate_cloudtrail_log_record with all arguments."""
+    def test_generate_cloudtrail_record_minimum_args(self):
+        """Test generate_cloudtrail_record with minimum arguments."""
+        aws_account_id = util_helper.generate_dummy_aws_account_id()
+        event_name = _faker.slug()
+        record = analyzer_helper.generate_cloudtrail_record(
+            aws_account_id, event_name)
+        self.assertEqual(record['userIdentity']['accountId'], aws_account_id)
+        self.assertIsNotNone(record['awsRegion'])
+        self.assertIsNotNone(record['eventName'])
+        self.assertEqual(record['requestParameters'], {})
+        self.assertEqual(record['responseElements'], {})
+
+    def test_generate_cloudtrail_record_all_args(self):
+        """Test generate_cloudtrail_record with all arguments."""
+        aws_account_id = util_helper.generate_dummy_aws_account_id()
+        event_name = _faker.slug()
+        event_time = _faker.date_object()
+        region = random.choice(util_helper.SOME_AWS_REGIONS)
+        request_parameters = Mock()
+        response_elements = Mock()
+        record = analyzer_helper.generate_cloudtrail_record(
+            aws_account_id, event_name, event_time, region,
+            request_parameters, response_elements)
+        self.assertEqual(record['userIdentity']['accountId'], aws_account_id)
+        self.assertIsNotNone(record['awsRegion'])
+        self.assertIsNotNone(record['eventName'])
+        self.assertEqual(record['requestParameters'], request_parameters)
+        self.assertEqual(record['responseElements'], response_elements)
+
+    def test_generate_cloudtrail_instances_record_all_args(self):
+        """Test generate_cloudtrail_instances_record with all arguments."""
         aws_account_id = util_helper.generate_dummy_aws_account_id()
         instance_ids = [
             util_helper.generate_dummy_instance_id(),
             util_helper.generate_dummy_instance_id(),
         ]
-        event_name = _faker.bs()
-        event_time = util_helper.utc_dt(1999, 12, 25)
-        record = analyzer_helper.generate_cloudtrail_log_record(
+        event_name = _faker.slug()
+        event_time = _faker.date_object()
+        record = analyzer_helper.generate_cloudtrail_instances_record(
             aws_account_id, instance_ids, event_name, event_time)
 
         self.assertEqual(record['userIdentity']['accountId'], aws_account_id)
@@ -62,14 +93,14 @@ class AnalyzerHelperTest(TestCase):
         actual_instance_ids = set([item['instanceId'] for item in items])
         self.assertEqual(set(instance_ids), actual_instance_ids)
 
-    def test_generate_cloudtrail_log_record_minimum_args(self):
-        """Test generate_cloudtrail_log_record with minimum arguments."""
+    def test_generate_cloudtrail_instances_record_minimum_args(self):
+        """Test generate_cloudtrail_instances_record with minimum arguments."""
         aws_account_id = util_helper.generate_dummy_aws_account_id()
         instance_ids = [
             util_helper.generate_dummy_instance_id(),
             util_helper.generate_dummy_instance_id(),
         ]
-        record = analyzer_helper.generate_cloudtrail_log_record(
+        record = analyzer_helper.generate_cloudtrail_instances_record(
             aws_account_id, instance_ids)
         self.assertEqual(record['userIdentity']['accountId'], aws_account_id)
         self.assertIsNotNone(record['awsRegion'])
