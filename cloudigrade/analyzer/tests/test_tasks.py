@@ -2,7 +2,6 @@
 import datetime
 import json
 import random
-import uuid
 from unittest.mock import call, patch
 
 from dateutil import tz
@@ -383,7 +382,7 @@ class AnalyzeLogTest(TestCase):
     @patch('analyzer.tasks.aws.delete_messages_from_queue')
     @patch('analyzer.tasks.aws.get_object_content_from_s3')
     @patch('analyzer.tasks.aws.yield_messages_from_queue')
-    def test_command_output_no_log_content(
+    def test_analyze_log_with_invalid_cloudtrail_log_content(
             self, mock_receive, mock_s3, mock_del):
         """
         Test that a malformed (not JSON) log is not processed.
@@ -395,81 +394,24 @@ class AnalyzeLogTest(TestCase):
         okay and expected, and we will (eventually) configure a DLQ to take any
         messages that we repeatedly fail to process.
         """
-        mock_instance_id = util_helper.generate_dummy_instance_id()
-        mock_queue_url = 'https://sqs.queue.url'
-        mock_receipt_handle = str(uuid.uuid4())
+        sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
+        mock_receive.return_value = [sqs_message]
+        mock_s3.return_value = 'hello world'
 
-        mock_sqs_message_body = {
-            'Records': [
-                {
-                    's3': {
-                        'bucket': {
-                            'name': 'test-bucket',
-                        },
-                        'object': {
-                            'key': 'path/to/log',
-                        },
-                    },
-                }
-            ]
-        }
-        mock_message = util_helper.generate_mock_sqs_message(
-            mock_queue_url,
-            json.dumps(mock_sqs_message_body),
-            mock_receipt_handle
-        )
-
-        mock_cloudtrail_log = 'hello world'
-
-        mock_receive.return_value = [mock_message]
-        mock_s3.return_value = mock_cloudtrail_log
-
-        tasks.analyze_log()
-
-        instances = list(AwsInstance.objects.filter(
-            ec2_instance_id=mock_instance_id).all())
-        instance_events = list(AwsInstanceEvent.objects.filter(
-            instance=instances[0]).all()) if instances else []
-
-        self.assertListEqual(instances, [])
-        self.assertListEqual(instance_events, [])
+        successes, failures = tasks.analyze_log()
+        self.assertEqual(len(successes), 0)
+        self.assertEqual(len(failures), 1)
 
         mock_del.assert_not_called()
 
     @patch('analyzer.tasks.aws.delete_messages_from_queue')
     @patch('analyzer.tasks.aws.get_object_content_from_s3')
     @patch('analyzer.tasks.aws.yield_messages_from_queue')
-    def test_command_output_non_on_off_events(
+    def test_analyze_log_with_irrelevant_log_activity(
             self, mock_receive, mock_s3, mock_del):
-        """Test that non on/off events are not processed."""
-        mock_instance_id = util_helper.generate_dummy_instance_id()
-        mock_queue_url = 'https://sqs.queue.url'
-        mock_receipt_handle = str(uuid.uuid4())
-
-        mock_sqs_message_body = {
-            'Records': [
-                {
-                    's3': {
-                        'bucket': {
-                            'name': 'test-bucket',
-                        },
-                        'object': {
-                            'key': 'path/to/log',
-                        },
-                    },
-                    'userIdentity': {
-                        'accountId': self.mock_account_id
-                    }
-                }
-            ]
-        }
-        mock_message = util_helper.generate_mock_sqs_message(
-            mock_queue_url,
-            json.dumps(mock_sqs_message_body),
-            mock_receipt_handle
-        )
-
-        mock_cloudtrail_log = {
+        """Test that logs without relevant data are effectively ignored."""
+        sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
+        irrelevant_log = {
             'Records': [
                 {
                     'eventSource': 'null.amazonaws.com',
@@ -483,19 +425,10 @@ class AnalyzeLogTest(TestCase):
             ]
         }
 
-        mock_receive.return_value = [mock_message]
-        mock_s3.return_value = json.dumps(mock_cloudtrail_log)
-        mock_del.return_value = 'Success'
+        mock_receive.return_value = [sqs_message]
+        mock_s3.return_value = json.dumps(irrelevant_log)
 
         tasks.analyze_log()
-
-        instances = list(AwsInstance.objects.filter(
-            ec2_instance_id=mock_instance_id).all())
-        instance_events = list(AwsInstanceEvent.objects.filter(
-            instance=instances[0]).all()) if instances else []
-
-        self.assertListEqual(instances, [])
-        self.assertListEqual(instance_events, [])
         mock_del.assert_called()
 
     @patch('analyzer.tasks.aws.delete_messages_from_queue')
@@ -507,35 +440,13 @@ class AnalyzeLogTest(TestCase):
         ami = account_helper.generate_aws_image()
         ami_id = ami.ec2_ami_id
 
-        mock_sqs_message_body = {
-            'Records': [
-                {
-                    's3': {
-                        'bucket': {
-                            'name': 'test-bucket',
-                        },
-                        'object': {
-                            'key': 'path/to/log/log.json.gz',
-                        },
-                    },
-                }
-            ]
-        }
-
-        mock_queue_url = 'https://sqs.queue.url'
-        mock_receipt_handle = str(uuid.uuid4())
+        sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
         mock_region = random.choice(util_helper.SOME_AWS_REGIONS)
 
         now = datetime.datetime.utcnow()
         mock_occurred_at = datetime.datetime(
             year=now.year, month=now.month, day=now.day, hour=now.hour,
             minute=now.minute, second=now.second, tzinfo=tz.tzutc()
-        )
-
-        mock_message = util_helper.generate_mock_sqs_message(
-            mock_queue_url,
-            json.dumps(mock_sqs_message_body),
-            mock_receipt_handle
         )
 
         mock_cloudtrail_log = {
@@ -571,7 +482,7 @@ class AnalyzeLogTest(TestCase):
             ]
         }
 
-        mock_receive.return_value = [mock_message]
+        mock_receive.return_value = [sqs_message]
         mock_s3.return_value = json.dumps(mock_cloudtrail_log)
 
         tasks.analyze_log()
@@ -589,35 +500,13 @@ class AnalyzeLogTest(TestCase):
         ami = account_helper.generate_aws_image(openshift_detected=True)
         ami_id = ami.ec2_ami_id
 
-        mock_sqs_message_body = {
-            'Records': [
-                {
-                    's3': {
-                        'bucket': {
-                            'name': 'test-bucket',
-                        },
-                        'object': {
-                            'key': 'path/to/log/log.json.gz',
-                        },
-                    },
-                }
-            ]
-        }
-
-        mock_queue_url = 'https://sqs.queue.url'
-        mock_receipt_handle = str(uuid.uuid4())
+        sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
         mock_region = random.choice(util_helper.SOME_AWS_REGIONS)
 
         now = datetime.datetime.utcnow()
         mock_occurred_at = datetime.datetime(
             year=now.year, month=now.month, day=now.day, hour=now.hour,
             minute=now.minute, second=now.second, tzinfo=tz.tzutc()
-        )
-
-        mock_message = util_helper.generate_mock_sqs_message(
-            mock_queue_url,
-            json.dumps(mock_sqs_message_body),
-            mock_receipt_handle
         )
 
         mock_cloudtrail_log = {
@@ -653,7 +542,7 @@ class AnalyzeLogTest(TestCase):
             ]
         }
 
-        mock_receive.return_value = [mock_message]
+        mock_receive.return_value = [sqs_message]
         mock_s3.return_value = json.dumps(mock_cloudtrail_log)
 
         tasks.analyze_log()
@@ -684,35 +573,13 @@ class AnalyzeLogTest(TestCase):
         )
         mock_describe.return_value = [image_data]
 
-        mock_sqs_message_body = {
-            'Records': [
-                {
-                    's3': {
-                        'bucket': {
-                            'name': 'test-bucket',
-                        },
-                        'object': {
-                            'key': 'path/to/log/log.json.gz',
-                        },
-                    },
-                }
-            ]
-        }
-
-        mock_queue_url = 'https://sqs.queue.url'
-        mock_receipt_handle = str(uuid.uuid4())
+        sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
         mock_region = random.choice(util_helper.SOME_AWS_REGIONS)
 
         now = datetime.datetime.utcnow()
         mock_occurred_at = datetime.datetime(
             year=now.year, month=now.month, day=now.day, hour=now.hour,
             minute=now.minute, second=now.second, tzinfo=tz.tzutc()
-        )
-
-        mock_message = util_helper.generate_mock_sqs_message(
-            mock_queue_url,
-            json.dumps(mock_sqs_message_body),
-            mock_receipt_handle
         )
 
         mock_cloudtrail_log = {
@@ -748,7 +615,7 @@ class AnalyzeLogTest(TestCase):
             ]
         }
 
-        mock_receive.return_value = [mock_message]
+        mock_receive.return_value = [sqs_message]
         mock_s3.return_value = json.dumps(mock_cloudtrail_log)
 
         try:
@@ -769,35 +636,13 @@ class AnalyzeLogTest(TestCase):
         """Test processing a CloudTrail log for other tags ignored."""
         mock_instance_id = util_helper.generate_dummy_instance_id()
 
-        mock_sqs_message_body = {
-            'Records': [
-                {
-                    's3': {
-                        'bucket': {
-                            'name': 'test-bucket',
-                        },
-                        'object': {
-                            'key': 'path/to/log/log.json.gz',
-                        },
-                    },
-                }
-            ]
-        }
-
-        mock_queue_url = 'https://sqs.queue.url'
-        mock_receipt_handle = str(uuid.uuid4())
+        sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
         mock_region = random.choice(util_helper.SOME_AWS_REGIONS)
 
         now = datetime.datetime.utcnow()
         mock_occurred_at = datetime.datetime(
             year=now.year, month=now.month, day=now.day, hour=now.hour,
             minute=now.minute, second=now.second, tzinfo=tz.tzutc()
-        )
-
-        mock_message = util_helper.generate_mock_sqs_message(
-            mock_queue_url,
-            json.dumps(mock_sqs_message_body),
-            mock_receipt_handle
         )
 
         mock_cloudtrail_log = {
@@ -833,7 +678,7 @@ class AnalyzeLogTest(TestCase):
             ]
         }
 
-        mock_receive.return_value = [mock_message]
+        mock_receive.return_value = [sqs_message]
         mock_s3.return_value = json.dumps(mock_cloudtrail_log)
 
         try:
