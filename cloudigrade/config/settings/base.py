@@ -280,7 +280,7 @@ CELERY_BEAT_SCHEDULE = {
     'persist_inspection_cluster_results': {
         'task': 'account.tasks.persist_inspection_cluster_results_task',
         # seconds
-        'schedule': env.int('SCALE_UP_INSPECTION_CLUSTER_SCHEDULE', default=60 * 60),
+        'schedule': env.int('PERSIST_INSPECTION_CLUSTER_RESULTS_SCHEDULE', default=5 * 60),
     },
     'analyze_log_every_2_mins': {
         'task': 'analyzer.tasks.analyze_log',
