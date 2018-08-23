@@ -1,4 +1,5 @@
 """util.exceptions module."""
+import http
 import logging
 
 from django.core.exceptions import PermissionDenied
@@ -83,7 +84,7 @@ class AwsTooManyECSInstances(NotReadyException):
 class MaximumNumberOfTrailsExceededException(APIException):
     """Raise when the max number of cloud trails exceeds the limit."""
 
-    status_code = 500
+    status_code = http.HTTPStatus.CONFLICT
     default_detail = _('Exceeded maximum number of cloud trails')
 
 
