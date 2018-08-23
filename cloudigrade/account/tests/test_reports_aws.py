@@ -1079,3 +1079,57 @@ class GetImageOverviewsTestCase(ReportTestBase):
                                                self.end, bad_account_id)
 
         self.assertEqual(0, len(results['images']))
+
+
+class GenerateDailyPeriodsTestCase(TestCase):
+    """Test cases around _generate_daily_periods."""
+
+    def assertExpectedCountAndEnd(self, periods, count, end):
+        """Assert periods were generated with correct count and final end."""
+        self.assertEqual(len(periods), count)
+        if count > 0:
+            self.assertEqual(periods[-1][1], end)
+
+    def test_one_day_perfect(self):
+        """Test for one exact day."""
+        input_start = util_helper.utc_dt(2018, 1, 1, 0, 0, 0)
+        input_end = util_helper.utc_dt(2018, 1, 2, 0, 0, 0)
+        expected_count = 1
+        expected_end = input_end
+        periods = reports._generate_daily_periods(input_start, input_end)
+        self.assertExpectedCountAndEnd(periods, expected_count, expected_end)
+
+    def test_two_days_perfect(self):
+        """Test for two exact days."""
+        input_start = util_helper.utc_dt(2018, 1, 1, 0, 0, 0)
+        input_end = util_helper.utc_dt(2018, 1, 3, 0, 0, 0)
+        expected_count = 2
+        expected_end = input_end
+        periods = reports._generate_daily_periods(input_start, input_end)
+        self.assertExpectedCountAndEnd(periods, expected_count, expected_end)
+
+    def test_one_day_from_less_than_one(self):
+        """Test for one partial-day period."""
+        input_start = util_helper.utc_dt(2018, 1, 1, 0, 0, 0)
+        input_end = util_helper.utc_dt(2018, 1, 1, 12, 34, 56)
+        expected_count = 1
+        expected_end = input_end
+        periods = reports._generate_daily_periods(input_start, input_end)
+        self.assertExpectedCountAndEnd(periods, expected_count, expected_end)
+
+    def test_two_days_from_one_and_half(self):
+        """Test for one whole day and one partial."""
+        input_start = util_helper.utc_dt(2018, 1, 1, 0, 0, 0)
+        input_end = util_helper.utc_dt(2018, 1, 2, 12, 34, 56)
+        expected_count = 2
+        expected_end = input_end
+        periods = reports._generate_daily_periods(input_start, input_end)
+        self.assertExpectedCountAndEnd(periods, expected_count, expected_end)
+
+    def test_no_days_backwards_inputs(self):
+        """Test no periods when end is before start."""
+        input_start = util_helper.utc_dt(2018, 1, 2, 0, 0, 0)
+        input_end = util_helper.utc_dt(2018, 1, 1, 0, 0, 0)
+        expected_count = 0
+        periods = reports._generate_daily_periods(input_start, input_end)
+        self.assertExpectedCountAndEnd(periods, expected_count, None)

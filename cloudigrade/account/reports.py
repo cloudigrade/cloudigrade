@@ -114,6 +114,37 @@ def _get_relevant_events(start, end, account_ids):
     return events
 
 
+def _generate_daily_periods(start, end):
+    """
+    Generate a list of whole-day "reporting periods" spanning start and end.
+
+    This is a little tricky because of time zones and the start and end values
+    being date-times not just dates. The resulting list must be inclusive of
+    both the start and end times.
+
+    Args:
+        start (datetime.datetime): Start time
+        end (datetime.datetime): End time
+
+    Returns:
+        list(tuple): Each tuple has a start and end datetime, of which the
+            start should be interpreted as inclusive and the end as exclusive.
+
+    """
+    day_start = start.replace(hour=0, minute=0, second=0, microsecond=0)
+    day_end = end.replace(hour=0, minute=0, second=0, microsecond=0)
+    number_of_days = (day_end - day_start).days
+    if day_start + datetime.timedelta(days=number_of_days) < end:
+        number_of_days += 1
+
+    periods = []
+    for day_number in range(number_of_days):
+        period_start = start + datetime.timedelta(days=day_number)
+        period_end = period_start + datetime.timedelta(days=1)
+        periods.append((period_start, min(period_end, end)))
+    return periods
+
+
 def _calculate_daily_usage(start, end, instance_events):
     """
     Get all InstanceEvents relevant to the report parameters.
@@ -123,12 +154,7 @@ def _calculate_daily_usage(start, end, instance_events):
         end (datetime.datetime): End time (exclusive)
         instance_events (list[InstanceEvent]): events to use for calculations
     """
-    periods = []
-    for day_number in range((end - start).days):
-        period_start = start + datetime.timedelta(days=day_number)
-        period_end = period_start + datetime.timedelta(days=1)
-        periods.append((period_start, period_end))
-
+    periods = _generate_daily_periods(start, end)
     image_ids_seen = set()
     image_ids_seen_with_rhel = set()
     image_ids_seen_with_openshift = set()
