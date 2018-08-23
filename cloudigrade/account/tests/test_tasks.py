@@ -1,6 +1,7 @@
 """Collection of tests for celery tasks."""
 import json
 import random
+import uuid
 from unittest.mock import MagicMock, Mock, patch
 
 from botocore.exceptions import ClientError
@@ -957,21 +958,17 @@ class AccountCeleryTaskTest(TestCase):
         with self.assertRaises(AwsTooManyECSInstances):
             tasks.run_inspection_cluster(messages)
 
+    @patch('account.tasks.aws.yield_messages_from_queue')
+    @patch('account.tasks._get_sqs_queue_url')
+    @patch('account.tasks.scale_down_cluster')
     @patch('account.tasks.persist_aws_inspection_cluster_results')
-    @patch('account.tasks.read_messages_from_queue')
     def test_persist_inspect_results_no_messages(
-            self,
-            mock_read_messages_from_queue,
-            mock_persist_inspection_results
-    ):
-        """Assert empty results does not work."""
-        mock_read_messages_from_queue.return_value = []
+            self, mock_persist, mock_scale_down, _, mock_receive):
+        """Assert empty yield results are properly ignored."""
+        mock_receive.return_value = []
         tasks.persist_inspection_cluster_results_task()
-        mock_read_messages_from_queue.assert_called_once_with(
-            settings.HOUNDIGRADE_RESULTS_QUEUE_NAME,
-            tasks.HOUNDIGRADE_MESSAGE_READ_LEN
-        )
-        mock_persist_inspection_results.assert_not_called()
+        mock_persist.assert_not_called()
+        mock_scale_down.assert_not_called()
 
     def test_persist_aws_inspection_cluster_results_mark_rhel(self):
         """Assert that rhel_images are tagged rhel."""
@@ -1048,80 +1045,104 @@ class AccountCeleryTaskTest(TestCase):
         self.assertFalse(machine_image1.rhel)
         self.assertFalse(machine_image1.openshift)
 
+    @patch('account.tasks.aws.delete_messages_from_queue')
+    @patch('account.tasks.aws.yield_messages_from_queue')
+    @patch('account.tasks._get_sqs_queue_url')
+    @patch('account.tasks.scale_down_cluster')
     @patch('account.tasks.persist_aws_inspection_cluster_results')
-    @patch('account.tasks.read_messages_from_queue')
+    def test_persist_inspect_results_task_aws_success(
+            self, mock_persist, mock_scale_down, _, mock_receive, mock_delete):
+        """Assert that a valid message is correctly handled and deleted."""
+        receipt_handle = str(uuid.uuid4())
+        message_id = str(uuid.uuid4())
+        body_dict = {
+            'cloud': 'aws',
+            'images': {
+                'ami-12345': {
+                    'rhel_found': False,
+                    'drive': {
+                        'partition': {
+                            'evidence': [
+                                {
+                                    'release_file': '/centos-release',
+                                    'release_file_contents': 'CentOS\n',
+                                    'rhel_found': False}]}}}}}
+        sqs_message = util_helper.generate_mock_sqs_message(
+            message_id, json.dumps(body_dict), receipt_handle)
+        mock_receive.return_value = [sqs_message]
+
+        s, f = tasks.persist_inspection_cluster_results_task()
+
+        mock_persist.assert_called_once_with(body_dict)
+        mock_delete.assert_called_once()
+        mock_scale_down.delay.assert_called_once()
+        self.assertIn(sqs_message, s)
+        self.assertEqual([], f)
+
+    @patch('account.tasks.aws.delete_messages_from_queue')
+    @patch('account.tasks.aws.yield_messages_from_queue')
+    @patch('account.tasks._get_sqs_queue_url')
+    @patch('account.tasks.scale_down_cluster')
+    @patch('account.tasks.persist_aws_inspection_cluster_results')
     def test_persist_inspect_results_unknown_cloud(
-            self,
-            mock_read_messages_from_queue,
-            mock_persist_inspection_results
-    ):
-        """Assert no work for unknown cloud."""
-        with patch.object(tasks, 'scale_down_cluster') as mock_scale_down:
-            mock_read_messages_from_queue.return_value = [{'cloud': 'unknown'}]
-            tasks.persist_inspection_cluster_results_task()
-            mock_read_messages_from_queue.assert_called_once_with(
-                settings.HOUNDIGRADE_RESULTS_QUEUE_NAME,
-                tasks.HOUNDIGRADE_MESSAGE_READ_LEN
-            )
-            mock_persist_inspection_results.assert_not_called()
-            mock_scale_down.delay.assert_called_once()
+            self, mock_persist, mock_scale_down, _, mock_receive, mock_delete):
+        """Assert message is not deleted for unknown cloud."""
+        receipt_handle = str(uuid.uuid4())
+        message_id = str(uuid.uuid4())
+        body_dict = {'cloud': 'unknown'}
+        sqs_message = util_helper.generate_mock_sqs_message(
+            message_id, json.dumps(body_dict), receipt_handle)
+        mock_receive.return_value = [sqs_message]
 
-    @patch('account.tasks.persist_aws_inspection_cluster_results')
-    @patch('account.tasks.read_messages_from_queue')
+        s, f = tasks.persist_inspection_cluster_results_task()
+
+        mock_persist.assert_not_called()
+        mock_delete.assert_not_called()
+        mock_scale_down.delay.assert_called_once()
+        self.assertEqual([], s)
+        self.assertIn(sqs_message, f)
+
+    @patch('account.tasks.aws.delete_messages_from_queue')
+    @patch('account.tasks.aws.yield_messages_from_queue')
+    @patch('account.tasks._get_sqs_queue_url')
+    @patch('account.tasks.scale_down_cluster')
     def test_persist_inspect_results_aws_cloud_no_images(
-            self,
-            mock_read_messages_from_queue,
-            mock_persist_inspection_results
-    ):
-        """Assert no work for aws cloud without images."""
-        with patch.object(tasks, 'scale_down_cluster') as mock_scale_down:
-            message = {'cloud': 'aws'}
-            mock_read_messages_from_queue.return_value = [message]
-            tasks.persist_inspection_cluster_results_task()
-            mock_read_messages_from_queue.assert_called_once_with(
-                settings.HOUNDIGRADE_RESULTS_QUEUE_NAME,
-                tasks.HOUNDIGRADE_MESSAGE_READ_LEN
-            )
-            mock_persist_inspection_results.assert_called_once_with(
-                message)
-            mock_scale_down.delay.assert_called_once()
+            self, mock_scale_down, _, mock_receive, mock_delete):
+        """Assert message is not deleted if it is missing images."""
+        receipt_handle = str(uuid.uuid4())
+        message_id = str(uuid.uuid4())
+        body_dict = {'cloud': 'aws'}
+        sqs_message = util_helper.generate_mock_sqs_message(
+            message_id, json.dumps(body_dict), receipt_handle)
+        mock_receive.return_value = [sqs_message]
 
-    @patch('account.tasks.persist_aws_inspection_cluster_results')
-    @patch('account.tasks.read_messages_from_queue')
-    def test_persist_inspect_results_aws_cloud_str_message(
-            self,
-            mock_read_messages_from_queue,
-            mock_persist_inspection_results
-    ):
-        """Test case where message is str not python dict."""
-        with patch.object(tasks, 'scale_down_cluster') as mock_scale_down:
-            message = json.dumps({'cloud': 'aws'})
-            mock_read_messages_from_queue.return_value = [message]
-            tasks.persist_inspection_cluster_results_task()
-            mock_read_messages_from_queue.assert_called_once_with(
-                settings.HOUNDIGRADE_RESULTS_QUEUE_NAME,
-                tasks.HOUNDIGRADE_MESSAGE_READ_LEN
-            )
-            mock_persist_inspection_results.assert_called_once_with(
-                json.loads(message))
-            mock_scale_down.delay.assert_called_once()
+        s, f = tasks.persist_inspection_cluster_results_task()
 
-    @patch('account.tasks.read_messages_from_queue')
+        mock_delete.assert_not_called()
+        mock_scale_down.delay.assert_called_once()
+        self.assertEqual([], s)
+        self.assertIn(sqs_message, f)
+
+    @patch('account.tasks.aws.delete_messages_from_queue')
+    @patch('account.tasks.aws.yield_messages_from_queue')
+    @patch('account.tasks._get_sqs_queue_url')
+    @patch('account.tasks.scale_down_cluster')
     def test_persist_inspect_results_aws_cloud_image_not_found(
-            self,
-            mock_read_messages_from_queue
-    ):
-        """Assert no work for aws cloud with unknown images."""
-        with patch.object(tasks, 'scale_down_cluster') as mock_scale_down:
-            message = {'cloud': 'aws', 'images': {'fake_image': {}}}
+            self, mock_scale_down, _, mock_receive, mock_delete):
+        """Assert message is not deleted if an image is not found."""
+        body_dict = {'cloud': 'aws', 'images': {'fake_image': {}}}
+        receipt_handle = str(uuid.uuid4())
+        message_id = str(uuid.uuid4())
+        sqs_message = util_helper.generate_mock_sqs_message(
+            message_id, json.dumps(body_dict), receipt_handle)
+        mock_receive.return_value = [sqs_message]
 
-            mock_read_messages_from_queue.return_value = [message]
-            tasks.persist_inspection_cluster_results_task()
-            mock_read_messages_from_queue.assert_called_once_with(
-                settings.HOUNDIGRADE_RESULTS_QUEUE_NAME,
-                tasks.HOUNDIGRADE_MESSAGE_READ_LEN
-            )
-            mock_scale_down.delay.assert_called_once()
+        s, f = tasks.persist_inspection_cluster_results_task()
+
+        mock_delete.assert_not_called()
+        mock_scale_down.delay.assert_called_once()
+        self.assertEqual([], s)
+        self.assertIn(sqs_message, f)
 
     @patch('account.tasks.aws')
     def test_scale_down_cluster_success(self, mock_aws):

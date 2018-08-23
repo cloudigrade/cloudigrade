@@ -6,10 +6,12 @@ import boto3
 from botocore.exceptions import ClientError
 from celery import shared_task
 from django.conf import settings
+from django.db import transaction
 from django.utils.translation import gettext as _
 
 from account.models import AwsMachineImage
-from account.util import (add_messages_to_queue, create_aws_machine_image_copy,
+from account.util import (_get_sqs_queue_url, add_messages_to_queue,
+                          create_aws_machine_image_copy,
                           read_messages_from_queue)
 from util import aws
 from util.aws import rewrap_aws_errors
@@ -500,6 +502,7 @@ def scale_down_cluster():
     aws.scale_down(settings.HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME)
 
 
+@transaction.atomic
 def persist_aws_inspection_cluster_results(inspection_result):
     """
     Persist the aws houndigrade inspection result.
@@ -511,20 +514,14 @@ def persist_aws_inspection_cluster_results(inspection_result):
     """
     results = inspection_result.get('images', [])
     for image_id, image_json in results.items():
-        try:
-            ami = AwsMachineImage.objects.get(ec2_ami_id=image_id)
-        except AwsMachineImage.DoesNotExist:
-            logger.error(
-                _('AwsMachineImage "{0}" is not found.').format(image_id))
-            continue
-
-        # Add image inspection JSON
+        ami = AwsMachineImage.objects.get(ec2_ami_id=image_id)
         ami.inspection_json = json.dumps(image_json)
         ami.status = ami.INSPECTED
         ami.save()
 
 
 @shared_task
+@rewrap_aws_errors
 def persist_inspection_cluster_results_task():
     """
     Task to run periodically and read houndigrade messages.
@@ -533,19 +530,38 @@ def persist_inspection_cluster_results_task():
         None: Run as an asynchronous Celery task.
 
     """
-    messages = read_messages_from_queue(
-        settings.HOUNDIGRADE_RESULTS_QUEUE_NAME,
-        HOUNDIGRADE_MESSAGE_READ_LEN)
-    logger.info(_('{0} read {1} message(s) for processing').format(
-        'persist_inspection_cluster_results_task', len(messages)))
-    if bool(messages):
-        for message in messages:
-            inspection_result = message
-            if isinstance(message, str):
-                inspection_result = json.loads(message)
-            if inspection_result.get(CLOUD_KEY) == CLOUD_TYPE_AWS:
-                persist_aws_inspection_cluster_results(inspection_result)
-            else:
-                logger.error(_('Unsupported cloud type: "{0}"').format(
-                    message.get(CLOUD_KEY)))
+    queue_url = _get_sqs_queue_url(settings.HOUNDIGRADE_RESULTS_QUEUE_NAME)
+    successes, failures = [], []
+    for message in aws.yield_messages_from_queue(
+            queue_url, HOUNDIGRADE_MESSAGE_READ_LEN):
+        logger.info(_('Processing inspection results with id "{0}"').format(
+            message.message_id))
+
+        inspection_results = json.loads(message.body)
+        if inspection_results.get(CLOUD_KEY) == CLOUD_TYPE_AWS:
+            try:
+                persist_aws_inspection_cluster_results(inspection_results)
+            except Exception as e:
+                logger.exception(_(
+                    'Unexpected error in result processing: {0}'
+                ).format(e))
+                logger.debug(_(
+                    'Failed message body is: {0}'
+                ).format(message.body))
+                failures.append(message)
+                continue
+
+            logger.info(_(
+                'Successfully processed message id {0}; deleting from queue.'
+            ).format(message.message_id))
+            aws.delete_messages_from_queue(queue_url, [message])
+            successes.append(message)
+        else:
+            logger.error(_('Unsupported cloud type: "{0}"').format(
+                inspection_results.get(CLOUD_KEY)))
+            failures.append(message)
+
+    if successes or failures:
         scale_down_cluster.delay()
+
+    return successes, failures
