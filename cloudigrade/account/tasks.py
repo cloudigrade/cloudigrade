@@ -158,16 +158,18 @@ def copy_ami_to_customer_account(arn, reference_ami_id, snapshot_region,
             'account',
             'Images with EC2 BillingProduct codes cannot be copied '
             'to another AWS account',
+            'You do not have permission to access the storage of this ami',
         )
         private_errors = (
             'You do not have permission to access the storage of this ami',
         )
         if maybe_trouble and \
                 e.response.get('Error').get('Code') == 'InvalidRequest':
-            if e.response.get('Error').get('Message') in public_errors:
+            if reference_ami.public and \
+                    e.response.get('Error').get('Message') in public_errors:
                 # This appears to be a marketplace AMI, mark it as inspected.
-                logger.info(_('Found a marketplace image "{0}", marking as '
-                              'inspected').format(reference_ami_id))
+                logger.info(_('Found a marketplace/community image "{0}", '
+                              'marking as inspected').format(reference_ami_id))
                 ami = AwsMachineImage.objects.get(ec2_ami_id=reference_ami_id)
                 ami.status = ami.INSPECTED
                 ami.save()
