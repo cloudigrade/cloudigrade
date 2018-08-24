@@ -338,8 +338,8 @@ def get_account_overview(account, start, end):
     """
     instances = []
     images = []
-    rhel = []
-    openshift = []
+    rhel_instances = []
+    openshift_instances = []
     # if the account was created right at or after the end time, we cannot give
     # meaningful data about the instances/images seen during the period,
     # therefore we need to make sure that we return None for those values
@@ -349,9 +349,10 @@ def get_account_overview(account, start, end):
             'data on its images/instances during the specified start and end '
             ' dates.'
         ).format(account, end))
-        total_images, total_instances, total_rhel, total_openshift = (
-            None, None, None, None
-        )
+        total_images = None
+        total_instances = None
+        total_instances_rhel = None
+        total_instances_openshift = None
     else:
         # _get_relevant_events will return the events in between the start &
         # end times & if no events are present during this period, it will
@@ -363,14 +364,14 @@ def get_account_overview(account, start, end):
                 instances.append(event.instance.id)
                 images.append(event.machineimage.id)
                 if event.machineimage.rhel:
-                    rhel.append(event.machineimage.id)
+                    rhel_instances.append(event.instance.id)
                 if event.machineimage.openshift:
-                    openshift.append(event.machineimage.id)
+                    openshift_instances.append(event.instance.id)
         # grab the totals
         total_images = len(set(images))
         total_instances = len(set(instances))
-        total_rhel = len(set(rhel))
-        total_openshift = len(set(openshift))
+        total_instances_rhel = len(set(rhel_instances))
+        total_instances_openshift = len(set(openshift_instances))
 
     cloud_account = {
         'id': account.id,
@@ -382,8 +383,8 @@ def get_account_overview(account, start, end):
         'name': account.name,
         'images': total_images,
         'instances': total_instances,
-        'rhel_instances': total_rhel,
-        'openshift_instances': total_openshift,
+        'rhel_instances': total_instances_rhel,
+        'openshift_instances': total_instances_openshift,
     }
 
     return cloud_account

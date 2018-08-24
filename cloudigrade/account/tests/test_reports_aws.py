@@ -850,8 +850,8 @@ class GetCloudAccountOverview(TestCase):
         # assert that we only find the one image
         self.assertExpectedAccountOverview(overview, self.account,
                                            images=1, instances=2,
-                                           rhel_instances=1,
-                                           openshift_instances=1)
+                                           rhel_instances=2,
+                                           openshift_instances=2)
 
     def test_get_cloud_account_overview_with_rhel(self):
         """Assert an account overview reports rhel correctly."""
