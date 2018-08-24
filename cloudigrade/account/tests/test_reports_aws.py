@@ -669,6 +669,42 @@ class GetDailyUsageComplexInstancesTest(GetDailyUsageTestBase):
         )), 2)
 
 
+class GetDailyUsageInstancesWithUnknownImagesActivity(GetDailyUsageTestBase):
+    """get_daily_usage for running instance with no known images."""
+
+    def generate_events(self, powered_times, instance=None):
+        """
+        Generate events without an image saved to the DB and returned.
+
+        Args:
+            powered_times (list[tuple]): Time periods instance is powered on.
+            instance (Instance): Optional which instance has the events. If
+                not specified, default is self.instance_1.
+
+        Returns:
+            list[InstanceEvent]: The list of events
+
+        """
+        if instance is None:
+            instance = self.instance_1
+        events = account_helper.generate_aws_instance_events(
+            instance, powered_times, no_image=True,
+        )
+        return events
+
+    def test_events_without_images(self):
+        """Assert empty report when the instance has no known images."""
+        powered_times = (
+            (
+                util_helper.utc_dt(2018, 1, 9, 0, 0, 0),
+                util_helper.utc_dt(2018, 1, 10, 0, 0, 0)
+            ),
+        )
+        self.generate_events(powered_times)
+        results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
+        self.assertNoActivityFound(results)
+
+
 class GetCloudAccountOverview(TestCase):
     """Test that the CloudAccountOverview functions act correctly."""
 
@@ -888,6 +924,24 @@ class GetCloudAccountOverview(TestCase):
                                            images=2, instances=2,
                                            rhel_instances=1,
                                            openshift_instances=2)
+
+    def test_get_cloud_account_overview_with_unknown_image(self):
+        """Assert an account overview reports when images are unknown."""
+        # generate event for instance_1 with unknown image
+        account_helper.generate_single_aws_instance_event(
+            self.instance_1, self.start, InstanceEvent.TYPE.power_on,
+            no_image=True)
+        # generate event for instance_2 with unknown image
+        account_helper.generate_single_aws_instance_event(
+            self.instance_2, self.start, InstanceEvent.TYPE.power_on,
+            no_image=True)
+        overview = reports.get_account_overview(
+            self.account, self.start, self.end)
+        # assert that we find instances but no images or RHEL/OCP instances.
+        self.assertExpectedAccountOverview(overview, self.account,
+                                           images=0, instances=2,
+                                           rhel_instances=0,
+                                           openshift_instances=0)
 
     def test_get_cloud_account_overview_account_creation_after(self):
         """Assert an overview of an account created after end reports None."""

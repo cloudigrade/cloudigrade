@@ -145,6 +145,25 @@ def _generate_daily_periods(start, end):
     return periods
 
 
+def _get_image_from_instance_events(events):
+    """
+    Get the first MachineImage from a set of InstanceEvents.
+
+    Args:
+        events (list[InstanceEvent]): The events being checked
+
+    Returns:
+        MachineImage: the first image found or None if none is found.
+
+    """
+    image = None
+    for event in events:
+        if event.machineimage:
+            image = event.machineimage
+            break
+    return image
+
+
 def _calculate_daily_usage(start, end, instance_events):
     """
     Get all InstanceEvents relevant to the report parameters.
@@ -180,11 +199,17 @@ def _calculate_daily_usage(start, end, instance_events):
                 continue
 
             # Since all events for AWS have the same image, we can short-
-            # circuit the logic here and look at only 1 event. We may need
+            # circuit the logic here and find any event's image. We may need
             # to revisit this logic in the future if we add support for a
             # cloud provider that allows you to change the image on an
             # existing instance.
-            image = events[0].machineimage
+            image = _get_image_from_instance_events(events)
+            if image is None:
+                logger.debug(_(
+                    'Instance {0} has no known machine image. Therefore '
+                    'we do not know to report it as RHEL or OpenShift.'
+                ).format(instance))
+                continue
             if image.id not in image_ids_seen:
                 image_ids_seen.add(image.id)
                 if image.rhel:
@@ -362,11 +387,17 @@ def get_account_overview(account, start, end):
             valid_event = validate_event(event, start)
             if valid_event:
                 instances.append(event.instance.id)
-                images.append(event.machineimage.id)
-                if event.machineimage.rhel:
-                    rhel_instances.append(event.instance.id)
-                if event.machineimage.openshift:
-                    openshift_instances.append(event.instance.id)
+                if event.machineimage:
+                    images.append(event.machineimage.id)
+                    if event.machineimage.rhel:
+                        rhel_instances.append(event.instance.id)
+                    if event.machineimage.openshift:
+                        openshift_instances.append(event.instance.id)
+                else:
+                    logger.debug(_(
+                        'Instance event {0} has no machine image. Therefore '
+                        'we do not know to report it as RHEL or OpenShift.'
+                    ).format(event))
         # grab the totals
         total_images = len(set(images))
         total_instances = len(set(instances))

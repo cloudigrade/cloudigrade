@@ -71,7 +71,7 @@ def generate_aws_instance(account, ec2_instance_id=None, region=None):
 
 def generate_single_aws_instance_event(
         instance, powered_time=None, event_type=None, ec2_ami_id=None,
-        instance_type=None, subnet=None):
+        instance_type=None, subnet=None, no_image=False):
     """
     Generate single AwsInstanceEvent for testing.
 
@@ -85,13 +85,12 @@ def generate_single_aws_instance_event(
         ec2_ami_id (str): Optional EC2 AMI ID the instance runs.
         instance_type (str): Optional AWS instance type.
         subnet (str): Optional subnet ID where instance runs.
+        no_image (bool): If true, don't create and assign an image.
 
     Returns:
         AwsInstanceEvent: The created AwsInstanceEvent.
 
     """
-    if ec2_ami_id is None:
-        ec2_ami_id = helper.generate_dummy_image_id()
     if instance_type is None:
         instance_type = random.choice(helper.SOME_EC2_INSTANCE_TYPES)
     if subnet is None:
@@ -99,12 +98,17 @@ def generate_single_aws_instance_event(
     if event_type is None:
         event_type = InstanceEvent.TYPE.power_off
 
-    image, __ = AwsMachineImage.objects.get_or_create(
-        ec2_ami_id=ec2_ami_id,
-        defaults={
-            'owner_aws_account_id': instance.account.aws_account_id,
-        }
-    )
+    image = None
+    if not no_image:
+        if ec2_ami_id is None:
+            ec2_ami_id = helper.generate_dummy_image_id()
+        image, __ = AwsMachineImage.objects.get_or_create(
+            ec2_ami_id=ec2_ami_id,
+            defaults={
+                'owner_aws_account_id': instance.account.aws_account_id,
+            }
+        )
+
     event = AwsInstanceEvent.objects.create(
         instance=instance,
         machineimage=image,
@@ -117,7 +121,8 @@ def generate_single_aws_instance_event(
 
 
 def generate_aws_instance_events(
-    instance, powered_times, ec2_ami_id=None, instance_type=None, subnet=None
+    instance, powered_times, ec2_ami_id=None, instance_type=None, subnet=None,
+    no_image=False,
 ):
     """
     Generate list of AwsInstanceEvents for the AwsInstance for testing.
@@ -135,12 +140,15 @@ def generate_aws_instance_events(
         ec2_ami_id (str): Optional EC2 AMI ID the instance runs.
         instance_type (str): Optional AWS instance type.
         subnet (str): Optional subnet ID where instance runs.
+        no_image (bool): If true, don't assign an image.
 
     Returns:
         list(AwsInstanceEvent): The list of created AwsInstanceEvents.
 
     """
-    if ec2_ami_id is None:
+    if no_image:
+        ec2_ami_id = None
+    elif ec2_ami_id is None:
         ec2_ami_id = helper.generate_dummy_image_id()
     if instance_type is None:
         instance_type = random.choice(helper.SOME_EC2_INSTANCE_TYPES)
