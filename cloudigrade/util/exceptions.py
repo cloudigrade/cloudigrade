@@ -92,6 +92,10 @@ class CloudTrailLogAnalysisMissingData(Exception):
     """Raise when log analysis is missing data upon attempted save."""
 
 
+class InvalidHoundigradeJsonFormat(Exception):
+    """Raise when houndigrade returns json that does not have images."""
+
+
 def api_exception_handler(exc, context):
     """
     Log exception and return an appropriately formatted response.

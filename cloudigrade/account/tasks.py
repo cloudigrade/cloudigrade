@@ -18,7 +18,8 @@ from util.aws import rewrap_aws_errors
 from util.celery import retriable_shared_task
 from util.exceptions import (AwsECSInstanceNotReady,
                              AwsSnapshotEncryptedError,
-                             AwsTooManyECSInstances)
+                             AwsTooManyECSInstances,
+                             InvalidHoundigradeJsonFormat)
 from util.misc import generate_device_name
 
 logger = logging.getLogger(__name__)
@@ -505,7 +506,7 @@ def scale_down_cluster():
 
 
 @transaction.atomic
-def persist_aws_inspection_cluster_results(inspection_result):
+def persist_aws_inspection_cluster_results(inspection_results):
     """
     Persist the aws houndigrade inspection result.
 
@@ -514,8 +515,13 @@ def persist_aws_inspection_cluster_results(inspection_result):
     Returns:
         None
     """
-    results = inspection_result.get('images', [])
-    for image_id, image_json in results.items():
+    images = inspection_results.get('images')
+    if images is None:
+        raise InvalidHoundigradeJsonFormat(_(
+            'Inspection results json missing images: {}').format(
+            inspection_results))
+
+    for image_id, image_json in images.items():
         ami = AwsMachineImage.objects.get(ec2_ami_id=image_id)
         ami.inspection_json = json.dumps(image_json)
         ami.status = ami.INSPECTED
@@ -542,7 +548,8 @@ def persist_inspection_cluster_results_task():
         inspection_results = json.loads(message.body)
         if inspection_results.get(CLOUD_KEY) == CLOUD_TYPE_AWS:
             try:
-                persist_aws_inspection_cluster_results(inspection_results)
+                persist_aws_inspection_cluster_results(
+                    inspection_results)
             except Exception as e:
                 logger.exception(_(
                     'Unexpected error in result processing: {0}'

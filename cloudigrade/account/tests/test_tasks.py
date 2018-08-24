@@ -23,6 +23,7 @@ from util.exceptions import (AwsECSInstanceNotReady, AwsSnapshotCopyLimitError,
                              AwsSnapshotEncryptedError, AwsSnapshotError,
                              AwsSnapshotNotOwnedError, AwsTooManyECSInstances,
                              AwsVolumeError, AwsVolumeNotReadyError,
+                             InvalidHoundigradeJsonFormat,
                              SnapshotNotReadyException)
 from util.tests import helper as util_helper
 from . import helper
@@ -1044,6 +1045,23 @@ class AccountCeleryTaskTest(TestCase):
             inspection_results['images'][ami_id])
         self.assertFalse(machine_image1.rhel)
         self.assertFalse(machine_image1.openshift)
+
+    def test_persist_aws_inspection_cluster_results_no_images(self):
+        """Assert that non rhel_images are not tagged rhel."""
+        ami_id = util_helper.generate_dummy_image_id()
+        helper.generate_aws_image(is_encrypted=False,
+                                  is_windows=False,
+                                  ec2_ami_id=ami_id)
+
+        inspection_results = {
+            'cloud': 'aws',
+        }
+
+        with self.assertRaises(InvalidHoundigradeJsonFormat) as e:
+            tasks.persist_aws_inspection_cluster_results(inspection_results)
+            self.assertTrue(
+                'Inspection results json missing images: {}'.format(
+                    inspection_results) in e)
 
     @patch('account.tasks.aws.delete_messages_from_queue')
     @patch('account.tasks.aws.yield_messages_from_queue')
