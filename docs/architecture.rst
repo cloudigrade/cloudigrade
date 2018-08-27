@@ -26,7 +26,7 @@ cloudigrade's asynchronous task workers orchestrate various time-variable operat
 
 `houndigrade <https://github.com/cloudigrade/houndigrade>`_ is a small auxiliary Python program that cloudigrade executes inside a short-lived cloudigrade-owned instance in the public cloud. houndigrade inspects the contents of attached volumes, determines what relevant products exist for each volume, and reports its findings back to cloudigrade.
 
-.. image:: architecture-overview.svg
+.. image:: illustrations/architecture-overview.svg
     :width: 600px
     :align: center
 
@@ -39,7 +39,7 @@ Register new cloud account
 
 When a new user registers their cloud account with cloudigrade, cloudigrade verifies that it has access to the account, retrieves a list of currently running instances, saves information about the account and running instance, and launches asynchronous tasks to inspect any new, unrecognized images belonging to currently running instances.
 
-.. image:: account-register.svg
+.. image:: illustrations/account-register.svg
     :width: 750px
     :align: center
 
@@ -51,7 +51,7 @@ cloudigrade periodically checks the public cloud's activity logs to discover any
 
 With AWS, this process requires first checking AWS SQS for new messages, retrieving the full message contents from AWS S3 as referenced by the SQS message, and iterating through the full log contents to search for and persist any relevant information. If cloudigrade discovers any new, unrecognized machine images, it launches an asynchronous task to inspect it.
 
-.. image:: periodic-log-scrape.svg
+.. image:: illustrations/periodic-log-scrape.svg
     :width: 900px
     :align: center
 
@@ -62,38 +62,38 @@ Async image inspection
 When cloudigrade encounters a user's image ID that it does not recognize, cloudigrade performs a sequence of asynchronous tasks to inspect that image. First, it calls a task to copy the image snapshot, then it calls a task to create a volume after the snapshot finishes copying, and then it calls a task to enqueue a message representing the created volume after the volume is ready.
 
 
-.. image:: inspection-aws-01-copy-snapshot.svg
+.. image:: illustrations/inspection-aws-01-copy-snapshot.svg
     :width: 600px
     :align: center
 
-.. image:: inspection-aws-02-create-volume.svg
+.. image:: illustrations/inspection-aws-02-create-volume.svg
     :width: 600px
     :align: center
 
-.. image:: inspection-aws-03-enqueue-volume.svg
+.. image:: illustrations/inspection-aws-03-enqueue-volume.svg
     :width: 600px
     :align: center
 
 A periodic scheduled task dequeues a batch of ready volumes and prepares a special instance to do inspection, and then when the instance is ready, it calls a task to execute houndigrade in that instance with the volumes attached.
 
-.. image:: inspection-aws-04-scale-cluster.svg
+.. image:: illustrations/inspection-aws-04-scale-cluster.svg
     :width: 750px
     :align: center
 
-.. image:: inspection-aws-05-configure-cluster.svg
+.. image:: illustrations/inspection-aws-05-configure-cluster.svg
     :width: 450px
     :align: center
 
 When houndigrade completes its inspection, it puts a message on a queue for cloudigrade containing houndigrade's inspection findings. When cloudigrade processes that message, cloudigrade calls a task to clean up the created snapshots, volumes, and instance used for inspection.
 
-.. image:: inspection-aws-06-inspection.svg
+.. image:: illustrations/inspection-aws-06-inspection.svg
     :width: 450px
     :align: center
 
-.. image:: inspection-aws-07-process-results.svg
+.. image:: illustrations/inspection-aws-07-process-results.svg
     :width: 750px
     :align: center
 
-.. image:: inspection-aws-08-cleanup-cluster.svg
+.. image:: illustrations/inspection-aws-08-cleanup-cluster.svg
     :width: 450px
     :align: center

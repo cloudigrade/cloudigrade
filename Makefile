@@ -113,7 +113,7 @@ oc-user-authenticate:
 	oc rsh -c cloudigrade-api $$(oc get pods -o jsonpath='{.items[*].metadata.name}' -l name=cloudigrade-api | awk '{print $$1}') scl enable rh-python36 -- python manage.py drf_create_token $$uname
 
 docs-seqdiag:
-	cd docs && for FILE in *.diag; do seqdiag -Tsvg $$FILE; done
+	cd docs/illustrations && for FILE in *.diag; do seqdiag -Tsvg $$FILE; done
 
 docs: docs-seqdiag
 

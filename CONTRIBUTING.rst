@@ -72,7 +72,7 @@ All code **must** cleanly pass Flake8 checks before it can be accepted. Occasion
 
 Imports must follow the ``pycharm`` style. If you are using PyCharm as your IDE, you can coerce it to use a compliant behavior by configuring your settings as follows:
 
-.. image:: docs/pycharm-settings-imports.png
+.. image:: docs/illustrations/pycharm-settings-imports.png
    :alt: editor: code style: imports: optimize imports
 
 Alternatively, you may use the command-line tool `isort <https://pypi.python.org/pypi/isort>`_ which has default settings that match closely enough for **cloudigrade**. `isort` can be used to automatically clean up imports across many files, but please manually review its changes before committing to ensure that there are no unintended side-effects. Example usage:
