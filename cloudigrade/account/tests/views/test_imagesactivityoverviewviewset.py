@@ -31,6 +31,8 @@ class ImagesActivityOverviewViewSetTestCase(TestCase):
             user=self.user, name=faker.Faker().bs())
         self.account_none = account_helper.generate_aws_account(
             user=self.user, name=faker.Faker().bs())
+        self.account_unknown = account_helper.generate_aws_account(
+            user=self.user, name=faker.Faker().bs())
         self.account_plain = account_helper.generate_aws_account(
             user=self.other_user, name=faker.Faker().bs())
 
@@ -38,6 +40,8 @@ class ImagesActivityOverviewViewSetTestCase(TestCase):
         self.a1_instance_rhel = account_helper.generate_aws_instance(
             self.account_mixed)
         self.a1_instance_oc = account_helper.generate_aws_instance(
+            self.account_mixed)
+        self.a1_instance_unknown = account_helper.generate_aws_instance(
             self.account_mixed)
         self.a2_instance_plain = account_helper.generate_aws_instance(
             self.account_plain)
@@ -68,6 +72,11 @@ class ImagesActivityOverviewViewSetTestCase(TestCase):
             self.a1_instance_oc,
             self.powered_times,
             ec2_ami_id=self.image_ocp.ec2_ami_id,
+        )
+        account_helper.generate_aws_instance_events(
+            self.a1_instance_unknown,
+            self.powered_times,
+            no_image=True,
         )
         account_helper.generate_aws_instance_events(
             self.a2_instance_plain,

@@ -486,11 +486,12 @@ def get_image_usages_for_account(start, end, account_id):
         runtime = _calculate_instance_usage(start, end, events)
         if not runtime:
             continue
-        machineimage = events[0].machineimage
-        image_id = machineimage.id
-        images[image_id].machine_image = machineimage
-        images[image_id].instance_ids.add(instance.id)
-        images[image_id].runtime_seconds += runtime
+        image = _get_image_from_instance_events(events)
+        if image:
+            image_id = image.id
+            images[image_id].machine_image = image
+            images[image_id].instance_ids.add(instance.id)
+            images[image_id].runtime_seconds += runtime
 
     return dict(images)
 

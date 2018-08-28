@@ -137,6 +137,29 @@ class GenerateAwsInstanceEventsTest(TestCase):
             self.assertEqual(event.instance_type, instance_type)
             self.assertEqual(event.subnet, subnet)
 
+    def test_generate_aws_events_with_no_image(self):
+        """Assert generation of InstanceEvents with no_image specified."""
+        account = helper.generate_aws_account()
+        instance = helper.generate_aws_instance(account)
+        powered_times = (
+            (util_helper.utc_dt(2017, 1, 2), util_helper.utc_dt(2017, 1, 3)),
+        )
+        events = helper.generate_aws_instance_events(instance, powered_times,
+                                                     no_image=True)
+
+        self.assertEqual(len(events), 2)
+        self.assertEqual(events[0].occurred_at, powered_times[0][0])
+        self.assertEqual(events[1].occurred_at, powered_times[0][1])
+        self.assertIsNone(events[0].machineimage)
+        self.assertIsNotNone(events[0].instance_type)
+        self.assertIsNotNone(events[0].subnet)
+
+        # Assert they all have the same subnet and instance type but no image.
+        for event in events:
+            self.assertIsNone(event.machineimage)
+            self.assertEqual(event.instance_type, events[0].instance_type)
+            self.assertEqual(event.subnet, events[0].subnet)
+
 
 class GenerateAwsImageTest(TestCase):
     """generate_aws_image test case."""

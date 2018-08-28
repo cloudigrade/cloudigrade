@@ -164,7 +164,8 @@ def generate_aws_instance_events(
                 event_type=InstanceEvent.TYPE.power_on,
                 ec2_ami_id=ec2_ami_id,
                 instance_type=instance_type,
-                subnet=subnet
+                subnet=subnet,
+                no_image=no_image
             )
             events.append(event)
         if power_off_time is not None:
@@ -174,7 +175,8 @@ def generate_aws_instance_events(
                 event_type=InstanceEvent.TYPE.power_off,
                 ec2_ami_id=ec2_ami_id,
                 instance_type=instance_type,
-                subnet=subnet
+                subnet=subnet,
+                no_image=no_image
             )
             events.append(event)
     return events
