@@ -50,25 +50,6 @@ class TokenDestroyView(OriginalTokenDestroyView):
     permission_classes = [permissions.IsAuthenticated]
 
 
-class PasswordResetView(OriginalPasswordResetView):
-    """
-    Use this endpoint to send email to user with password reset link.
-    """
-
-
-class SetPasswordView(OriginalSetPasswordView):
-    """
-    Use this endpoint to change user password.
-    """
-    permission_classes = [permissions.IsAuthenticated]
-
-
-class PasswordResetConfirmView(OriginalPasswordResetConfirmView):
-    """
-    Use this endpoint to finish reset password process.
-    """
-
-
 class ActivationView(OriginalActivationView):
     """
     Use this endpoint to activate user account.
