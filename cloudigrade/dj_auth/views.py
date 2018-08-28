@@ -1,19 +1,15 @@
-from dj_auth import permissions
+from django.contrib.auth import get_user_model
+from djoser import utils
+from djoser.conf import settings
 from djoser.views import (
-    ActivationView as OriginalActivationView,
-    PasswordResetConfirmView as OriginalPasswordResetConfirmView,
-    PasswordResetView as OriginalPasswordResetView,
     RootView as OriginalRootView,
-    SetPasswordView as OriginalSetPasswordView,
-    SetUsernameView as OriginalSetUsernameView,
     TokenCreateView as OriginalTokenCreateView,
     TokenDestroyView as OriginalTokenDestroyView,
     UserView as OriginalUserView
 )
-from django.contrib.auth import get_user_model
 from rest_framework.response import Response
-from djoser import utils
-from djoser.conf import settings
+
+from dj_auth import permissions
 
 
 class RootView(OriginalRootView):
@@ -46,19 +42,6 @@ class TokenCreateView(OriginalTokenCreateView):
 class TokenDestroyView(OriginalTokenDestroyView):
     """
     Use this endpoint to logout user (remove user authentication token).
-    """
-    permission_classes = [permissions.IsAuthenticated]
-
-
-class ActivationView(OriginalActivationView):
-    """
-    Use this endpoint to activate user account.
-    """
-
-
-class SetUsernameView(OriginalSetUsernameView):
-    """
-    Use this endpoint to change user username.
     """
     permission_classes = [permissions.IsAuthenticated]
 
