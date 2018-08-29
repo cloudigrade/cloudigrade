@@ -4,7 +4,7 @@ TOPDIR		= $(shell pwd)
 PYDIR		= cloudigrade
 
 OC_SOURCE	= registry.access.redhat.com/openshift3/ose
-OC_VERSION	= v3.9.31
+OC_VERSION	= v3.9.40
 OC_DATA_DIR	= ${HOME}/.oc/openshift.local.data
 OC_IS_OS	= rhel7
 
