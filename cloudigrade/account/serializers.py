@@ -85,10 +85,10 @@ class AwsAccountSerializer(HyperlinkedModelSerializer):
         arn = aws.AwsArn(validated_data['account_arn'])
         aws_account_id = arn.account_id
 
-        account = AwsAccount.objects.filter(
+        account_exists = AwsAccount.objects.filter(
             aws_account_id=aws_account_id
-        ).first()
-        if account is not None:
+        ).exists()
+        if account_exists:
             raise serializers.ValidationError(
                 detail={
                     'account_arn': [
