@@ -9,10 +9,12 @@ from django.conf import settings
 from django.db import transaction
 from django.utils.translation import gettext as _
 
-from account.models import AwsMachineImage
+from account.models import AwsAccount, AwsMachineImage
 from account.util import (_get_sqs_queue_url, add_messages_to_queue,
                           create_aws_machine_image_copy,
-                          read_messages_from_queue)
+                          create_initial_aws_instance_events,
+                          create_new_machine_images, generate_aws_ami_messages,
+                          read_messages_from_queue, start_image_inspection)
 from util import aws
 from util.aws import rewrap_aws_errors
 from util.celery import retriable_shared_task
@@ -28,6 +30,30 @@ logger = logging.getLogger(__name__)
 CLOUD_KEY = 'cloud'
 CLOUD_TYPE_AWS = 'aws'
 HOUNDIGRADE_MESSAGE_READ_LEN = 10
+
+
+@retriable_shared_task
+@rewrap_aws_errors
+def initial_aws_describe_instances(account_id):
+    """
+    Fetch and save instances data found upon AWS cloud account creation.
+
+    Args:
+        account_id (int): the AwsAccount id
+        arn (str): Amazon Resource Name for the AWS account
+    """
+    account = AwsAccount.objects.get(pk=account_id)
+    arn = account.account_arn
+
+    session = aws.get_session(arn)
+    instances_data = aws.get_running_instances(session)
+    with transaction.atomic():
+        new_ami_ids = create_new_machine_images(session, instances_data)
+        create_initial_aws_instance_events(account, instances_data)
+    messages = generate_aws_ami_messages(instances_data, new_ami_ids)
+    for message in messages:
+        start_image_inspection(
+            str(arn), message['image_id'], message['region'])
 
 
 @retriable_shared_task

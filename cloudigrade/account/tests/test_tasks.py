@@ -2,7 +2,7 @@
 import json
 import random
 import uuid
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, Mock, call, patch
 
 from botocore.exceptions import ClientError
 from celery.exceptions import Retry
@@ -10,11 +10,17 @@ from django.conf import settings
 from django.test import TestCase
 
 from account import tasks
-from account.models import AwsMachineImage, AwsMachineImageCopy
-from account.tasks import (_build_container_definition, copy_ami_snapshot,
-                           copy_ami_to_customer_account, create_volume,
-                           delete_snapshot, enqueue_ready_volume,
-                           remove_snapshot_ownership, scale_down_cluster)
+from account.models import (AwsInstance, AwsMachineImage, AwsMachineImageCopy,
+                            InstanceEvent)
+from account.tasks import (_build_container_definition,
+                           aws,
+                           copy_ami_snapshot,
+                           copy_ami_to_customer_account,
+                           create_volume,
+                           delete_snapshot,
+                           enqueue_ready_volume,
+                           remove_snapshot_ownership,
+                           scale_down_cluster)
 from account.tests import helper as account_helper
 from util.exceptions import (AwsECSInstanceNotReady, AwsSnapshotCopyLimitError,
                              AwsSnapshotEncryptedError, AwsSnapshotError,
@@ -34,6 +40,106 @@ class AccountCeleryTaskTest(TestCase):
         self.ready_volumes_queue_name = '{0}ready_volumes'.format(
             settings.AWS_NAME_PREFIX
         )
+
+    @patch('account.tasks.aws')
+    @patch('account.util.aws')
+    def test_initial_aws_describe_instances(self, mock_util_aws, mock_aws):
+        """
+        Test happy-path behaviors of initial_aws_describe_instances.
+
+        This test simulates a situation in which three running instances are
+        found. One instance has the Windows platform, another instance has its
+        image tagged for OpenShift, and a third instance has neither of those.
+
+        The end result is that the three running instances should be saved,
+        three power-on events should be saved (one for each instance), three
+        images should be saved, and two new tasks should be spawned for
+        inspecting the two not-windows images.
+        """
+        account = account_helper.generate_aws_account()
+
+        # Set up mocked data in AWS API responses.
+        region = random.choice(util_helper.SOME_AWS_REGIONS)
+        described_ami_unknown = util_helper.generate_dummy_describe_image()
+        described_ami_openshift = util_helper.generate_dummy_describe_image(
+            openshift=True,
+        )
+        described_ami_windows = util_helper.generate_dummy_describe_image()
+        ami_id_unknown = described_ami_unknown['ImageId']
+        ami_id_openshift = described_ami_openshift['ImageId']
+        ami_id_windows = described_ami_windows['ImageId']
+
+        running_instances = [
+            util_helper.generate_dummy_describe_instance(
+                image_id=ami_id_unknown,
+                state=aws.InstanceState.running
+            ),
+            util_helper.generate_dummy_describe_instance(
+                image_id=ami_id_openshift,
+                state=aws.InstanceState.running
+            ),
+            util_helper.generate_dummy_describe_instance(
+                image_id=ami_id_windows,
+                state=aws.InstanceState.running,
+                platform=AwsMachineImage.WINDOWS,
+            ),
+        ]
+        described_instances = {
+            region: running_instances,
+        }
+
+        mock_aws.get_running_instances.return_value = described_instances
+        mock_util_aws.describe_images.return_value = [
+            described_ami_unknown,
+            described_ami_openshift,
+            described_ami_windows,
+        ]
+        mock_util_aws.is_instance_windows.side_effect = aws.is_instance_windows
+        mock_util_aws.OPENSHIFT_TAG = aws.OPENSHIFT_TAG
+
+        start_inpection_calls = [
+            call(account.account_arn, described_ami_unknown['ImageId'],
+                 region),
+            call(account.account_arn, described_ami_openshift['ImageId'],
+                 region),
+        ]
+
+        with patch.object(tasks, 'start_image_inspection') as mock_start:
+            tasks.initial_aws_describe_instances(account.id)
+            mock_start.assert_has_calls(start_inpection_calls)
+
+        # Verify that we created all three running instances and events.
+        instances_count = AwsInstance.objects.filter(account=account).count()
+        self.assertEqual(instances_count, 3)
+
+        for described_instance in running_instances:
+            instance_id = described_instance['InstanceId']
+            instance = AwsInstance.objects.get(ec2_instance_id=instance_id)
+            self.assertIsInstance(instance, AwsInstance)
+            self.assertEqual(region, instance.region)
+            event = InstanceEvent.objects.get(instance=instance)
+            self.assertIsInstance(event, InstanceEvent)
+            self.assertEqual(InstanceEvent.TYPE.power_on, event.event_type)
+
+        # Verify that we saved all images used by the running instances.
+        images_count = AwsMachineImage.objects.count()
+        self.assertEqual(images_count, 3)
+
+        image = AwsMachineImage.objects.get(ec2_ami_id=ami_id_unknown)
+        self.assertFalse(image.rhel_detected)
+        self.assertFalse(image.openshift_detected)
+        self.assertEqual(image.name, described_ami_unknown['Name'])
+
+        image = AwsMachineImage.objects.get(ec2_ami_id=ami_id_openshift)
+        self.assertFalse(image.rhel_detected)
+        self.assertTrue(image.openshift_detected)
+        self.assertEqual(image.name, described_ami_openshift['Name'])
+
+        image = AwsMachineImage.objects.get(ec2_ami_id=ami_id_windows)
+        self.assertFalse(image.rhel_detected)
+        self.assertFalse(image.openshift_detected)
+        self.assertEqual(image.name, described_ami_windows['Name'])
+        self.assertEqual(image.platform, AwsMachineImage.WINDOWS)
 
     @patch('account.tasks.aws')
     def test_copy_ami_snapshot_success(self, mock_aws):

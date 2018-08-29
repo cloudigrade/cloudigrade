@@ -3,22 +3,17 @@ import logging
 
 from botocore.exceptions import ClientError
 from dateutil import tz
-from django.db import transaction
 from django.utils.translation import gettext as _
 from rest_framework import serializers
 from rest_framework.serializers import (HyperlinkedModelSerializer,
                                         Serializer)
 from rest_polymorphic.serializers import PolymorphicSerializer
 
-from account import reports
+from account import reports, tasks
 from account.models import (AwsAccount,
                             AwsInstance,
                             AwsInstanceEvent,
                             AwsMachineImage)
-from account.util import (create_initial_aws_instance_events,
-                          create_new_machine_images,
-                          generate_aws_ami_messages,
-                          start_image_inspection)
 from util import aws, misc
 from util.exceptions import InvalidArn
 
@@ -121,30 +116,20 @@ class AwsAccountSerializer(HyperlinkedModelSerializer):
             raise
         account_verified, failed_actions = aws.verify_account_access(session)
         if account_verified:
-            instances_data = aws.get_running_instances(session)
-            with transaction.atomic():
-                account.save()
-                try:
-                    aws.configure_cloudtrail(session, aws_account_id)
-                except ClientError as error:
-                    if error.response.get('Error', {}).get('Code') == \
-                            'AccessDeniedException':
-                        raise serializers.ValidationError(
-                            detail={
-                                'account_arn': [
-                                    _('Access denied to create CloudTrail for '
-                                      'ARN "{0}"').format(arn)
-                                ]
-                            }
-                        )
-                    raise
-                new_ami_ids = create_new_machine_images(session,
-                                                        instances_data)
-                create_initial_aws_instance_events(account, instances_data)
-            messages = generate_aws_ami_messages(instances_data, new_ami_ids)
-            for message in messages:
-                start_image_inspection(
-                    str(arn), message['image_id'], message['region'])
+            try:
+                aws.configure_cloudtrail(session, aws_account_id)
+            except ClientError as error:
+                if error.response.get('Error', {}).get('Code') == \
+                        'AccessDeniedException':
+                    raise serializers.ValidationError(
+                        detail={
+                            'account_arn': [
+                                _('Access denied to create CloudTrail for '
+                                  'ARN "{0}"').format(arn)
+                            ]
+                        }
+                    )
+                raise
         else:
             failure_details = [_('Account verification failed.')]
             failure_details += [
@@ -156,6 +141,8 @@ class AwsAccountSerializer(HyperlinkedModelSerializer):
                     'account_arn': failure_details
                 }
             )
+        account.save()
+        tasks.initial_aws_describe_instances.delay(account.id)
         return account
 
     def update(self, instance, validated_data):

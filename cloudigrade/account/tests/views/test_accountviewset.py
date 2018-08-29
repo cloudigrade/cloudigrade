@@ -186,7 +186,8 @@ class AccountViewSetTest(TestCase):
         self.assertResponseHasAwsAccountData(response, account)
 
     @patch.object(views.serializers, 'aws')
-    def test_create_account_with_name_success(self, mock_aws):
+    @patch.object(views.serializers, 'tasks')
+    def test_create_account_with_name_success(self, mock_tasks, mock_aws):
         """Test create account with a name succeeds."""
         mock_aws.verify_account_access.return_value = True, []
         mock_aws.AwsArn = AwsArn
@@ -207,9 +208,12 @@ class AccountViewSetTest(TestCase):
         for key, value in data.items():
             self.assertEqual(response.data[key], value)
         self.assertIsNotNone(response.data['name'])
+        mock_tasks.initial_aws_describe_instances.delay.assert_called()
 
     @patch.object(views.serializers, 'aws')
-    def test_create_account_with_duplicate_name_fail(self, mock_aws):
+    @patch.object(views.serializers, 'tasks')
+    def test_create_account_with_duplicate_name_fail(self, mock_tasks,
+                                                     mock_aws):
         """Test create account with a duplicate name fails."""
         mock_aws.verify_account_access.return_value = True, []
         mock_aws.AwsArn = AwsArn
@@ -228,9 +232,11 @@ class AccountViewSetTest(TestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertIn('non_field_errors', response.data)
+        mock_tasks.initial_aws_describe_instances.delay.assert_not_called()
 
     @patch.object(views.serializers, 'aws')
-    def test_create_account_without_name_success(self, mock_aws):
+    @patch.object(views.serializers, 'tasks')
+    def test_create_account_without_name_success(self, mock_tasks, mock_aws):
         """Test create account without a name succeeds."""
         mock_aws.verify_account_access.return_value = True, []
         mock_aws.AwsArn = AwsArn
@@ -250,6 +256,7 @@ class AccountViewSetTest(TestCase):
         for key, value in data.items():
             self.assertEqual(response.data[key], value)
         self.assertIsNone(response.data['name'])
+        mock_tasks.initial_aws_describe_instances.delay.assert_called()
 
     def test_update_account_patch_name_success(self):
         """Test updating an account with a name succeeds."""

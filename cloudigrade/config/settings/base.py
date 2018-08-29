@@ -293,6 +293,8 @@ CELERY_BROKER_URL = AWS_SQS_URL
 QUEUE_EXCHANGE_NAME = None
 
 CELERY_TASK_ROUTES = {
+    'account.tasks.initial_aws_describe_instances':
+        {'queue': 'initial_aws_describe_instances'},
     'account.tasks.copy_ami_snapshot':
         {'queue': 'copy_ami_snapshot'},
     'account.tasks.copy_ami_to_customer_account':
