@@ -11,13 +11,10 @@ from django.test import TestCase
 
 from account import tasks
 from account.models import AwsMachineImage, AwsMachineImageCopy
-from account.tasks import (copy_ami_snapshot,
-                           copy_ami_to_customer_account,
-                           create_volume,
-                           delete_snapshot,
-                           enqueue_ready_volume,
-                           remove_snapshot_ownership,
-                           scale_down_cluster)
+from account.tasks import (_build_container_definition, copy_ami_snapshot,
+                           copy_ami_to_customer_account, create_volume,
+                           delete_snapshot, enqueue_ready_volume,
+                           remove_snapshot_ownership, scale_down_cluster)
 from account.tests import helper as account_helper
 from util.exceptions import (AwsECSInstanceNotReady, AwsSnapshotCopyLimitError,
                              AwsSnapshotEncryptedError, AwsSnapshotError,
@@ -866,14 +863,11 @@ class AccountCeleryTaskTest(TestCase):
     @patch('account.models.MachineImage.objects')
     @patch('account.tasks.boto3')
     @patch('account.tasks.aws')
-    def test_run_inspection_cluster_success(self, mock_aws,
-                                            mock_boto3,
-                                            mock_machine_image_objects):
+    def test_run_inspection_cluster_success(
+            self, mock_aws, mock_boto3, mock_image_objects):
         """Asserts successful starting of the houndigrade task."""
-        mock_machine_image_objects.get.return_value = \
-            mock_machine_image_objects
-
-        mock_machine_image_objects.INSPECTING.return_value = 'inspecting'
+        mock_image_objects.get.return_value = mock_image_objects
+        mock_image_objects.INSPECTING.return_value = 'inspecting'
 
         mock_list_container_instances = {
             'containerInstanceArns': [util_helper.generate_dummy_instance_id()]
@@ -897,11 +891,10 @@ class AccountCeleryTaskTest(TestCase):
             'volume_id': util_helper.generate_dummy_volume_id()}]
         tasks.run_inspection_cluster(messages)
 
-        mock_machine_image_objects.get.assert_called_once_with(
-            ec2_ami_id=mock_ami_id)
+        mock_image_objects.get.assert_called_once_with(ec2_ami_id=mock_ami_id)
 
-        self.assertEqual(mock_machine_image_objects.status.return_value,
-                         mock_machine_image_objects.INSPECTING.return_value)
+        self.assertEqual(mock_image_objects.status.return_value,
+                         mock_image_objects.INSPECTING.return_value)
 
         mock_ecs.list_container_instances.assert_called_once_with(
             cluster=settings.HOUNDIGRADE_ECS_CLUSTER_NAME)
@@ -915,6 +908,54 @@ class AccountCeleryTaskTest(TestCase):
 
         mock_ec2.Volume.assert_called_once_with(messages[0]['volume_id'])
         mock_ec2.Volume.return_value.attach_to_instance.assert_called_once()
+
+    @patch('account.tasks.settings')
+    def test_build_container_definition_with_sentry(self, mock_s):
+        """Assert successful build of definition with sentry params."""
+        enable_sentry = True
+        sentry_dsn = 'dsn'
+        sentry_release = '1.3.3.7'
+        sentry_environment = 'test'
+
+        expected_result = [
+            {'name': 'HOUNDIGRADE_SENTRY_DSN', 'value': sentry_dsn},
+            {'name': 'HOUNDIGRADE_SENTRY_RELEASE', 'value': sentry_release},
+            {'name': 'HOUNDIGRADE_SENTRY_ENVIRONMENT',
+             'value': sentry_environment}]
+
+        mock_s.HOUNDIGRADE_ENABLE_SENTRY = enable_sentry
+        mock_s.HOUNDIGRADE_SENTRY_DSN = sentry_dsn
+        mock_s.HOUNDIGRADE_SENTRY_RELEASE = sentry_release
+        mock_s.HOUNDIGRADE_SENTRY_ENVIRONMENT = sentry_environment
+
+        task_command = ['-c', 'aws', '-t', 'ami-test', '/dev/sdba']
+
+        result = _build_container_definition(task_command)
+        for entry in expected_result:
+            self.assertIn(entry, result['environment'])
+
+    def test_build_container_definition_without_sentry(self):
+        """Assert successful build of definition with no sentry params."""
+        task_command = ['-c', 'aws', '-t', 'ami-test', '/dev/sdba']
+
+        result = _build_container_definition(task_command)
+
+        self.assertEqual(
+            result['image'], f'{settings.HOUNDIGRADE_ECS_IMAGE_NAME}:'
+                             f'{settings.HOUNDIGRADE_ECS_IMAGE_TAG}')
+        self.assertEqual(result['command'], task_command)
+        self.assertEqual(result['environment'][0]['value'],
+                         settings.AWS_SQS_REGION)
+        self.assertEqual(result['environment'][1]['value'],
+                         settings.AWS_SQS_ACCESS_KEY_ID)
+        self.assertEqual(result['environment'][2]['value'],
+                         settings.AWS_SQS_SECRET_ACCESS_KEY)
+        self.assertEqual(result['environment'][3]['value'],
+                         settings.HOUNDIGRADE_RESULTS_QUEUE_NAME)
+        self.assertEqual(result['environment'][4]['value'],
+                         settings.HOUNDIGRADE_EXCHANGE_NAME)
+        self.assertEqual(result['environment'][5]['value'],
+                         settings.CELERY_BROKER_URL)
 
     @patch('account.models.MachineImage.objects')
     @patch('account.tasks.boto3')

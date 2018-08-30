@@ -23,3 +23,15 @@ CLOUDTRAIL_NAME_PREFIX = AWS_NAME_PREFIX
 QUEUE_EXCHANGE_NAME = None
 
 STATIC_ROOT = env('DJANGO_STATIC_ROOT', default='/srv/cloudigrade/static/')
+
+if env('ENABLE_SENTRY', default=False):
+    RAVEN_CONFIG = {
+        'dsn': env('DJANGO_SENTRY_DSN'),
+        'release': env('DJANGO_SENTRY_RELEASE'),
+        'environment': env('DJANGO_SENTRY_ENVIRONMENT')
+    }
+    LOGGING['handlers']['sentry'] = {
+        'level': env('DJANGO_SENTRY_LOG_LEVEL', default='ERROR'),
+        'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler',
+    }
+    LOGGING['loggers']['']['handlers'].append('sentry')

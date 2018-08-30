@@ -4,6 +4,7 @@ data_file = .coverage
 source = cloudigrade
 omit =
     *config/settings/*
+    *config/celery.py
     *config/urls.py
     *config/wsgi.py
     *config/gunicorn.py

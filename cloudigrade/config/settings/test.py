@@ -10,3 +10,4 @@ AWS_NAME_PREFIX = env('AWS_NAME_PREFIX', default='cloudigrade-test-')
 CELERY_BROKER_TRANSPORT_OPTIONS['queue_name_prefix'] = AWS_NAME_PREFIX
 CLOUDTRAIL_NAME_PREFIX = AWS_NAME_PREFIX
 
+LOGGING['handlers']['console']['level'] = 'ERROR'

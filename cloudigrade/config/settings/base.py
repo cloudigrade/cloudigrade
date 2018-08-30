@@ -12,9 +12,9 @@ env = environ.Env()
 READ_DOT_ENV_FILE = env.bool('DJANGO_READ_DOT_ENV_FILE', default=False)
 
 if READ_DOT_ENV_FILE:
-    # Operating System Environment variables have precedence over variables defined in the .env file,
-    # that is to say variables from the .env files will only be used if not defined
-    # as environment variables.
+    # Operating System Environment variables have precedence over variables
+    # defined in the .env file, that is to say variables from the .env files
+    # will only be used if not defined as environment variables.
     env_file = str(ROOT_DIR.path('.env'))
     print('Loading : {}'.format(env_file))
     env.read_env(env_file)
@@ -24,6 +24,36 @@ if READ_DOT_ENV_FILE:
 SECRET_KEY = env('DJANGO_SECRET_KEY', default='base')
 DEBUG = env.bool('DJANGO_DEBUG', default=False)
 ALLOWED_HOSTS = env('DJANGO_ALLOWED_HOSTS', default=['*'])
+
+# Logging
+# https://docs.djangoproject.com/en/dev/topics/logging/
+# https://docs.python.org/3.6/library/logging.html
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': True,
+    'formatters': {
+        'verbose': {
+            'format': '%(asctime)s | %(levelname)s | '
+                      '%(filename)s:%(funcName)s:%(lineno)d | %(message)s'
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': env('DJANGO_CONSOLE_LOG_LEVEL', default='INFO'),
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        '': {
+            'handlers': ['console',],
+            'level': env('DJANGO_LOG_LEVEL', default='INFO'),
+        },
+    },
+}
+
+CELERY_WORKER_LOG_FORMAT = ('%(asctime)s | %(levelname)s | %(filename)s:'
+                            '%(funcName)s:%(lineno)d | %(message)s')
 
 # AWS Defaults
 S3_DEFAULT_REGION = env('S3_DEFAULT_REGION', default='us-east-1')
@@ -70,6 +100,7 @@ DJANGO_APPS = [
 
 # Any pip installed apps will go here
 THIRD_PARTY_APPS = [
+    'raven.contrib.django.raven_compat',
     'django_celery_beat',
     'rest_framework',
     'rest_framework.authtoken',
@@ -178,6 +209,12 @@ STATIC_URL = env('DJANGO_STATIC_URL', default='/static/')
 STATIC_ROOT = env('DJANGO_STATIC_ROOT', default=str(ROOT_DIR.path('static')))
 
 
+# Raven
+# https://sentry.io/onboarding/cloudigrade/cloudigrade-api/configure/python-django
+
+RAVEN_CONFIG = {}  # Configured in prod.py
+
+
 # Django Rest Framework
 # http://www.django-rest-framework.org/api-guide/settings/
 
@@ -230,6 +267,14 @@ AWS_NAME_PREFIX = env('AWS_NAME_PREFIX',
 HOUNDIGRADE_RESULTS_QUEUE_NAME = env('HOUNDIGRADE_RESULTS_QUEUE_NAME',
                                       default=AWS_NAME_PREFIX + \
                                               'inspection_results')
+
+if env.bool('HOUNDIGRADE_ENABLE_SENTRY', default=False):
+    HOUNDIGRADE_ENABLE_SENTRY = True
+    HOUNDIGRADE_SENTRY_DSN = env('HOUNDIGRADE_SENTRY_DSN')
+    HOUNDIGRADE_SENTRY_RELEASE = env('HOUNDIGRADE_SENTRY_RELEASE')
+    HOUNDIGRADE_SENTRY_ENVIRONMENT = env('HOUNDIGRADE_SENTRY_ENVIRONMENT')
+else:
+    HOUNDIGRADE_ENABLE_SENTRY = False
 
 CLOUDTRAIL_EVENT_URL = env(
     'CLOUDTRAIL_EVENT_URL',

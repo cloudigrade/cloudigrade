@@ -439,48 +439,9 @@ def run_inspection_cluster(messages, cloud='aws'):
 
         task_command.extend(['-t', message['ami_id'], mount_point])
 
-    # create task definition
     result = ecs.register_task_definition(
         family=f'{settings.HOUNDIGRADE_ECS_FAMILY_NAME}',
-        containerDefinitions=[
-            {
-                'name': 'Houndigrade',
-                'image': f'{settings.HOUNDIGRADE_ECS_IMAGE_NAME}:'
-                         f'{settings.HOUNDIGRADE_ECS_IMAGE_TAG}',
-                'cpu': 0,
-                'memoryReservation': 256,
-                'essential': True,
-                'command': task_command,
-                'environment': [
-                    {
-                        'name': 'AWS_DEFAULT_REGION',
-                        'value': settings.AWS_SQS_REGION
-                    },
-                    {
-                        'name': 'AWS_ACCESS_KEY_ID',
-                        'value': settings.AWS_SQS_ACCESS_KEY_ID
-                    },
-                    {
-                        'name': 'AWS_SECRET_ACCESS_KEY',
-                        'value': settings.AWS_SQS_SECRET_ACCESS_KEY
-                    },
-                    {
-                        'name': 'RESULTS_QUEUE_NAME',
-                        'value': settings.HOUNDIGRADE_RESULTS_QUEUE_NAME
-                    },
-                    {
-                        'name': 'EXCHANGE_NAME',
-                        'value': settings.HOUNDIGRADE_EXCHANGE_NAME
-                    },
-                    {
-                        'name': 'QUEUE_CONNECTION_URL',
-                        'value': settings.CELERY_BROKER_URL
-                    }
-                ],
-                'privileged': True,
-
-            }
-        ],
+        containerDefinitions=[_build_container_definition(task_command)],
         requiresCompatibilities=['EC2']
     )
 
@@ -489,6 +450,71 @@ def run_inspection_cluster(messages, cloud='aws'):
         cluster=settings.HOUNDIGRADE_ECS_CLUSTER_NAME,
         taskDefinition=result['taskDefinition']['taskDefinitionArn'],
     )
+
+
+def _build_container_definition(task_command):
+    """
+    Build a container definition to be used by an ecs task.
+
+    Args:
+        task_command (list): Command to insert into the definition.
+
+    Returns (dict): Complete container definition.
+
+    """
+    container_definition = {
+        'name': 'Houndigrade',
+        'image': f'{settings.HOUNDIGRADE_ECS_IMAGE_NAME}:'
+                 f'{settings.HOUNDIGRADE_ECS_IMAGE_TAG}',
+        'cpu': 0,
+        'memoryReservation': 256,
+        'essential': True,
+        'command': task_command,
+        'environment': [
+            {
+                'name': 'AWS_DEFAULT_REGION',
+                'value': settings.AWS_SQS_REGION
+            },
+            {
+                'name': 'AWS_ACCESS_KEY_ID',
+                'value': settings.AWS_SQS_ACCESS_KEY_ID
+            },
+            {
+                'name': 'AWS_SECRET_ACCESS_KEY',
+                'value': settings.AWS_SQS_SECRET_ACCESS_KEY
+            },
+            {
+                'name': 'RESULTS_QUEUE_NAME',
+                'value': settings.HOUNDIGRADE_RESULTS_QUEUE_NAME
+            },
+            {
+                'name': 'EXCHANGE_NAME',
+                'value': settings.HOUNDIGRADE_EXCHANGE_NAME
+            },
+            {
+                'name': 'QUEUE_CONNECTION_URL',
+                'value': settings.CELERY_BROKER_URL
+            },
+        ],
+        'privileged': True,
+    }
+    if settings.HOUNDIGRADE_ENABLE_SENTRY:
+        container_definition['environment'].extend([
+            {
+                'name': 'HOUNDIGRADE_SENTRY_DSN',
+                'value': settings.HOUNDIGRADE_SENTRY_DSN
+            },
+            {
+                'name': 'HOUNDIGRADE_SENTRY_RELEASE',
+                'value': settings.HOUNDIGRADE_SENTRY_RELEASE
+            },
+            {
+                'name': 'HOUNDIGRADE_SENTRY_ENVIRONMENT',
+                'value': settings.HOUNDIGRADE_SENTRY_ENVIRONMENT
+            },
+        ])
+
+    return container_definition
 
 
 @retriable_shared_task
