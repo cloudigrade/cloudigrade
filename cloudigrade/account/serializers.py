@@ -239,6 +239,7 @@ class AwsMachineImageSerializer(HyperlinkedModelSerializer):
             'openshift',
             'openshift_detected',
             'openshift_challenged',
+            'inspection_json',
         )
         read_only_fields = (
             'id',
@@ -256,6 +257,7 @@ class AwsMachineImageSerializer(HyperlinkedModelSerializer):
             'rhel_signed_packages_found',
             'openshift',
             'openshift_detected',
+            'inspection_json',
         )
         extra_kwargs = {
             'url': {'view_name': 'image-detail', 'lookup_field': 'pk'},

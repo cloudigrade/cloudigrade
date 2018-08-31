@@ -108,6 +108,9 @@ class MachineImageViewSetTest(TestCase):
         self.assertEqual(
             response.data['resourcetype'], image.__class__.__name__
         )
+        self.assertEqual(
+            response.data['inspection_json'], image.inspection_json
+        )
 
         if isinstance(image, AwsMachineImage):
             self.assertEqual(
@@ -244,11 +247,12 @@ class MachineImageViewSetTest(TestCase):
     def test_get_image_used_by_user_returns_ok(self):
         """Assert that user1 can get one of its own images."""
         user = self.user1
-        image = self.image_plain  # Image used by user1.
+        images = [self.image_plain, self.image_rhel]  # Images used by user1.
 
-        response = self.get_image_get_response(user, image.id)
-        self.assertEqual(response.status_code, 200)
-        self.assertResponseHasImageData(response, image)
+        for image in images:
+            response = self.get_image_get_response(user, image.id)
+            self.assertEqual(response.status_code, 200)
+            self.assertResponseHasImageData(response, image)
 
     def test_get_image_not_used_by_user_returns_404(self):
         """Assert that user2 cannot get an image it hasn't used."""
@@ -316,6 +320,7 @@ class MachineImageViewSetTest(TestCase):
         self.assertTrue(response.data['openshift'])
         self.assertFalse(response.data['rhel_challenged'])
         self.assertTrue(response.data['rhel'])
+        self.assertResponseHasImageData(response, self.image_rhel)
 
     def test_user1_challenge_rhel_returns_ok(self):
         """Assert that user can challenge non RHEL image as RHEL."""
