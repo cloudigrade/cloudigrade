@@ -24,7 +24,7 @@ QUEUE_EXCHANGE_NAME = None
 
 STATIC_ROOT = env('DJANGO_STATIC_ROOT', default='/srv/cloudigrade/static/')
 
-if env('ENABLE_SENTRY', default=False):
+if env('API_ENABLE_SENTRY', default=False):
     RAVEN_CONFIG = {
         'dsn': env('DJANGO_SENTRY_DSN'),
         'release': env('DJANGO_SENTRY_RELEASE'),

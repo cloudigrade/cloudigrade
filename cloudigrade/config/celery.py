@@ -14,7 +14,7 @@ app = Celery('config')
 app.config_from_object('django.conf:settings', namespace='CELERY')
 app.autodiscover_tasks()
 
-if env('ENABLE_SENTRY', default=False):
+if env('CELERY_ENABLE_SENTRY', default=False):
     client = raven.Client(dsn=env('CELERY_SENTRY_DSN'),
                           environment=env('CELERY_SENTRY_ENVIRONMENT'),
                           release=env('CELERY_SENTRY_RELEASE'))
