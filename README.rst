@@ -105,10 +105,11 @@ If you see no output, everything is okay! Otherwise (e.g. "libcurl link-time ssl
 If using a system that has dnf, try the following commands:
 
 .. code-block:: sh
-    sudo dnf install openssl
-    pip uninstall pycurl
-    export PYCURL_SSL_LIBRARY=openssl
-    pip install --no-cache-dir install-option="--with-openssl" pycurl
+
+   sudo dnf install openssl libcurl-devel
+   pip uninstall pycurl
+   export PYCURL_SSL_LIBRARY=openssl
+   pip install --no-cache-dir --install-option="--with-openssl" pycurl
 
 Try the aforementioned import commands again, and all should be good. If not, kindly reach out to another cloudigrade developer to seek assistance!
 
@@ -238,7 +239,7 @@ This will start OpenShift and create deployments for the database. To then run t
 
 This will also forward ports for the database pod, making them accessible to the development server.
 
-There are other commands available such as ``make oc-run-migration`` which will run migrations for you against the database in the OpenShift cluster. ``make oc-forward-ports`` which will just forward the ports without starting the development server, allowing you to start it however you wish, and ``make oc-stop-forwarding-ports`` which will clean up the port forwards after you're done.
+There are other commands available such as ``make oc-run-migrations`` which will run migrations for you against the database in the OpenShift cluster. ``make oc-forward-ports`` which will just forward the ports without starting the development server, allowing you to start it however you wish, and ``make oc-stop-forwarding-ports`` which will clean up the port forwards after you're done.
 
 
 Testing

@@ -12,7 +12,9 @@
     - Number of instances: 1 (we want 0, but you can't start with 0)
     - EBS storage (GiB): whatever is default
     - Key pair: set to your key pair (you'll have to create one before selecting it)
-    - Networking: Most defaults are acceptable, except you only want one subnet. The default includes multiple subnets, so you should remove all but one. This has the consequence of the Auto Scaling Group ending up with only one availability zone, which is what you want.
+    - Networking:
+        - Find the default VPC: https://console.aws.amazon.com/vpc and select that on the VPC dropdown.
+        - You only want one subnet. The default includes multiple subnets, so you should remove all but one. This has the consequence of the Auto Scaling Group ending up with only one availability zone, which is what you want.
 1. Wait and watch as things spin!
 1. when Cluster Resources becomes available, copy the "Auto Scaling group" value for later use, you will need to set HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME to this value.
 1. click "View Cluster" when the button becomes available
