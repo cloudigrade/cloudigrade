@@ -24,7 +24,7 @@ Or is **cloudigrade** a code name for Doppler?
 Running cloudigrade
 ===================
 
-Please refer to the `shiftigrade repo <https://github.com/cloudigrade/shiftigrade#running-cloudigrade>`_ for up to date instructions on how to run cloudigrade. These instructions are prerequisite for setting up your developer environemnt.
+Please refer to the `shiftigrade repo <https://gitlab.com/cloudigrade/shiftigrade>`_ for up to date instructions on how to run cloudigrade. These instructions are prerequisite for setting up your developer environemnt.
 
 
 Developer Environment
@@ -161,10 +161,12 @@ Common commands
 Running Locally in OpenShift
 ----------------------------
 
+All OC make commands are located in the `shiftigrade repository <https://gitlab.com/cloudigrade/shiftigrade>`_. Please clone and run all oc related make commands from there.
 To start the local cluster run the following:
 
 .. code-block:: bash
 
+    cd <shiftigrade-repo>
     make oc-up
 
 That will start a barebones OpenShift cluster that will persist configuration between restarts.
@@ -189,6 +191,7 @@ To stop the local cluster run the following:
 
 .. code-block:: bash
 
+    cd <shiftigrade-repo>
     make oc-down
 
 Since all cluster information is preserved, you are then able to start the cluster back up with ``make oc-up`` and resume right where you have left off.
@@ -197,6 +200,7 @@ If you'd like to remove all your saved settings for your cluster, you can run th
 
 .. code-block:: bash
 
+    cd <shifitigrade-repo>
     make oc-clean
 
 There are also other make targets available to deploy just the db or the project by itself, along with installing the templates and the ImageStream object.
@@ -229,6 +233,7 @@ By far the best way to develop **cloudigrade** is with it running locally, allow
 
 .. code-block:: bash
 
+    cd <shiftigrade-repo>
     make oc-up-dev
 
 This will start OpenShift and create deployments for the database. To then run the Django dev server run:
@@ -303,6 +308,7 @@ a user this way, use:
 
     make user
     # or the below command if you're running against cloudigrade in a local OpenShift cluster
+    cd <shiftigrade-repo>
     make oc-user
 
 To then generate an auth token, run the make command:
@@ -311,6 +317,7 @@ To then generate an auth token, run the make command:
 
     make user-authenticate
     # or the below command if you're running against cloudigrade in a local OpenShift cluster
+    cd <shiftigrade-repo>
     make oc-user-authenticate
 
 This auth token can be supplied in the Authorization header.
