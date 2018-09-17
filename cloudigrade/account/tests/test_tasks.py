@@ -1107,7 +1107,7 @@ class AccountCeleryTaskTest(TestCase):
             tasks.run_inspection_cluster(messages)
 
     @patch('account.tasks.aws.yield_messages_from_queue')
-    @patch('account.tasks._get_sqs_queue_url')
+    @patch('account.tasks.aws.get_sqs_queue_url')
     @patch('account.tasks.scale_down_cluster')
     @patch('account.tasks.persist_aws_inspection_cluster_results')
     def test_persist_inspect_results_no_messages(
@@ -1212,7 +1212,7 @@ class AccountCeleryTaskTest(TestCase):
 
     @patch('account.tasks.aws.delete_messages_from_queue')
     @patch('account.tasks.aws.yield_messages_from_queue')
-    @patch('account.tasks._get_sqs_queue_url')
+    @patch('account.tasks.aws.get_sqs_queue_url')
     @patch('account.tasks.scale_down_cluster')
     @patch('account.tasks.persist_aws_inspection_cluster_results')
     def test_persist_inspect_results_task_aws_success(
@@ -1246,7 +1246,7 @@ class AccountCeleryTaskTest(TestCase):
 
     @patch('account.tasks.aws.delete_messages_from_queue')
     @patch('account.tasks.aws.yield_messages_from_queue')
-    @patch('account.tasks._get_sqs_queue_url')
+    @patch('account.tasks.aws.get_sqs_queue_url')
     @patch('account.tasks.scale_down_cluster')
     @patch('account.tasks.persist_aws_inspection_cluster_results')
     def test_persist_inspect_results_unknown_cloud(
@@ -1269,7 +1269,7 @@ class AccountCeleryTaskTest(TestCase):
 
     @patch('account.tasks.aws.delete_messages_from_queue')
     @patch('account.tasks.aws.yield_messages_from_queue')
-    @patch('account.tasks._get_sqs_queue_url')
+    @patch('account.tasks.aws.get_sqs_queue_url')
     @patch('account.tasks.scale_down_cluster')
     def test_persist_inspect_results_aws_cloud_no_images(
             self, mock_scale_down, _, mock_receive, mock_delete):
@@ -1290,7 +1290,7 @@ class AccountCeleryTaskTest(TestCase):
 
     @patch('account.tasks.aws.delete_messages_from_queue')
     @patch('account.tasks.aws.yield_messages_from_queue')
-    @patch('account.tasks._get_sqs_queue_url')
+    @patch('account.tasks.aws.get_sqs_queue_url')
     @patch('account.tasks.scale_down_cluster')
     def test_persist_inspect_results_aws_cloud_image_not_found(
             self, mock_scale_down, _, mock_receive, mock_delete):

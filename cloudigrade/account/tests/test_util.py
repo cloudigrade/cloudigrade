@@ -7,6 +7,7 @@ from botocore.exceptions import ClientError
 from django.test import TestCase
 from rest_framework.serializers import ValidationError
 
+import util.aws.sqs
 from account import AWS_PROVIDER_STRING, util
 from account.models import AwsAccount, AwsMachineImage
 from account.util import convert_param_to_int
@@ -114,36 +115,6 @@ class AccountUtilTest(TestCase):
 
         self.assertEqual(result, expected)
 
-    @patch('account.util.boto3')
-    def test_get_sqs_queue_url_for_existing_queue(self, mock_boto3):
-        """Test getting URL for existing SQS queue."""
-        mock_client = mock_boto3.client.return_value
-        queue_name = Mock()
-        expected_url = Mock()
-        mock_client.get_queue_url.return_value = {'QueueUrl': expected_url}
-        queue_url = util._get_sqs_queue_url(queue_name)
-        self.assertEqual(queue_url, expected_url)
-        mock_client.get_queue_url.assert_called_with(QueueName=queue_name)
-
-    @patch('account.util.boto3')
-    def test_get_sqs_queue_url_creates_new_queue(self, mock_boto3):
-        """Test getting URL for a SQS queue that does not yet exist."""
-        mock_client = mock_boto3.client.return_value
-        queue_name = Mock()
-        expected_url = Mock()
-        error_response = {
-            'Error': {
-                'Code': '.NonExistentQueue'
-            }
-        }
-        exception = ClientError(error_response, Mock())
-        mock_client.get_queue_url.side_effect = exception
-        mock_client.create_queue.return_value = {'QueueUrl': expected_url}
-        queue_url = util._get_sqs_queue_url(queue_name)
-        self.assertEqual(queue_url, expected_url)
-        mock_client.get_queue_url.assert_called_with(QueueName=queue_name)
-        mock_client.create_queue.assert_called_with(QueueName=queue_name)
-
     def test_sqs_wrap_message(self):
         """Test SQS message wrapping."""
         message_decoded = {'hello': 'world'}
@@ -196,13 +167,16 @@ class AccountUtilTest(TestCase):
         return payloads, messages_sent, messages_received
 
     @patch('account.util.boto3')
-    def test_add_messages_to_queue(self, mock_boto3):
+    @patch('account.util.aws.sqs.boto3')
+    def test_add_messages_to_queue(self, mock_sqs_boto3, mock_boto3):
         """Test that messages get added to a message queue."""
         queue_name = 'Test Queue'
         messages, wrapped_messages, __ = self.create_messages()
         mock_sqs = mock_boto3.client.return_value
         mock_queue_url = Mock()
-        mock_sqs.get_queue_url.return_value = {'QueueUrl': mock_queue_url}
+        mock_sqs_boto3.client.return_value.get_queue_url.return_value = {
+            'QueueUrl': mock_queue_url
+        }
 
         with patch.object(util, '_sqs_wrap_message') as mock_sqs_wrap_message:
             mock_sqs_wrap_message.return_value = wrapped_messages[0]
@@ -214,7 +188,8 @@ class AccountUtilTest(TestCase):
         )
 
     @patch('account.util.boto3')
-    def test_read_single_message_from_queue(self, mock_boto3):
+    @patch('account.util.aws.sqs.boto3')
+    def test_read_single_message_from_queue(self, mock_sqs_boto3, mock_boto3):
         """Test that messages are read from a message queue."""
         queue_name = 'Test Queue'
         actual_count = util.SQS_RECEIVE_BATCH_SIZE + 1
@@ -232,7 +207,9 @@ class AccountUtilTest(TestCase):
         self.assertEqual(set(read_messages), set(messages[:requested_count]))
 
     @patch('account.util.boto3')
-    def test_read_messages_from_queue_until_empty(self, mock_boto3):
+    @patch('account.util.aws.sqs.boto3')
+    def test_read_messages_from_queue_until_empty(self, mock_sqs_boto3,
+                                                  mock_boto3):
         """Test that all messages are read from a message queue."""
         queue_name = 'Test Queue'
         requested_count = util.SQS_RECEIVE_BATCH_SIZE + 1
@@ -250,7 +227,9 @@ class AccountUtilTest(TestCase):
         self.assertEqual(set(read_messages), set(messages[:requested_count]))
 
     @patch('account.util.boto3')
-    def test_read_messages_from_queue_stops_at_limit(self, mock_boto3):
+    @patch('account.util.aws.sqs.boto3')
+    def test_read_messages_from_queue_stops_at_limit(self, mock_sqs_boto3,
+                                                     mock_boto3):
         """Test that all messages are read from a message queue."""
         queue_name = 'Test Queue'
         requested_count = util.SQS_RECEIVE_BATCH_SIZE - 1
@@ -268,7 +247,9 @@ class AccountUtilTest(TestCase):
         self.assertEqual(set(read_messages), set(messages[:requested_count]))
 
     @patch('account.util.boto3')
-    def test_read_messages_from_queue_stops_has_error(self, mock_boto3):
+    @patch('account.util.aws.sqs.boto3')
+    def test_read_messages_from_queue_stops_has_error(self, mock_sqs_boto3,
+                                                      mock_boto3):
         """Test we log if an error is raised when deleting from a queue."""
         queue_name = 'Test Queue'
         requested_count = util.SQS_RECEIVE_BATCH_SIZE - 1

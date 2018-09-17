@@ -49,7 +49,7 @@ class CeleryHealthCheckBackendTest(TestCase):
 class SqsHealthCheckBackendTest(TestCase):
     """SQS health check test case."""
 
-    @patch('util.health._get_sqs_queue_url')
+    @patch('util.health.aws.get_sqs_queue_url')
     def test_check_status_success(self, mock_get_sqs_queue_url):
         """Assert check_status records no error for normal use."""
         queue_name = settings.HOUNDIGRADE_RESULTS_QUEUE_NAME
@@ -58,7 +58,7 @@ class SqsHealthCheckBackendTest(TestCase):
         mock_get_sqs_queue_url.assert_called_with(queue_name)
         self.assertEqual(len(sqs_check_backend.errors), 0)
 
-    @patch('util.health._get_sqs_queue_url')
+    @patch('util.health.aws.get_sqs_queue_url')
     def test_check_status_boto3_fail(self, mock_get_sqs_queue_url):
         """Assert check_status records an error for a boto3 exception."""
         queue_name = settings.HOUNDIGRADE_RESULTS_QUEUE_NAME
@@ -68,7 +68,7 @@ class SqsHealthCheckBackendTest(TestCase):
         mock_get_sqs_queue_url.assert_called_with(queue_name)
         self.assertEqual(len(sqs_check_backend.errors), 1)
 
-    @patch('util.health._get_sqs_queue_url')
+    @patch('util.health.aws.get_sqs_queue_url')
     def test_check_status_mystery_fail(self, mock_get_sqs_queue_url):
         """Assert check_status records an error for a mystery exception."""
         queue_name = settings.HOUNDIGRADE_RESULTS_QUEUE_NAME

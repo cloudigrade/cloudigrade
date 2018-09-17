@@ -1,8 +1,11 @@
 """Collection of tests for ``util.aws.sqs`` module."""
+import json
 import uuid
 from unittest.mock import Mock, patch
 
 import faker
+from botocore.exceptions import ClientError
+from django.conf import settings
 from django.test import TestCase
 
 from util.aws import sqs
@@ -132,3 +135,99 @@ class UtilAwsSqsTest(TestCase):
         )
 
         self.assertEqual(mock_response, actual_response)
+
+    def test_get_sqs_queue_url_for_existing_queue(self):
+        """Test getting URL for existing SQS queue."""
+        queue_name = Mock()
+        expected_url = Mock()
+        mock_client = Mock()
+
+        with patch.object(sqs, 'boto3') as mock_boto3:
+            mock_boto3.client.return_value = mock_client
+            mock_client.get_queue_url.return_value = {'QueueUrl': expected_url}
+            queue_url = sqs.get_sqs_queue_url(queue_name)
+
+        self.assertEqual(queue_url, expected_url)
+        mock_client.get_queue_url.assert_called_with(QueueName=queue_name)
+
+    def test_get_sqs_queue_url_creates_new_queue(self):
+        """Test getting URL for a SQS queue that does not yet exist."""
+        queue_name = Mock()
+        expected_url = Mock()
+        mock_client = Mock()
+
+        error_response = {
+            'Error': {
+                'Code': '.NonExistentQueue'
+            }
+        }
+        exception = ClientError(error_response, Mock())
+
+        with patch.object(sqs, 'boto3') as mock_boto3, \
+                patch.object(sqs, 'create_queue') as mock_create_queue:
+            mock_boto3.client.return_value = mock_client
+            mock_client.get_queue_url.side_effect = exception
+            mock_create_queue.return_value = expected_url
+            queue_url = sqs.get_sqs_queue_url(queue_name)
+            mock_create_queue.assert_called_with(queue_name)
+
+        self.assertEqual(queue_url, expected_url)
+        mock_client.get_queue_url.assert_called_with(QueueName=queue_name)
+
+    def test_create_queue_also_creates_dlq(self):
+        """
+        Test creating a SQS queue automatic creates a DLQ.
+
+        This looks kind of complicated, and that's because we have to set up
+        the mock expectations for *two* boto clients: one creates the main
+        queue and the other creates the DLQ.
+        """
+        queue_name = _faker.slug()
+        dlq_arn = helper.generate_dummy_arn()
+
+        expected_dlq_name = f'{queue_name}-dlq'
+        expected_url = Mock()
+        expected_dlq_url = Mock()
+
+        # The first client describes the DLQ and creates the requested queue.
+        first_mock_client = Mock()
+        first_mock_client.create_queue.return_value = {
+            'QueueUrl': expected_url,
+        }
+        first_mock_client.get_queue_attributes.return_value = {
+            'Attributes': {'QueueArn': dlq_arn}
+        }
+
+        # The second (recursively nested) client creates the DLQ.
+        second_mock_client = Mock()
+        second_mock_client.create_queue.return_value = {
+            'QueueUrl': expected_dlq_url,
+        }
+
+        expected_queue_creation_attributes = {
+            'MessageRetentionPeriod': str(sqs.RETENTION_DEFAULT),
+            'RedrivePolicy': json.dumps({
+                'deadLetterTargetArn': dlq_arn,
+                'maxReceiveCount': settings.SQS_MAX_RECEIVE_COUNT,
+            })
+        }
+        expected_dlq_creation_attributes = {
+            'MessageRetentionPeriod': str(sqs.RETENTION_MAXIMUM),
+        }
+
+        with patch.object(sqs, 'boto3') as mock_boto3:
+            mock_boto3.client.side_effect = [
+                first_mock_client,
+                second_mock_client,
+            ]
+            queue_url = sqs.create_queue(queue_name)
+
+        self.assertEqual(queue_url, expected_url)
+        first_mock_client.create_queue.assert_called_with(
+            QueueName=queue_name,
+            Attributes=expected_queue_creation_attributes,
+        )
+        second_mock_client.create_queue.assert_called_with(
+            QueueName=expected_dlq_name,
+            Attributes=expected_dlq_creation_attributes,
+        )

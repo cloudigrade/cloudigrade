@@ -293,28 +293,6 @@ def generate_aws_ami_messages(instances_data, ami_id_list):
     return messages
 
 
-def _get_sqs_queue_url(queue_name):
-    """
-    Get the SQS queue URL for the given queue name.
-
-    This has the side-effect on ensuring that the queue exists.
-
-    Args:
-        queue_name (str): the name of the target SQS queue
-
-    Returns:
-        str: the queue's URL.
-
-    """
-    sqs = boto3.client('sqs')
-    try:
-        return sqs.get_queue_url(QueueName=queue_name)['QueueUrl']
-    except ClientError as e:
-        if e.response['Error']['Code'].endswith('.NonExistentQueue'):
-            return sqs.create_queue(QueueName=queue_name)['QueueUrl']
-        raise
-
-
 def _sqs_wrap_message(message):
     """
     Wrap the message in a dict for SQS batch sending.
@@ -359,7 +337,7 @@ def add_messages_to_queue(queue_name, messages):
         messages (list[dict]): A list of message dictionaries. The message
             dicts will be serialized as JSON strings.
     """
-    queue_url = _get_sqs_queue_url(queue_name)
+    queue_url = aws.get_sqs_queue_url(queue_name)
     sqs = boto3.client('sqs')
 
     wrapped_messages = [_sqs_wrap_message(message) for message in messages]
@@ -384,7 +362,7 @@ def read_messages_from_queue(queue_name, max_count=1):
         list[object]: The de-queued messages.
 
     """
-    queue_url = _get_sqs_queue_url(queue_name)
+    queue_url = aws.get_sqs_queue_url(queue_name)
     sqs = boto3.client('sqs')
     sqs_messages = []
     max_batch_size = min(SQS_RECEIVE_BATCH_SIZE, max_count)

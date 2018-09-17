@@ -10,7 +10,7 @@ from django.db import transaction
 from django.utils.translation import gettext as _
 
 from account.models import AwsAccount, AwsMachineImage
-from account.util import (_get_sqs_queue_url, add_messages_to_queue,
+from account.util import (add_messages_to_queue,
                           create_aws_machine_image_copy,
                           create_initial_aws_instance_events,
                           create_new_machine_images, generate_aws_ami_messages,
@@ -590,7 +590,7 @@ def persist_inspection_cluster_results_task():
         None: Run as an asynchronous Celery task.
 
     """
-    queue_url = _get_sqs_queue_url(settings.HOUNDIGRADE_RESULTS_QUEUE_NAME)
+    queue_url = aws.get_sqs_queue_url(settings.HOUNDIGRADE_RESULTS_QUEUE_NAME)
     successes, failures = [], []
     for message in aws.yield_messages_from_queue(
             queue_url, HOUNDIGRADE_MESSAGE_READ_LEN):

@@ -6,7 +6,7 @@ from django.conf import settings
 from django.utils.translation import gettext as _
 from health_check.backends import BaseHealthCheckBackend
 
-from account.util import _get_sqs_queue_url
+from util import aws
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +44,7 @@ class SqsHealthCheckBackend(BaseHealthCheckBackend):
         """Check SQS health by using looking up a known queue's URL'."""
         try:
             queue_name = settings.HOUNDIGRADE_RESULTS_QUEUE_NAME
-            _get_sqs_queue_url(queue_name)
+            aws.get_sqs_queue_url(queue_name)
         except ClientError as e:
             logger.exception(e)
             self.add_error(_('SQS check failed due to boto3 error.'))
