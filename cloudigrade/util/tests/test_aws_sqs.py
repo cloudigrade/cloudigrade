@@ -1,5 +1,6 @@
 """Collection of tests for ``util.aws.sqs`` module."""
 import json
+import random
 import uuid
 from unittest.mock import Mock, patch
 
@@ -175,59 +176,122 @@ class UtilAwsSqsTest(TestCase):
         mock_client.get_queue_url.assert_called_with(QueueName=queue_name)
 
     def test_create_queue_also_creates_dlq(self):
-        """
-        Test creating a SQS queue automatic creates a DLQ.
-
-        This looks kind of complicated, and that's because we have to set up
-        the mock expectations for *two* boto clients: one creates the main
-        queue and the other creates the DLQ.
-        """
+        """Test creating an SQS queue also creates a DLQ."""
         queue_name = _faker.slug()
-        dlq_arn = helper.generate_dummy_arn()
+        queue_url = Mock()
 
-        expected_dlq_name = f'{queue_name}-dlq'
-        expected_url = Mock()
-        expected_dlq_url = Mock()
+        mock_client = Mock()
+        mock_client.create_queue.return_value = {'QueueUrl': queue_url}
 
-        # The first client describes the DLQ and creates the requested queue.
-        first_mock_client = Mock()
-        first_mock_client.create_queue.return_value = {
-            'QueueUrl': expected_url,
-        }
-        first_mock_client.get_queue_attributes.return_value = {
-            'Attributes': {'QueueArn': dlq_arn}
-        }
-
-        # The second (recursively nested) client creates the DLQ.
-        second_mock_client = Mock()
-        second_mock_client.create_queue.return_value = {
-            'QueueUrl': expected_dlq_url,
-        }
-
-        expected_queue_creation_attributes = {
+        expected_queue_attributes = {
             'MessageRetentionPeriod': str(sqs.RETENTION_DEFAULT),
+        }
+
+        with patch.object(sqs, 'boto3') as mock_boto3, \
+                patch.object(sqs, 'ensure_queue_has_dlq') as mock_ensure:
+            mock_boto3.client.return_value = mock_client
+            actual_queue_url = sqs.create_queue(queue_name)
+            mock_ensure.assert_called_with(queue_name, queue_url)
+            mock_client.set_queue_attributes.assert_called_with(
+                QueueUrl=queue_url, Attributes=expected_queue_attributes
+            )
+
+        self.assertEqual(actual_queue_url, queue_url)
+
+    def test_create_queue_without_dlq(self):
+        """Test creating an SQS queue with retention period and no DLQ."""
+        queue_name = _faker.slug()
+        queue_url = Mock()
+        retention = random.randint(1, sqs.RETENTION_MAXIMUM)
+
+        mock_client = Mock()
+        mock_client.create_queue.return_value = {'QueueUrl': queue_url}
+
+        expected_queue_attributes = {
+            'MessageRetentionPeriod': str(retention),
+        }
+
+        with patch.object(sqs, 'boto3') as mock_boto3, \
+                patch.object(sqs, 'ensure_queue_has_dlq') as mock_ensure:
+            mock_boto3.client.return_value = mock_client
+            actual_queue_url = sqs.create_queue(queue_name, False, retention)
+            mock_ensure.assert_not_called()
+            mock_client.set_queue_attributes.assert_called_with(
+                QueueUrl=queue_url, Attributes=expected_queue_attributes
+            )
+
+        self.assertEqual(actual_queue_url, queue_url)
+
+    def test_create_dlq(self):
+        """Test creation of DLQ for a source queue."""
+        source_queue_name = _faker.slug()
+        expected_dlq_name = '{}-dlq'.format(
+            source_queue_name[:sqs.QUEUE_NAME_LENGTH_MAX - 4]
+        )
+        mock_client = Mock()
+        mock_client.get_queue_attributes.return_value = {
+            'Attributes': {
+                'QueueArn': helper.generate_dummy_arn()
+            }
+        }
+        with patch.object(sqs, 'boto3') as mock_boto3, \
+                patch.object(sqs, 'create_queue') as mock_create:
+            mock_boto3.client.return_value = mock_client
+            sqs.create_dlq(source_queue_name)
+            mock_create.assert_called_with(
+                expected_dlq_name,
+                with_dlq=False,
+                retention_period=sqs.RETENTION_MAXIMUM
+            )
+            mock_client.get_queue_attributes.assert_called_with(
+                QueueUrl=mock_create.return_value, AttributeNames=['QueueArn']
+            )
+
+    def test_ensure_queue_has_dlq(self):
+        """Test that a queue without redrive policy gets a DLQ."""
+        source_queue_name = _faker.slug()
+        source_queue_url = _faker.url()
+        mock_client = Mock()
+        mock_client.get_queue_attributes.return_value = {}
+        dlq_arn = helper.generate_dummy_arn()
+        expected_attributes = {
             'RedrivePolicy': json.dumps({
                 'deadLetterTargetArn': dlq_arn,
                 'maxReceiveCount': settings.SQS_MAX_RECEIVE_COUNT,
-            })
+            }),
         }
-        expected_dlq_creation_attributes = {
-            'MessageRetentionPeriod': str(sqs.RETENTION_MAXIMUM),
+        with patch.object(sqs, 'boto3') as mock_boto3, \
+                patch.object(sqs, 'create_dlq') as mock_create_dlq:
+            mock_boto3.client.return_value = mock_client
+            mock_create_dlq.return_value = dlq_arn
+            sqs.ensure_queue_has_dlq(source_queue_name, source_queue_url)
+            mock_create_dlq.assert_called_with(source_queue_name)
+        mock_client.get_queue_attributes.assert_called_with(
+            QueueUrl=source_queue_url,
+            AttributeNames=['RedrivePolicy']
+        )
+        mock_client.set_queue_attributes.assert_called_with(
+            QueueUrl=source_queue_url,
+            Attributes=expected_attributes
+        )
+
+    def test_ensure_queue_has_dql_but_already_has_redrive(self):
+        """Test that a queue with redrive policy does not get a DLQ."""
+        source_queue_name = _faker.slug()
+        source_queue_url = _faker.url()
+        mock_client = Mock()
+        mock_client.get_queue_attributes.return_value = {
+            'Attributes': {
+                'RedrivePolicy': '{"hello": "world"}',
+            }
         }
-
-        with patch.object(sqs, 'boto3') as mock_boto3:
-            mock_boto3.client.side_effect = [
-                first_mock_client,
-                second_mock_client,
-            ]
-            queue_url = sqs.create_queue(queue_name)
-
-        self.assertEqual(queue_url, expected_url)
-        first_mock_client.create_queue.assert_called_with(
-            QueueName=queue_name,
-            Attributes=expected_queue_creation_attributes,
+        with patch.object(sqs, 'boto3') as mock_boto3, \
+                patch.object(sqs, 'create_dlq') as mock_create_dlq:
+            mock_boto3.client.return_value = mock_client
+            sqs.ensure_queue_has_dlq(source_queue_name, source_queue_url)
+            mock_create_dlq.assert_not_called()
+        mock_client.get_queue_attributes.assert_called_with(
+            QueueUrl=source_queue_url,
+            AttributeNames=['RedrivePolicy']
         )
-        second_mock_client.create_queue.assert_called_with(
-            QueueName=expected_dlq_name,
-            Attributes=expected_dlq_creation_attributes,
-        )
+        mock_client.set_queue_attributes.assert_not_called()

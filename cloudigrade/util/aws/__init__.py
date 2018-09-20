@@ -25,6 +25,7 @@ from util.aws.helper import (get_region_from_availability_zone, get_regions,
                              rewrap_aws_errors, verify_account_access)
 from util.aws.s3 import get_object_content_from_s3
 from util.aws.sqs import (create_queue, delete_messages_from_queue,
+                          ensure_queue_has_dlq,
                           extract_sqs_message, get_sqs_queue_url,
                           receive_messages_from_queue,
                           yield_messages_from_queue)
