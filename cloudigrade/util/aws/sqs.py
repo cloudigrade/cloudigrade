@@ -210,7 +210,7 @@ def ensure_queue_has_dlq(source_queue_name, source_queue_url):
 
     redrive_policy = {
         'deadLetterTargetArn': dlq_arn,
-        'maxReceiveCount': settings.SQS_MAX_RECEIVE_COUNT,
+        'maxReceiveCount': settings.AWS_SQS_MAX_RECEIVE_COUNT,
     }
     attributes = {
         'RedrivePolicy': json.dumps(redrive_policy),

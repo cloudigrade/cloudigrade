@@ -257,7 +257,7 @@ class UtilAwsSqsTest(TestCase):
         expected_attributes = {
             'RedrivePolicy': json.dumps({
                 'deadLetterTargetArn': dlq_arn,
-                'maxReceiveCount': settings.SQS_MAX_RECEIVE_COUNT,
+                'maxReceiveCount': settings.AWS_SQS_MAX_RECEIVE_COUNT,
             }),
         }
         with patch.object(sqs, 'boto3') as mock_boto3, \

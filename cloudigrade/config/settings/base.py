@@ -58,7 +58,6 @@ CELERY_WORKER_LOG_FORMAT = ('%(asctime)s | %(levelname)s | %(filename)s:'
 # AWS Defaults
 S3_DEFAULT_REGION = env('S3_DEFAULT_REGION', default='us-east-1')
 SQS_DEFAULT_REGION = env('SQS_DEFAULT_REGION', default='us-east-1')
-SQS_MAX_RECEIVE_COUNT = env('SQS_MAX_RECEIVE_COUNT', default=5)
 HOUNDIGRADE_AWS_AVAILABILITY_ZONE = env('HOUNDIGRADE_AWS_AVAILABILITY_ZONE',
                                         default='us-east-1b')
 HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME = env(
@@ -262,6 +261,7 @@ AWS_SQS_URL = env(
     default='sqs://{}:{}@'.format(quote(AWS_SQS_ACCESS_KEY_ID, safe=''),
                                   quote(AWS_SQS_SECRET_ACCESS_KEY, safe=''))
 )
+AWS_SQS_MAX_RECEIVE_COUNT = env('AWS_SQS_MAX_RECEIVE_COUNT', default=5)
 AWS_NAME_PREFIX = env('AWS_NAME_PREFIX',
                       default=env('USER', default='anonymous') + '-')
 
