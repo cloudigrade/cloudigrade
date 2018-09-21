@@ -177,6 +177,7 @@ def create_queue(queue_name, with_dlq=True,
         'MessageRetentionPeriod': str(retention_period),  # AWS wants a str.
     }
 
+    logger.info('Creating SQS queue "{}"'.format(queue_name))
     queue_url = sqs.create_queue(QueueName=queue_name)['QueueUrl']
     sqs.set_queue_attributes(QueueUrl=queue_url, Attributes=attributes)
 
@@ -202,7 +203,7 @@ def ensure_queue_has_dlq(source_queue_name, source_queue_url):
     redrive_policy = json.loads(redrive_policy)
 
     if redrive_policy:
-        logger.info('{} already has a redrive policy: {}'.format(
+        logger.info('SQS queue "{}" already has a redrive policy: {}'.format(
             source_queue_name, redrive_policy))
         return
 
@@ -215,6 +216,8 @@ def ensure_queue_has_dlq(source_queue_name, source_queue_url):
     attributes = {
         'RedrivePolicy': json.dumps(redrive_policy),
     }
+    logger.info('Assigning SQS queue "{}" redrive policy: {}'.format(
+        source_queue_name, redrive_policy))
     sqs.set_queue_attributes(QueueUrl=source_queue_url, Attributes=attributes)
 
 

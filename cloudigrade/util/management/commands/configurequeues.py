@@ -19,5 +19,6 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         """Handle the command execution."""
         for queue_name in self.queue_names:
+            self.stdout.write('Configuring SQS queue "{}"'.format(queue_name))
             queue_url = aws.get_sqs_queue_url(queue_name)
             aws.ensure_queue_has_dql(queue_name, queue_url)
