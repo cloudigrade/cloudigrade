@@ -219,6 +219,7 @@ Deploy Review:
     - if ! oc rollout status dc/cloudireview-${CI_COMMIT_REF_SLUG}-cloudigrade-api; then oc rollout latest dc/cloudireview-${CI_COMMIT_REF_SLUG}-cloudigrade-api && oc rollout status dc/cloudireview-${CI_COMMIT_REF_SLUG}-cloudigrade-api; fi;
     - if ! oc rollout status dc/cloudireview-${CI_COMMIT_REF_SLUG}-cloudigrade-celery-beat; then oc rollout latest dc/cloudireview-${CI_COMMIT_REF_SLUG}-cloudigrade-celery-beat && oc rollout status dc/cloudireview-${CI_COMMIT_REF_SLUG}-cloudigrade-celery-beat; fi;
     - if ! oc rollout status dc/cloudireview-${CI_COMMIT_REF_SLUG}-cloudigrade-celery-worker; then oc rollout latest dc/cloudireview-${CI_COMMIT_REF_SLUG}-cloudigrade-celery-worker && oc rollout status dc/cloudireview-${CI_COMMIT_REF_SLUG}-cloudigrade-celery-worker; fi;
+    - echo "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin@example.com', 'admin@example.com', '${CLOUDIGRADE_PASSWORD}')" | oc rsh -c ${CI_COMMIT_REF_SLUG}-cloudigrade-api $(oc get pods -o jsonpath='{.items[*].metadata.name}' -l name=${CI_COMMIT_REF_SLUG}-cloudigrade-api) scl enable rh-python36 -- python manage.py shell || true
   environment:
     name: review/${CI_COMMIT_REF_NAME}
     url: https://cloudireview-${CI_COMMIT_REF_SLUG}.1b13.insights.openshiftapps.com
@@ -261,14 +262,11 @@ Clean Up Review:
     name: review/${CI_COMMIT_REF_NAME}
     action: stop
 
-Review-Master:
+.ReviewTemplate: &review_template
   stage: review
   image: registry.gitlab.com/cloudigrade/images/deploy-container:latest
   variables:
     GIT_STRATEGY: none
-  only:
-    - chat
-    - trigger
   except:
     - tags@cloudigrade/cloudigrade
   before_script:
@@ -335,20 +333,32 @@ Review-Master:
     - if ! oc rollout status dc/${CI_COMMIT_REF_SLUG}-cloudigrade-api; then oc rollout latest dc/${CI_COMMIT_REF_SLUG}-cloudigrade-api && oc rollout status dc/${CI_COMMIT_REF_SLUG}-cloudigrade-api; fi;
     - if ! oc rollout status dc/${CI_COMMIT_REF_SLUG}-cloudigrade-celery-beat; then oc rollout latest dc/${CI_COMMIT_REF_SLUG}-cloudigrade-celery-beat && oc rollout status dc/${CI_COMMIT_REF_SLUG}-cloudigrade-celery-beat; fi;
     - if ! oc rollout status dc/${CI_COMMIT_REF_SLUG}-cloudigrade-celery-worker; then oc rollout latest dc/${CI_COMMIT_REF_SLUG}-cloudigrade-celery-worker && oc rollout status dc/${CI_COMMIT_REF_SLUG}-cloudigrade-celery-worker; fi;
-    - echo -e "section_start:$( date +%s ):chat_reply\r\033[0K\nDeployed ${CHAT_INPUT}, available at https://${CI_COMMIT_REF_SLUG}.1b13.insights.openshiftapps.com\nsection_end:$( date +%s ):chat_reply\r\033[0K"
+    - echo "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin@example.com', 'admin@example.com', '${CLOUDIGRADE_PASSWORD}')" | oc rsh -c ${CI_COMMIT_REF_SLUG}-cloudigrade-api $(oc get pods -o jsonpath='{.items[*].metadata.name}' -l name=${CI_COMMIT_REF_SLUG}-cloudigrade-api) scl enable rh-python36 -- python manage.py shell || true
+    - echo -e "section_start:$( date +%s ):chat_reply\r\033[0K\nDeployed [cloudigrade] ${CHAT_INPUT}, available at https://${CI_COMMIT_REF_SLUG}.1b13.insights.openshiftapps.com/api/v1/ If both cloudigrade and frontigrade are deployed you can login with username 'admin@example.com' and the current Red Hat Guest WiFi password as the password.\nsection_end:$( date +%s ):chat_reply\r\033[0K"
+
+Review-Master:
+  <<: *review_template
+  only:
+    - chat
   environment:
     name: review/master-${CHAT_INPUT}
     url: https://${CI_COMMIT_REF_SLUG}.1b13.insights.openshiftapps.com
     on_stop: Clean-up-master
 
-Clean-up-master:
+Review Master:
+  <<: *review_template
+  only:
+    - trigger
+  environment:
+    name: review/master-${CHAT_INPUT}
+    url: https://${CI_COMMIT_REF_SLUG}.1b13.insights.openshiftapps.com
+    on_stop: Clean up master review
+
+.CleanReviewTemplate: &clean_review_definition
   stage: review
   image: registry.gitlab.com/cloudigrade/images/deploy-container:latest
   variables:
     GIT_STRATEGY: none
-  only:
-    - chat
-    - trigger
   except:
     - tags@cloudigrade/cloudigrade
   before_script:
@@ -393,10 +403,20 @@ Clean-up-master:
         ansible/provision-aws-resources.yaml
     - ansible-playbook -e aws_prefix="${CI_COMMIT_REF_SLUG}" -e sqs_state=absent ansible/clean-sqs.yaml
     - echo -e "section_start:$( date +%s ):chat_reply\r\033[0K\nCloudigrade master review - ${CHAT_INPUT} - cleaned up.\nsection_end:$( date +%s ):chat_reply\r\033[0K"
-  when: manual
   environment:
     name: review/master-${CHAT_INPUT}
     action: stop
+
+Clean-up-master:
+  <<: *clean_review_definition
+  only:
+    - chat
+
+Clean up master review:
+  <<: *clean_review_definition
+  only:
+    - trigger
+  when: manual
 
 ### DEPLOY STAGE ###
 ### MASTER ONLY ###
