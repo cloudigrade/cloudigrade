@@ -59,6 +59,18 @@ def analyze_log():
         success = False
         try:
             success = _process_cloudtrail_message(message)
+        except AwsAccount.DoesNotExist:
+            logger.warning(
+                _(
+                    'Encountered message {0} for nonexistent account; '
+                    'deleting message from queue.'
+                ).format(message.message_id)
+            )
+            logger.info(
+                _('Deleted message body: {0}').format(message.body)
+            )
+            aws.delete_messages_from_queue(queue_url, [message])
+            continue
         except Exception as e:
             logger.exception(_(
                 'Unexpected error in log processing: {0}'

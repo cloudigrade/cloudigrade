@@ -339,9 +339,11 @@ class AnalyzeLogTest(TestCase):
         """
         Test appropriate handling when the account ID in the log is unknown.
 
-        It is unclear exactly how this can happen in practice, but if this
-        does happen, we should stop processing the file, report an error, and
-        leave the corresponding message on the queue to try again later.
+        This can happen when a user deletes their AWS role, deletes their
+        cloudigrade account, and leave their cloudtrail running.
+
+        If this happens, we want to delete the message for the nonexistant
+        account from the queue, and log a warning.
         """
         sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
         mock_instance = util_helper.generate_mock_ec2_instance_incomplete()
@@ -355,9 +357,8 @@ class AnalyzeLogTest(TestCase):
         successes, failures = tasks.analyze_log()
 
         self.assertEqual(len(successes), 0)
-        self.assertEqual(len(failures), 1)
+        self.assertEqual(len(failures), 0)
         mock_inspection.assert_not_called()
-        mock_del.assert_not_called()
 
         instances = list(AwsInstance.objects.all())
         self.assertEqual(len(instances), 0)

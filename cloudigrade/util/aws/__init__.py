@@ -3,7 +3,7 @@ from util.aws.arn import AwsArn
 from util.aws.autoscaling import (describe_auto_scaling_group,
                                   is_scaled_down, scale_down,
                                   scale_up)
-from util.aws.cloudtrail import configure_cloudtrail
+from util.aws.cloudtrail import configure_cloudtrail, disable_cloudtrail
 from util.aws.ec2 import (InstanceState,
                           add_snapshot_ownership,
                           check_snapshot_state,

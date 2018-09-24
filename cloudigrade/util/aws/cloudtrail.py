@@ -114,3 +114,21 @@ def update_cloudtrail(cloudtrail, name):
         return response
     except ClientError as e:
         raise e
+
+
+def disable_cloudtrail(cloudtrail, name):
+    """Disable logging in the existing customer CloudTrail.
+
+    Args:
+        cloudtrail (botocore client): The cloudtrail client
+        name (string): The name of the cloudtrail to disable logging
+    """
+    logger.debug(_('Disabling logging in the cloudtrail {0}').format(name))
+
+    try:
+        response = cloudtrail.stop_logging(
+            Name=name,
+        )
+        return response
+    except ClientError as e:
+        raise e

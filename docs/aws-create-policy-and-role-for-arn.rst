@@ -37,7 +37,8 @@ The AWS Policy defines a set of permissions for particular actions in the custom
                        "cloudtrail:UpdateTrail",
                        "cloudtrail:PutEventSelectors",
                        "cloudtrail:DescribeTrails",
-                       "cloudtrail:StartLogging"
+                       "cloudtrail:StartLogging",
+                       "cloudtrail:StopLogging"
                    ],
                    "Resource": "*"
                }
@@ -59,6 +60,7 @@ The AWS Policy defines a set of permissions for particular actions in the custom
        - `cloudtrail:PutEventSelectors <https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_PutEventSelectors.html>`_ enables cloudigrade to create a cloudtrail in your account
        - `cloudtrail:DescribeTrails <https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_DescribeTrails.html>`_ enables cloudigrade to update a cloudtrail in your account
        - `cloudtrail:StartLogging <https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_StartLogging.html>`_ enables cloudigrade to select the events that cloudtrail cares about
+       - `cloudtrail:StopLogging <https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_StopLogging.html>`_ enables cloudigrade to stop logging when the user account is removed from cloudigrade
 
 #. Click "Review policy".
 #. Give the policy a distinct, memorable name such as ``policy-for-cloudigrade``. Copy this name for reference because you will need it soon.

@@ -378,3 +378,64 @@ class UtilAwsCloudTrailTest(TestCase):
 
         with self.assertRaises(ClientError):
             cloudtrail.update_cloudtrail(mock_client, name)
+
+    def test_disable_cloudtrail(self):
+        """Test the disable_cloudtrail function.
+
+        Assert that disable_cloudtrail function returns the response returned
+        from calling the cloudtrail stop_logging function.
+        """
+        aws_account_id = helper.generate_dummy_aws_account_id()
+        name = '{0}{1}'.format(settings.CLOUDTRAIL_NAME_PREFIX,
+                               aws_account_id)
+
+        mock_session = Mock()
+
+        mock_response = {
+            'ResponseMetadata': {
+                'RequestId': '398432984738',
+                'HTTPStatusCode': 200,
+                'HTTPHeaders': {
+                    'x-amzn-requestid': '56564546',
+                    'content-type': 'application/x-amz-json-1.1',
+                    'content-length': '2',
+                    'date': 'Mon, 24 Sep 2018 18:50:55 GMT'
+                },
+                'RetryAttempts': 0}
+        }
+
+        mock_client = mock_session.client.return_value
+        mock_client.stop_logging.return_value = mock_response
+        expected_value = mock_response
+        actual_value = cloudtrail.disable_cloudtrail(mock_client, name)
+
+        self.assertEqual(expected_value, actual_value)
+
+    def test_disable_cloudtrail_exception(self):
+        """
+        Test the disable_cloudtrail function.
+
+        Assert that an error is returned when the CloudTrail does not exist.
+        """
+        aws_account_id = helper.generate_dummy_aws_account_id()
+        name = '{0}{1}'.format(settings.CLOUDTRAIL_NAME_PREFIX,
+                               aws_account_id)
+
+        mock_session = Mock()
+
+        mock_error = {
+            'Error': {
+                'Code': 'TrailNotFoundException',
+                'Message':
+                    'Unknown trail: {0} for the user '
+                    '{1}'.format(name, aws_account_id)
+            }
+        }
+
+        mock_client = mock_session.client.return_value
+
+        mock_client.stop_logging.side_effect = ClientError(mock_error,
+                                                           'StopLogging')
+
+        with self.assertRaises(ClientError):
+            cloudtrail.disable_cloudtrail(mock_client, name)

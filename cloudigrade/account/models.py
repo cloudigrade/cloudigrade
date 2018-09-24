@@ -1,13 +1,21 @@
 """Cloudigrade Account Models."""
 import json
+import logging
 import operator
 
 import model_utils
+from botocore.exceptions import ClientError
+from django.conf import settings
 from django.contrib.auth.models import User
-from django.db import models
+from django.db import models, transaction
+from django.utils.translation import gettext as _
 
 from account import AWS_PROVIDER_STRING
+from util.aws import disable_cloudtrail, get_session
+from util.exceptions import CloudTrailCannotStopLogging
 from util.models import BasePolymorphicModel
+
+logger = logging.getLogger(__name__)
 
 
 class Account(BasePolymorphicModel):
@@ -236,6 +244,64 @@ class AwsAccount(Account):
     def cloud_type(self):
         """Get the cloud type to indicate this account uses AWS."""
         return AWS_PROVIDER_STRING
+
+    def delete(self, **kwargs):
+        """Delete an AWS Account and disable logging in its AWS cloudtrail."""
+        try:
+            with transaction.atomic():
+                cloudtrial_name = '{0}{1}'.format(
+                    settings.CLOUDTRAIL_NAME_PREFIX,
+                    self.cloud_account_id
+                )
+                try:
+                    super().delete(**kwargs)
+                    session = get_session(str(self.account_arn))
+                    cloudtrail_session = session.client('cloudtrail')
+                    disable_cloudtrail(cloudtrail_session, cloudtrial_name)
+
+                except ClientError as error:
+                    error_code = error.response.get('Error', {}).get('Code')
+
+                    # If cloudtrail does not exist, then delete the account.
+                    if error_code == 'TrailNotFoundException':
+                        pass
+
+                    # If we're unable to access the account (because user
+                    # deleted the role/permissions). Delete the account anyways
+                    # and log an error. This could result in orphaned
+                    # cloudtrail writing to our s3 bucket.
+                    elif error_code == 'AccessDenied':
+                        log_message = _(
+                            'Cloudigrade account {} was deleted, but could'
+                            'not access the AWS account to disable its '
+                            'cloudtrail {}.'
+                        ).format(self.cloud_account_id, cloudtrial_name)
+                        logger.warning(log_message)
+                        logger.info(error)
+                    else:
+                        raise
+        except ClientError as error:
+
+            # If we can get into the user account, but can't stop cloudtrail
+            # don't delete the account, and let the user know the issue.
+            if error.response.get('Error', {}).get('Code') == \
+                    'AccessDeniedException':
+                raise CloudTrailCannotStopLogging(
+                    detail=_(
+                        'Account deletion failed, insufficient permission '
+                        'to perform cloudtrail:StopLogging on cloudtrail {0}'
+                    ).format(cloudtrial_name)
+                )
+
+            log_message = _(
+                'Unexpected error when attempting to perform '
+                'cloudtrail:StopLogging on cloudtrial {0}'
+            ).format(cloudtrial_name)
+            logger.error(log_message)
+            logger.exception(error)
+            raise CloudTrailCannotStopLogging(
+                detail=log_message
+            )
 
 
 class AwsInstance(Instance):

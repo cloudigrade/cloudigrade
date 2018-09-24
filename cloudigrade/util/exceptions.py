@@ -96,6 +96,12 @@ class InvalidHoundigradeJsonFormat(Exception):
     """Raise when houndigrade returns json that does not have images."""
 
 
+class CloudTrailCannotStopLogging(APIException):
+    """Raise when we cannot stop cloud trail logging on client account."""
+
+    status_code = http.HTTPStatus.INTERNAL_SERVER_ERROR
+
+
 def api_exception_handler(exc, context):
     """
     Log exception and return an appropriately formatted response.

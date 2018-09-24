@@ -19,13 +19,9 @@ class AccountViewSet(mixins.CreateModelMixin,
                      mixins.RetrieveModelMixin,
                      mixins.UpdateModelMixin,
                      mixins.ListModelMixin,
+                     mixins.DestroyModelMixin,
                      viewsets.GenericViewSet):
-    """
-    Create, retrieve, update, or list customer accounts.
-
-    Do not allow to delete an account at this view because we have not yet
-    defined how we want account "soft" deletion to behave.
-    """
+    """Create, retrieve, update, delete, or list customer accounts."""
 
     queryset = Account.objects.all()
     serializer_class = serializers.AccountPolymorphicSerializer
