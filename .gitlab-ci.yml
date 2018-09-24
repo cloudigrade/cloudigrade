@@ -18,6 +18,9 @@ variables:
 py36:
   stage: test
   image: registry.gitlab.com/cloudigrade/images/build-container:latest
+  except:
+    - chat
+    - trigger
   before_script:
     - pip install tox codecov
   script:
@@ -27,6 +30,9 @@ py36:
 flake8:
   stage: test
   image: registry.gitlab.com/cloudigrade/images/build-container:latest
+  except:
+    - chat
+    - trigger
   before_script:
     - pip install tox
   script: tox -e flake8
@@ -34,6 +40,9 @@ flake8:
 Cloudigrade Docker:
   stage: test
   image: docker:stable
+  except:
+    - chat
+    - trigger
   services:
     - docker:dind
   script:
@@ -43,6 +52,9 @@ Cloudigrade Docker:
 NGINX S2i:
   stage: test
   image: docker:stable
+  except:
+    - chat
+    - trigger
   services:
     - docker:dind
   variables:
@@ -69,6 +81,8 @@ Push Cloudigrade Image:
     - master@cloudigrade/cloudigrade
   except:
     - tags@cloudigrade/cloudigrade
+    - chat
+    - trigger
   before_script:
     - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
   script:
@@ -84,6 +98,9 @@ Push Cloudigrade Tagged Image:
     - docker:dind
   only:
     - tags@cloudigrade/cloudigrade
+  except:
+    - chat
+    - trigger
   before_script:
     - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
   script:
@@ -100,6 +117,8 @@ Push NGINX Image:
     - master@cloudigrade/cloudigrade
   except:
     - tags@cloudigrade/cloudigrade
+    - chat
+    - trigger
   variables:
     CONTEXT_DIR: deployment/prod/
     NGINX_S2I_IMAGE: centos/nginx-112-centos7:latest
@@ -125,6 +144,9 @@ Push NGINX Tagged Image:
     - docker:dind
   only:
     - tags@cloudigrade/cloudigrade
+  except:
+    - chat
+    - trigger
   variables:
     CONTEXT_DIR: deployment/prod/
     NGINX_S2I_IMAGE: centos/nginx-112-centos7:latest
@@ -142,17 +164,18 @@ Push NGINX Tagged Image:
     - docker push ${NGINX_NAME}:${CI_COMMIT_TAG}
 
 ### REVIEW STAGE ###
-Deploy-Review:
+Deploy Review:
   stage: review
   image: registry.gitlab.com/cloudigrade/images/deploy-container:latest
   variables:
     GIT_STRATEGY: none
   only:
     - branches@cloudigrade/cloudigrade
-    - chat
   except:
     - master@cloudigrade/cloudigrade
     - tags@cloudigrade/cloudigrade
+    - chat
+    - trigger
   before_script:
     - oc login --token ${KUBE_TOKEN}
     - git clone https://gitlab.com/cloudigrade/shiftigrade.git
@@ -199,22 +222,20 @@ Deploy-Review:
   environment:
     name: review/${CI_COMMIT_REF_NAME}
     url: https://cloudireview-${CI_COMMIT_REF_SLUG}.1b13.insights.openshiftapps.com
-    on_stop: Clean-Up-Review
+    on_stop: Clean Up Review
 
-Clean-Up-Review:
+Clean Up Review:
   stage: review
   image: registry.gitlab.com/cloudigrade/images/deploy-container:latest
   variables:
     GIT_STRATEGY: none
-    HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME: ${CI_COMMIT_REF_SLUG}-houndigrade-asg
-    HOUNDIGRADE_ECS_CLUSTER_NAME: ${CI_COMMIT_REF_SLUG}-houndigrade
-    HOUNDIGRADE_LAUNCH_CONFIG_NAME: ${CI_COMMIT_REF_SLUG}-houndigrade-lc
   only:
     - branches@cloudigrade/cloudigrade
-    - chat
   except:
     - master@cloudigrade/cloudigrade
     - tags@cloudigrade/cloudigrade
+    - chat
+    - trigger
   before_script:
     - oc login ${OPENSHIFT_URL} --token ${KUBE_TOKEN}
     - git clone https://gitlab.com/cloudigrade/shiftigrade.git
@@ -238,6 +259,143 @@ Clean-Up-Review:
   when: manual
   environment:
     name: review/${CI_COMMIT_REF_NAME}
+    action: stop
+
+Review-Master:
+  stage: review
+  image: registry.gitlab.com/cloudigrade/images/deploy-container:latest
+  variables:
+    GIT_STRATEGY: none
+  only:
+    - chat
+    - trigger
+  except:
+    - tags@cloudigrade/cloudigrade
+  before_script:
+    - oc login ${OPENSHIFT_URL} --token ${KUBE_TOKEN}
+    - git clone https://gitlab.com/cloudigrade/shiftigrade.git
+    - cd shiftigrade
+  script:
+    - >
+      if [ -n "${CHAT_INPUT}" ]; then
+        export API_REPO_REF=master
+        export NGINX_REPO_REF=master
+        export CI_COMMIT_REF_SLUG=master-${CHAT_INPUT}
+        export API_ROUTE_HOST=${CI_COMMIT_REF_SLUG}.1b13.insights.openshiftapps.com
+        export AUTH_ROUTE_HOST=${CI_COMMIT_REF_SLUG}.1b13.insights.openshiftapps.com
+        export AWS_S3_BUCKET_NAME=${CI_COMMIT_REF_SLUG}-cloudigrade-s3
+        export CLOUDTRAIL_EVENT_URL=https://sqs.${AWS_DEFAULT_REGION}.amazonaws.com/${AWS_ACCOUNT_NUMBER}/${CI_COMMIT_REF_SLUG}-cloudigrade-cloudtrail-sqs
+        export DB_SECRETS_FILE_NAME=${CI_COMMIT_REF_SLUG}-db
+        export DEPLOYMENT_PREFIX=${CI_COMMIT_REF_SLUG}-
+        export DJANGO_DATABASE_HOST=${CI_COMMIT_REF_SLUG}-db.${OPENSHIFT_PROJECT}.svc
+        export EC2_HOST_NAME=${CI_COMMIT_REF_SLUG}-houndigrade-host
+        export GITLAB_DEPLOYMENT=${CI_COMMIT_REF_SLUG}-cloudigrade
+        export HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME=${CI_COMMIT_REF_SLUG}-houndigrade-asg
+        export HOUNDIGRADE_ECS_CLUSTER_NAME=${CI_COMMIT_REF_SLUG}-houndigrade
+        export HOUNDIGRADE_LAUNCH_CONFIG_NAME=${CI_COMMIT_REF_SLUG}-houndigrade-lc
+      else
+        echo -e "section_start:$( date +%s ):chat_reply\r\033[0K\nPlease provide a name for the deployment.\nsection_end:$( date +%s ):chat_reply\r\033[0K"
+        exit 1
+      fi
+    - >
+      ansible-playbook \
+        -e application_name=houndigrade \
+        -e aws_prefix="${CI_COMMIT_REF_SLUG}" \
+        -e ec2_ami_id="${RECOMMENDED_AMI}" \
+        -e ec2_asg_availability_zones="${HOUNDIGRADE_AWS_AVAILABILITY_ZONE}" \
+        -e ec2_asg_desired_capacity=0 \
+        -e ec2_asg_max_size=0 \
+        -e ec2_asg_min_size=0 \
+        -e ec2_asg_name="${HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME}" \
+        -e ec2_asg_vpc_subnets="${SUBNET_NAME}" \
+        -e ec2_instance_name="${EC2_HOST_NAME}" \
+        -e ec2_instance_type="${INSTANCE_TYPE}" \
+        -e ec2_launch_configuration_name="${HOUNDIGRADE_LAUNCH_CONFIG_NAME}" \
+        -e ec2_security_groups="${SECURITY_GROUP_NAME}" \
+        -e ecs_cluster_name="${HOUNDIGRADE_ECS_CLUSTER_NAME}" \
+        -e key_name="${SSH_KEY_NAME}" \
+        -e vpc_name="${VPC_NAME}" \
+        -e bucket_name="${AWS_S3_BUCKET_NAME}" \
+        ansible/provision-aws-resources.yaml
+    - >
+      if ! oc rollout status dc/${CI_COMMIT_REF_SLUG}-db; then
+        oc process openshift//postgresql-ephemeral \
+          -p DATABASE_SERVICE_NAME=${CI_COMMIT_REF_SLUG}-db \
+          -p POSTGRESQL_DATABASE=postgres \
+          -p POSTGRESQL_VERSION=9.6 \
+          -l app=${CI_COMMIT_REF_SLUG} \
+        | oc apply -f - && \
+        oc rollout status dc/${CI_COMMIT_REF_SLUG}-db;
+      else
+        echo "${CI_COMMIT_REF_SLUG}-db already exists, keeping."
+      fi
+    - kontemplate template ocp/review.yaml -i cloudigrade | oc apply -f -
+    - oc start-build -F ${CI_COMMIT_REF_SLUG}-cloudigrade-api
+    - oc start-build -F ${CI_COMMIT_REF_SLUG}-cloudigrade-nginx
+    - if ! oc rollout status dc/${CI_COMMIT_REF_SLUG}-cloudigrade-api; then oc rollout latest dc/${CI_COMMIT_REF_SLUG}-cloudigrade-api && oc rollout status dc/${CI_COMMIT_REF_SLUG}-cloudigrade-api; fi;
+    - if ! oc rollout status dc/${CI_COMMIT_REF_SLUG}-cloudigrade-celery-beat; then oc rollout latest dc/${CI_COMMIT_REF_SLUG}-cloudigrade-celery-beat && oc rollout status dc/${CI_COMMIT_REF_SLUG}-cloudigrade-celery-beat; fi;
+    - if ! oc rollout status dc/${CI_COMMIT_REF_SLUG}-cloudigrade-celery-worker; then oc rollout latest dc/${CI_COMMIT_REF_SLUG}-cloudigrade-celery-worker && oc rollout status dc/${CI_COMMIT_REF_SLUG}-cloudigrade-celery-worker; fi;
+    - echo -e "section_start:$( date +%s ):chat_reply\r\033[0K\nDeployed ${CHAT_INPUT}, available at https://${CI_COMMIT_REF_SLUG}.1b13.insights.openshiftapps.com\nsection_end:$( date +%s ):chat_reply\r\033[0K"
+  environment:
+    name: review/master-${CHAT_INPUT}
+    url: https://${CI_COMMIT_REF_SLUG}.1b13.insights.openshiftapps.com
+    on_stop: Clean-up-master
+
+Clean-up-master:
+  stage: review
+  image: registry.gitlab.com/cloudigrade/images/deploy-container:latest
+  variables:
+    GIT_STRATEGY: none
+  only:
+    - chat
+    - trigger
+  except:
+    - tags@cloudigrade/cloudigrade
+  before_script:
+    - oc login ${OPENSHIFT_URL} --token ${KUBE_TOKEN}
+    - git clone https://gitlab.com/cloudigrade/shiftigrade.git
+    - cd shiftigrade
+  script:
+    - >
+      if [ -n "${CHAT_INPUT}" ]; then
+        export API_REPO_REF=master
+        export NGINX_REPO_REF=master
+        export CI_COMMIT_REF_SLUG=master-${CHAT_INPUT}
+        export API_ROUTE_HOST=${CI_COMMIT_REF_SLUG}.1b13.insights.openshiftapps.com
+        export AUTH_ROUTE_HOST=${CI_COMMIT_REF_SLUG}.1b13.insights.openshiftapps.com
+        export AWS_S3_BUCKET_NAME=${CI_COMMIT_REF_SLUG}-cloudigrade-s3
+        export CLOUDTRAIL_EVENT_URL=https://sqs.${AWS_DEFAULT_REGION}.amazonaws.com/${AWS_ACCOUNT_NUMBER}/${CI_COMMIT_REF_SLUG}-cloudigrade-cloudtrail-sqs
+        export DB_SECRETS_FILE_NAME=${CI_COMMIT_REF_SLUG}-db
+        export DEPLOYMENT_PREFIX=${CI_COMMIT_REF_SLUG}-
+        export DJANGO_DATABASE_HOST=${CI_COMMIT_REF_SLUG}-db.${OPENSHIFT_PROJECT}.svc
+        export EC2_HOST_NAME=${CI_COMMIT_REF_SLUG}-houndigrade-host
+        export GITLAB_DEPLOYMENT=${CI_COMMIT_REF_SLUG}-cloudigrade
+        export HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME=${CI_COMMIT_REF_SLUG}-houndigrade-asg
+        export HOUNDIGRADE_ECS_CLUSTER_NAME=${CI_COMMIT_REF_SLUG}-houndigrade
+        export HOUNDIGRADE_LAUNCH_CONFIG_NAME=${CI_COMMIT_REF_SLUG}-houndigrade-lc
+      else
+        echo -e "section_start:$( date +%s ):chat_reply\r\033[0K\nPlease provide a name for the deployment.\nsection_end:$( date +%s ):chat_reply\r\033[0K"
+        exit 1
+      fi
+    - oc delete bc,cm,dc,is,routes,secrets,svc -l gitlab-deployment="${CI_COMMIT_REF_SLUG}-cloudigrade"
+    - oc delete dc,svc,secret "${CI_COMMIT_REF_SLUG}-db"
+    - >
+      ansible-playbook \
+        -e aws_prefix="${CI_COMMIT_REF_SLUG}" \
+        -e bucket_state=absent \
+        -e ec2_asg_name="${HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME}" \
+        -e ec2_asg_state=absent \
+        -e ec2_launch_configuration_name="${HOUNDIGRADE_LAUNCH_CONFIG_NAME}" \
+        -e ec2_lc_state=absent \
+        -e ecs_cluster_name="${HOUNDIGRADE_ECS_CLUSTER_NAME}" \
+        -e ecs_state=absent \
+        -e sqs_state=absent \
+        ansible/provision-aws-resources.yaml
+    - ansible-playbook -e aws_prefix="${CI_COMMIT_REF_SLUG}" -e sqs_state=absent ansible/clean-sqs.yaml
+    - echo -e "section_start:$( date +%s ):chat_reply\r\033[0K\nCloudigrade master review - ${CHAT_INPUT} - cleaned up.\nsection_end:$( date +%s ):chat_reply\r\033[0K"
+  when: manual
+  environment:
+    name: review/master-${CHAT_INPUT}
     action: stop
 
 ### DEPLOY STAGE ###
