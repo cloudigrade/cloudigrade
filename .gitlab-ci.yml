@@ -342,7 +342,7 @@ Review-Master:
     - chat
   environment:
     name: review/master-${CHAT_INPUT}
-    url: https://${CI_COMMIT_REF_SLUG}.1b13.insights.openshiftapps.com
+    url: https://master-${CHAT_INPUT}.1b13.insights.openshiftapps.com
     on_stop: Clean-up-master
 
 Review Master:
@@ -351,7 +351,7 @@ Review Master:
     - trigger
   environment:
     name: review/master-${CHAT_INPUT}
-    url: https://${CI_COMMIT_REF_SLUG}.1b13.insights.openshiftapps.com
+    url: https://master-${CHAT_INPUT}.1b13.insights.openshiftapps.com
     on_stop: Clean up master review
 
 .CleanReviewTemplate: &clean_review_definition
