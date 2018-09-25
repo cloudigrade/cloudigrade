@@ -261,8 +261,10 @@ class UtilAwsSqsTest(TestCase):
             }),
         }
         with patch.object(sqs, 'boto3') as mock_boto3, \
-                patch.object(sqs, 'create_dlq') as mock_create_dlq:
+                patch.object(sqs, 'create_dlq') as mock_create_dlq, \
+                patch.object(sqs, 'validate_redrive_policy') as mock_validate:
             mock_boto3.client.return_value = mock_client
+            mock_validate.return_value = False
             mock_create_dlq.return_value = dlq_arn
             sqs.ensure_queue_has_dlq(source_queue_name, source_queue_url)
             mock_create_dlq.assert_called_with(source_queue_name)
@@ -270,12 +272,13 @@ class UtilAwsSqsTest(TestCase):
             QueueUrl=source_queue_url,
             AttributeNames=['RedrivePolicy']
         )
+        mock_validate.assert_called_with(source_queue_name, {})
         mock_client.set_queue_attributes.assert_called_with(
             QueueUrl=source_queue_url,
             Attributes=expected_attributes
         )
 
-    def test_ensure_queue_has_dql_but_already_has_redrive(self):
+    def test_ensure_queue_has_dlq_but_already_has_redrive(self):
         """Test that a queue with redrive policy does not get a DLQ."""
         source_queue_name = _faker.slug()
         source_queue_url = _faker.url()
@@ -286,12 +289,69 @@ class UtilAwsSqsTest(TestCase):
             }
         }
         with patch.object(sqs, 'boto3') as mock_boto3, \
-                patch.object(sqs, 'create_dlq') as mock_create_dlq:
+                patch.object(sqs, 'create_dlq') as mock_create_dlq, \
+                patch.object(sqs, 'validate_redrive_policy') as mock_validate:
             mock_boto3.client.return_value = mock_client
+            mock_validate.return_value = True
             sqs.ensure_queue_has_dlq(source_queue_name, source_queue_url)
             mock_create_dlq.assert_not_called()
+        mock_validate.assert_called_with(source_queue_name, {'hello': 'world'})
         mock_client.get_queue_attributes.assert_called_with(
             QueueUrl=source_queue_url,
             AttributeNames=['RedrivePolicy']
         )
         mock_client.set_queue_attributes.assert_not_called()
+
+    def test_validate_redrive_policy_no_arn_invalid(self):
+        """Test redrive policy is not valid if no queue ARN."""
+        source_queue_name = _faker.slug()
+        redrive_policy = {}
+        self.assertFalse(sqs.validate_redrive_policy(source_queue_name,
+                                                     redrive_policy))
+
+    def test_validate_redrive_policy_malformed_arn_invalid(self):
+        """Test redrive policy is not valid if queue ARN is malformed."""
+        source_queue_name = _faker.slug()
+        redrive_policy = {
+            'deadLetterTargetArn': _faker.slug()
+        }
+        self.assertFalse(sqs.validate_redrive_policy(source_queue_name,
+                                                     redrive_policy))
+
+    def test_validate_redrive_policy_queue_not_exists_invalid(self):
+        """Test redrive policy is not valid if target queue does not exist."""
+        source_queue_name = _faker.slug()
+        dlq_name = _faker.slug()
+        dlq_arn = helper.generate_dummy_arn(resource=dlq_name)
+        redrive_policy = {
+            'deadLetterTargetArn': dlq_arn,
+        }
+        mock_client = Mock()
+        mock_client.get_queue_url.side_effect = ClientError(
+            error_response={'Error': {
+                'Code': 'Random.Something.NonExistentQueue',
+            }},
+            operation_name=Mock(),
+        )
+        with patch.object(sqs, 'boto3') as mock_boto3:
+            mock_boto3.client.return_value = mock_client
+            self.assertFalse(sqs.validate_redrive_policy(source_queue_name,
+                                                         redrive_policy))
+        mock_client.get_queue_url.assert_called_with(QueueName=dlq_name)
+
+    def test_validate_redrive_policy_queue_exists_valid(self):
+        """Test redrive policy is valid if target queue exists."""
+        source_queue_name = _faker.slug()
+        dlq_name = _faker.slug()
+        dlq_arn = helper.generate_dummy_arn(resource=dlq_name)
+        dlq_url = _faker.url()
+        redrive_policy = {
+            'deadLetterTargetArn': dlq_arn,
+        }
+        mock_client = Mock()
+        mock_client.get_queue_url.return_value = {'QueueUrl': dlq_url}
+        with patch.object(sqs, 'boto3') as mock_boto3:
+            mock_boto3.client.return_value = mock_client
+            self.assertTrue(sqs.validate_redrive_policy(source_queue_name,
+                                                        redrive_policy))
+        mock_client.get_queue_url.assert_called_with(QueueName=dlq_name)

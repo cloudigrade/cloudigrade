@@ -7,6 +7,9 @@ from botocore.exceptions import ClientError
 from django.conf import settings
 from django.utils.translation import gettext as _
 
+from util import aws
+from util.exceptions import InvalidArn
+
 logger = logging.getLogger(__name__)
 
 QUEUE_NAME_LENGTH_MAX = 80  # AWS SQS's maximum name length.
@@ -202,11 +205,12 @@ def ensure_queue_has_dlq(source_queue_name, source_queue_url):
     ).get('Attributes', {}).get('RedrivePolicy', '{}')
     redrive_policy = json.loads(redrive_policy)
 
-    if redrive_policy:
-        logger.info('SQS queue "{}" already has a redrive policy: {}'.format(
-            source_queue_name, redrive_policy))
+    if validate_redrive_policy(source_queue_name, redrive_policy):
         return
 
+    logger.info('SQS queue "{}" needs an updated redrive policy'.format(
+        source_queue_name
+    ))
     dlq_arn = create_dlq(source_queue_name)
 
     redrive_policy = {
@@ -219,6 +223,46 @@ def ensure_queue_has_dlq(source_queue_name, source_queue_url):
     logger.info('Assigning SQS queue "{}" redrive policy: {}'.format(
         source_queue_name, redrive_policy))
     sqs.set_queue_attributes(QueueUrl=source_queue_url, Attributes=attributes)
+
+
+def validate_redrive_policy(source_queue_name, redrive_policy):
+    """
+    Validate the queue redrive policy has an accessible DLQ.
+
+    Args:
+        source_queue_name (str): the queue name that should have a DLQ
+        redrive_policy (dict): the redrive policy
+
+    Returns:
+        bool: True if policy appears to be valid, else False.
+
+    """
+    logger.info('SQS queue "{}" already has a redrive policy: {}'.format(
+        source_queue_name, redrive_policy
+    ))
+
+    dlq_queue_arn = redrive_policy.get('deadLetterTargetArn')
+
+    if not dlq_queue_arn:
+        return False
+
+    try:
+        dlq_queue_name = aws.AwsArn(dlq_queue_arn).resource
+    except InvalidArn:
+        return False
+
+    try:
+        region = settings.SQS_DEFAULT_REGION
+        sqs = boto3.client('sqs', region_name=region)
+        sqs.get_queue_url(QueueName=dlq_queue_name)['QueueUrl']
+        queue_exists = True
+    except ClientError as e:
+        if e.response['Error']['Code'].endswith('.NonExistentQueue'):
+            queue_exists = False
+        else:
+            raise
+
+    return queue_exists
 
 
 def create_dlq(source_queue_name):

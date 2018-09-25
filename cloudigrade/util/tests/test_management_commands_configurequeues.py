@@ -29,7 +29,7 @@ class ConfigureQueuesTest(TestCase):
         expected_get_url_calls = [
             call(queue_name) for queue_name in queue_names
         ]
-        expected_ensure_queue_has_dql_calls = [
+        expected_ensure_queue_has_dlq_calls = [
             call(name, url) for name, url in queue_urls.items()
         ]
 
@@ -47,5 +47,5 @@ class ConfigureQueuesTest(TestCase):
             call_command('configurequeues')
 
             mock_aws.get_sqs_queue_url.assert_has_calls(expected_get_url_calls)
-            mock_aws.ensure_queue_has_dql.assert_has_calls(
-                expected_ensure_queue_has_dql_calls)
+            mock_aws.ensure_queue_has_dlq.assert_has_calls(
+                expected_ensure_queue_has_dlq_calls)
