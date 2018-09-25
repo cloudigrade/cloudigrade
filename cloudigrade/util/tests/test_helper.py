@@ -8,10 +8,13 @@ import re
 import string
 import uuid
 
+import faker
 from django.test import TestCase
 
 from util import aws
 from util.tests import helper
+
+_faker = faker.Faker()
 
 
 class UtilHelperTest(TestCase):
@@ -33,6 +36,12 @@ class UtilHelperTest(TestCase):
         account_id = '012345678901'
         arn = helper.generate_dummy_arn(account_id)
         self.assertIn(account_id, arn)
+
+    def test_generate_dummy_arn_given_resource(self):
+        """Assert generation of an ARN with a specified resource."""
+        resource = _faker.slug()
+        arn = helper.generate_dummy_arn(resource=resource)
+        self.assertTrue(arn.endswith(resource))
 
     def test_generate_dummy_describe_instance_default(self):
         """Assert generated instance has values where expected."""

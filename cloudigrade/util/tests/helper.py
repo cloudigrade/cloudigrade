@@ -89,7 +89,8 @@ def generate_dummy_arn(account_id=None,
                        partition='aws',
                        service='iam',
                        resource_type='role',
-                       resource_separator='/'):
+                       resource_separator='/',
+                       resource=None):
     """
     Generate a dummy AWS ARN for testing purposes.
 
@@ -101,6 +102,8 @@ def generate_dummy_arn(account_id=None,
         service (str): Optional partition. Default is 'iam'.
         resource_type (str): Optional resource type. Default is 'role'.
         resource_separator (str): A colon ':' or a forward-slash '/'
+        resource (str): Optional resource name. Default is None. If None, a
+            resource will be randomly generated.
 
     Returns:
         str: A well-formed, randomized ARN.
@@ -108,7 +111,8 @@ def generate_dummy_arn(account_id=None,
     """
     if account_id is None:
         account_id = generate_dummy_aws_account_id()
-    resource = faker.Faker().name()
+    if resource is None:
+        resource = faker.Faker().name()
     arn = f'arn:{partition}:{service}:{region}:{account_id}:' \
           f'{resource_type}{resource_separator}{resource}'
     return arn
