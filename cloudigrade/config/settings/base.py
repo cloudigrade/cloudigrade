@@ -2,6 +2,7 @@
 from urllib.parse import quote
 
 import environ
+import logging.config
 
 ROOT_DIR = environ.Path(__file__) - 3
 APPS_DIR = ROOT_DIR.path('cloudigrade')
@@ -28,6 +29,8 @@ ALLOWED_HOSTS = env('DJANGO_ALLOWED_HOSTS', default=['*'])
 # Logging
 # https://docs.djangoproject.com/en/dev/topics/logging/
 # https://docs.python.org/3.6/library/logging.html
+# https://www.caktusgroup.com/blog/2015/01/27/Django-Logging-Configuration-logging_config-default-settings-logger/
+LOGGING_CONFIG = None
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': True,
@@ -49,8 +52,13 @@ LOGGING = {
             'handlers': ['console',],
             'level': env('DJANGO_LOG_LEVEL', default='INFO'),
         },
+        'django': {
+            'propagate': True
+        },
     },
 }
+
+logging.config.dictConfig(LOGGING)
 
 CELERY_WORKER_LOG_FORMAT = ('%(asctime)s | %(levelname)s | %(filename)s:'
                             '%(funcName)s:%(lineno)d | %(message)s')
