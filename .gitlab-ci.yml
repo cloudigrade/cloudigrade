@@ -219,7 +219,7 @@ Deploy Review:
     - if ! oc rollout status dc/cloudireview-${CI_COMMIT_REF_SLUG}-cloudigrade-api; then oc rollout latest dc/cloudireview-${CI_COMMIT_REF_SLUG}-cloudigrade-api && oc rollout status dc/cloudireview-${CI_COMMIT_REF_SLUG}-cloudigrade-api; fi;
     - if ! oc rollout status dc/cloudireview-${CI_COMMIT_REF_SLUG}-cloudigrade-celery-beat; then oc rollout latest dc/cloudireview-${CI_COMMIT_REF_SLUG}-cloudigrade-celery-beat && oc rollout status dc/cloudireview-${CI_COMMIT_REF_SLUG}-cloudigrade-celery-beat; fi;
     - if ! oc rollout status dc/cloudireview-${CI_COMMIT_REF_SLUG}-cloudigrade-celery-worker; then oc rollout latest dc/cloudireview-${CI_COMMIT_REF_SLUG}-cloudigrade-celery-worker && oc rollout status dc/cloudireview-${CI_COMMIT_REF_SLUG}-cloudigrade-celery-worker; fi;
-    - echo "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin@example.com', 'admin@example.com', '${CLOUDIGRADE_PASSWORD}')" | oc rsh -c ${CI_COMMIT_REF_SLUG}-cloudigrade-api $(oc get pods -o jsonpath='{.items[*].metadata.name}' -l name=${CI_COMMIT_REF_SLUG}-cloudigrade-api) scl enable rh-python36 -- python manage.py shell || true
+    - echo "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin@example.com', 'admin@example.com', '${CLOUDIGRADE_PASSWORD}')" | oc rsh -c cloudireview-${CI_COMMIT_REF_SLUG}-cloudigrade-api $(oc get pods -o jsonpath='{.items[*].metadata.name}' -l name=cloudireview-${CI_COMMIT_REF_SLUG}-cloudigrade-api) scl enable rh-python36 -- python manage.py shell || true
   environment:
     name: review/${CI_COMMIT_REF_NAME}
     url: https://cloudireview-${CI_COMMIT_REF_SLUG}.1b13.insights.openshiftapps.com
