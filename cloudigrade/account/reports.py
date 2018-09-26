@@ -110,6 +110,8 @@ def _get_relevant_events(start, end, account_ids):
     # Reduce all the filters with the "or" operator.
     event_filter = functools.reduce(operator.ior, event_filters)
     events = InstanceEvent.objects.filter(event_filter) \
+        .select_related('instance') \
+        .prefetch_related('machineimage') \
         .order_by('instance__id')
     return events
 
