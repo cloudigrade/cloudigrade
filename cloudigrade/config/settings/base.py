@@ -273,6 +273,10 @@ AWS_SQS_MAX_RECEIVE_COUNT = env('AWS_SQS_MAX_RECEIVE_COUNT', default=5)
 AWS_NAME_PREFIX = env('AWS_NAME_PREFIX',
                       default=env('USER', default='anonymous') + '-')
 
+# URL for getting the AWS EC2 instance information
+AWS_PRICING_URL = \
+    'https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/index.json'
+
 HOUNDIGRADE_RESULTS_QUEUE_NAME = env('HOUNDIGRADE_RESULTS_QUEUE_NAME',
                                       default=AWS_NAME_PREFIX + \
                                               'inspection_results')
@@ -326,6 +330,8 @@ CELERY_TASK_ROUTES = {
         {'queue': 'scale_down_cluster'},
     'analyzer.tasks.analyze_log':
         {'queue': 'analyze_log'},
+    'analyzer.tasks.repopulate_ec2_instance_mapping':
+        {'queue': 'repopulate_ec2_instance_mapping'},
 }
 CELERY_BEAT_SCHEDULE = {
     'scale_up_inspection_cluster_every_60_min': {

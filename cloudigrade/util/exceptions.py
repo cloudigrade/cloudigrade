@@ -102,6 +102,10 @@ class CloudTrailCannotStopLogging(APIException):
     status_code = http.HTTPStatus.INTERNAL_SERVER_ERROR
 
 
+class EC2InstanceDefinitionNotFound(NotReadyException):
+    """Raise when the EC2 instance definition was not found."""
+
+
 def api_exception_handler(exc, context):
     """
     Log exception and return an appropriately formatted response.

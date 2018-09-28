@@ -3,6 +3,7 @@ import collections
 import itertools
 import json
 import logging
+import urllib.request
 from decimal import Decimal
 
 from celery import shared_task
@@ -10,13 +11,16 @@ from django.conf import settings
 from django.db import transaction
 from django.utils.translation import gettext as _
 
-from account.models import AwsAccount, AwsMachineImage, InstanceEvent
+from account.models import (AwsAccount, AwsEC2InstanceDefinitions,
+                            AwsMachineImage, InstanceEvent)
 from account.util import (save_instance_events,
                           save_new_aws_machine_image,
                           start_image_inspection)
 from util import aws
 from util.aws import is_instance_windows, rewrap_aws_errors
-from util.exceptions import CloudTrailLogAnalysisMissingData
+from util.celery import retriable_shared_task
+from util.exceptions import (CloudTrailLogAnalysisMissingData,
+                             EC2InstanceDefinitionNotFound)
 
 logger = logging.getLogger(__name__)
 
@@ -533,3 +537,83 @@ def _save_results(instance_events, ami_tag_events, aws_instances,
         )
 
     return new_images
+
+
+@retriable_shared_task
+def repopulate_ec2_instance_mapping():
+    """
+    Scan AWS pricing endpoint and update the EC2 instancetype lookup table.
+
+    See: https://aws.amazon.com/blogs/aws/new-aws-price-list-api/
+
+    Returns:
+        None: Run as an asynchronous Celery task.
+
+    """
+    logger.info(_('Getting AWS EC2 instance type information.'))
+
+    with urllib.request.urlopen(settings.AWS_PRICING_URL) as response:
+        ec2_offers = json.load(response)
+
+    instances = {}
+    for sku, data in ec2_offers['products'].items():
+        if data['productFamily'] != 'Compute Instance':
+            # skip anything that's not an EC2 Instance
+            continue
+        instances[data['attributes']['instanceType']] = data['attributes']
+
+    for instance_type, instance_metadata in instances.items():
+
+        try:
+            # memory comes in formatted like: 1,952.00 GiB
+            memory = float(
+                instance_metadata.get('memory', 0)[:-4].replace(',', '')
+            )
+            vcpu = int(instance_metadata.get('vcpu', 0))
+
+            AwsEC2InstanceDefinitions.objects.update_or_create(
+                instance_type=instance_type,
+                memory=memory,
+                vcpu=vcpu
+            )
+        except ValueError:
+            logger.error(
+                _(
+                    'Could not convert memory {} to float.'
+                ).format(instance_metadata.get('memory', 0))
+            )
+
+
+def _get_instance_definition(instance_type):
+    """
+    Get information about an AWS EC2 instance (e.g. memory, vcpu).
+
+    If the instance_type does not exist in this table, kick off a
+    new task to repopulate this table from an AWS pricing endpoint.
+
+    Args:
+        instance_type (str): Lookup the definition for this instance_type
+
+    Returns:
+        instance (django.models.AwsEC2InstanceDefinitions): model
+        corresponding to the given instance_type.
+
+    Raises:
+        EC2InstanceDefinitionNotFound: If instance_type is not found
+
+    """
+    try:
+        model = AwsEC2InstanceDefinitions.objects.get(
+            instance_type=instance_type
+        )
+        return model
+
+    except AwsEC2InstanceDefinitions.DoesNotExist:
+        logger.info(
+            _(
+                'Could not find instance type {} in mapping table, '
+                'repopulating table with latest amazon information.'
+            ).format(instance_type)
+        )
+        repopulate_ec2_instance_mapping.delay()
+        raise EC2InstanceDefinitionNotFound

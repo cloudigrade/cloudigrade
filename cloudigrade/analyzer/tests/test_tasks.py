@@ -1,19 +1,21 @@
 """Collection of tests for Analyzer tasks."""
 import json
 import random
-from unittest.mock import call, patch
+from unittest.mock import Mock, call, patch
 
 import faker
 from django.conf import settings
 from django.test import TestCase
 
-from account.models import (AwsInstance,
+from account.models import (AwsEC2InstanceDefinitions,
+                            AwsInstance,
                             AwsInstanceEvent,
                             AwsMachineImage,
                             InstanceEvent)
 from account.tests import helper as account_helper
 from analyzer import tasks
 from analyzer.tests import helper as analyzer_helper
+from util.exceptions import EC2InstanceDefinitionNotFound
 from util.tests import helper as util_helper
 
 _faker = faker.Faker()
@@ -569,3 +571,72 @@ class AnalyzeLogTest(TestCase):
         all_images = list(AwsMachineImage.objects.all())
         self.assertEqual(len(all_images), 0)
         mock_del.assert_called()
+
+    @patch('analyzer.tasks.repopulate_ec2_instance_mapping.delay')
+    @patch('analyzer.tasks.AwsEC2InstanceDefinitions.objects.get')
+    def test_get_instance_definition_returns_value_in_db(
+            self, mock_lookup, mock_remap):
+        """Test that task isn't ran if instance definition already exists."""
+        mock_instance_definition = Mock()
+        mock_instance_definition.instance_type = 't3.nano'
+        mock_instance_definition.memory = '0.5'
+        mock_instance_definition.vcpu = '2'
+        mock_lookup.return_value = mock_instance_definition
+
+        instance = mock_lookup()
+        self.assertEqual(mock_instance_definition, instance)
+        mock_remap.assert_not_called()
+
+    @patch('analyzer.tasks.repopulate_ec2_instance_mapping.delay')
+    @patch('analyzer.tasks.AwsEC2InstanceDefinitions.objects.get')
+    def test_get_instance_definition_triggers_task(
+            self, mock_lookup, mock_remap):
+        """Test that task isn't ran if instance definition already exists."""
+        mock_lookup.side_effect = AwsEC2InstanceDefinitions.DoesNotExist()
+        with self.assertRaises(EC2InstanceDefinitionNotFound):
+            tasks._get_instance_definition('t3.nano')
+
+        mock_remap.assert_called()
+
+    @patch('analyzer.tasks.AwsEC2InstanceDefinitions.objects.update_or_create')
+    @patch('json.load')
+    @patch('urllib.request.urlopen')
+    def test_repopulate_ec2_instance_mapping(
+            self, mock_request, mock_json_load, mock_db_create):
+        """Test that repopulate_ec2_instance_mapping creates db objects."""
+        mock_json_load.return_value = {
+            'products': {
+                'S25N2BEFE3CSAAXK': {
+                    'sku': 'S25N2BEFE3CSAAXK',
+                    'productFamily': 'Compute Instance',
+                    'attributes': {
+                        'servicecode': 'AmazonEC2',
+                        'location': 'EU (Ireland)',
+                        'locationType': 'AWS Region',
+                        'instanceType': 'r5d.12xlarge',
+                        'currentGeneration': 'Yes',
+                        'instanceFamily': 'Memory optimized',
+                        'vcpu': '48',
+                        'physicalProcessor': 'Intel Xeon Platinum 8175',
+                        'memory': '384 GiB',
+                        'storage': '2 x 900 NVMe SSD',
+                        'networkPerformance': '10 Gigabit',
+                        'processorArchitecture': '64-bit',
+                        'tenancy': 'Shared',
+                        'operatingSystem': 'Windows',
+                        'licenseModel': 'No License required',
+                        'usagetype': 'EU-BoxUsage:r5d.12xlarge',
+                        'operation': 'RunInstances:0002',
+                        'capacitystatus': 'Used',
+                        'ecu': '173',
+                        'normalizationSizeFactor': '96',
+                        'preInstalledSw': 'NA',
+                        'servicename': 'Amazon Elastic Compute Cloud'
+                    }
+                }
+            }
+        }
+        tasks.repopulate_ec2_instance_mapping()
+        mock_db_create.assert_called_with(instance_type='r5d.12xlarge',
+                                          memory=384,
+                                          vcpu=48)

@@ -6,13 +6,14 @@ import boto3
 from botocore.exceptions import ClientError
 from django.utils.translation import gettext as _
 
+
 from util.aws.helper import get_regions
 from util.aws.sts import _get_primary_account_id
 from util.exceptions import (AwsImageError, AwsSnapshotCopyLimitError,
                              AwsSnapshotError, AwsSnapshotNotOwnedError,
                              AwsSnapshotOwnedError, AwsVolumeError,
-                             AwsVolumeNotReadyError, ImageNotReadyException,
-                             SnapshotNotReadyException)
+                             AwsVolumeNotReadyError,
+                             ImageNotReadyException, SnapshotNotReadyException)
 
 logger = logging.getLogger(__name__)
 
