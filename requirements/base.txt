@@ -3,7 +3,7 @@ django-environ==0.4.5
 boto3==1.9.13
 celery==4.2.1
 django-model-utils==3.1.2
-jsonpickle==0.9.6
+jsonpickle==1.0
 psycopg2-binary==2.7.5
 python-dateutil==2.7.3
 djangorestframework==3.8.2
