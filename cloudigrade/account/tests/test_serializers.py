@@ -12,7 +12,8 @@ from account.models import (AwsAccount,
                             AwsInstance,
                             AwsMachineImage)
 from account.serializers import (AwsAccountSerializer,
-                                 aws)
+                                 AwsMachineImageSerializer,
+                                 aws,)
 from account.tests import helper as account_helper
 from util.tests import helper as util_helper
 
@@ -239,3 +240,51 @@ class AwsAccountSerializerTest(TestCase):
             self.assertIn('account_arn', raised_exception.detail)
             self.assertIn(str(aws_account_id),
                           raised_exception.detail['account_arn'][0])
+
+
+class AwsMachineImageSerializerTest(TestCase):
+    """AwsMachineImage serializer test case."""
+
+    def test_update_succeeds_when_rhel_challenged_is_unset(self):
+        """If RHEL challenged is unset, test that the update succeeds."""
+        mock_image = Mock()
+        mock_image.rhel_challenged = True
+        mock_image.openshift_challenged = True
+        mock_image.save = Mock(return_value=None)
+        validated_data = {
+            'rhel_challenged': False
+        }
+        serializer = AwsMachineImageSerializer()
+        serializer.update(mock_image, validated_data)
+        self.assertFalse(mock_image.rhel_challenged)
+        mock_image.save.assert_called()
+
+    def test_update_succeeds_when_rhel_challenged_is_set(self):
+        """If RHEL challenged is set, test that the update succeeds."""
+        mock_image = Mock()
+        mock_image.rhel_challenged = False
+        mock_image.openshift_challenged = True
+        mock_image.save = Mock(return_value=None)
+
+        validated_data = {
+            'rhel_challenged': True
+        }
+        serializer = AwsMachineImageSerializer()
+        serializer.update(mock_image, validated_data)
+        self.assertTrue(mock_image.rhel_challenged)
+
+    def test_no_update_when_nothing_changes(self):
+        """If RHEL challenged is set, test that the update succeeds."""
+        mock_image = Mock()
+        mock_image.rhel_challenged = False
+        mock_image.openshift_challenged = False
+        mock_image.save = Mock(return_value=None)
+
+        validated_data = {}
+
+        serializer = AwsMachineImageSerializer()
+        serializer.update(mock_image, validated_data)
+
+        self.assertFalse(mock_image.rhel_challenged)
+        self.assertFalse(mock_image.openshift_challenged)
+        mock_image.save.assert_not_called()

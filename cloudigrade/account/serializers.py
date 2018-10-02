@@ -270,7 +270,7 @@ class AwsMachineImageSerializer(HyperlinkedModelSerializer):
         if openshift_challenged is not None:
             image.openshift_challenged = openshift_challenged
 
-        if (rhel_challenged or openshift_challenged) is not None:
+        if rhel_challenged is not None or openshift_challenged is not None:
             image.save()
 
         return image
