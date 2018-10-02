@@ -170,26 +170,40 @@ class AwsInstanceEventSerializer(HyperlinkedModelSerializer):
     class Meta:
         model = AwsInstanceEvent
         fields = (
-            'instance',
-            'id',
-            'subnet',
-            'machineimage',
-            'instance_type',
             'event_type',
-            'occurred_at'
+            'id',
+            'instance',
+            'instance_id',
+            'instance_type',
+            'machineimage',
+            'machineimage_id',
+            'occurred_at',
+            'subnet',
+            'url',
         )
         read_only_fields = (
-            'instance',
-            'id',
-            'subnet',
-            'machineimage',
-            'instance_type',
             'event_type',
-            'occurred_at'
+            'id',
+            'instance',
+            'instance_id',
+            'instance_type',
+            'machineimage',
+            'machineimage_id',
+            'occurred_at',
+            'subnet',
+            'url',
         )
         extra_kwargs = {
-            'url': {'view_name': 'event-detail', 'lookup_field': 'pk'},
+            'url': {'view_name': 'instanceevent-detail', 'lookup_field': 'pk'},
         }
+
+    def get_instance_id(self, event):
+        """Get the instance_id property for serialization."""
+        return event.instance_id
+
+    def get_machineimage_id(self, event):
+        """Get the machineimage_id property for serialization."""
+        return event.machineimage_id
 
 
 class InstanceEventPolymorphicSerializer(PolymorphicSerializer):
@@ -209,45 +223,51 @@ class AwsMachineImageSerializer(HyperlinkedModelSerializer):
     class Meta:
         model = AwsMachineImage
         fields = (
-            'id',
             'created_at',
-            'updated_at',
-            'owner_aws_account_id',
-            'is_encrypted',
             'ec2_ami_id',
-            'status',
+            'id',
+            'inspection_json',
+            'is_encrypted',
+            'name',
+            'openshift',
+            'openshift_challenged',
+            'openshift_detected',
+            'owner_aws_account_id',
+            'platform',
             'rhel',
+            'rhel_challenged',
             'rhel_detected',
             'rhel_enabled_repos_found',
             'rhel_product_certs_found',
             'rhel_release_files_found',
             'rhel_signed_packages_found',
-            'rhel_challenged',
-            'openshift',
-            'openshift_detected',
-            'openshift_challenged',
-            'inspection_json',
+            'status',
+            'updated_at',
+            'url',
         )
         read_only_fields = (
-            'id',
             'created_at',
-            'updated_at',
-            'owner_aws_account_id',
-            'is_encrypted',
             'ec2_ami_id',
-            'status',
+            'id',
+            'inspection_json',
+            'is_encrypted',
+            'name',
+            'openshift',
+            'openshift_detected',
+            'owner_aws_account_id',
+            'platform',
             'rhel',
             'rhel_detected',
             'rhel_enabled_repos_found',
             'rhel_product_certs_found',
             'rhel_release_files_found',
             'rhel_signed_packages_found',
-            'openshift',
-            'openshift_detected',
-            'inspection_json',
+            'status',
+            'updated_at',
+            'url',
         )
         extra_kwargs = {
-            'url': {'view_name': 'image-detail', 'lookup_field': 'pk'},
+            'url': {'view_name': 'machineimage-detail', 'lookup_field': 'pk'},
         }
 
     def update(self, image, validated_data):
@@ -291,25 +311,31 @@ class AwsInstanceSerializer(HyperlinkedModelSerializer):
         model = AwsInstance
         fields = (
             'account',
-            'id',
+            'account_id',
             'created_at',
+            'ec2_instance_id',
+            'id',
+            'region',
             'updated_at',
             'url',
-            'ec2_instance_id',
-            'region'
         )
         read_only_fields = (
             'account',
-            'id',
+            'account_id',
             'created_at',
+            'ec2_instance_id',
+            'id',
+            'region',
             'updated_at',
             'url',
-            'ec2_instance_id',
-            'region'
         )
         extra_kwargs = {
             'url': {'view_name': 'instance-detail', 'lookup_field': 'pk'},
         }
+
+    def get_account_id(self, instance):
+        """Get the account_id property for serialization."""
+        return instance.account_id
 
 
 class InstancePolymorphicSerializer(PolymorphicSerializer):

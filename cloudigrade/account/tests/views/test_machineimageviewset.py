@@ -111,6 +111,31 @@ class MachineImageViewSetTest(TestCase):
         self.assertEqual(
             response.data['inspection_json'], image.inspection_json
         )
+        self.assertEqual(
+            response.data['name'], image.name
+        )
+        self.assertEqual(
+            response.data['status'], image.status
+        )
+        self.assertEqual(
+            response.data['rhel'], image.rhel
+        )
+        self.assertEqual(
+            response.data['rhel_challenged'], image.rhel_challenged
+        )
+        self.assertEqual(
+            response.data['openshift'], image.openshift
+        )
+        self.assertEqual(
+            response.data['openshift_detected'], image.openshift_detected
+        )
+        self.assertEqual(
+            response.data['openshift_challenged'], image.openshift_challenged
+        )
+        self.assertEqual(
+            response.data['url'],
+            f'http://testserver/api/v1/image/{image.id}/'
+        )
 
         if isinstance(image, AwsMachineImage):
             self.assertEqual(
@@ -316,11 +341,13 @@ class MachineImageViewSetTest(TestCase):
         response = self.get_image_put_response(self.user1,
                                                self.image_rhel.id,
                                                data2)
+
         self.assertTrue(response.data['openshift_challenged'])
         self.assertTrue(response.data['openshift'])
         self.assertFalse(response.data['rhel_challenged'])
         self.assertTrue(response.data['rhel'])
-        self.assertResponseHasImageData(response, self.image_rhel)
+        updated_image = AwsMachineImage.objects.get(pk=response.data['id'])
+        self.assertResponseHasImageData(response, updated_image)
 
     def test_user1_challenge_rhel_returns_ok(self):
         """Assert that user can challenge non RHEL image as RHEL."""
@@ -334,6 +361,8 @@ class MachineImageViewSetTest(TestCase):
                                                  data)
         self.assertTrue(response.data['rhel_challenged'])
         self.assertTrue(response.data['rhel'])
+        updated_image = AwsMachineImage.objects.get(pk=response.data['id'])
+        self.assertResponseHasImageData(response, updated_image)
 
     def test_user2_challenge_non_ocp_returns_ok(self):
         """Assert that user can challenge OCP image as non OCP."""
@@ -347,6 +376,8 @@ class MachineImageViewSetTest(TestCase):
                                                  data)
         self.assertTrue(response.data['openshift_challenged'])
         self.assertFalse(response.data['openshift'])
+        updated_image = AwsMachineImage.objects.get(pk=response.data['id'])
+        self.assertResponseHasImageData(response, updated_image)
 
     def test_user1_challenge_ocp_returns_ok(self):
         """Assert that user can challenge non OCP image as OCP."""
@@ -360,6 +391,8 @@ class MachineImageViewSetTest(TestCase):
                                                  data)
         self.assertTrue(response.data['openshift_challenged'])
         self.assertTrue(response.data['openshift'])
+        updated_image = AwsMachineImage.objects.get(pk=response.data['id'])
+        self.assertResponseHasImageData(response, updated_image)
 
     def test_user1_challenge_user2_returns_404(self):
         """Assert that user can not challenge image it hasn't used."""
@@ -391,6 +424,8 @@ class MachineImageViewSetTest(TestCase):
         self.assertFalse(response.data['rhel'])
         self.assertFalse(response.data['openshift_challenged'])
         self.assertTrue(response.data['openshift'])
+        updated_image = AwsMachineImage.objects.get(pk=response.data['id'])
+        self.assertResponseHasImageData(response, updated_image)
 
         response = self.get_image_patch_response(self.user2,
                                                  self.image_rhel_ocp.id,
@@ -399,6 +434,8 @@ class MachineImageViewSetTest(TestCase):
         self.assertFalse(response.data['openshift'])
         self.assertTrue(response.data['rhel_challenged'])
         self.assertFalse(response.data['rhel'])
+        updated_image = AwsMachineImage.objects.get(pk=response.data['id'])
+        self.assertResponseHasImageData(response, updated_image)
 
     def test_user2_challenge_both_together_returns_ok(self):
         """Assert that user can challenge RHEL and OCP at the same time."""
@@ -415,6 +452,8 @@ class MachineImageViewSetTest(TestCase):
         self.assertFalse(response.data['rhel'])
         self.assertTrue(response.data['openshift_challenged'])
         self.assertFalse(response.data['openshift'])
+        updated_image = AwsMachineImage.objects.get(pk=response.data['id'])
+        self.assertResponseHasImageData(response, updated_image)
 
     def test_user1_undo_challenge_returns_ok(self):
         """Assert that user can redact a challenge RHEL."""
@@ -432,12 +471,16 @@ class MachineImageViewSetTest(TestCase):
                                                  data1)
         self.assertTrue(response.data['rhel_challenged'])
         self.assertFalse(response.data['rhel'])
+        updated_image = AwsMachineImage.objects.get(pk=response.data['id'])
+        self.assertResponseHasImageData(response, updated_image)
 
         response = self.get_image_patch_response(self.user1,
                                                  self.image_rhel.id,
                                                  data2)
         self.assertFalse(response.data['rhel_challenged'])
         self.assertTrue(response.data['rhel'])
+        updated_image = AwsMachineImage.objects.get(pk=response.data['id'])
+        self.assertResponseHasImageData(response, updated_image)
 
     def test_superuser_can_challenge_image_returns_ok(self):
         """Assert that superuser can challenge image it hasn't used."""
@@ -451,3 +494,5 @@ class MachineImageViewSetTest(TestCase):
                                                  data)
         self.assertTrue(response.data['rhel_challenged'])
         self.assertFalse(response.data['rhel'])
+        updated_image = AwsMachineImage.objects.get(pk=response.data['id'])
+        self.assertResponseHasImageData(response, updated_image)

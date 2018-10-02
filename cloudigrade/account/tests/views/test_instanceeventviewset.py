@@ -60,12 +60,22 @@ class InstanceEventViewSetTest(TestCase):
             f'http://testserver/api/v1/instance/{event.instance.id}/'
         )
         self.assertEqual(
+            response.data['instance_id'], event.instance.id
+        )
+        self.assertEqual(
             response.data['resourcetype'], event.__class__.__name__
+        )
+        self.assertEqual(
+            response.data['url'],
+            f'http://testserver/api/v1/event/{event.id}/'
         )
 
         if isinstance(event, AwsInstanceEvent):
             self.assertEqual(
                 response.data['subnet'], event.subnet
+            )
+            self.assertEqual(
+                response.data['machineimage_id'], event.machineimage_id
             )
             __, machineimage_args, machineimage_kwargs = resolve(
                 urlparse(response.data['machineimage'])[2]

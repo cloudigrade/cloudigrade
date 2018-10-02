@@ -40,7 +40,14 @@ class InstanceViewSetTest(TestCase):
             f'http://testserver/api/v1/account/{instance.account.id}/'
         )
         self.assertEqual(
+            response.data['account_id'], instance.account.id
+        )
+        self.assertEqual(
             response.data['resourcetype'], instance.__class__.__name__
+        )
+        self.assertEqual(
+            response.data['url'],
+            f'http://testserver/api/v1/instance/{instance.id}/'
         )
 
         if isinstance(instance, AwsInstance):

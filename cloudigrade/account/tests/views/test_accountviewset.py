@@ -45,6 +45,10 @@ class AccountViewSetTest(TestCase):
         self.assertEqual(
             response.data['name'], account.name
         )
+        self.assertEqual(
+            response.data['url'],
+            f'http://testserver/api/v1/account/{account.id}/'
+        )
 
         if isinstance(account, AwsAccount):
             self.assertEqual(

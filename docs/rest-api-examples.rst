@@ -465,6 +465,7 @@ Response:
         "results": [
             {
                 "account": "https://test.cloudigra.de/api/v1/account/3/",
+                "account_id": 3,
                 "created_at": "2018-08-08T17:09:22.879395Z",
                 "ec2_instance_id": "i-08f57804410734024",
                 "id": 1,
@@ -475,6 +476,7 @@ Response:
             },
             {
                 "account": "https://test.cloudigra.de/api/v1/account/3/",
+                "account_id": 3,
                 "created_at": "2018-08-08T17:41:35.437117Z",
                 "ec2_instance_id": "i-09f905a808748efc7",
                 "id": 2,
@@ -485,6 +487,7 @@ Response:
             },
             {
                 "account": "https://test.cloudigra.de/api/v1/account/3/",
+                "account_id": 3,
                 "created_at": "2018-08-08T18:03:35.524515Z",
                 "ec2_instance_id": "i-01b6d5b1c7c60bf18",
                 "id": 3,
@@ -522,6 +525,7 @@ Response:
 
     {
         "account": "https://test.cloudigra.de/api/v1/account/3/",
+        "account_id": 3,
         "created_at": "2018-08-08T17:09:22.879395Z",
         "ec2_instance_id": "i-08f57804410734024",
         "id": 1,
@@ -566,6 +570,7 @@ Response:
         "results": [
             {
                 "account": "https://test.cloudigra.de/api/v1/account/4/",
+                "account_id": 4,
                 "created_at": "2018-08-09T18:48:37.444729Z",
                 "ec2_instance_id": "i-0e0eb03041e117b2d",
                 "id": 7,
@@ -613,51 +618,66 @@ Response:
                 "event_type": "power_on",
                 "id": 1,
                 "instance": "https://test.cloudigra.de/api/v1/instance/1/",
+                "instance_id": 1,
                 "instance_type": "t2.micro",
                 "machineimage": "https://test.cloudigra.de/api/v1/image/1/",
+                "machineimage_id": 1,
                 "occurred_at": "2018-08-08T17:02:55Z",
                 "resourcetype": "AwsInstanceEvent",
-                "subnet": "subnet-8134e1af"
+                "subnet": "subnet-8134e1af",
+                "url": "https://test.cloudigra.de/api/v1/event/1/"
             },
             {
                 "event_type": "power_off",
                 "id": 2,
                 "instance": "https://test.cloudigra.de/api/v1/instance/1/",
+                "instance_id": 1,
                 "instance_type": "t2.micro",
                 "machineimage": "https://test.cloudigra.de/api/v1/image/1/",
+                "machineimage_id": 1,
                 "occurred_at": "2018-08-08T17:11:52Z",
                 "resourcetype": "AwsInstanceEvent",
-                "subnet": null
+                "subnet": null,
+                "url": "https://test.cloudigra.de/api/v1/event/2/"
             },
             {
                 "event_type": "power_on",
                 "id": 3,
                 "instance": "https://test.cloudigra.de/api/v1/instance/2/",
+                "instance_id": 2,
                 "instance_type": "t2.micro",
                 "machineimage": "https://test.cloudigra.de/api/v1/image/2/",
+                "machineimage_id": 2,
                 "occurred_at": "2018-08-08T17:29:54Z",
                 "resourcetype": "AwsInstanceEvent",
-                "subnet": "subnet-8134e1af"
+                "subnet": "subnet-8134e1af",
+                "url": "https://test.cloudigra.de/api/v1/event/3/"
             },
             {
                 "event_type": "power_on",
                 "id": 4,
                 "instance": "https://test.cloudigra.de/api/v1/instance/3/",
+                "instance_id": 3,
                 "instance_type": "t2.micro",
                 "machineimage": "https://test.cloudigra.de/api/v1/image/3/",
+                "machineimage_id": 3,
                 "occurred_at": "2018-08-08T17:56:02Z",
                 "resourcetype": "AwsInstanceEvent",
-                "subnet": "subnet-26fe357a"
+                "subnet": "subnet-26fe357a",
+                "url": "https://test.cloudigra.de/api/v1/event/4/"
             },
             {
                 "event_type": "power_on",
                 "id": 5,
                 "instance": "https://test.cloudigra.de/api/v1/instance/4/",
+                "instance_id": 4,
                 "instance_type": "t1.micro",
                 "machineimage": "https://test.cloudigra.de/api/v1/image/4/",
+                "machineimage_id": 4,
                 "occurred_at": "2018-08-08T18:20:59Z",
                 "resourcetype": "AwsInstanceEvent",
-                "subnet": "subnet-e6059aac"
+                "subnet": "subnet-e6059aac",
+                "url": "https://test.cloudigra.de/api/v1/event/5/"
             }
         ]
     }
@@ -690,11 +710,14 @@ Response:
         "event_type": "power_on",
         "id": 1,
         "instance": "https://test.cloudigra.de/api/v1/instance/1/",
+        "instance_id": 1,
         "instance_type": "t2.micro",
         "machineimage": "https://test.cloudigra.de/api/v1/image/1/",
+        "machineimage_id": 1,
         "occurred_at": "2018-08-08T17:02:55Z",
         "resourcetype": "AwsInstanceEvent",
-        "subnet": "subnet-8134e1af"
+        "subnet": "subnet-8134e1af",
+        "url": "https://test.cloudigra.de/api/v1/event/1/"
     }
 
 Filtering events
@@ -734,21 +757,27 @@ Response:
                 "event_type": "power_on",
                 "id": 1,
                 "instance": "https://test.cloudigra.de/api/v1/instance/1/",
+                "instance_id": 1,
                 "instance_type": "t2.micro",
                 "machineimage": "https://test.cloudigra.de/api/v1/image/1/",
+                "machineimage_id": 1,
                 "occurred_at": "2018-08-08T17:02:55Z",
                 "resourcetype": "AwsInstanceEvent",
-                "subnet": "subnet-8134e1af"
+                "subnet": "subnet-8134e1af",
+                "url": "https://test.cloudigra.de/api/v1/event/1/"
             },
             {
                 "event_type": "power_off",
                 "id": 2,
                 "instance": "https://test.cloudigra.de/api/v1/instance/1/",
+                "instance_id": 1,
                 "instance_type": "t2.micro",
                 "machineimage": "https://test.cloudigra.de/api/v1/image/1/",
+                "machineimage_id": 1,
                 "occurred_at": "2018-08-08T17:11:52Z",
                 "resourcetype": "AwsInstanceEvent",
-                "subnet": null
+                "subnet": null,
+                "url": "https://test.cloudigra.de/api/v1/event/2/"
             }
         ]
     }
@@ -787,21 +816,27 @@ Response:
                 "event_type": "power_on",
                 "id": 1,
                 "instance": "https://test.cloudigra.de/api/v1/instance/1/",
+                "instance_id": 1,
                 "instance_type": "t2.micro",
                 "machineimage": "https://test.cloudigra.de/api/v1/image/1/",
+                "machineimage_id": 1,
                 "occurred_at": "2018-08-08T17:02:55Z",
                 "resourcetype": "AwsInstanceEvent",
-                "subnet": "subnet-8134e1af"
+                "subnet": "subnet-8134e1af",
+                "url": "https://test.cloudigra.de/api/v1/event/1/"
             },
             {
                 "event_type": "power_off",
                 "id": 2,
                 "instance": "https://test.cloudigra.de/api/v1/instance/1/",
+                "instance_id": 1,
                 "instance_type": "t2.micro",
                 "machineimage": "https://test.cloudigra.de/api/v1/image/1/",
+                "machineimage_id": 1,
                 "occurred_at": "2018-08-08T17:11:52Z",
                 "resourcetype": "AwsInstanceEvent",
-                "subnet": null
+                "subnet": null,
+                "url": "https://test.cloudigra.de/api/v1/event/2/"
             }
         ]
     }
@@ -1199,16 +1234,23 @@ Response:
                 "id": 1,
                 "inspection_json": "{\"/dev/xvdbb\": {\"/dev/xvdbb1\": {\"facts\": {\"rhel_enabled_repos\": {\"rhel_enabled_repos\": [], \"rhel_found\": false}, \"rhel_product_certs\": {\"rhel_found\": false, \"rhel_pem_files\": []}, \"rhel_release_files\": {\"rhel_found\": false, \"status\": \"No release files found on /dev/xvdbb1\"}, \"rhel_signed_packages\": {\"rhel_found\": false, \"rhel_signed_package_count\": 0}}}}, \"rhel_enabled_repos_found\": false, \"rhel_found\": true, \"rhel_product_certs_found\": false, \"rhel_release_files_found\": true, \"rhel_signed_packages_found\": false}",
                 "is_encrypted": false,
+                "name": "my favorite image",
                 "openshift": false,
                 "openshift_challenged": false,
                 "openshift_detected": false,
                 "owner_aws_account_id": "273470430754",
+                "platform": "none",
                 "resourcetype": "AwsMachineImage",
                 "rhel": false,
                 "rhel_challenged": false,
                 "rhel_detected": false,
+                "rhel_enabled_repos_found": false,
+                "rhel_product_certs_found": false,
+                "rhel_release_files_found": false,
+                "rhel_signed_packages_found": false,
                 "status": "inspected",
-                "updated_at": "2018-07-30T15:15:11.214092Z"
+                "updated_at": "2018-07-30T15:15:11.214092Z",
+                "url": "http://cloudigrade.127.0.0.1.nip.io/api/v1/image/1/"
             },
             {
                 "created_at": "2018-07-30T15:41:16.317326Z",
@@ -1216,16 +1258,23 @@ Response:
                 "id": 2,
                 "inspection_json": null,
                 "is_encrypted": false,
+                "name": null,
                 "openshift": true,
                 "openshift_challenged": true,
                 "openshift_detected": false,
                 "owner_aws_account_id": "273470430754",
+                "platform": "none",
                 "resourcetype": "AwsMachineImage",
                 "rhel": false,
                 "rhel_challenged": true,
-                "rhel_detected": true,
+                "rhel_detected": false,
+                "rhel_enabled_repos_found": false,
+                "rhel_product_certs_found": false,
+                "rhel_release_files_found": false,
+                "rhel_signed_packages_found": false,
                 "status": "pending",
-                "updated_at": "2018-07-30T15:14:19.829340Z"
+                "updated_at": "2018-07-30T15:14:19.829340Z",
+                "url": "http://cloudigrade.127.0.0.1.nip.io/api/v1/image/2/"
             },
             {
                 "created_at": "2018-07-30T15:41:16.330278Z",
@@ -1233,16 +1282,23 @@ Response:
                 "id": 3,
                 "inspection_json": null,
                 "is_encrypted": false,
+                "name": null,
                 "openshift": false,
                 "openshift_challenged": true,
                 "openshift_detected": true,
                 "owner_aws_account_id": "273470430754",
+                "platform": "none",
                 "resourcetype": "AwsMachineImage",
                 "rhel": true,
                 "rhel_challenged": true,
                 "rhel_detected": false,
+                "rhel_enabled_repos_found": false,
+                "rhel_product_certs_found": false,
+                "rhel_release_files_found": false,
+                "rhel_signed_packages_found": false,
                 "status": "pending",
-                "updated_at": "2018-07-30T15:14:06.164469Z"
+                "updated_at": "2018-07-30T15:14:06.164469Z",
+                "url": "http://cloudigrade.127.0.0.1.nip.io/api/v1/image/3/"
             },
             {
                 "created_at": "2018-07-30T15:41:16.343734Z",
@@ -1250,16 +1306,23 @@ Response:
                 "id": 4,
                 "inspection_json": null,
                 "is_encrypted": false,
+                "name": null,
                 "openshift": true,
                 "openshift_challenged": false,
                 "openshift_detected": true,
                 "owner_aws_account_id": "273470430754",
+                "platform": "none",
                 "resourcetype": "AwsMachineImage",
                 "rhel": true,
                 "rhel_challenged": false,
-                "rhel_detected": true,
+                "rhel_detected": false,
+                "rhel_enabled_repos_found": false,
+                "rhel_product_certs_found": false,
+                "rhel_release_files_found": false,
+                "rhel_signed_packages_found": false,
                 "status": "pending",
-                "updated_at": "2018-07-30T15:41:16.355784Z"
+                "updated_at": "2018-07-30T15:41:16.355784Z",
+                "url": "http://cloudigrade.127.0.0.1.nip.io/api/v1/image/4/"
             }
         ]
     }
@@ -1298,16 +1361,23 @@ Response:
                 "id": 1,
                 "inspection_json": "{\"/dev/xvdbb\": {\"/dev/xvdbb1\": {\"facts\": {\"rhel_enabled_repos\": {\"rhel_enabled_repos\": [], \"rhel_found\": false}, \"rhel_product_certs\": {\"rhel_found\": false, \"rhel_pem_files\": []}, \"rhel_release_files\": {\"rhel_found\": false, \"status\": \"No release files found on /dev/xvdbb1\"}, \"rhel_signed_packages\": {\"rhel_found\": false, \"rhel_signed_package_count\": 0}}}}, \"rhel_enabled_repos_found\": false, \"rhel_found\": true, \"rhel_product_certs_found\": false, \"rhel_release_files_found\": true, \"rhel_signed_packages_found\": false}",
                 "is_encrypted": false,
+                "name": "my favorite image",
                 "openshift": false,
                 "openshift_challenged": false,
                 "openshift_detected": false,
                 "owner_aws_account_id": "273470430754",
+                "platform": "none",
                 "resourcetype": "AwsMachineImage",
                 "rhel": false,
                 "rhel_challenged": false,
                 "rhel_detected": false,
+                "rhel_enabled_repos_found": false,
+                "rhel_product_certs_found": false,
+                "rhel_release_files_found": false,
+                "rhel_signed_packages_found": false,
                 "status": "inspected",
-                "updated_at": "2018-07-30T15:15:11.214092Z"
+                "updated_at": "2018-07-30T15:15:11.214092Z",
+                "url": "http://cloudigrade.127.0.0.1.nip.io/api/v1/image/1/"
             },
             {
                 "created_at": "2018-07-30T15:41:16.317326Z",
@@ -1315,16 +1385,23 @@ Response:
                 "id": 2,
                 "inspection_json": null,
                 "is_encrypted": false,
+                "name": null,
                 "openshift": true,
                 "openshift_challenged": true,
                 "openshift_detected": false,
                 "owner_aws_account_id": "273470430754",
+                "platform": "none",
                 "resourcetype": "AwsMachineImage",
                 "rhel": false,
                 "rhel_challenged": true,
-                "rhel_detected": true,
+                "rhel_detected": false,
+                "rhel_enabled_repos_found": false,
+                "rhel_product_certs_found": false,
+                "rhel_release_files_found": false,
+                "rhel_signed_packages_found": false,
                 "status": "pending",
-                "updated_at": "2018-07-30T15:14:19.829340Z"
+                "updated_at": "2018-07-30T15:14:19.829340Z",
+                "url": "http://cloudigrade.127.0.0.1.nip.io/api/v1/image/2/"
             },
             {
                 "created_at": "2018-07-30T15:41:16.330278Z",
@@ -1332,16 +1409,23 @@ Response:
                 "id": 3,
                 "inspection_json": null,
                 "is_encrypted": false,
+                "name": null,
                 "openshift": false,
                 "openshift_challenged": true,
                 "openshift_detected": true,
                 "owner_aws_account_id": "273470430754",
+                "platform": "none",
                 "resourcetype": "AwsMachineImage",
                 "rhel": true,
                 "rhel_challenged": true,
                 "rhel_detected": false,
+                "rhel_enabled_repos_found": false,
+                "rhel_product_certs_found": false,
+                "rhel_release_files_found": false,
+                "rhel_signed_packages_found": false,
                 "status": "pending",
-                "updated_at": "2018-07-30T15:14:06.164469Z"
+                "updated_at": "2018-07-30T15:14:06.164469Z",
+                "url": "http://cloudigrade.127.0.0.1.nip.io/api/v1/image/3/"
             },
             {
                 "created_at": "2018-07-30T15:41:16.343734Z",
@@ -1349,16 +1433,23 @@ Response:
                 "id": 4,
                 "inspection_json": null,
                 "is_encrypted": false,
+                "name": null,
                 "openshift": true,
                 "openshift_challenged": false,
                 "openshift_detected": true,
                 "owner_aws_account_id": "273470430754",
+                "platform": "none",
                 "resourcetype": "AwsMachineImage",
                 "rhel": true,
                 "rhel_challenged": false,
-                "rhel_detected": true,
+                "rhel_detected": false,
+                "rhel_enabled_repos_found": false,
+                "rhel_product_certs_found": false,
+                "rhel_release_files_found": false,
+                "rhel_signed_packages_found": false,
                 "status": "pending",
-                "updated_at": "2018-07-30T15:41:16.355784Z"
+                "updated_at": "2018-07-30T15:41:16.355784Z",
+                "url": "http://cloudigrade.127.0.0.1.nip.io/api/v1/image/4/"
             },
             {
                 "created_at": "2018-07-30T15:41:16.362110Z",
@@ -1366,16 +1457,23 @@ Response:
                 "id": 5,
                 "inspection_json": null,
                 "is_encrypted": false,
+                "name": null,
                 "openshift": false,
                 "openshift_challenged": false,
                 "openshift_detected": false,
                 "owner_aws_account_id": "518028203513",
+                "platform": "none",
                 "resourcetype": "AwsMachineImage",
                 "rhel": true,
                 "rhel_challenged": false,
-                "rhel_detected": true,
+                "rhel_detected": false,
+                "rhel_enabled_repos_found": false,
+                "rhel_product_certs_found": false,
+                "rhel_release_files_found": false,
+                "rhel_signed_packages_found": false,
                 "status": "pending",
-                "updated_at": "2018-07-30T15:41:16.367853Z"
+                "updated_at": "2018-07-30T15:41:16.367853Z",
+                "url": "http://cloudigrade.127.0.0.1.nip.io/api/v1/image/5/"
             }
         ]
     }
@@ -1415,16 +1513,23 @@ Response:
                 "id": 5,
                 "inspection_json": null,
                 "is_encrypted": false,
+                "name": null,
                 "openshift": false,
                 "openshift_challenged": false,
                 "openshift_detected": false,
                 "owner_aws_account_id": "518028203513",
+                "platform": "none",
                 "resourcetype": "AwsMachineImage",
                 "rhel": true,
                 "rhel_challenged": false,
-                "rhel_detected": true,
+                "rhel_detected": false,
+                "rhel_enabled_repos_found": false,
+                "rhel_product_certs_found": false,
+                "rhel_release_files_found": false,
+                "rhel_signed_packages_found": false,
                 "status": "pending",
-                "updated_at": "2018-07-30T15:41:16.367853Z"
+                "updated_at": "2018-07-30T15:41:16.367853Z",
+                "url": "http://cloudigrade.127.0.0.1.nip.io/api/v1/image/5/"
             }
         ]
     }
@@ -1459,16 +1564,23 @@ Response:
         "id": 1,
         "inspection_json": "{\"/dev/xvdbb\": {\"/dev/xvdbb1\": {\"facts\": {\"rhel_enabled_repos\": {\"rhel_enabled_repos\": [], \"rhel_found\": false}, \"rhel_product_certs\": {\"rhel_found\": false, \"rhel_pem_files\": []}, \"rhel_release_files\": {\"rhel_found\": false, \"status\": \"No release files found on /dev/xvdbb1\"}, \"rhel_signed_packages\": {\"rhel_found\": false, \"rhel_signed_package_count\": 0}}}}, \"rhel_enabled_repos_found\": false, \"rhel_found\": true, \"rhel_product_certs_found\": false, \"rhel_release_files_found\": true, \"rhel_signed_packages_found\": false}",
         "is_encrypted": false,
+        "name": "my favorite image",
         "openshift": false,
         "openshift_challenged": false,
         "openshift_detected": false,
         "owner_aws_account_id": "273470430754",
+        "platform": "none",
         "resourcetype": "AwsMachineImage",
         "rhel": false,
         "rhel_challenged": false,
         "rhel_detected": false,
+        "rhel_enabled_repos_found": false,
+        "rhel_product_certs_found": false,
+        "rhel_release_files_found": false,
+        "rhel_signed_packages_found": false,
         "status": "inspected",
-        "updated_at": "2018-07-30T15:15:11.214092Z"
+        "updated_at": "2018-07-30T15:15:11.214092Z",
+        "url": "http://cloudigrade.127.0.0.1.nip.io/api/v1/image/1/"
     }
 
 Same, as a superuser.
@@ -1500,16 +1612,23 @@ Response:
         "id": 1,
         "inspection_json": "{\"/dev/xvdbb\": {\"/dev/xvdbb1\": {\"facts\": {\"rhel_enabled_repos\": {\"rhel_enabled_repos\": [], \"rhel_found\": false}, \"rhel_product_certs\": {\"rhel_found\": false, \"rhel_pem_files\": []}, \"rhel_release_files\": {\"rhel_found\": false, \"status\": \"No release files found on /dev/xvdbb1\"}, \"rhel_signed_packages\": {\"rhel_found\": false, \"rhel_signed_package_count\": 0}}}}, \"rhel_enabled_repos_found\": false, \"rhel_found\": true, \"rhel_product_certs_found\": false, \"rhel_release_files_found\": true, \"rhel_signed_packages_found\": false}",
         "is_encrypted": false,
+        "name": "my favorite image",
         "openshift": false,
         "openshift_challenged": false,
         "openshift_detected": false,
         "owner_aws_account_id": "273470430754",
+        "platform": "none",
         "resourcetype": "AwsMachineImage",
         "rhel": false,
         "rhel_challenged": false,
         "rhel_detected": false,
+        "rhel_enabled_repos_found": false,
+        "rhel_product_certs_found": false,
+        "rhel_release_files_found": false,
+        "rhel_signed_packages_found": false,
         "status": "inspected",
-        "updated_at": "2018-07-30T15:15:11.214092Z"
+        "updated_at": "2018-07-30T15:15:11.214092Z",
+        "url": "http://cloudigrade.127.0.0.1.nip.io/api/v1/image/1/"
     }
 
 Issuing Challenges
@@ -1545,16 +1664,23 @@ Response:
         "id": 1,
         "inspection_json": null,
         "is_encrypted": false,
+        "name": null,
         "openshift": false,
         "openshift_challenged": false,
         "openshift_detected": false,
         "owner_aws_account_id": "273470430754",
+        "platform": "none",
         "resourcetype": "AwsMachineImage",
         "rhel": true,
         "rhel_challenged": true,
         "rhel_detected": false,
+        "rhel_enabled_repos_found": false,
+        "rhel_product_certs_found": false,
+        "rhel_release_files_found": false,
+        "rhel_signed_packages_found": false,
         "status": "pending",
-        "updated_at": "2018-07-30T15:31:02.026393Z"
+        "updated_at": "2018-07-30T15:31:02.026393Z",
+        "url": "http://cloudigrade.127.0.0.1.nip.io/api/v1/image/1/"
     }
 
 If you'd like to remove a challenge, simply send the same challenge with False as the value.
@@ -1588,16 +1714,23 @@ Response:
         "id": 1,
         "inspection_json": null,
         "is_encrypted": false,
+        "name": null,
         "openshift": false,
         "openshift_challenged": false,
         "openshift_detected": false,
         "owner_aws_account_id": "273470430754",
+        "platform": "none",
         "resourcetype": "AwsMachineImage",
         "rhel": false,
         "rhel_challenged": false,
         "rhel_detected": false,
+        "rhel_enabled_repos_found": false,
+        "rhel_product_certs_found": false,
+        "rhel_release_files_found": false,
+        "rhel_signed_packages_found": false,
         "status": "pending",
-        "updated_at": "2018-07-30T15:31:02.026393Z"
+        "updated_at": "2018-07-30T15:31:02.026393Z",
+        "url": "http://cloudigrade.127.0.0.1.nip.io/api/v1/image/1/"
     }
 
 You can challenge both at the same time.
@@ -1632,16 +1765,23 @@ Response:
         "id": 1,
         "inspection_json": null,
         "is_encrypted": false,
+        "name": null,
         "openshift": true,
         "openshift_challenged": true,
         "openshift_detected": false,
         "owner_aws_account_id": "273470430754",
+        "platform": "none",
         "resourcetype": "AwsMachineImage",
         "rhel": true,
         "rhel_challenged": true,
         "rhel_detected": false,
+        "rhel_enabled_repos_found": false,
+        "rhel_product_certs_found": false,
+        "rhel_release_files_found": false,
+        "rhel_signed_packages_found": false,
         "status": "pending",
-        "updated_at": "2018-07-30T15:31:02.026393Z"
+        "updated_at": "2018-07-30T15:31:02.026393Z",
+        "url": "http://cloudigrade.127.0.0.1.nip.io/api/v1/image/1/"
     }
 
 Miscellaneous Commands
