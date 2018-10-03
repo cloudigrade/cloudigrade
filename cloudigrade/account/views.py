@@ -11,7 +11,7 @@ from account.models import (Account,
                             InstanceEvent,
                             MachineImage)
 from account.util import convert_param_to_int
-from util.aws.sts import _get_primary_account_id
+from util.aws.sts import _get_primary_account_id, cloudigrade_policy
 from util.permissions import IsSuperUser
 
 
@@ -134,7 +134,10 @@ class SysconfigViewSet(viewsets.ViewSet):
     def list(self, *args, **kwargs):
         """Get cloud account ids currently used by this installation."""
         response = {
-            'aws_account_id': _get_primary_account_id()
+            'aws_account_id': _get_primary_account_id(),
+            'aws_policies': {
+                'traditional_inspection': cloudigrade_policy,
+            }
         }
         return Response(response)
 
