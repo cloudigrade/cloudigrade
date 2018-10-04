@@ -161,3 +161,33 @@ def generate_cloudtrail_instances_record(aws_account_id, instance_ids,
         aws_account_id, event_name, event_time, region,
         response_elements=response_elements)
     return record
+
+
+def generate_cloudtrail_modify_instances_record(aws_account_id, instance_id,
+                                                instance_type='t2.micro',
+                                                event_time=None, region=None):
+    """
+    Generate an ex. CloudTrail log's "Record" dict for modify instances event.
+
+    Args:
+        aws_account_id (int): The AWS account ID.
+        instance_id (str): The EC2 instance ID relevant to the event.
+        instance_type (str): New instance type.
+        event_time (datetime.datetime): optional time when the even occurred.
+        region (str): optional AWS region in which the event occurred.
+
+    Returns:
+        dict: Data that looks like a CloudTrail log Record.
+
+    """
+    event_name = 'ModifyInstanceAttribute'
+    request_parameters = {
+        'instanceId': instance_id,
+        'instanceType': {
+            'value': instance_type
+        }
+    }
+    record = generate_cloudtrail_record(
+        aws_account_id, event_name, event_time, region,
+        request_parameters=request_parameters)
+    return record

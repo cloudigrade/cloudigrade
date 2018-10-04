@@ -12,7 +12,7 @@ from django.db import transaction
 from django.utils.translation import gettext as _
 
 from account.models import (AwsAccount, AwsEC2InstanceDefinitions,
-                            AwsMachineImage, InstanceEvent)
+                            AwsInstance, AwsMachineImage, InstanceEvent)
 from account.util import (save_instance_events,
                           save_new_aws_machine_image,
                           start_image_inspection)
@@ -30,7 +30,8 @@ ec2_instance_event_map = {
     'StartInstances': InstanceEvent.TYPE.power_on,
     'StopInstances': InstanceEvent.TYPE.power_off,
     'TerminateInstances': InstanceEvent.TYPE.power_off,
-    'TerminateInstanceInAutoScalingGroup': InstanceEvent.TYPE.power_off
+    'TerminateInstanceInAutoScalingGroup': InstanceEvent.TYPE.power_off,
+    'ModifyInstanceAttribute': InstanceEvent.TYPE.attribute_change,
 }
 
 OPENSHIFT_MODEL_TAG = 'openshift'
@@ -44,7 +45,8 @@ ec2_ami_tag_event_list = [
 
 CloudTrailInstanceEvent = collections.namedtuple(
     'CloudTrailInstanceEvent',
-    ['occurred_at', 'account_id', 'region', 'instance_id', 'event_type']
+    ['occurred_at', 'account_id', 'region', 'instance_id', 'event_type',
+     'instance_type']
 )
 
 CloudTrailImageTagEvent = collections.namedtuple(
@@ -189,20 +191,27 @@ def _get_aws_data_for_trail_events(instance_events, ami_tag_events):  # noqa: C9
 
         # Fetch each instance's latest information from AWS.
         for instance_id in set([e.instance_id for e in _instance_events]):
-            instance = aws.get_ec2_instance(session, instance_id)
-            seen_aws_instances[instance_id] = instance
-            try:
-                if instance.image_id not in known_image_ids:
-                    seen_image_ids.add(instance.image_id)
-            except AttributeError as e:
-                relevant_events = [
-                    event for event in _instance_events
-                    if e.instance_id == instance_id
-                ]
-                logger.info(_(
-                    'Instance {0} has no image_id from AWS. It may have been '
-                    'terminated before we processed it. Found in events: {1}.'
-                ).format(instance_id, relevant_events))
+            # We only want to look up instances that are new to us
+            if not AwsInstance.objects.filter(
+                    ec2_instance_id=instance_id).exists():
+                instance = aws.get_ec2_instance(session, instance_id)
+                seen_aws_instances[instance_id] = instance
+
+                try:
+                    if instance.image_id not in known_image_ids:
+                        seen_image_ids.add(instance.image_id)
+                except AttributeError as e:
+                    relevant_events = [
+                        event for event in _instance_events
+                        if e.instance_id == instance_id
+                    ]
+                    logger.info(_(
+                        'Instance {0} has no image_id from AWS. It may have '
+                        'been terminated before we processed it. '
+                        'Found in events: {1}.'
+                    ).format(instance_id, relevant_events))
+            else:
+                seen_aws_instances[instance_id] = {'InstanceId': instance_id}
 
         if not seen_image_ids:
             continue
@@ -283,13 +292,24 @@ def _parse_log_for_ec2_instance_events(record):
 
     event_type = ec2_instance_event_map[record.get('eventName')]
 
-    instance_ids = set([
-        instance_item['instanceId']
-        for instance_item in record.get('responseElements', {})
-                                   .get('instancesSet', {})
-                                   .get('items', [])
-        if 'instanceId' in instance_item
-    ])
+    instance_type = None
+    if 'attribute_change' in event_type:
+        try:
+            instance_type = \
+                record['requestParameters']['instanceType']['value']
+            instance_ids = [record['requestParameters']['instanceId']]
+        except KeyError:
+            logger.debug(
+                _('Did not find instanceType in record: {}').format(record))
+            return []
+    else:
+        instance_ids = set([
+            instance_item['instanceId']
+            for instance_item in record.get('responseElements', {})
+                                       .get('instancesSet', {})
+                                       .get('items', [])
+            if 'instanceId' in instance_item
+        ])
 
     return [
         CloudTrailInstanceEvent(
@@ -298,6 +318,7 @@ def _parse_log_for_ec2_instance_events(record):
             region=region,
             instance_id=instance_id,
             event_type=event_type,
+            instance_type=instance_type,
         )
         for instance_id in instance_ids
     ]
@@ -522,7 +543,9 @@ def _save_results(instance_events, ami_tag_events, aws_instances,
             {
                 'subnet': getattr(aws_instance, 'subnet_id', None),
                 'ec2_ami_id': getattr(aws_instance, 'image_id', None),
-                'instance_type': getattr(aws_instance, 'instance_type', None),
+                'instance_type': instance_event.instance_type if
+                instance_event.instance_type is not None else getattr(
+                    aws_instance, 'instance_type', None),
                 'event_type': instance_event.event_type,
                 'occurred_at': instance_event.occurred_at
             }

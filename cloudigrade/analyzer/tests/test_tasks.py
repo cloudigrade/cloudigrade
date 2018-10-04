@@ -266,6 +266,133 @@ class AnalyzeLogTest(TestCase):
         self.assertIn(delete_3_call, delete_message_calls)
 
     @patch('analyzer.tasks.start_image_inspection')
+    @patch('analyzer.tasks.aws.get_session')
+    @patch('analyzer.tasks.aws.delete_messages_from_queue')
+    @patch('analyzer.tasks.aws.get_object_content_from_s3')
+    @patch('analyzer.tasks.aws.yield_messages_from_queue')
+    def test_analyze_log_changed_instance_type_existing_instance(
+            self, mock_receive, mock_s3, mock_del, mock_session,
+            mock_inspection):
+        """
+        Test that analyze_log correctly handles attribute change messages.
+
+        This test focuses on just getting an instance attribute change message
+        for an already known instance. Since we already know the instance,
+        we do not need to make an extra describe instance call to AWS.
+        """
+        instance_type = 't1.potato'
+        sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
+        gen_instance = account_helper.generate_aws_instance(
+            self.mock_account, region='us-east-1')
+        trail_record = \
+            analyzer_helper.generate_cloudtrail_modify_instances_record(
+                aws_account_id=self.mock_account_id,
+                instance_id=gen_instance.ec2_instance_id,
+                instance_type=instance_type,
+                region='us-east-1')
+        s3_content = {'Records': [trail_record]}
+        mock_receive.return_value = [sqs_message]
+        mock_s3.return_value = json.dumps(s3_content)
+
+        successes, failures = tasks.analyze_log()
+
+        self.assertEqual(len(successes), 1)
+        self.assertEqual(len(failures), 0)
+        mock_inspection.assert_not_called()
+        mock_del.assert_called_with(settings.CLOUDTRAIL_EVENT_URL,
+                                    [sqs_message])
+
+        instances = list(AwsInstance.objects.all())
+        self.assertEqual(len(instances), 1)
+        instance = instances[0]
+        self.assertEqual(
+            instance.ec2_instance_id, gen_instance.ec2_instance_id)
+        self.assertEqual(instance.account_id, self.mock_account.id)
+
+        events = list(AwsInstanceEvent.objects.all())
+        self.assertEqual(len(events), 1)
+        event = events[0]
+        self.assertEqual(event.instance, instance)
+        self.assertEqual(event.instance_type, instance_type)
+        self.assertEqual(event.event_type, 'attribute_change')
+
+    @patch('analyzer.tasks.start_image_inspection')
+    @patch('analyzer.tasks.aws.get_ec2_instance')
+    @patch('analyzer.tasks.aws.get_session')
+    @patch('analyzer.tasks.aws.delete_messages_from_queue')
+    @patch('analyzer.tasks.aws.get_object_content_from_s3')
+    @patch('analyzer.tasks.aws.yield_messages_from_queue')
+    def test_analyze_log_changed_instance_type_new_instance(
+            self, mock_receive, mock_s3, mock_del, mock_session, mock_ec2,
+            mock_inspection):
+        """
+        Test that analyze_log correctly handles attribute change messages.
+
+        This test focuses on just getting an instance attribute change message
+        for an unknown instance. Here we verify that the two first calls
+        correctly re-use the instance_type returned by the single describe,
+        and that the attribute change event uses the new instance type.
+        """
+        instance_type = 't1.potato'
+        new_instance_type = 't2.potato'
+        sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
+        image_1 = account_helper.generate_aws_image()
+        mock_instance = util_helper.generate_mock_ec2_instance(
+            instance_type=instance_type, image_id=image_1.ec2_ami_id)
+        on_record = analyzer_helper.generate_cloudtrail_instances_record(
+            aws_account_id=self.mock_account_id,
+            instance_ids=[mock_instance.instance_id], region='us-east-1')
+        off_record = analyzer_helper.generate_cloudtrail_instances_record(
+            aws_account_id=self.mock_account_id,
+            instance_ids=[mock_instance.instance_id],
+            event_name='StopInstances', region='us-east-1')
+        change_type_record = \
+            analyzer_helper.generate_cloudtrail_modify_instances_record(
+                aws_account_id=self.mock_account_id,
+                instance_id=mock_instance.instance_id,
+                instance_type=new_instance_type, region='us-east-1')
+        s3_content = {'Records': [on_record, off_record, change_type_record]}
+        mock_receive.return_value = [sqs_message]
+        mock_s3.return_value = json.dumps(s3_content)
+        mock_instances = {
+            mock_instance.instance_id: mock_instance,
+        }
+
+        def get_ec2_instance_side_effect(session, instance_id):
+            return mock_instances[instance_id]
+
+        mock_ec2.side_effect = get_ec2_instance_side_effect
+
+        successes, failures = tasks.analyze_log()
+
+        self.assertEqual(len(successes), 1)
+        self.assertEqual(len(failures), 0)
+        mock_del.assert_called_with(settings.CLOUDTRAIL_EVENT_URL,
+                                    [sqs_message])
+
+        instances = list(AwsInstance.objects.all())
+        self.assertEqual(len(instances), 1)
+        instance = instances[0]
+        self.assertEqual(
+            instance.ec2_instance_id, mock_instance.instance_id)
+        self.assertEqual(instance.account_id, self.mock_account.id)
+
+        events = list(AwsInstanceEvent.objects.all())
+        self.assertEqual(len(events), 3)
+
+        on_event = AwsInstanceEvent.objects.filter(
+            event_type='power_on').first()
+        self.assertEqual(on_event.instance_type, mock_instance.instance_type)
+
+        off_event = AwsInstanceEvent.objects.filter(
+            event_type='power_off').first()
+        self.assertEqual(off_event.instance_type, mock_instance.instance_type)
+
+        change_event = AwsInstanceEvent.objects.filter(
+            event_type='attribute_change').first()
+        self.assertEqual(change_event.instance_type, new_instance_type)
+
+    @patch('analyzer.tasks.start_image_inspection')
     @patch('analyzer.tasks.aws.get_ec2_instance')
     @patch('analyzer.tasks.aws.get_session')
     @patch('analyzer.tasks.aws.delete_messages_from_queue')

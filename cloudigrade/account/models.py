@@ -207,6 +207,7 @@ class InstanceEvent(BasePolymorphicModel):
     TYPE = model_utils.Choices(
         'power_on',
         'power_off',
+        'attribute_change'
     )
     instance = models.ForeignKey(
         Instance,
