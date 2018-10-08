@@ -268,36 +268,38 @@ class AwsAccount(Account):
                         pass
 
                     # If we're unable to access the account (because user
-                    # deleted the role/permissions). Delete the account anyways
-                    # and log an error. This could result in orphaned
+                    # deleted the role/account). Delete the cloudigrade account
+                    # and log an error. This could result in an orphaned
                     # cloudtrail writing to our s3 bucket.
                     elif error_code == 'AccessDenied':
                         log_message = _(
-                            'Cloudigrade account {} was deleted, but could'
+                            'Cloudigrade account {} was deleted, but could '
                             'not access the AWS account to disable its '
                             'cloudtrail {}.'
+                        ).format(self.cloud_account_id, cloudtrial_name)
+                        logger.warning(log_message)
+                        logger.info(error)
+
+                    # If the user role does exist, but we can't stop the
+                    # cloudtrail (because of insufficient permission), delete
+                    # the cloudigrade account and log an error. This could
+                    # result in an orphaned cloudtrail writing to our s3
+                    # bucket.
+                    elif error_code == 'AccessDeniedException':
+                        log_message = _(
+                            'Cloudigrade account {} was deleted, but we did '
+                            'not have permission to perform cloudtrail:'
+                            'StopLogging on cloudtrail {}.'
                         ).format(self.cloud_account_id, cloudtrial_name)
                         logger.warning(log_message)
                         logger.info(error)
                     else:
                         raise
         except ClientError as error:
-
-            # If we can get into the user account, but can't stop cloudtrail
-            # don't delete the account, and let the user know the issue.
-            if error.response.get('Error', {}).get('Code') == \
-                    'AccessDeniedException':
-                raise CloudTrailCannotStopLogging(
-                    detail=_(
-                        'Account deletion failed, insufficient permission '
-                        'to perform cloudtrail:StopLogging on cloudtrail {0}'
-                    ).format(cloudtrial_name)
-                )
-
             log_message = _(
-                'Unexpected error when attempting to perform '
-                'cloudtrail:StopLogging on cloudtrial {0}'
-            ).format(cloudtrial_name)
+                'Unexpected error occurred. The Cloud Meter account cannot be '
+                'deleted. To resolve this issue, contact Cloud Meter support.'
+            )
             logger.error(log_message)
             logger.exception(error)
             raise CloudTrailCannotStopLogging(

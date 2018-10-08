@@ -34,8 +34,8 @@ class AwsAccountModelTest(TestCase):
             self.account.delete()
             self.assertEqual(0, models.AwsAccount.objects.count())
 
-    def test_delete_fails_on_access_denied_exception(self):
-        """Test that the account is not deleted on AccessDeniedException."""
+    def test_delete_succeeds_on_access_denied_exception(self):
+        """Test that the account is deleted on AccessDeniedException."""
         client_error = ClientError(
             error_response={'Error': {'Code': 'AccessDeniedException'}},
             operation_name=Mock(),
@@ -47,10 +47,9 @@ class AwsAccountModelTest(TestCase):
             mock_assume_role.return_value = self.role
             mock_cloudtrail.side_effect = client_error
 
-            with self.assertRaises(CloudTrailCannotStopLogging):
-                self.account.delete()
+            self.account.delete()
 
-        self.assertEqual(1, models.AwsAccount.objects.count())
+        self.assertEqual(0, models.AwsAccount.objects.count())
 
     def test_delete_fails_on_other_cloudtrail_exception(self):
         """Test that the account is not deleted on other cloudtrail error."""
