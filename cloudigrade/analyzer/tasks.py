@@ -553,8 +553,10 @@ def repopulate_ec2_instance_mapping():
     logger.info(_('Getting AWS EC2 instance type information.'))
 
     with urllib.request.urlopen(settings.AWS_PRICING_URL) as response:
+        logger.info(_('Parsing JSON for AWS EC2 instance type information.'))
         ec2_offers = json.load(response)
 
+    logger.info(_('Successfully read AWS EC2 instance type information.'))
     instances = {}
     for sku, data in ec2_offers['products'].items():
         if data['productFamily'] != 'Compute Instance':
@@ -562,6 +564,7 @@ def repopulate_ec2_instance_mapping():
             continue
         instances[data['attributes']['instanceType']] = data['attributes']
 
+    logger.info(_('Found {} instance types').format(len(instances.items())))
     for instance_type, instance_metadata in instances.items():
 
         try:
@@ -576,12 +579,14 @@ def repopulate_ec2_instance_mapping():
                 memory=memory,
                 vcpu=vcpu
             )
+            logger.info(_('Saved instance type {}').format(instance_type))
         except ValueError:
             logger.error(
                 _(
                     'Could not convert memory {} to float.'
                 ).format(instance_metadata.get('memory', 0))
             )
+    logger.info('Finished saving AWS EC2 instance type information.')
 
 
 def _get_instance_definition(instance_type):
