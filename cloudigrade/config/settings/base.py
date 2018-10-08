@@ -349,4 +349,11 @@ CELERY_BEAT_SCHEDULE = {
         # seconds
         'schedule': env.int('ANALYZE_LOG_SCHEDULE', default=2 * 60),
     },
+    'repopulate_ec2_instance_mapping_every_week': {
+        'task': 'analyzer.tasks.repopulate_ec2_instance_mapping',
+        'schedule': env.int(
+            'REPOPULATE_EC2_INSTANCE_MAPPING_SCHEDULE',
+            default=60 * 60 * 24 * 7  # 1 week in seconds
+        ),
+    },
 }
