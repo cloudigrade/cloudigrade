@@ -9,7 +9,7 @@ stages:
 ### GLOBAL VARS ###
 variables:
   SHIFTIGRADE_IMAGE: registry.gitlab.com/cloudigrade/shiftigrade
-  SHIFTIGRADE_VERSION: 0.0.1
+  SHIFTIGRADE_VERSION: 0.1.0
   IMAGE_NAME: registry.gitlab.com/${CI_PROJECT_PATH}
   IMAGE_NAME_COMMIT: registry.gitlab.com/${CI_PROJECT_PATH}/commits/${CI_PROJECT_NAME}:${CI_BUILD_REF}
   NGINX_NAME: registry.gitlab.com/${CI_PROJECT_PATH}/nginx/${CI_PROJECT_NAME}-nginx
@@ -182,6 +182,11 @@ Deploy Review:
     - oc login --token ${KUBE_TOKEN}
     - cd /opt/shiftigrade
   script:
+    - export API_ROUTE_HOST=review-${CI_COMMIT_REF_SLUG}.1b13.insights.openshiftapps.com
+    - export AUTH_ROUTE_HOST=review-${CI_COMMIT_REF_SLUG}.1b13.insights.openshiftapps.com
+    - export DEPLOYMENT_PREFIX=$(echo review-${CI_COMMIT_REF_SLUG} | cut -c 1-36)
+    - export DB_SECRETS_FILE_NAME=${DEPLOYMENT_PREFIX}-db
+    - export DJANGO_DATABASE_HOST=${DEPLOYMENT_PREFIX}-db.${OPENSHIFT_PROJECT}.svc
     - >
       ansible-playbook \
         -e application_name=houndigrade \
@@ -203,27 +208,27 @@ Deploy Review:
         -e bucket_name="${AWS_S3_BUCKET_NAME}" \
         ansible/provision-aws-resources.yaml
     - >
-      if ! oc rollout status dc/cloudireview-${CI_COMMIT_REF_SLUG}-db; then
+      if ! oc rollout status dc/${DEPLOYMENT_PREFIX}-db; then
         oc process openshift//postgresql-ephemeral \
-          -p DATABASE_SERVICE_NAME=cloudireview-${CI_COMMIT_REF_SLUG}-db \
+          -p DATABASE_SERVICE_NAME=${DEPLOYMENT_PREFIX}-db \
           -p POSTGRESQL_DATABASE=postgres \
           -p POSTGRESQL_VERSION=9.6 \
           -l app=${CI_COMMIT_REF_SLUG} \
         | oc apply -f - && \
-        oc rollout status dc/cloudireview-${CI_COMMIT_REF_SLUG}-db;
+        oc rollout status dc/${DEPLOYMENT_PREFIX}-db;
       else
-        echo "${CI_COMMIT_REF_SLUG}-db already exists, keeping."
+        echo "${DEPLOYMENT_PREFIX}-db already exists, keeping."
       fi
     - kontemplate template ocp/review.yaml -i cloudigrade | oc apply -f -
-    - oc start-build -F cloudireview-${CI_COMMIT_REF_SLUG}-cloudigrade-api
-    - oc start-build -F cloudireview-${CI_COMMIT_REF_SLUG}-cloudigrade-nginx
-    - if ! oc rollout status dc/cloudireview-${CI_COMMIT_REF_SLUG}-cloudigrade-api; then oc rollout latest dc/cloudireview-${CI_COMMIT_REF_SLUG}-cloudigrade-api && oc rollout status dc/cloudireview-${CI_COMMIT_REF_SLUG}-cloudigrade-api; fi;
-    - if ! oc rollout status dc/cloudireview-${CI_COMMIT_REF_SLUG}-cloudigrade-celery-beat; then oc rollout latest dc/cloudireview-${CI_COMMIT_REF_SLUG}-cloudigrade-celery-beat && oc rollout status dc/cloudireview-${CI_COMMIT_REF_SLUG}-cloudigrade-celery-beat; fi;
-    - if ! oc rollout status dc/cloudireview-${CI_COMMIT_REF_SLUG}-cloudigrade-celery-worker; then oc rollout latest dc/cloudireview-${CI_COMMIT_REF_SLUG}-cloudigrade-celery-worker && oc rollout status dc/cloudireview-${CI_COMMIT_REF_SLUG}-cloudigrade-celery-worker; fi;
-    - echo "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin@example.com', 'admin@example.com', '${CLOUDIGRADE_PASSWORD}')" | oc rsh -c cloudireview-${CI_COMMIT_REF_SLUG}-cloudigrade-api $(oc get pods -o jsonpath='{.items[*].metadata.name}' -l name=cloudireview-${CI_COMMIT_REF_SLUG}-cloudigrade-api) scl enable rh-python36 -- python manage.py shell || true
+    - oc start-build -F c-${DEPLOYMENT_PREFIX}-api
+    - oc start-build -F c-${DEPLOYMENT_PREFIX}-nginx
+    - if ! oc rollout status dc/c-${DEPLOYMENT_PREFIX}-a; then oc rollout latest dc/c-${DEPLOYMENT_PREFIX}-a && oc rollout status dc/c-${DEPLOYMENT_PREFIX}-a; fi;
+    - if ! oc rollout status dc/c-${DEPLOYMENT_PREFIX}-b; then oc rollout latest dc/c-${DEPLOYMENT_PREFIX}-b && oc rollout status dc/c-${DEPLOYMENT_PREFIX}-b; fi;
+    - if ! oc rollout status dc/c-${DEPLOYMENT_PREFIX}-w; then oc rollout latest dc/c-${DEPLOYMENT_PREFIX}-w && oc rollout status dc/c-${DEPLOYMENT_PREFIX}-w; fi;
+    - echo "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin@example.com', 'admin@example.com', '${CLOUDIGRADE_PASSWORD}')" | oc rsh -c c-${DEPLOYMENT_PREFIX}-a $(oc get pods -o jsonpath='{.items[*].metadata.name}' -l name=c-${DEPLOYMENT_PREFIX}-a) scl enable rh-python36 -- python manage.py shell || true
   environment:
     name: review/${CI_COMMIT_REF_NAME}
-    url: https://cloudireview-${CI_COMMIT_REF_SLUG}.1b13.insights.openshiftapps.com
+    url: https://review-${CI_COMMIT_REF_SLUG}.1b13.insights.openshiftapps.com
     on_stop: Clean Up Review
 
 Clean Up Review:
@@ -242,8 +247,10 @@ Clean Up Review:
     - oc login ${OPENSHIFT_URL} --token ${KUBE_TOKEN}
     - cd /opt/shiftigrade
   script:
+    - export DEPLOYMENT_PREFIX=$(echo review-${CI_COMMIT_REF_SLUG} | cut -c 1-36)
+    - export DJANGO_DATABASE_HOST=${DEPLOYMENT_PREFIX}-db.${OPENSHIFT_PROJECT}.svc
     - oc delete bc,cm,dc,is,routes,secrets,svc -l gitlab-deployment="${CI_COMMIT_REF_SLUG}-cloudigrade"
-    - oc delete dc,svc,secret "cloudireview-${CI_COMMIT_REF_SLUG}-db"
+    - oc delete dc,svc,secret "${DEPLOYMENT_PREFIX}-db"
     - >
       ansible-playbook \
         -e aws_prefix="${CI_COMMIT_REF_SLUG}" \
@@ -278,13 +285,13 @@ Clean Up Review:
         export API_REPO_REF=master
         export NGINX_REPO_REF=master
         export CI_COMMIT_REF_SLUG=master-${CHAT_INPUT}
+        export DEPLOYMENT_PREFIX=$(echo ${CI_COMMIT_REF_SLUG} | cut -c 1-36)
         export API_ROUTE_HOST=${CI_COMMIT_REF_SLUG}.1b13.insights.openshiftapps.com
         export AUTH_ROUTE_HOST=${CI_COMMIT_REF_SLUG}.1b13.insights.openshiftapps.com
         export AWS_S3_BUCKET_NAME=${CI_COMMIT_REF_SLUG}-cloudigrade-s3
         export CLOUDTRAIL_EVENT_URL=https://sqs.${AWS_DEFAULT_REGION}.amazonaws.com/${AWS_ACCOUNT_NUMBER}/${CI_COMMIT_REF_SLUG}-cloudigrade-cloudtrail-sqs
-        export DB_SECRETS_FILE_NAME=${CI_COMMIT_REF_SLUG}-db
-        export DEPLOYMENT_PREFIX=${CI_COMMIT_REF_SLUG}-
-        export DJANGO_DATABASE_HOST=${CI_COMMIT_REF_SLUG}-db.${OPENSHIFT_PROJECT}.svc
+        export DB_SECRETS_FILE_NAME=${DEPLOYMENT_PREFIX}-db
+        export DJANGO_DATABASE_HOST=${DEPLOYMENT_PREFIX}-db.${OPENSHIFT_PROJECT}.svc
         export EC2_HOST_NAME=${CI_COMMIT_REF_SLUG}-houndigrade-host
         export GITLAB_DEPLOYMENT=${CI_COMMIT_REF_SLUG}-cloudigrade
         export HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME=${CI_COMMIT_REF_SLUG}-houndigrade-asg
@@ -315,24 +322,24 @@ Clean Up Review:
         -e bucket_name="${AWS_S3_BUCKET_NAME}" \
         ansible/provision-aws-resources.yaml
     - >
-      if ! oc rollout status dc/${CI_COMMIT_REF_SLUG}-db; then
+      if ! oc rollout status dc/${DEPLOYMENT_PREFIX}-db; then
         oc process openshift//postgresql-ephemeral \
-          -p DATABASE_SERVICE_NAME=${CI_COMMIT_REF_SLUG}-db \
+          -p DATABASE_SERVICE_NAME=${DEPLOYMENT_PREFIX}-db \
           -p POSTGRESQL_DATABASE=postgres \
           -p POSTGRESQL_VERSION=9.6 \
           -l app=${CI_COMMIT_REF_SLUG} \
         | oc apply -f - && \
-        oc rollout status dc/${CI_COMMIT_REF_SLUG}-db;
+        oc rollout status dc/${DEPLOYMENT_PREFIX}-db;
       else
-        echo "${CI_COMMIT_REF_SLUG}-db already exists, keeping."
+        echo "${DEPLOYMENT_PREFIX}-db already exists, keeping."
       fi
     - kontemplate template ocp/review.yaml -i cloudigrade | oc apply -f -
-    - oc start-build -F ${CI_COMMIT_REF_SLUG}-cloudigrade-api
-    - oc start-build -F ${CI_COMMIT_REF_SLUG}-cloudigrade-nginx
-    - if ! oc rollout status dc/${CI_COMMIT_REF_SLUG}-cloudigrade-api; then oc rollout latest dc/${CI_COMMIT_REF_SLUG}-cloudigrade-api && oc rollout status dc/${CI_COMMIT_REF_SLUG}-cloudigrade-api; fi;
-    - if ! oc rollout status dc/${CI_COMMIT_REF_SLUG}-cloudigrade-celery-beat; then oc rollout latest dc/${CI_COMMIT_REF_SLUG}-cloudigrade-celery-beat && oc rollout status dc/${CI_COMMIT_REF_SLUG}-cloudigrade-celery-beat; fi;
-    - if ! oc rollout status dc/${CI_COMMIT_REF_SLUG}-cloudigrade-celery-worker; then oc rollout latest dc/${CI_COMMIT_REF_SLUG}-cloudigrade-celery-worker && oc rollout status dc/${CI_COMMIT_REF_SLUG}-cloudigrade-celery-worker; fi;
-    - echo "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin@example.com', 'admin@example.com', '${CLOUDIGRADE_PASSWORD}')" | oc rsh -c ${CI_COMMIT_REF_SLUG}-cloudigrade-api $(oc get pods -o jsonpath='{.items[*].metadata.name}' -l name=${CI_COMMIT_REF_SLUG}-cloudigrade-api) scl enable rh-python36 -- python manage.py shell || true
+    - oc start-build -F c-${DEPLOYMENT_PREFIX}-api
+    - oc start-build -F c-${DEPLOYMENT_PREFIX}-nginx
+    - if ! oc rollout status dc/c-${DEPLOYMENT_PREFIX}-a; then oc rollout latest dc/c-${DEPLOYMENT_PREFIX}-a && oc rollout status dc/c-${DEPLOYMENT_PREFIX}-a; fi;
+    - if ! oc rollout status dc/c-${DEPLOYMENT_PREFIX}-b; then oc rollout latest dc/c-${DEPLOYMENT_PREFIX}-b && oc rollout status dc/c-${DEPLOYMENT_PREFIX}-b; fi;
+    - if ! oc rollout status dc/c-${DEPLOYMENT_PREFIX}-w; then oc rollout latest dc/c-${DEPLOYMENT_PREFIX}-w && oc rollout status dc/c-${DEPLOYMENT_PREFIX}-w; fi;
+    - echo "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin@example.com', 'admin@example.com', '${CLOUDIGRADE_PASSWORD}')" | oc rsh -c c-${DEPLOYMENT_PREFIX}-a $(oc get pods -o jsonpath='{.items[*].metadata.name}' -l name=c-${DEPLOYMENT_PREFIX}-a) scl enable rh-python36 -- python manage.py shell || true
     - echo -e "section_start:$( date +%s ):chat_reply\r\033[0K\nDeployed [cloudigrade] ${CHAT_INPUT}, available at https://${CI_COMMIT_REF_SLUG}.1b13.insights.openshiftapps.com/api/v1/ If both cloudigrade and frontigrade are deployed you can login with username 'admin@example.com' and the current Red Hat Guest WiFi password as the password.\nsection_end:$( date +%s ):chat_reply\r\033[0K"
 
 Review-Master:
@@ -369,13 +376,13 @@ Review Master:
         export API_REPO_REF=master
         export NGINX_REPO_REF=master
         export CI_COMMIT_REF_SLUG=master-${CHAT_INPUT}
+        export DEPLOYMENT_PREFIX=$(echo ${CI_COMMIT_REF_SLUG} | cut -c 1-36)
         export API_ROUTE_HOST=${CI_COMMIT_REF_SLUG}.1b13.insights.openshiftapps.com
         export AUTH_ROUTE_HOST=${CI_COMMIT_REF_SLUG}.1b13.insights.openshiftapps.com
         export AWS_S3_BUCKET_NAME=${CI_COMMIT_REF_SLUG}-cloudigrade-s3
         export CLOUDTRAIL_EVENT_URL=https://sqs.${AWS_DEFAULT_REGION}.amazonaws.com/${AWS_ACCOUNT_NUMBER}/${CI_COMMIT_REF_SLUG}-cloudigrade-cloudtrail-sqs
-        export DB_SECRETS_FILE_NAME=${CI_COMMIT_REF_SLUG}-db
-        export DEPLOYMENT_PREFIX=${CI_COMMIT_REF_SLUG}-
-        export DJANGO_DATABASE_HOST=${CI_COMMIT_REF_SLUG}-db.${OPENSHIFT_PROJECT}.svc
+        export DB_SECRETS_FILE_NAME=${DEPLOYMENT_PREFIX}-db
+        export DJANGO_DATABASE_HOST=${DEPLOYMENT_PREFIX}-db.${OPENSHIFT_PROJECT}.svc
         export EC2_HOST_NAME=${CI_COMMIT_REF_SLUG}-houndigrade-host
         export GITLAB_DEPLOYMENT=${CI_COMMIT_REF_SLUG}-cloudigrade
         export HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME=${CI_COMMIT_REF_SLUG}-houndigrade-asg
@@ -386,7 +393,7 @@ Review Master:
         exit 1
       fi
     - oc delete bc,cm,dc,is,routes,secrets,svc -l gitlab-deployment="${CI_COMMIT_REF_SLUG}-cloudigrade"
-    - oc delete dc,svc,secret "${CI_COMMIT_REF_SLUG}-db"
+    - oc delete dc,svc,secret "${DEPLOYMENT_PREFIX}-db"
     - >
       ansible-playbook \
         -e aws_prefix="${CI_COMMIT_REF_SLUG}" \
