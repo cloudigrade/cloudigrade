@@ -365,8 +365,7 @@ def get_account_overview(account, start, end):
     """
     instances = []
     images = []
-    rhel_instances = []
-    openshift_instances = []
+    instance_events = collections.defaultdict(list)
     # if the account was created right at or after the end time, we cannot give
     # meaningful data about the instances/images seen during the period,
     # therefore we need to make sure that we return None for those values
@@ -380,6 +379,8 @@ def get_account_overview(account, start, end):
         total_instances = None
         total_instances_rhel = None
         total_instances_openshift = None
+        total_runtime_rhel = None
+        total_runtime_openshift = None
     else:
         # _get_relevant_events will return the events in between the start &
         # end times & if no events are present during this period, it will
@@ -391,20 +392,28 @@ def get_account_overview(account, start, end):
                 instances.append(event.instance.id)
                 if event.machineimage:
                     images.append(event.machineimage.id)
-                    if event.machineimage.rhel:
-                        rhel_instances.append(event.instance.id)
-                    if event.machineimage.openshift:
-                        openshift_instances.append(event.instance.id)
+                    instance_events[event.instance].append(event)
                 else:
                     logger.debug(_(
                         'Instance event {0} has no machine image. Therefore '
                         'we do not know to report it as RHEL or OpenShift.'
                     ).format(event))
-        # grab the totals
+        # Calculate usage
+        usage = _calculate_daily_usage(start, end, instance_events)
+
         total_images = len(set(images))
         total_instances = len(set(instances))
-        total_instances_rhel = len(set(rhel_instances))
-        total_instances_openshift = len(set(openshift_instances))
+        total_instances_rhel = usage['instances_seen_with_rhel']
+        total_instances_openshift = usage['instances_seen_with_openshift']
+        # sum the total rhel runtime across instances
+        total_runtime_rhel = functools.reduce(
+            lambda x, y: x + y['rhel_runtime_seconds'], usage['daily_usage'], 0
+        )
+        # sum the total openshift runtime across instances
+        total_runtime_openshift = functools.reduce(
+            lambda x, y: x + y['openshift_runtime_seconds'],
+            usage['daily_usage'], 0
+        )
 
     cloud_account = {
         'id': account.id,
@@ -418,6 +427,8 @@ def get_account_overview(account, start, end):
         'instances': total_instances,
         'rhel_instances': total_instances_rhel,
         'openshift_instances': total_instances_openshift,
+        'rhel_runtime_seconds': total_runtime_rhel,
+        'openshift_runtime_seconds': total_runtime_openshift
     }
 
     return cloud_account

@@ -939,7 +939,9 @@ Response:
                 "instances": null,
                 "name": "account-for-aiken",
                 "openshift_instances": null,
+                "openshift_runtime_seconds": 0.0,
                 "rhel_instances": null,
+                "rhel_runtime_seconds": 0.0,
                 "type": "aws",
                 "user_id": 1
             },
@@ -1023,7 +1025,9 @@ Response:
                 "instances": 4,
                 "name": "greatest account ever",
                 "openshift_instances": 0,
+                "openshift_runtime_seconds": 0.0,
                 "rhel_instances": 2,
+                "rhel_runtime_seconds": 200,
                 "type": "aws",
                 "user_id": 1
             }
