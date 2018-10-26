@@ -353,3 +353,6 @@ CELERY_BEAT_SCHEDULE = {
         ),
     },
 }
+
+# Misc Config Values
+CLOUDIGRADE_VERSION = env('CLOUDIGRADE_VERSION', default=None)

@@ -2,6 +2,7 @@
 import http
 from unittest.mock import patch
 
+from django.conf import settings
 from django.test import TestCase
 from rest_framework.test import APIRequestFactory, force_authenticate
 
@@ -50,6 +51,8 @@ class SysconfigViewSetTest(TestCase):
             response.data['aws_policies']['traditional_inspection'],
             aws.sts.cloudigrade_policy
         )
+        self.assertEqual(
+            response.data['version'], settings.CLOUDIGRADE_VERSION)
 
     def test_get_sysconfig_no_auth_unauthorized(self):
         """Test getting the sysconfig without authentication."""

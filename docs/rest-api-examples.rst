@@ -1830,7 +1830,80 @@ Response:
     X-Frame-Options: SAMEORIGIN
 
     {
-        "aws_account_id": "123456789012"
+        "aws_account_id": "123456789012",
+        "aws_policies": {
+            "traditional_inspection": {
+                "Statement": [
+                    {
+                        "Action": [
+                            "ec2:DescribeImages",
+                            "ec2:DescribeInstances",
+                            "ec2:ModifySnapshotAttribute",
+                            "ec2:DescribeSnapshotAttribute",
+                            "ec2:DescribeSnapshots",
+                            "ec2:CopyImage",
+                            "ec2:CreateTags",
+                            "cloudtrail:CreateTrail",
+                            "cloudtrail:UpdateTrail",
+                            "cloudtrail:PutEventSelectors",
+                            "cloudtrail:DescribeTrails",
+                            "cloudtrail:StartLogging",
+                            "cloudtrail:StopLogging"
+                        ],
+                        "Effect": "Allow",
+                        "Resource": "*",
+                        "Sid": "CloudigradePolicy"
+                    }
+                ],
+                "Version": "2012-10-17"
+            }
+        },
+        "version": "489-cloudigrade-version - d2b30c637ce3788e22990b21434bac2edcfb7ede"
+    }
+
+If your application was not deployed by gitlab-ci, version will not be available.
+
+::
+
+    HTTP/1.1 200 OK
+    Allow: GET, HEAD, OPTIONS
+    Content-Length: 33
+    Content-Type: application/json
+    Date: Mon, 25 Jun 2018 17:22:50 GMT
+    Server: WSGIServer/0.2 CPython/3.6.5
+    Vary: Accept
+    X-Frame-Options: SAMEORIGIN
+
+    {
+        "aws_account_id": "123456789012",
+        "aws_policies": {
+            "traditional_inspection": {
+                "Statement": [
+                    {
+                        "Action": [
+                            "ec2:DescribeImages",
+                            "ec2:DescribeInstances",
+                            "ec2:ModifySnapshotAttribute",
+                            "ec2:DescribeSnapshotAttribute",
+                            "ec2:DescribeSnapshots",
+                            "ec2:CopyImage",
+                            "ec2:CreateTags",
+                            "cloudtrail:CreateTrail",
+                            "cloudtrail:UpdateTrail",
+                            "cloudtrail:PutEventSelectors",
+                            "cloudtrail:DescribeTrails",
+                            "cloudtrail:StartLogging",
+                            "cloudtrail:StopLogging"
+                        ],
+                        "Effect": "Allow",
+                        "Resource": "*",
+                        "Sid": "CloudigradePolicy"
+                    }
+                ],
+                "Version": "2012-10-17"
+            }
+        },
+        "version": null
     }
 
 If you attempt to retrieve account ids without authentication you'll receive a 401 error.

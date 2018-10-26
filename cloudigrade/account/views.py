@@ -1,4 +1,5 @@
 """DRF API views for the account app."""
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import Count, Q
 from django.http import HttpResponseNotFound
@@ -137,7 +138,8 @@ class SysconfigViewSet(viewsets.ViewSet):
             'aws_account_id': _get_primary_account_id(),
             'aws_policies': {
                 'traditional_inspection': cloudigrade_policy,
-            }
+            },
+            'version': settings.CLOUDIGRADE_VERSION,
         }
         return Response(response)
 
