@@ -202,10 +202,10 @@ class UserViewSet(viewsets.ViewSet):
             few variations in formatting, but they were all significantly less
             legible than keeping these on single long lines.
         """
-        queryset = get_user_model().objects.annotate(
+        queryset = get_user_model().objects.all().annotate(
             accounts=Count('account', distinct=True),
             challenged_images=Count(
-                'account__machineimage', distinct=True, filter=(
+                'account__instance__instanceevent__machineimage', distinct=True, filter=(  # noqa: E501
                     Q(account__instance__instanceevent__machineimage__rhel_challenged=True) |  # noqa: E501
                     Q(account__instance__instanceevent__machineimage__openshift_challenged=True))),  # noqa: E501
         ).values('id', 'username', 'is_superuser', 'accounts',
@@ -230,7 +230,7 @@ class UserViewSet(viewsets.ViewSet):
         user = get_user_model().objects.filter(id=pk).annotate(
             accounts=Count('account', distinct=True),
             challenged_images=Count(
-                'account__machineimage', distinct=True, filter=(
+                'account__instance__instanceevent__machineimage', distinct=True, filter=(  # noqa: E501
                     Q(account__instance__instanceevent__machineimage__rhel_challenged=True) |  # noqa: E501
                     Q(account__instance__instanceevent__machineimage__openshift_challenged=True)))  # noqa: E501
         ).values('id', 'username', 'is_superuser', 'accounts',
