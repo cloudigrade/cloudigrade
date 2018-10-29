@@ -1,6 +1,6 @@
 django==2.1.2
 django-environ==0.4.5
-boto3==1.9.13
+boto3==1.9.33
 celery==4.2.1
 django-model-utils==3.1.2
 jsonpickle==1.0
