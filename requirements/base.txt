@@ -5,7 +5,7 @@ celery==4.2.1
 django-model-utils==3.1.2
 jsonpickle==1.0
 psycopg2-binary==2.7.5
-python-dateutil==2.7.3
+python-dateutil==2.7.5
 djangorestframework==3.8.2
 gunicorn==19.9.0
 django-polymorphic==2.0.3
