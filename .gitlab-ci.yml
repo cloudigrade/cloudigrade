@@ -442,9 +442,9 @@ Deploy to Test:
     - cd /opt/shiftigrade
   script:
     - kontemplate template ocp/test.yaml -i cloudigrade | oc apply -f -
-    - if ! oc rollout status dc/cloudigrade-api; then oc rollout latest dc/cloudigrade-api && oc rollout status dc/cloudigrade-api; fi;
-    - if ! oc rollout status dc/cloudigrade-celery-beat; then oc rollout latest dc/cloudigrade-celery-beat && oc rollout status dc/cloudigrade-celery-beat; fi;
-    - if ! oc rollout status dc/cloudigrade-celery-worker; then oc rollout latest dc/cloudigrade-celery-worker && oc rollout status dc/cloudigrade-celery-worker; fi;
+    - if ! oc rollout status dc/c-a; then oc rollout latest dc/c-a && oc rollout status dc/c-a; fi;
+    - if ! oc rollout status dc/c-b; then oc rollout latest dc/c-b && oc rollout status dc/c-b; fi;
+    - if ! oc rollout status dc/c-w; then oc rollout latest dc/c-w && oc rollout status dc/c-w; fi;
   environment:
     name: test
     url: https://test.cloudigra.de/
@@ -466,9 +466,9 @@ Deploy to Stage:
     - cd /opt/shiftigrade
   script:
     - kontemplate template ocp/stage.yaml -i cloudigrade | oc apply -f -
-    - if ! oc rollout status dc/cloudigrade-api; then oc rollout latest dc/cloudigrade-api && oc rollout status dc/cloudigrade-api; fi;
-    - if ! oc rollout status dc/cloudigrade-celery-beat; then oc rollout latest dc/cloudigrade-celery-beat && oc rollout status dc/cloudigrade-celery-beat; fi;
-    - if ! oc rollout status dc/cloudigrade-celery-worker; then oc rollout latest dc/cloudigrade-celery-worker && oc rollout status dc/cloudigrade-celery-worker; fi;
+    - if ! oc rollout status dc/c-a; then oc rollout latest dc/c-a && oc rollout status dc/c-a; fi;
+    - if ! oc rollout status dc/c-b; then oc rollout latest dc/c-b && oc rollout status dc/c-b; fi;
+    - if ! oc rollout status dc/c-w; then oc rollout latest dc/c-w && oc rollout status dc/c-w; fi;
   environment:
     name: stage
     url: https://stage.cloudigra.de/
@@ -491,9 +491,9 @@ Deploy to Production:
     - cd /opt/shiftigrade
   script:
     - kontemplate template ocp/prod.yaml -i cloudigrade | oc apply -f -
-    - if ! oc rollout status dc/cloudigrade-api; then oc rollout latest dc/cloudigrade-api && oc rollout status dc/cloudigrade-api; fi;
-    - if ! oc rollout status dc/cloudigrade-celery-beat; then oc rollout latest dc/cloudigrade-celery-beat && oc rollout status dc/cloudigrade-celery-beat; fi;
-    - if ! oc rollout status dc/cloudigrade-celery-worker; then oc rollout latest dc/cloudigrade-celery-worker && oc rollout status dc/cloudigrade-celery-worker; fi;
+    - if ! oc rollout status dc/c-a; then oc rollout latest dc/c-a && oc rollout status dc/c-a; fi;
+    - if ! oc rollout status dc/c-b; then oc rollout latest dc/c-b && oc rollout status dc/c-b; fi;
+    - if ! oc rollout status dc/c-w; then oc rollout latest dc/c-w && oc rollout status dc/c-w; fi;
   when: manual
   environment:
     name: production
