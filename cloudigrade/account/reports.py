@@ -196,7 +196,7 @@ def _calculate_daily_usage(start, end, instance_events):
                 events,
             )
 
-            if runtime == 0.0:
+            if runtime == 0.0 or runtime is None:
                 # No runtime? No updates to counters.
                 continue
 
@@ -260,6 +260,11 @@ def _calculate_instance_usage(start, end, events):
     """
     last_started = None
     time_running = 0.0
+
+    # If start is after the current time, we cannot make any
+    # meaningful assumptions about the runtime.
+    if start > datetime.datetime.now(datetime.timezone.utc):
+        return None
 
     sorted_events = sorted(events, key=lambda e: e.occurred_at)
 
@@ -366,10 +371,25 @@ def get_account_overview(account, start, end):
     instances = []
     images = []
     instance_events = collections.defaultdict(list)
+
+    # If the start time is in the future, we cannot give any meaningful data
+    if start > datetime.datetime.now(datetime.timezone.utc):
+        logger.info(_(
+            'Start time {0} is after the current time, therefore '
+            'there is no meaningful data we can provide.'
+        ).format(start))
+
+        total_images = None
+        total_instances = None
+        total_instances_rhel = None
+        total_instances_openshift = None
+        total_runtime_rhel = None
+        total_runtime_openshift = None
+
     # if the account was created right at or after the end time, we cannot give
     # meaningful data about the instances/images seen during the period,
     # therefore we need to make sure that we return None for those values
-    if end <= account.created_at:
+    elif end <= account.created_at:
         logger.info(_(
             'Account "{0}" was created after "{1}", therefore there is no '
             'data on its images/instances during the specified start and end '

@@ -13,7 +13,10 @@ from account.models import (AwsAccount,
                             AwsMachineImage)
 from account.serializers import (AwsAccountSerializer,
                                  AwsMachineImageSerializer,
-                                 aws,)
+                                 CloudAccountImagesSerializer,
+                                 CloudAccountOverviewSerializer,
+                                 DailyInstanceActivitySerializer,
+                                 aws)
 from account.tests import helper as account_helper
 from util.tests import helper as util_helper
 
@@ -288,3 +291,108 @@ class AwsMachineImageSerializerTest(TestCase):
         self.assertFalse(mock_image.rhel_challenged)
         self.assertFalse(mock_image.openshift_challenged)
         mock_image.save.assert_not_called()
+
+
+class DailyInstanceActivitySerializerTest(TestCase):
+    """DailyInstanceActivity Serializer test case."""
+
+    def setUp(self):
+        """Set up commonly used data for each test."""
+        self.start = util_helper.utc_dt(2018, 1, 10, 0, 0, 0)
+        self.end = util_helper.utc_dt(2018, 1, 10, 5, 0, 0)
+
+    def test_validation_passes_if_end_after_start(self):
+        """If start<end then validation should pass."""
+        serializer = DailyInstanceActivitySerializer()
+        data = {
+            'start': self.start,
+            'end': self.end
+        }
+        validated_data = serializer.validate(data)
+        self.assertEquals(self.start, validated_data['start'])
+        self.assertEquals(self.end, validated_data['end'])
+
+    def test_validation_error_if_end_before_start(self):
+        """If start>end test that ValidationError is raised."""
+        serializer = DailyInstanceActivitySerializer()
+        data = {
+            'start': self.end,
+            'end': self.start
+        }
+        with self.assertRaises(ValidationError) as error:
+            serializer.validate(data)
+        raised_exception = error.exception
+        self.assertEquals(
+            'End date must be after start date.',
+            str(raised_exception.detail[0])
+        )
+
+
+class CloudAccountOverviewSerializerTest(TestCase):
+    """CloudAccountOverview Serializer test case."""
+
+    def setUp(self):
+        """Set up commonly used data for each test."""
+        self.start = util_helper.utc_dt(2018, 1, 10, 0, 0, 0)
+        self.end = util_helper.utc_dt(2018, 1, 10, 5, 0, 0)
+
+    def test_validation_passes_if_end_after_start(self):
+        """If start<end then validation should pass."""
+        serializer = CloudAccountOverviewSerializer()
+        data = {
+            'start': self.start,
+            'end': self.end
+        }
+        validated_data = serializer.validate(data)
+        self.assertEquals(self.start, validated_data['start'])
+        self.assertEquals(self.end, validated_data['end'])
+
+    def test_validation_error_if_end_before_start(self):
+        """If start>end test that ValidationError is raised."""
+        serializer = CloudAccountOverviewSerializer()
+        data = {
+            'start': self.end,
+            'end': self.start
+        }
+        with self.assertRaises(ValidationError) as error:
+            serializer.validate(data)
+        raised_exception = error.exception
+        self.assertEquals(
+            'End date must be after start date.',
+            str(raised_exception.detail[0])
+        )
+
+
+class CloudAccountImagesSerializerTest(TestCase):
+    """CloudAccountImages Serializer test case."""
+
+    def setUp(self):
+        """Set up commonly used data for each test."""
+        self.start = util_helper.utc_dt(2018, 1, 10, 0, 0, 0)
+        self.end = util_helper.utc_dt(2018, 1, 10, 5, 0, 0)
+
+    def test_validation_passes_if_end_after_start(self):
+        """If start<end then validation should pass."""
+        serializer = CloudAccountImagesSerializer()
+        data = {
+            'start': self.start,
+            'end': self.end
+        }
+        validated_data = serializer.validate(data)
+        self.assertEquals(self.start, validated_data['start'])
+        self.assertEquals(self.end, validated_data['end'])
+
+    def test_validation_error_if_end_before_start(self):
+        """If start>end test that ValidationError is raised."""
+        serializer = CloudAccountImagesSerializer()
+        data = {
+            'start': self.end,
+            'end': self.start
+        }
+        with self.assertRaises(ValidationError) as error:
+            serializer.validate(data)
+        raised_exception = error.exception
+        self.assertEquals(
+            'End date must be after start date.',
+            str(raised_exception.detail[0])
+        )

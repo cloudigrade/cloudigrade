@@ -355,6 +355,14 @@ class CloudAccountOverviewSerializer(Serializer):
     name_pattern = serializers.CharField(required=False)
     account_id = serializers.IntegerField(required=False)
 
+    def validate(self, data):
+        """Validate that the end date is after the start date."""
+        if data['start'] > data['end']:
+            raise serializers.ValidationError(
+                'End date must be after start date.'
+            )
+        return data
+
     def generate(self):
         """Generate the cloud accounts overviews and return the results."""
         start = self.validated_data['start']
@@ -381,6 +389,14 @@ class DailyInstanceActivitySerializer(Serializer):
     name_pattern = serializers.CharField(required=False)
     account_id = serializers.IntegerField(required=False)
 
+    def validate(self, data):
+        """Validate that the end date is after the start date."""
+        if data['start'] > data['end']:
+            raise serializers.ValidationError(
+                'End date must be after start date.'
+            )
+        return data
+
     def generate(self):
         """Generate the usage report and return the results."""
         start = self.validated_data['start']
@@ -405,6 +421,14 @@ class CloudAccountImagesSerializer(Serializer):
     start = serializers.DateTimeField(default_timezone=tz.tzutc())
     end = serializers.DateTimeField(default_timezone=tz.tzutc())
     account_id = serializers.IntegerField(required=True)
+
+    def validate(self, data):
+        """Validate that the end date is after the start date."""
+        if data['start'] > data['end']:
+            raise serializers.ValidationError(
+                'End date must be after start date.'
+            )
+        return data
 
     def generate(self):
         """Generate the usage report and return the results."""

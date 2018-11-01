@@ -753,6 +753,9 @@ class GetCloudAccountOverview(TestCase):
         self.instance_1 = account_helper.generate_aws_instance(self.account)
         self.instance_2 = account_helper.generate_aws_instance(self.account)
 
+        self.start_future = util_helper.utc_dt(3000, 1, 1, 0, 0, 0)
+        self.end_future = util_helper.utc_dt(3000, 2, 1, 0, 0, 0)
+
     def assertExpectedAccountOverview(self, overview, account,
                                       images=0, instances=0,
                                       rhel_instances=0, openshift_instances=0,
@@ -977,6 +980,17 @@ class GetCloudAccountOverview(TestCase):
                                            openshift_runtime_seconds=None,
                                            rhel_runtime_seconds=None)
 
+    def test_get_cloud_account_overview_future_start_end(self):
+        """Assert an overview of an account created on end reports None."""
+        overview = reports.get_account_overview(
+            self.account, self.start_future, self.end_future)
+        self.assertExpectedAccountOverview(overview, self.account,
+                                           images=None, instances=None,
+                                           rhel_instances=None,
+                                           openshift_instances=None,
+                                           openshift_runtime_seconds=None,
+                                           rhel_runtime_seconds=None)
+
     # the following tests are assuming that the events have been returned
     # from the _get_relevant_events() function which will only return events
     # during the specified time period **or** if no events exist during the
@@ -1148,6 +1162,33 @@ class GetImageOverviewsTestCase(ReportTestBase):
         results = reports.get_images_overviews(self.user_1.id, self.start,
                                                self.end, bad_account_id)
 
+        self.assertEqual(0, len(results['images']))
+
+    def test_no_images_for_future_start_time(self):
+        """
+        If start, end times are in the future, test that we return nothing.
+
+        This case generally should not happen when frontigrade is making
+        requests, but in case another client crafts a request with future
+        start/end times, we should return an empty list.
+        """
+        powered_times = (
+            (
+                util_helper.utc_dt(2018, 1, 10, 0, 0, 0),
+                util_helper.utc_dt(2018, 1, 10, 5, 0, 0)
+            ),
+        )
+        self.generate_events(powered_times, self.instance_1, self.image_rhel)
+        self.generate_events(powered_times, self.instance_2, self.image_rhel)
+        self.generate_events(powered_times, self.instance_3, self.image_ocp)
+        self.generate_events(powered_times, self.instance_4, self.image_plain)
+
+        # Report on January in the year 2525
+        start_future = util_helper.utc_dt(2525, 1, 1, 0, 0, 0)
+        end_future = util_helper.utc_dt(2525, 2, 1, 0, 0, 0)
+
+        results = reports.get_images_overviews(self.user_1.id, start_future,
+                                               end_future, self.account_1.id)
         self.assertEqual(0, len(results['images']))
 
 
