@@ -9,7 +9,7 @@ stages:
 ### GLOBAL VARS ###
 variables:
   SHIFTIGRADE_IMAGE: registry.gitlab.com/cloudigrade/shiftigrade
-  SHIFTIGRADE_VERSION: 0.1.1
+  SHIFTIGRADE_VERSION: 0.1.4
   IMAGE_NAME: registry.gitlab.com/${CI_PROJECT_PATH}
   IMAGE_NAME_COMMIT: registry.gitlab.com/${CI_PROJECT_PATH}/commits/${CI_PROJECT_NAME}:${CI_BUILD_REF}
   NGINX_NAME: registry.gitlab.com/${CI_PROJECT_PATH}/nginx/${CI_PROJECT_NAME}-nginx
@@ -182,8 +182,8 @@ Deploy Review:
     - oc login --token ${KUBE_TOKEN}
     - cd /opt/shiftigrade
   script:
-    - export API_ROUTE_HOST=review-${CI_COMMIT_REF_SLUG}.1b13.insights.openshiftapps.com
-    - export AUTH_ROUTE_HOST=review-${CI_COMMIT_REF_SLUG}.1b13.insights.openshiftapps.com
+    - export API_ROUTE_HOST=review-${CI_COMMIT_REF_SLUG}.5a9f.insights-dev.openshiftapps.com
+    - export AUTH_ROUTE_HOST=review-${CI_COMMIT_REF_SLUG}.5a9f.insights-dev.openshiftapps.com
     - export DEPLOYMENT_PREFIX=$(echo review-${CI_COMMIT_REF_SLUG} | cut -c 1-36)
     - export DB_SECRETS_FILE_NAME=${DEPLOYMENT_PREFIX}-db
     - export DJANGO_DATABASE_HOST=${DEPLOYMENT_PREFIX}-db.${OPENSHIFT_PROJECT}.svc
@@ -228,7 +228,7 @@ Deploy Review:
     - echo "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin@example.com', 'admin@example.com', '${CLOUDIGRADE_PASSWORD}')" | oc rsh -c c-${DEPLOYMENT_PREFIX}-a $(oc get pods -o jsonpath='{.items[*].metadata.name}' -l name=c-${DEPLOYMENT_PREFIX}-a) scl enable rh-python36 -- python manage.py shell || true
   environment:
     name: review/${CI_COMMIT_REF_NAME}
-    url: https://review-${CI_COMMIT_REF_SLUG}.1b13.insights.openshiftapps.com
+    url: https://review-${CI_COMMIT_REF_SLUG}.5a9f.insights-dev.openshiftapps.com
     on_stop: Clean Up Review
 
 Clean Up Review:
@@ -286,8 +286,8 @@ Clean Up Review:
         export NGINX_REPO_REF=master
         export CI_COMMIT_REF_SLUG=master-${CHAT_INPUT}
         export DEPLOYMENT_PREFIX=$(echo ${CI_COMMIT_REF_SLUG} | cut -c 1-36)
-        export API_ROUTE_HOST=${CI_COMMIT_REF_SLUG}.1b13.insights.openshiftapps.com
-        export AUTH_ROUTE_HOST=${CI_COMMIT_REF_SLUG}.1b13.insights.openshiftapps.com
+        export API_ROUTE_HOST=${CI_COMMIT_REF_SLUG}.5a9f.insights-dev.openshiftapps.com
+        export AUTH_ROUTE_HOST=${CI_COMMIT_REF_SLUG}.5a9f.insights-dev.openshiftapps.com
         export AWS_S3_BUCKET_NAME=${CI_COMMIT_REF_SLUG}-cloudigrade-s3
         export CLOUDTRAIL_EVENT_URL=https://sqs.${AWS_DEFAULT_REGION}.amazonaws.com/${AWS_ACCOUNT_NUMBER}/${CI_COMMIT_REF_SLUG}-cloudigrade-cloudtrail-sqs
         export DB_SECRETS_FILE_NAME=${DEPLOYMENT_PREFIX}-db
@@ -340,7 +340,7 @@ Clean Up Review:
     - if ! oc rollout status dc/c-${DEPLOYMENT_PREFIX}-b; then oc rollout latest dc/c-${DEPLOYMENT_PREFIX}-b && oc rollout status dc/c-${DEPLOYMENT_PREFIX}-b; fi;
     - if ! oc rollout status dc/c-${DEPLOYMENT_PREFIX}-w; then oc rollout latest dc/c-${DEPLOYMENT_PREFIX}-w && oc rollout status dc/c-${DEPLOYMENT_PREFIX}-w; fi;
     - echo "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin@example.com', 'admin@example.com', '${CLOUDIGRADE_PASSWORD}')" | oc rsh -c c-${DEPLOYMENT_PREFIX}-a $(oc get pods -o jsonpath='{.items[*].metadata.name}' -l name=c-${DEPLOYMENT_PREFIX}-a) scl enable rh-python36 -- python manage.py shell || true
-    - echo -e "section_start:$( date +%s ):chat_reply\r\033[0K\nDeployed [cloudigrade] ${CHAT_INPUT}, available at https://${CI_COMMIT_REF_SLUG}.1b13.insights.openshiftapps.com/api/v1/ If both cloudigrade and frontigrade are deployed you can login with username 'admin@example.com' and the current Red Hat Guest WiFi password as the password.\nsection_end:$( date +%s ):chat_reply\r\033[0K"
+    - echo -e "section_start:$( date +%s ):chat_reply\r\033[0K\nDeployed [cloudigrade] ${CHAT_INPUT}, available at https://${CI_COMMIT_REF_SLUG}.5a9f.insights-dev.openshiftapps.com/api/v1/ If both cloudigrade and frontigrade are deployed you can login with username 'admin@example.com' and the current Red Hat Guest WiFi password as the password.\nsection_end:$( date +%s ):chat_reply\r\033[0K"
 
 Review-Master:
   <<: *review_template
@@ -348,7 +348,7 @@ Review-Master:
     - chat
   environment:
     name: review/master-${CHAT_INPUT}
-    url: https://master-${CHAT_INPUT}.1b13.insights.openshiftapps.com
+    url: https://master-${CHAT_INPUT}.5a9f.insights-dev.openshiftapps.com
     on_stop: Clean-up-master
 
 Review Master:
@@ -357,7 +357,7 @@ Review Master:
     - trigger
   environment:
     name: review/master-${CHAT_INPUT}
-    url: https://master-${CHAT_INPUT}.1b13.insights.openshiftapps.com
+    url: https://master-${CHAT_INPUT}.5a9f.insights-dev.openshiftapps.com
     on_stop: Clean up master review
 
 .CleanReviewTemplate: &clean_review_definition
@@ -377,8 +377,8 @@ Review Master:
         export NGINX_REPO_REF=master
         export CI_COMMIT_REF_SLUG=master-${CHAT_INPUT}
         export DEPLOYMENT_PREFIX=$(echo ${CI_COMMIT_REF_SLUG} | cut -c 1-36)
-        export API_ROUTE_HOST=${CI_COMMIT_REF_SLUG}.1b13.insights.openshiftapps.com
-        export AUTH_ROUTE_HOST=${CI_COMMIT_REF_SLUG}.1b13.insights.openshiftapps.com
+        export API_ROUTE_HOST=${CI_COMMIT_REF_SLUG}.5a9f.insights-dev.openshiftapps.com
+        export AUTH_ROUTE_HOST=${CI_COMMIT_REF_SLUG}.5a9f.insights-dev.openshiftapps.com
         export AWS_S3_BUCKET_NAME=${CI_COMMIT_REF_SLUG}-cloudigrade-s3
         export CLOUDTRAIL_EVENT_URL=https://sqs.${AWS_DEFAULT_REGION}.amazonaws.com/${AWS_ACCOUNT_NUMBER}/${CI_COMMIT_REF_SLUG}-cloudigrade-cloudtrail-sqs
         export DB_SECRETS_FILE_NAME=${DEPLOYMENT_PREFIX}-db
