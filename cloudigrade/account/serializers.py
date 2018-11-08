@@ -48,10 +48,6 @@ class AwsAccountSerializer(HyperlinkedModelSerializer):
         user = self.context['request'].user
         name = data.get('name')
 
-        if not name:
-            # We want to allow None/null named accounts to still be saved.
-            return data
-
         try:
             AwsAccount.objects.get(user=user, name=name)
         except AwsAccount.DoesNotExist:

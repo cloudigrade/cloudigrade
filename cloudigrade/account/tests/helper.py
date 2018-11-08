@@ -1,6 +1,7 @@
 """Helper functions for generating test data."""
 import json
 import random
+import uuid
 
 from account.models import (AwsAccount,
                             AwsInstance,
@@ -33,6 +34,9 @@ def generate_aws_account(arn=None, aws_account_id=None, user=None, name=None):
 
     if user is None:
         user = helper.generate_test_user()
+
+    if name is None:
+        name = str(uuid.uuid4())
 
     return AwsAccount.objects.create(
         account_arn=arn,

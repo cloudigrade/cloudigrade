@@ -2,6 +2,7 @@
 from unittest.mock import Mock, patch
 
 from botocore.exceptions import ClientError
+from django.db.utils import IntegrityError
 from django.test import TestCase
 
 from account import models
@@ -24,6 +25,13 @@ class AwsAccountModelTest(TestCase):
             arn=arn,
             name='test'
         )
+
+    def test_save_fails_when_name_is_blank(self):
+        """Test that we cannot save an account with an empty name."""
+        with self.assertRaises(IntegrityError):
+            models.AwsAccount.objects.create(
+                name=None
+            )
 
     def test_delete_succeeds(self):
         """Test that an account is deleted if there are no errors."""

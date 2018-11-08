@@ -240,8 +240,8 @@ class AccountViewSetTest(TestCase):
 
     @patch.object(views.serializers, 'aws')
     @patch.object(views.serializers, 'tasks')
-    def test_create_account_without_name_success(self, mock_tasks, mock_aws):
-        """Test create account without a name succeeds."""
+    def test_create_account_without_name_fail(self, mock_tasks, mock_aws):
+        """Test create account without a name fails."""
         mock_aws.verify_account_access.return_value = True, []
         mock_aws.AwsArn = AwsArn
 
@@ -256,11 +256,9 @@ class AccountViewSetTest(TestCase):
         view = views.AccountViewSet.as_view(actions={'post': 'create'})
         response = view(request)
 
-        self.assertEqual(response.status_code, 201)
-        for key, value in data.items():
-            self.assertEqual(response.data[key], value)
-        self.assertIsNone(response.data['name'])
-        mock_tasks.initial_aws_describe_instances.delay.assert_called()
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('name', response.data)
+        mock_tasks.initial_aws_describe_instances.delay.assert_not_called()
 
     def test_update_account_patch_name_success(self):
         """Test updating an account with a name succeeds."""
