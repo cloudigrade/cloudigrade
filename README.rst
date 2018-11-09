@@ -220,9 +220,9 @@ If you'd like to deploy your in progress work to the local openshift cluster you
     kontemplate template ocp/local.yaml | oc apply -f -
 
     # Then simply kick off a new build for cloudigrade
-    oc start-build cloudigrade-api
+    oc start-build c-api
     # or frontigrade
-    oc start-build frontigrade
+    oc start-build f
 
 Now everytime you want your code redeployed you can push your code and trigger a new build using ``oc start-build <build-name>``.
 
