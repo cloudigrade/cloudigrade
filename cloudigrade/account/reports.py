@@ -8,10 +8,8 @@ import operator
 from django.db import models
 from django.utils.translation import gettext as _
 
-from account.models import (Account,
-                            AwsEC2InstanceDefinitions,
-                            Instance,
-                            InstanceEvent)
+from account.models import (Account, AwsEC2InstanceDefinitions, Instance,
+                            InstanceEvent, MachineImage)
 
 logger = logging.getLogger(__name__)
 
@@ -466,7 +464,7 @@ def get_account_overview(account, start, end):
 
     """
     instances = []
-    images = []
+    image_ids = []
     instance_events = collections.defaultdict(list)
 
     # If the start time is in the future, we cannot give any meaningful data
@@ -477,6 +475,8 @@ def get_account_overview(account, start, end):
         ).format(start))
 
         total_images = None
+        total_challenged_images_rhel = None
+        total_challenged_images_openshift = None
         total_instances = None
         total_instances_rhel = None
         total_instances_openshift = None
@@ -493,6 +493,8 @@ def get_account_overview(account, start, end):
             ' dates.'
         ).format(account, end))
         total_images = None
+        total_challenged_images_rhel = None
+        total_challenged_images_openshift = None
         total_instances = None
         total_instances_rhel = None
         total_instances_openshift = None
@@ -508,7 +510,7 @@ def get_account_overview(account, start, end):
             if valid_event:
                 instances.append(event.instance.id)
                 if event.machineimage:
-                    images.append(event.machineimage.id)
+                    image_ids.append(event.machineimage.id)
                     instance_events[event.instance].append(event)
                 else:
                     logger.debug(_(
@@ -518,7 +520,14 @@ def get_account_overview(account, start, end):
         # Calculate usage
         usage = _calculate_daily_usage(start, end, instance_events)
 
-        total_images = len(set(images))
+        total_images = len(set(image_ids))
+        total_challenged_images_rhel, total_challenged_images_openshift = 0, 0
+        images = MachineImage.objects.filter(pk__in=set(image_ids))
+        for image in images:
+            if image.rhel_challenged:
+                total_challenged_images_rhel += 1
+            if image.openshift_challenged:
+                total_challenged_images_openshift += 1
         total_instances = len(set(instances))
         total_instances_rhel = usage['instances_seen_with_rhel']
         total_instances_openshift = usage['instances_seen_with_openshift']
@@ -545,7 +554,9 @@ def get_account_overview(account, start, end):
         'rhel_instances': total_instances_rhel,
         'openshift_instances': total_instances_openshift,
         'rhel_runtime_seconds': total_runtime_rhel,
-        'openshift_runtime_seconds': total_runtime_openshift
+        'openshift_runtime_seconds': total_runtime_openshift,
+        'rhel_images_challenged': total_challenged_images_rhel,
+        'openshift_images_challenged': total_challenged_images_openshift,
     }
 
     return cloud_account

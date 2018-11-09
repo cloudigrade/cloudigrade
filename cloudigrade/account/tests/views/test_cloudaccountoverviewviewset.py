@@ -104,7 +104,10 @@ class CloudAccountOverviewViewSetTest(TestCase):
             'rhel_instances': 0,
             'openshift_instances': 0,
             'rhel_runtime_seconds': 0.0,
-            'openshift_runtime_seconds': 0.0}
+            'openshift_runtime_seconds': 0.0,
+            'rhel_images_challenged': 0,
+            'openshift_images_challenged': 0,
+        }
         self.account2_expected_overview = {
             'id': self.account2.id,
             'cloud_account_id': self.account2.aws_account_id,
@@ -118,7 +121,10 @@ class CloudAccountOverviewViewSetTest(TestCase):
             'rhel_instances': 1,
             'openshift_instances': 0,
             'rhel_runtime_seconds': runtime,
-            'openshift_runtime_seconds': 0.0}
+            'openshift_runtime_seconds': 0.0,
+            'rhel_images_challenged': 0,
+            'openshift_images_challenged': 0,
+        }
         self.account3_expected_overview = {
             'id': self.account3.id,
             'cloud_account_id': self.account3.aws_account_id,
@@ -132,7 +138,10 @@ class CloudAccountOverviewViewSetTest(TestCase):
             'rhel_instances': 0,
             'openshift_instances': 1,
             'rhel_runtime_seconds': 0.0,
-            'openshift_runtime_seconds': runtime}
+            'openshift_runtime_seconds': runtime,
+            'rhel_images_challenged': 0,
+            'openshift_images_challenged': 0,
+        }
         self.account4_expected_overview = {
             'id': self.account4.id,
             'cloud_account_id': self.account4.aws_account_id,
@@ -146,8 +155,10 @@ class CloudAccountOverviewViewSetTest(TestCase):
             'rhel_instances': 1,
             'openshift_instances': 1,
             'rhel_runtime_seconds': runtime,
-            'openshift_runtime_seconds': runtime}
-        account_helper.generate_aws_ec2_definitions()
+            'openshift_runtime_seconds': runtime,
+            'rhel_images_challenged': 0,
+            'openshift_images_challenged': 0,
+        }
 
     def get_overview_list_response(self, user, data=None, name_pattern=None,
                                    account_id=None):
