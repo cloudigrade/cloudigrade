@@ -203,7 +203,7 @@ class GenerateAwsImageTest(TestCase):
         """Assert generation of an AwsMachineImage with all specified args."""
         account_id = util_helper.generate_dummy_aws_account_id()
         ec2_ami_id = util_helper.generate_dummy_image_id()
-        name = 'Taters'
+        name = _faker.name()
 
         image = helper.generate_aws_image(
             account_id,
@@ -234,7 +234,7 @@ class GenerateAwsImageTest(TestCase):
     def test_generate_aws_image_with_is_cloud_access(self):
         """Assert generation of an AwsMachineImage with is_cloud_access."""
         account_id = util_helper.generate_dummy_aws_account_id()
-        name = 'Taters'
+        name = _faker.name()
 
         image = helper.generate_aws_image(
             account_id,
@@ -255,7 +255,7 @@ class GenerateAwsImageTest(TestCase):
     def test_generate_aws_image_with_is_marketplace(self):
         """Assert generation of an AwsMachineImage with is_marketplace."""
         account_id = util_helper.generate_dummy_aws_account_id()
-        name = 'Taters'
+        name = _faker.name()
 
         image = helper.generate_aws_image(
             account_id,
