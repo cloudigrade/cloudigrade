@@ -3,13 +3,12 @@ import json
 import random
 import uuid
 
-from account.models import (AwsAccount,
-                            AwsEC2InstanceDefinitions,
-                            AwsInstance,
-                            AwsInstanceEvent,
-                            AwsMachineImage,
-                            InstanceEvent,
-                            MachineImage)
+from django.conf import settings
+
+from account.models import (AwsAccount, AwsEC2InstanceDefinitions, AwsInstance,
+                            AwsInstanceEvent, AwsMachineImage,
+                            CLOUD_ACCESS_NAME_TOKEN, InstanceEvent,
+                            MARKETPLACE_NAME_TOKEN, MachineImage)
 from util import aws
 from util.tests import helper
 
@@ -211,7 +210,9 @@ def generate_aws_image(owner_aws_account_id=None,
                        name=None,
                        status=MachineImage.INSPECTED,
                        rhel_challenged=False,
-                       openshift_challenged=False):
+                       openshift_challenged=False,
+                       is_cloud_access=False,
+                       is_marketplace=False):
     """
     Generate an AwsMachineImage.
 
@@ -228,6 +229,12 @@ def generate_aws_image(owner_aws_account_id=None,
         status (str): Optional MachineImage inspection status.
         rhel_challenged (bool): Optional indicates if RHEL is challenged.
         openshift_challenged (bool): Optional indicates if OCP is challenged.
+        is_cloud_access (bool): Optional indicates if image is from Cloud
+            Access. Has side-effect of modifying the owner_aws_account_id and
+            name as appropriate.
+        is_marketplace (bool): Optional indicates if image is from Marketplace.
+            Has side-effect of modifying the owner_aws_account_id and name as
+            appropriate.
 
     Returns:
         AwsMachineImage: The created AwsMachineImage.
@@ -243,6 +250,14 @@ def generate_aws_image(owner_aws_account_id=None,
         image_json = json.dumps({'rhel_release_files_found': rhel_detected})
     else:
         image_json = None
+
+    if is_marketplace:
+        name = f'{name}{MARKETPLACE_NAME_TOKEN}'
+        owner_aws_account_id = random.choice(settings.RHEL_IMAGES_AWS_ACCOUNTS)
+
+    if is_cloud_access:
+        name = f'{name}{CLOUD_ACCESS_NAME_TOKEN}'
+        owner_aws_account_id = random.choice(settings.RHEL_IMAGES_AWS_ACCOUNTS)
 
     image = AwsMachineImage.objects.create(
         owner_aws_account_id=owner_aws_account_id,

@@ -243,10 +243,13 @@ def start_image_inspection(arn, ami_id, region):
     ami.status = ami.PREPARING
     ami.save()
 
-    # Local import to get around a circular import issue
-    from account.tasks import copy_ami_snapshot
-
-    copy_ami_snapshot.delay(arn, ami_id, region)
+    if ami.is_marketplace or ami.is_cloud_access:
+        ami.status = ami.INSPECTED
+        ami.save()
+    else:
+        # Local import to get around a circular import issue
+        from account.tasks import copy_ami_snapshot
+        copy_ami_snapshot.delay(arn, ami_id, region)
 
     return ami
 

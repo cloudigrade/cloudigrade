@@ -10,6 +10,7 @@ from rest_framework.serializers import ValidationError
 import util.aws.sqs
 from account import AWS_PROVIDER_STRING, util
 from account.models import AwsAccount, AwsMachineImage
+from account.tests import helper as account_helper
 from account.util import convert_param_to_int
 from util import aws
 from util.tests import helper as util_helper
@@ -287,3 +288,33 @@ class AccountUtilTest(TestCase):
         """Test that convert_param_to_int returns int with str."""
         with self.assertRaises(ValidationError):
             convert_param_to_int('test_field', 'not_int')
+
+    @patch('account.tasks.copy_ami_snapshot')
+    def test_start_image_inspection_runs(self, mock_copy):
+        """Test that inspection skips for marketplace images."""
+        image = account_helper.generate_aws_image()
+        mock_arn = Mock()
+        mock_region = Mock()
+        util.start_image_inspection(mock_arn, image.ec2_ami_id, mock_region)
+        mock_copy.delay.assert_called_with(mock_arn, image.ec2_ami_id,
+                                           mock_region)
+        image.refresh_from_db()
+        self.assertEqual(image.status, image.PREPARING)
+
+    @patch('account.tasks.copy_ami_snapshot')
+    def test_start_image_inspection_marketplace_skips(self, mock_copy):
+        """Test that inspection skips for marketplace images."""
+        image = account_helper.generate_aws_image(is_marketplace=True)
+        util.start_image_inspection(None, image.ec2_ami_id, None)
+        mock_copy.delay.assert_not_called()
+        image.refresh_from_db()
+        self.assertEqual(image.status, image.INSPECTED)
+
+    @patch('account.tasks.copy_ami_snapshot')
+    def test_start_image_inspection_cloud_access_skips(self, mock_copy):
+        """Test that inspection skips for Cloud Access images."""
+        image = account_helper.generate_aws_image(is_cloud_access=True)
+        util.start_image_inspection(None, image.ec2_ami_id, None)
+        mock_copy.delay.assert_not_called()
+        image.refresh_from_db()
+        self.assertEqual(image.status, image.INSPECTED)

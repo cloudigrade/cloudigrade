@@ -8,10 +8,12 @@ import uuid
 from decimal import Decimal
 
 import faker
+from django.conf import settings
 from django.test import TestCase
 
 from account.models import (AwsAccount, AwsInstance, AwsMachineImage,
-                            InstanceEvent)
+                            CLOUD_ACCESS_NAME_TOKEN, InstanceEvent,
+                            MARKETPLACE_NAME_TOKEN)
 from account.tests import helper
 from util.tests import helper as util_helper
 
@@ -194,6 +196,8 @@ class GenerateAwsImageTest(TestCase):
         self.assertIsNone(image.name)
         self.assertFalse(image.rhel_challenged)
         self.assertFalse(image.openshift_challenged)
+        self.assertFalse(image.is_cloud_access)
+        self.assertFalse(image.is_marketplace)
 
     def test_generate_aws_image_with_args(self):
         """Assert generation of an AwsMachineImage with all specified args."""
@@ -224,3 +228,47 @@ class GenerateAwsImageTest(TestCase):
         self.assertEqual(image.status, AwsMachineImage.PREPARING)
         self.assertTrue(image.rhel_challenged)
         self.assertTrue(image.openshift_challenged)
+        self.assertFalse(image.is_cloud_access)
+        self.assertFalse(image.is_marketplace)
+
+    def test_generate_aws_image_with_is_cloud_access(self):
+        """Assert generation of an AwsMachineImage with is_cloud_access."""
+        account_id = util_helper.generate_dummy_aws_account_id()
+        name = 'Taters'
+
+        image = helper.generate_aws_image(
+            account_id,
+            name=name,
+            is_cloud_access=True,
+        )
+
+        self.assertNotEqual(image.owner_aws_account_id, account_id)
+        self.assertIn(image.owner_aws_account_id,
+                      settings.RHEL_IMAGES_AWS_ACCOUNTS)
+        self.assertTrue(image.rhel_detected)
+        self.assertFalse(image.openshift_detected)
+        self.assertNotEqual(image.name, name)
+        self.assertIn(CLOUD_ACCESS_NAME_TOKEN, image.name)
+        self.assertTrue(image.is_cloud_access)
+        self.assertFalse(image.is_marketplace)
+
+    def test_generate_aws_image_with_is_marketplace(self):
+        """Assert generation of an AwsMachineImage with is_marketplace."""
+        account_id = util_helper.generate_dummy_aws_account_id()
+        name = 'Taters'
+
+        image = helper.generate_aws_image(
+            account_id,
+            name=name,
+            is_marketplace=True,
+        )
+
+        self.assertNotEqual(image.owner_aws_account_id, account_id)
+        self.assertIn(image.owner_aws_account_id,
+                      settings.RHEL_IMAGES_AWS_ACCOUNTS)
+        self.assertFalse(image.rhel_detected)
+        self.assertFalse(image.openshift_detected)
+        self.assertNotEqual(image.name, name)
+        self.assertIn(MARKETPLACE_NAME_TOKEN, image.name)
+        self.assertFalse(image.is_cloud_access)
+        self.assertTrue(image.is_marketplace)

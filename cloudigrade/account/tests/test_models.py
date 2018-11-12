@@ -110,3 +110,26 @@ class AwsAccountModelTest(TestCase):
             self.account.delete()
 
         self.assertEqual(0, models.AwsAccount.objects.count())
+
+    def test_marketplace_is_not_rhel(self):
+        """Test that marketplace images are not tracked as RHEL."""
+        image = account_helper.generate_aws_image(
+            is_marketplace=True,
+        )
+        self.assertFalse(image.rhel)
+        self.assertFalse(image.rhel_detected)
+        self.assertTrue(image.is_marketplace)
+
+    def test_rhel_not_detected_but_is_cloud_access_is_rhel(self):
+        """Test that cloud access images are always tracked as RHEL."""
+        image = account_helper.generate_aws_image(
+            rhel_detected=False,
+            is_cloud_access=True,
+        )
+        self.assertTrue(image.rhel)
+        self.assertTrue(image.rhel_detected)
+        self.assertTrue(image.is_cloud_access)
+        self.assertFalse(image.rhel_enabled_repos_found)
+        self.assertFalse(image.rhel_product_certs_found)
+        self.assertFalse(image.rhel_release_files_found)
+        self.assertFalse(image.rhel_signed_packages_found)

@@ -1,4 +1,5 @@
 """Base settings file."""
+from decimal import Decimal
 from urllib.parse import quote
 
 import environ
@@ -95,6 +96,12 @@ HOUNDIGRADE_ECS_IMAGE_TAG = env(
 )
 HOUNDIGRADE_DEBUG = env.bool('HOUNDIGRADE_DEBUG', default=False)
 HOUNDIGRADE_EXCHANGE_NAME = env('HOUNDIGRADE_EXCHANGE_NAME', default='')
+
+RHEL_IMAGES_AWS_ACCOUNTS = [
+    Decimal('841258680906'),  # china
+    Decimal('219670896067'),  # govcloud
+    Decimal('309956199498'),  # all others
+]
 
 # Default apps go here
 DJANGO_APPS = [

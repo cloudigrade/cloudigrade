@@ -18,6 +18,10 @@ from util.models import BasePolymorphicModel
 logger = logging.getLogger(__name__)
 
 
+CLOUD_ACCESS_NAME_TOKEN = '-Access2'
+MARKETPLACE_NAME_TOKEN = '-hourly2'
+
+
 class Account(BasePolymorphicModel):
     """Base customer account model."""
 
@@ -158,13 +162,12 @@ class MachineImage(BasePolymorphicModel):
         Indicate if the image detected RHEL.
 
         Returns:
-            bool: OR of `rhel_enabled_repos_found`,
-                `rhel_product_certs_found`,
-                `rhel_release_files_found` and
-                `rhel_signed_packages_found` properties.
+            bool: combination of various image properties that results in our
+                canonical definition of whether the image is marked for RHEL.
 
         """
-        return self.rhel_enabled_repos_found or \
+        return self.is_cloud_access or \
+            self.rhel_enabled_repos_found or \
             self.rhel_product_certs_found or \
             self.rhel_release_files_found or \
             self.rhel_signed_packages_found
@@ -185,6 +188,26 @@ class MachineImage(BasePolymorphicModel):
     def cloud_image_id(self):
         """
         Get the external cloud provider's ID for this image.
+
+        This should be treated like an abstract method, but we can't actually
+        extend ABC here because it conflicts with Django's Meta class.
+        """
+        raise NotImplementedError
+
+    @property
+    def is_cloud_access(self):
+        """
+        Indicate if the image is from Cloud Access.
+
+        This should be treated like an abstract method, but we can't actually
+        extend ABC here because it conflicts with Django's Meta class.
+        """
+        raise NotImplementedError
+
+    @property
+    def is_marketplace(self):
+        """
+        Indicate if the image is from AWS Marketplace.
 
         This should be treated like an abstract method, but we can't actually
         extend ABC here because it conflicts with Django's Meta class.
@@ -353,6 +376,20 @@ class AwsMachineImage(MachineImage):
         decimal_places=0,
         null=True,
     )
+
+    @property
+    def is_cloud_access(self):
+        """Indicate if the image is from Cloud Access."""
+        return self.name is not None and \
+            CLOUD_ACCESS_NAME_TOKEN in self.name and \
+            self.owner_aws_account_id in settings.RHEL_IMAGES_AWS_ACCOUNTS
+
+    @property
+    def is_marketplace(self):
+        """Indicate if the image is from AWS Marketplace."""
+        return self.name is not None and \
+            MARKETPLACE_NAME_TOKEN in self.name and \
+            self.owner_aws_account_id in settings.RHEL_IMAGES_AWS_ACCOUNTS
 
     @property
     def cloud_image_id(self):
