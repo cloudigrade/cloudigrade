@@ -3,6 +3,7 @@ import json
 import random
 import uuid
 
+import faker
 from django.conf import settings
 
 from account.models import (AwsAccount, AwsEC2InstanceDefinitions, AwsInstance,
@@ -11,6 +12,8 @@ from account.models import (AwsAccount, AwsEC2InstanceDefinitions, AwsInstance,
                             MARKETPLACE_NAME_TOKEN, MachineImage)
 from util import aws
 from util.tests import helper
+
+_faker = faker.Faker()
 
 
 def generate_aws_account(arn=None, aws_account_id=None, user=None, name=None,
@@ -252,11 +255,11 @@ def generate_aws_image(owner_aws_account_id=None,
         image_json = None
 
     if is_marketplace:
-        name = f'{name}{MARKETPLACE_NAME_TOKEN}'
+        name = f'{name or _faker.name()}{MARKETPLACE_NAME_TOKEN}'
         owner_aws_account_id = random.choice(settings.RHEL_IMAGES_AWS_ACCOUNTS)
 
     if is_cloud_access:
-        name = f'{name}{CLOUD_ACCESS_NAME_TOKEN}'
+        name = f'{name or _faker.name()}{CLOUD_ACCESS_NAME_TOKEN}'
         owner_aws_account_id = random.choice(settings.RHEL_IMAGES_AWS_ACCOUNTS)
 
     image = AwsMachineImage.objects.create(
