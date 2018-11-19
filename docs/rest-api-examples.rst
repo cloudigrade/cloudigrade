@@ -42,41 +42,14 @@ The following resource paths are currently available:
 -  ``/api/v1/report/images/`` returns active images overview data
 -  ``/auth/`` is for authentication
 
-User Account Setup
+User Setup
 ------------------
 
-This is for accounts with Cloudigrade itself, not telling Cloudigrade
+This is for users with Cloudigrade itself, not telling Cloudigrade
 about a user's AWS account.
 
-Create a Cloudigrade account
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Request:
-
-.. code:: bash
-
-    http post localhost:8080/auth/users/create/ \
-    username=<username> password=<password>
-
-Response:
-
-::
-
-    HTTP/1.1 201 Created
-    Allow: POST, OPTIONS
-    Content-Length: 43
-    Content-Type: application/json
-    Date: Thu, 10 May 2018 20:11:16 GMT
-    Server: nginx/1.12.1
-    Set-Cookie: 4bf7fdd75eecaf09c9580e6ddbe57ad4=3a0a5f9fe4f5acc709f37456c6867643; path=/; HttpOnly
-    Vary: Accept
-    X-Frame-Options: SAMEORIGIN
-
-    {
-        "email": "",
-        "id": <id>,
-        "username": "<username>"
-    }
+Users cannot be created directly through the API. Please use the Django Admin to
+create users.
 
 
 Login to Cloudigrade
