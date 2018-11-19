@@ -15,7 +15,9 @@ class LoadEc2DefinitionsTest(TestCase):
     def create_random_definition(self):
         """Create and save a random definition."""
         AwsEC2InstanceDefinitions.objects.create(
-            instance_type=random.choice(helper.SOME_EC2_INSTANCE_TYPES),
+            instance_type=random.choice(tuple(
+                helper.SOME_EC2_INSTANCE_TYPES.keys()
+            )),
             memory=random.randrange(4),
             vcpu=random.randrange(4),
         )

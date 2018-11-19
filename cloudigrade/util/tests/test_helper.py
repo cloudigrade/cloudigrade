@@ -60,7 +60,9 @@ class UtilHelperTest(TestCase):
         instance_id = helper.generate_dummy_instance_id()
         subnet_id = helper.generate_dummy_subnet_id()
         state = aws.InstanceState.shutting_down
-        instance_type = random.choice(helper.SOME_EC2_INSTANCE_TYPES)
+        instance_type = random.choice(tuple(
+            helper.SOME_EC2_INSTANCE_TYPES.keys()
+        ))
         instance = helper.generate_dummy_describe_instance(
             instance_id, image_id, subnet_id, state, instance_type
         )
@@ -88,7 +90,9 @@ class UtilHelperTest(TestCase):
         instance_id = helper.generate_dummy_instance_id()
         subnet_id = helper.generate_dummy_subnet_id()
         state = aws.InstanceState.shutting_down
-        instance_type = random.choice(helper.SOME_EC2_INSTANCE_TYPES)
+        instance_type = random.choice(tuple(
+            helper.SOME_EC2_INSTANCE_TYPES.keys()
+        ))
         instance = helper.generate_mock_ec2_instance(
             instance_id, image_id, subnet_id, state, instance_type
         )

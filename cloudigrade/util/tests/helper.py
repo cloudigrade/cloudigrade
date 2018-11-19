@@ -21,18 +21,18 @@ SOME_AWS_REGIONS = (
     'us-east-2',
 )
 
-SOME_EC2_INSTANCE_TYPES = (
-    'c5.xlarge',
-    'm5.24xlarge',
-    'r4.large',
-    't2.large',
-    't2.medium',
-    't2.micro',
-    't2.nano',
-    't2.small',
-    't2.xlarge',
-    'x1e.32xlarge',
-)
+SOME_EC2_INSTANCE_TYPES = {
+    'c5.xlarge': {'memory': 8, 'vcpu': 4},
+    'm5.24xlarge': {'memory': 384, 'vcpu': 96},
+    'r4.large': {'memory': 15.25, 'vcpu': 2},
+    't2.large': {'memory': 16, 'vcpu': 4},
+    't2.medium': {'memory': 8, 'vcpu': 2},
+    't2.micro': {'memory': 1, 'vcpu': 1},
+    't2.nano': {'memory': 0.5, 'vcpu': 1},
+    't2.small': {'memory': 2, 'vcpu': 1},
+    't2.xlarge': {'memory': 16, 'vcpu': 4},
+    'x1e.32xlarge': {'memory': 3904, 'vcpu': 128},
+}
 
 MAX_AWS_ACCOUNT_ID = 10**12 - 1
 
@@ -151,7 +151,7 @@ def generate_dummy_describe_instance(instance_id=None, image_id=None,
         subnet_id = generate_dummy_subnet_id()
 
     if instance_type is None:
-        instance_type = random.choice(SOME_EC2_INSTANCE_TYPES)
+        instance_type = random.choice(tuple(SOME_EC2_INSTANCE_TYPES.keys()))
 
     mock_instance = {
         'ImageId': image_id,

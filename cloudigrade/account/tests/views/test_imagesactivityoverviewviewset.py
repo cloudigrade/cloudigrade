@@ -97,6 +97,7 @@ class ImagesActivityOverviewViewSetTestCase(TestCase):
         self.end_future = util_helper.utc_dt(future_year, 2, 1, 0, 0, 0)
 
         self.factory = APIRequestFactory()
+        account_helper.generate_aws_ec2_definitions()
 
     def get_report_response(self, as_user, start, end, account_id,
                             user_id=None):

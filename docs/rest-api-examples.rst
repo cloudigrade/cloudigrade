@@ -880,23 +880,35 @@ Response:
             {
                 "date": "2018-03-01T00:00:00Z",
                 "openshift_instances": 0,
+                "openshift_memory_seconds": 0.0,
                 "openshift_runtime_seconds": 0.0,
+                "openshift_vcpu_seconds": 0.0,
                 "rhel_instances": 0,
-                "rhel_runtime_seconds": 0.0
+                "rhel_memory_seconds": 0.0,
+                "rhel_runtime_seconds": 0.0,
+                "rhel_vcpu_seconds": 0.0
             },
             {
                 "date": "2018-03-02T00:00:00Z",
                 "openshift_instances": 0,
+                "openshift_memory_seconds": 0.0,
                 "openshift_runtime_seconds": 0.0,
+                "openshift_vcpu_seconds": 0.0,
                 "rhel_instances": 0,
-                "rhel_runtime_seconds": 0.0
+                "rhel_memory_seconds": 0.0,
+                "rhel_runtime_seconds": 0.0,
+                "rhel_vcpu_seconds": 0.0
             },
             {
                 "date": "2018-03-03T00:00:00Z",
                 "openshift_instances": 0,
+                "openshift_memory_seconds": 0.0,
                 "openshift_runtime_seconds": 0.0,
+                "openshift_vcpu_seconds": 0.0,
                 "rhel_instances": 0,
-                "rhel_runtime_seconds": 0.0
+                "rhel_memory_seconds": 0.0,
+                "rhel_runtime_seconds": 0.0,
+                "rhel_vcpu_seconds": 0.0
             }
         ],
         "instances_seen_with_openshift": 0,

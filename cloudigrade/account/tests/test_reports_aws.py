@@ -1,4 +1,6 @@
 """Collection of tests for the reports module."""
+import random
+
 import faker
 from django.test import TestCase
 
@@ -67,6 +69,12 @@ class ReportTestBase(TestCase):
         self.account_4 = account_helper.generate_aws_account(
             user=self.user_2, name=_faker.bs())
 
+        self.instance_type = random.choice(tuple(
+            util_helper.SOME_EC2_INSTANCE_TYPES.keys()
+        ))
+
+        self.instance = util_helper.SOME_EC2_INSTANCE_TYPES[self.instance_type]
+
         self.instance_1 = account_helper.generate_aws_instance(self.account_1)
         self.instance_2 = account_helper.generate_aws_instance(self.account_1)
         self.instance_3 = account_helper.generate_aws_instance(self.account_1)
@@ -89,6 +97,8 @@ class ReportTestBase(TestCase):
         self.start = util_helper.utc_dt(2018, 1, 1, 0, 0, 0)
         self.end = util_helper.utc_dt(2018, 2, 1, 0, 0, 0)
 
+        account_helper.generate_aws_ec2_definitions()
+
     def generate_events(self, powered_times, instance=None, image=None):
         """
         Generate events saved to the DB and returned.
@@ -109,7 +119,10 @@ class ReportTestBase(TestCase):
         if image is None:
             image = self.image_rhel
         events = account_helper.generate_aws_instance_events(
-            instance, powered_times, image.ec2_ami_id,
+            instance,
+            powered_times,
+            image.ec2_ami_id,
+            instance_type=self.instance_type
         )
         return events
 
@@ -117,7 +130,9 @@ class ReportTestBase(TestCase):
 class GetDailyUsageTestBase(ReportTestBase):
     """Base class for testing get_daily_usage with additional assertions."""
 
-    def assertTotalRunningTimes(self, results, rhel=0, openshift=0):
+    def assertTotalRunningTimes(self, results, rhel=0, openshift=0,
+                                rhel_memory=0, openshift_memory=0,
+                                rhel_vcpu=0, openshift_vcpu=0):
         """Assert total expected running times for rhel and openshift."""
         self.assertEqual(sum((
             day['rhel_runtime_seconds'] for day in results['daily_usage']
@@ -125,6 +140,18 @@ class GetDailyUsageTestBase(ReportTestBase):
         self.assertEqual(sum((
             day['openshift_runtime_seconds'] for day in results['daily_usage']
         )), openshift)
+        self.assertEqual(sum((
+            day['rhel_memory_seconds'] for day in results['daily_usage']
+        )), rhel_memory)
+        self.assertEqual(sum((
+            day['openshift_memory_seconds'] for day in results['daily_usage']
+        )), openshift_memory)
+        self.assertEqual(sum((
+            day['rhel_vcpu_seconds'] for day in results['daily_usage']
+        )), rhel_vcpu)
+        self.assertEqual(sum((
+            day['openshift_vcpu_seconds'] for day in results['daily_usage']
+        )), openshift_vcpu)
 
     def assertDaysSeen(self, results, rhel=0, openshift=0):
         """Assert expected days seen having rhel and openshift instances."""
@@ -227,7 +254,13 @@ class GetDailyUsageBasicInstanceTest(GetDailyUsageTestBase):
         )
         self.generate_events(powered_times)
         results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
-        self.assertTotalRunningTimes(results, rhel=HOURS_5)
+
+        self.assertTotalRunningTimes(
+            results,
+            rhel=HOURS_5,
+            rhel_memory=HOURS_5 * self.instance['memory'],
+            rhel_vcpu=HOURS_5 * self.instance['vcpu']
+        )
         self.assertDaysSeen(results, rhel=1)
         self.assertInstancesSeen(results, rhel=1)
 
@@ -251,7 +284,12 @@ class GetDailyUsageBasicInstanceTest(GetDailyUsageTestBase):
         )
         self.generate_events(powered_times)
         results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
-        self.assertTotalRunningTimes(results, rhel=HOURS_5)
+        self.assertTotalRunningTimes(
+            results,
+            rhel=HOURS_5,
+            rhel_memory=HOURS_5 * self.instance['memory'],
+            rhel_vcpu=HOURS_5 * self.instance['vcpu']
+        )
         self.assertDaysSeen(results, rhel=1)
         self.assertInstancesSeen(results, rhel=1)
 
@@ -273,7 +311,12 @@ class GetDailyUsageBasicInstanceTest(GetDailyUsageTestBase):
         )
         self.generate_events(powered_times)
         results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
-        self.assertTotalRunningTimes(results, rhel=HOURS_5)
+        self.assertTotalRunningTimes(
+            results,
+            rhel=HOURS_5,
+            rhel_memory=HOURS_5 * self.instance['memory'],
+            rhel_vcpu=HOURS_5 * self.instance['vcpu']
+        )
         self.assertDaysSeen(results, rhel=1)
         self.assertInstancesSeen(results, rhel=1)
 
@@ -290,7 +333,12 @@ class GetDailyUsageBasicInstanceTest(GetDailyUsageTestBase):
         powered_times = ((util_helper.utc_dt(2018, 1, 31, 19, 0, 0), None),)
         self.generate_events(powered_times)
         results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
-        self.assertTotalRunningTimes(results, rhel=HOURS_5)
+        self.assertTotalRunningTimes(
+            results,
+            rhel=HOURS_5,
+            rhel_memory=HOURS_5 * self.instance['memory'],
+            rhel_vcpu=HOURS_5 * self.instance['vcpu']
+        )
         self.assertDaysSeen(results, rhel=1)
         self.assertInstancesSeen(results, rhel=1)
 
@@ -313,7 +361,12 @@ class GetDailyUsageBasicInstanceTest(GetDailyUsageTestBase):
         )
         self.generate_events(powered_times)
         results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
-        self.assertTotalRunningTimes(results, rhel=DAY * 5 + HOURS_5)
+        self.assertTotalRunningTimes(
+            results,
+            rhel=DAY * 5 + HOURS_5,
+            rhel_memory=(DAY * 5 + HOURS_5) * self.instance['memory'],
+            rhel_vcpu=(DAY * 5 + HOURS_5) * self.instance['vcpu']
+        )
         self.assertDaysSeen(results, rhel=6)
         self.assertInstancesSeen(results, rhel=1)
 
@@ -330,7 +383,12 @@ class GetDailyUsageBasicInstanceTest(GetDailyUsageTestBase):
         powered_times = ((util_helper.utc_dt(2017, 1, 1), None),)
         self.generate_events(powered_times)
         results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
-        self.assertTotalRunningTimes(results, rhel=DAYS_31)
+        self.assertTotalRunningTimes(
+            results,
+            rhel=DAYS_31,
+            rhel_memory=DAYS_31 * self.instance['memory'],
+            rhel_vcpu=DAYS_31 * self.instance['vcpu']
+        )
         self.assertDaysSeen(results, rhel=31)
         self.assertInstancesSeen(results, rhel=1)
 
@@ -349,7 +407,12 @@ class GetDailyUsageBasicInstanceTest(GetDailyUsageTestBase):
         )
         self.generate_events(powered_times)
         results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
-        self.assertTotalRunningTimes(results, rhel=DAYS_31)
+        self.assertTotalRunningTimes(
+            results,
+            rhel=DAYS_31,
+            rhel_memory=DAYS_31 * self.instance['memory'],
+            rhel_vcpu=DAYS_31 * self.instance['vcpu']
+        )
         self.assertDaysSeen(results, rhel=31)
         self.assertInstancesSeen(results, rhel=1)
 
@@ -378,9 +441,41 @@ class GetDailyUsageBasicInstanceTest(GetDailyUsageTestBase):
         )
         self.generate_events(powered_times)
         results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
-        self.assertTotalRunningTimes(results, rhel=HOURS_15)
+        self.assertTotalRunningTimes(
+            results,
+            rhel=HOURS_15,
+            rhel_memory=HOURS_15 * self.instance['memory'],
+            rhel_vcpu=HOURS_15 * self.instance['vcpu']
+        )
         self.assertDaysSeen(results, rhel=3)
         self.assertInstancesSeen(results, rhel=1)
+
+    def test_usage_nonexistent_instance_type(self):
+        """Assert memory and vcpu usage is 0, if instance type is not valid."""
+        powered_times = (
+            (
+                util_helper.utc_dt(2018, 1, 10, 0, 0, 0),
+                util_helper.utc_dt(2018, 1, 10, 5, 0, 0)
+            ),
+        )
+        account_helper.generate_aws_instance_events(
+            self.instance_1,
+            powered_times,
+            self.image_rhel_ocp.ec2_ami_id,
+            instance_type='i-dont-exist'
+        )
+        results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
+        self.assertTotalRunningTimes(
+            results,
+            rhel=HOURS_5,
+            rhel_memory=0,
+            rhel_vcpu=0,
+            openshift=HOURS_5,
+            openshift_memory=0,
+            openshift_vcpu=0
+        )
+        self.assertDaysSeen(results, rhel=1, openshift=1)
+        self.assertInstancesSeen(results, rhel=1, openshift=1)
 
 
 class GetDailyUsageTwoRhelInstancesTest(GetDailyUsageTestBase):
@@ -419,7 +514,12 @@ class GetDailyUsageTwoRhelInstancesTest(GetDailyUsageTestBase):
         self.generate_events(powered_times, instance=self.instance_2)
 
         results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
-        self.assertTotalRunningTimes(results, rhel=HOURS_10)
+        self.assertTotalRunningTimes(
+            results,
+            rhel=HOURS_10,
+            rhel_memory=HOURS_10 * self.instance['memory'],
+            rhel_vcpu=HOURS_10 * self.instance['vcpu']
+        )
         self.assertDaysSeen(results, rhel=2)
         self.assertInstancesSeen(results, rhel=2)
 
@@ -452,7 +552,12 @@ class GetDailyUsageTwoRhelInstancesTest(GetDailyUsageTestBase):
         self.generate_events(powered_times, self.instance_2)
 
         results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
-        self.assertTotalRunningTimes(results, rhel=HOURS_10)
+        self.assertTotalRunningTimes(
+            results,
+            rhel=HOURS_10,
+            rhel_memory=HOURS_10 * self.instance['memory'],
+            rhel_vcpu=HOURS_10 * self.instance['vcpu']
+        )
         self.assertDaysSeen(results, rhel=1)
         self.assertInstancesSeen(results, rhel=2)
 
@@ -493,7 +598,15 @@ class GetDailyUsageOneRhelOneOpenShiftInstanceTest(GetDailyUsageTestBase):
         self.generate_events(powered_times, self.instance_2, self.image_ocp)
 
         results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
-        self.assertTotalRunningTimes(results, rhel=HOURS_5, openshift=HOURS_5)
+        self.assertTotalRunningTimes(
+            results,
+            rhel=HOURS_5,
+            openshift=HOURS_5,
+            rhel_memory=HOURS_5 * self.instance['memory'],
+            rhel_vcpu=HOURS_5 * self.instance['vcpu'],
+            openshift_memory=HOURS_5 * self.instance['memory'],
+            openshift_vcpu=HOURS_5 * self.instance['vcpu']
+        )
         self.assertDaysSeen(results, rhel=1, openshift=1)
         self.assertInstancesSeen(results, rhel=1, openshift=1)
 
@@ -526,7 +639,15 @@ class GetDailyUsageOneRhelOneOpenShiftInstanceTest(GetDailyUsageTestBase):
         self.generate_events(powered_times, self.instance_2, self.image_ocp)
 
         results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
-        self.assertTotalRunningTimes(results, rhel=HOURS_5, openshift=HOURS_5)
+        self.assertTotalRunningTimes(
+            results,
+            rhel=HOURS_5,
+            openshift=HOURS_5,
+            rhel_memory=HOURS_5 * self.instance['memory'],
+            rhel_vcpu=HOURS_5 * self.instance['vcpu'],
+            openshift_memory=HOURS_5 * self.instance['memory'],
+            openshift_vcpu=HOURS_5 * self.instance['vcpu']
+        )
         self.assertDaysSeen(results, rhel=1, openshift=1)
         self.assertInstancesSeen(results, rhel=1, openshift=1)
 
@@ -569,6 +690,7 @@ class GetDailyUsageComplexInstancesTest(GetDailyUsageTestBase):
             self.instance_1,
             powered_times_1,
             ec2_ami_id=self.image_rhel.ec2_ami_id,
+            instance_type=self.instance_type
         )
 
         powered_times_2 = (
@@ -585,6 +707,7 @@ class GetDailyUsageComplexInstancesTest(GetDailyUsageTestBase):
             self.instance_2,
             powered_times_2,
             ec2_ami_id=self.image_rhel.ec2_ami_id,
+            instance_type=self.instance_type
         )
 
         powered_times_3 = (
@@ -597,6 +720,7 @@ class GetDailyUsageComplexInstancesTest(GetDailyUsageTestBase):
             self.instance_3,
             powered_times_3,
             ec2_ami_id=self.image_plain.ec2_ami_id,
+            instance_type=self.instance_type
         )
 
         powered_times_4 = (
@@ -609,6 +733,7 @@ class GetDailyUsageComplexInstancesTest(GetDailyUsageTestBase):
             self.instance_4,
             powered_times_4,
             ec2_ami_id=self.image_ocp.ec2_ami_id,
+            instance_type=self.instance_type
         )
 
         powered_times_5 = (
@@ -625,6 +750,7 @@ class GetDailyUsageComplexInstancesTest(GetDailyUsageTestBase):
             self.instance_5,
             powered_times_5,
             ec2_ami_id=self.image_rhel_ocp.ec2_ami_id,
+            instance_type=self.instance_type
         )
 
         results = reports.get_daily_usage(
@@ -638,7 +764,15 @@ class GetDailyUsageComplexInstancesTest(GetDailyUsageTestBase):
 
         # total of rhel seconds should be 13 days worth of seconds.
         # total of openshift seconds should be 6 days worth of seconds.
-        self.assertTotalRunningTimes(results, rhel=DAY * 13, openshift=DAY * 6)
+        self.assertTotalRunningTimes(
+            results,
+            rhel=DAY * 13,
+            openshift=DAY * 6,
+            rhel_memory=DAY * 13 * self.instance['memory'],
+            rhel_vcpu=DAY * 13 * self.instance['vcpu'],
+            openshift_memory=DAY * 6 * self.instance['memory'],
+            openshift_vcpu=DAY * 6 * self.instance['vcpu']
+        )
 
         # number of individual days in which we saw anything rhel is 10
         # number of individual days in which we saw anything openshift is 4
@@ -755,6 +889,8 @@ class GetCloudAccountOverview(TestCase):
 
         self.start_future = util_helper.utc_dt(3000, 1, 1, 0, 0, 0)
         self.end_future = util_helper.utc_dt(3000, 2, 1, 0, 0, 0)
+
+        account_helper.generate_aws_ec2_definitions()
 
     def assertExpectedAccountOverview(self, overview, account,
                                       images=0, instances=0,

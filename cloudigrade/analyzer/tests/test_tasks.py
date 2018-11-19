@@ -7,15 +7,13 @@ import faker
 from django.conf import settings
 from django.test import TestCase
 
-from account.models import (AwsEC2InstanceDefinitions,
-                            AwsInstance,
+from account.models import (AwsInstance,
                             AwsInstanceEvent,
                             AwsMachineImage,
                             InstanceEvent)
 from account.tests import helper as account_helper
 from analyzer import tasks
 from analyzer.tests import helper as analyzer_helper
-from util.exceptions import EC2InstanceDefinitionNotFound
 from util.tests import helper as util_helper
 
 _faker = faker.Faker()
@@ -713,17 +711,6 @@ class AnalyzeLogTest(TestCase):
         instance = mock_lookup()
         self.assertEqual(mock_instance_definition, instance)
         mock_remap.assert_not_called()
-
-    @patch('analyzer.tasks.repopulate_ec2_instance_mapping.delay')
-    @patch('analyzer.tasks.AwsEC2InstanceDefinitions.objects.get')
-    def test_get_instance_definition_triggers_task(
-            self, mock_lookup, mock_remap):
-        """Test that task isn't ran if instance definition already exists."""
-        mock_lookup.side_effect = AwsEC2InstanceDefinitions.DoesNotExist()
-        with self.assertRaises(EC2InstanceDefinitionNotFound):
-            tasks._get_instance_definition('t3.nano')
-
-        mock_remap.assert_called()
 
     @patch('analyzer.tasks.AwsEC2InstanceDefinitions.objects.update_or_create')
     @patch('json.load')

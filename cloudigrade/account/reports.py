@@ -8,7 +8,10 @@ import operator
 from django.db import models
 from django.utils.translation import gettext as _
 
-from account.models import Account, Instance, InstanceEvent
+from account.models import (Account,
+                            AwsEC2InstanceDefinitions,
+                            Instance,
+                            InstanceEvent)
 
 logger = logging.getLogger(__name__)
 
@@ -189,12 +192,18 @@ def _calculate_daily_usage(start, end, instance_events):
         rhel_seconds = 0.0
         openshift_seconds = 0.0
 
+        rhel_vcpu = 0.0
+        openshift_vcpu = 0.0
+        rhel_mem = 0.0
+        openshift_mem = 0.0
+
         for instance, events in instance_events.items():
-            runtime = _calculate_instance_usage(
+            usage = _calculate_instance_usage(
                 period_start,
                 period_end,
                 events,
             )
+            runtime = usage['runtime']
 
             if runtime == 0.0 or runtime is None:
                 # No runtime? No updates to counters.
@@ -222,10 +231,15 @@ def _calculate_daily_usage(start, end, instance_events):
                 rhel_instance_count += 1
                 instance_ids_seen_with_rhel.add(instance.id)
                 rhel_seconds += runtime
+                rhel_mem += usage['memory']
+                rhel_vcpu += usage['vcpu']
+
             if image.id in image_ids_seen_with_openshift:
                 openshift_instance_count += 1
                 instance_ids_seen_with_openshift.add(instance.id)
                 openshift_seconds += runtime
+                openshift_mem += usage['memory']
+                openshift_vcpu += usage['vcpu']
 
         daily_usage.append({
             'date': period_start,
@@ -233,6 +247,10 @@ def _calculate_daily_usage(start, end, instance_events):
             'openshift_instances': openshift_instance_count,
             'rhel_runtime_seconds': rhel_seconds,
             'openshift_runtime_seconds': openshift_seconds,
+            'rhel_vcpu_seconds': rhel_vcpu,
+            'openshift_vcpu_seconds': openshift_vcpu,
+            'rhel_memory_seconds': rhel_mem,
+            'openshift_memory_seconds': openshift_mem
         })
 
     return {
@@ -260,11 +278,18 @@ def _calculate_instance_usage(start, end, events):
     """
     last_started = None
     time_running = 0.0
+    vcpu_usage = 0.0
+    mem_usage = 0.0
 
     # If start is after the current time, we cannot make any
     # meaningful assumptions about the runtime.
     if start > datetime.datetime.now(datetime.timezone.utc):
-        return None
+        usage = {
+            'runtime': None,
+            'memory': None,
+            'vcpu': None
+        }
+        return usage
 
     sorted_events = sorted(events, key=lambda e: e.occurred_at)
 
@@ -278,6 +303,18 @@ def _calculate_instance_usage(start, end, events):
         )
     )
 
+    # find out what the instance type is at the start of the time period
+    instance_events = list(filter(
+        lambda event: event.instance_type is not None,
+        list(
+            filter(lambda event: event.occurred_at < start, sorted_events)
+        )
+    ))
+    if instance_events == []:
+        instance_type = None
+    else:
+        instance_type = instance_events[-1].instance_type
+
     after_start = [event for event in sorted_events
                    if start <= event.occurred_at < end]
     sorted_trimmed_events = before_start + after_start
@@ -290,19 +327,79 @@ def _calculate_instance_usage(start, end, events):
                 event.event_type == InstanceEvent.TYPE.power_on:
             # hold the time only if new event is ON and was previously OFF
             last_started = event_time
+            if event.instance_type is not None:
+                instance_type = event.instance_type
+
+        elif event.event_type == InstanceEvent.TYPE.attribute_change:
+            instance_type = event.instance_type
+
         elif last_started and \
                 event.event_type == InstanceEvent.TYPE.power_off:
             # add the time if new event is OFF and was previously ON
             diff = event_time - last_started
             time_running += diff.total_seconds()
+
+            vcpu, mem = _get_vcpu_memory_usage(
+                diff.total_seconds(),
+                instance_type
+            )
+            vcpu_usage += vcpu
+            mem_usage += mem
+
             # drop the started time, implying that the instance is now OFF
             last_started = None
 
     if last_started:
         diff = end - last_started
         time_running += diff.total_seconds()
+        vcpu, mem = _get_vcpu_memory_usage(diff.total_seconds(), instance_type)
+        vcpu_usage += vcpu
+        mem_usage += mem
 
-    return time_running
+    usage = {
+        'runtime': time_running,
+        'memory': mem_usage,
+        'vcpu': vcpu_usage
+    }
+
+    return usage
+
+
+def _get_vcpu_memory_usage(time_running, instance_type):
+    """
+    Calculate Vcpu and memory usage for some instance type and runtime.
+
+    If the AwsEC2InstanceDefinitions for the given instance_type cannot be
+    found, log an error and return 0 for vcpu and memory usage. N
+
+    Args:
+        time_running (int): Time that the instance has ran, in seconds
+        instance_type (str): Type of the running instance
+
+    Returns:
+        (float, float): A tuple of vcpu usage (in seconds),
+                        and memory usage (in seconds)
+
+    """
+    if time_running == 0.0 or instance_type is None:
+        return (0, 0)
+
+    try:
+        instance_definition = AwsEC2InstanceDefinitions.objects.get(
+            instance_type=instance_type
+        )
+        vcpu_usage = time_running * instance_definition.vcpu
+        mem_usage = time_running * instance_definition.memory
+
+        return (vcpu_usage, mem_usage)
+
+    except AwsEC2InstanceDefinitions.DoesNotExist:
+        logger.error(
+            _(
+                'Could not find instance type {} in mapping table.'
+            ).format(instance_type)
+        )
+        return (0, 0)
 
 
 def validate_event(event, start):
@@ -516,7 +613,7 @@ def get_image_usages_for_account(start, end, account_id):
 
     images = collections.defaultdict(ImageActivityData)
     for instance, events in instance_events.items():
-        runtime = _calculate_instance_usage(start, end, events)
+        runtime = _calculate_instance_usage(start, end, events)['runtime']
         if not runtime:
             continue
         image = _get_image_from_instance_events(events)

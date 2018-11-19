@@ -147,6 +147,7 @@ class CloudAccountOverviewViewSetTest(TestCase):
             'openshift_instances': 1,
             'rhel_runtime_seconds': runtime,
             'openshift_runtime_seconds': runtime}
+        account_helper.generate_aws_ec2_definitions()
 
     def get_overview_list_response(self, user, data=None, name_pattern=None,
                                    account_id=None):

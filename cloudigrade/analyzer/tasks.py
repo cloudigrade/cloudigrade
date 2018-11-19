@@ -19,8 +19,7 @@ from account.util import (save_instance_events,
 from util import aws
 from util.aws import is_instance_windows, rewrap_aws_errors
 from util.celery import retriable_shared_task
-from util.exceptions import (CloudTrailLogAnalysisMissingData,
-                             EC2InstanceDefinitionNotFound)
+from util.exceptions import CloudTrailLogAnalysisMissingData
 
 logger = logging.getLogger(__name__)
 
@@ -610,38 +609,3 @@ def repopulate_ec2_instance_mapping():
                 ).format(instance_metadata.get('memory', 0))
             )
     logger.info('Finished saving AWS EC2 instance type information.')
-
-
-def _get_instance_definition(instance_type):
-    """
-    Get information about an AWS EC2 instance (e.g. memory, vcpu).
-
-    If the instance_type does not exist in this table, kick off a
-    new task to repopulate this table from an AWS pricing endpoint.
-
-    Args:
-        instance_type (str): Lookup the definition for this instance_type
-
-    Returns:
-        instance (django.models.AwsEC2InstanceDefinitions): model
-        corresponding to the given instance_type.
-
-    Raises:
-        EC2InstanceDefinitionNotFound: If instance_type is not found
-
-    """
-    try:
-        model = AwsEC2InstanceDefinitions.objects.get(
-            instance_type=instance_type
-        )
-        return model
-
-    except AwsEC2InstanceDefinitions.DoesNotExist:
-        logger.info(
-            _(
-                'Could not find instance type {} in mapping table, '
-                'repopulating table with latest amazon information.'
-            ).format(instance_type)
-        )
-        repopulate_ec2_instance_mapping.delay()
-        raise EC2InstanceDefinitionNotFound

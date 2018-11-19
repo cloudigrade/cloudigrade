@@ -81,6 +81,7 @@ class DailyInstanceActivityViewSetTest(TestCase):
 
         self.start = util_helper.utc_dt(2018, 1, 1, 0, 0, 0)
         self.end = util_helper.utc_dt(2018, 2, 1, 0, 0, 0)
+        account_helper.generate_aws_ec2_definitions()
 
     def get_report_response(self, as_user, start, end, user_id=None,
                             name_pattern=None, account_id=None):

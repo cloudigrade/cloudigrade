@@ -4,6 +4,7 @@ import random
 import uuid
 
 from account.models import (AwsAccount,
+                            AwsEC2InstanceDefinitions,
                             AwsInstance,
                             AwsInstanceEvent,
                             AwsMachineImage,
@@ -96,7 +97,9 @@ def generate_single_aws_instance_event(
 
     """
     if instance_type is None:
-        instance_type = random.choice(helper.SOME_EC2_INSTANCE_TYPES)
+        instance_type = random.choice(tuple(
+            helper.SOME_EC2_INSTANCE_TYPES.keys()
+        ))
     if subnet is None:
         subnet = helper.generate_dummy_subnet_id()
     if event_type is None:
@@ -155,7 +158,9 @@ def generate_aws_instance_events(
     elif ec2_ami_id is None:
         ec2_ami_id = helper.generate_dummy_image_id()
     if instance_type is None:
-        instance_type = random.choice(helper.SOME_EC2_INSTANCE_TYPES)
+        instance_type = random.choice(tuple(
+            helper.SOME_EC2_INSTANCE_TYPES.keys()
+        ))
     if subnet is None:
         subnet = helper.generate_dummy_subnet_id()
 
@@ -241,3 +246,15 @@ def generate_aws_image(owner_aws_account_id=None,
         openshift_challenged=openshift_challenged
     )
     return image
+
+
+def generate_aws_ec2_definitions():
+    """Generate all defined AwsEC2InstanceDefinitions."""
+    instance_types = helper.SOME_EC2_INSTANCE_TYPES
+
+    for name, instance in instance_types.items():
+        AwsEC2InstanceDefinitions.objects.create(
+            instance_type=name,
+            memory=instance['memory'],
+            vcpu=instance['vcpu']
+        )
