@@ -302,7 +302,7 @@ Response:
         "user_id": 2
     }
 
-Because PATCH is intended to replace objects, it must include all potentially
+Because PUT is intended to replace objects, it must include all potentially
 writable fields, which includes "name" and "account_arn".
 
 Request:
