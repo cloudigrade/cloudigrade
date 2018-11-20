@@ -112,7 +112,7 @@ Create an AWS account
 ~~~~~~~~~~~~~~~~~~~~~
 
 This request may take a few seconds because of multiple round-trip calls
-to the AWS APIs for each region. The "name" attribute is optional and has a
+to the AWS APIs for each region. The "name" attribute is required and has a
 maximum supported length of 256 characters.
 
 Request:
@@ -147,42 +147,6 @@ Response:
         "resourcetype": "AwsAccount",
         "updated_at": "2018-07-05T16:00:24.473360Z",
         "url": "http://localhost:8080/api/v1/account/3/",
-        "user_id": 2
-    }
-
-If not specified, the account is created with a ``null`` value for "name".
-
-Request:
-
-.. code:: bash
-
-    http post localhost:8080/api/v1/account/ "${AUTH}" \
-        resourcetype="AwsAccount" \
-        account_arn="arn:aws:iam::273470430754:role/role-for-cloudigrade"
-
-Response:
-
-::
-
-    HTTP/1.1 201 Created
-    Allow: GET, POST, HEAD, OPTIONS
-    Content-Length: 294
-    Content-Type: application/json
-    Date: Thu, 05 Jul 2018 16:01:30 GMT
-    Location: http://localhost:8080/api/v1/account/4/
-    Server: WSGIServer/0.2 CPython/3.6.5
-    Vary: Accept
-    X-Frame-Options: SAMEORIGIN
-
-    {
-        "account_arn": "arn:aws:iam::273470430754:role/role-for-cloudigrade",
-        "aws_account_id": "273470430754",
-        "created_at": "2018-07-05T16:01:30.046877Z",
-        "id": 4,
-        "name": null,
-        "resourcetype": "AwsAccount",
-        "updated_at": "2018-07-05T16:01:30.046910Z",
-        "url": "http://localhost:8080/api/v1/account/4/",
         "user_id": 2
     }
 
