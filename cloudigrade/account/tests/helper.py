@@ -1,12 +1,17 @@
 """Helper functions for generating test data."""
+import functools
 import json
 import logging
 import random
 import uuid
+from unittest.mock import patch
 
 import faker
 from django.conf import settings
+from django.contrib.auth.models import User
+from rest_framework.test import APIClient
 
+from account import tasks
 from account.models import (AwsAccount, AwsEC2InstanceDefinitions, AwsInstance,
                             AwsInstanceEvent, AwsMachineImage,
                             CLOUD_ACCESS_NAME_TOKEN, InstanceEvent,
@@ -16,6 +21,126 @@ from util.tests import helper
 
 _faker = faker.Faker()
 logger = logging.getLogger(__name__)
+
+
+class SandboxedRestClient(object):
+    """
+    Very special REST client intended only for local sandbox testing.
+
+    This client short-circuits some otherwise important behaviors so we don't
+    make calls to the real public clouds when interacting with objects. These
+    short-circuited behaviors all simulate "happy path" responses from the
+    public clouds.
+
+    This client can be useful for testing the general interaction and output of
+    our APIs when we do not expect or need to override specific responses from
+    the real public clouds.
+    """
+
+    def __init__(self):
+        """Initialize the client."""
+        self.client = APIClient()
+        self.authenticated_user = None
+        self.bypass_aws_calls = True
+        self.aws_account_verified = True
+        self.aws_primary_account_id = int(
+            helper.generate_dummy_aws_account_id()
+        )
+
+    def _call_api(self, verb, path, data=None):
+        """
+        Make the simulated API call, optionally patching cloud interactions.
+
+        If `self.bypass_aws_calls` is True, the following objects are patched
+        so we remain more truly "sandboxed" for the call:
+
+        - aws.verify_account_access is used in account creation
+        - aws.sts.boto3 is used in account creation
+        - aws.disable_cloudtrail is used in account deletion
+        - aws.get_session is used in account deletion
+        - aws.sts._get_primary_account_id is used in sysconfig
+        - tasks.initial_aws_describe_instances is used in account creation
+
+        Returns:
+            rest_framework.response.Response
+
+        """
+        if self.bypass_aws_calls:
+            with patch.object(
+                aws, 'verify_account_access'
+            ) as mock_verify, patch.object(aws.sts, 'boto3'), patch.object(
+                aws, 'disable_cloudtrail'
+            ), patch.object(
+                aws, 'get_session'
+            ), patch.object(
+                aws.sts, '_get_primary_account_id'
+            ) as mock_get_primary_account_id, patch.object(
+                tasks, 'initial_aws_describe_instances'
+            ):
+                mock_verify.return_value = self.aws_account_verified, []
+                mock_get_primary_account_id.return_value = (
+                    self.aws_primary_account_id
+                )
+                response = getattr(self.client, verb)(path, data=data)
+        else:
+            response = getattr(self.client, verb)(path, data=data)
+        return response
+
+    def __getattr__(self, item):
+        """
+        Get an appropriate RESTful API-calling method.
+
+        If we want to customize any specific API's behavior, we can simply add
+        a new method to this class following the "verb_noun" pattern. For
+        example, "create_account" would handle POSTs to the account API.
+        """
+        try:
+            verb, noun = item.split('_')
+            if verb == 'list':
+                verb = 'get'
+            elif verb == 'create':
+                verb = 'post'
+            return functools.partial(self.verb_noun, verb, noun)
+        except Exception:
+            raise AttributeError(
+                f'\'{self.__class__.__name__}\' object '
+                f'has no attribute \'{item}\''
+            )
+
+    def _force_authenticate(self, user):
+        """Force client authentication as the given user."""
+        self.authenticated_user = user
+        self.client.force_authenticate(self.authenticated_user)
+
+    def login(self, username, password):
+        """Log in with the given credentials and authenticate future calls."""
+        response = self._call_api(
+            verb='post',
+            path='/auth/token/create/',
+            data={'username': username, 'password': password},
+        )
+        if response.status_code == 200:
+            user = User.objects.get(username=username)
+            self._force_authenticate(user)
+
+        return response
+
+    def logout(self):
+        """Log out and reset authentication for future calls."""
+        response = self._call_api(verb='post', path='/auth/token/destroy/')
+        self._force_authenticate(None)
+        return response
+
+    def verb_noun(self, verb, noun, noun_id=None, data=None):
+        """Make a simulated REST API call for the given inputs."""
+        if noun_id:
+            path = f'/api/v1/{noun}/{noun_id}/'
+        elif verb == 'report':
+            path = f'/api/v1/report/{noun}/'
+            verb = 'get'
+        else:
+            path = f'/api/v1/{noun}/'
+        return self._call_api(verb=verb, path=path, data=data)
 
 
 def generate_aws_account(arn=None, aws_account_id=None, user=None, name=None,

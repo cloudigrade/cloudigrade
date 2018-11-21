@@ -9,6 +9,7 @@ import string
 import uuid
 
 import faker
+from django.contrib.auth.models import User
 from django.test import TestCase
 
 from util import aws
@@ -240,3 +241,27 @@ class UtilHelperTest(TestCase):
         instance_id = helper.generate_dummy_instance_id()
         instance = helper.generate_mock_ec2_instance_incomplete(instance_id)
         self.assertIncompleteInstanceRaisesAttributeErrors(instance)
+
+    def test_get_test_user_creates(self):
+        """Assert get_test_user creates a user when it doesn't yet exist."""
+        user = helper.get_test_user()
+        self.assertIsNotNone(user)
+
+    def test_get_test_user_updates_without_password(self):
+        """Assert get_test_user gets and updates user if found."""
+        email = f'{_faker.slug()}@example.com'
+        original_user = User.objects.create_user(email)
+        user = helper.get_test_user(email, is_superuser=True)
+        original_user.refresh_from_db()
+        self.assertEqual(user, original_user)
+        self.assertTrue(user.is_superuser)
+
+    def test_get_test_user_updates_with_password(self):
+        """Assert get_test_user updates user with password if found."""
+        email = f'{_faker.slug()}@example.com'
+        password = _faker.uuid4()
+        original_user = User.objects.create_user(email)
+        user = helper.get_test_user(email, password)
+        original_user.refresh_from_db()
+        self.assertEqual(user, original_user)
+        self.assertTrue(user.check_password(password))

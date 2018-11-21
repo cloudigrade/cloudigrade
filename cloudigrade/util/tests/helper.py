@@ -444,12 +444,13 @@ def utc_dt(*args, **kwargs):
     )
 
 
-def generate_test_user(email=None, is_superuser=False):
+def generate_test_user(email=None, password=None, is_superuser=False):
     """
     Generate and save a user for testing.
 
     Args:
         email (str): optional email address
+        password (str): optional password
         is_superuser (bool): create as a superuser if True
 
     Returns:
@@ -461,10 +462,36 @@ def generate_test_user(email=None, is_superuser=False):
         # confident that the address domain is not real.
         name = ''.join(random.choice(string.ascii_letters) for __ in range(32))
         email = f'{name}@mail.127.0.0.1.nip.io'
+    if not password:
+        password = str(uuid.uuid4())
     user = User.objects.create_user(
         username=email,
         email=email,
-        password=''.join(random.choice(string.printable) for __ in range(128)),
+        password=password,
         is_superuser=is_superuser,
     )
+    return user
+
+
+def get_test_user(email=None, password=None, is_superuser=False):
+    """
+    Get user with updated password and superuser, creating if it doesn't exist.
+
+    Args:
+        email (str): optional email address
+        password (str): optional password
+        is_superuser (bool): create (or update) as a superuser if True
+
+    Returns:
+        User: created Django auth User
+
+    """
+    try:
+        user = User.objects.get(username=email)
+        if password:
+            user.set_password(password)
+        user.is_superuser = is_superuser
+        user.save()
+    except User.DoesNotExist:
+        user = generate_test_user(email, password, is_superuser)
     return user

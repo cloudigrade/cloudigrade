@@ -2,6 +2,7 @@
 
 Because even test helpers should be tested!
 """
+import http
 import random
 import re
 import uuid
@@ -25,6 +26,75 @@ from account.tests import helper
 from util.tests import helper as util_helper
 
 _faker = faker.Faker()
+
+
+class SandboxedRestClientTest(TestCase):
+    """SandboxedRestClient tests."""
+
+    def setUp(self):
+        """Set up user for the client tests."""
+        self.username = f'{_faker.slug()}@example.com'
+        self.password = _faker.slug()
+        self.user = util_helper.generate_test_user(
+            self.username, self.password
+        )
+
+    def test_login_logout(self):
+        """Assert login and logout work."""
+        client = helper.SandboxedRestClient()
+        response = client.login(self.username, self.password)
+        self.assertEqual(response.status_code, http.HTTPStatus.OK)
+        self.assertIn('auth_token', response.json())
+        response = client.logout()
+        self.assertEqual(response.status_code, http.HTTPStatus.NO_CONTENT)
+
+    def test_list_noun(self):
+        """Assert "list" requests work."""
+        client = helper.SandboxedRestClient()
+        client._force_authenticate(self.user)
+        response = client.list_account()
+        self.assertEqual(response.status_code, http.HTTPStatus.OK)
+        response_json = response.json()
+        self.assertIn('results', response_json)
+        self.assertIsInstance(response_json['results'], list)
+        self.assertIn('count', response_json)
+        self.assertIn('next', response_json)
+        self.assertIn('previous', response_json)
+
+    def test_create_noun(self):
+        """Assert "create" requests work."""
+        client = helper.SandboxedRestClient()
+        client._force_authenticate(self.user)
+        arn = util_helper.generate_dummy_arn()
+        name = _faker.sentence()
+        response = client.create_account(
+            data={
+                'account_arn': arn,
+                'name': name,
+                'resourcetype': 'AwsAccount',
+            }
+        )
+        self.assertEqual(response.status_code, http.HTTPStatus.CREATED)
+        response_json = response.json()
+        self.assertEqual(response_json['account_arn'], arn)
+        self.assertEqual(response_json['name'], name)
+        self.assertEqual(response_json['user_id'], self.user.id)
+
+    def test_get_noun(self):
+        """Assert "get" requests work."""
+        client = helper.SandboxedRestClient()
+        client._force_authenticate(self.user)
+        account = helper.generate_aws_account(user=self.user)
+        response = client.get_account(account.id)
+        self.assertEqual(response.status_code, http.HTTPStatus.OK)
+        response_json = response.json()
+        self.assertEqual(response_json['id'], account.id)
+
+    def test_invalid_request(self):
+        """Assert invalid requests raise AttributeError."""
+        client = helper.SandboxedRestClient()
+        with self.assertRaises(AttributeError):
+            client.foo_bar()
 
 
 class GenerateAwsAccountTest(TestCase):
