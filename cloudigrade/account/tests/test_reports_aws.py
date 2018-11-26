@@ -909,13 +909,22 @@ class GetCloudAccountOverview(TestCase):
 
         account_helper.generate_aws_ec2_definitions()
 
+        self.instance_type = random.choice(tuple(
+            util_helper.SOME_EC2_INSTANCE_TYPES.keys()
+        ))
+        self.instance = util_helper.SOME_EC2_INSTANCE_TYPES[self.instance_type]
+
     def assertExpectedAccountOverview(self, overview, account,
                                       images=0, instances=0,
                                       rhel_instances=0, openshift_instances=0,
                                       rhel_runtime_seconds=0.0,
                                       openshift_runtime_seconds=0.0,
                                       rhel_images_challenged=0,
-                                      openshift_images_challenged=0):
+                                      openshift_images_challenged=0,
+                                      rhel_memory_seconds=0.0,
+                                      openshift_memory_seconds=0.0,
+                                      rhel_vcpu_seconds=0.0,
+                                      openshift_vcpu_seconds=0.0):
         """Assert results match the expected account info and counters."""
         expected_overview = {
             'id': account.id,
@@ -933,6 +942,10 @@ class GetCloudAccountOverview(TestCase):
             'openshift_runtime_seconds': openshift_runtime_seconds,
             'rhel_images_challenged': rhel_images_challenged,
             'openshift_images_challenged': openshift_images_challenged,
+            'rhel_memory_seconds': rhel_memory_seconds,
+            'openshift_memory_seconds': openshift_memory_seconds,
+            'rhel_vcpu_seconds': rhel_vcpu_seconds,
+            'openshift_vcpu_seconds': openshift_vcpu_seconds,
         }
         self.assertEqual(expected_overview, overview)
 
@@ -969,21 +982,25 @@ class GetCloudAccountOverview(TestCase):
         )
         account_helper.generate_aws_instance_events(
             self.instance_1, powered_times,
-            self.windows_image.ec2_ami_id
+            self.windows_image.ec2_ami_id,
         )
         # in addition to instance_1's events, we are creating an event for
         # instance_2 with a rhel_image
         account_helper.generate_single_aws_instance_event(
             self.instance_2, self.start, InstanceEvent.TYPE.power_on,
-            self.rhel_image.ec2_ami_id)
+            self.rhel_image.ec2_ami_id,
+            instance_type=self.instance_type
+        )
         overview = reports.get_account_overview(
             self.account, self.start, self.end)
         # we expect to find 2 total images, 2 total instances and 1 rhel
         # instance
-        self.assertExpectedAccountOverview(overview, self.account,
-                                           images=2, instances=2,
-                                           rhel_instances=1,
-                                           rhel_runtime_seconds=DAYS_31)
+        self.assertExpectedAccountOverview(
+            overview, self.account, images=2, instances=2, rhel_instances=1,
+            rhel_runtime_seconds=DAYS_31,
+            rhel_memory_seconds=DAYS_31 * self.instance['memory'],
+            rhel_vcpu_seconds=DAYS_31 * self.instance['vcpu']
+        )
 
     def test_get_cloud_account_overview_with_openshift_image(self):
         """Assert an account overview with events reports correctly."""
@@ -995,21 +1012,25 @@ class GetCloudAccountOverview(TestCase):
         )
         account_helper.generate_aws_instance_events(
             self.instance_1, powered_times,
-            self.windows_image.ec2_ami_id
+            self.windows_image.ec2_ami_id,
         )
         # in addition to instance_1's events, we are creating an event for
         # instance_2 with an openshift_image
         account_helper.generate_single_aws_instance_event(
             self.instance_2, self.start, InstanceEvent.TYPE.power_on,
-            self.openshift_image.ec2_ami_id)
+            self.openshift_image.ec2_ami_id,
+            instance_type=self.instance_type
+        )
         overview = reports.get_account_overview(
             self.account, self.start, self.end)
         # we expect to find 2 total images, 2 total instances and 1
         # openshift instance
-        self.assertExpectedAccountOverview(overview, self.account,
-                                           images=2, instances=2,
-                                           openshift_instances=1,
-                                           openshift_runtime_seconds=DAYS_31)
+        self.assertExpectedAccountOverview(
+            overview, self.account, images=2, instances=2,
+            openshift_instances=1, openshift_runtime_seconds=DAYS_31,
+            openshift_memory_seconds=DAYS_31 * self.instance['memory'],
+            openshift_vcpu_seconds=DAYS_31 * self.instance['vcpu']
+        )
 
     def test_get_cloud_account_overview_with_openshift_and_rhel_image(self):
         """Assert an account overview reports openshift and rhel correctly."""
@@ -1021,23 +1042,28 @@ class GetCloudAccountOverview(TestCase):
         )
         account_helper.generate_aws_instance_events(
             self.instance_1, powered_times,
-            self.windows_image.ec2_ami_id
+            self.windows_image.ec2_ami_id,
         )
         # in addition to instance_1's events, we are creating an event for
         # instance_2 with a rhel & openshift_image
         account_helper.generate_single_aws_instance_event(
             self.instance_2, self.start, InstanceEvent.TYPE.power_on,
-            self.openshift_and_rhel_image.ec2_ami_id)
+            self.openshift_and_rhel_image.ec2_ami_id,
+            instance_type=self.instance_type
+        )
         overview = reports.get_account_overview(
             self.account, self.start, self.end)
         # we expect to find 2 total images, 2 total instances, 1 rhel instance
         # and 1 openshift instance
-        self.assertExpectedAccountOverview(overview, self.account,
-                                           images=2, instances=2,
-                                           rhel_instances=1,
-                                           openshift_instances=1,
-                                           openshift_runtime_seconds=DAYS_31,
-                                           rhel_runtime_seconds=DAYS_31)
+        self.assertExpectedAccountOverview(
+            overview, self.account, images=2, instances=2, rhel_instances=1,
+            openshift_instances=1, openshift_runtime_seconds=DAYS_31,
+            rhel_runtime_seconds=DAYS_31,
+            openshift_memory_seconds=DAYS_31 * self.instance['memory'],
+            openshift_vcpu_seconds=DAYS_31 * self.instance['vcpu'],
+            rhel_memory_seconds=DAYS_31 * self.instance['memory'],
+            rhel_vcpu_seconds=DAYS_31 * self.instance['vcpu']
+        )
 
     def test_get_cloud_account_overview_with_challenged_images(self):
         """Assert an account overview reports challenged images correctly."""
@@ -1079,11 +1105,15 @@ class GetCloudAccountOverview(TestCase):
         # generate event for instance_1 with the rhel/openshift image
         account_helper.generate_single_aws_instance_event(
             self.instance_1, self.start, InstanceEvent.TYPE.power_on,
-            self.openshift_and_rhel_image.ec2_ami_id)
+            self.openshift_and_rhel_image.ec2_ami_id,
+            instance_type=self.instance_type
+        )
         # generate event for instance_2 with the rhel/openshift image
         account_helper.generate_single_aws_instance_event(
             self.instance_2, self.start, InstanceEvent.TYPE.power_on,
-            self.openshift_and_rhel_image.ec2_ami_id)
+            self.openshift_and_rhel_image.ec2_ami_id,
+            instance_type=self.instance_type
+        )
         overview = reports.get_account_overview(
             self.account, self.start, self.end)
         # assert that we only find the one image
@@ -1091,38 +1121,53 @@ class GetCloudAccountOverview(TestCase):
             overview, self.account, images=1, instances=2,
             rhel_instances=2, openshift_instances=2,
             openshift_runtime_seconds=DAYS_31 * 2,
-            rhel_runtime_seconds=DAYS_31 * 2)
+            rhel_runtime_seconds=DAYS_31 * 2,
+            openshift_memory_seconds=DAYS_31 * 2 * self.instance['memory'],
+            openshift_vcpu_seconds=DAYS_31 * 2 * self.instance['vcpu'],
+            rhel_memory_seconds=DAYS_31 * 2 * self.instance['memory'],
+            rhel_vcpu_seconds=DAYS_31 * 2 * self.instance['vcpu']
+        )
 
     def test_get_cloud_account_overview_with_rhel(self):
         """Assert an account overview reports rhel correctly."""
         # generate event for instance_1 with the rhel/openshift image
         account_helper.generate_single_aws_instance_event(
             self.instance_1, self.start, InstanceEvent.TYPE.power_on,
-            self.openshift_and_rhel_image.ec2_ami_id)
+            self.openshift_and_rhel_image.ec2_ami_id,
+            instance_type=self.instance_type
+        )
         # generate event for instance_2 with the rhel image
         account_helper.generate_single_aws_instance_event(
             self.instance_2, self.start, InstanceEvent.TYPE.power_on,
-            self.rhel_image.ec2_ami_id)
+            self.rhel_image.ec2_ami_id, instance_type=self.instance_type)
         overview = reports.get_account_overview(
             self.account, self.start, self.end)
         # assert that we only find the two rhel images
-        self.assertExpectedAccountOverview(overview, self.account,
-                                           images=2, instances=2,
-                                           rhel_instances=2,
-                                           openshift_instances=1,
-                                           rhel_runtime_seconds=DAYS_31 * 2,
-                                           openshift_runtime_seconds=DAYS_31)
+        self.assertExpectedAccountOverview(
+            overview, self.account, images=2, instances=2,
+            rhel_instances=2, openshift_instances=1,
+            rhel_runtime_seconds=DAYS_31 * 2,
+            openshift_runtime_seconds=DAYS_31,
+            openshift_memory_seconds=DAYS_31 * self.instance['memory'],
+            openshift_vcpu_seconds=DAYS_31 * self.instance['vcpu'],
+            rhel_memory_seconds=DAYS_31 * 2 * self.instance['memory'],
+            rhel_vcpu_seconds=DAYS_31 * 2 * self.instance['vcpu']
+        )
 
     def test_get_cloud_account_overview_with_openshift(self):
         """Assert an account overview reports openshift correctly."""
         # generate event for instance_1 with the rhel/openshift image
         account_helper.generate_single_aws_instance_event(
             self.instance_1, self.start, InstanceEvent.TYPE.power_on,
-            self.openshift_and_rhel_image.ec2_ami_id)
+            self.openshift_and_rhel_image.ec2_ami_id,
+            instance_type=self.instance_type
+        )
         # generate event for instance_2 with the openshift image
         account_helper.generate_single_aws_instance_event(
             self.instance_2, self.start, InstanceEvent.TYPE.power_on,
-            self.openshift_image.ec2_ami_id)
+            self.openshift_image.ec2_ami_id,
+            instance_type=self.instance_type
+        )
         overview = reports.get_account_overview(
             self.account, self.start, self.end)
         # assert that we only find the two openshift images
@@ -1130,7 +1175,12 @@ class GetCloudAccountOverview(TestCase):
             overview, self.account, images=2, instances=2,
             rhel_instances=1, openshift_instances=2,
             rhel_runtime_seconds=DAYS_31,
-            openshift_runtime_seconds=DAYS_31 * 2)
+            openshift_runtime_seconds=DAYS_31 * 2,
+            openshift_memory_seconds=DAYS_31 * 2 * self.instance['memory'],
+            openshift_vcpu_seconds=DAYS_31 * 2 * self.instance['vcpu'],
+            rhel_memory_seconds=DAYS_31 * self.instance['memory'],
+            rhel_vcpu_seconds=DAYS_31 * self.instance['vcpu']
+        )
 
     def test_get_cloud_account_overview_with_unknown_image(self):
         """Assert an account overview reports when images are unknown."""
@@ -1161,7 +1211,11 @@ class GetCloudAccountOverview(TestCase):
                                            rhel_runtime_seconds=None,
                                            openshift_runtime_seconds=None,
                                            rhel_images_challenged=None,
-                                           openshift_images_challenged=None)
+                                           openshift_images_challenged=None,
+                                           openshift_memory_seconds=None,
+                                           openshift_vcpu_seconds=None,
+                                           rhel_memory_seconds=None,
+                                           rhel_vcpu_seconds=None)
 
     def test_get_cloud_account_overview_account_creation_on(self):
         """Assert an overview of an account created on end reports None."""
@@ -1174,7 +1228,11 @@ class GetCloudAccountOverview(TestCase):
                                            rhel_runtime_seconds=None,
                                            openshift_runtime_seconds=None,
                                            rhel_images_challenged=None,
-                                           openshift_images_challenged=None)
+                                           openshift_images_challenged=None,
+                                           openshift_memory_seconds=None,
+                                           openshift_vcpu_seconds=None,
+                                           rhel_memory_seconds=None,
+                                           rhel_vcpu_seconds=None)
 
     def test_get_cloud_account_overview_future_start_end(self):
         """Assert an overview of an account created on end reports None."""
@@ -1187,7 +1245,11 @@ class GetCloudAccountOverview(TestCase):
                                            rhel_runtime_seconds=None,
                                            openshift_runtime_seconds=None,
                                            rhel_images_challenged=None,
-                                           openshift_images_challenged=None)
+                                           openshift_images_challenged=None,
+                                           openshift_memory_seconds=None,
+                                           openshift_vcpu_seconds=None,
+                                           rhel_memory_seconds=None,
+                                           rhel_vcpu_seconds=None)
 
     # the following tests are assuming that the events have been returned
     # from the _get_relevant_events() function which will only return events

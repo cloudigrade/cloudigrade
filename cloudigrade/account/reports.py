@@ -481,6 +481,10 @@ def get_account_overview(account, start, end):
         total_instances_openshift = None
         total_runtime_rhel = None
         total_runtime_openshift = None
+        total_memory_rhel = None
+        total_memory_openshift = None
+        total_vcpu_rhel = None
+        total_vcpu_openshift = None
 
     # if the account was created right at or after the end time, we cannot give
     # meaningful data about the instances/images seen during the period,
@@ -499,6 +503,10 @@ def get_account_overview(account, start, end):
         total_instances_openshift = None
         total_runtime_rhel = None
         total_runtime_openshift = None
+        total_memory_rhel = None
+        total_memory_openshift = None
+        total_vcpu_rhel = None
+        total_vcpu_openshift = None
     else:
         # _get_relevant_events will return the events in between the start &
         # end times & if no events are present during this period, it will
@@ -529,15 +537,21 @@ def get_account_overview(account, start, end):
         total_instances = len(instance_events.keys())
         total_instances_rhel = usage['instances_seen_with_rhel']
         total_instances_openshift = usage['instances_seen_with_openshift']
-        # sum the total rhel runtime across instances
-        total_runtime_rhel = functools.reduce(
-            lambda x, y: x + y['rhel_runtime_seconds'], usage['daily_usage'], 0
-        )
-        # sum the total openshift runtime across instances
-        total_runtime_openshift = functools.reduce(
-            lambda x, y: x + y['openshift_runtime_seconds'],
-            usage['daily_usage'], 0
-        )
+
+        total_runtime_rhel = 0
+        total_runtime_openshift = 0
+        total_memory_rhel = 0
+        total_memory_openshift = 0
+        total_vcpu_rhel = 0
+        total_vcpu_openshift = 0
+
+        for day in usage['daily_usage']:
+            total_runtime_rhel += day['rhel_runtime_seconds']
+            total_runtime_openshift += day['openshift_runtime_seconds']
+            total_memory_rhel += day['rhel_memory_seconds']
+            total_memory_openshift += day['openshift_memory_seconds']
+            total_vcpu_rhel += day['rhel_vcpu_seconds']
+            total_vcpu_openshift += day['openshift_vcpu_seconds']
 
     cloud_account = {
         'id': account.id,
@@ -555,6 +569,10 @@ def get_account_overview(account, start, end):
         'openshift_runtime_seconds': total_runtime_openshift,
         'rhel_images_challenged': total_challenged_images_rhel,
         'openshift_images_challenged': total_challenged_images_openshift,
+        'rhel_memory_seconds': total_memory_rhel,
+        'openshift_memory_seconds': total_memory_openshift,
+        'rhel_vcpu_seconds': total_vcpu_rhel,
+        'openshift_vcpu_seconds': total_vcpu_openshift,
     }
 
     return cloud_account

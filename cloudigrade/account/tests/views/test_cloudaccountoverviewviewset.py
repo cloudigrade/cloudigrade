@@ -1,4 +1,6 @@
 """Collection of tests for CloudAccountOverviewViewSet."""
+import random
+
 from django.test import TestCase
 from rest_framework.test import APIRequestFactory, force_authenticate
 
@@ -50,6 +52,11 @@ class CloudAccountOverviewViewSetTest(TestCase):
             account_helper.generate_aws_instance(account=self.account3)
         self.instance4 = \
             account_helper.generate_aws_instance(account=self.account4)
+
+        self.instance_type = random.choice(tuple(
+            util_helper.SOME_EC2_INSTANCE_TYPES.keys()
+        ))
+        self.instance = util_helper.SOME_EC2_INSTANCE_TYPES[self.instance_type]
         self.windows_image = account_helper.generate_aws_image(
             is_encrypted=False,
             is_windows=True)
@@ -75,22 +82,26 @@ class CloudAccountOverviewViewSetTest(TestCase):
             account_helper.generate_single_aws_instance_event(
                 instance=self.instance1, powered_time=powered_time,
                 event_type=InstanceEvent.TYPE.power_on,
-                ec2_ami_id=self.windows_image.ec2_ami_id)
+                ec2_ami_id=self.windows_image.ec2_ami_id,
+                instance_type=self.instance_type)
         self.event2 = \
             account_helper.generate_single_aws_instance_event(
                 instance=self.instance2, powered_time=powered_time,
                 event_type=InstanceEvent.TYPE.power_on,
-                ec2_ami_id=self.rhel_image.ec2_ami_id)
+                ec2_ami_id=self.rhel_image.ec2_ami_id,
+                instance_type=self.instance_type)
         self.event3 = \
             account_helper.generate_single_aws_instance_event(
                 instance=self.instance3, powered_time=powered_time,
                 event_type=InstanceEvent.TYPE.power_on,
-                ec2_ami_id=self.openshift_image.ec2_ami_id)
+                ec2_ami_id=self.openshift_image.ec2_ami_id,
+                instance_type=self.instance_type)
         self.event4 = \
             account_helper.generate_single_aws_instance_event(
                 instance=self.instance4, powered_time=powered_time,
                 event_type=InstanceEvent.TYPE.power_on,
-                ec2_ami_id=self.openshift_and_rhel_image.ec2_ami_id)
+                ec2_ami_id=self.openshift_and_rhel_image.ec2_ami_id,
+                instance_type=self.instance_type)
         self.factory = APIRequestFactory()
         self.account1_expected_overview = {
             'id': self.account1.id,
@@ -108,6 +119,10 @@ class CloudAccountOverviewViewSetTest(TestCase):
             'openshift_runtime_seconds': 0.0,
             'rhel_images_challenged': 0,
             'openshift_images_challenged': 0,
+            'rhel_memory_seconds': 0.0,
+            'openshift_memory_seconds': 0.0,
+            'rhel_vcpu_seconds': 0.0,
+            'openshift_vcpu_seconds': 0.0
         }
         self.account2_expected_overview = {
             'id': self.account2.id,
@@ -125,6 +140,10 @@ class CloudAccountOverviewViewSetTest(TestCase):
             'openshift_runtime_seconds': 0.0,
             'rhel_images_challenged': 0,
             'openshift_images_challenged': 0,
+            'rhel_memory_seconds': runtime * self.instance['memory'],
+            'openshift_memory_seconds': 0.0,
+            'rhel_vcpu_seconds': runtime * self.instance['vcpu'],
+            'openshift_vcpu_seconds': 0.0
         }
         self.account3_expected_overview = {
             'id': self.account3.id,
@@ -142,6 +161,10 @@ class CloudAccountOverviewViewSetTest(TestCase):
             'openshift_runtime_seconds': runtime,
             'rhel_images_challenged': 0,
             'openshift_images_challenged': 0,
+            'rhel_memory_seconds': 0.0,
+            'openshift_memory_seconds': runtime * self.instance['memory'],
+            'rhel_vcpu_seconds': 0.0,
+            'openshift_vcpu_seconds': runtime * self.instance['vcpu']
         }
         self.account4_expected_overview = {
             'id': self.account4.id,
@@ -159,7 +182,12 @@ class CloudAccountOverviewViewSetTest(TestCase):
             'openshift_runtime_seconds': runtime,
             'rhel_images_challenged': 0,
             'openshift_images_challenged': 0,
+            'rhel_memory_seconds': runtime * self.instance['memory'],
+            'openshift_memory_seconds': runtime * self.instance['memory'],
+            'rhel_vcpu_seconds': runtime * self.instance['vcpu'],
+            'openshift_vcpu_seconds': runtime * self.instance['vcpu']
         }
+        account_helper.generate_aws_ec2_definitions()
 
     def get_overview_list_response(self, user, data=None, name_pattern=None,
                                    account_id=None):
