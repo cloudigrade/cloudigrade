@@ -361,7 +361,7 @@ class CloudAccountOverviewSerializer(Serializer):
 
     def generate(self):
         """Generate the cloud accounts overviews and return the results."""
-        start = self.validated_data['start']
+        start = misc.truncate_date(self.validated_data['start'])
         end = misc.truncate_date(self.validated_data['end'])
         name_pattern = self.validated_data.get('name_pattern', None)
 
@@ -395,7 +395,7 @@ class DailyInstanceActivitySerializer(Serializer):
 
     def generate(self):
         """Generate the usage report and return the results."""
-        start = self.validated_data['start']
+        start = misc.truncate_date(self.validated_data['start'])
         end = misc.truncate_date(self.validated_data['end'])
         name_pattern = self.validated_data.get('name_pattern', None)
 
@@ -428,7 +428,7 @@ class CloudAccountImagesSerializer(Serializer):
 
     def generate(self):
         """Generate the usage report and return the results."""
-        start = self.validated_data['start']
+        start = misc.truncate_date(self.validated_data['start'])
         end = misc.truncate_date(self.validated_data['end'])
 
         user = self.context['request'].user
