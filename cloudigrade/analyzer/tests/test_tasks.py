@@ -713,44 +713,73 @@ class AnalyzeLogTest(TestCase):
         mock_remap.assert_not_called()
 
     @patch('analyzer.tasks.AwsEC2InstanceDefinitions.objects.update_or_create')
-    @patch('json.load')
-    @patch('urllib.request.urlopen')
+    @patch('analyzer.tasks.boto3.client')
     def test_repopulate_ec2_instance_mapping(
-            self, mock_request, mock_json_load, mock_db_create):
+            self, mock_boto3, mock_db_create):
         """Test that repopulate_ec2_instance_mapping creates db objects."""
-        mock_json_load.return_value = {
-            'products': {
-                'S25N2BEFE3CSAAXK': {
-                    'sku': 'S25N2BEFE3CSAAXK',
-                    'productFamily': 'Compute Instance',
-                    'attributes': {
-                        'servicecode': 'AmazonEC2',
-                        'location': 'EU (Ireland)',
-                        'locationType': 'AWS Region',
-                        'instanceType': 'r5d.12xlarge',
-                        'currentGeneration': 'Yes',
-                        'instanceFamily': 'Memory optimized',
-                        'vcpu': '48',
-                        'physicalProcessor': 'Intel Xeon Platinum 8175',
-                        'memory': '384 GiB',
-                        'storage': '2 x 900 NVMe SSD',
-                        'networkPerformance': '10 Gigabit',
-                        'processorArchitecture': '64-bit',
-                        'tenancy': 'Shared',
-                        'operatingSystem': 'Windows',
-                        'licenseModel': 'No License required',
-                        'usagetype': 'EU-BoxUsage:r5d.12xlarge',
-                        'operation': 'RunInstances:0002',
-                        'capacitystatus': 'Used',
-                        'ecu': '173',
-                        'normalizationSizeFactor': '96',
-                        'preInstalledSw': 'NA',
-                        'servicename': 'Amazon Elastic Compute Cloud'
-                    }
-                }
-            }
-        }
+        paginator = mock_boto3.return_value.get_paginator.return_value
+        paginator.paginate.return_value = [{
+            'PriceList': [
+                """{
+                    "product": {
+                        "productFamily": "Compute Instance",
+                        "attributes": {
+                            "memory": "16 GiB",
+                            "vcpu": "2",
+                            "capacitystatus": "Used",
+                            "instanceType": "r5.large",
+                            "tenancy": "Host",
+                            "usagetype": "APN1-HostBoxUsage:r5.large",
+                            "locationType": "AWS Region",
+                            "storage": "EBS only",
+                            "normalizationSizeFactor": "4",
+                            "instanceFamily": "Memory optimized",
+                            "operatingSystem": "RHEL",
+                            "servicecode": "AmazonEC2",
+                            "physicalProcessor": "Intel Xeon Platinum 8175",
+                            "licenseModel": "No License required",
+                            "ecu": "10",
+                            "currentGeneration": "Yes",
+                            "preInstalledSw": "NA",
+                            "networkPerformance": "10 Gigabit",
+                            "location": "Asia Pacific (Tokyo)",
+                            "servicename": "Amazon Elastic Compute Cloud",
+                            "processorArchitecture": "64-bit",
+                            "operation": "RunInstances:0010"
+                        },
+                        "sku": "22WY57989R2PA7RB"
+                    },
+                    "serviceCode": "AmazonEC2",
+                    "terms": {
+                        "OnDemand": {
+                            "22WY57989R2PA7RB.JRTCKXETXF": {
+                                "priceDimensions": {
+                                    "22WY57989R2PA7RB.JRTCKXETXF.6YS6EN2CT7": {
+                                        "unit": "Hrs",
+                                        "endRange": "Inf",
+                                        "appliesTo": [
+                                        ],
+                                        "beginRange": "0",
+                                        "pricePerUnit": {
+                                            "USD": "0.0000000000"
+                                        }
+                                    }
+                                },
+                                "sku": "22WY57989R2PA7RB",
+                                "effectiveDate": "2018-11-01T00:00:00Z",
+                                "offerTermCode": "JRTCKXETXF",
+                                "termAttributes": {
+
+                                }
+                            }
+                        }
+                    },
+                    "version": "20181122020351",
+                    "publicationDate": "2018-11-22T02:03:51Z"
+                }"""
+            ]
+        }]
         tasks.repopulate_ec2_instance_mapping()
-        mock_db_create.assert_called_with(instance_type='r5d.12xlarge',
-                                          memory=384,
-                                          vcpu=48)
+        mock_db_create.assert_called_with(instance_type='r5.large',
+                                          memory=16,
+                                          vcpu=2)

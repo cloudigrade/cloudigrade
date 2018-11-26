@@ -3,9 +3,9 @@ import collections
 import itertools
 import json
 import logging
-import urllib.request
 from decimal import Decimal
 
+import boto3
 from celery import shared_task
 from django.conf import settings
 from django.db import transaction
@@ -564,48 +564,49 @@ def _save_results(instance_events, ami_tag_events, aws_instances,
 @retriable_shared_task
 def repopulate_ec2_instance_mapping():
     """
-    Scan AWS pricing endpoint and update the EC2 instancetype lookup table.
-
-    See: https://aws.amazon.com/blogs/aws/new-aws-price-list-api/
+    Use the Boto3 pricing client to update the EC2 instancetype lookup table.
 
     Returns:
         None: Run as an asynchronous Celery task.
 
     """
+    client = boto3.client('pricing')
+    paginator = client.get_paginator('get_products')
+    page_iterator = paginator.paginate(
+        ServiceCode='AmazonEC2',
+        Filters=[
+            {
+                'Type': 'TERM_MATCH',
+                'Field': 'productFamily',
+                'Value': 'Compute Instance'
+            },
+        ]
+    )
     logger.info(_('Getting AWS EC2 instance type information.'))
 
-    with urllib.request.urlopen(settings.AWS_PRICING_URL) as response:
-        logger.info(_('Parsing JSON for AWS EC2 instance type information.'))
-        ec2_offers = json.load(response)
+    for page in page_iterator:
+        for instance in page['PriceList']:
+            try:
+                instance_attr = json.loads(instance)['product']['attributes']
 
-    logger.info(_('Successfully read AWS EC2 instance type information.'))
-    instances = {}
-    for sku, data in ec2_offers['products'].items():
-        if data['productFamily'] != 'Compute Instance':
-            # skip anything that's not an EC2 Instance
-            continue
-        instances[data['attributes']['instanceType']] = data['attributes']
+                # memory comes in formatted like: 1,952.00 GiB
+                memory = float(
+                    instance_attr.get('memory', 0)[:-4].replace(',', '')
+                )
+                vcpu = int(instance_attr.get('vcpu', 0))
 
-    logger.info(_('Found {} instance types').format(len(instances.items())))
-    for instance_type, instance_metadata in instances.items():
+                AwsEC2InstanceDefinitions.objects.update_or_create(
+                    instance_type=instance_attr['instanceType'],
+                    memory=memory,
+                    vcpu=vcpu
+                )
+                logger.info(_('Saved instance type {}').format(
+                    instance_attr['instanceType']
+                ))
+            except ValueError:
+                logger.error(_('Could not save instance definition for '
+                               'instance-type {}, memory {}, vcpu {}.').format(
+                    instance_attr['instanceType'], memory, vcpu
+                ))
 
-        try:
-            # memory comes in formatted like: 1,952.00 GiB
-            memory = float(
-                instance_metadata.get('memory', 0)[:-4].replace(',', '')
-            )
-            vcpu = int(instance_metadata.get('vcpu', 0))
-
-            AwsEC2InstanceDefinitions.objects.update_or_create(
-                instance_type=instance_type,
-                memory=memory,
-                vcpu=vcpu
-            )
-            logger.info(_('Saved instance type {}').format(instance_type))
-        except ValueError:
-            logger.error(
-                _(
-                    'Could not convert memory {} to float.'
-                ).format(instance_metadata.get('memory', 0))
-            )
     logger.info('Finished saving AWS EC2 instance type information.')
