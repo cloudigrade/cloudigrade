@@ -7,12 +7,15 @@ import re
 import uuid
 from decimal import Decimal
 
+import faker
 from django.test import TestCase
 
 from account.models import (AwsAccount, AwsInstance, AwsMachineImage,
                             InstanceEvent)
 from account.tests import helper
 from util.tests import helper as util_helper
+
+_faker = faker.Faker()
 
 
 class GenerateAwsAccountTest(TestCase):
@@ -29,11 +32,17 @@ class GenerateAwsAccountTest(TestCase):
         aws_account_id = util_helper.generate_dummy_aws_account_id()
         arn = util_helper.generate_dummy_arn(account_id=aws_account_id)
         user = util_helper.generate_test_user()
-        account = helper.generate_aws_account(arn, aws_account_id, user)
+        name = _faker.name()
+        created_at = util_helper.utc_dt(2017, 1, 1, 0, 0, 0)
+        account = helper.generate_aws_account(
+            arn, aws_account_id, user, name, created_at
+        )
         self.assertIsInstance(account, AwsAccount)
         self.assertEqual(account.account_arn, arn)
         self.assertEqual(account.aws_account_id, str(aws_account_id))
         self.assertEqual(account.user, user)
+        self.assertEqual(account.name, name)
+        self.assertEqual(account.created_at, created_at)
 
 
 class GenerateAwsInstanceTest(TestCase):
