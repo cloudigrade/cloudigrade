@@ -147,6 +147,9 @@ def generate_aws_instance_events(
     is a datetime.datetime of when a "power on" event occurs, and the second
     element is a datetime.datetime of when a "power off" event occurs.
 
+    Power-off events will never be created with an image defined in this helper
+    function because in most real-world cases they do not have one.
+
     Args:
         instance (AwsInstance): instance that owns the events.
         powered_times (list[tuple]): Time periods the instance is powered on.
@@ -184,14 +187,16 @@ def generate_aws_instance_events(
             )
             events.append(event)
         if power_off_time is not None:
+            # power_off events typically do *not* have an image defined.
+            # So, ignore inputs and *always* set ec2_ami_id=None.
             event = generate_single_aws_instance_event(
                 instance=instance,
                 powered_time=power_off_time,
                 event_type=InstanceEvent.TYPE.power_off,
-                ec2_ami_id=ec2_ami_id,
+                ec2_ami_id=None,
                 instance_type=instance_type,
                 subnet=subnet,
-                no_image=no_image
+                no_image=True
             )
             events.append(event)
     return events

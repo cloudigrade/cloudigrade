@@ -507,9 +507,9 @@ def get_account_overview(account, start, end):
         for event in events:
             valid_event = validate_event(event, start)
             if valid_event:
+                instance_events[event.instance].append(event)
                 if event.machineimage:
                     image_ids.append(event.machineimage.id)
-                    instance_events[event.instance].append(event)
                 else:
                     logger.debug(_(
                         'Instance event {0} has no machine image. Therefore '

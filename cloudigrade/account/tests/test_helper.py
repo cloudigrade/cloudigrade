@@ -107,15 +107,21 @@ class GenerateAwsInstanceEventsTest(TestCase):
         self.assertEqual(events[2].event_type, InstanceEvent.TYPE.power_off)
         self.assertEqual(events[3].event_type, InstanceEvent.TYPE.power_on)
 
-        self.assertIsNotNone(events[0].machineimage)
+        # power_off events typically don't have an image defined, and the
+        # first event here should be power_off.
+        self.assertIsNone(events[0].machineimage)
         self.assertIsNotNone(events[0].instance_type)
         self.assertIsNotNone(events[0].subnet)
 
         # Assert they all have the same AMI, subnet, and instance type.
         for event in events[1:]:
-            self.assertEqual(event.machineimage, events[0].machineimage)
             self.assertEqual(event.instance_type, events[0].instance_type)
             self.assertEqual(event.subnet, events[0].subnet)
+            if event.event_type != event.TYPE.power_off:
+                # power_off events typically don't have an image defined.
+                # the second event should be power_on and should have an
+                # image defined we can compare with.
+                self.assertEqual(event.machineimage, events[1].machineimage)
 
     def test_generate_aws_events_with_args_and_some_times(self):
         """Assert generation of InstanceEvents with all specified args."""
@@ -144,7 +150,8 @@ class GenerateAwsInstanceEventsTest(TestCase):
         # already be covered by ``test_generate_events_with_some_times``.
         # Here we only care that argument values were set correctly.
         for event in events:
-            self.assertEqual(event.machineimage.ec2_ami_id, ec2_ami_id)
+            if event.event_type != event.TYPE.power_off:
+                self.assertEqual(event.machineimage.ec2_ami_id, ec2_ami_id)
             self.assertEqual(event.instance_type, instance_type)
             self.assertEqual(event.subnet, subnet)
 
