@@ -84,13 +84,15 @@ def generate_dummy_volume_id():
     )
 
 
-def generate_dummy_arn(account_id=None,
-                       region='',
-                       partition='aws',
-                       service='iam',
-                       resource_type='role',
-                       resource_separator='/',
-                       resource=None):
+def generate_dummy_arn(
+        account_id=None,
+        region='',
+        partition='aws',
+        service='iam',
+        resource_type='role',
+        resource_separator='/',
+        resource='role-for-cloudigrade',
+):
     """
     Generate a dummy AWS ARN for testing purposes.
 
@@ -102,8 +104,8 @@ def generate_dummy_arn(account_id=None,
         service (str): Optional partition. Default is 'iam'.
         resource_type (str): Optional resource type. Default is 'role'.
         resource_separator (str): A colon ':' or a forward-slash '/'
-        resource (str): Optional resource name. Default is None. If None, a
-            resource will be randomly generated.
+        resource (str): Optional resource name. If None, a resource will be
+            randomly generated.
 
     Returns:
         str: A well-formed, randomized ARN.
