@@ -597,6 +597,8 @@ class ImageActivityData():
     _self_iterable_keys = (
         'instances_seen',
         'runtime_seconds',
+        'memory_seconds',
+        'vcpu_seconds'
     )
 
     def __init__(self):
@@ -604,6 +606,8 @@ class ImageActivityData():
         self.machine_image = None
         self.instance_ids = set()
         self.runtime_seconds = 0.0
+        self.memory_seconds = 0.0
+        self.vcpu_seconds = 0.0
 
     def __iter__(self):
         """Generate iterable to convert self to a dict."""
@@ -640,15 +644,17 @@ def get_image_usages_for_account(start, end, account_id):
 
     images = collections.defaultdict(ImageActivityData)
     for instance, events in instance_events.items():
-        runtime = _calculate_instance_usage(start, end, events)['runtime']
-        if not runtime:
+        usage = _calculate_instance_usage(start, end, events)
+        if not usage['runtime']:
             continue
         image = _get_image_from_instance_events(events)
         if image:
             image_id = image.id
             images[image_id].machine_image = image
             images[image_id].instance_ids.add(instance.id)
-            images[image_id].runtime_seconds += runtime
+            images[image_id].runtime_seconds += usage['runtime']
+            images[image_id].memory_seconds += usage['memory']
+            images[image_id].vcpu_seconds += usage['vcpu']
 
     return dict(images)
 

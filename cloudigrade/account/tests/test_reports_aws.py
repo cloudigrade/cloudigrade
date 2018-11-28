@@ -1077,13 +1077,15 @@ class GetCloudAccountOverview(TestCase):
         # This instance is both detected and challenged for openshift.
         account_helper.generate_aws_instance_events(
             self.instance_1, powered_times,
-            self.openshift_image_challenged.ec2_ami_id
+            self.openshift_image_challenged.ec2_ami_id,
+            instance_type=self.instance_type
         )
         # This instance has no detection but has challenges for both rhel and
         # openshift.
         account_helper.generate_aws_instance_events(
             self.instance_2, powered_times,
-            self.plain_image_both_challenged.ec2_ami_id
+            self.plain_image_both_challenged.ec2_ami_id,
+            instance_type=self.instance_type
         )
 
         overview = reports.get_account_overview(
@@ -1091,14 +1093,17 @@ class GetCloudAccountOverview(TestCase):
         # we expect to find 2 total images, 2 total instances, 1 rhel instance,
         # 1 openshift instance, 1 rhel challenged image, and 2 openshift
         # challenged images.
-        self.assertExpectedAccountOverview(overview, self.account,
-                                           images=2, instances=2,
-                                           rhel_instances=1,
-                                           openshift_instances=1,
-                                           openshift_runtime_seconds=HOURS_5,
-                                           rhel_runtime_seconds=HOURS_5,
-                                           rhel_images_challenged=1,
-                                           openshift_images_challenged=2)
+        self.assertExpectedAccountOverview(
+            overview, self.account, images=2, instances=2,
+            rhel_images_challenged=1, rhel_instances=1,
+            rhel_runtime_seconds=HOURS_5,
+            rhel_memory_seconds=HOURS_5 * self.instance['memory'],
+            rhel_vcpu_seconds=HOURS_5 * self.instance['vcpu'],
+            openshift_images_challenged=2, openshift_instances=1,
+            openshift_runtime_seconds=HOURS_5,
+            openshift_memory_seconds=HOURS_5 * self.instance['memory'],
+            openshift_vcpu_seconds=HOURS_5 * self.instance['vcpu'],
+        )
 
     def test_get_cloud_account_overview_with_two_instances_same_image(self):
         """Assert an account overview reports images correctly."""
