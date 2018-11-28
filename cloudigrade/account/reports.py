@@ -463,7 +463,6 @@ def get_account_overview(account, start, end):
             the specified account during the specified time period.
 
     """
-    instances = []
     image_ids = []
     instance_events = collections.defaultdict(list)
 
@@ -508,7 +507,6 @@ def get_account_overview(account, start, end):
         for event in events:
             valid_event = validate_event(event, start)
             if valid_event:
-                instances.append(event.instance.id)
                 if event.machineimage:
                     image_ids.append(event.machineimage.id)
                     instance_events[event.instance].append(event)
@@ -517,6 +515,7 @@ def get_account_overview(account, start, end):
                         'Instance event {0} has no machine image. Therefore '
                         'we do not know to report it as RHEL or OpenShift.'
                     ).format(event))
+
         # Calculate usage
         usage = _calculate_daily_usage(start, end, instance_events)
 
@@ -528,7 +527,7 @@ def get_account_overview(account, start, end):
                 total_challenged_images_rhel += 1
             if image.openshift_challenged:
                 total_challenged_images_openshift += 1
-        total_instances = len(set(instances))
+        total_instances = len(instance_events.keys())
         total_instances_rhel = usage['instances_seen_with_rhel']
         total_instances_openshift = usage['instances_seen_with_openshift']
         # sum the total rhel runtime across instances
