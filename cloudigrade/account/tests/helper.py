@@ -85,8 +85,16 @@ def generate_aws_instance(account, ec2_instance_id=None, region=None):
 
 
 def generate_single_aws_instance_event(
-        instance, powered_time=None, event_type=None, ec2_ami_id=None,
-        instance_type=None, subnet=None, no_image=False):
+    instance,
+    powered_time=None,
+    event_type=None,
+    ec2_ami_id=None,
+    instance_type=None,
+    subnet=None,
+    no_image=False,
+    no_instance_type=False,
+    no_subnet=False,
+):
     """
     Generate single AwsInstanceEvent for testing.
 
@@ -101,17 +109,25 @@ def generate_single_aws_instance_event(
         instance_type (str): Optional AWS instance type.
         subnet (str): Optional subnet ID where instance runs.
         no_image (bool): If true, don't create and assign an image.
+        no_instance_type (bool): If true, don't assign an instance type.
+        no_subnet (bool): If true, don't create and assign a subnet.
 
     Returns:
         AwsInstanceEvent: The created AwsInstanceEvent.
 
     """
-    if instance_type is None:
-        instance_type = random.choice(tuple(
-            helper.SOME_EC2_INSTANCE_TYPES.keys()
-        ))
-    if subnet is None:
+    if no_instance_type:
+        instance_type = None
+    elif instance_type is None:
+        instance_type = random.choice(
+            tuple(helper.SOME_EC2_INSTANCE_TYPES.keys())
+        )
+
+    if no_subnet:
+        subnet = None
+    elif subnet is None:
         subnet = helper.generate_dummy_subnet_id()
+
     if event_type is None:
         event_type = InstanceEvent.TYPE.power_off
 
@@ -171,9 +187,9 @@ def generate_aws_instance_events(
     elif ec2_ami_id is None:
         ec2_ami_id = helper.generate_dummy_image_id()
     if instance_type is None:
-        instance_type = random.choice(tuple(
-            helper.SOME_EC2_INSTANCE_TYPES.keys()
-        ))
+        instance_type = random.choice(
+            tuple(helper.SOME_EC2_INSTANCE_TYPES.keys())
+        )
     if subnet is None:
         subnet = helper.generate_dummy_subnet_id()
 
@@ -187,7 +203,7 @@ def generate_aws_instance_events(
                 ec2_ami_id=ec2_ami_id,
                 instance_type=instance_type,
                 subnet=subnet,
-                no_image=no_image
+                no_image=no_image,
             )
             events.append(event)
         if power_off_time is not None:
@@ -200,7 +216,7 @@ def generate_aws_instance_events(
                 ec2_ami_id=None,
                 instance_type=instance_type,
                 subnet=subnet,
-                no_image=True
+                no_image=True,
             )
             events.append(event)
     return events

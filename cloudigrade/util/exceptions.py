@@ -102,6 +102,12 @@ class CloudTrailCannotStopLogging(APIException):
     status_code = http.HTTPStatus.INTERNAL_SERVER_ERROR
 
 
+class NormalizeRunException(APIException):
+    """Raise when something unexpected happens in building NormalizeRuns."""
+
+    status_code = http.HTTPStatus.INTERNAL_SERVER_ERROR
+
+
 def api_exception_handler(exc, context):
     """
     Log exception and return an appropriately formatted response.

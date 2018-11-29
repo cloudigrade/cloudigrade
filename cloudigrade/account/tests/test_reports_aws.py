@@ -7,6 +7,7 @@ from django.test import TestCase
 from account import reports
 from account.models import InstanceEvent
 from account.tests import helper as account_helper
+from util.exceptions import NormalizeRunException
 from util.tests import helper as util_helper
 
 HOUR = 60. * 60
@@ -1263,6 +1264,212 @@ class GetCloudAccountOverview(TestCase):
                                            openshift_vcpu_seconds=None,
                                            rhel_memory_seconds=None,
                                            rhel_vcpu_seconds=None)
+
+    def test_get_cloud_account_overview_instance_old_and_new_events(self):
+        """
+        Test an account with an instance with some old and new events.
+
+        This test covers a buggy situation we found in production in which
+        having an instance with its "instance type" or "image" events defined
+        before the reporting period would result in missing data.
+
+        In this test, only the first power-on event includes the image and
+        instance type information. All subsequent events leave them empty.
+        """
+        events = []
+
+        # we specifically want an instance type that has not-1 values for
+        # memory and cpu so we can verify different numbers in the results.
+        instance_type = 't2.large'
+        memory = util_helper.SOME_EC2_INSTANCE_TYPES[instance_type]['memory']
+        vcpu = util_helper.SOME_EC2_INSTANCE_TYPES[instance_type]['vcpu']
+
+        # a long time ago before the reporting period...
+        # only the FIRST event has the image and instance type info.
+        events.append(
+            account_helper.generate_single_aws_instance_event(
+                self.instance_1,
+                util_helper.utc_dt(2017, 12, 10, 0, 0, 0),
+                InstanceEvent.TYPE.power_on,
+                ec2_ami_id=self.rhel_image.ec2_ami_id,
+                instance_type=instance_type,
+            )
+        )
+        events.append(
+            account_helper.generate_single_aws_instance_event(
+                self.instance_1,
+                util_helper.utc_dt(2017, 12, 11, 0, 0, 0),
+                InstanceEvent.TYPE.power_off,
+                no_image=True,
+                no_instance_type=True,
+                no_subnet=True,
+            )
+        )
+
+        # and during the reporting period...
+        events.append(
+            account_helper.generate_single_aws_instance_event(
+                self.instance_1,
+                util_helper.utc_dt(2018, 1, 2, 0, 0, 0),
+                InstanceEvent.TYPE.power_on,
+                no_image=True,
+                no_instance_type=True,
+                no_subnet=True,
+            )
+        )
+        events.append(
+            account_helper.generate_single_aws_instance_event(
+                self.instance_1,
+                util_helper.utc_dt(2018, 1, 3, 0, 0, 0),
+                InstanceEvent.TYPE.power_off,
+                no_image=True,
+                no_instance_type=True,
+                no_subnet=True,
+            )
+        )
+        overview = reports.get_account_overview(
+            self.account, self.start, self.end
+        )
+        expected_runtime_seconds = DAY
+        expected_memory_seconds = expected_runtime_seconds * memory
+        expected_vcpu_seconds = expected_runtime_seconds * vcpu
+        self.assertExpectedAccountOverview(
+            overview,
+            self.account,
+            images=1,
+            instances=1,
+            rhel_instances=1,
+            openshift_instances=0,
+            rhel_runtime_seconds=expected_runtime_seconds,
+            openshift_runtime_seconds=0,
+            rhel_images_challenged=0,
+            openshift_images_challenged=0,
+            openshift_memory_seconds=0,
+            openshift_vcpu_seconds=0,
+            rhel_memory_seconds=expected_memory_seconds,
+            rhel_vcpu_seconds=expected_vcpu_seconds,
+        )
+
+    def test_get_cloud_account_overview_instance_old_and_new_events_2(self):
+        """
+        Test an account with an instance with some old and new events.
+
+        This test is very similar to the preceding test
+        (test_get_cloud_account_overview_instance_old_and_new_events), but
+        where the previous test does include a final power-off event, this test
+        does not.
+        """
+        events = []
+
+        # we specifically want an instance type that has not-1 values for
+        # memory and cpu so we can verify different numbers in the results.
+        instance_type = 't2.large'
+        memory = util_helper.SOME_EC2_INSTANCE_TYPES[instance_type]['memory']
+        vcpu = util_helper.SOME_EC2_INSTANCE_TYPES[instance_type]['vcpu']
+
+        # a long time ago before the reporting period...
+        # only the FIRST event has the image and instance type info.
+        events.append(
+            account_helper.generate_single_aws_instance_event(
+                self.instance_1,
+                util_helper.utc_dt(2017, 12, 10, 0, 0, 0),
+                InstanceEvent.TYPE.power_on,
+                ec2_ami_id=self.rhel_image.ec2_ami_id,
+                instance_type=instance_type,
+            )
+        )
+        events.append(
+            account_helper.generate_single_aws_instance_event(
+                self.instance_1,
+                util_helper.utc_dt(2017, 12, 11, 0, 0, 0),
+                InstanceEvent.TYPE.power_off,
+                no_image=True,
+                no_instance_type=True,
+                no_subnet=True,
+            )
+        )
+
+        # and during the reporting period...
+        events.append(
+            account_helper.generate_single_aws_instance_event(
+                self.instance_1,
+                util_helper.utc_dt(2018, 1, 2, 0, 0, 0),
+                InstanceEvent.TYPE.power_on,
+                no_image=True,
+                no_instance_type=True,
+                no_subnet=True,
+            )
+        )
+        overview = reports.get_account_overview(
+            self.account, self.start, self.end
+        )
+        expected_runtime_seconds = DAY * 30  # the remainder of the month
+        expected_memory_seconds = expected_runtime_seconds * memory
+        expected_vcpu_seconds = expected_runtime_seconds * vcpu
+        self.assertExpectedAccountOverview(
+            overview,
+            self.account,
+            images=1,
+            instances=1,
+            rhel_instances=1,
+            openshift_instances=0,
+            rhel_runtime_seconds=expected_runtime_seconds,
+            openshift_runtime_seconds=0,
+            rhel_images_challenged=0,
+            openshift_images_challenged=0,
+            openshift_memory_seconds=0,
+            openshift_vcpu_seconds=0,
+            rhel_memory_seconds=expected_memory_seconds,
+            rhel_vcpu_seconds=expected_vcpu_seconds,
+        )
+
+    def test_get_cloud_account_overview_type_changes_while_running(self):
+        """
+        Test when an instance seems to change type while running.
+
+        This should never happen, and if it does, it should raise an exception.
+        """
+        events = []
+
+        # we specifically want an instance type that has not-1 values for
+        # memory and cpu so we can verify different numbers in the results.
+        instance_type_1 = 't2.micro'
+        instance_type_2 = 't2.large'
+
+        events.append(
+            account_helper.generate_single_aws_instance_event(
+                self.instance_1,
+                util_helper.utc_dt(2018, 1, 1, 0, 0, 0),
+                InstanceEvent.TYPE.power_on,
+                ec2_ami_id=self.rhel_image.ec2_ami_id,
+                instance_type=instance_type_1,
+            )
+        )
+        events.append(
+            account_helper.generate_single_aws_instance_event(
+                self.instance_1,
+                util_helper.utc_dt(2018, 1, 2, 0, 0, 0),
+                InstanceEvent.TYPE.attribute_change,
+                instance_type=instance_type_2,
+                no_image=True,
+                no_subnet=True,
+            )
+        )
+        events.append(
+            account_helper.generate_single_aws_instance_event(
+                self.instance_1,
+                util_helper.utc_dt(2018, 1, 3, 0, 0, 0),
+                InstanceEvent.TYPE.power_off,
+                no_image=True,
+                no_instance_type=True,
+                no_subnet=True,
+            )
+        )
+
+        with self.assertRaises(NormalizeRunException):
+            reports.get_account_overview(
+                self.account, self.start, self.end
+            )
 
     # the following tests are assuming that the events have been returned
     # from the _get_relevant_events() function which will only return events

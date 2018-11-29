@@ -2,14 +2,17 @@
 import collections
 import datetime
 import functools
+import itertools
 import logging
 import operator
 
 from django.db import models
 from django.utils.translation import gettext as _
 
-from account.models import (Account, AwsEC2InstanceDefinitions, Instance,
-                            InstanceEvent, MachineImage)
+from account.models import (Account, AwsEC2InstanceDefinitions,
+                            AwsInstanceEvent, Instance, InstanceEvent,
+                            MachineImage)
+from util.exceptions import NormalizeRunException
 
 logger = logging.getLogger(__name__)
 
@@ -32,13 +35,7 @@ def get_daily_usage(user_id, start, end, name_pattern=None, account_id=None):
     """
     accounts = _filter_accounts(user_id, name_pattern, account_id)
     events = _get_relevant_events(start, end, accounts)
-
-    instance_events = collections.defaultdict(list)
-    for event in events:
-        instance_events[event.instance].append(event)
-    instance_events = dict(instance_events)
-
-    usage = _calculate_daily_usage(start, end, instance_events)
+    usage = _calculate_daily_usage(start, end, events)
     return usage
 
 
@@ -148,256 +145,575 @@ def _generate_daily_periods(start, end):
     return periods
 
 
-def _get_image_from_instance_events(events):
+def get_last_known_instance_type(instance, before_date):
     """
-    Get the first MachineImage from a set of InstanceEvents.
+    Get the last known type for the given instance.
 
     Args:
-        events (list[InstanceEvent]): The events being checked
+        instance (Instance): instance to check
+        before_date (datetime.datetime): cutoff for checking events for type
 
     Returns:
-        MachineImage: the first image found or None if none is found.
+        str: The last known instance type or None if no type is found.
 
     """
-    image = None
-    for event in events:
-        if event.machineimage:
-            image = event.machineimage
-            break
-    return image
-
-
-def _calculate_daily_usage(start, end, instance_events):
-    """
-    Get all InstanceEvents relevant to the report parameters.
-
-    Args:
-        start (datetime.datetime): Start time (inclusive)
-        end (datetime.datetime): End time (exclusive)
-        instance_events (list[InstanceEvent]): events to use for calculations
-    """
-    periods = _generate_daily_periods(start, end)
-    image_ids_seen = set()
-    image_ids_seen_with_rhel = set()
-    image_ids_seen_with_openshift = set()
-    instance_ids_seen_with_rhel = set()
-    instance_ids_seen_with_openshift = set()
-
-    daily_usage = []
-    for period_start, period_end in periods:
-        rhel_instance_count = 0
-        openshift_instance_count = 0
-        rhel_seconds = 0.0
-        openshift_seconds = 0.0
-
-        rhel_vcpu = 0.0
-        openshift_vcpu = 0.0
-        rhel_mem = 0.0
-        openshift_mem = 0.0
-
-        for instance, events in instance_events.items():
-            usage = _calculate_instance_usage(
-                period_start,
-                period_end,
-                events,
-            )
-            runtime = usage['runtime']
-
-            if runtime == 0.0 or runtime is None:
-                # No runtime? No updates to counters.
-                continue
-
-            # Since all events for AWS have the same image, we can short-
-            # circuit the logic here and find any event's image. We may need
-            # to revisit this logic in the future if we add support for a
-            # cloud provider that allows you to change the image on an
-            # existing instance.
-            image = _get_image_from_instance_events(events)
-            if image is None:
-                logger.debug(_(
-                    'Instance {0} has no known machine image. Therefore '
-                    'we do not know to report it as RHEL or OpenShift.'
-                ).format(instance))
-                continue
-            if image.id not in image_ids_seen:
-                image_ids_seen.add(image.id)
-                if image.rhel:
-                    image_ids_seen_with_rhel.add(image.id)
-                if image.openshift:
-                    image_ids_seen_with_openshift.add(image.id)
-            if image.id in image_ids_seen_with_rhel:
-                rhel_instance_count += 1
-                instance_ids_seen_with_rhel.add(instance.id)
-                rhel_seconds += runtime
-                rhel_mem += usage['memory']
-                rhel_vcpu += usage['vcpu']
-
-            if image.id in image_ids_seen_with_openshift:
-                openshift_instance_count += 1
-                instance_ids_seen_with_openshift.add(instance.id)
-                openshift_seconds += runtime
-                openshift_mem += usage['memory']
-                openshift_vcpu += usage['vcpu']
-
-        daily_usage.append({
-            'date': period_start,
-            'rhel_instances': rhel_instance_count,
-            'openshift_instances': openshift_instance_count,
-            'rhel_runtime_seconds': rhel_seconds,
-            'openshift_runtime_seconds': openshift_seconds,
-            'rhel_vcpu_seconds': rhel_vcpu,
-            'openshift_vcpu_seconds': openshift_vcpu,
-            'rhel_memory_seconds': rhel_mem,
-            'openshift_memory_seconds': openshift_mem
-        })
-
-    return {
-        'instances_seen_with_rhel': len(instance_ids_seen_with_rhel),
-        'instances_seen_with_openshift': len(instance_ids_seen_with_openshift),
-        'daily_usage': daily_usage,
-    }
-
-
-def _calculate_instance_usage(start, end, events):
-    """
-    Calculate instance usage based on events.
-
-    Note:
-        All given events should belong to the same instance.
-
-    Args:
-        start (datetime.datetime): Start time (inclusive)
-        end (datetime.datetime): End time (exclusive)
-        events (list[InstanceEvent]): Events for calculating usage
-
-    Returns:
-        float: The total seconds running.
-
-    """
-    last_started = None
-    time_running = 0.0
-    vcpu_usage = 0.0
-    mem_usage = 0.0
-
-    # If start is after the current time, we cannot make any
-    # meaningful assumptions about the runtime.
-    if start > datetime.datetime.now(datetime.timezone.utc):
-        usage = {
-            'runtime': None,
-            'memory': None,
-            'vcpu': None
-        }
-        return usage
-
-    sorted_events = sorted(events, key=lambda e: e.occurred_at)
-
-    # Get the last event before the start date only if that event is power_on.
-    before_start = list(
-        filter(
-            lambda event: event.event_type == InstanceEvent.TYPE.power_on,
-            list(
-                filter(lambda event: event.occurred_at < start, sorted_events)
-            )[-1:]
-        )
-    )
-
-    # find out what the instance type is at the start of the time period
-    instance_events = list(filter(
-        lambda event: event.instance_type is not None,
-        list(
-            filter(lambda event: event.occurred_at < start, sorted_events)
-        )
-    ))
-    if instance_events == []:
-        instance_type = None
-    else:
-        instance_type = instance_events[-1].instance_type
-
-    after_start = [event for event in sorted_events
-                   if start <= event.occurred_at < end]
-    sorted_trimmed_events = before_start + after_start
-
-    for event in sorted_trimmed_events:
-        # whichever is later: the first event or the reported period start
-        event_time = max(start, event.occurred_at)
-
-        if not last_started and \
-                event.event_type == InstanceEvent.TYPE.power_on:
-            # hold the time only if new event is ON and was previously OFF
-            last_started = event_time
-            if event.instance_type is not None:
-                instance_type = event.instance_type
-
-        elif event.event_type == InstanceEvent.TYPE.attribute_change:
-            instance_type = event.instance_type
-
-        elif last_started and \
-                event.event_type == InstanceEvent.TYPE.power_off:
-            # add the time if new event is OFF and was previously ON
-            diff = event_time - last_started
-            time_running += diff.total_seconds()
-
-            vcpu, mem = _get_vcpu_memory_usage(
-                diff.total_seconds(),
-                instance_type
-            )
-            vcpu_usage += vcpu
-            mem_usage += mem
-
-            # drop the started time, implying that the instance is now OFF
-            last_started = None
-
-    if last_started:
-        diff = end - last_started
-        time_running += diff.total_seconds()
-        vcpu, mem = _get_vcpu_memory_usage(diff.total_seconds(), instance_type)
-        vcpu_usage += vcpu
-        mem_usage += mem
-
-    usage = {
-        'runtime': time_running,
-        'memory': mem_usage,
-        'vcpu': vcpu_usage
-    }
-
-    return usage
-
-
-def _get_vcpu_memory_usage(time_running, instance_type):
-    """
-    Calculate Vcpu and memory usage for some instance type and runtime.
-
-    If the AwsEC2InstanceDefinitions for the given instance_type cannot be
-    found, log an error and return 0 for vcpu and memory usage. N
-
-    Args:
-        time_running (int): Time that the instance has ran, in seconds
-        instance_type (str): Type of the running instance
-
-    Returns:
-        (float, float): A tuple of vcpu usage (in seconds),
-                        and memory usage (in seconds)
-
-    """
-    if time_running == 0.0 or instance_type is None:
-        return (0, 0)
-
     try:
-        instance_definition = AwsEC2InstanceDefinitions.objects.get(
-            instance_type=instance_type
+        event = (
+            AwsInstanceEvent.objects.filter(
+                instance=instance,
+                occurred_at__lte=before_date,
+                instance_type__isnull=False,
+            )
+            .order_by('-occurred_at')
+            .get()
         )
-        vcpu_usage = time_running * instance_definition.vcpu
-        mem_usage = time_running * instance_definition.memory
-
-        return (vcpu_usage, mem_usage)
-
-    except AwsEC2InstanceDefinitions.DoesNotExist:
+        return event.instance_type
+    except AwsInstanceEvent.DoesNotExist:
         logger.error(
             _(
-                'Could not find instance type {} in mapping table.'
-            ).format(instance_type)
+                'could not find any type for {instance} by {before_date}'
+            ).format(instance=instance, before_date=before_date)
         )
-        return (0, 0)
+        return None
+
+
+def get_last_known_machineimage(instance, before_date):
+    """
+    Get the last known image for the given instance.
+
+    Args:
+        instance (Instance): instance to check
+        before_date (datetime.datetime): cutoff for checking events for type
+
+    Returns:
+        MachineImage: The last known image or None if no image is found.
+
+    """
+    try:
+        event = (
+            InstanceEvent.objects.filter(
+                instance=instance,
+                occurred_at__lte=before_date,
+                machineimage__isnull=False,
+            )
+            .order_by('-occurred_at')
+            .get()
+        )
+        return event.machineimage
+    except InstanceEvent.DoesNotExist:
+        logger.error(
+            _(
+                'could not find any image for {instance} by {before_date}'
+            ).format(instance=instance, before_date=before_date)
+        )
+        return None
+
+
+NormalizedRun = collections.namedtuple(
+    'NormalizedRun',
+    [
+        'start_time',
+        'end_time',
+        'image_id',
+        'instance_id',
+        'instance_memory',
+        'instance_type',
+        'instance_vcpu',
+        # 'is_cloud_access',  # soon
+        'is_encrypted',
+        # 'is_marketplace',  # soon
+        'openshift',
+        'openshift_challenged',
+        'openshift_detected',
+        'rhel',
+        'rhel_challenged',
+        'rhel_detected',
+    ],
+)
+
+
+def get_instance_type_definition(instance_type):
+    """Gracefully get the definition for the instance type."""
+    try:
+        type_definition = (
+            AwsEC2InstanceDefinitions.objects.get(instance_type=instance_type)
+            if instance_type
+            else None
+        )
+    except AwsEC2InstanceDefinitions.DoesNotExist:
+        type_definition = None
+    return type_definition
+
+
+def normalize_runs(events):  # noqa: C901
+    """
+    Create list of "runs" with normalized event information.
+
+    These runs should have all the relevant reporting information about when
+    an instance ran for a period of time so we don't have to keep going back
+    and forth through events to collect bits of information we need.
+
+    Args:
+        events (list[InstanceEvent]): list of relevant events
+
+    Returns:
+        list(NormalizedRun).
+
+    """
+    sorted_events_by_instance = itertools.groupby(
+        sorted(events, key=lambda e: f'{e.instance_id}_{e.occurred_at}'),
+        key=lambda e: e.instance_id,
+    )
+
+    normalized_runs = []
+    for instance_id, events in sorted_events_by_instance:
+        events = list(events)  # events is not subscriptable from the groupby.
+        instance_type = events[
+            0
+        ].instance_type or get_last_known_instance_type(
+            events[0].instance, events[0].occurred_at
+        )
+        type_definition = get_instance_type_definition(instance_type)
+        start_run = None
+        end_run = None
+        image = None
+
+        for event in events:
+            if event.instance_type and event.instance_type != instance_type:
+                if start_run:
+                    message = _(
+                        'instance {instance_id} changed type from {old_type} '
+                        'to {new_type} while is was running; this should not '
+                        'be possible! (event {event})'
+                    ).format(
+                        instance_id=instance_id,
+                        old_type=instance_type,
+                        new_type=event.instance_type,
+                        event=event,
+                    )
+                    raise NormalizeRunException(message)
+                instance_type = event.instance_type
+            if event.machineimage and not image:
+                image = event.machineimage
+
+            if event.event_type == event.TYPE.power_on:
+                if start_run is None:
+                    # Only set if not already set. Why? This allows us to
+                    # handle spurious start events, as if the event sequence we
+                    # receive is: "start start stop"
+                    start_run = event.occurred_at
+                    end_run = None
+            elif event.event_type == event.TYPE.power_off:
+                end_run = event.occurred_at
+
+            if start_run and image is None:
+                image = get_last_known_machineimage(
+                    event.instance, event.occurred_at
+                )
+
+            if start_run and end_run:
+                # The instance completed a start-stop cycle.
+                run = NormalizedRun(
+                    start_time=start_run,
+                    end_time=end_run,
+                    image_id=image.id if image else None,
+                    instance_id=instance_id,
+                    instance_type=instance_type,
+                    instance_memory=type_definition.memory
+                    if type_definition
+                    else None,
+                    instance_vcpu=type_definition.vcpu
+                    if type_definition
+                    else None,
+                    is_encrypted=image.is_encrypted if image else False,
+                    openshift=image.openshift if image else False,
+                    openshift_challenged=image.openshift_challenged
+                    if image
+                    else False,
+                    openshift_detected=image.openshift_detected
+                    if image
+                    else False,
+                    rhel=image.rhel if image else False,
+                    rhel_challenged=image.rhel_challenged if image else False,
+                    rhel_detected=image.rhel_detected if image else False,
+                )
+                normalized_runs.append(run)
+                start_run = None
+                end_run = None
+
+        if start_run and not end_run:
+            # When the instance was started but never stopped.
+            run = NormalizedRun(
+                start_time=start_run,
+                end_time=None,
+                image_id=image.id if image else None,
+                instance_id=instance_id,
+                instance_type=instance_type,
+                instance_memory=type_definition.memory
+                if type_definition
+                else None,
+                instance_vcpu=type_definition.vcpu
+                if type_definition
+                else None,
+                is_encrypted=image.is_encrypted if image else False,
+                openshift=image.openshift if image else False,
+                openshift_challenged=image.openshift_challenged
+                if image
+                else False,
+                openshift_detected=image.openshift_detected
+                if image
+                else False,
+                rhel=image.rhel if image else False,
+                rhel_challenged=image.rhel_challenged if image else False,
+                rhel_detected=image.rhel_detected if image else False,
+            )
+            normalized_runs.append(run)
+
+    return normalized_runs
+
+
+def calculate_runs_in_periods(periods, events):
+    """
+    Calculate image usage runs for each period.
+
+    Args:
+        periods (list[tuple[datetime, datetime]]): periods of time for which
+            usage activity should be counted
+        events (list[InstanceEvent]): list of relevant events to use for
+            determining what instances and images were used across the periods
+
+    Returns:
+        list(dict).
+
+    """
+    normalized_runs = normalize_runs(events)
+
+    # Next, walk through the periods and runs to further split the runs into
+    # the periods. This process will break a run into multiple run along period
+    # boundaries as necessary.
+    periodic_runs = collections.defaultdict(list)
+    # Since periods and normalized_runs are both already sorted, this *could*
+    # be optimized from O(n**2) to O(n) by cleverly iterating them together...
+    for period_start, period_end in periods:
+        for run in normalized_runs:
+            # There are four cases when we want to keep a run:
+            # 1. whole run is within the period
+            # 2. run started before the period and ended during it
+            # 3. run started during the period and ended after it (or never)
+            # 4. run started before the period and ended after it (or never)
+
+            if (
+                period_start <= run.start_time < period_end and
+                run.end_time is not None and
+                period_start < run.end_time <= period_end
+            ):
+                # Use case #1:
+                # If the whole run fits inside the period, simply include it.
+                logger.debug(
+                    'case 1 match: period %(period_start)s to %(period_end)s '
+                    'overlap with run %(run_start_time)s to %(run_end_time)s '
+                    '(%(run)s)',
+                    {
+                        'period_start': period_start,
+                        'period_end': period_end,
+                        'run_start_time': run.start_time,
+                        'run_end_time': run.end_time,
+                        'run': run,
+                    },
+                )
+                periodic_runs[period_start, period_end].append(run)
+            elif (
+                run.start_time < period_start and
+                run.end_time is not None and
+                period_start < run.end_time <= period_end
+            ):
+                # Use case #2:
+                # If the run started before the period and ended during the
+                # period, we set the start_time to the period_start.
+                logger.debug(
+                    'case 2 match: period %(period_start)s to %(period_end)s '
+                    'overlap with run %(run_start_time)s to %(run_end_time)s '
+                    '(%(run)s)',
+                    {
+                        'period_start': period_start,
+                        'period_end': period_end,
+                        'run_start_time': run.start_time,
+                        'run_end_time': run.end_time,
+                        'run': run,
+                    },
+                )
+                periodic_runs[period_start, period_end].append(
+                    NormalizedRun(
+                        start_time=period_start,
+                        end_time=run.end_time,
+                        image_id=run.image_id,
+                        instance_id=run.instance_id,
+                        instance_memory=run.instance_memory,
+                        instance_type=run.instance_type,
+                        instance_vcpu=run.instance_vcpu,
+                        is_encrypted=run.is_encrypted,
+                        rhel=run.rhel,
+                        rhel_challenged=run.rhel_challenged,
+                        rhel_detected=run.rhel_detected,
+                        openshift=run.openshift,
+                        openshift_challenged=run.openshift_challenged,
+                        openshift_detected=run.openshift_detected,
+                    )
+                )
+            elif period_start <= run.start_time < period_end and (
+                run.end_time is None or period_end < run.end_time
+            ):
+                # Use case #3:
+                # If the run started during period and ended after the period
+                # or never ended, we set the end_time to the period_end.
+                logger.debug(
+                    'case 3 match: period %(period_start)s to %(period_end)s '
+                    'overlap with run %(run_start_time)s to %(run_end_time)s '
+                    '(%(run)s)',
+                    {
+                        'period_start': period_start,
+                        'period_end': period_end,
+                        'run_start_time': run.start_time,
+                        'run_end_time': run.end_time,
+                        'run': run,
+                    },
+                )
+                periodic_runs[period_start, period_end].append(
+                    NormalizedRun(
+                        start_time=run.start_time,
+                        end_time=period_end,
+                        image_id=run.image_id,
+                        instance_id=run.instance_id,
+                        instance_memory=run.instance_memory,
+                        instance_type=run.instance_type,
+                        instance_vcpu=run.instance_vcpu,
+                        is_encrypted=run.is_encrypted,
+                        rhel=run.rhel,
+                        rhel_challenged=run.rhel_challenged,
+                        rhel_detected=run.rhel_detected,
+                        openshift=run.openshift,
+                        openshift_challenged=run.openshift_challenged,
+                        openshift_detected=run.openshift_detected,
+                    )
+                )
+            elif run.start_time < period_start and (
+                run.end_time is None or period_end < run.end_time
+            ):
+                # Use case #4:
+                # If the run started before the period and ended after the
+                # period or never ended, we set the start_time to period_start
+                # and the end_time to period_end.
+                logger.debug(
+                    'case 4 match: period %(period_start)s to %(period_end)s '
+                    'overlap with run %(run_start_time)s to %(run_end_time)s '
+                    '(%(run)s)',
+                    {
+                        'period_start': period_start,
+                        'period_end': period_end,
+                        'run_start_time': run.start_time,
+                        'run_end_time': run.end_time,
+                        'run': run,
+                    },
+                )
+                periodic_runs[period_start, period_end].append(
+                    NormalizedRun(
+                        start_time=period_start,
+                        end_time=period_end,
+                        image_id=run.image_id,
+                        instance_id=run.instance_id,
+                        instance_memory=run.instance_memory,
+                        instance_type=run.instance_type,
+                        instance_vcpu=run.instance_vcpu,
+                        is_encrypted=run.is_encrypted,
+                        rhel=run.rhel,
+                        rhel_challenged=run.rhel_challenged,
+                        rhel_detected=run.rhel_detected,
+                        openshift=run.openshift,
+                        openshift_challenged=run.openshift_challenged,
+                        openshift_detected=run.openshift_detected,
+                    )
+                )
+            else:
+                logger.debug(
+                    'period %(period_start)s to %(period_end)s does not '
+                    'overlap with run %(run_start_time)s to %(run_end_time)s '
+                    '(%(run)s)',
+                    {
+                        'period_start': period_start,
+                        'period_end': period_end,
+                        'run_start_time': run.start_time,
+                        'run_end_time': run.end_time,
+                        'run': run,
+                    },
+                )
+
+    return periodic_runs
+
+
+def _calculate_daily_usage(start, end, events, extended=False):
+    """
+    Calculate the daily usage of RHEL and OCP for the given parameters.
+
+    Args:
+        start (datetime.datetime): Start time (inclusive)
+        end (datetime.datetime): End time (exclusive)
+        events (list[InstanceEvent]): events to use for calculations
+        extended (bool): should include extended output
+
+    Returns:
+        dict: Structure with some overall totals and list of daily totals.
+
+    """
+    all_instance_ids = set()
+    rhel_instance_ids = set()
+    openshift_instance_ids = set()
+    rhel_challenged_instance_ids = set()
+    openshift_challenged_instance_ids = set()
+
+    all_image_ids = set()
+    rhel_image_ids = set()
+    openshift_image_ids = set()
+    rhel_challenged_image_ids = set()
+    openshift_challenged_image_ids = set()
+
+    periods = _generate_daily_periods(start, end)
+    periodic_runs = calculate_runs_in_periods(periods, events)
+
+    period_usages = []
+    for period in periods:
+        # Instances
+        period_all_instance_ids = set()
+        period_rhel_instance_ids = set()
+        period_openshift_instance_ids = set()
+        period_rhel_challenged_instance_ids = set()
+        period_openshift_challenged_instance_ids = set()
+
+        # Images
+        period_all_image_ids = set()
+        period_rhel_image_ids = set()
+        period_openshift_image_ids = set()
+        period_rhel_challenged_image_ids = set()
+        period_openshift_challenged_image_ids = set()
+
+        # Instance runtime seconds
+        period_all_seconds = 0.0
+        period_rhel_seconds = 0.0
+        period_openshift_seconds = 0.0
+
+        # Instance seconds * memory in GBs
+        period_all_memory_seconds = 0.0
+        period_rhel_memory_seconds = 0.0
+        period_openshift_memory_seconds = 0.0
+
+        # Instance seconds * vcpu count
+        period_all_vcpu_seconds = 0.0
+        period_rhel_vcpu_seconds = 0.0
+        period_openshift_vcpu_seconds = 0.0
+
+        for run in periodic_runs[period]:
+            if run.image_id:
+                period_all_image_ids.add(run.image_id)
+
+            period_all_instance_ids.add(run.instance_id)
+
+            seconds = (run.end_time - run.start_time).total_seconds()
+            memory_seconds = (
+                seconds * run.instance_memory if run.instance_memory else 0.0
+            )
+            vcpu_seconds = (
+                seconds * run.instance_vcpu if run.instance_vcpu else 0.0
+            )
+
+            period_all_seconds += seconds
+            period_all_memory_seconds += memory_seconds
+            period_all_vcpu_seconds += vcpu_seconds
+
+            if run.rhel:
+                period_rhel_instance_ids.add(run.instance_id)
+                period_rhel_image_ids.add(run.image_id)
+                period_rhel_seconds += seconds
+                period_rhel_memory_seconds += memory_seconds
+                period_rhel_vcpu_seconds += vcpu_seconds
+
+            if run.openshift:
+                period_openshift_instance_ids.add(run.instance_id)
+                period_openshift_image_ids.add(run.image_id)
+                period_openshift_seconds += seconds
+                period_openshift_memory_seconds += memory_seconds
+                period_openshift_vcpu_seconds += vcpu_seconds
+
+            if run.rhel_challenged:
+                period_rhel_challenged_image_ids.add(run.image_id)
+                period_rhel_challenged_instance_ids.add(run.instance_id)
+
+            if run.openshift_challenged:
+                period_openshift_challenged_image_ids.add(run.image_id)
+                period_openshift_challenged_instance_ids.add(run.instance_id)
+
+        period_start, __ = period
+        period_usage = {
+            'date': period_start,
+            'rhel_instances': len(period_rhel_instance_ids),
+            'openshift_instances': len(period_openshift_instance_ids),
+            'rhel_images': len(period_rhel_image_ids),
+            'openshift_images': len(period_openshift_image_ids),
+            'rhel_runtime_seconds': period_rhel_seconds,
+            'openshift_runtime_seconds': period_openshift_seconds,
+            'rhel_vcpu_seconds': period_rhel_vcpu_seconds,
+            'openshift_vcpu_seconds': period_openshift_vcpu_seconds,
+            'rhel_memory_seconds': period_rhel_memory_seconds,
+            'openshift_memory_seconds': period_openshift_memory_seconds,
+        }
+        if extended:
+            period_usage.update(
+                {
+                    'all_instances': len(period_all_instance_ids),
+                    'all_images': len(period_all_image_ids),
+                    'all_runtime_seconds': period_all_seconds,
+                }
+            )
+        period_usages.append(period_usage)
+
+        all_instance_ids |= period_all_instance_ids
+        rhel_instance_ids |= period_rhel_instance_ids
+        openshift_instance_ids |= period_openshift_instance_ids
+        rhel_challenged_instance_ids |= period_rhel_challenged_instance_ids
+        openshift_challenged_instance_ids |= (
+            period_openshift_challenged_instance_ids
+        )
+        all_image_ids |= period_all_image_ids
+        rhel_image_ids |= period_rhel_image_ids
+        openshift_image_ids |= period_openshift_image_ids
+        rhel_challenged_image_ids |= period_rhel_challenged_image_ids
+        openshift_challenged_image_ids |= period_openshift_challenged_image_ids
+
+    overall_usage = {
+        'instances_seen_with_rhel': len(rhel_instance_ids),
+        'instances_seen_with_openshift': len(openshift_instance_ids),
+        'instances_seen_with_rhel_challenged': len(
+            rhel_challenged_instance_ids
+        ),
+        'instances_seen_with_openshift_challenged': len(
+            openshift_challenged_instance_ids
+        ),
+        'daily_usage': period_usages,
+    }
+    if extended:
+        overall_usage.update(
+            {
+                'instances_seen': len(all_instance_ids),
+                'images_seen': len(all_image_ids),
+                'images_seen_with_rhel': len(rhel_image_ids),
+                'images_seen_with_openshift': len(openshift_image_ids),
+                'images_seen_with_rhel_challenged': len(
+                    rhel_challenged_image_ids
+                ),
+                'images_seen_with_openshift_challenged': len(
+                    openshift_challenged_image_ids
+                ),
+            }
+        )
+    return overall_usage
 
 
 def validate_event(event, start):
@@ -463,9 +779,6 @@ def get_account_overview(account, start, end):
             the specified account during the specified time period.
 
     """
-    image_ids = []
-    instance_events = collections.defaultdict(list)
-
     # If the start time is in the future, we cannot give any meaningful data
     if start > datetime.datetime.now(datetime.timezone.utc):
         logger.info(_(
@@ -508,33 +821,17 @@ def get_account_overview(account, start, end):
         total_vcpu_rhel = None
         total_vcpu_openshift = None
     else:
-        # _get_relevant_events will return the events in between the start &
-        # end times & if no events are present during this period, it will
-        # return the last event that occurred.
         events = _get_relevant_events(start, end, [account.id])
-        for event in events:
-            valid_event = validate_event(event, start)
-            if valid_event:
-                instance_events[event.instance].append(event)
-                if event.machineimage:
-                    image_ids.append(event.machineimage.id)
-                else:
-                    logger.debug(_(
-                        'Instance event {0} has no machine image. Therefore '
-                        'we do not know to report it as RHEL or OpenShift.'
-                    ).format(event))
+        usage = _calculate_daily_usage(start, end, events, extended=True)
 
-        # Calculate usage
-        usage = _calculate_daily_usage(start, end, instance_events)
-
-        total_images = len(set(image_ids))
-        total_challenged_images_rhel = MachineImage.objects.filter(
-            pk__in=set(image_ids), rhel_challenged=True
-        ).count()
-        total_challenged_images_openshift = MachineImage.objects.filter(
-            pk__in=set(image_ids), openshift_challenged=True
-        ).count()
-        total_instances = len(instance_events.keys())
+        total_images = usage['images_seen']
+        total_challenged_images_rhel = usage[
+            'instances_seen_with_rhel_challenged'
+        ]
+        total_challenged_images_openshift = usage[
+            'instances_seen_with_openshift_challenged'
+        ]
+        total_instances = usage['instances_seen']
         total_instances_rhel = usage['instances_seen_with_rhel']
         total_instances_openshift = usage['instances_seen_with_openshift']
 
@@ -578,7 +875,7 @@ def get_account_overview(account, start, end):
     return cloud_account
 
 
-class ImageActivityData():
+class ImageActivityData(object):
     """Helper data structure for counting image activity."""
 
     _machine_image_iterable_keys = (
@@ -598,7 +895,7 @@ class ImageActivityData():
         'instances_seen',
         'runtime_seconds',
         'memory_seconds',
-        'vcpu_seconds'
+        'vcpu_seconds',
     )
 
     def __init__(self):
@@ -636,25 +933,29 @@ def get_image_usages_for_account(start, end, account_id):
 
     """
     events = _get_relevant_events(start, end, [account_id])
-
-    instance_events = collections.defaultdict(list)
-    for event in events:
-        instance_events[event.instance].append(event)
-    instance_events = dict(instance_events)
+    period = start, end
+    periods = [period]
+    runs = calculate_runs_in_periods(periods, events)
 
     images = collections.defaultdict(ImageActivityData)
-    for instance, events in instance_events.items():
-        usage = _calculate_instance_usage(start, end, events)
-        if not usage['runtime']:
+    for run in runs[period]:
+        if run.image_id is None:
             continue
-        image = _get_image_from_instance_events(events)
-        if image:
-            image_id = image.id
-            images[image_id].machine_image = image
-            images[image_id].instance_ids.add(instance.id)
-            images[image_id].runtime_seconds += usage['runtime']
-            images[image_id].memory_seconds += usage['memory']
-            images[image_id].vcpu_seconds += usage['vcpu']
+        seconds = (run.end_time - run.start_time).total_seconds()
+        vcpu_seconds = (
+            seconds * run.instance_vcpu if run.instance_vcpu else 0.0
+        )
+        memory_seconds = (
+            seconds * run.instance_memory if run.instance_memory else 0.0
+        )
+        if images[run.image_id].machine_image is None:
+            images[run.image_id].machine_image = MachineImage.objects.get(
+                id=run.image_id
+            )
+        images[run.image_id].instance_ids.add(run.instance_id)
+        images[run.image_id].runtime_seconds += seconds
+        images[run.image_id].memory_seconds += memory_seconds
+        images[run.image_id].vcpu_seconds += vcpu_seconds
 
     return dict(images)
 
