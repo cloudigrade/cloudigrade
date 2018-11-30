@@ -678,10 +678,12 @@ class GetDailyUsageComplexInstancesTest(GetDailyUsageTestBase):
         """
         powered_times_1 = (
             (
+                # running for 4 days (2, 3, 4, 5)
                 util_helper.utc_dt(2018, 1, 2, 0, 0, 0),
                 util_helper.utc_dt(2018, 1, 6, 0, 0, 0)
             ),
             (
+                # running for 2 days (12, 13)
                 util_helper.utc_dt(2018, 1, 12, 0, 0, 0),
                 util_helper.utc_dt(2018, 1, 14, 0, 0, 0)
             ),
@@ -695,10 +697,12 @@ class GetDailyUsageComplexInstancesTest(GetDailyUsageTestBase):
 
         powered_times_2 = (
             (
+                # running for 2 days (3, 5)
                 util_helper.utc_dt(2018, 1, 3, 0, 0, 0),
                 util_helper.utc_dt(2018, 1, 5, 0, 0, 0)
             ),
             (
+                # running for 2 days (21, 22)
                 util_helper.utc_dt(2018, 1, 21, 0, 0, 0),
                 util_helper.utc_dt(2018, 1, 23, 0, 0, 0)
             ),
@@ -712,6 +716,7 @@ class GetDailyUsageComplexInstancesTest(GetDailyUsageTestBase):
 
         powered_times_3 = (
             (
+                # running for 5 days (3, 4, 5, 6, 7)
                 util_helper.utc_dt(2018, 1, 3, 0, 0, 0),
                 util_helper.utc_dt(2018, 1, 8, 0, 0, 0)
             ),
@@ -725,6 +730,7 @@ class GetDailyUsageComplexInstancesTest(GetDailyUsageTestBase):
 
         powered_times_4 = (
             (
+                # running for 3 days (19, 20, 21)
                 util_helper.utc_dt(2018, 1, 19, 0, 0, 0),
                 util_helper.utc_dt(2018, 1, 22, 0, 0, 0)
             ),
@@ -738,10 +744,12 @@ class GetDailyUsageComplexInstancesTest(GetDailyUsageTestBase):
 
         powered_times_5 = (
             (
+                # running for 1 day (9)
                 util_helper.utc_dt(2018, 1, 9, 0, 0, 0),
                 util_helper.utc_dt(2018, 1, 10, 0, 0, 0)
             ),
             (
+                # running for 2 days (20, 21)
                 util_helper.utc_dt(2018, 1, 20, 0, 0, 0),
                 util_helper.utc_dt(2018, 1, 22, 0, 0, 0)
             ),
