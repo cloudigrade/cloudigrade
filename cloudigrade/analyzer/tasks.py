@@ -583,7 +583,7 @@ def repopulate_ec2_instance_mapping():
         ]
     )
     logger.info(_('Getting AWS EC2 instance type information.'))
-
+    instances = {}
     for page in page_iterator:
         for instance in page['PriceList']:
             try:
@@ -595,18 +595,26 @@ def repopulate_ec2_instance_mapping():
                 )
                 vcpu = int(instance_attr.get('vcpu', 0))
 
-                AwsEC2InstanceDefinitions.objects.update_or_create(
-                    instance_type=instance_attr['instanceType'],
-                    memory=memory,
-                    vcpu=vcpu
-                )
-                logger.info(_('Saved instance type {}').format(
-                    instance_attr['instanceType']
-                ))
+                instances[instance_attr['instanceType']] = {
+                    'memory': memory,
+                    'vcpu': vcpu
+                }
             except ValueError:
                 logger.error(_('Could not save instance definition for '
                                'instance-type {}, memory {}, vcpu {}.').format(
-                    instance_attr['instanceType'], memory, vcpu
+                    instance_attr['instanceType'],
+                    instance_attr.get('memory', 0),
+                    instance_attr.get('vcpu', 0)
                 ))
+
+    for instance_name, attributes in instances.items():
+        AwsEC2InstanceDefinitions.objects.update_or_create(
+            instance_type=instance_name,
+            memory=attributes['memory'],
+            vcpu=attributes['vcpu']
+        )
+        logger.info(_('Saved instance type {}').format(
+            instance_name
+        ))
 
     logger.info('Finished saving AWS EC2 instance type information.')
