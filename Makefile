@@ -22,6 +22,7 @@ help:
 	@echo "  clean                         to clean the project directory of any scratch files, bytecode, logs, etc."
 	@echo "  unittest                      to run unittests."
 	@echo "  docs                          to build all documentation."
+	@echo "  docs-api-examples             to regenerate docs API examples .rst file."
 	@echo "  docs-seqdiag                  to regenerate docs .svg files from .diag files."
 	@echo "  user                          to create a Django super user."
 	@echo "  user-authenticate             to generate an auth token for a user."
@@ -62,6 +63,9 @@ user-authenticate:
 docs-seqdiag:
 	cd docs/illustrations && for FILE in *.diag; do seqdiag -Tsvg $$FILE; done
 
-docs: docs-seqdiag
+docs-api-examples:
+	PYTHONPATH=cloudigrade $(PYTHON) ./docs/rest-api-examples.py > ./docs/rest-api-examples.rst
+
+docs: docs-api-examples docs-seqdiag
 
 .PHONY: docs
