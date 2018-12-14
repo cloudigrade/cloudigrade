@@ -80,9 +80,8 @@ class DocsApiHandler(object):
             arn=util_helper.generate_dummy_arn(),
             user=self.superuser,
             name='super duper account',
+            created_at=self.two_weeks_ago,
         )
-        self.superuser_account.created_at = self.two_weeks_ago
-        self.superuser_account.save()
         self.superuser_instances = [
             account_helper.generate_aws_instance(self.superuser_account)
         ]
@@ -101,9 +100,8 @@ class DocsApiHandler(object):
             arn=util_helper.generate_dummy_arn(),
             user=self.customer_user,
             name='greatest account ever',
+            created_at=self.two_weeks_ago,
         )
-        self.superuser_account.created_at = self.two_weeks_ago
-        self.superuser_account.save()
         self.customer_instances = [
             account_helper.generate_aws_instance(self.customer_account),
             account_helper.generate_aws_instance(self.customer_account),
