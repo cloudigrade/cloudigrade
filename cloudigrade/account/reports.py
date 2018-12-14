@@ -520,13 +520,12 @@ def get_account_overview(account, start, end):
         usage = _calculate_daily_usage(start, end, instance_events)
 
         total_images = len(set(image_ids))
-        total_challenged_images_rhel, total_challenged_images_openshift = 0, 0
-        images = MachineImage.objects.filter(pk__in=set(image_ids))
-        for image in images:
-            if image.rhel_challenged:
-                total_challenged_images_rhel += 1
-            if image.openshift_challenged:
-                total_challenged_images_openshift += 1
+        total_challenged_images_rhel = MachineImage.objects.filter(
+            pk__in=set(image_ids), rhel_challenged=True
+        ).count()
+        total_challenged_images_openshift = MachineImage.objects.filter(
+            pk__in=set(image_ids), openshift_challenged=True
+        ).count()
         total_instances = len(instance_events.keys())
         total_instances_rhel = usage['instances_seen_with_rhel']
         total_instances_openshift = usage['instances_seen_with_openshift']
