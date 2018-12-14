@@ -13,6 +13,7 @@ class CloudAccountOverviewViewSetTest(TestCase):
 
     def setUp(self):
         """Set up a bunch of test data."""
+        account_helper.generate_aws_ec2_definitions()
         self.user1 = util_helper.generate_test_user()
         self.user2 = util_helper.generate_test_user()
         self.start = util_helper.utc_dt(2018, 1, 1, 0, 0, 0)

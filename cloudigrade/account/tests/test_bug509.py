@@ -28,6 +28,7 @@ class ReportBug509TestCase(TestCase):
 
     def setUp(self):
         """Set up data for tests."""
+        account_helper.generate_aws_ec2_definitions()
         self.user = util_helper.generate_test_user()
         account_created_at = util_helper.utc_dt(2017, 12, 1, 0, 0, 0)
         self.account = account_helper.generate_aws_account(
