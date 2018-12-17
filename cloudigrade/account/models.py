@@ -65,12 +65,14 @@ class MachineImage(BasePolymorphicModel):
     INSPECTING = 'inspecting'
     INSPECTED = 'inspected'
     ERROR = 'error'
+    UNAVAILABLE = 'unavailable'  # images we can't access but know must exist
     STATUS_CHOICES = (
         (PENDING, 'Pending Inspection'),
         (PREPARING, 'Preparing for Inspection'),
         (INSPECTING, 'Being Inspected'),
         (INSPECTED, 'Inspected'),
         (ERROR, 'Error'),
+        (UNAVAILABLE, 'Unavailable for Inspection'),
     )
     inspection_json = models.TextField(null=True,
                                        blank=True)
@@ -342,12 +344,13 @@ class AwsMachineImage(MachineImage):
     platform = models.CharField(
         max_length=7,
         choices=PLATFORM_CHOICES,
-        default=NONE
+        default=NONE,
+        null=True,
     )
     owner_aws_account_id = models.DecimalField(
         max_digits=12,
         decimal_places=0,
-        null=False
+        null=True,
     )
 
     @property

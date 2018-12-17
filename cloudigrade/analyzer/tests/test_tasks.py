@@ -7,10 +7,13 @@ import faker
 from django.conf import settings
 from django.test import TestCase
 
-from account.models import (AwsInstance,
-                            AwsInstanceEvent,
-                            AwsMachineImage,
-                            InstanceEvent)
+from account.models import (
+    AwsInstance,
+    AwsInstanceEvent,
+    AwsMachineImage,
+    InstanceEvent,
+    MachineImage,
+)
 from account.tests import helper as account_helper
 from analyzer import tasks
 from analyzer.tests import helper as analyzer_helper
@@ -493,6 +496,70 @@ class AnalyzeLogTest(TestCase):
         self.assertEqual(len(events), 0)
         images = list(AwsMachineImage.objects.all())
         self.assertEqual(len(images), 0)
+
+    @patch('analyzer.tasks.start_image_inspection')
+    @patch('analyzer.tasks.aws.get_ec2_instance')
+    @patch('analyzer.tasks.aws.get_session')
+    @patch('analyzer.tasks.aws.delete_messages_from_queue')
+    @patch('analyzer.tasks.aws.get_object_content_from_s3')
+    @patch('analyzer.tasks.aws.yield_messages_from_queue')
+    @patch('analyzer.tasks.aws.describe_images')
+    def test_command_output_success_unavailable_image(
+        self,
+        mock_describe,
+        mock_receive,
+        mock_s3,
+        mock_del,
+        mock_session,
+        mock_ec2,
+        mock_inspection,
+    ):
+        """
+        Test processing a CloudTrail log when we can't get the image data.
+
+        This can happen when a user has created an instance from a shared
+        image, but permission to that image has been revoked by the time we
+        discover and process the instance. In that case, we save an image with
+        status 'Unavailable' to indicate that we can't inspect it.
+        """
+        sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
+        mock_instance = util_helper.generate_mock_ec2_instance()
+        trail_record = analyzer_helper.generate_cloudtrail_instances_record(
+            aws_account_id=self.mock_account_id,
+            instance_ids=[mock_instance.instance_id],
+        )
+        s3_content = {'Records': [trail_record]}
+        mock_receive.return_value = [sqs_message]
+        mock_s3.return_value = json.dumps(s3_content)
+        mock_instances = {mock_instance.instance_id: mock_instance}
+
+        def get_ec2_instance_side_effect(session, instance_id):
+            return mock_instances[instance_id]
+
+        mock_ec2.side_effect = get_ec2_instance_side_effect
+
+        successes, failures = tasks.analyze_log()
+
+        self.assertEqual(len(successes), 1)
+        self.assertEqual(len(failures), 0)
+        mock_del.assert_called_with(
+            settings.CLOUDTRAIL_EVENT_URL, [sqs_message]
+        )
+
+        # The saved image should not be inspected because we can't access it.
+        mock_inspection.assert_not_called()
+
+        instances = list(AwsInstance.objects.all())
+        self.assertEqual(len(instances), 1)
+        instance = instances[0]
+        self.assertEqual(instance.ec2_instance_id, mock_instance.instance_id)
+        self.assertEqual(instance.account_id, self.mock_account.id)
+
+        # Assert that the image was stored.
+        images = list(AwsMachineImage.objects.all())
+        self.assertEqual(len(images), 1)
+        self.assertEqual(images[0].ec2_ami_id, mock_instance.image_id)
+        self.assertEqual(images[0].status, MachineImage.UNAVAILABLE)
 
     @patch('analyzer.tasks.aws.delete_messages_from_queue')
     @patch('analyzer.tasks.aws.get_object_content_from_s3')

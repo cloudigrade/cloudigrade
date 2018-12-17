@@ -11,11 +11,19 @@ from django.conf import settings
 from django.db import transaction
 from django.utils.translation import gettext as _
 
-from account.models import (AwsAccount, AwsEC2InstanceDefinitions,
-                            AwsInstance, AwsMachineImage, InstanceEvent)
-from account.util import (save_instance_events,
-                          save_new_aws_machine_image,
-                          start_image_inspection)
+from account.models import (
+    AwsAccount,
+    AwsEC2InstanceDefinitions,
+    AwsInstance,
+    AwsMachineImage,
+    InstanceEvent,
+    MachineImage,
+)
+from account.util import (
+    save_instance_events,
+    save_new_aws_machine_image,
+    start_image_inspection,
+)
 from util import aws
 from util.aws import is_instance_windows, rewrap_aws_errors
 from util.celery import retriable_shared_task
@@ -394,8 +402,9 @@ def _is_valid_event(record, valid_events):
         return True
 
 
-def _sanity_check_cloudtrail_findings(instance_events, ami_tag_events,
-                                      aws_instances, described_images):
+def _sanity_check_cloudtrail_findings(
+    instance_events, ami_tag_events, aws_instances, described_images
+):
     """
     Sanity check the CloudTrail findings before attempting to save them.
 
@@ -421,17 +430,23 @@ def _sanity_check_cloudtrail_findings(instance_events, ami_tag_events,
         if image_id not in described_images and \
                 not AwsMachineImage.objects.filter(
                     ec2_ami_id=image_id).exists():
-            raise CloudTrailLogAnalysisMissingData(_(
-                'Missing image data for {0}'
+            logger.info(_(
+                'Missing image data for {0}; creating UNAVAILABLE stub image.'
             ).format(instance_event))
+            AwsMachineImage.objects.create(
+                ec2_ami_id=image_id, status=MachineImage.UNAVAILABLE
+            )
     for ami_tag_event in ami_tag_events:
         image_id = ami_tag_event.image_id
         if image_id not in described_images and \
                 not AwsMachineImage.objects.filter(
                     ec2_ami_id=image_id).exists():
-            raise CloudTrailLogAnalysisMissingData(_(
-                'Missing image data for {0}'
+            logger.info(_(
+                'Missing image data for {0}; creating UNAVAILABLE stub image.'
             ).format(ami_tag_event))
+            AwsMachineImage.objects.create(
+                ec2_ami_id=image_id, status=MachineImage.UNAVAILABLE
+            )
 
 
 @transaction.atomic
