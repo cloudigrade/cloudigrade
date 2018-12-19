@@ -292,6 +292,12 @@ CLOUDTRAIL_EVENT_URL = env(
 
 S3_BUCKET_NAME = env('S3_BUCKET_NAME', default='{0}cloudigrade'.format(AWS_NAME_PREFIX))
 
+S3_BUCKET_LC_NAME = env('S3_BUCKET_LC_NAME', default='s3_lifecycle_policy')
+S3_BUCKET_LC_IA_TRANSITION = env('S3_BUCKET_LC_IA_TRANSITION', default=30)
+S3_BUCKET_LC_GLACIER_TRANSITION = env('S3_BUCKET_LC_GLACIER_TRANSITION',
+                                      default=60)
+S3_BUCKET_LC_MAX_AGE = env('S3_BUCKET_LC_MAX_AGE', default=1460)
+
 CLOUDTRAIL_NAME_PREFIX = 'cloudigrade-'
 
 CELERY_BROKER_TRANSPORT_OPTIONS = {
