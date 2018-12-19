@@ -33,7 +33,7 @@ def update_images_as_inspected(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('account', '0024_auto_20181108_1553'),
+        ('account', '0026_machineimage_20181219_1842'),
     ]
 
     operations = [
