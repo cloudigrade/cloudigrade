@@ -29,6 +29,7 @@ from util.exceptions import (AwsECSInstanceNotReady, AwsSnapshotCopyLimitError,
                              InvalidHoundigradeJsonFormat,
                              SnapshotNotReadyException)
 from util.tests import helper as util_helper
+from util.tests.helper import generate_dummy_image_id
 from . import helper
 
 
@@ -68,6 +69,7 @@ class AccountCeleryTaskTest(TestCase):
         ami_id_unknown = described_ami_unknown['ImageId']
         ami_id_openshift = described_ami_openshift['ImageId']
         ami_id_windows = described_ami_windows['ImageId']
+        ami_id_unavailable = generate_dummy_image_id()
 
         running_instances = [
             util_helper.generate_dummy_describe_instance(
@@ -83,6 +85,11 @@ class AccountCeleryTaskTest(TestCase):
                 state=aws.InstanceState.running,
                 platform=AwsMachineImage.WINDOWS,
             ),
+            util_helper.generate_dummy_describe_instance(
+                image_id=ami_id_unavailable,
+                state=aws.InstanceState.running
+            ),
+
         ]
         described_instances = {
             region: running_instances,
@@ -110,7 +117,7 @@ class AccountCeleryTaskTest(TestCase):
 
         # Verify that we created all three running instances and events.
         instances_count = AwsInstance.objects.filter(account=account).count()
-        self.assertEqual(instances_count, 3)
+        self.assertEqual(instances_count, 4)
 
         for described_instance in running_instances:
             instance_id = described_instance['InstanceId']
@@ -123,7 +130,7 @@ class AccountCeleryTaskTest(TestCase):
 
         # Verify that we saved all images used by the running instances.
         images_count = AwsMachineImage.objects.count()
-        self.assertEqual(images_count, 3)
+        self.assertEqual(images_count, 4)
 
         image = AwsMachineImage.objects.get(ec2_ami_id=ami_id_unknown)
         self.assertFalse(image.rhel_detected)
@@ -140,6 +147,11 @@ class AccountCeleryTaskTest(TestCase):
         self.assertFalse(image.openshift_detected)
         self.assertEqual(image.name, described_ami_windows['Name'])
         self.assertEqual(image.platform, AwsMachineImage.WINDOWS)
+
+        image = AwsMachineImage.objects.get(ec2_ami_id=ami_id_unavailable)
+        self.assertFalse(image.rhel_detected)
+        self.assertFalse(image.openshift_detected)
+        self.assertEqual(image.status, AwsMachineImage.UNAVAILABLE)
 
     @patch('account.tasks.aws')
     def test_copy_ami_snapshot_success(self, mock_aws):

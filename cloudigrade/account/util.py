@@ -13,7 +13,7 @@ from rest_framework.serializers import ValidationError
 
 from account import AWS_PROVIDER_STRING
 from account.models import (AwsInstance, AwsInstanceEvent, AwsMachineImage,
-                            AwsMachineImageCopy, InstanceEvent)
+                            AwsMachineImageCopy, InstanceEvent, MachineImage)
 from util import aws
 
 logger = logging.getLogger(__name__)
@@ -68,9 +68,17 @@ def save_instance_events(account, instance_data, region, events=None):
 
     if events is None:
         # Assume this is the initial event
-        machineimage = AwsMachineImage.objects.get(
-            ec2_ami_id=instance_data['ImageId']
-        )
+        image_id = instance_data['ImageId']
+
+        try:
+            machineimage = AwsMachineImage.objects.get(ec2_ami_id=image_id)
+        except AwsMachineImage.DoesNotExist:
+            logger.info(_(
+                'Missing image data for {0}; creating UNAVAILABLE stub image.'
+            ).format(instance_data))
+            machineimage = AwsMachineImage.objects.create(
+                ec2_ami_id=image_id, status=MachineImage.UNAVAILABLE
+            )
         event = AwsInstanceEvent(
             instance=instance,
             machineimage=machineimage,
