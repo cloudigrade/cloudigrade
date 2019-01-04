@@ -187,7 +187,6 @@ class CloudAccountOverviewViewSetTest(TestCase):
             'rhel_vcpu_seconds': runtime * self.instance['vcpu'],
             'openshift_vcpu_seconds': runtime * self.instance['vcpu']
         }
-        account_helper.generate_aws_ec2_definitions()
 
     def get_overview_list_response(self, user, data=None, name_pattern=None,
                                    account_id=None):
