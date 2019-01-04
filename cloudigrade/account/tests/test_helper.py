@@ -6,14 +6,21 @@ import random
 import re
 import uuid
 from decimal import Decimal
+from unittest.mock import patch
 
 import faker
 from django.conf import settings
 from django.test import TestCase
 
-from account.models import (AwsAccount, AwsInstance, AwsMachineImage,
-                            CLOUD_ACCESS_NAME_TOKEN, InstanceEvent,
-                            MARKETPLACE_NAME_TOKEN)
+from account.models import (
+    AwsAccount,
+    AwsEC2InstanceDefinitions,
+    AwsInstance,
+    AwsMachineImage,
+    CLOUD_ACCESS_NAME_TOKEN,
+    InstanceEvent,
+    MARKETPLACE_NAME_TOKEN,
+)
 from account.tests import helper
 from util.tests import helper as util_helper
 
@@ -272,3 +279,33 @@ class GenerateAwsImageTest(TestCase):
         self.assertIn(MARKETPLACE_NAME_TOKEN, image.name)
         self.assertFalse(image.is_cloud_access)
         self.assertTrue(image.is_marketplace)
+
+
+class GenerateAwsEc2InstanceDefinitionsTest(TestCase):
+    """generate_aws_ec2_definitions test case."""
+
+    def test_generate_aws_ec2_definitions_when_empty(self):
+        """Assert generation of AWS EC2 instance definitions."""
+        self.assertEqual(AwsEC2InstanceDefinitions.objects.count(), 0)
+        helper.generate_aws_ec2_definitions()
+        self.assertEqual(
+            AwsEC2InstanceDefinitions.objects.count(),
+            len(util_helper.SOME_EC2_INSTANCE_TYPES),
+        )
+
+    @patch.object(helper, 'logger')
+    def test_generate_aws_ec2_definitions_warns_when_not_empty(
+        self, mock_logger
+    ):
+        """Assert warning when generating definition that already exists."""
+        helper.generate_aws_ec2_definitions()
+        helper.generate_aws_ec2_definitions()
+        self.assertEqual(
+            AwsEC2InstanceDefinitions.objects.count(),
+            len(util_helper.SOME_EC2_INSTANCE_TYPES),
+        )
+        # warning counts should match because each type was attempted twice.
+        self.assertEqual(
+            len(mock_logger.warning.mock_calls),
+            len(util_helper.SOME_EC2_INSTANCE_TYPES),
+        )

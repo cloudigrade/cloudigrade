@@ -1,5 +1,6 @@
 """Helper functions for generating test data."""
 import json
+import logging
 import random
 import uuid
 
@@ -14,6 +15,7 @@ from util import aws
 from util.tests import helper
 
 _faker = faker.Faker()
+logger = logging.getLogger(__name__)
 
 
 def generate_aws_account(arn=None, aws_account_id=None, user=None, name=None,
@@ -282,8 +284,12 @@ def generate_aws_ec2_definitions():
     instance_types = helper.SOME_EC2_INSTANCE_TYPES
 
     for name, instance in instance_types.items():
-        AwsEC2InstanceDefinitions.objects.create(
+        __, created = AwsEC2InstanceDefinitions.objects.get_or_create(
             instance_type=name,
-            memory=instance['memory'],
-            vcpu=instance['vcpu']
+            defaults={
+                'memory': instance['memory'],
+                'vcpu': instance['vcpu'],
+            },
         )
+        if not created:
+            logger.warning('"{0}" EC2 definition already exists'.format(name))
