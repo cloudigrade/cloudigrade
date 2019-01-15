@@ -219,9 +219,9 @@ NormalizedRun = collections.namedtuple(
         'instance_memory',
         'instance_type',
         'instance_vcpu',
-        # 'is_cloud_access',  # soon
+        'is_cloud_access',
         'is_encrypted',
-        # 'is_marketplace',  # soon
+        'is_marketplace',
         'openshift',
         'openshift_challenged',
         'openshift_detected',
@@ -325,7 +325,9 @@ def normalize_runs(events):  # noqa: C901
                     instance_vcpu=type_definition.vcpu
                     if type_definition
                     else None,
+                    is_cloud_access=image.is_cloud_access if image else False,
                     is_encrypted=image.is_encrypted if image else False,
+                    is_marketplace=image.is_marketplace if image else False,
                     openshift=image.openshift if image else False,
                     openshift_challenged=image.openshift_challenged
                     if image
@@ -355,7 +357,9 @@ def normalize_runs(events):  # noqa: C901
                 instance_vcpu=type_definition.vcpu
                 if type_definition
                 else None,
+                is_cloud_access=image.is_cloud_access if image else False,
                 is_encrypted=image.is_encrypted if image else False,
+                is_marketplace=image.is_marketplace if image else False,
                 openshift=image.openshift if image else False,
                 openshift_challenged=image.openshift_challenged
                 if image
@@ -451,7 +455,9 @@ def calculate_runs_in_periods(periods, events):
                         instance_memory=run.instance_memory,
                         instance_type=run.instance_type,
                         instance_vcpu=run.instance_vcpu,
+                        is_cloud_access=run.is_cloud_access,
                         is_encrypted=run.is_encrypted,
+                        is_marketplace=run.is_marketplace,
                         rhel=run.rhel,
                         rhel_challenged=run.rhel_challenged,
                         rhel_detected=run.rhel_detected,
@@ -487,7 +493,9 @@ def calculate_runs_in_periods(periods, events):
                         instance_memory=run.instance_memory,
                         instance_type=run.instance_type,
                         instance_vcpu=run.instance_vcpu,
+                        is_cloud_access=run.is_cloud_access,
                         is_encrypted=run.is_encrypted,
+                        is_marketplace=run.is_marketplace,
                         rhel=run.rhel,
                         rhel_challenged=run.rhel_challenged,
                         rhel_detected=run.rhel_detected,
@@ -524,7 +532,9 @@ def calculate_runs_in_periods(periods, events):
                         instance_memory=run.instance_memory,
                         instance_type=run.instance_type,
                         instance_vcpu=run.instance_vcpu,
+                        is_cloud_access=run.is_cloud_access,
                         is_encrypted=run.is_encrypted,
+                        is_marketplace=run.is_marketplace,
                         rhel=run.rhel,
                         rhel_challenged=run.rhel_challenged,
                         rhel_detected=run.rhel_detected,
