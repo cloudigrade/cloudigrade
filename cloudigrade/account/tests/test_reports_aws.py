@@ -1524,7 +1524,9 @@ class GetImageOverviewsTestCase(ReportTestBase):
         """Assert the image's various general metadata are as expected."""
         self.assertEqual(image.cloud_image_id, result['cloud_image_id'])
         self.assertEqual(image.id, result['id'])
+        self.assertEqual(image.is_cloud_access, result['is_cloud_access'])
         self.assertEqual(image.is_encrypted, result['is_encrypted'])
+        self.assertEqual(image.is_marketplace, result['is_marketplace'])
         self.assertEqual(image.name, result['name'])
         self.assertEqual(image.status, result['status'])
 
