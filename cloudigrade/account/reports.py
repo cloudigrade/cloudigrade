@@ -157,24 +157,23 @@ def get_last_known_instance_type(instance, before_date):
         str: The last known instance type or None if no type is found.
 
     """
-    try:
-        event = (
-            AwsInstanceEvent.objects.filter(
-                instance=instance,
-                occurred_at__lte=before_date,
-                instance_type__isnull=False,
-            )
-            .order_by('-occurred_at')
-            .get()
+    event = (
+        AwsInstanceEvent.objects.filter(
+            instance=instance,
+            occurred_at__lte=before_date,
+            instance_type__isnull=False,
         )
-        return event.instance_type
-    except AwsInstanceEvent.DoesNotExist:
+        .order_by('-occurred_at')
+        .first()
+    )
+    if event is None:
         logger.error(
             _(
                 'could not find any type for {instance} by {before_date}'
             ).format(instance=instance, before_date=before_date)
         )
         return None
+    return event.instance_type
 
 
 def get_last_known_machineimage(instance, before_date):
@@ -189,24 +188,23 @@ def get_last_known_machineimage(instance, before_date):
         MachineImage: The last known image or None if no image is found.
 
     """
-    try:
-        event = (
-            InstanceEvent.objects.filter(
-                instance=instance,
-                occurred_at__lte=before_date,
-                machineimage__isnull=False,
-            )
-            .order_by('-occurred_at')
-            .get()
+    event = (
+        InstanceEvent.objects.filter(
+            instance=instance,
+            occurred_at__lte=before_date,
+            machineimage__isnull=False,
         )
-        return event.machineimage
-    except InstanceEvent.DoesNotExist:
+        .order_by('-occurred_at')
+        .first()
+    )
+    if event is None:
         logger.error(
             _(
                 'could not find any image for {instance} by {before_date}'
             ).format(instance=instance, before_date=before_date)
         )
         return None
+    return event.machineimage
 
 
 NormalizedRun = collections.namedtuple(

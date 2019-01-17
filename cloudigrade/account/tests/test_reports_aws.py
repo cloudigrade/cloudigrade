@@ -1423,6 +1423,103 @@ class GetCloudAccountOverview(TestCase):
             rhel_vcpu_seconds=expected_vcpu_seconds,
         )
 
+    def test_get_cloud_account_overview_instance_old_and_new_events_3(self):
+        """
+        Test an account with an instance with some old and new events.
+
+        This test is also very similar to the preceding two tests
+        (test_get_cloud_account_overview_instance_old_and_new_events and
+        test_get_cloud_account_overview_instance_old_and_new_events_2), but
+        this test includes multiple events before the reporting period that
+        have the extra image/instance/subnet info stored as well as multiple
+        events before the reported period that do *not* have that info stored.
+        """
+        events = []
+
+        # we specifically want an instance type that has not-1 values for
+        # memory and cpu so we can verify different numbers in the results.
+        instance_type = 't2.large'
+        memory = util_helper.SOME_EC2_INSTANCE_TYPES[instance_type]['memory']
+        vcpu = util_helper.SOME_EC2_INSTANCE_TYPES[instance_type]['vcpu']
+
+        # a long time ago before the reporting period...
+        # in the old times, all events had the image/instance/subnet info.
+        events.append(
+            account_helper.generate_single_aws_instance_event(
+                self.instance_1,
+                util_helper.utc_dt(2017, 12, 10, 0, 0, 0),
+                InstanceEvent.TYPE.power_on,
+                ec2_ami_id=self.rhel_image.ec2_ami_id,
+                instance_type=instance_type,
+            )
+        )
+        events.append(
+            account_helper.generate_single_aws_instance_event(
+                self.instance_1,
+                util_helper.utc_dt(2017, 12, 11, 0, 0, 0),
+                InstanceEvent.TYPE.power_off,
+                ec2_ami_id=self.rhel_image.ec2_ami_id,
+                instance_type=instance_type,
+                subnet=events[0].subnet,
+            )
+        )
+
+        # some time later, we stopped writing that info after the first event.
+        events.append(
+            account_helper.generate_single_aws_instance_event(
+                self.instance_1,
+                util_helper.utc_dt(2017, 12, 15, 0, 0, 0),
+                InstanceEvent.TYPE.power_on,
+                no_image=True,
+                no_instance_type=True,
+                no_subnet=True,
+            )
+        )
+        events.append(
+            account_helper.generate_single_aws_instance_event(
+                self.instance_1,
+                util_helper.utc_dt(2017, 12, 16, 0, 0, 0),
+                InstanceEvent.TYPE.power_off,
+                no_image=True,
+                no_instance_type=True,
+                no_subnet=True,
+            )
+        )
+
+        # and during the reporting period...
+        events.append(
+            account_helper.generate_single_aws_instance_event(
+                self.instance_1,
+                util_helper.utc_dt(2018, 1, 2, 0, 0, 0),
+                InstanceEvent.TYPE.power_on,
+                no_image=True,
+                no_instance_type=True,
+                no_subnet=True,
+            )
+        )
+        overview = reports.get_account_overview(
+            self.account, self.start, self.end
+        )
+        expected_runtime_seconds = DAY * 30  # the remainder of the month
+        expected_memory_seconds = expected_runtime_seconds * memory
+        expected_vcpu_seconds = expected_runtime_seconds * vcpu
+        self.assertExpectedAccountOverview(
+            overview,
+            self.account,
+            images=1,
+            instances=1,
+            rhel_instances=1,
+            openshift_instances=0,
+            rhel_runtime_seconds=expected_runtime_seconds,
+            openshift_runtime_seconds=0,
+            rhel_images_challenged=0,
+            openshift_images_challenged=0,
+            openshift_memory_seconds=0,
+            openshift_vcpu_seconds=0,
+            rhel_memory_seconds=expected_memory_seconds,
+            rhel_vcpu_seconds=expected_vcpu_seconds,
+        )
+
     def test_get_cloud_account_overview_type_changes_while_running(self):
         """
         Test when an instance seems to change type while running.
