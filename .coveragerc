@@ -2,6 +2,8 @@
 branch = True
 data_file = .coverage
 source = cloudigrade
+parallel = True
+concurrency = multiprocessing
 omit =
     *config/settings/*
     *config/celery.py
