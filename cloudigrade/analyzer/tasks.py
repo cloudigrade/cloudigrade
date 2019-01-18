@@ -7,6 +7,7 @@ from decimal import Decimal
 
 import boto3
 from celery import shared_task
+from dateutil.parser import parse
 from django.conf import settings
 from django.db import transaction
 from django.utils.translation import gettext as _
@@ -496,10 +497,10 @@ def _save_results(instance_events, ami_tag_events, aws_instances,
     # Which images need tag state changes?
     ocp_tagged_ami_ids = set()
     ocp_untagged_ami_ids = set()
-    for image_id, events in itertools.groupby(
+    for image_id, events_info in itertools.groupby(
             ami_tag_events, key=lambda e: e.image_id):
         # Get only the most recent event for each image
-        latest_event = sorted(events, key=lambda e: e.occurred_at)[-1]
+        latest_event = sorted(events_info, key=lambda e: e.occurred_at)[-1]
         # IMPORTANT NOTE: This assumes all tags are the OCP tag!
         # This will need to change if we ever support other ami tags.
         if latest_event.exists:
@@ -553,27 +554,58 @@ def _save_results(instance_events, ami_tag_events, aws_instances,
         aws_instance = aws_instances[instance_id]
 
         # Build a list of event data
-        events = [
-            {
-                'subnet': getattr(aws_instance, 'subnet_id', None),
-                'ec2_ami_id': getattr(aws_instance, 'image_id', None),
-                'instance_type': instance_event.instance_type if
-                instance_event.instance_type is not None else getattr(
-                    aws_instance, 'instance_type', None),
-                'event_type': instance_event.event_type,
-                'occurred_at': instance_event.occurred_at
-            }
-            for instance_event in _events
-        ]
+        events_info = _build_events_info_for_saving(
+            account, aws_instance, _events
+        )
 
         save_instance_events(
             account,
             aws_instance,
             region,
-            events
+            events_info
         )
 
     return new_images
+
+
+def _build_events_info_for_saving(account, instance, events):
+    """
+    Build a list of enough information to save the relevant events.
+
+    If particular note here is the "if" that filters away events that seem to
+    have occurred before their account was created. This can happen in some
+    edge-case circumstances when the user is deleting and recreating their
+    account in cloudigrade while powering off and on events in AWS. The AWS
+    CloudTrail from *before* deleting the account may continue to accumulate
+    events for some time since it is delayed, and when the account is recreated
+    in cloudigrade, those old events may arrive, but we *should not* know about
+    them. If we were to keep those events, bad things could happen because we
+    may not have enough information about them (instance type, relevant image)
+    to process them for reporting.
+
+    Args:
+        account (AwsAccount): the account that owns the instance
+        instance (AwsInstance): the instance that generated the events
+        events (list[AwsInstanceEvent]): the incoming events
+
+    Returns:
+        list[dict]: enough information to save a list of events
+
+    """
+    events_info = [
+        {
+            'subnet': getattr(instance, 'subnet_id', None),
+            'ec2_ami_id': getattr(instance, 'image_id', None),
+            'instance_type': instance_event.instance_type
+            if instance_event.instance_type is not None
+            else getattr(instance, 'instance_type', None),
+            'event_type': instance_event.event_type,
+            'occurred_at': instance_event.occurred_at,
+        }
+        for instance_event in events
+        if parse(instance_event.occurred_at) >= account.created_at
+    ]
+    return events_info
 
 
 @retriable_shared_task

@@ -33,7 +33,9 @@ class AnalyzeLogTest(TestCase):
         self.mock_account = account_helper.generate_aws_account(
             arn=self.mock_arn,
             aws_account_id=self.mock_account_id,
-            user=self.user)
+            user=self.user,
+            created_at=util_helper.utc_dt(2017, 12, 1, 0, 0, 0),
+        )
 
     def assertExpectedInstance(self, ec2_instance, region):
         """Assert we created an Instance model matching expectations."""
@@ -850,3 +852,47 @@ class AnalyzeLogTest(TestCase):
         mock_db_create.assert_called_with(instance_type='r5.large',
                                           memory=16,
                                           vcpu=2)
+
+    def test_build_events_info_for_saving(self):
+        """Test _build_events_info_for_saving with typical inputs."""
+        instance = account_helper.generate_aws_instance(self.mock_account)
+
+        # Note: this time is *after* self.mock_account.created_at.
+        occurred_at = '2018-01-02T12:34:56+00:00'
+
+        instance_events = [
+            tasks.CloudTrailInstanceEvent(
+                occurred_at=occurred_at,
+                account_id=self.mock_account.aws_account_id,
+                region=instance.region,
+                instance_id=instance.ec2_instance_id,
+                event_type=InstanceEvent.TYPE.power_on,
+                instance_type=None,
+            )
+        ]
+        events_info = tasks._build_events_info_for_saving(
+            self.mock_account, instance, instance_events
+        )
+        self.assertEqual(len(events_info), 1)
+
+    def test_build_events_info_for_saving_too_old_events(self):
+        """Test _build_events_info_for_saving with events that are too old."""
+        instance = account_helper.generate_aws_instance(self.mock_account)
+
+        # Note: this time is *before* self.mock_account.created_at.
+        occurred_at = '2016-01-02T12:34:56+00:00'
+
+        instance_events = [
+            tasks.CloudTrailInstanceEvent(
+                occurred_at=occurred_at,
+                account_id=self.mock_account.aws_account_id,
+                region=instance.region,
+                instance_id=instance.ec2_instance_id,
+                event_type=InstanceEvent.TYPE.power_on,
+                instance_type=None,
+            )
+        ]
+        events_info = tasks._build_events_info_for_saving(
+            self.mock_account, instance, instance_events
+        )
+        self.assertEqual(len(events_info), 0)
