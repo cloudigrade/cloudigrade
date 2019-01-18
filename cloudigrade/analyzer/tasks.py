@@ -528,11 +528,12 @@ def _save_results(instance_events, ami_tag_events, aws_instances,
         name = described_image['Name']
         windows = ami_id in windows_ami_ids
         openshift = ami_id in ocp_tagged_ami_ids
+        region = described_image['found_in_region']
 
         logger.info(_('{prefix}: Saving new AMI ID: {ami_id}')
                     .format(prefix=log_prefix, ami_id=ami_id))
         image, new = save_new_aws_machine_image(
-            ami_id, name, owner_id, openshift, windows)
+            ami_id, name, owner_id, openshift, windows, region)
         if new and image.status is not image.INSPECTED:
             new_images[ami_id] = image
 

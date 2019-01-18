@@ -70,6 +70,7 @@ def save_instance_events(account, instance_data, region, events=None):
         # Assume this is the initial event
         machineimage, created = AwsMachineImage.objects.get_or_create(
             ec2_ami_id=instance_data['ImageId'],
+            region=region,
             defaults={'status': MachineImage.UNAVAILABLE})
         if created:
             logger.info(_(
@@ -146,14 +147,14 @@ def create_new_machine_images(session, instances_data):
     logger.info(_('{prefix}: Skipping known AMI IDs: {known_ami_ids}')
                 .format(prefix=log_prefix, known_ami_ids=known_ami_ids))
 
-    new_described_images = []
+    new_described_images = {}
     windows_ami_ids = []
 
     for region_id, instances in instances_data.items():
         ami_ids = set([instance['ImageId'] for instance in instances])
         new_ami_ids = ami_ids - known_ami_ids
         if new_ami_ids:
-            new_described_images.extend(
+            new_described_images[region_id] = (
                 aws.describe_images(session, new_ami_ids, region_id)
             )
         windows_ami_ids.extend({
@@ -165,28 +166,30 @@ def create_new_machine_images(session, instances_data):
                 .format(prefix=log_prefix, windows_ami_ids=windows_ami_ids))
 
     new_image_ids = []
-    for described_image in new_described_images:
-        ami_id = described_image['ImageId']
-        owner_id = Decimal(described_image['OwnerId'])
-        name = described_image['Name']
-        windows = ami_id in windows_ami_ids
-        openshift = len([
-            tag for tag in described_image.get('Tags', [])
-            if tag.get('Key') == aws.OPENSHIFT_TAG
-        ]) > 0
+    for region_id, described_images in new_described_images.items():
+        for described_image in described_images:
+            ami_id = described_image['ImageId']
+            owner_id = Decimal(described_image['OwnerId'])
+            name = described_image['Name']
+            windows = ami_id in windows_ami_ids
+            region = region_id
+            openshift = len([
+                tag for tag in described_image.get('Tags', [])
+                if tag.get('Key') == aws.OPENSHIFT_TAG
+            ]) > 0
 
-        logger.info(_('{prefix}: Saving new AMI ID: {ami_id}')
-                    .format(prefix=log_prefix, ami_id=ami_id))
-        image, new = save_new_aws_machine_image(
-            ami_id, name, owner_id, openshift, windows)
-        if new:
-            new_image_ids.append(ami_id)
+            logger.info(_('{prefix}: Saving new AMI ID: {ami_id}')
+                        .format(prefix=log_prefix, ami_id=ami_id))
+            image, new = save_new_aws_machine_image(
+                ami_id, name, owner_id, openshift, windows, region)
+            if new:
+                new_image_ids.append(ami_id)
 
     return new_image_ids
 
 
 def save_new_aws_machine_image(ami_id, name, owner_aws_account_id,
-                               openshift_detected, windows_detected):
+                               openshift_detected, windows_detected, region):
     """
     Save a new AwsMachineImage image object.
 
@@ -201,6 +204,7 @@ def save_new_aws_machine_image(ami_id, name, owner_aws_account_id,
         owner_aws_account_id (Decimal): the AWS account ID that owns this image
         openshift_detected (bool): was openshift detected for this image
         windows_detected (bool): was windows detected for this image
+        region (str): Region where the image was found
 
     Returns (AwsMachineImage, bool): The object representing the saved model
         and a boolean of whether it was new or not.
@@ -220,6 +224,7 @@ def save_new_aws_machine_image(ami_id, name, owner_aws_account_id,
             'name': name,
             'status': status,
             'openshift_detected': openshift_detected,
+            'region': region,
         }
     )
 

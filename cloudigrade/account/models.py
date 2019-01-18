@@ -376,6 +376,11 @@ class AwsMachineImage(MachineImage):
         decimal_places=0,
         null=True,
     )
+    region = models.CharField(
+        max_length=256,
+        null=True,
+        blank=True,
+    )
 
     @property
     def is_cloud_access(self):
