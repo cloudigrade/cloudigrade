@@ -288,6 +288,24 @@ If the cloudigrade deployment also failed because the database was not available
     oc rollout retry dc/cloudigrade
 
 
+Updating API Example Docs
+-------------------------
+
+To automatically update the API examples documentation, you need a database with current migrations applied but with no customer data in it. If you have deployed to a local OpenShift cluster, you should forward the database port so it can be accessed locally.
+
+.. code-block:: sh
+
+    make oc-forward-ports
+
+Once the database is available, you may run the following Make target to generate the API examples documentation:
+
+.. code-block:: sh
+
+    make docs-api-examples
+
+This will create many use-case-specific records in the database, simulate API calls through cloudigrade, and generate an updated document with the API calls. You should review any changes made by this command before adding and committing them to source control.
+
+
 Authentication
 ==============
 
