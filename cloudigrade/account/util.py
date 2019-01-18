@@ -53,7 +53,7 @@ def save_instance_events(account, instance_data, region, events=None):
             the data for these InstanceEvents.
         instance_data (dict): Dictionary containing instance information.
         region (str): AWS Region.
-        events (list): List of Events to be saved.
+        events (list[dict]): List of dicts representing Events to be saved.
 
     Returns:
         AwsInstance: Object representing the saved instance.
