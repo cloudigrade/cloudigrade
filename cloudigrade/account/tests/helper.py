@@ -182,7 +182,8 @@ def generate_aws_account(arn=None, aws_account_id=None, user=None, name=None,
     return account
 
 
-def generate_aws_instance(account, ec2_instance_id=None, region=None):
+def generate_aws_instance(account, ec2_instance_id=None, region=None,
+                          image=None, no_image=False):
     """
     Generate an AwsInstance for the AwsAccount for testing.
 
@@ -201,11 +202,21 @@ def generate_aws_instance(account, ec2_instance_id=None, region=None):
         ec2_instance_id = helper.generate_dummy_instance_id()
     if region is None:
         region = random.choice(helper.SOME_AWS_REGIONS)
+    if image is None:
+        if not no_image:
+            ec2_ami_id = helper.generate_dummy_image_id()
+            image, __ = AwsMachineImage.objects.get_or_create(
+                ec2_ami_id=ec2_ami_id,
+                defaults={
+                    'owner_aws_account_id': account.aws_account_id,
+                }
+            )
 
     return AwsInstance.objects.create(
         account=account,
         ec2_instance_id=ec2_instance_id,
         region=region,
+        machineimage=image
     )
 
 

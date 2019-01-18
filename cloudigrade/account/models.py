@@ -224,6 +224,12 @@ class Instance(BasePolymorphicModel):
         db_index=True,
         null=False,
     )
+    machineimage = models.ForeignKey(
+        MachineImage,
+        on_delete=models.CASCADE,
+        db_index=True,
+        null=True,
+    )
 
 
 class InstanceEvent(BasePolymorphicModel):

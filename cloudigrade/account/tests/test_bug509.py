@@ -34,10 +34,12 @@ class ReportBug509TestCase(TestCase):
         self.account = account_helper.generate_aws_account(
             user=self.user, created_at=account_created_at,
         )
-        self.instance = account_helper.generate_aws_instance(self.account)
         self.image_rhel = account_helper.generate_aws_image(
             rhel_detected=True,
             rhel_challenged=False,
+        )
+        self.instance = account_helper.generate_aws_instance(
+            self.account, image=self.image_rhel
         )
 
         # Power on the instance before the reporting month.

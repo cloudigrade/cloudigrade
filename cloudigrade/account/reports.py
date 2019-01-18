@@ -176,37 +176,6 @@ def get_last_known_instance_type(instance, before_date):
     return event.instance_type
 
 
-def get_last_known_machineimage(instance, before_date):
-    """
-    Get the last known image for the given instance.
-
-    Args:
-        instance (Instance): instance to check
-        before_date (datetime.datetime): cutoff for checking events for type
-
-    Returns:
-        MachineImage: The last known image or None if no image is found.
-
-    """
-    event = (
-        InstanceEvent.objects.filter(
-            instance=instance,
-            occurred_at__lte=before_date,
-            machineimage__isnull=False,
-        )
-        .order_by('-occurred_at')
-        .first()
-    )
-    if event is None:
-        logger.error(
-            _(
-                'could not find any image for {instance} by {before_date}'
-            ).format(instance=instance, before_date=before_date)
-        )
-        return None
-    return event.machineimage
-
-
 NormalizedRun = collections.namedtuple(
     'NormalizedRun',
     [
@@ -274,7 +243,7 @@ def normalize_runs(events):  # noqa: C901
         type_definition = get_instance_type_definition(instance_type)
         start_run = None
         end_run = None
-        image = None
+        image = Instance.objects.get(id=instance_id).machineimage
 
         for event in events:
             if event.instance_type and event.instance_type != instance_type:
@@ -291,8 +260,6 @@ def normalize_runs(events):  # noqa: C901
                     )
                     raise NormalizeRunException(message)
                 instance_type = event.instance_type
-            if event.machineimage and not image:
-                image = event.machineimage
 
             if event.event_type == event.TYPE.power_on:
                 if start_run is None:
@@ -305,8 +272,11 @@ def normalize_runs(events):  # noqa: C901
                 end_run = event.occurred_at
 
             if start_run and image is None:
-                image = get_last_known_machineimage(
-                    event.instance, event.occurred_at
+                logger.warning(
+                    _(
+                        'Instance {instance_id} does not have an associated '
+                        'machine image.'
+                    ).format(instance_id=instance_id)
                 )
 
             if start_run and end_run:

@@ -21,6 +21,7 @@ from account.models import (
     MachineImage,
 )
 from account.util import (
+    save_instance,
     save_instance_events,
     save_new_aws_machine_image,
     start_image_inspection,
@@ -558,11 +559,10 @@ def _save_results(instance_events, ami_tag_events, aws_instances,
         events_info = _build_events_info_for_saving(
             account, aws_instance, _events
         )
-
+        instance = save_instance(account, aws_instance, region)
         save_instance_events(
-            account,
+            instance,
             aws_instance,
-            region,
             events_info
         )
 

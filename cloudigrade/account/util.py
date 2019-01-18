@@ -38,19 +38,20 @@ def create_initial_aws_instance_events(account, instances_data):
     """
     for region, instances in instances_data.items():
         for instance_data in instances:
-            save_instance_events(account, instance_data, region)
+            instance = save_instance(account, instance_data, region)
+            save_instance_events(instance, instance_data)
 
 
-def save_instance_events(account, instance_data, region, events=None):
+def save_instance(account, instance_data, region):
     """
-    Save provided events, and create the instance object if it does not exist.
+    Create or Update the instance object.
 
-    Note: This function assumes the images related to the instance events have
+    Note: This function assumes the images related to the instance have
     already been created and saved.
 
     Args:
         account (AwsAccount): The account that owns the instance that spawned
-            the data for these InstanceEvents.
+            the data for this Instance.
         instance_data (dict): Dictionary containing instance information.
         region (str): AWS Region.
         events (list[dict]): List of dicts representing Events to be saved.
@@ -59,23 +60,76 @@ def save_instance_events(account, instance_data, region, events=None):
         AwsInstance: Object representing the saved instance.
 
     """
-    instance, __ = AwsInstance.objects.get_or_create(
+    instance, created = AwsInstance.objects.get_or_create(
         account=account,
         ec2_instance_id=instance_data['InstanceId'] if isinstance(
             instance_data, dict) else instance_data.instance_id,
         region=region,
     )
+    image_id = (
+        instance_data.get('ImageId', None)
+        if isinstance(instance_data, dict)
+        else getattr(instance_data, 'image_id', None)
+    )
 
-    if events is None:
-        # Assume this is the initial event
+    # If for some reason we don't get the image_id, we cannot look up
+    # the associated image.
+    if image_id is None:
+        machineimage = None
+    else:
         machineimage, created = AwsMachineImage.objects.get_or_create(
-            ec2_ami_id=instance_data['ImageId'],
-            region=region,
-            defaults={'status': MachineImage.UNAVAILABLE})
+            ec2_ami_id=image_id,
+            defaults={
+                'status': MachineImage.UNAVAILABLE,
+                'region': region
+            }
+        )
         if created:
             logger.info(_(
                 'Missing image data for {0}; creating UNAVAILABLE stub image.'
             ).format(instance_data))
+
+    if machineimage is not None:
+        instance.machineimage = machineimage
+        instance.save()
+    return instance
+
+
+def save_instance_events(instance, instance_data, events=None):
+    """
+    Save provided events, and create the instance object if it does not exist.
+
+    Note: This function assumes the images related to the instance events have
+    already been created and saved.
+
+    Args:
+        instance (AwsInstance): The Instance is associated with
+            these InstanceEvents.
+        instance_data (dict): Dictionary containing instance information.
+        region (str): AWS Region.
+        events (list[dict]): List of dicts representing Events to be saved.
+
+    Returns:
+        AwsInstance: Object representing the saved instance.
+
+    """
+    # When processing events, it's possible that we get information
+    # about an instance but we don't know what image was under it
+    # because the instance may have been terminated and cleaned up
+    # before we could look at it. In that case, we (correctly) have to
+    # save the event with no known image.
+    if instance is None:
+        machineimage = None
+    else:
+        machineimage = (
+            instance.machineimage
+            if hasattr(instance, 'machineimage')
+            else None
+        )
+    if events is None:
+        # As of issue #512 we do not use the stored machineimage on the
+        # instanceevent. But we keep storing it here anyways in order
+        # to remain backwards compatible
         event = AwsInstanceEvent(
             instance=instance,
             machineimage=machineimage,
@@ -89,16 +143,6 @@ def save_instance_events(account, instance_data, region, events=None):
         logger.info(_('saving {count} new event(s) for {instance}')
                     .format(count=len(events), instance=instance))
         for event in events:
-            # When processing events, it's possible that we get information
-            # about an instance but we don't know what image was under it
-            # because the instance may have been terminated and cleaned up
-            # before we could look at it. In that case, we (correctly) have to
-            # save the event with no known image.
-            machineimage = None
-            if event['ec2_ami_id']:
-                machineimage = AwsMachineImage.objects.get(
-                    ec2_ami_id=event['ec2_ami_id']
-                )
             event = AwsInstanceEvent(
                 instance=instance,
                 machineimage=machineimage,

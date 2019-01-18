@@ -28,6 +28,7 @@ class InstanceAdmin(admin.ModelAdmin):
     list_display = (
         'id',
         'account',
+        'machineimage',
     )
 
 

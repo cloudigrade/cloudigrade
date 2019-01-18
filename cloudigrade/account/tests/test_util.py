@@ -9,7 +9,7 @@ from rest_framework.serializers import ValidationError
 
 import util.aws.sqs
 from account import AWS_PROVIDER_STRING, util
-from account.models import AwsAccount, AwsMachineImage
+from account.models import AwsAccount, AwsMachineImage, MachineImage
 from account.tests import helper as account_helper
 from account.util import convert_param_to_int
 from util import aws
@@ -318,3 +318,72 @@ class AccountUtilTest(TestCase):
         mock_copy.delay.assert_not_called()
         image.refresh_from_db()
         self.assertEqual(image.status, image.INSPECTED)
+
+    def test_save_instance_with_unavailable_image(self):
+        """Test that save instance events also writes image on instance."""
+        aws_account_id = util_helper.generate_dummy_aws_account_id()
+        arn = util_helper.generate_dummy_arn(aws_account_id)
+        account = AwsAccount(
+            account_arn=arn,
+            aws_account_id=aws_account_id,
+            user=util_helper.generate_test_user(),
+        )
+        account.save()
+
+        region = random.choice(util_helper.SOME_AWS_REGIONS)
+        instances_data = {
+            region: [
+                util_helper.generate_dummy_describe_instance(
+                    state=aws.InstanceState.running
+                )
+            ]
+        }
+        ami_id = instances_data[region][0]['ImageId']
+
+        instance = util.save_instance(
+            account, instances_data[region][0], region
+        )
+
+        self.assertEqual(instance.machineimage.ec2_ami_id, ami_id)
+        self.assertEqual(
+            instance.machineimage.status, MachineImage.UNAVAILABLE
+        )
+
+    def test_save_instance_with_available_image(self):
+        """Test that save instance events also writes image on instance."""
+        aws_account_id = util_helper.generate_dummy_aws_account_id()
+        arn = util_helper.generate_dummy_arn(aws_account_id)
+        account = AwsAccount(
+            account_arn=arn,
+            aws_account_id=aws_account_id,
+            user=util_helper.generate_test_user(),
+        )
+        account.save()
+
+        region = random.choice(util_helper.SOME_AWS_REGIONS)
+        instances_data = {
+            region: [
+                util_helper.generate_dummy_describe_instance(
+                    state=aws.InstanceState.running
+                )
+            ]
+        }
+        ami_id = instances_data[region][0]['ImageId']
+
+        mock_session = Mock()
+        described_amis = util_helper.generate_dummy_describe_image(
+            image_id=ami_id,
+            owner_id=aws_account_id
+        )
+
+        with patch.object(util.aws, 'describe_images') as mock_describe_images:
+            mock_describe_images.return_value = [described_amis]
+            util.create_new_machine_images(mock_session, instances_data)
+            mock_describe_images.assert_called_with(mock_session, {ami_id},
+                                                    region)
+
+        instance = util.save_instance(
+            account, instances_data[region][0], region
+        )
+        self.assertEqual(instance.machineimage.ec2_ami_id, ami_id)
+        self.assertEqual(instance.machineimage.status, MachineImage.PENDING)

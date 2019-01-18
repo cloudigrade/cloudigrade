@@ -44,14 +44,6 @@ class CloudAccountOverviewViewSetTest(TestCase):
         self.account4 = account_helper.generate_aws_account(user=self.user2)
         self.account4.created_at = util_helper.utc_dt(2017, 12, 1, 0, 0, 0)
         self.account4.save()
-        self.instance1 = \
-            account_helper.generate_aws_instance(account=self.account1)
-        self.instance2 = \
-            account_helper.generate_aws_instance(account=self.account2)
-        self.instance3 = \
-            account_helper.generate_aws_instance(account=self.account3)
-        self.instance4 = \
-            account_helper.generate_aws_instance(account=self.account4)
 
         self.instance_type = random.choice(tuple(
             util_helper.SOME_EC2_INSTANCE_TYPES.keys()
@@ -78,27 +70,43 @@ class CloudAccountOverviewViewSetTest(TestCase):
             ec2_ami_id=None,
             rhel_detected=True,
             openshift_detected=True)
+
+        self.windows_instance = account_helper.generate_aws_instance(
+            account=self.account1, image=self.windows_image
+        )
+        self.rhel_instance = account_helper.generate_aws_instance(
+            account=self.account2, image=self.rhel_image
+        )
+        self.openshift_instance = account_helper.generate_aws_instance(
+            account=self.account3, image=self.openshift_image
+        )
+        self.openshift_and_rhel_instance = \
+            account_helper.generate_aws_instance(
+                account=self.account4, image=self.openshift_and_rhel_image
+            )
+
         self.event1 = \
             account_helper.generate_single_aws_instance_event(
-                instance=self.instance1, occurred_at=powered_time,
+                instance=self.windows_instance, occurred_at=powered_time,
                 event_type=InstanceEvent.TYPE.power_on,
                 ec2_ami_id=self.windows_image.ec2_ami_id,
                 instance_type=self.instance_type)
         self.event2 = \
             account_helper.generate_single_aws_instance_event(
-                instance=self.instance2, occurred_at=powered_time,
+                instance=self.rhel_instance, occurred_at=powered_time,
                 event_type=InstanceEvent.TYPE.power_on,
                 ec2_ami_id=self.rhel_image.ec2_ami_id,
                 instance_type=self.instance_type)
         self.event3 = \
             account_helper.generate_single_aws_instance_event(
-                instance=self.instance3, occurred_at=powered_time,
+                instance=self.openshift_instance, occurred_at=powered_time,
                 event_type=InstanceEvent.TYPE.power_on,
                 ec2_ami_id=self.openshift_image.ec2_ami_id,
                 instance_type=self.instance_type)
         self.event4 = \
             account_helper.generate_single_aws_instance_event(
-                instance=self.instance4, occurred_at=powered_time,
+                instance=self.openshift_and_rhel_instance,
+                occurred_at=powered_time,
                 event_type=InstanceEvent.TYPE.power_on,
                 ec2_ami_id=self.openshift_and_rhel_image.ec2_ami_id,
                 instance_type=self.instance_type)

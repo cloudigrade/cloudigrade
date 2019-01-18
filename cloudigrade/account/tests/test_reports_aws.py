@@ -40,11 +40,12 @@ class ReportTestBase(TestCase):
                 image_rhel_ocp
                 image_windows
                 account_1:
-                    instance_1
-                    instance_2
-                    instance_3
-                    instance_4
-                    instance_5
+                    plain_instance
+                    windows_instance
+                    rhel_instance
+                    openshift_instance
+                    rhel_ocp_instance
+                    noimage_instance
                 account_2:
                     None
 
@@ -76,12 +77,6 @@ class ReportTestBase(TestCase):
 
         self.instance = util_helper.SOME_EC2_INSTANCE_TYPES[self.instance_type]
 
-        self.instance_1 = account_helper.generate_aws_instance(self.account_1)
-        self.instance_2 = account_helper.generate_aws_instance(self.account_1)
-        self.instance_3 = account_helper.generate_aws_instance(self.account_1)
-        self.instance_4 = account_helper.generate_aws_instance(self.account_1)
-        self.instance_5 = account_helper.generate_aws_instance(self.account_1)
-
         self.image_plain = account_helper.generate_aws_image(
             self.account_1.aws_account_id)
         self.image_windows = account_helper.generate_aws_image(
@@ -93,6 +88,26 @@ class ReportTestBase(TestCase):
         self.image_rhel_ocp = account_helper.generate_aws_image(
             self.account_1.aws_account_id, rhel_detected=True,
             openshift_detected=True)
+
+        self.plain_instance = account_helper.generate_aws_instance(
+            account=self.account_1, image=self.image_plain
+        )
+        self.windows_instance = account_helper.generate_aws_instance(
+            account=self.account_1, image=self.image_windows
+        )
+        self.rhel_instance = account_helper.generate_aws_instance(
+            account=self.account_1, image=self.image_rhel
+        )
+        self.openshift_instance = account_helper.generate_aws_instance(
+            account=self.account_1, image=self.image_ocp
+        )
+        self.rhel_ocp_instance = account_helper.generate_aws_instance(
+            account=self.account_1, image=self.image_rhel_ocp
+        )
+
+        self.noimage_instance = account_helper.generate_aws_instance(
+            account=self.account_1, no_image=True
+        )
 
         # Report on "month of January in 2018"
         self.start = util_helper.utc_dt(2018, 1, 1, 0, 0, 0)
@@ -116,7 +131,7 @@ class ReportTestBase(TestCase):
 
         """
         if instance is None:
-            instance = self.instance_1
+            instance = self.rhel_instance
         if image is None:
             image = self.image_rhel
         events = account_helper.generate_aws_instance_events(
@@ -229,7 +244,9 @@ class GetDailyUsageNoReportableActivity(GetDailyUsageTestBase):
                 util_helper.utc_dt(2018, 1, 10, 0, 0, 0)
             ),
         )
-        self.generate_events(powered_times, image=self.image_plain)
+        self.generate_events(
+            powered_times, instance=self.plain_instance, image=self.image_plain
+        )
         results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
         self.assertNoActivityFound(results)
 
@@ -460,7 +477,7 @@ class GetDailyUsageBasicInstanceTest(GetDailyUsageTestBase):
             ),
         )
         account_helper.generate_aws_instance_events(
-            self.instance_1,
+            self.rhel_ocp_instance,
             powered_times,
             self.image_rhel_ocp.ec2_ami_id,
             instance_type='i-dont-exist'
@@ -512,7 +529,10 @@ class GetDailyUsageTwoRhelInstancesTest(GetDailyUsageTestBase):
                 util_helper.utc_dt(2018, 1, 20, 5, 0, 0)
             ),
         )
-        self.generate_events(powered_times, instance=self.instance_2)
+        rhel_instance_2 = account_helper.generate_aws_instance(
+            account=self.account_1, image=self.image_rhel
+        )
+        self.generate_events(powered_times, instance=rhel_instance_2)
 
         results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
         self.assertTotalRunningTimes(
@@ -542,7 +562,13 @@ class GetDailyUsageTwoRhelInstancesTest(GetDailyUsageTestBase):
                 util_helper.utc_dt(2018, 1, 10, 5, 0, 0)
             ),
         )
-        self.generate_events(powered_times, self.instance_1)
+        rhel_instance_1 = account_helper.generate_aws_instance(
+            account=self.account_1, image=self.image_rhel
+        )
+        rhel_instance_2 = account_helper.generate_aws_instance(
+            account=self.account_1, image=self.image_rhel
+        )
+        self.generate_events(powered_times, rhel_instance_1)
 
         powered_times = (
             (
@@ -550,7 +576,7 @@ class GetDailyUsageTwoRhelInstancesTest(GetDailyUsageTestBase):
                 util_helper.utc_dt(2018, 1, 10, 7, 30, 0)
             ),
         )
-        self.generate_events(powered_times, self.instance_2)
+        self.generate_events(powered_times, rhel_instance_2)
 
         results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
         self.assertTotalRunningTimes(
@@ -588,7 +614,9 @@ class GetDailyUsageOneRhelOneOpenShiftInstanceTest(GetDailyUsageTestBase):
                 util_helper.utc_dt(2018, 1, 10, 5, 0, 0)
             ),
         )
-        self.generate_events(powered_times, self.instance_1, self.image_rhel)
+        self.generate_events(
+            powered_times, self.rhel_instance, self.image_rhel
+        )
 
         powered_times = (
             (
@@ -596,7 +624,9 @@ class GetDailyUsageOneRhelOneOpenShiftInstanceTest(GetDailyUsageTestBase):
                 util_helper.utc_dt(2018, 1, 20, 5, 0, 0)
             ),
         )
-        self.generate_events(powered_times, self.instance_2, self.image_ocp)
+        self.generate_events(
+            powered_times, self.openshift_instance, self.image_ocp
+        )
 
         results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
         self.assertTotalRunningTimes(
@@ -629,7 +659,9 @@ class GetDailyUsageOneRhelOneOpenShiftInstanceTest(GetDailyUsageTestBase):
                 util_helper.utc_dt(2018, 1, 10, 5, 0, 0)
             ),
         )
-        self.generate_events(powered_times, self.instance_1, self.image_rhel)
+        self.generate_events(
+            powered_times, self.rhel_instance, self.image_rhel
+        )
 
         powered_times = (
             (
@@ -637,7 +669,9 @@ class GetDailyUsageOneRhelOneOpenShiftInstanceTest(GetDailyUsageTestBase):
                 util_helper.utc_dt(2018, 1, 10, 7, 30, 0)
             ),
         )
-        self.generate_events(powered_times, self.instance_2, self.image_ocp)
+        self.generate_events(
+            powered_times, self.openshift_instance, self.image_ocp
+        )
 
         results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
         self.assertTotalRunningTimes(
@@ -689,8 +723,11 @@ class GetDailyUsageComplexInstancesTest(GetDailyUsageTestBase):
                 util_helper.utc_dt(2018, 1, 14, 0, 0, 0)
             ),
         )
+        rhel_instance_1 = account_helper.generate_aws_instance(
+            account=self.account_1, image=self.image_rhel
+        )
         account_helper.generate_aws_instance_events(
-            self.instance_1,
+            rhel_instance_1,
             powered_times_1,
             ec2_ami_id=self.image_rhel.ec2_ami_id,
             instance_type=self.instance_type
@@ -708,8 +745,11 @@ class GetDailyUsageComplexInstancesTest(GetDailyUsageTestBase):
                 util_helper.utc_dt(2018, 1, 23, 0, 0, 0)
             ),
         )
+        rhel_instance_2 = account_helper.generate_aws_instance(
+            account=self.account_1, image=self.image_rhel
+        )
         account_helper.generate_aws_instance_events(
-            self.instance_2,
+            rhel_instance_2,
             powered_times_2,
             ec2_ami_id=self.image_rhel.ec2_ami_id,
             instance_type=self.instance_type
@@ -723,7 +763,7 @@ class GetDailyUsageComplexInstancesTest(GetDailyUsageTestBase):
             ),
         )
         account_helper.generate_aws_instance_events(
-            self.instance_3,
+            self.plain_instance,
             powered_times_3,
             ec2_ami_id=self.image_plain.ec2_ami_id,
             instance_type=self.instance_type
@@ -737,7 +777,7 @@ class GetDailyUsageComplexInstancesTest(GetDailyUsageTestBase):
             ),
         )
         account_helper.generate_aws_instance_events(
-            self.instance_4,
+            self.openshift_instance,
             powered_times_4,
             ec2_ami_id=self.image_ocp.ec2_ami_id,
             instance_type=self.instance_type
@@ -756,7 +796,7 @@ class GetDailyUsageComplexInstancesTest(GetDailyUsageTestBase):
             ),
         )
         account_helper.generate_aws_instance_events(
-            self.instance_5,
+            self.rhel_ocp_instance,
             powered_times_5,
             ec2_ami_id=self.image_rhel_ocp.ec2_ami_id,
             instance_type=self.instance_type
@@ -822,14 +862,14 @@ class GetDailyUsageInstancesWithUnknownImagesActivity(GetDailyUsageTestBase):
         Args:
             powered_times (list[tuple]): Time periods instance is powered on.
             instance (Instance): Optional which instance has the events. If
-                not specified, default is self.instance_1.
+                not specified, default is self.noimage_instance.
 
         Returns:
             list[InstanceEvent]: The list of events
 
         """
         if instance is None:
-            instance = self.instance_1
+            instance = self.noimage_instance
         events = account_helper.generate_aws_instance_events(
             instance, powered_times, no_image=True,
         )
@@ -910,8 +950,25 @@ class GetCloudAccountOverview(TestCase):
             rhel_detected=True,
             openshift_detected=True,
         )
-        self.instance_1 = account_helper.generate_aws_instance(self.account)
-        self.instance_2 = account_helper.generate_aws_instance(self.account)
+        self.windows_instance = account_helper.generate_aws_instance(
+            self.account, image=self.windows_image
+        )
+        self.rhel_instance = account_helper.generate_aws_instance(
+            self.account, image=self.rhel_image
+        )
+        self.openshift_instance = account_helper.generate_aws_instance(
+            self.account, image=self.openshift_image
+        )
+        self.openshift_challenged_instance = \
+            account_helper.generate_aws_instance(
+                self.account, image=self.openshift_image_challenged
+            )
+        self.both_challenged_instance = account_helper.generate_aws_instance(
+            self.account, image=self.plain_image_both_challenged
+        )
+        self.openshift_rhel_instance = account_helper.generate_aws_instance(
+            self.account, image=self.openshift_and_rhel_image
+        )
 
         self.start_future = util_helper.utc_dt(3000, 1, 1, 0, 0, 0)
         self.end_future = util_helper.utc_dt(3000, 2, 1, 0, 0, 0)
@@ -973,7 +1030,7 @@ class GetCloudAccountOverview(TestCase):
             ),
         )
         account_helper.generate_aws_instance_events(
-            self.instance_1, powered_times,
+            self.windows_instance, powered_times,
             self.windows_image.ec2_ami_id
         )
         overview = reports.get_account_overview(
@@ -990,13 +1047,13 @@ class GetCloudAccountOverview(TestCase):
             ),
         )
         account_helper.generate_aws_instance_events(
-            self.instance_1, powered_times,
+            self.windows_instance, powered_times,
             self.windows_image.ec2_ami_id,
         )
         # in addition to instance_1's events, we are creating an event for
         # instance_2 with a rhel_image
         account_helper.generate_single_aws_instance_event(
-            self.instance_2, self.start, InstanceEvent.TYPE.power_on,
+            self.rhel_instance, self.start, InstanceEvent.TYPE.power_on,
             self.rhel_image.ec2_ami_id,
             instance_type=self.instance_type
         )
@@ -1020,13 +1077,13 @@ class GetCloudAccountOverview(TestCase):
             ),
         )
         account_helper.generate_aws_instance_events(
-            self.instance_1, powered_times,
+            self.windows_instance, powered_times,
             self.windows_image.ec2_ami_id,
         )
         # in addition to instance_1's events, we are creating an event for
         # instance_2 with an openshift_image
         account_helper.generate_single_aws_instance_event(
-            self.instance_2, self.start, InstanceEvent.TYPE.power_on,
+            self.openshift_instance, self.start, InstanceEvent.TYPE.power_on,
             self.openshift_image.ec2_ami_id,
             instance_type=self.instance_type
         )
@@ -1050,13 +1107,14 @@ class GetCloudAccountOverview(TestCase):
             ),
         )
         account_helper.generate_aws_instance_events(
-            self.instance_1, powered_times,
+            self.windows_instance, powered_times,
             self.windows_image.ec2_ami_id,
         )
         # in addition to instance_1's events, we are creating an event for
         # instance_2 with a rhel & openshift_image
         account_helper.generate_single_aws_instance_event(
-            self.instance_2, self.start, InstanceEvent.TYPE.power_on,
+            self.openshift_rhel_instance, self.start,
+            InstanceEvent.TYPE.power_on,
             self.openshift_and_rhel_image.ec2_ami_id,
             instance_type=self.instance_type
         )
@@ -1085,14 +1143,14 @@ class GetCloudAccountOverview(TestCase):
 
         # This instance is both detected and challenged for openshift.
         account_helper.generate_aws_instance_events(
-            self.instance_1, powered_times,
+            self.openshift_challenged_instance, powered_times,
             self.openshift_image_challenged.ec2_ami_id,
             instance_type=self.instance_type
         )
         # This instance has no detection but has challenges for both rhel and
         # openshift.
         account_helper.generate_aws_instance_events(
-            self.instance_2, powered_times,
+            self.both_challenged_instance, powered_times,
             self.plain_image_both_challenged.ec2_ami_id,
             instance_type=self.instance_type
         )
@@ -1116,15 +1174,22 @@ class GetCloudAccountOverview(TestCase):
 
     def test_get_cloud_account_overview_with_two_instances_same_image(self):
         """Assert an account overview reports images correctly."""
+        # Generate 2 rhel/openshift instances
+        openshift_rhel_instance = account_helper.generate_aws_instance(
+            self.account, image=self.openshift_and_rhel_image
+        )
+        openshift_rhel_instance2 = account_helper.generate_aws_instance(
+            self.account, image=self.openshift_and_rhel_image
+        )
         # generate event for instance_1 with the rhel/openshift image
         account_helper.generate_single_aws_instance_event(
-            self.instance_1, self.start, InstanceEvent.TYPE.power_on,
+            openshift_rhel_instance, self.start, InstanceEvent.TYPE.power_on,
             self.openshift_and_rhel_image.ec2_ami_id,
             instance_type=self.instance_type
         )
         # generate event for instance_2 with the rhel/openshift image
         account_helper.generate_single_aws_instance_event(
-            self.instance_2, self.start, InstanceEvent.TYPE.power_on,
+            openshift_rhel_instance2, self.start, InstanceEvent.TYPE.power_on,
             self.openshift_and_rhel_image.ec2_ami_id,
             instance_type=self.instance_type
         )
@@ -1146,13 +1211,14 @@ class GetCloudAccountOverview(TestCase):
         """Assert an account overview reports rhel correctly."""
         # generate event for instance_1 with the rhel/openshift image
         account_helper.generate_single_aws_instance_event(
-            self.instance_1, self.start, InstanceEvent.TYPE.power_on,
+            self.openshift_rhel_instance, self.start,
+            InstanceEvent.TYPE.power_on,
             self.openshift_and_rhel_image.ec2_ami_id,
             instance_type=self.instance_type
         )
         # generate event for instance_2 with the rhel image
         account_helper.generate_single_aws_instance_event(
-            self.instance_2, self.start, InstanceEvent.TYPE.power_on,
+            self.rhel_instance, self.start, InstanceEvent.TYPE.power_on,
             self.rhel_image.ec2_ami_id, instance_type=self.instance_type)
         overview = reports.get_account_overview(
             self.account, self.start, self.end)
@@ -1172,13 +1238,14 @@ class GetCloudAccountOverview(TestCase):
         """Assert an account overview reports openshift correctly."""
         # generate event for instance_1 with the rhel/openshift image
         account_helper.generate_single_aws_instance_event(
-            self.instance_1, self.start, InstanceEvent.TYPE.power_on,
+            self.openshift_rhel_instance, self.start,
+            InstanceEvent.TYPE.power_on,
             self.openshift_and_rhel_image.ec2_ami_id,
             instance_type=self.instance_type
         )
         # generate event for instance_2 with the openshift image
         account_helper.generate_single_aws_instance_event(
-            self.instance_2, self.start, InstanceEvent.TYPE.power_on,
+            self.openshift_instance, self.start, InstanceEvent.TYPE.power_on,
             self.openshift_image.ec2_ami_id,
             instance_type=self.instance_type
         )
@@ -1198,13 +1265,19 @@ class GetCloudAccountOverview(TestCase):
 
     def test_get_cloud_account_overview_with_unknown_image(self):
         """Assert an account overview reports when images are unknown."""
+        self.noimage_instance = account_helper.generate_aws_instance(
+            self.account, no_image=True
+        )
+        self.noimage_instance2 = account_helper.generate_aws_instance(
+            self.account, no_image=True
+        )
         # generate event for instance_1 with unknown image
         account_helper.generate_single_aws_instance_event(
-            self.instance_1, self.start, InstanceEvent.TYPE.power_on,
+            self.noimage_instance, self.start, InstanceEvent.TYPE.power_on,
             no_image=True)
         # generate event for instance_2 with unknown image
         account_helper.generate_single_aws_instance_event(
-            self.instance_2, self.start, InstanceEvent.TYPE.power_on,
+            self.noimage_instance2, self.start, InstanceEvent.TYPE.power_on,
             no_image=True)
         overview = reports.get_account_overview(
             self.account, self.start, self.end)
@@ -1288,7 +1361,7 @@ class GetCloudAccountOverview(TestCase):
         # only the FIRST event has the image and instance type info.
         events.append(
             account_helper.generate_single_aws_instance_event(
-                self.instance_1,
+                self.rhel_instance,
                 util_helper.utc_dt(2017, 12, 10, 0, 0, 0),
                 InstanceEvent.TYPE.power_on,
                 ec2_ami_id=self.rhel_image.ec2_ami_id,
@@ -1297,7 +1370,7 @@ class GetCloudAccountOverview(TestCase):
         )
         events.append(
             account_helper.generate_single_aws_instance_event(
-                self.instance_1,
+                self.rhel_instance,
                 util_helper.utc_dt(2017, 12, 11, 0, 0, 0),
                 InstanceEvent.TYPE.power_off,
                 no_image=True,
@@ -1309,7 +1382,7 @@ class GetCloudAccountOverview(TestCase):
         # and during the reporting period...
         events.append(
             account_helper.generate_single_aws_instance_event(
-                self.instance_1,
+                self.rhel_instance,
                 util_helper.utc_dt(2018, 1, 2, 0, 0, 0),
                 InstanceEvent.TYPE.power_on,
                 no_image=True,
@@ -1319,7 +1392,7 @@ class GetCloudAccountOverview(TestCase):
         )
         events.append(
             account_helper.generate_single_aws_instance_event(
-                self.instance_1,
+                self.rhel_instance,
                 util_helper.utc_dt(2018, 1, 3, 0, 0, 0),
                 InstanceEvent.TYPE.power_off,
                 no_image=True,
@@ -1371,7 +1444,7 @@ class GetCloudAccountOverview(TestCase):
         # only the FIRST event has the image and instance type info.
         events.append(
             account_helper.generate_single_aws_instance_event(
-                self.instance_1,
+                self.rhel_instance,
                 util_helper.utc_dt(2017, 12, 10, 0, 0, 0),
                 InstanceEvent.TYPE.power_on,
                 ec2_ami_id=self.rhel_image.ec2_ami_id,
@@ -1380,7 +1453,7 @@ class GetCloudAccountOverview(TestCase):
         )
         events.append(
             account_helper.generate_single_aws_instance_event(
-                self.instance_1,
+                self.rhel_instance,
                 util_helper.utc_dt(2017, 12, 11, 0, 0, 0),
                 InstanceEvent.TYPE.power_off,
                 no_image=True,
@@ -1392,7 +1465,7 @@ class GetCloudAccountOverview(TestCase):
         # and during the reporting period...
         events.append(
             account_helper.generate_single_aws_instance_event(
-                self.instance_1,
+                self.rhel_instance,
                 util_helper.utc_dt(2018, 1, 2, 0, 0, 0),
                 InstanceEvent.TYPE.power_on,
                 no_image=True,
@@ -1446,7 +1519,7 @@ class GetCloudAccountOverview(TestCase):
         # in the old times, all events had the image/instance/subnet info.
         events.append(
             account_helper.generate_single_aws_instance_event(
-                self.instance_1,
+                self.rhel_instance,
                 util_helper.utc_dt(2017, 12, 10, 0, 0, 0),
                 InstanceEvent.TYPE.power_on,
                 ec2_ami_id=self.rhel_image.ec2_ami_id,
@@ -1455,7 +1528,7 @@ class GetCloudAccountOverview(TestCase):
         )
         events.append(
             account_helper.generate_single_aws_instance_event(
-                self.instance_1,
+                self.rhel_instance,
                 util_helper.utc_dt(2017, 12, 11, 0, 0, 0),
                 InstanceEvent.TYPE.power_off,
                 ec2_ami_id=self.rhel_image.ec2_ami_id,
@@ -1467,7 +1540,7 @@ class GetCloudAccountOverview(TestCase):
         # some time later, we stopped writing that info after the first event.
         events.append(
             account_helper.generate_single_aws_instance_event(
-                self.instance_1,
+                self.rhel_instance,
                 util_helper.utc_dt(2017, 12, 15, 0, 0, 0),
                 InstanceEvent.TYPE.power_on,
                 no_image=True,
@@ -1477,7 +1550,7 @@ class GetCloudAccountOverview(TestCase):
         )
         events.append(
             account_helper.generate_single_aws_instance_event(
-                self.instance_1,
+                self.rhel_instance,
                 util_helper.utc_dt(2017, 12, 16, 0, 0, 0),
                 InstanceEvent.TYPE.power_off,
                 no_image=True,
@@ -1489,7 +1562,7 @@ class GetCloudAccountOverview(TestCase):
         # and during the reporting period...
         events.append(
             account_helper.generate_single_aws_instance_event(
-                self.instance_1,
+                self.rhel_instance,
                 util_helper.utc_dt(2018, 1, 2, 0, 0, 0),
                 InstanceEvent.TYPE.power_on,
                 no_image=True,
@@ -1535,7 +1608,7 @@ class GetCloudAccountOverview(TestCase):
 
         events.append(
             account_helper.generate_single_aws_instance_event(
-                self.instance_1,
+                self.rhel_instance,
                 util_helper.utc_dt(2018, 1, 1, 0, 0, 0),
                 InstanceEvent.TYPE.power_on,
                 ec2_ami_id=self.rhel_image.ec2_ami_id,
@@ -1544,7 +1617,7 @@ class GetCloudAccountOverview(TestCase):
         )
         events.append(
             account_helper.generate_single_aws_instance_event(
-                self.instance_1,
+                self.rhel_instance,
                 util_helper.utc_dt(2018, 1, 2, 0, 0, 0),
                 InstanceEvent.TYPE.attribute_change,
                 instance_type=instance_type_2,
@@ -1554,7 +1627,7 @@ class GetCloudAccountOverview(TestCase):
         )
         events.append(
             account_helper.generate_single_aws_instance_event(
-                self.instance_1,
+                self.rhel_instance,
                 util_helper.utc_dt(2018, 1, 3, 0, 0, 0),
                 InstanceEvent.TYPE.power_off,
                 no_image=True,
@@ -1578,7 +1651,7 @@ class GetCloudAccountOverview(TestCase):
         powered_time = util_helper.utc_dt(2018, 1, 10, 0, 0, 0)
 
         event = account_helper.generate_single_aws_instance_event(
-            self.instance_1, powered_time, InstanceEvent.TYPE.power_off
+            self.rhel_instance, powered_time, InstanceEvent.TYPE.power_off
         )
         is_valid = reports.validate_event(event, self.start)
         self.assertEqual(is_valid, True)
@@ -1588,7 +1661,7 @@ class GetCloudAccountOverview(TestCase):
         powered_time = util_helper.utc_dt(2018, 1, 10, 0, 0, 0)
 
         event = account_helper.generate_single_aws_instance_event(
-            self.instance_1, powered_time, InstanceEvent.TYPE.power_on
+            self.rhel_instance, powered_time, InstanceEvent.TYPE.power_on
         )
         is_valid = reports.validate_event(event, self.start)
         self.assertEqual(is_valid, True)
@@ -1598,7 +1671,7 @@ class GetCloudAccountOverview(TestCase):
         powered_time = util_helper.utc_dt(2017, 12, 10, 0, 0, 0)
 
         event = account_helper.generate_single_aws_instance_event(
-            self.instance_1, powered_time, InstanceEvent.TYPE.power_on
+            self.rhel_instance, powered_time, InstanceEvent.TYPE.power_on
         )
         is_valid = reports.validate_event(event, self.start)
         self.assertEqual(is_valid, True)
@@ -1608,10 +1681,33 @@ class GetCloudAccountOverview(TestCase):
         powered_time = util_helper.utc_dt(2017, 12, 10, 0, 0, 0)
 
         event = account_helper.generate_single_aws_instance_event(
-            self.instance_1, powered_time, InstanceEvent.TYPE.power_off
+            self.rhel_instance, powered_time, InstanceEvent.TYPE.power_off
         )
         is_valid = reports.validate_event(event, self.start)
         self.assertEqual(is_valid, False)
+
+    def test_instanceevent_machineimage_ignored(self):
+        """
+        Assert that the present instanceevent machineimage is not used.
+
+        We should instead only be looking at the instance.machineimage.
+        """
+        # generate event for instance_1 with the rhel/openshift image
+        account_helper.generate_single_aws_instance_event(
+            self.rhel_instance, self.start, InstanceEvent.TYPE.power_on,
+            self.openshift_and_rhel_image.ec2_ami_id,
+            instance_type=self.instance_type
+        )
+        overview = reports.get_account_overview(
+            self.account, self.start, self.end)
+        # assert that we only find the two openshift images
+        self.assertExpectedAccountOverview(
+            overview, self.account, images=1, instances=1,
+            rhel_instances=1, openshift_instances=0,
+            rhel_runtime_seconds=DAYS_31,
+            rhel_memory_seconds=DAYS_31 * self.instance['memory'],
+            rhel_vcpu_seconds=DAYS_31 * self.instance['vcpu']
+        )
 
 
 class GetImageOverviewsTestCase(ReportTestBase):
@@ -1660,10 +1756,20 @@ class GetImageOverviewsTestCase(ReportTestBase):
                 util_helper.utc_dt(2018, 1, 10, 5, 0, 0)
             ),
         )
-        self.generate_events(powered_times, self.instance_1, self.image_rhel)
-        self.generate_events(powered_times, self.instance_2, self.image_rhel)
-        self.generate_events(powered_times, self.instance_3, self.image_ocp)
-        self.generate_events(powered_times, self.instance_4, self.image_plain)
+        rhel_instance_1 = account_helper.generate_aws_instance(
+            account=self.account_1, image=self.image_rhel
+        )
+        rhel_instance_2 = account_helper.generate_aws_instance(
+            account=self.account_1, image=self.image_rhel
+        )
+        self.generate_events(powered_times, rhel_instance_1, self.image_rhel)
+        self.generate_events(powered_times, rhel_instance_2, self.image_rhel)
+        self.generate_events(
+            powered_times, self.openshift_instance, self.image_ocp
+        )
+        self.generate_events(
+            powered_times, self.plain_instance, self.image_plain
+        )
 
         results = reports.get_images_overviews(self.user_1.id, self.start,
                                                self.end, self.account_1.id)
@@ -1707,10 +1813,20 @@ class GetImageOverviewsTestCase(ReportTestBase):
                 util_helper.utc_dt(2017, 1, 10, 5, 0, 0)
             ),
         )
-        self.generate_events(powered_times, self.instance_1, self.image_rhel)
-        self.generate_events(powered_times, self.instance_2, self.image_rhel)
-        self.generate_events(powered_times, self.instance_3, self.image_ocp)
-        self.generate_events(powered_times, self.instance_4, self.image_plain)
+        rhel_instance_1 = account_helper.generate_aws_instance(
+            account=self.account_1, image=self.image_rhel
+        )
+        rhel_instance_2 = account_helper.generate_aws_instance(
+            account=self.account_1, image=self.image_rhel
+        )
+        self.generate_events(powered_times, rhel_instance_1, self.image_rhel)
+        self.generate_events(powered_times, rhel_instance_2, self.image_rhel)
+        self.generate_events(
+            powered_times, self.openshift_instance, self.image_ocp
+        )
+        self.generate_events(
+            powered_times, self.plain_instance, self.image_plain
+        )
 
         results = reports.get_images_overviews(self.user_1.id, self.start,
                                                self.end, self.account_1.id)
@@ -1731,10 +1847,20 @@ class GetImageOverviewsTestCase(ReportTestBase):
                 util_helper.utc_dt(2018, 1, 10, 5, 0, 0)
             ),
         )
-        self.generate_events(powered_times, self.instance_1, self.image_rhel)
-        self.generate_events(powered_times, self.instance_2, self.image_rhel)
-        self.generate_events(powered_times, self.instance_3, self.image_ocp)
-        self.generate_events(powered_times, self.instance_4, self.image_plain)
+        rhel_instance_1 = account_helper.generate_aws_instance(
+            account=self.account_1, image=self.image_rhel
+        )
+        rhel_instance_2 = account_helper.generate_aws_instance(
+            account=self.account_1, image=self.image_rhel
+        )
+        self.generate_events(powered_times, rhel_instance_1, self.image_rhel)
+        self.generate_events(powered_times, rhel_instance_2, self.image_rhel)
+        self.generate_events(
+            powered_times, self.openshift_instance, self.image_ocp
+        )
+        self.generate_events(
+            powered_times, self.plain_instance, self.image_plain
+        )
 
         bad_account_id = util_helper.generate_dummy_aws_account_id()
 
@@ -1757,10 +1883,20 @@ class GetImageOverviewsTestCase(ReportTestBase):
                 util_helper.utc_dt(2018, 1, 10, 5, 0, 0)
             ),
         )
-        self.generate_events(powered_times, self.instance_1, self.image_rhel)
-        self.generate_events(powered_times, self.instance_2, self.image_rhel)
-        self.generate_events(powered_times, self.instance_3, self.image_ocp)
-        self.generate_events(powered_times, self.instance_4, self.image_plain)
+        rhel_instance_1 = account_helper.generate_aws_instance(
+            account=self.account_1, image=self.image_rhel
+        )
+        rhel_instance_2 = account_helper.generate_aws_instance(
+            account=self.account_1, image=self.image_rhel
+        )
+        self.generate_events(powered_times, rhel_instance_1, self.image_rhel)
+        self.generate_events(powered_times, rhel_instance_2, self.image_rhel)
+        self.generate_events(
+            powered_times, self.openshift_instance, self.image_ocp
+        )
+        self.generate_events(
+            powered_times, self.plain_instance, self.image_plain
+        )
 
         # Report on January in the year 2525
         start_future = util_helper.utc_dt(2525, 1, 1, 0, 0, 0)

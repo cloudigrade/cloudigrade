@@ -36,21 +36,21 @@ class ImagesActivityOverviewViewSetTestCase(TestCase):
         self.account_plain = account_helper.generate_aws_account(
             user=self.other_user, name=faker.Faker().bs())
 
-        # Instances
-        self.a1_instance_rhel = account_helper.generate_aws_instance(
-            self.account_mixed)
-        self.a1_instance_oc = account_helper.generate_aws_instance(
-            self.account_mixed)
-        self.a1_instance_unknown = account_helper.generate_aws_instance(
-            self.account_mixed)
-        self.a2_instance_plain = account_helper.generate_aws_instance(
-            self.account_plain)
-
         # Images
         self.image_rhel = account_helper.generate_aws_image(rhel_detected=True)
         self.image_ocp = account_helper.generate_aws_image(
             openshift_detected=True)
         self.image_plain = account_helper.generate_aws_image()
+
+        # Instances
+        self.a1_instance_rhel = account_helper.generate_aws_instance(
+            self.account_mixed, image=self.image_rhel)
+        self.a1_instance_oc = account_helper.generate_aws_instance(
+            self.account_mixed, image=self.image_ocp)
+        self.a1_instance_unknown = account_helper.generate_aws_instance(
+            self.account_mixed, no_image=True)
+        self.a2_instance_plain = account_helper.generate_aws_instance(
+            self.account_plain, image=self.image_plain)
 
         # Generate activity for instances belonging to self.user
         self.powered_times = (

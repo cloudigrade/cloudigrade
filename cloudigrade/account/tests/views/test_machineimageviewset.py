@@ -38,19 +38,7 @@ class MachineImageViewSetTest(TestCase):
         self.account_su = account_helper.generate_aws_account(
             user=self.superuser)
 
-        # Instances for the accounts
-        self.instance_u1_1 = account_helper.generate_aws_instance(
-            account=self.account_u1_1)
-        self.instance_u1_2 = account_helper.generate_aws_instance(
-            account=self.account_u1_2)
-        self.instance_u2_1 = account_helper.generate_aws_instance(
-            account=self.account_u2_1)
-        self.instance_u2_2 = account_helper.generate_aws_instance(
-            account=self.account_u2_2)
-        self.instance_su = account_helper.generate_aws_instance(
-            account=self.account_su)
-
-        # Images wih various contents
+        # Images with various contents
         self.image_plain = account_helper.generate_aws_image()
         self.image_windows = account_helper.generate_aws_image(is_windows=True)
         self.image_rhel = account_helper.generate_aws_image(rhel_detected=True)
@@ -58,6 +46,18 @@ class MachineImageViewSetTest(TestCase):
             openshift_detected=True)
         self.image_rhel_ocp = account_helper.generate_aws_image(
             rhel_detected=True, openshift_detected=True)
+
+        # Instances for the accounts
+        self.instance_u1_1 = account_helper.generate_aws_instance(
+            account=self.account_u1_1, image=self.image_plain)
+        self.instance_u1_2 = account_helper.generate_aws_instance(
+            account=self.account_u1_2, image=self.image_rhel)
+        self.instance_u2_1 = account_helper.generate_aws_instance(
+            account=self.account_u2_1, image=self.image_ocp)
+        self.instance_u2_2 = account_helper.generate_aws_instance(
+            account=self.account_u2_2, image=self.image_rhel_ocp)
+        self.instance_su = account_helper.generate_aws_instance(
+            account=self.account_su, image=self.image_windows)
 
         # Some initial event activity spread across the accounts
         powered_times = (

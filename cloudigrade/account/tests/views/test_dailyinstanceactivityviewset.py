@@ -28,20 +28,6 @@ class DailyInstanceActivityViewSetTest(TestCase):
         self.u3_second_account = account_helper.generate_aws_account(
             user=self.multi_account_user, name=faker.Faker().bs())
 
-        # Instances
-        self.u1a1_instance_rhel = account_helper.generate_aws_instance(
-            self.account)
-        self.u1a1_instance_oc = account_helper.generate_aws_instance(
-            self.account)
-        self.u3a1_instance_rhel = account_helper.generate_aws_instance(
-            self.u3_first_account)
-        self.u3a1_instance_oc = account_helper.generate_aws_instance(
-            self.u3_first_account)
-        self.u3a2_instance_rhel = account_helper.generate_aws_instance(
-            self.u3_second_account)
-        self.u3a2_instance_oc = account_helper.generate_aws_instance(
-            self.u3_second_account)
-
         # Images
         self.image_plain = account_helper.generate_aws_image()
         self.image_rhel = account_helper.generate_aws_image(
@@ -50,10 +36,24 @@ class DailyInstanceActivityViewSetTest(TestCase):
             rhel_detected=True, openshift_detected=False)
         self.u3a2_image_rhel = account_helper.generate_aws_image(
             rhel_detected=True, openshift_detected=False)
-        self.image_os = account_helper.generate_aws_image(
+        self.image_oc = account_helper.generate_aws_image(
             rhel_detected=False, openshift_detected=True)
         self.image_rhel_openshift = account_helper.generate_aws_image(
             rhel_detected=True, openshift_detected=True)
+
+        # Instances
+        self.u1a1_instance_rhel = account_helper.generate_aws_instance(
+            self.account, image=self.image_rhel)
+        self.u1a1_instance_oc = account_helper.generate_aws_instance(
+            self.account, image=self.image_oc)
+        self.u3a1_instance_rhel = account_helper.generate_aws_instance(
+            self.u3_first_account, image=self.u3a1_image_rhel)
+        self.u3a1_instance_oc = account_helper.generate_aws_instance(
+            self.u3_first_account, image=self.image_oc)
+        self.u3a2_instance_rhel = account_helper.generate_aws_instance(
+            self.u3_second_account, image=self.u3a2_image_rhel)
+        self.u3a2_instance_oc = account_helper.generate_aws_instance(
+            self.u3_second_account, image=self.image_oc)
 
         # Generate activity for instances belonging to
         # self.user and self.multi_account_user
