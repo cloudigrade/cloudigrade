@@ -80,25 +80,25 @@ class CloudAccountOverviewViewSetTest(TestCase):
             openshift_detected=True)
         self.event1 = \
             account_helper.generate_single_aws_instance_event(
-                instance=self.instance1, powered_time=powered_time,
+                instance=self.instance1, occurred_at=powered_time,
                 event_type=InstanceEvent.TYPE.power_on,
                 ec2_ami_id=self.windows_image.ec2_ami_id,
                 instance_type=self.instance_type)
         self.event2 = \
             account_helper.generate_single_aws_instance_event(
-                instance=self.instance2, powered_time=powered_time,
+                instance=self.instance2, occurred_at=powered_time,
                 event_type=InstanceEvent.TYPE.power_on,
                 ec2_ami_id=self.rhel_image.ec2_ami_id,
                 instance_type=self.instance_type)
         self.event3 = \
             account_helper.generate_single_aws_instance_event(
-                instance=self.instance3, powered_time=powered_time,
+                instance=self.instance3, occurred_at=powered_time,
                 event_type=InstanceEvent.TYPE.power_on,
                 ec2_ami_id=self.openshift_image.ec2_ami_id,
                 instance_type=self.instance_type)
         self.event4 = \
             account_helper.generate_single_aws_instance_event(
-                instance=self.instance4, powered_time=powered_time,
+                instance=self.instance4, occurred_at=powered_time,
                 event_type=InstanceEvent.TYPE.power_on,
                 ec2_ami_id=self.openshift_and_rhel_image.ec2_ami_id,
                 instance_type=self.instance_type)

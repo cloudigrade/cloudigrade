@@ -86,7 +86,7 @@ def generate_aws_instance(account, ec2_instance_id=None, region=None):
 
 def generate_single_aws_instance_event(
     instance,
-    powered_time=None,
+    occurred_at,
     event_type=None,
     ec2_ami_id=None,
     instance_type=None,
@@ -103,7 +103,7 @@ def generate_single_aws_instance_event(
 
     Args:
         instance (AwsInstance): instance that owns the events.
-        powered_time (datetime): Time that the instance is powered on.
+        occurred_at (datetime.datetime): Time that the instance occurred.
         event_type (str): AWS event type
         ec2_ami_id (str): Optional EC2 AMI ID the instance runs.
         instance_type (str): Optional AWS instance type.
@@ -146,7 +146,7 @@ def generate_single_aws_instance_event(
         instance=instance,
         machineimage=image,
         event_type=event_type,
-        occurred_at=powered_time,
+        occurred_at=occurred_at,
         subnet=subnet,
         instance_type=instance_type,
     )
@@ -198,7 +198,7 @@ def generate_aws_instance_events(
         if power_on_time is not None:
             event = generate_single_aws_instance_event(
                 instance=instance,
-                powered_time=power_on_time,
+                occurred_at=power_on_time,
                 event_type=InstanceEvent.TYPE.power_on,
                 ec2_ami_id=ec2_ami_id,
                 instance_type=instance_type,
@@ -211,7 +211,7 @@ def generate_aws_instance_events(
             # So, ignore inputs and *always* set ec2_ami_id=None.
             event = generate_single_aws_instance_event(
                 instance=instance,
-                powered_time=power_off_time,
+                occurred_at=power_off_time,
                 event_type=InstanceEvent.TYPE.power_off,
                 ec2_ami_id=None,
                 instance_type=instance_type,

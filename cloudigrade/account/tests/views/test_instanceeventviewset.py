@@ -27,27 +27,23 @@ class InstanceEventViewSetTest(TestCase):
         self.account2 = account_helper.generate_aws_account(user=self.user1)
         self.account3 = account_helper.generate_aws_account(user=self.user2)
         self.account4 = account_helper.generate_aws_account(user=self.user2)
-        self.instance1 = \
-            account_helper.generate_aws_instance(account=self.account1)
-        self.instance2 = \
-            account_helper.generate_aws_instance(account=self.account2)
-        self.instance3 = \
-            account_helper.generate_aws_instance(account=self.account3)
-        self.instance4 = \
-            account_helper.generate_aws_instance(account=self.account4)
+        self.instance1 = account_helper.generate_aws_instance(self.account1)
+        self.instance2 = account_helper.generate_aws_instance(self.account2)
+        self.instance3 = account_helper.generate_aws_instance(self.account3)
+        self.instance4 = account_helper.generate_aws_instance(self.account4)
         powered_time = util_helper.utc_dt(2018, 1, 10, 0, 0, 0)
-        self.event1 = \
-            account_helper.generate_single_aws_instance_event(
-                instance=self.instance1, powered_time=powered_time)
-        self.event2 = \
-            account_helper.generate_single_aws_instance_event(
-                instance=self.instance2, powered_time=powered_time)
-        self.event3 = \
-            account_helper.generate_single_aws_instance_event(
-                instance=self.instance3, powered_time=powered_time)
-        self.event4 = \
-            account_helper.generate_single_aws_instance_event(
-                instance=self.instance4, powered_time=powered_time)
+        self.event1 = account_helper.generate_single_aws_instance_event(
+            instance=self.instance1, occurred_at=powered_time
+        )
+        self.event2 = account_helper.generate_single_aws_instance_event(
+            instance=self.instance2, occurred_at=powered_time
+        )
+        self.event3 = account_helper.generate_single_aws_instance_event(
+            instance=self.instance3, occurred_at=powered_time
+        )
+        self.event4 = account_helper.generate_single_aws_instance_event(
+            instance=self.instance4, occurred_at=powered_time
+        )
         self.factory = APIRequestFactory()
 
     def assertResponseHasEventData(self, response, event):

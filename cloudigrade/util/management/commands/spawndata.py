@@ -96,7 +96,7 @@ class Command(BaseCommand):
         for instance in instances:
             account_helper.generate_single_aws_instance_event(
                 instance=instance,
-                powered_time=since + datetime.timedelta(
+                occurred_at=since + datetime.timedelta(
                     seconds=randrange(seconds)),
                 ec2_ami_id=choice(images).ec2_ami_id,
                 event_type=InstanceEvent.TYPE.power_on,
