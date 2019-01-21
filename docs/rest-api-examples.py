@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import django
 import jinja2
 from dateutil import tz
+from django.test import override_settings
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.local')
 django.setup()
@@ -393,9 +394,18 @@ class DocsApiHandler(object):
         # Miscellaneous Commands
 
         # Retrieve current cloud account ids used by the application
-        response = self.superuser_client.get_sysconfig()
+        cloudigrade_version = (
+            '489-cloudigrade-version - '
+            'd2b30c637ce3788e22990b21434bac2edcfb7ede'
+        )
+        with override_settings(CLOUDIGRADE_VERSION=cloudigrade_version):
+            response = self.superuser_client.get_sysconfig()
         assert_status(response, 200)
         responses['get_sysconfig'] = response
+
+        response = self.superuser_client.get_sysconfig()
+        assert_status(response, 200)
+        responses['get_sysconfig_no_version'] = response
 
         return responses
 

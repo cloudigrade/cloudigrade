@@ -469,8 +469,10 @@ Response:
 Miscellaneous Commands
 ----------------------
 
-Retrieve current cloud account ids used by the application
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Retrieve current publicly-viewable system configuration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The sysconfig endpoint includes the AWS cloud account id used by the application, AWS policies used for acting on behalf of customers, and the currently deployed backend version.
 
 Request:
 
@@ -480,4 +482,14 @@ Response:
 
 {{ get_sysconfig | stringify_http_response | rst_codeblock }}
 
-If you attempt to retrieve account ids without authentication you'll receive a 401 error.
+If the application was not deployed by gitlab-ci, the version will be returned as ``null``.
+
+Request:
+
+{{ get_sysconfig_no_version.wsgi_request | httpied_command | rst_codeblock("bash") }}
+
+Response:
+
+{{ get_sysconfig_no_version | stringify_http_response | rst_codeblock }}
+
+If you attempt to retrieve sysconfig without authentication, you'll receive a 401 error.
