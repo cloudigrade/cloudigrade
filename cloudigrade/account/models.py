@@ -425,6 +425,62 @@ class AwsInstanceEvent(InstanceEvent):
     subnet = models.CharField(max_length=256, null=True, blank=True)
     instance_type = models.CharField(max_length=64, null=True, blank=True)
 
+    def __repr__(self):
+        """
+        Get an unambiguous string representation of this event.
+
+        Returned string should be clean enough to pass into eval to instantiate
+        a proper model object that could be saved if desired. For example:
+
+            from account.models import AwsInstanceEvent
+            from account.tests import helper
+            a = helper.generate_aws_account()
+            i = helper.generate_aws_instance(a)
+            e = helper.generate_single_aws_instance_event(i, datetime.now())
+
+            from dateutil.parser import parse
+            e2 = eval(repr(e))
+
+            e.delete()
+            e2.save()
+
+        The pk/id will not actually be preserved if saved after deleting the
+        original instance, but that's okay because nothing should reference it.
+        The updated_date will always be overridden as "now" when saving.
+        """
+        subnet = (
+            str(repr(self.subnet))
+            if self.subnet is not None
+            else None
+        )
+        instance_type = (
+            str(repr(self.instance_type))
+            if self.instance_type is not None
+            else None
+        )
+        machineimage_id = (
+            self.machineimage_id
+            if self.machineimage_id is not None
+            else None
+        )
+        occurred_at = repr(self.occurred_at.isoformat())
+        created_at = repr(self.created_at.isoformat())
+        updated_at = repr(self.updated_at.isoformat())
+
+        return (
+            f'{self.__class__.__name__}('
+            f'id={self.id}, '
+            f'subnet={subnet}, '
+            f'instance_type={instance_type}, '
+            f'instance_id={self.instance_id}, '
+            f'machineimage_id={machineimage_id}, '
+            f'event_type={repr(self.event_type)}, '
+            f'occurred_at=parse({occurred_at}), '
+            f'created_at=parse({created_at}), '
+            f'updated_at=parse({updated_at})'
+            f')'
+        )
+
 
 class AwsEC2InstanceDefinitions(models.Model):
     """
