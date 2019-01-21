@@ -443,4 +443,5 @@ if __name__ == '__main__':
     responses = api_hander.gather_api_responses()
     api_hander.cleanup()
     output = render(responses)
+    output = '\n'.join((line.rstrip() for line in output.split('\n')))
     print(output)
