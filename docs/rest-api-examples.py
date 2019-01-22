@@ -137,6 +137,7 @@ class DocsApiHandler(object):
             )
             image.openshift_challenged = True
             image.status = image.INSPECTED
+            image.region = 'us-east-1'
             image.save()
 
     def cleanup(self):
