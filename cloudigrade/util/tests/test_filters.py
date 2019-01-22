@@ -5,6 +5,7 @@ from django.test import TestCase
 
 from account.tests.helper import SandboxedRestClient
 from util import filters
+from util.tests import helper
 
 
 class Jinja2FiltersTest(TestCase):
@@ -61,3 +62,20 @@ class Jinja2FiltersTest(TestCase):
         expected = textwrap.dedent(expected)[1:]  # trim whitespace
         actual = filters.stringify_http_response(response)
         self.assertEqual(actual, expected)
+
+    def test_stringify_http_204_no_content(self):
+        """Assert correct "no content" output of stringify_http_response."""
+        user = helper.generate_test_user()
+        client = SandboxedRestClient()
+        client._force_authenticate(user)
+        response = client.logout()
+        expected = \
+            """
+            HTTP/1.1 204 No Content
+            Allow: POST, OPTIONS
+            Content-Length: 0
+            Vary: Accept
+            X-Frame-Options: SAMEORIGIN"""  # noqa: E501
+        expected = textwrap.dedent(expected)[1:]  # trim whitespace
+        actual = filters.stringify_http_response(response)
+        self.assertEqual(expected, actual)

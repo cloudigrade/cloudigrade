@@ -35,9 +35,17 @@ def stringify_http_response(response):
     fulltext = '\n'.join(lines)
     try:
         body = response.json() if response.content else None
-        body = json.dumps(body, indent=4, sort_keys=True)
+        body = (
+            json.dumps(body, indent=4, sort_keys=True)
+            if body is not None
+            else None
+        )
     except ValueError:
-        body = response.content.decode('utf-8') if response.content else None
+        body = (
+            response.content.decode('utf-8')
+            if response.content
+            else None
+        )
     if body is not None:
         fulltext = f'{fulltext}\n\n{body}'
     return fulltext
