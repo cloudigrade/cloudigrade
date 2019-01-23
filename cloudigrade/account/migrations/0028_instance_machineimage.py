@@ -23,7 +23,7 @@ def populate_machineimage(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('account', '0029_merge_20190122_1627'),
+        ('account', '0027_update_machineimage_status'),
     ]
 
     operations = [
