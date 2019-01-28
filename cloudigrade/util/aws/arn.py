@@ -1,5 +1,6 @@
 """Helper utility module to wrap up common AWS ARN operations."""
 import re
+from decimal import Decimal
 
 from util.exceptions import InvalidArn
 
@@ -60,6 +61,13 @@ class AwsArn(object):
             raise InvalidArn('Invalid ARN: {0}'.format(arn))
 
         for key, val in match.groupdict().items():
+            if key == 'account_id':
+                try:
+                    val = Decimal(val)
+                except TypeError:
+                    raise InvalidArn(
+                        'Invalid ARN account ID: {0} {1}'.format(arn, val)
+                    )
             setattr(self, key, val)
 
     def __repr__(self):

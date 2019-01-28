@@ -104,7 +104,9 @@ class GenerateAwsAccountTest(TestCase):
         """Assert generation of an AwsAccount with default/no args."""
         account = helper.generate_aws_account()
         self.assertIsInstance(account, AwsAccount)
-        self.assertIsNotNone(re.match(r'\d{1,12}', account.aws_account_id))
+        self.assertIsNotNone(
+            re.match(r'\d{1,12}', str(account.aws_account_id))
+        )
 
     def test_generate_aws_account_with_args(self):
         """Assert generation of an AwsAccount with all specified args."""
@@ -118,7 +120,7 @@ class GenerateAwsAccountTest(TestCase):
         )
         self.assertIsInstance(account, AwsAccount)
         self.assertEqual(account.account_arn, arn)
-        self.assertEqual(account.aws_account_id, str(aws_account_id))
+        self.assertEqual(account.aws_account_id, aws_account_id)
         self.assertEqual(account.user, user)
         self.assertEqual(account.name, name)
         self.assertEqual(account.created_at, created_at)

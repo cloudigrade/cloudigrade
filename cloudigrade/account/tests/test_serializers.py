@@ -92,7 +92,7 @@ class AwsAccountSerializerTest(TestCase):
 
         # Verify that we created the account.
         account = AwsAccount.objects.get(aws_account_id=self.aws_account_id)
-        self.assertEqual(str(self.aws_account_id), account.aws_account_id)
+        self.assertEqual(self.aws_account_id, account.aws_account_id)
         self.assertEqual(self.arn, account.account_arn)
 
         # Verify that we created no instances yet.

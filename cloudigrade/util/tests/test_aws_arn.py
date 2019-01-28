@@ -44,24 +44,19 @@ class UtilAwsArnTest(TestCase):
                             partition + ':' + \
                             service + ':' + \
                             region + ':' + \
-                            account_id + ':' + \
+                            str(account_id) + ':' + \
                             resource_type + \
                             resource_separator + \
                             resource
 
-        self.assertEqual(str(mock_account_id), account_id)
+        self.assertEqual(mock_account_id, account_id)
         self.assertEqual(mock_arn, reconstructed_arn)
 
-    def test_parse_arn_without_region_or_account(self):
-        """Assert successful ARN parsing without a region or an account id."""
+    def test_arn_requires_non_empty_account_id(self):
+        """Assert ARN parsing with empty account id raises InvalidArn."""
         mock_arn = helper.generate_dummy_arn(account_id='')
-        arn_object = AwsArn(mock_arn)
-
-        region = arn_object.region
-        self.assertEqual(region, None)
-
-        account_id = arn_object.account_id
-        self.assertEqual(account_id, None)
+        with self.assertRaises(InvalidArn):
+            AwsArn(mock_arn)
 
     def test_parse_arn_with_slash_separator(self):
         """Assert successful ARN parsing with a slash separator."""

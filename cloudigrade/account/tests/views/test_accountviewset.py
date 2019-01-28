@@ -55,7 +55,7 @@ class AccountViewSetTest(TestCase):
                 response.data['account_arn'], account.account_arn
             )
             self.assertEqual(
-                response.data['aws_account_id'], account.aws_account_id
+                response.data['aws_account_id'], str(account.aws_account_id)
             )
 
     def get_aws_account_ids_from_list_response(self, response):
@@ -114,8 +114,8 @@ class AccountViewSetTest(TestCase):
     def test_list_accounts_as_user1(self):
         """Assert that user1 sees only its own accounts."""
         expected_accounts = {
-            self.account1.aws_account_id,
-            self.account2.aws_account_id,
+            str(self.account1.aws_account_id),
+            str(self.account2.aws_account_id),
         }
         response = self.get_account_list_response(self.user1)
         actual_accounts = self.get_aws_account_ids_from_list_response(response)
@@ -124,9 +124,9 @@ class AccountViewSetTest(TestCase):
     def test_list_accounts_as_user2(self):
         """Assert that user2 sees only its own accounts."""
         expected_accounts = {
-            self.account3.aws_account_id,
-            self.account4.aws_account_id,
-            self.account5.aws_account_id,
+            str(self.account3.aws_account_id),
+            str(self.account4.aws_account_id),
+            str(self.account5.aws_account_id),
         }
         response = self.get_account_list_response(self.user2)
         actual_accounts = self.get_aws_account_ids_from_list_response(response)
@@ -135,11 +135,11 @@ class AccountViewSetTest(TestCase):
     def test_list_accounts_as_superuser(self):
         """Assert that the superuser sees all accounts regardless of owner."""
         expected_accounts = {
-            self.account1.aws_account_id,
-            self.account2.aws_account_id,
-            self.account3.aws_account_id,
-            self.account4.aws_account_id,
-            self.account5.aws_account_id
+            str(self.account1.aws_account_id),
+            str(self.account2.aws_account_id),
+            str(self.account3.aws_account_id),
+            str(self.account4.aws_account_id),
+            str(self.account5.aws_account_id),
         }
         response = self.get_account_list_response(self.superuser)
         actual_accounts = self.get_aws_account_ids_from_list_response(response)
@@ -148,9 +148,9 @@ class AccountViewSetTest(TestCase):
     def test_list_accounts_as_superuser_with_filter(self):
         """Assert that the superuser sees accounts filtered by user_id."""
         expected_accounts = {
-            self.account3.aws_account_id,
-            self.account4.aws_account_id,
-            self.account5.aws_account_id
+            str(self.account3.aws_account_id),
+            str(self.account4.aws_account_id),
+            str(self.account5.aws_account_id),
         }
         params = {'user_id': self.user2.id}
         response = self.get_account_list_response(self.superuser, params)
