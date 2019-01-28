@@ -13,6 +13,7 @@ from account.models import (
     AwsMachineImage,
     InstanceEvent,
     MachineImage,
+    Run
 )
 from account.tests import helper as account_helper
 from analyzer import tasks
@@ -896,3 +897,158 @@ class AnalyzeLogTest(TestCase):
             self.mock_account, instance, instance_events
         )
         self.assertEqual(len(events_info), 0)
+
+    def test_process_instance_event_recalculate_runs(self):
+        """
+        Test that we recalculate runs when new instance events occur.
+
+        Initial Runs (2,-):
+            [ #------------]
+
+        New power off event at (,13) results in the run being updated (2,13):
+            [ ############ ]
+
+        """
+        instance = account_helper.generate_aws_instance(self.mock_account)
+
+        run_time = (util_helper.utc_dt(2018, 1, 2, 0, 0, 0),
+                    None)
+
+        account_helper.generate_single_run(instance, run_time)
+
+        occurred_at = util_helper.utc_dt(2018, 1, 13, 0, 0, 0)
+
+        instance_event = tasks.CloudTrailInstanceEvent(
+            occurred_at=occurred_at,
+            account_id=self.mock_account.aws_account_id,
+            region=instance.region,
+            instance_id=instance.ec2_instance_id,
+            event_type=InstanceEvent.TYPE.power_off,
+            instance_type=None,
+        )
+
+        tasks.process_instance_event(instance_event)
+
+        runs = list(Run.objects.all())
+        self.assertEqual(1, len(runs))
+        self.assertEqual(run_time[0], runs[0].start_time)
+        self.assertEqual(occurred_at, runs[0].end_time)
+
+    @patch('analyzer.tasks.recalculate_runs')
+    def test_process_instance_event_new_run(self, mock_recalculate_runs):
+        """
+        Test new run is created if it occurred after all runs and is power on.
+
+        account.util.recalculate_runs should not be ran in this case.
+
+        Initial Runs (2,5):
+            [ ####          ]
+
+        New power on event at (10,) results in 2 runs (2,5) (10,-):
+            [ ####    #-----]
+
+        """
+        instance = account_helper.generate_aws_instance(self.mock_account)
+
+        run_time = (
+            util_helper.utc_dt(2018, 1, 2, 0, 0, 0),
+            util_helper.utc_dt(2018, 1, 5, 0, 0, 0)
+        )
+
+        account_helper.generate_single_run(instance, run_time)
+
+        occurred_at = util_helper.utc_dt(2018, 1, 10, 0, 0, 0)
+
+        instance_event = tasks.CloudTrailInstanceEvent(
+            occurred_at=occurred_at,
+            account_id=self.mock_account.aws_account_id,
+            region=instance.region,
+            instance_id=instance.ec2_instance_id,
+            event_type=InstanceEvent.TYPE.power_on,
+            instance_type=None,
+        )
+        tasks.process_instance_event(instance_event)
+
+        runs = list(Run.objects.all())
+        self.assertEqual(2, len(runs))
+
+        # Since we're adding a new run, recalculate_runs shouldn't be called
+        mock_recalculate_runs.assert_not_called()
+
+    def test_process_instance_event_duplicate_start(self):
+        """
+        Test that recalculate works when a duplicate start event is introduced.
+
+        Initial Runs (5,7):
+            [    ###        ]
+
+        New instance power on event at (1,) results in the run being updated:
+            [#######        ]
+
+        """
+        instance = account_helper.generate_aws_instance(self.mock_account)
+
+        run_time = (
+            util_helper.utc_dt(2018, 1, 5, 0, 0, 0),
+            util_helper.utc_dt(2018, 1, 7, 0, 0, 0)
+        )
+
+        account_helper.generate_single_run(instance, run_time)
+
+        occurred_at = util_helper.utc_dt(2018, 1, 1, 0, 0, 0)
+
+        instance_event = tasks.CloudTrailInstanceEvent(
+            occurred_at=occurred_at,
+            account_id=self.mock_account.aws_account_id,
+            region=instance.region,
+            instance_id=instance.ec2_instance_id,
+            event_type=InstanceEvent.TYPE.power_on,
+            instance_type=None,
+        )
+
+        tasks.process_instance_event(instance_event)
+
+        runs = list(Run.objects.all())
+        self.assertEqual(1, len(runs))
+        self.assertEqual(run_time[1], runs[0].end_time)
+        self.assertEqual(occurred_at, runs[0].start_time)
+
+    @patch('analyzer.tasks.recalculate_runs')
+    def test_process_instance_event_power_off(self, mock_recalculate_runs):
+        """
+        Test new run is not if a power off event occurs after all runs.
+
+        account.util.recalculate_runs should not be ran in this case.
+
+        Initial Runs (2,5):
+            [ ####          ]
+
+        New power off event at (10,) results in 1 runs (2,5):
+            [ ####          ]
+
+        """
+        instance = account_helper.generate_aws_instance(self.mock_account)
+
+        run_time = (
+            util_helper.utc_dt(2018, 1, 2, 0, 0, 0),
+            util_helper.utc_dt(2018, 1, 5, 0, 0, 0)
+        )
+
+        account_helper.generate_single_run(instance, run_time)
+
+        occurred_at = util_helper.utc_dt(2018, 1, 10, 0, 0, 0)
+
+        instance_event = tasks.CloudTrailInstanceEvent(
+            occurred_at=occurred_at,
+            account_id=self.mock_account.aws_account_id,
+            region=instance.region,
+            instance_id=instance.ec2_instance_id,
+            event_type=InstanceEvent.TYPE.power_off,
+            instance_type=None,
+        )
+        tasks.process_instance_event(instance_event)
+
+        runs = list(Run.objects.all())
+        self.assertEqual(1, len(runs))
+
+        mock_recalculate_runs.assert_not_called()

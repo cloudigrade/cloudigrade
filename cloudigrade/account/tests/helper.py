@@ -13,7 +13,7 @@ from rest_framework.test import APIClient
 
 from account import tasks
 from account.models import (AwsAccount, AwsEC2InstanceDefinitions, AwsInstance,
-                            AwsInstanceEvent, AwsMachineImage,
+                            AwsInstanceEvent, AwsMachineImage, AwsRun,
                             CLOUD_ACCESS_NAME_TOKEN, InstanceEvent,
                             MARKETPLACE_NAME_TOKEN, MachineImage)
 from util import aws
@@ -447,3 +447,61 @@ def generate_aws_ec2_definitions():
         )
         if not created:
             logger.warning('"%s" EC2 definition already exists', name)
+
+
+def generate_runs(instance, runtimes, **kwargs):
+    """
+    Generate multiple AwsRun for testing.
+
+    Args:
+        instance (AwsInstance): instance that was ran.
+        runtimes (list(tuple(datetime.datetime, datetime.datetime))):
+            times the runs occurred.
+        **kwargs: optional arguments to pass to generate_single_run()
+    Returns:
+        list(AwsRun): A list of created AwsRun.
+
+    """
+    runs = []
+    for runtime in runtimes:
+        runs.append(generate_single_run(instance, runtime, **kwargs))
+
+    return runs
+
+
+def generate_single_run(instance, runtime,
+                        image=None, no_image=False,
+                        instance_type=None):
+    """
+    Generate a single AwsRun for testing.
+
+    Args:
+        instance (AwsInstance): instance that was ran.
+        runtime (tuple(datetime.datetime, datetime.datetime)):
+            time the run occured.
+        image (Image): image that was ran.
+        no_image (bool): If true, don't create and assign an image.
+        instance_type (str): Optional AWS instance type.
+    Returns:
+        AwsRun: The created AwsRun.
+
+    """
+    if instance_type is None:
+        instance_type = random.choice(
+            tuple(helper.SOME_EC2_INSTANCE_TYPES.keys())
+        )
+
+    if not no_image and image is None:
+        image = generate_aws_image()
+
+    run = AwsRun.objects.create(
+        start_time=runtime[0],
+        end_time=runtime[1],
+        instance=instance,
+        machineimage=image,
+        instance_type=instance_type,
+        vcpu=helper.SOME_EC2_INSTANCE_TYPES[instance_type]['vcpu'],
+        memory=helper.SOME_EC2_INSTANCE_TYPES[instance_type]['memory'],
+    )
+
+    return run
