@@ -314,6 +314,10 @@ CELERY_BROKER_TRANSPORT_OPTIONS = {
 CELERY_BROKER_URL = AWS_SQS_URL
 QUEUE_EXCHANGE_NAME = None
 
+INSPECT_PENDING_IMAGES_MIN_AGE = env.int(
+    'INSPECT_PENDING_IMAGES_MIN_AGE', default=60 * 60 * 12  # 12 hours
+)
+
 CELERY_TASK_ROUTES = {
     'account.tasks.initial_aws_describe_instances':
         {'queue': 'initial_aws_describe_instances'},
@@ -357,6 +361,10 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'analyzer.tasks.analyze_log',
         # seconds
         'schedule': env.int('ANALYZE_LOG_SCHEDULE', default=2 * 60),
+    },
+    'inspect_pending_images': {
+        'task': 'account.tasks.inspect_pending_images',
+        'schedule': env.int('INSPECT_PENDING_IMAGES_SCHEDULE', default=15 * 60),
     },
     'repopulate_ec2_instance_mapping_every_week': {
         'task': 'analyzer.tasks.repopulate_ec2_instance_mapping',

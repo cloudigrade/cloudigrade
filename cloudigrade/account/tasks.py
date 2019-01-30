@@ -1,12 +1,14 @@
 """Celery tasks for use in the account app."""
 import json
 import logging
+from datetime import timedelta
 
 import boto3
 from botocore.exceptions import ClientError
 from celery import shared_task
 from django.conf import settings
 from django.db import transaction
+from django.utils import timezone
 from django.utils.translation import gettext as _
 
 from account.models import AwsAccount, AwsMachineImage
@@ -626,3 +628,43 @@ def persist_inspection_cluster_results_task():
         scale_down_cluster.delay()
 
     return successes, failures
+
+
+@shared_task
+@transaction.atomic
+def inspect_pending_images():
+    """
+    (Re)start inspection of images in PENDING, PREPARING, or INSPECTING status.
+
+    This generally should not be necessary for most images, but if an image
+    inspection fails to proceed normally, this function will attempt to run it
+    through inspection again.
+
+    This function runs atomically in a transaction to protect against the risk
+    of it being called multiple times simultaneously which could result in the
+    same image being found and getting multiple inspection tasks.
+    """
+    updated_since = (
+        timezone.now() - timedelta(
+            seconds=settings.INSPECT_PENDING_IMAGES_MIN_AGE
+        )
+    )
+    images = AwsMachineImage.objects.filter(
+        status=AwsMachineImage.PENDING,
+        instance__awsinstance__region__isnull=False,
+        updated_at__lt=updated_since,
+    ).distinct()
+    logger.info(
+        _(
+            'Found {0} images for inspection that have not updated since {1}'
+        ).format(images.count(), updated_since)
+    )
+
+    for image in images:
+        instance = image.instance_set.filter(
+            awsinstance__region__isnull=False
+        ).first()
+        arn = instance.account.account_arn
+        ami_id = image.ec2_ami_id
+        region = instance.region
+        start_image_inspection(arn, ami_id, region)
