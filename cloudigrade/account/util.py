@@ -288,6 +288,11 @@ def start_image_inspection(arn, ami_id, region):
         AwsMachineImage: Image being inspected
 
     """
+    logger.info(
+        _(
+            'Starting inspection for image {0} in region {1} through arn {0}'
+        ).format(ami_id, region, arn)
+    )
     ami = AwsMachineImage.objects.get(ec2_ami_id=ami_id)
     ami.status = ami.PREPARING
     ami.save()
