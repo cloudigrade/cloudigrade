@@ -649,8 +649,13 @@ def inspect_pending_images():
             seconds=settings.INSPECT_PENDING_IMAGES_MIN_AGE
         )
     )
+    restartable_statuses = [
+        AwsMachineImage.PENDING,
+        AwsMachineImage.PREPARING,
+        AwsMachineImage.INSPECTING,
+    ]
     images = AwsMachineImage.objects.filter(
-        status=AwsMachineImage.PENDING,
+        status__in=restartable_statuses,
         instance__awsinstance__region__isnull=False,
         updated_at__lt=updated_since,
     ).distinct()
