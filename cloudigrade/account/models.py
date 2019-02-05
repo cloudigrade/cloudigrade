@@ -396,16 +396,20 @@ class AwsMachineImage(MachineImage):
     @property
     def is_cloud_access(self):
         """Indicate if the image is from Cloud Access."""
-        return self.name is not None and \
-            CLOUD_ACCESS_NAME_TOKEN in self.name and \
+        return (
+            self.name is not None and
+            CLOUD_ACCESS_NAME_TOKEN.lower() in self.name.lower() and
             self.owner_aws_account_id in settings.RHEL_IMAGES_AWS_ACCOUNTS
+        )
 
     @property
     def is_marketplace(self):
         """Indicate if the image is from AWS Marketplace."""
-        return self.name is not None and \
-            MARKETPLACE_NAME_TOKEN in self.name and \
+        return (
+            self.name is not None and
+            MARKETPLACE_NAME_TOKEN.lower() in self.name.lower() and
             self.owner_aws_account_id in settings.RHEL_IMAGES_AWS_ACCOUNTS
+        )
 
     @property
     def cloud_image_id(self):

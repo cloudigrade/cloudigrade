@@ -133,3 +133,29 @@ class AwsAccountModelTest(TestCase):
         self.assertFalse(image.rhel_product_certs_found)
         self.assertFalse(image.rhel_release_files_found)
         self.assertFalse(image.rhel_signed_packages_found)
+
+    def test_is_marketplace_check_is_case_insensitive(self):
+        """Assert is_marketplace check is case-insensitive."""
+        image = account_helper.generate_aws_image(is_marketplace=True)
+        image.name = image.name.upper()
+        image.save()
+        image.refresh_from_db()
+        self.assertTrue(image.is_marketplace)
+
+        image.name = image.name.lower()
+        image.save()
+        image.refresh_from_db()
+        self.assertTrue(image.is_marketplace)
+
+    def test_is_cloud_access_check_is_case_insensitive(self):
+        """Assert is_cloud_access check is case-insensitive."""
+        image = account_helper.generate_aws_image(is_cloud_access=True)
+        image.name = image.name.upper()
+        image.save()
+        image.refresh_from_db()
+        self.assertTrue(image.is_cloud_access)
+
+        image.name = image.name.lower()
+        image.save()
+        image.refresh_from_db()
+        self.assertTrue(image.is_cloud_access)
