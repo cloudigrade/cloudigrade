@@ -333,6 +333,8 @@ CELERY_TASK_ROUTES = {
         {'queue': 'enqueue_ready_volumes'},
     'account.tasks.delete_snapshot':
         {'queue': 'delete_snapshot'},
+    'account.tasks.inspect_pending_images':
+        {'queue': 'inspect_pending_images'},
     'account.tasks.scale_up_inspection_cluster':
         {'queue': 'scale_up_inspection_cluster'},
     'account.tasks.run_inspection_cluster':
