@@ -3,7 +3,8 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import Count, Q
 from django.http import HttpResponseNotFound
-from rest_framework import mixins, viewsets
+from rest_framework import mixins, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from account import serializers
@@ -127,6 +128,25 @@ class MachineImageViewSet(viewsets.ReadOnlyModelViewSet,
                 instanceevent__instance__account__user_id=user_id
             ).order_by('id').distinct()
         return self.queryset.order_by('id')
+
+    @action(detail=True, methods=['post'])
+    def reinspect(self, request, pk=None):
+        """Set the machine image status to pending, so it gets reinspected."""
+        user = self.request.user
+
+        if not user.is_superuser:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        machine_image = self.get_object()
+        machine_image.status = MachineImage.PENDING
+        machine_image.save()
+
+        serializer = serializers.MachineImagePolymorphicSerializer(
+            machine_image,
+            context={'request': request}
+        )
+
+        return Response(serializer.data)
 
 
 class SysconfigViewSet(viewsets.ViewSet):

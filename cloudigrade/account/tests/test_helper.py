@@ -38,6 +38,9 @@ class SandboxedRestClientTest(TestCase):
         self.user = util_helper.generate_test_user(
             self.username, self.password
         )
+        self.superuser = util_helper.generate_test_user(
+            is_superuser=True
+        )
 
     def test_login_logout(self):
         """Assert login and logout work."""
@@ -95,6 +98,21 @@ class SandboxedRestClientTest(TestCase):
         client = helper.SandboxedRestClient()
         with self.assertRaises(AttributeError):
             client.foo_bar()
+
+    def test_action_noun_verb_detail(self):
+        """Assert "detail" requests work."""
+        client = helper.SandboxedRestClient()
+        client._force_authenticate(self.superuser)
+
+        image = helper.generate_aws_image(
+            status=AwsMachineImage.INSPECTED
+        )
+        response = client.post_image(
+            noun_id=image.id,
+            detail='reinspect'
+        )
+        self.assertEqual(response.status_code, http.HTTPStatus.OK)
+        self.assertEqual(AwsMachineImage.PENDING, response.data['status'])
 
 
 class GenerateAwsAccountTest(TestCase):

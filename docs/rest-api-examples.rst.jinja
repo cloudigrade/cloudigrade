@@ -432,6 +432,22 @@ Response:
 {{ get_image | stringify_http_response | rst_codeblock }}
 
 
+Reinspect a specific image
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Restart image inspection to deal with failed inspections or repeat inspection for the sake of testing.
+
+Note that this command is only accessible by superusers.
+
+Request:
+
+{{ reinspect_image.wsgi_request | httpied_command | rst_codeblock("bash") }}
+
+Response:
+
+{{ reinspect_image | stringify_http_response | rst_codeblock }}
+
+
 Issuing challenges/flags
 ~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -365,6 +365,14 @@ class DocsApiHandler(object):
         assert_status(response, 200)
         responses['get_image'] = response
 
+        # Reinspect a specific image
+        response = self.superuser_client.post_image(
+            noun_id=self.images[0].id,
+            detail='reinspect'
+        )
+        assert_status(response, 200)
+        responses['reinspect_image'] = response
+
         # Issuing challenges/flags
         response = self.superuser_client.patch_image(
             self.images[0].id,

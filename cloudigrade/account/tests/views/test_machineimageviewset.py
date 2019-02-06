@@ -1,4 +1,5 @@
 """Collection of tests for MachineImageViewSet."""
+import http
 from decimal import Decimal
 
 from django.test import TestCase
@@ -46,6 +47,9 @@ class MachineImageViewSetTest(TestCase):
             openshift_detected=True)
         self.image_rhel_ocp = account_helper.generate_aws_image(
             rhel_detected=True, openshift_detected=True)
+        self.inspected_image = account_helper.generate_aws_image(
+            status=AwsMachineImage.INSPECTED
+        )
 
         # Instances for the accounts
         self.instance_u1_1 = account_helper.generate_aws_instance(
@@ -201,6 +205,24 @@ class MachineImageViewSetTest(TestCase):
         response = view(request, pk=image_id)
         return response
 
+    def get_image_reinspect_response(self, user, image_id):
+        """
+        Generate a response for a post-reinspect on the MachineImageViewSet.
+
+        Args:
+            user (User): Django auth user performing the request.
+            image_id (int): ID of the image to reinspect.
+
+        Returns:
+            Response: the generated response for this request
+
+        """
+        request = self.factory.post('/image/')
+        force_authenticate(request, user=user)
+        view = MachineImageViewSet.as_view(actions={'post': 'reinspect'})
+        response = view(request, pk=image_id)
+        return response
+
     def get_image_list_response(self, user, data=None):
         """
         Generate a response for a get-list on the MachineImageViewSet.
@@ -252,7 +274,8 @@ class MachineImageViewSetTest(TestCase):
             self.image_windows.id,
             self.image_rhel.id,
             self.image_ocp.id,
-            self.image_rhel_ocp.id
+            self.image_rhel_ocp.id,
+            self.inspected_image.id
         }
         response = self.get_image_list_response(self.superuser)
         actual_images = self.get_image_ids_from_list_response(response)
@@ -496,3 +519,20 @@ class MachineImageViewSetTest(TestCase):
         self.assertFalse(response.data['rhel'])
         updated_image = AwsMachineImage.objects.get(pk=response.data['id'])
         self.assertResponseHasImageData(response, updated_image)
+
+    def test_reinspect_superuser(self):
+        """Assert that a superuser can reinspect an image."""
+        response = self.get_image_reinspect_response(
+            self.superuser,
+            self.inspected_image.id
+        )
+        self.assertEqual(http.HTTPStatus.OK, response.status_code)
+        updated_image = AwsMachineImage.objects.get(pk=response.data['id'])
+        self.assertEqual(AwsMachineImage.PENDING, response.data['status'])
+        self.assertEqual(AwsMachineImage.PENDING, updated_image.status)
+
+    def test_reinspect_normal_user(self):
+        """Assert that a user cannot reinspect an image."""
+        response = self.get_image_reinspect_response(self.user1,
+                                                     self.inspected_image.id)
+        self.assertEqual(http.HTTPStatus.FORBIDDEN, response.status_code)

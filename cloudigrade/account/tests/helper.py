@@ -131,9 +131,11 @@ class SandboxedRestClient(object):
         self._force_authenticate(None)
         return response
 
-    def verb_noun(self, verb, noun, noun_id=None, data=None):
+    def verb_noun(self, verb, noun, noun_id=None, detail=None, data=None):
         """Make a simulated REST API call for the given inputs."""
-        if noun_id:
+        if detail:
+            path = f'/api/v1/{noun}/{noun_id}/{detail}/'
+        elif noun_id:
             path = f'/api/v1/{noun}/{noun_id}/'
         elif verb == 'report':
             path = f'/api/v1/report/{noun}/'
