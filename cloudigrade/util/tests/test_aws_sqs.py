@@ -77,6 +77,34 @@ class UtilAwsSqsTest(TestCase):
             self.assertEqual(yield_counter, max_count)
             self.assertEqual(yielded_messages, available_messages[:max_count])
 
+    def test_yield_messages_from_queue_not_exists(self):
+        """Assert yield_messages_from_queue handles a nonexistent queue."""
+        queue_url = _faker.url()
+        error_response = {'Error': {'Code': '.NonExistentQueue'}}
+        exception = ClientError(error_response, Mock())
+
+        with patch.object(sqs, 'boto3') as mock_boto3:
+            mock_resource = mock_boto3.resource.return_value
+            mock_queue = mock_resource.Queue.return_value
+            mock_queue.receive_messages.side_effect = exception
+            yielded_messages = list(sqs.yield_messages_from_queue(queue_url))
+
+        self.assertEqual(len(yielded_messages), 0)
+
+    def test_yield_messages_from_queue_raises_unhandled_exception(self):
+        """Assert yield_messages_from_queue raises unhandled exceptions."""
+        queue_url = _faker.url()
+        error_response = {'Error': {'Code': '.Potatoes'}}
+        exception = ClientError(error_response, Mock())
+
+        with patch.object(sqs, 'boto3') as mock_boto3:
+            mock_resource = mock_boto3.resource.return_value
+            mock_queue = mock_resource.Queue.return_value
+            mock_queue.receive_messages.side_effect = exception
+            with self.assertRaises(ClientError) as raised_exception:
+                list(sqs.yield_messages_from_queue(queue_url))
+            self.assertEqual(raised_exception.exception, exception)
+
     def test_delete_message_from_queue(self):
         """Assert that messages are deleted from SQS queue."""
         mock_queue_url = 'https://123.abc'
