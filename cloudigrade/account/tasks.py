@@ -42,7 +42,6 @@ def initial_aws_describe_instances(account_id):
 
     Args:
         account_id (int): the AwsAccount id
-        arn (str): Amazon Resource Name for the AWS account
     """
     account = AwsAccount.objects.get(pk=account_id)
     arn = account.account_arn
@@ -94,14 +93,15 @@ def copy_ami_snapshot(arn, ami_id, snapshot_region, reference_ami_id=None):
             raise AwsSnapshotEncryptedError
 
         logger.info(
-            _('AWS snapshot "{snapshot_id}" for image "{image_id}" has owner '
-              '"{owner_id}"; current session is account "{account_id}"')
-            .format(
-                snapshot_id=customer_snapshot.snapshot_id,
-                image_id=ami.id,
-                owner_id=customer_snapshot.owner_id,
-                account_id=session_account_id
-            )
+            _('AWS snapshot "%(snapshot_id)s" for image "%(image_id)s" has '
+              'owner "%(owner_id)s"; current session is account '
+              '"%(account_id)s"'),
+            {
+                'snapshot_id': customer_snapshot.snapshot_id,
+                'image_id': ami.id,
+                'owner_id': customer_snapshot.owner_id,
+                'account_id': session_account_id
+            }
         )
 
         if customer_snapshot.owner_id != session_account_id and \
@@ -122,11 +122,15 @@ def copy_ami_snapshot(arn, ami_id, snapshot_region, reference_ami_id=None):
     aws.add_snapshot_ownership(customer_snapshot)
 
     snapshot_copy_id = aws.copy_snapshot(customer_snapshot_id, snapshot_region)
-    logger.info(_(
-        '{0}: customer_snapshot_id={1}, snapshot_copy_id={2}').format(
-        'copy_ami_snapshot',
-        customer_snapshot_id,
-        snapshot_copy_id))
+    logger.info(
+        _('%(label)s: customer_snapshot_id=%(snapshot_id)s, '
+          'snapshot_copy_id=%(copy_id)s'),
+        {
+            'label': 'copy_ami_snapshot',
+            'snapshot_id': customer_snapshot_id,
+            'copy_id': snapshot_copy_id
+        }
+    )
 
     # Schedule removal of ownership on customer snapshot
     remove_snapshot_ownership.delay(
@@ -197,8 +201,8 @@ def copy_ami_to_customer_account(arn, reference_ami_id, snapshot_region,
             if reference_ami.public and \
                     e.response.get('Error').get('Message') in public_errors:
                 # This appears to be a marketplace AMI, mark it as inspected.
-                logger.info(_('Found a marketplace/community image "{0}", '
-                              'marking as inspected').format(reference_ami_id))
+                logger.info(_('Found a marketplace/community image "%s", '
+                              'marking as inspected'), reference_ami_id)
                 ami = AwsMachineImage.objects.get(ec2_ami_id=reference_ami_id)
                 ami.status = ami.INSPECTED
                 ami.save()
@@ -208,8 +212,8 @@ def copy_ami_to_customer_account(arn, reference_ami_id, snapshot_region,
                 # This appears to be a private AMI, shared with our customer,
                 # but not given access to the storage.
                 logger.info(_(
-                    'Found a private image "{0}" with inaccessible storage, '
-                    'marking as erred').format(reference_ami_id))
+                    'Found a private image "%s" with inaccessible storage, '
+                    'marking as erred'), reference_ami_id)
                 ami = AwsMachineImage.objects.get(ec2_ami_id=reference_ami_id)
                 ami.status = ami.ERROR
                 ami.save()
@@ -247,18 +251,23 @@ def remove_snapshot_ownership(arn,
     except ClientError as error:
         if error.response.get(
                 'Error', {}).get('Code') == 'InvalidSnapshot.NotFound':
-            logger.info(_(
-                '{0} detected snapshot_copy_id {1} already deleted.').format(
-                'remove_snapshot_ownership',
-                snapshot_copy_id))
+            logger.info(
+                _('%(label)s detected snapshot_copy_id %(copy_id)s already '
+                  'deleted.'),
+                {
+                    'label': 'remove_snapshot_ownership',
+                    'copy_id': snapshot_copy_id
+                }
+            )
         else:
             raise
 
     # Remove permissions from customer_snapshot
     logger.info(_(
-        '{0} remove ownership from customer snapshot {1}').format(
-        'remove_snapshot_ownership',
-        customer_snapshot_id))
+        '%(label)s remove ownership from customer snapshot %(snapshot_id)s'),
+        {'label': 'remove_snapshot_ownership',
+         'snapshot_id': customer_snapshot_id}
+    )
     session = aws.get_session(arn)
     customer_snapshot = aws.get_snapshot(
         session,
@@ -283,10 +292,14 @@ def create_volume(ami_id, snapshot_copy_id):
     volume_id = aws.create_volume(snapshot_copy_id, zone)
     region = aws.get_region_from_availability_zone(zone)
 
-    logger.info(_('{0}: volume_id={1}, volume_region={2}').format(
-        'create_volume',
-        volume_id,
-        region))
+    logger.info(
+        _('%(label)s: volume_id=%(volume_id)s, volume_region=%(region)s'),
+        {
+            'label': 'create_volume',
+            'volume_id': volume_id,
+            'region': region
+        }
+    )
 
     delete_snapshot.delay(snapshot_copy_id, volume_id, region)
     enqueue_ready_volume.delay(ami_id, volume_id, region)
@@ -314,8 +327,10 @@ def delete_snapshot(snapshot_copy_id, volume_id, volume_region):
     aws.check_volume_state(volume)
 
     # Delete snapshot_copy
-    logger.info(_('{0} delete cloudigrade snapshot copy {1}').format(
-        'delete_snapshot', snapshot_copy_id))
+    logger.info(
+        _('%(label)s delete cloudigrade snapshot copy %(copy_id)s'),
+        {'label': 'delete_snapshot', 'copy_id': snapshot_copy_id}
+    )
     snapshot_copy = ec2.Snapshot(snapshot_copy_id)
     snapshot_copy.delete(DryRun=False)
 
@@ -438,23 +453,28 @@ def run_inspection_cluster(messages, cloud='aws'):
     ec2 = boto3.resource('ec2')
     ec2_instance = ec2.Instance(ec2_instance_id)
 
-    logger.info(_('{0} attaching volumes').format(
-        'run_inspection_cluster'))
+    logger.info(_('%s attaching volumes'), 'run_inspection_cluster')
     # attach volumes
     for index, message in enumerate(messages):
         mount_point = generate_device_name(index)
         volume = ec2.Volume(message['volume_id'])
-        logger.info(_('{0} attaching volume {1} to instance {2}').format(
-            'run_inspection_cluster',
-            message['volume_id'],
-            ec2_instance_id))
+        logger.info(
+            _('%(label)s attaching volume %(volume_id)s to instance'
+              ' %(instance)s'),
+            {
+                'label': 'run_inspection_cluster',
+                'volume_id': message['volume_id'],
+                'instance': ec2_instance_id
+            }
+        )
 
         volume.attach_to_instance(
             Device=mount_point, InstanceId=ec2_instance_id)
 
-        logger.info(_('{0} modify volume {1} to auto-delete').format(
-            'run_inspection_cluster',
-            message['volume_id']))
+        logger.info(_('%(label)s modify volume %(volume_id)s to auto-delete'),
+                    {'label': 'run_inspection_cluster',
+                     'volume_id': message['volume_id']}
+                    )
         # Configure volumes to delete when instance is scaled down
         ec2_instance.modify_attribute(BlockDeviceMappings=[
             {
@@ -565,7 +585,7 @@ def persist_aws_inspection_cluster_results(inspection_results):
     Persist the aws houndigrade inspection result.
 
     Args:
-        inspection_result (dict): A dict containing houndigrade results
+        inspection_results (dict): A dict containing houndigrade results
     Returns:
         None
     """
@@ -596,8 +616,9 @@ def persist_inspection_cluster_results_task():
     successes, failures = [], []
     for message in aws.yield_messages_from_queue(
             queue_url, HOUNDIGRADE_MESSAGE_READ_LEN):
-        logger.info(_('Processing inspection results with id "{0}"').format(
-            message.message_id))
+        logger.info(_('Processing inspection results with id "%s"'),
+                    message.message_id
+                    )
 
         inspection_results = json.loads(message.body)
         if inspection_results.get(CLOUD_KEY) == CLOUD_TYPE_AWS:
@@ -606,22 +627,22 @@ def persist_inspection_cluster_results_task():
                     inspection_results)
             except Exception as e:
                 logger.exception(_(
-                    'Unexpected error in result processing: {0}'
-                ).format(e))
+                    'Unexpected error in result processing: %s'
+                ), e)
                 logger.debug(_(
-                    'Failed message body is: {0}'
-                ).format(message.body))
+                    'Failed message body is: %s'
+                ), message.body)
                 failures.append(message)
                 continue
 
             logger.info(_(
-                'Successfully processed message id {0}; deleting from queue.'
-            ).format(message.message_id))
+                'Successfully processed message id %s; deleting from queue.'
+            ), message.message_id)
             aws.delete_messages_from_queue(queue_url, [message])
             successes.append(message)
         else:
-            logger.error(_('Unsupported cloud type: "{0}"').format(
-                inspection_results.get(CLOUD_KEY)))
+            logger.error(_('Unsupported cloud type: "%s"'),
+                         inspection_results.get(CLOUD_KEY))
             failures.append(message)
 
     if successes or failures:
@@ -660,9 +681,9 @@ def inspect_pending_images():
         updated_at__lt=updated_since,
     ).distinct()
     logger.info(
-        _(
-            'Found {0} images for inspection that have not updated since {1}'
-        ).format(images.count(), updated_since)
+        _('Found %(number)s images for inspection that have not updated '
+          'since %(updated_time)s'),
+        {'number': images.count(), 'updated_time': updated_since}
     )
 
     for image in images:

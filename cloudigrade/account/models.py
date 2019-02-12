@@ -305,12 +305,13 @@ class AwsAccount(Account):
                     # and log an error. This could result in an orphaned
                     # cloudtrail writing to our s3 bucket.
                     elif error_code == 'AccessDenied':
-                        log_message = _(
-                            'Cloudigrade account {} was deleted, but could '
-                            'not access the AWS account to disable its '
-                            'cloudtrail {}.'
-                        ).format(self.cloud_account_id, cloudtrial_name)
-                        logger.warning(log_message)
+                        logger.warning(
+                            _('Cloudigrade account %(account_id)s was deleted,'
+                              ' but could not access the AWS account to '
+                              'disable its cloudtrail %(cloudtrail_name)s.'),
+                            {'account_id': self.cloud_account_id,
+                             'cloudtrail_name': cloudtrial_name}
+                        )
                         logger.info(error)
 
                     # If the user role does exist, but we can't stop the
@@ -319,12 +320,14 @@ class AwsAccount(Account):
                     # result in an orphaned cloudtrail writing to our s3
                     # bucket.
                     elif error_code == 'AccessDeniedException':
-                        log_message = _(
-                            'Cloudigrade account {} was deleted, but we did '
-                            'not have permission to perform cloudtrail:'
-                            'StopLogging on cloudtrail {}.'
-                        ).format(self.cloud_account_id, cloudtrial_name)
-                        logger.warning(log_message)
+                        logger.warning(
+                            _('Cloudigrade account %(account_id)s was deleted,'
+                              ' but we did not have permission to perform '
+                              'cloudtrail: StopLogging on cloudtrail '
+                              '%(cloudtrail_name)s.'),
+                            {'account_id': self.cloud_account_id,
+                             'cloudtrail_name': cloudtrial_name}
+                        )
                         logger.info(error)
                     else:
                         raise

@@ -38,8 +38,9 @@ def get_object_content_from_s3(bucket, key):
         else:
             content = object_bytes.decode('utf-8')
     except UnicodeDecodeError as ex:
-        logger.exception(_('Failed to decode content of {key}: {error}')
-                         .format(key=key, error=ex))
+        logger.exception(_('Failed to decode content of %(key)s: %(error)s'),
+                         {'key': key, 'error': ex}
+                         )
         raise
 
     return content

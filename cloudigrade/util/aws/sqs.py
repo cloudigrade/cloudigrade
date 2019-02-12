@@ -102,8 +102,10 @@ def delete_messages_from_queue(queue_url, messages):
     """
     if not messages:
         logger.debug(
-            _('{0} received no messages for deletion.   Queue URL {1}').format(
-                'delete_messages_from_queue', queue_url))
+            _('%(label)s received no messages for deletion. Queue URL '
+              '%(queue_url)s'),
+            {'label': 'delete_messages_from_queue', 'queue_url': queue_url}
+        )
         return {}
 
     sqs_queue = _get_queue(queue_url)
@@ -186,7 +188,7 @@ def create_queue(queue_name, with_dlq=True,
         'MessageRetentionPeriod': str(retention_period),  # AWS wants a str.
     }
 
-    logger.info('Creating SQS queue "{}"'.format(queue_name))
+    logger.info('Creating SQS queue "%s"', queue_name)
     queue_url = sqs.create_queue(QueueName=queue_name)['QueueUrl']
     sqs.set_queue_attributes(QueueUrl=queue_url, Attributes=attributes)
 
@@ -214,9 +216,9 @@ def ensure_queue_has_dlq(source_queue_name, source_queue_url):
     if validate_redrive_policy(source_queue_name, redrive_policy):
         return
 
-    logger.info('SQS queue "{}" needs an updated redrive policy'.format(
-        source_queue_name
-    ))
+    logger.info('SQS queue "%s" needs an updated redrive policy',
+                source_queue_name
+                )
     dlq_arn = create_dlq(source_queue_name)
 
     redrive_policy = {
@@ -226,8 +228,8 @@ def ensure_queue_has_dlq(source_queue_name, source_queue_url):
     attributes = {
         'RedrivePolicy': json.dumps(redrive_policy),
     }
-    logger.info('Assigning SQS queue "{}" redrive policy: {}'.format(
-        source_queue_name, redrive_policy))
+    logger.info('Assigning SQS queue "%(queue)s" redrive policy: %(policy)s',
+                {'queue': source_queue_name, 'policy': redrive_policy})
     sqs.set_queue_attributes(QueueUrl=source_queue_url, Attributes=attributes)
 
 
@@ -243,9 +245,9 @@ def validate_redrive_policy(source_queue_name, redrive_policy):
         bool: True if policy appears to be valid, else False.
 
     """
-    logger.info('SQS queue "{}" already has a redrive policy: {}'.format(
-        source_queue_name, redrive_policy
-    ))
+    logger.info('SQS queue "%(queue)s" already has a redrive policy: '
+                '%(policy)s',
+                {'queue': source_queue_name, 'policy': redrive_policy})
 
     dlq_queue_arn = redrive_policy.get('deadLetterTargetArn')
 

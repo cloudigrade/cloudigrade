@@ -83,10 +83,10 @@ def _handle_dry_run_response_exception(action, e):
     unauthorized_operation = 'UnauthorizedOperation'
 
     if e.response['Error']['Code'] == dry_run_operation:
-        logger.debug(_('Verified access to "{0}"').format(action))
+        logger.debug(_('Verified access to "%s"'), action)
         return True
     elif e.response['Error']['Code'] == unauthorized_operation:
-        logger.warning(_('No access to "{0}"').format(action))
+        logger.warning(_('No access to "%s"'), action)
         return False
     raise e
 
@@ -154,14 +154,14 @@ def _verify_policy_action(session, action):  # noqa: C901
             # unfortunately, CloudTrail does not have a DryRun option like ec2
             # so we cannot verify whether or not our policy gives us the
             # correct permissions without carrying out the action
-            logger.warning(_('Unable to verify the policy action "{0}" '
+            logger.warning(_('Unable to verify the policy action "%s" '
                              'due to CloudTrail not providing a DryRun '
-                             'option.')
-                           .format(action))
+                             'option.'),
+                           action)
             return True
         else:
-            logger.warning(_('No test case exists for action "{0}"')
-                           .format(action))
+            logger.warning(_('No test case exists for action "%s"'),
+                           action)
             return False
     except ClientError as e:
         return _handle_dry_run_response_exception(action, e)

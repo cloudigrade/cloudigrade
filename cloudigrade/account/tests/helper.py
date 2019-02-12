@@ -446,4 +446,4 @@ def generate_aws_ec2_definitions():
             },
         )
         if not created:
-            logger.warning('"{0}" EC2 definition already exists'.format(name))
+            logger.warning('"%s" EC2 definition already exists', name)

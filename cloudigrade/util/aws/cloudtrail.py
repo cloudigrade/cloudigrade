@@ -78,7 +78,7 @@ def create_cloudtrail(cloudtrail, name):
         cloudtrail (botocore client): The cloudtrail client
         name (string): The name of the cloudtrail to configure
     """
-    logger.debug(_('Creating the cloudtrail {0}').format(name))
+    logger.debug(_('Creating the cloudtrail %s'), name)
     try:
         response = cloudtrail.create_trail(
             Name=name,
@@ -103,7 +103,7 @@ def update_cloudtrail(cloudtrail, name):
         cloudtrail (botocore client): The cloudtrail client
         name (string): The name of the cloudtrail to configure
     """
-    logger.debug(_('Updating the cloudtrail {0}').format(name))
+    logger.debug(_('Updating the cloudtrail %s'), name)
     try:
         response = cloudtrail.update_trail(
             Name=name,
@@ -123,7 +123,7 @@ def disable_cloudtrail(cloudtrail, name):
         cloudtrail (botocore client): The cloudtrail client
         name (string): The name of the cloudtrail to disable logging
     """
-    logger.debug(_('Disabling logging in the cloudtrail {0}').format(name))
+    logger.debug(_('Disabling logging in the cloudtrail %s'), name)
 
     try:
         response = cloudtrail.stop_logging(

@@ -169,8 +169,8 @@ def get_last_known_instance_type(instance, before_date):
     if event is None:
         logger.error(
             _(
-                'could not find any type for {instance} by {before_date}'
-            ).format(instance=instance, before_date=before_date)
+                'could not find any type for %(instance)s by %(before_date)s'
+            ), {'instance': instance, 'before_date': before_date}
         )
         return None
     return event.instance_type
@@ -274,9 +274,9 @@ def normalize_runs(events):  # noqa: C901
             if start_run and image is None:
                 logger.warning(
                     _(
-                        'Instance {instance_id} does not have an associated '
+                        'Instance %s does not have an associated '
                         'machine image.'
-                    ).format(instance_id=instance_id)
+                    ), instance_id
                 )
 
             if start_run and end_run:
@@ -760,9 +760,9 @@ def get_account_overview(account, start, end):
     # If the start time is in the future, we cannot give any meaningful data
     if start > datetime.datetime.now(datetime.timezone.utc):
         logger.info(_(
-            'Start time {0} is after the current time, therefore '
+            'Start time %s is after the current time, therefore '
             'there is no meaningful data we can provide.'
-        ).format(start))
+        ), start)
 
         total_images = None
         total_challenged_images_rhel = None
@@ -782,10 +782,11 @@ def get_account_overview(account, start, end):
     # therefore we need to make sure that we return None for those values
     elif end <= account.created_at:
         logger.info(_(
-            'Account "{0}" was created after "{1}", therefore there is no '
-            'data on its images/instances during the specified start and end '
-            ' dates.'
-        ).format(account, end))
+            'Account "%(account)s" was created after "%(end_time)s", '
+            'therefore there is no data on its images/instances during the '
+            'specified start and end dates.'),
+            {'account': account, 'end_time': end}
+        )
         total_images = None
         total_challenged_images_rhel = None
         total_challenged_images_openshift = None

@@ -86,8 +86,8 @@ def save_instance(account, instance_data, region):
         )
         if created:
             logger.info(_(
-                'Missing image data for {0}; creating UNAVAILABLE stub image.'
-            ).format(instance_data))
+                'Missing image data for %s; creating UNAVAILABLE stub image.'
+            ), instance_data)
 
     if machineimage is not None:
         instance.machineimage = machineimage
@@ -140,8 +140,8 @@ def save_instance_events(instance, instance_data, events=None):
         )
         event.save()
     else:
-        logger.info(_('saving {count} new event(s) for {instance}')
-                    .format(count=len(events), instance=instance))
+        logger.info(_('saving %(count)s new event(s) for %(instance)s'),
+                    {'count': len(events), 'instance': instance})
         for event in events:
             event = AwsInstanceEvent(
                 instance=instance,
@@ -180,16 +180,16 @@ def create_new_machine_images(session, instances_data):
         for instances in instances_data.values()
         for instance in instances
     }
-    logger.info(_('{prefix}: all AMI IDs found: {seen_ami_ids}')
-                .format(prefix=log_prefix, seen_ami_ids=seen_ami_ids))
+    logger.info(_('%(prefix)s: all AMI IDs found: %(seen_ami_ids)s'),
+                {'prefix': log_prefix, 'seen_ami_ids': seen_ami_ids})
     known_images = AwsMachineImage.objects.filter(
         ec2_ami_id__in=list(seen_ami_ids)
     )
     known_ami_ids = {
         image.ec2_ami_id for image in known_images
     }
-    logger.info(_('{prefix}: Skipping known AMI IDs: {known_ami_ids}')
-                .format(prefix=log_prefix, known_ami_ids=known_ami_ids))
+    logger.info(_('%(prefix)s: Skipping known AMI IDs: %(known_ami_ids)s'),
+                {'prefix': log_prefix, 'known_ami_ids': known_ami_ids})
 
     new_described_images = {}
     windows_ami_ids = []
@@ -206,8 +206,8 @@ def create_new_machine_images(session, instances_data):
             for instance in instances
             if aws.is_instance_windows(instance)
         })
-    logger.info(_('{prefix}: Windows AMI IDs found: {windows_ami_ids}')
-                .format(prefix=log_prefix, windows_ami_ids=windows_ami_ids))
+    logger.info(_('%(prefix)s: Windows AMI IDs found: %(windows_ami_ids)s'),
+                {'prefix': log_prefix, 'windows_ami_ids': windows_ami_ids})
 
     new_image_ids = []
     for region_id, described_images in new_described_images.items():
@@ -222,8 +222,8 @@ def create_new_machine_images(session, instances_data):
                 if tag.get('Key') == aws.OPENSHIFT_TAG
             ]) > 0
 
-            logger.info(_('{prefix}: Saving new AMI ID: {ami_id}')
-                        .format(prefix=log_prefix, ami_id=ami_id))
+            logger.info(_('%(prefix)s: Saving new AMI ID: %(ami_id)s'),
+                        {'prefix': log_prefix, 'ami_id': ami_id})
             image, new = save_new_aws_machine_image(
                 ami_id, name, owner_id, openshift, windows, region)
             if new:
@@ -289,9 +289,9 @@ def start_image_inspection(arn, ami_id, region):
 
     """
     logger.info(
-        _(
-            'Starting inspection for ami {0} in region {1} through arn {2}'
-        ).format(ami_id, region, arn)
+        _('Starting inspection for ami %(ami_id)s in region %(region)s '
+          'through arn %(arn)s'),
+        {'ami_id': ami_id, 'region': region, 'arn': arn}
     )
     ami = AwsMachineImage.objects.get(ec2_ami_id=ami_id)
     ami.status = ami.PREPARING
@@ -454,10 +454,14 @@ def read_messages_from_queue(queue_name, max_count=1):
             # I'm not sure exactly what exceptions could land here, but we
             # probably should log them, stop attempting further deletes, and
             # return what we have received (and thus deleted!) so far.
-            log_message = _(
-                'Unexpected error when attempting to read from {0}: {1}'
-            ).format(queue_url, getattr(e, 'response', {}).get('Error'))
-            logger.error(log_message)
+            logger.error(
+                _('Unexpected error when attempting to read from %(queue)s: '
+                  '%(error)s'),
+                {
+                    'queue': queue_url,
+                    'error': getattr(e, 'response', {}).get('Error')
+                }
+            )
             logger.exception(e)
             break
     return messages

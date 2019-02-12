@@ -77,32 +77,32 @@ def analyze_log():
         except AwsAccount.DoesNotExist:
             logger.warning(
                 _(
-                    'Encountered message {0} for nonexistent account; '
+                    'Encountered message %s for nonexistent account; '
                     'deleting message from queue.'
-                ).format(message.message_id)
+                ), message.message_id
             )
             logger.info(
-                _('Deleted message body: {0}').format(message.body)
+                _('Deleted message body: %s'), message.body
             )
             aws.delete_messages_from_queue(queue_url, [message])
             continue
         except Exception as e:
             logger.exception(_(
-                'Unexpected error in log processing: {0}'
-            ).format(e))
+                'Unexpected error in log processing: %s'
+            ), e)
         if success:
             logger.info(_(
-                'Successfully processed message id {0}; deleting from queue.'
-            ).format(message.message_id))
+                'Successfully processed message id %s; deleting from queue.'
+            ), message.message_id)
             aws.delete_messages_from_queue(queue_url, [message])
             successes.append(message)
         else:
             logger.error(_(
-                'Failed to process message id {0}; leaving on queue.'
-            ).format(message.message_id))
+                'Failed to process message id %s; leaving on queue.'
+            ), message.message_id)
             logger.debug(_(
-                'Failed message body is: {0}'
-            ).format(message.body))
+                'Failed message body is: %s'
+            ), message.body)
             failures.append(message)
     return successes, failures
 
@@ -128,9 +128,11 @@ def _process_cloudtrail_message(message):
         raw_content = aws.get_object_content_from_s3(bucket, key)
         content = json.loads(raw_content)
         logs.append((content, bucket, key))
-        logger.debug(_(
-            'Read CloudTrail log file from bucket {0} object key {1}'
-        ).format(bucket, key))
+        logger.debug(
+            _('Read CloudTrail log file from bucket %(bucket)s object key '
+              '%(key)s'),
+            {'bucket': bucket, 'key': key}
+        )
 
     # Extract actionable details from each of the S3 log files
     instance_events = []
@@ -164,10 +166,15 @@ def _process_cloudtrail_message(message):
         logger.debug(_('Saved instances and/or events to the DB.'))
         return True
     except:  # noqa: E722 because we don't know what could go wrong yet.
-        logger.exception(_(
-            'Failed to save instances and/or events to the DB. '
-            'Instance events: {0} AMI tag events: {1}'
-        ).format(instance_events, ami_tag_events))
+        logger.exception(
+            _('Failed to save instances and/or events to the DB. '
+              'Instance events: %(instance_events)s AMI tag events: '
+              '%(ami_tag_events)s'),
+            {
+                'instance_events': instance_events,
+                'ami_tag_events': ami_tag_events
+            }
+        )
         return False
 
 
@@ -214,11 +221,16 @@ def _get_aws_data_for_trail_events(instance_events, ami_tag_events):  # noqa: C9
                         event for event in _instance_events
                         if e.instance_id == instance_id
                     ]
-                    logger.info(_(
-                        'Instance {0} has no image_id from AWS. It may have '
-                        'been terminated before we processed it. '
-                        'Found in events: {1}.'
-                    ).format(instance_id, relevant_events))
+                    logger.info(
+                        _('Instance %(instance_id)s has no image_id from AWS. '
+                          'It may have been terminated before we processed it.'
+                          ' Found in events: %(events)s.'
+                          ),
+                        {
+                            'instance_id': instance_id,
+                            'events': relevant_events
+                        }
+                    )
             else:
                 seen_aws_instances[instance_id] = {'InstanceId': instance_id}
 
@@ -309,7 +321,7 @@ def _parse_log_for_ec2_instance_events(record):
             instance_ids = [record['requestParameters']['instanceId']]
         except KeyError:
             logger.debug(
-                _('Did not find instanceType in record: {}').format(record))
+                _('Did not find instanceType in record: %s'), record)
             return []
     else:
         instance_ids = set([
@@ -419,22 +431,22 @@ def _sanity_check_cloudtrail_findings(
     for instance_event in instance_events:
         if instance_event.instance_id not in aws_instances:
             raise CloudTrailLogAnalysisMissingData(_(
-                'Missing instance data for {0}'
-            ).format(instance_event))
+                'Missing instance data for %s'
+            ), instance_event)
         try:
             image_id = aws_instances[instance_event.instance_id].image_id
         except AttributeError:
             logger.info(_(
-                'Instance event {0} has no image_id from AWS. It may have '
+                'Instance event %s has no image_id from AWS. It may have '
                 'been terminated before we processed it.'
-            ).format(instance_event))
+            ), instance_event)
             continue
         if image_id not in described_images and \
                 not AwsMachineImage.objects.filter(
                     ec2_ami_id=image_id).exists():
             logger.info(_(
-                'Missing image data for {0}; creating UNAVAILABLE stub image.'
-            ).format(instance_event))
+                'Missing image data for %s; creating UNAVAILABLE stub image.'
+            ), instance_event)
             AwsMachineImage.objects.create(
                 ec2_ami_id=image_id, status=MachineImage.UNAVAILABLE
             )
@@ -444,8 +456,8 @@ def _sanity_check_cloudtrail_findings(
                 not AwsMachineImage.objects.filter(
                     ec2_ami_id=image_id).exists():
             logger.info(_(
-                'Missing image data for {0}; creating UNAVAILABLE stub image.'
-            ).format(ami_tag_event))
+                'Missing image data for %s; creating UNAVAILABLE stub image.'
+            ), ami_tag_event)
             AwsMachineImage.objects.create(
                 ec2_ami_id=image_id, status=MachineImage.UNAVAILABLE
             )
@@ -480,11 +492,11 @@ def _save_results(instance_events, ami_tag_events, aws_instances,
     # Log some basic information about what we're saving.
     log_prefix = 'analyzer'
     instance_ids = set(aws_instances.keys())
-    logger.info(_('{prefix}: all EC2 Instance IDs found: {instance_ids}')
-                .format(prefix=log_prefix, instance_ids=instance_ids))
+    logger.info(_('%(prefix)s: all EC2 Instance IDs found: %(instance_ids)s'),
+                {'prefix': log_prefix, 'instance_ids': instance_ids})
     ami_ids = set(described_images.keys())
-    logger.info(_('{prefix}: new AMI IDs found: {ami_ids}')
-                .format(prefix=log_prefix, ami_ids=ami_ids))
+    logger.info(_('%(prefix)s: new AMI IDs found: %(ami_ids)s'),
+                {'prefix': log_prefix, 'ami_ids': ami_ids})
 
     # Which images have Windows based on the instance platform?
     windows_ami_ids = {
@@ -492,8 +504,8 @@ def _save_results(instance_events, ami_tag_events, aws_instances,
         for instance in aws_instances.values()
         if is_instance_windows(instance)
     }
-    logger.info(_('{prefix}: Windows AMI IDs found: {windows_ami_ids}')
-                .format(prefix=log_prefix, windows_ami_ids=windows_ami_ids))
+    logger.info(_('%(prefix)s: Windows AMI IDs found: %(windows_ami_ids)s'),
+                {'prefix': log_prefix, 'windows_ami_ids': windows_ami_ids})
 
     # Which images need tag state changes?
     ocp_tagged_ami_ids = set()
@@ -521,8 +533,8 @@ def _save_results(instance_events, ami_tag_events, aws_instances,
     new_images = {}
     for ami_id, described_image in described_images.items():
         if ami_id in known_ami_ids:
-            logger.info(_('{prefix}: Skipping known AMI ID: {ami_id}')
-                        .format(prefix=log_prefix, ami_id=ami_id))
+            logger.info(_('%(prefix)s: Skipping known AMI ID: %(ami_id)s'),
+                        {'prefix': log_prefix, 'ami_id': ami_id})
             continue
 
         owner_id = Decimal(described_image['OwnerId'])
@@ -531,8 +543,8 @@ def _save_results(instance_events, ami_tag_events, aws_instances,
         openshift = ami_id in ocp_tagged_ami_ids
         region = described_image['found_in_region']
 
-        logger.info(_('{prefix}: Saving new AMI ID: {ami_id}')
-                    .format(prefix=log_prefix, ami_id=ami_id))
+        logger.info(_('%(prefix)s: Saving new AMI ID: %(ami_id)s'),
+                    {'prefix': log_prefix, 'ami_id': ami_id})
         image, new = save_new_aws_machine_image(
             ami_id, name, owner_id, openshift, windows, region)
         if new and image.status is not image.INSPECTED:
@@ -648,12 +660,15 @@ def repopulate_ec2_instance_mapping():
                     'vcpu': vcpu
                 }
             except ValueError:
-                logger.error(_('Could not save instance definition for '
-                               'instance-type {}, memory {}, vcpu {}.').format(
-                    instance_attr['instanceType'],
-                    instance_attr.get('memory', 0),
-                    instance_attr.get('vcpu', 0)
-                ))
+                logger.error(
+                    _('Could not save instance definition for instance-type '
+                      '%(instance_type)s, memory %(memory)s, vcpu %(vcpu)s.'),
+                    {
+                        'instance_type': instance_attr['instanceType'],
+                        'memory': instance_attr.get('memory', 0),
+                        'vcpu': instance_attr.get('vcpu', 0)
+                    }
+                )
 
     for instance_name, attributes in instances.items():
         AwsEC2InstanceDefinitions.objects.update_or_create(
@@ -661,8 +676,6 @@ def repopulate_ec2_instance_mapping():
             memory=attributes['memory'],
             vcpu=attributes['vcpu']
         )
-        logger.info(_('Saved instance type {}').format(
-            instance_name
-        ))
+        logger.info(_('Saved instance type %s'), instance_name)
 
     logger.info('Finished saving AWS EC2 instance type information.')
