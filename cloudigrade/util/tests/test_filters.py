@@ -54,11 +54,11 @@ class Jinja2FiltersTest(TestCase):
         expected = \
             """
             HTTP/1.1 404 Not Found
-            Content-Length: 85
+            Content-Length: 77
             Content-Type: text/html
             X-Frame-Options: SAMEORIGIN
 
-            <h1>Not Found</h1><p>The requested URL /api/v1/foo/ was not found on this server.</p>"""  # noqa: E501
+            <h1>Not Found</h1><p>The requested resource was not found on this server.</p>"""  # noqa: E501
         expected = textwrap.dedent(expected)[1:]  # trim whitespace
         actual = filters.stringify_http_response(response)
         self.assertEqual(actual, expected)
