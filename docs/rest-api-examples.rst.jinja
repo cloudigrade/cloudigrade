@@ -509,3 +509,35 @@ Response:
 {{ get_sysconfig_no_version | stringify_http_response | rst_codeblock }}
 
 If you attempt to retrieve sysconfig without authentication, you'll receive a 401 error.
+
+
+REST API v2 Example Usage
+=========================
+
+The v2 API is authenticated with 3scale. In order to authenticate a `HTTP_X_RH_IDENTITY` header must be included in the request.
+This header must be the base64 encoded version of:
+
+
+{{ v2_rh_identity | tojson(indent=4) | rst_codeblock("json") }}
+
+.. code:: bash
+
+    HTTP_X_RH_IDENTITY={{v2_header}}
+
+
+Miscellaneous Commands
+----------------------
+
+
+Retrieve current publicly-viewable system configuration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The sysconfig endpoint includes the AWS cloud account id used by the application, AWS policies used for acting on behalf of customers, and the currently deployed backend version.
+
+Request:
+
+{{ v2get_sysconfig.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
+
+Response:
+
+{{ v2get_sysconfig | stringify_http_response | rst_codeblock }}

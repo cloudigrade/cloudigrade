@@ -1,6 +1,8 @@
 """Helper functions for generating test data."""
+import base64
 import collections
 import datetime
+import json
 import random
 import string
 import uuid
@@ -35,6 +37,15 @@ SOME_EC2_INSTANCE_TYPES = {
 }
 
 MAX_AWS_ACCOUNT_ID = 10**12 - 1
+
+
+RH_IDENTITY = {
+    'identity': {
+        'user': {
+            'email': 'admin@example.com'
+        }
+    }
+}
 
 
 def generate_dummy_aws_account_id():
@@ -495,3 +506,21 @@ def get_test_user(email=None, password=None, is_superuser=False):
     except User.DoesNotExist:
         user = generate_test_user(email, password, is_superuser)
     return user
+
+
+def get_3scale_auth_header(email='admin@example.com'):
+    """
+    Get an example 3scale auth header.
+
+    Args:
+        email (str): email address associated with the 3scale account.
+            defaults to admin@example.com
+
+    Returns:
+        str: base64 encoded 3scale header
+
+    """
+    RH_IDENTITY['identity']['user']['email'] = email
+    return base64.b64encode(
+        json.dumps(RH_IDENTITY).encode('utf-8')
+    )

@@ -416,6 +416,20 @@ class DocsApiHandler(object):
         assert_status(response, 200)
         responses['get_sysconfig_no_version'] = response
 
+        ########################
+        # V2 endpoints
+        responses['v2_rh_identity'] = util_helper.RH_IDENTITY
+        # convert from binary string to string. 
+        responses['v2_header'] = util_helper.get_3scale_auth_header().\
+            decode("utf-8")
+
+        with override_settings(CLOUDIGRADE_VERSION=cloudigrade_version):
+            response = self.superuser_client.get_sysconfig(
+                api_root='/api/v2'
+            )
+        assert_status(response, 200)
+        responses['v2get_sysconfig'] = response
+
         return responses
 
 

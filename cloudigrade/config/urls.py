@@ -4,6 +4,7 @@ from django.contrib import admin
 from django.urls import include, path
 from rest_framework import routers
 
+from account.v2.views import SysconfigViewSetV2
 from account.views import (AccountViewSet,
                            CloudAccountOverviewViewSet,
                            DailyInstanceActivityViewSet,
@@ -28,8 +29,12 @@ router.register(r'report/images', ImagesActivityOverviewViewSet,
 router.register(r'report/instances', DailyInstanceActivityViewSet,
                 base_name='report-instances')
 
+routerv2 = routers.DefaultRouter()
+routerv2.register(r'sysconfig', SysconfigViewSetV2, base_name='sysconfig')
+
 urlpatterns = [
     url(r'^api/v1/', include(router.urls)),
+    url(r'^api/v2/', include(routerv2.urls)),
     url(r'^api-auth/', include('rest_framework.urls')),
     url(r'^healthz/', include('health_check.urls')),
     url(r'^auth/', include('dj_auth.urls')),
