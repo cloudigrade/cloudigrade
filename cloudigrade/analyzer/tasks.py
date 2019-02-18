@@ -21,6 +21,7 @@ from celery import shared_task
 from dateutil.parser import parse
 from django.conf import settings
 from django.db import transaction
+from django.db.models import Q
 from django.utils.translation import gettext as _
 
 from account.models import (
@@ -30,13 +31,11 @@ from account.models import (
     AwsMachineImage,
     InstanceEvent,
     MachineImage,
-)
-from account.util import (
-    save_instance,
-    save_instance_events,
-    save_new_aws_machine_image,
-    start_image_inspection,
-)
+    Run)
+from account.reports import normalize_runs
+from account.util import (recalculate_runs, save_instance,
+                          save_instance_events, save_new_aws_machine_image,
+                          start_image_inspection)
 from util import aws
 from util.aws import is_instance_windows, rewrap_aws_errors
 from util.celery import retriable_shared_task
@@ -116,6 +115,52 @@ def analyze_log():
             ), message.body)
             failures.append(message)
     return successes, failures
+
+
+@shared_task
+def process_instance_event(event):
+    """Process instance events that have been saved during log analysis."""
+    before_run = Q(start_time__gt=event.occurred_at)
+    during_run = Q(start_time__lte=event.occurred_at,
+                   end_time__gt=event.occurred_at)
+    during_run_no_end = Q(start_time__lte=event.occurred_at,
+                          end_time=None)
+
+    filters = before_run | during_run | during_run_no_end
+
+    instance = AwsInstance.objects.get(ec2_instance_id=event.instance_id)
+
+    if Run.objects.filter(filters, instance=instance).exists():
+        previous_event = None
+        try:
+            previous_event = event.get_previous_by_occurred_at()
+        except InstanceEvent.DoesNotExist:
+            pass
+
+        events = InstanceEvent.objects.filter(
+            instance_id=event.instance_id,
+            occurred_at__gte=event.occurred_at
+        )
+
+        if previous_event:
+            events = previous_event.union(events)
+
+        recalculate_runs(events)
+    elif event.event_type == event.TYPE.power_on:
+        normalized_runs = normalize_runs([event])
+        for index, normalized_run in enumerate(normalized_runs):
+            logger.info('Processing run {} of {}'.format(
+                index + 1, len(normalized_runs)))
+            run = Run(
+                start_time=normalized_run.start_time,
+                end_time=normalized_run.end_time,
+                machineimage_id=normalized_run.image_id,
+                instance_id=normalized_run.instance_id,
+                instance_type=normalized_run.instance_type,
+                memory=normalized_run.instance_memory,
+                vcpu=normalized_run.instance_vcpu,
+            )
+            run.save()
 
 
 def _process_cloudtrail_message(message):

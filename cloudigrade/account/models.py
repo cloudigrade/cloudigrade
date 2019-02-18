@@ -13,7 +13,7 @@ from django.utils.translation import gettext as _
 from account import AWS_PROVIDER_STRING
 from util.aws import disable_cloudtrail, get_session
 from util.exceptions import CloudTrailCannotStopLogging
-from util.models import BasePolymorphicModel
+from util.models import BaseModel, BasePolymorphicModel
 
 logger = logging.getLogger(__name__)
 
@@ -522,4 +522,43 @@ class AwsEC2InstanceDefinitions(models.Model):
     )
     vcpu = models.IntegerField(
         default=0
+    )
+
+
+class Run(BaseModel):
+    """Base model for a Run object."""
+
+    start_time = models.DateTimeField(
+        null=False
+    )
+    end_time = models.DateTimeField(
+        blank=True,
+        null=True
+    )
+    machineimage = models.ForeignKey(
+        MachineImage,
+        on_delete=models.CASCADE,
+        db_index=True,
+        null=True,
+    )
+    instance = models.ForeignKey(
+        Instance,
+        on_delete=models.CASCADE,
+        db_index=True,
+        null=False,
+    )
+    instance_type = models.CharField(
+        max_length=64,
+        null=True,
+        blank=True
+    )
+    memory = models.FloatField(
+        default=0,
+        blank=True,
+        null=True
+    )
+    vcpu = models.IntegerField(
+        default=0,
+        blank=True,
+        null=True
     )

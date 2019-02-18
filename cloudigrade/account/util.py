@@ -7,13 +7,16 @@ from decimal import Decimal
 import boto3
 import jsonpickle
 from botocore.exceptions import ClientError
+from django.db import transaction
 from django.utils import timezone
 from django.utils.translation import gettext as _
 from rest_framework.serializers import ValidationError
 
 from account import AWS_PROVIDER_STRING
 from account.models import (AwsInstance, AwsInstanceEvent, AwsMachineImage,
-                            AwsMachineImageCopy, InstanceEvent, MachineImage)
+                            AwsMachineImageCopy, InstanceEvent, MachineImage,
+                            Run)
+from account.reports import normalize_runs
 from util import aws
 
 logger = logging.getLogger(__name__)
@@ -126,6 +129,7 @@ def save_instance_events(instance, instance_data, events=None):
             if hasattr(instance, 'machineimage')
             else None
         )
+    from analyzer import tasks as analyzer_tasks
     if events is None:
         # As of issue #512 we do not use the stored machineimage on the
         # instanceevent. But we keep storing it here anyways in order
@@ -139,6 +143,7 @@ def save_instance_events(instance, instance_data, events=None):
             instance_type=instance_data['InstanceType'],
         )
         event.save()
+        analyzer_tasks.process_instance_event(event)
     else:
         logger.info(_('saving %(count)s new event(s) for %(instance)s'),
                     {'count': len(events), 'instance': instance})
@@ -152,6 +157,8 @@ def save_instance_events(instance, instance_data, events=None):
                 instance_type=event['instance_type'],
             )
             event.save()
+            analyzer_tasks.process_instance_event(event)
+
     return instance
 
 
@@ -468,7 +475,7 @@ def read_messages_from_queue(queue_name, max_count=1):
 
 
 def convert_param_to_int(name, value):
-    """Check if a value is convertable to int.
+    """Check if a value is convertible to int.
 
     Args:
         name (str): The field name being validated
@@ -487,3 +494,132 @@ def convert_param_to_int(name, value):
             name: [_('{} must be an integer.'.format(name))]
         }
         raise ValidationError(error)
+
+
+def recalculate_runs(events):
+    """Take in events and calculate runs based on them."""
+    for event in events:
+        # check if event occurred before any runs
+        if Run.objects.filter(
+                instance_id=event.instance_id,
+                start_time__gt=event.occurred_at
+        ).exists():
+            # need to torch these runs
+            runs = Run.objects.filter(
+                instance_id=event.instance_id,
+                start_time__gt=event.occurred_at)
+            events = InstanceEvent.objects.filter(
+                instance_id=event.instance_id,
+                occurred_at__gte=event.occurred_at) \
+                .select_related('instance') \
+                .prefetch_related('machineimage') \
+                .order_by('instance__id')
+            normalized_runs = normalize_runs(events)
+
+            with transaction.atomic():
+                runs.delete()
+                for index, normalized_run in enumerate(normalized_runs):
+                    logger.info('Processing run {} of {}'.format(
+                        index + 1, len(normalized_runs)))
+                    run = Run(
+                        start_time=normalized_run.start_time,
+                        end_time=normalized_run.end_time,
+                        machineimage_id=normalized_run.image_id,
+                        instance_id=normalized_run.instance_id,
+                        instance_type=normalized_run.instance_type,
+                        memory=normalized_run.instance_memory,
+                        vcpu=normalized_run.instance_vcpu,
+                    )
+                    run.save()
+
+        # check to see if even occurred within a run
+        elif Run.objects.filter(
+                instance_id=event.instance_id,
+                start_time__lt=event.occurred_at,
+                end_time__gt=event.occurred_at).exists():
+            runs = Run.objects.filter(
+                instance_id=event.instance_id,
+                start_time__lt=event.occurred_at,
+                end_time__gt=event.occurred_at)
+            events = InstanceEvent.objects.filter(
+                instance_id=event.instance_id,
+                occurred_at__gte=event.occurred_at) \
+                .select_related('instance') \
+                .prefetch_related('machineimage') \
+                .order_by('instance__id')
+            normalized_runs = normalize_runs(events)
+
+            with transaction.atomic():
+                runs.delete()
+                for index, normalized_run in enumerate(normalized_runs):
+                    logger.info('Processing run {} of {}'.format(
+                        index + 1, len(normalized_runs)))
+                    run = Run(
+                        start_time=normalized_run.start_time,
+                        end_time=normalized_run.end_time,
+                        machineimage_id=normalized_run.image_id,
+                        instance_id=normalized_run.instance_id,
+                        instance_type=normalized_run.instance_type,
+                        memory=normalized_run.instance_memory,
+                        vcpu=normalized_run.instance_vcpu,
+                    )
+                    run.save()
+
+        # if this is a power off event, and we have a run with no end_time.
+        # complete it
+        elif event.event_type == event.TYPE.power_off and Run.objects.filter(
+                instance_id=event.instance_id,
+                start_time__lt=event.occurred_at,
+                end_time=None
+        ).exists():
+            run = Run.objects.filter(
+                instance_id=event.instance_id,
+                start_time__lt=event.occurred_at,
+                end_time=None
+            ).earliest('start_time')
+            run.end_time = event.occurred_at
+            run.save()
+
+        # if event is a power on event, and we didn't hit previous checks,
+        # create a new run
+        elif event.event_type == event.TYPE.power_on and not \
+                Run.objects.filter(
+                    instance_id=event.instance_id,
+                    end_time=None,
+                ).exists():
+            normalized_runs = normalize_runs([event])
+            for index, normalized_run in enumerate(normalized_runs):
+                logger.info('Processing run {} of {}'.format(
+                    index + 1, len(normalized_runs)))
+                run = Run(
+                    start_time=normalized_run.start_time,
+                    end_time=normalized_run.end_time,
+                    machineimage_id=normalized_run.image_id,
+                    instance_id=normalized_run.instance_id,
+                    instance_type=normalized_run.instance_type,
+                    memory=normalized_run.instance_memory,
+                    vcpu=normalized_run.instance_vcpu,
+                )
+                run.save()
+
+
+def validate_event(event, start):
+    """
+    Ensure that the event is relevant to our time frame.
+
+    Args:
+        event: (InstanceEvent): The event object to evaluate
+        start (datetime.datetime): Start time (inclusive)
+
+    Returns:
+        bool: A boolean regarding whether or not we should inspect the event
+            further.
+
+    """
+    valid_event = True
+    # if the event occurred outside of our specified period (ie. before start)
+    # we should only inspect it if it was a power on event
+    if event.occurred_at < start:
+        if event.event_type == InstanceEvent.TYPE.power_off:
+            valid_event = False
+    return valid_event

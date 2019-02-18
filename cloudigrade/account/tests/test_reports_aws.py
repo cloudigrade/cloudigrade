@@ -142,6 +142,33 @@ class ReportTestBase(TestCase):
         )
         return runs
 
+    def generate_events(self, powered_times, instance=None, image=None):
+        """
+        Generate events saved to the DB and returned.
+
+        Args:
+            powered_times (list[tuple]): Time periods instance is powered on.
+            instance (Instance): Optional which instance has the events. If
+                not specified, default is self.instance_1.
+            image (AwsMachineImage): Optional which image seen in the events.
+                If not specified, default is self.image_rhel.
+
+        Returns:
+            list[InstanceEvent]: The list of events
+
+        """
+        if instance is None:
+            instance = self.rhel_instance
+        if image is None:
+            image = self.image_rhel
+        events = account_helper.generate_aws_instance_events(
+            instance,
+            powered_times,
+            image.ec2_ami_id,
+            instance_type=self.instance_type
+        )
+        return events
+
 
 class GetDailyUsageTestBase(ReportTestBase):
     """Base class for testing get_daily_usage with additional assertions."""

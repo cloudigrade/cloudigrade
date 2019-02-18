@@ -11,8 +11,7 @@ from django.utils.translation import gettext as _
 
 from account.models import (Account, AwsEC2InstanceDefinitions,
                             AwsInstanceEvent, Instance, InstanceEvent,
-                            MachineImage)
-from util.exceptions import NormalizeRunException
+                            MachineImage, Run)
 
 logger = logging.getLogger(__name__)
 
@@ -34,8 +33,8 @@ def get_daily_usage(user_id, start, end, name_pattern=None, account_id=None):
 
     """
     accounts = _filter_accounts(user_id, name_pattern, account_id)
-    events = _get_relevant_events(start, end, accounts)
-    usage = _calculate_daily_usage(start, end, events)
+    runs = _get_relevant_runs(start, end, accounts)
+    usage = _calculate_daily_usage(start, end, runs)
     return usage
 
 
@@ -74,9 +73,9 @@ def _filter_accounts(user_id, name_pattern=None, account_id=None):
     return accounts
 
 
-def _get_relevant_events(start, end, account_ids):
+def _get_relevant_runs(start, end, account_ids):
     """
-    Get all InstanceEvents relevant to the report parameters.
+    Get all Runs relevant to the report parameters.
 
     Args:
         start (datetime.datetime): Start time (inclusive)
@@ -87,31 +86,30 @@ def _get_relevant_events(start, end, account_ids):
         list(InstanceEvent): All events relevant to the report parameters.
 
     """
-    # Get the nearest event before the reporting period for each instance.
-    account_filter = models.Q(account__id__in=account_ids)
-    instances_before = Instance.objects.filter(
-        account_filter & models.Q(instanceevent__occurred_at__lt=start)
-    ).annotate(occurred_at=models.Max('instanceevent__occurred_at'))
+    account_filter = models.Q(instance__account__id__in=account_ids)
+    started_no_end = models.Q(start_time__gte=start, end_time=None)
+    started_and_ended = models.Q(start_time__gte=start, end_time__lt=end)
+    started_before_ended_never = models.Q(start_time__lt=start, end_time=None)
+    started_before_ended_before = models.Q(
+        start_time__lt=start, end_time__gt=start, end_time__lt=end)
+    started_before_ended_after = models.Q(
+        start_time__lt=start, end_time__gte=end)
 
-    # Build a filter list for the events found before the period.
-    event_filters = [
-        models.Q(instance__id=i.id, occurred_at=i.occurred_at)
-        for i in list(instances_before)
-    ]
-
-    # Add a filter for the events *during* the reporting period.
-    event_filters.append(
-        models.Q(instance__account__id__in=account_ids) &
-        models.Q(occurred_at__gte=start, occurred_at__lt=end)
+    run_filter = account_filter & (
+        started_no_end |
+        started_and_ended |
+        started_before_ended_never |
+        started_before_ended_before |
+        started_before_ended_after
     )
 
-    # Reduce all the filters with the "or" operator.
-    event_filter = functools.reduce(operator.ior, event_filters)
-    events = InstanceEvent.objects.filter(event_filter) \
+    runs = Run.objects \
+        .filter(run_filter) \
         .select_related('instance') \
         .prefetch_related('machineimage') \
         .order_by('instance__id')
-    return events
+
+    return runs
 
 
 def _generate_daily_periods(start, end):
@@ -258,7 +256,8 @@ def normalize_runs(events):  # noqa: C901
                         new_type=event.instance_type,
                         event=event,
                     )
-                    raise NormalizeRunException(message)
+                    logger.warning(message)
+                    continue
                 instance_type = event.instance_type
 
             if event.event_type == event.TYPE.power_on:
@@ -344,22 +343,20 @@ def normalize_runs(events):  # noqa: C901
     return normalized_runs
 
 
-def calculate_runs_in_periods(periods, events):
+def calculate_runs_in_periods(periods, normalized_runs):
     """
     Calculate image usage runs for each period.
 
     Args:
         periods (list[tuple[datetime, datetime]]): periods of time for which
             usage activity should be counted
-        events (list[InstanceEvent]): list of relevant events to use for
+        normalized_runs (list[Run]): list of relevant run to use for
             determining what instances and images were used across the periods
 
     Returns:
         list(dict).
 
     """
-    normalized_runs = normalize_runs(events)
-
     # Next, walk through the periods and runs to further split the runs into
     # the periods. This process will break a run into multiple run along period
     # boundaries as necessary.
@@ -375,9 +372,9 @@ def calculate_runs_in_periods(periods, events):
             # 4. run started before the period and ended after it (or never)
 
             if (
-                period_start <= run.start_time < period_end and
-                run.end_time is not None and
-                period_start < run.end_time <= period_end
+                    period_start <= run.start_time < period_end and
+                    run.end_time is not None and
+                    period_start < run.end_time <= period_end
             ):
                 # Use case #1:
                 # If the whole run fits inside the period, simply include it.
@@ -393,11 +390,40 @@ def calculate_runs_in_periods(periods, events):
                         'run': run,
                     },
                 )
-                periodic_runs[period_start, period_end].append(run)
+                # periodic_runs[period_start, period_end].append(run)
+                periodic_runs[period_start, period_end].append(
+                    NormalizedRun(
+                        start_time=period_start,
+                        end_time=run.end_time,
+                        image_id=run.machineimage_id,
+                        instance_id=run.instance_id,
+                        instance_memory=run.memory,
+                        instance_type=run.instance_type,
+                        instance_vcpu=run.vcpu,
+                        is_cloud_access=run.machineimage.is_cloud_access if
+                        run.machineimage else None,
+                        is_encrypted=run.machineimage.is_encrypted if
+                        run.machineimage else None,
+                        is_marketplace=run.machineimage.is_marketplace if
+                        run.machineimage else None,
+                        rhel=run.machineimage.rhel if
+                        run.machineimage else None,
+                        rhel_challenged=run.machineimage.rhel_challenged if
+                        run.machineimage else None,
+                        rhel_detected=run.machineimage.rhel_detected if
+                        run.machineimage else None,
+                        openshift=run.machineimage.openshift if
+                        run.machineimage else None,
+                        openshift_challenged=run.machineimage.openshift_challenged if
+                        run.machineimage else None,
+                        openshift_detected=run.machineimage.openshift_detected if
+                        run.machineimage else None,
+                    )
+                )
             elif (
-                run.start_time < period_start and
-                run.end_time is not None and
-                period_start < run.end_time <= period_end
+                    run.start_time < period_start and
+                    run.end_time is not None and
+                    period_start < run.end_time <= period_end
             ):
                 # Use case #2:
                 # If the run started before the period and ended during the
@@ -418,24 +444,33 @@ def calculate_runs_in_periods(periods, events):
                     NormalizedRun(
                         start_time=period_start,
                         end_time=run.end_time,
-                        image_id=run.image_id,
+                        image_id=run.machineimage_id,
                         instance_id=run.instance_id,
-                        instance_memory=run.instance_memory,
+                        instance_memory=run.memory,
                         instance_type=run.instance_type,
-                        instance_vcpu=run.instance_vcpu,
-                        is_cloud_access=run.is_cloud_access,
-                        is_encrypted=run.is_encrypted,
-                        is_marketplace=run.is_marketplace,
-                        rhel=run.rhel,
-                        rhel_challenged=run.rhel_challenged,
-                        rhel_detected=run.rhel_detected,
-                        openshift=run.openshift,
-                        openshift_challenged=run.openshift_challenged,
-                        openshift_detected=run.openshift_detected,
+                        instance_vcpu=run.vcpu,
+                        is_cloud_access=run.machineimage.is_cloud_access if
+                        run.machineimage else None,
+                        is_encrypted=run.machineimage.is_encrypted if
+                        run.machineimage else None,
+                        is_marketplace=run.machineimage.is_marketplace if
+                        run.machineimage else None,
+                        rhel=run.machineimage.rhel if
+                        run.machineimage else None,
+                        rhel_challenged=run.machineimage.rhel_challenged if
+                        run.machineimage else None,
+                        rhel_detected=run.machineimage.rhel_detected if
+                        run.machineimage else None,
+                        openshift=run.machineimage.openshift if
+                        run.machineimage else None,
+                        openshift_challenged=run.machineimage.openshift_challenged if
+                        run.machineimage else None,
+                        openshift_detected=run.machineimage.openshift_detected if
+                        run.machineimage else None,
                     )
                 )
             elif period_start <= run.start_time < period_end and (
-                run.end_time is None or period_end < run.end_time
+                    run.end_time is None or period_end < run.end_time
             ):
                 # Use case #3:
                 # If the run started during period and ended after the period
@@ -456,24 +491,33 @@ def calculate_runs_in_periods(periods, events):
                     NormalizedRun(
                         start_time=run.start_time,
                         end_time=period_end,
-                        image_id=run.image_id,
+                        image_id=run.machineimage_id,
                         instance_id=run.instance_id,
-                        instance_memory=run.instance_memory,
+                        instance_memory=run.memory,
                         instance_type=run.instance_type,
-                        instance_vcpu=run.instance_vcpu,
-                        is_cloud_access=run.is_cloud_access,
-                        is_encrypted=run.is_encrypted,
-                        is_marketplace=run.is_marketplace,
-                        rhel=run.rhel,
-                        rhel_challenged=run.rhel_challenged,
-                        rhel_detected=run.rhel_detected,
-                        openshift=run.openshift,
-                        openshift_challenged=run.openshift_challenged,
-                        openshift_detected=run.openshift_detected,
+                        instance_vcpu=run.vcpu,
+                        is_cloud_access=run.machineimage.is_cloud_access if
+                        run.machineimage else None,
+                        is_encrypted=run.machineimage.is_encrypted if
+                        run.machineimage else None,
+                        is_marketplace=run.machineimage.is_marketplace if
+                        run.machineimage else None,
+                        rhel=run.machineimage.rhel if
+                        run.machineimage else None,
+                        rhel_challenged=run.machineimage.rhel_challenged if
+                        run.machineimage else None,
+                        rhel_detected=run.machineimage.rhel_detected if
+                        run.machineimage else None,
+                        openshift=run.machineimage.openshift if
+                        run.machineimage else None,
+                        openshift_challenged=run.machineimage.openshift_challenged if
+                        run.machineimage else None,
+                        openshift_detected=run.machineimage.openshift_detected if
+                        run.machineimage else None,
                     )
                 )
             elif run.start_time < period_start and (
-                run.end_time is None or period_end < run.end_time
+                    run.end_time is None or period_end < run.end_time
             ):
                 # Use case #4:
                 # If the run started before the period and ended after the
@@ -495,20 +539,29 @@ def calculate_runs_in_periods(periods, events):
                     NormalizedRun(
                         start_time=period_start,
                         end_time=period_end,
-                        image_id=run.image_id,
+                        image_id=run.machineimage_id,
                         instance_id=run.instance_id,
-                        instance_memory=run.instance_memory,
+                        instance_memory=run.memory,
                         instance_type=run.instance_type,
-                        instance_vcpu=run.instance_vcpu,
-                        is_cloud_access=run.is_cloud_access,
-                        is_encrypted=run.is_encrypted,
-                        is_marketplace=run.is_marketplace,
-                        rhel=run.rhel,
-                        rhel_challenged=run.rhel_challenged,
-                        rhel_detected=run.rhel_detected,
-                        openshift=run.openshift,
-                        openshift_challenged=run.openshift_challenged,
-                        openshift_detected=run.openshift_detected,
+                        instance_vcpu=run.vcpu,
+                        is_cloud_access=run.machineimage.is_cloud_access if
+                        run.machineimage else None,
+                        is_encrypted=run.machineimage.is_encrypted if
+                        run.machineimage else None,
+                        is_marketplace=run.machineimage.is_marketplace if
+                        run.machineimage else None,
+                        rhel=run.machineimage.rhel if
+                        run.machineimage else None,
+                        rhel_challenged=run.machineimage.rhel_challenged if
+                        run.machineimage else None,
+                        rhel_detected=run.machineimage.rhel_detected if
+                        run.machineimage else None,
+                        openshift=run.machineimage.openshift if
+                        run.machineimage else None,
+                        openshift_challenged=run.machineimage.openshift_challenged if
+                        run.machineimage else None,
+                        openshift_detected=run.machineimage.openshift_detected if
+                        run.machineimage else None,
                     )
                 )
             else:
@@ -528,14 +581,14 @@ def calculate_runs_in_periods(periods, events):
     return periodic_runs
 
 
-def _calculate_daily_usage(start, end, events, extended=False):
+def _calculate_daily_usage(start, end, runs, extended=False):
     """
     Calculate the daily usage of RHEL and OCP for the given parameters.
 
     Args:
         start (datetime.datetime): Start time (inclusive)
         end (datetime.datetime): End time (exclusive)
-        events (list[InstanceEvent]): events to use for calculations
+        runs (list[Run]): events to use for calculations
         extended (bool): should include extended output
 
     Returns:
@@ -555,7 +608,7 @@ def _calculate_daily_usage(start, end, events, extended=False):
     openshift_challenged_image_ids = set()
 
     periods = _generate_daily_periods(start, end)
-    periodic_runs = calculate_runs_in_periods(periods, events)
+    periodic_runs = calculate_runs_in_periods(periods, runs)
 
     period_usages = []
     for period in periods:
@@ -694,28 +747,6 @@ def _calculate_daily_usage(start, end, events, extended=False):
     return overall_usage
 
 
-def validate_event(event, start):
-    """
-    Ensure that the event is relevant to our time frame.
-
-    Args:
-        event: (InstanceEvent): The event object to evaluate
-        start (datetime.datetime): Start time (inclusive)
-
-    Returns:
-        bool: A boolean regarding whether or not we should inspect the event
-            further.
-
-    """
-    valid_event = True
-    # if the event occurred outside of our specified period (ie. before start)
-    # we should only inspect it if it was a power on event
-    if event.occurred_at < start:
-        if event.event_type == InstanceEvent.TYPE.power_off:
-            valid_event = False
-    return valid_event
-
-
 def get_account_overviews(user_id, start, end, name_pattern=None,
                           account_id=None):
     """
@@ -800,8 +831,8 @@ def get_account_overview(account, start, end):
         total_vcpu_rhel = None
         total_vcpu_openshift = None
     else:
-        events = _get_relevant_events(start, end, [account.id])
-        usage = _calculate_daily_usage(start, end, events, extended=True)
+        runs = _get_relevant_runs(start, end, [account.id])
+        usage = _calculate_daily_usage(start, end, runs, extended=True)
 
         total_images = usage['images_seen']
         total_challenged_images_rhel = usage[
@@ -913,10 +944,10 @@ def get_image_usages_for_account(start, end, account_id):
         dict: ImageActivityData objects keyed by machine image ID.
 
     """
-    events = _get_relevant_events(start, end, [account_id])
+    runs = _get_relevant_runs(start, end, [account_id])
     period = start, end
     periods = [period]
-    runs = calculate_runs_in_periods(periods, events)
+    runs = calculate_runs_in_periods(periods, runs)
 
     images = collections.defaultdict(ImageActivityData)
     for run in runs[period]:
