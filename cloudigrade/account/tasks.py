@@ -460,11 +460,12 @@ def run_inspection_cluster(messages, cloud='aws'):
         volume = ec2.Volume(message['volume_id'])
         logger.info(
             _('%(label)s attaching volume %(volume_id)s to instance'
-              ' %(instance)s'),
+              ' %(instance)s at %(mount_point)s'),
             {
                 'label': 'run_inspection_cluster',
                 'volume_id': message['volume_id'],
-                'instance': ec2_instance_id
+                'instance': ec2_instance_id,
+                'mount_point': mount_point,
             }
         )
 
