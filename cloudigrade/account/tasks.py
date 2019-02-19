@@ -198,8 +198,10 @@ def copy_ami_to_customer_account(arn, reference_ami_id, snapshot_region,
         )
         if maybe_trouble and \
                 e.response.get('Error').get('Code') == 'InvalidRequest':
-            if reference_ami.public and \
-                    e.response.get('Error').get('Message') in public_errors:
+            error = e.response.get('Error').get('Message')[:-1] if \
+                e.response.get('Error').get('Message').endswith('.') else \
+                e.response.get('Error').get('Message')
+            if reference_ami.public and error in public_errors:
                 # This appears to be a marketplace AMI, mark it as inspected.
                 logger.info(_('Found a marketplace/community image "%s", '
                               'marking as inspected'), reference_ami_id)
@@ -207,8 +209,7 @@ def copy_ami_to_customer_account(arn, reference_ami_id, snapshot_region,
                 ami.status = ami.INSPECTED
                 ami.save()
                 return
-            elif not reference_ami.public and \
-                    e.response.get('Error').get('Message') in private_errors:
+            elif not reference_ami.public and error in private_errors:
                 # This appears to be a private AMI, shared with our customer,
                 # but not given access to the storage.
                 logger.info(_(
