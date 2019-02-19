@@ -78,6 +78,8 @@ class AccountUtilCalculateRunsTest(TestCase):
                 no_instance_type=True
             )
 
+        account_helper.generate_aws_ec2_definitions()
+
     def test_calculate_runs(self):
         """
         Test that the runs are generated correctly from a series of events.
@@ -144,7 +146,7 @@ class AccountUtilCalculateRunsTest(TestCase):
         """
         # Single Run from (2, 7)
         util.recalculate_runs(
-            [self.first_power_on_event, self.second_power_off]
+            [self.first_power_on_event, self.second_power_off_event]
         )
         runs = list(Run.objects.all())
         self.assertEqual(1, len(runs))
@@ -182,14 +184,14 @@ class AccountUtilCalculateRunsTest(TestCase):
             (util_helper.utc_dt(2018, 1, 7, 0, 0, 0),
              util_helper.utc_dt(2018, 1, 16, 0, 0, 0))
         ]
-
         instance2_events = account_helper.generate_aws_instance_events(
             instance2,
             powered_times=instance2_powered_times
         )
-        util.recalculate_runs(
-            [self.first_power_on, instance2_events, self.second_power_off]
-        )
+        events = [self.first_power_on_event, self.second_power_off_event] + instance2_events
+
+        util.recalculate_runs(events)
+
 
         instance1_runs = list(Run.objects.filter(instance=self.instance1))
         instance2_runs = list(Run.objects.filter(instance=instance2))
@@ -222,8 +224,8 @@ class AccountUtilCalculateRunsTest(TestCase):
             )
 
         util.recalculate_runs(
-            [initial_event, self.second_power_off_event,
-             no_instance_type_event, self.second_power_off]
+            [initial_event, self.first_power_off_event,
+             no_instance_type_event, self.second_power_off_event]
         )
 
         runs = list(Run.objects.all())
@@ -232,13 +234,13 @@ class AccountUtilCalculateRunsTest(TestCase):
 
         # Check that memory, vcpu are set correctly on the first run
         self.assertEqual(self.instance_type, runs[0].instance_type)
-        self.assertEqual(self.instance_info.memory, runs[0].memory)
-        self.assertEqual(self.instance_info.vcpu, runs[0].vcpu)
+        self.assertEqual(self.instance_info['memory'], runs[0].memory)
+        self.assertEqual(self.instance_info['vcpu'], runs[0].vcpu)
 
         # Check that memory, vcpu are set correctly on the second run
         self.assertEqual(self.instance_type, runs[1].instance_type)
-        self.assertEqual(self.instance_info.memory, runs[1].memory)
-        self.assertEqual(self.instance_info.vcpu, runs[1].vcpu)
+        self.assertEqual(self.instance_info['memory'], runs[1].memory)
+        self.assertEqual(self.instance_info['vcpu'], runs[1].vcpu)
 
     def test_get_cloud_account_overview_type_changes_while_running(self):
         """
@@ -300,9 +302,9 @@ class AccountUtilCalculateRunsTest(TestCase):
             self.openshift_and_rhel_image.ec2_ami_id,
             instance_type=self.instance_type
         )
-        util.recalculate_runs(event)
+        util.recalculate_runs([event])
         runs = list(Run.objects.all())
-        self.assertEqual(self.rhel_instance, runs[0].image)
+        self.assertEqual(self.rhel_image, runs[0].machineimage)
 
     # the following tests are assuming that the events have been returned
     # from the _get_relevant_events() function which will only return events

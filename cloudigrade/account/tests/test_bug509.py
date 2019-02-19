@@ -6,7 +6,7 @@ See also: https://gitlab.com/cloudigrade/cloudigrade/issues/509
 import faker
 from django.test import TestCase
 
-from account import reports
+from account import reports, util
 from account.tests import helper as account_helper
 from util.tests import helper as util_helper
 
@@ -46,11 +46,13 @@ class ReportBug509TestCase(TestCase):
         self.power_on = util_helper.utc_dt(2017, 12, 25, 12, 34, 56)
         # Power off the instance at the end of the 5th day in the report.
         self.power_off = util_helper.utc_dt(2018, 1, 6, 0, 0, 0)
-        account_helper.generate_aws_instance_events(
+        events = account_helper.generate_aws_instance_events(
             self.instance,
             [(self.power_on, self.power_off)],
             self.image_rhel.ec2_ami_id,
         )
+        util.recalculate_runs(events)
+
         # Report on "month of January in 2018"
         self.start = util_helper.utc_dt(2018, 1, 1, 0, 0, 0)
         self.end = util_helper.utc_dt(2018, 2, 1, 0, 0, 0)

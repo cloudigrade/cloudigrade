@@ -127,8 +127,7 @@ def process_instance_event(event):
                           end_time=None)
 
     filters = before_run | during_run | during_run_no_end
-
-    instance = AwsInstance.objects.get(ec2_instance_id=event.instance_id)
+    instance = AwsInstance.objects.get(id=event.instance_id)
 
     if Run.objects.filter(filters, instance=instance).exists():
         previous_event = None
@@ -146,7 +145,7 @@ def process_instance_event(event):
             events = previous_event.union(events)
 
         recalculate_runs(events)
-    elif event.event_type == event.TYPE.power_on:
+    elif event.event_type == InstanceEvent.TYPE.power_on:
         normalized_runs = normalize_runs([event])
         for index, normalized_run in enumerate(normalized_runs):
             logger.info('Processing run {} of {}'.format(

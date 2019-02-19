@@ -496,9 +496,9 @@ def convert_param_to_int(name, value):
         raise ValidationError(error)
 
 
-def recalculate_runs(events):
+def recalculate_runs(new_events):
     """Take in events and calculate runs based on them."""
-    for event in events:
+    for event in new_events:
         # check if event occurred before any runs
         if Run.objects.filter(
                 instance_id=event.instance_id,

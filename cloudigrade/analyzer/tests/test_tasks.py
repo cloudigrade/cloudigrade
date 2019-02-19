@@ -866,7 +866,7 @@ class AnalyzeLogTest(TestCase):
                 occurred_at=occurred_at,
                 account_id=self.mock_account.aws_account_id,
                 region=instance.region,
-                instance_id=instance.ec2_instance_id,
+                instance_id=instance.id,
                 event_type=InstanceEvent.TYPE.power_on,
                 instance_type=None,
             )
@@ -888,7 +888,7 @@ class AnalyzeLogTest(TestCase):
                 occurred_at=occurred_at,
                 account_id=self.mock_account.aws_account_id,
                 region=instance.region,
-                instance_id=instance.ec2_instance_id,
+                instance_id=instance.id,
                 event_type=InstanceEvent.TYPE.power_on,
                 instance_type=None,
             )
@@ -922,7 +922,7 @@ class AnalyzeLogTest(TestCase):
             occurred_at=occurred_at,
             account_id=self.mock_account.aws_account_id,
             region=instance.region,
-            instance_id=instance.ec2_instance_id,
+            instance_id=instance.id,
             event_type=InstanceEvent.TYPE.power_off,
             instance_type=None,
         )
@@ -963,7 +963,7 @@ class AnalyzeLogTest(TestCase):
             occurred_at=occurred_at,
             account_id=self.mock_account.aws_account_id,
             region=instance.region,
-            instance_id=instance.ec2_instance_id,
+            instance_id=instance.id,
             event_type=InstanceEvent.TYPE.power_on,
             instance_type=None,
         )
@@ -1001,7 +1001,7 @@ class AnalyzeLogTest(TestCase):
             occurred_at=occurred_at,
             account_id=self.mock_account.aws_account_id,
             region=instance.region,
-            instance_id=instance.ec2_instance_id,
+            instance_id=instance.id,
             event_type=InstanceEvent.TYPE.power_on,
             instance_type=None,
         )
@@ -1042,7 +1042,7 @@ class AnalyzeLogTest(TestCase):
             occurred_at=occurred_at,
             account_id=self.mock_account.aws_account_id,
             region=instance.region,
-            instance_id=instance.ec2_instance_id,
+            instance_id=instance.id,
             event_type=InstanceEvent.TYPE.power_off,
             instance_type=None,
         )
