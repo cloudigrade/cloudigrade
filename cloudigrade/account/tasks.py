@@ -459,11 +459,12 @@ def run_inspection_cluster(messages, cloud='aws'):
         mount_point = generate_device_name(index)
         volume = ec2.Volume(message['volume_id'])
         logger.info(
-            _('%(label)s attaching volume %(volume_id)s to instance'
-              ' %(instance)s at %(mount_point)s'),
+            _('%(label)s attaching volume %(volume_id)s from AMI'
+              ' %(ami_id)s to instance %(instance)s at %(mount_point)s'),
             {
                 'label': 'run_inspection_cluster',
                 'volume_id': message['volume_id'],
+                'ami_id': message['ami_id'],
                 'instance': ec2_instance_id,
                 'mount_point': mount_point,
             }
