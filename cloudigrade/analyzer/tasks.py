@@ -1,4 +1,15 @@
-"""Celery tasks for analyzing incoming logs."""
+"""
+Celery tasks for analyzing incoming logs.
+
+Note for developers:
+If you find yourself adding a new Celery task, please be aware of how Celery
+determines which queue to read and write to work on that task. By default,
+Celery tasks will go to a queue named "celery". If you wish to separate a task
+onto a different queue (which may make it easier to see the volume of specific
+waiting tasks), please be sure to update all the relevant configurations to
+use that custom queue. This includes CELERY_TASK_ROUTES in config and the
+Celery worker's --queues argument (see deployment-configs.yaml in shiftigrade).
+"""
 import collections
 import itertools
 import json
