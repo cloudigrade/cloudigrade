@@ -63,20 +63,20 @@ class DailyInstanceActivityViewSetTest(TestCase):
                 util_helper.utc_dt(2018, 1, 4, 5, 0, 0)
             ),
         )
-        account_helper.generate_aws_instance_events(
+        account_helper.generate_runs(
             self.u1a1_instance_rhel,
             powered_times,
-            ec2_ami_id=self.image_rhel.ec2_ami_id,
+            image=self.image_rhel,
         )
-        account_helper.generate_aws_instance_events(
+        account_helper.generate_runs(
             self.u3a1_instance_rhel,
             powered_times,
-            ec2_ami_id=self.u3a1_image_rhel.ec2_ami_id,
+            image=self.u3a1_image_rhel,
         )
-        account_helper.generate_aws_instance_events(
+        account_helper.generate_runs(
             self.u3a2_instance_rhel,
             powered_times,
-            ec2_ami_id=self.u3a2_image_rhel.ec2_ami_id,
+            image=self.u3a2_image_rhel,
         )
 
         self.start = util_helper.utc_dt(2018, 1, 1, 0, 0, 0)

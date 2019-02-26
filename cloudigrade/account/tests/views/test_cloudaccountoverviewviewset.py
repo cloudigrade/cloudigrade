@@ -6,6 +6,7 @@ from rest_framework.test import APIRequestFactory, force_authenticate
 
 from account.models import (InstanceEvent)
 from account.tests import helper as account_helper
+from account.util import recalculate_runs
 from account.views import (CloudAccountOverviewViewSet)
 from util.tests import helper as util_helper
 
@@ -110,6 +111,8 @@ class CloudAccountOverviewViewSetTest(TestCase):
                 event_type=InstanceEvent.TYPE.power_on,
                 ec2_ami_id=self.openshift_and_rhel_image.ec2_ami_id,
                 instance_type=self.instance_type)
+
+        recalculate_runs([self.event1, self.event2, self.event3, self.event4])
         self.factory = APIRequestFactory()
         self.account1_expected_overview = {
             'id': self.account1.id,
@@ -289,15 +292,16 @@ class CloudAccountOverviewViewSetTest(TestCase):
 
     def test_list_overviews_as_user2(self):
         """Assert that the user2 sees only overviews of user2 accounts."""
-        expected_response = {
-            'cloud_account_overviews': [
-                self.account3_expected_overview,
-                self.account4_expected_overview,
-            ]
-        }
         response = self.get_overview_list_response(self.user2)
         actual_response = response.data
-        self.assertEqual(expected_response, actual_response)
+        self.assertTrue(
+            self.account3_expected_overview in
+            actual_response['cloud_account_overviews']
+        )
+        self.assertTrue(
+            self.account4_expected_overview in
+            actual_response['cloud_account_overviews']
+        )
 
     def test_get_user1s_overview_as_superuser_returns_ok(self):
         """Assert that superuser can get another user's overviews."""

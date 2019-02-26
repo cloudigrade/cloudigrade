@@ -502,12 +502,12 @@ def recalculate_runs(new_events):
         # check if event occurred before any runs
         if Run.objects.filter(
                 instance_id=event.instance_id,
-                start_time__gt=event.occurred_at
+                start_time__gte=event.occurred_at
         ).exists():
             # need to torch these runs
             runs = Run.objects.filter(
                 instance_id=event.instance_id,
-                start_time__gt=event.occurred_at)
+                start_time__gte=event.occurred_at)
             events = InstanceEvent.objects.filter(
                 instance_id=event.instance_id,
                 occurred_at__gte=event.occurred_at) \
@@ -532,7 +532,7 @@ def recalculate_runs(new_events):
                     )
                     run.save()
 
-        # check to see if even occurred within a run
+        # check to see if event occurred within a run
         elif Run.objects.filter(
                 instance_id=event.instance_id,
                 start_time__lt=event.occurred_at,

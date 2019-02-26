@@ -593,9 +593,7 @@ class GetDailyUsageTwoRhelInstancesTest(GetDailyUsageTestBase):
         rhel_instance_1 = account_helper.generate_aws_instance(
             account=self.account_1, image=self.image_rhel
         )
-        rhel_instance_2 = account_helper.generate_aws_instance(
-            account=self.account_1, image=self.image_rhel
-        )
+
         self.generate_runs(powered_times, rhel_instance_1)
 
         powered_times = (
@@ -604,6 +602,10 @@ class GetDailyUsageTwoRhelInstancesTest(GetDailyUsageTestBase):
                 util_helper.utc_dt(2018, 1, 10, 7, 30, 0)
             ),
         )
+        rhel_instance_2 = account_helper.generate_aws_instance(
+            account=self.account_1, image=self.image_rhel
+        )
+
         self.generate_runs(powered_times, rhel_instance_2)
 
         results = reports.get_daily_usage(self.user_1.id, self.start, self.end)

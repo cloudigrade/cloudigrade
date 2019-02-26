@@ -136,13 +136,13 @@ def process_instance_event(event):
         except InstanceEvent.DoesNotExist:
             pass
 
-        events = InstanceEvent.objects.filter(
+        events = list(InstanceEvent.objects.filter(
             instance_id=event.instance_id,
             occurred_at__gte=event.occurred_at
-        )
+        ))
 
         if previous_event:
-            events = previous_event.union(events)
+            events.insert(0, previous_event)
 
         recalculate_runs(events)
     elif event.event_type == InstanceEvent.TYPE.power_on:

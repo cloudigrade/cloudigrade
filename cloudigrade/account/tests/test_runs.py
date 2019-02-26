@@ -130,40 +130,6 @@ class AccountUtilCalculateRunsTest(TestCase):
         self.assertEqual(self.first_power_on, runs[0].start_time)
         self.assertIsNone(runs[0].end_time)
 
-    def test_calculate_runs_out_of_order_events(self):
-        """
-        Test that Runs are calculated correctly when events are out of order.
-
-        Run after first pair of events (2,7):
-            [ ######     ]
-
-        Run after adding an intermediate power_on event at (3,):
-            [ ######     ]
-
-        Run after adding an intermediate power_off event at (,5):
-            [ ## ###     ]
-
-        """
-        # Single Run from (2, 7)
-        util.recalculate_runs(
-            [self.first_power_on_event, self.second_power_off_event]
-        )
-        runs = list(Run.objects.all())
-        self.assertEqual(1, len(runs))
-        self.assertEqual(self.first_power_on, runs[0].start_time)
-        self.assertEqual(self.second_power_off, runs[0].end_time)
-
-        # add power_on event starting from (3,)
-        util.recalculate_runs([self.second_power_on_event])
-        runs = list(Run.objects.all())
-        self.assertEqual(1, len(runs))
-        self.assertEqual(self.first_power_on, runs[0].start_time)
-        self.assertEqual(self.second_power_off, runs[0].end_time)
-
-        # add power_off event that occurred at (,5)
-        util.recalculate_runs([self.second_power_off_event])
-        runs = list(Run.objects.all())
-        self.assertEqual(2, len(runs))
 
     def test_calculate_runs_multiple_instances(self):
         """
@@ -246,7 +212,8 @@ class AccountUtilCalculateRunsTest(TestCase):
         """
         Test when an instance seems to change type while running.
 
-        This should never happen, and if it does, it should raise an exception.
+        This should never happen, and if it does, the instance_type used
+        should be the initial instance_type.
         """
         events = []
 
@@ -284,8 +251,9 @@ class AccountUtilCalculateRunsTest(TestCase):
                 no_subnet=True,
             )
         )
-        with self.assertRaises(NormalizeRunException):
-            util.recalculate_runs(events)
+        util.recalculate_runs(events)
+        runs = list(Run.objects.all())
+        self.assertEqual(instance_type_1, runs[0].instance_type)
 
     def test_instanceevent_machineimage_ignored(self):
         """

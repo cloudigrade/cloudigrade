@@ -87,19 +87,23 @@ def _get_relevant_runs(start, end, account_ids):
 
     """
     account_filter = models.Q(instance__account__id__in=account_ids)
-    started_no_end = models.Q(start_time__gte=start, end_time=None)
-    started_and_ended = models.Q(start_time__gte=start, end_time__lt=end)
+
+    # There are 4 cases where we would care about a run:
+    # 1. If the run started in the given interval
+    # 2. If the run ended in the given interval
+    # 3. If the run started before the given interval, and never ended
+    # 4. If the run started before the given interval, and ended after
+    started_in_interval = models.Q(start_time__gte=start, start_time__lte=end)
+    ended_in_interval = models.Q(
+        end_time__gte=start, end_time__lte=end)
     started_before_ended_never = models.Q(start_time__lt=start, end_time=None)
-    started_before_ended_before = models.Q(
-        start_time__lt=start, end_time__gt=start, end_time__lt=end)
     started_before_ended_after = models.Q(
         start_time__lt=start, end_time__gte=end)
 
     run_filter = account_filter & (
-        started_no_end |
-        started_and_ended |
+        started_in_interval |
         started_before_ended_never |
-        started_before_ended_before |
+        ended_in_interval |
         started_before_ended_after
     )
 
@@ -393,7 +397,7 @@ def calculate_runs_in_periods(periods, normalized_runs):
                 # periodic_runs[period_start, period_end].append(run)
                 periodic_runs[period_start, period_end].append(
                     NormalizedRun(
-                        start_time=period_start,
+                        start_time=run.start_time,
                         end_time=run.end_time,
                         image_id=run.machineimage_id,
                         instance_id=run.instance_id,

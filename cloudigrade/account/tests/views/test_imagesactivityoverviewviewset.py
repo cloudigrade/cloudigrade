@@ -63,25 +63,25 @@ class ImagesActivityOverviewViewSetTestCase(TestCase):
                 None
             ),
         )
-        account_helper.generate_aws_instance_events(
+        account_helper.generate_runs(
             self.a1_instance_rhel,
             self.powered_times,
-            ec2_ami_id=self.image_rhel.ec2_ami_id,
+            image=self.image_rhel,
         )
-        account_helper.generate_aws_instance_events(
+        account_helper.generate_runs(
             self.a1_instance_oc,
             self.powered_times,
-            ec2_ami_id=self.image_ocp.ec2_ami_id,
+            image=self.image_ocp,
         )
-        account_helper.generate_aws_instance_events(
+        account_helper.generate_runs(
             self.a1_instance_unknown,
             self.powered_times,
             no_image=True,
         )
-        account_helper.generate_aws_instance_events(
+        account_helper.generate_runs(
             self.a2_instance_plain,
             self.powered_times,
-            ec2_ami_id=self.image_plain.ec2_ami_id,
+            image=self.image_plain,
         )
 
         self.start = util_helper.utc_dt(2018, 1, 1, 0, 0, 0)

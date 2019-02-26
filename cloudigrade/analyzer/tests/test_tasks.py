@@ -16,6 +16,7 @@ from account.models import (
     Run
 )
 from account.tests import helper as account_helper
+from account.util import recalculate_runs
 from analyzer import tasks
 from analyzer.tests import helper as analyzer_helper
 from util.tests import helper as util_helper
@@ -861,18 +862,14 @@ class AnalyzeLogTest(TestCase):
         # Note: this time is *after* self.mock_account.created_at.
         occurred_at = '2018-01-02T12:34:56+00:00'
 
-        instance_events = [
-            tasks.CloudTrailInstanceEvent(
-                occurred_at=occurred_at,
-                account_id=self.mock_account.aws_account_id,
-                region=instance.region,
-                instance_id=instance.id,
-                event_type=InstanceEvent.TYPE.power_on,
-                instance_type=None,
-            )
-        ]
+        instance_event = account_helper.generate_single_aws_instance_event(
+            instance=instance,
+            occurred_at=occurred_at,
+            event_type=InstanceEvent.TYPE.power_on,
+            instance_type=None
+        )
         events_info = tasks._build_events_info_for_saving(
-            self.mock_account, instance, instance_events
+            self.mock_account, instance, [instance_event]
         )
         self.assertEqual(len(events_info), 1)
 
@@ -883,18 +880,14 @@ class AnalyzeLogTest(TestCase):
         # Note: this time is *before* self.mock_account.created_at.
         occurred_at = '2016-01-02T12:34:56+00:00'
 
-        instance_events = [
-            tasks.CloudTrailInstanceEvent(
-                occurred_at=occurred_at,
-                account_id=self.mock_account.aws_account_id,
-                region=instance.region,
-                instance_id=instance.id,
-                event_type=InstanceEvent.TYPE.power_on,
-                instance_type=None,
-            )
-        ]
+        instance_event = account_helper.generate_single_aws_instance_event(
+            instance=instance,
+            occurred_at=occurred_at,
+            event_type=InstanceEvent.TYPE.power_on,
+            instance_type=None
+        )
         events_info = tasks._build_events_info_for_saving(
-            self.mock_account, instance, instance_events
+            self.mock_account, instance, [instance_event]
         )
         self.assertEqual(len(events_info), 0)
 
@@ -918,15 +911,12 @@ class AnalyzeLogTest(TestCase):
 
         occurred_at = util_helper.utc_dt(2018, 1, 13, 0, 0, 0)
 
-        instance_event = tasks.CloudTrailInstanceEvent(
+        instance_event = account_helper.generate_single_aws_instance_event(
+            instance=instance,
             occurred_at=occurred_at,
-            account_id=self.mock_account.aws_account_id,
-            region=instance.region,
-            instance_id=instance.id,
             event_type=InstanceEvent.TYPE.power_off,
-            instance_type=None,
+            instance_type=None
         )
-
         tasks.process_instance_event(instance_event)
 
         runs = list(Run.objects.all())
@@ -958,14 +948,11 @@ class AnalyzeLogTest(TestCase):
         account_helper.generate_single_run(instance, run_time)
 
         occurred_at = util_helper.utc_dt(2018, 1, 10, 0, 0, 0)
-
-        instance_event = tasks.CloudTrailInstanceEvent(
+        instance_event = account_helper.generate_single_aws_instance_event(
+            instance=instance,
             occurred_at=occurred_at,
-            account_id=self.mock_account.aws_account_id,
-            region=instance.region,
-            instance_id=instance.id,
             event_type=InstanceEvent.TYPE.power_on,
-            instance_type=None,
+            instance_type=None
         )
         tasks.process_instance_event(instance_event)
 
@@ -985,32 +972,55 @@ class AnalyzeLogTest(TestCase):
         New instance power on event at (1,) results in the run being updated:
             [#######        ]
 
+        New instance power on event at (3,) results in the run not being updated:
+            [#######        ]
+
         """
         instance = account_helper.generate_aws_instance(self.mock_account)
 
-        run_time = (
+        run_time = [(
             util_helper.utc_dt(2018, 1, 5, 0, 0, 0),
             util_helper.utc_dt(2018, 1, 7, 0, 0, 0)
+        )]
+
+        instance_events = account_helper.generate_aws_instance_events(
+            instance, run_time,
+            instance_type=None
         )
 
-        account_helper.generate_single_run(instance, run_time)
+        recalculate_runs(instance_events)
 
         occurred_at = util_helper.utc_dt(2018, 1, 1, 0, 0, 0)
 
-        instance_event = tasks.CloudTrailInstanceEvent(
+        instance_event = account_helper.generate_single_aws_instance_event(
+            instance=instance,
             occurred_at=occurred_at,
-            account_id=self.mock_account.aws_account_id,
-            region=instance.region,
-            instance_id=instance.id,
             event_type=InstanceEvent.TYPE.power_on,
-            instance_type=None,
+            instance_type=None
         )
 
         tasks.process_instance_event(instance_event)
 
         runs = list(Run.objects.all())
         self.assertEqual(1, len(runs))
-        self.assertEqual(run_time[1], runs[0].end_time)
+        self.assertEqual(run_time[0][1], runs[0].end_time)
+        self.assertEqual(occurred_at, runs[0].start_time)
+
+
+        occurred_at = util_helper.utc_dt(2018, 1, 3, 0, 0, 0)
+
+        dup_start_instance_event = account_helper.generate_single_aws_instance_event(
+            instance=instance,
+            occurred_at=occurred_at,
+            event_type=InstanceEvent.TYPE.power_on,
+            instance_type=None
+        )
+
+        tasks.process_instance_event(dup_start_instance_event)
+
+        runs = list(Run.objects.all())
+        self.assertEqual(1, len(runs))
+        self.assertEqual(run_time[0][1], runs[0].end_time)
         self.assertEqual(occurred_at, runs[0].start_time)
 
     @patch('analyzer.tasks.recalculate_runs')
@@ -1038,13 +1048,11 @@ class AnalyzeLogTest(TestCase):
 
         occurred_at = util_helper.utc_dt(2018, 1, 10, 0, 0, 0)
 
-        instance_event = tasks.CloudTrailInstanceEvent(
+        instance_event = account_helper.generate_single_aws_instance_event(
+            instance=instance,
             occurred_at=occurred_at,
-            account_id=self.mock_account.aws_account_id,
-            region=instance.region,
-            instance_id=instance.id,
             event_type=InstanceEvent.TYPE.power_off,
-            instance_type=None,
+            instance_type=None
         )
         tasks.process_instance_event(instance_event)
 
