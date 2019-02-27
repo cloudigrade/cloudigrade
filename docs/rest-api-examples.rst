@@ -85,7 +85,7 @@ Response:
     X-Frame-Options: SAMEORIGIN
 
     {
-        "auth_token": "23f3d15292410c0e63c0666894396403f6e1e31a",
+        "auth_token": "19819abe751c5c5ecbb14c8ca2057079ff6c4256",
         "is_superuser": false
     }
 
@@ -127,7 +127,7 @@ Request:
 .. code:: bash
 
     http post localhost:8080/api/v1/account/ "${AUTH}" \
-        account_arn="arn:aws:iam::204233690675:role/role-for-cloudigrade" \
+        account_arn="arn:aws:iam::486088907480:role/role-for-cloudigrade" \
         name="yet another account" \
         resourcetype="AwsAccount"
 
@@ -137,22 +137,22 @@ Response:
 
     HTTP/1.1 201 Created
     Allow: GET, POST, HEAD, OPTIONS
-    Content-Length: 310
+    Content-Length: 307
     Content-Type: application/json
-    Location: localhost:8080/api/v1/account/18/
+    Location: localhost:8080/api/v1/account/3/
     Vary: Accept
     X-Frame-Options: SAMEORIGIN
 
     {
-        "account_arn": "arn:aws:iam::204233690675:role/role-for-cloudigrade",
-        "aws_account_id": "204233690675",
-        "created_at": "2019-02-06T23:01:33.364387Z",
-        "id": 18,
+        "account_arn": "arn:aws:iam::486088907480:role/role-for-cloudigrade",
+        "aws_account_id": "486088907480",
+        "created_at": "2019-02-27T15:21:52.795897Z",
+        "id": 3,
         "name": "yet another account",
         "resourcetype": "AwsAccount",
-        "updated_at": "2019-02-06T23:01:33.364423Z",
-        "url": "http://localhost:8080/api/v1/account/18/",
-        "user_id": 12
+        "updated_at": "2019-02-27T15:21:52.795919Z",
+        "url": "http://localhost:8080/api/v1/account/3/",
+        "user_id": 2
     }
 
 If you attempt to create an AWS account for an ARN that is already in
@@ -163,7 +163,7 @@ Request:
 .. code:: bash
 
     http post localhost:8080/api/v1/account/ "${AUTH}" \
-        account_arn="arn:aws:iam::204233690675:role/role-for-cloudigrade" \
+        account_arn="arn:aws:iam::486088907480:role/role-for-cloudigrade" \
         name="but this account already exists" \
         resourcetype="AwsAccount"
 
@@ -203,7 +203,7 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, POST, HEAD, OPTIONS
-    Content-Length: 666
+    Content-Length: 662
     Content-Type: application/json
     Vary: Accept
     X-Frame-Options: SAMEORIGIN
@@ -214,26 +214,26 @@ Response:
         "previous": null,
         "results": [
             {
-                "account_arn": "arn:aws:iam::71641443264:role/role-for-cloudigrade",
-                "aws_account_id": "71641443264",
-                "created_at": "2019-01-23T00:00:00Z",
-                "id": 17,
+                "account_arn": "arn:aws:iam::937635791276:role/role-for-cloudigrade",
+                "aws_account_id": "937635791276",
+                "created_at": "2019-02-13T00:00:00Z",
+                "id": 2,
                 "name": "greatest account ever",
                 "resourcetype": "AwsAccount",
-                "updated_at": "2019-02-06T23:01:32.465336Z",
-                "url": "http://localhost:8080/api/v1/account/17/",
-                "user_id": 12
+                "updated_at": "2019-02-27T15:21:52.355108Z",
+                "url": "http://localhost:8080/api/v1/account/2/",
+                "user_id": 2
             },
             {
-                "account_arn": "arn:aws:iam::204233690675:role/role-for-cloudigrade",
-                "aws_account_id": "204233690675",
-                "created_at": "2019-02-06T23:01:33.364387Z",
-                "id": 18,
+                "account_arn": "arn:aws:iam::486088907480:role/role-for-cloudigrade",
+                "aws_account_id": "486088907480",
+                "created_at": "2019-02-27T15:21:52.795897Z",
+                "id": 3,
                 "name": "yet another account",
                 "resourcetype": "AwsAccount",
-                "updated_at": "2019-02-06T23:01:33.364423Z",
-                "url": "http://localhost:8080/api/v1/account/18/",
-                "user_id": 12
+                "updated_at": "2019-02-27T15:21:52.795919Z",
+                "url": "http://localhost:8080/api/v1/account/3/",
+                "user_id": 2
             }
         ]
     }
@@ -246,7 +246,7 @@ Request:
 
 .. code:: bash
 
-    http localhost:8080/api/v1/account/18/ "${AUTH}"
+    http localhost:8080/api/v1/account/3/ "${AUTH}"
 
 Response:
 
@@ -254,21 +254,21 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, PUT, PATCH, DELETE, HEAD, OPTIONS
-    Content-Length: 310
+    Content-Length: 307
     Content-Type: application/json
     Vary: Accept
     X-Frame-Options: SAMEORIGIN
 
     {
-        "account_arn": "arn:aws:iam::204233690675:role/role-for-cloudigrade",
-        "aws_account_id": "204233690675",
-        "created_at": "2019-02-06T23:01:33.364387Z",
-        "id": 18,
+        "account_arn": "arn:aws:iam::486088907480:role/role-for-cloudigrade",
+        "aws_account_id": "486088907480",
+        "created_at": "2019-02-27T15:21:52.795897Z",
+        "id": 3,
         "name": "yet another account",
         "resourcetype": "AwsAccount",
-        "updated_at": "2019-02-06T23:01:33.364423Z",
-        "url": "http://localhost:8080/api/v1/account/18/",
-        "user_id": 12
+        "updated_at": "2019-02-27T15:21:52.795919Z",
+        "url": "http://localhost:8080/api/v1/account/3/",
+        "user_id": 2
     }
 
 
@@ -285,7 +285,7 @@ Request:
 
 .. code:: bash
 
-    http patch localhost:8080/api/v1/account/18/ "${AUTH}" \
+    http patch localhost:8080/api/v1/account/3/ "${AUTH}" \
         name="name updated using PATCH" \
         resourcetype="AwsAccount"
 
@@ -295,21 +295,21 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, PUT, PATCH, DELETE, HEAD, OPTIONS
-    Content-Length: 315
+    Content-Length: 312
     Content-Type: application/json
     Vary: Accept
     X-Frame-Options: SAMEORIGIN
 
     {
-        "account_arn": "arn:aws:iam::204233690675:role/role-for-cloudigrade",
-        "aws_account_id": "204233690675",
-        "created_at": "2019-02-06T23:01:33.364387Z",
-        "id": 18,
+        "account_arn": "arn:aws:iam::486088907480:role/role-for-cloudigrade",
+        "aws_account_id": "486088907480",
+        "created_at": "2019-02-27T15:21:52.795897Z",
+        "id": 3,
         "name": "name updated using PATCH",
         "resourcetype": "AwsAccount",
-        "updated_at": "2019-02-06T23:01:33.748667Z",
-        "url": "http://localhost:8080/api/v1/account/18/",
-        "user_id": 12
+        "updated_at": "2019-02-27T15:21:52.869174Z",
+        "url": "http://localhost:8080/api/v1/account/3/",
+        "user_id": 2
     }
 
 Because PUT is intended to replace objects, it must include all potentially
@@ -319,9 +319,9 @@ Request:
 
 .. code:: bash
 
-    http put localhost:8080/api/v1/account/18/ "${AUTH}" \
+    http put localhost:8080/api/v1/account/3/ "${AUTH}" \
         name="name updated using PUT" \
-        account_arn="arn:aws:iam::204233690675:role/role-for-cloudigrade" \
+        account_arn="arn:aws:iam::486088907480:role/role-for-cloudigrade" \
         resourcetype="AwsAccount"
 
 Response:
@@ -330,21 +330,21 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, PUT, PATCH, DELETE, HEAD, OPTIONS
-    Content-Length: 313
+    Content-Length: 310
     Content-Type: application/json
     Vary: Accept
     X-Frame-Options: SAMEORIGIN
 
     {
-        "account_arn": "arn:aws:iam::204233690675:role/role-for-cloudigrade",
-        "aws_account_id": "204233690675",
-        "created_at": "2019-02-06T23:01:33.364387Z",
-        "id": 18,
+        "account_arn": "arn:aws:iam::486088907480:role/role-for-cloudigrade",
+        "aws_account_id": "486088907480",
+        "created_at": "2019-02-27T15:21:52.795897Z",
+        "id": 3,
         "name": "name updated using PUT",
         "resourcetype": "AwsAccount",
-        "updated_at": "2019-02-06T23:01:33.885625Z",
-        "url": "http://localhost:8080/api/v1/account/18/",
-        "user_id": 12
+        "updated_at": "2019-02-27T15:21:52.891058Z",
+        "url": "http://localhost:8080/api/v1/account/3/",
+        "user_id": 2
     }
 
 You cannot change the ARN via PUT or PATCH.
@@ -353,7 +353,7 @@ Request:
 
 .. code:: bash
 
-    http patch localhost:8080/api/v1/account/18/ "${AUTH}" \
+    http patch localhost:8080/api/v1/account/3/ "${AUTH}" \
         account_arn="arn:aws:iam::999999999999:role/role-for-cloudigrade" \
         resourcetype="AwsAccount"
 
@@ -393,7 +393,7 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 1164
+    Content-Length: 1146
     Content-Type: application/json
     Vary: Accept
     X-Frame-Options: SAMEORIGIN
@@ -404,43 +404,43 @@ Response:
         "previous": null,
         "results": [
             {
-                "account": "http://localhost:8080/api/v1/account/17/",
-                "account_id": 17,
-                "created_at": "2019-02-06T23:01:32.503289Z",
-                "ec2_instance_id": "i-5e48ecb9e67e596d3",
-                "id": 22,
-                "machineimage": "http://localhost:8080/api/v1/image/38/",
-                "machineimage_id": 38,
-                "region": "us-east-2",
+                "account": "http://localhost:8080/api/v1/account/2/",
+                "account_id": 2,
+                "created_at": "2019-02-27T15:21:52.366933Z",
+                "ec2_instance_id": "i-5f6853a7cda3d262b",
+                "id": 2,
+                "machineimage": "http://localhost:8080/api/v1/image/3/",
+                "machineimage_id": 3,
+                "region": "us-east-1",
                 "resourcetype": "AwsInstance",
-                "updated_at": "2019-02-06T23:01:32.503419Z",
-                "url": "http://localhost:8080/api/v1/instance/22/"
+                "updated_at": "2019-02-27T15:21:52.366950Z",
+                "url": "http://localhost:8080/api/v1/instance/2/"
             },
             {
-                "account": "http://localhost:8080/api/v1/account/17/",
-                "account_id": 17,
-                "created_at": "2019-02-06T23:01:32.529991Z",
-                "ec2_instance_id": "i-04a47a99733e4d5b9",
-                "id": 23,
-                "machineimage": "http://localhost:8080/api/v1/image/39/",
-                "machineimage_id": 39,
+                "account": "http://localhost:8080/api/v1/account/2/",
+                "account_id": 2,
+                "created_at": "2019-02-27T15:21:52.376632Z",
+                "ec2_instance_id": "i-55933f855d2db4109",
+                "id": 3,
+                "machineimage": "http://localhost:8080/api/v1/image/4/",
+                "machineimage_id": 4,
                 "region": "ca-central-1",
                 "resourcetype": "AwsInstance",
-                "updated_at": "2019-02-06T23:01:32.530012Z",
-                "url": "http://localhost:8080/api/v1/instance/23/"
+                "updated_at": "2019-02-27T15:21:52.376650Z",
+                "url": "http://localhost:8080/api/v1/instance/3/"
             },
             {
-                "account": "http://localhost:8080/api/v1/account/17/",
-                "account_id": 17,
-                "created_at": "2019-02-06T23:01:32.560169Z",
-                "ec2_instance_id": "i-aed8c3444d2e8116e",
-                "id": 24,
-                "machineimage": "http://localhost:8080/api/v1/image/40/",
-                "machineimage_id": 40,
-                "region": "us-east-2",
+                "account": "http://localhost:8080/api/v1/account/2/",
+                "account_id": 2,
+                "created_at": "2019-02-27T15:21:52.386763Z",
+                "ec2_instance_id": "i-55e5a9cfb49fdc5cc",
+                "id": 4,
+                "machineimage": "http://localhost:8080/api/v1/image/5/",
+                "machineimage_id": 5,
+                "region": "us-east-1",
                 "resourcetype": "AwsInstance",
-                "updated_at": "2019-02-06T23:01:32.560221Z",
-                "url": "http://localhost:8080/api/v1/instance/24/"
+                "updated_at": "2019-02-27T15:21:52.386781Z",
+                "url": "http://localhost:8080/api/v1/instance/4/"
             }
         ]
     }
@@ -453,7 +453,7 @@ Request:
 
 .. code:: bash
 
-    http localhost:8080/api/v1/instance/22/ "${AUTH}"
+    http localhost:8080/api/v1/instance/2/ "${AUTH}"
 
 Response:
 
@@ -461,23 +461,23 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 369
+    Content-Length: 363
     Content-Type: application/json
     Vary: Accept
     X-Frame-Options: SAMEORIGIN
 
     {
-        "account": "http://localhost:8080/api/v1/account/17/",
-        "account_id": 17,
-        "created_at": "2019-02-06T23:01:32.503289Z",
-        "ec2_instance_id": "i-5e48ecb9e67e596d3",
-        "id": 22,
-        "machineimage": "http://localhost:8080/api/v1/image/38/",
-        "machineimage_id": 38,
-        "region": "us-east-2",
+        "account": "http://localhost:8080/api/v1/account/2/",
+        "account_id": 2,
+        "created_at": "2019-02-27T15:21:52.366933Z",
+        "ec2_instance_id": "i-5f6853a7cda3d262b",
+        "id": 2,
+        "machineimage": "http://localhost:8080/api/v1/image/3/",
+        "machineimage_id": 3,
+        "region": "us-east-1",
         "resourcetype": "AwsInstance",
-        "updated_at": "2019-02-06T23:01:32.503419Z",
-        "url": "http://localhost:8080/api/v1/instance/22/"
+        "updated_at": "2019-02-27T15:21:52.366950Z",
+        "url": "http://localhost:8080/api/v1/instance/2/"
     }
 
 
@@ -492,7 +492,7 @@ Request:
 .. code:: bash
 
     http localhost:8080/api/v1/instance/ "${AUTH}" \
-        user_id=="11"
+        user_id=="1"
 
 Response:
 
@@ -500,7 +500,7 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 421
+    Content-Length: 420
     Content-Type: application/json
     Vary: Accept
     X-Frame-Options: SAMEORIGIN
@@ -511,17 +511,17 @@ Response:
         "previous": null,
         "results": [
             {
-                "account": "http://localhost:8080/api/v1/account/16/",
-                "account_id": 16,
-                "created_at": "2019-02-06T23:01:32.420312Z",
-                "ec2_instance_id": "i-f6024390514f14e8d",
-                "id": 21,
-                "machineimage": "http://localhost:8080/api/v1/image/36/",
-                "machineimage_id": 36,
-                "region": "eu-west-1",
+                "account": "http://localhost:8080/api/v1/account/1/",
+                "account_id": 1,
+                "created_at": "2019-02-27T15:21:52.316022Z",
+                "ec2_instance_id": "i-44a17ace104d4f208",
+                "id": 1,
+                "machineimage": "http://localhost:8080/api/v1/image/1/",
+                "machineimage_id": 1,
+                "region": "ap-northeast-1",
                 "resourcetype": "AwsInstance",
-                "updated_at": "2019-02-06T23:01:32.420344Z",
-                "url": "http://localhost:8080/api/v1/instance/21/"
+                "updated_at": "2019-02-27T15:21:52.316042Z",
+                "url": "http://localhost:8080/api/v1/instance/1/"
             }
         ]
     }
@@ -545,7 +545,7 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 2057
+    Content-Length: 2028
     Content-Type: application/json
     Vary: Accept
     X-Frame-Options: SAMEORIGIN
@@ -557,81 +557,81 @@ Response:
         "results": [
             {
                 "event_type": "power_on",
-                "id": 37,
-                "instance": "http://localhost:8080/api/v1/instance/22/",
-                "instance_id": 22,
-                "instance_type": "t2.xlarge",
-                "machineimage": "http://localhost:8080/api/v1/image/41/",
-                "machineimage_id": 41,
-                "occurred_at": "2019-01-30T00:00:00Z",
+                "id": 2,
+                "instance": "http://localhost:8080/api/v1/instance/2/",
+                "instance_id": 2,
+                "instance_type": "t2.small",
+                "machineimage": "http://localhost:8080/api/v1/image/6/",
+                "machineimage_id": 6,
+                "occurred_at": "2019-02-20T00:00:00Z",
                 "resourcetype": "AwsInstanceEvent",
-                "subnet": "subnet-88450bed",
-                "url": "http://localhost:8080/api/v1/event/37/"
+                "subnet": "subnet-9292b545",
+                "url": "http://localhost:8080/api/v1/event/2/"
             },
             {
                 "event_type": "power_off",
-                "id": 38,
-                "instance": "http://localhost:8080/api/v1/instance/22/",
-                "instance_id": 22,
-                "instance_type": "t2.xlarge",
+                "id": 3,
+                "instance": "http://localhost:8080/api/v1/instance/2/",
+                "instance_id": 2,
+                "instance_type": "t2.small",
                 "machineimage": null,
                 "machineimage_id": null,
-                "occurred_at": "2019-02-04T00:00:00Z",
+                "occurred_at": "2019-02-25T00:00:00Z",
                 "resourcetype": "AwsInstanceEvent",
-                "subnet": "subnet-88450bed",
-                "url": "http://localhost:8080/api/v1/event/38/"
+                "subnet": "subnet-9292b545",
+                "url": "http://localhost:8080/api/v1/event/3/"
             },
             {
                 "event_type": "power_on",
-                "id": 39,
-                "instance": "http://localhost:8080/api/v1/instance/22/",
-                "instance_id": 22,
-                "instance_type": "t2.xlarge",
-                "machineimage": "http://localhost:8080/api/v1/image/41/",
-                "machineimage_id": 41,
-                "occurred_at": "2019-02-05T00:00:00Z",
+                "id": 4,
+                "instance": "http://localhost:8080/api/v1/instance/2/",
+                "instance_id": 2,
+                "instance_type": "t2.small",
+                "machineimage": "http://localhost:8080/api/v1/image/6/",
+                "machineimage_id": 6,
+                "occurred_at": "2019-02-26T00:00:00Z",
                 "resourcetype": "AwsInstanceEvent",
-                "subnet": "subnet-88450bed",
-                "url": "http://localhost:8080/api/v1/event/39/"
+                "subnet": "subnet-9292b545",
+                "url": "http://localhost:8080/api/v1/event/4/"
             },
             {
                 "event_type": "power_on",
-                "id": 40,
-                "instance": "http://localhost:8080/api/v1/instance/23/",
-                "instance_id": 23,
-                "instance_type": "t2.xlarge",
-                "machineimage": "http://localhost:8080/api/v1/image/42/",
-                "machineimage_id": 42,
-                "occurred_at": "2019-01-30T00:00:00Z",
+                "id": 5,
+                "instance": "http://localhost:8080/api/v1/instance/3/",
+                "instance_id": 3,
+                "instance_type": "m5.24xlarge",
+                "machineimage": "http://localhost:8080/api/v1/image/7/",
+                "machineimage_id": 7,
+                "occurred_at": "2019-02-20T00:00:00Z",
                 "resourcetype": "AwsInstanceEvent",
-                "subnet": "subnet-906c8743",
-                "url": "http://localhost:8080/api/v1/event/40/"
+                "subnet": "subnet-04fab80d",
+                "url": "http://localhost:8080/api/v1/event/5/"
             },
             {
                 "event_type": "power_off",
-                "id": 41,
-                "instance": "http://localhost:8080/api/v1/instance/23/",
-                "instance_id": 23,
-                "instance_type": "t2.xlarge",
+                "id": 6,
+                "instance": "http://localhost:8080/api/v1/instance/3/",
+                "instance_id": 3,
+                "instance_type": "m5.24xlarge",
                 "machineimage": null,
                 "machineimage_id": null,
-                "occurred_at": "2019-02-04T00:00:00Z",
+                "occurred_at": "2019-02-25T00:00:00Z",
                 "resourcetype": "AwsInstanceEvent",
-                "subnet": "subnet-906c8743",
-                "url": "http://localhost:8080/api/v1/event/41/"
+                "subnet": "subnet-04fab80d",
+                "url": "http://localhost:8080/api/v1/event/6/"
             },
             {
                 "event_type": "power_on",
-                "id": 42,
-                "instance": "http://localhost:8080/api/v1/instance/23/",
-                "instance_id": 23,
-                "instance_type": "t2.xlarge",
-                "machineimage": "http://localhost:8080/api/v1/image/42/",
-                "machineimage_id": 42,
-                "occurred_at": "2019-02-05T00:00:00Z",
+                "id": 7,
+                "instance": "http://localhost:8080/api/v1/instance/3/",
+                "instance_id": 3,
+                "instance_type": "m5.24xlarge",
+                "machineimage": "http://localhost:8080/api/v1/image/7/",
+                "machineimage_id": 7,
+                "occurred_at": "2019-02-26T00:00:00Z",
                 "resourcetype": "AwsInstanceEvent",
-                "subnet": "subnet-906c8743",
-                "url": "http://localhost:8080/api/v1/event/42/"
+                "subnet": "subnet-04fab80d",
+                "url": "http://localhost:8080/api/v1/event/7/"
             }
         ]
     }
@@ -644,7 +644,7 @@ Request:
 
 .. code:: bash
 
-    http localhost:8080/api/v1/event/37/ "${AUTH}"
+    http localhost:8080/api/v1/event/2/ "${AUTH}"
 
 Response:
 
@@ -652,23 +652,23 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 343
+    Content-Length: 336
     Content-Type: application/json
     Vary: Accept
     X-Frame-Options: SAMEORIGIN
 
     {
         "event_type": "power_on",
-        "id": 37,
-        "instance": "http://localhost:8080/api/v1/instance/22/",
-        "instance_id": 22,
-        "instance_type": "t2.xlarge",
-        "machineimage": "http://localhost:8080/api/v1/image/41/",
-        "machineimage_id": 41,
-        "occurred_at": "2019-01-30T00:00:00Z",
+        "id": 2,
+        "instance": "http://localhost:8080/api/v1/instance/2/",
+        "instance_id": 2,
+        "instance_type": "t2.small",
+        "machineimage": "http://localhost:8080/api/v1/image/6/",
+        "machineimage_id": 6,
+        "occurred_at": "2019-02-20T00:00:00Z",
         "resourcetype": "AwsInstanceEvent",
-        "subnet": "subnet-88450bed",
-        "url": "http://localhost:8080/api/v1/event/37/"
+        "subnet": "subnet-9292b545",
+        "url": "http://localhost:8080/api/v1/event/2/"
     }
 
 
@@ -683,7 +683,7 @@ Request:
 .. code:: bash
 
     http localhost:8080/api/v1/event/ "${AUTH}" \
-        instance_id=="22"
+        instance_id=="2"
 
 Response:
 
@@ -691,7 +691,7 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 1054
+    Content-Length: 1035
     Content-Type: application/json
     Vary: Accept
     X-Frame-Options: SAMEORIGIN
@@ -703,42 +703,42 @@ Response:
         "results": [
             {
                 "event_type": "power_on",
-                "id": 37,
-                "instance": "http://localhost:8080/api/v1/instance/22/",
-                "instance_id": 22,
-                "instance_type": "t2.xlarge",
-                "machineimage": "http://localhost:8080/api/v1/image/41/",
-                "machineimage_id": 41,
-                "occurred_at": "2019-01-30T00:00:00Z",
+                "id": 2,
+                "instance": "http://localhost:8080/api/v1/instance/2/",
+                "instance_id": 2,
+                "instance_type": "t2.small",
+                "machineimage": "http://localhost:8080/api/v1/image/6/",
+                "machineimage_id": 6,
+                "occurred_at": "2019-02-20T00:00:00Z",
                 "resourcetype": "AwsInstanceEvent",
-                "subnet": "subnet-88450bed",
-                "url": "http://localhost:8080/api/v1/event/37/"
+                "subnet": "subnet-9292b545",
+                "url": "http://localhost:8080/api/v1/event/2/"
             },
             {
                 "event_type": "power_off",
-                "id": 38,
-                "instance": "http://localhost:8080/api/v1/instance/22/",
-                "instance_id": 22,
-                "instance_type": "t2.xlarge",
+                "id": 3,
+                "instance": "http://localhost:8080/api/v1/instance/2/",
+                "instance_id": 2,
+                "instance_type": "t2.small",
                 "machineimage": null,
                 "machineimage_id": null,
-                "occurred_at": "2019-02-04T00:00:00Z",
+                "occurred_at": "2019-02-25T00:00:00Z",
                 "resourcetype": "AwsInstanceEvent",
-                "subnet": "subnet-88450bed",
-                "url": "http://localhost:8080/api/v1/event/38/"
+                "subnet": "subnet-9292b545",
+                "url": "http://localhost:8080/api/v1/event/3/"
             },
             {
                 "event_type": "power_on",
-                "id": 39,
-                "instance": "http://localhost:8080/api/v1/instance/22/",
-                "instance_id": 22,
-                "instance_type": "t2.xlarge",
-                "machineimage": "http://localhost:8080/api/v1/image/41/",
-                "machineimage_id": 41,
-                "occurred_at": "2019-02-05T00:00:00Z",
+                "id": 4,
+                "instance": "http://localhost:8080/api/v1/instance/2/",
+                "instance_id": 2,
+                "instance_type": "t2.small",
+                "machineimage": "http://localhost:8080/api/v1/image/6/",
+                "machineimage_id": 6,
+                "occurred_at": "2019-02-26T00:00:00Z",
                 "resourcetype": "AwsInstanceEvent",
-                "subnet": "subnet-88450bed",
-                "url": "http://localhost:8080/api/v1/event/39/"
+                "subnet": "subnet-9292b545",
+                "url": "http://localhost:8080/api/v1/event/4/"
             }
         ]
     }
@@ -752,7 +752,7 @@ Request:
 .. code:: bash
 
     http localhost:8080/api/v1/event/ "${AUTH}" \
-        user_id=="11"
+        user_id=="1"
 
 Response:
 
@@ -760,7 +760,7 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 394
+    Content-Length: 389
     Content-Type: application/json
     Vary: Accept
     X-Frame-Options: SAMEORIGIN
@@ -772,16 +772,16 @@ Response:
         "results": [
             {
                 "event_type": "power_on",
-                "id": 36,
-                "instance": "http://localhost:8080/api/v1/instance/21/",
-                "instance_id": 21,
-                "instance_type": "t2.small",
-                "machineimage": "http://localhost:8080/api/v1/image/37/",
-                "machineimage_id": 37,
-                "occurred_at": "2019-02-05T00:00:00Z",
+                "id": 1,
+                "instance": "http://localhost:8080/api/v1/instance/1/",
+                "instance_id": 1,
+                "instance_type": "t2.medium",
+                "machineimage": "http://localhost:8080/api/v1/image/2/",
+                "machineimage_id": 2,
+                "occurred_at": "2019-02-26T00:00:00Z",
                 "resourcetype": "AwsInstanceEvent",
-                "subnet": "subnet-0dd96c31",
-                "url": "http://localhost:8080/api/v1/event/36/"
+                "subnet": "subnet-5b4671d9",
+                "url": "http://localhost:8080/api/v1/event/1/"
             }
         ]
     }
@@ -805,8 +805,8 @@ Request:
 .. code:: bash
 
     http localhost:8080/api/v1/report/instances/ "${AUTH}" \
-        start=="2019-02-03 00:00:00+00:00" \
-        end=="2019-02-06 00:00:00+00:00"
+        start=="2019-02-24 00:00:00+00:00" \
+        end=="2019-02-27 00:00:00+00:00"
 
 Response:
 
@@ -822,7 +822,7 @@ Response:
     {
         "daily_usage": [
             {
-                "date": "2019-02-03T00:00:00Z",
+                "date": "2019-02-24T00:00:00Z",
                 "openshift_images": 0,
                 "openshift_instances": 0,
                 "openshift_memory_seconds": 0.0,
@@ -835,7 +835,7 @@ Response:
                 "rhel_vcpu_seconds": 0.0
             },
             {
-                "date": "2019-02-04T00:00:00Z",
+                "date": "2019-02-25T00:00:00Z",
                 "openshift_images": 0,
                 "openshift_instances": 0,
                 "openshift_memory_seconds": 0.0,
@@ -848,7 +848,7 @@ Response:
                 "rhel_vcpu_seconds": 0.0
             },
             {
-                "date": "2019-02-05T00:00:00Z",
+                "date": "2019-02-26T00:00:00Z",
                 "openshift_images": 0,
                 "openshift_instances": 0,
                 "openshift_memory_seconds": 0.0,
@@ -876,8 +876,8 @@ Request:
 .. code:: bash
 
     http localhost:8080/api/v1/report/accounts/ "${AUTH}" \
-        start=="2019-02-03 00:00:00+00:00" \
-        end=="2019-02-06 00:00:00+00:00"
+        start=="2019-02-24 00:00:00+00:00" \
+        end=="2019-02-27 00:00:00+00:00"
 
 Response:
 
@@ -885,7 +885,7 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 1051
+    Content-Length: 1049
     Content-Type: application/json
     Vary: Accept
     X-Frame-Options: SAMEORIGIN
@@ -893,10 +893,10 @@ Response:
     {
         "cloud_account_overviews": [
             {
-                "arn": "arn:aws:iam::71641443264:role/role-for-cloudigrade",
-                "cloud_account_id": 71641443264.0,
-                "creation_date": "2019-01-23T00:00:00Z",
-                "id": 17,
+                "arn": "arn:aws:iam::937635791276:role/role-for-cloudigrade",
+                "cloud_account_id": "937635791276",
+                "creation_date": "2019-02-13T00:00:00Z",
+                "id": 2,
                 "images": 2,
                 "instances": 2,
                 "name": "greatest account ever",
@@ -911,13 +911,13 @@ Response:
                 "rhel_runtime_seconds": 0.0,
                 "rhel_vcpu_seconds": 0.0,
                 "type": "aws",
-                "user_id": 12
+                "user_id": 2
             },
             {
-                "arn": "arn:aws:iam::204233690675:role/role-for-cloudigrade",
-                "cloud_account_id": 204233690675.0,
-                "creation_date": "2019-02-06T23:01:33.364387Z",
-                "id": 18,
+                "arn": "arn:aws:iam::486088907480:role/role-for-cloudigrade",
+                "cloud_account_id": "486088907480",
+                "creation_date": "2019-02-27T15:21:52.795897Z",
+                "id": 3,
                 "images": null,
                 "instances": null,
                 "name": "name updated using PUT",
@@ -932,7 +932,7 @@ Response:
                 "rhel_runtime_seconds": null,
                 "rhel_vcpu_seconds": null,
                 "type": "aws",
-                "user_id": 12
+                "user_id": 2
             }
         ]
     }
@@ -985,8 +985,8 @@ Request:
 .. code:: bash
 
     http localhost:8080/api/v1/report/accounts/ "${AUTH}" \
-        start=="2019-02-03 00:00:00+00:00" \
-        end=="2019-02-06 00:00:00+00:00" \
+        start=="2019-02-24 00:00:00+00:00" \
+        end=="2019-02-27 00:00:00+00:00" \
         name_pattern=="eat tofu"
 
 Response:
@@ -1003,10 +1003,10 @@ Response:
     {
         "cloud_account_overviews": [
             {
-                "arn": "arn:aws:iam::71641443264:role/role-for-cloudigrade",
-                "cloud_account_id": 71641443264.0,
-                "creation_date": "2019-01-23T00:00:00Z",
-                "id": 17,
+                "arn": "arn:aws:iam::937635791276:role/role-for-cloudigrade",
+                "cloud_account_id": "937635791276",
+                "creation_date": "2019-02-13T00:00:00Z",
+                "id": 2,
                 "images": 2,
                 "instances": 2,
                 "name": "greatest account ever",
@@ -1021,7 +1021,7 @@ Response:
                 "rhel_runtime_seconds": 0.0,
                 "rhel_vcpu_seconds": 0.0,
                 "type": "aws",
-                "user_id": 12
+                "user_id": 2
             }
         ]
     }
@@ -1039,9 +1039,9 @@ Request:
 .. code:: bash
 
     http localhost:8080/api/v1/report/images/ "${AUTH}" \
-        start=="2019-02-03 00:00:00+00:00" \
-        end=="2019-02-06 00:00:00+00:00" \
-        account_id=="17"
+        start=="2019-02-24 00:00:00+00:00" \
+        end=="2019-02-27 00:00:00+00:00" \
+        account_id=="2"
 
 Response:
 
@@ -1049,7 +1049,7 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 732
+    Content-Length: 730
     Content-Type: application/json
     Vary: Accept
     X-Frame-Options: SAMEORIGIN
@@ -1057,8 +1057,8 @@ Response:
     {
         "images": [
             {
-                "cloud_image_id": "ami-7f8e9000",
-                "id": 38,
+                "cloud_image_id": "ami-b2363984",
+                "id": 3,
                 "instances_seen": 1,
                 "is_cloud_access": false,
                 "is_encrypted": false,
@@ -1076,8 +1076,8 @@ Response:
                 "vcpu_seconds": 0.0
             },
             {
-                "cloud_image_id": "ami-693ffbc1",
-                "id": 39,
+                "cloud_image_id": "ami-8b3032a0",
+                "id": 4,
                 "instances_seen": 1,
                 "is_cloud_access": false,
                 "is_encrypted": false,
@@ -1116,7 +1116,7 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 201
+    Content-Length: 199
     Content-Type: application/json
     Vary: Accept
     X-Frame-Options: SAMEORIGIN
@@ -1125,14 +1125,14 @@ Response:
         {
             "accounts": 1,
             "challenged_images": 1,
-            "id": 11,
+            "id": 1,
             "is_superuser": true,
             "username": "superuser@example.com"
         },
         {
             "accounts": 2,
             "challenged_images": 2,
-            "id": 12,
+            "id": 2,
             "is_superuser": false,
             "username": "customer@example.com"
         }
@@ -1146,7 +1146,7 @@ Request:
 
 .. code:: bash
 
-    http localhost:8080/api/v1/user/12/ "${AUTH}"
+    http localhost:8080/api/v1/user/2/ "${AUTH}"
 
 Response:
 
@@ -1154,7 +1154,7 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 99
+    Content-Length: 98
     Content-Type: application/json
     Vary: Accept
     X-Frame-Options: SAMEORIGIN
@@ -1162,7 +1162,7 @@ Response:
     {
         "accounts": 2,
         "challenged_images": 2,
-        "id": 12,
+        "id": 2,
         "is_superuser": false,
         "username": "customer@example.com"
     }
@@ -1188,7 +1188,7 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 1443
+    Content-Length: 1441
     Content-Type: application/json
     Vary: Accept
     X-Frame-Options: SAMEORIGIN
@@ -1199,9 +1199,9 @@ Response:
         "previous": null,
         "results": [
             {
-                "created_at": "2019-02-06T23:01:32.591925Z",
-                "ec2_ami_id": "ami-d7322741",
-                "id": 41,
+                "created_at": "2019-02-27T15:21:52.392469Z",
+                "ec2_ami_id": "ami-120f461c",
+                "id": 6,
                 "inspection_json": "{\"rhel_enabled_repos_found\": true}",
                 "is_cloud_access": false,
                 "is_encrypted": false,
@@ -1210,7 +1210,7 @@ Response:
                 "openshift": true,
                 "openshift_challenged": true,
                 "openshift_detected": false,
-                "owner_aws_account_id": "71641443264",
+                "owner_aws_account_id": "937635791276",
                 "platform": "none",
                 "region": "us-east-1",
                 "resourcetype": "AwsMachineImage",
@@ -1222,13 +1222,13 @@ Response:
                 "rhel_release_files_found": false,
                 "rhel_signed_packages_found": false,
                 "status": "inspected",
-                "updated_at": "2019-02-06T23:01:32.816327Z",
-                "url": "http://localhost:8080/api/v1/image/41/"
+                "updated_at": "2019-02-27T15:21:52.458064Z",
+                "url": "http://localhost:8080/api/v1/image/6/"
             },
             {
-                "created_at": "2019-02-06T23:01:32.740610Z",
-                "ec2_ami_id": "ami-ca5ac2e7",
-                "id": 42,
+                "created_at": "2019-02-27T15:21:52.413831Z",
+                "ec2_ami_id": "ami-b9b42e5b",
+                "id": 7,
                 "inspection_json": "{\"rhel_enabled_repos_found\": true}",
                 "is_cloud_access": false,
                 "is_encrypted": false,
@@ -1237,7 +1237,7 @@ Response:
                 "openshift": true,
                 "openshift_challenged": true,
                 "openshift_detected": false,
-                "owner_aws_account_id": "71641443264",
+                "owner_aws_account_id": "937635791276",
                 "platform": "none",
                 "region": "us-east-1",
                 "resourcetype": "AwsMachineImage",
@@ -1249,8 +1249,8 @@ Response:
                 "rhel_release_files_found": false,
                 "rhel_signed_packages_found": false,
                 "status": "inspected",
-                "updated_at": "2019-02-06T23:01:32.839029Z",
-                "url": "http://localhost:8080/api/v1/image/42/"
+                "updated_at": "2019-02-27T15:21:52.463138Z",
+                "url": "http://localhost:8080/api/v1/image/7/"
             }
         ]
     }
@@ -1265,7 +1265,7 @@ Request:
 .. code:: bash
 
     http localhost:8080/api/v1/image/ "${AUTH}" \
-        user_id=="11"
+        user_id=="1"
 
 Response:
 
@@ -1273,7 +1273,7 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 748
+    Content-Length: 746
     Content-Type: application/json
     Vary: Accept
     X-Frame-Options: SAMEORIGIN
@@ -1284,9 +1284,9 @@ Response:
         "previous": null,
         "results": [
             {
-                "created_at": "2019-02-06T23:01:32.435106Z",
-                "ec2_ami_id": "ami-8792914c",
-                "id": 37,
+                "created_at": "2019-02-27T15:21:52.324861Z",
+                "ec2_ami_id": "ami-b7e37e80",
+                "id": 2,
                 "inspection_json": "{\"rhel_enabled_repos_found\": true}",
                 "is_cloud_access": false,
                 "is_encrypted": false,
@@ -1295,7 +1295,7 @@ Response:
                 "openshift": true,
                 "openshift_challenged": true,
                 "openshift_detected": false,
-                "owner_aws_account_id": "666340074959",
+                "owner_aws_account_id": "142735702789",
                 "platform": "none",
                 "region": "us-east-1",
                 "resourcetype": "AwsMachineImage",
@@ -1307,8 +1307,8 @@ Response:
                 "rhel_release_files_found": false,
                 "rhel_signed_packages_found": false,
                 "status": "inspected",
-                "updated_at": "2019-02-06T23:01:32.848715Z",
-                "url": "http://localhost:8080/api/v1/image/37/"
+                "updated_at": "2019-02-27T15:21:52.434087Z",
+                "url": "http://localhost:8080/api/v1/image/2/"
             }
         ]
     }
@@ -1321,7 +1321,7 @@ Request:
 
 .. code:: bash
 
-    http localhost:8080/api/v1/image/41/ "${AUTH}"
+    http localhost:8080/api/v1/image/2/ "${AUTH}"
 
 Response:
 
@@ -1329,15 +1329,15 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, PUT, PATCH, HEAD, OPTIONS
-    Content-Length: 695
+    Content-Length: 694
     Content-Type: application/json
     Vary: Accept
     X-Frame-Options: SAMEORIGIN
 
     {
-        "created_at": "2019-02-06T23:01:32.591925Z",
-        "ec2_ami_id": "ami-d7322741",
-        "id": 41,
+        "created_at": "2019-02-27T15:21:52.324861Z",
+        "ec2_ami_id": "ami-b7e37e80",
+        "id": 2,
         "inspection_json": "{\"rhel_enabled_repos_found\": true}",
         "is_cloud_access": false,
         "is_encrypted": false,
@@ -1346,7 +1346,7 @@ Response:
         "openshift": true,
         "openshift_challenged": true,
         "openshift_detected": false,
-        "owner_aws_account_id": "71641443264",
+        "owner_aws_account_id": "142735702789",
         "platform": "none",
         "region": "us-east-1",
         "resourcetype": "AwsMachineImage",
@@ -1358,8 +1358,8 @@ Response:
         "rhel_release_files_found": false,
         "rhel_signed_packages_found": false,
         "status": "inspected",
-        "updated_at": "2019-02-06T23:01:32.816327Z",
-        "url": "http://localhost:8080/api/v1/image/41/"
+        "updated_at": "2019-02-27T15:21:52.434087Z",
+        "url": "http://localhost:8080/api/v1/image/2/"
     }
 
 
@@ -1374,7 +1374,7 @@ Request:
 
 .. code:: bash
 
-    http post localhost:8080/api/v1/image/41/reinspect/ "${AUTH}"
+    http post localhost:8080/api/v1/image/2/reinspect/ "${AUTH}"
 
 Response:
 
@@ -1382,15 +1382,15 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: POST, OPTIONS
-    Content-Length: 693
+    Content-Length: 692
     Content-Type: application/json
     Vary: Accept
     X-Frame-Options: SAMEORIGIN
 
     {
-        "created_at": "2019-02-06T23:01:32.591925Z",
-        "ec2_ami_id": "ami-d7322741",
-        "id": 41,
+        "created_at": "2019-02-27T15:21:52.324861Z",
+        "ec2_ami_id": "ami-b7e37e80",
+        "id": 2,
         "inspection_json": "{\"rhel_enabled_repos_found\": true}",
         "is_cloud_access": false,
         "is_encrypted": false,
@@ -1399,7 +1399,7 @@ Response:
         "openshift": true,
         "openshift_challenged": true,
         "openshift_detected": false,
-        "owner_aws_account_id": "71641443264",
+        "owner_aws_account_id": "142735702789",
         "platform": "none",
         "region": "us-east-1",
         "resourcetype": "AwsMachineImage",
@@ -1411,8 +1411,8 @@ Response:
         "rhel_release_files_found": false,
         "rhel_signed_packages_found": false,
         "status": "pending",
-        "updated_at": "2019-02-06T23:01:35.087077Z",
-        "url": "http://localhost:8080/api/v1/image/41/"
+        "updated_at": "2019-02-27T15:21:53.338367Z",
+        "url": "http://localhost:8080/api/v1/image/2/"
     }
 
 
@@ -1425,7 +1425,7 @@ Request:
 
 .. code:: bash
 
-    http patch localhost:8080/api/v1/image/41/ "${AUTH}" \
+    http patch localhost:8080/api/v1/image/2/ "${AUTH}" \
         rhel_challenged="True" \
         resourcetype="AwsMachineImage"
 
@@ -1435,15 +1435,15 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, PUT, PATCH, HEAD, OPTIONS
-    Content-Length: 693
+    Content-Length: 692
     Content-Type: application/json
     Vary: Accept
     X-Frame-Options: SAMEORIGIN
 
     {
-        "created_at": "2019-02-06T23:01:32.591925Z",
-        "ec2_ami_id": "ami-d7322741",
-        "id": 41,
+        "created_at": "2019-02-27T15:21:52.324861Z",
+        "ec2_ami_id": "ami-b7e37e80",
+        "id": 2,
         "inspection_json": "{\"rhel_enabled_repos_found\": true}",
         "is_cloud_access": false,
         "is_encrypted": false,
@@ -1452,7 +1452,7 @@ Response:
         "openshift": true,
         "openshift_challenged": true,
         "openshift_detected": false,
-        "owner_aws_account_id": "71641443264",
+        "owner_aws_account_id": "142735702789",
         "platform": "none",
         "region": "us-east-1",
         "resourcetype": "AwsMachineImage",
@@ -1464,8 +1464,8 @@ Response:
         "rhel_release_files_found": false,
         "rhel_signed_packages_found": false,
         "status": "pending",
-        "updated_at": "2019-02-06T23:01:35.208087Z",
-        "url": "http://localhost:8080/api/v1/image/41/"
+        "updated_at": "2019-02-27T15:21:53.371008Z",
+        "url": "http://localhost:8080/api/v1/image/2/"
     }
 
 If you'd like to remove a challenge, simply send the same challenge with False as the value.
@@ -1474,7 +1474,7 @@ Request:
 
 .. code:: bash
 
-    http patch localhost:8080/api/v1/image/41/ "${AUTH}" \
+    http patch localhost:8080/api/v1/image/2/ "${AUTH}" \
         rhel_challenged="False" \
         resourcetype="AwsMachineImage"
 
@@ -1484,15 +1484,15 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, PUT, PATCH, HEAD, OPTIONS
-    Content-Length: 693
+    Content-Length: 692
     Content-Type: application/json
     Vary: Accept
     X-Frame-Options: SAMEORIGIN
 
     {
-        "created_at": "2019-02-06T23:01:32.591925Z",
-        "ec2_ami_id": "ami-d7322741",
-        "id": 41,
+        "created_at": "2019-02-27T15:21:52.324861Z",
+        "ec2_ami_id": "ami-b7e37e80",
+        "id": 2,
         "inspection_json": "{\"rhel_enabled_repos_found\": true}",
         "is_cloud_access": false,
         "is_encrypted": false,
@@ -1501,7 +1501,7 @@ Response:
         "openshift": true,
         "openshift_challenged": true,
         "openshift_detected": false,
-        "owner_aws_account_id": "71641443264",
+        "owner_aws_account_id": "142735702789",
         "platform": "none",
         "region": "us-east-1",
         "resourcetype": "AwsMachineImage",
@@ -1513,8 +1513,8 @@ Response:
         "rhel_release_files_found": false,
         "rhel_signed_packages_found": false,
         "status": "pending",
-        "updated_at": "2019-02-06T23:01:35.256609Z",
-        "url": "http://localhost:8080/api/v1/image/41/"
+        "updated_at": "2019-02-27T15:21:53.385561Z",
+        "url": "http://localhost:8080/api/v1/image/2/"
     }
 
 You can challenge both at the same time.
@@ -1523,7 +1523,7 @@ Request:
 
 .. code:: bash
 
-    http patch localhost:8080/api/v1/image/41/ "${AUTH}" \
+    http patch localhost:8080/api/v1/image/2/ "${AUTH}" \
         rhel_challenged="True" \
         openshift_challenged="True" \
         resourcetype="AwsMachineImage"
@@ -1534,15 +1534,15 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, PUT, PATCH, HEAD, OPTIONS
-    Content-Length: 693
+    Content-Length: 692
     Content-Type: application/json
     Vary: Accept
     X-Frame-Options: SAMEORIGIN
 
     {
-        "created_at": "2019-02-06T23:01:32.591925Z",
-        "ec2_ami_id": "ami-d7322741",
-        "id": 41,
+        "created_at": "2019-02-27T15:21:52.324861Z",
+        "ec2_ami_id": "ami-b7e37e80",
+        "id": 2,
         "inspection_json": "{\"rhel_enabled_repos_found\": true}",
         "is_cloud_access": false,
         "is_encrypted": false,
@@ -1551,7 +1551,7 @@ Response:
         "openshift": true,
         "openshift_challenged": true,
         "openshift_detected": false,
-        "owner_aws_account_id": "71641443264",
+        "owner_aws_account_id": "142735702789",
         "platform": "none",
         "region": "us-east-1",
         "resourcetype": "AwsMachineImage",
@@ -1563,8 +1563,8 @@ Response:
         "rhel_release_files_found": false,
         "rhel_signed_packages_found": false,
         "status": "pending",
-        "updated_at": "2019-02-06T23:01:35.282142Z",
-        "url": "http://localhost:8080/api/v1/image/41/"
+        "updated_at": "2019-02-27T15:21:53.398651Z",
+        "url": "http://localhost:8080/api/v1/image/2/"
     }
 
 
@@ -1594,7 +1594,7 @@ Response:
     X-Frame-Options: SAMEORIGIN
 
     {
-        "aws_account_id": 411939644880,
+        "aws_account_id": 171191549947,
         "aws_policies": {
             "traditional_inspection": {
                 "Statement": [
@@ -1645,7 +1645,7 @@ Response:
     X-Frame-Options: SAMEORIGIN
 
     {
-        "aws_account_id": 411939644880,
+        "aws_account_id": 171191549947,
         "aws_policies": {
             "traditional_inspection": {
                 "Statement": [

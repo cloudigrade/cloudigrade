@@ -272,7 +272,7 @@ class AwsAccount(Account):
     @property
     def cloud_account_id(self):
         """Get the AWS Account ID for this account."""
-        return self.aws_account_id
+        return str(self.aws_account_id)
 
     @property
     def cloud_type(self):

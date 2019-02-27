@@ -113,7 +113,7 @@ class CloudAccountOverviewViewSetTest(TestCase):
         self.factory = APIRequestFactory()
         self.account1_expected_overview = {
             'id': self.account1.id,
-            'cloud_account_id': self.account1.aws_account_id,
+            'cloud_account_id': self.account1.cloud_account_id,
             'user_id': self.account1.user_id,
             'type': 'aws',
             'arn': self.account1.account_arn,
@@ -134,7 +134,7 @@ class CloudAccountOverviewViewSetTest(TestCase):
         }
         self.account2_expected_overview = {
             'id': self.account2.id,
-            'cloud_account_id': self.account2.aws_account_id,
+            'cloud_account_id': self.account2.cloud_account_id,
             'user_id': self.account2.user_id,
             'type': 'aws',
             'arn': self.account2.account_arn,
@@ -155,7 +155,7 @@ class CloudAccountOverviewViewSetTest(TestCase):
         }
         self.account3_expected_overview = {
             'id': self.account3.id,
-            'cloud_account_id': self.account3.aws_account_id,
+            'cloud_account_id': self.account3.cloud_account_id,
             'user_id': self.account3.user_id,
             'type': 'aws',
             'arn': self.account3.account_arn,
@@ -176,7 +176,7 @@ class CloudAccountOverviewViewSetTest(TestCase):
         }
         self.account4_expected_overview = {
             'id': self.account4.id,
-            'cloud_account_id': self.account4.aws_account_id,
+            'cloud_account_id': self.account4.cloud_account_id,
             'user_id': self.account4.user_id,
             'type': 'aws',
             'arn': self.account4.account_arn,

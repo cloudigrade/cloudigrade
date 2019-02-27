@@ -994,7 +994,7 @@ class GetCloudAccountOverview(TestCase):
         """Assert results match the expected account info and counters."""
         expected_overview = {
             'id': account.id,
-            'cloud_account_id': account.aws_account_id,
+            'cloud_account_id': account.cloud_account_id,
             'user_id': account.user_id,
             'type': account.cloud_type,
             'arn': account.account_arn,
