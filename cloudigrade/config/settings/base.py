@@ -345,6 +345,8 @@ CELERY_TASK_ROUTES = {
         {'queue': 'scale_down_cluster'},
     'analyzer.tasks.analyze_log':
         {'queue': 'analyze_log'},
+    'analyzer.tasks.process_instance_event':
+        {'queue': 'process_instance_event'},
     'analyzer.tasks.repopulate_ec2_instance_mapping':
         {'queue': 'repopulate_ec2_instance_mapping'},
 }
