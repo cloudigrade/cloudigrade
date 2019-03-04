@@ -6,7 +6,6 @@ from rest_framework.test import APIRequestFactory, force_authenticate
 
 from account.models import (InstanceEvent)
 from account.tests import helper as account_helper
-from account.util import recalculate_runs
 from account.views import (CloudAccountOverviewViewSet)
 from util.tests import helper as util_helper
 
@@ -112,7 +111,9 @@ class CloudAccountOverviewViewSetTest(TestCase):
                 ec2_ami_id=self.openshift_and_rhel_image.ec2_ami_id,
                 instance_type=self.instance_type)
 
-        recalculate_runs([self.event1, self.event2, self.event3, self.event4])
+        account_helper.recalculate_runs_from_events(
+            [self.event1, self.event2, self.event3, self.event4]
+        )
         self.factory = APIRequestFactory()
         self.account1_expected_overview = {
             'id': self.account1.id,

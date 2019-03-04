@@ -16,7 +16,6 @@ from account.models import (
     Run
 )
 from account.tests import helper as account_helper
-from account.util import recalculate_runs
 from analyzer import tasks
 from analyzer.tests import helper as analyzer_helper
 from util.tests import helper as util_helper
@@ -904,10 +903,15 @@ class AnalyzeLogTest(TestCase):
         """
         instance = account_helper.generate_aws_instance(self.mock_account)
 
-        run_time = (util_helper.utc_dt(2018, 1, 2, 0, 0, 0),
-                    None)
+        started_at = util_helper.utc_dt(2018, 1, 2, 0, 0, 0)
 
-        account_helper.generate_single_run(instance, run_time)
+        start_event = account_helper.generate_single_aws_instance_event(
+            instance,
+            occurred_at=started_at,
+            event_type=InstanceEvent.TYPE.power_on,
+            no_instance_type=True
+        )
+        tasks.process_instance_event(start_event)
 
         occurred_at = util_helper.utc_dt(2018, 1, 13, 0, 0, 0)
 
@@ -915,13 +919,13 @@ class AnalyzeLogTest(TestCase):
             instance=instance,
             occurred_at=occurred_at,
             event_type=InstanceEvent.TYPE.power_off,
-            instance_type=None
+            no_instance_type=True
         )
         tasks.process_instance_event(instance_event)
 
         runs = list(Run.objects.all())
         self.assertEqual(1, len(runs))
-        self.assertEqual(run_time[0], runs[0].start_time)
+        self.assertEqual(started_at, runs[0].start_time)
         self.assertEqual(occurred_at, runs[0].end_time)
 
     @patch('analyzer.tasks.recalculate_runs')
@@ -969,13 +973,15 @@ class AnalyzeLogTest(TestCase):
         Initial Runs (5,7):
             [    ###        ]
 
-        New instance power on event at (1,) results in the run being updated:
+        New power on event at (1,) results in the run being updated:
             [#######        ]
 
-        New instance power on event at (3,) results in the run not being updated:
+        New power on event at (3,) results in the run not being updated:
             [#######        ]
 
         """
+        instance_type = 't1.potato'
+
         instance = account_helper.generate_aws_instance(self.mock_account)
 
         run_time = [(
@@ -985,18 +991,17 @@ class AnalyzeLogTest(TestCase):
 
         instance_events = account_helper.generate_aws_instance_events(
             instance, run_time,
-            instance_type=None
+            instance_type=instance_type
         )
+        account_helper.recalculate_runs_from_events(instance_events)
 
-        recalculate_runs(instance_events)
-
-        occurred_at = util_helper.utc_dt(2018, 1, 1, 0, 0, 0)
+        first_start = util_helper.utc_dt(2018, 1, 1, 0, 0, 0)
 
         instance_event = account_helper.generate_single_aws_instance_event(
             instance=instance,
-            occurred_at=occurred_at,
+            occurred_at=first_start,
             event_type=InstanceEvent.TYPE.power_on,
-            instance_type=None
+            instance_type=instance_type
         )
 
         tasks.process_instance_event(instance_event)
@@ -1004,24 +1009,24 @@ class AnalyzeLogTest(TestCase):
         runs = list(Run.objects.all())
         self.assertEqual(1, len(runs))
         self.assertEqual(run_time[0][1], runs[0].end_time)
-        self.assertEqual(occurred_at, runs[0].start_time)
+        self.assertEqual(first_start, runs[0].start_time)
 
+        second_start = util_helper.utc_dt(2018, 1, 3, 0, 0, 0)
 
-        occurred_at = util_helper.utc_dt(2018, 1, 3, 0, 0, 0)
-
-        dup_start_instance_event = account_helper.generate_single_aws_instance_event(
-            instance=instance,
-            occurred_at=occurred_at,
-            event_type=InstanceEvent.TYPE.power_on,
-            instance_type=None
-        )
+        dup_start_instance_event = \
+            account_helper.generate_single_aws_instance_event(
+                instance=instance,
+                occurred_at=second_start,
+                event_type=InstanceEvent.TYPE.power_on,
+                instance_type=instance_type,
+            )
 
         tasks.process_instance_event(dup_start_instance_event)
 
         runs = list(Run.objects.all())
         self.assertEqual(1, len(runs))
         self.assertEqual(run_time[0][1], runs[0].end_time)
-        self.assertEqual(occurred_at, runs[0].start_time)
+        self.assertEqual(first_start, runs[0].start_time)
 
     @patch('analyzer.tasks.recalculate_runs')
     def test_process_instance_event_power_off(self, mock_recalculate_runs):

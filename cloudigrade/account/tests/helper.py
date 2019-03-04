@@ -16,6 +16,7 @@ from account.models import (AwsAccount, AwsEC2InstanceDefinitions, AwsInstance,
                             AwsInstanceEvent, AwsMachineImage,
                             CLOUD_ACCESS_NAME_TOKEN, InstanceEvent,
                             MARKETPLACE_NAME_TOKEN, MachineImage, Run)
+from account.util import recalculate_runs
 from util import aws
 from util.tests import helper
 
@@ -293,7 +294,7 @@ def generate_single_aws_instance_event(
 
 def generate_aws_instance_events(
     instance, powered_times, ec2_ami_id=None, instance_type=None, subnet=None,
-    no_image=False,
+    no_image=False, no_instance_type=False
 ):
     """
     Generate list of AwsInstanceEvents for the AwsInstance for testing.
@@ -315,6 +316,7 @@ def generate_aws_instance_events(
         instance_type (str): Optional AWS instance type.
         subnet (str): Optional subnet ID where instance runs.
         no_image (bool): If true, don't assign an image.
+        no_instance_type (bool): If true, instance_type is not set
 
     Returns:
         list(AwsInstanceEvent): The list of created AwsInstanceEvents.
@@ -324,7 +326,9 @@ def generate_aws_instance_events(
         ec2_ami_id = None
     elif ec2_ami_id is None:
         ec2_ami_id = helper.generate_dummy_image_id()
-    if instance_type is None:
+    if no_instance_type:
+        instance_type = None
+    elif instance_type is None:
         instance_type = random.choice(
             tuple(helper.SOME_EC2_INSTANCE_TYPES.keys())
         )
@@ -342,6 +346,7 @@ def generate_aws_instance_events(
                 instance_type=instance_type,
                 subnet=subnet,
                 no_image=no_image,
+                no_instance_type=no_instance_type
             )
             events.append(event)
         if power_off_time is not None:
@@ -355,6 +360,7 @@ def generate_aws_instance_events(
                 instance_type=instance_type,
                 subnet=subnet,
                 no_image=True,
+                no_instance_type=no_instance_type
             )
             events.append(event)
     return events
@@ -451,7 +457,7 @@ def generate_aws_ec2_definitions():
 
 def generate_runs(instance, runtimes, **kwargs):
     """
-    Generate multiple Run for testing.
+    Generate multiple Runs for testing.
 
     Args:
         instance (AwsInstance): instance that was ran.
@@ -471,9 +477,10 @@ def generate_runs(instance, runtimes, **kwargs):
 
 def generate_single_run(instance, runtime,
                         image=None, no_image=False,
-                        instance_type=None):
+                        instance_type=None,
+                        no_instance_type=False):
     """
-    Generate a single Run for testing.
+    Generate a single Run (and related events) for testing.
 
     Args:
         instance (AwsInstance): instance that was ran.
@@ -482,11 +489,14 @@ def generate_single_run(instance, runtime,
         image (Image): image that was ran.
         no_image (bool): If true, don't create and assign an image.
         instance_type (str): Optional AWS instance type.
+        no_instance_type (bool): Optional indication that instance has no type.
     Returns:
         Run: The created Run.
 
     """
-    if instance_type is None:
+    if no_instance_type:
+        instance_type = None
+    elif instance_type is None:
         instance_type = random.choice(
             tuple(helper.SOME_EC2_INSTANCE_TYPES.keys())
         )
@@ -505,5 +515,31 @@ def generate_single_run(instance, runtime,
         memory=helper.SOME_EC2_INSTANCE_TYPES[instance_type]['memory'] if
         instance_type in helper.SOME_EC2_INSTANCE_TYPES else None,
     )
-
+    generate_single_aws_instance_event(
+        instance=instance,
+        occurred_at=runtime[0],
+        event_type=InstanceEvent.TYPE.power_on,
+        instance_type=instance_type,
+        no_instance_type=no_instance_type
+    )
+    if runtime[1]:
+        generate_single_aws_instance_event(
+            instance=instance,
+            occurred_at=runtime[0],
+            event_type=InstanceEvent.TYPE.power_off,
+            instance_type=instance_type,
+            no_instance_type=no_instance_type
+        )
     return run
+
+
+def recalculate_runs_from_events(events):
+    """
+    Run recalculate_runs on multiple events.
+
+    Args:
+        events (list(model.InstanceEvents)): events to recalculate
+
+    """
+    for event in events:
+        recalculate_runs(event)

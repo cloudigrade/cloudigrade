@@ -7,7 +7,6 @@ from django.test import TestCase
 from account import reports
 from account.models import InstanceEvent
 from account.tests import helper as account_helper
-from account.util import recalculate_runs
 from util.tests import helper as util_helper
 
 HOUR = 60. * 60
@@ -329,7 +328,7 @@ class GetDailyUsageBasicInstanceTest(GetDailyUsageTestBase):
         )
         events = self.generate_events(powered_times)
 
-        recalculate_runs(events)
+        account_helper.recalculate_runs_from_events(events)
 
         results = reports.get_daily_usage(self.user_1.id, self.start, self.end)
         self.assertTotalRunningTimes(
@@ -1432,7 +1431,7 @@ class GetCloudAccountOverview(TestCase):
             )
         )
 
-        recalculate_runs(events)
+        account_helper.recalculate_runs_from_events(events)
 
         overview = reports.get_account_overview(
             self.account, self.start, self.end
@@ -1508,7 +1507,7 @@ class GetCloudAccountOverview(TestCase):
             )
         )
 
-        recalculate_runs(events)
+        account_helper.recalculate_runs_from_events(events)
 
         overview = reports.get_account_overview(
             self.account, self.start, self.end
@@ -1608,7 +1607,7 @@ class GetCloudAccountOverview(TestCase):
             )
         )
 
-        recalculate_runs(events)
+        account_helper.recalculate_runs_from_events(events)
 
         overview = reports.get_account_overview(
             self.account, self.start, self.end

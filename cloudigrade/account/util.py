@@ -8,6 +8,7 @@ import boto3
 import jsonpickle
 from botocore.exceptions import ClientError
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import gettext as _
 from rest_framework.serializers import ValidationError
@@ -147,16 +148,20 @@ def save_instance_events(instance, instance_data, events=None):
     else:
         logger.info(_('saving %(count)s new event(s) for %(instance)s'),
                     {'count': len(events), 'instance': instance})
-        for event in events:
+        for e in events:
             event = AwsInstanceEvent(
                 instance=instance,
                 machineimage=machineimage,
-                event_type=event['event_type'],
-                occurred_at=event['occurred_at'],
-                subnet=event['subnet'],
-                instance_type=event['instance_type'],
+                event_type=e['event_type'],
+                occurred_at=e['occurred_at'],
+                subnet=e['subnet'],
+                instance_type=e['instance_type'],
             )
             event.save()
+
+            # Need to reload event from DB, otherwise occurred_at is passed
+            # as a string instead of a datetime object.
+            event.refresh_from_db()
             analyzer_tasks.process_instance_event(event)
 
     return instance
@@ -496,97 +501,28 @@ def convert_param_to_int(name, value):
         raise ValidationError(error)
 
 
-def recalculate_runs(new_events):
-    """Take in events and calculate runs based on them."""
-    for event in new_events:
-        # check if event occurred before any runs
-        if Run.objects.filter(
-                instance_id=event.instance_id,
-                start_time__gte=event.occurred_at
-        ).exists():
-            # need to torch these runs
-            runs = Run.objects.filter(
-                instance_id=event.instance_id,
-                start_time__gte=event.occurred_at)
-            events = InstanceEvent.objects.filter(
-                instance_id=event.instance_id,
-                occurred_at__gte=event.occurred_at) \
-                .select_related('instance') \
-                .prefetch_related('machineimage') \
-                .order_by('instance__id')
-            normalized_runs = normalize_runs(events)
+def recalculate_runs(event):
+    """Take in an event and calculate runs based on them."""
+    # Get all runs that occurred after event or occurred during event.
+    after_run = Q(start_time__gt=event.occurred_at)
+    during_run = Q(start_time__lte=event.occurred_at,
+                   end_time__gt=event.occurred_at)
+    during_run_no_end = Q(start_time__lte=event.occurred_at,
+                          end_time=None)
+    filters = after_run | during_run | during_run_no_end
+    runs = Run.objects.filter(filters, instance_id=event.instance_id)
 
-            with transaction.atomic():
-                runs.delete()
-                for index, normalized_run in enumerate(normalized_runs):
-                    logger.info('Processing run {} of {}'.format(
-                        index + 1, len(normalized_runs)))
-                    run = Run(
-                        start_time=normalized_run.start_time,
-                        end_time=normalized_run.end_time,
-                        machineimage_id=normalized_run.image_id,
-                        instance_id=normalized_run.instance_id,
-                        instance_type=normalized_run.instance_type,
-                        memory=normalized_run.instance_memory,
-                        vcpu=normalized_run.instance_vcpu,
-                    )
-                    run.save()
-
-        # check to see if event occurred within a run
-        elif Run.objects.filter(
-                instance_id=event.instance_id,
-                start_time__lt=event.occurred_at,
-                end_time__gt=event.occurred_at).exists():
-            runs = Run.objects.filter(
-                instance_id=event.instance_id,
-                start_time__lt=event.occurred_at,
-                end_time__gt=event.occurred_at)
-            events = InstanceEvent.objects.filter(
-                instance_id=event.instance_id,
-                occurred_at__gte=event.occurred_at) \
-                .select_related('instance') \
-                .prefetch_related('machineimage') \
-                .order_by('instance__id')
-            normalized_runs = normalize_runs(events)
-
-            with transaction.atomic():
-                runs.delete()
-                for index, normalized_run in enumerate(normalized_runs):
-                    logger.info('Processing run {} of {}'.format(
-                        index + 1, len(normalized_runs)))
-                    run = Run(
-                        start_time=normalized_run.start_time,
-                        end_time=normalized_run.end_time,
-                        machineimage_id=normalized_run.image_id,
-                        instance_id=normalized_run.instance_id,
-                        instance_type=normalized_run.instance_type,
-                        memory=normalized_run.instance_memory,
-                        vcpu=normalized_run.instance_vcpu,
-                    )
-                    run.save()
-
-        # if this is a power off event, and we have a run with no end_time.
-        # complete it
-        elif event.event_type == event.TYPE.power_off and Run.objects.filter(
-                instance_id=event.instance_id,
-                start_time__lt=event.occurred_at,
-                end_time=None
-        ).exists():
-            run = Run.objects.filter(
-                instance_id=event.instance_id,
-                start_time__lt=event.occurred_at,
-                end_time=None
-            ).earliest('start_time')
-            run.end_time = event.occurred_at
-            run.save()
-
-        # if event is a power on event, and we didn't hit previous checks,
-        # create a new run
-        elif event.event_type == event.TYPE.power_on and not \
-                Run.objects.filter(
-                    instance_id=event.instance_id,
-                    end_time=None,
-                ).exists():
+    # Get the earliest time of relevant runs.
+    # We can use this as a baseline to fetch all relevant events.
+    # All of these runs get torched, since we recalculate them based
+    # on the newest event.
+    # If no runs exist in this query, this event is the start of a new run
+    try:
+        earliest_run = runs.earliest('start_time').start_time \
+            if runs.earliest('start_time').start_time < event.occurred_at \
+            else event.occurred_at
+    except Run.DoesNotExist:
+        if event.event_type == event.TYPE.power_on:
             normalized_runs = normalize_runs([event])
             for index, normalized_run in enumerate(normalized_runs):
                 logger.info('Processing run {} of {}'.format(
@@ -601,6 +537,31 @@ def recalculate_runs(new_events):
                     vcpu=normalized_run.instance_vcpu,
                 )
                 run.save()
+        return
+
+    events = InstanceEvent.objects.filter(
+        instance_id=event.instance_id,
+        occurred_at__gte=earliest_run) \
+        .select_related('instance') \
+        .prefetch_related('machineimage') \
+        .order_by('occurred_at')
+
+    normalized_runs = normalize_runs(events)
+    with transaction.atomic():
+        runs.delete()
+        for index, normalized_run in enumerate(normalized_runs):
+            logger.info('Processing run {} of {}'.format(
+                index + 1, len(normalized_runs)))
+            run = Run(
+                start_time=normalized_run.start_time,
+                end_time=normalized_run.end_time,
+                machineimage_id=normalized_run.image_id,
+                instance_id=normalized_run.instance_id,
+                instance_type=normalized_run.instance_type,
+                memory=normalized_run.instance_memory,
+                vcpu=normalized_run.instance_vcpu,
+            )
+            run.save()
 
 
 def validate_event(event, start):

@@ -6,7 +6,7 @@ See also: https://gitlab.com/cloudigrade/cloudigrade/issues/509
 import faker
 from django.test import TestCase
 
-from account import reports, util
+from account import reports
 from account.tests import helper as account_helper
 from util.tests import helper as util_helper
 
@@ -51,7 +51,7 @@ class ReportBug509TestCase(TestCase):
             [(self.power_on, self.power_off)],
             self.image_rhel.ec2_ami_id,
         )
-        util.recalculate_runs(events)
+        account_helper.recalculate_runs_from_events(events)
 
         # Report on "month of January in 2018"
         self.start = util_helper.utc_dt(2018, 1, 1, 0, 0, 0)

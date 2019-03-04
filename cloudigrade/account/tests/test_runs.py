@@ -6,7 +6,6 @@ from django.test import TestCase
 from account import util
 from account.models import InstanceEvent, Run
 from account.tests import helper as account_helper
-from util.exceptions import NormalizeRunException
 from util.tests import helper as util_helper
 
 
@@ -92,8 +91,11 @@ class AccountUtilCalculateRunsTest(TestCase):
         This should produce a single run with.
 
         """
-        # Single Run from (2, -)
-        util.recalculate_runs([self.first_power_on_event])
+        self.second_power_on_event.delete()
+        self.second_power_off_event.delete()
+
+        # Single Run from (2, -)test_calculate_runs
+        util.recalculate_runs(self.first_power_on_event)
 
         runs = list(Run.objects.all())
         self.assertEqual(1, len(runs))
@@ -102,7 +104,7 @@ class AccountUtilCalculateRunsTest(TestCase):
 
         # Single Run from (2, 3)
         util.recalculate_runs(
-            [self.first_power_off_event]
+            self.first_power_off_event
         )
 
         runs = list(Run.objects.all())
@@ -117,9 +119,12 @@ class AccountUtilCalculateRunsTest(TestCase):
         The start time of the first event is what's used to generate the run.
 
         """
+        self.first_power_off_event.delete()
+        self.second_power_off_event.delete()
+
         # Two power on events, one from (2, -), the other (5,-)
         # should generate a single run from (2,-)
-        util.recalculate_runs(
+        account_helper.recalculate_runs_from_events(
             [self.first_power_on_event,
              self.second_power_on_event]
         )
@@ -129,7 +134,6 @@ class AccountUtilCalculateRunsTest(TestCase):
 
         self.assertEqual(self.first_power_on, runs[0].start_time)
         self.assertIsNone(runs[0].end_time)
-
 
     def test_calculate_runs_multiple_instances(self):
         """
@@ -142,6 +146,9 @@ class AccountUtilCalculateRunsTest(TestCase):
             [ ######         ]
 
         """
+        self.first_power_off_event.delete()
+        self.first_power_on_event.delete()
+
         instance2 = account_helper.generate_aws_instance(account=self.account)
 
         instance2_powered_times = [
@@ -154,10 +161,10 @@ class AccountUtilCalculateRunsTest(TestCase):
             instance2,
             powered_times=instance2_powered_times
         )
-        events = [self.first_power_on_event, self.second_power_off_event] + instance2_events
+        events = [self.first_power_on_event,
+                  self.second_power_off_event] + instance2_events
 
-        util.recalculate_runs(events)
-
+        account_helper.recalculate_runs_from_events(events)
 
         instance1_runs = list(Run.objects.filter(instance=self.instance1))
         instance2_runs = list(Run.objects.filter(instance=instance2))
@@ -189,7 +196,7 @@ class AccountUtilCalculateRunsTest(TestCase):
                 no_instance_type=True
             )
 
-        util.recalculate_runs(
+        account_helper.recalculate_runs_from_events(
             [initial_event, self.first_power_off_event,
              no_instance_type_event, self.second_power_off_event]
         )
@@ -251,7 +258,7 @@ class AccountUtilCalculateRunsTest(TestCase):
                 no_subnet=True,
             )
         )
-        util.recalculate_runs(events)
+        account_helper.recalculate_runs_from_events(events)
         runs = list(Run.objects.all())
         self.assertEqual(instance_type_1, runs[0].instance_type)
 
@@ -270,7 +277,7 @@ class AccountUtilCalculateRunsTest(TestCase):
             self.openshift_and_rhel_image.ec2_ami_id,
             instance_type=self.instance_type
         )
-        util.recalculate_runs([event])
+        util.recalculate_runs(event)
         runs = list(Run.objects.all())
         self.assertEqual(self.rhel_image, runs[0].machineimage)
 

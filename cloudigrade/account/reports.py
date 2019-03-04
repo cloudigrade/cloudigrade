@@ -10,7 +10,7 @@ from django.db import models
 from django.utils.translation import gettext as _
 
 from account.models import (Account, AwsEC2InstanceDefinitions,
-                            AwsInstanceEvent, Instance, InstanceEvent,
+                            AwsInstanceEvent, Instance,
                             MachineImage, Run)
 
 logger = logging.getLogger(__name__)
@@ -418,9 +418,9 @@ def calculate_runs_in_periods(periods, normalized_runs):
                         run.machineimage else None,
                         openshift=run.machineimage.openshift if
                         run.machineimage else None,
-                        openshift_challenged=run.machineimage.openshift_challenged if
+                        openshift_challenged=run.machineimage.openshift_challenged if  # NOQA
                         run.machineimage else None,
-                        openshift_detected=run.machineimage.openshift_detected if
+                        openshift_detected=run.machineimage.openshift_detected if  # NOQA
                         run.machineimage else None,
                     )
                 )
@@ -467,9 +467,9 @@ def calculate_runs_in_periods(periods, normalized_runs):
                         run.machineimage else None,
                         openshift=run.machineimage.openshift if
                         run.machineimage else None,
-                        openshift_challenged=run.machineimage.openshift_challenged if
+                        openshift_challenged=run.machineimage.openshift_challenged if  # NOQA
                         run.machineimage else None,
-                        openshift_detected=run.machineimage.openshift_detected if
+                        openshift_detected=run.machineimage.openshift_detected if  # NOQA
                         run.machineimage else None,
                     )
                 )
@@ -514,9 +514,9 @@ def calculate_runs_in_periods(periods, normalized_runs):
                         run.machineimage else None,
                         openshift=run.machineimage.openshift if
                         run.machineimage else None,
-                        openshift_challenged=run.machineimage.openshift_challenged if
+                        openshift_challenged=run.machineimage.openshift_challenged if  # NOQA
                         run.machineimage else None,
-                        openshift_detected=run.machineimage.openshift_detected if
+                        openshift_detected=run.machineimage.openshift_detected if  # NOQA
                         run.machineimage else None,
                     )
                 )
@@ -562,9 +562,9 @@ def calculate_runs_in_periods(periods, normalized_runs):
                         run.machineimage else None,
                         openshift=run.machineimage.openshift if
                         run.machineimage else None,
-                        openshift_challenged=run.machineimage.openshift_challenged if
+                        openshift_challenged=run.machineimage.openshift_challenged if  # NOQA
                         run.machineimage else None,
-                        openshift_detected=run.machineimage.openshift_detected if
+                        openshift_detected=run.machineimage.openshift_detected if  # NOQA
                         run.machineimage else None,
                     )
                 )

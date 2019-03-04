@@ -120,31 +120,17 @@ def analyze_log():
 @shared_task
 def process_instance_event(event):
     """Process instance events that have been saved during log analysis."""
-    before_run = Q(start_time__gt=event.occurred_at)
+    after_run = Q(start_time__gt=event.occurred_at)
     during_run = Q(start_time__lte=event.occurred_at,
                    end_time__gt=event.occurred_at)
     during_run_no_end = Q(start_time__lte=event.occurred_at,
                           end_time=None)
 
-    filters = before_run | during_run | during_run_no_end
+    filters = after_run | during_run | during_run_no_end
     instance = AwsInstance.objects.get(id=event.instance_id)
 
     if Run.objects.filter(filters, instance=instance).exists():
-        previous_event = None
-        try:
-            previous_event = event.get_previous_by_occurred_at()
-        except InstanceEvent.DoesNotExist:
-            pass
-
-        events = list(InstanceEvent.objects.filter(
-            instance_id=event.instance_id,
-            occurred_at__gte=event.occurred_at
-        ))
-
-        if previous_event:
-            events.insert(0, previous_event)
-
-        recalculate_runs(events)
+        recalculate_runs(event)
     elif event.event_type == InstanceEvent.TYPE.power_on:
         normalized_runs = normalize_runs([event])
         for index, normalized_run in enumerate(normalized_runs):
