@@ -215,6 +215,18 @@ class MachineImage(BasePolymorphicModel):
         raise NotImplementedError
 
 
+class MachineImageInspectionStart(BaseModel):
+    """Model to track any time an image starts inspection."""
+
+    machineimage = models.ForeignKey(
+        MachineImage,
+        on_delete=models.CASCADE,
+        db_index=True,
+        null=False,
+    )
+    occurred_at = models.DateTimeField(auto_now_add=True, null=False)
+
+
 class Instance(BasePolymorphicModel):
     """Base model for a compute/VM instance in a cloud."""
 

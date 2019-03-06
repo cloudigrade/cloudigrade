@@ -8,7 +8,8 @@ from rest_framework.serializers import ValidationError
 
 import util.aws.sqs
 from account import AWS_PROVIDER_STRING, util
-from account.models import AwsAccount, AwsMachineImage, MachineImage
+from account.models import (AwsAccount, AwsMachineImage, MachineImage,
+                            MachineImageInspectionStart)
 from account.tests import helper as account_helper
 from account.util import convert_param_to_int
 from util import aws
@@ -299,6 +300,9 @@ class AccountUtilTest(TestCase):
                                            mock_region)
         image.refresh_from_db()
         self.assertEqual(image.status, image.PREPARING)
+        self.assertTrue(MachineImageInspectionStart.objects.filter(
+            machineimage__id=image.id
+        ).exists())
 
     @patch('account.tasks.copy_ami_snapshot')
     def test_start_image_inspection_marketplace_skips(self, mock_copy):

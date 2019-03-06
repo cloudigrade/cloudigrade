@@ -16,7 +16,7 @@ from rest_framework.serializers import ValidationError
 from account import AWS_PROVIDER_STRING
 from account.models import (AwsInstance, AwsInstanceEvent, AwsMachineImage,
                             AwsMachineImageCopy, InstanceEvent, MachineImage,
-                            Run)
+                            MachineImageInspectionStart, Run)
 from account.reports import normalize_runs
 from util import aws
 from util.aws import InstanceState
@@ -344,6 +344,8 @@ def start_image_inspection(arn, ami_id, region):
     ami = AwsMachineImage.objects.get(ec2_ami_id=ami_id)
     ami.status = ami.PREPARING
     ami.save()
+
+    MachineImageInspectionStart.objects.create(machineimage=ami)
 
     if ami.is_marketplace or ami.is_cloud_access:
         ami.status = ami.INSPECTED
