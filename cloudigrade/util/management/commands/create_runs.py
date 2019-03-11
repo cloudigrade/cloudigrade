@@ -1,12 +1,9 @@
 """Process events and turn them into runs."""
-import logging
-
 from django.core.management.base import BaseCommand
+from tqdm import tqdm
 
-from account.models import AwsInstanceEvent, Run, AwsInstance
+from account.models import AwsInstance, AwsInstanceEvent, Run
 from account.reports import normalize_runs
-
-logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
@@ -14,18 +11,14 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """Handle the command execution."""
-        for instance in AwsInstance.objects.all():
-            logger.info('Processing events for instance {}'.format(instance))
+        for instance in tqdm(AwsInstance.objects.all(), desc='instances'):
             events = AwsInstanceEvent.objects.filter(instance=instance)
 
             normalized_runs = normalize_runs(events)
 
-            for index, normalized_run in enumerate(normalized_runs):
-                logger.info(
-                    'Processing run {} of {}'.format(
-                        index + 1, len(normalized_runs)
-                    )
-                )
+            for normalized_run in tqdm(
+                normalized_runs, desc='runs for {}'.format(instance)
+            ):
                 run = Run(
                     start_time=normalized_run.start_time,
                     end_time=normalized_run.end_time,
