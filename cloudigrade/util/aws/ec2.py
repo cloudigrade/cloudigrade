@@ -149,6 +149,14 @@ def get_ami(session, image_id, source_region):
 
 def check_image_state(image):
     """Raise an exception if image state is not available."""
+    # Load the image to populate the metadata on it, if there is no metadata,
+    # the image has probably been deregistered.
+    image.load()
+    if image.meta.data is None:
+        message = _('Image {id} cannot be loaded, it has probably been '
+                    'deregistered.').format(id=image.id)
+        raise AwsImageError(message)
+
     if image.state == 'available':
         return
     message = _('Image {id} has state {state} (reason: {reason})').format(

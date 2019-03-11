@@ -141,6 +141,13 @@ class UtilAwsEc2Test(TestCase):
         with self.assertRaises(ImageNotReadyException):
             ec2.check_image_state(mock_image)
 
+    def test_check_image_state_no_meta(self):
+        """Assert raised exception when image has no metadata."""
+        mock_image = helper.generate_mock_image()
+        mock_image.meta.data = None
+        with self.assertRaises(AwsImageError):
+            ec2.check_image_state(mock_image)
+
     def test_get_ami_snapshot_id(self):
         """Assert that an AMI returns a snapshot id."""
         mock_image_id = helper.generate_dummy_image_id()
