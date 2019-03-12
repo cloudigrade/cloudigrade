@@ -22,7 +22,7 @@ from util.tests import helper
 class UtilAwsEc2Test(TestCase):
     """AWS EC2 utility functions test case."""
 
-    def test_get_running_instances(self):
+    def test_get_all_instances(self):
         """
         Assert we get expected instances in a dict keyed by regions.
 
@@ -79,13 +79,15 @@ class UtilAwsEc2Test(TestCase):
         expected_found = {
             mock_regions[0]: [
                 mock_running_instance_1,
+                mock_stopped_instance_1,
                 mock_running_instance_2,
+                mock_stopped_instance_2,
             ]
         }
 
         with patch.object(ec2, 'get_regions') as mock_get_regions:
             mock_get_regions.return_value = mock_regions
-            actual_found = ec2.get_running_instances(mock_session)
+            actual_found = ec2.get_all_instances(mock_session)
 
         self.assertDictEqual(expected_found, actual_found)
 

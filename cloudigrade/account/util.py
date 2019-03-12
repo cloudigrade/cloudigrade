@@ -19,6 +19,7 @@ from account.models import (AwsInstance, AwsInstanceEvent, AwsMachineImage,
                             Run)
 from account.reports import normalize_runs
 from util import aws
+from util.aws import InstanceState
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +44,8 @@ def create_initial_aws_instance_events(account, instances_data):
     for region, instances in instances_data.items():
         for instance_data in instances:
             instance = save_instance(account, instance_data, region)
-            save_instance_events(instance, instance_data)
+            if InstanceState.is_running(instance_data['State']['Code']):
+                save_instance_events(instance, instance_data)
 
 
 def save_instance(account, instance_data, region):

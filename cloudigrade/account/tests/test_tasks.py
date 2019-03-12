@@ -68,12 +68,14 @@ class AccountCeleryTaskTest(TestCase):
             openshift=True,
         )
         described_ami_windows = util_helper.generate_dummy_describe_image()
+
         ami_id_unknown = described_ami_unknown['ImageId']
         ami_id_openshift = described_ami_openshift['ImageId']
         ami_id_windows = described_ami_windows['ImageId']
         ami_id_unavailable = generate_dummy_image_id()
+        ami_id_gone = generate_dummy_image_id()
 
-        running_instances = [
+        all_instances = [
             util_helper.generate_dummy_describe_instance(
                 image_id=ami_id_unknown,
                 state=aws.InstanceState.running
@@ -91,13 +93,17 @@ class AccountCeleryTaskTest(TestCase):
                 image_id=ami_id_unavailable,
                 state=aws.InstanceState.running
             ),
+            util_helper.generate_dummy_describe_instance(
+                image_id=ami_id_gone,
+                state=aws.InstanceState.terminated
+            ),
 
         ]
         described_instances = {
-            region: running_instances,
+            region: all_instances,
         }
 
-        mock_aws.get_running_instances.return_value = described_instances
+        mock_aws.get_all_instances.return_value = described_instances
         mock_util_aws.describe_images.return_value = [
             described_ami_unknown,
             described_ami_openshift,
@@ -117,11 +123,12 @@ class AccountCeleryTaskTest(TestCase):
             tasks.initial_aws_describe_instances(account.id)
             mock_start.assert_has_calls(start_inpection_calls)
 
-        # Verify that we created all three running instances and events.
+        # Verify that we created all five instances.
         instances_count = AwsInstance.objects.filter(account=account).count()
-        self.assertEqual(instances_count, 4)
+        self.assertEqual(instances_count, 5)
 
-        for described_instance in running_instances:
+        # Verify that the running instances exist with power-on events.
+        for described_instance in all_instances[:4]:
             instance_id = described_instance['InstanceId']
             instance = AwsInstance.objects.get(ec2_instance_id=instance_id)
             self.assertIsInstance(instance, AwsInstance)
@@ -130,9 +137,19 @@ class AccountCeleryTaskTest(TestCase):
             self.assertIsInstance(event, InstanceEvent)
             self.assertEqual(InstanceEvent.TYPE.power_on, event.event_type)
 
-        # Verify that we saved all images used by the running instances.
+        # Verify that the not-running instances exist with no events.
+        for described_instance in all_instances[4:]:
+            instance_id = described_instance['InstanceId']
+            instance = AwsInstance.objects.get(ec2_instance_id=instance_id)
+            self.assertIsInstance(instance, AwsInstance)
+            self.assertEqual(region, instance.region)
+            self.assertFalse(
+                InstanceEvent.objects.filter(instance=instance).exists()
+            )
+
+        # Verify that we saved images for all instances, even if not running.
         images_count = AwsMachineImage.objects.count()
-        self.assertEqual(images_count, 4)
+        self.assertEqual(images_count, 5)
 
         image = AwsMachineImage.objects.get(ec2_ami_id=ami_id_unknown)
         self.assertFalse(image.rhel_detected)

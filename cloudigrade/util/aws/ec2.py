@@ -49,9 +49,9 @@ class InstanceState(enum.Enum):
         return code == cls.running.value
 
 
-def get_running_instances(session):
+def get_all_instances(session):
     """
-    Find all running EC2 instances visible to the given ARN.
+    Find all EC2 instances visible to the given ARN.
 
     Args:
         session (boto3.Session): A temporary session tied to a customer account
@@ -70,7 +70,6 @@ def get_running_instances(session):
         for reservation in instances.get('Reservations', []):
             running_instances[region_name].extend([
                 instance for instance in reservation.get('Instances', [])
-                if InstanceState.is_running(instance['State']['Code'])
             ])
 
     return running_instances

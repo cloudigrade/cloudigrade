@@ -58,7 +58,7 @@ def initial_aws_describe_instances(account_id):
     arn = account.account_arn
 
     session = aws.get_session(arn)
-    instances_data = aws.get_running_instances(session)
+    instances_data = aws.get_all_instances(session)
     with transaction.atomic():
         new_ami_ids = create_new_machine_images(session, instances_data)
         create_initial_aws_instance_events(account, instances_data)
