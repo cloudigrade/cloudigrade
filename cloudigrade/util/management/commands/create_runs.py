@@ -2,6 +2,7 @@
 import logging
 
 from django.core.management.base import BaseCommand
+from django.db import transaction
 from tqdm import tqdm
 
 from account.models import AwsInstance, AwsInstanceEvent, Run
@@ -24,11 +25,13 @@ class Command(BaseCommand):
             return False
         return True
 
+    @transaction.atomic
     def handle(self, *args, **options):
         """Handle the command execution."""
         all_runs = Run.objects.all()
         if not self.confirm(all_runs.count()):
             return False
+
         all_runs.delete()
 
         runs_created = 0
