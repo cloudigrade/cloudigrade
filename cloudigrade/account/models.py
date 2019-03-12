@@ -392,6 +392,9 @@ class AwsMachineImage(MachineImage):
         null=True,
         blank=True,
     )
+    aws_marketplace_image = models.BooleanField(
+        default=False
+    )
 
     @property
     def is_cloud_access(self):

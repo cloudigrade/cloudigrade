@@ -646,6 +646,7 @@ class AccountCeleryTaskTest(TestCase):
         mock_aws_machine_image_objects.get.assert_called_with(
             ec2_ami_id=reference_ami_id)
         self.assertEqual(mock_ami.status, mock_ami.INSPECTED)
+        self.assertTrue(mock_ami.aws_marketplace_image)
         mock_ami.save.assert_called_once()
 
     @patch('account.models.AwsMachineImage.objects')
@@ -678,6 +679,7 @@ class AccountCeleryTaskTest(TestCase):
         mock_aws_machine_image_objects.get.assert_called_with(
             ec2_ami_id=reference_ami_id)
         self.assertEqual(mock_ami.status, mock_ami.INSPECTED)
+        self.assertTrue(mock_ami.aws_marketplace_image)
         mock_ami.save.assert_called_once()
 
     @patch('account.models.AwsMachineImage.objects')
@@ -710,6 +712,7 @@ class AccountCeleryTaskTest(TestCase):
         mock_aws_machine_image_objects.get.assert_called_with(
             ec2_ami_id=reference_ami_id)
         self.assertEqual(mock_ami.status, mock_ami.INSPECTED)
+        self.assertTrue(mock_ami.aws_marketplace_image)
         mock_ami.save.assert_called_once()
 
     @patch('account.models.AwsMachineImage.objects')

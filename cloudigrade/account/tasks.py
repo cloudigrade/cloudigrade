@@ -212,6 +212,7 @@ def copy_ami_to_customer_account(arn, reference_ami_id, snapshot_region):
                               'marking as inspected'), reference_ami_id)
                 ami = AwsMachineImage.objects.get(ec2_ami_id=reference_ami_id)
                 ami.status = ami.INSPECTED
+                ami.aws_marketplace_image = True
                 ami.save()
                 return
             elif not reference_ami.public and error in private_errors:
