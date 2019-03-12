@@ -557,8 +557,7 @@ class AccountCeleryTaskTest(TestCase):
             copy_ami_snapshot(mock_arn, mock_image_id, mock_region)
             mock_create_volume.delay.assert_not_called()
             mock_copy_ami_to_customer_account.delay.assert_called_with(
-                mock_arn, mock_image_id, mock_region, maybe_trouble=True
-            )
+                mock_arn, mock_image_id, mock_region)
 
     @patch('account.tasks.aws')
     def test_copy_ami_snapshot_not_marketplace(self, mock_aws):
@@ -638,8 +637,7 @@ class AccountCeleryTaskTest(TestCase):
             operation_name=Mock(),
         )
 
-        copy_ami_to_customer_account(arn, reference_ami_id, source_region,
-                                     True)
+        copy_ami_to_customer_account(arn, reference_ami_id, source_region)
 
         mock_aws.get_session.assert_called_with(arn)
         mock_aws.get_ami.assert_called_with(
@@ -671,8 +669,7 @@ class AccountCeleryTaskTest(TestCase):
             operation_name=Mock(),
         )
 
-        copy_ami_to_customer_account(arn, reference_ami_id, source_region,
-                                     True)
+        copy_ami_to_customer_account(arn, reference_ami_id, source_region)
 
         mock_aws.get_session.assert_called_with(arn)
         mock_aws.get_ami.assert_called_with(
@@ -704,8 +701,7 @@ class AccountCeleryTaskTest(TestCase):
             operation_name=Mock(),
         )
 
-        copy_ami_to_customer_account(arn, reference_ami_id, source_region,
-                                     True)
+        copy_ami_to_customer_account(arn, reference_ami_id, source_region)
 
         mock_aws.get_session.assert_called_with(arn)
         mock_aws.get_ami.assert_called_with(
@@ -740,8 +736,7 @@ class AccountCeleryTaskTest(TestCase):
             operation_name=Mock(),
         )
 
-        copy_ami_to_customer_account(arn, reference_ami_id, source_region,
-                                     True)
+        copy_ami_to_customer_account(arn, reference_ami_id, source_region)
 
         mock_aws.get_session.assert_called_with(arn)
         mock_aws.get_ami.assert_called_with(
@@ -776,8 +771,7 @@ class AccountCeleryTaskTest(TestCase):
             operation_name=Mock(),
         )
 
-        copy_ami_to_customer_account(arn, reference_ami_id, source_region,
-                                     True)
+        copy_ami_to_customer_account(arn, reference_ami_id, source_region)
 
         mock_aws.get_session.assert_called_with(arn)
         mock_aws.get_ami.assert_called_with(
@@ -804,8 +798,7 @@ class AccountCeleryTaskTest(TestCase):
         )
 
         with self.assertRaises(RuntimeError) as e:
-            copy_ami_to_customer_account(arn, reference_ami_id, source_region,
-                                         True)
+            copy_ami_to_customer_account(arn, reference_ami_id, source_region)
 
         self.assertIn('ClientError', e.exception.args[0])
         self.assertIn('ItIsAMystery', e.exception.args[0])

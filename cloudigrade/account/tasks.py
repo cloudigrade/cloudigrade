@@ -125,8 +125,7 @@ def copy_ami_snapshot(arn, ami_id, snapshot_region, reference_ami_id=None):
     except ClientError as e:
         if e.response.get('Error').get('Code') == 'InvalidSnapshot.NotFound':
             # Possibly a marketplace AMI, try to handle it by copying.
-            copy_ami_to_customer_account.delay(arn, ami_id, snapshot_region,
-                                               maybe_trouble=True)
+            copy_ami_to_customer_account.delay(arn, ami_id, snapshot_region)
             return
         raise e
 
@@ -168,8 +167,7 @@ def copy_ami_snapshot(arn, ami_id, snapshot_region, reference_ami_id=None):
 
 @retriable_shared_task
 @rewrap_aws_errors
-def copy_ami_to_customer_account(arn, reference_ami_id, snapshot_region,
-                                 maybe_trouble=False):
+def copy_ami_to_customer_account(arn, reference_ami_id, snapshot_region):
     """
     Copy an AWS Image to the customer's AWS account.
 
@@ -183,9 +181,6 @@ def copy_ami_to_customer_account(arn, reference_ami_id, snapshot_region,
         arn (str): The AWS Resource Number for the account with the snapshot
         reference_ami_id (str): The AWS ID for the original image to copy
         snapshot_region (str): The region the snapshot resides in
-        maybe_trouble (bool): Set to True if we suspect this to be a
-            marketplace, community, or private image (with restricted
-            storage access).
 
     Returns:
         None: Run as an asynchronous Celery task.
@@ -207,8 +202,7 @@ def copy_ami_to_customer_account(arn, reference_ami_id, snapshot_region,
         private_errors = (
             'You do not have permission to access the storage of this ami',
         )
-        if maybe_trouble and \
-                e.response.get('Error').get('Code') == 'InvalidRequest':
+        if e.response.get('Error').get('Code') == 'InvalidRequest':
             error = e.response.get('Error').get('Message')[:-1] if \
                 e.response.get('Error').get('Message').endswith('.') else \
                 e.response.get('Error').get('Message')
@@ -223,7 +217,7 @@ def copy_ami_to_customer_account(arn, reference_ami_id, snapshot_region,
             elif not reference_ami.public and error in private_errors:
                 # This appears to be a private AMI, shared with our customer,
                 # but not given access to the storage.
-                logger.info(_(
+                logger.warning(_(
                     'Found a private image "%s" with inaccessible storage, '
                     'marking as erred'), reference_ami_id)
                 ami = AwsMachineImage.objects.get(ec2_ami_id=reference_ami_id)
