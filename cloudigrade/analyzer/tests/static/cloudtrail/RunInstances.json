@@ -1,0 +1,185 @@
+{
+	"Records": [
+		{
+			"eventVersion": "1.05",
+			"userIdentity": {
+				"type": "IAMUser",
+				"principalId": "ADJI3AALKATBQC7U6IUV5",
+				"arn": "arn:aws:iam::123456789012:user/my-great-user",
+				"accountId": "123456789012",
+				"accessKeyId": "A3TSI7ALTYA3RBK6253W",
+				"userName": "my-great-user",
+				"sessionContext": {
+					"attributes": {
+						"mfaAuthenticated": "false",
+						"creationDate": "2019-03-15T21:38:40Z"
+					}
+				},
+				"invokedBy": "signin.amazonaws.com"
+			},
+			"eventTime": "2019-03-15T22:13:21Z",
+			"eventSource": "ec2.amazonaws.com",
+			"eventName": "RunInstances",
+			"awsRegion": "us-east-1",
+			"sourceIPAddress": "127.0.0.1",
+			"userAgent": "signin.amazonaws.com",
+			"requestParameters": {
+				"instancesSet": {
+					"items": [
+						{
+							"imageId": "ami-011b3ccf1bd6db744",
+							"minCount": 1,
+							"maxCount": 1,
+							"keyName": "dev01-username"
+						}
+					]
+				},
+				"groupSet": {
+					"items": [
+						{
+							"groupId": "sg-065253d99c0a227f6"
+						}
+					]
+				},
+				"instanceType": "t2.micro",
+				"blockDeviceMapping": {
+					"items": [
+						{
+							"deviceName": "/dev/sda1",
+							"ebs": {
+								"volumeSize": 10,
+								"deleteOnTermination": true,
+								"volumeType": "gp2"
+							}
+						}
+					]
+				},
+				"monitoring": {
+					"enabled": false
+				},
+				"disableApiTermination": false,
+				"ebsOptimized": false,
+				"creditSpecification": {
+					"cpuCredits": "standard"
+				}
+			},
+			"responseElements": {
+				"requestId": "c41e97ab-013f-4aef-85ac-a6568cfd3e0f",
+				"reservationId": "r-0dbe22da0f74b05e6",
+				"ownerId": "123456789012",
+				"groupSet": {
+
+				},
+				"instancesSet": {
+					"items": [
+						{
+							"instanceId": "i-065fe68fc87593079",
+							"imageId": "ami-011b3ccf1bd6db744",
+							"instanceState": {
+								"code": 0,
+								"name": "pending"
+							},
+							"privateDnsName": "ip-172-31-80-29.ec2.internal",
+							"keyName": "dev01-username",
+							"amiLaunchIndex": 0,
+							"productCodes": {
+
+							},
+							"instanceType": "t2.micro",
+							"launchTime": 1552688001000,
+							"placement": {
+								"availabilityZone": "us-east-1b",
+								"tenancy": "default"
+							},
+							"monitoring": {
+								"state": "disabled"
+							},
+							"subnetId": "subnet-3923e717",
+							"vpcId": "vpc-000e3d7b",
+							"privateIpAddress": "172.31.80.29",
+							"stateReason": {
+								"code": "pending",
+								"message": "pending"
+							},
+							"architecture": "x86_64",
+							"rootDeviceType": "ebs",
+							"rootDeviceName": "/dev/sda1",
+							"blockDeviceMapping": {
+
+							},
+							"virtualizationType": "hvm",
+							"hypervisor": "xen",
+							"groupSet": {
+								"items": [
+									{
+										"groupId": "sg-065253d99c0a227f6",
+										"groupName": "launch-wizard-33"
+									}
+								]
+							},
+							"sourceDestCheck": true,
+							"networkInterfaceSet": {
+								"items": [
+									{
+										"networkInterfaceId": "eni-0f087fe781a78e94f",
+										"subnetId": "subnet-3923e717",
+										"vpcId": "vpc-000e3d7b",
+										"ownerId": "123456789012",
+										"status": "in-use",
+										"macAddress": "12:4d:eb:ce:78:2a",
+										"privateIpAddress": "172.31.80.29",
+										"privateDnsName": "ip-172-31-80-29.ec2.internal",
+										"sourceDestCheck": true,
+										"interfaceType": "interface",
+										"groupSet": {
+											"items": [
+												{
+													"groupId": "sg-065253d99c0a227f6",
+													"groupName": "launch-wizard-33"
+												}
+											]
+										},
+										"attachment": {
+											"attachmentId": "eni-attach-00952ae6faf8065bd",
+											"deviceIndex": 0,
+											"status": "attaching",
+											"attachTime": 1552688001000,
+											"deleteOnTermination": true
+										},
+										"privateIpAddressesSet": {
+											"item": [
+												{
+													"privateIpAddress": "172.31.80.29",
+													"privateDnsName": "ip-172-31-80-29.ec2.internal",
+													"primary": true
+												}
+											]
+										},
+										"ipv6AddressesSet": {
+
+										},
+										"tagSet": {
+
+										}
+									}
+								]
+							},
+							"ebsOptimized": false,
+							"cpuOptions": {
+								"coreCount": 1,
+								"threadsPerCore": 1
+							},
+							"capacityReservationSpecification": {
+								"capacityReservationPreference": "open"
+							}
+						}
+					]
+				}
+			},
+			"requestID": "c41e97ab-013f-4aef-85ac-a6568cfd3e0f",
+			"eventID": "50fb2a32-1951-4d8d-943e-13dfeeb4d417",
+			"eventType": "AwsApiCall",
+			"recipientAccountId": "123456789012"
+		}
+	]
+}
