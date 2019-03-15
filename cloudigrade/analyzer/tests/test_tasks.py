@@ -16,7 +16,7 @@ from account.models import (
     Run
 )
 from account.tests import helper as account_helper
-from analyzer import tasks
+from analyzer import cloudtrail, tasks
 from analyzer.tests import helper as analyzer_helper
 from util.tests import helper as util_helper
 
@@ -627,8 +627,11 @@ class AnalyzeLogTest(TestCase):
 
         sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
         trail_record = analyzer_helper.generate_cloudtrail_tag_set_record(
-            aws_account_id=self.mock_account_id, image_ids=[ami.ec2_ami_id],
-            tag_names=[tasks.aws.OPENSHIFT_TAG], event_name=tasks.CREATE_TAG)
+            aws_account_id=self.mock_account_id,
+            image_ids=[ami.ec2_ami_id],
+            tag_names=[tasks.aws.OPENSHIFT_TAG],
+            event_name=cloudtrail.CREATE_TAG,
+        )
         s3_content = {'Records': [trail_record]}
         mock_receive.return_value = [sqs_message]
         mock_s3.return_value = json.dumps(s3_content)
@@ -653,8 +656,11 @@ class AnalyzeLogTest(TestCase):
 
         sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
         trail_record = analyzer_helper.generate_cloudtrail_tag_set_record(
-            aws_account_id=self.mock_account_id, image_ids=[ami.ec2_ami_id],
-            tag_names=[tasks.aws.OPENSHIFT_TAG], event_name=tasks.DELETE_TAG)
+            aws_account_id=self.mock_account_id,
+            image_ids=[ami.ec2_ami_id],
+            tag_names=[tasks.aws.OPENSHIFT_TAG],
+            event_name=cloudtrail.DELETE_TAG,
+        )
         s3_content = {'Records': [trail_record]}
         mock_receive.return_value = [sqs_message]
         mock_s3.return_value = json.dumps(s3_content)
@@ -692,9 +698,12 @@ class AnalyzeLogTest(TestCase):
         sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
         region = random.choice(util_helper.SOME_AWS_REGIONS)
         trail_record = analyzer_helper.generate_cloudtrail_tag_set_record(
-            aws_account_id=self.mock_account_id, image_ids=[new_ami_id],
-            tag_names=[tasks.aws.OPENSHIFT_TAG], event_name=tasks.CREATE_TAG,
-            region=region)
+            aws_account_id=self.mock_account_id,
+            image_ids=[new_ami_id],
+            tag_names=[tasks.aws.OPENSHIFT_TAG],
+            event_name=cloudtrail.CREATE_TAG,
+            region=region,
+        )
         s3_content = {'Records': [trail_record]}
         mock_receive.return_value = [sqs_message]
         mock_s3.return_value = json.dumps(s3_content)
@@ -727,8 +736,11 @@ class AnalyzeLogTest(TestCase):
 
         sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
         trail_record = analyzer_helper.generate_cloudtrail_tag_set_record(
-            aws_account_id=self.mock_account_id, image_ids=[new_ami_id],
-            tag_names=[_faker.slug()], event_name=tasks.CREATE_TAG)
+            aws_account_id=self.mock_account_id,
+            image_ids=[new_ami_id],
+            tag_names=[_faker.slug()],
+            event_name=cloudtrail.CREATE_TAG,
+        )
         s3_content = {'Records': [trail_record]}
         mock_receive.return_value = [sqs_message]
         mock_s3.return_value = json.dumps(s3_content)
@@ -752,8 +764,11 @@ class AnalyzeLogTest(TestCase):
 
         sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
         trail_record = analyzer_helper.generate_cloudtrail_tag_set_record(
-            aws_account_id=self.mock_account_id, image_ids=[some_ignored_id],
-            tag_names=[_faker.slug()], event_name=tasks.CREATE_TAG)
+            aws_account_id=self.mock_account_id,
+            image_ids=[some_ignored_id],
+            tag_names=[_faker.slug()],
+            event_name=cloudtrail.CREATE_TAG,
+        )
         s3_content = {'Records': [trail_record]}
         mock_receive.return_value = [sqs_message]
         mock_s3.return_value = json.dumps(s3_content)
