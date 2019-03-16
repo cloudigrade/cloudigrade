@@ -41,6 +41,23 @@ CloudTrailImageTagEvent = collections.namedtuple(
 )
 
 
+def extract_time_account_region(record):
+    """
+    Extract the CloudTrail Record's eventTime, accountId, and awsRegion.
+
+    Args:
+        record (Dict): a single element from a CloudTrail log file Records list
+
+    Returns:
+        tuple(str, str, str)
+
+    """
+    occurred_at = record['eventTime']
+    account_id = record['userIdentity']['accountId']
+    region = record['awsRegion']
+    return occurred_at, account_id, region
+
+
 def extract_ec2_instance_events(record):
     """
     Parse CloudTrail Record and extract EC2 instance on/off/change events.
@@ -55,29 +72,38 @@ def extract_ec2_instance_events(record):
     if not _is_valid_event(record, ec2_instance_event_map.keys()):
         return []
 
-    occurred_at = record['eventTime']
-    account_id = record['userIdentity']['accountId']
-    region = record['awsRegion']
+    occurred_at, account_id, region = extract_time_account_region(record)
+    event_name = record['eventName']
+    event_type = ec2_instance_event_map[event_name]
 
-    event_type = ec2_instance_event_map[record.get('eventName')]
+    requestParameters = record.get('requestParameters', {})
 
-    instance_type = None
-    if 'attribute_change' in event_type:
-        try:
-            instance_type = \
-                record['requestParameters']['instanceType']['value']
-            instance_ids = [record['requestParameters']['instanceId']]
-        except KeyError:
-            logger.debug(_('Did not find instanceType in record: %s'), record)
-            return []
-    else:
-        instance_ids = set([
-            instance_item['instanceId']
-            for instance_item in record.get('responseElements', {})
-                                       .get('instancesSet', {})
-                                       .get('items', [])
-            if 'instanceId' in instance_item
-        ])
+    # Weird! 'instanceType' definition differs based on the event name...
+    # This is how 'instanceType' appears for 'RunInstances':
+    instance_type = requestParameters.get('instanceType')
+    if instance_type is not None and not isinstance(instance_type, str):
+        # This is how 'instanceType' appears for 'ModifyInstanceAttribute':
+        instance_type = requestParameters.get('instanceType', {}).get('value')
+
+    if (
+        event_name in ['ModifyInstanceAttribute', 'RunInstances'] and
+        instance_type is None
+    ):
+        logger.error(_(
+            'Missing instanceType in %(event_name)s record: %(record)s'
+        ), {'event_name': event_name, 'record': record})
+        return []
+
+    instance_ids = set([
+        instance_item['instanceId']
+        for instance_item in record.get('responseElements', {})
+                                   .get('instancesSet', {})
+                                   .get('items', [])
+        if 'instanceId' in instance_item
+    ])
+    request_instance_id = requestParameters.get('instanceId')
+    if request_instance_id is not None:
+        instance_ids.add(request_instance_id)
 
     return [
         CloudTrailInstanceEvent(
@@ -106,10 +132,7 @@ def extract_ami_tag_events(record):
     if not _is_valid_event(record, ec2_ami_tag_event_list):
         return []
 
-    occurred_at = record['eventTime']
-    account_id = record['userIdentity']['accountId']
-    region = record['awsRegion']
-
+    occurred_at, account_id, region = extract_time_account_region(record)
     exists = record.get('eventName') == CREATE_TAG
     image_ids = set([
         resource_item['resourceId']

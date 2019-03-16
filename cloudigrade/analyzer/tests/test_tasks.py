@@ -112,32 +112,57 @@ class AnalyzeLogTest(TestCase):
         # Generate the known image for the first instance.
         image_1 = account_helper.generate_aws_image()
 
+        # Use the same instance type for all the mocked EC2 instances.
+        instance_type = random.choice(
+            tuple(util_helper.SOME_EC2_INSTANCE_TYPES.keys())
+        )
+
         # Define the mocked EC2 instances.
         mock_instance_1 = util_helper.generate_mock_ec2_instance(
-            image_id=image_1.ec2_ami_id)
-        mock_instance_2 = util_helper.generate_mock_ec2_instance()
+            image_id=image_1.ec2_ami_id, instance_type=instance_type
+        )
+        mock_instance_2 = util_helper.generate_mock_ec2_instance(
+            instance_type=instance_type
+        )
         mock_instance_w = util_helper.generate_mock_ec2_instance(
-            platform='windows')
-        mock_instance_4 = util_helper.generate_mock_ec2_instance()
+            platform='windows', instance_type=instance_type
+        )
+        mock_instance_4 = util_helper.generate_mock_ec2_instance(
+            instance_type=instance_type
+        )
 
         # Define the three Record entries for the S3 log file.
+        # These are all effectively 'RunInstances' events.
         occurred_at = util_helper.utc_dt(2018, 1, 1, 0, 0, 0)
         trail_record_1 = analyzer_helper.generate_cloudtrail_instances_record(
-            aws_account_id=self.mock_account_id, instance_ids=[
+            aws_account_id=self.mock_account_id,
+            instance_ids=[
                 mock_instance_1.instance_id,
                 mock_instance_w.instance_id,
-            ], event_time=occurred_at, region=region)
+            ],
+            event_time=occurred_at,
+            region=region,
+            instance_type=instance_type,
+        )
         trail_record_2 = analyzer_helper.generate_cloudtrail_instances_record(
-            aws_account_id=self.mock_account_id, instance_ids=[
-                mock_instance_2.instance_id,
-            ], event_time=occurred_at, region=region)
+            aws_account_id=self.mock_account_id,
+            instance_ids=[mock_instance_2.instance_id],
+            event_time=occurred_at,
+            region=region,
+            instance_type=instance_type,
+        )
         trail_record_3 = analyzer_helper.generate_cloudtrail_instances_record(
-            aws_account_id=self.mock_account_id, instance_ids=[
+            aws_account_id=self.mock_account_id,
+            instance_ids=[
                 mock_instance_1.instance_id,
                 mock_instance_2.instance_id,
                 mock_instance_w.instance_id,
                 mock_instance_4.instance_id,
-            ], event_time=occurred_at, region=region)
+            ],
+            event_time=occurred_at,
+            region=region,
+            instance_type=instance_type,
+        )
         s3_content = {
             'Records': [trail_record_1, trail_record_2, trail_record_3]
         }
@@ -157,13 +182,13 @@ class AnalyzeLogTest(TestCase):
 
         # Define the mocked "describe images" behavior.
         described_image_2 = util_helper.generate_dummy_describe_image(
-            image_id=mock_instance_2.image_id,
+            image_id=mock_instance_2.image_id
         )
         described_image_w = util_helper.generate_dummy_describe_image(
-            image_id=mock_instance_w.image_id,
+            image_id=mock_instance_w.image_id
         )
         described_image_4 = util_helper.generate_dummy_describe_image(
-            image_id=mock_instance_4.image_id,
+            image_id=mock_instance_4.image_id
         )
         mock_images_data = {
             mock_instance_2.image_id: described_image_2,
@@ -339,22 +364,30 @@ class AnalyzeLogTest(TestCase):
         """
         instance_type = 't1.potato'
         new_instance_type = 't2.potato'
+        region = 'us-east-1'
         sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
         image_1 = account_helper.generate_aws_image()
         mock_instance = util_helper.generate_mock_ec2_instance(
             instance_type=instance_type, image_id=image_1.ec2_ami_id)
         on_record = analyzer_helper.generate_cloudtrail_instances_record(
             aws_account_id=self.mock_account_id,
-            instance_ids=[mock_instance.instance_id], region='us-east-1')
+            instance_ids=[mock_instance.instance_id],
+            region=region,
+            instance_type=instance_type
+        )
         off_record = analyzer_helper.generate_cloudtrail_instances_record(
             aws_account_id=self.mock_account_id,
             instance_ids=[mock_instance.instance_id],
-            event_name='StopInstances', region='us-east-1')
+            event_name='StopInstances',
+            region=region,
+        )
         change_type_record = \
             analyzer_helper.generate_cloudtrail_modify_instances_record(
                 aws_account_id=self.mock_account_id,
                 instance_id=mock_instance.instance_id,
-                instance_type=new_instance_type, region='us-east-1')
+                instance_type=new_instance_type,
+                region=region,
+            )
         s3_content = {'Records': [on_record, off_record, change_type_record]}
         mock_receive.return_value = [sqs_message]
         mock_s3.return_value = json.dumps(s3_content)
