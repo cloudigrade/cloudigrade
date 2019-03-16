@@ -28,17 +28,24 @@ CloudTrailInstanceEvent = collections.namedtuple(
     'CloudTrailInstanceEvent',
     [
         'occurred_at',
-        'account_id',
+        'aws_account_id',
         'region',
-        'instance_id',
+        'ec2_instance_id',
         'event_type',
         'instance_type',
-        'image_id',
+        'ec2_ami_id',
     ],
 )
 CloudTrailImageTagEvent = collections.namedtuple(
     'CloudTrailImageTagEvent',
-    ['occurred_at', 'account_id', 'region', 'image_id', 'tag', 'exists'],
+    [
+        'occurred_at',
+        'aws_account_id',
+        'region',
+        'ec2_ami_id',
+        'tag',
+        'exists',
+    ],
 )
 
 
@@ -73,7 +80,7 @@ def extract_ec2_instance_events(record):
     if not _is_valid_event(record, ec2_instance_event_map.keys()):
         return []
 
-    occurred_at, account_id, region = extract_time_account_region(record)
+    occurred_at, aws_account_id, region = extract_time_account_region(record)
     event_name = record['eventName']
     event_type = ec2_instance_event_map[event_name]
 
@@ -95,7 +102,7 @@ def extract_ec2_instance_events(record):
         ), {'event_name': event_name, 'record': record})
         return []
 
-    instance_image_ids = set([
+    ec2_instance_ami_ids = set([
         (instance_item['instanceId'], instance_item.get('imageId'))
         for instance_item in record.get('responseElements', {})
                                    .get('instancesSet', {})
@@ -107,26 +114,26 @@ def extract_ec2_instance_events(record):
     if (
         request_instance_id is not None and
         request_instance_id not in (
-            instance_id for instance_id, __ in instance_image_ids
+            instance_id for instance_id, __ in ec2_instance_ami_ids
         )
     ):
         # We only see the instanceId in requestParameters for
         # ModifyInstanceAttribute, and that operation can't change the image.
         # Only if there are no other records for this instance, then we may add
         # it to the set with *no* image ID.
-        instance_image_ids.add((request_instance_id, None))
+        ec2_instance_ami_ids.add((request_instance_id, None))
 
     return [
         CloudTrailInstanceEvent(
             occurred_at=occurred_at,
-            account_id=account_id,
+            aws_account_id=aws_account_id,
             region=region,
-            instance_id=instance_id,
+            ec2_instance_id=ec2_instance_id,
             event_type=event_type,
             instance_type=instance_type,
-            image_id=image_id,
+            ec2_ami_id=ec2_ami_id,
         )
-        for instance_id, image_id in instance_image_ids
+        for ec2_instance_id, ec2_ami_id in ec2_instance_ami_ids
     ]
 
 
@@ -144,9 +151,9 @@ def extract_ami_tag_events(record):
     if not _is_valid_event(record, ec2_ami_tag_event_list):
         return []
 
-    occurred_at, account_id, region = extract_time_account_region(record)
+    occurred_at, aws_account_id, region = extract_time_account_region(record)
     exists = record.get('eventName') == CREATE_TAG
-    image_ids = set([
+    ec2_ami_ids = set([
         resource_item['resourceId']
         for resource_item in record.get('requestParameters', {})
                                    .get('resourcesSet', {})
@@ -163,9 +170,9 @@ def extract_ami_tag_events(record):
 
     return [
         CloudTrailImageTagEvent(
-            occurred_at, account_id, region, image_id, tag, exists
+            occurred_at, aws_account_id, region, ec2_ami_id, tag, exists
         )
-        for image_id, tag in itertools.product(image_ids, tags)
+        for ec2_ami_id, tag in itertools.product(ec2_ami_ids, tags)
     ]
 
 
