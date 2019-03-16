@@ -33,6 +33,7 @@ CloudTrailInstanceEvent = collections.namedtuple(
         'instance_id',
         'event_type',
         'instance_type',
+        'image_id',
     ],
 )
 CloudTrailImageTagEvent = collections.namedtuple(
@@ -94,16 +95,26 @@ def extract_ec2_instance_events(record):
         ), {'event_name': event_name, 'record': record})
         return []
 
-    instance_ids = set([
-        instance_item['instanceId']
+    instance_image_ids = set([
+        (instance_item['instanceId'], instance_item.get('imageId'))
         for instance_item in record.get('responseElements', {})
                                    .get('instancesSet', {})
                                    .get('items', [])
         if 'instanceId' in instance_item
     ])
+
     request_instance_id = requestParameters.get('instanceId')
-    if request_instance_id is not None:
-        instance_ids.add(request_instance_id)
+    if (
+        request_instance_id is not None and
+        request_instance_id not in (
+            instance_id for instance_id, __ in instance_image_ids
+        )
+    ):
+        # We only see the instanceId in requestParameters for
+        # ModifyInstanceAttribute, and that operation can't change the image.
+        # Only if there are no other records for this instance, then we may add
+        # it to the set with *no* image ID.
+        instance_image_ids.add((request_instance_id, None))
 
     return [
         CloudTrailInstanceEvent(
@@ -113,8 +124,9 @@ def extract_ec2_instance_events(record):
             instance_id=instance_id,
             event_type=event_type,
             instance_type=instance_type,
+            image_id=image_id,
         )
-        for instance_id in instance_ids
+        for instance_id, image_id in instance_image_ids
     ]
 
 

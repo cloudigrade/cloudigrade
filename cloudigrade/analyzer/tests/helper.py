@@ -139,6 +139,7 @@ def generate_cloudtrail_instances_record(
         event_time=None,
         region=None,
         instance_type='t1.snail',
+        image_id='ami-1234567890',
 ):
     """
     Generate an example CloudTrail log's "Record" dict for instances event.
@@ -150,24 +151,39 @@ def generate_cloudtrail_instances_record(
         event_time (datetime.datetime): optional time when the even occurred.
         region (str): optional AWS region in which the event occurred.
         instance_type (str): optional AWS instance type.
+        image_id (str): optional AWS AMI ID.
 
     Returns:
         dict: Data that looks like a CloudTrail log Record.
 
     """
     if event_name == 'RunInstances':
-        request_parameters = {'instanceType': instance_type}
+        request_parameters = {
+            'instanceType': instance_type, 'imageId': image_id
+        }
+        response_elements = {
+            'instancesSet': {
+                'items': [
+                    {
+                        'instanceId': instance_id,
+                        'instanceType': instance_type,
+                        'imageId': image_id,
+                    }
+                    for instance_id in instance_ids
+                ]
+            },
+        }
     else:
         request_parameters = {}
+        response_elements = {
+            'instancesSet': {
+                'items': [
+                    {'instanceId': instance_id}
+                    for instance_id in instance_ids
+                ]
+            },
+        }
 
-    response_elements = {
-        'instancesSet': {
-            'items': [
-                {'instanceId': instance_id}
-                for instance_id in instance_ids
-            ]
-        },
-    }
     record = generate_cloudtrail_record(
         aws_account_id,
         event_name,
