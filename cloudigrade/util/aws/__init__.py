@@ -20,7 +20,7 @@ from util.aws.ec2 import (InstanceState,
                           get_ec2_instance,
                           get_snapshot,
                           get_volume,
-                          is_instance_windows,
+                          is_windows,
                           remove_snapshot_ownership)
 from util.aws.helper import (get_region_from_availability_zone, get_regions,
                              rewrap_aws_errors, verify_account_access)

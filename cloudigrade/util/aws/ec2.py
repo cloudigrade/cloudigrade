@@ -441,19 +441,21 @@ def check_volume_state(volume):
     return
 
 
-def is_instance_windows(instance_data):
+def is_windows(aws_data):
     """
-    Check to see if the instance has the windows platform set.
+    Check to see if the instance or image has the windows platform set.
 
     Args:
-        instance_data (object): Can either be a dict or an ec2.instance
+        instance_data (object): Can be a dict, ec2.instance, or ec2.image
             object depending what the source of the data was. Describes the
-            ec2 instance.
+            ec2 instance or image.
 
     Returns:
         bool: True if it appears to be windows, else False.
 
     """
-    return instance_data.get('Platform', '').lower() == 'windows' if \
-        isinstance(instance_data, dict) \
-        else getattr(instance_data, 'platform', None) == 'windows'
+    return (
+        aws_data.get('Platform', '').lower() == 'windows' if
+        isinstance(aws_data, dict) else
+        getattr(aws_data, 'platform', None) == 'windows'
+    )

@@ -109,7 +109,7 @@ class AccountCeleryTaskTest(TestCase):
             described_ami_openshift,
             described_ami_windows,
         ]
-        mock_util_aws.is_instance_windows.side_effect = aws.is_instance_windows
+        mock_util_aws.is_windows.side_effect = aws.is_windows
         mock_util_aws.OPENSHIFT_TAG = aws.OPENSHIFT_TAG
 
         start_inpection_calls = [

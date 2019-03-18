@@ -38,7 +38,7 @@ from account.util import (recalculate_runs, save_instance,
 from analyzer.cloudtrail import (extract_ami_tag_events,
                                  extract_ec2_instance_events)
 from util import aws
-from util.aws import is_instance_windows, rewrap_aws_errors
+from util.aws import is_windows, rewrap_aws_errors
 from util.celery import retriable_shared_task
 from util.exceptions import CloudTrailLogAnalysisMissingData
 
@@ -402,7 +402,7 @@ def _save_results(instance_events, ami_tag_events, aws_instances,
     windows_ami_ids = {
         instance.image_id
         for instance in aws_instances.values()
-        if is_instance_windows(instance)
+        if is_windows(instance)
     }
     logger.info(_('%(prefix)s: Windows AMI IDs found: %(windows_ami_ids)s'),
                 {'prefix': log_prefix, 'windows_ami_ids': windows_ami_ids})

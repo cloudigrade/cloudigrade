@@ -461,31 +461,31 @@ class UtilAwsEc2Test(TestCase):
         with self.assertRaises(AwsVolumeError):
             ec2.check_volume_state(mock_volume)
 
-    def test_is_instance_windows_lowercase(self):
+    def test_is_windows_lowercase(self):
         """Test that an instance with Platform 'windows' is windows."""
         dummy_instance = helper.generate_dummy_describe_instance(
             platform='windows'
         )
-        self.assertTrue(ec2.is_instance_windows(dummy_instance))
+        self.assertTrue(ec2.is_windows(dummy_instance))
 
-    def test_is_instance_windows_with_unexpected_case(self):
+    def test_is_windows_with_unexpected_case(self):
         """Test that an instance with Platform 'WiNdOwS' is windows."""
         dummy_instance = helper.generate_dummy_describe_instance(
             platform='WiNdOwS'
         )
-        self.assertTrue(ec2.is_instance_windows(dummy_instance))
+        self.assertTrue(ec2.is_windows(dummy_instance))
 
-    def test_is_instance_windows_with_empty_platform(self):
+    def test_is_windows_with_empty_platform(self):
         """Test that an instance with no Platform is not windows."""
         dummy_instance = helper.generate_dummy_describe_instance()
-        self.assertFalse(ec2.is_instance_windows(dummy_instance))
+        self.assertFalse(ec2.is_windows(dummy_instance))
 
-    def test_is_instance_windows_with_other_platform(self):
+    def test_is_windows_with_other_platform(self):
         """Test that an instance with Platform 'other' is not windows."""
         dummy_instance = helper.generate_dummy_describe_instance(
             platform='other'
         )
-        self.assertFalse(ec2.is_instance_windows(dummy_instance))
+        self.assertFalse(ec2.is_windows(dummy_instance))
 
     def test_copy_ami(self):
         """Test that an image is copied via the boto session successfully."""

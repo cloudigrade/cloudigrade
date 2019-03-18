@@ -180,8 +180,9 @@ def generate_dummy_describe_instance(instance_id=None, image_id=None,
     return mock_instance
 
 
-def generate_dummy_describe_image(image_id=None, owner_id=None, name=None,
-                                  openshift=False):
+def generate_dummy_describe_image(
+    image_id=None, owner_id=None, name=None, openshift=False, platform=None
+):
     """
     Generate dummy image to imitate 'describe images' API response.
 
@@ -192,6 +193,7 @@ def generate_dummy_describe_image(image_id=None, owner_id=None, name=None,
         owner_id (str): Optional AWS Account ID.
         name (str): Optional image name.
         openshift (bool): Optional indicator for openshift.
+        platform (str): Optional known Platform value.
 
     Returns:
         dict: Well-formed image data structure.
@@ -219,6 +221,9 @@ def generate_dummy_describe_image(image_id=None, owner_id=None, name=None,
         'Name': name,
         'Tags': tags,
     }
+    if platform is not None:
+        mock_image['Platform'] = platform
+
     return mock_image
 
 

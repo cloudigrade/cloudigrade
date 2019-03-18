@@ -218,7 +218,7 @@ def create_new_machine_images(session, instances_data):
         windows_ami_ids.extend({
             instance['ImageId']
             for instance in instances
-            if aws.is_instance_windows(instance)
+            if aws.is_windows(instance)
         })
     logger.info(_('%(prefix)s: Windows AMI IDs found: %(windows_ami_ids)s'),
                 {'prefix': log_prefix, 'windows_ami_ids': windows_ami_ids})
@@ -357,7 +357,7 @@ def generate_aws_ami_messages(instances_data, ami_id_list):
     for region, instances in instances_data.items():
         for instance in instances:
             if (instance['ImageId'] in ami_id_list and
-                    not aws.is_instance_windows(instance)):
+                    not aws.is_windows(instance)):
                 messages.append(
                     {
                         'cloud_provider': AWS_PROVIDER_STRING,
