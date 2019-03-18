@@ -1,0 +1,58 @@
+{
+	"Records": [
+		{
+			"eventVersion": "1.05",
+			"userIdentity": {
+				"type": "IAMUser",
+				"principalId": "ADJI3AALKATBQC7U6IUV5",
+				"arn": "arn:aws:iam::123456789012:user/my-great-user",
+				"accountId": "123456789012",
+				"accessKeyId": "A3TSI7ALTYA3RBK6253W",
+				"userName": "my-great-user",
+				"sessionContext": {
+					"attributes": {
+						"mfaAuthenticated": "false",
+						"creationDate": "2019-03-15T21:38:40Z"
+					}
+				},
+				"invokedBy": "signin.amazonaws.com"
+			},
+			"eventTime": "2019-03-15T22:18:50Z",
+			"eventSource": "ec2.amazonaws.com",
+			"eventName": "TerminateInstances",
+			"awsRegion": "us-east-1",
+			"sourceIPAddress": "127.0.0.1",
+			"userAgent": "signin.amazonaws.com",
+			"requestParameters": {
+				"instancesSet": {
+					"items": [
+						{
+							"instanceId": "i-065fe68fc87593079"
+						}
+					]
+				}
+			},
+			"responseElements": {
+				"instancesSet": {
+					"items": [
+						{
+							"instanceId": "i-065fe68fc87593079",
+							"currentState": {
+								"code": 32,
+								"name": "shutting-down"
+							},
+							"previousState": {
+								"code": 16,
+								"name": "running"
+							}
+						}
+					]
+				}
+			},
+			"requestID": "ef518598-c161-4faf-b417-eea1b1d844f9",
+			"eventID": "4793dc0c-cad5-4ea6-acbf-6d7f4e6ea01b",
+			"eventType": "AwsApiCall",
+			"recipientAccountId": "123456789012"
+		}
+	]
+}
