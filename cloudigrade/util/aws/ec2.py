@@ -90,6 +90,28 @@ def get_ec2_instance(session, instance_id):
     return session.resource('ec2').Instance(instance_id)
 
 
+def describe_instances(session, instance_ids, source_region):
+    """
+    Describe multiple AWS EC2 Instances.
+
+    Args:
+        session (boto3.Session): A temporary session tied to a customer account
+        instance_ids (list[str]): The EC2 instance IDs
+        source_region (str): The region the instances are running in
+
+    Returns:
+        list(dict): List of dicts that describe the requested instances
+
+    """
+    ec2 = session.client('ec2', region_name=source_region)
+    results = ec2.describe_instances(InstanceIds=list(instance_ids))
+    instances = dict()
+    for reservation in results.get('Reservations', []):
+        for instance in reservation.get('Instances', []):
+            instances[instance['InstanceId']] = instance
+    return instances
+
+
 def describe_images(session, image_ids, source_region):
     """
     Describe multiple AWS Amazon Machine Images.
