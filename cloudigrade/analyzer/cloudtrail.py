@@ -34,6 +34,7 @@ CloudTrailInstanceEvent = collections.namedtuple(
         'event_type',
         'instance_type',
         'ec2_ami_id',
+        'subnet_id',
     ],
 )
 CloudTrailImageTagEvent = collections.namedtuple(
@@ -103,7 +104,11 @@ def extract_ec2_instance_events(record):
         return []
 
     ec2_instance_ami_ids = set([
-        (instance_item['instanceId'], instance_item.get('imageId'))
+        (
+            instance_item['instanceId'],
+            instance_item.get('imageId'),
+            instance_item.get('subnetId'),
+        )
         for instance_item in record.get('responseElements', {})
                                    .get('instancesSet', {})
                                    .get('items', [])
@@ -121,7 +126,7 @@ def extract_ec2_instance_events(record):
         # ModifyInstanceAttribute, and that operation can't change the image.
         # Only if there are no other records for this instance, then we may add
         # it to the set with *no* image ID.
-        ec2_instance_ami_ids.add((request_instance_id, None))
+        ec2_instance_ami_ids.add((request_instance_id, None, None))
 
     return [
         CloudTrailInstanceEvent(
@@ -132,8 +137,9 @@ def extract_ec2_instance_events(record):
             event_type=event_type,
             instance_type=instance_type,
             ec2_ami_id=ec2_ami_id,
+            subnet_id=subnet_id,
         )
-        for ec2_instance_id, ec2_ami_id in ec2_instance_ami_ids
+        for ec2_instance_id, ec2_ami_id, subnet_id in ec2_instance_ami_ids
     ]
 
 
