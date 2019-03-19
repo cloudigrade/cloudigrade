@@ -3,6 +3,7 @@ import logging
 
 from botocore.exceptions import ClientError
 from dateutil import tz
+from django.db.transaction import on_commit
 from django.utils.translation import gettext as _
 from rest_framework import serializers
 from rest_framework.serializers import (HyperlinkedModelSerializer,
@@ -138,7 +139,8 @@ class AwsAccountSerializer(HyperlinkedModelSerializer):
                 }
             )
         account.save()
-        tasks.initial_aws_describe_instances.delay(account.id)
+        on_commit(lambda:
+                  tasks.initial_aws_describe_instances.delay(account.id))
         return account
 
     def update(self, instance, validated_data):

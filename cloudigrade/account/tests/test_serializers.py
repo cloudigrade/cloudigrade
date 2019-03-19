@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 import faker
 from botocore.exceptions import ClientError
-from django.test import TestCase
+from django.test import TestCase, TransactionTestCase
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
@@ -23,7 +23,7 @@ from util.tests import helper as util_helper
 _faker = faker.Faker()
 
 
-class AwsAccountSerializerTest(TestCase):
+class AwsAccountSerializerTest(TransactionTestCase):
     """AwsAccount serializer test case."""
 
     def setUp(self):
@@ -237,6 +237,61 @@ class AwsAccountSerializerTest(TestCase):
             self.assertIn('account_arn', raised_exception.detail)
             self.assertIn(str(self.aws_account_id),
                           raised_exception.detail['account_arn'][0])
+
+
+class AwsAccountSerializerNonTransactionalTest(TestCase):
+    """
+    NonTransactional AwsAccount serializer test case.
+
+    This is split from the AwsAccountSerializerTest since those tests are
+    Transactional.
+    """
+
+    def setUp(self):
+        """Set up shared test data."""
+        self.aws_account_id = util_helper.generate_dummy_aws_account_id()
+        self.arn = util_helper.generate_dummy_arn(self.aws_account_id)
+        self.role = util_helper.generate_dummy_role()
+        self.validated_data = {
+            'account_arn': self.arn,
+            'name': 'account_name'
+        }
+
+    @patch('account.serializers.tasks')
+    def test_task_not_launched_when_account_is_not_committed(self, mock_tasks):
+        """
+        If account is not commited, task sould not run.
+
+        There is a race condition where the account information is not saved
+        prior to the initial_aws_describe_instances running. We now wrap that
+        task in a on_commit block. Django's TestCase class does not commit
+        transactions- so we can test that the task is not ran if the
+        account is not commited.
+        """
+        mock_request = Mock()
+        mock_request.user = util_helper.generate_test_user()
+        context = {'request': mock_request}
+
+        mock_ami = Mock()
+        mock_ami.name = None
+        mock_ami.tags = []
+
+        with patch.object(aws, 'verify_account_access') as mock_verify, \
+                patch.object(aws.sts, 'boto3') as mock_boto3:
+            mock_assume_role = mock_boto3.client.return_value.assume_role
+            mock_assume_role.return_value = self.role
+            mock_verify.return_value = True, []
+
+            serializer = AwsAccountSerializer(context=context)
+
+            result = serializer.create(self.validated_data)
+            self.assertIsInstance(result, AwsAccount)
+            mock_tasks.initial_aws_describe_instances.delay.assert_not_called()
+
+        # Verify that we created the account.
+        account = AwsAccount.objects.get(aws_account_id=self.aws_account_id)
+        self.assertEqual(self.aws_account_id, account.aws_account_id)
+        self.assertEqual(self.arn, account.account_arn)
 
 
 class AwsMachineImageSerializerTest(TestCase):

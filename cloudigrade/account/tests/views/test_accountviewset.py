@@ -2,7 +2,7 @@
 from unittest.mock import patch
 
 import faker
-from django.test import TestCase
+from django.test import TransactionTestCase
 from rest_framework.test import (APIRequestFactory,
                                  force_authenticate)
 
@@ -14,7 +14,7 @@ from util.aws import AwsArn
 from util.tests import helper as util_helper
 
 
-class AccountViewSetTest(TestCase):
+class AccountViewSetTest(TransactionTestCase):
     """AccountViewSet test case."""
 
     def setUp(self):
