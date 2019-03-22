@@ -131,6 +131,23 @@ def generate_dummy_arn(
     return arn
 
 
+def get_random_instance_type(avoid=None):
+    """
+    Get a randomly selected AWS EC2 instance type.
+
+    Args:
+        avoid (str): optional specific instance type to avoid
+
+    Returns:
+        str: AWS EC2 instance type
+
+    """
+    instance_types = set(SOME_EC2_INSTANCE_TYPES.keys())
+    instance_types.discard(avoid)
+    instance_type = random.choice(tuple(instance_types))
+    return instance_type
+
+
 def generate_dummy_describe_instance(instance_id=None, image_id=None,
                                      subnet_id=None, state=None,
                                      instance_type=None, platform=''):
@@ -164,7 +181,7 @@ def generate_dummy_describe_instance(instance_id=None, image_id=None,
         subnet_id = generate_dummy_subnet_id()
 
     if instance_type is None:
-        instance_type = random.choice(tuple(SOME_EC2_INSTANCE_TYPES.keys()))
+        instance_type = get_random_instance_type()
 
     mock_instance = {
         'ImageId': image_id,
