@@ -150,7 +150,27 @@ def save_instance_events(instance, instance_data, events=None):
     else:
         logger.info(_('saving %(count)s new event(s) for %(instance)s'),
                     {'count': len(events), 'instance': instance})
+        events = sorted(events, key=lambda e: e['occurred_at'])
+
+        have_instance_type = False
+
         for e in events:
+            # Special case for "power on" events! If we have never saved the
+            # instance type before, we need to try to get the type from the
+            # described instance and use that on the event.
+            if (
+                have_instance_type is False and
+                e['event_type'] == AwsInstanceEvent.TYPE.power_on and
+                e['instance_type'] is None and
+                not AwsInstanceEvent.objects.filter(
+                    instance=instance,
+                    occurred_at__lte=e['occurred_at'],
+                    instance_type__isnull=False,
+                ).exists()
+            ):
+                e['instance_type'] = instance_data.get('InstanceType')
+                have_instance_type = True
+
             event = AwsInstanceEvent(
                 instance=instance,
                 machineimage=machineimage,
