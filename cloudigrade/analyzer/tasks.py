@@ -30,7 +30,8 @@ from account.models import (
     AwsMachineImage,
     InstanceEvent,
     MachineImage,
-    Run)
+    Run,
+)
 from account.reports import normalize_runs
 from account.util import (recalculate_runs, save_instance,
                           save_instance_events, save_new_aws_machine_image,
@@ -40,7 +41,8 @@ from analyzer.cloudtrail import (extract_ami_tag_events,
 from util import aws
 from util.aws import is_windows, rewrap_aws_errors
 from util.celery import retriable_shared_task
-from util.exceptions import CloudTrailLogAnalysisMissingData
+
+# from util.exceptions import CloudTrailLogAnalysisMissingData
 
 logger = logging.getLogger(__name__)
 
@@ -155,24 +157,31 @@ def _process_cloudtrail_message(message):
             ami_tag_events.extend(extract_ami_tag_events(record))
 
     # Get supporting details from AWS so we can save our models.
-    aws_instances, described_images = _get_aws_data_for_trail_events(
-        instance_events, ami_tag_events
-    )
+    # Note: It's important that we do all AWS API loading calls here before
+    # saving anything to the database. We don't want to leave database write
+    # transactions open while waiting on external APIs.
+    described_instances = _load_missing_instance_data(instance_events)
+    described_amis = _load_missing_ami_data(instance_events, ami_tag_events)
 
     try:
         # Save the results
-        new_images = _save_results(instance_events,
-                                   ami_tag_events,
-                                   aws_instances,
-                                   described_images)
+        new_images = _save_cloudtrail_activity(
+            instance_events,
+            ami_tag_events,
+            described_instances,
+            described_amis,
+        )
         # Starting image inspection MUST come after all other database writes
         # so that we are confident the atomic transaction will complete.
-        for image_id, image_data in described_images.items():
-            if image_id in new_images:
+        for ami_id, image in new_images.items():
+            # Is it even possible to get here when status is *not* PENDING?
+            # I don't think so, but just in case, we only want inspection to
+            # start if status == PENDING.
+            if image.status == image.PENDING:
                 start_image_inspection(
-                    image_data['found_in_account_arn'],
-                    image_id,
-                    image_data['found_in_region']
+                    described_amis[ami_id]['found_by_account_arn'],
+                    ami_id,
+                    described_amis[ami_id]['found_in_region'],
                 )
 
         logger.debug(_('Saved instances and/or events to the DB.'))
@@ -190,184 +199,231 @@ def _process_cloudtrail_message(message):
         return False
 
 
-def _get_aws_data_for_trail_events(instance_events, ami_tag_events):  # noqa: C901, E501
+def _instance_event_is_complete(instance_event):
+    """Check if the instance_event is populated enough for its instance."""
+    return (
+        instance_event.instance_type is not None and
+        instance_event.ec2_ami_id is not None
+    )
+
+
+def _load_missing_instance_data(instance_events):  # noqa: C901
     """
-    Get additional AWS data so we can process the given event data.
+    Load additional data so we can create instances from Cloud Trail events.
+
+    We only get the necessary instance type and AMI ID from AWS Cloud Trail for
+    the "RunInstances" event upon first creation of an instance. If we didn't
+    get that (for example, if an instance already existed but was stopped when
+    we got the cloud account), that means we may not know about the instance
+    and need to describe it before we create our record of it.
+
+    However, there is an edge-case possibility when AWS gives us events out of
+    order. If we receive an instance event *before* its "RunInstances" that
+    would fully describe it, we have to describe it now even though the later
+    event should eventually give us that same information. There's a super edge
+    case here that means the AWS user could have also changed the type before
+    we receive that initial "RunInstances" event, but we are not explicitly
+    handling that scenario as of this writing.
 
     Args:
         instance_events (list[CloudTrailInstanceEvent]): found instance events
-        ami_tag_events (list[CloudTrailImageTagEvent]): found ami tag events
+
+    Side-effect:
+        instance_events input argument may have been updated with missing
+            image_id values from AWS.
 
     Returns:
-        tuple(dict, dict): Dict of AWS Instance objects keyed by instance ID
-            and dict of AWS describe_image dicts keyed by image ID. These
-            should provide enough information to save appropriate DB updates.
+         dict: dict of dicts from AWS describing EC2 instances that are
+            referenced by the input arguments but are not present in our
+            database, with the outer key being each EC2 instance's ID.
 
     """
-    seen_aws_instances = {}
-    new_described_images = {}
-
-    known_ec2_ami_ids = set()  # growing set of IDs so we don't repeat lookups
+    all_ec2_instance_ids = set([
+        instance_event.ec2_instance_id for instance_event in instance_events
+    ])
+    described_instances = dict()
+    defined_ec2_instance_ids = set()
+    # First identify which instances DON'T need to be described because we
+    # either already have them stored or at least one of instance_events has
+    # enough information for it.
+    for instance_event in instance_events:
+        ec2_instance_id = instance_event.ec2_instance_id
+        if (
+            _instance_event_is_complete(instance_event) or
+            ec2_instance_id in defined_ec2_instance_ids
+        ):
+            defined_ec2_instance_ids.add(ec2_instance_id)
+        elif AwsInstance.objects.filter(
+            ec2_instance_id=ec2_instance_id
+        ).exists():
+            defined_ec2_instance_ids.add(ec2_instance_id)
 
     # Iterate through the instance events grouped by account and region in
     # order to minimize the number of sessions and AWS API calls.
-    for (aws_account_id, region), _instance_events in itertools.groupby(
-            instance_events, key=lambda e: (e.aws_account_id, e.region)):
+    for (aws_account_id, region), grouped_instance_events in itertools.groupby(
+        instance_events, key=lambda e: (e.aws_account_id, e.region)
+    ):
+        grouped_instance_events = list(grouped_instance_events)
+        # Find the set of EC2 instance IDs that belong to this account+region.
+        ec2_instance_ids = set(
+            [e.ec2_instance_id for e in grouped_instance_events]
+        ).difference(defined_ec2_instance_ids)
+
+        if not ec2_instance_ids:
+            # Early continue if there are no instances we need to describe!
+            continue
+
         account = AwsAccount.objects.get(aws_account_id=aws_account_id)
         session = aws.get_session(account.account_arn, region)
-        seen_ec2_ami_ids = set()  # set of image IDs seen in this iteration
 
-        # Fetch each instance's latest information from AWS.
-        for ec2_instance_id in set(
-                [e.ec2_instance_id for e in _instance_events]
+        # Get all relevant instances in one API call for this account+region.
+        new_described_instances = aws.describe_instances(
+            session, ec2_instance_ids, region
+        )
+
+        # How we found these instances will be important to save *later*.
+        # This wouldn't be necessary if we could save these here, but we don't
+        # want to mix DB transactions with external AWS API calls.
+        for (
+            ec2_instance_id, described_instance
+        ) in new_described_instances.items():
+            logger.info(
+                _(
+                    'Loading data for EC2 Instance %(ec2_instance_id)s for '
+                    'ARN %(account_arn)s in region %(region)s'
+                ),
+                {
+                    'ec2_instance_id': ec2_instance_id,
+                    'account_arn': account.account_arn,
+                    'region': region,
+                },
+            )
+            described_instance['found_by_account_arn'] = account.account_arn
+            described_instance['found_in_region'] = region
+            described_instances[ec2_instance_id] = described_instance
+
+    # Add any missing image IDs to the instance_events from the describes.
+    for instance_event in instance_events:
+        ec2_instance_id = instance_event.ec2_instance_id
+        if (
+            instance_event.ec2_ami_id is None and
+            ec2_instance_id in described_instances
         ):
-            # We only want to look up instances that are new to us
-            if not AwsInstance.objects.filter(
-                    ec2_instance_id=ec2_instance_id).exists():
-                instance = aws.get_ec2_instance(session, ec2_instance_id)
-                seen_aws_instances[ec2_instance_id] = instance
+            described_instance = described_instances[ec2_instance_id]
+            instance_event.ec2_ami_id = described_instance['ImageId']
 
-                try:
-                    if instance.image_id not in known_ec2_ami_ids:
-                        seen_ec2_ami_ids.add(instance.image_id)
-                except AttributeError as e:
-                    relevant_events = [
-                        event for event in _instance_events
-                        if e.ec2_instance_id == ec2_instance_id
-                    ]
-                    logger.info(
-                        _('Instance %(instance_id)s has no image_id from AWS. '
-                          'It may have been terminated before we processed it.'
-                          ' Found in events: %(events)s.'
-                          ),
-                        {
-                            'instance_id': ec2_instance_id,
-                            'events': relevant_events
-                        }
-                    )
-            else:
-                seen_aws_instances[ec2_instance_id] = {
-                    'InstanceId': ec2_instance_id
-                }
+    # We really *should* have what we need, but just in case...
+    for ec2_instance_id in all_ec2_instance_ids:
+        if (
+            ec2_instance_id not in defined_ec2_instance_ids and
+            ec2_instance_id not in described_instances
+        ):
+            logger.info(
+                _(
+                    'EC2 Instance %(ec2_instance_id)s could not be loaded '
+                    'from database or AWS. It may have been terminated before '
+                    'we processed it.'
+                ),
+                {'ec2_instance_id': ec2_instance_id},
+            )
 
-        if not seen_ec2_ami_ids:
-            continue
-
-        # Do we already have the image in our database?
-        known_ec2_ami_ids = known_ec2_ami_ids.union([
-            image.ec2_ami_id for image in
-            AwsMachineImage.objects.filter(ec2_ami_id__in=seen_ec2_ami_ids)
-        ])
-        new_ec2_ami_ids = seen_ec2_ami_ids - known_ec2_ami_ids
-
-        if not new_ec2_ami_ids:
-            continue
-
-        # TODO What happens if an image has been deregistered by now?
-        described_images = aws.describe_images(
-            session, new_ec2_ami_ids, region
-        )
-        for image_data in described_images:
-            # These bits of data will be useful in post-processing:
-            image_data['found_in_account_arn'] = account.account_arn
-            image_data['found_in_region'] = region
-            ec2_ami_id = image_data['ImageId']
-            new_described_images[ec2_ami_id] = image_data
-            known_ec2_ami_ids.add(ec2_ami_id)
-
-    # Iterate through the AMI tag events grouped by account and region in
-    # order to minimize the number of sessions and AWS API calls.
-    for (aws_account_id, region), _ami_tag_events in itertools.groupby(
-            ami_tag_events, key=lambda e: (e.aws_account_id, e.region)):
-        tag_ec2_ami_ids = set([
-            ami_tag_event.ec2_ami_id
-            for ami_tag_event in _ami_tag_events
-        ])
-        tag_ec2_ami_ids -= known_ec2_ami_ids
-
-        # Do we already have the image in our database?
-        known_ec2_ami_ids = known_ec2_ami_ids.union([
-            image.ec2_ami_id for image in
-            AwsMachineImage.objects.filter(ec2_ami_id__in=tag_ec2_ami_ids)
-        ])
-        tag_ec2_ami_ids -= known_ec2_ami_ids
-
-        if not tag_ec2_ami_ids:
-            continue
-
-        account = AwsAccount.objects.get(aws_account_id=aws_account_id)
-        session = aws.get_session(account.account_arn, region)
-
-        # TODO What happens if an image has been deregistered by now?
-        described_images = aws.describe_images(
-            session, tag_ec2_ami_ids, region
-        )
-        for image_data in described_images:
-            # These bits of data will be useful in post-processing:
-            image_data['found_in_account_arn'] = account.account_arn
-            image_data['found_in_region'] = region
-            ec2_ami_id = image_data['ImageId']
-            new_described_images[ec2_ami_id] = image_data
-            known_ec2_ami_ids.add(ec2_ami_id)
-
-    return seen_aws_instances, new_described_images
+    return described_instances
 
 
-def _sanity_check_cloudtrail_findings(
-    instance_events, ami_tag_events, aws_instances, described_images
-):
+def _load_missing_ami_data(instance_events, ami_tag_events):
     """
-    Sanity check the CloudTrail findings before attempting to save them.
+    Load additional data so we can create the AMIs for the given events.
 
     Args:
         instance_events (list[CloudTrailInstanceEvent]): found instance events
-        ami_tag_events (list[CloudTrailImageTagEvent]): found ami tag events
-        aws_instances (dict): AWS Instance objects keyed by instance ID
-        described_images (dict): AWS describe_image dicts keyed by image ID
+        ami_tag_events (list[CloudTrailImageTagEvent]): found AMI tag events
+
+    Returns:
+         dict: Dict of dicts from AWS describing AMIs that are referenced
+            by the input arguments but are not present in our database, with
+            the outer key being each AMI's ID.
+
     """
-    for instance_event in instance_events:
-        if instance_event.ec2_instance_id not in aws_instances:
-            raise CloudTrailLogAnalysisMissingData(_(
-                'Missing instance data for %s'
-            ), instance_event)
-        try:
-            ec2_ami_id = aws_instances[
-                instance_event.ec2_instance_id
-            ].image_id
-        except AttributeError:
-            logger.info(_(
-                'Instance event %s has no image_id from AWS. It may have '
-                'been terminated before we processed it.'
-            ), instance_event)
-            continue
-        if (
-            ec2_ami_id not in described_images and
-            not AwsMachineImage.objects.filter(ec2_ami_id=ec2_ami_id).exists()
-        ):
-            logger.info(_(
-                'Missing image data for %s; creating UNAVAILABLE stub image.'
-            ), instance_event)
-            AwsMachineImage.objects.create(
-                ec2_ami_id=ec2_ami_id, status=MachineImage.UNAVAILABLE
+    seen_ami_ids = set(
+        [
+            event.ec2_ami_id
+            for event in instance_events + ami_tag_events
+            if event.ec2_ami_id is not None
+        ]
+    )
+    known_images = AwsMachineImage.objects.filter(ec2_ami_id__in=seen_ami_ids)
+    known_ami_ids = set([image.ec2_ami_id for image in known_images])
+    new_ami_ids = seen_ami_ids.difference(known_ami_ids)
+
+    new_amis_keyed = set(
+        [
+            (event.aws_account_id, event.region, event.ec2_ami_id)
+            for event in instance_events + ami_tag_events
+            if event.ec2_ami_id in new_ami_ids
+        ]
+    )
+
+    described_amis = dict()
+
+    # Look up only the new AMIs that belong to each account+region group.
+    for (aws_account_id, region), amis_keyed in itertools.groupby(
+        new_amis_keyed, key=lambda a: (a[0], a[1])
+    ):
+        amis_keyed = list(amis_keyed)
+        account = AwsAccount.objects.get(aws_account_id=aws_account_id)
+        session = aws.get_session(account.account_arn, region)
+
+        ami_ids = [k[2] for k in amis_keyed]
+
+        # Get all relevant images in one API call for this account+region.
+        new_described_amis = aws.describe_images(session, ami_ids, region)
+        for described_ami in new_described_amis:
+            ami_id = described_ami['ImageId']
+            logger.info(
+                _(
+                    'Loading data for AMI %(ami_id)s for '
+                    'ARN %(account_arn)s in region %(region)s'
+                ),
+                {
+                    'ami_id': ami_id,
+                    'account_arn': account.account_arn,
+                    'region': region,
+                },
             )
-    for ami_tag_event in ami_tag_events:
-        ec2_ami_id = ami_tag_event.ec2_ami_id
-        if ec2_ami_id not in described_images and \
-                not AwsMachineImage.objects.filter(
-                    ec2_ami_id=ec2_ami_id).exists():
-            logger.info(_(
-                'Missing image data for %s; creating UNAVAILABLE stub image.'
-            ), ami_tag_event)
-            AwsMachineImage.objects.create(
-                ec2_ami_id=ec2_ami_id, status=MachineImage.UNAVAILABLE
+            described_ami['found_in_region'] = region
+            described_ami['found_by_account_arn'] = account.account_arn
+            described_amis[ami_id] = described_ami
+
+    for aws_account_id, region, ec2_ami_id in new_amis_keyed:
+        if ec2_ami_id not in described_amis:
+            logger.info(
+                _(
+                    'AMI %(ec2_ami_id)s could not be found in region '
+                    '%(region)s for AWS account %(aws_account_id)s.'
+                ),
+                {
+                    'ec2_ami_id': ec2_ami_id,
+                    'region': region,
+                    'aws_account_id': aws_account_id,
+                },
             )
+
+    return described_amis
 
 
 @transaction.atomic
-def _save_results(instance_events, ami_tag_events, aws_instances,
-                  described_images):
+def _save_cloudtrail_activity(
+    instance_events, ami_tag_events, described_instances, described_images
+):
     """
     Save new images and instances events found via CloudTrail to the DB.
+
+    The order of operations here generally looks like:
+
+        1. Save new images.
+        2. Save tag changes for images.
+        3. Save new instances.
+        4. Save events for instances.
 
     Note:
         Nothing should be reaching out to AWS APIs in this function! We should
@@ -377,41 +433,70 @@ def _save_results(instance_events, ami_tag_events, aws_instances,
     Args:
         instance_events (list[CloudTrailInstanceEvent]): found instance events
         ami_tag_events (list[CloudTrailImageTagEvent]): found ami tag events
-        aws_instances (dict): AWS Instance objects keyed by instance ID
-        described_images (dict): AWS describe_image dicts keyed by image ID
+        described_instances (dict): described new-to-us AWS instances keyed by
+            EC2 instance ID
+        described_images (dict): described new-to-us AMIs keyed by AMI ID
 
     Returns:
         dict: Only the new images that were created in the process.
 
     """
-    _sanity_check_cloudtrail_findings(instance_events,
-                                      ami_tag_events,
-                                      aws_instances,
-                                      described_images)
-
     # Log some basic information about what we're saving.
     log_prefix = 'analyzer'
-    ec2_instance_ids = set(aws_instances.keys())
-    logger.info(_('%(prefix)s: all EC2 Instance IDs found: %(instance_ids)s'),
-                {'prefix': log_prefix, 'instance_ids': ec2_instance_ids})
-    ami_ids = set(described_images.keys())
-    logger.info(_('%(prefix)s: new AMI IDs found: %(ami_ids)s'),
-                {'prefix': log_prefix, 'ami_ids': ami_ids})
+    all_ec2_instance_ids = set(
+        [
+            instance_event.ec2_instance_id
+            for instance_event in instance_events
+            if instance_event.ec2_instance_id is not None
+        ]
+    )
+    logger.info(
+        _(
+            '%(prefix)s: EC2 Instance IDs found: %(all_ec2_instance_ids)s'
+        ),
+        {'prefix': log_prefix, 'all_ec2_instance_ids': all_ec2_instance_ids},
+    )
 
-    # Which images have Windows based on the instance platform?
+    all_ami_ids = set(
+        [
+            instance_event.ec2_ami_id
+            for instance_event in instance_events
+            if instance_event.ec2_ami_id is not None
+        ] + [
+            ami_tag_event.ec2_ami_id
+            for ami_tag_event in ami_tag_events
+            if ami_tag_event.ec2_ami_id is not None
+        ] + [
+            ec2_ami_id
+            for ec2_ami_id in described_images.keys()
+        ]
+    )
+    logger.info(
+        _(
+            '%(prefix)s: EC2 AMI IDs found: %(all_ami_ids)s'
+        ),
+        {'prefix': log_prefix, 'all_ami_ids': all_ami_ids},
+    )
+
+    # Which images have the Windows platform?
     windows_ami_ids = {
-        instance.image_id
-        for instance in aws_instances.values()
-        if is_windows(instance)
+        ami_id
+        for ami_id, described_ami in described_images.items()
+        if is_windows(described_ami)
     }
-    logger.info(_('%(prefix)s: Windows AMI IDs found: %(windows_ami_ids)s'),
-                {'prefix': log_prefix, 'windows_ami_ids': windows_ami_ids})
+    logger.info(
+        _(
+            '%(prefix)s: Windows AMI IDs found: %(windows_ami_ids)s'
+        ),
+        {'prefix': log_prefix, 'windows_ami_ids': windows_ami_ids},
+    )
 
     # Which images need tag state changes?
     ocp_tagged_ami_ids = set()
     ocp_untagged_ami_ids = set()
     for ec2_ami_id, events_info in itertools.groupby(
-            ami_tag_events, key=lambda e: e.ec2_ami_id):
+        ami_tag_events, key=lambda e: e.ec2_ami_id
+    ):
         # Get only the most recent event for each image
         latest_event = sorted(events_info, key=lambda e: e.occurred_at)[-1]
         # IMPORTANT NOTE: This assumes all tags are the OCP tag!
@@ -421,34 +506,67 @@ def _save_results(instance_events, ami_tag_events, aws_instances,
         else:
             ocp_untagged_ami_ids.add(ec2_ami_id)
 
-    # Which images do we actually need to create?
-    known_ami_ids = {
-        image.ec2_ami_id for image in
-        AwsMachineImage.objects.filter(
-            ec2_ami_id__in=list(described_images.keys())
-        )
-    }
+    logger.info(
+        _('%(prefix)s: AMIs found tagged for OCP: %(ocp_tagged_ami_ids)s'),
+        {'prefix': log_prefix, 'ocp_tagged_ami_ids': ocp_tagged_ami_ids},
+    )
+
+    logger.info(
+        _('%(prefix)s: AMIs found untagged for OCP: %(ocp_untagged_ami_ids)s'),
+        {'prefix': log_prefix, 'ocp_untagged_ami_ids': ocp_untagged_ami_ids},
+    )
 
     # Create only the new images.
     new_images = {}
     for ami_id, described_image in described_images.items():
-        if ami_id in known_ami_ids:
-            logger.info(_('%(prefix)s: Skipping known AMI ID: %(ami_id)s'),
-                        {'prefix': log_prefix, 'ami_id': ami_id})
-            continue
-
         owner_id = Decimal(described_image['OwnerId'])
         name = described_image['Name']
         windows = ami_id in windows_ami_ids
         openshift = ami_id in ocp_tagged_ami_ids
         region = described_image['found_in_region']
 
-        logger.info(_('%(prefix)s: Saving new AMI ID: %(ami_id)s'),
-                    {'prefix': log_prefix, 'ami_id': ami_id})
+        logger.info(
+            _(
+                '%(prefix)s: Saving new AMI ID %(ami_id)s in region %(region)s'
+            ),
+            {'prefix': log_prefix, 'ami_id': ami_id, 'region': region},
+        )
         image, new = save_new_aws_machine_image(
             ami_id, name, owner_id, openshift, windows, region)
         if new and image.status is not image.INSPECTED:
             new_images[ami_id] = image
+
+    # Create "unavailable" images for AMIs we saw referenced but that we either
+    # don't have in our models or could not describe from AWS.
+    seen_ami_ids = set(
+        [
+            described_instance['ImageId']
+            for described_instance in described_instances.values()
+            if described_instance.get('ImageId') is not None
+        ] + [
+            ami_tag_event.ec2_ami_id
+            for ami_tag_event in ami_tag_events
+            if ami_tag_event.ec2_ami_id is not None
+        ] + [
+            instance_event.ec2_ami_id
+            for instance_event in instance_events
+            if instance_event.ec2_ami_id is not None
+        ]
+    )
+    described_ami_ids = set(described_images.keys())
+    known_ami_ids = set(
+        image.ec2_ami_id for image in AwsMachineImage.objects.filter(
+            ec2_ami_id__in=list(seen_ami_ids - described_ami_ids)
+        )
+    )
+    unavailable_ami_ids = seen_ami_ids - described_ami_ids - known_ami_ids
+    for ami_id in unavailable_ami_ids:
+        logger.info(_(
+            'Missing image data for %s; creating UNAVAILABLE stub image.'
+        ), ami_id)
+        AwsMachineImage.objects.create(
+            ec2_ami_id=ami_id, status=MachineImage.UNAVAILABLE
+        )
 
     # Update images with openshift tag changes.
     if ocp_tagged_ami_ids:
@@ -462,24 +580,41 @@ def _save_results(instance_events, ami_tag_events, aws_instances,
 
     # Save instances and their events.
     for (
-        (ec2_instance_id, region, aws_account_id), _events
+        (ec2_instance_id, region, aws_account_id), events
     ) in itertools.groupby(
         instance_events,
         key=lambda e: (e.ec2_instance_id, e.region, e.aws_account_id),
     ):
         account = AwsAccount.objects.get(aws_account_id=aws_account_id)
-        aws_instance = aws_instances[ec2_instance_id]
+        events = list(events)
+
+        if ec2_instance_id in described_instances:
+            instance_data = described_instances[ec2_instance_id]
+        else:
+            instance_data = {
+                'InstanceId': ec2_instance_id,
+                'ImageId': events[0].ec2_ami_id,
+                'SubnetId': events[0].subnet_id,
+            }
+        logger.info(
+            _(
+                '%(prefix)s: Saving new EC2 instance ID %(ec2_instance_id)s '
+                'for AWS account ID %(aws_account_id)s in region %(region)s'
+            ),
+            {
+                'prefix': log_prefix,
+                'ec2_instance_id': ec2_instance_id,
+                'aws_account_id': aws_account_id,
+                'region': region,
+            },
+        )
+        instance = save_instance(
+            account, instance_data, region
+        )
 
         # Build a list of event data
-        events_info = _build_events_info_for_saving(
-            account, aws_instance, _events
-        )
-        instance = save_instance(account, aws_instance, region)
-        save_instance_events(
-            instance,
-            aws_instance,
-            events_info
-        )
+        events_info = _build_events_info_for_saving(account, instance, events)
+        save_instance_events(instance, instance_data, events_info)
 
     return new_images
 
@@ -488,7 +623,7 @@ def _build_events_info_for_saving(account, instance, events):
     """
     Build a list of enough information to save the relevant events.
 
-    If particular note here is the "if" that filters away events that seem to
+    Of particular note here is the "if" that filters away events that seem to
     have occurred before their account was created. This can happen in some
     edge-case circumstances when the user is deleting and recreating their
     account in cloudigrade while powering off and on events in AWS. The AWS

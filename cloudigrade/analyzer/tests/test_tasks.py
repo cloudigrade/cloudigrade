@@ -12,7 +12,6 @@ from account.models import (
     AwsInstanceEvent,
     AwsMachineImage,
     InstanceEvent,
-    MachineImage,
     Run
 )
 from account.tests import helper as account_helper
@@ -29,224 +28,600 @@ class AnalyzeLogTest(TestCase):
     def setUp(self):
         """Set up common variables for tests."""
         self.user = util_helper.generate_test_user()
-        self.mock_account_id = str(util_helper.generate_dummy_aws_account_id())
-        self.mock_arn = util_helper.generate_dummy_arn(self.mock_account_id)
-        self.mock_account = account_helper.generate_aws_account(
-            arn=self.mock_arn,
-            aws_account_id=self.mock_account_id,
+        self.aws_account_id = util_helper.generate_dummy_aws_account_id()
+        self.account = account_helper.generate_aws_account(
+            aws_account_id=self.aws_account_id,
             user=self.user,
             created_at=util_helper.utc_dt(2017, 12, 1, 0, 0, 0),
         )
-
-    def assertExpectedInstance(self, ec2_instance, region):
-        """Assert we created an Instance model matching expectations."""
-        instance = AwsInstance.objects.get(
-            ec2_instance_id=ec2_instance.instance_id)
-        self.assertEqual(instance.ec2_instance_id,
-                         ec2_instance.instance_id)
-        self.assertEqual(instance.account, self.mock_account)
-        self.assertEqual(instance.region, region)
-
-    def assertExpectedInstanceEvents(self, ec2_instance, expected_count,
-                                     event_type, occurred_at):
-        """Assert we created InstanceEvents matching expectations."""
-        instanceevents = list(AwsInstanceEvent.objects.filter(
-            instance__awsinstance__ec2_instance_id=ec2_instance.instance_id))
-
-        self.assertEqual(len(instanceevents), expected_count)
-        for instanceevent in instanceevents:
-            self.assertEqual(instanceevent.instance.ec2_instance_id,
-                             ec2_instance.instance_id)
-            self.assertEqual(instanceevent.subnet, ec2_instance.subnet_id)
-            self.assertEqual(instanceevent.instance_type,
-                             ec2_instance.instance_type)
-            self.assertEqual(instanceevent.event_type, event_type)
-            self.assertEqual(instanceevent.occurred_at, occurred_at)
-            self.assertEqual(instanceevent.machineimage.ec2_ami_id,
-                             ec2_instance.image_id)
-
-    def assertExpectedImage(self, ec2_instance, described_image,
-                            is_windows=False):
-        """Assert we created a MachineImage matching expectations."""
-        image = AwsMachineImage.objects.get(ec2_ami_id=ec2_instance.image_id)
-        self.assertEqual(image.ec2_ami_id, ec2_instance.image_id)
-        self.assertEqual(image.ec2_ami_id, described_image['ImageId'])
-        self.assertEqual(image.owner_aws_account_id,
-                         described_image['OwnerId'])
-        self.assertEqual(image.name,
-                         described_image['Name'])
-        if is_windows:
-            self.assertEqual(image.platform, AwsMachineImage.WINDOWS)
-        else:
-            self.assertEqual(image.platform, AwsMachineImage.NONE)
+        account_helper.generate_aws_ec2_definitions()
 
     @patch('analyzer.tasks.start_image_inspection')
-    @patch('analyzer.tasks.aws.get_ec2_instance')
     @patch('analyzer.tasks.aws.get_session')
     @patch('analyzer.tasks.aws.delete_messages_from_queue')
     @patch('analyzer.tasks.aws.get_object_content_from_s3')
     @patch('analyzer.tasks.aws.yield_messages_from_queue')
+    @patch('analyzer.tasks.aws.describe_instances')
     @patch('analyzer.tasks.aws.describe_images')
-    def test_command_output_success_ec2_attributes_included(
-            self, mock_describe, mock_receive, mock_s3, mock_del, mock_session,
-            mock_ec2, mock_inspection):
+    def test_analyze_log_same_instance_various_things(
+        self,
+        mock_describe_images,
+        mock_describe_instances,
+        mock_receive,
+        mock_s3,
+        mock_del,
+        mock_session,
+        mock_inspection,
+    ):
         """
-        Test processing a CloudTrail log with some interesting data included.
+        Analyze CloudTrail records for one instance doing various things.
 
-        This test simulates receiving a CloudTrail log that has three records.
-        The first record includes power-on events for two instances. The second
-        record includes a power-on event for a windows platform instance. The
-        third record includes a power-on event for all three instances plus a
-        fourth instance. The first instance's image is already known to us.
-        The others are all new.
+        This test covers multiple "interesting" use cases including:
 
-        All events happen simultaneously. This is unusual and probably will not
-        happen in practice, but our code should handle it.
+        - starting a new instance for the first time
+        - that instance uses an image we've not yet seen
+        - rebooting that instance
+        - stopping that instance
+        - changing the instance's type
+        - stopping the instance
+
+        We verify that we DO NOT describe_instances because the CloudTrail
+        message for running a new instance should have enough data to define
+        our model. We verify that we DO describe_images for the new image. We
+        verify that the appropriate events and runs are created and that the
+        instance type change correctly affects its following event and run.
         """
         sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
         mock_receive.return_value = [sqs_message]
-
-        # Put all the activity in the same region for testing.
         region = random.choice(util_helper.SOME_AWS_REGIONS)
 
-        # Generate the known image for the first instance.
-        image_1 = account_helper.generate_aws_image()
-
-        # Use the same instance type for all the mocked EC2 instances.
-        instance_type = random.choice(
-            tuple(util_helper.SOME_EC2_INSTANCE_TYPES.keys())
+        # Starting instance type and then the one it changes to.
+        instance_type = util_helper.get_random_instance_type()
+        new_instance_type = util_helper.get_random_instance_type(
+            avoid=instance_type
         )
 
-        # Define the mocked EC2 instances.
-        mock_instance_1 = util_helper.generate_mock_ec2_instance(
-            image_id=image_1.ec2_ami_id, instance_type=instance_type
-        )
-        mock_instance_2 = util_helper.generate_mock_ec2_instance(
-            instance_type=instance_type
-        )
-        mock_instance_w = util_helper.generate_mock_ec2_instance(
-            platform='windows', instance_type=instance_type
-        )
-        mock_instance_4 = util_helper.generate_mock_ec2_instance(
-            instance_type=instance_type
-        )
-
-        # Define the three Record entries for the S3 log file.
-        # These are all effectively 'RunInstances' events.
-        occurred_at = util_helper.utc_dt(2018, 1, 1, 0, 0, 0)
-        trail_record_1 = analyzer_helper.generate_cloudtrail_instances_record(
-            aws_account_id=self.mock_account_id,
-            instance_ids=[
-                mock_instance_1.instance_id,
-                mock_instance_w.instance_id,
-            ],
-            event_time=occurred_at,
-            region=region,
-            instance_type=instance_type,
-        )
-        trail_record_2 = analyzer_helper.generate_cloudtrail_instances_record(
-            aws_account_id=self.mock_account_id,
-            instance_ids=[mock_instance_2.instance_id],
-            event_time=occurred_at,
-            region=region,
-            instance_type=instance_type,
-        )
-        trail_record_3 = analyzer_helper.generate_cloudtrail_instances_record(
-            aws_account_id=self.mock_account_id,
-            instance_ids=[
-                mock_instance_1.instance_id,
-                mock_instance_2.instance_id,
-                mock_instance_w.instance_id,
-                mock_instance_4.instance_id,
-            ],
-            event_time=occurred_at,
-            region=region,
-            instance_type=instance_type,
-        )
-        s3_content = {
-            'Records': [trail_record_1, trail_record_2, trail_record_3]
-        }
-        mock_s3.return_value = json.dumps(s3_content)
-
-        # Define the mocked "get instance" behavior.
-        mock_instances = {
-            mock_instance_1.instance_id: mock_instance_1,
-            mock_instance_2.instance_id: mock_instance_2,
-            mock_instance_w.instance_id: mock_instance_w,
-            mock_instance_4.instance_id: mock_instance_4,
-        }
-
-        def get_ec2_instance_side_effect(session, instance_id):
-            return mock_instances[instance_id]
-        mock_ec2.side_effect = get_ec2_instance_side_effect
+        ec2_instance_id = util_helper.generate_dummy_instance_id()
+        ec2_ami_id = util_helper.generate_dummy_image_id()
 
         # Define the mocked "describe images" behavior.
-        described_image_2 = util_helper.generate_dummy_describe_image(
-            image_id=mock_instance_2.image_id
-        )
-        described_image_w = util_helper.generate_dummy_describe_image(
-            image_id=mock_instance_w.image_id
-        )
-        described_image_4 = util_helper.generate_dummy_describe_image(
-            image_id=mock_instance_4.image_id
-        )
-        mock_images_data = {
-            mock_instance_2.image_id: described_image_2,
-            mock_instance_w.image_id: described_image_w,
-            mock_instance_4.image_id: described_image_4,
-        }
+        described_image = util_helper.generate_dummy_describe_image(ec2_ami_id)
+        described_images = {ec2_ami_id: described_image}
 
-        def describe_images_side_effect(session, image_ids, source_region):
-            return [
-                mock_images_data[image_id]
-                for image_id in image_ids
+        def describe_images_side_effect(__, image_ids, ___):
+            return [described_images[image_id] for image_id in image_ids]
+        mock_describe_images.side_effect = describe_images_side_effect
+
+        # Define the S3 message payload.
+        occurred_at_run = util_helper.utc_dt(2018, 1, 1, 0, 0, 0)
+        occurred_at_reboot = util_helper.utc_dt(2018, 1, 2, 0, 0, 0)
+        occurred_at_stop = util_helper.utc_dt(2018, 1, 3, 0, 0, 0)
+        occurred_at_modify = util_helper.utc_dt(2018, 1, 4, 0, 0, 0)
+        occurred_at_start = util_helper.utc_dt(2018, 1, 5, 0, 0, 0)
+        s3_content = {
+            'Records': [
+                analyzer_helper.generate_cloudtrail_instances_record(
+                    aws_account_id=self.aws_account_id,
+                    instance_ids=[ec2_instance_id],
+                    event_name='RunInstances',
+                    event_time=occurred_at_run,
+                    region=region,
+                    instance_type=instance_type,
+                    image_id=ec2_ami_id,
+                ),
+                analyzer_helper.generate_cloudtrail_instances_record(
+                    aws_account_id=self.aws_account_id,
+                    instance_ids=[ec2_instance_id],
+                    event_name='RebootInstances',
+                    event_time=occurred_at_reboot,
+                    region=region,
+                    # instance_type=instance_type,  # not relevant for reboot
+                    # image_id=ec2_ami_id,  # not relevant for reboot
+                ),
+                analyzer_helper.generate_cloudtrail_instances_record(
+                    aws_account_id=self.aws_account_id,
+                    instance_ids=[ec2_instance_id],
+                    event_name='StopInstances',
+                    event_time=occurred_at_stop,
+                    region=region,
+                    # instance_type=instance_type,  # not relevant for stop
+                    # image_id=ec2_ami_id,  # not relevant for stop
+                ),
+                analyzer_helper.generate_cloudtrail_modify_instances_record(
+                    aws_account_id=self.aws_account_id,
+                    instance_id=ec2_instance_id,
+                    instance_type=new_instance_type,
+                    event_time=occurred_at_modify,
+                    region=region,
+                ),
+                analyzer_helper.generate_cloudtrail_instances_record(
+                    aws_account_id=self.aws_account_id,
+                    instance_ids=[ec2_instance_id],
+                    event_name='StartInstances',
+                    event_time=occurred_at_start,
+                    region=region,
+                    # instance_type=instance_type,  # not relevant for start
+                    # image_id=ec2_ami_id,  # not relevant for start
+                ),
             ]
-        mock_describe.side_effect = describe_images_side_effect
+        }
+        mock_s3.return_value = json.dumps(s3_content)
 
         successes, failures = tasks.analyze_log()
 
         self.assertEqual(len(successes), 1)
         self.assertEqual(len(failures), 0)
 
-        mock_del.assert_called()
+        # Assert that we deleted the message upon processing it.
+        mock_del.assert_called_with(
+            settings.CLOUDTRAIL_EVENT_URL, [sqs_message]
+        )
+
+        # We should *not* have described the instance because the CloudTrail
+        # messages should have enough information to proceed.
+        mock_describe_instances.assert_not_called()
+
+        # We *should* have described the image because it is new to us.
+        mock_describe_images.assert_called()
+
+        # Inspection *should* have started for this new image.
         mock_inspection.assert_called()
         inspection_calls = mock_inspection.call_args_list
-        # Note: We do not start inspection for the image we already knew about
-        # or the image for the windows instance. We only start inspection for
-        # new not-windows images.
-        self.assertEqual(len(inspection_calls), 2)
-        instance_2_call = call(self.mock_arn, mock_instance_2.image_id, region)
-        instance_4_call = call(self.mock_arn, mock_instance_4.image_id, region)
-        self.assertIn(instance_2_call, inspection_calls)
-        self.assertIn(instance_4_call, inspection_calls)
+        self.assertEqual(len(inspection_calls), 1)
+        instance_call = call(self.account.account_arn, ec2_ami_id, region)
+        self.assertIn(instance_call, inspection_calls)
 
-        # Check the objects we created around the first instance.
-        self.assertExpectedInstance(mock_instance_1, region)
-        self.assertExpectedInstanceEvents(
-            mock_instance_1, 2, InstanceEvent.TYPE.power_on, occurred_at)
-        # Unlike the other cases, we should not have created a new image here.
-        image_1_after = AwsMachineImage.objects.get(
-            ec2_ami_id=mock_instance_1.image_id)
-        self.assertEqual(image_1, image_1_after)
+        # Assert that the correct instance was saved.
+        instance = AwsInstance.objects.get(ec2_instance_id=ec2_instance_id)
+        self.assertEqual(instance.account, self.account)
+        self.assertEqual(instance.region, region)
 
-        # Check the objects we created around the second instance.
-        self.assertExpectedInstance(mock_instance_2, region)
-        self.assertExpectedInstanceEvents(
-            mock_instance_2, 2, InstanceEvent.TYPE.power_on, occurred_at)
-        self.assertExpectedImage(mock_instance_2, described_image_2)
+        # Assert that the correct instance events were saved.
+        # We expect to find *four* events. Note that "reboot" does not cause us
+        # to generate a new event because we know it's already running.
+        instanceevents = list(AwsInstanceEvent.objects.filter(
+            instance__awsinstance__ec2_instance_id=ec2_instance_id
+        ).order_by('occurred_at'))
+        self.assertEqual(len(instanceevents), 4)
 
-        # Check the objects we created around the windows instance.
-        self.assertExpectedInstance(mock_instance_w, region)
-        self.assertExpectedInstanceEvents(
-            mock_instance_w, 2, InstanceEvent.TYPE.power_on, occurred_at)
-        self.assertExpectedImage(mock_instance_w, described_image_w,
-                                 is_windows=True)
+        self.assertEqual(instanceevents[0].occurred_at, occurred_at_run)
+        self.assertEqual(instanceevents[1].occurred_at, occurred_at_stop)
+        self.assertEqual(instanceevents[2].occurred_at, occurred_at_modify)
+        self.assertEqual(instanceevents[3].occurred_at, occurred_at_start)
 
-        # Check the objects we created around the fourth instance.
-        self.assertExpectedInstance(mock_instance_4, region)
-        self.assertExpectedInstanceEvents(
-            mock_instance_4, 1, InstanceEvent.TYPE.power_on, occurred_at)
-        self.assertExpectedImage(mock_instance_4, described_image_4)
+        self.assertEqual(instanceevents[0].event_type, 'power_on')
+        self.assertEqual(instanceevents[1].event_type, 'power_off')
+        self.assertEqual(instanceevents[2].event_type, 'attribute_change')
+        self.assertEqual(instanceevents[3].event_type, 'power_on')
+
+        self.assertEqual(instanceevents[0].instance_type, instance_type)
+        self.assertEqual(instanceevents[1].instance_type, None)
+        self.assertEqual(instanceevents[2].instance_type, new_instance_type)
+        self.assertEqual(instanceevents[3].instance_type, None)
+
+        # Assert that as a side-effect two runs were created.
+        runs = Run.objects.filter(instance=instance).order_by('start_time')
+        self.assertEqual(len(runs), 2)
+        self.assertEqual(runs[0].instance_type, instance_type)
+        self.assertEqual(runs[0].start_time, occurred_at_run)
+        self.assertEqual(runs[0].end_time, occurred_at_stop)
+        self.assertEqual(runs[1].instance_type, new_instance_type)
+        self.assertEqual(runs[1].start_time, occurred_at_start)
+        self.assertIsNone(runs[1].end_time)
+
+        # Assert that the correct image was saved.
+        image = AwsMachineImage.objects.get(ec2_ami_id=ec2_ami_id)
+        self.assertEqual(image.region, region)
+        self.assertEqual(
+            image.owner_aws_account_id, described_image['OwnerId']
+        )
+        self.assertEqual(image.status, image.PENDING)
+
+    @patch('analyzer.tasks.start_image_inspection')
+    @patch('analyzer.tasks.aws.get_session')
+    @patch('analyzer.tasks.aws.delete_messages_from_queue')
+    @patch('analyzer.tasks.aws.get_object_content_from_s3')
+    @patch('analyzer.tasks.aws.yield_messages_from_queue')
+    @patch('analyzer.tasks.aws.describe_instances')
+    @patch('analyzer.tasks.aws.describe_images')
+    def test_analyze_log_run_instance_windows_image(
+        self,
+        mock_describe_images,
+        mock_describe_instances,
+        mock_receive,
+        mock_s3,
+        mock_del,
+        mock_session,
+        mock_inspection,
+    ):
+        """
+        Analyze CloudTrail records for a Windows instance.
+
+        Windows treatment is special because when we describe the image and
+        discover that it has the "Windows" platform set, we save our model in
+        an already-inspected state.
+        """
+        sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
+        mock_receive.return_value = [sqs_message]
+        region = random.choice(util_helper.SOME_AWS_REGIONS)
+        instance_type = util_helper.get_random_instance_type()
+
+        ec2_instance_id = util_helper.generate_dummy_instance_id()
+        ec2_ami_id = util_helper.generate_dummy_image_id()
+
+        # Define the mocked "describe images" behavior.
+        described_image = util_helper.generate_dummy_describe_image(
+            ec2_ami_id, platform='Windows'
+        )
+        described_images = {ec2_ami_id: described_image}
+
+        def describe_images_side_effect(__, image_ids, ___):
+            return [described_images[image_id] for image_id in image_ids]
+        mock_describe_images.side_effect = describe_images_side_effect
+
+        # Define the S3 message payload.
+        occurred_at_run = util_helper.utc_dt(2018, 1, 1, 0, 0, 0)
+        s3_content = {
+            'Records': [
+                analyzer_helper.generate_cloudtrail_instances_record(
+                    aws_account_id=self.aws_account_id,
+                    instance_ids=[ec2_instance_id],
+                    event_name='RunInstances',
+                    event_time=occurred_at_run,
+                    region=region,
+                    instance_type=instance_type,
+                    image_id=ec2_ami_id,
+                ),
+            ]
+        }
+        mock_s3.return_value = json.dumps(s3_content)
+
+        successes, failures = tasks.analyze_log()
+
+        self.assertEqual(len(successes), 1)
+        self.assertEqual(len(failures), 0)
+
+        # Assert that we deleted the message upon processing it.
+        mock_del.assert_called_with(
+            settings.CLOUDTRAIL_EVENT_URL, [sqs_message]
+        )
+
+        # We should *not* have described the instance because the CloudTrail
+        # messages should have enough information to proceed.
+        mock_describe_instances.assert_not_called()
+
+        # We *should* have described the image because it is new to us.
+        mock_describe_images.assert_called()
+
+        # Inspection should *not* have started for this new image.
+        mock_inspection.assert_not_called()
+
+        # Assert that the correct instance was saved.
+        instance = AwsInstance.objects.get(ec2_instance_id=ec2_instance_id)
+        self.assertEqual(instance.account, self.account)
+        self.assertEqual(instance.region, region)
+
+        # Assert that the correct instance event was saved.
+        instanceevents = list(AwsInstanceEvent.objects.filter(
+            instance__awsinstance__ec2_instance_id=ec2_instance_id
+        ).order_by('occurred_at'))
+        self.assertEqual(len(instanceevents), 1)
+        self.assertEqual(instanceevents[0].occurred_at, occurred_at_run)
+        self.assertEqual(instanceevents[0].event_type, 'power_on')
+        self.assertEqual(instanceevents[0].instance_type, instance_type)
+
+        # Assert that as a side-effect one run was created.
+        runs = Run.objects.filter(instance=instance).order_by('start_time')
+        self.assertEqual(len(runs), 1)
+        self.assertEqual(runs[0].instance_type, instance_type)
+        self.assertEqual(runs[0].start_time, occurred_at_run)
+        self.assertIsNone(runs[0].end_time)
+
+        # Assert that the correct image was saved.
+        image = AwsMachineImage.objects.get(ec2_ami_id=ec2_ami_id)
+        self.assertEqual(image.region, region)
+        self.assertEqual(
+            image.owner_aws_account_id, described_image['OwnerId']
+        )
+        self.assertEqual(image.status, image.INSPECTED)
+        self.assertEqual(image.platform, image.WINDOWS)
+
+    @patch('analyzer.tasks.start_image_inspection')
+    @patch('analyzer.tasks.aws.get_session')
+    @patch('analyzer.tasks.aws.delete_messages_from_queue')
+    @patch('analyzer.tasks.aws.get_object_content_from_s3')
+    @patch('analyzer.tasks.aws.yield_messages_from_queue')
+    @patch('analyzer.tasks.aws.describe_instances')
+    @patch('analyzer.tasks.aws.describe_images')
+    def test_analyze_log_run_instance_known_image(
+        self,
+        mock_describe_images,
+        mock_describe_instances,
+        mock_receive,
+        mock_s3,
+        mock_del,
+        mock_session,
+        mock_inspection,
+    ):
+        """
+        Analyze CloudTrail records for a new instance with an image we know.
+
+        In this case, we do *no* API describes and just process the CloudTrail
+        record to save our model changes.
+        """
+        sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
+        mock_receive.return_value = [sqs_message]
+        region = random.choice(util_helper.SOME_AWS_REGIONS)
+        instance_type = util_helper.get_random_instance_type()
+
+        ec2_instance_id = util_helper.generate_dummy_instance_id()
+        known_image = account_helper.generate_aws_image()
+        ec2_ami_id = known_image.ec2_ami_id
+
+        # Define the S3 message payload.
+        occurred_at_run = util_helper.utc_dt(2018, 1, 1, 0, 0, 0)
+        s3_content = {
+            'Records': [
+                analyzer_helper.generate_cloudtrail_instances_record(
+                    aws_account_id=self.aws_account_id,
+                    instance_ids=[ec2_instance_id],
+                    event_name='RunInstances',
+                    event_time=occurred_at_run,
+                    region=region,
+                    instance_type=instance_type,
+                    image_id=ec2_ami_id,
+                ),
+            ]
+        }
+        mock_s3.return_value = json.dumps(s3_content)
+
+        successes, failures = tasks.analyze_log()
+
+        self.assertEqual(len(successes), 1)
+        self.assertEqual(len(failures), 0)
+
+        # Assert that we deleted the message upon processing it.
+        mock_del.assert_called_with(
+            settings.CLOUDTRAIL_EVENT_URL, [sqs_message]
+        )
+
+        # We should *not* have described the instance because the CloudTrail
+        # messages should have enough information to proceed.
+        mock_describe_instances.assert_not_called()
+
+        # We should *not* have described the image because we already know it.
+        mock_describe_images.assert_not_called()
+
+        # Inspection should *not* have started for this existing image.
+        mock_inspection.assert_not_called()
+
+        # Assert that the correct instance was saved.
+        instance = AwsInstance.objects.get(ec2_instance_id=ec2_instance_id)
+        self.assertEqual(instance.account, self.account)
+        self.assertEqual(instance.region, region)
+
+        # Assert that the correct instance event was saved.
+        instanceevents = list(AwsInstanceEvent.objects.filter(
+            instance__awsinstance__ec2_instance_id=ec2_instance_id
+        ).order_by('occurred_at'))
+        self.assertEqual(len(instanceevents), 1)
+        self.assertEqual(instanceevents[0].occurred_at, occurred_at_run)
+        self.assertEqual(instanceevents[0].event_type, 'power_on')
+        self.assertEqual(instanceevents[0].instance_type, instance_type)
+
+        # Assert that as a side-effect one run was created.
+        runs = Run.objects.filter(instance=instance).order_by('start_time')
+        self.assertEqual(len(runs), 1)
+        self.assertEqual(runs[0].instance_type, instance_type)
+        self.assertEqual(runs[0].start_time, occurred_at_run)
+        self.assertIsNone(runs[0].end_time)
+
+    @patch('analyzer.tasks.start_image_inspection')
+    @patch('analyzer.tasks.aws.get_session')
+    @patch('analyzer.tasks.aws.delete_messages_from_queue')
+    @patch('analyzer.tasks.aws.get_object_content_from_s3')
+    @patch('analyzer.tasks.aws.yield_messages_from_queue')
+    @patch('analyzer.tasks.aws.describe_instances')
+    @patch('analyzer.tasks.aws.describe_images')
+    def test_analyze_log_start_old_instance_known_image(
+        self,
+        mock_describe_images,
+        mock_describe_instances,
+        mock_receive,
+        mock_s3,
+        mock_del,
+        mock_session,
+        mock_inspection,
+    ):
+        """
+        Analyze CloudTrail records to start an instance with a known image.
+
+        If an account had stopped a instance when it registered with us, we
+        never see the "RunInstances" record for that instance. If it starts
+        later with a "StartInstances" record, we don't receive enough
+        information from the record alone and need to immediately describe the
+        instance in AWS in order to populate our model.
+        """
+        sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
+        mock_receive.return_value = [sqs_message]
+        region = random.choice(util_helper.SOME_AWS_REGIONS)
+
+        image = account_helper.generate_aws_image()
+        ec2_ami_id = image.ec2_ami_id
+
+        # Define the mocked "describe instances" behavior.
+        ec2_instance_id = util_helper.generate_dummy_instance_id()
+        described_instance = util_helper.generate_dummy_describe_instance(
+            instance_id=ec2_instance_id, image_id=ec2_ami_id
+        )
+        instance_type = described_instance['InstanceType']
+        described_instances = {ec2_instance_id: described_instance}
+
+        def describe_instances_side_effect(__, instance_ids, ___):
+            return dict([
+                (instance_id, described_instances[instance_id])
+                for instance_id in instance_ids
+            ])
+        mock_describe_instances.side_effect = describe_instances_side_effect
+
+        # Define the S3 message payload.
+        occurred_at_start = util_helper.utc_dt(2018, 1, 1, 0, 0, 0)
+        s3_content = {
+            'Records': [
+                analyzer_helper.generate_cloudtrail_instances_record(
+                    aws_account_id=self.aws_account_id,
+                    instance_ids=[ec2_instance_id],
+                    event_name='StartInstances',
+                    event_time=occurred_at_start,
+                    region=region,
+                    instance_type=instance_type,
+                    image_id=ec2_ami_id,
+                ),
+            ]
+        }
+        mock_s3.return_value = json.dumps(s3_content)
+
+        successes, failures = tasks.analyze_log()
+
+        self.assertEqual(len(successes), 1)
+        self.assertEqual(len(failures), 0)
+
+        # Assert that we deleted the message upon processing it.
+        mock_del.assert_called_with(
+            settings.CLOUDTRAIL_EVENT_URL, [sqs_message]
+        )
+
+        # We *should* have described the instance because the CloudTrail record
+        # should *not* have enough information to proceed.
+        mock_describe_instances.assert_called()
+
+        # We should *not* have described the image because we already know it.
+        mock_describe_images.assert_not_called()
+
+        # Inspection should *not* have started for this existing image.
+        mock_inspection.assert_not_called()
+
+        # Assert that the correct instance was saved.
+        instance = AwsInstance.objects.get(ec2_instance_id=ec2_instance_id)
+        self.assertEqual(instance.account, self.account)
+        self.assertEqual(instance.region, region)
+
+        # Assert that the correct instance event was saved.
+        instanceevents = list(AwsInstanceEvent.objects.filter(
+            instance__awsinstance__ec2_instance_id=ec2_instance_id
+        ).order_by('occurred_at'))
+        self.assertEqual(len(instanceevents), 1)
+        self.assertEqual(instanceevents[0].occurred_at, occurred_at_start)
+        self.assertEqual(instanceevents[0].event_type, 'power_on')
+        self.assertEqual(instanceevents[0].instance_type, instance_type)
+
+        # Assert that as a side-effect one run was created.
+        runs = Run.objects.filter(instance=instance).order_by('start_time')
+        self.assertEqual(len(runs), 1)
+        self.assertEqual(runs[0].instance_type, instance_type)
+        self.assertEqual(runs[0].start_time, occurred_at_start)
+        self.assertIsNone(runs[0].end_time)
+
+    @patch('analyzer.tasks.start_image_inspection')
+    @patch('analyzer.tasks.aws.get_session')
+    @patch('analyzer.tasks.aws.delete_messages_from_queue')
+    @patch('analyzer.tasks.aws.get_object_content_from_s3')
+    @patch('analyzer.tasks.aws.yield_messages_from_queue')
+    @patch('analyzer.tasks.aws.describe_instances')
+    @patch('analyzer.tasks.aws.describe_images')
+    def test_analyze_log_run_instance_unavailable_image(
+        self,
+        mock_describe_images,
+        mock_describe_instances,
+        mock_receive,
+        mock_s3,
+        mock_del,
+        mock_session,
+        mock_inspection,
+    ):
+        """
+        Analyze CloudTrail records for an instance with an unavailable image.
+
+        This could happen if a user has deleted or revoked access to the AMI
+        after starting the instance but before we could discover and process
+        it. In that case, we save an image with status 'Unavailable' to
+        indicate that we can't (and probably never will) inspect it.
+        """
+        sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
+        mock_receive.return_value = [sqs_message]
+        region = random.choice(util_helper.SOME_AWS_REGIONS)
+
+        instance_type = util_helper.get_random_instance_type()
+        ec2_instance_id = util_helper.generate_dummy_instance_id()
+        ec2_ami_id = util_helper.generate_dummy_image_id()
+
+        # Define the mocked "describe images" behavior.
+        mock_describe_images.return_value = []
+
+        # Define the S3 message payload.
+        occurred_at_run = util_helper.utc_dt(2018, 1, 1, 0, 0, 0)
+        s3_content = {
+            'Records': [
+                analyzer_helper.generate_cloudtrail_instances_record(
+                    aws_account_id=self.aws_account_id,
+                    instance_ids=[ec2_instance_id],
+                    event_name='RunInstances',
+                    event_time=occurred_at_run,
+                    region=region,
+                    instance_type=instance_type,
+                    image_id=ec2_ami_id,
+                ),
+            ]
+        }
+        mock_s3.return_value = json.dumps(s3_content)
+
+        successes, failures = tasks.analyze_log()
+
+        self.assertEqual(len(successes), 1)
+        self.assertEqual(len(failures), 0)
+
+        # Assert that we deleted the message upon processing it.
+        mock_del.assert_called_with(
+            settings.CLOUDTRAIL_EVENT_URL, [sqs_message]
+        )
+
+        # We should *not* have described the instance because the CloudTrail
+        # record should have enough information to proceed.
+        mock_describe_instances.assert_not_called()
+
+        # We *should* have described the image because it is new to us.
+        mock_describe_images.assert_called()
+
+        # Inspection should *not* have started for this unavailable image.
+        mock_inspection.assert_not_called()
+
+        # Assert that the correct instance was saved.
+        instance = AwsInstance.objects.get(ec2_instance_id=ec2_instance_id)
+        self.assertEqual(instance.account, self.account)
+        self.assertEqual(instance.region, region)
+
+        # Assert that the correct instance events were saved.
+        # We expect to find *four* events. Note that "reboot" does not cause us
+        # to generate a new event because we know it's already running.
+        instanceevents = list(AwsInstanceEvent.objects.filter(
+            instance__awsinstance__ec2_instance_id=ec2_instance_id
+        ).order_by('occurred_at'))
+        self.assertEqual(len(instanceevents), 1)
+        self.assertEqual(instanceevents[0].occurred_at, occurred_at_run)
+        self.assertEqual(instanceevents[0].event_type, 'power_on')
+        self.assertEqual(instanceevents[0].instance_type, instance_type)
+
+        # Assert that as a side-effect two runs were created.
+        runs = Run.objects.filter(instance=instance).order_by('start_time')
+        self.assertEqual(len(runs), 1)
+        self.assertEqual(runs[0].instance_type, instance_type)
+        self.assertEqual(runs[0].start_time, occurred_at_run)
+        self.assertEqual(runs[0].end_time, None)
+
+        # Assert that the correct image was saved.
+        image = AwsMachineImage.objects.get(ec2_ami_id=ec2_ami_id)
+        self.assertEqual(image.owner_aws_account_id, None)
+        self.assertEqual(image.status, image.UNAVAILABLE)
 
     @patch('analyzer.tasks.aws.delete_messages_from_queue')
     @patch('analyzer.tasks.aws.get_object_content_from_s3')
@@ -312,10 +687,10 @@ class AnalyzeLogTest(TestCase):
         instance_type = 't1.potato'
         sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
         gen_instance = account_helper.generate_aws_instance(
-            self.mock_account, region='us-east-1')
+            self.account, region='us-east-1')
         trail_record = \
             analyzer_helper.generate_cloudtrail_modify_instances_record(
-                aws_account_id=self.mock_account_id,
+                aws_account_id=self.aws_account_id,
                 instance_id=gen_instance.ec2_instance_id,
                 instance_type=instance_type,
                 region='us-east-1')
@@ -336,7 +711,7 @@ class AnalyzeLogTest(TestCase):
         instance = instances[0]
         self.assertEqual(
             instance.ec2_instance_id, gen_instance.ec2_instance_id)
-        self.assertEqual(instance.account_id, self.mock_account.id)
+        self.assertEqual(instance.account_id, self.account.id)
 
         events = list(AwsInstanceEvent.objects.all())
         self.assertEqual(len(events), 1)
@@ -346,98 +721,20 @@ class AnalyzeLogTest(TestCase):
         self.assertEqual(event.event_type, 'attribute_change')
 
     @patch('analyzer.tasks.start_image_inspection')
-    @patch('analyzer.tasks.aws.get_ec2_instance')
-    @patch('analyzer.tasks.aws.get_session')
-    @patch('analyzer.tasks.aws.delete_messages_from_queue')
-    @patch('analyzer.tasks.aws.get_object_content_from_s3')
-    @patch('analyzer.tasks.aws.yield_messages_from_queue')
-    def test_analyze_log_changed_instance_type_new_instance(
-            self, mock_receive, mock_s3, mock_del, mock_session, mock_ec2,
-            mock_inspection):
-        """
-        Test that analyze_log correctly handles attribute change messages.
-
-        This test focuses on just getting an instance attribute change message
-        for an unknown instance. Here we verify that the two first calls
-        correctly re-use the instance_type returned by the single describe,
-        and that the attribute change event uses the new instance type.
-        """
-        instance_type = 't1.potato'
-        new_instance_type = 't2.potato'
-        region = 'us-east-1'
-        sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
-        image_1 = account_helper.generate_aws_image()
-        mock_instance = util_helper.generate_mock_ec2_instance(
-            instance_type=instance_type, image_id=image_1.ec2_ami_id)
-        on_record = analyzer_helper.generate_cloudtrail_instances_record(
-            aws_account_id=self.mock_account_id,
-            instance_ids=[mock_instance.instance_id],
-            region=region,
-            instance_type=instance_type
-        )
-        off_record = analyzer_helper.generate_cloudtrail_instances_record(
-            aws_account_id=self.mock_account_id,
-            instance_ids=[mock_instance.instance_id],
-            event_name='StopInstances',
-            region=region,
-        )
-        change_type_record = \
-            analyzer_helper.generate_cloudtrail_modify_instances_record(
-                aws_account_id=self.mock_account_id,
-                instance_id=mock_instance.instance_id,
-                instance_type=new_instance_type,
-                region=region,
-            )
-        s3_content = {'Records': [on_record, off_record, change_type_record]}
-        mock_receive.return_value = [sqs_message]
-        mock_s3.return_value = json.dumps(s3_content)
-        mock_instances = {
-            mock_instance.instance_id: mock_instance,
-        }
-
-        def get_ec2_instance_side_effect(session, instance_id):
-            return mock_instances[instance_id]
-
-        mock_ec2.side_effect = get_ec2_instance_side_effect
-
-        successes, failures = tasks.analyze_log()
-
-        self.assertEqual(len(successes), 1)
-        self.assertEqual(len(failures), 0)
-        mock_del.assert_called_with(settings.CLOUDTRAIL_EVENT_URL,
-                                    [sqs_message])
-
-        instances = list(AwsInstance.objects.all())
-        self.assertEqual(len(instances), 1)
-        instance = instances[0]
-        self.assertEqual(
-            instance.ec2_instance_id, mock_instance.instance_id)
-        self.assertEqual(instance.account_id, self.mock_account.id)
-
-        events = list(AwsInstanceEvent.objects.all())
-        self.assertEqual(len(events), 3)
-
-        on_event = AwsInstanceEvent.objects.filter(
-            event_type='power_on').first()
-        self.assertEqual(on_event.instance_type, mock_instance.instance_type)
-
-        off_event = AwsInstanceEvent.objects.filter(
-            event_type='power_off').first()
-        self.assertEqual(off_event.instance_type, mock_instance.instance_type)
-
-        change_event = AwsInstanceEvent.objects.filter(
-            event_type='attribute_change').first()
-        self.assertEqual(change_event.instance_type, new_instance_type)
-
-    @patch('analyzer.tasks.start_image_inspection')
-    @patch('analyzer.tasks.aws.get_ec2_instance')
+    @patch('analyzer.tasks.aws.describe_instances')
     @patch('analyzer.tasks.aws.get_session')
     @patch('analyzer.tasks.aws.delete_messages_from_queue')
     @patch('analyzer.tasks.aws.get_object_content_from_s3')
     @patch('analyzer.tasks.aws.yield_messages_from_queue')
     def test_analyze_log_when_instance_was_terminated(
-            self, mock_receive, mock_s3, mock_del, mock_session,
-            mock_ec2, mock_inspection):
+        self,
+        mock_receive,
+        mock_s3,
+        mock_del,
+        mock_session,
+        mock_describe_instances,
+        mock_inspection,
+    ):
         """
         Test appropriate handling when the AWS instance is not accessible.
 
@@ -449,22 +746,23 @@ class AnalyzeLogTest(TestCase):
         no images should be created.
         """
         sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
-        mock_instance = util_helper.generate_mock_ec2_instance_incomplete()
-        trail_record = analyzer_helper.generate_cloudtrail_instances_record(
-            aws_account_id=self.mock_account_id,
-            instance_ids=[mock_instance.instance_id],
-            event_name='TerminateInstances')
-        s3_content = {'Records': [trail_record]}
+        described_instance = util_helper.generate_dummy_describe_instance()
+        s3_content = {
+            'Records': [
+                analyzer_helper.generate_cloudtrail_instances_record(
+                    aws_account_id=self.aws_account_id,
+                    instance_ids=[described_instance['InstanceId']],
+                    event_name='TerminateInstances',
+                )
+            ]
+        }
         mock_receive.return_value = [sqs_message]
         mock_s3.return_value = json.dumps(s3_content)
-        mock_instances = {
-            mock_instance.instance_id: mock_instance,
-        }
 
-        def get_ec2_instance_side_effect(session, instance_id):
-            return mock_instances[instance_id]
-
-        mock_ec2.side_effect = get_ec2_instance_side_effect
+        # Returning an empty dict matches the behavior seen by manually
+        # checking with boto to describe an instance that has been terminated
+        # for several hours and is no longer visible to the user.
+        mock_describe_instances.return_value = dict()
 
         successes, failures = tasks.analyze_log()
 
@@ -477,8 +775,10 @@ class AnalyzeLogTest(TestCase):
         instances = list(AwsInstance.objects.all())
         self.assertEqual(len(instances), 1)
         instance = instances[0]
-        self.assertEqual(instance.ec2_instance_id, mock_instance.instance_id)
-        self.assertEqual(instance.account_id, self.mock_account.id)
+        self.assertEqual(
+            instance.ec2_instance_id, described_instance['InstanceId']
+        )
+        self.assertEqual(instance.account_id, self.account.id)
 
         # Note that the event is stored in a partially known state.
         events = list(AwsInstanceEvent.objects.all())
@@ -532,70 +832,6 @@ class AnalyzeLogTest(TestCase):
         self.assertEqual(len(events), 0)
         images = list(AwsMachineImage.objects.all())
         self.assertEqual(len(images), 0)
-
-    @patch('analyzer.tasks.start_image_inspection')
-    @patch('analyzer.tasks.aws.get_ec2_instance')
-    @patch('analyzer.tasks.aws.get_session')
-    @patch('analyzer.tasks.aws.delete_messages_from_queue')
-    @patch('analyzer.tasks.aws.get_object_content_from_s3')
-    @patch('analyzer.tasks.aws.yield_messages_from_queue')
-    @patch('analyzer.tasks.aws.describe_images')
-    def test_command_output_success_unavailable_image(
-        self,
-        mock_describe,
-        mock_receive,
-        mock_s3,
-        mock_del,
-        mock_session,
-        mock_ec2,
-        mock_inspection,
-    ):
-        """
-        Test processing a CloudTrail log when we can't get the image data.
-
-        This can happen when a user has created an instance from a shared
-        image, but permission to that image has been revoked by the time we
-        discover and process the instance. In that case, we save an image with
-        status 'Unavailable' to indicate that we can't inspect it.
-        """
-        sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
-        mock_instance = util_helper.generate_mock_ec2_instance()
-        trail_record = analyzer_helper.generate_cloudtrail_instances_record(
-            aws_account_id=self.mock_account_id,
-            instance_ids=[mock_instance.instance_id],
-        )
-        s3_content = {'Records': [trail_record]}
-        mock_receive.return_value = [sqs_message]
-        mock_s3.return_value = json.dumps(s3_content)
-        mock_instances = {mock_instance.instance_id: mock_instance}
-
-        def get_ec2_instance_side_effect(session, instance_id):
-            return mock_instances[instance_id]
-
-        mock_ec2.side_effect = get_ec2_instance_side_effect
-
-        successes, failures = tasks.analyze_log()
-
-        self.assertEqual(len(successes), 1)
-        self.assertEqual(len(failures), 0)
-        mock_del.assert_called_with(
-            settings.CLOUDTRAIL_EVENT_URL, [sqs_message]
-        )
-
-        # The saved image should not be inspected because we can't access it.
-        mock_inspection.assert_not_called()
-
-        instances = list(AwsInstance.objects.all())
-        self.assertEqual(len(instances), 1)
-        instance = instances[0]
-        self.assertEqual(instance.ec2_instance_id, mock_instance.instance_id)
-        self.assertEqual(instance.account_id, self.mock_account.id)
-
-        # Assert that the image was stored.
-        images = list(AwsMachineImage.objects.all())
-        self.assertEqual(len(images), 1)
-        self.assertEqual(images[0].ec2_ami_id, mock_instance.image_id)
-        self.assertEqual(images[0].status, MachineImage.UNAVAILABLE)
 
     @patch('analyzer.tasks.aws.delete_messages_from_queue')
     @patch('analyzer.tasks.aws.get_object_content_from_s3')
@@ -660,7 +896,7 @@ class AnalyzeLogTest(TestCase):
 
         sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
         trail_record = analyzer_helper.generate_cloudtrail_tag_set_record(
-            aws_account_id=self.mock_account_id,
+            aws_account_id=self.aws_account_id,
             image_ids=[ami.ec2_ami_id],
             tag_names=[tasks.aws.OPENSHIFT_TAG],
             event_name=cloudtrail.CREATE_TAG,
@@ -689,7 +925,7 @@ class AnalyzeLogTest(TestCase):
 
         sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
         trail_record = analyzer_helper.generate_cloudtrail_tag_set_record(
-            aws_account_id=self.mock_account_id,
+            aws_account_id=self.aws_account_id,
             image_ids=[ami.ec2_ami_id],
             tag_names=[tasks.aws.OPENSHIFT_TAG],
             event_name=cloudtrail.DELETE_TAG,
@@ -731,7 +967,7 @@ class AnalyzeLogTest(TestCase):
         sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
         region = random.choice(util_helper.SOME_AWS_REGIONS)
         trail_record = analyzer_helper.generate_cloudtrail_tag_set_record(
-            aws_account_id=self.mock_account_id,
+            aws_account_id=self.aws_account_id,
             image_ids=[new_ami_id],
             tag_names=[tasks.aws.OPENSHIFT_TAG],
             event_name=cloudtrail.CREATE_TAG,
@@ -749,8 +985,9 @@ class AnalyzeLogTest(TestCase):
         new_ami = AwsMachineImage.objects.get(ec2_ami_id=new_ami_id)
         self.assertTrue(new_ami.openshift_detected)
         mock_del.assert_called()
-        mock_inspection.assert_called_once_with(self.mock_arn, new_ami_id,
-                                                region)
+        mock_inspection.assert_called_once_with(
+            self.account.account_arn, new_ami_id, region
+        )
 
     @patch('analyzer.tasks.aws.delete_messages_from_queue')
     @patch('analyzer.tasks.aws.get_object_content_from_s3')
@@ -769,7 +1006,7 @@ class AnalyzeLogTest(TestCase):
 
         sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
         trail_record = analyzer_helper.generate_cloudtrail_tag_set_record(
-            aws_account_id=self.mock_account_id,
+            aws_account_id=self.aws_account_id,
             image_ids=[new_ami_id],
             tag_names=[_faker.slug()],
             event_name=cloudtrail.CREATE_TAG,
@@ -797,7 +1034,7 @@ class AnalyzeLogTest(TestCase):
 
         sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
         trail_record = analyzer_helper.generate_cloudtrail_tag_set_record(
-            aws_account_id=self.mock_account_id,
+            aws_account_id=self.aws_account_id,
             image_ids=[some_ignored_id],
             tag_names=[_faker.slug()],
             event_name=cloudtrail.CREATE_TAG,
@@ -904,9 +1141,9 @@ class AnalyzeLogTest(TestCase):
 
     def test_build_events_info_for_saving(self):
         """Test _build_events_info_for_saving with typical inputs."""
-        instance = account_helper.generate_aws_instance(self.mock_account)
+        instance = account_helper.generate_aws_instance(self.account)
 
-        # Note: this time is *after* self.mock_account.created_at.
+        # Note: this time is *after* self.account.created_at.
         occurred_at = '2018-01-02T12:34:56+00:00'
 
         instance_event = account_helper.generate_single_aws_instance_event(
@@ -915,16 +1152,16 @@ class AnalyzeLogTest(TestCase):
             event_type=InstanceEvent.TYPE.power_on,
             instance_type=None
         )
-        events_info = tasks._build_events_info_for_saving(
-            self.mock_account, instance, [instance_event]
-        )
+        events_info = tasks._build_events_info_for_saving(self.account,
+                                                          instance,
+                                                          [instance_event])
         self.assertEqual(len(events_info), 1)
 
     def test_build_events_info_for_saving_too_old_events(self):
         """Test _build_events_info_for_saving with events that are too old."""
-        instance = account_helper.generate_aws_instance(self.mock_account)
+        instance = account_helper.generate_aws_instance(self.account)
 
-        # Note: this time is *before* self.mock_account.created_at.
+        # Note: this time is *before* self.account.created_at.
         occurred_at = '2016-01-02T12:34:56+00:00'
 
         instance_event = account_helper.generate_single_aws_instance_event(
@@ -933,9 +1170,9 @@ class AnalyzeLogTest(TestCase):
             event_type=InstanceEvent.TYPE.power_on,
             instance_type=None
         )
-        events_info = tasks._build_events_info_for_saving(
-            self.mock_account, instance, [instance_event]
-        )
+        events_info = tasks._build_events_info_for_saving(self.account,
+                                                          instance,
+                                                          [instance_event])
         self.assertEqual(len(events_info), 0)
 
     def test_process_instance_event_recalculate_runs(self):
@@ -949,7 +1186,7 @@ class AnalyzeLogTest(TestCase):
             [ ############ ]
 
         """
-        instance = account_helper.generate_aws_instance(self.mock_account)
+        instance = account_helper.generate_aws_instance(self.account)
 
         started_at = util_helper.utc_dt(2018, 1, 2, 0, 0, 0)
 
@@ -990,7 +1227,7 @@ class AnalyzeLogTest(TestCase):
             [ ####    #-----]
 
         """
-        instance = account_helper.generate_aws_instance(self.mock_account)
+        instance = account_helper.generate_aws_instance(self.account)
 
         run_time = (
             util_helper.utc_dt(2018, 1, 2, 0, 0, 0),
@@ -1030,7 +1267,7 @@ class AnalyzeLogTest(TestCase):
         """
         instance_type = 't1.potato'
 
-        instance = account_helper.generate_aws_instance(self.mock_account)
+        instance = account_helper.generate_aws_instance(self.account)
 
         run_time = [(
             util_helper.utc_dt(2018, 1, 5, 0, 0, 0),
@@ -1090,7 +1327,7 @@ class AnalyzeLogTest(TestCase):
             [ ####          ]
 
         """
-        instance = account_helper.generate_aws_instance(self.mock_account)
+        instance = account_helper.generate_aws_instance(self.account)
 
         run_time = (
             util_helper.utc_dt(2018, 1, 2, 0, 0, 0),

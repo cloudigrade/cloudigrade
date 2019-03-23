@@ -1,5 +1,4 @@
 """Functions for parsing relevant data from CloudTrail messages."""
-import collections
 import itertools
 import logging
 
@@ -24,9 +23,12 @@ OPENSHIFT_MODEL_TAG = 'openshift'
 CREATE_TAG = 'CreateTags'
 DELETE_TAG = 'DeleteTags'
 ec2_ami_tag_event_list = [CREATE_TAG, DELETE_TAG]
-CloudTrailInstanceEvent = collections.namedtuple(
-    'CloudTrailInstanceEvent',
-    [
+
+
+class CloudTrailInstanceEvent(object):
+    """Data structure for holding a Cloud Trail instance-related event."""
+
+    __slots__ = (
         'occurred_at',
         'aws_account_id',
         'region',
@@ -35,19 +37,30 @@ CloudTrailInstanceEvent = collections.namedtuple(
         'instance_type',
         'ec2_ami_id',
         'subnet_id',
-    ],
-)
-CloudTrailImageTagEvent = collections.namedtuple(
-    'CloudTrailImageTagEvent',
-    [
+    )
+
+    def __init__(self, **kwargs):
+        """Initialize a CloudTrailInstanceEvent with arguments."""
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
+
+class CloudTrailImageTagEvent(object):
+    """Data structure for holding a Cloud Trail image tag-related event."""
+
+    __slots__ = (
         'occurred_at',
         'aws_account_id',
         'region',
         'ec2_ami_id',
         'tag',
         'exists',
-    ],
-)
+    )
+
+    def __init__(self, **kwargs):
+        """Initialize a CloudTrailImageTagEvent with arguments."""
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
 
 def extract_time_account_region(record):
@@ -176,7 +189,12 @@ def extract_ami_tag_events(record):
 
     return [
         CloudTrailImageTagEvent(
-            occurred_at, aws_account_id, region, ec2_ami_id, tag, exists
+            occurred_at=occurred_at,
+            aws_account_id=aws_account_id,
+            region=region,
+            ec2_ami_id=ec2_ami_id,
+            tag=tag,
+            exists=exists,
         )
         for ec2_ami_id, tag in itertools.product(ec2_ami_ids, tags)
     ]
