@@ -200,11 +200,15 @@ def generate_cloudtrail_instances_record(
     return record
 
 
-def generate_cloudtrail_modify_instances_record(aws_account_id, instance_id,
-                                                instance_type='t2.micro',
-                                                event_time=None, region=None):
+def generate_cloudtrail_modify_instance_record(
+    aws_account_id,
+    instance_id,
+    instance_type='t2.micro',
+    event_time=None,
+    region=None,
+):
     """
-    Generate an ex. CloudTrail log's "Record" dict for modify instances event.
+    Generate an example CloudTrail "ModifyInstanceAttribute" record dict.
 
     Args:
         aws_account_id (int): The AWS account ID.

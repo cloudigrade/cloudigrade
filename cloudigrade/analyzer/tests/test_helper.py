@@ -109,13 +109,13 @@ class AnalyzerHelperTest(TestCase):
         actual_instance_ids = set([item['instanceId'] for item in items])
         self.assertEqual(set(instance_ids), actual_instance_ids)
 
-    def test_generate_cloudtrail_modify_instances_record_all_args(self):
-        """Test generate_cloudtrail_modify_instances_record with all args."""
+    def test_generate_cloudtrail_modify_instance_record_all_args(self):
+        """Test generate_cloudtrail_modify_instance_record with all args."""
         aws_account_id = util_helper.generate_dummy_aws_account_id()
         instance_id = util_helper.generate_dummy_instance_id()
         event_time = _faker.date_object()
         instance_type = _faker.word()
-        record = analyzer_helper.generate_cloudtrail_modify_instances_record(
+        record = analyzer_helper.generate_cloudtrail_modify_instance_record(
             aws_account_id, instance_id, instance_type, event_time)
 
         self.assertEqual(record['userIdentity']['accountId'], aws_account_id)
@@ -126,11 +126,11 @@ class AnalyzerHelperTest(TestCase):
         self.assertEqual(instance_type, record['requestParameters'][
             'instanceType']['value'])
 
-    def test_generate_cloudtrail_modify_instances_record_minimum_args(self):
-        """Test generate_cloudtrail_modify_instances_record with min args."""
+    def test_generate_cloudtrail_modify_instance_record_minimum_args(self):
+        """Test generate_cloudtrail_modify_instance_record with min args."""
         aws_account_id = util_helper.generate_dummy_aws_account_id()
         instance_id = util_helper.generate_dummy_instance_id()
-        record = analyzer_helper.generate_cloudtrail_modify_instances_record(
+        record = analyzer_helper.generate_cloudtrail_modify_instance_record(
             aws_account_id, instance_id)
 
         self.assertEqual(record['userIdentity']['accountId'], aws_account_id)

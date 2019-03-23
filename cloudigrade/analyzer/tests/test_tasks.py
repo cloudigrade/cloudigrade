@@ -127,7 +127,7 @@ class AnalyzeLogTest(TestCase):
                     # instance_type=instance_type,  # not relevant for stop
                     # image_id=ec2_ami_id,  # not relevant for stop
                 ),
-                analyzer_helper.generate_cloudtrail_modify_instances_record(
+                analyzer_helper.generate_cloudtrail_modify_instance_record(
                     aws_account_id=self.aws_account_id,
                     instance_id=ec2_instance_id,
                     instance_type=new_instance_type,
@@ -689,7 +689,7 @@ class AnalyzeLogTest(TestCase):
         gen_instance = account_helper.generate_aws_instance(
             self.account, region='us-east-1')
         trail_record = \
-            analyzer_helper.generate_cloudtrail_modify_instances_record(
+            analyzer_helper.generate_cloudtrail_modify_instance_record(
                 aws_account_id=self.aws_account_id,
                 instance_id=gen_instance.ec2_instance_id,
                 instance_type=instance_type,
