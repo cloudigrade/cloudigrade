@@ -812,10 +812,10 @@ class AnalyzeLogTest(TestCase):
         account from the queue, and log a warning.
         """
         sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
-        mock_instance = util_helper.generate_mock_ec2_instance_incomplete()
+        ec2_instance_id = util_helper.generate_dummy_instance_id()
         trail_record = analyzer_helper.generate_cloudtrail_instances_record(
             aws_account_id=util_helper.generate_dummy_aws_account_id(),
-            instance_ids=[mock_instance.instance_id])
+            instance_ids=[ec2_instance_id])
         s3_content = {'Records': [trail_record]}
         mock_receive.return_value = [sqs_message]
         mock_s3.return_value = json.dumps(s3_content)

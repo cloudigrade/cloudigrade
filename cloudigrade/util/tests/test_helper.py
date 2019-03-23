@@ -231,17 +231,6 @@ class UtilHelperTest(TestCase):
         foo = getattr(instance, 'subnet_id', None)
         self.assertIsNone(foo)
 
-    def test_generate_mock_ec2_instance_incomplete(self):
-        """Test generate_mock_ec2_instance_incomplete with default no args."""
-        instance = helper.generate_mock_ec2_instance_incomplete()
-        self.assertIncompleteInstanceRaisesAttributeErrors(instance)
-
-    def test_generate_mock_ec2_instance_incomplete_with_args(self):
-        """Test generate_mock_ec2_instance_incomplete with all args."""
-        instance_id = helper.generate_dummy_instance_id()
-        instance = helper.generate_mock_ec2_instance_incomplete(instance_id)
-        self.assertIncompleteInstanceRaisesAttributeErrors(instance)
-
     def test_get_test_user_creates(self):
         """Assert get_test_user creates a user when it doesn't yet exist."""
         user = helper.get_test_user()
