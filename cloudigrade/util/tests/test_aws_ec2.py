@@ -106,6 +106,43 @@ class UtilAwsEc2Test(TestCase):
         mock_session.resource.assert_called_once_with('ec2')
         mock_resource.Instance.assert_called_once_with(mock_instance_id)
 
+    def test_describe_instances(self):
+        """Assert that describe_instances returns a dict of instances data."""
+        instance_ids = [
+            helper.generate_dummy_instance_id(),
+            helper.generate_dummy_instance_id(),
+            helper.generate_dummy_instance_id(),
+            helper.generate_dummy_instance_id(),
+        ]
+        individual_described_instances = [
+            helper.generate_dummy_describe_instance(instance_id)
+            for instance_id in instance_ids
+        ]
+        response = {
+            'Reservations': [
+                {
+                    'Instances': individual_described_instances[:2],
+                },
+                {
+                    'Instances': individual_described_instances[2:],
+                },
+            ],
+        }
+
+        mock_session = Mock()
+        mock_client = mock_session.client.return_value
+        mock_client.describe_instances.return_value = response
+
+        region = random.choice(helper.SOME_AWS_REGIONS)
+
+        described_instances = ec2.describe_instances(
+            mock_session, instance_ids, region
+        )
+
+        self.assertEqual(set(described_instances.keys()), set(instance_ids))
+        for described_instance in individual_described_instances:
+            self.assertIn(described_instance, described_instances.values())
+
     @patch('util.aws.ec2.check_image_state')
     def test_get_ami(self, mock_check_image_state):
         """Assert that get_ami returns an Image."""
