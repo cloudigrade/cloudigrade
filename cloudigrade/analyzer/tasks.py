@@ -42,8 +42,6 @@ from util import aws
 from util.aws import is_windows, rewrap_aws_errors
 from util.celery import retriable_shared_task
 
-# from util.exceptions import CloudTrailLogAnalysisMissingData
-
 logger = logging.getLogger(__name__)
 
 

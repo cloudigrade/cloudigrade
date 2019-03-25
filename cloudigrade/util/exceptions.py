@@ -88,10 +88,6 @@ class MaximumNumberOfTrailsExceededException(APIException):
     default_detail = _('Exceeded maximum number of cloud trails')
 
 
-class CloudTrailLogAnalysisMissingData(Exception):
-    """Raise when log analysis is missing data upon attempted save."""
-
-
 class InvalidHoundigradeJsonFormat(Exception):
     """Raise when houndigrade returns json that does not have images."""
 
