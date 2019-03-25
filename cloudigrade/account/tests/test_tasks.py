@@ -62,7 +62,7 @@ class AccountCeleryTaskTest(TestCase):
         account = account_helper.generate_aws_account()
 
         # Set up mocked data in AWS API responses.
-        region = random.choice(util_helper.SOME_AWS_REGIONS)
+        region = util_helper.get_random_region()
         described_ami_unknown = util_helper.generate_dummy_describe_image()
         described_ami_openshift = util_helper.generate_dummy_describe_image(
             openshift=True,
@@ -179,7 +179,7 @@ class AccountCeleryTaskTest(TestCase):
         mock_account_id = mock_aws.get_session_account_id.return_value
 
         mock_arn = util_helper.generate_dummy_arn()
-        mock_region = random.choice(util_helper.SOME_AWS_REGIONS)
+        mock_region = util_helper.get_random_region()
         mock_image_id = util_helper.generate_dummy_image_id()
         mock_image = util_helper.generate_mock_image(mock_image_id)
         block_mapping = mock_image.block_device_mappings
@@ -230,7 +230,7 @@ class AccountCeleryTaskTest(TestCase):
         account = account_helper.generate_aws_account()
         arn = account.account_arn
 
-        region = random.choice(util_helper.SOME_AWS_REGIONS)
+        region = util_helper.get_random_region()
         new_image_id = util_helper.generate_dummy_image_id()
         mock_image = util_helper.generate_mock_image(new_image_id)
         block_mapping = mock_image.block_device_mappings
@@ -296,7 +296,7 @@ class AccountCeleryTaskTest(TestCase):
     def test_copy_ami_snapshot_encrypted(self, mock_aws):
         """Assert that the task marks the image as encrypted in the DB."""
         mock_account_id = util_helper.generate_dummy_aws_account_id()
-        mock_region = random.choice(util_helper.SOME_AWS_REGIONS)
+        mock_region = util_helper.get_random_region()
         mock_arn = util_helper.generate_dummy_arn(mock_account_id, mock_region)
 
         mock_image_id = util_helper.generate_dummy_image_id()
@@ -328,7 +328,7 @@ class AccountCeleryTaskTest(TestCase):
         mock_account_id = mock_aws.get_session_account_id.return_value
 
         mock_arn = util_helper.generate_dummy_arn()
-        mock_region = random.choice(util_helper.SOME_AWS_REGIONS)
+        mock_region = util_helper.get_random_region()
         mock_image_id = util_helper.generate_dummy_image_id()
         mock_image = util_helper.generate_mock_image(mock_image_id)
         block_mapping = mock_image.block_device_mappings
@@ -359,7 +359,7 @@ class AccountCeleryTaskTest(TestCase):
         mock_account_id = mock_aws.get_session_account_id.return_value
 
         mock_arn = util_helper.generate_dummy_arn()
-        mock_region = random.choice(util_helper.SOME_AWS_REGIONS)
+        mock_region = util_helper.get_random_region()
         mock_image_id = util_helper.generate_dummy_image_id()
         mock_image = util_helper.generate_mock_image(mock_image_id)
         block_mapping = mock_image.block_device_mappings
@@ -516,7 +516,7 @@ class AccountCeleryTaskTest(TestCase):
         # the account id to use as the private shared image owner
         other_account_id = util_helper.generate_dummy_aws_account_id()
 
-        mock_region = random.choice(util_helper.SOME_AWS_REGIONS)
+        mock_region = util_helper.get_random_region()
         mock_arn = util_helper.generate_dummy_arn(mock_account_id, mock_region)
 
         mock_image_id = util_helper.generate_dummy_image_id()
@@ -551,7 +551,7 @@ class AccountCeleryTaskTest(TestCase):
         mock_session = mock_aws.boto3.Session.return_value
         mock_aws.get_session_account_id.return_value = mock_account_id
 
-        mock_region = random.choice(util_helper.SOME_AWS_REGIONS)
+        mock_region = util_helper.get_random_region()
         mock_arn = util_helper.generate_dummy_arn(mock_account_id, mock_region)
 
         mock_image_id = util_helper.generate_dummy_image_id()
@@ -583,7 +583,7 @@ class AccountCeleryTaskTest(TestCase):
         mock_session = mock_aws.boto3.Session.return_value
         mock_aws.get_session_account_id.return_value = mock_account_id
 
-        mock_region = random.choice(util_helper.SOME_AWS_REGIONS)
+        mock_region = util_helper.get_random_region()
         mock_arn = util_helper.generate_dummy_arn(mock_account_id, mock_region)
 
         mock_image_id = util_helper.generate_dummy_image_id()
@@ -613,7 +613,7 @@ class AccountCeleryTaskTest(TestCase):
         """Assert that the task copies image using appropriate boto calls."""
         arn = util_helper.generate_dummy_arn()
         reference_ami_id = util_helper.generate_dummy_image_id()
-        source_region = random.choice(util_helper.SOME_AWS_REGIONS)
+        source_region = util_helper.get_random_region()
 
         new_ami_id = mock_aws.copy_ami.return_value
 
@@ -640,7 +640,7 @@ class AccountCeleryTaskTest(TestCase):
         """Assert that the task marks marketplace image as inspected."""
         arn = util_helper.generate_dummy_arn()
         reference_ami_id = util_helper.generate_dummy_image_id()
-        source_region = random.choice(util_helper.SOME_AWS_REGIONS)
+        source_region = util_helper.get_random_region()
         mock_ami = Mock()
         mock_ami.INSPECTED = 'Inspected'
         mock_aws_machine_image_objects.get.return_value = mock_ami
@@ -676,7 +676,7 @@ class AccountCeleryTaskTest(TestCase):
         """Assert that the task marks marketplace image as inspected."""
         arn = util_helper.generate_dummy_arn()
         reference_ami_id = util_helper.generate_dummy_image_id()
-        source_region = random.choice(util_helper.SOME_AWS_REGIONS)
+        source_region = util_helper.get_random_region()
         mock_ami = Mock()
         mock_ami.INSPECTED = 'Inspected'
         mock_aws_machine_image_objects.get.return_value = mock_ami
@@ -709,7 +709,7 @@ class AccountCeleryTaskTest(TestCase):
         """Assert that the task marks community image as inspected."""
         arn = util_helper.generate_dummy_arn()
         reference_ami_id = util_helper.generate_dummy_image_id()
-        source_region = random.choice(util_helper.SOME_AWS_REGIONS)
+        source_region = util_helper.get_random_region()
         mock_ami = Mock()
         mock_ami.INSPECTED = 'Inspected'
         mock_aws_machine_image_objects.get.return_value = mock_ami
@@ -742,7 +742,7 @@ class AccountCeleryTaskTest(TestCase):
         """Assert that the task marks private (no copy) image as in error."""
         arn = util_helper.generate_dummy_arn()
         reference_ami_id = util_helper.generate_dummy_image_id()
-        source_region = random.choice(util_helper.SOME_AWS_REGIONS)
+        source_region = util_helper.get_random_region()
         mock_ami = Mock()
         mock_ami.ERROR = 'Error'
         mock_aws_machine_image_objects.get.return_value = mock_ami
@@ -777,7 +777,7 @@ class AccountCeleryTaskTest(TestCase):
         """Assert that the task marks private (no copy) image as in error."""
         arn = util_helper.generate_dummy_arn()
         reference_ami_id = util_helper.generate_dummy_image_id()
-        source_region = random.choice(util_helper.SOME_AWS_REGIONS)
+        source_region = util_helper.get_random_region()
         mock_ami = Mock()
         mock_ami.ERROR = 'Error'
         mock_aws_machine_image_objects.get.return_value = mock_ami
@@ -810,7 +810,7 @@ class AccountCeleryTaskTest(TestCase):
         """Assert that the task fails when non-marketplace error occurs."""
         arn = util_helper.generate_dummy_arn()
         reference_ami_id = util_helper.generate_dummy_image_id()
-        source_region = random.choice(util_helper.SOME_AWS_REGIONS)
+        source_region = util_helper.get_random_region()
 
         mock_aws.copy_ami.side_effect = ClientError(
             error_response={'Error': {

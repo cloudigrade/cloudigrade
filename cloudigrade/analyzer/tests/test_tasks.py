@@ -1,6 +1,5 @@
 """Collection of tests for Analyzer tasks."""
 import json
-import random
 from unittest.mock import Mock, call, patch
 
 import faker
@@ -73,7 +72,7 @@ class AnalyzeLogTest(TestCase):
         """
         sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
         mock_receive.return_value = [sqs_message]
-        region = random.choice(util_helper.SOME_AWS_REGIONS)
+        region = util_helper.get_random_region()
 
         # Starting instance type and then the one it changes to.
         instance_type = util_helper.get_random_instance_type()
@@ -243,7 +242,7 @@ class AnalyzeLogTest(TestCase):
         """
         sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
         mock_receive.return_value = [sqs_message]
-        region = random.choice(util_helper.SOME_AWS_REGIONS)
+        region = util_helper.get_random_region()
         instance_type = util_helper.get_random_instance_type()
 
         ec2_instance_id = util_helper.generate_dummy_instance_id()
@@ -351,7 +350,7 @@ class AnalyzeLogTest(TestCase):
         """
         sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
         mock_receive.return_value = [sqs_message]
-        region = random.choice(util_helper.SOME_AWS_REGIONS)
+        region = util_helper.get_random_region()
         instance_type = util_helper.get_random_instance_type()
 
         ec2_instance_id = util_helper.generate_dummy_instance_id()
@@ -444,7 +443,7 @@ class AnalyzeLogTest(TestCase):
         """
         sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
         mock_receive.return_value = [sqs_message]
-        region = random.choice(util_helper.SOME_AWS_REGIONS)
+        region = util_helper.get_random_region()
 
         image = account_helper.generate_aws_image()
         ec2_ami_id = image.ec2_ami_id
@@ -549,7 +548,7 @@ class AnalyzeLogTest(TestCase):
         """
         sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
         mock_receive.return_value = [sqs_message]
-        region = random.choice(util_helper.SOME_AWS_REGIONS)
+        region = util_helper.get_random_region()
 
         instance_type = util_helper.get_random_instance_type()
         ec2_instance_id = util_helper.generate_dummy_instance_id()
@@ -965,7 +964,7 @@ class AnalyzeLogTest(TestCase):
         mock_describe.return_value = [image_data]
 
         sqs_message = analyzer_helper.generate_mock_cloudtrail_sqs_message()
-        region = random.choice(util_helper.SOME_AWS_REGIONS)
+        region = util_helper.get_random_region()
         trail_record = analyzer_helper.generate_cloudtrail_tag_set_record(
             aws_account_id=self.aws_account_id,
             image_ids=[new_ami_id],

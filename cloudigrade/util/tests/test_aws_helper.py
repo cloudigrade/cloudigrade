@@ -1,5 +1,4 @@
 """Collection of tests for ``util.aws.helper`` module."""
-import random
 import uuid
 from unittest.mock import Mock, call, patch
 
@@ -288,7 +287,7 @@ class UtilAwsHelperTest(TestCase):
     @patch('util.aws.helper.boto3.client')
     def test_get_region_from_availability_zone(self, mock_client):
         """Assert that the proper region is returned for an AZ."""
-        expected_region = random.choice(test_helper.SOME_AWS_REGIONS)
+        expected_region = test_helper.get_random_region()
         zone = test_helper.generate_dummy_availability_zone(expected_region)
 
         az_response = {

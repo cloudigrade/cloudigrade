@@ -1,5 +1,4 @@
 """Collection of tests for utils in the account app."""
-import random
 import uuid
 from unittest.mock import Mock, patch
 
@@ -30,7 +29,7 @@ class AccountUtilTest(TestCase):
         )
         account.save()
 
-        region = random.choice(util_helper.SOME_AWS_REGIONS)
+        region = util_helper.get_random_region()
         instances_data = {
             region: [
                 util_helper.generate_dummy_describe_instance(
@@ -70,7 +69,7 @@ class AccountUtilTest(TestCase):
         )
         account.save()
 
-        region = random.choice(util_helper.SOME_AWS_REGIONS)
+        region = util_helper.get_random_region()
         instances_data = {
             region: [
                 util_helper.generate_dummy_describe_instance(
@@ -103,7 +102,7 @@ class AccountUtilTest(TestCase):
 
     def test_generate_aws_ami_messages(self):
         """Test that messages are formatted correctly."""
-        region = random.choice(util_helper.SOME_AWS_REGIONS)
+        region = util_helper.get_random_region()
         instance = util_helper.generate_dummy_describe_instance()
         instances_data = {region: [instance]}
         ami_list = [instance['ImageId']]
@@ -330,7 +329,7 @@ class AccountUtilTest(TestCase):
         )
         account.save()
 
-        region = random.choice(util_helper.SOME_AWS_REGIONS)
+        region = util_helper.get_random_region()
         instances_data = {
             region: [
                 util_helper.generate_dummy_describe_instance(
@@ -360,7 +359,7 @@ class AccountUtilTest(TestCase):
         )
         account.save()
 
-        region = random.choice(util_helper.SOME_AWS_REGIONS)
+        region = util_helper.get_random_region()
         instances_data = {
             region: [
                 util_helper.generate_dummy_describe_instance(

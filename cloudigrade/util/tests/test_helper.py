@@ -157,7 +157,7 @@ class UtilHelperTest(TestCase):
 
     def test_generate_dummy_availability_zone_with_region(self):
         """Assert region is used to generate availability zone."""
-        region = random.choice(helper.SOME_AWS_REGIONS)
+        region = helper.get_random_region()
         zone = helper.generate_dummy_availability_zone(region)
         self.assertEqual(zone[:-1], region)
 

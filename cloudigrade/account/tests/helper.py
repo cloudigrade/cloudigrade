@@ -205,7 +205,7 @@ def generate_aws_instance(account, ec2_instance_id=None, region=None,
     if ec2_instance_id is None:
         ec2_instance_id = helper.generate_dummy_instance_id()
     if region is None:
-        region = random.choice(helper.SOME_AWS_REGIONS)
+        region = helper.get_random_region()
     if image is None:
         if not no_image:
             ec2_ami_id = helper.generate_dummy_image_id()

@@ -1,6 +1,5 @@
 """Helper functions for generating test data for the log analyzer."""
 import json
-import random
 import uuid
 
 from util.tests import helper as util_helper
@@ -73,7 +72,7 @@ def generate_cloudtrail_record(aws_account_id, event_name, event_time=None,
 
     """
     if not region:
-        region = random.choice(util_helper.SOME_AWS_REGIONS)
+        region = util_helper.get_random_region()
     if not event_time:
         event_time = util_helper.utc_dt(2018, 1, 1, 0, 0, 0)
     if not request_parameters:

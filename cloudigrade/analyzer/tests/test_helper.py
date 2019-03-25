@@ -3,7 +3,6 @@
 Because even test helpers should be tested!
 """
 import json
-import random
 import uuid
 from unittest.mock import Mock
 
@@ -62,7 +61,7 @@ class AnalyzerHelperTest(TestCase):
         aws_account_id = util_helper.generate_dummy_aws_account_id()
         event_name = _faker.slug()
         event_time = _faker.date_object()
-        region = random.choice(util_helper.SOME_AWS_REGIONS)
+        region = util_helper.get_random_region()
         request_parameters = Mock()
         response_elements = Mock()
         record = analyzer_helper.generate_cloudtrail_record(

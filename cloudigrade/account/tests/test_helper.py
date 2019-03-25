@@ -162,7 +162,7 @@ class GenerateAwsInstanceTest(TestCase):
         """Assert generation of an AwsInstance with all specified args."""
         account = helper.generate_aws_account()
         ec2_instance_id = util_helper.generate_dummy_instance_id()
-        region = random.choice(util_helper.SOME_AWS_REGIONS)
+        region = util_helper.get_random_region()
         instance = helper.generate_aws_instance(
             account,
             ec2_instance_id=ec2_instance_id,

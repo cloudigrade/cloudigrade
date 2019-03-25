@@ -1,5 +1,4 @@
 """Collection of tests for ``util.aws.ec2`` module."""
-import random
 import uuid
 from unittest.mock import Mock, patch
 
@@ -133,7 +132,7 @@ class UtilAwsEc2Test(TestCase):
         mock_client = mock_session.client.return_value
         mock_client.describe_instances.return_value = response
 
-        region = random.choice(helper.SOME_AWS_REGIONS)
+        region = helper.get_random_region()
 
         described_instances = ec2.describe_instances(
             mock_session, instance_ids, region
@@ -153,7 +152,7 @@ class UtilAwsEc2Test(TestCase):
         mock_resource = mock_session.resource.return_value
         mock_resource.Image.return_value = mock_image
 
-        mock_region = random.choice(helper.SOME_AWS_REGIONS)
+        mock_region = helper.get_random_region()
 
         actual_image = ec2.get_ami(mock_session, mock_image_id, mock_region)
         self.assertEqual(actual_image, mock_image)
@@ -205,7 +204,7 @@ class UtilAwsEc2Test(TestCase):
         mock_resource = mock_session.resource.return_value
         mock_resource.Snapshot.return_value = mock_snapshot
 
-        mock_region = random.choice(helper.SOME_AWS_REGIONS)
+        mock_region = helper.get_random_region()
 
         actual_snapshot = ec2.get_snapshot(mock_session, mock_snapshot_id,
                                            mock_region)
@@ -349,7 +348,7 @@ class UtilAwsEc2Test(TestCase):
     @patch('util.aws.ec2.boto3')
     def test_copy_snapshot_success(self, mock_boto3):
         """Assert that a snapshot copy operation begins."""
-        mock_region = random.choice(helper.SOME_AWS_REGIONS)
+        mock_region = helper.get_random_region()
         mock_snapshot = helper.generate_mock_snapshot()
         mock_copied_snapshot_id = helper.generate_dummy_snapshot_id()
         mock_copy_result = {'SnapshotId': mock_copied_snapshot_id}
@@ -367,7 +366,7 @@ class UtilAwsEc2Test(TestCase):
     @patch('util.aws.ec2.boto3')
     def test_copy_snapshot_limit_reached(self, mock_boto3):
         """Assert that an error is returned when the copy limit is reached."""
-        mock_region = random.choice(helper.SOME_AWS_REGIONS)
+        mock_region = helper.get_random_region()
         mock_snapshot = helper.generate_mock_snapshot()
 
         mock_copy_error = {
@@ -393,7 +392,7 @@ class UtilAwsEc2Test(TestCase):
     @patch('util.aws.ec2.boto3')
     def test_copy_snapshot_failure(self, mock_boto3):
         """Assert that an error is given when copy fails."""
-        mock_region = random.choice(helper.SOME_AWS_REGIONS)
+        mock_region = helper.get_random_region()
         mock_snapshot = helper.generate_mock_snapshot()
 
         mock_copy_error = {
@@ -467,7 +466,7 @@ class UtilAwsEc2Test(TestCase):
     @patch('util.aws.ec2.boto3')
     def test_get_volume(self, mock_boto3):
         """Test that a Volume is returned."""
-        region = random.choice(helper.SOME_AWS_REGIONS)
+        region = helper.get_random_region()
         zone = helper.generate_dummy_availability_zone(region)
         volume_id = helper.generate_dummy_volume_id()
         mock_volume = helper.generate_mock_volume(
@@ -533,7 +532,7 @@ class UtilAwsEc2Test(TestCase):
         mock_ec2_client.copy_image.return_value = mock_copied_image_dict
 
         image_id = mock_original_image.id
-        source_region = random.choice(helper.SOME_AWS_REGIONS)
+        source_region = helper.get_random_region()
         with patch.object(ec2, 'get_ami') as mock_get_ami:
             mock_get_ami.return_value = mock_original_image
             result = ec2.copy_ami(mock_session, image_id, source_region)

@@ -1,5 +1,4 @@
 """Collection of tests for custom DRF serializers in the account app."""
-import random
 from unittest.mock import MagicMock, Mock, patch
 
 import faker
@@ -200,7 +199,7 @@ class AwsAccountSerializerTest(TransactionTestCase):
         """Test that an account is not saved if ARN reuses an AWS account."""
         user = util_helper.generate_test_user()
 
-        region = random.choice(util_helper.SOME_AWS_REGIONS)
+        region = util_helper.get_random_region()
         running_instances = {
             region: [
                 util_helper.generate_dummy_describe_instance(
