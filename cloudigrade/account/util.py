@@ -168,7 +168,21 @@ def save_instance_events(instance, instance_data, events=None):
                     instance_type__isnull=False,
                 ).exists()
             ):
-                e['instance_type'] = instance_data.get('InstanceType')
+                instance_type = instance_data.get('InstanceType')
+                logger.info(
+                    _(
+                        'Setting type %(instance_type)s for %(event_type)s '
+                        'event at %(occurred_at)s from EC2 instance ID '
+                        '%(ec2_instance_id)s'
+                    ),
+                    {
+                        'instance_type': instance_type,
+                        'event_type': e.get('event_type'),
+                        'occurred_at': e.get('occurred_at'),
+                        'ec2_instance_id': instance.ec2_instance_id,
+                    },
+                )
+                e['instance_type'] = instance_type
                 have_instance_type = True
 
             event = AwsInstanceEvent(
