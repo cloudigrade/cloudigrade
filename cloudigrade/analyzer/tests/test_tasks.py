@@ -793,14 +793,13 @@ class AnalyzeLogTest(TestCase):
         self.assertEqual(len(images), 0)
 
     @patch('analyzer.tasks.start_image_inspection')
-    @patch('analyzer.tasks.aws.get_ec2_instance')
     @patch('analyzer.tasks.aws.get_session')
     @patch('analyzer.tasks.aws.delete_messages_from_queue')
     @patch('analyzer.tasks.aws.get_object_content_from_s3')
     @patch('analyzer.tasks.aws.yield_messages_from_queue')
     def test_analyze_log_when_account_is_not_known(
             self, mock_receive, mock_s3, mock_del, mock_session,
-            mock_ec2, mock_inspection):
+            mock_inspection):
         """
         Test appropriate handling when the account ID in the log is unknown.
 

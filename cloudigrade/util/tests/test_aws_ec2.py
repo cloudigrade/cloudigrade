@@ -90,21 +90,6 @@ class UtilAwsEc2Test(TestCase):
 
         self.assertDictEqual(expected_found, actual_found)
 
-    def test_get_ec2_instance(self):
-        """Assert that get_ec2_instance returns an Instance."""
-        mock_instance_id = helper.generate_dummy_instance_id()
-        mock_instance = helper.generate_mock_ec2_instance(mock_instance_id)
-
-        mock_session = Mock()
-        mock_resource = mock_session.resource.return_value
-        mock_resource.Instance.return_value = mock_instance
-
-        actual_instance = ec2.get_ec2_instance(mock_session, mock_instance_id)
-        self.assertEqual(actual_instance, mock_instance)
-
-        mock_session.resource.assert_called_once_with('ec2')
-        mock_resource.Instance.assert_called_once_with(mock_instance_id)
-
     def test_describe_instances(self):
         """Assert that describe_instances returns a dict of instances data."""
         instance_ids = [

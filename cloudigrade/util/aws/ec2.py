@@ -75,21 +75,6 @@ def get_all_instances(session):
     return running_instances
 
 
-def get_ec2_instance(session, instance_id):
-    """
-    Return an EC2 AwsInstance object from the customer account.
-
-    Args:
-        session (boto3.Session): A temporary session tied to a customer account
-        instance_id (str): An EC2 instance ID
-
-    Returns:
-        AwsInstance: A boto3 AwsInstance object.
-
-    """
-    return session.resource('ec2').Instance(instance_id)
-
-
 def describe_instances(session, instance_ids, source_region):
     """
     Describe multiple AWS EC2 Instances.
