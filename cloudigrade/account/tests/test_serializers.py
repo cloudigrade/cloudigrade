@@ -221,13 +221,17 @@ class AwsAccountSerializerTest(TransactionTestCase):
         mock_request.user = util_helper.generate_test_user()
         context = {'request': mock_request}
 
-        with patch.object(aws, 'verify_account_access') as mock_verify, \
-                patch.object(aws.sts, 'boto3') as mock_boto3, \
-                patch.object(aws, 'get_all_instances') as mock_get_all:
+        with patch.object(
+            aws, 'verify_account_access'
+        ) as mock_verify, patch.object(
+            aws.sts, 'boto3'
+        ) as mock_boto3, patch.object(
+            aws, 'describe_instances_everywhere'
+        ) as mock_describe:
             mock_assume_role = mock_boto3.client.return_value.assume_role
             mock_assume_role.return_value = self.role
             mock_verify.return_value = True, []
-            mock_get_all.return_value = running_instances
+            mock_describe.return_value = running_instances
             serializer = AwsAccountSerializer(context=context)
 
             with self.assertRaises(ValidationError) as cm:

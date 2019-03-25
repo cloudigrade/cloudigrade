@@ -21,7 +21,7 @@ from util.tests import helper
 class UtilAwsEc2Test(TestCase):
     """AWS EC2 utility functions test case."""
 
-    def test_get_all_instances(self):
+    def test_describe_all_instances(self):
         """
         Assert we get expected instances in a dict keyed by regions.
 
@@ -86,7 +86,7 @@ class UtilAwsEc2Test(TestCase):
 
         with patch.object(ec2, 'get_regions') as mock_get_regions:
             mock_get_regions.return_value = mock_regions
-            actual_found = ec2.get_all_instances(mock_session)
+            actual_found = ec2.describe_instances_everywhere(mock_session)
 
         self.assertDictEqual(expected_found, actual_found)
 

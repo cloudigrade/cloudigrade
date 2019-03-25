@@ -49,9 +49,9 @@ class InstanceState(enum.Enum):
         return code == cls.running.value
 
 
-def get_all_instances(session):
+def describe_instances_everywhere(session):
     """
-    Find all EC2 instances visible to the given ARN.
+    Describe all EC2 instances visible to the given ARN in every known region.
 
     Args:
         session (boto3.Session): A temporary session tied to a customer account

@@ -103,7 +103,9 @@ class AccountCeleryTaskTest(TestCase):
             region: all_instances,
         }
 
-        mock_aws.get_all_instances.return_value = described_instances
+        mock_aws.describe_instances_everywhere.return_value = (
+            described_instances
+        )
         mock_util_aws.describe_images.return_value = [
             described_ami_unknown,
             described_ami_openshift,
