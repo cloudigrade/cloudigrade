@@ -214,23 +214,6 @@ class UtilHelperTest(TestCase):
         image_dict = helper.generate_mock_image_dict(image_id)
         self.assertEqual(image_dict['ImageId'], image_id)
 
-    def assertIncompleteInstanceRaisesAttributeErrors(self, instance):
-        """Check that accessing certain attributes will raise an exception."""
-        with self.assertRaises(AttributeError):
-            foo = instance.image_id
-        with self.assertRaises(AttributeError):
-            foo = instance.subnet_id
-        with self.assertRaises(AttributeError):
-            foo = instance.instance_type
-        with self.assertRaises(AttributeError):
-            foo = instance.platform
-
-        foo = instance.instance_id
-        self.assertIsNotNone(foo)
-
-        foo = getattr(instance, 'subnet_id', None)
-        self.assertIsNone(foo)
-
     def test_get_test_user_creates(self):
         """Assert get_test_user creates a user when it doesn't yet exist."""
         user = helper.get_test_user()
