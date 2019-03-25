@@ -259,9 +259,7 @@ def generate_single_aws_instance_event(
     if no_instance_type:
         instance_type = None
     elif instance_type is None:
-        instance_type = random.choice(
-            tuple(helper.SOME_EC2_INSTANCE_TYPES.keys())
-        )
+        instance_type = helper.get_random_instance_type()
 
     if no_subnet:
         subnet = None
@@ -330,9 +328,7 @@ def generate_aws_instance_events(
     if no_instance_type:
         instance_type = None
     elif instance_type is None:
-        instance_type = random.choice(
-            tuple(helper.SOME_EC2_INSTANCE_TYPES.keys())
-        )
+        instance_type = helper.get_random_instance_type()
     if subnet is None:
         subnet = helper.generate_dummy_subnet_id()
 
@@ -498,9 +494,7 @@ def generate_single_run(instance, runtime,
     if no_instance_type:
         instance_type = None
     elif instance_type is None:
-        instance_type = random.choice(
-            tuple(helper.SOME_EC2_INSTANCE_TYPES.keys())
-        )
+        instance_type = helper.get_random_instance_type()
 
     if not no_image and image is None:
         image = generate_aws_image()

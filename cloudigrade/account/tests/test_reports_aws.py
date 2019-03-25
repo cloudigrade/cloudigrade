@@ -1,6 +1,4 @@
 """Collection of tests for the reports module."""
-import random
-
 import faker
 from django.test import TestCase
 
@@ -70,9 +68,7 @@ class ReportTestBase(TestCase):
         self.account_4 = account_helper.generate_aws_account(
             user=self.user_2, name=_faker.bs())
 
-        self.instance_type = random.choice(tuple(
-            util_helper.SOME_EC2_INSTANCE_TYPES.keys()
-        ))
+        self.instance_type = util_helper.get_random_instance_type()
 
         self.instance = util_helper.SOME_EC2_INSTANCE_TYPES[self.instance_type]
 
@@ -1004,9 +1000,7 @@ class GetCloudAccountOverview(TestCase):
 
         account_helper.generate_aws_ec2_definitions()
 
-        self.instance_type = random.choice(tuple(
-            util_helper.SOME_EC2_INSTANCE_TYPES.keys()
-        ))
+        self.instance_type = util_helper.get_random_instance_type()
         self.instance = util_helper.SOME_EC2_INSTANCE_TYPES[self.instance_type]
 
     def assertExpectedAccountOverview(self, overview, account,

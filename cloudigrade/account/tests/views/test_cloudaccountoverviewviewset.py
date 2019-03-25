@@ -1,6 +1,4 @@
 """Collection of tests for CloudAccountOverviewViewSet."""
-import random
-
 from django.test import TestCase
 from rest_framework.test import APIRequestFactory, force_authenticate
 
@@ -45,9 +43,7 @@ class CloudAccountOverviewViewSetTest(TestCase):
         self.account4.created_at = util_helper.utc_dt(2017, 12, 1, 0, 0, 0)
         self.account4.save()
 
-        self.instance_type = random.choice(tuple(
-            util_helper.SOME_EC2_INSTANCE_TYPES.keys()
-        ))
+        self.instance_type = util_helper.get_random_instance_type()
         self.instance = util_helper.SOME_EC2_INSTANCE_TYPES[self.instance_type]
         self.windows_image = account_helper.generate_aws_image(
             is_encrypted=False,

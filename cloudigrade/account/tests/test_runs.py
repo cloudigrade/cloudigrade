@@ -1,6 +1,4 @@
 """Collection of tests for the run calculation."""
-import random
-
 from django.test import TestCase
 
 from account import util
@@ -29,9 +27,7 @@ class AccountUtilCalculateRunsTest(TestCase):
                 openshift_detected=True,
             )
 
-        self.instance_type = random.choice(tuple(
-            util_helper.SOME_EC2_INSTANCE_TYPES.keys()
-        ))
+        self.instance_type = util_helper.get_random_instance_type()
         self.instance_info = \
             util_helper.SOME_EC2_INSTANCE_TYPES[self.instance_type]
         self.instance1 = account_helper.generate_aws_instance(

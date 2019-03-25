@@ -3,7 +3,6 @@
 Because even test helpers should be tested!
 """
 import http
-import random
 import re
 import uuid
 from decimal import Decimal
@@ -232,9 +231,7 @@ class GenerateAwsInstanceEventsTest(TestCase):
             (util_helper.utc_dt(2017, 1, 4), None),
         )
         ec2_ami_id = util_helper.generate_dummy_image_id()
-        instance_type = random.choice(tuple(
-            util_helper.SOME_EC2_INSTANCE_TYPES.keys()
-        ))
+        instance_type = util_helper.get_random_instance_type()
         subnet = str(uuid.uuid4())
         events = helper.generate_aws_instance_events(
             instance,
