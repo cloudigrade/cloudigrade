@@ -526,7 +526,7 @@ def generate_single_run(instance, runtime,
     if runtime[1]:
         generate_single_aws_instance_event(
             instance=instance,
-            occurred_at=runtime[0],
+            occurred_at=runtime[1],
             event_type=InstanceEvent.TYPE.power_off,
             instance_type=instance_type,
             no_instance_type=no_instance_type

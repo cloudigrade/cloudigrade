@@ -52,14 +52,50 @@ class InstanceViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = serializers.InstancePolymorphicSerializer
 
     def get_queryset(self):
-        """Get the queryset filtered to appropriate user."""
+        """Filter the queryset."""
+        # Filter to the appropriate user
         user = self.request.user
         if not user.is_superuser:
-            return self.queryset.filter(account__user__id=user.id)
+            self.queryset = self.queryset.filter(account__user__id=user.id)
         user_id = self.request.query_params.get('user_id', None)
         if user_id is not None:
             user_id = convert_param_to_int('user_id', user_id)
-            return self.queryset.filter(account__user__id=user_id)
+            self.queryset = self.queryset.filter(account__user__id=user_id)
+
+        # Filter based on the instance running
+        running = self.request.query_params.get('running', None)
+        if running is not None:
+            self.queryset = self.queryset.prefetch_related('run_set')
+            if running.lower() == 'true':
+                # The query for run!=None is needed because Django constructs
+                # the query with LEFT OUTER JOIN, so if an run doesn't exist,
+                # the instance is still in the queryset.
+                # The discussion for this problem can be found:
+                # https://gitlab.com/cloudigrade/cloudigrade/merge_requests/593#note_154802463  # noqa: E501
+                # TODO: improve performance by forcing Django to INNER JOIN
+
+                # truthiness table:
+                # has endtime  |   run exists   |   include
+                # T            |   T            |   F
+                # T            |   F            |   F (will not happen IRL)
+                # F            |   T            |   T
+                # F            |   F            |   F
+                self.queryset = self.queryset.filter(
+                    Q(run__end_time=None) &
+                    ~Q(run=None)
+                ).distinct()
+            elif running.lower() == 'false':
+                # truthiness table:
+                # has endtime  |   run exists   |   include
+                # T            |   T            |   T
+                # T            |   F            |   T (will not happen IRL)
+                # F            |   T            |   F
+                # F            |   F            |   T
+                self.queryset = self.queryset.filter(
+                    ~Q(run__end_time=None) |
+                    Q(run=None)
+                ).distinct()
+
         return self.queryset
 
 

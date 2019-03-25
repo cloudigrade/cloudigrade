@@ -140,6 +140,8 @@ class DocsApiHandler(object):
             image.region = 'us-east-1'
             image.save()
 
+        account_helper.recalculate_runs_from_events(self.events)
+
     def cleanup(self):
         """Delete everything we created here."""
         for account in models.AwsAccount.objects.all():
@@ -266,12 +268,20 @@ class DocsApiHandler(object):
         assert_status(response, 200)
         responses['instance_get'] = response
 
-        # Filtering instances
+        # Filtering instances on user
         response = self.superuser_client.list_instance(
             data={'user_id': self.superuser.id}
         )
         assert_status(response, 200)
         responses['instance_filter'] = response
+
+        # Filtering instances on running
+        response = self.superuser_client.list_instance(
+            data={'running': True}
+        )
+        assert_status(response, 200)
+        responses['instance_filter_running'] = response
+
 
         #####################
         # Instance Event Info
@@ -423,12 +433,165 @@ class DocsApiHandler(object):
         responses['v2_header'] = util_helper.get_3scale_auth_header().\
             decode("utf-8")
 
+        ##########################
+        # v2 Customer Account Info
+
+        # List all accounts
+        response = self.customer_client.list_account(
+            api_root='/api/v2'
+        )
+        assert_status(response, 200)
+        responses['v2_account_list'] = response
+
+        # Retrieve a specific account
+        response = self.customer_client.get_account(
+            customer_account.id,
+            api_root='/api/v2'
+        )
+        assert_status(response, 200)
+        responses['v2_account_get'] = response
+
+        # Update a specific account
+        response = self.customer_client.patch_account(
+            customer_account.id,
+            data={
+                'name': 'name updated using PATCH',
+                'resourcetype': 'AwsAccount',
+            },
+            api_root='/api/v2'
+        )
+        assert_status(response, 200)
+        responses['v2_account_patch'] = response
+
+        response = self.customer_client.put_account(
+            customer_account.id,
+            data={
+                'name': 'name updated using PUT',
+                'account_arn': another_arn,
+                'resourcetype': 'AwsAccount',
+            },
+            api_root='/api/v2'
+        )
+        assert_status(response, 200)
+        responses['v2_account_put'] = response
+
+        # You cannot change the ARN via PUT or PATCH.
+        response = self.customer_client.patch_account(
+            customer_account.id,
+            data={
+                'account_arn': 'arn:aws:iam::999999999999:role/role-for-cloudigrade',
+                'resourcetype': 'AwsAccount',
+            },
+            api_root='/api/v2'
+        )
+        assert_status(response, 400)
+        responses['v2_account_patch_arn_fail'] = response
+
+        ##################
+        # V2 Instance Info
+
+        # List all instances
+        response = self.customer_client.list_instance(
+            api_root='/api/v2'
+        )
+        assert_status(response, 200)
+        responses['v2_instance_list'] = response
+
+        # Retrieve a specific instance
+        response = self.customer_client.get_instance(
+            self.customer_instances[0].id,
+            api_root='/api/v2'
+        )
+        assert_status(response, 200)
+        responses['v2_instance_get'] = response
+
+        # Filtering instances on user
+        response = self.superuser_client.list_instance(
+            data={'v2_user_id': self.superuser.id},
+            api_root='/api/v2'
+        )
+        assert_status(response, 200)
+        responses['v2_instance_filter'] = response
+
+        # Filtering instances on running
+        response = self.superuser_client.list_instance(
+            data={'running': True},
+            api_root='/api/v2'
+        )
+        assert_status(response, 200)
+        responses['v2_instance_filter_running'] = response
+
+        #######################
+        # V2 Machine Image Info
+
+        # List all images
+        response = self.customer_client.list_image(
+            api_root='/api/v2'
+        )
+        assert_status(response, 200)
+        responses['v2_list_images'] = response
+
+        response = self.superuser_client.list_image(
+            data={'user_id': self.superuser.id},
+            api_root='/api/v2'
+        )
+        assert_status(response, 200)
+        responses['v2_list_images_filter'] = response
+
+        # Retrieve a specific image
+        response = self.superuser_client.get_image(
+            self.images[0].id,
+            api_root='/api/v2'
+        )
+        assert_status(response, 200)
+        responses['v2_get_image'] = response
+
+        # Reinspect a specific image
+        response = self.superuser_client.post_image(
+            noun_id=self.images[0].id,
+            detail='reinspect',
+            api_root='/api/v2'
+        )
+        assert_status(response, 200)
+        responses['v2_reinspect_image'] = response
+
+        # Issuing challenges/flags
+        response = self.superuser_client.patch_image(
+            self.images[0].id,
+            data={'rhel_challenged': True, 'resourcetype': 'AwsMachineImage'},
+            api_root='/api/v2'
+        )
+        assert_status(response, 200)
+        responses['v2_patch_image'] = response
+
+        response = self.superuser_client.patch_image(
+            self.images[0].id,
+            data={'rhel_challenged': False, 'resourcetype': 'AwsMachineImage'},
+            api_root='/api/v2'
+        )
+        assert_status(response, 200)
+        responses['v2_patch_image_false'] = response
+
+        response = self.superuser_client.patch_image(
+            self.images[0].id,
+            data={
+                'rhel_challenged': True,
+                'openshift_challenged': True,
+                'resourcetype': 'AwsMachineImage',
+            },
+            api_root='/api/v2'
+        )
+        assert_status(response, 200)
+        responses['v2_patch_image_both'] = response
+
+        ########################
+        # V2 Miscellaneous Commands
         with override_settings(CLOUDIGRADE_VERSION=cloudigrade_version):
             response = self.superuser_client.get_sysconfig(
                 api_root='/api/v2'
             )
         assert_status(response, 200)
-        responses['v2get_sysconfig'] = response
+        responses['v2_get_sysconfig'] = response
 
         return responses
 

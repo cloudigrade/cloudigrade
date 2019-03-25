@@ -61,7 +61,7 @@ def httpied_command(wsgi_request, version=1):
     else:
         cli_text = ' '.join(['http', verb, url])
     if version == 2:
-        cli_text += ' X_RH_IDENTITY:${HTTP_X_RH_IDENTITY}'
+        cli_text += ' \'X_RH_IDENTITY:${HTTP_X_RH_IDENTITY}\''
     else:
         if getattr(wsgi_request, 'user', None):
             cli_text += ' "${AUTH}"'

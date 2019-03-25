@@ -226,6 +226,18 @@ Response:
 {{ instance_filter | stringify_http_response | rst_codeblock }}
 
 
+You may also include an optional "running" query string argument to filter for only
+running/non-running instances.
+
+Request:
+
+{{ instance_filter_running.wsgi_request | httpied_command | rst_codeblock("bash") }}
+
+Response:
+
+{{ instance_filter_running | stringify_http_response | rst_codeblock }}
+
+
 Instance Event Info
 -------------------
 
@@ -525,9 +537,231 @@ This header must be the base64 encoded version of:
     HTTP_X_RH_IDENTITY={{v2_header}}
 
 
+Overview
+--------
+
+The following resource paths are currently available:
+
+-  ``/api/v2/account/`` returns account data
+-  ``/api/v2/instance/`` returns instance data
+-  ``/api/v2/image/`` returns image data
+-  ``/api/v2/sysconfig/`` returns sysconfig data
+
+
+Customer Account Info
+---------------------
+
+List all accounts
+~~~~~~~~~~~~~~~~~
+
+Request:
+
+{{ v2_account_list.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
+
+Response:
+
+{{ v2_account_list | stringify_http_response | rst_codeblock }}
+
+
+Retrieve a specific account
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Request:
+
+{{ v2_account_get.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
+
+Response:
+
+{{ v2_account_get | stringify_http_response | rst_codeblock }}
+
+
+Update a specific account
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can update the account object via either HTTP PATCH or HTTP PUT. All
+updates require you to specify the "resourcetype".
+
+At the time of this writing, only the "name" property can be changed on the
+account object.
+
+Request:
+
+{{ v2_account_patch.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
+
+Response:
+
+{{ v2_account_patch | stringify_http_response | rst_codeblock }}
+
+Because PUT is intended to replace objects, it must include all potentially
+writable fields, which includes "name" and "account_arn".
+
+Request:
+
+{{ v2_account_put.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
+
+Response:
+
+{{ v2_account_put | stringify_http_response | rst_codeblock }}
+
+You cannot change the ARN via PUT or PATCH.
+
+Request:
+
+{{ v2_account_patch_arn_fail.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
+
+Response:
+
+{{ v2_account_patch_arn_fail | stringify_http_response | rst_codeblock }}
+
+
+Instance Info
+-------------
+
+List all instances
+~~~~~~~~~~~~~~~~~~
+
+Request:
+
+{{ v2_instance_list.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
+
+Response:
+
+{{ v2_instance_list | stringify_http_response | rst_codeblock }}
+
+
+Retrieve a specific instance
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Request:
+
+{{ v2_instance_get.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
+
+Response:
+
+{{ v2_instance_get | stringify_http_response | rst_codeblock }}
+
+
+Filtering instances
+~~~~~~~~~~~~~~~~~~~
+
+You may include an optional "user_id" query string argument to filter results
+down to a specific user.
+
+Request:
+
+{{ v2_instance_filter.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
+
+Response:
+
+{{ v2_instance_filter | stringify_http_response | rst_codeblock }}
+
+
+You may also include an optional "running" query string argument to filter for only
+running/non-running instances.
+
+Request:
+
+{{ v2_instance_filter_running.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
+
+Response:
+
+{{ v2_instance_filter_running | stringify_http_response | rst_codeblock }}
+
+
+Machine Images
+--------------
+
+List all images
+~~~~~~~~~~~~~~~
+
+Below command will return all images that have been seen used by any instance for any account belonging to the user that makes the request.
+
+Request:
+
+{{ v2_list_images.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
+
+Response:
+
+{{ v2_list_images | stringify_http_response | rst_codeblock }}
+
+When authenticating as a superuser, this will return all images used by instances in all accounts.
+
+A superuser can also filter the images down to a those used by instances for accounts belonging to a specific user by using the optional
+``user_id`` query string argument.
+
+Request:
+
+{{ v2_list_images_filter.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
+
+Response:
+
+{{ v2_list_images_filter | stringify_http_response | rst_codeblock }}
+
+
+Retrieve a specific image
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Request:
+
+{{ v2_get_image.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
+
+Response:
+
+{{ v2_get_image | stringify_http_response | rst_codeblock }}
+
+
+Reinspect a specific image
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+cloudigrade/account/v2/serializers.py
+Restart image inspection to deal with failed inspections or repeat inspection for the sake of testing.
+
+Note that this command is only accessible by superusers.
+
+Request:
+
+{{ v2_reinspect_image.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
+
+Response:
+
+{{ v2_reinspect_image | stringify_http_response | rst_codeblock }}
+
+
+Issuing challenges/flags
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Note that ``resourcetype`` is required when making these calls.
+
+Request:
+
+{{ v2_patch_image.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
+
+Response:
+
+{{ v2_patch_image | stringify_http_response | rst_codeblock }}
+
+If you'd like to remove a challenge, simply send the same challenge with False as the value.
+
+Request:
+
+{{ v2_patch_image_false.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
+
+Response:
+
+{{ v2_patch_image_false | stringify_http_response | rst_codeblock }}
+
+You can challenge both at the same time.
+
+Request:
+
+{{ v2_patch_image_both.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
+
+Response:
+
+{{ v2_patch_image_both | stringify_http_response | rst_codeblock }}
+
+
 Miscellaneous Commands
 ----------------------
-
 
 Retrieve current publicly-viewable system configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -536,8 +770,8 @@ The sysconfig endpoint includes the AWS cloud account id used by the application
 
 Request:
 
-{{ v2get_sysconfig.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
+{{ v2_get_sysconfig.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
 
 Response:
 
-{{ v2get_sysconfig | stringify_http_response | rst_codeblock }}
+{{ v2_get_sysconfig | stringify_http_response | rst_codeblock }}

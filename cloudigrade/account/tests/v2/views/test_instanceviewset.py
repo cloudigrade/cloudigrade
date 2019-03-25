@@ -1,10 +1,10 @@
-"""Collection of tests for InstanceViewSet."""
+"""Collection of tests for v2 InstanceViewSet."""
 from django.test import TestCase
 from rest_framework.test import APIRequestFactory, force_authenticate
 
 from account.models import (AwsInstance)
 from account.tests import helper as account_helper
-from account.views import (InstanceViewSet)
+from account.v2.views import InstanceViewSet
 from util.tests import helper as util_helper
 
 
@@ -16,18 +16,34 @@ class InstanceViewSetTest(TestCase):
         self.user1 = util_helper.generate_test_user()
         self.user2 = util_helper.generate_test_user()
         self.superuser = util_helper.generate_test_user(is_superuser=True)
+
         self.account1 = account_helper.generate_aws_account(user=self.user1)
         self.account2 = account_helper.generate_aws_account(user=self.user1)
         self.account3 = account_helper.generate_aws_account(user=self.user2)
         self.account4 = account_helper.generate_aws_account(user=self.user2)
-        self.instance1 = \
-            account_helper.generate_aws_instance(account=self.account1)
-        self.instance2 = \
-            account_helper.generate_aws_instance(account=self.account2)
-        self.instance3 = \
-            account_helper.generate_aws_instance(account=self.account3)
-        self.instance4 = \
-            account_helper.generate_aws_instance(account=self.account4)
+
+        self.image_plain = account_helper.generate_aws_image()
+        self.image_windows = account_helper.generate_aws_image(is_windows=True)
+        self.image_rhel = account_helper.generate_aws_image(rhel_detected=True)
+        self.image_ocp = account_helper.generate_aws_image(
+            openshift_detected=True)
+
+        self.instance1 = account_helper.generate_aws_instance(
+            account=self.account1,
+            image=self.image_plain
+        )
+        self.instance2 = account_helper.generate_aws_instance(
+            account=self.account2,
+            image=self.image_windows
+        )
+        self.instance3 = account_helper.generate_aws_instance(
+            account=self.account3,
+            image=self.image_rhel
+        )
+        self.instance4 = account_helper.generate_aws_instance(
+            account=self.account4,
+            image=self.image_ocp
+        )
         self.factory = APIRequestFactory()
 
     def assertResponseHasInstanceData(self, response, instance):
@@ -37,17 +53,21 @@ class InstanceViewSetTest(TestCase):
         )
         self.assertEqual(
             response.data['account'],
-            f'http://testserver/api/v1/account/{instance.account.id}/'
+            f'http://testserver/api/v2/account/{instance.account.id}/'
         )
         self.assertEqual(
             response.data['account_id'], instance.account.id
+        )
+        self.assertEqual(
+            response.data['machineimage'],
+            f'http://testserver/api/v2/image/{instance.machineimage.id}/'
         )
         self.assertEqual(
             response.data['resourcetype'], instance.__class__.__name__
         )
         self.assertEqual(
             response.data['url'],
-            f'http://testserver/api/v1/instance/{instance.id}/'
+            f'http://testserver/api/v2/instance/{instance.id}/'
         )
 
         if isinstance(instance, AwsInstance):
