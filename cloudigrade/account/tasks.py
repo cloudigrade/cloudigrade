@@ -476,9 +476,21 @@ def run_inspection_cluster(messages, cloud='aws'):
                 'mount_point': mount_point,
             }
         )
-
-        volume.attach_to_instance(
-            Device=mount_point, InstanceId=ec2_instance_id)
+        try:
+            volume.attach_to_instance(
+                Device=mount_point, InstanceId=ec2_instance_id)
+        except ClientError as e:
+            if e.response.get('Error').get('Code') == 'OptInRequired':
+                logger.warning(_('Found a marketplace AMI "%s" when trying to '
+                                 'copy volume, this should not happen, '
+                                 'but here we are.'), message['ami_id'])
+                ami = AwsMachineImage.objects.get(ec2_ami_id=message['ami_id'])
+                ami.aws_marketplace_image = True
+                ami.status = AwsMachineImage.INSPECTED
+                ami.save()
+                continue
+            else:
+                raise e
 
         logger.info(_('%(label)s modify volume %(volume_id)s to auto-delete'),
                     {'label': 'run_inspection_cluster',
@@ -495,6 +507,10 @@ def run_inspection_cluster(messages, cloud='aws'):
         ])
 
         task_command.extend(['-t', message['ami_id'], mount_point])
+
+    if '-t' not in task_command:
+        logger.warning(_('No targets left to inspect, exiting early.'))
+        return
 
     result = ecs.register_task_definition(
         family=f'{settings.HOUNDIGRADE_ECS_FAMILY_NAME}',
