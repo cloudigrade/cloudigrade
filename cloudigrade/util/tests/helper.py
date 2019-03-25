@@ -266,35 +266,6 @@ def generate_dummy_role():
     }
 
 
-def generate_mock_ec2_instance(instance_id=None, image_id=None, subnet_id=None,
-                               state=None, instance_type=None, platform=''):
-    """
-    Generate a mocked EC2 AwsInstance object.
-
-    Args:
-        instance_id (str): The EC2 instance id.
-        instance_type (str): The EC2 instance type.
-        image_id (str): The EC2 AMI image id.
-        subnet (str): The EC2 subnet.
-        platform (str): The Platform value.
-
-    Returns:
-        Mock: A mock object with AwsInstance-like attributes.
-
-    """
-    described_instance = generate_dummy_describe_instance(
-        instance_id, image_id, subnet_id, state, instance_type, platform
-    )
-    mock_instance = Mock()
-    mock_instance.instance_id = described_instance['InstanceId']
-    mock_instance.instance_type = described_instance['InstanceType']
-    mock_instance.image_id = described_instance['ImageId']
-    mock_instance.state = described_instance['State']
-    mock_instance.subnet_id = described_instance['SubnetId']
-    mock_instance.platform = described_instance['Platform']
-    return mock_instance
-
-
 def generate_mock_image(image_id=None, encrypted=False, state=None):
     """
     Generate a mocked EC2 Image object.

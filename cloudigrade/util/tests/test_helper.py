@@ -72,34 +72,6 @@ class UtilHelperTest(TestCase):
         self.assertEqual(instance['State']['Code'], state.value)
         self.assertEqual(instance['State']['Name'], state.name)
 
-    def test_generate_mock_ec2_instance_default(self):
-        """Assert generated instance has values where expected."""
-        instance = helper.generate_mock_ec2_instance()
-        self.assertIsNotNone(instance.image_id)
-        self.assertIsNotNone(instance.instance_id)
-        self.assertIsNotNone(instance.instance_type)
-        self.assertIsNotNone(instance.subnet_id)
-        self.assertIsNotNone(instance.state)
-        self.assertIsNotNone(instance.state['Code'])
-        self.assertIsNotNone(instance.state['Name'])
-
-    def test_generate_mock_ec2_instance_with_values(self):
-        """Assert generated instance contains given values."""
-        image_id = helper.generate_dummy_image_id()
-        instance_id = helper.generate_dummy_instance_id()
-        subnet_id = helper.generate_dummy_subnet_id()
-        state = aws.InstanceState.shutting_down
-        instance_type = helper.get_random_instance_type()
-        instance = helper.generate_mock_ec2_instance(
-            instance_id, image_id, subnet_id, state, instance_type
-        )
-        self.assertEqual(instance.image_id, image_id)
-        self.assertEqual(instance.instance_id, instance_id)
-        self.assertEqual(instance.instance_type, instance_type)
-        self.assertEqual(instance.subnet_id, subnet_id)
-        self.assertEqual(instance.state['Code'], state.value)
-        self.assertEqual(instance.state['Name'], state.name)
-
     def test_generate_mock_image(self):
         """Assert generated image contains given value."""
         image_id = helper.generate_dummy_image_id()
