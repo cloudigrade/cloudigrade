@@ -570,6 +570,14 @@ def _build_container_definition(task_command):
             },
         ],
         'privileged': True,
+        'logConfiguration': {
+            'logDriver': 'awslogs',
+            'options': {
+                'awslogs-create-group': 'true',
+                'awslogs-group': f'{settings.AWS_NAME_PREFIX}cloudigrade-ecs',
+                'awslogs-region': settings.AWS_SQS_REGION,
+            }
+        }
     }
     if settings.HOUNDIGRADE_ENABLE_SENTRY:
         container_definition['environment'].extend([
