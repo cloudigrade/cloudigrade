@@ -154,6 +154,52 @@ For convenience, you may want to set the following environment variable:
 If you do not set that variable, you may need to include the ``--settings=config.settings.local`` argument with any Django admin or management commands you run.
 
 
+Configure AWS Policy for Capturing ECS Logs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For ECS to be able to write logs to CloudWatch, we'll need to create and assign it the ecs role.
+
+First we'll create the policy.
+
+- Open the IAM console at https://console.aws.amazon.com/iam/.
+- In the navigation pane, choose Policies.
+- Choose Create policy, JSON.
+- Enter the following policy:
+.. code-block:: json
+
+    {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Effect": "Allow",
+                "Action": [
+                    "logs:CreateLogGroup",
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents",
+                    "logs:DescribeLogStreams"
+                ],
+                "Resource": [
+                    "arn:aws:logs:*:*:*"
+                ]
+            }
+        ]
+    }
+
+- Choose Review policy.
+- On the Review policy page, enter ECS-CloudWatchLogs for the Name and choose Create policy.
+
+Next, we will attach the policy.
+
+- Open the IAM console at https://console.aws.amazon.com/iam/.
+- In the navigation pane, choose Roles.
+- Choose ecsInstanceRole.
+- Choose Permissions, Attach policy.
+- To narrow the available policies to attach, for Filter, type ECS-CloudWatchLogs.
+- Check the box to the left of the ECS-CloudWatchLogs policy and choose Attach policy.
+
+You'll be able to view CloudWatch Logs `here <https://console.aws.amazon.com/cloudwatch/home?region=us-east-1#logs:>`_, there will be a log group created for your ecs cluster.
+
+
 Common commands
 ===============
 
