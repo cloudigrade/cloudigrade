@@ -1,26 +1,32 @@
 """Celery app for use in Django project."""
+import logging
+
 import django
 import environ
-import raven
+import sentry_sdk
 from celery import Celery
-from raven.contrib.celery import register_logger_signal, register_signal
+from sentry_sdk.integrations.celery import CeleryIntegration
 
 env = environ.Env()
+logger = logging.getLogger(__name__)
 
+
+logger.info('Starting celery.')
 # Django setup is required *before* Celery app can start correctly.
 django.setup()
+logger.info('Django setup.')
 
 app = Celery('config')
 app.config_from_object('django.conf:settings', namespace='CELERY')
 app.autodiscover_tasks()
+logger.info('Celery setup.')
 
 if env('CELERY_ENABLE_SENTRY', default=False):
-    client = raven.Client(dsn=env('CELERY_SENTRY_DSN'),
-                          environment=env('CELERY_SENTRY_ENVIRONMENT'),
-                          release=env('CELERY_SENTRY_RELEASE'))
-
-    # register a custom filter to filter out duplicate logs
-    register_logger_signal(client)
-
-    # hook into the Celery error handler
-    register_signal(client)
+    logger.info('Enabling sentry.')
+    sentry_sdk.init(
+        dsn=env('CELERY_SENTRY_DSN'),
+        environment=env('CELERY_SENTRY_ENVIRONMENT'),
+        release=env('CELERY_SENTRY_RELEASE'),
+        integrations=[CeleryIntegration()]
+    )
+    logger.info('Sentry setup.')

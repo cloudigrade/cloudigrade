@@ -115,7 +115,6 @@ DJANGO_APPS = [
 
 # Any pip installed apps will go here
 THIRD_PARTY_APPS = [
-    'raven.contrib.django.raven_compat',
     'django_celery_beat',
     'rest_framework',
     'rest_framework.authtoken',
@@ -222,12 +221,6 @@ USE_TZ = True
 
 STATIC_URL = env('DJANGO_STATIC_URL', default='/static/')
 STATIC_ROOT = env('DJANGO_STATIC_ROOT', default=str(ROOT_DIR.path('static')))
-
-
-# Raven
-# https://sentry.io/onboarding/cloudigrade/cloudigrade-api/configure/python-django
-
-RAVEN_CONFIG = {}  # Configured in prod.py
 
 
 # Django Rest Framework
