@@ -480,17 +480,37 @@ def run_inspection_cluster(messages, cloud='aws'):
             volume.attach_to_instance(
                 Device=mount_point, InstanceId=ec2_instance_id)
         except ClientError as e:
-            if e.response.get('Error').get('Code') == 'OptInRequired':
-                logger.warning(_('Found a marketplace AMI "%s" when trying to '
-                                 'copy volume, this should not happen, '
-                                 'but here we are.'), message['ami_id'])
-                ami = AwsMachineImage.objects.get(ec2_ami_id=message['ami_id'])
+            error_code = e.response.get('Error').get('Code')
+            error_message = e.response.get('Error').get('Message')
+
+            ami = AwsMachineImage.objects.get(ec2_ami_id=message['ami_id'])
+
+            if error_code in ('OptInRequired', 'IncorrectInstanceState',) \
+                    and 'marketplace' in error_message.lower():
+                logger.info(_('Found a marketplace AMI "%s" when trying to '
+                              'copy volume, this should not happen, '
+                              'but here we are.'), message['ami_id'])
                 ami.aws_marketplace_image = True
                 ami.status = AwsMachineImage.INSPECTED
-                ami.save()
-                continue
             else:
-                raise e
+                logger.error(
+                    _('Encountered an issue when trying to attach volume '
+                      '"%(volume_id)s" from AMI "%(ami_id)s" to inspection '
+                      'instance. Error code: "%(error_code)s". Error '
+                      'message: "%(error_message)s". Setting image state to '
+                      'ERROR.'), {
+                        'volume_id': message['volume_id'],
+                        'ami_id': message['ami_id'],
+                        'error_code': error_code,
+                        'error_message': error_message,
+                    }
+                )
+                ami.status = AwsMachineImage.ERROR
+
+            ami.save()
+            volume.delete()
+
+            continue
 
         logger.info(_('%(label)s modify volume %(volume_id)s to auto-delete'),
                     {'label': 'run_inspection_cluster',

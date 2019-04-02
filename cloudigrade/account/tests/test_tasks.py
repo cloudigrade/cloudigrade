@@ -1205,7 +1205,7 @@ class AccountCeleryTaskTest(TestCase):
         mock_volume.attach_to_instance.side_effect = ClientError(
             error_response={'Error': {
                 'Code': 'OptInRequired',
-                'Message': 'Mystery Error',
+                'Message': 'Marketplace Error',
             }},
             operation_name=Mock(),
         )
@@ -1251,6 +1251,7 @@ class AccountCeleryTaskTest(TestCase):
         """Assert that non marketplace errors are still raised."""
         mock_image_objects.get.return_value = mock_image_objects
         mock_image_objects.INSPECTED.return_value = 'inspected'
+        mock_image_objects.ERROR.return_value = 'error'
 
         mock_list_container_instances = {
             'containerInstanceArns': [util_helper.generate_dummy_instance_id()]
@@ -1283,8 +1284,10 @@ class AccountCeleryTaskTest(TestCase):
             'ami_id': mock_ami_id,
             'volume_id': util_helper.generate_dummy_volume_id()}]
 
-        with self.assertRaises(RuntimeError):
-            tasks.run_inspection_cluster(messages)
+        tasks.run_inspection_cluster(messages)
+
+        self.assertEqual(mock_image_objects.status,
+                         mock_image_objects.ERROR.return_value)
 
         mock_ecs.list_container_instances.assert_called_once_with(
             cluster=settings.HOUNDIGRADE_ECS_CLUSTER_NAME)
