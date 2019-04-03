@@ -35,10 +35,16 @@ LOGGING_CONFIG = None
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': True,
+    'filters': {
+        'request_id': {
+            '()': 'util.logfilter.RequestIDFilter'
+        }
+    },
     'formatters': {
         'verbose': {
             'format': '%(asctime)s | %(levelname)s | '
-                      '%(filename)s:%(funcName)s:%(lineno)d | %(message)s'
+                      '%(filename)s:%(funcName)s:%(lineno)d | '
+                      'requestid:%(request_id)s | %(message)s'
         },
     },
     'handlers': {
@@ -46,6 +52,7 @@ LOGGING = {
             'level': env('DJANGO_CONSOLE_LOG_LEVEL', default='INFO'),
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
+            'filters': ['request_id']
         },
     },
     'loggers': {
@@ -144,6 +151,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'util.middleware.RequestIDLoggingMiddleware'
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -374,3 +382,6 @@ CELERY_BEAT_SCHEDULE = {
 
 # Misc Config Values
 CLOUDIGRADE_VERSION = env('CLOUDIGRADE_VERSION', default=None)
+
+# Response Header name that includes the cloudigrade request id
+CLOUDIGRADE_REQUEST_HEADER = 'X-CLOUDIGRADE-REQUEST-ID'
