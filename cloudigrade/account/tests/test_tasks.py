@@ -627,6 +627,9 @@ class AccountCeleryTaskTest(TestCase):
         mock_ami = Mock()
         mock_ami.INSPECTED = 'Inspected'
         mock_aws_machine_image_objects.get.return_value = mock_ami
+        mock_reference_ami = Mock()
+        mock_reference_ami.public = True
+        mock_aws.get_ami.return_value = mock_reference_ami
 
         mock_aws.copy_ami.side_effect = ClientError(
             error_response={'Error': {

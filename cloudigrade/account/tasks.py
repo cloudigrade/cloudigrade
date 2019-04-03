@@ -206,16 +206,8 @@ def copy_ami_to_customer_account(arn, reference_ami_id, snapshot_region):
             error = e.response.get('Error').get('Message')[:-1] if \
                 e.response.get('Error').get('Message').endswith('.') else \
                 e.response.get('Error').get('Message')
-            if reference_ami.public and error in public_errors:
-                # This appears to be a marketplace AMI, mark it as inspected.
-                logger.info(_('Found a marketplace/community image "%s", '
-                              'marking as inspected'), reference_ami_id)
-                ami = AwsMachineImage.objects.get(ec2_ami_id=reference_ami_id)
-                ami.status = ami.INSPECTED
-                ami.aws_marketplace_image = True
-                ami.save()
-                return
-            elif not reference_ami.public and error in private_errors:
+
+            if not reference_ami.public and error in private_errors:
                 # This appears to be a private AMI, shared with our customer,
                 # but not given access to the storage.
                 logger.warning(_(
@@ -225,6 +217,16 @@ def copy_ami_to_customer_account(arn, reference_ami_id, snapshot_region):
                 ami.status = ami.ERROR
                 ami.save()
                 return
+            elif error in public_errors:
+                # This appears to be a marketplace AMI, mark it as inspected.
+                logger.info(_('Found a marketplace/community image "%s", '
+                              'marking as inspected'), reference_ami_id)
+                ami = AwsMachineImage.objects.get(ec2_ami_id=reference_ami_id)
+                ami.status = ami.INSPECTED
+                ami.aws_marketplace_image = True
+                ami.save()
+                return
+
         raise e
 
     copy_ami_snapshot.delay(arn, new_ami_id, snapshot_region, reference_ami_id)
