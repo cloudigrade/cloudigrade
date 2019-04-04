@@ -3,6 +3,7 @@ import base64
 import json
 import logging
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils.translation import gettext as _
 from rest_framework import HTTP_HEADER_ENCODING
@@ -15,13 +16,32 @@ class ThreeScaleAuthentication(BaseAuthentication):
     """
     3scale authentication.
 
-    Check for the existence of a HTTP_X_RH_IDENTITY. The user identity is
+    Check for the existence of a INSIGHTS_IDENTITY_HEADER. The user identity is
     inferred based off the email in the header.
     """
 
     def authenticate(self, request):
-        """Return a `User` if a valid `HTTP_X_RH_IDENTITY` is present."""
-        auth_header = request.META.get('HTTP_X_RH_IDENTITY', None)
+        """
+        Return a `User` if a valid INSIGHTS_IDENTITY_HEADER is present.
+
+        Returns:
+            None: If authentication is not provided
+            User, True: If authentication succeeds.
+
+        Raises:
+            AuthenticationFailed: If the user attempts and fail to authenticate
+
+        """
+        insights_request_id = request.META.get(
+            settings.INSIGHTS_REQUEST_ID_HEADER, None
+        )
+        logger.info(
+            _('Authenticating via insights, INSIGHTS_REQUEST_ID: %s'),
+            insights_request_id
+        )
+
+        auth_header = request.META.get(settings.INSIGHTS_IDENTITY_HEADER, None)
+
         # Can't authenticate if there isn't a header
         if not auth_header:
             return None
@@ -31,18 +51,28 @@ class ThreeScaleAuthentication(BaseAuthentication):
             )
 
         except (TypeError, UnicodeDecodeError, json.JSONDecodeError) as e:
-            logger.exception(
-                _('Could not authenticate: 3scale header parsing error %s'), e
+            logger.info(
+                _('Authentication Failed: 3scale header parsing error %s'), e
             )
             raise exceptions.AuthenticationFailed(
-                _('Invalid 3scale header: {error}').format(e)
+                _('Invalid 3scale header: {error}').format(error=e)
             )
 
         # If email is not in header, authentication fails
         try:
             email = auth['identity']['user']['email']
         except KeyError:
-            return None
+            logger.info(
+                _('Authentication Failed: '
+                  'email not contained in 3scale header %s.'), auth_header
+            )
+            raise exceptions.AuthenticationFailed(
+                _('Invalid 3scale header: missing user email field')
+            )
 
         user, created = User.objects.get_or_create(username=email)
+        if created:
+            logger.info(
+                _('User %s was not found and has been created.'), email
+            )
         return user, True

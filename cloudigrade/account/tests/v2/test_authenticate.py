@@ -3,8 +3,10 @@ import base64
 import json
 from unittest.mock import Mock
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.test import TestCase
+from rest_framework.authentication import exceptions
 
 from account.v2.authentication import ThreeScaleAuthentication
 from util.tests import helper as util_helper
@@ -31,7 +33,7 @@ class ThreeScaleAuthenticateTestCase(TestCase):
     def test_3scale_authenticate(self):
         """Test that 3scale authentication with the correct header succeeds."""
         request = Mock()
-        request.META = {'HTTP_X_RH_IDENTITY': self.rh_header}
+        request.META = {settings.INSIGHTS_IDENTITY_HEADER: self.rh_header}
 
         user, auth = self.three_scale_auth.authenticate(request)
 
@@ -40,6 +42,17 @@ class ThreeScaleAuthenticateTestCase(TestCase):
 
     def test_3scale_authenticate_invalid_header(self):
         """Test that 3scale authentication with an invalid header fails."""
+        bad_rh_header = base64.b64encode(b'Not JSON')
+
+        request = Mock()
+        request.META = {settings.INSIGHTS_IDENTITY_HEADER: bad_rh_header}
+
+        with self.assertRaises(exceptions.AuthenticationFailed) as e:
+            self.three_scale_auth.authenticate(request)
+            self.assertIn('Authentication Failed', e.exception.args[0])
+
+    def test_3scale_authenticate_header_bad_format(self):
+        """Test that 3scale authentication with a bad json header fails."""
         rh_identity = {
             'user': {
                 'email': self.user_email
@@ -50,11 +63,11 @@ class ThreeScaleAuthenticateTestCase(TestCase):
         )
 
         request = Mock()
-        request.META = {'HTTP_X_RH_IDENTITY': bad_rh_header}
+        request.META = {settings.INSIGHTS_IDENTITY_HEADER: bad_rh_header}
 
-        auth = self.three_scale_auth.authenticate(request)
-
-        self.assertIsNone(auth)
+        with self.assertRaises(exceptions.AuthenticationFailed) as e:
+            self.three_scale_auth.authenticate(request)
+            self.assertIn('Authentication Failed', e.exception.args[0])
 
     def test_3scale_authenticate_no_header(self):
         """Test that 3scale authentication with no headers fails."""
@@ -70,7 +83,7 @@ class ThreeScaleAuthenticateTestCase(TestCase):
         self.assertEqual(0, len(users))
 
         request = Mock()
-        request.META = {'HTTP_X_RH_IDENTITY': self.rh_header}
+        request.META = {settings.INSIGHTS_IDENTITY_HEADER: self.rh_header}
 
         user, auth = self.three_scale_auth.authenticate(request)
 
