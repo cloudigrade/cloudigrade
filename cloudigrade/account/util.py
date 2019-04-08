@@ -7,6 +7,7 @@ from decimal import Decimal
 import boto3
 import jsonpickle
 from botocore.exceptions import ClientError
+from django.conf import settings
 from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
@@ -344,6 +345,18 @@ def start_image_inspection(arn, ami_id, region):
     ami = AwsMachineImage.objects.get(ec2_ami_id=ami_id)
     ami.status = ami.PREPARING
     ami.save()
+
+    if (
+        MachineImageInspectionStart.objects.filter(machineimage=ami).count() >
+        settings.MAX_ALLOWED_INSPECTION_ATTEMPTS
+    ):
+        logger.info(
+            _('Exceeded %(count)s inspection attempts for %(ami)s'),
+            {'count': settings.MAX_ALLOWED_INSPECTION_ATTEMPTS, 'ami': ami}
+        )
+        ami.status = ami.ERROR
+        ami.save()
+        return ami
 
     MachineImageInspectionStart.objects.create(machineimage=ami)
 

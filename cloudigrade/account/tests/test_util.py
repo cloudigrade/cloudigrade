@@ -3,6 +3,7 @@ import uuid
 from unittest.mock import Mock, patch
 
 from botocore.exceptions import ClientError
+from django.conf import settings
 from django.test import TestCase
 from rest_framework.serializers import ValidationError
 
@@ -321,6 +322,17 @@ class AccountUtilTest(TestCase):
         mock_copy.delay.assert_not_called()
         image.refresh_from_db()
         self.assertEqual(image.status, image.INSPECTED)
+
+    @patch('account.tasks.copy_ami_snapshot')
+    def test_start_image_inspection_exceed_max_allowed(self, mock_copy):
+        """Test that inspection stops when max allowed attempts is exceeded."""
+        image = account_helper.generate_aws_image()
+        for _ in range(0, settings.MAX_ALLOWED_INSPECTION_ATTEMPTS + 1):
+            MachineImageInspectionStart.objects.create(machineimage=image)
+        util.start_image_inspection(None, image.ec2_ami_id, None)
+        mock_copy.delay.assert_not_called()
+        image.refresh_from_db()
+        self.assertEqual(image.status, image.ERROR)
 
     def test_save_instance_with_unavailable_image(self):
         """Test that save instance events also writes image on instance."""
