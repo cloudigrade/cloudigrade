@@ -27,11 +27,11 @@ from account.models import (
     AwsAccount,
     AwsEC2InstanceDefinitions,
     AwsInstance,
+    AwsInstanceEvent,
     AwsMachineImage,
     InstanceEvent,
     MachineImage,
-    Run,
-)
+    Run)
 from account.reports import normalize_runs
 from account.util import (recalculate_runs, save_instance,
                           save_instance_events, save_new_aws_machine_image,
@@ -250,10 +250,18 @@ def _load_missing_instance_data(instance_events):  # noqa: C901
             _instance_event_is_complete(instance_event) or
             ec2_instance_id in defined_ec2_instance_ids
         ):
+            # This means the incoming data is sufficiently populated so we
+            # should know the instance's image and type.
             defined_ec2_instance_ids.add(ec2_instance_id)
         elif AwsInstance.objects.filter(
-            ec2_instance_id=ec2_instance_id
+            ec2_instance_id=instance_event.ec2_instance_id,
+            machineimage__isnull=False,
+        ).exists() and AwsInstanceEvent.objects.filter(
+            instance__awsinstance__ec2_instance_id=ec2_instance_id,
+            instance_type__isnull=False,
         ).exists():
+            # This means we already know the instance's image and at least once
+            # we have known the instance's type from an event.
             defined_ec2_instance_ids.add(ec2_instance_id)
 
     # Iterate through the instance events grouped by account and region in
