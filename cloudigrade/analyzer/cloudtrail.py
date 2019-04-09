@@ -111,7 +111,7 @@ def extract_ec2_instance_events(record):
         event_name in ['ModifyInstanceAttribute', 'RunInstances'] and
         instance_type is None
     ):
-        logger.error(_(
+        logger.info(_(
             'Missing instanceType in %(event_name)s record: %(record)s'
         ), {'event_name': event_name, 'record': record})
         return []
