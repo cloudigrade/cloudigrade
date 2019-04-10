@@ -224,7 +224,6 @@ class MachineImageInspectionStart(BaseModel):
         db_index=True,
         null=False,
     )
-    occurred_at = models.DateTimeField(auto_now_add=True, null=False)
 
 
 class Instance(BasePolymorphicModel):
