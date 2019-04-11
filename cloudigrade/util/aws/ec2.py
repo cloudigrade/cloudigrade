@@ -139,17 +139,37 @@ def get_ami(session, image_id, source_region):
         has state == 'available', effectively ensuring that the image is ready
         to be copied (for the async inspection process).
 
+        If the image cannot load or has a "failed" state at AWS, this function
+        may return None.
+
     Args:
         session (boto3.Session): A temporary session tied to a customer account
         image_id (str): An AMI ID
         source_region (str): The region the image resides in
 
     Returns:
-        Image: A boto3 EC2 Image object.
+        Image: A boto3 EC2 Image object. None if the image could not be loaded.
 
     """
-    image = session.resource('ec2', region_name=source_region).Image(image_id)
-    check_image_state(image)
+    try:
+        image = session.resource('ec2', region_name=source_region).Image(
+            image_id
+        )
+        check_image_state(image)
+    except AwsImageError as e:
+        logger.exception(e)
+        logger.info(
+            _(
+                'Failed to get AMI %(image_id)s in %(source_region)s. '
+                '%(message)s',
+            ),
+            {
+                'image_id': image_id,
+                'source_region': source_region,
+                'message': str(e),
+            },
+        )
+        image = None
     return image
 
 
@@ -199,10 +219,18 @@ def copy_ami(session, image_id, source_region):
         source_region (str): The region the snapshot resides in
 
     Returns:
-        str: The image id of the newly created image.
+        str: The image id of the newly created image. None if the original
+            image could not be loaded.
 
     """
     old_image = get_ami(session, image_id, source_region)
+    if not old_image:
+        logger.info(
+            _('Cannot copy AMI %(image_id)s from %(source_region)s.'),
+            {'image_id': image_id, 'source_region': source_region},
+        )
+        return None
+
     # Note: AWS image names are limited to 128 characters in length.
     new_name = 'cloudigrade reference copy ({0})'.format(old_image.name)[:128]
     ec2 = session.client('ec2', region_name=source_region)

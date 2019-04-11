@@ -147,6 +147,23 @@ class UtilAwsEc2Test(TestCase):
         mock_resource.Image.assert_called_once_with(mock_image_id)
         mock_check_image_state.assert_called_once_with(mock_image)
 
+    @patch('util.aws.ec2.check_image_state')
+    def test_get_ami_when_load_fails(self, mock_check_image_state):
+        """Assert that get_ami returns None when load fails."""
+        mock_image_id = helper.generate_dummy_image_id()
+        mock_image = helper.generate_mock_image(mock_image_id)
+
+        mock_session = Mock()
+        mock_resource = mock_session.resource.return_value
+        mock_resource.Image.return_value = mock_image
+
+        mock_region = helper.get_random_region()
+
+        mock_check_image_state.side_effect = AwsImageError
+
+        actual_image = ec2.get_ami(mock_session, mock_image_id, mock_region)
+        self.assertIsNone(actual_image)
+
     def test_check_image_state_available(self):
         """Assert clean return when image state is available."""
         mock_image = helper.generate_mock_image(state='available')
@@ -554,3 +571,18 @@ class UtilAwsEc2Test(TestCase):
         mock_ec2_client.copy_image.assert_called_once()
         mock_ec2_client.create_tags.assert_called_once()
         self.assertEqual(result, mock_copied_image_dict['ImageId'])
+
+    def test_copy_ami_abort_when_no_image_loaded(self):
+        """Test that image copy aborts when no image is loaded."""
+        mock_session = Mock()
+        mock_ec2_client = mock_session.client.return_value
+
+        image_id = helper.generate_dummy_image_id()
+        source_region = helper.get_random_region()
+        with patch.object(ec2, 'get_ami') as mock_get_ami:
+            mock_get_ami.return_value = None
+            result = ec2.copy_ami(mock_session, image_id, source_region)
+
+        self.assertIsNone(result)
+        mock_ec2_client.copy_image.assert_not_called()
+        mock_ec2_client.create_tags.assert_not_called()
