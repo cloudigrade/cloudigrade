@@ -171,6 +171,35 @@ class UtilAwsEc2Test(TestCase):
         with self.assertRaises(AwsImageError):
             ec2.check_image_state(mock_image)
 
+    def test_check_image_state_not_found(self):
+        """Assert raised exception when image is not found."""
+        # Dummy response inspired by real exception recorded at
+        # https://sentry.io/organizations/cloudigrade/issues/970892568/
+        error_response = {
+            'Error': {
+                'Code': 'InvalidAMIID.NotFound',
+                'Message': 'The image id \'[POTATO]\' does not exist',
+            }
+        }
+        exception = ClientError(error_response, Mock())
+        mock_image = helper.generate_mock_image()
+        mock_image.load.side_effect = exception
+        with self.assertRaises(AwsImageError):
+            ec2.check_image_state(mock_image)
+
+    def test_check_image_state_mystery_load_failure(self):
+        """Assert raised exception when image loading fails mysteriously."""
+        error_response = {
+            'Error': {
+                'Code': 'itisamystery.gif',
+            }
+        }
+        exception = ClientError(error_response, Mock())
+        mock_image = helper.generate_mock_image()
+        mock_image.load.side_effect = exception
+        with self.assertRaises(ClientError):
+            ec2.check_image_state(mock_image)
+
     def test_get_ami_snapshot_id(self):
         """Assert that an AMI returns a snapshot id."""
         mock_image_id = helper.generate_dummy_image_id()

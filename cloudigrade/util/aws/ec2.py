@@ -155,9 +155,23 @@ def get_ami(session, image_id, source_region):
 
 def check_image_state(image):
     """Raise an exception if image state is not available."""
-    # Load the image to populate the metadata on it, if there is no metadata,
-    # the image has probably been deregistered.
-    image.load()
+    # Load the image to populate the metadata on it. If there is no metadata,
+    # the image has probably been deregistered. Sometimes this raises an error
+    # when the image cannot be found, but sometimes it simply leaves None in
+    # meta.data without an error. It is unclear why AWS has different paths...
+    try:
+        image.load()
+    except ClientError as e:
+        if e.response.get('Error', {}).get('Code', '').endswith('.NotFound'):
+            message = _(
+                _('Image {id} cannot be loaded because: {reason}')
+            ).format(
+                id=image.id, reason=e.response.get('Error', {}).get('Message')
+            )
+            raise AwsImageError(message)
+        else:
+            raise
+
     if image.meta.data is None:
         message = _('Image {id} cannot be loaded, it has probably been '
                     'deregistered.').format(id=image.id)
