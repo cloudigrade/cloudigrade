@@ -68,9 +68,6 @@ LOGGING = {
 
 logging.config.dictConfig(LOGGING)
 
-CELERY_WORKER_LOG_FORMAT = ('%(asctime)s | %(levelname)s | %(filename)s:'
-                            '%(funcName)s:%(lineno)d | %(message)s')
-
 # AWS Defaults
 S3_DEFAULT_REGION = env('S3_DEFAULT_REGION', default='us-east-1')
 SQS_DEFAULT_REGION = env('SQS_DEFAULT_REGION', default='us-east-1')
