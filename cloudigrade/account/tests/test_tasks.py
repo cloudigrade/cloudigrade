@@ -611,6 +611,30 @@ class AccountCeleryTaskTest(TestCase):
         self.assertIn('Mystery Error', e.exception.args[0])
 
     @patch('account.tasks.aws')
+    def test_copy_ami_snapshot_save_error_when_image_load_fails(
+        self, mock_aws
+    ):
+        """Assert that we save error status if image load fails."""
+        arn = util_helper.generate_dummy_arn()
+        ami_id = util_helper.generate_dummy_image_id()
+        snapshot_region = util_helper.get_random_region()
+        image = account_helper.generate_aws_image(ec2_ami_id=ami_id)
+
+        mock_aws.get_ami.return_value = None
+
+        with patch.object(
+            tasks, 'create_volume'
+        ) as mock_create_volume, patch.object(
+            tasks, 'copy_ami_to_customer_account'
+        ) as mock_copy_ami_to_customer_account:
+            copy_ami_snapshot(arn, ami_id, snapshot_region)
+            mock_create_volume.delay.assert_not_called()
+            mock_copy_ami_to_customer_account.delay.assert_not_called()
+
+        image.refresh_from_db()
+        self.assertEquals(image.status, image.ERROR)
+
+    @patch('account.tasks.aws')
     def test_copy_ami_to_customer_account_success(self, mock_aws):
         """Assert that the task copies image using appropriate boto calls."""
         arn = util_helper.generate_dummy_arn()
@@ -833,6 +857,27 @@ class AccountCeleryTaskTest(TestCase):
         mock_aws.get_ami.assert_called_with(
             mock_aws.get_session.return_value, reference_ami_id, source_region
         )
+
+    @patch('account.tasks.aws')
+    def test_copy_ami_to_customer_account_save_error_when_image_load_fails(
+        self, mock_aws
+    ):
+        """Assert that we save error status if image load fails."""
+        arn = util_helper.generate_dummy_arn()
+        reference_ami_id = util_helper.generate_dummy_image_id()
+        snapshot_region = util_helper.get_random_region()
+        image = account_helper.generate_aws_image(ec2_ami_id=reference_ami_id)
+
+        mock_aws.get_ami.return_value = None
+        with patch.object(tasks, 'copy_ami_snapshot') as mock_copy:
+            copy_ami_to_customer_account(
+                arn, reference_ami_id, snapshot_region
+            )
+            mock_copy.delay.assert_not_called()
+        mock_aws.copy_ami.assert_not_called()
+
+        image.refresh_from_db()
+        self.assertEquals(image.status, image.ERROR)
 
     @patch('account.tasks.aws')
     def test_create_volume_success(self, mock_aws):

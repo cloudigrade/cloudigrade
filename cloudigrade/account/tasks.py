@@ -91,6 +91,18 @@ def copy_ami_snapshot(arn, ami_id, snapshot_region, reference_ami_id=None):
     session = aws.get_session(arn)
     session_account_id = aws.get_session_account_id(session)
     ami = aws.get_ami(session, ami_id, snapshot_region)
+    if not ami:
+        logger.info(
+            _(
+                'Cannot copy AMI %(image_id)s snapshot from '
+                '%(source_region)s. Saving ERROR status.'
+            ),
+            {'image_id': ami_id, 'source_region': snapshot_region},
+        )
+        image = AwsMachineImage.objects.get(ec2_ami_id=ami_id)
+        image.status = image.ERROR
+        image.save()
+        return
 
     customer_snapshot_id = aws.get_ami_snapshot_id(ami)
     try:
@@ -188,6 +200,18 @@ def copy_ami_to_customer_account(arn, reference_ami_id, snapshot_region):
     """
     session = aws.get_session(arn)
     reference_ami = aws.get_ami(session, reference_ami_id, snapshot_region)
+    if not reference_ami:
+        logger.info(
+            _(
+                'Cannot copy reference AMI %(image_id)s from '
+                '%(source_region)s. Saving ERROR status.'
+            ),
+            {'image_id': reference_ami_id, 'source_region': snapshot_region},
+        )
+        image = AwsMachineImage.objects.get(ec2_ami_id=reference_ami_id)
+        image.status = image.ERROR
+        image.save()
+        return
 
     try:
         new_ami_id = aws.copy_ami(session, reference_ami.id, snapshot_region)
