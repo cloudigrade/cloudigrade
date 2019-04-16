@@ -25,14 +25,24 @@ class Command(BaseCommand):
             return False
         return True
 
+    def add_arguments(self, parser):
+        """Add a command-line argument to skip confirmation prompt."""
+        parser.add_argument(
+            '--confirm',
+            action='store_true',
+            help='automatically confirm destructive operation',
+        )
+
     @transaction.atomic
     def handle(self, *args, **options):
         """Handle the command execution."""
         all_runs = Run.objects.all()
-        if not self.confirm(all_runs.count()):
-            return False
-
-        all_runs.delete()
+        runs_count = all_runs.count()
+        if runs_count > 0:
+            self.stdout.write('Found {} existing Runs.'.format(runs_count))
+            if not options.get('confirm') and not self.confirm(runs_count):
+                return False
+            all_runs.delete()
 
         runs_created = 0
         for instance in tqdm(

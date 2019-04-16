@@ -368,6 +368,10 @@ def generate_aws_image(owner_aws_account_id=None,
                        is_windows=False,
                        ec2_ami_id=None,
                        rhel_detected=False,
+                       rhel_detected_repos=False,
+                       rhel_detected_certs=False,
+                       rhel_detected_release_files=False,
+                       rhel_detected_signed_packages=False,
                        openshift_detected=False,
                        name=None,
                        status=MachineImage.INSPECTED,
@@ -386,6 +390,12 @@ def generate_aws_image(owner_aws_account_id=None,
         is_windows (bool): Optional Indicates if AMI is Windows.
         ec2_ami_id (str): Optional EC2 AMI ID of the image
         rhel_detected (bool): Optional Indicates if RHEL is detected.
+        rhel_detected_repos (bool): Optional Indicated if detected via repos.
+        rhel_detected_certs (bool): Optional Indicates if detected via certs.
+        rhel_detected_release_files (bool): Optional Indicates if detected
+            via release files.
+        rhel_detected_signed_packages (bool): Optional Indicates if detected
+            via signed packages.
         openshift_detected (bool): Optional Indicates if OpenShift is detected.
         name (str): Optional AMI name.
         status (str): Optional MachineImage inspection status.
@@ -409,7 +419,17 @@ def generate_aws_image(owner_aws_account_id=None,
     platform = AwsMachineImage.WINDOWS if is_windows else AwsMachineImage.NONE
 
     if rhel_detected:
-        image_json = json.dumps({'rhel_release_files_found': rhel_detected})
+        if not any((rhel_detected_certs, rhel_detected_release_files,
+                    rhel_detected_repos, rhel_detected_signed_packages,)):
+            image_json = json.dumps(
+                {'rhel_release_files_found': rhel_detected})
+        else:
+            image_json = json.dumps({
+                'rhel_enabled_repos_found': rhel_detected_repos,
+                'rhel_product_certs_found': rhel_detected_certs,
+                'rhel_release_files_found': rhel_detected_release_files,
+                'rhel_signed_packages_found': rhel_detected_signed_packages,
+            })
     else:
         image_json = None
 
