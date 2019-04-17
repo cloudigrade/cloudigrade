@@ -47,7 +47,7 @@ class AccountViewSetTest(TransactionTestCase):
         )
         self.assertEqual(
             response.data['url'],
-            f'http://testserver/api/v2/account/{account.id}/'
+            f'http://testserver/v2/account/{account.id}/'
         )
 
         if isinstance(account, AwsAccount):

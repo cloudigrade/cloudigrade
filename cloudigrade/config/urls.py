@@ -41,7 +41,7 @@ routerv2.register(r'sysconfig', v2views.SysconfigViewSet,
 
 urlpatterns = [
     url(r'^api/v1/', include(router.urls)),
-    url(r'^api/v2/', include(routerv2.urls)),
+    url(r'^v2/', include(routerv2.urls)),
     url(r'^api-auth/', include('rest_framework.urls')),
     url(r'^healthz/', include('health_check.urls')),
     url(r'^auth/', include('dj_auth.urls')),

@@ -138,7 +138,7 @@ class MachineImageViewSetTest(TestCase):
         )
         self.assertEqual(
             response.data['url'],
-            f'http://testserver/api/v2/image/{image.id}/'
+            f'http://testserver/v2/image/{image.id}/'
         )
 
         if isinstance(image, AwsMachineImage):

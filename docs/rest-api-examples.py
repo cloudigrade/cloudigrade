@@ -429,16 +429,18 @@ class DocsApiHandler(object):
         ########################
         # V2 endpoints
         responses['v2_rh_identity'] = util_helper.RH_IDENTITY
-        # convert from binary string to string. 
+        # convert from binary string to string.
         responses['v2_header'] = util_helper.get_3scale_auth_header().\
             decode("utf-8")
 
         ##########################
         # v2 Customer Account Info
 
+        api_root_v2 = '/v2'
+
         # List all accounts
         response = self.customer_client.list_account(
-            api_root='/api/v2'
+            api_root=api_root_v2
         )
         assert_status(response, 200)
         responses['v2_account_list'] = response
@@ -446,7 +448,7 @@ class DocsApiHandler(object):
         # Retrieve a specific account
         response = self.customer_client.get_account(
             customer_account.id,
-            api_root='/api/v2'
+            api_root=api_root_v2
         )
         assert_status(response, 200)
         responses['v2_account_get'] = response
@@ -458,7 +460,7 @@ class DocsApiHandler(object):
                 'name': 'name updated using PATCH',
                 'resourcetype': 'AwsAccount',
             },
-            api_root='/api/v2'
+            api_root=api_root_v2
         )
         assert_status(response, 200)
         responses['v2_account_patch'] = response
@@ -470,7 +472,7 @@ class DocsApiHandler(object):
                 'account_arn': another_arn,
                 'resourcetype': 'AwsAccount',
             },
-            api_root='/api/v2'
+            api_root=api_root_v2
         )
         assert_status(response, 200)
         responses['v2_account_put'] = response
@@ -482,7 +484,7 @@ class DocsApiHandler(object):
                 'account_arn': 'arn:aws:iam::999999999999:role/role-for-cloudigrade',
                 'resourcetype': 'AwsAccount',
             },
-            api_root='/api/v2'
+            api_root=api_root_v2
         )
         assert_status(response, 400)
         responses['v2_account_patch_arn_fail'] = response
@@ -492,7 +494,7 @@ class DocsApiHandler(object):
 
         # List all instances
         response = self.customer_client.list_instance(
-            api_root='/api/v2'
+            api_root=api_root_v2
         )
         assert_status(response, 200)
         responses['v2_instance_list'] = response
@@ -500,7 +502,7 @@ class DocsApiHandler(object):
         # Retrieve a specific instance
         response = self.customer_client.get_instance(
             self.customer_instances[0].id,
-            api_root='/api/v2'
+            api_root=api_root_v2
         )
         assert_status(response, 200)
         responses['v2_instance_get'] = response
@@ -508,7 +510,7 @@ class DocsApiHandler(object):
         # Filtering instances on user
         response = self.superuser_client.list_instance(
             data={'v2_user_id': self.superuser.id},
-            api_root='/api/v2'
+            api_root=api_root_v2
         )
         assert_status(response, 200)
         responses['v2_instance_filter'] = response
@@ -516,7 +518,7 @@ class DocsApiHandler(object):
         # Filtering instances on running
         response = self.superuser_client.list_instance(
             data={'running': True},
-            api_root='/api/v2'
+            api_root=api_root_v2
         )
         assert_status(response, 200)
         responses['v2_instance_filter_running'] = response
@@ -526,14 +528,14 @@ class DocsApiHandler(object):
 
         # List all images
         response = self.customer_client.list_image(
-            api_root='/api/v2'
+            api_root=api_root_v2
         )
         assert_status(response, 200)
         responses['v2_list_images'] = response
 
         response = self.superuser_client.list_image(
             data={'user_id': self.superuser.id},
-            api_root='/api/v2'
+            api_root=api_root_v2
         )
         assert_status(response, 200)
         responses['v2_list_images_filter'] = response
@@ -541,7 +543,7 @@ class DocsApiHandler(object):
         # Retrieve a specific image
         response = self.superuser_client.get_image(
             self.images[0].id,
-            api_root='/api/v2'
+            api_root=api_root_v2
         )
         assert_status(response, 200)
         responses['v2_get_image'] = response
@@ -550,7 +552,7 @@ class DocsApiHandler(object):
         response = self.superuser_client.post_image(
             noun_id=self.images[0].id,
             detail='reinspect',
-            api_root='/api/v2'
+            api_root=api_root_v2
         )
         assert_status(response, 200)
         responses['v2_reinspect_image'] = response
@@ -559,7 +561,7 @@ class DocsApiHandler(object):
         response = self.superuser_client.patch_image(
             self.images[0].id,
             data={'rhel_challenged': True, 'resourcetype': 'AwsMachineImage'},
-            api_root='/api/v2'
+            api_root=api_root_v2
         )
         assert_status(response, 200)
         responses['v2_patch_image'] = response
@@ -567,7 +569,7 @@ class DocsApiHandler(object):
         response = self.superuser_client.patch_image(
             self.images[0].id,
             data={'rhel_challenged': False, 'resourcetype': 'AwsMachineImage'},
-            api_root='/api/v2'
+            api_root=api_root_v2
         )
         assert_status(response, 200)
         responses['v2_patch_image_false'] = response
@@ -579,7 +581,7 @@ class DocsApiHandler(object):
                 'openshift_challenged': True,
                 'resourcetype': 'AwsMachineImage',
             },
-            api_root='/api/v2'
+            api_root=api_root_v2
         )
         assert_status(response, 200)
         responses['v2_patch_image_both'] = response
@@ -588,7 +590,7 @@ class DocsApiHandler(object):
         # V2 Miscellaneous Commands
         with override_settings(CLOUDIGRADE_VERSION=cloudigrade_version):
             response = self.superuser_client.get_sysconfig(
-                api_root='/api/v2'
+                api_root=api_root_v2
             )
         assert_status(response, 200)
         responses['v2_get_sysconfig'] = response

@@ -53,21 +53,21 @@ class InstanceViewSetTest(TestCase):
         )
         self.assertEqual(
             response.data['account'],
-            f'http://testserver/api/v2/account/{instance.account.id}/'
+            f'http://testserver/v2/account/{instance.account.id}/'
         )
         self.assertEqual(
             response.data['account_id'], instance.account.id
         )
         self.assertEqual(
             response.data['machineimage'],
-            f'http://testserver/api/v2/image/{instance.machineimage.id}/'
+            f'http://testserver/v2/image/{instance.machineimage.id}/'
         )
         self.assertEqual(
             response.data['resourcetype'], instance.__class__.__name__
         )
         self.assertEqual(
             response.data['url'],
-            f'http://testserver/api/v2/instance/{instance.id}/'
+            f'http://testserver/v2/instance/{instance.id}/'
         )
 
         if isinstance(instance, AwsInstance):
