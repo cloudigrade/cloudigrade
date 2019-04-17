@@ -1,6 +1,6 @@
 """Collection of tests for custom Jinja2 filters."""
 import textwrap
-from unittest.mock import Mock
+from unittest.mock import MagicMock, Mock
 
 from django.test import TestCase
 
@@ -93,4 +93,19 @@ class Jinja2FiltersTest(TestCase):
             Allow: POST, OPTIONS"""  # noqa: E501
         expected = textwrap.dedent(expected)[1:]  # trim whitespace
         actual = filters.stringify_http_response(response)
+        self.assertEqual(expected, actual)
+
+    def test_httpied_command_v2_includes_x_hr_identity(self):
+        """Assert httpied_command with version=2 includes X_RH_IDENTITY."""
+        uri = 'http://localhost/v2/ok'
+
+        mock_request = MagicMock()
+        mock_request.method = 'get'
+        mock_request.user = None
+        mock_request.build_absolute_uri.return_value = uri
+
+        expected = (
+            "http http://localhost/v2/ok 'X_RH_IDENTITY:${HTTP_X_RH_IDENTITY}'"
+        )
+        actual = filters.httpied_command(mock_request, version=2)
         self.assertEqual(expected, actual)
