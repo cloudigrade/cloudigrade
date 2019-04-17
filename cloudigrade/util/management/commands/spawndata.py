@@ -35,7 +35,7 @@ class Command(BaseCommand):
                             help=_('chance of new image finding RHEL (0-1)'))
         parser.add_argument('--other_owner_chance', type=float, default=0.5,
                             help=_('chance of new image not belonging to one '
-                                   'of this user\'s accounts (0-1)'))
+                                   "of this user's accounts (0-1)"))
 
     def confirm(self, options):
         """Seek manual confirmation before proceeding."""

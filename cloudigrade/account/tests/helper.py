@@ -104,8 +104,8 @@ class SandboxedRestClient(object):
             return functools.partial(self.verb_noun, verb, noun)
         except Exception:
             raise AttributeError(
-                f'\'{self.__class__.__name__}\' object '
-                f'has no attribute \'{item}\''
+                f"'{self.__class__.__name__}' object "
+                f"has no attribute '{item}'"
             )
 
     def _force_authenticate(self, user):

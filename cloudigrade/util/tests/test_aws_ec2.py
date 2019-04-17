@@ -195,7 +195,7 @@ class UtilAwsEc2Test(TestCase):
         error_response = {
             'Error': {
                 'Code': 'InvalidAMIID.NotFound',
-                'Message': 'The image id \'[POTATO]\' does not exist',
+                'Message': "The image id '[POTATO]' does not exist",
             }
         }
         exception = ClientError(error_response, Mock())
