@@ -24,6 +24,9 @@ class Command(BaseCommand):
         one_year = today - datetime.timedelta(days=365)
         one_year_minus_two_days = one_year + datetime.timedelta(days=2)
         one_year_minus_seven_days = one_year + datetime.timedelta(days=7)
+        sixty_five_days = today - datetime.timedelta(days=65)
+        fifty_five_days = today - datetime.timedelta(days=55)
+        forty_five_days = today - datetime.timedelta(days=45)
         twenty_one_days = today - datetime.timedelta(days=21)
         seventeen_days = today - datetime.timedelta(days=17)
         fourteen_days = today - datetime.timedelta(days=14)
@@ -215,13 +218,18 @@ class Command(BaseCommand):
         # User 2 Clount 2
         account_helper.generate_aws_instance_events(
             instance=user2clount2image1instance1,
-            powered_times=[(one_day, None)],
+            powered_times=[
+                (fifty_five_days, forty_five_days),
+                (one_day, None)],
             ec2_ami_id=user2clount2image1.ec2_ami_id,
         )
         account_helper.generate_aws_instance_events(
             instance=user2clount2image1instance2,
             powered_times=[
-                (twenty_one_days, fourteen_days), (twelve_days, None)],
+                (sixty_five_days, fifty_five_days),
+                (forty_five_days, twenty_one_days),
+                (twenty_one_days, fourteen_days),
+                (twelve_days, None)],
             ec2_ami_id=user2clount2image1.ec2_ami_id,
         )
         # User 3 Clount 3

@@ -19,5 +19,5 @@ class SyncBucketLifecycleTest(TestCase):
         self.assertEquals(AwsAccount.objects.count(), 5)
         self.assertEquals(AwsMachineImage.objects.count(), 8)
         self.assertEquals(AwsInstance.objects.count(), 11)
-        self.assertEquals(AwsInstanceEvent.objects.count(), 22)
-        self.assertEquals(Run.objects.count(), 13)
+        self.assertEquals(AwsInstanceEvent.objects.count(), 28)
+        self.assertEquals(Run.objects.count(), 16)
