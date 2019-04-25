@@ -3,8 +3,8 @@ from django.test import TestCase
 from rest_framework.test import APIRequestFactory, force_authenticate
 
 from account.models import (AwsInstance)
-from account.tests import helper as account_helper
-from account.v2.views import InstanceViewSet
+from api.tests import helper as api_helper
+from api.views import InstanceViewSet
 from util.tests import helper as util_helper
 
 
@@ -17,31 +17,33 @@ class InstanceViewSetTest(TestCase):
         self.user2 = util_helper.generate_test_user()
         self.superuser = util_helper.generate_test_user(is_superuser=True)
 
-        self.account1 = account_helper.generate_aws_account(user=self.user1)
-        self.account2 = account_helper.generate_aws_account(user=self.user1)
-        self.account3 = account_helper.generate_aws_account(user=self.user2)
-        self.account4 = account_helper.generate_aws_account(user=self.user2)
+        self.account1 = api_helper.generate_aws_account(user=self.user1)
+        self.account2 = api_helper.generate_aws_account(user=self.user1)
+        self.account3 = api_helper.generate_aws_account(user=self.user2)
+        self.account4 = api_helper.generate_aws_account(user=self.user2)
 
-        self.image_plain = account_helper.generate_aws_image()
-        self.image_windows = account_helper.generate_aws_image(is_windows=True)
-        self.image_rhel = account_helper.generate_aws_image(rhel_detected=True)
-        self.image_ocp = account_helper.generate_aws_image(
+        self.image_plain = api_helper.generate_aws_image()
+        self.image_windows = api_helper.generate_aws_image(
+            is_windows=True)
+        self.image_rhel = api_helper.generate_aws_image(
+            rhel_detected=True)
+        self.image_ocp = api_helper.generate_aws_image(
             openshift_detected=True)
 
-        self.instance1 = account_helper.generate_aws_instance(
-            account=self.account1,
+        self.instance1 = api_helper.generate_aws_instance(
+            cloud_account=self.account1,
             image=self.image_plain
         )
-        self.instance2 = account_helper.generate_aws_instance(
-            account=self.account2,
+        self.instance2 = api_helper.generate_aws_instance(
+            cloud_account=self.account2,
             image=self.image_windows
         )
-        self.instance3 = account_helper.generate_aws_instance(
-            account=self.account3,
+        self.instance3 = api_helper.generate_aws_instance(
+            cloud_account=self.account3,
             image=self.image_rhel
         )
-        self.instance4 = account_helper.generate_aws_instance(
-            account=self.account4,
+        self.instance4 = api_helper.generate_aws_instance(
+            cloud_account=self.account4,
             image=self.image_ocp
         )
         self.factory = APIRequestFactory()
@@ -52,27 +54,24 @@ class InstanceViewSetTest(TestCase):
             response.data['id'], instance.id
         )
         self.assertEqual(
-            response.data['account'],
-            f'http://testserver/v2/account/{instance.account.id}/'
+            response.data['cloud_account'],
+            f'http://testserver/v2/accounts/{instance.cloud_account.id}/'
         )
         self.assertEqual(
-            response.data['account_id'], instance.account.id
+            response.data['cloud_account_id'], instance.cloud_account.id
         )
         self.assertEqual(
-            response.data['machineimage'],
-            f'http://testserver/v2/image/{instance.machineimage.id}/'
+            response.data['machine_image'],
+            f'http://testserver/v2/images/{instance.machine_image.id}/'
         )
         self.assertEqual(
-            response.data['resourcetype'], instance.__class__.__name__
-        )
-        self.assertEqual(
-            response.data['url'],
-            f'http://testserver/v2/instance/{instance.id}/'
+            response.data['machine_image_id'], instance.machine_image.id
         )
 
         if isinstance(instance, AwsInstance):
             self.assertEqual(
-                response.data['ec2_instance_id'], instance.ec2_instance_id
+                response.data['content_object']['ec2_instance_id'],
+                instance.ec2_instance_id
             )
 
     def get_instance_get_response(self, user, instance_id):
@@ -88,7 +87,7 @@ class InstanceViewSetTest(TestCase):
             Response: the generated response for this request
 
         """
-        request = self.factory.get('/instance/')
+        request = self.factory.get('/instances/')
         force_authenticate(request, user=user)
         view = InstanceViewSet.as_view(actions={'get': 'retrieve'})
         response = view(request, pk=instance_id)
@@ -106,7 +105,7 @@ class InstanceViewSetTest(TestCase):
             Response: the generated response for this request
 
         """
-        request = self.factory.get('/instance/', data)
+        request = self.factory.get('/instances/', data)
         force_authenticate(request, user=user)
         view = InstanceViewSet.as_view(actions={'get': 'list'})
         response = view(request)
@@ -212,18 +211,18 @@ class InstanceViewSetTest(TestCase):
         Instance4 has never ran.
         """
         # Generate activity for instances
-        account_helper.generate_single_run(
+        api_helper.generate_single_run(
             self.instance1,
             (util_helper.utc_dt(2018, 1, 1, 0, 0, 0), None),
         )
 
-        account_helper.generate_single_run(
+        api_helper.generate_single_run(
             self.instance2,
             (util_helper.utc_dt(2018, 1, 1, 0, 0, 0),
              util_helper.utc_dt(2018, 1, 2, 0, 0, 0)),
         )
 
-        account_helper.generate_single_run(
+        api_helper.generate_single_run(
             self.instance3,
             (util_helper.utc_dt(2018, 1, 1, 0, 0, 0),
              None),
@@ -248,18 +247,18 @@ class InstanceViewSetTest(TestCase):
         Instance4 has never ran.
         """
         # Generate activity for instances
-        account_helper.generate_single_run(
+        api_helper.generate_single_run(
             self.instance1,
             (util_helper.utc_dt(2018, 1, 1, 0, 0, 0), None),
         )
 
-        account_helper.generate_single_run(
+        api_helper.generate_single_run(
             self.instance2,
             (util_helper.utc_dt(2018, 1, 1, 0, 0, 0),
              util_helper.utc_dt(2018, 1, 2, 0, 0, 0)),
         )
 
-        account_helper.generate_single_run(
+        api_helper.generate_single_run(
             self.instance3,
             (util_helper.utc_dt(2018, 1, 1, 0, 0, 0),
              util_helper.utc_dt(2018, 1, 2, 0, 0, 0)),
@@ -283,17 +282,17 @@ class InstanceViewSetTest(TestCase):
         Instance4 has never ran.
         """
         # Generate activity for instances
-        account_helper.generate_single_run(
+        api_helper.generate_single_run(
             self.instance1,
             (util_helper.utc_dt(2018, 1, 1, 0, 0, 0), None),
         )
 
-        account_helper.generate_single_run(
+        api_helper.generate_single_run(
             self.instance2,
             (util_helper.utc_dt(2018, 1, 1, 0, 0, 0), None),
         )
 
-        account_helper.generate_single_run(
+        api_helper.generate_single_run(
             self.instance3,
             (util_helper.utc_dt(2018, 1, 1, 0, 0, 0),
              util_helper.utc_dt(2018, 1, 2, 0, 0, 0)),
@@ -318,18 +317,18 @@ class InstanceViewSetTest(TestCase):
         Instance4 has never ran and belongs to user2.
         """
         # Generate activity for instances
-        account_helper.generate_single_run(
+        api_helper.generate_single_run(
             self.instance1,
             (util_helper.utc_dt(2018, 1, 1, 0, 0, 0), None),
         )
 
-        account_helper.generate_single_run(
+        api_helper.generate_single_run(
             self.instance2,
             (util_helper.utc_dt(2018, 1, 1, 0, 0, 0),
              util_helper.utc_dt(2018, 1, 2, 0, 0, 0)),
         )
 
-        account_helper.generate_single_run(
+        api_helper.generate_single_run(
             self.instance3,
             (util_helper.utc_dt(2018, 1, 1, 0, 0, 0),
              None),

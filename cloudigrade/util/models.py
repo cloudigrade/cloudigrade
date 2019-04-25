@@ -1,4 +1,6 @@
 """Cloudigrade Base Models."""
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from polymorphic.models import PolymorphicModel
 
@@ -19,6 +21,18 @@ class BaseModel(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
+        ordering = ('created_at',)
+
+
+class BaseGenericModel(BaseModel):
+    """Abstract model to add fields needed for Generic Relationships."""
+
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey()
 
     class Meta:
         abstract = True

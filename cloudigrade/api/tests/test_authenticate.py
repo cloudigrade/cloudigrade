@@ -8,7 +8,7 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from rest_framework.authentication import exceptions
 
-from account.v2.authentication import ThreeScaleAuthentication
+from api.authentication import ThreeScaleAuthentication
 from util.tests import helper as util_helper
 
 

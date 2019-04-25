@@ -222,7 +222,7 @@ class DailyInstanceActivityViewSet(viewsets.GenericViewSet):
         """
         Run the daily instance activity report and return the results.
 
-        Note: this is called "list" to simplify DRF router integration. By
+        Note: this is called "list" to simplify DRF router_v1 integration. By
         using the "list" name, this method automatically gets mapped to the
         GET handler for the "/" end of the URI (effectively "/api/v1/report/").
         """

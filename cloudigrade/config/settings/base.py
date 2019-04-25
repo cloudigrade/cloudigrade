@@ -122,6 +122,7 @@ THIRD_PARTY_APPS = [
     'django_celery_beat',
     'rest_framework',
     'rest_framework.authtoken',
+    'generic_relations',
     'djoser',
     'health_check',
     'health_check.db',
@@ -130,6 +131,7 @@ THIRD_PARTY_APPS = [
 # Apps specific to this project go here
 LOCAL_APPS = [
     'util.apps.UtilConfig',
+    'api.apps.ApiConfig',
     'account.apps.AccountConfig',
     'analyzer.apps.AnalyzerConfig',
     'dj_auth.apps.DjAuthConfig',

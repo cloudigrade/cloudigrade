@@ -1,16 +1,14 @@
 """Collection of tests for AccountViewSet."""
-from unittest.mock import patch
 
 import faker
 from django.test import TransactionTestCase
 from rest_framework.test import (APIRequestFactory,
                                  force_authenticate)
 
-from account import views
-from account.models import (AwsAccount)
-from account.tests import helper as account_helper
-from account.v2.views import AccountViewSet
-from util.aws import AwsArn
+from api import views
+from api.models import CloudAccount
+from api.tests import helper as api_helper
+from api.views import AccountViewSet
 from util.tests import helper as util_helper
 
 
@@ -22,12 +20,12 @@ class AccountViewSetTest(TransactionTestCase):
         self.user1 = util_helper.generate_test_user()
         self.user2 = util_helper.generate_test_user()
         self.superuser = util_helper.generate_test_user(is_superuser=True)
-        self.account1 = account_helper.generate_aws_account(user=self.user1)
-        self.account2 = account_helper.generate_aws_account(user=self.user1)
-        self.account3 = account_helper.generate_aws_account(user=self.user2)
-        self.account4 = account_helper.generate_aws_account(user=self.user2)
-        self.account5 = account_helper.generate_aws_account(user=self.user2,
-                                                            name='unique')
+        self.account1 = api_helper.generate_aws_account(user=self.user1)
+        self.account2 = api_helper.generate_aws_account(user=self.user1)
+        self.account3 = api_helper.generate_aws_account(user=self.user2)
+        self.account4 = api_helper.generate_aws_account(user=self.user2)
+        self.account5 = api_helper.generate_aws_account(user=self.user2,
+                                                        name='unique')
         self.factory = APIRequestFactory()
         self.faker = faker.Faker()
 
@@ -40,22 +38,17 @@ class AccountViewSetTest(TransactionTestCase):
             response.data['user_id'], account.user_id
         )
         self.assertEqual(
-            response.data['resourcetype'], account.__class__.__name__
-        )
-        self.assertEqual(
             response.data['name'], account.name
         )
-        self.assertEqual(
-            response.data['url'],
-            f'http://testserver/v2/account/{account.id}/'
-        )
 
-        if isinstance(account, AwsAccount):
+        if isinstance(account, CloudAccount):
             self.assertEqual(
-                response.data['account_arn'], account.account_arn
+                response.data['content_object']['account_arn'],
+                account.content_object.account_arn
             )
             self.assertEqual(
-                response.data['aws_account_id'], str(account.aws_account_id)
+                response.data['content_object']['aws_account_id'],
+                str(account.content_object.aws_account_id)
             )
 
     def get_aws_account_ids_from_list_response(self, response):
@@ -70,7 +63,8 @@ class AccountViewSetTest(TransactionTestCase):
 
         """
         aws_account_ids = set([
-            account['aws_account_id'] for account in response.data['results']
+            account['content_object']['aws_account_id'] for account in
+            response.data['results']
         ])
         return aws_account_ids
 
@@ -87,7 +81,7 @@ class AccountViewSetTest(TransactionTestCase):
             Response: the generated response for this request
 
         """
-        request = self.factory.get('/account/')
+        request = self.factory.get('/accounts/')
         force_authenticate(request, user=user)
         view = AccountViewSet.as_view(actions={'get': 'retrieve'})
         response = view(request, pk=account_id)
@@ -105,7 +99,7 @@ class AccountViewSetTest(TransactionTestCase):
             Response: the generated response for this request
 
         """
-        request = self.factory.get('/account/', data)
+        request = self.factory.get('/accounts/', data)
         force_authenticate(request, user=user)
         view = AccountViewSet.as_view(actions={'get': 'list'})
         response = view(request)
@@ -114,8 +108,8 @@ class AccountViewSetTest(TransactionTestCase):
     def test_list_accounts_as_user1(self):
         """Assert that user1 sees only its own accounts."""
         expected_accounts = {
-            str(self.account1.aws_account_id),
-            str(self.account2.aws_account_id),
+            str(self.account1.content_object.aws_account_id),
+            str(self.account2.content_object.aws_account_id),
         }
         response = self.get_account_list_response(self.user1)
         actual_accounts = self.get_aws_account_ids_from_list_response(response)
@@ -124,9 +118,9 @@ class AccountViewSetTest(TransactionTestCase):
     def test_list_accounts_as_user2(self):
         """Assert that user2 sees only its own accounts."""
         expected_accounts = {
-            str(self.account3.aws_account_id),
-            str(self.account4.aws_account_id),
-            str(self.account5.aws_account_id),
+            str(self.account3.content_object.aws_account_id),
+            str(self.account4.content_object.aws_account_id),
+            str(self.account5.content_object.aws_account_id),
         }
         response = self.get_account_list_response(self.user2)
         actual_accounts = self.get_aws_account_ids_from_list_response(response)
@@ -135,11 +129,11 @@ class AccountViewSetTest(TransactionTestCase):
     def test_list_accounts_as_superuser(self):
         """Assert that the superuser sees all accounts regardless of owner."""
         expected_accounts = {
-            str(self.account1.aws_account_id),
-            str(self.account2.aws_account_id),
-            str(self.account3.aws_account_id),
-            str(self.account4.aws_account_id),
-            str(self.account5.aws_account_id),
+            str(self.account1.content_object.aws_account_id),
+            str(self.account2.content_object.aws_account_id),
+            str(self.account3.content_object.aws_account_id),
+            str(self.account4.content_object.aws_account_id),
+            str(self.account5.content_object.aws_account_id),
         }
         response = self.get_account_list_response(self.superuser)
         actual_accounts = self.get_aws_account_ids_from_list_response(response)
@@ -148,9 +142,9 @@ class AccountViewSetTest(TransactionTestCase):
     def test_list_accounts_as_superuser_with_filter(self):
         """Assert that the superuser sees accounts filtered by user_id."""
         expected_accounts = {
-            str(self.account3.aws_account_id),
-            str(self.account4.aws_account_id),
-            str(self.account5.aws_account_id),
+            str(self.account3.content_object.aws_account_id),
+            str(self.account4.content_object.aws_account_id),
+            str(self.account5.content_object.aws_account_id),
         }
         params = {'user_id': self.user2.id}
         response = self.get_account_list_response(self.superuser, params)
@@ -189,46 +183,36 @@ class AccountViewSetTest(TransactionTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertResponseHasAwsAccountData(response, account)
 
-    @patch.object(views.serializers, 'aws')
-    @patch.object(views.serializers, 'tasks')
-    def test_create_account_with_name_success(self, mock_tasks, mock_aws):
+    def test_create_account_with_name_success(self):
         """Test create account with a name succeeds."""
-        mock_aws.verify_account_access.return_value = True, []
-        mock_aws.AwsArn = AwsArn
-
         data = {
-            'resourcetype': 'AwsAccount',
+            'cloud_type': 'aws',
             'account_arn': util_helper.generate_dummy_arn(),
             'name': faker.Faker().bs()[:256],
         }
 
-        request = self.factory.post('/account/', data=data)
+        request = self.factory.post('/accounts/', data=data)
         force_authenticate(request, user=self.user2)
 
         view = views.AccountViewSet.as_view(actions={'post': 'create'})
         response = view(request)
 
         self.assertEqual(response.status_code, 201)
-        for key, value in data.items():
-            self.assertEqual(response.data[key], value)
+        self.assertEqual(
+            response.data['content_object']['account_arn'],
+            data['account_arn'])
+        self.assertEqual(response.data['name'], data['name'])
         self.assertIsNotNone(response.data['name'])
-        mock_tasks.initial_aws_describe_instances.delay.assert_called()
 
-    @patch.object(views.serializers, 'aws')
-    @patch.object(views.serializers, 'tasks')
-    def test_create_account_with_duplicate_name_fail(self, mock_tasks,
-                                                     mock_aws):
+    def test_create_account_with_duplicate_name_fail(self):
         """Test create account with a duplicate name fails."""
-        mock_aws.verify_account_access.return_value = True, []
-        mock_aws.AwsArn = AwsArn
-
         data = {
-            'resourcetype': 'AwsAccount',
+            'cloud_type': 'aws',
             'account_arn': util_helper.generate_dummy_arn(),
             'name': 'unique',
         }
 
-        request = self.factory.post('/account/', data=data)
+        request = self.factory.post('/accounts/', data=data)
         force_authenticate(request, user=self.user2)
 
         view = views.AccountViewSet.as_view(actions={'post': 'create'})
@@ -236,21 +220,15 @@ class AccountViewSetTest(TransactionTestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertIn('non_field_errors', response.data)
-        mock_tasks.initial_aws_describe_instances.delay.assert_not_called()
 
-    @patch.object(views.serializers, 'aws')
-    @patch.object(views.serializers, 'tasks')
-    def test_create_account_without_name_fail(self, mock_tasks, mock_aws):
+    def test_create_account_without_name_fail(self):
         """Test create account without a name fails."""
-        mock_aws.verify_account_access.return_value = True, []
-        mock_aws.AwsArn = AwsArn
-
         data = {
-            'resourcetype': 'AwsAccount',
+            'cloud_type': 'aws',
             'account_arn': util_helper.generate_dummy_arn(),
         }
 
-        request = self.factory.post('/account/', data=data)
+        request = self.factory.post('/accounts/', data=data)
         force_authenticate(request, user=self.user2)
 
         view = views.AccountViewSet.as_view(actions={'post': 'create'})
@@ -258,17 +236,16 @@ class AccountViewSetTest(TransactionTestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertIn('name', response.data)
-        mock_tasks.initial_aws_describe_instances.delay.assert_not_called()
 
     def test_update_account_patch_name_success(self):
         """Test updating an account with a name succeeds."""
         data = {
-            'resourcetype': 'AwsAccount',
+            'cloud_type': 'aws',
             'name': faker.Faker().bs()[:256],
         }
 
         account_id = self.account4.id
-        request = self.factory.patch('/account/', data=data)
+        request = self.factory.patch('/accounts/', data=data)
         force_authenticate(request, user=self.user2)
 
         view = views.AccountViewSet.as_view(
@@ -282,12 +259,12 @@ class AccountViewSetTest(TransactionTestCase):
     def test_update_account_patch_duplicate_name_fail(self):
         """Test updating an account with a duplicate name fails."""
         data = {
-            'resourcetype': 'AwsAccount',
+            'cloud_type': 'aws',
             'name': 'unique',
         }
 
         account_id = self.account3.id
-        request = self.factory.patch('/account/', data=data)
+        request = self.factory.patch('/accounts/', data=data)
         force_authenticate(request, user=self.user2)
 
         view = views.AccountViewSet.as_view(
@@ -301,12 +278,12 @@ class AccountViewSetTest(TransactionTestCase):
     def test_update_account_patch_arn_fails(self):
         """Test that updating to change the arn fails."""
         data = {
-            'resourcetype': 'AwsAccount',
+            'cloud_type': 'aws',
             'account_arn': util_helper.generate_dummy_arn(),
         }
 
         account_id = self.account4.id
-        request = self.factory.patch('/account/', data=data)
+        request = self.factory.patch('/accounts/', data=data)
         force_authenticate(request, user=self.user2)
 
         view = views.AccountViewSet.as_view(
@@ -319,11 +296,11 @@ class AccountViewSetTest(TransactionTestCase):
     def test_create_with_malformed_arn_fails(self):
         """Test create account with malformed arn returns validation error."""
         data = {
-            'resourcetype': 'AwsAccount',
+            'cloud_type': 'aws',
             'account_arn': self.faker.bs(),
         }
 
-        request = self.factory.post('/account/', data=data)
+        request = self.factory.post('/accounts/', data=data)
         force_authenticate(request, user=self.user2)
 
         view = views.AccountViewSet.as_view(actions={'post': 'create'})
