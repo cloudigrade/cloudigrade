@@ -1,7 +1,7 @@
 """Cloudigrade Base Models."""
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
-from django.db import models
+from django.db import models, transaction
 from polymorphic.models import PolymorphicModel
 
 
@@ -37,3 +37,9 @@ class BaseGenericModel(BaseModel):
     class Meta:
         abstract = True
         ordering = ('created_at',)
+
+    @transaction.atomic
+    def delete(self, **kwargs):
+        """Delete the platform specific model along with the generic model."""
+        self.content_object.delete()
+        super().delete(**kwargs)

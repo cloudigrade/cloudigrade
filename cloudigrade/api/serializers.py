@@ -1,4 +1,6 @@
 """DRF API serializers for the account app v2."""
+from botocore.exceptions import ClientError
+from django.db.transaction import on_commit
 from django.utils.translation import gettext as _
 from generic_relations.relations import GenericRelatedField
 from rest_framework.exceptions import ValidationError
@@ -7,6 +9,7 @@ from rest_framework.fields import (BooleanField, CharField,
 from rest_framework.relations import HyperlinkedIdentityField
 from rest_framework.serializers import ModelSerializer
 
+from api import tasks
 from api.models import (AwsCloudAccount, AwsInstance,
                         AwsMachineImage, CloudAccount, Instance,
                         MachineImage)
@@ -144,7 +147,13 @@ class CloudAccountSerializer(ModelSerializer):
         return account.user_id
 
     def create_aws_cloud_account(self, validated_data):
-        """Create an AWS flavored CloudAccount."""
+        """
+        Create an AWS flavored CloudAccount.
+
+        Validate that we have the right access to the customer's AWS clount,
+        set up Cloud Trail on their clount.
+
+        """
         arn = aws.AwsArn(validated_data['account_arn'])
         aws_account_id = arn.account_id
 
@@ -168,6 +177,46 @@ class CloudAccountSerializer(ModelSerializer):
             account_arn=str(arn),
             aws_account_id=aws_account_id,
         )
+
+        try:
+            session = aws.get_session(str(arn))
+        except ClientError as error:
+            if error.response.get('Error', {}).get('Code') == 'AccessDenied':
+                raise ValidationError(
+                    detail={
+                        'account_arn': [
+                            _('Permission denied for ARN "{0}"').format(arn)
+                        ]
+                    }
+                )
+            raise
+        account_verified, failed_actions = aws.verify_account_access(session)
+        if account_verified:
+            try:
+                aws.configure_cloudtrail(session, aws_account_id)
+            except ClientError as error:
+                if error.response.get('Error', {}).get('Code') == \
+                        'AccessDeniedException':
+                    raise ValidationError(
+                        detail={
+                            'account_arn': [
+                                _('Access denied to create CloudTrail for '
+                                  'ARN "{0}"').format(arn)
+                            ]
+                        }
+                    )
+                raise
+        else:
+            failure_details = [_('Account verification failed.')]
+            failure_details += [
+                _('Access denied for policy action "{0}".').format(action)
+                for action in failed_actions
+            ]
+            raise ValidationError(
+                detail={
+                    'account_arn': failure_details
+                }
+            )
         aws_cloud_account.save()
         cloud_account = CloudAccount(
             name=name,
@@ -175,7 +224,10 @@ class CloudAccountSerializer(ModelSerializer):
             content_object=aws_cloud_account
         )
         cloud_account.save()
-
+        on_commit(lambda:
+                  tasks.initial_aws_describe_instances.delay(
+                      aws_cloud_account.id)
+                  )
         return cloud_account
 
 
