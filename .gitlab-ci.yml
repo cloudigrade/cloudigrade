@@ -48,8 +48,8 @@ Cloudigrade Docker:
   services:
     - docker:dind
   script:
-    - docker pull ${IMAGE_NAME}:latest || true
-    - docker build --cache-from ${IMAGE_NAME}:latest .
+    - docker pull ${IMAGE_NAME}:pilot || true
+    - docker build --cache-from ${IMAGE_NAME}:pilot .
 
 NGINX S2i:
   stage: test
@@ -71,7 +71,7 @@ NGINX S2i:
     - tar --strip-components=1 -xzvf /opt/s2i.tar.gz -C /opt/
     - mv /opt/s2i /usr/bin/
   script:
-    - s2i build --context-dir=${CONTEXT_DIR} --ref ${CI_COMMIT_REF_NAME} ${CI_PROJECT_URL} ${NGINX_S2I_IMAGE} ${IMAGE_NAME}:latest
+    - s2i build --context-dir=${CONTEXT_DIR} --ref ${CI_COMMIT_REF_NAME} ${CI_PROJECT_URL} ${NGINX_S2I_IMAGE} ${IMAGE_NAME}:pilot
 
 ### BUILD STAGE ###
 Push Cloudigrade Image:
@@ -88,10 +88,10 @@ Push Cloudigrade Image:
   before_script:
     - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
   script:
-    - docker pull ${IMAGE_NAME}:latest || true
-    - docker build --cache-from ${IMAGE_NAME}:latest --tag ${IMAGE_NAME_COMMIT} --tag ${IMAGE_NAME}:latest .
+    - docker pull ${IMAGE_NAME}:pilot || true
+    - docker build --cache-from ${IMAGE_NAME}:pilot --tag ${IMAGE_NAME_COMMIT} --tag ${IMAGE_NAME}:pilot .
     - docker push ${IMAGE_NAME_COMMIT}
-    - docker push ${IMAGE_NAME}:latest
+    - docker push ${IMAGE_NAME}:pilot
 
 Push Cloudigrade Tagged Image:
   stage: build
@@ -106,8 +106,8 @@ Push Cloudigrade Tagged Image:
   before_script:
     - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
   script:
-    - docker pull ${IMAGE_NAME}:latest || true
-    - docker build --cache-from ${IMAGE_NAME}:latest --tag ${IMAGE_NAME}:${CI_COMMIT_TAG} .
+    - docker pull ${IMAGE_NAME}:pilot || true
+    - docker build --cache-from ${IMAGE_NAME}:pilot --tag ${IMAGE_NAME}:${CI_COMMIT_TAG} .
     - docker push ${IMAGE_NAME}:${CI_COMMIT_TAG}
 
 Push NGINX Image:
@@ -135,9 +135,9 @@ Push NGINX Image:
     - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
   script:
     - s2i build --context-dir=${CONTEXT_DIR} ${CI_PROJECT_URL} ${NGINX_S2I_IMAGE} ${NGINX_NAME_COMMIT}
-    - docker tag ${NGINX_NAME_COMMIT} ${NGINX_NAME}:latest
+    - docker tag ${NGINX_NAME_COMMIT} ${NGINX_NAME}:pilot
     - docker push ${NGINX_NAME_COMMIT}
-    - docker push ${NGINX_NAME}:latest
+    - docker push ${NGINX_NAME}:pilot
 
 Push NGINX Tagged Image:
   stage: build
