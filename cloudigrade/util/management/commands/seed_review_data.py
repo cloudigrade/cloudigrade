@@ -112,6 +112,7 @@ class Command(BaseCommand):
         )
         user2clount2image1 = account_helper.generate_aws_image(
             owner_aws_account_id=int(user2clount1.aws_account_id),
+            ec2_ami_id='ami-8f6ad3ef',
             openshift_detected=True,
         )
         user2clount3image1 = account_helper.generate_aws_image(
