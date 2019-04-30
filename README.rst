@@ -266,7 +266,7 @@ If you'd like to deploy your in progress work to the local openshift cluster you
     kontemplate template ocp/local.yaml | oc apply -f -
 
     # Then simply kick off a new build for cloudigrade
-    oc start-build c-api
+    oc start-build c1-api
     # or frontigrade
     oc start-build f
 
