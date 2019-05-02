@@ -19,7 +19,8 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         """Handle the command execution."""
         # Dates
-        today = datetime.datetime.today()
+        today = datetime.datetime.now()
+        today = datetime.datetime(today.year, today.month, 1, 0, 0, 0, 0)
         two_years = today - datetime.timedelta(days=365 * 2)
         one_year = today - datetime.timedelta(days=365)
         one_year_minus_two_days = one_year + datetime.timedelta(days=2)
