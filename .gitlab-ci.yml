@@ -220,13 +220,13 @@ Deploy Review:
         echo "${DEPLOYMENT_PREFIX}-db already exists, keeping."
       fi
     - kontemplate template ocp/review.yaml -i cloudigrade | oc apply -f -
-    - oc start-build -F c1-${DEPLOYMENT_PREFIX}-api
-    - oc start-build -F c1-${DEPLOYMENT_PREFIX}-nginx
-    - if ! oc rollout status dc/c1-${DEPLOYMENT_PREFIX}-a; then oc rollout latest dc/c1-${DEPLOYMENT_PREFIX}-a && oc rollout status dc/c1-${DEPLOYMENT_PREFIX}-a; fi;
-    - oc rsh -c c1-${DEPLOYMENT_PREFIX}-a $(oc get pods -o jsonpath='{.items[*].metadata.name}' -l name=c1-${DEPLOYMENT_PREFIX}-a) scl enable rh-python36 -- python manage.py seed_review_data || true
-    - if ! oc rollout status dc/c1-${DEPLOYMENT_PREFIX}-b; then oc rollout latest dc/c1-${DEPLOYMENT_PREFIX}-b && oc rollout status dc/c1-${DEPLOYMENT_PREFIX}-b; fi;
-    - if ! oc rollout status dc/c1-${DEPLOYMENT_PREFIX}-w; then oc rollout latest dc/c1-${DEPLOYMENT_PREFIX}-w && oc rollout status dc/c1-${DEPLOYMENT_PREFIX}-w; fi;
-    - echo "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin@example.com', 'admin@example.com', '${CLOUDIGRADE_PASSWORD}')" | oc rsh -c c1-${DEPLOYMENT_PREFIX}-a $(oc get pods -o jsonpath='{.items[*].metadata.name}' -l name=c1-${DEPLOYMENT_PREFIX}-a) scl enable rh-python36 -- python manage.py shell || true
+    - oc start-build -F c-${DEPLOYMENT_PREFIX}-api
+    - oc start-build -F c-${DEPLOYMENT_PREFIX}-nginx
+    - if ! oc rollout status dc/c-${DEPLOYMENT_PREFIX}-a; then oc rollout latest dc/c-${DEPLOYMENT_PREFIX}-a && oc rollout status dc/c-${DEPLOYMENT_PREFIX}-a; fi;
+    - oc rsh -c c-${DEPLOYMENT_PREFIX}-a $(oc get pods -o jsonpath='{.items[*].metadata.name}' -l name=c-${DEPLOYMENT_PREFIX}-a) scl enable rh-python36 -- python manage.py seed_review_data || true
+    - if ! oc rollout status dc/c-${DEPLOYMENT_PREFIX}-b; then oc rollout latest dc/c-${DEPLOYMENT_PREFIX}-b && oc rollout status dc/c-${DEPLOYMENT_PREFIX}-b; fi;
+    - if ! oc rollout status dc/c-${DEPLOYMENT_PREFIX}-w; then oc rollout latest dc/c-${DEPLOYMENT_PREFIX}-w && oc rollout status dc/c-${DEPLOYMENT_PREFIX}-w; fi;
+    - echo "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin@example.com', 'admin@example.com', '${CLOUDIGRADE_PASSWORD}')" | oc rsh -c c-${DEPLOYMENT_PREFIX}-a $(oc get pods -o jsonpath='{.items[*].metadata.name}' -l name=c-${DEPLOYMENT_PREFIX}-a) scl enable rh-python36 -- python manage.py shell || true
   environment:
     name: review/${CI_COMMIT_REF_NAME}
     url: https://review-${CI_COMMIT_REF_SLUG}.5a9f.insights-dev.openshiftapps.com
@@ -335,13 +335,13 @@ Clean Up Review:
         echo "${DEPLOYMENT_PREFIX}-db already exists, keeping."
       fi
     - kontemplate template ocp/review.yaml -i cloudigrade | oc apply -f -
-    - oc start-build -F c1-${DEPLOYMENT_PREFIX}-api
-    - oc start-build -F c1-${DEPLOYMENT_PREFIX}-nginx
-    - if ! oc rollout status dc/c1-${DEPLOYMENT_PREFIX}-a; then oc rollout latest dc/c1-${DEPLOYMENT_PREFIX}-a && oc rollout status dc/c1-${DEPLOYMENT_PREFIX}-a; fi;
-    - oc rsh -c c1-${DEPLOYMENT_PREFIX}-a $(oc get pods -o jsonpath='{.items[*].metadata.name}' -l name=c1-${DEPLOYMENT_PREFIX}-a) scl enable rh-python36 -- python manage.py seed_review_data || true
-    - if ! oc rollout status dc/c1-${DEPLOYMENT_PREFIX}-b; then oc rollout latest dc/c1-${DEPLOYMENT_PREFIX}-b && oc rollout status dc/c1-${DEPLOYMENT_PREFIX}-b; fi;
-    - if ! oc rollout status dc/c1-${DEPLOYMENT_PREFIX}-w; then oc rollout latest dc/c1-${DEPLOYMENT_PREFIX}-w && oc rollout status dc/c1-${DEPLOYMENT_PREFIX}-w; fi;
-    - echo "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin@example.com', 'admin@example.com', '${CLOUDIGRADE_PASSWORD}')" | oc rsh -c c1-${DEPLOYMENT_PREFIX}-a $(oc get pods -o jsonpath='{.items[*].metadata.name}' -l name=c1-${DEPLOYMENT_PREFIX}-a) scl enable rh-python36 -- python manage.py shell || true
+    - oc start-build -F c-${DEPLOYMENT_PREFIX}-api
+    - oc start-build -F c-${DEPLOYMENT_PREFIX}-nginx
+    - if ! oc rollout status dc/c-${DEPLOYMENT_PREFIX}-a; then oc rollout latest dc/c-${DEPLOYMENT_PREFIX}-a && oc rollout status dc/c-${DEPLOYMENT_PREFIX}-a; fi;
+    - oc rsh -c c-${DEPLOYMENT_PREFIX}-a $(oc get pods -o jsonpath='{.items[*].metadata.name}' -l name=c-${DEPLOYMENT_PREFIX}-a) scl enable rh-python36 -- python manage.py seed_review_data || true
+    - if ! oc rollout status dc/c-${DEPLOYMENT_PREFIX}-b; then oc rollout latest dc/c-${DEPLOYMENT_PREFIX}-b && oc rollout status dc/c-${DEPLOYMENT_PREFIX}-b; fi;
+    - if ! oc rollout status dc/c-${DEPLOYMENT_PREFIX}-w; then oc rollout latest dc/c-${DEPLOYMENT_PREFIX}-w && oc rollout status dc/c-${DEPLOYMENT_PREFIX}-w; fi;
+    - echo "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin@example.com', 'admin@example.com', '${CLOUDIGRADE_PASSWORD}')" | oc rsh -c c-${DEPLOYMENT_PREFIX}-a $(oc get pods -o jsonpath='{.items[*].metadata.name}' -l name=c-${DEPLOYMENT_PREFIX}-a) scl enable rh-python36 -- python manage.py shell || true
     - echo -e "section_start:$( date +%s ):chat_reply\r\033[0K\nDeployed [cloudigrade] ${CHAT_INPUT}, available at https://${CI_COMMIT_REF_SLUG}.5a9f.insights-dev.openshiftapps.com/api/v1/ If both cloudigrade and frontigrade are deployed you can login with username 'admin@example.com' and the current Red Hat Guest WiFi password as the password.\nsection_end:$( date +%s ):chat_reply\r\033[0K"
 
 Review-Master:
@@ -444,11 +444,11 @@ Deploy to Test:
     - cd /opt/shiftigrade
   script:
     - kontemplate template ocp/test.yaml -i cloudigrade | oc apply -f -
-    - if ! oc rollout status dc/c1-a; then oc rollout latest dc/c1-a && oc rollout status dc/c1-a; fi;
-    - if ! oc rollout status dc/c1-b; then oc rollout latest dc/c1-b && oc rollout status dc/c1-b; fi;
-    - if ! oc rollout status dc/c1-w; then oc rollout latest dc/c1-w && oc rollout status dc/c1-w; fi;
+    - if ! oc rollout status dc/c-a; then oc rollout latest dc/c-a && oc rollout status dc/c-a; fi;
+    - if ! oc rollout status dc/c-b; then oc rollout latest dc/c-b && oc rollout status dc/c-b; fi;
+    - if ! oc rollout status dc/c-w; then oc rollout latest dc/c-w && oc rollout status dc/c-w; fi;
   environment:
-    name: pilot-test
+    name: test
     url: https://test.cloudigra.de/
 
 Deploy to Stage:
@@ -468,11 +468,11 @@ Deploy to Stage:
     - cd /opt/shiftigrade
   script:
     - kontemplate template ocp/stage.yaml -i cloudigrade | oc apply -f -
-    - if ! oc rollout status dc/c1-a; then oc rollout latest dc/c1-a && oc rollout status dc/c1-a; fi;
-    - if ! oc rollout status dc/c1-b; then oc rollout latest dc/c1-b && oc rollout status dc/c1-b; fi;
-    - if ! oc rollout status dc/c1-w; then oc rollout latest dc/c1-w && oc rollout status dc/c1-w; fi;
+    - if ! oc rollout status dc/c-a; then oc rollout latest dc/c-a && oc rollout status dc/c-a; fi;
+    - if ! oc rollout status dc/c-b; then oc rollout latest dc/c-b && oc rollout status dc/c-b; fi;
+    - if ! oc rollout status dc/c-w; then oc rollout latest dc/c-w && oc rollout status dc/c-w; fi;
   environment:
-    name: pilot-stage
+    name: stage
     url: https://stage.cloudigra.de/
 
 ### RELEASE STAGE ###
@@ -493,10 +493,10 @@ Deploy to Production:
     - cd /opt/shiftigrade
   script:
     - kontemplate template ocp/prod.yaml -i cloudigrade | oc apply -f -
-    - if ! oc rollout status dc/c1-a; then oc rollout latest dc/c1-a && oc rollout status dc/c1-a; fi;
-    - if ! oc rollout status dc/c1-b; then oc rollout latest dc/c1-b && oc rollout status dc/c1-b; fi;
-    - if ! oc rollout status dc/c1-w; then oc rollout latest dc/c1-w && oc rollout status dc/c1-w; fi;
+    - if ! oc rollout status dc/c-a; then oc rollout latest dc/c-a && oc rollout status dc/c-a; fi;
+    - if ! oc rollout status dc/c-b; then oc rollout latest dc/c-b && oc rollout status dc/c-b; fi;
+    - if ! oc rollout status dc/c-w; then oc rollout latest dc/c-w && oc rollout status dc/c-w; fi;
   when: manual
   environment:
-    name: pilot-production
+    name: production
     url: https://www.cloudigra.de/
