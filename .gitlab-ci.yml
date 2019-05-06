@@ -229,7 +229,7 @@ Deploy Review:
     - echo "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin@example.com', 'admin@example.com', '${CLOUDIGRADE_PASSWORD}')" | oc rsh -c c-${DEPLOYMENT_PREFIX}-a $(oc get pods -o jsonpath='{.items[*].metadata.name}' -l name=c-${DEPLOYMENT_PREFIX}-a) scl enable rh-python36 -- python manage.py shell || true
   environment:
     name: review/${CI_COMMIT_REF_NAME}
-    url: https://review-${CI_COMMIT_REF_SLUG}.5a9f.insights-dev.openshiftapps.com
+    url: https://qa.cloud.paas.upshift.redhat.com/api/cloudigrade/v2/
     on_stop: Clean Up Review
 
 Clean Up Review:
@@ -342,7 +342,7 @@ Clean Up Review:
     - if ! oc rollout status dc/c-${DEPLOYMENT_PREFIX}-b; then oc rollout latest dc/c-${DEPLOYMENT_PREFIX}-b && oc rollout status dc/c-${DEPLOYMENT_PREFIX}-b; fi;
     - if ! oc rollout status dc/c-${DEPLOYMENT_PREFIX}-w; then oc rollout latest dc/c-${DEPLOYMENT_PREFIX}-w && oc rollout status dc/c-${DEPLOYMENT_PREFIX}-w; fi;
     - echo "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin@example.com', 'admin@example.com', '${CLOUDIGRADE_PASSWORD}')" | oc rsh -c c-${DEPLOYMENT_PREFIX}-a $(oc get pods -o jsonpath='{.items[*].metadata.name}' -l name=c-${DEPLOYMENT_PREFIX}-a) scl enable rh-python36 -- python manage.py shell || true
-    - echo -e "section_start:$( date +%s ):chat_reply\r\033[0K\nDeployed [cloudigrade] ${CHAT_INPUT}, available at https://${CI_COMMIT_REF_SLUG}.5a9f.insights-dev.openshiftapps.com/api/v1/ If both cloudigrade and frontigrade are deployed you can login with username 'admin@example.com' and the current Red Hat Guest WiFi password as the password.\nsection_end:$( date +%s ):chat_reply\r\033[0K"
+    - echo -e "section_start:$( date +%s ):chat_reply\r\033[0K\nDeployed [cloudigrade] ${CHAT_INPUT}, available at https://qa.cloud.paas.upshift.redhat.com/api/cloudigrade/v2/ using HTTP headers X-4Scale-Env:ci and X-4Scale-Branch:${CI_COMMIT_REF_SLUG}\nsection_end:$( date +%s ):chat_reply\r\033[0K"
 
 Review-Master:
   <<: *review_template
@@ -350,7 +350,7 @@ Review-Master:
     - chat
   environment:
     name: review/master-${CHAT_INPUT}
-    url: https://master-${CHAT_INPUT}.5a9f.insights-dev.openshiftapps.com
+    url: https://qa.cloud.paas.upshift.redhat.com/api/cloudigrade/v2/
     on_stop: Clean-up-master
 
 Review Master:
@@ -359,7 +359,7 @@ Review Master:
     - trigger
   environment:
     name: review/master-${CHAT_INPUT}
-    url: https://master-${CHAT_INPUT}.5a9f.insights-dev.openshiftapps.com
+    url: https://qa.cloud.paas.upshift.redhat.com/api/cloudigrade/v2/
     on_stop: Clean up master review
 
 .CleanReviewTemplate: &clean_review_definition
@@ -449,7 +449,7 @@ Deploy to Test:
     - if ! oc rollout status dc/c-w; then oc rollout latest dc/c-w && oc rollout status dc/c-w; fi;
   environment:
     name: test
-    url: https://test.cloudigra.de/
+    url: https://stage.cloud.paas.upshift.redhat.com/api/cloudigrade/v2/
 
 Deploy to Stage:
   stage: deploy
@@ -473,7 +473,7 @@ Deploy to Stage:
     - if ! oc rollout status dc/c-w; then oc rollout latest dc/c-w && oc rollout status dc/c-w; fi;
   environment:
     name: stage
-    url: https://stage.cloudigra.de/
+    url: https://stage.cloud.paas.upshift.redhat.com/api/cloudigrade/v2/
 
 ### RELEASE STAGE ###
 Deploy to Production:
@@ -499,4 +499,4 @@ Deploy to Production:
   when: manual
   environment:
     name: production
-    url: https://www.cloudigra.de/
+    url: https://cloud.redhat.com/api/cloudigrade/
