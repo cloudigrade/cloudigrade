@@ -27,65 +27,33 @@ to the various clouds (e.g. ``AWS_ACCESS_KEY_ID``).
 Authorization
 -------------
 
-As mentioned in `README.md <../README.md>`_, all API calls require an
-``Authorization`` header. For convenience, these examples assume you
-have an environment variable set like this with an appropriate token
-value:
+The v2 API is authenticated with 3scale. In order to authenticate a `HTTP_X_RH_IDENTITY` header must be included in the request.
+This header must be the base64 encoded version of:
+
+
+{{ v2_rh_identity | tojson(indent=4) | rst_codeblock("json") }}
 
 .. code:: bash
 
-    AUTH=Authorization:"Token d1fa223f753e45dd8e311cf84ee2635b0fae5bd8"
+    HTTP_X_RH_IDENTITY={{v2_header}}
 
 Overview
 --------
 
 The following resource paths are currently available:
 
--  ``/api/v1/account/`` returns account data
--  ``/api/v1/event/`` returns event data
--  ``/api/v1/instance/`` returns instance data
--  ``/api/v1/image/`` returns image data
--  ``/api/v1/sysconfig/`` returns sysconfig data
--  ``/api/v1/user/`` returns user data
--  ``/api/v1/report/instances/`` returns daily instance usage data
--  ``/api/v1/report/accounts/`` returns account overview data
--  ``/api/v1/report/images/`` returns active images overview data
--  ``/auth/`` is for authentication
+-  ``/api/v2/account/`` returns account data
+-  ``/api/v2/instance/`` returns instance data
+-  ``/api/v2/image/`` returns image data
+-  ``/api/v2/sysconfig/`` returns sysconfig data
+
 
 User Setup
 ------------------
 
-This is for users with Cloudigrade itself, not telling Cloudigrade
-about a user's AWS account.
-
-Users cannot be created directly through the API. Please use the Django Admin to
-create users.
-
-
-Login to Cloudigrade
-~~~~~~~~~~~~~~~~~~~~
-
-Request:
-
-{{ login.wsgi_request | httpied_command | rst_codeblock("bash") }}
-
-Response:
-
-{{ login | stringify_http_response | rst_codeblock }}
-
-The `auth_token` should be used in the `Authorization:` HTTP header.
-
-
-Log out of Cloudigrade
-~~~~~~~~~~~~~~~~~~~~~~
-
-Request:
-
-{{ logout.wsgi_request | httpied_command | rst_codeblock("bash") }}
-
-Response:
-
-{{ logout | stringify_http_response | rst_codeblock }}
+When accessing any endpoint with the HTTP_X_RH_IDENTITY header,
+if the user found in the header does not exist, it will be created.
+Users can also be created using Django Admin.
 
 
 Customer Account Setup
@@ -100,452 +68,22 @@ maximum supported length of 256 characters.
 
 Request:
 
-{{ account_create.wsgi_request | httpied_command | rst_codeblock("bash") }}
+{{ v2_account_create.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
 
 Response:
 
-{{ account_create | stringify_http_response | rst_codeblock }}
+{{ v2_account_create | stringify_http_response | rst_codeblock }}
 
 If you attempt to create an AWS account for an ARN that is already in
 the system, you should get a 400 error.
 
 Request:
 
-{{ account_create_duplicate_arn.wsgi_request | httpied_command | rst_codeblock("bash") }}
+{{ v2_account_create_duplicate_arn.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
 
 Response:
 
-{{ account_create_duplicate_arn | stringify_http_response | rst_codeblock }}
-
-
-Customer Account Info
----------------------
-
-List all accounts
-~~~~~~~~~~~~~~~~~
-
-Request:
-
-{{ account_list.wsgi_request | httpied_command | rst_codeblock("bash") }}
-
-Response:
-
-{{ account_list | stringify_http_response | rst_codeblock }}
-
-
-Retrieve a specific account
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Request:
-
-{{ account_get.wsgi_request | httpied_command | rst_codeblock("bash") }}
-
-Response:
-
-{{ account_get | stringify_http_response | rst_codeblock }}
-
-
-Update a specific account
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-You can update the account object via either HTTP PATCH or HTTP PUT. All
-updates require you to specify the "resourcetype".
-
-At the time of this writing, only the "name" property can be changed on the
-account object.
-
-Request:
-
-{{ account_patch.wsgi_request | httpied_command | rst_codeblock("bash") }}
-
-Response:
-
-{{ account_patch | stringify_http_response | rst_codeblock }}
-
-Because PUT is intended to replace objects, it must include all potentially
-writable fields, which includes "name" and "account_arn".
-
-Request:
-
-{{ account_put.wsgi_request | httpied_command | rst_codeblock("bash") }}
-
-Response:
-
-{{ account_put | stringify_http_response | rst_codeblock }}
-
-You cannot change the ARN via PUT or PATCH.
-
-Request:
-
-{{ account_patch_arn_fail.wsgi_request | httpied_command | rst_codeblock("bash") }}
-
-Response:
-
-{{ account_patch_arn_fail | stringify_http_response | rst_codeblock }}
-
-
-Instance Info
--------------
-
-List all instances
-~~~~~~~~~~~~~~~~~~
-
-Request:
-
-{{ instance_list.wsgi_request | httpied_command | rst_codeblock("bash") }}
-
-Response:
-
-{{ instance_list | stringify_http_response | rst_codeblock }}
-
-
-Retrieve a specific instance
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Request:
-
-{{ instance_get.wsgi_request | httpied_command | rst_codeblock("bash") }}
-
-Response:
-
-{{ instance_get | stringify_http_response | rst_codeblock }}
-
-
-Filtering instances
-~~~~~~~~~~~~~~~~~~~
-
-You may include an optional "user_id" query string argument to filter results
-down to a specific user.
-
-Request:
-
-{{ instance_filter.wsgi_request | httpied_command | rst_codeblock("bash") }}
-
-Response:
-
-{{ instance_filter | stringify_http_response | rst_codeblock }}
-
-
-You may also include an optional "running" query string argument to filter for only
-running/non-running instances.
-
-Request:
-
-{{ instance_filter_running.wsgi_request | httpied_command | rst_codeblock("bash") }}
-
-Response:
-
-{{ instance_filter_running | stringify_http_response | rst_codeblock }}
-
-
-Instance Event Info
--------------------
-
-List all events
-~~~~~~~~~~~~~~~
-
-Request:
-
-{{ event_list.wsgi_request | httpied_command | rst_codeblock("bash") }}
-
-Response:
-
-{{ event_list | stringify_http_response | rst_codeblock }}
-
-
-Retrieve a specific event
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Request:
-
-{{ event_get.wsgi_request | httpied_command | rst_codeblock("bash") }}
-
-Response:
-
-{{ event_get | stringify_http_response | rst_codeblock }}
-
-
-Filtering events
-~~~~~~~~~~~~~~~~
-
-You may include an optional "instance_id" query string argument to filter results
-down to a specific instance.
-
-Request:
-
-{{ event_filter_instance.wsgi_request | httpied_command | rst_codeblock("bash") }}
-
-Response:
-
-{{ event_filter_instance | stringify_http_response | rst_codeblock }}
-
-
-You may include an optional "user_id" query string argument to filter results
-down to a specific user.
-
-Request:
-
-{{ event_filter_user.wsgi_request | httpied_command | rst_codeblock("bash") }}
-
-Response:
-
-{{ event_filter_user | stringify_http_response | rst_codeblock }}
-
-
-Usage Reporting
----------------
-
-Retrieve a daily instance usage report
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-You may include an optional "user_id" query string argument to filter results
-down to a specific user if your request is authenticated as a superuser.
-
-You may include an optional "name_pattern" query string argument to filter
-results down to activity under accounts whose names match at least one of the
-words in that argument.
-
-Request:
-
-{{ report_instances.wsgi_request | httpied_command | rst_codeblock("bash") }}
-
-Response:
-
-{{ report_instances | stringify_http_response | rst_codeblock }}
-
-
-Retrieve an account overview
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Request:
-
-{{ report_accounts.wsgi_request | httpied_command | rst_codeblock("bash") }}
-
-Response:
-
-{{ report_accounts | stringify_http_response | rst_codeblock }}
-
-
-If you attempt to retrieve cloud account overviews without specifying a
-start and end date, you should get a 400 error.
-
-Request:
-
-{{ report_accounts_no_args.wsgi_request | httpied_command | rst_codeblock("bash") }}
-
-Response:
-
-{{ report_accounts_no_args | stringify_http_response | rst_codeblock }}
-
-
-You may include an optional "name_pattern" query string argument to filter
-results down to activity under accounts whose names match at least one of the
-words in that argument.
-
-You may include an optional "account_id" query string argument to filter
-results down to activity for a specific clount (Cloud Account). This can be
-combined with the "user_id" argument if the caller is a superuser to get
-information specific to a different user.
-
-In this example, an account named "greatest account ever" is included because
-it contains the word "eat" even though it does not contain the word "tofu".
-
-Request:
-
-{{ report_accounts_filter.wsgi_request | httpied_command | rst_codeblock("bash") }}
-
-Response:
-
-{{ report_accounts_filter | stringify_http_response | rst_codeblock }}
-
-
-Retrieve an account's active images overview
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The "start", "end", and "account_id" query string arguments are all required.
-If authenticated as a superuser, you may include an optional "user_id" query
-string argument to get the results for that user.
-
-Request:
-
-{{ report_images.wsgi_request | httpied_command | rst_codeblock("bash") }}
-
-Response:
-
-{{ report_images | stringify_http_response | rst_codeblock }}
-
-
-User Info
----------------------
-
-List all users
-~~~~~~~~~~~~~~~~~
-
-Request:
-
-{{ list_users.wsgi_request | httpied_command | rst_codeblock("bash") }}
-
-Response:
-
-{{ list_users | stringify_http_response | rst_codeblock }}
-
-
-Retrieve a specific user
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-Request:
-
-{{ get_user.wsgi_request | httpied_command | rst_codeblock("bash") }}
-
-Response:
-
-{{ get_user | stringify_http_response | rst_codeblock }}
-
-
-Machine Images
---------------
-
-List all images
-~~~~~~~~~~~~~~~
-
-Below command will return all images that have been seen used by any instance for any account belonging to the user that makes the request.
-
-Request:
-
-{{ list_images.wsgi_request | httpied_command | rst_codeblock("bash") }}
-
-Response:
-
-{{ list_images | stringify_http_response | rst_codeblock }}
-
-When authenticating as a superuser, this will return all images used by instances in all accounts.
-
-A superuser can also filter the images down to a those used by instances for accounts belonging to a specific user by using the optional
-``user_id`` query string argument.
-
-Request:
-
-{{ list_images_filter.wsgi_request | httpied_command | rst_codeblock("bash") }}
-
-Response:
-
-{{ list_images_filter | stringify_http_response | rst_codeblock }}
-
-
-Retrieve a specific image
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Request:
-
-{{ get_image.wsgi_request | httpied_command | rst_codeblock("bash") }}
-
-Response:
-
-{{ get_image | stringify_http_response | rst_codeblock }}
-
-
-Reinspect a specific image
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Restart image inspection to deal with failed inspections or repeat inspection for the sake of testing.
-
-Note that this command is only accessible by superusers.
-
-Request:
-
-{{ reinspect_image.wsgi_request | httpied_command | rst_codeblock("bash") }}
-
-Response:
-
-{{ reinspect_image | stringify_http_response | rst_codeblock }}
-
-
-Issuing challenges/flags
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-Note that ``resourcetype`` is required when making these calls.
-
-Request:
-
-{{ patch_image.wsgi_request | httpied_command | rst_codeblock("bash") }}
-
-Response:
-
-{{ patch_image | stringify_http_response | rst_codeblock }}
-
-If you'd like to remove a challenge, simply send the same challenge with False as the value.
-
-Request:
-
-{{ patch_image_false.wsgi_request | httpied_command | rst_codeblock("bash") }}
-
-Response:
-
-{{ patch_image_false | stringify_http_response | rst_codeblock }}
-
-You can challenge both at the same time.
-
-Request:
-
-{{ patch_image_both.wsgi_request | httpied_command | rst_codeblock("bash") }}
-
-Response:
-
-{{ patch_image_both | stringify_http_response | rst_codeblock }}
-
-
-Miscellaneous Commands
-----------------------
-
-Retrieve current publicly-viewable system configuration
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The sysconfig endpoint includes the AWS cloud account id used by the application, AWS policies used for acting on behalf of customers, and the currently deployed backend version.
-
-Request:
-
-{{ get_sysconfig.wsgi_request | httpied_command | rst_codeblock("bash") }}
-
-Response:
-
-{{ get_sysconfig | stringify_http_response | rst_codeblock }}
-
-If the application was not deployed by gitlab-ci, the version will be returned as ``null``.
-
-Request:
-
-{{ get_sysconfig_no_version.wsgi_request | httpied_command | rst_codeblock("bash") }}
-
-Response:
-
-{{ get_sysconfig_no_version | stringify_http_response | rst_codeblock }}
-
-If you attempt to retrieve sysconfig without authentication, you'll receive a 401 error.
-
-
-REST API v2 Example Usage
-=========================
-
-The v2 API is authenticated with 3scale. In order to authenticate a `HTTP_X_RH_IDENTITY` header must be included in the request.
-This header must be the base64 encoded version of:
-
-
-{{ v2_rh_identity | tojson(indent=4) | rst_codeblock("json") }}
-
-.. code:: bash
-
-    HTTP_X_RH_IDENTITY={{v2_header}}
-
-
-Overview
---------
-
-The following resource paths are currently available:
-
--  ``/api/v2/account/`` returns account data
--  ``/api/v2/instance/`` returns instance data
--  ``/api/v2/image/`` returns image data
--  ``/api/v2/sysconfig/`` returns sysconfig data
+{{ v2_account_create_duplicate_arn | stringify_http_response | rst_codeblock }}
 
 
 Customer Account Info

@@ -25,7 +25,6 @@ help:
 	@echo "  docs-api-examples             to regenerate docs API examples .rst file."
 	@echo "  docs-seqdiag                  to regenerate docs .svg files from .diag files."
 	@echo "  user                          to create a Django super user."
-	@echo "  user-authenticate             to generate an auth token for a user."
 	@echo "==[OpenShift/Dev Shortcuts]=========================================="
 	@echo "  oc-run-dev                    to start the local dev server allowing it to connect to supporting services running in the cluster."
 	@echo "  oc-run-migrations             to run migrations from local dev environment against the DB running in the cluster."
@@ -55,10 +54,6 @@ oc-run-dev: oc-forward-ports
 
 user:
 	$(PYTHON) $(PYDIR)/manage.py createsuperuser --settings=config.settings.local
-
-user-authenticate:
-	@read -p "User name: " uname; \
-	$(PYTHON) $(PYDIR)/manage.py drf_create_token $$uname --settings=config.settings.local
 
 docs-seqdiag:
 	cd docs/illustrations && for FILE in *.diag; do seqdiag -Tsvg $$FILE; done

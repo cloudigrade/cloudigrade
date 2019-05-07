@@ -18,8 +18,8 @@ from django.conf import settings
 from util.tests.helper import get_test_user
 from util import filters
 
-from account import models
-from account.tests import helper as account_helper
+from api import models
+from api.tests import helper as account_helper
 from util.tests import helper as util_helper
 
 
@@ -56,10 +56,12 @@ class DocsApiHandler(object):
             self.customer_email, self.customer_password, is_superuser=False
         )
         self.customer_client = account_helper.SandboxedRestClient()
+        self.customer_client._force_authenticate(self.customer_user)
+
         self.customer_arn = util_helper.generate_dummy_arn()
 
         # Make sure an account doesn't already exist with that ARN.
-        for account in models.AwsAccount.objects.filter(
+        for account in models.AwsCloudAccount.objects.filter(
             account_arn=self.customer_arn
         ):
             self.superuser_client.delete_account(account.id)
@@ -126,9 +128,9 @@ class DocsApiHandler(object):
         # Force all images to have RHEL detected and OCP challenged.
         self.images = list(
             set(
-                event.machineimage
-                for event in self.events
-                if event.machineimage is not None
+                instance.machine_image
+                for instance in self.customer_instances
+                if instance.machine_image is not None
             )
         )
         for image in self.images:
@@ -140,11 +142,9 @@ class DocsApiHandler(object):
             image.region = 'us-east-1'
             image.save()
 
-        account_helper.recalculate_runs_from_events(self.events)
-
     def cleanup(self):
         """Delete everything we created here."""
-        for account in models.AwsAccount.objects.all():
+        for account in models.CloudAccount.objects.all():
             self.superuser_client.delete_account(account.id)
         models.MachineImage.objects.all().delete()
         User.objects.all().delete()
@@ -159,273 +159,6 @@ class DocsApiHandler(object):
         """
         responses = dict()
 
-        ############
-        # User Setup
-
-        # Login to Cloudigrade
-        response = self.customer_client.login(
-            self.customer_email, self.customer_password
-        )
-        assert_status(response, 200)
-        responses['login'] = response
-
-        # Log out of Cloudigrade
-        response = self.customer_client.logout()
-        assert_status(response, 204)
-        responses['logout'] = response
-
-        # ...but actually log in again so we can make more API calls later...
-        self.customer_client.login(self.customer_email, self.customer_password)
-
-        ########################
-        # Customer Account Setup
-
-        # Create an AWS account (success)
-        another_arn = util_helper.generate_dummy_arn()
-        response = self.customer_client.create_account(
-            data={
-                'account_arn': another_arn,
-                'name': 'yet another account',
-                'resourcetype': 'AwsAccount',
-            }
-        )
-        assert_status(response, 201)
-        responses['account_create'] = response
-
-        customer_account = models.AwsAccount.objects.get(
-            account_arn=another_arn
-        )
-
-        # Create an AWS account (fail: duplicate ARN)
-        response = self.customer_client.create_account(
-            data={
-                'account_arn': another_arn,
-                'name': 'but this account already exists',
-                'resourcetype': 'AwsAccount',
-            }
-        )
-        assert_status(response, 400)
-        responses['account_create_duplicate_arn'] = response
-
-        #######################
-        # Customer Account Info
-
-        # List all accounts
-        response = self.customer_client.list_account()
-        assert_status(response, 200)
-        responses['account_list'] = response
-
-        # Retrieve a specific account
-        response = self.customer_client.get_account(customer_account.id)
-        assert_status(response, 200)
-        responses['account_get'] = response
-
-        # Update a specific account
-        response = self.customer_client.patch_account(
-            customer_account.id,
-            data={
-                'name': 'name updated using PATCH',
-                'resourcetype': 'AwsAccount',
-            },
-        )
-        assert_status(response, 200)
-        responses['account_patch'] = response
-
-        response = self.customer_client.put_account(
-            customer_account.id,
-            data={
-                'name': 'name updated using PUT',
-                'account_arn': another_arn,
-                'resourcetype': 'AwsAccount',
-            },
-        )
-        assert_status(response, 200)
-        responses['account_put'] = response
-
-        # You cannot change the ARN via PUT or PATCH.
-        response = self.customer_client.patch_account(
-            customer_account.id,
-            data={
-                'account_arn': 'arn:aws:iam::999999999999:role/role-for-cloudigrade',
-                'resourcetype': 'AwsAccount',
-            },
-        )
-        assert_status(response, 400)
-        responses['account_patch_arn_fail'] = response
-
-        ###############
-        # Instance Info
-
-        # List all instances
-        response = self.customer_client.list_instance()
-        assert_status(response, 200)
-        responses['instance_list'] = response
-
-        # Retrieve a specific instance
-        response = self.customer_client.get_instance(
-            self.customer_instances[0].id
-        )
-        assert_status(response, 200)
-        responses['instance_get'] = response
-
-        # Filtering instances on user
-        response = self.superuser_client.list_instance(
-            data={'user_id': self.superuser.id}
-        )
-        assert_status(response, 200)
-        responses['instance_filter'] = response
-
-        # Filtering instances on running
-        response = self.superuser_client.list_instance(
-            data={'running': True}
-        )
-        assert_status(response, 200)
-        responses['instance_filter_running'] = response
-
-
-        #####################
-        # Instance Event Info
-
-        # List all events
-        response = self.customer_client.list_event()
-        assert_status(response, 200)
-        responses['event_list'] = response
-
-        # Retrieve a specific instance
-        response = self.customer_client.get_event(
-            responses['event_list'].json()['results'][0]['id']
-        )
-        assert_status(response, 200)
-        responses['event_get'] = response
-
-        response = self.customer_client.list_event(
-            data={'instance_id': self.customer_instances[0].id}
-        )
-        assert_status(response, 200)
-        responses['event_filter_instance'] = response
-
-        response = self.superuser_client.list_event(
-            data={'user_id': self.superuser.id}
-        )
-        assert_status(response, 200)
-        responses['event_filter_user'] = response
-
-        # Retrieve a daily instance usage report
-        response = self.customer_client.report_instances(
-            data={'start': self.three_days_ago, 'end': self.this_morning}
-        )
-        assert_status(response, 200)
-        responses['report_instances'] = response
-
-        # Retrieve an account overview
-        response = self.customer_client.report_accounts(
-            data={'start': self.three_days_ago, 'end': self.this_morning}
-        )
-        assert_status(response, 200)
-        responses['report_accounts'] = response
-
-        response = self.customer_client.report_accounts()
-        assert_status(response, 400)
-        responses['report_accounts_no_args'] = response
-
-        response = self.customer_client.report_accounts(
-            data={
-                'start': self.three_days_ago,
-                'end': self.this_morning,
-                'name_pattern': 'eat tofu',
-            }
-        )
-        assert_status(response, 200)
-        responses['report_accounts_filter'] = response
-
-        # Retrieve an account's active images overview
-        response = self.customer_client.report_images(
-            data={
-                'start': self.three_days_ago,
-                'end': self.this_morning,
-                'account_id': self.customer_account.id,
-            }
-        )
-        assert_status(response, 200)
-        responses['report_images'] = response
-
-        # List all users
-        response = self.superuser_client.list_user()
-        assert_status(response, 200)
-        responses['list_users'] = response
-
-        # Retrieve a specific user
-        response = self.superuser_client.get_user(self.customer_user.id)
-        assert_status(response, 200)
-        responses['get_user'] = response
-
-        # List all images
-        response = self.customer_client.list_image()
-        assert_status(response, 200)
-        responses['list_images'] = response
-
-        response = self.superuser_client.list_image(
-            data={'user_id': self.superuser.id}
-        )
-        assert_status(response, 200)
-        responses['list_images_filter'] = response
-
-        # Retrieve a specific image
-        response = self.superuser_client.get_image(self.images[0].id)
-        assert_status(response, 200)
-        responses['get_image'] = response
-
-        # Reinspect a specific image
-        response = self.superuser_client.post_image(
-            noun_id=self.images[0].id,
-            detail='reinspect'
-        )
-        assert_status(response, 200)
-        responses['reinspect_image'] = response
-
-        # Issuing challenges/flags
-        response = self.superuser_client.patch_image(
-            self.images[0].id,
-            data={'rhel_challenged': True, 'resourcetype': 'AwsMachineImage'},
-        )
-        assert_status(response, 200)
-        responses['patch_image'] = response
-
-        response = self.superuser_client.patch_image(
-            self.images[0].id,
-            data={'rhel_challenged': False, 'resourcetype': 'AwsMachineImage'},
-        )
-        assert_status(response, 200)
-        responses['patch_image_false'] = response
-
-        response = self.superuser_client.patch_image(
-            self.images[0].id,
-            data={
-                'rhel_challenged': True,
-                'openshift_challenged': True,
-                'resourcetype': 'AwsMachineImage',
-            },
-        )
-        assert_status(response, 200)
-        responses['patch_image_both'] = response
-
-        ########################
-        # Miscellaneous Commands
-
-        # Retrieve current cloud account ids used by the application
-        cloudigrade_version = (
-            '489-cloudigrade-version - '
-            'd2b30c637ce3788e22990b21434bac2edcfb7ede'
-        )
-        with override_settings(CLOUDIGRADE_VERSION=cloudigrade_version):
-            response = self.superuser_client.get_sysconfig()
-        assert_status(response, 200)
-        responses['get_sysconfig'] = response
-
-        response = self.superuser_client.get_sysconfig()
-        assert_status(response, 200)
-        responses['get_sysconfig_no_version'] = response
-
         ########################
         # V2 endpoints
         responses['v2_rh_identity'] = util_helper.RH_IDENTITY
@@ -433,20 +166,51 @@ class DocsApiHandler(object):
         responses['v2_header'] = util_helper.get_3scale_auth_header().\
             decode("utf-8")
 
+        api_root_v2 = '/v2'
+
+        ########################
+        # Customer Account Setup
+
+        # Create an AWS account (success)
+        another_arn = util_helper.generate_dummy_arn()
+        response = self.customer_client.create_accounts(
+            data={
+                'account_arn': another_arn,
+                'name': 'yet another account',
+                'cloud_type': 'aws',
+            },
+            api_root=api_root_v2
+        )
+        assert_status(response, 201)
+        responses['v2_account_create'] = response
+
+        customer_account = models.CloudAccount.objects.get(
+            id=response.data['account_id']
+        )
+
+        # Create an AWS account (fail: duplicate ARN)
+        response = self.customer_client.create_accounts(
+            data={
+                'account_arn': another_arn,
+                'name': 'but this account already exists',
+                'cloud_type': 'AwsAccount',
+            }
+        )
+        assert_status(response, 400)
+        responses['v2_account_create_duplicate_arn'] = response
+
         ##########################
         # v2 Customer Account Info
 
-        api_root_v2 = '/v2'
-
         # List all accounts
-        response = self.customer_client.list_account(
+        response = self.customer_client.list_accounts(
             api_root=api_root_v2
         )
         assert_status(response, 200)
         responses['v2_account_list'] = response
 
         # Retrieve a specific account
-        response = self.customer_client.get_account(
+        response = self.customer_client.get_accounts(
             customer_account.id,
             api_root=api_root_v2
         )
@@ -454,7 +218,7 @@ class DocsApiHandler(object):
         responses['v2_account_get'] = response
 
         # Update a specific account
-        response = self.customer_client.patch_account(
+        response = self.customer_client.patch_accounts(
             customer_account.id,
             data={
                 'name': 'name updated using PATCH',
@@ -465,7 +229,7 @@ class DocsApiHandler(object):
         assert_status(response, 200)
         responses['v2_account_patch'] = response
 
-        response = self.customer_client.put_account(
+        response = self.customer_client.put_accounts(
             customer_account.id,
             data={
                 'name': 'name updated using PUT',
@@ -478,7 +242,7 @@ class DocsApiHandler(object):
         responses['v2_account_put'] = response
 
         # You cannot change the ARN via PUT or PATCH.
-        response = self.customer_client.patch_account(
+        response = self.customer_client.patch_accounts(
             customer_account.id,
             data={
                 'account_arn': 'arn:aws:iam::999999999999:role/role-for-cloudigrade',
@@ -493,14 +257,14 @@ class DocsApiHandler(object):
         # V2 Instance Info
 
         # List all instances
-        response = self.customer_client.list_instance(
+        response = self.customer_client.list_instances(
             api_root=api_root_v2
         )
         assert_status(response, 200)
         responses['v2_instance_list'] = response
 
         # Retrieve a specific instance
-        response = self.customer_client.get_instance(
+        response = self.customer_client.get_instances(
             self.customer_instances[0].id,
             api_root=api_root_v2
         )
@@ -508,7 +272,7 @@ class DocsApiHandler(object):
         responses['v2_instance_get'] = response
 
         # Filtering instances on user
-        response = self.superuser_client.list_instance(
+        response = self.superuser_client.list_instances(
             data={'v2_user_id': self.superuser.id},
             api_root=api_root_v2
         )
@@ -516,7 +280,7 @@ class DocsApiHandler(object):
         responses['v2_instance_filter'] = response
 
         # Filtering instances on running
-        response = self.superuser_client.list_instance(
+        response = self.superuser_client.list_instances(
             data={'running': True},
             api_root=api_root_v2
         )
@@ -527,13 +291,13 @@ class DocsApiHandler(object):
         # V2 Machine Image Info
 
         # List all images
-        response = self.customer_client.list_image(
+        response = self.customer_client.list_images(
             api_root=api_root_v2
         )
         assert_status(response, 200)
         responses['v2_list_images'] = response
 
-        response = self.superuser_client.list_image(
+        response = self.superuser_client.list_images(
             data={'user_id': self.superuser.id},
             api_root=api_root_v2
         )
@@ -541,7 +305,7 @@ class DocsApiHandler(object):
         responses['v2_list_images_filter'] = response
 
         # Retrieve a specific image
-        response = self.superuser_client.get_image(
+        response = self.superuser_client.get_images(
             self.images[0].id,
             api_root=api_root_v2
         )
@@ -549,7 +313,7 @@ class DocsApiHandler(object):
         responses['v2_get_image'] = response
 
         # Reinspect a specific image
-        response = self.superuser_client.post_image(
+        response = self.superuser_client.post_images(
             noun_id=self.images[0].id,
             detail='reinspect',
             api_root=api_root_v2
@@ -558,7 +322,7 @@ class DocsApiHandler(object):
         responses['v2_reinspect_image'] = response
 
         # Issuing challenges/flags
-        response = self.superuser_client.patch_image(
+        response = self.superuser_client.patch_images(
             self.images[0].id,
             data={'rhel_challenged': True, 'resourcetype': 'AwsMachineImage'},
             api_root=api_root_v2
@@ -566,7 +330,7 @@ class DocsApiHandler(object):
         assert_status(response, 200)
         responses['v2_patch_image'] = response
 
-        response = self.superuser_client.patch_image(
+        response = self.superuser_client.patch_images(
             self.images[0].id,
             data={'rhel_challenged': False, 'resourcetype': 'AwsMachineImage'},
             api_root=api_root_v2
@@ -574,7 +338,7 @@ class DocsApiHandler(object):
         assert_status(response, 200)
         responses['v2_patch_image_false'] = response
 
-        response = self.superuser_client.patch_image(
+        response = self.superuser_client.patch_images(
             self.images[0].id,
             data={
                 'rhel_challenged': True,
@@ -588,6 +352,12 @@ class DocsApiHandler(object):
 
         ########################
         # V2 Miscellaneous Commands
+        # Retrieve current cloud account ids used by the application
+        cloudigrade_version = (
+            '489-cloudigrade-version - '
+            'd2b30c637ce3788e22990b21434bac2edcfb7ede'
+        )
+
         with override_settings(CLOUDIGRADE_VERSION=cloudigrade_version):
             response = self.superuser_client.get_sysconfig(
                 api_root=api_root_v2

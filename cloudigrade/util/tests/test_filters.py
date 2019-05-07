@@ -105,7 +105,7 @@ class Jinja2FiltersTest(TestCase):
         mock_request.build_absolute_uri.return_value = uri
 
         expected = (
-            "http http://localhost/v2/ok 'X_RH_IDENTITY:${HTTP_X_RH_IDENTITY}'"
+            'http http://localhost/v2/ok "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}"'
         )
         actual = filters.httpied_command(mock_request, version=2)
         self.assertEqual(expected, actual)

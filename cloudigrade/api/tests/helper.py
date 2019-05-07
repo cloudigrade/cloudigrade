@@ -8,7 +8,6 @@ from unittest.mock import patch
 
 import faker
 from django.conf import settings
-from django.contrib.auth.models import User
 from rest_framework.test import APIClient
 
 from account import tasks
@@ -110,7 +109,9 @@ class SandboxedRestClient(object):
     def _force_authenticate(self, user):
         """Force client authentication as the given user."""
         self.authenticated_user = user
-        self.client.force_authenticate(self.authenticated_user)
+        self.client.credentials(
+            HTTP_X_RH_IDENTITY=helper.get_3scale_auth_header(user.username)
+        )
 
     def verb_noun(self, verb, noun, noun_id=None, detail=None, data=None,
                   api_root='/v2'):

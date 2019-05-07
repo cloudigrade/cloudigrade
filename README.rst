@@ -351,18 +351,19 @@ This will create many use-case-specific records in the database, simulate API ca
 Authentication
 ==============
 
-Django Rest Framework token authentication is used to authenticate
-users, with djoser (http://djoser.readthedocs.io/en/stable/index.html)
-for user account management and login/logout. API access is restricted
-to authenticated users. All API calls require an Authorization header:
+3Scale authentication is used to authenticate
+users, for a local deployment, this means including a `HTTP_X_RH_IDENTITY`
+header in all requests.
 
-.. code-block::
+API access is restricted to authenticated users.
 
-    Authorization: "Token `auth_token`"
+For more information about this header see `examples. <./docs/rest-api-example.rst#Authorization>`_
 
-In addition to the djoser frontend, it is possible to programmatically
-create users on the command line, for instance for testing. To create
-a user this way, use:
+
+When accessing any endpoint with the HTTP_X_RH_IDENTITY header,
+if the user found in the header does not exist, it will be created.
+It is also possible to programmatically create users on the command line,
+for instance for testing. To create a user this way, use:
 
 .. code-block:: sh
 
@@ -370,17 +371,6 @@ a user this way, use:
     # or the below command if you're running against cloudigrade in a local OpenShift cluster
     cd <shiftigrade-repo>
     make oc-user
-
-To then generate an auth token, run the make command:
-
-.. code-block:: sh
-
-    make user-authenticate
-    # or the below command if you're running against cloudigrade in a local OpenShift cluster
-    cd <shiftigrade-repo>
-    make oc-user-authenticate
-
-This auth token can be supplied in the Authorization header.
 
 
 Message Broker
