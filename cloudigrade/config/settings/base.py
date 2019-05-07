@@ -123,7 +123,6 @@ THIRD_PARTY_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'generic_relations',
-    'djoser',
     'health_check',
     'health_check.db',
 ]
@@ -134,7 +133,6 @@ LOCAL_APPS = [
     'api.apps.ApiConfig',
     'account.apps.AccountConfig',
     'analyzer.apps.AnalyzerConfig',
-    'dj_auth.apps.DjAuthConfig',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS

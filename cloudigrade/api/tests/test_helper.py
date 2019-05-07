@@ -34,15 +34,6 @@ class SandboxedRestClientTest(TestCase):
             is_superuser=True
         )
 
-    def test_login_logout(self):
-        """Assert login and logout work."""
-        client = helper.SandboxedRestClient()
-        response = client.login(self.username, self.password)
-        self.assertEqual(response.status_code, http.HTTPStatus.OK)
-        self.assertIn('auth_token', response.json())
-        response = client.logout()
-        self.assertEqual(response.status_code, http.HTTPStatus.NO_CONTENT)
-
     def test_list_noun(self):
         """Assert "list" requests work."""
         client = helper.SandboxedRestClient()

@@ -44,7 +44,5 @@ urlpatterns = [
     url(r'^v2/', include(router_v2.urls)),
     url(r'^api-auth/', include('rest_framework.urls')),
     url(r'^healthz/', include('health_check.urls')),
-    url(r'^auth/', include('dj_auth.urls')),
-    url(r'^auth/', include('dj_auth.urls.authtoken')),
     path('admin/', admin.site.urls),
 ]

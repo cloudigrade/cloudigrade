@@ -8,7 +8,6 @@ from unittest.mock import patch
 
 import faker
 from django.conf import settings
-from django.contrib.auth.models import User
 from rest_framework.test import APIClient
 
 from account import tasks
@@ -112,25 +111,6 @@ class SandboxedRestClient(object):
         """Force client authentication as the given user."""
         self.authenticated_user = user
         self.client.force_authenticate(self.authenticated_user)
-
-    def login(self, username, password):
-        """Log in with the given credentials and authenticate future calls."""
-        response = self._call_api(
-            verb='post',
-            path='/auth/token/create/',
-            data={'username': username, 'password': password},
-        )
-        if response.status_code == 200:
-            user = User.objects.get(username=username)
-            self._force_authenticate(user)
-
-        return response
-
-    def logout(self):
-        """Log out and reset authentication for future calls."""
-        response = self._call_api(verb='post', path='/auth/token/destroy/')
-        self._force_authenticate(None)
-        return response
 
     def verb_noun(self, verb, noun, noun_id=None, detail=None, data=None,
                   api_root='/api/v1'):
