@@ -2,7 +2,8 @@
 from django.utils.translation import gettext as _
 from generic_relations.relations import GenericRelatedField
 from rest_framework.exceptions import ValidationError
-from rest_framework.fields import BooleanField, CharField, ChoiceField
+from rest_framework.fields import (BooleanField, CharField,
+                                   ChoiceField, IntegerField)
 from rest_framework.relations import HyperlinkedIdentityField
 from rest_framework.serializers import ModelSerializer
 
@@ -16,13 +17,15 @@ from util.exceptions import InvalidArn
 class AwsCloudAccountSerializer(ModelSerializer):
     """Serialize a customer AWS CloudAccount for API v2."""
 
+    aws_cloud_account_id = IntegerField(source='id', read_only=True)
+
     class Meta:
         model = AwsCloudAccount
         fields = (
             'account_arn',
             'aws_account_id',
+            'aws_cloud_account_id',
             'created_at',
-            'id',
             'updated_at',
         )
 
@@ -45,6 +48,7 @@ class CloudAccountSerializer(ModelSerializer):
     """Serialize a customer CloudAccount for API v2."""
 
     account_arn = CharField(required=False)
+    account_id = IntegerField(source='id', read_only=True)
     aws_account_id = CharField(required=False)
 
     cloud_type = ChoiceField(
@@ -58,8 +62,8 @@ class CloudAccountSerializer(ModelSerializer):
     class Meta:
         model = CloudAccount
         fields = (
+            'account_id',
             'created_at',
-            'id',
             'name',
             'updated_at',
             'user_id',
@@ -165,9 +169,12 @@ class CloudAccountSerializer(ModelSerializer):
 class AwsMachineImageSerializer(ModelSerializer):
     """Serialize a customer AwsMachineImage for API v2."""
 
+    aws_image_id = IntegerField(source='id', read_only=True)
+
     class Meta:
         model = AwsMachineImage
         fields = (
+            'aws_image_id',
             'created_at',
             'ec2_ami_id',
             'id',
@@ -210,6 +217,8 @@ class MachineImageSerializer(ModelSerializer):
         AwsMachineImage: AwsMachineImageSerializer(),
     }, required=False)
 
+    image_id = IntegerField(source='id', read_only=True)
+
     rhel_challenged = BooleanField(required=False)
     openshift_challenged = BooleanField(required=False)
 
@@ -217,7 +226,7 @@ class MachineImageSerializer(ModelSerializer):
         model = MachineImage
         fields = (
             'created_at',
-            'id',
+            'image_id',
             'inspection_json',
             'is_encrypted',
             'name',
@@ -284,12 +293,14 @@ class MachineImageSerializer(ModelSerializer):
 class AwsInstanceSerializer(ModelSerializer):
     """Serialize a customer AwsInstance for API v2."""
 
+    aws_instance_id = IntegerField(source='id', read_only=True)
+
     class Meta:
         model = AwsInstance
         fields = (
+            'aws_instance_id',
             'created_at',
             'ec2_instance_id',
-            'id',
             'region',
             'updated_at',
         )
@@ -322,6 +333,7 @@ class InstanceSerializer(ModelSerializer):
         AwsInstance: AwsInstanceSerializer(),
     }, required=False)
     cloud_account = HyperlinkedIdentityField(view_name='v2-account-detail')
+    instance_id = IntegerField(source='id', read_only=True)
     machine_image = HyperlinkedIdentityField(
         view_name='v2-machineimage-detail')
 
@@ -331,7 +343,7 @@ class InstanceSerializer(ModelSerializer):
             'cloud_account',
             'cloud_account_id',
             'created_at',
-            'id',
+            'instance_id',
             'machine_image',
             'machine_image_id',
             'updated_at',

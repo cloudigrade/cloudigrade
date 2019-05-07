@@ -106,7 +106,7 @@ class MachineImageViewSetTest(TestCase):
     def assertResponseHasImageData(self, response, image):
         """Assert the response has data matching the image object."""
         self.assertEqual(
-            response.data['id'], image.id
+            response.data['image_id'], image.id
         )
         self.assertEqual(
             Decimal(response.data['content_object']['owner_aws_account_id']),
@@ -249,7 +249,7 @@ class MachineImageViewSetTest(TestCase):
 
         """
         image_ids = set([
-            image['id'] for image in response.data['results']
+            image['image_id'] for image in response.data['results']
         ])
         return image_ids
 
@@ -363,7 +363,7 @@ class MachineImageViewSetTest(TestCase):
         self.assertTrue(response.data['openshift'])
         self.assertFalse(response.data['rhel_challenged'])
         self.assertTrue(response.data['rhel'])
-        updated_image = MachineImage.objects.get(pk=response.data['id'])
+        updated_image = MachineImage.objects.get(pk=response.data['image_id'])
         self.assertResponseHasImageData(response, updated_image)
 
     def test_user1_challenge_rhel_returns_ok(self):
@@ -377,7 +377,7 @@ class MachineImageViewSetTest(TestCase):
                                                  data)
         self.assertTrue(response.data['rhel_challenged'])
         self.assertTrue(response.data['rhel'])
-        updated_image = MachineImage.objects.get(pk=response.data['id'])
+        updated_image = MachineImage.objects.get(pk=response.data['image_id'])
         self.assertResponseHasImageData(response, updated_image)
 
     def test_user2_challenge_non_ocp_returns_ok(self):
@@ -391,7 +391,7 @@ class MachineImageViewSetTest(TestCase):
                                                  data)
         self.assertTrue(response.data['openshift_challenged'])
         self.assertFalse(response.data['openshift'])
-        updated_image = MachineImage.objects.get(pk=response.data['id'])
+        updated_image = MachineImage.objects.get(pk=response.data['image_id'])
         self.assertResponseHasImageData(response, updated_image)
 
     def test_user1_challenge_ocp_returns_ok(self):
@@ -405,7 +405,7 @@ class MachineImageViewSetTest(TestCase):
                                                  data)
         self.assertTrue(response.data['openshift_challenged'])
         self.assertTrue(response.data['openshift'])
-        updated_image = MachineImage.objects.get(pk=response.data['id'])
+        updated_image = MachineImage.objects.get(pk=response.data['image_id'])
         self.assertResponseHasImageData(response, updated_image)
 
     def test_user1_challenge_user2_returns_404(self):
@@ -435,7 +435,7 @@ class MachineImageViewSetTest(TestCase):
         self.assertFalse(response.data['rhel'])
         self.assertFalse(response.data['openshift_challenged'])
         self.assertTrue(response.data['openshift'])
-        updated_image = MachineImage.objects.get(pk=response.data['id'])
+        updated_image = MachineImage.objects.get(pk=response.data['image_id'])
         self.assertResponseHasImageData(response, updated_image)
 
         response = self.get_image_patch_response(self.user2,
@@ -445,7 +445,7 @@ class MachineImageViewSetTest(TestCase):
         self.assertFalse(response.data['openshift'])
         self.assertTrue(response.data['rhel_challenged'])
         self.assertFalse(response.data['rhel'])
-        updated_image = MachineImage.objects.get(pk=response.data['id'])
+        updated_image = MachineImage.objects.get(pk=response.data['image_id'])
         self.assertResponseHasImageData(response, updated_image)
 
     def test_user2_challenge_both_together_returns_ok(self):
@@ -462,7 +462,7 @@ class MachineImageViewSetTest(TestCase):
         self.assertFalse(response.data['rhel'])
         self.assertTrue(response.data['openshift_challenged'])
         self.assertFalse(response.data['openshift'])
-        updated_image = MachineImage.objects.get(pk=response.data['id'])
+        updated_image = MachineImage.objects.get(pk=response.data['image_id'])
         self.assertResponseHasImageData(response, updated_image)
 
     def test_user1_undo_challenge_returns_ok(self):
@@ -479,7 +479,7 @@ class MachineImageViewSetTest(TestCase):
                                                  data1)
         self.assertTrue(response.data['rhel_challenged'])
         self.assertFalse(response.data['rhel'])
-        updated_image = MachineImage.objects.get(pk=response.data['id'])
+        updated_image = MachineImage.objects.get(pk=response.data['image_id'])
         self.assertResponseHasImageData(response, updated_image)
 
         response = self.get_image_patch_response(self.user1,
@@ -487,7 +487,7 @@ class MachineImageViewSetTest(TestCase):
                                                  data2)
         self.assertFalse(response.data['rhel_challenged'])
         self.assertTrue(response.data['rhel'])
-        updated_image = MachineImage.objects.get(pk=response.data['id'])
+        updated_image = MachineImage.objects.get(pk=response.data['image_id'])
         self.assertResponseHasImageData(response, updated_image)
 
     def test_superuser_can_challenge_image_returns_ok(self):
@@ -501,7 +501,7 @@ class MachineImageViewSetTest(TestCase):
                                                  data)
         self.assertTrue(response.data['rhel_challenged'])
         self.assertFalse(response.data['rhel'])
-        updated_image = MachineImage.objects.get(pk=response.data['id'])
+        updated_image = MachineImage.objects.get(pk=response.data['image_id'])
         self.assertResponseHasImageData(response, updated_image)
 
     def test_reinspect_superuser(self):
@@ -511,7 +511,7 @@ class MachineImageViewSetTest(TestCase):
             self.inspected_image.id
         )
         self.assertEqual(http.HTTPStatus.OK, response.status_code)
-        updated_image = MachineImage.objects.get(pk=response.data['id'])
+        updated_image = MachineImage.objects.get(pk=response.data['image_id'])
         self.assertEqual(MachineImage.PENDING, response.data['status'])
         self.assertEqual(MachineImage.PENDING, updated_image.status)
 

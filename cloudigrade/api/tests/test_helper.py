@@ -83,7 +83,7 @@ class SandboxedRestClientTest(TestCase):
         response = client.get_accounts(account.id)
         self.assertEqual(response.status_code, http.HTTPStatus.OK)
         response_json = response.json()
-        self.assertEqual(response_json['id'], account.id)
+        self.assertEqual(response_json['account_id'], account.id)
 
     def test_invalid_request(self):
         """Assert invalid requests raise AttributeError."""

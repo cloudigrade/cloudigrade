@@ -51,7 +51,7 @@ class InstanceViewSetTest(TestCase):
     def assertResponseHasInstanceData(self, response, instance):
         """Assert the response has data matching the instance object."""
         self.assertEqual(
-            response.data['id'], instance.id
+            response.data['instance_id'], instance.id
         )
         self.assertEqual(
             response.data['cloud_account'],
@@ -123,7 +123,7 @@ class InstanceViewSetTest(TestCase):
 
         """
         instance_ids = set([
-            instance['id'] for instance in response.data['results']
+            instance['instance_id'] for instance in response.data['results']
         ])
         return instance_ids
 

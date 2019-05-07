@@ -32,7 +32,7 @@ class AccountViewSetTest(TransactionTestCase):
     def assertResponseHasAwsAccountData(self, response, account):
         """Assert the response has data matching the account object."""
         self.assertEqual(
-            response.data['id'], account.id
+            response.data['account_id'], account.id
         )
         self.assertEqual(
             response.data['user_id'], account.user_id
