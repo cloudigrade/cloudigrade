@@ -41,11 +41,15 @@ class SandboxedRestClientTest(TestCase):
         response = client.list_accounts()
         self.assertEqual(response.status_code, http.HTTPStatus.OK)
         response_json = response.json()
-        self.assertIn('results', response_json)
-        self.assertIsInstance(response_json['results'], list)
-        self.assertIn('count', response_json)
-        self.assertIn('next', response_json)
-        self.assertIn('previous', response_json)
+        self.assertIn('data', response_json)
+        self.assertIsInstance(response_json['data'], list)
+        self.assertIn('meta', response_json)
+        self.assertIn('count', response_json['meta'])
+        self.assertIn('links', response_json)
+        self.assertIn('next', response_json['links'])
+        self.assertIn('previous', response_json['links'])
+        self.assertIn('first', response_json['links'])
+        self.assertIn('last', response_json['links'])
 
     def test_create_noun(self):
         """Assert "create" requests work."""

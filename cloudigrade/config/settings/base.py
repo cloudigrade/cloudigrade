@@ -232,7 +232,7 @@ STATIC_ROOT = env('DJANGO_STATIC_ROOT', default=str(ROOT_DIR.path('static')))
 # http://www.django-rest-framework.org/api-guide/settings/
 
 REST_FRAMEWORK = {
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'DEFAULT_PAGINATION_CLASS': 'drf_insights_pagination.pagination.InsightsPagination',
     'PAGE_SIZE': 10,
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.TokenAuthentication',
@@ -243,6 +243,7 @@ REST_FRAMEWORK = {
     'EXCEPTION_HANDLER': 'util.exceptions.api_exception_handler',
 }
 
+INSIGHTS_PAGINATION_APP_PATH = '/api/cloudigrade'
 
 # Message and Task Queues
 

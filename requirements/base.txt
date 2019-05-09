@@ -8,6 +8,7 @@ psycopg2-binary==2.7.5
 python-dateutil==2.7.5
 djangorestframework==3.9.1
 rest-framework-generic-relations==1.2.1
+drf-insights-pagination==1.0.0
 gunicorn==19.9.0
 django-polymorphic==2.0.3
 django-rest-polymorphic==0.1.8

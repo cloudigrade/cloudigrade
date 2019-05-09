@@ -64,7 +64,7 @@ class AccountViewSetTest(TransactionTestCase):
         """
         aws_account_ids = set([
             account['content_object']['aws_account_id'] for account in
-            response.data['results']
+            response.data['data']
         ])
         return aws_account_ids
 

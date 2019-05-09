@@ -136,7 +136,7 @@ class InstanceEventViewSetTest(TestCase):
 
         """
         event_ids = set([
-            event['id'] for event in response.data['results']
+            event['id'] for event in response.data['data']
         ])
         return event_ids
 

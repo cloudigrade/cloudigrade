@@ -249,7 +249,7 @@ class MachineImageViewSetTest(TestCase):
 
         """
         image_ids = set([
-            image['image_id'] for image in response.data['results']
+            image['image_id'] for image in response.data['data']
         ])
         return image_ids
 

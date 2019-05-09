@@ -123,7 +123,7 @@ class InstanceViewSetTest(TestCase):
 
         """
         instance_ids = set([
-            instance['instance_id'] for instance in response.data['results']
+            instance['instance_id'] for instance in response.data['data']
         ])
         return instance_ids
 
