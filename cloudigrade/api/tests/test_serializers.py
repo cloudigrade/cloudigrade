@@ -101,6 +101,30 @@ class AwsAccountSerializerTest(TransactionTestCase):
                 str(serializer.errors['cloud_type'][0]),
             )
 
+    def test_serialization_fails_on_only_empty_account_arn(self):
+        """Test that an AWS account is not saved if account_arn is empty."""
+        mock_request = Mock()
+        mock_request.user = util_helper.generate_test_user()
+        context = {'request': mock_request}
+
+        validated_data = {'cloud_type': 'aws', 'name': _faker.name()}
+
+        with patch.object(
+            aws, 'verify_account_access'
+        ) as mock_verify, patch.object(aws.sts, 'boto3') as mock_boto3:
+            mock_assume_role = mock_boto3.client.return_value.assume_role
+            mock_assume_role.return_value = self.role
+            mock_verify.return_value = True, []
+
+            serializer = CloudAccountSerializer(
+                context=context, data=validated_data
+            )
+            serializer.is_valid()
+            self.assertEquals(
+                'This field is required.',
+                str(serializer.errors['account_arn'][0]),
+            )
+
     def test_create_succeeds_when_account_verified(self):
         """Test saving of a test ARN."""
         mock_request = Mock()

@@ -3,7 +3,7 @@ from django.utils.translation import gettext as _
 from generic_relations.relations import GenericRelatedField
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import (BooleanField, CharField,
-                                   ChoiceField, IntegerField)
+                                   ChoiceField, Field, IntegerField)
 from rest_framework.relations import HyperlinkedIdentityField
 from rest_framework.serializers import ModelSerializer
 
@@ -79,7 +79,24 @@ class CloudAccountSerializer(ModelSerializer):
         )
 
     def validate(self, data):
-        """Validate that clount name is unique per user."""
+        """
+        Validate conditions across multiple fields.
+
+        - name must be unique per user
+        - account_arn must not be None if cloud_type is aws
+        """
+        if self.instance is None:
+            # Checking `self.instance is None` means that this validation code
+            # should be skipped if validating existing objects. We only need
+            # the `account_arn` value to be given at creation, not updates.
+            cloud_type = data.get('cloud_type')
+            account_arn = data.get('account_arn')
+            if cloud_type == 'aws' and account_arn is None:
+                raise ValidationError(
+                    {'account_arn': Field.default_error_messages['required']},
+                    'required',
+                )
+
         user = self.context['request'].user
         name = data.get('name')
 
