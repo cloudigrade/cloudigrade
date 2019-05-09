@@ -53,7 +53,7 @@ class CloudAccountSerializer(ModelSerializer):
 
     cloud_type = ChoiceField(
         choices=['aws', 'gcp', 'azure'],
-        required=False
+        required=True
     )
     content_object = GenericRelatedField({
         AwsCloudAccount: AwsCloudAccountSerializer(),

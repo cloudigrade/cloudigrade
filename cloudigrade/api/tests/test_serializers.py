@@ -27,29 +27,79 @@ class AwsAccountSerializerTest(TransactionTestCase):
             'cloud_type': 'aws',
         }
 
-    def test_serialization_fails_on_empty_account_name(self):
-        """Test that an account is not saved if verification fails."""
+    def test_serialization_fails_when_all_empty_fields(self):
+        """Test that an account is not saved if all fields are empty."""
         mock_request = Mock()
         mock_request.user = util_helper.generate_test_user()
         context = {'request': mock_request}
 
-        validated_data = {
-            'account_arn': self.arn,
-        }
+        validated_data = {}
 
-        with patch.object(aws, 'verify_account_access') as mock_verify, \
-                patch.object(aws.sts, 'boto3') as mock_boto3:
+        with patch.object(
+            aws, 'verify_account_access'
+        ) as mock_verify, patch.object(aws.sts, 'boto3') as mock_boto3:
             mock_assume_role = mock_boto3.client.return_value.assume_role
             mock_assume_role.return_value = self.role
             mock_verify.return_value = True, []
 
             serializer = CloudAccountSerializer(
-                context=context,
-                data=validated_data
+                context=context, data=validated_data
             )
             serializer.is_valid()
-            self.assertEquals('This field is required.',
-                              str(serializer.errors['name'][0]))
+            self.assertEquals(
+                'This field is required.',
+                str(serializer.errors['cloud_type'][0]),
+            )
+            self.assertEquals(
+                'This field is required.', str(serializer.errors['name'][0])
+            )
+
+    def test_serialization_fails_on_only_empty_name(self):
+        """Test that an account is not saved if only name is empty."""
+        mock_request = Mock()
+        mock_request.user = util_helper.generate_test_user()
+        context = {'request': mock_request}
+
+        validated_data = {'account_arn': self.arn, 'cloud_type': 'aws'}
+
+        with patch.object(
+            aws, 'verify_account_access'
+        ) as mock_verify, patch.object(aws.sts, 'boto3') as mock_boto3:
+            mock_assume_role = mock_boto3.client.return_value.assume_role
+            mock_assume_role.return_value = self.role
+            mock_verify.return_value = True, []
+
+            serializer = CloudAccountSerializer(
+                context=context, data=validated_data
+            )
+            serializer.is_valid()
+            self.assertEquals(
+                'This field is required.', str(serializer.errors['name'][0])
+            )
+
+    def test_serialization_fails_on_only_empty_cloud_type(self):
+        """Test that an account is not saved if only cloud_type is empty."""
+        mock_request = Mock()
+        mock_request.user = util_helper.generate_test_user()
+        context = {'request': mock_request}
+
+        validated_data = {'account_arn': self.arn, 'name': _faker.name()}
+
+        with patch.object(
+            aws, 'verify_account_access'
+        ) as mock_verify, patch.object(aws.sts, 'boto3') as mock_boto3:
+            mock_assume_role = mock_boto3.client.return_value.assume_role
+            mock_assume_role.return_value = self.role
+            mock_verify.return_value = True, []
+
+            serializer = CloudAccountSerializer(
+                context=context, data=validated_data
+            )
+            serializer.is_valid()
+            self.assertEquals(
+                'This field is required.',
+                str(serializer.errors['cloud_type'][0]),
+            )
 
     def test_create_succeeds_when_account_verified(self):
         """Test saving of a test ARN."""
