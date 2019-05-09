@@ -1,5 +1,7 @@
 """DRF API views for the account app v2."""
-from django.db.models import Q
+from dateutil import tz
+from dateutil.parser import parse
+from django.db.models import Max
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -66,38 +68,20 @@ class InstanceViewSet(viewsets.ReadOnlyModelViewSet):
                 cloud_account__user__id=user_id)
 
         # Filter based on the instance running
-        running = self.request.query_params.get('running', None)
-        if running is not None:
-            self.queryset = self.queryset.prefetch_related('run_set')
-            if running.lower() == 'true':
-                # The query for run!=None is needed because Django constructs
-                # the query with LEFT OUTER JOIN, so if an run doesn't exist,
-                # the instance is still in the queryset.
-                # The discussion for this problem can be found:
-                # https://gitlab.com/cloudigrade/cloudigrade/merge_requests/593#note_154802463  # noqa: E501
-                # TODO: improve performance by forcing Django to INNER JOIN
+        running_since = self.request.query_params.get('running_since', None)
+        if running_since is not None:
+            running_since = parse(running_since)
+            if not running_since.tzinfo:
+                running_since = running_since.replace(tzinfo=tz.tzutc())
 
-                # truthiness table:
-                # has endtime  |   run exists   |   include
-                # T            |   T            |   F
-                # T            |   F            |   F (will not happen IRL)
-                # F            |   T            |   T
-                # F            |   F            |   F
-                self.queryset = self.queryset.filter(
-                    Q(run__end_time=None) &
-                    ~Q(run=None)
-                ).distinct()
-            elif running.lower() == 'false':
-                # truthiness table:
-                # has endtime  |   run exists   |   include
-                # T            |   T            |   T
-                # T            |   F            |   T (will not happen IRL)
-                # F            |   T            |   F
-                # F            |   F            |   T
-                self.queryset = self.queryset.filter(
-                    ~Q(run__end_time=None) |
-                    Q(run=None)
-                ).distinct()
+            self.queryset = (
+                self.queryset.prefetch_related('run_set')
+                    .filter(
+                    run__start_time__isnull=False, run__end_time__isnull=True
+                )
+                .annotate(Max('run__start_time'))
+                .filter(run__start_time__max__lte=running_since)
+            )
 
         return self.queryset
 
