@@ -8,8 +8,8 @@ from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 from django.utils.translation import gettext as _
 
-from account.models import InstanceEvent
-from account.tests import helper as account_helper
+from api.models import InstanceEvent
+from api.tests import helper as account_helper
 from util.tests import helper as util_helper
 
 
@@ -75,7 +75,7 @@ class Command(BaseCommand):
 
         images = [
             account_helper.generate_aws_image(
-                owner_aws_account_id=choice(accounts).aws_account_id
+                owner_aws_account_id=int(choice(accounts).cloud_account_id)
                 if random() < options['other_owner_chance']
                 else util_helper.generate_dummy_aws_account_id(),
                 rhel_detected=random() < options['rhel_chance'],
@@ -87,7 +87,7 @@ class Command(BaseCommand):
 
         instances = [
             account_helper.generate_aws_instance(
-                account=choice(accounts),
+                cloud_account=choice(accounts),
             )
             for __ in range(options['instance_count'])
         ]
@@ -97,8 +97,8 @@ class Command(BaseCommand):
             account_helper.generate_single_aws_instance_event(
                 instance=instance,
                 occurred_at=since + datetime.timedelta(
-                    seconds=randrange(seconds)),
-                ec2_ami_id=choice(images).ec2_ami_id,
+                    seconds=randrange(seconds)
+                ),
                 event_type=InstanceEvent.TYPE.power_on,
             )
         self.stdout.write(_('Created {} events(s)').format(len(instances)))
