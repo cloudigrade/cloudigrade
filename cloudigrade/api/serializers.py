@@ -130,10 +130,6 @@ class CloudAccountSerializer(ModelSerializer):
 
         if cloud_type == 'aws':
             return self.create_aws_cloud_account(validated_data)
-        elif cloud_type == 'gcp':
-            return NotImplementedError
-        elif cloud_type == 'azure':
-            return NotImplementedError
         else:
             return NotImplementedError
 
