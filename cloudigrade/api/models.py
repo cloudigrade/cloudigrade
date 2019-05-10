@@ -418,6 +418,23 @@ class InstanceEvent(BaseGenericModel):
         """
         return self.content_object.cloud_type
 
+    def __repr__(self):
+        """Get an unambiguous string representation."""
+        occurred_at = repr(self.occurred_at.isoformat())
+        created_at = repr(self.created_at.isoformat())
+        updated_at = repr(self.updated_at.isoformat())
+
+        return (
+            f'{self.__class__.__name__}('
+            f'id={self.id}, '
+            f'instance_id={self.instance_id}, '
+            f'event_type={self.event_type}, '
+            f'occurred_at=parse({occurred_at}), '
+            f'created_at=parse({created_at}), '
+            f'updated_at=parse({updated_at})'
+            f')'
+        )
+
 
 class AwsInstanceEvent(BaseModel):
     """Event model for an event triggered by an AwsInstance."""
@@ -432,28 +449,7 @@ class AwsInstanceEvent(BaseModel):
         return AWS_PROVIDER_STRING
 
     def __repr__(self):
-        """
-        Get an unambiguous string representation of this event.
-
-        Returned string should be clean enough to pass into eval to instantiate
-        a proper model object that could be saved if desired. For example:
-
-            from account.models import AwsInstanceEvent
-            from account.tests import helper
-            a = helper.generate_aws_account()
-            i = helper.generate_aws_instance(a)
-            e = helper.generate_single_aws_instance_event(i, datetime.now())
-
-            from dateutil.parser import parse
-            e2 = eval(repr(e))
-
-            e.delete()
-            e2.save()
-
-        The pk/id will not actually be preserved if saved after deleting the
-        original instance, but that's okay because nothing should reference it.
-        The updated_date will always be overridden as "now" when saving.
-        """
+        """Get an unambiguous string representation."""
         subnet = (
             str(repr(self.subnet))
             if self.subnet is not None
@@ -464,12 +460,6 @@ class AwsInstanceEvent(BaseModel):
             if self.instance_type is not None
             else None
         )
-        machineimage_id = (
-            self.instance_event.machineimage_id
-            if self.instance_event.machineimage_id is not None
-            else None
-        )
-        occurred_at = repr(self.instance_event.occurred_at.isoformat())
         created_at = repr(self.created_at.isoformat())
         updated_at = repr(self.updated_at.isoformat())
 
@@ -478,10 +468,6 @@ class AwsInstanceEvent(BaseModel):
             f'id={self.id}, '
             f'subnet={subnet}, '
             f'instance_type={instance_type}, '
-            f'instance_id={self.instance_event.instance_id}, '
-            f'machineimage_id={machineimage_id}, '
-            f'event_type={repr(self.instance_event.event_type)}, '
-            f'occurred_at=parse({occurred_at}), '
             f'created_at=parse({created_at}), '
             f'updated_at=parse({updated_at})'
             f')'
