@@ -131,7 +131,7 @@ class CloudAccountSerializer(ModelSerializer):
         if cloud_type == 'aws':
             return self.create_aws_cloud_account(validated_data)
         else:
-            return NotImplementedError
+            raise NotImplementedError
 
     def update(self, instance, validated_data):
         """Update the instance with the name from validated_data."""
@@ -212,11 +212,11 @@ class AwsMachineImageSerializer(ModelSerializer):
 
     def create(self, validated_data):
         """Create an AwsMachineImage."""
-        return NotImplementedError
+        raise NotImplementedError
 
     def update(self, instance, validated_data):
         """Update an AwsMachineImage."""
-        return NotImplementedError
+        raise NotImplementedError
 
 
 class MachineImageSerializer(ModelSerializer):
@@ -328,11 +328,11 @@ class AwsInstanceSerializer(ModelSerializer):
 
     def create(self, validated_data):
         """Create a AwsInstance."""
-        return NotImplementedError
+        raise NotImplementedError
 
     def update(self, instance, validated_data):
         """Update a AwsInstance."""
-        return NotImplementedError
+        raise NotImplementedError
 
 
 class InstanceSerializer(ModelSerializer):
@@ -375,8 +375,8 @@ class InstanceSerializer(ModelSerializer):
 
     def create(self, validated_data):
         """Create a Instance."""
-        return NotImplementedError
+        raise NotImplementedError
 
     def update(self, instance, validated_data):
         """Update a Instance."""
-        return NotImplementedError
+        raise NotImplementedError
