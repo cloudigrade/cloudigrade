@@ -207,42 +207,22 @@ class MachineImage(BaseGenericModel):
 
     @property
     def cloud_image_id(self):
-        """
-        Get the external cloud provider's ID for this image.
-
-        This should be treated like an abstract method, but we can't actually
-        extend ABC here because it conflicts with Django's Meta class.
-        """
-        raise NotImplementedError
+        """Get the external cloud provider's ID for this image."""
+        return self.content_object.is_cloud_access
 
     @property
     def is_cloud_access(self):
-        """
-        Indicate if the image is from Cloud Access.
-
-        This should be treated like an abstract method, but we can't actually
-        extend ABC here because it conflicts with Django's Meta class.
-        """
-        raise NotImplementedError
+        """Indicate if the image is from Cloud Access."""
+        return self.content_object.is_cloud_access
 
     @property
     def is_marketplace(self):
-        """
-        Indicate if the image is from AWS Marketplace.
-
-        This should be treated like an abstract method, but we can't actually
-        extend ABC here because it conflicts with Django's Meta class.
-        """
-        raise NotImplementedError
+        """Indicate if the image is from AWS Marketplace."""
+        return self.content_object.is_marketplace
 
     @property
     def cloud_type(self):
-        """
-        Get the external cloud provider type.
-
-        This should be treated like an abstract method, but we can't actually
-        extend ABC here because it conflicts with Django's Meta class.
-        """
+        """Get the external cloud provider type."""
         return self.content_object.cloud_type
 
 
