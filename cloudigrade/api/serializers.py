@@ -52,7 +52,7 @@ class CloudAccountSerializer(ModelSerializer):
     aws_account_id = CharField(required=False)
 
     cloud_type = ChoiceField(
-        choices=['aws', 'gcp', 'azure'],
+        choices=['aws'],
         required=True
     )
     content_object = GenericRelatedField({
@@ -223,7 +223,7 @@ class MachineImageSerializer(ModelSerializer):
     """Serialize a customer AwsMachineImage for API v2."""
 
     cloud_type = ChoiceField(
-        choices=['aws', 'gcp', 'azure'],
+        choices=['aws'],
         required=False
     )
     content_object = GenericRelatedField({
@@ -339,7 +339,7 @@ class InstanceSerializer(ModelSerializer):
     """Serialize a customer AwsInstance for API v2."""
 
     cloud_type = ChoiceField(
-        choices=['aws', 'gcp', 'azure'],
+        choices=['aws'],
         required=False
     )
     content_object = GenericRelatedField({

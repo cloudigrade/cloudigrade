@@ -125,19 +125,18 @@ class AwsAccountSerializerTest(TransactionTestCase):
                 str(serializer.errors['account_arn'][0]),
             )
 
-    def test_create_fails_on_not_implemented_cloud_type(self):
-        """Test that creating account cloud_type azure is not implemented."""
+    def test_serialization_fails_on_unsupported_cloud_type(self):
+        """Test that account is not saved with unsupported cloud_type."""
         mock_request = Mock()
         mock_request.user = util_helper.generate_test_user()
         context = {'request': mock_request}
 
-        validated_data = {'cloud_type': 'azure', 'name': _faker.name()}
+        bad_type = _faker.name()
+        validated_data = {'cloud_type': bad_type, 'name': _faker.name()}
 
         with patch.object(
             aws, 'verify_account_access'
-        ) as mock_verify, patch.object(
-            aws.sts, 'boto3'
-        ) as mock_boto3, self.assertRaises(NotImplementedError):
+        ) as mock_verify, patch.object(aws.sts, 'boto3') as mock_boto3:
             mock_assume_role = mock_boto3.client.return_value.assume_role
             mock_assume_role.return_value = self.role
             mock_verify.return_value = True, []
@@ -145,8 +144,11 @@ class AwsAccountSerializerTest(TransactionTestCase):
             serializer = CloudAccountSerializer(
                 context=context, data=validated_data
             )
-            result = serializer.create(validated_data)
-            self.assertIsInstance(result, CloudAccount)
+            serializer.is_valid()
+            self.assertEquals(
+                f'"{bad_type}" is not a valid choice.',
+                str(serializer.errors['cloud_type'][0]),
+            )
 
     def test_create_succeeds_when_account_verified(self):
         """Test saving of a test ARN."""
