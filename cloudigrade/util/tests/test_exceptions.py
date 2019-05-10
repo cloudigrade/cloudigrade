@@ -8,6 +8,7 @@ from rest_framework.exceptions import APIException, NotFound
 from rest_framework.exceptions import PermissionDenied as DrfPermissionDenied
 
 from util import exceptions
+from util.exceptions import NotImplementedAPIException
 
 
 class ExceptionsTest(TestCase):
@@ -52,5 +53,18 @@ class ExceptionsTest(TestCase):
             response = exceptions.api_exception_handler(exc, mock_context)
             mock_call_args = mock_handler.call_args_list[0][0]
             self.assertIsInstance(mock_call_args[0], APIException)
+            self.assertEqual(mock_call_args[1], mock_context)
+            self.assertEqual(response, mock_handler.return_value)
+
+    def test_api_exception_handler_NotImplementedError_replaced(self):
+        """Assert NotImplementedError is replaced with our custom exception."""
+        mock_context = Mock()
+        exc = NotImplementedError()
+        with patch.object(exceptions, 'exception_handler') as mock_handler:
+            response = exceptions.api_exception_handler(exc, mock_context)
+            mock_call_args = mock_handler.call_args_list[0][0]
+            self.assertIsInstance(
+                mock_call_args[0], NotImplementedAPIException
+            )
             self.assertEqual(mock_call_args[1], mock_context)
             self.assertEqual(response, mock_handler.return_value)

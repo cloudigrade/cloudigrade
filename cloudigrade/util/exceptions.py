@@ -104,6 +104,12 @@ class NormalizeRunException(APIException):
     status_code = http.HTTPStatus.INTERNAL_SERVER_ERROR
 
 
+class NotImplementedAPIException(APIException):
+    """Raise when we encounter NotImplementedError."""
+
+    status_code = http.HTTPStatus.NOT_IMPLEMENTED
+
+
 def api_exception_handler(exc, context):
     """
     Log exception and return an appropriately formatted response.
@@ -118,6 +124,8 @@ def api_exception_handler(exc, context):
         exc = NotFound()
     elif isinstance(exc, PermissionDenied):
         exc = DrfPermissionDenied()
+    elif isinstance(exc, NotImplementedError):
+        exc = NotImplementedAPIException()
     elif not isinstance(exc, APIException):
         logger.exception(exc)
         exc = APIException()
