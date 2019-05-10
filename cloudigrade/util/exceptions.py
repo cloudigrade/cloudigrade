@@ -125,6 +125,7 @@ def api_exception_handler(exc, context):
     elif isinstance(exc, PermissionDenied):
         exc = DrfPermissionDenied()
     elif isinstance(exc, NotImplementedError):
+        logger.exception(exc)
         exc = NotImplementedAPIException()
     elif not isinstance(exc, APIException):
         logger.exception(exc)
