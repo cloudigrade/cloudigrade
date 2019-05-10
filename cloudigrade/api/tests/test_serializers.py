@@ -125,6 +125,29 @@ class AwsAccountSerializerTest(TransactionTestCase):
                 str(serializer.errors['account_arn'][0]),
             )
 
+    def test_create_fails_on_not_implemented_cloud_type(self):
+        """Test that creating account cloud_type azure is not implemented."""
+        mock_request = Mock()
+        mock_request.user = util_helper.generate_test_user()
+        context = {'request': mock_request}
+
+        validated_data = {'cloud_type': 'azure', 'name': _faker.name()}
+
+        with patch.object(
+            aws, 'verify_account_access'
+        ) as mock_verify, patch.object(
+            aws.sts, 'boto3'
+        ) as mock_boto3, self.assertRaises(NotImplementedError):
+            mock_assume_role = mock_boto3.client.return_value.assume_role
+            mock_assume_role.return_value = self.role
+            mock_verify.return_value = True, []
+
+            serializer = CloudAccountSerializer(
+                context=context, data=validated_data
+            )
+            result = serializer.create(validated_data)
+            self.assertIsInstance(result, CloudAccount)
+
     def test_create_succeeds_when_account_verified(self):
         """Test saving of a test ARN."""
         mock_request = Mock()
