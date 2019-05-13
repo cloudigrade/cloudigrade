@@ -6,14 +6,15 @@ import http
 import re
 import uuid
 from decimal import Decimal
+from unittest.mock import patch
 
 import faker
 from django.conf import settings
 from django.test import TestCase
 
-from api.models import (CLOUD_ACCESS_NAME_TOKEN, CloudAccount,
-                        Instance, InstanceEvent, MARKETPLACE_NAME_TOKEN,
-                        MachineImage)
+from api.models import (AwsEC2InstanceDefinition, CLOUD_ACCESS_NAME_TOKEN,
+                        CloudAccount, Instance, InstanceEvent,
+                        MARKETPLACE_NAME_TOKEN, MachineImage)
 from api.tests import helper
 from util.tests import helper as util_helper
 
@@ -339,3 +340,33 @@ class GenerateAwsImageTest(TestCase):
         self.assertIn(MARKETPLACE_NAME_TOKEN, image.name)
         self.assertFalse(image.content_object.is_cloud_access)
         self.assertTrue(image.content_object.is_marketplace)
+
+
+class GenerateAwsEc2InstanceDefinitionsTest(TestCase):
+    """generate_aws_ec2_definitions test case."""
+
+    def test_generate_aws_ec2_definitions_when_empty(self):
+        """Assert generation of AWS EC2 instance definitions."""
+        self.assertEqual(AwsEC2InstanceDefinition.objects.count(), 0)
+        helper.generate_aws_ec2_definitions()
+        self.assertEqual(
+            AwsEC2InstanceDefinition.objects.count(),
+            len(util_helper.SOME_EC2_INSTANCE_TYPES),
+        )
+
+    @patch.object(helper, 'logger')
+    def test_generate_aws_ec2_definitions_warns_when_not_empty(
+        self, mock_logger
+    ):
+        """Assert warning when generating definition that already exists."""
+        helper.generate_aws_ec2_definitions()
+        helper.generate_aws_ec2_definitions()
+        self.assertEqual(
+            AwsEC2InstanceDefinition.objects.count(),
+            len(util_helper.SOME_EC2_INSTANCE_TYPES),
+        )
+        # warning counts should match because each type was attempted twice.
+        self.assertEqual(
+            len(mock_logger.warning.mock_calls),
+            len(util_helper.SOME_EC2_INSTANCE_TYPES),
+        )

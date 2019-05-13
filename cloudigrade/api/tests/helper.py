@@ -14,7 +14,7 @@ from account import tasks
 from api.models import (AwsCloudAccount, AwsInstance, AwsInstanceEvent,
                         AwsMachineImage, CLOUD_ACCESS_NAME_TOKEN, CloudAccount,
                         Instance, InstanceEvent, MARKETPLACE_NAME_TOKEN,
-                        MachineImage, Run)
+                        MachineImage, Run, AwsEC2InstanceDefinition)
 from util import aws
 from util.tests import helper
 
@@ -495,3 +495,16 @@ def generate_single_run(instance, runtime,
             no_instance_type=no_instance_type
         )
     return run
+
+
+def generate_aws_ec2_definitions():
+    """Generate AwsEC2InstanceDefinitions from SOME_EC2_INSTANCE_TYPES."""
+    instance_types = helper.SOME_EC2_INSTANCE_TYPES
+
+    for name, instance in instance_types.items():
+        __, created = AwsEC2InstanceDefinition.objects.get_or_create(
+            instance_type=name,
+            defaults={'memory': instance['memory'], 'vcpu': instance['vcpu']},
+        )
+        if not created:
+            logger.warning('"%s" EC2 definition already exists', name)
