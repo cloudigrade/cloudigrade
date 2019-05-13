@@ -454,7 +454,7 @@ class AwsInstanceEvent(BaseModel):
         )
 
 
-class AwsEC2InstanceDefinitions(BaseModel):
+class AwsEC2InstanceDefinition(BaseModel):
     """
     Lookup table for AWS EC2 instance definitions.
 
