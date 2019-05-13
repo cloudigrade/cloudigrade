@@ -5,8 +5,8 @@ from django.core.management.base import BaseCommand
 from django.db import transaction
 from tqdm import tqdm
 
-from account.models import AwsInstance, AwsInstanceEvent, Run
-from account.reports import normalize_runs
+from api.models import Instance, InstanceEvent, Run
+from api.util import normalize_runs
 
 logger = logging.getLogger(__name__)
 
@@ -46,9 +46,9 @@ class Command(BaseCommand):
 
         runs_created = 0
         for instance in tqdm(
-            AwsInstance.objects.all(), desc='instances'
+            Instance.objects.all(), desc='instances'
         ):
-            events = AwsInstanceEvent.objects.filter(instance=instance)
+            events = InstanceEvent.objects.filter(instance=instance)
 
             normalized_runs = normalize_runs(events)
 
