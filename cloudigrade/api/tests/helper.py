@@ -11,10 +11,11 @@ from django.conf import settings
 from rest_framework.test import APIClient
 
 from account import tasks
-from api.models import (AwsCloudAccount, AwsInstance, AwsInstanceEvent,
-                        AwsMachineImage, CLOUD_ACCESS_NAME_TOKEN, CloudAccount,
-                        Instance, InstanceEvent, MARKETPLACE_NAME_TOKEN,
-                        MachineImage, Run, AwsEC2InstanceDefinition)
+from api.models import (AwsCloudAccount, AwsEC2InstanceDefinition, AwsInstance,
+                        AwsInstanceEvent, AwsMachineImage,
+                        CLOUD_ACCESS_NAME_TOKEN, CloudAccount, Instance,
+                        InstanceEvent, MARKETPLACE_NAME_TOKEN, MachineImage,
+                        Run)
 from util import aws
 from util.tests import helper
 
