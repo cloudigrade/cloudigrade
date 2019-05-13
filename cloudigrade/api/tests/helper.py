@@ -344,18 +344,24 @@ def generate_aws_instance_events(
     return events
 
 
-def generate_aws_image(owner_aws_account_id=None,
-                       is_encrypted=False,
-                       is_windows=False,
-                       ec2_ami_id=None,
-                       rhel_detected=False,
-                       openshift_detected=False,
-                       name=None,
-                       status=MachineImage.INSPECTED,
-                       rhel_challenged=False,
-                       openshift_challenged=False,
-                       is_cloud_access=False,
-                       is_marketplace=False):
+def generate_aws_image(
+    owner_aws_account_id=None,
+    is_encrypted=False,
+    is_windows=False,
+    ec2_ami_id=None,
+    rhel_detected=False,
+    rhel_detected_repos=False,
+    rhel_detected_certs=False,
+    rhel_detected_release_files=False,
+    rhel_detected_signed_packages=False,
+    openshift_detected=False,
+    name=None,
+    status=MachineImage.INSPECTED,
+    rhel_challenged=False,
+    openshift_challenged=False,
+    is_cloud_access=False,
+    is_marketplace=False,
+):
     """
     Generate an AwsMachineImage.
 
@@ -367,6 +373,14 @@ def generate_aws_image(owner_aws_account_id=None,
         is_windows (bool): Optional Indicates if AMI is Windows.
         ec2_ami_id (str): Optional EC2 AMI ID of the image
         rhel_detected (bool): Optional Indicates if RHEL is detected.
+        rhel_detected_repos (bool): Optional indicates if RHEL is detected via
+            enabled yum repos.
+        rhel_detected_certs (bool): Optional indicates if RHEL is detected via
+            product certificates.
+        rhel_detected_release_files (bool): Optional indicates if RHEL is
+            detected via release files.
+        rhel_detected_signed_packages (bool): Optional indicates if RHEL is
+            detected via signed packages.
         openshift_detected (bool): Optional Indicates if OpenShift is detected.
         name (str): Optional AMI name.
         status (str): Optional MachineImage inspection status.
@@ -387,11 +401,30 @@ def generate_aws_image(owner_aws_account_id=None,
         owner_aws_account_id = helper.generate_dummy_aws_account_id()
     if not ec2_ami_id:
         ec2_ami_id = helper.generate_dummy_image_id()
-    platform = AwsMachineImage.WINDOWS if is_windows else \
-        AwsMachineImage.NONE
+    platform = AwsMachineImage.WINDOWS if is_windows else AwsMachineImage.NONE
 
     if rhel_detected:
-        image_json = json.dumps({'rhel_release_files_found': rhel_detected})
+        if not any(
+            (
+                rhel_detected_certs,
+                rhel_detected_release_files,
+                rhel_detected_repos,
+                rhel_detected_signed_packages,
+            )
+        ):
+            image_json = json.dumps(
+                {'rhel_release_files_found': rhel_detected}
+            )
+        else:
+            image_json = json.dumps(
+                {
+                    'rhel_enabled_repos_found': rhel_detected_repos,
+                    'rhel_product_certs_found': rhel_detected_certs,
+                    'rhel_release_files_found': rhel_detected_release_files,
+                    'rhel_signed_packages_found':
+                        rhel_detected_signed_packages,
+                }
+            )
     else:
         image_json = None
 
@@ -416,7 +449,7 @@ def generate_aws_image(owner_aws_account_id=None,
         status=status,
         rhel_challenged=rhel_challenged,
         openshift_challenged=openshift_challenged,
-        content_object=aws_machine_image
+        content_object=aws_machine_image,
     )
 
     return machine_image

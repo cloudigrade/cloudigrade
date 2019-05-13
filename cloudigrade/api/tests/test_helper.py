@@ -3,6 +3,7 @@
 Because even test helpers should be tested!
 """
 import http
+import json
 import re
 import uuid
 from decimal import Decimal
@@ -296,6 +297,23 @@ class GenerateAwsImageTest(TestCase):
         self.assertTrue(image.openshift_challenged)
         self.assertFalse(image.content_object.is_cloud_access)
         self.assertFalse(image.content_object.is_marketplace)
+
+    def test_generate_aws_image_with_rhel_detected_details_args(self):
+        """Assert generation of an AwsMachineImage with RHEL JSON details."""
+        image = helper.generate_aws_image(
+            rhel_detected=True,
+            rhel_detected_repos=True,
+            rhel_detected_certs=True,
+            rhel_detected_release_files=True,
+            rhel_detected_signed_packages=True,
+        )
+
+        self.assertIsInstance(image, MachineImage)
+        inspection_data = json.loads(image.inspection_json)
+        self.assertTrue(inspection_data['rhel_enabled_repos_found'])
+        self.assertTrue(inspection_data['rhel_product_certs_found'])
+        self.assertTrue(inspection_data['rhel_release_files_found'])
+        self.assertTrue(inspection_data['rhel_signed_packages_found'])
 
     def test_generate_aws_image_with_is_cloud_access(self):
         """Assert generation of an AwsMachineImage with is_cloud_access."""
