@@ -1,25 +1,19 @@
-FROM centos:7
+FROM fedora:29
 
 WORKDIR /opt/cloudigrade
 RUN useradd -r cloudigrade
 
-RUN yum install centos-release-scl -y \
-    && yum-config-manager --enable centos-sclo-rh-testing \
-    && yum install nmap-ncat rh-python36 rh-python36-python-pip -y \
-    && yum clean all \
-    && rm -rf /var/cache/yum
-
 COPY requirements requirements
-RUN yum install libcurl-devel gcc -y \
-    && PYCURL_SSL_LIBRARY=nss scl enable rh-python36 \
-        'pip install -r requirements/prod.txt' \
-    && yum erase libcurl-devel gcc -y \
-    && yum autoremove -y \
-    && yum clean all \
-    && rm -rf /var/cache/yum
+RUN dnf update -y \
+    && dnf install procps-ng nmap-ncat libcurl-devel gcc openssl-devel python3-devel redhat-rpm-config -y \
+    && /usr/bin/pip3.7 install --upgrade "urllib3<1.25" \
+    && PYCURL_SSL_LIBRARY=openssl /usr/bin/pip3.7 install -r requirements/prod.txt \
+    && dnf erase libcurl-devel gcc python3-devel openssl-devel -y \
+    && dnf clean all \
+    && rm -rf /var/cache/dnf
 
 COPY cloudigrade .
 USER cloudigrade
 
-ENTRYPOINT ["scl", "enable", "rh-python36", "--", "gunicorn"]
+ENTRYPOINT ["gunicorn"]
 CMD ["-c","config/gunicorn.py","config.wsgi"]
