@@ -17,16 +17,18 @@ variables:
   DOCKER_DRIVER: overlay2
 
 ### TEST STAGE ###
-py36:
+py37:
   stage: test
   image: registry.gitlab.com/cloudigrade/images/build-container:latest
+  variables:
+    PYCURL_SSL_LIBRARY: openssl
   except:
     - chat
     - trigger
   before_script:
     - pip install tox codecov
   script:
-    - tox -e py36
+    - tox -e py37
     - codecov
 
 flake8:

@@ -72,15 +72,18 @@ def yield_messages_from_queue(queue_url, max_number=10, wait_time=10):
     messages_received = 0
     try:
         while messages_received < max_number:
-            messages = sqs_queue.receive_messages(
-                MaxNumberOfMessages=1,
-                WaitTimeSeconds=wait_time,
-            )
-            if not messages:
-                break
-            for message in messages:
-                messages_received += 1
-                yield message
+            try:
+                messages = sqs_queue.receive_messages(
+                    MaxNumberOfMessages=1,
+                    WaitTimeSeconds=wait_time,
+                )
+                if not messages:
+                    break
+                for message in messages:
+                    messages_received += 1
+                    yield message
+            except StopIteration:
+                return
     except ClientError as e:
         if e.response['Error']['Code'].endswith('.NonExistentQueue'):
             logger.warning(_('Queue does not yet exist at %s'), queue_url)

@@ -53,6 +53,21 @@ class UtilAwsSqsTest(TestCase):
 
             self.assertEqual(yielded_messages, available_messages)
 
+    def test_yield_messages_from_queue_no_messages(self):
+        """Assert that yield_messages_from_queue breaks when no messages."""
+        queue_url = _faker.url()
+
+        with patch.object(sqs, 'boto3') as mock_boto3:
+            mock_resource = mock_boto3.resource.return_value
+            mock_queue = mock_resource.Queue.return_value
+            mock_queue.receive_messages.side_effect = [None]
+
+            yielded_messages = []
+            for message in sqs.yield_messages_from_queue(queue_url):
+                yielded_messages.append(message)
+
+            self.assertEqual(yielded_messages, [])
+
     def test_yield_messages_from_queue_max_number_stop(self):
         """Assert that yield_messages_from_queue yields messages."""
         queue_url = _faker.url()
