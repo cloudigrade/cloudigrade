@@ -395,8 +395,10 @@ def render(data):
 if __name__ == '__main__':
     empty_check()
     api_hander = DocsApiHandler()
-    responses = api_hander.gather_api_responses()
-    api_hander.cleanup()
+    try:
+        responses = api_hander.gather_api_responses()
+    finally:
+        api_hander.cleanup()
     output = render(responses)
     output = '\n'.join((line.rstrip() for line in output.split('\n')))
     print(output)
