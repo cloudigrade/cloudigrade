@@ -2,10 +2,14 @@
 import collections
 import itertools
 import logging
+from datetime import datetime, timedelta
 
+from dateutil import tz
+from django.db.models import Q
 from django.utils.translation import gettext as _
 
-from api.models import AwsEC2InstanceDefinition, AwsInstanceEvent, Instance
+from api.models import (AwsEC2InstanceDefinition, AwsInstanceEvent, Instance,
+                        Run)
 
 logger = logging.getLogger(__name__)
 
@@ -197,3 +201,74 @@ def normalize_runs(events):  # noqa: C901
             normalized_runs.append(run)
 
     return normalized_runs
+
+
+def max_concurrent_usage(day, user_id=None, cloud_account_id=None):
+    """
+    Find maximum concurrent usage of RHEL instances in the given parameters.
+
+    Args:
+        day (datetime.date): the day during which we are measuring usage
+        user_id (int): optional filter on user
+        cloud_account_id (int): optional filter on cloud account
+
+    Returns:
+        dict containing the values of maximum concurrent number of instances,
+        vcpu, and memory encountered at any point during the day.
+
+    """
+    queryset = Run.objects.all()
+    if user_id:
+        queryset = queryset.filter(instance__cloud_account__user__id=user_id)
+    if cloud_account_id:
+        queryset = queryset.filter(
+            instance__cloud_account__id=cloud_account_id
+        )
+    start = datetime(day.year, day.month, day.day, 0, 0, 0, tzinfo=tz.tzutc())
+    end = start + timedelta(days=1)
+
+    # We want to filter to Runs that have:
+    # - started before (not inclusive) our end time
+    # - ended at or after our start time (inclusive) or have never stopped
+    runs = queryset.filter(
+        Q(end_time__isnull=True) | Q(end_time__gte=start), start_time__lt=end,
+    ).prefetch_related('machineimage')
+
+    # Now that we have the Runs, we need to extract the start and stop times
+    # from each Run, put them in a list, and order them chronologically. If we
+    # ever want to know about concurrency for things other than RHEL, we would
+    # repeat the following pattern for each other filter/condition.
+    rhel_on_offs = []
+    for run in runs:
+        if not run.machineimage.rhel:
+            continue
+        rhel_on_offs.append((run.start_time, True, run.vcpu, run.memory))
+        if run.end_time:
+            rhel_on_offs.append((run.end_time, False, run.vcpu, run.memory))
+
+    rhel_on_offs = sorted(rhel_on_offs, key=lambda r: r[0])
+
+    # Now that we have the start and stop times ordered, we can easily find the
+    # maximum concurrency by walking forward in time and counting up.
+    current_instances, max_instances = 0, 0
+    current_vcpu, max_vcpu = 0, 0
+    current_memory, max_memory = 0.0, 0.0
+    for __, is_start, vcpu, memory in rhel_on_offs:
+        if is_start:
+            current_instances += 1
+            current_vcpu += vcpu
+            current_memory += memory
+        else:
+            current_instances -= 1
+            current_vcpu -= vcpu
+            current_memory -= memory
+        max_instances = max(current_instances, max_instances)
+        max_vcpu = max(current_vcpu, max_vcpu)
+        max_memory = max(current_memory, max_memory)
+
+    return {
+        'date': day,
+        'instances': max_instances,
+        'vcpu': max_vcpu,
+        'memory': max_memory,
+    }
