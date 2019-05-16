@@ -193,7 +193,7 @@ class DocsApiHandler(object):
             data={
                 'account_arn': another_arn,
                 'name': 'but this account already exists',
-                'cloud_type': 'AwsAccount',
+                'cloud_type': 'aws',
             }
         )
         assert_status(response, 400)
@@ -222,7 +222,6 @@ class DocsApiHandler(object):
             customer_account.id,
             data={
                 'name': 'name updated using PATCH',
-                'resourcetype': 'AwsAccount',
             },
             api_root=api_root_v2
         )
@@ -234,7 +233,7 @@ class DocsApiHandler(object):
             data={
                 'name': 'name updated using PUT',
                 'account_arn': another_arn,
-                'resourcetype': 'AwsAccount',
+                'cloud_type': 'aws',
             },
             api_root=api_root_v2
         )
@@ -246,7 +245,6 @@ class DocsApiHandler(object):
             customer_account.id,
             data={
                 'account_arn': 'arn:aws:iam::999999999999:role/role-for-cloudigrade',
-                'resourcetype': 'AwsAccount',
             },
             api_root=api_root_v2
         )
@@ -324,7 +322,7 @@ class DocsApiHandler(object):
         # Issuing challenges/flags
         response = self.superuser_client.patch_images(
             self.images[0].id,
-            data={'rhel_challenged': True, 'resourcetype': 'AwsMachineImage'},
+            data={'rhel_challenged': True},
             api_root=api_root_v2
         )
         assert_status(response, 200)
@@ -332,7 +330,7 @@ class DocsApiHandler(object):
 
         response = self.superuser_client.patch_images(
             self.images[0].id,
-            data={'rhel_challenged': False, 'resourcetype': 'AwsMachineImage'},
+            data={'rhel_challenged': False},
             api_root=api_root_v2
         )
         assert_status(response, 200)
@@ -343,7 +341,6 @@ class DocsApiHandler(object):
             data={
                 'rhel_challenged': True,
                 'openshift_challenged': True,
-                'resourcetype': 'AwsMachineImage',
             },
             api_root=api_root_v2
         )
