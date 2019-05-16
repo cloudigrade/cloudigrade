@@ -19,7 +19,9 @@ from util.tests.helper import get_test_user
 from util import filters
 
 from api import models
+from api.models import InstanceEvent, Run
 from api.tests import helper as account_helper
+from api.util import normalize_runs
 from util.tests import helper as util_helper
 
 
@@ -124,6 +126,24 @@ class DocsApiHandler(object):
                     ],
                 )
             )
+
+        # Build the runs for the created events.
+        # Note: this crude and *direct* implementation of Run-saving should be
+        # replaced as we continue porting pilot functionality and (eventually)
+        # better general-purpose Run-handling functions materialize.
+        normalized_runs = normalize_runs(InstanceEvent.objects.all())
+        for normalized_run in normalized_runs:
+            run = Run(
+                start_time=normalized_run.start_time,
+                end_time=normalized_run.end_time,
+                machineimage_id=normalized_run.image_id,
+                instance_id=normalized_run.instance_id,
+                instance_type=normalized_run.instance_type,
+                memory=normalized_run.instance_memory,
+                vcpu=normalized_run.instance_vcpu,
+            )
+            run.save()
+
 
         # Force all images to have RHEL detected and OCP challenged.
         self.images = list(
@@ -279,7 +299,7 @@ class DocsApiHandler(object):
 
         # Filtering instances on running
         response = self.superuser_client.list_instances(
-            data={'running': True},
+            data={'running_since': self.now},
             api_root=api_root_v2
         )
         assert_status(response, 200)
