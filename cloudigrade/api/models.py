@@ -442,7 +442,7 @@ class Instance(BaseGenericModel):
 class AwsInstance(BaseModel):
     """Amazon Web Services EC2 instance model."""
 
-    instance = GenericRelation(Instance)
+    instance = GenericRelation(Instance, related_query_name='aws_instance')
     ec2_instance_id = models.CharField(
         max_length=256,
         unique=True,
@@ -611,4 +611,15 @@ class Run(BaseModel):
         default=0,
         blank=True,
         null=True
+    )
+
+
+class MachineImageInspectionStart(BaseModel):
+    """Model to track any time an image starts inspection."""
+
+    machineimage = models.ForeignKey(
+        MachineImage,
+        on_delete=models.CASCADE,
+        db_index=True,
+        null=False,
     )
