@@ -88,6 +88,18 @@ Once you have an environment set up, install our Python package requirements:
     pip install -U pip wheel tox
     pip install -r requirements/local.txt
 
+If the installation fails with:
+
+.. code-block:: sh
+
+    ERROR: botocore 1.12.151 has requirement urllib3<1.25,>=1.20; python_version >= "3.4", but you'll have urllib3 1.25.2 which is incompatible.
+
+Try downgrading the urllib to a compatible version:
+
+.. code-block:: sh
+
+    pip install --upgrade "urllib3<1.25"
+
 If you plan to run cloudigrade or Celery locally on macOS, the required ``pycurl`` package may fail to install or may install improperly despite ``pip install`` appearing to complete successfully. You can verify that ``pycurl`` is installed correctly by simply importing it in a Python shell like this:
 
 .. code-block:: sh
