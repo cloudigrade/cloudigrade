@@ -19,7 +19,7 @@ variables:
 ### TEST STAGE ###
 py36:
   stage: test
-  image: registry.gitlab.com/cloudigrade/images/build-container:latest
+  image: registry.gitlab.com/cloudigrade/images/build-container:python3.6
   except:
     - chat
     - trigger
@@ -31,7 +31,7 @@ py36:
 
 flake8:
   stage: test
-  image: registry.gitlab.com/cloudigrade/images/build-container:latest
+  image: registry.gitlab.com/cloudigrade/images/build-container:python3.6
   except:
     - chat
     - trigger
