@@ -1164,8 +1164,8 @@ class AccountCeleryTaskTest(TestCase):
 
         mock_image_objects.get.assert_called_once_with(ec2_ami_id=mock_ami_id)
 
-        self.assertEqual(mock_image_objects.status.return_value,
-                         mock_image_objects.INSPECTING.return_value)
+        self.assertEqual(mock_image_objects.status,
+                         MachineImage.INSPECTING)
 
         mock_ecs.list_container_instances.assert_called_once_with(
             cluster=settings.HOUNDIGRADE_ECS_CLUSTER_NAME)

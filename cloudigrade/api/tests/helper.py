@@ -11,11 +11,13 @@ from django.conf import settings
 from rest_framework.test import APIClient
 
 from account import tasks
+from api.cloudtrail import CloudTrailInstanceEvent
 from api.models import (AwsCloudAccount, AwsEC2InstanceDefinition, AwsInstance,
                         AwsInstanceEvent, AwsMachineImage,
                         CLOUD_ACCESS_NAME_TOKEN, CloudAccount, Instance,
                         InstanceEvent, MARKETPLACE_NAME_TOKEN, MachineImage,
                         Run)
+from api.util import recalculate_runs
 from util import aws
 from util.tests import helper
 
@@ -344,6 +346,57 @@ def generate_aws_instance_events(
     return events
 
 
+def generate_cloudtrail_instance_event(
+        instance,
+        occurred_at,
+        event_type=None,
+        instance_type=None,
+        subnet=None,
+        no_instance_type=False,
+        no_subnet=False,
+):
+    """
+    Generate a single CloudTrailInstanceEvent for testing.
+
+    Any optional arguments not provided will be randomly generated.
+
+    Args:
+        instance (Instance): instance that owns the events.
+        occurred_at (datetime): Time periods the instance is powered on.
+        instance_type (str): Optional AWS instance type.
+        subnet (str): Optional subnet ID where instance runs.
+        no_instance_type (bool): If true, instance_type is not set
+
+    Returns:
+        CloudTrailInstanceEvent: The created CloudTrailInstanceEvent.
+
+    """
+    if no_instance_type:
+        instance_type = None
+    elif instance_type is None:
+        instance_type = helper.get_random_instance_type()
+
+    if no_subnet:
+        subnet = None
+    elif subnet is None:
+        subnet = helper.generate_dummy_subnet_id()
+
+    if event_type is None:
+        event_type = InstanceEvent.TYPE.power_off
+
+    event = CloudTrailInstanceEvent(
+        occurred_at=occurred_at,
+        event_type=event_type,
+        instance_type=instance_type,
+        aws_account_id=instance.cloud_account.id,
+        region=instance.machine_image.content_object.region,
+        ec2_instance_id=instance.content_object.ec2_instance_id,
+        ec2_ami_id=instance.machine_image.content_object.ec2_ami_id,
+        subnet_id=subnet,
+    )
+    return event
+
+
 def generate_aws_image(
     owner_aws_account_id=None,
     is_encrypted=False,
@@ -455,26 +508,6 @@ def generate_aws_image(
     return machine_image
 
 
-def generate_runs(instance, runtimes, **kwargs):
-    """
-    Generate multiple Runs for testing.
-
-    Args:
-        instance (Instance): instance that was ran.
-        runtimes (list(tuple(datetime.datetime, datetime.datetime))):
-            times the runs occurred.
-        **kwargs: optional arguments to pass to generate_single_run()
-    Returns:
-        list(Run): A list of created Run.
-
-    """
-    runs = []
-    for runtime in runtimes:
-        runs.append(generate_single_run(instance, runtime, **kwargs))
-
-    return runs
-
-
 def generate_single_run(instance, runtime,
                         image=None, no_image=False,
                         instance_type=None,
@@ -542,3 +575,244 @@ def generate_aws_ec2_definitions():
         )
         if not created:
             logger.warning('"%s" EC2 definition already exists', name)
+
+
+def generate_cloudtrail_record(aws_account_id, event_name, event_time=None,
+                               region=None, request_parameters=None,
+                               response_elements=None):
+    """
+    Generate an example CloudTrail log's "Record" dict.
+
+    This function needs something in request_parameters or response_elements to
+    produce actually meaningful output, but this is not strictly required.
+
+    Args:
+        aws_account_id (int): The AWS account ID.
+        event_name (str): optional AWS event name.
+        event_time (datetime.datetime): optional time when the even occurred.
+        region (str): optional AWS region in which the event occurred.
+        request_parameters (dict): optional data for 'requestParameters' key.
+        response_elements (dict): optional data for 'responseElements' key.
+
+    Returns:
+        dict: Data that looks like a CloudTrail log Record.
+
+    """
+    if not region:
+        region = helper.get_random_region()
+    if not event_time:
+        event_time = helper.utc_dt(2018, 1, 1, 0, 0, 0)
+    if not request_parameters:
+        request_parameters = {}
+    if not response_elements:
+        response_elements = {}
+
+    record = {
+        'awsRegion': region,
+        'eventName': event_name,
+        'eventSource': 'ec2.amazonaws.com',
+        'eventTime': event_time.strftime('%Y-%m-%dT%H:%M:%SZ'),
+        'requestParameters': request_parameters,
+        'responseElements': response_elements,
+        'userIdentity': {
+            'accountId': int(aws_account_id)
+        }
+    }
+    return record
+
+
+def generate_mock_cloudtrail_sqs_message(bucket_name='analyzer-test-bucket',
+                                         object_key='path/to/file.json.gz',
+                                         receipt_handle=None,
+                                         message_id=None):
+    """
+    Generate a Mock object that behaves like a CloudTrail SQS message.
+
+    Args:
+        bucket_name (str): optional name of the S3 bucket
+        object_key (str): optional path to the S3 object
+        receipt_handle (str): optional SQS message receipt handle
+        message_id (str): id of the message
+
+    Returns:
+        Mock: populated to look and behave like a CloudTrail SQS message
+
+    """
+    if not receipt_handle:
+        receipt_handle = str(uuid.uuid4())
+
+    if not message_id:
+        message_id = str(uuid.uuid4())
+
+    mock_sqs_message_body = {
+        'Records': [
+            {
+                's3': {
+                    'bucket': {
+                        'name': bucket_name,
+                    },
+                    'object': {
+                        'key': object_key,
+                    },
+                },
+            }
+        ]
+    }
+    mock_message = helper.generate_mock_sqs_message(
+        message_id,
+        json.dumps(mock_sqs_message_body),
+        receipt_handle
+    )
+    return mock_message
+
+
+def generate_cloudtrail_instances_record(
+    aws_account_id,
+    instance_ids,
+    event_name='RunInstances',
+    event_time=None,
+    region=None,
+    instance_type='t1.snail',
+    image_id=None,
+    subnet_id='subnet-12345678',
+):
+    """
+    Generate an example CloudTrail log's "Record" dict for instances event.
+
+    Args:
+        aws_account_id (int): The AWS account ID.
+        instance_ids (list[str]): The EC2 instance IDs relevant to the event.
+        event_name (str): optional AWS event name.
+        event_time (datetime.datetime): optional time when the even occurred.
+        region (str): optional AWS region in which the event occurred.
+        instance_type (str): optional AWS instance type. Only used by
+            RunInstances and the same value is effective for all instances.
+        image_id (str): optional AWS AMI ID. Only used by RunInstances and the
+            same value is effective for all instances.
+        subnet_id (str): optional AWS EC2 subnet ID.
+
+    Returns:
+        dict: Data that looks like a CloudTrail log Record.
+
+    """
+    if event_name == 'RunInstances':
+        request_parameters = {
+            'instanceType': instance_type, 'imageId': image_id
+        }
+
+        response_elements = {
+            'instancesSet': {
+                'items': [
+                    {
+                        'instanceId': instance_id,
+                        'instanceType': instance_type,
+                        'imageId': image_id,
+                        'subnetId': subnet_id,
+                    }
+                    for instance_id in instance_ids
+                ]
+            },
+        }
+    else:
+        request_parameters = {}
+        response_elements = {
+            'instancesSet': {
+                'items': [
+                    {'instanceId': instance_id} for instance_id in instance_ids
+                ]
+            },
+        }
+
+    record = generate_cloudtrail_record(
+        aws_account_id,
+        event_name,
+        event_time,
+        region,
+        request_parameters=request_parameters,
+        response_elements=response_elements,
+    )
+    return record
+
+
+def generate_cloudtrail_tag_set_record(aws_account_id, image_ids, tag_names,
+                                       event_name='CreateTags',
+                                       event_time=None, region=None):
+    """
+    Generate an example CloudTrail log's "Record" dict for tag setting events.
+
+    Args:
+        aws_account_id (int): The AWS account ID.
+        image_ids (list[str]): The EC2 AMI IDs whose tags are changing.
+        tag_names (list[str]): List of tags
+        event_name (str): AWS event name.
+        event_time (datetime.datetime): optional time when the even occurred.
+        region (str): optional AWS region in which the event occurred.
+
+    Returns:
+        dict: Data that looks like a CloudTrail log Record.
+
+    """
+    request_parameters = {
+        'resourcesSet': {
+            'items': [
+                {'resourceId': image_id}
+                for image_id in image_ids
+            ]
+        },
+        'tagSet': {
+            'items': [
+                {'key': tag_name, 'value': tag_name}
+                for tag_name in tag_names
+            ]
+        },
+    }
+    record = generate_cloudtrail_record(
+        aws_account_id, event_name, event_time, region,
+        request_parameters=request_parameters)
+    return record
+
+
+def generate_cloudtrail_modify_instance_record(
+    aws_account_id,
+    instance_id,
+    instance_type='t2.micro',
+    event_time=None,
+    region=None,
+):
+    """
+    Generate an example CloudTrail "ModifyInstanceAttribute" record dict.
+
+    Args:
+        aws_account_id (int): The AWS account ID.
+        instance_id (str): The EC2 instance ID relevant to the event.
+        instance_type (str): New instance type.
+        event_time (datetime.datetime): optional time when the even occurred.
+        region (str): optional AWS region in which the event occurred.
+
+    Returns:
+        dict: Data that looks like a CloudTrail log Record.
+
+    """
+    event_name = 'ModifyInstanceAttribute'
+    request_parameters = {
+        'instanceId': instance_id,
+        'instanceType': {
+            'value': instance_type
+        }
+    }
+    record = generate_cloudtrail_record(
+        aws_account_id, event_name, event_time, region,
+        request_parameters=request_parameters)
+    return record
+
+
+def recalculate_runs_from_events(events):
+    """
+    Run recalculate_runs on multiple events.
+
+    Args:
+        events (list(model.InstanceEvents)): events to recalculate
+
+    """
+    for event in events:
+        recalculate_runs(event)

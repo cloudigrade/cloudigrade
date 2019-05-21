@@ -5,17 +5,18 @@ import logging
 import math
 import uuid
 from datetime import datetime, timedelta
-from dateutil import tz
 from decimal import Decimal
 
 import boto3
 import jsonpickle
 from botocore.exceptions import ClientError
+from dateutil import tz
 from django.conf import settings
 from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import gettext as _
+from rest_framework.serializers import ValidationError
 
 from account import AWS_PROVIDER_STRING
 from api.models import (
@@ -56,10 +57,10 @@ def get_last_known_instance_type(instance, before_date):
     """
     # raise Exception
     event = (
-        AwsInstanceEvent.objects.filter(
-            instance_event__instance=instance,
-            instance_event__occurred_at__lte=before_date,
-            instance_event__instance_type__isnull=False,
+        InstanceEvent.objects.filter(
+            instance=instance,
+            occurred_at__lte=before_date,
+            aws_instance_event__instance_type__isnull=False,
         )
         .order_by('-occurred_at')
         .first()
@@ -70,7 +71,7 @@ def get_last_known_instance_type(instance, before_date):
             {'instance': instance, 'before_date': before_date},
         )
         return None
-    return event.instance_type
+    return event.content_object.instance_type
 
 
 NormalizedRun = collections.namedtuple(
@@ -286,6 +287,7 @@ def max_concurrent_usage(day, user_id=None, cloud_account_id=None):
         'memory': max_memory,
     }
 
+
 def create_new_machine_images(session, instances_data):
     """
     Create AwsMachineImage objects that have not been seen before.
@@ -445,7 +447,7 @@ def save_instance(account, instance_data, region):
     already been created and saved.
 
     Args:
-        account (AwsAccount): The account that owns the instance that spawned
+        account (CloudAccount): The account that owns the instance that spawned
             the data for this Instance.
         instance_data (dict): Dictionary containing instance information.
         region (str): AWS Region.
@@ -549,11 +551,11 @@ def save_instance_events(awsinstance, instance_data, events=None):
             # described instance and use that on the event.
             if (
                     have_instance_type is False and
-                    e['event_type'] == AwsInstanceEvent.TYPE.power_on and
+                    e['event_type'] == InstanceEvent.TYPE.power_on and
                     e['instance_type'] is None and
                     not AwsInstanceEvent.objects.filter(
-                        instance=awsinstance,
-                        occurred_at__lte=e['occurred_at'],
+                        instance_event__instance__aws_instance=awsinstance,
+                        instance_event__occurred_at__lte=e['occurred_at'],
                         instance_type__isnull=False,
                     ).exists()
             ):
@@ -578,9 +580,9 @@ def save_instance_events(awsinstance, instance_data, events=None):
                 subnet=e['subnet'], instance_type=e['instance_type']
             )
             awsevent.save()
-
+            instance = awsinstance.instance.get()
             event = InstanceEvent(
-                instance=awsinstance,
+                instance=instance,
                 event_type=e['event_type'],
                 occurred_at=e['occurred_at'],
                 content_object=awsevent,
@@ -732,7 +734,7 @@ def start_image_inspection(arn, ami_id, region):
         )
         machine_image.status = machine_image.ERROR
         machine_image.save()
-        return ami.machine
+        return machine_image
 
     MachineImageInspectionStart.objects.create(machineimage=machine_image)
 
@@ -875,3 +877,25 @@ def _sqs_unwrap_message(sqs_message):
         # Yes, the response has Body, not MessageBody.
         sqs_message['Body']
     )
+
+
+def convert_param_to_int(name, value):
+    """Check if a value is convertible to int.
+
+    Args:
+        name (str): The field name being validated
+        value: The value to convert to int
+
+    Returns:
+        int: The int value
+    Raises:
+        ValidationError if value not convertable to an int
+
+    """
+    try:
+        return int(value)
+    except ValueError:
+        error = {
+            name: [_('{} must be an integer.'.format(name))]
+        }
+        raise ValidationError(error)

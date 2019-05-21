@@ -311,7 +311,8 @@ class AwsMachineImage(BaseModel):
         (NONE, 'None'),
         (WINDOWS, 'Windows'),
     )
-    machine_image = GenericRelation(MachineImage)
+    machine_image = GenericRelation(MachineImage,
+                                    related_query_name='aws_machine_image')
     ec2_ami_id = models.CharField(
         max_length=256,
         unique=True,
@@ -515,7 +516,8 @@ class InstanceEvent(BaseGenericModel):
 class AwsInstanceEvent(BaseModel):
     """Event model for an event triggered by an AwsInstance."""
 
-    instance_event = GenericRelation(InstanceEvent)
+    instance_event = GenericRelation(InstanceEvent,
+                                     related_query_name='aws_instance_event')
     subnet = models.CharField(max_length=256, null=True, blank=True)
     instance_type = models.CharField(max_length=64, null=True, blank=True)
 
