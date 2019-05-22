@@ -1,2 +1,0 @@
-seqdiag
-Jinja2==2.10
