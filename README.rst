@@ -65,42 +65,20 @@ We recommend developing on the latest version of Fedora. Follow the following co
 Python virtual environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-We strongly encourage all developers to use a virtual environment to isolate **cloudigrade**\ 's Python package dependencies. You may use whatever tooling you feel confortable with, but here are some initial notes for setting up with `virtualenv <https://pypi.python.org/pypi/virtualenv>`_ and `virtualenvwrapper <https://pypi.python.org/pypi/virtualenvwrapper>`_:
+We strongly encourage all developers to use a virtual environment to isolate **cloudigrade**\ 's Python package dependencies. You may use whatever tooling you feel confortable with, but here are some initial notes for setting up with `pipenv <https://pypi.org/project/pipenv/>`_:
 
 .. code-block:: bash
 
-    # install virtualenv and virtualenvwrapper
-    pip install -U pip
-    pip install -U virtualenvwrapper virtualenv
-    echo "source \"$(brew --prefix)/bin/virtualenvwrapper.sh\"" >> ~/.bash_profile
-    source $(brew --prefix)/bin/virtualenvwrapper.sh
+    # install pipenv
+    pip install pipenv
 
-    # create the environment
-    mkvirtualenv cloudigrade
-
-    # activate the environment
-    workon cloudigrade
-
-Once you have an environment set up, install our Python package requirements:
+Once you have pipenv installed, install our Python package requirements:
 
 .. code-block:: sh
 
-    pip install -U pip wheel tox
-    pip install -r requirements/local.txt
+    pipenv sync --dev
 
-If the installation fails with:
-
-.. code-block:: sh
-
-    ERROR: botocore 1.12.151 has requirement urllib3<1.25,>=1.20; python_version >= "3.4", but you'll have urllib3 1.25.2 which is incompatible.
-
-Try downgrading the urllib to a compatible version:
-
-.. code-block:: sh
-
-    pip install --upgrade "urllib3<1.25"
-
-If you plan to run cloudigrade or Celery locally on macOS, the required ``pycurl`` package may fail to install or may install improperly despite ``pip install`` appearing to complete successfully. You can verify that ``pycurl`` is installed correctly by simply importing it in a Python shell like this:
+If you plan to run cloudigrade or Celery locally on macOS, the required ``pycurl`` package may fail to install or may install improperly despite ``pipenv sync`` appearing to complete successfully. You can verify that ``pycurl`` is installed correctly by simply importing it in a Python shell like this:
 
 .. code-block:: sh
 
@@ -111,19 +89,22 @@ If you see no output, everything is okay! Otherwise (e.g. "libcurl link-time ssl
 .. code-block:: sh
 
    brew install openssl
-   pip uninstall pycurl
-   PYCURL_SSL_LIBRARY=openssl pip --no-cache-dir install --install-option="--with-openssl" --install-option="--openssl-dir=$(brew --prefix)/opt/openssl" pycurl
+   export LDFLAGS="-L/usr/local/opt/openssl/lib -L/usr/local/lib -L/usr/local/opt/expat/lib"
+   export CFLAGS="-I/usr/local/opt/openssl/include/ -I/usr/local/include -I/usr/local/opt/expat/include"
+   export CPPFLAGS="-I/usr/local/opt/openssl/include/ -I/usr/local/include -I/usr/local/opt/expat/include"
+   PYCURL_SSL_LIBRARY=openssl pipenv install pycurl
 
 If using a system that has dnf, try the following commands:
 
 .. code-block:: sh
 
    sudo dnf install openssl libcurl-devel
-   pip uninstall pycurl
    export PYCURL_SSL_LIBRARY=openssl
-   pip install --no-cache-dir --install-option="--with-openssl" pycurl
+   pipenv install pycurl
 
 Try the aforementioned import commands again, and all should be good. If not, kindly reach out to another cloudigrade developer to seek assistance!
+
+After finishing the installation of dependencies you can grab a shell that uses the virtual environment by calling ``pipenv shell``.
 
 
 Configure AWS account credentials
