@@ -1,18 +1,22 @@
 """DRF API serializers for the account app v2."""
+from datetime import timedelta
+
 from botocore.exceptions import ClientError
 from django.db.transaction import on_commit
 from django.utils.translation import gettext as _
 from generic_relations.relations import GenericRelatedField
+from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import (BooleanField, CharField,
                                    ChoiceField, Field, IntegerField)
 from rest_framework.relations import HyperlinkedIdentityField
-from rest_framework.serializers import ModelSerializer
+from rest_framework.serializers import ModelSerializer, Serializer
 
 from api import tasks
 from api.models import (AwsCloudAccount, AwsInstance,
                         AwsMachineImage, CloudAccount, Instance,
                         MachineImage)
+from api.util import max_concurrent_usage
 from util import aws
 from util.exceptions import InvalidArn
 
@@ -432,3 +436,59 @@ class InstanceSerializer(ModelSerializer):
     def update(self, instance, validated_data):
         """Update a Instance."""
         raise NotImplementedError
+
+
+class DailyConcurrentUsageDummyQueryset(object):
+    """Dummy queryset for getting days with their max concurrent usage."""
+
+    def __init__(
+        self,
+        start_date=None,
+        end_date=None,
+        user_id=None,
+        cloud_account_id=None,
+    ):
+        """Initialize parameters."""
+        self.start_date = start_date
+        self.end_date = end_date
+        self.user_id = user_id
+        self.cloud_account_id = cloud_account_id
+        self._days = None
+
+    @property
+    def days(self):
+        """Get all days."""
+        if self._days is None:
+            days = []
+            current = self.start_date
+            delta_day = timedelta(days=1)
+            while current < self.end_date:
+                days.append(current)
+                current += delta_day
+            self._days = days
+        return self._days
+
+    def count(self):
+        """Count the available days."""
+        return len(self.days)
+
+    def __getitem__(self, index):
+        """Get a specific day."""
+        days = self.days[index]
+        results = []
+        for day in days:
+            result = max_concurrent_usage(
+                day, self.user_id, self.cloud_account_id
+            )
+            results.append(result)
+
+        return results
+
+
+class DailyConcurrentUsageSerializer(Serializer):
+    """Serialize a report of daily RHEL concurrency over time for the API."""
+
+    date = serializers.DateField(required=True)
+    instances = serializers.IntegerField(required=True)
+    vcpu = serializers.FloatField(required=True)
+    memory = serializers.FloatField(required=True)
