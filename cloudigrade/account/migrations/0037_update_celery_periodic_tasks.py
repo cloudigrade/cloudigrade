@@ -32,12 +32,20 @@ def update_celery_periodic_tasks(apps, schema_editor):
     for old_name, new_name in periodic_task_names:
         try:
             task = PeriodicTask.objects.get(name=old_name)
-            task.name = new_name
-            task.save()
         except PeriodicTask.DoesNotExist:
             # This can happen if beat has never run with old configs, such as
             # with a fresh DB or when running tests. If so, nothing to do!
-            pass
+            continue
+
+        if PeriodicTask.objects.filter(name=new_name).exists():
+            # A version of the task with the new name might already exist if
+            # the beat has started with the new configs but before this
+            # migration has run. In that case, we want to simply delete the old
+            # version task.
+            task.delete()
+        else:
+            task.name = new_name
+            task.save()
 
 
 class Migration(migrations.Migration):
