@@ -1,8 +1,11 @@
 """DRF API views for the account app v2."""
+from datetime import date
+
 from dateutil import tz
 from dateutil.parser import parse
 from django.db.models import Max
-from rest_framework import mixins, status, viewsets
+from django.utils.translation import gettext as _
+from rest_framework import exceptions, mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -11,6 +14,7 @@ from account.util import convert_param_to_int
 from api import serializers
 from api.authentication import ThreeScaleAuthentication
 from api.models import CloudAccount, Instance, MachineImage
+from api.serializers import DailyConcurrentUsageDummyQueryset
 
 
 class AccountViewSet(mixins.CreateModelMixin,
@@ -155,3 +159,49 @@ class SysconfigViewSet(v1_views.SysconfigViewSet):
     """
 
     authentication_classes = (ThreeScaleAuthentication, )
+
+
+class DailyConcurrentUsageViewSet(
+    viewsets.GenericViewSet, mixins.ListModelMixin
+):
+    """Generate report of concurrent usage within a time frame."""
+
+    serializer_class = serializers.DailyConcurrentUsageSerializer
+
+    def get_queryset(self):
+        """Get the queryset of dates filtered to the appropriate inputs."""
+        errors = {}
+        try:
+            start_date = self.request.query_params.get('start_date', None)
+            start_date = (
+                parse(start_date).date() if start_date else date.today()
+            )
+        except ValueError:
+            errors['start_date'] = [
+                _('start_date must be a date (YYYY-MM-DD).')
+            ]
+
+        try:
+            end_date = self.request.query_params.get('end_date', None)
+            end_date = parse(end_date).date() if end_date else date.today()
+        except ValueError:
+            errors['end_date'] = [_('end_date must be a date (YYYY-MM-DD).')]
+
+        user = self.request.user
+        if not user.is_superuser:
+            user_id = user.id
+        else:
+            user_id = self.request.query_params.get('user_id', None)
+        if user_id is not None:
+            try:
+                user_id = convert_param_to_int('user_id', user_id)
+            except exceptions.ValidationError as e:
+                errors.update(e.detail)
+
+        if errors:
+            raise exceptions.ValidationError(errors)
+
+        queryset = DailyConcurrentUsageDummyQueryset(
+            start_date, end_date, user_id
+        )
+        return queryset

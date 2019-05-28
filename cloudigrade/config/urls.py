@@ -38,6 +38,8 @@ router_v2.register(r'images', v2views.MachineImageViewSet,
                    basename='v2-machineimage')
 router_v2.register(r'sysconfig', v2views.SysconfigViewSet,
                    basename='v2-sysconfig')
+router_v2.register(r'concurrent', v2views.DailyConcurrentUsageViewSet,
+                   basename='v2-concurrent')
 
 urlpatterns = [
     url(r'^api/v1/', include(router_v1.urls)),
