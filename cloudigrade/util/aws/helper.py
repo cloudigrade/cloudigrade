@@ -33,7 +33,13 @@ def get_regions(session, service_name='ec2'):
         list: The available AWS region names.
 
     """
-    return session.get_available_regions(service_name)
+    client = session.client(service_name)
+    available_regions = client.describe_regions()
+    region_list = []
+    for region in available_regions['Regions']:
+        region_list.append(region['RegionName'])
+
+    return region_list
 
 
 def verify_account_access(session):
