@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN" "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
-<svg viewBox="0 0 832 763" xmlns="http://www.w3.org/2000/svg" xmlns:inkspace="http://www.inkscape.org/namespaces/inkscape" xmlns:xlink="http://www.w3.org/1999/xlink">
+<svg viewBox="0 0 832 756" xmlns="http://www.w3.org/2000/svg" xmlns:inkspace="http://www.inkscape.org/namespaces/inkscape" xmlns:xlink="http://www.w3.org/1999/xlink">
   <defs id="defs_block">
     <filter height="1.504" id="filter_blur" inkspace:collect="always" width="1.1575" x="-0.07875" y="-0.252">
       <feGaussianBlur id="feGaussianBlur3780" inkspace:collect="always" stdDeviation="4.2" />
@@ -17,59 +17,59 @@
     }
 }
 </desc>
-  <rect fill="rgb(0,0,0)" height="598" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="127" y="143" />
-  <rect fill="rgb(0,0,0)" height="552" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="319" y="143" />
-  <rect fill="rgb(0,0,0)" height="50" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="511" y="595" />
-  <rect fill="rgb(0,0,0)" height="67" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="703" y="210" />
-  <rect fill="rgb(0,0,0)" height="50" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="703" y="344" />
-  <rect fill="rgb(0,0,0)" height="67" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="703" y="461" />
+  <rect fill="rgb(0,0,0)" height="592" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="127" y="142" />
+  <rect fill="rgb(0,0,0)" height="546" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="319" y="142" />
+  <rect fill="rgb(0,0,0)" height="50" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="511" y="588" />
+  <rect fill="rgb(0,0,0)" height="66" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="703" y="208" />
+  <rect fill="rgb(0,0,0)" height="50" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="703" y="340" />
+  <rect fill="rgb(0,0,0)" height="66" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="703" y="456" />
   <rect fill="rgb(0,0,0)" height="40" stroke="rgb(0,0,0)" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="128" x="67" y="46" />
   <rect fill="rgb(0,0,0)" height="40" stroke="rgb(0,0,0)" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="128" x="259" y="46" />
   <rect fill="rgb(0,0,0)" height="40" stroke="rgb(0,0,0)" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="128" x="451" y="46" />
   <rect fill="rgb(0,0,0)" height="40" stroke="rgb(0,0,0)" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="128" x="643" y="46" />
-  <path d="M 128 80 L 128 751" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="8 4" />
-  <rect fill="moccasin" height="598" stroke="rgb(0,0,0)" width="8" x="124" y="137" />
-  <path d="M 320 80 L 320 751" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="8 4" />
-  <rect fill="moccasin" height="552" stroke="rgb(0,0,0)" width="8" x="316" y="137" />
-  <path d="M 512 80 L 512 751" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="8 4" />
-  <rect fill="moccasin" height="50" stroke="rgb(0,0,0)" width="8" x="508" y="589" />
-  <path d="M 704 80 L 704 751" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="8 4" />
-  <rect fill="moccasin" height="67" stroke="rgb(0,0,0)" width="8" x="700" y="204" />
-  <rect fill="moccasin" height="50" stroke="rgb(0,0,0)" width="8" x="700" y="338" />
-  <rect fill="moccasin" height="67" stroke="rgb(0,0,0)" width="8" x="700" y="455" />
+  <path d="M 128 80 L 128 744" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="8 4" />
+  <rect fill="moccasin" height="592" stroke="rgb(0,0,0)" width="8" x="124" y="136" />
+  <path d="M 320 80 L 320 744" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="8 4" />
+  <rect fill="moccasin" height="546" stroke="rgb(0,0,0)" width="8" x="316" y="136" />
+  <path d="M 512 80 L 512 744" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="8 4" />
+  <rect fill="moccasin" height="50" stroke="rgb(0,0,0)" width="8" x="508" y="582" />
+  <path d="M 704 80 L 704 744" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="8 4" />
+  <rect fill="moccasin" height="66" stroke="rgb(0,0,0)" width="8" x="700" y="202" />
+  <rect fill="moccasin" height="50" stroke="rgb(0,0,0)" width="8" x="700" y="334" />
+  <rect fill="moccasin" height="66" stroke="rgb(0,0,0)" width="8" x="700" y="450" />
   <rect fill="rgb(255,255,255)" height="40" stroke="rgb(0,0,0)" width="128" x="64" y="40" />
-  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="77" x="128.5" y="66">task worker</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="60" x="128.0" y="65">task worker</text>
   <rect fill="rgb(255,255,255)" height="40" stroke="rgb(0,0,0)" width="128" x="256" y="40" />
-  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="77" x="320.5" y="67">cloudigrade</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="56" x="320.0" y="66">cloudigrade</text>
   <rect fill="rgb(255,255,255)" height="40" stroke="rgb(0,0,0)" width="128" x="448" y="40" />
-  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="70" x="512.0" y="67">task queue</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="55" x="512.5" y="66">task queue</text>
   <rect fill="rgb(255,255,255)" height="40" stroke="rgb(0,0,0)" width="128" x="640" y="40" />
-  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="21" x="704.5" y="66">AWS</text>
-  <path d="M 136 137 L 312 137" fill="none" stroke="rgb(0,0,0)" />
-  <polygon fill="rgb(0,0,0)" points="304,133 312,137 304,141" stroke="rgb(0,0,0)" />
-  <path d="M 328 204 L 696 204" fill="none" stroke="rgb(0,0,0)" />
-  <polygon fill="rgb(0,0,0)" points="688,200 696,204 688,208" stroke="rgb(0,0,0)" />
-  <path d="M 328 271 L 696 271" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
-  <polygon fill="rgb(0,0,0)" points="336,267 328,271 336,275" stroke="rgb(0,0,0)" />
-  <path d="M 328 338 L 696 338" fill="none" stroke="rgb(0,0,0)" />
-  <polygon fill="rgb(0,0,0)" points="688,334 696,338 688,342" stroke="rgb(0,0,0)" />
-  <path d="M 328 388 L 696 388" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
-  <polygon fill="rgb(0,0,0)" points="336,384 328,388 336,392" stroke="rgb(0,0,0)" />
-  <path d="M 328 455 L 696 455" fill="none" stroke="rgb(0,0,0)" />
-  <polygon fill="rgb(0,0,0)" points="688,451 696,455 688,459" stroke="rgb(0,0,0)" />
-  <path d="M 328 522 L 696 522" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
-  <polygon fill="rgb(0,0,0)" points="336,518 328,522 336,526" stroke="rgb(0,0,0)" />
-  <path d="M 328 589 L 504 589" fill="none" stroke="rgb(0,0,0)" />
-  <polygon fill="rgb(0,0,0)" points="496,585 504,589 496,593" stroke="rgb(0,0,0)" />
-  <path d="M 328 639 L 504 639" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
-  <polygon fill="rgb(0,0,0)" points="336,635 328,639 336,643" stroke="rgb(0,0,0)" />
-  <path d="M 136 689 L 312 689" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
-  <polygon fill="rgb(0,0,0)" points="144,685 136,689 144,693" stroke="rgb(0,0,0)" />
-  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="91" x="185.5" y="135">copy snapshot</text>
-  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="105" x="384.5" y="202">get snapshot id</text>
-  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="77" x="657.5" y="269">snapshot id</text>
-  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="154" x="409.0" y="336">set snapshot ownership</text>
-  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="133" x="398.5" y="453">start copy snapshot</text>
-  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="105" x="643.5" y="520">new snapshot id</text>
-  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="133" x="398.5" y="587">async create volume</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="26" x="704.0" y="65">AWS</text>
+  <path d="M 136 136 L 312 136" fill="none" stroke="rgb(0,0,0)" />
+  <polygon fill="rgb(0,0,0)" points="304,132 312,136 304,140" stroke="rgb(0,0,0)" />
+  <path d="M 328 202 L 696 202" fill="none" stroke="rgb(0,0,0)" />
+  <polygon fill="rgb(0,0,0)" points="688,198 696,202 688,206" stroke="rgb(0,0,0)" />
+  <path d="M 328 268 L 696 268" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
+  <polygon fill="rgb(0,0,0)" points="336,264 328,268 336,272" stroke="rgb(0,0,0)" />
+  <path d="M 328 334 L 696 334" fill="none" stroke="rgb(0,0,0)" />
+  <polygon fill="rgb(0,0,0)" points="688,330 696,334 688,338" stroke="rgb(0,0,0)" />
+  <path d="M 328 384 L 696 384" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
+  <polygon fill="rgb(0,0,0)" points="336,380 328,384 336,388" stroke="rgb(0,0,0)" />
+  <path d="M 328 450 L 696 450" fill="none" stroke="rgb(0,0,0)" />
+  <polygon fill="rgb(0,0,0)" points="688,446 696,450 688,454" stroke="rgb(0,0,0)" />
+  <path d="M 328 516 L 696 516" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
+  <polygon fill="rgb(0,0,0)" points="336,512 328,516 336,520" stroke="rgb(0,0,0)" />
+  <path d="M 328 582 L 504 582" fill="none" stroke="rgb(0,0,0)" />
+  <polygon fill="rgb(0,0,0)" points="496,578 504,582 496,586" stroke="rgb(0,0,0)" />
+  <path d="M 328 632 L 504 632" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
+  <polygon fill="rgb(0,0,0)" points="336,628 328,632 336,636" stroke="rgb(0,0,0)" />
+  <path d="M 136 682 L 312 682" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
+  <polygon fill="rgb(0,0,0)" points="144,678 136,682 144,686" stroke="rgb(0,0,0)" />
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="72" x="176.0" y="134">copy snapshot</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="76" x="370.0" y="200">get snapshot id</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="56" x="668.0" y="266">snapshot id</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="117" x="390.5" y="332">set snapshot ownership</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="99" x="381.5" y="448">start copy snapshot</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="81" x="655.5" y="514">new snapshot id</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="105" x="384.5" y="580">async create volume</text>
 </svg>

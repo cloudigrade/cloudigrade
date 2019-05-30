@@ -5,8 +5,7 @@ from decimal import Decimal
 from django.test import TestCase
 from rest_framework.test import APIRequestFactory, force_authenticate
 
-from account.models import AwsMachineImage
-from api.models import MachineImage
+from api.models import AwsMachineImage, MachineImage
 from api.tests import helper as api_helper
 from api.views import MachineImageViewSet
 from util.tests import helper as util_helper
@@ -51,7 +50,7 @@ class MachineImageViewSetTest(TestCase):
         self.image_rhel_ocp = api_helper.generate_aws_image(
             rhel_detected=True, openshift_detected=True)
         self.inspected_image = api_helper.generate_aws_image(
-            status=AwsMachineImage.INSPECTED
+            status=MachineImage.INSPECTED
         )
 
         # Instances for the accounts
@@ -142,7 +141,7 @@ class MachineImageViewSetTest(TestCase):
                 response.data['content_object']['ec2_ami_id'], image.ec2_ami_id
             )
             self.assertEqual(
-                response.data['is_encrypted'], image.is_encrypted
+                response.data['is_encrypted'], image.machine_image.is_encrypted
             )
 
     def get_image_get_response(self, user, image_id):

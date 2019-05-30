@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN" "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
-<svg viewBox="0 0 640 824" xmlns="http://www.w3.org/2000/svg" xmlns:inkspace="http://www.inkscape.org/namespaces/inkscape" xmlns:xlink="http://www.w3.org/1999/xlink">
+<svg viewBox="0 0 640 819" xmlns="http://www.w3.org/2000/svg" xmlns:inkspace="http://www.inkscape.org/namespaces/inkscape" xmlns:xlink="http://www.w3.org/1999/xlink">
   <defs id="defs_block">
     <filter height="1.504" id="filter_blur" inkspace:collect="always" width="1.1575" x="-0.07875" y="-0.252">
       <feGaussianBlur id="feGaussianBlur3780" inkspace:collect="always" stdDeviation="4.2" />
@@ -18,60 +18,60 @@
     }
 }
 </desc>
-  <rect fill="rgb(0,0,0)" height="659" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="127" y="143" />
-  <rect fill="rgb(0,0,0)" height="613" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="319" y="143" />
-  <rect fill="rgb(0,0,0)" height="67" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="511" y="210" />
-  <rect fill="rgb(0,0,0)" height="50" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="511" y="422" />
-  <rect fill="rgb(0,0,0)" height="50" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="511" y="539" />
-  <rect fill="rgb(0,0,0)" height="50" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="511" y="656" />
+  <rect fill="rgb(0,0,0)" height="654" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="127" y="143" />
+  <rect fill="rgb(0,0,0)" height="608" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="319" y="143" />
+  <rect fill="rgb(0,0,0)" height="66" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="511" y="209" />
+  <rect fill="rgb(0,0,0)" height="50" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="511" y="419" />
+  <rect fill="rgb(0,0,0)" height="50" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="511" y="535" />
+  <rect fill="rgb(0,0,0)" height="50" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="511" y="651" />
   <rect fill="rgb(0,0,0)" height="40" stroke="rgb(0,0,0)" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="128" x="67" y="46" />
   <rect fill="rgb(0,0,0)" height="40" stroke="rgb(0,0,0)" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="128" x="259" y="46" />
   <rect fill="rgb(0,0,0)" height="40" stroke="rgb(0,0,0)" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="128" x="451" y="46" />
-  <path d="M 128 80 L 128 812" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="8 4" />
-  <rect fill="moccasin" height="659" stroke="rgb(0,0,0)" width="8" x="124" y="137" />
-  <path d="M 320 80 L 320 812" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="8 4" />
-  <rect fill="moccasin" height="613" stroke="rgb(0,0,0)" width="8" x="316" y="137" />
-  <path d="M 512 80 L 512 812" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="8 4" />
-  <rect fill="moccasin" height="67" stroke="rgb(0,0,0)" width="8" x="508" y="204" />
-  <rect fill="moccasin" height="50" stroke="rgb(0,0,0)" width="8" x="508" y="416" />
-  <rect fill="moccasin" height="50" stroke="rgb(0,0,0)" width="8" x="508" y="533" />
-  <rect fill="moccasin" height="50" stroke="rgb(0,0,0)" width="8" x="508" y="650" />
+  <path d="M 128 80 L 128 807" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="8 4" />
+  <rect fill="moccasin" height="654" stroke="rgb(0,0,0)" width="8" x="124" y="137" />
+  <path d="M 320 80 L 320 807" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="8 4" />
+  <rect fill="moccasin" height="608" stroke="rgb(0,0,0)" width="8" x="316" y="137" />
+  <path d="M 512 80 L 512 807" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="8 4" />
+  <rect fill="moccasin" height="66" stroke="rgb(0,0,0)" width="8" x="508" y="203" />
+  <rect fill="moccasin" height="50" stroke="rgb(0,0,0)" width="8" x="508" y="413" />
+  <rect fill="moccasin" height="50" stroke="rgb(0,0,0)" width="8" x="508" y="529" />
+  <rect fill="moccasin" height="50" stroke="rgb(0,0,0)" width="8" x="508" y="645" />
   <rect fill="rgb(255,255,255)" height="40" stroke="rgb(0,0,0)" width="128" x="64" y="40" />
-  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="77" x="128.5" y="66">task worker</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="60" x="128.0" y="65">task worker</text>
   <rect fill="rgb(255,255,255)" height="40" stroke="rgb(0,0,0)" width="128" x="256" y="40" />
-  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="77" x="320.5" y="67">cloudigrade</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="56" x="320.0" y="66">cloudigrade</text>
   <rect fill="rgb(255,255,255)" height="40" stroke="rgb(0,0,0)" width="128" x="448" y="40" />
-  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="21" x="512.5" y="66">AWS</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="26" x="512.0" y="65">AWS</text>
   <path d="M 136 137 L 312 137" fill="none" stroke="rgb(0,0,0)" />
   <polygon fill="rgb(0,0,0)" points="304,133 312,137 304,141" stroke="rgb(0,0,0)" />
-  <path d="M 328 204 L 504 204" fill="none" stroke="rgb(0,0,0)" />
-  <polygon fill="rgb(0,0,0)" points="496,200 504,204 496,208" stroke="rgb(0,0,0)" />
-  <path d="M 328 271 L 504 271" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
-  <polygon fill="rgb(0,0,0)" points="336,267 328,271 336,275" stroke="rgb(0,0,0)" />
-  <path d="M 328 416 L 504 416" fill="none" stroke="rgb(0,0,0)" />
-  <polygon fill="rgb(0,0,0)" points="496,412 504,416 496,420" stroke="rgb(0,0,0)" />
-  <path d="M 328 466 L 504 466" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
-  <polygon fill="rgb(0,0,0)" points="336,462 328,466 336,470" stroke="rgb(0,0,0)" />
-  <path d="M 328 533 L 504 533" fill="none" stroke="rgb(0,0,0)" />
-  <polygon fill="rgb(0,0,0)" points="496,529 504,533 496,537" stroke="rgb(0,0,0)" />
-  <path d="M 328 583 L 504 583" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
-  <polygon fill="rgb(0,0,0)" points="336,579 328,583 336,587" stroke="rgb(0,0,0)" />
-  <path d="M 328 650 L 504 650" fill="none" stroke="rgb(0,0,0)" />
-  <polygon fill="rgb(0,0,0)" points="496,646 504,650 496,654" stroke="rgb(0,0,0)" />
-  <path d="M 328 700 L 504 700" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
-  <polygon fill="rgb(0,0,0)" points="336,696 328,700 336,704" stroke="rgb(0,0,0)" />
-  <path d="M 136 750 L 312 750" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
-  <polygon fill="rgb(0,0,0)" points="144,746 136,750 144,754" stroke="rgb(0,0,0)" />
-  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="119" x="199.5" y="135">configure cluster</text>
-  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="133" x="398.5" y="202">check cluster ready</text>
-  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="35" x="486.5" y="269">ready</text>
-  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="98" x="381.0" y="414">attach volumes</text>
-  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="154" x="409.0" y="531">update task definition</text>
-  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="105" x="384.5" y="648">run houndigrade</text>
-  <path d="M 40 338 L 187 338" fill="none" stroke="rgb(0,0,0)" />
-  <path d="M 40 342 L 187 342" fill="none" stroke="rgb(0,0,0)" />
-  <path d="M 452 338 L 600 338" fill="none" stroke="rgb(0,0,0)" />
-  <path d="M 452 342 L 600 342" fill="none" stroke="rgb(0,0,0)" />
-  <rect fill="rgb(208,208,208)" height="21" stroke="rgb(0,0,0)" width="265" x="187" y="330" />
-  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="245" x="319.5" y="347">if not ready, abort and retry later</text>
+  <path d="M 328 203 L 504 203" fill="none" stroke="rgb(0,0,0)" />
+  <polygon fill="rgb(0,0,0)" points="496,199 504,203 496,207" stroke="rgb(0,0,0)" />
+  <path d="M 328 269 L 504 269" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
+  <polygon fill="rgb(0,0,0)" points="336,265 328,269 336,273" stroke="rgb(0,0,0)" />
+  <path d="M 328 413 L 504 413" fill="none" stroke="rgb(0,0,0)" />
+  <polygon fill="rgb(0,0,0)" points="496,409 504,413 496,417" stroke="rgb(0,0,0)" />
+  <path d="M 328 463 L 504 463" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
+  <polygon fill="rgb(0,0,0)" points="336,459 328,463 336,467" stroke="rgb(0,0,0)" />
+  <path d="M 328 529 L 504 529" fill="none" stroke="rgb(0,0,0)" />
+  <polygon fill="rgb(0,0,0)" points="496,525 504,529 496,533" stroke="rgb(0,0,0)" />
+  <path d="M 328 579 L 504 579" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
+  <polygon fill="rgb(0,0,0)" points="336,575 328,579 336,583" stroke="rgb(0,0,0)" />
+  <path d="M 328 645 L 504 645" fill="none" stroke="rgb(0,0,0)" />
+  <polygon fill="rgb(0,0,0)" points="496,641 504,645 496,649" stroke="rgb(0,0,0)" />
+  <path d="M 328 695 L 504 695" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
+  <polygon fill="rgb(0,0,0)" points="336,691 328,695 336,699" stroke="rgb(0,0,0)" />
+  <path d="M 136 745 L 312 745" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
+  <polygon fill="rgb(0,0,0)" points="144,741 136,745 144,749" stroke="rgb(0,0,0)" />
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="83" x="181.5" y="135">configure cluster</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="99" x="381.5" y="201">check cluster ready</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="28" x="490.0" y="267">ready</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="78" x="371.0" y="411">attach volumes</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="107" x="385.5" y="527">update task definition</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="80" x="372.0" y="643">run houndigrade</text>
+  <path d="M 40 337 L 226 337" fill="none" stroke="rgb(0,0,0)" />
+  <path d="M 40 341 L 226 341" fill="none" stroke="rgb(0,0,0)" />
+  <path d="M 413 337 L 600 337" fill="none" stroke="rgb(0,0,0)" />
+  <path d="M 413 341 L 600 341" fill="none" stroke="rgb(0,0,0)" />
+  <rect fill="rgb(208,208,208)" height="20" stroke="rgb(0,0,0)" width="187" x="226" y="329" />
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="167" x="319.5" y="345">if not ready, abort and retry later</text>
 </svg>

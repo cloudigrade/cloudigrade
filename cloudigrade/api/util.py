@@ -18,7 +18,7 @@ from django.utils import timezone
 from django.utils.translation import gettext as _
 from rest_framework.serializers import ValidationError
 
-from account import AWS_PROVIDER_STRING
+from api import AWS_PROVIDER_STRING
 from api.models import (
     AwsEC2InstanceDefinition,
     AwsInstance,

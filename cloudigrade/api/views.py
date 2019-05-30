@@ -3,18 +3,19 @@ from datetime import date, timedelta
 
 from dateutil import tz
 from dateutil.parser import parse
+from django.conf import settings
 from django.db.models import Max
 from django.utils.translation import gettext as _
 from rest_framework import exceptions, mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from account import views as v1_views
-from account.util import convert_param_to_int
 from api import serializers
 from api.authentication import ThreeScaleAuthentication
 from api.models import CloudAccount, Instance, MachineImage
 from api.serializers import DailyConcurrentUsageDummyQueryset
+from api.util import convert_param_to_int
+from util.aws.sts import _get_primary_account_id, cloudigrade_policy
 
 
 class AccountViewSet(mixins.CreateModelMixin,
@@ -151,7 +152,7 @@ class MachineImageViewSet(viewsets.ReadOnlyModelViewSet,
         return Response(serializer.data)
 
 
-class SysconfigViewSet(v1_views.SysconfigViewSet):
+class SysconfigViewSet(viewsets.ViewSet):
     """
     View to display our cloud account ids.
 
@@ -159,6 +160,17 @@ class SysconfigViewSet(v1_views.SysconfigViewSet):
     """
 
     authentication_classes = (ThreeScaleAuthentication, )
+
+    def list(self, *args, **kwargs):
+        """Get cloud account ids currently used by this installation."""
+        response = {
+            'aws_account_id': _get_primary_account_id(),
+            'aws_policies': {
+                'traditional_inspection': cloudigrade_policy,
+            },
+            'version': settings.CLOUDIGRADE_VERSION,
+        }
+        return Response(response)
 
 
 class DailyConcurrentUsageViewSet(

@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN" "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
-<svg viewBox="0 0 640 855" xmlns="http://www.w3.org/2000/svg" xmlns:inkspace="http://www.inkscape.org/namespaces/inkscape" xmlns:xlink="http://www.w3.org/1999/xlink">
+<svg viewBox="0 0 640 834" xmlns="http://www.w3.org/2000/svg" xmlns:inkspace="http://www.inkscape.org/namespaces/inkscape" xmlns:xlink="http://www.w3.org/1999/xlink">
   <defs id="defs_block">
     <filter height="1.504" id="filter_blur" inkspace:collect="always" width="1.1575" x="-0.07875" y="-0.252">
       <feGaussianBlur id="feGaussianBlur3780" inkspace:collect="always" stdDeviation="4.2" />
@@ -18,60 +18,60 @@
     }
 }
 </desc>
-  <rect fill="rgb(0,0,0)" height="690" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="127" y="143" />
-  <rect fill="rgb(0,0,0)" height="644" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="319" y="143" />
-  <rect fill="rgb(0,0,0)" height="50" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="511" y="208" />
-  <rect fill="rgb(0,0,0)" height="50" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="511" y="323" />
-  <rect fill="rgb(0,0,0)" height="50" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="511" y="438" />
-  <rect fill="rgb(0,0,0)" height="50" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="511" y="555" />
-  <rect fill="rgb(0,0,0)" height="50" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="511" y="687" />
+  <rect fill="rgb(0,0,0)" height="670" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="127" y="142" />
+  <rect fill="rgb(0,0,0)" height="624" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="319" y="142" />
+  <rect fill="rgb(0,0,0)" height="50" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="511" y="206" />
+  <rect fill="rgb(0,0,0)" height="50" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="511" y="320" />
+  <rect fill="rgb(0,0,0)" height="50" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="511" y="434" />
+  <rect fill="rgb(0,0,0)" height="50" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="511" y="550" />
+  <rect fill="rgb(0,0,0)" height="50" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="511" y="666" />
   <rect fill="rgb(0,0,0)" height="40" stroke="rgb(0,0,0)" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="128" x="67" y="46" />
   <rect fill="rgb(0,0,0)" height="40" stroke="rgb(0,0,0)" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="128" x="259" y="46" />
   <rect fill="rgb(0,0,0)" height="40" stroke="rgb(0,0,0)" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="128" x="451" y="46" />
-  <path d="M 128 80 L 128 843" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="8 4" />
-  <rect fill="moccasin" height="690" stroke="rgb(0,0,0)" width="8" x="124" y="137" />
-  <path d="M 320 80 L 320 843" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="8 4" />
-  <rect fill="moccasin" height="644" stroke="rgb(0,0,0)" width="8" x="316" y="137" />
-  <path d="M 512 80 L 512 843" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="8 4" />
-  <rect fill="moccasin" height="50" stroke="rgb(0,0,0)" width="8" x="508" y="202" />
-  <rect fill="moccasin" height="50" stroke="rgb(0,0,0)" width="8" x="508" y="317" />
-  <rect fill="moccasin" height="50" stroke="rgb(0,0,0)" width="8" x="508" y="432" />
-  <rect fill="moccasin" height="50" stroke="rgb(0,0,0)" width="8" x="508" y="549" />
-  <rect fill="moccasin" height="50" stroke="rgb(0,0,0)" width="8" x="508" y="681" />
+  <path d="M 128 80 L 128 822" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="8 4" />
+  <rect fill="moccasin" height="670" stroke="rgb(0,0,0)" width="8" x="124" y="136" />
+  <path d="M 320 80 L 320 822" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="8 4" />
+  <rect fill="moccasin" height="624" stroke="rgb(0,0,0)" width="8" x="316" y="136" />
+  <path d="M 512 80 L 512 822" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="8 4" />
+  <rect fill="moccasin" height="50" stroke="rgb(0,0,0)" width="8" x="508" y="200" />
+  <rect fill="moccasin" height="50" stroke="rgb(0,0,0)" width="8" x="508" y="314" />
+  <rect fill="moccasin" height="50" stroke="rgb(0,0,0)" width="8" x="508" y="428" />
+  <rect fill="moccasin" height="50" stroke="rgb(0,0,0)" width="8" x="508" y="544" />
+  <rect fill="moccasin" height="50" stroke="rgb(0,0,0)" width="8" x="508" y="660" />
   <rect fill="rgb(255,255,255)" height="40" stroke="rgb(0,0,0)" width="128" x="64" y="40" />
-  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="77" x="128.5" y="66">task worker</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="60" x="128.0" y="65">task worker</text>
   <rect fill="rgb(255,255,255)" height="40" stroke="rgb(0,0,0)" width="128" x="256" y="40" />
-  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="77" x="320.5" y="67">cloudigrade</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="56" x="320.0" y="66">cloudigrade</text>
   <rect fill="rgb(255,255,255)" height="40" stroke="rgb(0,0,0)" width="128" x="448" y="40" />
-  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="21" x="512.5" y="66">AWS</text>
-  <path d="M 136 137 L 312 137" fill="none" stroke="rgb(0,0,0)" />
-  <polygon fill="rgb(0,0,0)" points="304,133 312,137 304,141" stroke="rgb(0,0,0)" />
-  <path d="M 328 202 L 504 202" fill="none" stroke="rgb(0,0,0)" />
-  <polygon fill="rgb(0,0,0)" points="496,198 504,202 496,206" stroke="rgb(0,0,0)" />
-  <path d="M 328 252 L 504 252" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
-  <polygon fill="rgb(0,0,0)" points="336,248 328,252 336,256" stroke="rgb(0,0,0)" />
-  <path d="M 328 317 L 504 317" fill="none" stroke="rgb(0,0,0)" />
-  <polygon fill="rgb(0,0,0)" points="496,313 504,317 496,321" stroke="rgb(0,0,0)" />
-  <path d="M 328 367 L 504 367" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
-  <polygon fill="rgb(0,0,0)" points="336,363 328,367 336,371" stroke="rgb(0,0,0)" />
-  <path d="M 328 432 L 504 432" fill="none" stroke="rgb(0,0,0)" />
-  <polygon fill="rgb(0,0,0)" points="496,428 504,432 496,436" stroke="rgb(0,0,0)" />
-  <path d="M 328 482 L 504 482" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
-  <polygon fill="rgb(0,0,0)" points="336,478 328,482 336,486" stroke="rgb(0,0,0)" />
-  <path d="M 328 549 L 504 549" fill="none" stroke="rgb(0,0,0)" />
-  <polygon fill="rgb(0,0,0)" points="496,545 504,549 496,553" stroke="rgb(0,0,0)" />
-  <path d="M 328 599 L 504 599" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
-  <polygon fill="rgb(0,0,0)" points="336,595 328,599 336,603" stroke="rgb(0,0,0)" />
-  <path d="M 328 681 L 504 681" fill="none" stroke="rgb(0,0,0)" />
-  <polygon fill="rgb(0,0,0)" points="496,677 504,681 496,685" stroke="rgb(0,0,0)" />
-  <path d="M 328 731 L 504 731" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
-  <polygon fill="rgb(0,0,0)" points="336,727 328,731 336,735" stroke="rgb(0,0,0)" />
-  <path d="M 136 781 L 312 781" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
-  <polygon fill="rgb(0,0,0)" points="144,777 136,781 144,785" stroke="rgb(0,0,0)" />
-  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="105" x="192.5" y="135">cleanup cluster</text>
-  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="98" x="381.0" y="200">detach volumes</text>
-  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="126" x="395.0" y="315">set cluster size 0</text>
-  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="98" x="381.0" y="430">delete volumes</text>
-  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="112" x="388.0" y="547">delete snapshots</text>
-  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="168" x="416.0" y="672">unset snapshot ownership</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="26" x="512.0" y="65">AWS</text>
+  <path d="M 136 136 L 312 136" fill="none" stroke="rgb(0,0,0)" />
+  <polygon fill="rgb(0,0,0)" points="304,132 312,136 304,140" stroke="rgb(0,0,0)" />
+  <path d="M 328 200 L 504 200" fill="none" stroke="rgb(0,0,0)" />
+  <polygon fill="rgb(0,0,0)" points="496,196 504,200 496,204" stroke="rgb(0,0,0)" />
+  <path d="M 328 250 L 504 250" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
+  <polygon fill="rgb(0,0,0)" points="336,246 328,250 336,254" stroke="rgb(0,0,0)" />
+  <path d="M 328 314 L 504 314" fill="none" stroke="rgb(0,0,0)" />
+  <polygon fill="rgb(0,0,0)" points="496,310 504,314 496,318" stroke="rgb(0,0,0)" />
+  <path d="M 328 364 L 504 364" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
+  <polygon fill="rgb(0,0,0)" points="336,360 328,364 336,368" stroke="rgb(0,0,0)" />
+  <path d="M 328 428 L 504 428" fill="none" stroke="rgb(0,0,0)" />
+  <polygon fill="rgb(0,0,0)" points="496,424 504,428 496,432" stroke="rgb(0,0,0)" />
+  <path d="M 328 478 L 504 478" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
+  <polygon fill="rgb(0,0,0)" points="336,474 328,478 336,482" stroke="rgb(0,0,0)" />
+  <path d="M 328 544 L 504 544" fill="none" stroke="rgb(0,0,0)" />
+  <polygon fill="rgb(0,0,0)" points="496,540 504,544 496,548" stroke="rgb(0,0,0)" />
+  <path d="M 328 594 L 504 594" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
+  <polygon fill="rgb(0,0,0)" points="336,590 328,594 336,598" stroke="rgb(0,0,0)" />
+  <path d="M 328 660 L 504 660" fill="none" stroke="rgb(0,0,0)" />
+  <polygon fill="rgb(0,0,0)" points="496,656 504,660 496,664" stroke="rgb(0,0,0)" />
+  <path d="M 328 710 L 504 710" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
+  <polygon fill="rgb(0,0,0)" points="336,706 328,710 336,714" stroke="rgb(0,0,0)" />
+  <path d="M 136 760 L 312 760" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
+  <polygon fill="rgb(0,0,0)" points="144,756 136,760 144,764" stroke="rgb(0,0,0)" />
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="75" x="177.5" y="134">cleanup cluster</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="80" x="372.0" y="198">detach volumes</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="86" x="375.0" y="312">set cluster size 0</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="76" x="370.0" y="426">delete volumes</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="84" x="374.0" y="542">delete snapshots</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="129" x="396.5" y="658">unset snapshot ownership</text>
 </svg>

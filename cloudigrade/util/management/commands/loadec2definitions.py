@@ -8,8 +8,8 @@ Note:
 from django.core.management.base import BaseCommand
 from django.utils.translation import gettext as _
 
-from account.models import AwsEC2InstanceDefinitions
-from analyzer import tasks
+from api import tasks
+from api.models import AwsEC2InstanceDefinition
 
 
 class Command(BaseCommand):
@@ -25,7 +25,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """Handle the command execution."""
-        if not options['force'] and AwsEC2InstanceDefinitions.objects.exists():
+        if not options['force'] and AwsEC2InstanceDefinition.objects.exists():
             self.stdout.write(_(
                 'Nothing to do. EC2 instance definitions already exist.'
             ))

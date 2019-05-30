@@ -11,8 +11,7 @@ from django.test import TestCase
 from rest_framework.serializers import ValidationError
 
 import util.aws.sqs
-from account import AWS_PROVIDER_STRING
-from api import util
+from api import AWS_PROVIDER_STRING, util
 from api.models import (AwsMachineImage, MachineImage,
                         MachineImageInspectionStart)
 from api.tests import helper as api_helper

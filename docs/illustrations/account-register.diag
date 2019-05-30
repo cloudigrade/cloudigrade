@@ -1,6 +1,6 @@
 seqdiag {
     client; cloudigrade; db; queue; cloud;
-    client => cloudigrade [label='POST /api/v1/account/', return='account'] {
+    client => cloudigrade [label='POST /api/v2/accounts/', return='account'] {
         cloudigrade => db [label='does account exist', return='false'];
         cloudigrade => cloud [label='check access', return='success'];
         cloudigrade => cloud [label='describe running instances', return='instances'];

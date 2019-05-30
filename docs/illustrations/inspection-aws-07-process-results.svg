@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN" "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
-<svg viewBox="0 0 1024 707" xmlns="http://www.w3.org/2000/svg" xmlns:inkspace="http://www.inkscape.org/namespaces/inkscape" xmlns:xlink="http://www.w3.org/1999/xlink">
+<svg viewBox="0 0 1024 702" xmlns="http://www.w3.org/2000/svg" xmlns:inkspace="http://www.inkscape.org/namespaces/inkscape" xmlns:xlink="http://www.w3.org/1999/xlink">
   <defs id="defs_block">
     <filter height="1.504" id="filter_blur" inkspace:collect="always" width="1.1575" x="-0.07875" y="-0.252">
       <feGaussianBlur id="feGaussianBlur3780" inkspace:collect="always" stdDeviation="4.2" />
@@ -17,61 +17,61 @@
     }
 }
 </desc>
-  <rect fill="rgb(0,0,0)" height="542" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="127" y="143" />
-  <rect fill="rgb(0,0,0)" height="496" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="319" y="143" />
-  <rect fill="rgb(0,0,0)" height="65" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="511" y="210" />
-  <rect fill="rgb(0,0,0)" height="50" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="703" y="422" />
-  <rect fill="rgb(0,0,0)" height="50" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="895" y="539" />
+  <rect fill="rgb(0,0,0)" height="538" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="127" y="142" />
+  <rect fill="rgb(0,0,0)" height="492" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="319" y="142" />
+  <rect fill="rgb(0,0,0)" height="64" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="511" y="208" />
+  <rect fill="rgb(0,0,0)" height="50" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="703" y="418" />
+  <rect fill="rgb(0,0,0)" height="50" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="8" x="895" y="534" />
   <rect fill="rgb(0,0,0)" height="40" stroke="rgb(0,0,0)" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="128" x="67" y="46" />
   <rect fill="rgb(0,0,0)" height="40" stroke="rgb(0,0,0)" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="128" x="259" y="46" />
   <rect fill="rgb(0,0,0)" height="40" stroke="rgb(0,0,0)" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="128" x="451" y="46" />
   <rect fill="rgb(0,0,0)" height="40" stroke="rgb(0,0,0)" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="128" x="643" y="46" />
   <rect fill="rgb(0,0,0)" height="40" stroke="rgb(0,0,0)" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="128" x="835" y="46" />
-  <path d="M 128 80 L 128 695" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="8 4" />
-  <rect fill="moccasin" height="542" stroke="rgb(0,0,0)" width="8" x="124" y="137" />
-  <path d="M 320 80 L 320 695" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="8 4" />
-  <rect fill="moccasin" height="496" stroke="rgb(0,0,0)" width="8" x="316" y="137" />
-  <path d="M 512 80 L 512 695" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="8 4" />
-  <rect fill="moccasin" height="65" stroke="rgb(0,0,0)" width="8" x="508" y="204" />
-  <path d="M 704 80 L 704 695" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="8 4" />
-  <rect fill="moccasin" height="50" stroke="rgb(0,0,0)" width="8" x="700" y="416" />
-  <path d="M 896 80 L 896 695" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="8 4" />
-  <rect fill="moccasin" height="50" stroke="rgb(0,0,0)" width="8" x="892" y="533" />
+  <path d="M 128 80 L 128 690" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="8 4" />
+  <rect fill="moccasin" height="538" stroke="rgb(0,0,0)" width="8" x="124" y="136" />
+  <path d="M 320 80 L 320 690" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="8 4" />
+  <rect fill="moccasin" height="492" stroke="rgb(0,0,0)" width="8" x="316" y="136" />
+  <path d="M 512 80 L 512 690" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="8 4" />
+  <rect fill="moccasin" height="64" stroke="rgb(0,0,0)" width="8" x="508" y="202" />
+  <path d="M 704 80 L 704 690" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="8 4" />
+  <rect fill="moccasin" height="50" stroke="rgb(0,0,0)" width="8" x="700" y="412" />
+  <path d="M 896 80 L 896 690" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="8 4" />
+  <rect fill="moccasin" height="50" stroke="rgb(0,0,0)" width="8" x="892" y="528" />
   <rect fill="rgb(255,255,255)" height="40" stroke="rgb(0,0,0)" width="128" x="64" y="40" />
-  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="28" x="128.0" y="66">cron</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="22" x="128.0" y="65">cron</text>
   <rect fill="rgb(255,255,255)" height="40" stroke="rgb(0,0,0)" width="128" x="256" y="40" />
-  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="77" x="320.5" y="67">cloudigrade</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="56" x="320.0" y="66">cloudigrade</text>
   <rect fill="rgb(255,255,255)" height="40" stroke="rgb(0,0,0)" width="128" x="448" y="40" />
-  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="91" x="512.5" y="67">message queue</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="78" x="512.0" y="66">message queue</text>
   <rect fill="rgb(255,255,255)" height="40" stroke="rgb(0,0,0)" width="128" x="640" y="40" />
-  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="14" x="704.0" y="66">db</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="12" x="704.0" y="65">db</text>
   <rect fill="rgb(255,255,255)" height="40" stroke="rgb(0,0,0)" width="128" x="832" y="40" />
-  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="70" x="896.0" y="67">task queue</text>
-  <path d="M 136 137 L 312 137" fill="none" stroke="rgb(0,0,0)" />
-  <polygon fill="rgb(0,0,0)" points="304,133 312,137 304,141" stroke="rgb(0,0,0)" />
-  <path d="M 328 204 L 504 204" fill="none" stroke="rgb(0,0,0)" />
-  <polygon fill="rgb(0,0,0)" points="496,200 504,204 496,208" stroke="rgb(0,0,0)" />
-  <path d="M 328 269 L 504 269" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
-  <polygon fill="rgb(0,0,0)" points="336,265 328,269 336,273" stroke="rgb(0,0,0)" />
-  <path d="M 328 416 L 696 416" fill="none" stroke="rgb(0,0,0)" />
-  <polygon fill="rgb(0,0,0)" points="688,412 696,416 688,420" stroke="rgb(0,0,0)" />
-  <path d="M 328 466 L 696 466" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
-  <polygon fill="rgb(0,0,0)" points="336,462 328,466 336,470" stroke="rgb(0,0,0)" />
-  <path d="M 328 533 L 888 533" fill="none" stroke="rgb(0,0,0)" />
-  <polygon fill="rgb(0,0,0)" points="880,529 888,533 880,537" stroke="rgb(0,0,0)" />
-  <path d="M 328 583 L 888 583" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
-  <polygon fill="rgb(0,0,0)" points="336,579 328,583 336,587" stroke="rgb(0,0,0)" />
-  <path d="M 136 633 L 312 633" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
-  <polygon fill="rgb(0,0,0)" points="144,629 136,633 144,637" stroke="rgb(0,0,0)" />
-  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="105" x="192.5" y="135">process results</text>
-  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="133" x="398.5" y="202">get inspection data</text>
-  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="28" x="490.0" y="267">data</text>
-  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="140" x="402.0" y="414">save inspection data</text>
-  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="147" x="405.5" y="531">async cleanup cluster</text>
-  <path d="M 40 336 L 372 336" fill="none" stroke="rgb(0,0,0)" />
-  <path d="M 40 340 L 372 340" fill="none" stroke="rgb(0,0,0)" />
-  <path d="M 651 336 L 984 336" fill="none" stroke="rgb(0,0,0)" />
-  <path d="M 651 340 L 984 340" fill="none" stroke="rgb(0,0,0)" />
-  <rect fill="rgb(208,208,208)" height="21" stroke="rgb(0,0,0)" width="279" x="372" y="328" />
-  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="259" x="511.5" y="345">if no messages, abort and retry later</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="55" x="896.5" y="66">task queue</text>
+  <path d="M 136 136 L 312 136" fill="none" stroke="rgb(0,0,0)" />
+  <polygon fill="rgb(0,0,0)" points="304,132 312,136 304,140" stroke="rgb(0,0,0)" />
+  <path d="M 328 202 L 504 202" fill="none" stroke="rgb(0,0,0)" />
+  <polygon fill="rgb(0,0,0)" points="496,198 504,202 496,206" stroke="rgb(0,0,0)" />
+  <path d="M 328 266 L 504 266" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
+  <polygon fill="rgb(0,0,0)" points="336,262 328,266 336,270" stroke="rgb(0,0,0)" />
+  <path d="M 328 412 L 696 412" fill="none" stroke="rgb(0,0,0)" />
+  <polygon fill="rgb(0,0,0)" points="688,408 696,412 688,416" stroke="rgb(0,0,0)" />
+  <path d="M 328 462 L 696 462" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
+  <polygon fill="rgb(0,0,0)" points="336,458 328,462 336,466" stroke="rgb(0,0,0)" />
+  <path d="M 328 528 L 888 528" fill="none" stroke="rgb(0,0,0)" />
+  <polygon fill="rgb(0,0,0)" points="880,524 888,528 880,532" stroke="rgb(0,0,0)" />
+  <path d="M 328 578 L 888 578" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
+  <polygon fill="rgb(0,0,0)" points="336,574 328,578 336,582" stroke="rgb(0,0,0)" />
+  <path d="M 136 628 L 312 628" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
+  <polygon fill="rgb(0,0,0)" points="144,624 136,628 144,632" stroke="rgb(0,0,0)" />
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="75" x="177.5" y="134">process results</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="95" x="379.5" y="200">get inspection data</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="22" x="493.0" y="264">data</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="102" x="383.0" y="410">save inspection data</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="108" x="386.0" y="526">async cleanup cluster</text>
+  <path d="M 40 333 L 410 333" fill="none" stroke="rgb(0,0,0)" />
+  <path d="M 40 337 L 410 337" fill="none" stroke="rgb(0,0,0)" />
+  <path d="M 614 333 L 984 333" fill="none" stroke="rgb(0,0,0)" />
+  <path d="M 614 337 L 984 337" fill="none" stroke="rgb(0,0,0)" />
+  <rect fill="rgb(208,208,208)" height="21" stroke="rgb(0,0,0)" width="204" x="410" y="325" />
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="184" x="512.0" y="342">if no messages, abort and retry later</text>
 </svg>

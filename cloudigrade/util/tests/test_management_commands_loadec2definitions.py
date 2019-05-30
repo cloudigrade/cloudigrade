@@ -5,7 +5,7 @@ from unittest.mock import patch
 from django.core.management import call_command
 from django.test import TestCase
 
-from account.models import AwsEC2InstanceDefinitions
+from api.models import AwsEC2InstanceDefinition
 from util.tests import helper
 
 
@@ -14,7 +14,7 @@ class LoadEc2DefinitionsTest(TestCase):
 
     def create_random_definition(self):
         """Create and save a random definition."""
-        AwsEC2InstanceDefinitions.objects.create(
+        AwsEC2InstanceDefinition.objects.create(
             instance_type=helper.get_random_instance_type(),
             memory=random.randrange(4),
             vcpu=random.randrange(4),
