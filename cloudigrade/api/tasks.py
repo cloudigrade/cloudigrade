@@ -154,13 +154,21 @@ def copy_ami_snapshot(arn, ami_id, snapshot_region, reference_ami_id=None):
             ),
             {'image_id': ami_id, 'source_region': snapshot_region},
         )
-        awsimage = AwsMachineImage.objects.get(ec2_ami_id=ami_id)
-        image = awsimage.machine_image.get()
-        image.status = image.ERROR
-        image.save()
+        _mark_aws_image_error(ami_id)
         return
 
     customer_snapshot_id = aws.get_ami_snapshot_id(ami)
+    if not customer_snapshot_id:
+        logger.info(
+            _(
+                'Cannot get customer snapshot id from AMI %(image_id)s '
+                'in %(source_region)s. Saving ERROR status.'
+            ),
+            {'image_id': ami_id, 'source_region': snapshot_region},
+
+        )
+        _mark_aws_image_error(ami_id)
+        return
     try:
         customer_snapshot = aws.get_snapshot(
             session, customer_snapshot_id, snapshot_region
@@ -1506,3 +1514,11 @@ def _build_events_info_for_saving(account, instance, events):
         if parse(instance_event.occurred_at) >= account.created_at
     ]
     return events_info
+
+
+def _mark_aws_image_error(ami_id):
+    """Set an aws image state to ERROR."""
+    aws_image = AwsMachineImage.objects.get(ec2_ami_id=ami_id)
+    image = aws_image.machine_image.get()
+    image.status = image.ERROR
+    image.save()

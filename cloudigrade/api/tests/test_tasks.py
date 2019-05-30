@@ -654,6 +654,31 @@ class AccountCeleryTaskTest(TestCase):
         self.assertEquals(image.status, image.ERROR)
 
     @patch('api.tasks.aws')
+    def test_copy_ami_snapshot_save_error_when_image_snapshot_id_get_fails(
+        self, mock_aws
+    ):
+        """Assert that we save error status if snapshot id is not available."""
+        arn = util_helper.generate_dummy_arn()
+        ami_id = util_helper.generate_dummy_image_id()
+        snapshot_region = util_helper.get_random_region()
+        image = account_helper.generate_aws_image(ec2_ami_id=ami_id)
+
+        mock_aws.get_ami.return_value = image
+        mock_aws.get_ami_snapshot_id.return_value = None
+
+        with patch.object(
+            tasks, 'create_volume'
+        ) as mock_create_volume, patch.object(
+            tasks, 'copy_ami_to_customer_account'
+        ) as mock_copy_ami_to_customer_account:
+            copy_ami_snapshot(arn, ami_id, snapshot_region)
+            mock_create_volume.delay.assert_not_called()
+            mock_copy_ami_to_customer_account.delay.assert_not_called()
+
+        image.refresh_from_db()
+        self.assertEquals(image.status, image.ERROR)
+
+    @patch('api.tasks.aws')
     def test_copy_ami_to_customer_account_success(self, mock_aws):
         """Assert that the task copies image using appropriate boto calls."""
         arn = util_helper.generate_dummy_arn()
