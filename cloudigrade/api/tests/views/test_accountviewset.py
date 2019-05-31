@@ -7,7 +7,7 @@ from django.test import TransactionTestCase
 from rest_framework.test import (APIRequestFactory,
                                  force_authenticate)
 
-from api import views
+from api import serializers, views
 from api.models import CloudAccount
 from api.tests import helper as api_helper
 from api.views import AccountViewSet
@@ -324,3 +324,33 @@ class AccountViewSetTest(TransactionTestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertIn('account_arn', response.data)
+
+    def test_update_cloudtype_fails(self):
+        """Test updating cloud_type returns validation error."""
+        class MockCloudAccountSerializer(serializers.CloudAccountSerializer):
+            cloud_type = serializers.ChoiceField(
+                choices=['aws', 'bad_cloud'],
+                required=True
+            )
+
+        with patch('api.views.AccountViewSet.get_serializer_class') as\
+                mock_viewset_serializer:
+            mock_viewset_serializer.return_value = MockCloudAccountSerializer
+            data = {
+                'cloud_type': 'bad_cloud',
+                'name': faker.Faker().bs()[:256],
+            }
+
+            account_id = self.account4.id
+            request = self.factory.patch('/accounts/', data=data)
+            force_authenticate(request, user=self.user2)
+
+            view = views.AccountViewSet.as_view(
+                actions={'patch': 'partial_update'}
+            )
+
+            response = view(request, pk=account_id)
+            expected_error = 'You cannot update field cloud_type.'
+
+            self.assertEqual(response.status_code, 400)
+            self.assertEqual(expected_error, response.data['cloud_type'][0])

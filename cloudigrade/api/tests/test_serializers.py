@@ -123,10 +123,12 @@ class AwsAccountSerializerTest(TransactionTestCase):
                 context=context, data=validated_data
             )
             serializer.is_valid()
-            self.assertEquals(
-                'This field is required.',
-                str(serializer.errors['account_arn'][0]),
-            )
+            with self.assertRaises(ValidationError) as cm:
+                serializer.create(validated_data)
+                self.assertEquals(
+                    'This field is required.',
+                    str(cm.exception['account_arn'][0]),
+                )
 
     def test_serialization_fails_on_unsupported_cloud_type(self):
         """Test that account is not saved with unsupported cloud_type."""

@@ -10,7 +10,7 @@ from django.contrib.auth.models import User
 from django.db import models, transaction
 from django.utils.translation import gettext as _
 
-from account import AWS_PROVIDER_STRING
+from api import AWS_PROVIDER_STRING
 from util.aws import disable_cloudtrail, get_session
 from util.exceptions import CloudTrailCannotStopLogging
 from util.models import BaseModel, BasePolymorphicModel

@@ -12,7 +12,7 @@ from rest_framework.fields import (BooleanField, CharField,
 from rest_framework.relations import HyperlinkedIdentityField
 from rest_framework.serializers import ModelSerializer, Serializer
 
-from api import tasks
+from api import CLOUD_PROVIDERS, tasks
 from api.models import (AwsCloudAccount, AwsInstance,
                         AwsMachineImage, CloudAccount, Instance,
                         MachineImage)
@@ -36,20 +36,6 @@ class AwsCloudAccountSerializer(ModelSerializer):
             'updated_at',
         )
 
-    def validate_account_arn(self, value):
-        """Validate the input account_arn."""
-        if self.instance is not None and value != self.instance.account_arn:
-            raise ValidationError(
-                _('You cannot change this field.')
-            )
-        try:
-            aws.AwsArn(value)
-        except InvalidArn:
-            raise ValidationError(
-                _('Invalid ARN.')
-            )
-        return value
-
 
 class CloudAccountSerializer(ModelSerializer):
     """Serialize a customer CloudAccount for API v2."""
@@ -59,7 +45,7 @@ class CloudAccountSerializer(ModelSerializer):
     aws_account_id = CharField(required=False)
 
     cloud_type = ChoiceField(
-        choices=['aws'],
+        choices=CLOUD_PROVIDERS,
         required=True
     )
     content_object = GenericRelatedField({
@@ -84,26 +70,14 @@ class CloudAccountSerializer(ModelSerializer):
             'user_id',
             'content_object',
         )
+        create_only_fields = ('cloud_type', )
 
     def validate(self, data):
         """
         Validate conditions across multiple fields.
 
         - name must be unique per user
-        - account_arn must not be None if cloud_type is aws
         """
-        if self.instance is None:
-            # Checking `self.instance is None` means that this validation code
-            # should be skipped if validating existing objects. We only need
-            # the `account_arn` value to be given at creation, not updates.
-            cloud_type = data.get('cloud_type')
-            account_arn = data.get('account_arn')
-            if cloud_type == 'aws' and account_arn is None:
-                raise ValidationError(
-                    {'account_arn': Field.default_error_messages['required']},
-                    'required',
-                )
-
         user = self.context['request'].user
         name = data.get('name')
 
@@ -121,7 +95,7 @@ class CloudAccountSerializer(ModelSerializer):
         if self.instance is not None and value != \
                 self.instance.content_object.account_arn:
             raise ValidationError(
-                _('You cannot change this field.')
+                _('You cannot update account_arn.')
             )
         try:
             aws.AwsArn(value)
@@ -132,19 +106,40 @@ class CloudAccountSerializer(ModelSerializer):
         return value
 
     def create(self, validated_data):
-        """Create a CloudAccount."""
+        """
+        Create a CloudAccount.
+
+        Validates:
+            - account_arn must not be None if cloud_type is aws
+        """
         cloud_type = validated_data['cloud_type']
 
         if cloud_type == 'aws':
+            account_arn = validated_data.get('account_arn')
+            if account_arn is None:
+                raise ValidationError(
+                    {'account_arn': Field.default_error_messages['required']},
+                    'required',
+                )
             return self.create_aws_cloud_account(validated_data)
         else:
             raise NotImplementedError
 
     def update(self, instance, validated_data):
         """Update the instance with the name from validated_data."""
-        instance.name = validated_data.get('name', instance.name)
-        instance.save()
-        return instance
+        errors = {}
+
+        for field in validated_data.copy():
+            if field in self.Meta.create_only_fields:
+                if getattr(instance, field) != validated_data.get(field):
+                    errors[field] = [
+                        _('You cannot update field {}.').format(field)
+                    ]
+                else:
+                    validated_data.pop(field, None)
+        if errors:
+            raise ValidationError(errors)
+        return super().update(instance, validated_data)
 
     def get_user_id(self, account):
         """Get the user_id property for serialization."""
