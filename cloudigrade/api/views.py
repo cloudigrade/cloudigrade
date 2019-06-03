@@ -166,6 +166,7 @@ class DailyConcurrentUsageViewSet(
 ):
     """Generate report of concurrent usage within a time frame."""
 
+    authentication_classes = (ThreeScaleAuthentication, )
     serializer_class = serializers.DailyConcurrentUsageSerializer
 
     def get_queryset(self):
