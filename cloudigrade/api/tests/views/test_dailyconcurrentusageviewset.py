@@ -3,7 +3,8 @@ import datetime
 
 import faker
 from django.test import TransactionTestCase
-from rest_framework.test import (APIClient, APIRequestFactory)
+from django.utils.translation import gettext as _
+from rest_framework.test import APIClient, APIRequestFactory
 
 from api.tests import helper as api_helper
 from util.tests import helper as util_helper
@@ -45,7 +46,7 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
             self.instance1,
             (
                 util_helper.utc_dt(2019, 5, 15, 1, 0, 0),
-                util_helper.utc_dt(2019, 5, 15, 2, 0, 0)
+                util_helper.utc_dt(2019, 5, 15, 2, 0, 0),
             ),
             image=self.instance1.machine_image,
             instance_type=self.instance_type1,
@@ -92,3 +93,49 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
             self.assertEqual(result['vcpu'], 0)
             self.assertEqual(result['memory'], 0.0)
             self.assertEqual(result['date'], str(this_date))
+
+    def test_bad_start_date_and_end_date_arguments(self):
+        """Test with bad date arguments."""
+        data = {'start_date': 'potato', 'end_date': 'gems'}
+        client = APIClient()
+        client.force_authenticate(user=self.user1)
+        response = client.get('/v2/concurrent/', data=data, format='json')
+        self.assertEqual(response.status_code, 400)
+        body = response.json()
+        self.assertEqual(
+            body['start_date'], [_('start_date must be a date (YYYY-MM-DD).')]
+        )
+        self.assertEqual(
+            body['end_date'], [_('end_date must be a date (YYYY-MM-DD).')]
+        )
+
+    def test_start_date_is_inclusive_and_end_date_is_exclusive(self):
+        """Test that start_date is inclusive and end_date is exclusive."""
+        data = {'start_date': '2019-01-01', 'end_date': '2019-01-04'}
+        client = APIClient()
+        client.force_authenticate(user=self.user1)
+        response = client.get('/v2/concurrent/', data=data, format='json')
+        body = response.json()
+        self.assertEqual(body['meta']['count'], 3)
+        self.assertEqual(len(body['data']), 3)
+        self.assertEqual(body['data'][0]['date'], '2019-01-01')
+        self.assertEqual(body['data'][1]['date'], '2019-01-02')
+        self.assertEqual(body['data'][2]['date'], '2019-01-03')
+
+    def test_start_date_end_date_defaults(self):
+        """
+        Test with no start_date and no end_date set.
+
+        Default start_date is "today" and default end_date is "tomorrow", and
+        since start_date is inclusive and end_date is exclusive, the resulting
+        output should be data for one day: today.
+        """
+        today = datetime.date.today()
+        data = {}
+        client = APIClient()
+        client.force_authenticate(user=self.user1)
+        response = client.get('/v2/concurrent/', data=data, format='json')
+        body = response.json()
+        self.assertEqual(body['meta']['count'], 1)
+        self.assertEqual(len(body['data']), 1)
+        self.assertEqual(body['data'][0]['date'], str(today))
