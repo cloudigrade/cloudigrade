@@ -1,5 +1,5 @@
 """DRF API views for the account app v2."""
-from datetime import date
+from datetime import date, timedelta
 
 from dateutil import tz
 from dateutil.parser import parse
@@ -183,7 +183,11 @@ class DailyConcurrentUsageViewSet(
 
         try:
             end_date = self.request.query_params.get('end_date', None)
-            end_date = parse(end_date).date() if end_date else date.today()
+            end_date = (
+                parse(end_date).date()
+                if end_date
+                else date.today() + timedelta(days=1)
+            )
         except ValueError:
             errors['end_date'] = [_('end_date must be a date (YYYY-MM-DD).')]
 
