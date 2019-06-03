@@ -20,7 +20,7 @@ from util import filters
 
 from api import models
 from api.models import InstanceEvent, Run
-from api.tests import helper as account_helper
+from api.tests import helper as api_helper
 from api.util import normalize_runs
 from util.tests import helper as util_helper
 
@@ -49,7 +49,7 @@ class DocsApiHandler(object):
         """Initialize all the data for the examples."""
         self.superuser_email = f'superuser@example.com'
         self.superuser = get_test_user(self.superuser_email, is_superuser=True)
-        self.superuser_client = account_helper.SandboxedRestClient()
+        self.superuser_client = api_helper.SandboxedRestClient()
         self.superuser_client._force_authenticate(self.superuser)
 
         self.customer_email = f'customer@example.com'
@@ -57,7 +57,7 @@ class DocsApiHandler(object):
         self.customer_user = get_test_user(
             self.customer_email, self.customer_password, is_superuser=False
         )
-        self.customer_client = account_helper.SandboxedRestClient()
+        self.customer_client = api_helper.SandboxedRestClient()
         self.customer_client._force_authenticate(self.customer_user)
 
         self.customer_arn = util_helper.generate_dummy_arn()
@@ -81,36 +81,36 @@ class DocsApiHandler(object):
 
         ##################################
         # Generate data for the superuser.
-        self.superuser_account = account_helper.generate_aws_account(
+        self.superuser_account = api_helper.generate_aws_account(
             arn=util_helper.generate_dummy_arn(),
             user=self.superuser,
             name='super duper account',
             created_at=self.two_weeks_ago,
         )
         self.superuser_instances = [
-            account_helper.generate_aws_instance(self.superuser_account)
+            api_helper.generate_aws_instance(self.superuser_account)
         ]
 
         self.events = []
         # This event represents one instance starting yesterday.
         self.events.extend(
-            account_helper.generate_aws_instance_events(
+            api_helper.generate_aws_instance_events(
                 self.superuser_instances[0], [(self.yesterday, None)]
             )
         )
 
         ######################################
         # Generate data for the customer user.
-        self.customer_account = account_helper.generate_aws_account(
+        self.customer_account = api_helper.generate_aws_account(
             arn=util_helper.generate_dummy_arn(),
             user=self.customer_user,
             name='greatest account ever',
             created_at=self.two_weeks_ago,
         )
         self.customer_instances = [
-            account_helper.generate_aws_instance(self.customer_account),
-            account_helper.generate_aws_instance(self.customer_account),
-            account_helper.generate_aws_instance(self.customer_account),
+            api_helper.generate_aws_instance(self.customer_account),
+            api_helper.generate_aws_instance(self.customer_account),
+            api_helper.generate_aws_instance(self.customer_account),
         ]
 
         # Generate events so we can see customer activity in the responses.
@@ -118,7 +118,7 @@ class DocsApiHandler(object):
         # stopping two days ago, and starting again yesterday.
         for instance in self.customer_instances[:2]:
             self.events.extend(
-                account_helper.generate_aws_instance_events(
+                api_helper.generate_aws_instance_events(
                     instance,
                     [
                         (self.last_week, self.two_days_ago),
