@@ -256,12 +256,12 @@ def max_concurrent_usage(day, user_id=None, cloud_account_id=None):
     for __, is_start, vcpu, memory in rhel_on_offs:
         if is_start:
             current_instances += 1
-            current_vcpu += vcpu
-            current_memory += memory
+            current_vcpu += vcpu if vcpu is not None else 0
+            current_memory += memory if memory is not None else 0.0
         else:
             current_instances -= 1
-            current_vcpu -= vcpu
-            current_memory -= memory
+            current_vcpu -= vcpu if vcpu is not None else 0
+            current_memory -= memory if memory is not None else 0.0
         max_instances = max(current_instances, max_instances)
         max_vcpu = max(current_vcpu, max_vcpu)
         max_memory = max(current_memory, max_memory)
