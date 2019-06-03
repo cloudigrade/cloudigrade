@@ -298,6 +298,34 @@ Response:
 {{ v2_patch_image_both | stringify_http_response | rst_codeblock }}
 
 
+Report Commands
+---------------
+
+These APIs may be used to generate calculated and aggregated report data.
+
+Daily Max Concurrency
+~~~~~~~~~~~~~~~~~~~~~
+
+The concurrency API returns a paginated list of days, and each day includes the
+maximum concurrent number of instances, number of vCPUs, and amount of memory
+in GBs seen concurrently in use during that day.
+
+Optional ``start_date`` is an ISO-8601 date that is the inclusive start of the
+reporting period. If not defined, default is "today".
+
+Optional ``end_date`` is an ISO-8601 date that is the exclusive end of the
+reporting period. If not defined, default is "tomorrow".
+
+Request:
+
+{{ v2_list_concurrent.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
+
+Response:
+
+{{ v2_list_concurrent | stringify_http_response | rst_codeblock }}
+
+
+
 Miscellaneous Commands
 ----------------------
 

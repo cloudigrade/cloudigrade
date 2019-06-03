@@ -47,6 +47,8 @@ class DocsApiHandler(object):
 
     def __init__(self):
         """Initialize all the data for the examples."""
+        api_helper.generate_aws_ec2_definitions()
+
         self.superuser_email = f'superuser@example.com'
         self.superuser = get_test_user(self.superuser_email, is_superuser=True)
         self.superuser_client = api_helper.SandboxedRestClient()
@@ -121,7 +123,7 @@ class DocsApiHandler(object):
                 api_helper.generate_aws_instance_events(
                     instance,
                     [
-                        (self.last_week, self.two_days_ago),
+                        (self.last_week, self.three_days_ago),
                         (self.yesterday, None),
                     ],
                 )
@@ -331,6 +333,16 @@ class DocsApiHandler(object):
         )
         assert_status(response, 200)
         responses['v2_patch_image_both'] = response
+
+        #######################
+        # Report Commands
+
+        # Daily Max Concurrency
+        response = self.customer_client.list_concurrent(
+            data={'start_date': self.last_week.date()}
+        )
+        assert_status(response, 200)
+        responses['v2_list_concurrent'] = response
 
         ########################
         # V2 Miscellaneous Commands
