@@ -144,7 +144,6 @@ class DocsApiHandler(object):
             )
             run.save()
 
-
         # Force all images to have RHEL detected and OCP challenged.
         self.images = list(
             set(
@@ -183,10 +182,9 @@ class DocsApiHandler(object):
         # V2 endpoints
         responses['v2_rh_identity'] = util_helper.RH_IDENTITY
         # convert from binary string to string.
-        responses['v2_header'] = util_helper.get_3scale_auth_header().\
-            decode("utf-8")
-
-        api_root_v2 = '/v2'
+        responses['v2_header'] = util_helper.get_3scale_auth_header().decode(
+            "utf-8"
+        )
 
         ########################
         # Customer Account Setup
@@ -198,8 +196,7 @@ class DocsApiHandler(object):
                 'account_arn': another_arn,
                 'name': 'yet another account',
                 'cloud_type': 'aws',
-            },
-            api_root=api_root_v2
+            }
         )
         assert_status(response, 201)
         responses['v2_account_create'] = response
@@ -223,27 +220,18 @@ class DocsApiHandler(object):
         # v2 Customer Account Info
 
         # List all accounts
-        response = self.customer_client.list_accounts(
-            api_root=api_root_v2
-        )
+        response = self.customer_client.list_accounts()
         assert_status(response, 200)
         responses['v2_account_list'] = response
 
         # Retrieve a specific account
-        response = self.customer_client.get_accounts(
-            customer_account.id,
-            api_root=api_root_v2
-        )
+        response = self.customer_client.get_accounts(customer_account.id)
         assert_status(response, 200)
         responses['v2_account_get'] = response
 
         # Update a specific account
         response = self.customer_client.patch_accounts(
-            customer_account.id,
-            data={
-                'name': 'name updated using PATCH',
-            },
-            api_root=api_root_v2
+            customer_account.id, data={'name': 'name updated using PATCH'}
         )
         assert_status(response, 200)
         responses['v2_account_patch'] = response
@@ -255,7 +243,6 @@ class DocsApiHandler(object):
                 'account_arn': another_arn,
                 'cloud_type': 'aws',
             },
-            api_root=api_root_v2
         )
         assert_status(response, 200)
         responses['v2_account_put'] = response
@@ -264,9 +251,8 @@ class DocsApiHandler(object):
         response = self.customer_client.patch_accounts(
             customer_account.id,
             data={
-                'account_arn': 'arn:aws:iam::999999999999:role/role-for-cloudigrade',
+                'account_arn': 'arn:aws:iam::999999999999:role/role-for-cloudigrade'
             },
-            api_root=api_root_v2
         )
         assert_status(response, 400)
         responses['v2_account_patch_arn_fail'] = response
@@ -275,32 +261,27 @@ class DocsApiHandler(object):
         # V2 Instance Info
 
         # List all instances
-        response = self.customer_client.list_instances(
-            api_root=api_root_v2
-        )
+        response = self.customer_client.list_instances()
         assert_status(response, 200)
         responses['v2_instance_list'] = response
 
         # Retrieve a specific instance
         response = self.customer_client.get_instances(
-            self.customer_instances[0].id,
-            api_root=api_root_v2
+            self.customer_instances[0].id
         )
         assert_status(response, 200)
         responses['v2_instance_get'] = response
 
         # Filtering instances on user
         response = self.superuser_client.list_instances(
-            data={'v2_user_id': self.superuser.id},
-            api_root=api_root_v2
+            data={'v2_user_id': self.superuser.id}
         )
         assert_status(response, 200)
         responses['v2_instance_filter'] = response
 
         # Filtering instances on running
         response = self.superuser_client.list_instances(
-            data={'running_since': self.now},
-            api_root=api_root_v2
+            data={'running_since': self.now}
         )
         assert_status(response, 200)
         responses['v2_instance_filter_running'] = response
@@ -309,60 +290,44 @@ class DocsApiHandler(object):
         # V2 Machine Image Info
 
         # List all images
-        response = self.customer_client.list_images(
-            api_root=api_root_v2
-        )
+        response = self.customer_client.list_images()
         assert_status(response, 200)
         responses['v2_list_images'] = response
 
         response = self.superuser_client.list_images(
-            data={'user_id': self.superuser.id},
-            api_root=api_root_v2
+            data={'user_id': self.superuser.id}
         )
         assert_status(response, 200)
         responses['v2_list_images_filter'] = response
 
         # Retrieve a specific image
-        response = self.superuser_client.get_images(
-            self.images[0].id,
-            api_root=api_root_v2
-        )
+        response = self.superuser_client.get_images(self.images[0].id)
         assert_status(response, 200)
         responses['v2_get_image'] = response
 
         # Reinspect a specific image
         response = self.superuser_client.post_images(
-            noun_id=self.images[0].id,
-            detail='reinspect',
-            api_root=api_root_v2
+            noun_id=self.images[0].id, detail='reinspect'
         )
         assert_status(response, 200)
         responses['v2_reinspect_image'] = response
 
         # Issuing challenges/flags
         response = self.superuser_client.patch_images(
-            self.images[0].id,
-            data={'rhel_challenged': True},
-            api_root=api_root_v2
+            self.images[0].id, data={'rhel_challenged': True}
         )
         assert_status(response, 200)
         responses['v2_patch_image'] = response
 
         response = self.superuser_client.patch_images(
-            self.images[0].id,
-            data={'rhel_challenged': False},
-            api_root=api_root_v2
+            self.images[0].id, data={'rhel_challenged': False}
         )
         assert_status(response, 200)
         responses['v2_patch_image_false'] = response
 
         response = self.superuser_client.patch_images(
             self.images[0].id,
-            data={
-                'rhel_challenged': True,
-                'openshift_challenged': True,
-            },
-            api_root=api_root_v2
+            data={'rhel_challenged': True, 'openshift_challenged': True},
         )
         assert_status(response, 200)
         responses['v2_patch_image_both'] = response
@@ -376,9 +341,7 @@ class DocsApiHandler(object):
         )
 
         with override_settings(CLOUDIGRADE_VERSION=cloudigrade_version):
-            response = self.superuser_client.get_sysconfig(
-                api_root=api_root_v2
-            )
+            response = self.superuser_client.get_sysconfig()
         assert_status(response, 200)
         responses['v2_get_sysconfig'] = response
 
