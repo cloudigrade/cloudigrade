@@ -194,8 +194,8 @@ Response:
 {{ v2_instance_filter | stringify_http_response | rst_codeblock }}
 
 
-You may also include an optional "running" query string argument to filter for only
-running/non-running instances.
+You may also include an optional "running_since" query string argument to filter for only
+instances that have been running uninterrupted since the given time.
 
 Request:
 
