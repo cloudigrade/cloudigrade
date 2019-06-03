@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import django
 import jinja2
 from dateutil import tz
+from django.db import transaction
 from django.test import override_settings
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.local')
@@ -19,7 +20,6 @@ from util.tests.helper import get_test_user
 from util import filters
 
 from api import models
-from api.models import InstanceEvent, Run
 from api.tests import helper as api_helper
 from api.util import normalize_runs
 from util.tests import helper as util_helper
@@ -133,9 +133,9 @@ class DocsApiHandler(object):
         # Note: this crude and *direct* implementation of Run-saving should be
         # replaced as we continue porting pilot functionality and (eventually)
         # better general-purpose Run-handling functions materialize.
-        normalized_runs = normalize_runs(InstanceEvent.objects.all())
+        normalized_runs = normalize_runs(models.InstanceEvent.objects.all())
         for normalized_run in normalized_runs:
-            run = Run(
+            run = models.Run(
                 start_time=normalized_run.start_time,
                 end_time=normalized_run.end_time,
                 machineimage_id=normalized_run.image_id,
@@ -162,13 +162,6 @@ class DocsApiHandler(object):
             image.status = image.INSPECTED
             image.region = 'us-east-1'
             image.save()
-
-    def cleanup(self):
-        """Delete everything we created here."""
-        for account in models.CloudAccount.objects.all():
-            self.superuser_client.delete_account(account.id)
-        models.MachineImage.objects.all().delete()
-        User.objects.all().delete()
 
     def gather_api_responses(self):
         """
@@ -389,11 +382,10 @@ def render(data):
 
 if __name__ == '__main__':
     empty_check()
-    api_hander = DocsApiHandler()
-    try:
+    with transaction.atomic():
+        api_hander = DocsApiHandler()
         responses = api_hander.gather_api_responses()
-    finally:
-        api_hander.cleanup()
+        transaction.set_rollback(True)
     output = render(responses)
     output = '\n'.join((line.rstrip() for line in output.split('\n')))
     print(output)
