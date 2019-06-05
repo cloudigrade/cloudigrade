@@ -310,8 +310,9 @@ def copy_ami_to_customer_account(arn, reference_ami_id, snapshot_region):
                     reference_ami_id,
                 )
                 ami = AwsMachineImage.objects.get(ec2_ami_id=reference_ami_id)
-                ami.status = ami.ERROR
-                ami.save()
+                image = ami.machine_image.get()
+                image.status = image.ERROR
+                image.save()
                 return
             elif error in public_errors:
                 # This appears to be a marketplace AMI, mark it as inspected.
@@ -323,9 +324,11 @@ def copy_ami_to_customer_account(arn, reference_ami_id, snapshot_region):
                     reference_ami_id,
                 )
                 ami = AwsMachineImage.objects.get(ec2_ami_id=reference_ami_id)
-                ami.status = ami.INSPECTED
                 ami.aws_marketplace_image = True
                 ami.save()
+                image = ami.machine_image.get()
+                image.status = image.INSPECTED
+                image.save()
                 return
 
         raise e
@@ -539,7 +542,8 @@ def run_inspection_cluster(messages, cloud='aws'):
 
     """
     for message in messages:
-        image = AwsMachineImage.objects.get(ec2_ami_id=message['ami_id'])
+        aws_image = AwsMachineImage.objects.get(ec2_ami_id=message['ami_id'])
+        image = aws_image.machine_image.get()
         image.status = MachineImage.INSPECTING
         image.save()
 
@@ -593,6 +597,7 @@ def run_inspection_cluster(messages, cloud='aws'):
             error_message = e.response.get('Error').get('Message')
 
             ami = AwsMachineImage.objects.get(ec2_ami_id=message['ami_id'])
+            image = aws_image.machine_image.get()
 
             if error_code in ('OptInRequired', 'IncorrectInstanceState',) \
                     and 'marketplace' in error_message.lower():
@@ -600,7 +605,7 @@ def run_inspection_cluster(messages, cloud='aws'):
                               'copy volume, this should not happen, '
                               'but here we are.'), message['ami_id'])
                 ami.aws_marketplace_image = True
-                ami.status = MachineImage.INSPECTED
+                image.status = MachineImage.INSPECTED
             else:
                 logger.error(
                     _('Encountered an issue when trying to attach volume '
@@ -614,9 +619,10 @@ def run_inspection_cluster(messages, cloud='aws'):
                         'error_message': error_message,
                     }
                 )
-                ami.status = MachineImage.ERROR
+                image.status = MachineImage.ERROR
 
             ami.save()
+            image.save()
             volume.delete()
 
             continue

@@ -678,17 +678,19 @@ class AccountCeleryTaskTest(TestCase):
             mock_aws.get_session.return_value, reference_ami.id, source_region
         )
 
-    @patch('api.models.AwsMachineImage.objects')
     @patch('api.tasks.aws')
     def test_copy_ami_to_customer_account_marketplace(
-            self, mock_aws, mock_aws_machine_image_objects):
+            self, mock_aws):
         """Assert that the task marks marketplace image as inspected."""
         arn = util_helper.generate_dummy_arn()
         reference_ami_id = util_helper.generate_dummy_image_id()
         source_region = util_helper.get_random_region()
-        mock_ami = Mock()
-        mock_ami.INSPECTED = 'Inspected'
-        mock_aws_machine_image_objects.get.return_value = mock_ami
+
+        image = account_helper.generate_aws_image(
+            ec2_ami_id=reference_ami_id,
+            status=MachineImage.INSPECTING
+        )
+
         mock_reference_ami = Mock()
         mock_reference_ami.public = True
         mock_aws.get_ami.return_value = mock_reference_ami
@@ -708,23 +710,25 @@ class AccountCeleryTaskTest(TestCase):
         mock_aws.get_ami.assert_called_with(
             mock_aws.get_session.return_value, reference_ami_id, source_region
         )
-        mock_aws_machine_image_objects.get.assert_called_with(
-            ec2_ami_id=reference_ami_id)
-        self.assertEqual(mock_ami.status, mock_ami.INSPECTED)
-        self.assertTrue(mock_ami.aws_marketplace_image)
-        mock_ami.save.assert_called_once()
 
-    @patch('api.models.AwsMachineImage.objects')
+        image.refresh_from_db()
+        aws_image = image.content_object
+        aws_image.refresh_from_db()
+
+        self.assertEqual(image.status, MachineImage.INSPECTED)
+        self.assertTrue(aws_image.aws_marketplace_image)
+
     @patch('api.tasks.aws')
     def test_copy_ami_to_customer_account_marketplace_with_dot_error(
-            self, mock_aws, mock_aws_machine_image_objects):
+            self, mock_aws):
         """Assert that the task marks marketplace image as inspected."""
         arn = util_helper.generate_dummy_arn()
         reference_ami_id = util_helper.generate_dummy_image_id()
         source_region = util_helper.get_random_region()
-        mock_ami = Mock()
-        mock_ami.INSPECTED = 'Inspected'
-        mock_aws_machine_image_objects.get.return_value = mock_ami
+        image = account_helper.generate_aws_image(
+            ec2_ami_id=reference_ami_id,
+            status=MachineImage.INSPECTING
+        )
 
         mock_aws.copy_ami.side_effect = ClientError(
             error_response={'Error': {
@@ -741,24 +745,24 @@ class AccountCeleryTaskTest(TestCase):
         mock_aws.get_ami.assert_called_with(
             mock_aws.get_session.return_value, reference_ami_id, source_region
         )
-        mock_aws_machine_image_objects.get.assert_called_with(
-            ec2_ami_id=reference_ami_id)
-        self.assertEqual(mock_ami.status, mock_ami.INSPECTED)
-        self.assertTrue(mock_ami.aws_marketplace_image)
-        mock_ami.save.assert_called_once()
+        image.refresh_from_db()
+        aws_image = image.content_object
+        aws_image.refresh_from_db()
 
-    @patch('api.models.AwsMachineImage.objects')
+        self.assertEqual(image.status, MachineImage.INSPECTED)
+        self.assertTrue(aws_image.aws_marketplace_image)
+
     @patch('api.tasks.aws')
     def test_copy_ami_to_customer_account_community(
-            self, mock_aws, mock_aws_machine_image_objects):
+            self, mock_aws):
         """Assert that the task marks community image as inspected."""
         arn = util_helper.generate_dummy_arn()
         reference_ami_id = util_helper.generate_dummy_image_id()
         source_region = util_helper.get_random_region()
-        mock_ami = Mock()
-        mock_ami.INSPECTED = 'Inspected'
-        mock_aws_machine_image_objects.get.return_value = mock_ami
-
+        image = account_helper.generate_aws_image(
+            ec2_ami_id=reference_ami_id,
+            status=MachineImage.INSPECTING
+        )
         mock_aws.copy_ami.side_effect = ClientError(
             error_response={'Error': {
                 'Code': 'InvalidRequest',
@@ -767,30 +771,33 @@ class AccountCeleryTaskTest(TestCase):
             }},
             operation_name=Mock(),
         )
-
         copy_ami_to_customer_account(arn, reference_ami_id, source_region)
 
         mock_aws.get_session.assert_called_with(arn)
         mock_aws.get_ami.assert_called_with(
             mock_aws.get_session.return_value, reference_ami_id, source_region
         )
-        mock_aws_machine_image_objects.get.assert_called_with(
-            ec2_ami_id=reference_ami_id)
-        self.assertEqual(mock_ami.status, mock_ami.INSPECTED)
-        self.assertTrue(mock_ami.aws_marketplace_image)
-        mock_ami.save.assert_called_once()
 
-    @patch('api.models.AwsMachineImage.objects')
+        image.refresh_from_db()
+        aws_image = image.content_object
+        aws_image.refresh_from_db()
+
+        self.assertEqual(image.status, image.INSPECTED)
+        self.assertTrue(aws_image.aws_marketplace_image)
+
     @patch('api.tasks.aws')
     def test_copy_ami_to_customer_account_private_no_copy(
-            self, mock_aws, mock_aws_machine_image_objects):
+            self, mock_aws):
         """Assert that the task marks private (no copy) image as in error."""
         arn = util_helper.generate_dummy_arn()
         reference_ami_id = util_helper.generate_dummy_image_id()
         source_region = util_helper.get_random_region()
-        mock_ami = Mock()
-        mock_ami.ERROR = 'Error'
-        mock_aws_machine_image_objects.get.return_value = mock_ami
+
+        image = account_helper.generate_aws_image(
+            ec2_ami_id=reference_ami_id,
+            status=MachineImage.INSPECTING
+        )
+
         mock_reference_ami = Mock()
         mock_reference_ami.public = False
         mock_aws.get_ami.return_value = mock_reference_ami
@@ -806,26 +813,25 @@ class AccountCeleryTaskTest(TestCase):
 
         copy_ami_to_customer_account(arn, reference_ami_id, source_region)
 
+        image.refresh_from_db()
+
         mock_aws.get_session.assert_called_with(arn)
         mock_aws.get_ami.assert_called_with(
             mock_aws.get_session.return_value, reference_ami_id, source_region
         )
-        mock_aws_machine_image_objects.get.assert_called_with(
-            ec2_ami_id=reference_ami_id)
-        self.assertEqual(mock_ami.status, mock_ami.ERROR)
-        mock_ami.save.assert_called_once()
+        self.assertEqual(image.status, MachineImage.ERROR)
 
-    @patch('api.models.AwsMachineImage.objects')
     @patch('api.tasks.aws')
     def test_copy_ami_to_customer_account_private_no_copy_dot_error(
-            self, mock_aws, mock_aws_machine_image_objects):
+            self, mock_aws):
         """Assert that the task marks private (no copy) image as in error."""
         arn = util_helper.generate_dummy_arn()
         reference_ami_id = util_helper.generate_dummy_image_id()
         source_region = util_helper.get_random_region()
-        mock_ami = Mock()
-        mock_ami.ERROR = 'Error'
-        mock_aws_machine_image_objects.get.return_value = mock_ami
+        image = account_helper.generate_aws_image(
+            ec2_ami_id=reference_ami_id,
+            status=MachineImage.INSPECTING
+        )
         mock_reference_ami = Mock()
         mock_reference_ami.public = False
         mock_aws.get_ami.return_value = mock_reference_ami
@@ -845,10 +851,9 @@ class AccountCeleryTaskTest(TestCase):
         mock_aws.get_ami.assert_called_with(
             mock_aws.get_session.return_value, reference_ami_id, source_region
         )
-        mock_aws_machine_image_objects.get.assert_called_with(
-            ec2_ami_id=reference_ami_id)
-        self.assertEqual(mock_ami.status, mock_ami.ERROR)
-        mock_ami.save.assert_called_once()
+        image.refresh_from_db()
+
+        self.assertEqual(image.status, MachineImage.ERROR)
 
     @patch('api.tasks.aws')
     def test_copy_ami_to_customer_account_not_marketplace(self, mock_aws):
@@ -1131,14 +1136,17 @@ class AccountCeleryTaskTest(TestCase):
         )
         mock_run_inspection_cluster.delay.assert_not_called()
 
-    @patch('api.models.AwsMachineImage.objects')
     @patch('api.tasks.boto3')
     @patch('api.tasks.aws')
     def test_run_inspection_cluster_success(
-            self, mock_aws, mock_boto3, mock_image_objects):
+            self, mock_aws, mock_boto3):
         """Asserts successful starting of the houndigrade task."""
-        mock_image_objects.get.return_value = mock_image_objects
-        mock_image_objects.INSPECTING.return_value = 'inspecting'
+        mock_ami_id = util_helper.generate_dummy_image_id()
+
+        image = account_helper.generate_aws_image(
+            ec2_ami_id=mock_ami_id,
+            status=MachineImage.PENDING
+        )
 
         mock_list_container_instances = {
             'containerInstanceArns': [util_helper.generate_dummy_instance_id()]
@@ -1155,16 +1163,14 @@ class AccountCeleryTaskTest(TestCase):
         mock_session = mock_aws.boto3.Session.return_value
         mock_aws.get_session.return_value = mock_session
 
-        mock_ami_id = util_helper.generate_dummy_image_id()
-
         messages = [{
             'ami_id': mock_ami_id,
             'volume_id': util_helper.generate_dummy_volume_id()}]
         tasks.run_inspection_cluster(messages)
 
-        mock_image_objects.get.assert_called_once_with(ec2_ami_id=mock_ami_id)
+        image.refresh_from_db()
 
-        self.assertEqual(mock_image_objects.status,
+        self.assertEqual(image.status,
                          MachineImage.INSPECTING)
 
         mock_ecs.list_container_instances.assert_called_once_with(
@@ -1271,14 +1277,17 @@ class AccountCeleryTaskTest(TestCase):
         with self.assertRaises(AwsTooManyECSInstances):
             tasks.run_inspection_cluster(messages)
 
-    @patch('api.models.AwsMachineImage.objects')
     @patch('api.tasks.boto3')
     @patch('api.tasks.aws')
     def test_run_inspection_cluster_with_marketplace_volume(
-            self, mock_aws, mock_boto3, mock_image_objects):
+            self, mock_aws, mock_boto3):
         """Assert that ami is marked as inspected if marketplace volume."""
-        mock_image_objects.get.return_value = mock_image_objects
-        mock_image_objects.INSPECTED.return_value = 'inspected'
+        mock_ami_id = util_helper.generate_dummy_image_id()
+
+        image = account_helper.generate_aws_image(
+            ec2_ami_id=mock_ami_id,
+            status=MachineImage.PENDING
+        )
 
         mock_list_container_instances = {
             'containerInstanceArns': [util_helper.generate_dummy_instance_id()]
@@ -1305,16 +1314,15 @@ class AccountCeleryTaskTest(TestCase):
         mock_session = mock_aws.boto3.Session.return_value
         mock_aws.get_session.return_value = mock_session
 
-        mock_ami_id = util_helper.generate_dummy_image_id()
-
         messages = [{
             'ami_id': mock_ami_id,
             'volume_id': util_helper.generate_dummy_volume_id()}]
 
         tasks.run_inspection_cluster(messages)
+        image.refresh_from_db()
 
-        self.assertEqual(mock_image_objects.status,
-                         mock_image_objects.INSPECTED.return_value)
+        self.assertEqual(image.status,
+                         MachineImage.INSPECTED)
 
         mock_ecs.list_container_instances.assert_called_once_with(
             cluster=settings.HOUNDIGRADE_ECS_CLUSTER_NAME)
@@ -1329,15 +1337,17 @@ class AccountCeleryTaskTest(TestCase):
         mock_ec2.Volume.assert_called_once_with(messages[0]['volume_id'])
         mock_ec2.Volume.return_value.attach_to_instance.assert_called_once()
 
-    @patch('api.models.AwsMachineImage.objects')
     @patch('api.tasks.boto3')
     @patch('api.tasks.aws')
     def test_run_inspection_cluster_with_unknown_error(
-            self, mock_aws, mock_boto3, mock_image_objects):
+            self, mock_aws, mock_boto3):
         """Assert that non marketplace errors are still raised."""
-        mock_image_objects.get.return_value = mock_image_objects
-        mock_image_objects.INSPECTED.return_value = 'inspected'
-        mock_image_objects.ERROR.return_value = 'error'
+        mock_ami_id = util_helper.generate_dummy_image_id()
+
+        image = account_helper.generate_aws_image(
+            ec2_ami_id=mock_ami_id,
+            status=MachineImage.PENDING
+        )
 
         mock_list_container_instances = {
             'containerInstanceArns': [util_helper.generate_dummy_instance_id()]
@@ -1364,16 +1374,15 @@ class AccountCeleryTaskTest(TestCase):
         mock_session = mock_aws.boto3.Session.return_value
         mock_aws.get_session.return_value = mock_session
 
-        mock_ami_id = util_helper.generate_dummy_image_id()
-
         messages = [{
             'ami_id': mock_ami_id,
             'volume_id': util_helper.generate_dummy_volume_id()}]
 
         tasks.run_inspection_cluster(messages)
+        image.refresh_from_db()
 
-        self.assertEqual(mock_image_objects.status,
-                         mock_image_objects.ERROR.return_value)
+        self.assertEqual(image.status,
+                         MachineImage.ERROR)
 
         mock_ecs.list_container_instances.assert_called_once_with(
             cluster=settings.HOUNDIGRADE_ECS_CLUSTER_NAME)
