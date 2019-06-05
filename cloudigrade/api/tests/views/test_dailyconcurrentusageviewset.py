@@ -109,6 +109,22 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
             body['end_date'], [_('end_date must be a date (YYYY-MM-DD).')]
         )
 
+    def test_bad_user_id_and_cloud_account_id_arguments(self):
+        """Test with bad user_id and cloud_account_id arguments."""
+        data = {'user_id': 'potato', 'cloud_account_id': 'gems'}
+        client = APIClient()
+        client.force_authenticate(user=self.superuser)
+        response = client.get('/v2/concurrent/', data=data, format='json')
+        self.assertEqual(response.status_code, 400)
+        body = response.json()
+        self.assertEqual(
+            body['user_id'], [_('{} must be an integer.').format('user_id')]
+        )
+        self.assertEqual(
+            body['cloud_account_id'],
+            [_('{} must be an integer.').format('cloud_account_id')],
+        )
+
     def test_start_date_is_inclusive_and_end_date_is_exclusive(self):
         """Test that start_date is inclusive and end_date is exclusive."""
         data = {'start_date': '2019-01-01', 'end_date': '2019-01-04'}

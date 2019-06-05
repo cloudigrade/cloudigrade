@@ -169,7 +169,7 @@ class DailyConcurrentUsageViewSet(
     authentication_classes = (ThreeScaleAuthentication, )
     serializer_class = serializers.DailyConcurrentUsageSerializer
 
-    def get_queryset(self):
+    def get_queryset(self):  # noqa: C901
         """Get the queryset of dates filtered to the appropriate inputs."""
         errors = {}
         try:
@@ -203,10 +203,21 @@ class DailyConcurrentUsageViewSet(
             except exceptions.ValidationError as e:
                 errors.update(e.detail)
 
+        cloud_account_id = self.request.query_params.get(
+            'cloud_account_id', None
+        )
+        if cloud_account_id is not None:
+            try:
+                cloud_account_id = convert_param_to_int(
+                    'cloud_account_id', cloud_account_id
+                )
+            except exceptions.ValidationError as e:
+                errors.update(e.detail)
+
         if errors:
             raise exceptions.ValidationError(errors)
 
         queryset = DailyConcurrentUsageDummyQueryset(
-            start_date, end_date, user_id
+            start_date, end_date, user_id, cloud_account_id
         )
         return queryset
