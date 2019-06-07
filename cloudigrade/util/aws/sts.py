@@ -19,6 +19,7 @@ cloudigrade_policy = {
                 'ec2:DescribeSnapshots',
                 'ec2:CopyImage',
                 'ec2:CreateTags',
+                'ec2:DescribeRegions',
                 'cloudtrail:CreateTrail',
                 'cloudtrail:UpdateTrail',
                 'cloudtrail:PutEventSelectors',
