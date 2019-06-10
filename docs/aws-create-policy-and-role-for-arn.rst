@@ -33,6 +33,7 @@ The AWS Policy defines a set of permissions for particular actions in the custom
                        "ec2:DescribeSnapshotAttribute",
                        "ec2:CopyImage",
                        "ec2:CreateTags",
+                       "ec2:DescribeRegions",
                        "cloudtrail:CreateTrail",
                        "cloudtrail:UpdateTrail",
                        "cloudtrail:PutEventSelectors",
@@ -55,6 +56,7 @@ The AWS Policy defines a set of permissions for particular actions in the custom
        - `ec2:DescribeSnapshotAttribute <https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeSnapshotAttribute.html>`_ enables cloudigrade to verify that it has set the aforementioned attribute.
        - `ec2:CopyImage <https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CopyImage.html>`_ enables cloudigrade to copy a private image into the customer's account so that cloudigrade can inspect it
        - `ec2:CreateTags <https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreateTags.html>`_ enables cloudigrade to tag a copied image to indicate where it came from
+       - `ec2:DescribeRegions <https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeRegions.html>`_ enables cloudigrade to query which regions the user account has access to
        - `cloudtrail:CreateTrail <https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_CreateTrail.html>`_ enables cloudigrade to get information about existing cloudtrails
        - `cloudtrail:UpdateTrail <https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_UpdateTrail.html>`_ enables cloudigrade to turn on logging for cloudtrail
        - `cloudtrail:PutEventSelectors <https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_PutEventSelectors.html>`_ enables cloudigrade to create a cloudtrail in your account

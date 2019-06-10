@@ -156,6 +156,8 @@ def _verify_policy_action(session, action):  # noqa: C901
                     },
                 ]
             )
+        elif action == 'ec2:DescribeRegions':
+            ec2.describe_regions(DryRun=True)
         elif action.startswith('cloudtrail:'):
             # unfortunately, CloudTrail does not have a DryRun option like ec2
             # so we cannot verify whether or not our policy gives us the

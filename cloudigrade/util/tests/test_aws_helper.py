@@ -176,6 +176,14 @@ class UtilAwsHelperTest(TestCase):
             }
         )
 
+    def test_verify_policy_action_describe_regions(self):
+        """Assert appropriate calls to verify ec2:DescribeRegions."""
+        self.assert_verify_policy_action_success(
+            'ec2:DescribeRegions',
+            'describe_regions',
+            func_kwargs={'DryRun': True}
+        )
+
     def test_verify_policy_action_describe_snapshots(self):
         """Assert appropriate calls to verify ec2:describe_snapshots."""
         self.assert_verify_policy_action_success(
