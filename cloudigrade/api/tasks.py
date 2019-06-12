@@ -64,7 +64,6 @@ logger = logging.getLogger(__name__)
 # Constants
 CLOUD_KEY = 'cloud'
 CLOUD_TYPE_AWS = 'aws'
-HOUNDIGRADE_MESSAGE_READ_LEN = 10
 
 
 @retriable_shared_task
@@ -778,7 +777,7 @@ def persist_inspection_cluster_results_task():
     queue_url = aws.get_sqs_queue_url(settings.HOUNDIGRADE_RESULTS_QUEUE_NAME)
     successes, failures = [], []
     for message in aws.yield_messages_from_queue(
-            queue_url, HOUNDIGRADE_MESSAGE_READ_LEN):
+            queue_url, settings.AWS_SQS_MAX_HOUNDI_YIELD_COUNT):
         logger.info(_('Processing inspection results with id "%s"'),
                     message.message_id
                     )
