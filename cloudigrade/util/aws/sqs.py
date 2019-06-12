@@ -55,7 +55,9 @@ def receive_messages_from_queue(queue_url, max_number=10, wait_time=10):
     return messages
 
 
-def yield_messages_from_queue(queue_url, max_number=10, wait_time=10):
+def yield_messages_from_queue(queue_url,
+                              max_number=settings.AWS_SQS_MAX_YIELD_COUNT,
+                              wait_time=10):
     """
     Yield message objects from SQS Queue object.
 
