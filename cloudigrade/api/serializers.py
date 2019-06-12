@@ -1,5 +1,5 @@
 """DRF API serializers for the account app v2."""
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from botocore.exceptions import ClientError
 from django.db.transaction import on_commit
@@ -446,10 +446,12 @@ class DailyConcurrentUsageDummyQueryset(object):
     def days(self):
         """Get all days."""
         if self._days is None:
+            tomorrow = datetime.utcnow().date() + timedelta(days=1)
             days = []
             current = self.start_date
             delta_day = timedelta(days=1)
-            while current < self.end_date:
+            end_date = min(self.end_date, tomorrow)
+            while current < end_date:
                 days.append(current)
                 current += delta_day
             self._days = days

@@ -45,14 +45,14 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
         api_helper.generate_single_run(
             self.instance1,
             (
-                util_helper.utc_dt(2019, 5, 15, 1, 0, 0),
-                util_helper.utc_dt(2019, 5, 15, 2, 0, 0),
+                util_helper.utc_dt(2019, 3, 15, 1, 0, 0),
+                util_helper.utc_dt(2019, 3, 15, 2, 0, 0),
             ),
             image=self.instance1.machine_image,
             instance_type=self.instance_type1,
         )
 
-        data = {'start_date': '2019-05-15', 'end_date': '2019-06-15'}
+        data = {'start_date': '2019-03-15', 'end_date': '2019-04-15'}
         client = APIClient()
         client.force_authenticate(user=self.user1)
         response = client.get('/v2/concurrent/', data=data, format='json')
@@ -63,22 +63,22 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
 
         link_first = body['links']['first']
         self.assertIn('offset=0', link_first)
-        self.assertIn('start_date=2019-05-15', link_first)
-        self.assertIn('end_date=2019-06-15', link_first)
+        self.assertIn('start_date=2019-03-15', link_first)
+        self.assertIn('end_date=2019-04-15', link_first)
 
         link_next = body['links']['next']
         self.assertIn('offset=10', link_next)
-        self.assertIn('start_date=2019-05-15', link_next)
-        self.assertIn('end_date=2019-06-15', link_next)
+        self.assertIn('start_date=2019-03-15', link_next)
+        self.assertIn('end_date=2019-04-15', link_next)
 
         self.assertIsNone(body['links']['previous'])
 
         link_last = body['links']['last']
         self.assertIn('offset=21', link_last)
-        self.assertIn('start_date=2019-05-15', link_last)
-        self.assertIn('end_date=2019-06-15', link_last)
+        self.assertIn('start_date=2019-03-15', link_last)
+        self.assertIn('end_date=2019-04-15', link_last)
 
-        first_date = datetime.date(2019, 5, 15)
+        first_date = datetime.date(2019, 3, 15)
         first_result = body['data'][0]
 
         self.assertEqual(first_result['instances'], 1)
@@ -148,6 +148,25 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
         """
         today = datetime.date.today()
         data = {}
+        client = APIClient()
+        client.force_authenticate(user=self.user1)
+        response = client.get('/v2/concurrent/', data=data, format='json')
+        body = response.json()
+        self.assertEqual(body['meta']['count'], 1)
+        self.assertEqual(len(body['data']), 1)
+        self.assertEqual(body['data'][0]['date'], str(today))
+
+    def test_future_end_date_acts_like_tomorrow(self):
+        """
+        Test with far-future end_date, expecting it to act like tomorrow.
+
+        When an end_date is given that is later than tomorrow, we actually use
+        tomorrow as the exclusive end date because we do not want to project
+        calculations into the future.
+        """
+        today = datetime.date.today()
+        future = today + datetime.timedelta(days=100)
+        data = {'end_date': str(future)}
         client = APIClient()
         client.force_authenticate(user=self.user1)
         response = client.get('/v2/concurrent/', data=data, format='json')
