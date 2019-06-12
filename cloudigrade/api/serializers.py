@@ -9,7 +9,6 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import (BooleanField, CharField,
                                    ChoiceField, Field, IntegerField)
-from rest_framework.relations import HyperlinkedIdentityField
 from rest_framework.serializers import ModelSerializer, Serializer
 
 from api import CLOUD_PROVIDERS, tasks
@@ -396,30 +395,23 @@ class InstanceSerializer(ModelSerializer):
     content_object = GenericRelatedField({
         AwsInstance: AwsInstanceSerializer(),
     }, required=False)
-    cloud_account = HyperlinkedIdentityField(view_name='v2-account-detail')
     instance_id = IntegerField(source='id', read_only=True)
-    machine_image = HyperlinkedIdentityField(
-        view_name='v2-machineimage-detail')
 
     class Meta:
         model = Instance
         fields = (
-            'cloud_account',
             'cloud_account_id',
             'created_at',
             'instance_id',
-            'machine_image',
             'machine_image_id',
             'updated_at',
             'cloud_type',
             'content_object',
         )
         read_only_fields = (
-            'cloud_account',
             'cloud_account_id',
             'created_at',
             'id',
-            'machine_image',
             'machine_image_id',
             'updated_at',
         )

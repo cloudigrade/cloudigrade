@@ -54,15 +54,7 @@ class InstanceViewSetTest(TestCase):
             response.data['instance_id'], instance.id
         )
         self.assertEqual(
-            response.data['cloud_account'],
-            f'http://testserver/v2/accounts/{instance.cloud_account.id}/'
-        )
-        self.assertEqual(
             response.data['cloud_account_id'], instance.cloud_account.id
-        )
-        self.assertEqual(
-            response.data['machine_image'],
-            f'http://testserver/v2/images/{instance.machine_image.id}/'
         )
         self.assertEqual(
             response.data['machine_image_id'], instance.machine_image.id
