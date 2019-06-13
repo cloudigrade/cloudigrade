@@ -598,7 +598,14 @@ def save_instance_events(awsinstance, instance_data, events=None):
 
 
 def recalculate_runs(event):
-    """Take in an event and calculate runs based on them."""
+    """
+    Take in an event and (re)calculate runs based on it.
+
+    The simplest use case here is if the event is newer than any runs, and that
+    means a new run may be created. The more complex use case is if the event
+    occurred during or before existing runs, and that means any overlapping or
+    future runs must be deleted and recreated.
+    """
     # Get all runs that occurred after event or occurred during event.
     after_run = Q(start_time__gt=event.occurred_at)
     during_run = Q(start_time__lte=event.occurred_at,
