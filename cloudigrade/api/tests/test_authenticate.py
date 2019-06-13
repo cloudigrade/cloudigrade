@@ -26,7 +26,7 @@ class ThreeScaleAuthenticateTestCase(TestCase):
         self.user_email = 'test@example.com'
 
         self.rh_header = util_helper.get_3scale_auth_header(
-            email=self.user_email
+            account_number=self.user_email
         )
         self.three_scale_auth = ThreeScaleAuthentication()
 

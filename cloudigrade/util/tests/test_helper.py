@@ -6,7 +6,6 @@ import datetime
 import random
 import re
 import string
-import uuid
 
 import faker
 from django.contrib.auth.models import User
@@ -156,8 +155,6 @@ class UtilHelperTest(TestCase):
     def test_generate_test_user(self):
         """Assert generation of test user with appropriate defaults."""
         user = helper.generate_test_user()
-        self.assertEqual(user.email, user.username)
-        self.assertTrue(user.email.endswith('@mail.127.0.0.1.nip.io'))
         self.assertFalse(user.is_superuser)
         other_user = helper.generate_test_user()
         self.assertNotEqual(user, other_user)
@@ -165,10 +162,10 @@ class UtilHelperTest(TestCase):
 
     def test_generate_test_user_with_args(self):
         """Assert generation of test user with specified arguments."""
-        email = f'{uuid.uuid4()}@example.com'
-        user = helper.generate_test_user(email=email, is_superuser=True)
-        self.assertEqual(user.email, email)
-        self.assertEqual(user.username, email)
+        account_number = _faker.random_int(min=100000, max=999999)
+        user = helper.generate_test_user(
+            account_number=account_number, is_superuser=True)
+        self.assertEqual(user.username, account_number)
         self.assertTrue(user.is_superuser)
 
     def test_generate_mock_image_dict(self):
@@ -189,19 +186,19 @@ class UtilHelperTest(TestCase):
 
     def test_get_test_user_updates_without_password(self):
         """Assert get_test_user gets and updates user if found."""
-        email = f'{_faker.slug()}@example.com'
-        original_user = User.objects.create_user(email)
-        user = helper.get_test_user(email, is_superuser=True)
+        account_number = _faker.random_int(min=100000, max=999999)
+        original_user = User.objects.create_user(account_number)
+        user = helper.get_test_user(account_number, is_superuser=True)
         original_user.refresh_from_db()
         self.assertEqual(user, original_user)
         self.assertTrue(user.is_superuser)
 
     def test_get_test_user_updates_with_password(self):
         """Assert get_test_user updates user with password if found."""
-        email = f'{_faker.slug()}@example.com'
+        account_number = _faker.random_int(min=100000, max=999999)
         password = _faker.uuid4()
-        original_user = User.objects.create_user(email)
-        user = helper.get_test_user(email, password)
+        original_user = User.objects.create_user(account_number)
+        user = helper.get_test_user(account_number, password)
         original_user.refresh_from_db()
         self.assertEqual(user, original_user)
         self.assertTrue(user.check_password(password))

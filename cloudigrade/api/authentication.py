@@ -58,21 +58,23 @@ class ThreeScaleAuthentication(BaseAuthentication):
                 _('Invalid 3scale header: {error}').format(error=e)
             )
 
-        # If email is not in header, authentication fails
+        # If account_number is not in header, authentication fails
         try:
-            email = auth['identity']['user']['email']
+            account_number = auth['identity']['account_number']
         except KeyError:
             logger.info(
                 _('Authentication Failed: '
-                  'email not contained in 3scale header %s.'), auth_header
+                  'account_number not contained '
+                  'in 3scale header %s.'), auth_header
             )
             raise exceptions.AuthenticationFailed(
-                _('Invalid 3scale header: missing user email field')
+                _('Invalid 3scale header: missing user account_number field')
             )
 
-        user, created = User.objects.get_or_create(username=email)
+        user, created = User.objects.get_or_create(username=account_number)
         if created:
             logger.info(
-                _('User %s was not found and has been created.'), email
+                _('User %s was not found and '
+                  'has been created.'), account_number
             )
         return user, True

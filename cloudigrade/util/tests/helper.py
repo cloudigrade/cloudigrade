@@ -40,9 +40,7 @@ MAX_AWS_ACCOUNT_ID = 10**12 - 1
 
 RH_IDENTITY = {
     'identity': {
-        'user': {
-            'email': 'admin@example.com'
-        }
+        'account_number': '1337'
     }
 }
 
@@ -422,12 +420,12 @@ def utc_dt(*args, **kwargs):
     )
 
 
-def generate_test_user(email=None, password=None, is_superuser=False):
+def generate_test_user(account_number=None, password=None, is_superuser=False):
     """
     Generate and save a user for testing.
 
     Args:
-        email (str): optional email address
+        account_number (str): optional account_number
         password (str): optional password
         is_superuser (bool): create as a superuser if True
 
@@ -435,28 +433,24 @@ def generate_test_user(email=None, password=None, is_superuser=False):
         User: created Django auth User
 
     """
-    if not email:
-        # We're specifically not using faker here because we want to be very
-        # confident that the address domain is not real.
-        name = ''.join(random.choice(string.ascii_letters) for __ in range(32))
-        email = f'{name}@mail.127.0.0.1.nip.io'
+    if not account_number:
+        account_number = faker.Faker().random_int(min=100000, max=999999)
     if not password:
         password = str(uuid.uuid4())
     user = User.objects.create_user(
-        username=email,
-        email=email,
+        username=account_number,
         password=password,
         is_superuser=is_superuser,
     )
     return user
 
 
-def get_test_user(email=None, password=None, is_superuser=False):
+def get_test_user(account_number=None, password=None, is_superuser=False):
     """
     Get user with updated password and superuser, creating if it doesn't exist.
 
     Args:
-        email (str): optional email address
+        account_number (str): optional account_number
         password (str): optional password
         is_superuser (bool): create (or update) as a superuser if True
 
@@ -465,29 +459,29 @@ def get_test_user(email=None, password=None, is_superuser=False):
 
     """
     try:
-        user = User.objects.get(username=email)
+        user = User.objects.get(username=account_number)
         if password:
             user.set_password(password)
         user.is_superuser = is_superuser
         user.save()
     except User.DoesNotExist:
-        user = generate_test_user(email, password, is_superuser)
+        user = generate_test_user(account_number, password, is_superuser)
     return user
 
 
-def get_3scale_auth_header(email='admin@example.com'):
+def get_3scale_auth_header(account_number='1337'):
     """
     Get an example 3scale auth header.
 
     Args:
-        email (str): email address associated with the 3scale account.
-            defaults to admin@example.com
+        account_number (str): account number associated w/the 3scale account.
+            defaults to 1337
 
     Returns:
         str: base64 encoded 3scale header
 
     """
-    RH_IDENTITY['identity']['user']['email'] = email
+    RH_IDENTITY['identity']['account_number'] = account_number
     return base64.b64encode(
         json.dumps(RH_IDENTITY).encode('utf-8')
     )

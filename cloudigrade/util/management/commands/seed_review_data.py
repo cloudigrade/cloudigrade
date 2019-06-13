@@ -47,12 +47,12 @@ class Command(BaseCommand):
 
         # Users
         user1 = util_helper.generate_test_user(
-            email='user1@example.com',
+            account_number='100001',
             password='user1@example.com',
             is_superuser=False,
         )
         user2 = util_helper.generate_test_user(
-            email='user2@example.com',
+            account_number='100002',
             password='user2@example.com',
             is_superuser=False,
         )

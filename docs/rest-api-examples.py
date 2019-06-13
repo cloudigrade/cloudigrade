@@ -49,15 +49,15 @@ class DocsApiHandler(object):
         """Initialize all the data for the examples."""
         api_helper.generate_aws_ec2_definitions()
 
-        self.superuser_email = f'superuser@example.com'
-        self.superuser = get_test_user(self.superuser_email, is_superuser=True)
+        self.superuser_account_number = '100000'
+        self.superuser = get_test_user(self.superuser_account_number, is_superuser=True)
         self.superuser_client = api_helper.SandboxedRestClient()
         self.superuser_client._force_authenticate(self.superuser)
 
-        self.customer_email = f'customer@example.com'
+        self.customer_account_number = f'100001'
         self.customer_password = 'very-secure-password'
         self.customer_user = get_test_user(
-            self.customer_email, self.customer_password, is_superuser=False
+            self.customer_account_number, self.customer_password, is_superuser=False
         )
         self.customer_client = api_helper.SandboxedRestClient()
         self.customer_client._force_authenticate(self.customer_user)
