@@ -425,8 +425,12 @@ class Instance(BaseGenericModel):
         # clean up.
         super().delete(**kwargs)
 
-        if not Instance.objects.filter(machine_image=self.machine_image)\
-                .exclude(id=self.id).exists():
+        if (
+            self.machine_image is not None and
+            not Instance.objects.filter(machine_image=self.machine_image)
+            .exclude(id=self.id)
+            .exists()
+        ):
             self.machine_image.delete()
 
     @property

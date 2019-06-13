@@ -138,10 +138,15 @@ class InstanceModelTest(TestCase):
             cloud_account=self.account,
             image=self.image
         )
+        self.instance_without_image = helper.generate_aws_instance(
+            cloud_account=self.account,
+            no_image=True,
+        )
 
     def test_delete_instance_cleans_up_machineimage(self):
         """Test that deleting an instance cleans up its associated image."""
         self.instance.delete()
+        self.instance_without_image.delete()
         self.assertEqual(0, models.AwsMachineImage.objects.count())
         self.assertEqual(0, models.MachineImage.objects.count())
 
@@ -152,6 +157,7 @@ class InstanceModelTest(TestCase):
             image=self.image
         )
         self.instance.delete()
+        self.instance_without_image.delete()
 
         self.assertEqual(1, models.AwsMachineImage.objects.count())
         self.assertEqual(1, models.MachineImage.objects.count())
