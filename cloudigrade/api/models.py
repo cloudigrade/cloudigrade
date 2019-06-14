@@ -629,3 +629,24 @@ class MachineImageInspectionStart(BaseModel):
         db_index=True,
         null=False,
     )
+
+
+class ConcurrentUsage(BaseModel):
+    """Saved calculation of max concurrent usage for a date+user+account."""
+
+    date = models.DateField()
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        db_index=True,
+        null=False,
+    )
+    cloud_account = models.ForeignKey(
+        CloudAccount,
+        on_delete=models.CASCADE,
+        db_index=True,
+        null=True,
+    )
+    instances = models.IntegerField()
+    memory = models.FloatField()
+    vcpu = models.IntegerField()
