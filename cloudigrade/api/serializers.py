@@ -479,5 +479,5 @@ class DailyConcurrentUsageSerializer(Serializer):
 
     date = serializers.DateField(required=True)
     instances = serializers.IntegerField(required=True)
-    vcpu = serializers.FloatField(required=True)
+    vcpu = serializers.IntegerField(required=True)
     memory = serializers.FloatField(required=True)
