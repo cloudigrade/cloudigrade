@@ -294,10 +294,10 @@ class CalculateMaxConcurrentUsageTest(TestCase):
 
     def assertMaxConcurrentUsage(self, results, date, instances, vcpu, memory):
         """Assert expected calculate_max_concurrent_usage results."""
-        self.assertEqual(results['date'], date)
-        self.assertEqual(results['instances'], instances)
-        self.assertEqual(results['vcpu'], vcpu)
-        self.assertEqual(results['memory'], memory)
+        self.assertEqual(results.date, date)
+        self.assertEqual(results.instances, instances)
+        self.assertEqual(results.vcpu, vcpu)
+        self.assertEqual(results.memory, memory)
 
     def test_single_rhel_run_within_day(self):
         """Test with a single RHEL instance run within the day."""

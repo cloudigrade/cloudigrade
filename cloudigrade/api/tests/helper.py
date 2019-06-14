@@ -17,7 +17,7 @@ from api.models import (AwsCloudAccount, AwsEC2InstanceDefinition, AwsInstance,
                         CLOUD_ACCESS_NAME_TOKEN, CloudAccount, Instance,
                         InstanceEvent, MARKETPLACE_NAME_TOKEN, MachineImage,
                         Run)
-from api.util import recalculate_runs
+from api.util import calculate_max_concurrent_usage_from_runs, recalculate_runs
 from util import aws
 from util.tests import helper
 
@@ -508,10 +508,15 @@ def generate_aws_image(
     return machine_image
 
 
-def generate_single_run(instance, runtime,
-                        image=None, no_image=False,
-                        instance_type=None,
-                        no_instance_type=False):
+def generate_single_run(
+    instance,
+    runtime,
+    image=None,
+    no_image=False,
+    instance_type=None,
+    no_instance_type=False,
+    calculate_concurrent_usage=True,
+):
     """
     Generate a single Run (and related events) for testing.
 
@@ -523,6 +528,8 @@ def generate_single_run(instance, runtime,
         no_image (bool): If true, don't create and assign an image.
         instance_type (str): Optional AWS instance type.
         no_instance_type (bool): Optional indication that instance has no type.
+        calculate_concurrent_usage (bool): Optional indicated if after creating
+            the run we should run calculate_max_concurrent_usage_from_runs.
     Returns:
         Run: The created Run.
 
@@ -561,6 +568,8 @@ def generate_single_run(instance, runtime,
             instance_type=instance_type,
             no_instance_type=no_instance_type
         )
+    if calculate_concurrent_usage:
+        calculate_max_concurrent_usage_from_runs([run])
     return run
 
 

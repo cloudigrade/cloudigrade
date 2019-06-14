@@ -25,6 +25,7 @@ from api.models import (
     AwsInstanceEvent,
     AwsMachineImage,
     AwsMachineImageCopy,
+    ConcurrentUsage,
     Instance,
     InstanceEvent,
     MachineImage,
@@ -217,9 +218,12 @@ def normalize_runs(events):  # noqa: C901
     return normalized_runs
 
 
-def calculate_max_concurrent_usage(date, user_id, cloud_account_id=None):
+def get_max_concurrent_usage(date, user_id, cloud_account_id=None):
     """
-    Find maximum concurrent usage of RHEL instances in the given parameters.
+    Get maximum concurrent usage of RHEL instances in given parameters.
+
+    This gets a pre-calculated version of the results from ConcurrentUsage. If
+    you only need to calculate new results, see calculate_max_concurrent_usage.
 
     Args:
         date (datetime.date): the day during which we are measuring usage
@@ -229,6 +233,52 @@ def calculate_max_concurrent_usage(date, user_id, cloud_account_id=None):
     Returns:
         dict containing the values of maximum concurrent number of instances,
         vcpu, and memory encountered at any point during the day.
+
+    """
+    today = datetime.utcnow().date()
+    if date > today:
+        # Early return stub values; we never project future calculations.
+        return ConcurrentUsage(
+            date=date,
+            user_id=user_id,
+            cloud_account_id=cloud_account_id,
+            instances=0,
+            vcpu=0,
+            memory=0.0,
+        )
+
+    try:
+        saved_usage = ConcurrentUsage.objects.get(
+            date=date, user_id=user_id, cloud_account_id=cloud_account_id
+        )
+    except ConcurrentUsage.DoesNotExist:
+        calculate_max_concurrent_usage(
+            date=date, user_id=user_id, cloud_account_id=cloud_account_id
+        )
+        saved_usage = ConcurrentUsage.objects.get(
+            date=date, user_id=user_id, cloud_account_id=cloud_account_id
+        )
+
+    return saved_usage
+
+
+def calculate_max_concurrent_usage(date, user_id, cloud_account_id=None):
+    """
+    Calculate maximum concurrent usage of RHEL instances in given parameters.
+
+    This always performs a new calculation of the results based on Runs. If you
+    can use pre-calculated data, see calculate_max_concurrent_usage.
+
+    Furthermore, we save the calculation results to the database, deleting any
+    conflicting existing calculated result in the process.
+
+    Args:
+        date (datetime.date): the day during which we are measuring usage
+        user_id (int): required filter on user
+        cloud_account_id (int): optional filter on cloud account
+
+    Returns:
+        ConcurrentUsage instance containing calculated max concurrent values.
 
     """
     queryset = Run.objects.all()
@@ -282,12 +332,53 @@ def calculate_max_concurrent_usage(date, user_id, cloud_account_id=None):
         max_vcpu = max(current_vcpu, max_vcpu)
         max_memory = max(current_memory, max_memory)
 
-    return {
-        'date': date,
-        'instances': max_instances,
-        'vcpu': max_vcpu,
-        'memory': max_memory,
-    }
+    ConcurrentUsage.objects.filter(
+        date=date, user_id=user_id, cloud_account_id=cloud_account_id
+    ).delete()
+    usage = ConcurrentUsage.objects.create(
+        date=date,
+        user_id=user_id,
+        cloud_account_id=cloud_account_id,
+        instances=max_instances,
+        vcpu=max_vcpu,
+        memory=max_memory,
+    )
+    return usage
+
+
+def calculate_max_concurrent_usage_from_runs(runs):
+    """
+    Calculate maximum concurrent usage of RHEL instances from given Runs.
+
+    We try to find the common intersection of the given runs across the dates,
+    users, and cloud accounts referenced in the given Runs.
+    """
+    date_user_cloud_accounts = set()
+
+    # This nested set of for loops should find the set of all days, user_ids,
+    # and cloud_account_ids that may be affected by the given Runs. All of
+    # those combinations need to have their max concurrent usage calculated.
+    for run in runs:
+        start_date = run.start_time.date()
+        if run.end_time is not None:
+            end_date = run.end_time.date()
+        else:
+            # No end time on the run? Act like the run ends "today".
+            end_date = datetime.utcnow().date()
+        # But really the end is *tomorrow* since the end is exclusive.
+        end_date = end_date + timedelta(days=1)
+        cloud_acount_id = run.instance.cloud_account.id
+        user_id = run.instance.cloud_account.user.id
+        delta_days = (end_date - start_date).days
+        for offset in range(delta_days):
+            date = start_date + timedelta(days=offset)
+            date_user_cloud_account = (date, user_id, cloud_acount_id)
+            date_user_cloud_accounts.add(date_user_cloud_account)
+            date_user_no_cloud_account = (date, user_id, None)
+            date_user_cloud_accounts.add(date_user_no_cloud_account)
+
+    for date, user_id, cloud_account_id in date_user_cloud_accounts:
+        calculate_max_concurrent_usage(date, user_id, cloud_account_id)
 
 
 def create_new_machine_images(session, instances_data):
@@ -630,6 +721,7 @@ def recalculate_runs(event):
     except Run.DoesNotExist:
         if event.event_type == event.TYPE.power_on:
             normalized_runs = normalize_runs([event])
+            saved_runs = []
             for index, normalized_run in enumerate(normalized_runs):
                 logger.info(
                     'Processing run %(index)s of %(runs)s',
@@ -645,6 +737,8 @@ def recalculate_runs(event):
                     vcpu=normalized_run.instance_vcpu,
                 )
                 run.save()
+                saved_runs.append(run)
+            calculate_max_concurrent_usage_from_runs(runs)
         return
 
     events = (
@@ -658,6 +752,7 @@ def recalculate_runs(event):
     normalized_runs = normalize_runs(events)
     with transaction.atomic():
         runs.delete()
+        saved_runs = []
         for index, normalized_run in enumerate(normalized_runs):
             logger.info(
                 'Processing run %(index)s of %(runs)s',
@@ -673,6 +768,8 @@ def recalculate_runs(event):
                 vcpu=normalized_run.instance_vcpu,
             )
             run.save()
+            saved_runs.append(run)
+        calculate_max_concurrent_usage_from_runs(runs)
 
 
 def generate_aws_ami_messages(instances_data, ami_id_list):
