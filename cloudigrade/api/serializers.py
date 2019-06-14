@@ -15,7 +15,7 @@ from api import CLOUD_PROVIDERS, tasks
 from api.models import (AwsCloudAccount, AwsInstance,
                         AwsMachineImage, CloudAccount, Instance,
                         MachineImage)
-from api.util import max_concurrent_usage
+from api.util import calculate_max_concurrent_usage
 from util import aws
 from util.exceptions import InvalidArn
 
@@ -466,7 +466,7 @@ class DailyConcurrentUsageDummyQueryset(object):
         days = self.days[index]
         results = []
         for day in days:
-            result = max_concurrent_usage(
+            result = calculate_max_concurrent_usage(
                 day, self.user_id, self.cloud_account_id
             )
             results.append(result)

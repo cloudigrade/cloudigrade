@@ -217,7 +217,7 @@ def normalize_runs(events):  # noqa: C901
     return normalized_runs
 
 
-def max_concurrent_usage(day, user_id=None, cloud_account_id=None):
+def calculate_max_concurrent_usage(day, user_id=None, cloud_account_id=None):
     """
     Find maximum concurrent usage of RHEL instances in the given parameters.
 
