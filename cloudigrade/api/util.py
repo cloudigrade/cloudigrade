@@ -217,12 +217,12 @@ def normalize_runs(events):  # noqa: C901
     return normalized_runs
 
 
-def calculate_max_concurrent_usage(day, user_id, cloud_account_id=None):
+def calculate_max_concurrent_usage(date, user_id, cloud_account_id=None):
     """
     Find maximum concurrent usage of RHEL instances in the given parameters.
 
     Args:
-        day (datetime.date): the day during which we are measuring usage
+        date (datetime.date): the day during which we are measuring usage
         user_id (int): required filter on user
         cloud_account_id (int): optional filter on cloud account
 
@@ -238,7 +238,9 @@ def calculate_max_concurrent_usage(day, user_id, cloud_account_id=None):
         queryset = queryset.filter(
             instance__cloud_account__id=cloud_account_id
         )
-    start = datetime(day.year, day.month, day.day, 0, 0, 0, tzinfo=tz.tzutc())
+    start = datetime(
+        date.year, date.month, date.day, 0, 0, 0, tzinfo=tz.tzutc()
+    )
     end = start + timedelta(days=1)
 
     # We want to filter to Runs that have:
@@ -281,7 +283,7 @@ def calculate_max_concurrent_usage(day, user_id, cloud_account_id=None):
         max_memory = max(current_memory, max_memory)
 
     return {
-        'date': day,
+        'date': date,
         'instances': max_instances,
         'vcpu': max_vcpu,
         'memory': max_memory,

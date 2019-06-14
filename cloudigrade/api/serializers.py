@@ -465,9 +465,9 @@ class DailyConcurrentUsageDummyQueryset(object):
         """Get a specific day."""
         days = self.days[index]
         results = []
-        for day in days:
+        for date in days:
             result = calculate_max_concurrent_usage(
-                day, self.user_id, self.cloud_account_id
+                date, self.user_id, self.cloud_account_id
             )
             results.append(result)
 
