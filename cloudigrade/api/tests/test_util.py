@@ -319,7 +319,9 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         expected_vcpu = self.instance_type_large_specs['vcpu']
         expected_memory = self.instance_type_large_specs['memory']
 
-        results = calculate_max_concurrent_usage(request_date)
+        results = calculate_max_concurrent_usage(
+            request_date, user_id=self.user1.id
+        )
         self.assertMaxConcurrentUsage(
             results,
             expected_date,
@@ -345,7 +347,9 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         request_date = datetime.date(2019, 5, 1)
         expected_date = request_date
 
-        results = calculate_max_concurrent_usage(request_date)
+        results = calculate_max_concurrent_usage(
+            request_date, user_id=self.user1.id
+        )
         self.assertMaxConcurrentUsage(results, expected_date, 0, 0, 0)
 
     def test_single_rhel_run_entirely_after_day(self):
@@ -365,7 +369,9 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         request_date = datetime.date(2019, 5, 1)
         expected_date = request_date
 
-        results = calculate_max_concurrent_usage(request_date)
+        results = calculate_max_concurrent_usage(
+            request_date, user_id=self.user1.id
+        )
         self.assertMaxConcurrentUsage(results, expected_date, 0, 0, 0)
 
     def test_single_run_overlapping_day_start(self):
@@ -388,7 +394,9 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         expected_vcpu = self.instance_type_large_specs['vcpu']
         expected_memory = self.instance_type_large_specs['memory']
 
-        results = calculate_max_concurrent_usage(request_date)
+        results = calculate_max_concurrent_usage(
+            request_date, user_id=self.user1.id
+        )
         self.assertMaxConcurrentUsage(
             results,
             expected_date,
@@ -417,7 +425,9 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         expected_vcpu = self.instance_type_large_specs['vcpu']
         expected_memory = self.instance_type_large_specs['memory']
 
-        results = calculate_max_concurrent_usage(request_date)
+        results = calculate_max_concurrent_usage(
+            request_date, user_id=self.user1.id
+        )
         self.assertMaxConcurrentUsage(
             results,
             expected_date,
@@ -446,7 +456,9 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         expected_vcpu = self.instance_type_large_specs['vcpu']
         expected_memory = self.instance_type_large_specs['memory']
 
-        results = calculate_max_concurrent_usage(request_date)
+        results = calculate_max_concurrent_usage(
+            request_date, user_id=self.user1.id
+        )
         self.assertMaxConcurrentUsage(
             results,
             expected_date,
@@ -476,7 +488,9 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         request_date = datetime.date(2019, 5, 1)
         expected_date = request_date
 
-        results = calculate_max_concurrent_usage(request_date)
+        results = calculate_max_concurrent_usage(
+            request_date, user_id=self.user1.id
+        )
         self.assertMaxConcurrentUsage(results, expected_date, 0, 0, 0)
 
     def test_overlapping_rhel_runs_within_day(self):
@@ -521,7 +535,9 @@ class CalculateMaxConcurrentUsageTest(TestCase):
             self.instance_type_small_specs['memory']
         )
 
-        results = calculate_max_concurrent_usage(request_date)
+        results = calculate_max_concurrent_usage(
+            request_date, user_id=self.user1.id
+        )
         self.assertMaxConcurrentUsage(
             results,
             expected_date,
@@ -616,7 +632,9 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         expected_memory = self.instance_type_large_specs['memory']
 
         results = calculate_max_concurrent_usage(
-            request_date, cloud_account_id=self.user1account1.id
+            request_date,
+            user_id=self.user1.id,
+            cloud_account_id=self.user1account1.id,
         )
         self.assertMaxConcurrentUsage(
             results,
