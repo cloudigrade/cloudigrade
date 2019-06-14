@@ -80,6 +80,8 @@ class DocsApiHandler(object):
         self.three_days_ago = self.this_morning - timedelta(days=3)
         self.two_days_ago = self.this_morning - timedelta(days=2)
         self.two_weeks_ago = self.this_morning - timedelta(weeks=2)
+        self.tomorrow = self.this_morning + timedelta(days=1)
+        self.next_week = self.this_morning + timedelta(weeks=1)
 
         ##################################
         # Generate data for the superuser.
@@ -336,6 +338,15 @@ class DocsApiHandler(object):
         )
         assert_status(response, 200)
         responses['v2_list_concurrent'] = response
+
+        response = self.customer_client.list_concurrent(
+            data={
+                'start_date': self.tomorrow.date(),
+                'end_date': self.next_week.date(),
+            }
+        )
+        assert_status(response, 200)
+        responses['v2_list_concurrent_future'] = response
 
         ########################
         # V2 Miscellaneous Commands
