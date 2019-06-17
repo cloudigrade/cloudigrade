@@ -36,6 +36,8 @@ Django = "~=2.1.5"
 django_polymorphic = "~=2.0.3"
 django_celery_beat = "~=1.4.0"
 Faker = "~=1.0.4"
+python-daemon = "~=2.2.3"
+kafka-python = "~=1.4.6"
 
 [requires]
 python_version = "3.7"
