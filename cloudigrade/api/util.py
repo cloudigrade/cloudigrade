@@ -591,15 +591,45 @@ def save_instance(account, instance_data, region):
         )
         if created:
             logger.info(
-                _('Missing image data for %s; creating '
-                  'UNAVAILABLE stub image.'), instance_data,
+                _(
+                    'Missing image data for %s; creating '
+                    'UNAVAILABLE stub image.'
+                ),
+                instance_data,
             )
             machineimage = MachineImage.objects.create(
                 status=MachineImage.UNAVAILABLE,
                 content_object=awsmachineimage,
             )
         else:
-            machineimage = awsmachineimage.machine_image.get()
+            try:
+                machineimage = awsmachineimage.machine_image.get()
+            except MachineImage.DoesNotExist:
+                # We are not sure how this could happen. Whenever we save a new
+                # AwsMachineImage, we *should* always follow up with creating
+                # its paired MachineImage. Investigate if you see this error!
+                logger.error(
+                    _(
+                        'Existing AwsMachineImage %(awsmachineimage_id)s '
+                        '(ec2_ami_id=%(ec2_ami_id)s) found has no '
+                        'MachineImage. This should not happen!'
+                    ),
+                    {
+                        'awsmachineimage_id': awsmachineimage.id,
+                        'ec2_ami_id': image_id,
+                    },
+                )
+                logger.info(
+                    _(
+                        'Missing image data for %s; creating '
+                        'UNAVAILABLE stub image.'
+                    ),
+                    instance_data,
+                )
+                machineimage = MachineImage.objects.create(
+                    status=MachineImage.UNAVAILABLE,
+                    content_object=awsmachineimage,
+                )
 
     if machineimage is not None:
         instance = awsinstance.instance.get()
