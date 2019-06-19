@@ -106,6 +106,10 @@ class NotImplementedAPIException(APIException):
     status_code = http.HTTPStatus.NOT_IMPLEMENTED
 
 
+class AwsPolicyCreationException(Exception):
+    """Raise when AWS Policy fails creation unexpectedly."""
+
+
 def api_exception_handler(exc, context):
     """
     Log exception and return an appropriately formatted response.
