@@ -106,6 +106,11 @@ class AwsCloudAccount(BaseModel):
                     super().delete(**kwargs)
                     session = get_session(str(self.account_arn))
                     cloudtrail_session = session.client('cloudtrail')
+                    logger.info(
+                        'attempting to disable cloudtrail "%(name)s" via ARN '
+                        '"%(arn)s"',
+                        {'name': cloudtrial_name, 'arn': self.account_arn},
+                    )
                     disable_cloudtrail(cloudtrail_session, cloudtrial_name)
 
                 except ClientError as error:
