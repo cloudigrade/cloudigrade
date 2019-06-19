@@ -29,7 +29,7 @@ from api.tasks import (_build_container_definition,
                        scale_down_cluster)
 from api.tests import helper as account_helper
 from util.exceptions import (AwsECSInstanceNotReady, AwsSnapshotCopyLimitError,
-                             AwsSnapshotEncryptedError, AwsSnapshotError,
+                             AwsSnapshotError,
                              AwsSnapshotNotOwnedError, AwsTooManyECSInstances,
                              AwsVolumeError, AwsVolumeNotReadyError,
                              InvalidHoundigradeJsonFormat,
@@ -336,10 +336,11 @@ class AccountCeleryTaskTest(TestCase):
 
         ami = account_helper.generate_aws_image(ec2_ami_id=mock_image_id)
 
-        with patch.object(tasks, 'create_volume') as mock_create_volume,\
-                self.assertRaises(AwsSnapshotEncryptedError):
+        with patch.object(tasks, 'create_volume') as mock_create_volume:
             copy_ami_snapshot(mock_arn, mock_image_id, mock_region)
+            ami.refresh_from_db()
             self.assertTrue(ami.is_encrypted)
+            self.assertEqual(ami.status, ami.ERROR)
             mock_create_volume.delay.assert_not_called()
 
     @patch('api.tasks.aws')

@@ -25,10 +25,6 @@ class NotReadyException(Exception):
         self.message = message
 
 
-class AwsSnapshotEncryptedError(Exception):
-    """Raise when a snapshot is encrypted."""
-
-
 class AwsSnapshotCopyLimitError(NotReadyException):
     """The limit on concurrent snapshot copy operations has been met."""
 

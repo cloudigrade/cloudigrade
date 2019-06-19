@@ -54,7 +54,6 @@ from util import aws
 from util.aws import is_windows, rewrap_aws_errors
 from util.celery import retriable_shared_task
 from util.exceptions import (AwsECSInstanceNotReady,
-                             AwsSnapshotEncryptedError,
                              AwsTooManyECSInstances,
                              InvalidHoundigradeJsonFormat)
 from util.misc import generate_device_name
@@ -177,8 +176,21 @@ def copy_ami_snapshot(arn, ami_id, snapshot_region, reference_ami_id=None):
             awsimage = AwsMachineImage.objects.get(ec2_ami_id=ami_id)
             image = awsimage.machine_image.get()
             image.is_encrypted = True
+            image.status = image.ERROR
             image.save()
-            raise AwsSnapshotEncryptedError
+            logger.info(
+                _(
+                    'AWS snapshot "%(snapshot_id)s" for image "%(image_id)s" '
+                    'found using customer ARN "%(arn)s" is encrypted and '
+                    'cannot be copied.'
+                ),
+                {
+                    'snapshot_id': customer_snapshot.snapshot_id,
+                    'image_id': ami.id,
+                    'arn': arn,
+                },
+            )
+            return
 
         logger.info(
             _(
