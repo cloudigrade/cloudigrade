@@ -550,22 +550,35 @@ def save_instance(account, instance_data, region):
         AwsInstance: Object representing the saved instance.
 
     """
-    awsinstance, created = AwsInstance.objects.get_or_create(
-        ec2_instance_id=instance_data['InstanceId']
+    instance_id = (
+        instance_data.get('InstanceId')
         if isinstance(instance_data, dict)
-        else instance_data.instance_id,
-        region=region,
+        else getattr(instance_data, 'instance_id', None)
+    )
+    image_id = (
+        instance_data.get('ImageId')
+        if isinstance(instance_data, dict)
+        else getattr(instance_data, 'image_id', None)
+    )
+    logger.info(
+        _(
+            'saving models for aws instance id %(instance_id)s having aws '
+            'image id %(image_id)s for %(cloud_account)s'
+        ),
+        {
+            'instance_id': instance_id,
+            'image_id': image_id,
+            'cloud_account': account,
+        },
+    )
+
+    awsinstance, created = AwsInstance.objects.get_or_create(
+        ec2_instance_id=instance_id, region=region
     )
 
     if created:
         Instance.objects.create(cloud_account=account,
                                 content_object=awsinstance)
-
-    image_id = (
-        instance_data.get('ImageId', None)
-        if isinstance(instance_data, dict)
-        else getattr(instance_data, 'image_id', None)
-    )
 
     # If for some reason we don't get the image_id, we cannot look up
     # the associated image.
