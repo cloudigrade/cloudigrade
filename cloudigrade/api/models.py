@@ -436,6 +436,12 @@ class Instance(BaseGenericModel):
             .exclude(id=self.id)
             .exists()
         ):
+            logger.info(
+                _(
+                    '%s is no longer used by any instances and will be deleted'
+                ),
+                self.machine_image,
+            )
             self.machine_image.delete()
 
     @property
