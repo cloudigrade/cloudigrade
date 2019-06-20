@@ -925,12 +925,20 @@ def create_aws_machine_image_copy(copy_ami_id, reference_ami_id):
         copy_ami_id (str): the AMI IS of the copied image
         reference_ami_id (str): the AMI ID of the original reference image
     """
-    reference = AwsMachineImage.objects.get(ec2_ami_id=reference_ami_id)
-    AwsMachineImageCopy.objects.create(
-        ec2_ami_id=copy_ami_id,
-        owner_aws_account_id=reference.owner_aws_account_id,
-        reference_awsmachineimage=reference,
-    )
+    with transaction.atomic():
+        reference = AwsMachineImage.objects.get(ec2_ami_id=reference_ami_id)
+        awsmachineimagecopy = AwsMachineImageCopy.objects.create(
+            ec2_ami_id=copy_ami_id,
+            owner_aws_account_id=reference.owner_aws_account_id,
+            reference_awsmachineimage=reference,
+        )
+        MachineImage.objects.create(
+            content_object=awsmachineimagecopy
+        )
+
+        # This should not be necessary, but we really need this to exist.
+        # If it doesn't, this will kill the transaction with an exception.
+        awsmachineimagecopy.machine_image.get()
 
 
 def add_messages_to_queue(queue_name, messages):
