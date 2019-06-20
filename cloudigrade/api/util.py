@@ -491,24 +491,29 @@ def save_new_aws_machine_image(
         platform = AwsMachineImage.WINDOWS
         status = MachineImage.INSPECTED
 
-    ami, new = AwsMachineImage.objects.get_or_create(
-        ec2_ami_id=ami_id,
-        defaults={
-            'platform': platform,
-            'owner_aws_account_id': owner_aws_account_id,
-            'region': region,
-        },
-    )
-
-    if new:
-        MachineImage.objects.create(
-            name=name,
-            status=status,
-            openshift_detected=openshift_detected,
-            content_object=ami,
+    with transaction.atomic():
+        awsmachineimage, created = AwsMachineImage.objects.get_or_create(
+            ec2_ami_id=ami_id,
+            defaults={
+                'platform': platform,
+                'owner_aws_account_id': owner_aws_account_id,
+                'region': region,
+            },
         )
 
-    return ami, new
+        if created:
+            MachineImage.objects.create(
+                name=name,
+                status=status,
+                openshift_detected=openshift_detected,
+                content_object=awsmachineimage,
+            )
+
+        # This should not be necessary, but we really need this to exist.
+        # If it doesn't, this will kill the transaction with an exception.
+        awsmachineimage.machine_image.get()
+
+    return awsmachineimage, created
 
 
 def create_initial_aws_instance_events(account, instances_data):
@@ -572,36 +577,45 @@ def save_instance(account, instance_data, region):
         },
     )
 
-    awsinstance, created = AwsInstance.objects.get_or_create(
-        ec2_instance_id=instance_id, region=region
-    )
+    with transaction.atomic():
+        awsinstance, created = AwsInstance.objects.get_or_create(
+            ec2_instance_id=instance_id, region=region,
+        )
 
-    if created:
-        Instance.objects.create(cloud_account=account,
-                                content_object=awsinstance)
+        if created:
+            Instance.objects.create(
+                cloud_account=account, content_object=awsinstance
+            )
+
+        # This should not be necessary, but we really need this to exist.
+        # If it doesn't, this will kill the transaction with an exception.
+        awsinstance.instance.get()
 
     # If for some reason we don't get the image_id, we cannot look up
     # the associated image.
     if image_id is None:
         machineimage = None
     else:
-        awsmachineimage, created = AwsMachineImage.objects.get_or_create(
-            ec2_ami_id=image_id,
-            defaults={'region': region},
-        )
-        if created:
+        with transaction.atomic():
             logger.info(
-                _(
-                    'Missing image data for %s; creating '
-                    'UNAVAILABLE stub image.'
-                ),
-                instance_data,
+                _('AwsMachineImage get_or_create for EC2 AMI %s'), image_id
             )
-            machineimage = MachineImage.objects.create(
-                status=MachineImage.UNAVAILABLE,
-                content_object=awsmachineimage,
+            awsmachineimage, created = AwsMachineImage.objects.get_or_create(
+                ec2_ami_id=image_id,
+                defaults={'region': region},
             )
-        else:
+            if created:
+                logger.info(
+                    _(
+                        'Missing image data for %s; creating '
+                        'UNAVAILABLE stub image.'
+                    ),
+                    instance_data,
+                )
+                MachineImage.objects.create(
+                    status=MachineImage.UNAVAILABLE,
+                    content_object=awsmachineimage,
+                )
             try:
                 machineimage = awsmachineimage.machine_image.get()
             except MachineImage.DoesNotExist:
@@ -626,10 +640,11 @@ def save_instance(account, instance_data, region):
                     ),
                     instance_data,
                 )
-                machineimage = MachineImage.objects.create(
+                MachineImage.objects.create(
                     status=MachineImage.UNAVAILABLE,
                     content_object=awsmachineimage,
                 )
+                machineimage = awsmachineimage.machine_image.get()
 
     if machineimage is not None:
         instance = awsinstance.instance.get()
@@ -659,17 +674,20 @@ def save_instance_events(awsinstance, instance_data, events=None):
     from api.tasks import process_instance_event
 
     if events is None:
-        awsevent = AwsInstanceEvent.objects.create(
-            subnet=instance_data['SubnetId'],
-            instance_type=instance_data['InstanceType'],
-        )
-
-        event = InstanceEvent.objects.create(
-            event_type=InstanceEvent.TYPE.power_on,
-            occurred_at=timezone.now(),
-            instance=awsinstance.instance.get(),
-            content_object=awsevent,
-        )
+        with transaction.atomic():
+            awsevent = AwsInstanceEvent.objects.create(
+                subnet=instance_data['SubnetId'],
+                instance_type=instance_data['InstanceType'],
+            )
+            InstanceEvent.objects.create(
+                event_type=InstanceEvent.TYPE.power_on,
+                occurred_at=timezone.now(),
+                instance=awsinstance.instance.get(),
+                content_object=awsevent,
+            )
+            # This get is separate from the create to ensure the relationship
+            # exists correctly even though it shouldn't strictly be necessary.
+            event = awsevent.instance_event.get()
 
         process_instance_event(event)
     else:

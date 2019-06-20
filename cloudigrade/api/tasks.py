@@ -1359,13 +1359,12 @@ def _save_cloudtrail_activity(
         logger.info(_(
             'Missing image data for %s; creating UNAVAILABLE stub image.'
         ), ami_id)
-        ami = AwsMachineImage.objects.create(
-            ec2_ami_id=ami_id
-        )
-        MachineImage.objects.create(
-            status=MachineImage.UNAVAILABLE,
-            content_object=ami
-        )
+        with transaction.atomic():
+            awsmachineimage = AwsMachineImage.objects.create(ec2_ami_id=ami_id)
+            MachineImage.objects.create(
+                status=MachineImage.UNAVAILABLE, content_object=awsmachineimage
+            )
+            awsmachineimage.machine_image.get()
 
     # Update images with openshift tag changes.
     if ocp_tagged_ami_ids:
