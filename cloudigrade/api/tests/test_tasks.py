@@ -1510,6 +1510,42 @@ class AccountCeleryTaskTest(TestCase):
         self.assertFalse(machine_image.rhel)
         self.assertFalse(machine_image.openshift)
 
+    def test_persist_aws_inspection_cluster_results_our_model_is_gone(self):
+        """
+        Assert that we handle when the AwsMachineImage model has been deleted.
+
+        This can happen if the customer deletes their cloud account while we
+        are running or waiting on the async inspection. Deleting the cloud
+        account results in the instances and potentially the images being
+        deleted, and when we get the inspection results back for that deleted
+        image, we should just quietly drop the results and move on to other
+        results that may still need processing.
+        """
+        deleted_ami_id = util_helper.generate_dummy_image_id()
+
+        ami_id = util_helper.generate_dummy_image_id()
+        helper.generate_aws_image(
+            is_encrypted=False, is_windows=False, ec2_ami_id=ami_id
+        )
+
+        inspection_results = {
+            'cloud': 'aws',
+            'images': {
+                deleted_ami_id: {
+                    'rhel_found': True, 'rhel_release_files_found': True
+                },
+                ami_id: {'rhel_found': True, 'rhel_release_files_found': True},
+            },
+        }
+
+        tasks.persist_aws_inspection_cluster_results(inspection_results)
+        aws_machine_image = AwsMachineImage.objects.get(ec2_ami_id=ami_id)
+        machine_image = aws_machine_image.machine_image.get()
+        self.assertTrue(machine_image.rhel)
+
+        with self.assertRaises(AwsMachineImage.DoesNotExist):
+            AwsMachineImage.objects.get(ec2_ami_id=deleted_ami_id)
+
     def test_persist_aws_inspection_cluster_results_no_images(self):
         """Assert that non rhel_images are not tagged rhel."""
         ami_id = util_helper.generate_dummy_image_id()
@@ -1611,7 +1647,11 @@ class AccountCeleryTaskTest(TestCase):
     @patch('api.tasks.scale_down_cluster')
     def test_persist_inspect_results_aws_cloud_image_not_found(
             self, mock_scale_down, _, mock_receive, mock_delete):
-        """Assert message is not deleted if an image is not found."""
+        """
+        Assert message is still deleted when our image is not found.
+
+        See also: test_persist_aws_inspection_cluster_results_our_model_is_gone
+        """
         body_dict = {'cloud': 'aws', 'images': {'fake_image': {}}}
         receipt_handle = str(uuid.uuid4())
         message_id = str(uuid.uuid4())
@@ -1621,10 +1661,10 @@ class AccountCeleryTaskTest(TestCase):
 
         s, f = tasks.persist_inspection_cluster_results_task()
 
-        mock_delete.assert_not_called()
+        mock_delete.assert_called_once()
         mock_scale_down.delay.assert_called_once()
-        self.assertEqual([], s)
-        self.assertIn(sqs_message, f)
+        self.assertIn(sqs_message, s)
+        self.assertEqual([], f)
 
     @patch('api.tasks.aws')
     def test_scale_down_cluster_success(self, mock_aws):

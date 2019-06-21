@@ -769,11 +769,21 @@ def persist_aws_inspection_cluster_results(inspection_results):
             inspection_results))
 
     for image_id, image_json in images.items():
-        ami = AwsMachineImage.objects.get(ec2_ami_id=image_id)
-        image = ami.machine_image.get()
-        image.inspection_json = json.dumps(image_json)
-        image.status = image.INSPECTED
-        image.save()
+        try:
+            ami = AwsMachineImage.objects.get(ec2_ami_id=image_id)
+            image = ami.machine_image.get()
+            image.inspection_json = json.dumps(image_json)
+            image.status = image.INSPECTED
+            image.save()
+        except AwsMachineImage.DoesNotExist:
+            logger.warning(
+                _(
+                    'Persisting AWS inspection results for EC2 AMI ID '
+                    '%(ec2_ami_id)s, but we do not have any record of it. '
+                    'Inspection results are: %(inspection_json)s'
+                ),
+                {'ec2_ami_id': image_id, 'inspection_json': image_json},
+            )
 
 
 @shared_task
