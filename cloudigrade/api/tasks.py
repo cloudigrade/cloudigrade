@@ -131,7 +131,7 @@ def process_instance_event(event):
             run.save()
 
 
-@retriable_shared_task
+@retriable_shared_task  # noqa: C901
 @rewrap_aws_errors
 def copy_ami_snapshot(arn, ami_id, snapshot_region, reference_ami_id=None):
     """
@@ -151,6 +151,28 @@ def copy_ami_snapshot(arn, ami_id, snapshot_region, reference_ami_id=None):
         None: Run as an asynchronous Celery task.
 
     """
+    if reference_ami_id:
+        if not AwsMachineImage.objects.filter(
+            ec2_ami_id=reference_ami_id
+        ).exists():
+            logger.warning(
+                _(
+                    'AwsMachineImage with EC2 AMI ID %(ami_id)s could not be '
+                    'found for copy_ami_snapshot (using reference_ami_id).'
+                ),
+                {'ami_id': ami_id},
+            )
+            return
+    elif not AwsMachineImage.objects.filter(ec2_ami_id=ami_id).exists():
+        logger.warning(
+            _(
+                'AwsMachineImage with EC2 AMI ID %(ami_id)s could not be '
+                'found for copy_ami_snapshot.'
+            ),
+            {'ami_id': ami_id},
+        )
+        return
+
     session = aws.get_session(arn)
     session_account_id = aws.get_session_account_id(session)
     ami = aws.get_ami(session, ami_id, snapshot_region)

@@ -210,6 +210,7 @@ class AccountCeleryTaskTest(TestCase):
         mock_region = util_helper.get_random_region()
         mock_image_id = util_helper.generate_dummy_image_id()
         mock_image = util_helper.generate_mock_image(mock_image_id)
+        account_helper.generate_aws_image(ec2_ami_id=mock_image_id)
         block_mapping = mock_image.block_device_mappings
         mock_snapshot_id = block_mapping[0]['Ebs']['SnapshotId']
         mock_snapshot = util_helper.generate_mock_snapshot(
@@ -260,6 +261,9 @@ class AccountCeleryTaskTest(TestCase):
 
         region = util_helper.get_random_region()
         new_image_id = util_helper.generate_dummy_image_id()
+        # unlike non-reference calls to copy_ami_snapshot, we do NOT want to
+        # call "account_helper.generate_aws_image(ec2_ami_id=new_image_id)"
+        # here because cloudigrade has only seen the reference, not the new.
         mock_image = util_helper.generate_mock_image(new_image_id)
         block_mapping = mock_image.block_device_mappings
         mock_snapshot_id = block_mapping[0]['Ebs']['SnapshotId']
@@ -359,6 +363,7 @@ class AccountCeleryTaskTest(TestCase):
         mock_arn = util_helper.generate_dummy_arn()
         mock_region = util_helper.get_random_region()
         mock_image_id = util_helper.generate_dummy_image_id()
+        account_helper.generate_aws_image(ec2_ami_id=mock_image_id)
         mock_image = util_helper.generate_mock_image(mock_image_id)
         block_mapping = mock_image.block_device_mappings
         mock_snapshot_id = block_mapping[0]['Ebs']['SnapshotId']
@@ -382,6 +387,15 @@ class AccountCeleryTaskTest(TestCase):
             mock_create_volume.delay.assert_not_called()
 
     @patch('api.tasks.aws')
+    def test_copy_snapshot_missing_image(self, mock_aws):
+        """Assert early return if the AwsMachineImage doesn't exist."""
+        arn = util_helper.generate_dummy_arn()
+        ec2_ami_id = util_helper.generate_dummy_image_id()
+        region = util_helper.get_random_region()
+        copy_ami_snapshot(arn, ec2_ami_id, region)
+        mock_aws.get_session.assert_not_called()
+
+    @patch('api.tasks.aws')
     def test_copy_ami_snapshot_retry_on_ownership_not_verified(self, mock_aws):
         """Assert that the snapshot copy task fails."""
         mock_session = mock_aws.boto3.Session.return_value
@@ -391,6 +405,7 @@ class AccountCeleryTaskTest(TestCase):
         mock_region = util_helper.get_random_region()
         mock_image_id = util_helper.generate_dummy_image_id()
         mock_image = util_helper.generate_mock_image(mock_image_id)
+        account_helper.generate_aws_image(ec2_ami_id=mock_image_id)
         block_mapping = mock_image.block_device_mappings
         mock_snapshot_id = block_mapping[0]['Ebs']['SnapshotId']
         mock_snapshot = util_helper.generate_mock_snapshot(
@@ -616,6 +631,7 @@ class AccountCeleryTaskTest(TestCase):
         mock_arn = util_helper.generate_dummy_arn(mock_account_id, mock_region)
 
         mock_image_id = util_helper.generate_dummy_image_id()
+        account_helper.generate_aws_image(ec2_ami_id=mock_image_id)
         mock_image = util_helper.generate_mock_image(mock_image_id)
         mock_snapshot_id = util_helper.generate_dummy_snapshot_id()
 
