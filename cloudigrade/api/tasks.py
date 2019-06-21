@@ -314,6 +314,18 @@ def copy_ami_to_customer_account(arn, reference_ami_id, snapshot_region):
         None: Run as an asynchronous Celery task.
 
     """
+    if not AwsMachineImage.objects.filter(
+        ec2_ami_id=reference_ami_id
+    ).exists():
+        logger.warning(
+            _(
+                'AwsMachineImage with EC2 AMI ID %(reference_ami_id)s could '
+                'not be found for copy_ami_to_customer_account.'
+            ),
+            {'reference_ami_id': reference_ami_id},
+        )
+        return
+
     session = aws.get_session(arn)
     reference_ami = aws.get_ami(session, reference_ami_id, snapshot_region)
     if not reference_ami:

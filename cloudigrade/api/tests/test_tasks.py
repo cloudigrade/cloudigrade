@@ -709,6 +709,8 @@ class AccountCeleryTaskTest(TestCase):
         reference_ami_id = util_helper.generate_dummy_image_id()
         source_region = util_helper.get_random_region()
 
+        helper.generate_aws_image(ec2_ami_id=reference_ami_id)
+
         new_ami_id = mock_aws.copy_ami.return_value
 
         with patch.object(tasks, 'copy_ami_snapshot') as \
@@ -800,6 +802,15 @@ class AccountCeleryTaskTest(TestCase):
 
         self.assertEqual(image.status, MachineImage.INSPECTED)
         self.assertTrue(aws_image.aws_marketplace_image)
+
+    @patch('api.tasks.aws')
+    def test_copy_ami_to_customer_account_missing_image(self, mock_aws):
+        """Assert early return if the AwsMachineImage doesn't exist."""
+        arn = util_helper.generate_dummy_arn()
+        reference_ami_id = util_helper.generate_dummy_image_id()
+        region = util_helper.get_random_region()
+        copy_ami_to_customer_account(arn, reference_ami_id, region)
+        mock_aws.get_session.assert_not_called()
 
     @patch('api.tasks.aws')
     def test_copy_ami_to_customer_account_community(
@@ -910,6 +921,8 @@ class AccountCeleryTaskTest(TestCase):
         arn = util_helper.generate_dummy_arn()
         reference_ami_id = util_helper.generate_dummy_image_id()
         source_region = util_helper.get_random_region()
+
+        helper.generate_aws_image(ec2_ami_id=reference_ami_id)
 
         mock_aws.copy_ami.side_effect = ClientError(
             error_response={'Error': {
