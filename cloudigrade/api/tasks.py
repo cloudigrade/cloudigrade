@@ -545,7 +545,7 @@ def scale_up_inspection_cluster():
     run_inspection_cluster.delay(messages)
 
 
-@retriable_shared_task
+@retriable_shared_task  # noqa: C901
 @rewrap_aws_errors
 def run_inspection_cluster(messages, cloud='aws'):
     """
@@ -560,11 +560,37 @@ def run_inspection_cluster(messages, cloud='aws'):
         None: Run as an asynchronous Celery task.
 
     """
+    relevant_messages = []
     for message in messages:
-        aws_image = AwsMachineImage.objects.get(ec2_ami_id=message['ami_id'])
-        image = aws_image.machine_image.get()
-        image.status = MachineImage.INSPECTING
-        image.save()
+        try:
+            ec2_ami_id = message.get('ami_id')
+            aws_image = AwsMachineImage.objects.get(ec2_ami_id=ec2_ami_id)
+            image = aws_image.machine_image.get()
+            image.status = MachineImage.INSPECTING
+            image.save()
+            relevant_messages.append(message)
+        except AwsMachineImage.DoesNotExist:
+            logger.warning(
+                _(
+                    'Skipping inspection because we do not have an '
+                    'AwsMachineImage for %(ec2_ami_id)s (%(message)s)'
+                ),
+                {
+                    'ec2_ami_id': ec2_ami_id, 'message': message
+                },
+            )
+        except MachineImage.DoesNotExist:
+            logger.warning(
+                _(
+                    'Skipping inspection because we do not have a '
+                    'MachineImage for %(ec2_ami_id)s (%(message)s)'
+                ),
+                {'ec2_ami_id': ec2_ami_id, 'message': message},
+            )
+
+    if not relevant_messages:
+        # Early return if nothing actually needs inspection.
+        return
 
     task_command = ['-c', cloud]
     if settings.HOUNDIGRADE_DEBUG:
@@ -594,7 +620,7 @@ def run_inspection_cluster(messages, cloud='aws'):
 
     logger.info(_('%s attaching volumes'), 'run_inspection_cluster')
     # attach volumes
-    for index, message in enumerate(messages):
+    for index, message in enumerate(relevant_messages):
         mount_point = generate_device_name(index)
         volume = ec2.Volume(message['volume_id'])
         logger.info(

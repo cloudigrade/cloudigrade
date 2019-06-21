@@ -1279,6 +1279,13 @@ class AccountCeleryTaskTest(TestCase):
         with self.assertRaises(AwsECSInstanceNotReady):
             tasks.run_inspection_cluster(messages)
 
+    @patch('api.tasks.boto3')
+    def test_run_inspection_cluster_with_no_known_images(self, mock_boto3):
+        """Assert that inspection is skipped if no known images are given."""
+        messages = [{'ami_id': util_helper.generate_dummy_image_id()}]
+        tasks.run_inspection_cluster(messages)
+        mock_boto3.client.assert_not_called()
+
     @patch('api.models.AwsMachineImage.objects')
     @patch('api.tasks.boto3')
     def test_run_inspection_cluster_with_too_many_instances(
