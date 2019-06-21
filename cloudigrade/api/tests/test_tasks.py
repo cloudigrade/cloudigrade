@@ -35,7 +35,6 @@ from util.exceptions import (AwsECSInstanceNotReady, AwsSnapshotCopyLimitError,
                              InvalidHoundigradeJsonFormat,
                              SnapshotNotReadyException)
 from util.tests import helper as util_helper
-from util.tests.helper import generate_dummy_image_id
 from . import helper
 
 
@@ -76,8 +75,8 @@ class AccountCeleryTaskTest(TestCase):
         ami_id_unknown = described_ami_unknown['ImageId']
         ami_id_openshift = described_ami_openshift['ImageId']
         ami_id_windows = described_ami_windows['ImageId']
-        ami_id_unavailable = generate_dummy_image_id()
-        ami_id_gone = generate_dummy_image_id()
+        ami_id_unavailable = util_helper.generate_dummy_image_id()
+        ami_id_gone = util_helper.generate_dummy_image_id()
 
         all_instances = [
             util_helper.generate_dummy_describe_instance(
