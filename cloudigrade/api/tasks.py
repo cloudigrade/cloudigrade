@@ -74,7 +74,17 @@ def initial_aws_describe_instances(account_id):
     Args:
         account_id (int): the AwsAccount id
     """
-    aws_account = AwsCloudAccount.objects.get(pk=account_id)
+    try:
+        aws_account = AwsCloudAccount.objects.get(pk=account_id)
+    except AwsCloudAccount.DoesNotExist:
+        logger.warning(
+            _('AwsCloudAccount id %s could not be found for initial describe'),
+            account_id,
+        )
+        # This can happen if a customer creates and then quickly deletes their
+        # cloud account before this async task has started to run. Early exit!
+        return
+
     account = aws_account.cloud_account.get()
     arn = aws_account.account_arn
 

@@ -194,6 +194,13 @@ class AccountCeleryTaskTest(TestCase):
         self.assertEqual(image.status, MachineImage.UNAVAILABLE)
 
     @patch('api.tasks.aws')
+    def test_initial_aws_describe_instances_missing_account(self, mock_aws):
+        """Test early return when account does not exist."""
+        account_id = -1  # negative number account ID should never exist.
+        tasks.initial_aws_describe_instances(account_id)
+        mock_aws.get_session.assert_not_called()
+
+    @patch('api.tasks.aws')
     def test_copy_ami_snapshot_success(self, mock_aws):
         """Assert that the snapshot copy task succeeds."""
         mock_session = mock_aws.boto3.Session.return_value
