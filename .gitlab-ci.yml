@@ -9,7 +9,7 @@ stages:
 ### GLOBAL VARS ###
 variables:
   SHIFTIGRADE_IMAGE: registry.gitlab.com/cloudigrade/shiftigrade
-  SHIFTIGRADE_VERSION: 0.2.7
+  SHIFTIGRADE_VERSION: 0.2.8
   IMAGE_NAME: registry.gitlab.com/${CI_PROJECT_PATH}
   IMAGE_NAME_COMMIT: registry.gitlab.com/${CI_PROJECT_PATH}/commits/${CI_PROJECT_NAME}:${CI_BUILD_REF}
   NGINX_NAME: registry.gitlab.com/${CI_PROJECT_PATH}/nginx/${CI_PROJECT_NAME}-nginx
@@ -241,6 +241,7 @@ Deploy Review:
     - oc rsh -c c-${DEPLOYMENT_PREFIX}-a $(oc get pods -o jsonpath='{.items[*].metadata.name}' -l name=c-${DEPLOYMENT_PREFIX}-a) python3 manage.py seed_review_data || true
     - if ! oc rollout status dc/c-${DEPLOYMENT_PREFIX}-b; then oc rollout latest dc/c-${DEPLOYMENT_PREFIX}-b && oc rollout status dc/c-${DEPLOYMENT_PREFIX}-b; fi;
     - if ! oc rollout status dc/c-${DEPLOYMENT_PREFIX}-w; then oc rollout latest dc/c-${DEPLOYMENT_PREFIX}-w && oc rollout status dc/c-${DEPLOYMENT_PREFIX}-w; fi;
+    - if ! oc rollout status dc/c-${DEPLOYMENT_PREFIX}-l; then oc rollout latest dc/c-${DEPLOYMENT_PREFIX}-l && oc rollout status dc/c-${DEPLOYMENT_PREFIX}-l; fi;
   environment:
     name: review/${CI_COMMIT_REF_NAME}
     url: https://qa.cloud.paas.upshift.redhat.com/api/cloudigrade/v2/
@@ -357,6 +358,7 @@ Clean Up Review:
     - oc rsh -c c-${DEPLOYMENT_PREFIX}-a $(oc get pods -o jsonpath='{.items[*].metadata.name}' -l name=c-${DEPLOYMENT_PREFIX}-a) python3 manage.py seed_review_data || true
     - if ! oc rollout status dc/c-${DEPLOYMENT_PREFIX}-b; then oc rollout latest dc/c-${DEPLOYMENT_PREFIX}-b && oc rollout status dc/c-${DEPLOYMENT_PREFIX}-b; fi;
     - if ! oc rollout status dc/c-${DEPLOYMENT_PREFIX}-w; then oc rollout latest dc/c-${DEPLOYMENT_PREFIX}-w && oc rollout status dc/c-${DEPLOYMENT_PREFIX}-w; fi;
+    - if ! oc rollout status dc/c-${DEPLOYMENT_PREFIX}-l; then oc rollout latest dc/c-${DEPLOYMENT_PREFIX}-l && oc rollout status dc/c-${DEPLOYMENT_PREFIX}-l; fi;
     - echo -e "section_start:$( date +%s ):chat_reply\r\033[0K\nDeployed [cloudigrade] ${CHAT_INPUT}, available at https://qa.cloud.paas.upshift.redhat.com/api/cloudigrade/v2/ using HTTP headers X-4Scale-Env:ci and X-4Scale-Branch:${CI_COMMIT_REF_SLUG}\nsection_end:$( date +%s ):chat_reply\r\033[0K"
 
 Review-Master:
@@ -451,6 +453,7 @@ Deploy to Test:
     API_IMAGE: registry.gitlab.com/${CI_PROJECT_PATH}/commits/${CI_PROJECT_NAME}:${CI_BUILD_REF}
     NGINX_IMAGE: registry.gitlab.com/${CI_PROJECT_PATH}/nginx-commits/${CI_PROJECT_NAME}-nginx:${CI_BUILD_REF}
     CELERY_IMAGE: registry.gitlab.com/${CI_PROJECT_PATH}/commits/${CI_PROJECT_NAME}:${CI_BUILD_REF}
+    LISTENER_IMAGE: registry.gitlab.com/${CI_PROJECT_PATH}/commits/${CI_PROJECT_NAME}:${CI_BUILD_REF}
   only:
     - master@cloudigrade/cloudigrade
   except:
@@ -464,6 +467,7 @@ Deploy to Test:
     - if ! oc rollout status dc/c-a; then oc rollout latest dc/c-a && oc rollout status dc/c-a; fi;
     - if ! oc rollout status dc/c-b; then oc rollout latest dc/c-b && oc rollout status dc/c-b; fi;
     - if ! oc rollout status dc/c-w; then oc rollout latest dc/c-w && oc rollout status dc/c-w; fi;
+    - if ! oc rollout status dc/c-l; then oc rollout latest dc/c-l && oc rollout status dc/c-l; fi;
   environment:
     name: test
     url: https://stage.cloud.paas.upshift.redhat.com/api/cloudigrade/v2/
@@ -476,6 +480,7 @@ Deploy to Stage:
     API_IMAGE: registry.gitlab.com/${CI_PROJECT_PATH}:${CI_COMMIT_TAG}
     NGINX_IMAGE: registry.gitlab.com/${CI_PROJECT_PATH}/nginx/${CI_PROJECT_NAME}-nginx:${CI_COMMIT_TAG}
     CELERY_IMAGE: registry.gitlab.com/${CI_PROJECT_PATH}:${CI_COMMIT_TAG}
+    LISTENER_IMAGE: registry.gitlab.com/${CI_PROJECT_PATH}:${CI_COMMIT_TAG}
   only:
     - tags@cloudigrade/cloudigrade
   except:
@@ -489,6 +494,7 @@ Deploy to Stage:
     - if ! oc rollout status dc/c-a; then oc rollout latest dc/c-a && oc rollout status dc/c-a; fi;
     - if ! oc rollout status dc/c-b; then oc rollout latest dc/c-b && oc rollout status dc/c-b; fi;
     - if ! oc rollout status dc/c-w; then oc rollout latest dc/c-w && oc rollout status dc/c-w; fi;
+    - if ! oc rollout status dc/c-l; then oc rollout latest dc/c-l && oc rollout status dc/c-l; fi;
   environment:
     name: stage
     url: https://stage.cloud.paas.upshift.redhat.com/api/cloudigrade/v2/
@@ -502,6 +508,7 @@ Deploy to Production:
     API_IMAGE: registry.gitlab.com/${CI_PROJECT_PATH}:${CI_COMMIT_TAG}
     NGINX_IMAGE: registry.gitlab.com/${CI_PROJECT_PATH}/nginx/${CI_PROJECT_NAME}-nginx:${CI_COMMIT_TAG}
     CELERY_IMAGE: registry.gitlab.com/${CI_PROJECT_PATH}:${CI_COMMIT_TAG}
+    LISTENER_IMAGE: registry.gitlab.com/${CI_PROJECT_PATH}:${CI_COMMIT_TAG}
   only:
     - tags@cloudigrade/cloudigrade
   except:
@@ -515,6 +522,7 @@ Deploy to Production:
     - if ! oc rollout status dc/c-a; then oc rollout latest dc/c-a && oc rollout status dc/c-a; fi;
     - if ! oc rollout status dc/c-b; then oc rollout latest dc/c-b && oc rollout status dc/c-b; fi;
     - if ! oc rollout status dc/c-w; then oc rollout latest dc/c-w && oc rollout status dc/c-w; fi;
+    - if ! oc rollout status dc/c-l; then oc rollout latest dc/c-l && oc rollout status dc/c-l; fi;
   when: manual
   environment:
     name: production

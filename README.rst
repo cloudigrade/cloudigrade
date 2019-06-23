@@ -371,6 +371,24 @@ Message Broker
 
 Amazon SQS is used to broker messages between **cloudigrade**, Celery workers, and houndigrade.
 
+
+Kafka Listener
+==============
+
+`sources_listener.py` is a special script whose purpose is to listen to the platform kafka instance. Currently we only listen to a topic from the sources application to inform us of when new source authentication objects are created so we can proceed to add them to cloud meter.
+
+There are several environment variables that configure the script.
+
+- ``LISTENER_TOPIC`` - The topic to listen to
+- ``LISTENER_GROUP_ID`` - The listener group
+- ``LISTENER_SERVER`` - Kafka server
+- ``LISTENER_PORT`` -  Kafka server port
+- ``LISTENER_AUTO_COMMIT`` - Whether the messages being received should be marked as so
+- ``LISTENER_TIMEOUT`` - Timeout of the listener
+- ``LISTENER_PID_PATH`` - The path of the pid file
+
+The listener will be automatically deployed to all OSD environments, including review. If you'd like to run it locally you don't need to do anything special, simply be in your virtual environment, set your environment variables, and call `python cloudigrade/sources_listener.py`.
+
 .. |license| image:: https://img.shields.io/github/license/cloudigrade/cloudigrade.svg
    :target: https://github.com/cloudigrade/cloudigrade/blob/master/LICENSE
 .. |Build Status| image:: https://travis-ci.org/cloudigrade/cloudigrade.svg?branch=master
