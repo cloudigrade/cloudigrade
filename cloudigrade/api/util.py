@@ -864,6 +864,7 @@ def generate_aws_ami_messages(instances_data, ami_id_list):
     return messages
 
 
+@transaction.atomic
 def start_image_inspection(arn, ami_id, region):
     """
     Start image inspection of the provided image.
@@ -884,37 +885,62 @@ def start_image_inspection(arn, ami_id, region):
         ),
         {'ami_id': ami_id, 'region': region, 'arn': arn},
     )
-    ami = AwsMachineImage.objects.get(ec2_ami_id=ami_id)
 
-    machine_image = ami.machine_image.get()
-    machine_image.status = machine_image.PREPARING
-    machine_image.save()
+    try:
+        ami = AwsMachineImage.objects.get(ec2_ami_id=ami_id)
 
-    if (
-        MachineImageInspectionStart.objects.filter(
-            machineimage=machine_image
-        ).count() > settings.MAX_ALLOWED_INSPECTION_ATTEMPTS
-    ):
-        logger.info(
-            _('Exceeded %(count)s inspection attempts for %(ami)s'),
-            {'count': settings.MAX_ALLOWED_INSPECTION_ATTEMPTS, 'ami': ami},
-        )
-        machine_image.status = machine_image.ERROR
+        machine_image = ami.machine_image.get()
+        machine_image.status = machine_image.PREPARING
         machine_image.save()
+
+        if (
+            MachineImageInspectionStart.objects.filter(
+                machineimage=machine_image
+            ).count() > settings.MAX_ALLOWED_INSPECTION_ATTEMPTS
+        ):
+            logger.info(
+                _('Exceeded %(count)s inspection attempts for %(ami)s'),
+                {
+                    'count': settings.MAX_ALLOWED_INSPECTION_ATTEMPTS,
+                    'ami': ami,
+                },
+            )
+            machine_image.status = machine_image.ERROR
+            machine_image.save()
+            return machine_image
+
+        MachineImageInspectionStart.objects.create(machineimage=machine_image)
+
+        if machine_image.is_marketplace or machine_image.is_cloud_access:
+            machine_image.status = machine_image.INSPECTED
+            machine_image.save()
+        else:
+            # Local import to get around a circular import issue
+            from api.tasks import copy_ami_snapshot
+
+            copy_ami_snapshot.delay(arn, ami_id, region)
+
         return machine_image
 
-    MachineImageInspectionStart.objects.create(machineimage=machine_image)
+    except AwsMachineImage.DoesNotExist:
+        logger.warning(
+            _(
+                'AwsMachineImage for ec2_ami_id %(ec2_ami_id)s could not be '
+                'found for start_image_inspection'
+            ),
+            {'ec2_ami_id': ami_id},
+        )
+        return
 
-    if machine_image.is_marketplace or machine_image.is_cloud_access:
-        machine_image.status = machine_image.INSPECTED
-        machine_image.save()
-    else:
-        # Local import to get around a circular import issue
-        from api.tasks import copy_ami_snapshot
-
-        copy_ami_snapshot.delay(arn, ami_id, region)
-
-    return machine_image
+    except MachineImage.DoesNotExist:
+        logger.warning(
+            _(
+                'MachineImage for ec2_ami_id %(ec2_ami_id)s could not be '
+                'found for start_image_inspection'
+            ),
+            {'ec2_ami_id': ami_id},
+        )
+        return
 
 
 def create_aws_machine_image_copy(copy_ami_id, reference_ami_id):
