@@ -91,8 +91,24 @@ def initial_aws_describe_instances(account_id):
     session = aws.get_session(arn)
     instances_data = aws.describe_instances_everywhere(session)
     with transaction.atomic():
-        new_ami_ids = create_new_machine_images(session, instances_data)
-        create_initial_aws_instance_events(account, instances_data)
+        try:
+            AwsCloudAccount.objects.get(pk=account_id)
+            new_ami_ids = create_new_machine_images(session, instances_data)
+            create_initial_aws_instance_events(account, instances_data)
+        except AwsCloudAccount.DoesNotExist:
+            logger.warning(
+                _(
+                    'AwsCloudAccount id %s could not be found to save newly '
+                    'discovered images and instances'
+                ),
+                account_id,
+            )
+            # This can happen if a customer deleted their cloud account between
+            # the start of this function and here. The AWS calls for
+            # describe_instances_everywhere may be slow and are not within this
+            # transaction. That's why we have to check again after it.
+            return
+
     messages = generate_aws_ami_messages(instances_data, new_ami_ids)
     for message in messages:
         start_image_inspection(str(arn), message['image_id'],
