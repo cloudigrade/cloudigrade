@@ -624,10 +624,12 @@ def run_inspection_cluster(messages, cloud='aws'):
     for message in messages:
         try:
             ec2_ami_id = message.get('ami_id')
-            aws_image = AwsMachineImage.objects.get(ec2_ami_id=ec2_ami_id)
-            image = aws_image.machine_image.get()
-            image.status = MachineImage.INSPECTING
-            image.save()
+            aws_machine_image = AwsMachineImage.objects.get(
+                ec2_ami_id=ec2_ami_id
+            )
+            machine_image = aws_machine_image.machine_image.get()
+            machine_image.status = MachineImage.INSPECTING
+            machine_image.save()
             relevant_messages.append(message)
         except AwsMachineImage.DoesNotExist:
             logger.warning(
@@ -635,9 +637,7 @@ def run_inspection_cluster(messages, cloud='aws'):
                     'Skipping inspection because we do not have an '
                     'AwsMachineImage for %(ec2_ami_id)s (%(message)s)'
                 ),
-                {
-                    'ec2_ami_id': ec2_ami_id, 'message': message
-                },
+                {'ec2_ami_id': ec2_ami_id, 'message': message},
             )
         except MachineImage.DoesNotExist:
             logger.warning(
@@ -659,7 +659,8 @@ def run_inspection_cluster(messages, cloud='aws'):
     ecs = boto3.client('ecs')
     # get ecs container instance id
     result = ecs.list_container_instances(
-        cluster=settings.HOUNDIGRADE_ECS_CLUSTER_NAME)
+        cluster=settings.HOUNDIGRADE_ECS_CLUSTER_NAME
+    )
 
     # verify we have our single container instance
     num_instances = len(result['containerInstanceArns'])
@@ -670,7 +671,7 @@ def run_inspection_cluster(messages, cloud='aws'):
 
     result = ecs.describe_container_instances(
         containerInstances=[result['containerInstanceArns'][0]],
-        cluster=settings.HOUNDIGRADE_ECS_CLUSTER_NAME
+        cluster=settings.HOUNDIGRADE_ECS_CLUSTER_NAME,
     )
     ec2_instance_id = result['containerInstances'][0]['ec2InstanceId']
 
@@ -681,70 +682,113 @@ def run_inspection_cluster(messages, cloud='aws'):
     logger.info(_('%s attaching volumes'), 'run_inspection_cluster')
     # attach volumes
     for index, message in enumerate(relevant_messages):
+        ec2_ami_id = message['ami_id']
+        ec2_volume_id = message['volume_id']
         mount_point = generate_device_name(index)
-        volume = ec2.Volume(message['volume_id'])
+        volume = ec2.Volume(ec2_volume_id)
         logger.info(
-            _('%(label)s attaching volume %(volume_id)s from AMI'
-              ' %(ami_id)s to instance %(instance)s at %(mount_point)s'),
+            _(
+                '%(label)s attaching volume %(volume_id)s from AMI '
+                '%(ami_id)s to instance %(instance)s at %(mount_point)s'
+            ),
             {
                 'label': 'run_inspection_cluster',
-                'volume_id': message['volume_id'],
-                'ami_id': message['ami_id'],
+                'volume_id': ec2_volume_id,
+                'ami_id': ec2_ami_id,
                 'instance': ec2_instance_id,
                 'mount_point': mount_point,
-            }
+            },
         )
         try:
             volume.attach_to_instance(
-                Device=mount_point, InstanceId=ec2_instance_id)
+                Device=mount_point, InstanceId=ec2_instance_id
+            )
         except ClientError as e:
             error_code = e.response.get('Error').get('Code')
             error_message = e.response.get('Error').get('Message')
 
-            ami = AwsMachineImage.objects.get(ec2_ami_id=message['ami_id'])
-            image = aws_image.machine_image.get()
+            with transaction.atomic():
+                try:
+                    if (
+                        error_code
+                        in ('OptInRequired', 'IncorrectInstanceState') and
+                        'marketplace' in error_message.lower()
+                    ):
+                        logger.info(
+                            _(
+                                'Found a marketplace AMI "%s" when trying to '
+                                'copy volume, this should not happen, '
+                                'but here we are.'
+                            ),
+                            ec2_ami_id,
+                        )
 
-            if error_code in ('OptInRequired', 'IncorrectInstanceState',) \
-                    and 'marketplace' in error_message.lower():
-                logger.info(_('Found a marketplace AMI "%s" when trying to '
-                              'copy volume, this should not happen, '
-                              'but here we are.'), message['ami_id'])
-                ami.aws_marketplace_image = True
-                image.status = MachineImage.INSPECTED
-            else:
-                logger.error(
-                    _('Encountered an issue when trying to attach volume '
-                      '"%(volume_id)s" from AMI "%(ami_id)s" to inspection '
-                      'instance. Error code: "%(error_code)s". Error '
-                      'message: "%(error_message)s". Setting image state to '
-                      'ERROR.'), {
-                        'volume_id': message['volume_id'],
-                        'ami_id': message['ami_id'],
-                        'error_code': error_code,
-                        'error_message': error_message,
-                    }
-                )
-                image.status = MachineImage.ERROR
+                        aws_machine_image = AwsMachineImage.objects.get(
+                            ec2_ami_id=ec2_ami_id
+                        )
+                        aws_machine_image.aws_marketplace_image = True
+                        machine_image = aws_machine_image.machine_image.get()
+                        machine_image.status = MachineImage.INSPECTED
+                    else:
+                        logger.error(
+                            _(
+                                'Encountered an issue when trying to attach '
+                                'volume "%(volume_id)s" from AMI "%(ami_id)s" '
+                                'to inspection instance. Error code: '
+                                '"%(error_code)s". Error message: '
+                                '"%(error_message)s". Setting image state to '
+                                'ERROR.'
+                            ),
+                            {
+                                'volume_id': ec2_volume_id,
+                                'ami_id': ec2_ami_id,
+                                'error_code': error_code,
+                                'error_message': error_message,
+                            },
+                        )
 
-            ami.save()
-            image.save()
-            volume.delete()
+                        aws_machine_image = AwsMachineImage.objects.get(
+                            ec2_ami_id=ec2_ami_id
+                        )
+                        machine_image = aws_machine_image.machine_image.get()
+                        machine_image.status = MachineImage.ERROR
+
+                    aws_machine_image.save()
+                    machine_image.save()
+                except AwsMachineImage.DoesNotExist:
+                    logger.warning(
+                        _(
+                            'AwsMachineImage for ec2_ami_id %(ec2_ami_id)s '
+                            'could not be found for run_inspection_cluster'
+                        ),
+                        {'ec2_ami_id': ec2_ami_id},
+                    )
+                except MachineImage.DoesNotExist:
+                    logger.warning(
+                        _(
+                            'MachineImage for ec2_ami_id %(ec2_ami_id)s '
+                            'could not be found for run_inspection_cluster'
+                        ),
+                        {'ec2_ami_id': ec2_ami_id},
+                    )
+                finally:
+                    volume.delete()
 
             continue
 
-        logger.info(_('%(label)s modify volume %(volume_id)s to auto-delete'),
-                    {'label': 'run_inspection_cluster',
-                     'volume_id': message['volume_id']}
-                    )
+        logger.info(
+            _('%(label)s modify volume %(volume_id)s to auto-delete'),
+            {'label': 'run_inspection_cluster', 'volume_id': ec2_volume_id},
+        )
         # Configure volumes to delete when instance is scaled down
-        ec2_instance.modify_attribute(BlockDeviceMappings=[
-            {
-                'DeviceName': mount_point,
-                'Ebs': {
-                    'DeleteOnTermination': True
+        ec2_instance.modify_attribute(
+            BlockDeviceMappings=[
+                {
+                    'DeviceName': mount_point,
+                    'Ebs': {'DeleteOnTermination': True},
                 }
-            }
-        ])
+            ]
+        )
 
         task_command.extend(['-t', message['ami_id'], mount_point])
 
@@ -755,7 +799,7 @@ def run_inspection_cluster(messages, cloud='aws'):
     result = ecs.register_task_definition(
         family=f'{settings.HOUNDIGRADE_ECS_FAMILY_NAME}',
         containerDefinitions=[_build_container_definition(task_command)],
-        requiresCompatibilities=['EC2']
+        requiresCompatibilities=['EC2'],
     )
 
     # release the hounds
