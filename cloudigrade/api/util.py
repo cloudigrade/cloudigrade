@@ -967,6 +967,39 @@ def create_aws_machine_image_copy(copy_ami_id, reference_ami_id):
         awsmachineimagecopy.machine_image.get()
 
 
+@transaction.atomic
+def get_aws_machine_image(ec2_ami_id):
+    """
+    Get the AwsMachineImage for the given EC2 AMI ID.
+
+    If either the AwsMachineImage or its related MachineImage object could not
+    be loaded, return None.
+
+    Args:
+        ec2_ami_id (str): the AWS EC2 AMI ID for the image
+
+    Returns:
+        AwsMachineImage or None.
+
+    """
+    try:
+        aws_machine_image = AwsMachineImage.objects.get(ec2_ami_id=ec2_ami_id)
+        aws_machine_image.machine_image.get()
+    except AwsMachineImage.DoesNotExist:
+        logger.warning(
+            _('AwsMachineImage for ec2_ami_id %(ec2_ami_id)s not found'),
+            {'ec2_ami_id': ec2_ami_id},
+        )
+        return None
+    except MachineImage.DoesNotExist:
+        logger.warning(
+            _('MachineImage for ec2_ami_id %(ec2_ami_id)s not found'),
+            {'ec2_ami_id': ec2_ami_id},
+        )
+        return None
+    return aws_machine_image
+
+
 def add_messages_to_queue(queue_name, messages):
     """
     Send messages to an SQS queue.
