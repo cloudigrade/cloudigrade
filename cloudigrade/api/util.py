@@ -537,6 +537,7 @@ def create_initial_aws_instance_events(account, instances_data):
                 save_instance_events(instance, instance_data)
 
 
+@transaction.atomic()
 def save_instance(account, instance_data, region):
     """
     Create or Update the instance object.
@@ -577,74 +578,72 @@ def save_instance(account, instance_data, region):
         },
     )
 
-    with transaction.atomic():
-        awsinstance, created = AwsInstance.objects.get_or_create(
-            ec2_instance_id=instance_id, region=region,
+    awsinstance, created = AwsInstance.objects.get_or_create(
+        ec2_instance_id=instance_id, region=region,
+    )
+
+    if created:
+        Instance.objects.create(
+            cloud_account=account, content_object=awsinstance
         )
 
-        if created:
-            Instance.objects.create(
-                cloud_account=account, content_object=awsinstance
-            )
-
-        # This should not be necessary, but we really need this to exist.
-        # If it doesn't, this will kill the transaction with an exception.
-        awsinstance.instance.get()
+    # This should not be necessary, but we really need this to exist.
+    # If it doesn't, this will kill the transaction with an exception.
+    awsinstance.instance.get()
 
     # If for some reason we don't get the image_id, we cannot look up
     # the associated image.
     if image_id is None:
         machineimage = None
     else:
-        with transaction.atomic():
+        logger.info(
+            _('AwsMachineImage get_or_create for EC2 AMI %s'), image_id
+        )
+        awsmachineimage, created = AwsMachineImage.objects.get_or_create(
+            ec2_ami_id=image_id,
+            defaults={'region': region},
+        )
+        if created:
             logger.info(
-                _('AwsMachineImage get_or_create for EC2 AMI %s'), image_id
+                _(
+                    'Missing image data for %s; creating '
+                    'UNAVAILABLE stub image.'
+                ),
+                instance_data,
             )
-            awsmachineimage, created = AwsMachineImage.objects.get_or_create(
-                ec2_ami_id=image_id,
-                defaults={'region': region},
+            MachineImage.objects.create(
+                status=MachineImage.UNAVAILABLE,
+                content_object=awsmachineimage,
             )
-            if created:
-                logger.info(
-                    _(
-                        'Missing image data for %s; creating '
-                        'UNAVAILABLE stub image.'
-                    ),
-                    instance_data,
-                )
-                MachineImage.objects.create(
-                    status=MachineImage.UNAVAILABLE,
-                    content_object=awsmachineimage,
-                )
-            try:
-                machineimage = awsmachineimage.machine_image.get()
-            except MachineImage.DoesNotExist:
-                # We are not sure how this could happen. Whenever we save a new
-                # AwsMachineImage, we *should* always follow up with creating
-                # its paired MachineImage. Investigate if you see this error!
-                logger.error(
-                    _(
-                        'Existing AwsMachineImage %(awsmachineimage_id)s '
-                        '(ec2_ami_id=%(ec2_ami_id)s) found has no '
-                        'MachineImage. This should not happen!'
-                    ),
-                    {
-                        'awsmachineimage_id': awsmachineimage.id,
-                        'ec2_ami_id': image_id,
-                    },
-                )
-                logger.info(
-                    _(
-                        'Missing image data for %s; creating '
-                        'UNAVAILABLE stub image.'
-                    ),
-                    instance_data,
-                )
-                MachineImage.objects.create(
-                    status=MachineImage.UNAVAILABLE,
-                    content_object=awsmachineimage,
-                )
-                machineimage = awsmachineimage.machine_image.get()
+        try:
+            machineimage = awsmachineimage.machine_image.get()
+        except MachineImage.DoesNotExist:
+            # We are not sure how this could happen. Whenever we save a new
+            # AwsMachineImage, we *should* always follow up with creating
+            # its paired MachineImage. Investigate if you see this error!
+            logger.error(
+                _(
+                    'Existing AwsMachineImage %(awsmachineimage_id)s '
+                    '(ec2_ami_id=%(ec2_ami_id)s) found has no '
+                    'MachineImage. This should not happen!'
+                ),
+                {
+                    'awsmachineimage_id': awsmachineimage.id,
+                    'ec2_ami_id': image_id,
+                },
+            )
+            logger.info(
+                _(
+                    'Missing image data for %s; creating '
+                    'UNAVAILABLE stub image.'
+                ),
+                instance_data,
+            )
+            MachineImage.objects.create(
+                status=MachineImage.UNAVAILABLE,
+                content_object=awsmachineimage,
+            )
+            machineimage = awsmachineimage.machine_image.get()
 
     if machineimage is not None:
         instance = awsinstance.instance.get()
