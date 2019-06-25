@@ -42,6 +42,7 @@ from api.util import (
     create_initial_aws_instance_events,
     create_new_machine_images,
     generate_aws_ami_messages,
+    get_aws_machine_image,
     normalize_runs,
     read_messages_from_queue,
     recalculate_runs,
@@ -1668,7 +1669,17 @@ def _build_events_info_for_saving(account, instance, events):
 
 def _mark_aws_image_error(ami_id):
     """Set an aws image state to ERROR."""
-    aws_image = AwsMachineImage.objects.get(ec2_ami_id=ami_id)
-    image = aws_image.machine_image.get()
-    image.status = image.ERROR
-    image.save()
+    with transaction.atomic():
+        aws_machine_image = get_aws_machine_image(ec2_ami_id=ami_id)
+        if not aws_machine_image:
+            logger.warning(
+                _(
+                    'AwsMachineImage with EC2 AMI ID %(ami_id)s could not be '
+                    'found for _mark_aws_image_error'
+                ),
+                {'ami_id': ami_id},
+            )
+            return
+        machine_image = aws_machine_image.machine_image.get()
+        machine_image.status = machine_image.ERROR
+        machine_image.save()
