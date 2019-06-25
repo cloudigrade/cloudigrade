@@ -353,10 +353,7 @@ def copy_ami_to_customer_account(arn, reference_ami_id, snapshot_region):
             ),
             {'image_id': reference_ami_id, 'source_region': snapshot_region},
         )
-        awsimage = AwsMachineImage.objects.get(ec2_ami_id=reference_ami_id)
-        image = awsimage.machine_image.get()
-        image.status = image.ERROR
-        image.save()
+        _mark_aws_image_error(reference_ami_id)
         return
 
     try:
@@ -384,15 +381,12 @@ def copy_ami_to_customer_account(arn, reference_ami_id, snapshot_region):
                 # but not given access to the storage.
                 logger.warning(
                     _(
-                        'Found a private image "%s" with inaccessible storage,'
-                        ' marking as erred'
+                        'Found a private image "%s" with inaccessible '
+                        'storage. Saving ERROR status.'
                     ),
                     reference_ami_id,
                 )
-                ami = AwsMachineImage.objects.get(ec2_ami_id=reference_ami_id)
-                image = ami.machine_image.get()
-                image.status = image.ERROR
-                image.save()
+                _mark_aws_image_error(reference_ami_id)
                 return
             elif error in public_errors:
                 # This appears to be a marketplace AMI, mark it as inspected.
@@ -730,6 +724,8 @@ def run_inspection_cluster(messages, cloud='aws'):
                         aws_machine_image.aws_marketplace_image = True
                         machine_image = aws_machine_image.machine_image.get()
                         machine_image.status = MachineImage.INSPECTED
+                        aws_machine_image.save()
+                        machine_image.save()
                     else:
                         logger.error(
                             _(
@@ -747,15 +743,8 @@ def run_inspection_cluster(messages, cloud='aws'):
                                 'error_message': error_message,
                             },
                         )
+                        _mark_aws_image_error(ec2_ami_id)
 
-                        aws_machine_image = AwsMachineImage.objects.get(
-                            ec2_ami_id=ec2_ami_id
-                        )
-                        machine_image = aws_machine_image.machine_image.get()
-                        machine_image.status = MachineImage.ERROR
-
-                    aws_machine_image.save()
-                    machine_image.save()
                 except AwsMachineImage.DoesNotExist:
                     logger.warning(
                         _(
