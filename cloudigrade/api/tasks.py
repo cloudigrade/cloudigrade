@@ -1667,19 +1667,29 @@ def _build_events_info_for_saving(account, instance, events):
     return events_info
 
 
-def _mark_aws_image_error(ami_id):
-    """Set an aws image state to ERROR."""
+def _mark_aws_image_error(ec2_ami_id):
+    """
+    Set an AwsMachineImage's MachineImage status to ERROR.
+
+    Args:
+        ec2_ami_id (str): the AWS EC2 AMI ID of the AwsMachineImage to update.
+
+    Returns:
+        bool True if status is successfully updated, else False.
+
+    """
     with transaction.atomic():
-        aws_machine_image = get_aws_machine_image(ec2_ami_id=ami_id)
+        aws_machine_image = get_aws_machine_image(ec2_ami_id=ec2_ami_id)
         if not aws_machine_image:
             logger.warning(
                 _(
-                    'AwsMachineImage with EC2 AMI ID %(ami_id)s could not be '
-                    'found for _mark_aws_image_error'
+                    'AwsMachineImage with EC2 AMI ID %(ec2_ami_id)s could not '
+                    'be found for _mark_aws_image_error'
                 ),
-                {'ami_id': ami_id},
+                {'ec2_ami_id': ec2_ami_id},
             )
-            return
+            return False
         machine_image = aws_machine_image.machine_image.get()
         machine_image.status = machine_image.ERROR
         machine_image.save()
+    return True
