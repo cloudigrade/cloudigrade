@@ -397,12 +397,9 @@ def copy_ami_to_customer_account(arn, reference_ami_id, snapshot_region):
                     ),
                     reference_ami_id,
                 )
-                ami = AwsMachineImage.objects.get(ec2_ami_id=reference_ami_id)
-                ami.aws_marketplace_image = True
-                ami.save()
-                image = ami.machine_image.get()
-                image.status = image.INSPECTED
-                image.save()
+                _mark_aws_image_inspected(
+                    ec2_ami_id=reference_ami_id, aws_marketplace_image=True
+                )
                 return
 
         raise e
@@ -702,68 +699,48 @@ def run_inspection_cluster(messages, cloud='aws'):
             error_code = e.response.get('Error').get('Code')
             error_message = e.response.get('Error').get('Message')
 
-            with transaction.atomic():
-                try:
-                    if (
-                        error_code
-                        in ('OptInRequired', 'IncorrectInstanceState') and
-                        'marketplace' in error_message.lower()
-                    ):
-                        logger.info(
-                            _(
-                                'Found a marketplace AMI "%s" when trying to '
-                                'copy volume, this should not happen, '
-                                'but here we are.'
-                            ),
-                            ec2_ami_id,
-                        )
+            if (
+                error_code
+                in ('OptInRequired', 'IncorrectInstanceState') and
+                'marketplace' in error_message.lower()
+            ):
+                logger.info(
+                    _(
+                        'Found a marketplace AMI "%s" when trying to copy '
+                        'volume. This should not happen, but here we are.'
+                    ),
+                    ec2_ami_id,
+                )
+                save_success = _mark_aws_image_inspected(ec2_ami_id)
+            else:
+                logger.error(
+                    _(
+                        'Encountered an issue when trying to attach '
+                        'volume "%(volume_id)s" from AMI "%(ami_id)s" '
+                        'to inspection instance. Error code: '
+                        '"%(error_code)s". Error message: '
+                        '"%(error_message)s". Setting image state to '
+                        'ERROR.'
+                    ),
+                    {
+                        'volume_id': ec2_volume_id,
+                        'ami_id': ec2_ami_id,
+                        'error_code': error_code,
+                        'error_message': error_message,
+                    },
+                )
+                save_success = _mark_aws_image_error(ec2_ami_id)
 
-                        aws_machine_image = AwsMachineImage.objects.get(
-                            ec2_ami_id=ec2_ami_id
-                        )
-                        aws_machine_image.aws_marketplace_image = True
-                        machine_image = aws_machine_image.machine_image.get()
-                        machine_image.status = MachineImage.INSPECTED
-                        aws_machine_image.save()
-                        machine_image.save()
-                    else:
-                        logger.error(
-                            _(
-                                'Encountered an issue when trying to attach '
-                                'volume "%(volume_id)s" from AMI "%(ami_id)s" '
-                                'to inspection instance. Error code: '
-                                '"%(error_code)s". Error message: '
-                                '"%(error_message)s". Setting image state to '
-                                'ERROR.'
-                            ),
-                            {
-                                'volume_id': ec2_volume_id,
-                                'ami_id': ec2_ami_id,
-                                'error_code': error_code,
-                                'error_message': error_message,
-                            },
-                        )
-                        _mark_aws_image_error(ec2_ami_id)
+            if not save_success:
+                logger.warning(
+                    _(
+                        'Failed to save updated status to AwsMachineImage for '
+                        'EC2 AMI ID %(ec2_ami_id)s in run_inspection_cluster'
+                    ),
+                    {'ec2_ami_id': ec2_ami_id},
+                )
 
-                except AwsMachineImage.DoesNotExist:
-                    logger.warning(
-                        _(
-                            'AwsMachineImage for ec2_ami_id %(ec2_ami_id)s '
-                            'could not be found for run_inspection_cluster'
-                        ),
-                        {'ec2_ami_id': ec2_ami_id},
-                    )
-                except MachineImage.DoesNotExist:
-                    logger.warning(
-                        _(
-                            'MachineImage for ec2_ami_id %(ec2_ami_id)s '
-                            'could not be found for run_inspection_cluster'
-                        ),
-                        {'ec2_ami_id': ec2_ami_id},
-                    )
-                finally:
-                    volume.delete()
-
+            volume.delete()
             continue
 
         logger.info(
@@ -889,13 +866,10 @@ def persist_aws_inspection_cluster_results(inspection_results):
             inspection_results))
 
     for image_id, image_json in images.items():
-        try:
-            ami = AwsMachineImage.objects.get(ec2_ami_id=image_id)
-            image = ami.machine_image.get()
-            image.inspection_json = json.dumps(image_json)
-            image.status = image.INSPECTED
-            image.save()
-        except AwsMachineImage.DoesNotExist:
+        save_success = _mark_aws_image_inspected(
+            image_id, inspection_json=json.dumps(image_json)
+        )
+        if not save_success:
             logger.warning(
                 _(
                     'Persisting AWS inspection results for EC2 AMI ID '
@@ -1654,6 +1628,43 @@ def _build_events_info_for_saving(account, instance, events):
         if parse(instance_event.occurred_at) >= account.created_at
     ]
     return events_info
+
+
+def _mark_aws_image_inspected(
+    ec2_ami_id, aws_marketplace_image=None, inspection_json=None
+):
+    """
+    Set an AwsMachineImage's MachineImage status to INSPECTED.
+
+    Args:
+        ec2_ami_id (str): the AWS EC2 AMI ID of the AwsMachineImage to update.
+        aws_marketplace_image (bool): optional value for aws_marketplace_image.
+        inspection_json (str): optional value for inspection_json.
+
+    Returns:
+        bool True if status is successfully updated, else False.
+
+    """
+    with transaction.atomic():
+        aws_machine_image = get_aws_machine_image(ec2_ami_id=ec2_ami_id)
+        if not aws_machine_image:
+            logger.warning(
+                _(
+                    'AwsMachineImage with EC2 AMI ID %(ec2_ami_id)s could not '
+                    'be found for _mark_aws_image_inspected'
+                ),
+                {'ec2_ami_id': ec2_ami_id},
+            )
+            return False
+        if aws_marketplace_image is not None:
+            aws_machine_image.aws_marketplace_image = aws_marketplace_image
+            aws_machine_image.save()
+        machine_image = aws_machine_image.machine_image.get()
+        machine_image.status = machine_image.INSPECTED
+        if inspection_json is not None:
+            machine_image.inspection_json = inspection_json
+        machine_image.save()
+    return True
 
 
 def _mark_aws_image_error(ec2_ami_id):
