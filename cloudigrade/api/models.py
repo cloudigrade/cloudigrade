@@ -336,6 +336,30 @@ class MachineImage(BaseGenericModel):
         """Get the external cloud provider type."""
         return self.content_object.cloud_type
 
+    def __repr__(self):
+        """Get an unambiguous string representation."""
+        name = (
+            str(repr(self.name))
+            if self.name is not None
+            else None
+        )
+        created_at = repr(self.created_at.isoformat())
+        updated_at = repr(self.updated_at.isoformat())
+
+        return (
+            f'{self.__class__.__name__}('
+            f'id={self.id}, '
+            f'name={name}, '
+            f"status='{self.status}', "
+            f'is_encrypted={self.is_encrypted}, '
+            f'rhel_challenged={self.rhel_challenged}, '
+            f'openshift_detected={self.openshift_detected}, '
+            f'openshift_challenged={self.openshift_challenged}, '
+            f'created_at=parse({created_at}), '
+            f'updated_at=parse({updated_at})'
+            f')'
+        )
+
 
 class AwsMachineImage(BaseModel):
     """MachineImage model for an AWS EC2 instance."""
@@ -405,6 +429,34 @@ class AwsMachineImage(BaseModel):
         """Get the cloud type to indicate this account uses AWS."""
         return AWS_PROVIDER_STRING
 
+    def __repr__(self):
+        """Get an unambiguous string representation."""
+        platform = (
+            str(repr(self.platform))
+            if self.platform is not None
+            else None
+        )
+        region = (
+            str(repr(self.region))
+            if self.region is not None
+            else None
+        )
+        created_at = repr(self.created_at.isoformat())
+        updated_at = repr(self.updated_at.isoformat())
+
+        return (
+            f'{self.__class__.__name__}('
+            f'id={self.id}, '
+            f"ec2_ami_id='{self.ec2_ami_id}', "
+            f'platform={platform}, '
+            f'owner_aws_account_id={self.owner_aws_account_id}, '
+            f'region={region}, '
+            f'aws_marketplace_image={self.aws_marketplace_image}, '
+            f'created_at=parse({created_at}), '
+            f'updated_at=parse({updated_at})'
+            f')'
+        )
+
 
 class AwsMachineImageCopy(AwsMachineImage):
     """
@@ -426,6 +478,21 @@ class AwsMachineImageCopy(AwsMachineImage):
         null=False,
         related_name='+'
     )
+
+    def __repr__(self):
+        """Get an unambiguous string representation."""
+        reference_awsmachineimage_id = self.reference_awsmachineimage_id
+        created_at = repr(self.created_at.isoformat())
+        updated_at = repr(self.updated_at.isoformat())
+
+        return (
+            f'{self.__class__.__name__}('
+            f'id={self.id}, '
+            f'reference_awsmachineimage_id={reference_awsmachineimage_id}, '
+            f'created_at=parse({created_at}), '
+            f'updated_at=parse({updated_at})'
+            f')'
+        )
 
 
 class Instance(BaseGenericModel):

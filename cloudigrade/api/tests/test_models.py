@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 from botocore.exceptions import ClientError
 from django.test import TestCase
 
-from api import models
+from api import models, util as api_util
 from api.tests import helper
 from util.aws import sts
 from util.exceptions import CloudTrailCannotStopLogging
@@ -193,3 +193,44 @@ class InstanceModelTest(TestCase):
 
         self.assertEqual(1, models.AwsMachineImage.objects.count())
         self.assertEqual(1, models.MachineImage.objects.count())
+
+
+class MachineImageModelTest(TestCase):
+    """Instance Model Test Cases."""
+
+    def setUp(self):
+        """Set up basic image objects."""
+        self.machine_image = helper.generate_aws_image()
+        copy_ec2_ami_id = util_helper.generate_dummy_image_id()
+        api_util.create_aws_machine_image_copy(
+            copy_ec2_ami_id, self.machine_image.content_object.ec2_ami_id
+        )
+        self.aws_machine_image_copy = (
+            models.AwsMachineImageCopy.objects.get(
+                reference_awsmachineimage=self.machine_image.content_object
+            )
+        )
+
+    def test_machine_image_repr(self):
+        """Test that the MachineImage repr is valid."""
+        mock_logger = Mock()
+        mock_logger.info(repr(self.machine_image))
+        info_calls = mock_logger.info.mock_calls
+        message = info_calls[0][1][0]
+        self.assertTrue(message.startswith('MachineImage('))
+
+    def test_aws_machine_image_repr(self):
+        """Test that the AwsMachineImage repr is valid."""
+        mock_logger = Mock()
+        mock_logger.info(repr(self.machine_image.content_object))
+        info_calls = mock_logger.info.mock_calls
+        message = info_calls[0][1][0]
+        self.assertTrue(message.startswith('AwsMachineImage('))
+
+    def test_aws_machine_image_copy_repr(self):
+        """Test that the AwsMachineImageCopy repr is valid."""
+        mock_logger = Mock()
+        mock_logger.info(repr(self.aws_machine_image_copy))
+        info_calls = mock_logger.info.mock_calls
+        message = info_calls[0][1][0]
+        self.assertTrue(message.startswith('AwsMachineImageCopy('))
