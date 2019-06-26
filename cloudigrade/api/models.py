@@ -444,6 +444,26 @@ class Instance(BaseGenericModel):
         null=True,
     )
 
+    def __repr__(self):
+        """Get an unambiguous string representation."""
+        machine_image_id = (
+            str(repr(self.machine_image_id))
+            if self.machine_image_id is not None
+            else None
+        )
+        created_at = repr(self.created_at.isoformat())
+        updated_at = repr(self.updated_at.isoformat())
+
+        return (
+            f'{self.__class__.__name__}('
+            f'id={self.id}, '
+            f'cloud_account_id={self.cloud_account_id}, '
+            f'machine_image_id={machine_image_id}, '
+            f'created_at=parse({created_at}), '
+            f'updated_at=parse({updated_at})'
+            f')'
+        )
+
     @transaction.atomic
     def delete(self, **kwargs):
         """
@@ -501,6 +521,21 @@ class AwsInstance(BaseModel):
         null=False,
         blank=False,
     )
+
+    def __repr__(self):
+        """Get an unambiguous string representation."""
+        created_at = repr(self.created_at.isoformat())
+        updated_at = repr(self.updated_at.isoformat())
+
+        return (
+            f'{self.__class__.__name__}('
+            f'id={self.id}, '
+            f"ec2_instance_id='{self.ec2_instance_id}', "
+            f"region='{self.region}', "
+            f'created_at=parse({created_at}), '
+            f'updated_at=parse({updated_at})'
+            f')'
+        )
 
     @property
     def cloud_type(self):

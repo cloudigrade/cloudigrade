@@ -159,6 +159,22 @@ class InstanceModelTest(TestCase):
             no_image=True,
         )
 
+    def test_instance_repr(self):
+        """Test that the Instance repr is valid."""
+        mock_logger = Mock()
+        mock_logger.info(repr(self.instance))
+        info_calls = mock_logger.info.mock_calls
+        message = info_calls[0][1][0]
+        self.assertTrue(message.startswith('Instance('))
+
+    def test_aws_instance_repr(self):
+        """Test that the AwsInstance repr is valid."""
+        mock_logger = Mock()
+        mock_logger.info(repr(self.instance.content_object))
+        info_calls = mock_logger.info.mock_calls
+        message = info_calls[0][1][0]
+        self.assertTrue(message.startswith('AwsInstance('))
+
     def test_delete_instance_cleans_up_machineimage(self):
         """Test that deleting an instance cleans up its associated image."""
         self.instance.delete()
