@@ -25,18 +25,18 @@ class AwsCloudAccountModelTest(TestCase):
             name='test'
         )
 
-    def test_cloud_account_repr(self):
-        """Test that the CloudAccount repr is valid."""
+    def test_cloud_account_str(self):
+        """Test that the CloudAccount str (and repr) is valid."""
         mock_logger = Mock()
-        mock_logger.info(repr(self.account))
+        mock_logger.info(str(self.account))
         info_calls = mock_logger.info.mock_calls
         message = info_calls[0][1][0]
         self.assertTrue(message.startswith('CloudAccount('))
 
-    def test_aws_cloud_account_repr(self):
-        """Test that the AwsCloudAccount repr is valid."""
+    def test_aws_cloud_account_str(self):
+        """Test that the AwsCloudAccount str (and repr) is valid."""
         mock_logger = Mock()
-        mock_logger.info(repr(self.account.content_object))
+        mock_logger.info(str(self.account.content_object))
         info_calls = mock_logger.info.mock_calls
         message = info_calls[0][1][0]
         self.assertTrue(message.startswith('AwsCloudAccount('))
@@ -159,18 +159,18 @@ class InstanceModelTest(TestCase):
             no_image=True,
         )
 
-    def test_instance_repr(self):
-        """Test that the Instance repr is valid."""
+    def test_instance_str(self):
+        """Test that the Instance str (and repr) is valid."""
         mock_logger = Mock()
-        mock_logger.info(repr(self.instance))
+        mock_logger.info(str(self.instance))
         info_calls = mock_logger.info.mock_calls
         message = info_calls[0][1][0]
         self.assertTrue(message.startswith('Instance('))
 
-    def test_aws_instance_repr(self):
-        """Test that the AwsInstance repr is valid."""
+    def test_aws_instance_str(self):
+        """Test that the AwsInstance str (and repr) is valid."""
         mock_logger = Mock()
-        mock_logger.info(repr(self.instance.content_object))
+        mock_logger.info(str(self.instance.content_object))
         info_calls = mock_logger.info.mock_calls
         message = info_calls[0][1][0]
         self.assertTrue(message.startswith('AwsInstance('))
@@ -211,26 +211,26 @@ class MachineImageModelTest(TestCase):
             )
         )
 
-    def test_machine_image_repr(self):
-        """Test that the MachineImage repr is valid."""
+    def test_machine_image_str(self):
+        """Test that the MachineImage str (and repr) is valid."""
         mock_logger = Mock()
-        mock_logger.info(repr(self.machine_image))
+        mock_logger.info(str(self.machine_image))
         info_calls = mock_logger.info.mock_calls
         message = info_calls[0][1][0]
         self.assertTrue(message.startswith('MachineImage('))
 
-    def test_aws_machine_image_repr(self):
-        """Test that the AwsMachineImage repr is valid."""
+    def test_aws_machine_image_str(self):
+        """Test that the AwsMachineImage str (and repr) is valid."""
         mock_logger = Mock()
-        mock_logger.info(repr(self.machine_image.content_object))
+        mock_logger.info(str(self.machine_image.content_object))
         info_calls = mock_logger.info.mock_calls
         message = info_calls[0][1][0]
         self.assertTrue(message.startswith('AwsMachineImage('))
 
-    def test_aws_machine_image_copy_repr(self):
-        """Test that the AwsMachineImageCopy repr is valid."""
+    def test_aws_machine_image_copy_str(self):
+        """Test that the AwsMachineImageCopy str (and repr) is valid."""
         mock_logger = Mock()
-        mock_logger.info(repr(self.aws_machine_image_copy))
+        mock_logger.info(str(self.aws_machine_image_copy))
         info_calls = mock_logger.info.mock_calls
         message = info_calls[0][1][0]
         self.assertTrue(message.startswith('AwsMachineImageCopy('))

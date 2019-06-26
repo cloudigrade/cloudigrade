@@ -61,6 +61,10 @@ class CloudAccount(BaseGenericModel):
         """
         return self.content_object.cloud_type
 
+    def __str__(self):
+        """Get the string representation."""
+        return repr(self)
+
     def __repr__(self):
         """Get an unambiguous string representation."""
         created_at = repr(self.created_at.isoformat())
@@ -108,6 +112,10 @@ class AwsCloudAccount(BaseModel):
     def cloud_type(self):
         """Get the cloud type to indicate this account uses AWS."""
         return AWS_PROVIDER_STRING
+
+    def __str__(self):
+        """Get the string representation."""
+        return repr(self)
 
     def __repr__(self):
         """Get an unambiguous string representation."""
@@ -336,6 +344,10 @@ class MachineImage(BaseGenericModel):
         """Get the external cloud provider type."""
         return self.content_object.cloud_type
 
+    def __str__(self):
+        """Get the string representation."""
+        return repr(self)
+
     def __repr__(self):
         """Get an unambiguous string representation."""
         name = (
@@ -429,6 +441,10 @@ class AwsMachineImage(BaseModel):
         """Get the cloud type to indicate this account uses AWS."""
         return AWS_PROVIDER_STRING
 
+    def __str__(self):
+        """Get the string representation."""
+        return repr(self)
+
     def __repr__(self):
         """Get an unambiguous string representation."""
         platform = (
@@ -479,6 +495,10 @@ class AwsMachineImageCopy(AwsMachineImage):
         related_name='+'
     )
 
+    def __str__(self):
+        """Get the string representation."""
+        return repr(self)
+
     def __repr__(self):
         """Get an unambiguous string representation."""
         reference_awsmachineimage_id = self.reference_awsmachineimage_id
@@ -510,6 +530,10 @@ class Instance(BaseGenericModel):
         db_index=True,
         null=True,
     )
+
+    def __str__(self):
+        """Get the string representation."""
+        return repr(self)
 
     def __repr__(self):
         """Get an unambiguous string representation."""
@@ -589,6 +613,10 @@ class AwsInstance(BaseModel):
         blank=False,
     )
 
+    def __str__(self):
+        """Get the string representation."""
+        return repr(self)
+
     def __repr__(self):
         """Get an unambiguous string representation."""
         created_at = repr(self.created_at.isoformat())
@@ -642,6 +670,10 @@ class InstanceEvent(BaseGenericModel):
         """
         return self.content_object.cloud_type
 
+    def __str__(self):
+        """Get the string representation."""
+        return repr(self)
+
     def __repr__(self):
         """Get an unambiguous string representation."""
         occurred_at = repr(self.occurred_at.isoformat())
@@ -672,6 +704,10 @@ class AwsInstanceEvent(BaseModel):
     def cloud_type(self):
         """Get the cloud type to indicate this account uses AWS."""
         return AWS_PROVIDER_STRING
+
+    def __str__(self):
+        """Get the string representation."""
+        return repr(self)
 
     def __repr__(self):
         """Get an unambiguous string representation."""
