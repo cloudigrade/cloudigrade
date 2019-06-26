@@ -25,6 +25,22 @@ class AwsCloudAccountModelTest(TestCase):
             name='test'
         )
 
+    def test_cloud_account_repr(self):
+        """Test that the CloudAccount repr is valid."""
+        mock_logger = Mock()
+        mock_logger.info(repr(self.account))
+        info_calls = mock_logger.info.mock_calls
+        message = info_calls[0][1][0]
+        self.assertTrue(message.startswith('CloudAccount('))
+
+    def test_aws_cloud_account_repr(self):
+        """Test that the AwsCloudAccount repr is valid."""
+        mock_logger = Mock()
+        mock_logger.info(repr(self.account.content_object))
+        info_calls = mock_logger.info.mock_calls
+        message = info_calls[0][1][0]
+        self.assertTrue(message.startswith('AwsCloudAccount('))
+
     def test_delete_succeeds(self):
         """Test that an account is deleted if there are no errors."""
         with patch.object(sts, 'boto3') as mock_boto3,\

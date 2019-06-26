@@ -61,6 +61,21 @@ class CloudAccount(BaseGenericModel):
         """
         return self.content_object.cloud_type
 
+    def __repr__(self):
+        """Get an unambiguous string representation."""
+        created_at = repr(self.created_at.isoformat())
+        updated_at = repr(self.updated_at.isoformat())
+
+        return (
+            f'{self.__class__.__name__}('
+            f'id={self.id}, '
+            f"name='{self.name}', "
+            f'user_id={self.user_id}, '
+            f'created_at=parse({created_at}), '
+            f'updated_at=parse({updated_at})'
+            f')'
+        )
+
     @transaction.atomic
     def delete(self, **kwargs):
         """
@@ -93,6 +108,21 @@ class AwsCloudAccount(BaseModel):
     def cloud_type(self):
         """Get the cloud type to indicate this account uses AWS."""
         return AWS_PROVIDER_STRING
+
+    def __repr__(self):
+        """Get an unambiguous string representation."""
+        created_at = repr(self.created_at.isoformat())
+        updated_at = repr(self.updated_at.isoformat())
+
+        return (
+            f'{self.__class__.__name__}('
+            f'id={self.id}, '
+            f'aws_account_id={self.aws_account_id}, '
+            f"account_arn='{self.account_arn}', "
+            f'created_at=parse({created_at}), '
+            f'updated_at=parse({updated_at})'
+            f')'
+        )
 
     def delete(self, **kwargs):
         """Delete an AWS Account and disable logging in its AWS cloudtrail."""
