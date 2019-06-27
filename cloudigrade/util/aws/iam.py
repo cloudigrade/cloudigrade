@@ -83,7 +83,7 @@ def ensure_cloudigrade_policy(session):
     our naming conventions.
 
     Args:
-        session (boto3.Session):
+        session (boto3.Session): temporary session tied to a customer account
 
     Returns:
         tuple(str, str) of the policy name and policy arn.
