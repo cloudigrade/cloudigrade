@@ -12,6 +12,7 @@ from util.aws.sts import (
 from util.exceptions import AwsPolicyCreationException
 
 policy_name_pattern = 'cloudigrade-policy-for-{aws_account_id}'
+role_name_pattern = 'cloudigrade-role-for-{aws_account_id}'
 
 
 def get_session_from_access_key(
@@ -53,6 +54,24 @@ def get_standard_policy_name_and_arn(session):
         customer_account_id=customer_account_id, policy_name=policy_name
     )
     return (policy_name, arn)
+
+
+def get_standard_role_name_and_arn(session):
+    """
+    Get cloudigrade's standard role name and ARN for customer AWS accounts.
+
+    Returns:
+        tuple(str, str) of the role name and role arn.
+
+    """
+    customer_account_id = get_session_account_id(session)
+    role_name = role_name_pattern.format(
+        aws_account_id=_get_primary_account_id()
+    )
+    arn = 'arn:aws:iam::{customer_account_id}:role/{role_name}'.format(
+        customer_account_id=customer_account_id, role_name=role_name
+    )
+    return (role_name, arn)
 
 
 def ensure_cloudigrade_policy(session):
