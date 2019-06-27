@@ -133,3 +133,28 @@ def ensure_cloudigrade_policy(session):
         PolicyArn=policy_arn, PolicyDocument=policy_document, SetAsDefault=True
     )
     return (policy_name, policy_arn)
+
+
+def get_standard_assume_role_policy_document():
+    """
+    Get cloudigrade's standard AssumeRolePolicyDocument for customer IAM Roles.
+
+    Returns:
+        str: the Policy document
+
+    """
+    aws_account_id = _get_primary_account_id()
+    cloudigrade_account_root_arn = f'arn:aws:iam::{aws_account_id}:root'
+    document_dict = {
+        'Version': '2012-10-17',
+        'Statement': [
+            {
+                'Effect': 'Allow',
+                'Principal': {'AWS': cloudigrade_account_root_arn},
+                'Action': 'sts:AssumeRole',
+                'Condition': {},
+            }
+        ],
+    }
+    document_str = json.dumps(document_dict)
+    return document_str

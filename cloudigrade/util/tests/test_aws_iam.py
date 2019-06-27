@@ -1,4 +1,5 @@
 """Collection of tests for ``util.aws.sts`` module."""
+import json
 from unittest.mock import Mock, patch
 
 import faker
@@ -63,6 +64,23 @@ class UtilAwsIamTest(TestCase):
         self.assertEqual(arn.service, 'iam')
         self.assertEqual(arn.resource_type, 'role')
         self.assertIn(str(system_account_id), arn.resource)
+
+    @patch('util.aws.iam._get_primary_account_id')
+    def test_get_standard_assume_role_policy_document(
+        self, mock_get_primary_account_id
+    ):
+        """Assert _get_primary_account_id returns expected document str."""
+        primary_account_id = helper.generate_dummy_aws_account_id()
+        mock_get_primary_account_id.return_value = primary_account_id
+        document = iam.get_standard_assume_role_policy_document()
+        document_dict = json.loads(document)
+        self.assertIn(
+            str(primary_account_id),
+            document_dict['Statement'][0]['Principal']['AWS'],
+        )
+        self.assertEqual(
+            document_dict['Statement'][0]['Action'], 'sts:AssumeRole'
+        )
 
     @patch('util.aws.iam.get_standard_policy_name_and_arn')
     def test_ensure_cloudigrade_policy_new(
