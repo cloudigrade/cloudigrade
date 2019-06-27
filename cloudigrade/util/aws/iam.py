@@ -21,8 +21,8 @@ def get_session_from_access_key(
     Return a new session using the customer AWS access key credentials.
 
     Args:
-        access_key_id (str): AWS access key ID for ths Session.
-        secret_access_key (str): AWS secret access key for ths Session.
+        access_key_id (str): AWS access key ID for the Session.
+        secret_access_key (str): AWS secret access key for the Session.
         region_name (str): Default AWS Region for the Session.
 
     Returns:
