@@ -1128,17 +1128,16 @@ class GetAwsMachineImageTest(TestCase):
         )
         expected_aws_machine_image = expected_machine_image.content_object
 
-        result = util.get_aws_machine_image(
-            ec2_ami_id=ec2_ami_id
-        )
-        self.assertEqual(expected_aws_machine_image, result)
-        self.assertEqual(expected_machine_image, result.machine_image.get())
+        result = util.get_aws_machine_image(ec2_ami_id)
+        self.assertEqual(expected_aws_machine_image, result[0])
+        self.assertEqual(expected_machine_image, result[1])
 
     def test_without_aws_machine_image(self):
         """Test when AwsMachineImage does not exist."""
         ec2_ami_id = util_helper.generate_dummy_image_id()
-        result = util.get_aws_machine_image(ec2_ami_id=ec2_ami_id)
-        self.assertIsNone(result)
+        result = util.get_aws_machine_image(ec2_ami_id)
+        self.assertIsNone(result[0])
+        self.assertIsNone(result[1])
 
     def test_without_machine_image(self):
         """Test when MachineImage does not exist."""
@@ -1147,5 +1146,6 @@ class GetAwsMachineImageTest(TestCase):
             owner_aws_account_id=util_helper.generate_dummy_aws_account_id(),
             ec2_ami_id=ec2_ami_id,
         )
-        result = util.get_aws_machine_image(ec2_ami_id=ec2_ami_id)
-        self.assertIsNone(result)
+        result = util.get_aws_machine_image(ec2_ami_id)
+        self.assertIsNone(result[0])
+        self.assertIsNone(result[1])

@@ -969,34 +969,34 @@ def create_aws_machine_image_copy(copy_ami_id, reference_ami_id):
 @transaction.atomic
 def get_aws_machine_image(ec2_ami_id):
     """
-    Get the AwsMachineImage for the given EC2 AMI ID.
+    Get the AwsMachineImage and its MachineImage for the given EC2 AMI ID.
 
     If either the AwsMachineImage or its related MachineImage object could not
-    be loaded, return None.
+    be loaded, return (None, None).
 
     Args:
         ec2_ami_id (str): the AWS EC2 AMI ID for the image
 
     Returns:
-        AwsMachineImage or None.
+        tuple of AwsMachineImage, MachineImage or tuple None, None.
 
     """
     try:
         aws_machine_image = AwsMachineImage.objects.get(ec2_ami_id=ec2_ami_id)
-        aws_machine_image.machine_image.get()
+        machine_image = aws_machine_image.machine_image.get()
     except AwsMachineImage.DoesNotExist:
         logger.warning(
             _('AwsMachineImage for ec2_ami_id %(ec2_ami_id)s not found'),
             {'ec2_ami_id': ec2_ami_id},
         )
-        return None
+        return None, None
     except MachineImage.DoesNotExist:
         logger.warning(
             _('MachineImage for ec2_ami_id %(ec2_ami_id)s not found'),
             {'ec2_ami_id': ec2_ami_id},
         )
-        return None
-    return aws_machine_image
+        return None, None
+    return aws_machine_image, machine_image
 
 
 def add_messages_to_queue(queue_name, messages):

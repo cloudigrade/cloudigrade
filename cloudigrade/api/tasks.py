@@ -1646,7 +1646,7 @@ def _mark_aws_image_inspected(
 
     """
     with transaction.atomic():
-        aws_machine_image = get_aws_machine_image(ec2_ami_id=ec2_ami_id)
+        aws_machine_image, machine_image = get_aws_machine_image(ec2_ami_id)
         if not aws_machine_image:
             logger.warning(
                 _(
@@ -1659,7 +1659,6 @@ def _mark_aws_image_inspected(
         if aws_marketplace_image is not None:
             aws_machine_image.aws_marketplace_image = aws_marketplace_image
             aws_machine_image.save()
-        machine_image = aws_machine_image.machine_image.get()
         machine_image.status = machine_image.INSPECTED
         if inspection_json is not None:
             machine_image.inspection_json = inspection_json
@@ -1679,7 +1678,7 @@ def _mark_aws_image_error(ec2_ami_id):
 
     """
     with transaction.atomic():
-        aws_machine_image = get_aws_machine_image(ec2_ami_id=ec2_ami_id)
+        aws_machine_image, machine_image = get_aws_machine_image(ec2_ami_id)
         if not aws_machine_image:
             logger.warning(
                 _(
@@ -1689,7 +1688,6 @@ def _mark_aws_image_error(ec2_ami_id):
                 {'ec2_ami_id': ec2_ami_id},
             )
             return False
-        machine_image = aws_machine_image.machine_image.get()
         machine_image.status = machine_image.ERROR
         machine_image.save()
     return True
