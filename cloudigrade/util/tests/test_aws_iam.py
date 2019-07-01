@@ -248,3 +248,209 @@ class UtilAwsIamTest(TestCase):
         mock_iam_client.list_policy_versions.assert_not_called()
         mock_iam_client.delete_policy_version.assert_not_called()
         mock_iam_client.create_policy_version.assert_not_called()
+
+    @patch('util.aws.iam.get_standard_role_name_and_arn')
+    @patch('util.aws.iam.get_standard_assume_role_policy_document')
+    def test_ensure_cloudigrade_role_new(
+        self,
+        mock_get_standard_assume_role_policy_document,
+        mock_get_standard_role_name_and_arn,
+    ):
+        """
+        Test ensure_cloudigrade_role happy path for new role.
+
+        When we create an IAM Role, we attach the AssumeRolePolicyDocument. So,
+        the general interaction with AWS API looks like:
+
+        - get_role returns None
+        - create_role returns our new Role
+        - do not call update_assume_role_policy because the Role created should
+          already be correct
+        - list_attached_role_policies returns empty list
+        - attach_role_policy attaches our Policy to the Role
+        """
+        role_name = _faker.slug()
+        role_arn = helper.generate_dummy_arn(resource=role_name)
+        mock_get_standard_role_name_and_arn.return_value = (
+            role_name,
+            role_arn,
+        )
+
+        policy_document = {'my_great_policy': 'goes here'}
+        policy_document_str = json.dumps(policy_document)
+        mock_get_standard_assume_role_policy_document.return_value = (
+            policy_document_str
+        )
+
+        policy_arn = helper.generate_dummy_arn()
+        mock_session = Mock()
+        mock_iam_client = mock_session.client.return_value
+
+        # If the client raises NoSuchEntityException, no role exists yet.
+        mock_iam_client.exceptions.NoSuchEntityException = Exception
+        mock_iam_client.get_role.side_effect = (
+            mock_iam_client.exceptions.NoSuchEntityException
+        )
+
+        # Fake role response from the mock client.
+        # Note that the AssumeRolePolicyDocument has the dict, not str.
+        created_role = {
+            'Role': {
+                'Arn': role_arn,
+                'Name': role_name,
+                'AssumeRolePolicyDocument': policy_document,
+            }
+        }
+        mock_iam_client.create_role.return_value = created_role
+
+        # Fake attached role policies list from the mock client.
+        mock_iam_client.list_attached_role_policies.return_value = {
+            'AttachedPolicies': []
+        }
+
+        result = iam.ensure_cloudigrade_role(mock_session, policy_arn)
+
+        # See the test docstring for rationale of each of these AWS calls:
+        mock_iam_client.get_role.assert_called_with(RoleName=role_name)
+        mock_iam_client.create_role.assert_called_with(
+            RoleName=role_name, AssumeRolePolicyDocument=policy_document_str
+        )
+        mock_iam_client.update_assume_role_policy.assert_not_called()
+        mock_iam_client.list_attached_role_policies.assert_called_with(
+            RoleName=role_name
+        )
+        mock_iam_client.attach_role_policy.assert_called_with(
+            RoleName=role_name, PolicyArn=policy_arn
+        )
+
+        self.assertEqual(result, (role_name, role_arn))
+
+    @patch('util.aws.iam.get_standard_role_name_and_arn')
+    @patch('util.aws.iam.get_standard_assume_role_policy_document')
+    def test_ensure_cloudigrade_role_update_no_changes(
+        self,
+        mock_get_standard_assume_role_policy_document,
+        mock_get_standard_role_name_and_arn,
+    ):
+        """
+        Test ensure_cloudigrade_role happy path to update role with no changes.
+
+        In this case, the Role is already correctly configured. So, the general
+        interaction with AWS API looks like:
+
+        - get_role returns our Role
+        - do not call update_assume_role_policy because the Role created should
+          already be correct
+        - list_attached_role_policies returns list with our attachment
+        - do not call attach_role_policy because it already exists
+        """
+        role_name = _faker.slug()
+        role_arn = helper.generate_dummy_arn(resource=role_name)
+        mock_get_standard_role_name_and_arn.return_value = (
+            role_name,
+            role_arn,
+        )
+
+        policy_document = {'my_great_policy': 'goes here'}
+        policy_document_str = json.dumps(policy_document)
+        mock_get_standard_assume_role_policy_document.return_value = (
+            policy_document_str
+        )
+
+        policy_arn = helper.generate_dummy_arn()
+        mock_session = Mock()
+        mock_iam_client = mock_session.client.return_value
+
+        # Fake role response from the mock client.
+        # Note that the AssumeRolePolicyDocument has the dict, not str.
+        existing_role = {
+            'Role': {
+                'Arn': role_arn,
+                'Name': role_name,
+                'AssumeRolePolicyDocument': policy_document,
+            }
+        }
+        mock_iam_client.get_role.return_value = existing_role
+
+        # Fake attached role policies list from the mock client.
+        mock_iam_client.list_attached_role_policies.return_value = {
+            'AttachedPolicies': [{'PolicyArn': policy_arn}]
+        }
+
+        result = iam.ensure_cloudigrade_role(mock_session, policy_arn)
+
+        # See the test docstring for rationale of each of these AWS calls:
+        mock_iam_client.get_role.assert_called_with(RoleName=role_name)
+        mock_iam_client.create_role.assert_not_called()
+        mock_iam_client.update_assume_role_policy.assert_not_called()
+        mock_iam_client.list_attached_role_policies.assert_called_with(
+            RoleName=role_name
+        )
+        mock_iam_client.attach_role_policy.assert_not_called()
+
+        self.assertEqual(result, (role_name, role_arn))
+
+    @patch('util.aws.iam.get_standard_role_name_and_arn')
+    @patch('util.aws.iam.get_standard_assume_role_policy_document')
+    def test_ensure_cloudigrade_role_update_policy_document(
+        self,
+        mock_get_standard_assume_role_policy_document,
+        mock_get_standard_role_name_and_arn,
+    ):
+        """
+        Test ensure_cloudigrade_role updates role with wrong policy document.
+
+        In this case, the Role is already partially configured. So, the general
+        interaction with AWS API looks like:
+
+        - get_role returns our Role with incorrect policy document
+        - call update_assume_role_policy with the correct policy document
+        - list_attached_role_policies returns list with our attachment
+        - do not call attach_role_policy because it already exists
+        """
+        role_name = _faker.slug()
+        role_arn = helper.generate_dummy_arn(resource=role_name)
+        mock_get_standard_role_name_and_arn.return_value = (
+            role_name,
+            role_arn,
+        )
+
+        policy_document = {'my_great_policy': 'goes here'}
+        policy_document_str = json.dumps(policy_document)
+        mock_get_standard_assume_role_policy_document.return_value = (
+            policy_document_str
+        )
+
+        policy_arn = helper.generate_dummy_arn()
+        mock_session = Mock()
+        mock_iam_client = mock_session.client.return_value
+
+        # Fake role response from the mock client with *bad* policy document.
+        existing_role = {
+            'Role': {
+                'Arn': role_arn,
+                'Name': role_name,
+                'AssumeRolePolicyDocument': '{}',
+            }
+        }
+        mock_iam_client.get_role.return_value = existing_role
+
+        # Fake attached role policies list from the mock client.
+        mock_iam_client.list_attached_role_policies.return_value = {
+            'AttachedPolicies': [{'PolicyArn': policy_arn}]
+        }
+
+        result = iam.ensure_cloudigrade_role(mock_session, policy_arn)
+
+        # See the test docstring for rationale of each of these AWS calls:
+        mock_iam_client.get_role.assert_called_with(RoleName=role_name)
+        mock_iam_client.create_role.assert_not_called()
+        mock_iam_client.update_assume_role_policy.assert_called_with(
+            RoleName=role_name, PolicyDocument=policy_document_str
+        )
+        mock_iam_client.list_attached_role_policies.assert_called_with(
+            RoleName=role_name
+        )
+        mock_iam_client.attach_role_policy.assert_not_called()
+
+        self.assertEqual(result, (role_name, role_arn))

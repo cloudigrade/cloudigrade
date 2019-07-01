@@ -1,5 +1,6 @@
 """Helper utility module to wrap up common AWS IAM operations."""
 import json
+import logging
 
 import boto3
 from django.utils.translation import gettext as _
@@ -9,8 +10,12 @@ from util.aws.sts import (
     cloudigrade_policy,
     get_session_account_id,
 )
-from util.exceptions import AwsPolicyCreationException
+from util.exceptions import (
+    AwsPolicyCreationException,
+    AwsRoleCreationException,
+)
 
+logger = logging.getLogger(__name__)
 policy_name_pattern = 'cloudigrade-policy-for-{aws_account_id}'
 role_name_pattern = 'cloudigrade-role-for-{aws_account_id}'
 
@@ -158,3 +163,93 @@ def get_standard_assume_role_policy_document():
     }
     document_str = json.dumps(document_dict)
     return document_str
+
+
+def ensure_cloudigrade_role(session, policy_arn):
+    """
+    Ensure that the AWS session's account has a cloudigrade IAM Role.
+
+    This has the potential side effect of creating an appropriate Role if one
+    does not yet exist *or* updating the existing Role if one exists matching
+    our naming conventions.
+
+    This function requires that the cloudigrade IAM Policy has already been
+    created in the customer's account and is valid. The new Role created here
+    will be associated with that Policy.
+
+    Args:
+        session (boto3.Session): temporary session tied to a customer account
+        policy_arn (str): the cloudigrade Policy's ARN in the customer account
+
+    Returns:
+        tuple(str, str) of the Role name and Policy ARN.
+
+    """
+    role_name, role_arn = get_standard_role_name_and_arn(session)
+    assume_role_policy_document = get_standard_assume_role_policy_document()
+
+    iam_client = session.client('iam')
+
+    # Step 1: Ensure the Role exists.
+    try:
+        role = iam_client.get_role(RoleName=role_name)
+    except iam_client.exceptions.NoSuchEntityException:
+        role = None
+    if role is None:
+        role = iam_client.create_role(
+            RoleName=role_name,
+            AssumeRolePolicyDocument=assume_role_policy_document,
+        )
+        created_arn = role.get('Role', {}).get('Arn')
+        if created_arn != role_arn:
+            raise AwsRoleCreationException(
+                _(
+                    'Created role ARN "{created_arn}" does not match '
+                    'expected role ARN "{role_arn}"'
+                ).format(created_arn=created_arn, role_arn=role_arn)
+            )
+        created_name = role.get('Role', {}).get('Name')
+        if created_name != role_name:
+            raise AwsRoleCreationException(
+                _(
+                    'Created role name "%{created_name}" does not match '
+                    'expected role name "%{role_name}"'
+                ).format(created_name=created_name, role_name=role_name)
+            )
+
+    # Step 2: Ensure the Role has our assume role policy document.
+    existing_assume_role_policy_document = json.dumps(
+        role.get('Role', {}).get('AssumeRolePolicyDocument')
+    )
+    if existing_assume_role_policy_document != assume_role_policy_document:
+        logger.warning(
+            _(
+                'Existing AssumeRolePolicyDocument for Role %(role_arn)s does'
+                'not match expected value (old: %(document)s)'
+            ),
+            {
+                'role_arn': role_arn,
+                'document': existing_assume_role_policy_document,
+            },
+        )
+        iam_client.update_assume_role_policy(
+            RoleName=role_name, PolicyDocument=assume_role_policy_document
+        )
+
+    # Step 3: Ensure the Role has the customer's cloudigrade Policy attached.
+    attached_policies = iam_client.list_attached_role_policies(
+        RoleName=role_name
+    ).get('AttachedPolicies', [])
+    attached_policy_found = False
+    for attached_policy in attached_policies:
+        if attached_policy.get('PolicyArn') == policy_arn:
+            attached_policy_found = True
+            break
+    if not attached_policy_found:
+        logger.info(
+            _('Attaching policy ARN %(policy_arn)s to role ARN %(role_arn)s'),
+            {'policy_arn': policy_arn, 'role_arn': role_arn},
+        )
+        iam_client.attach_role_policy(RoleName=role_name, PolicyArn=policy_arn)
+
+    return (role_name, role_arn)

@@ -110,6 +110,10 @@ class AwsPolicyCreationException(Exception):
     """Raise when AWS Policy fails creation unexpectedly."""
 
 
+class AwsRoleCreationException(Exception):
+    """Raise when AWS Role fails creation unexpectedly."""
+
+
 def api_exception_handler(exc, context):
     """
     Log exception and return an appropriately formatted response.
