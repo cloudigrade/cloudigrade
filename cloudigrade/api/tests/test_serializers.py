@@ -125,10 +125,10 @@ class AwsAccountSerializerTest(TransactionTestCase):
             serializer.is_valid()
             with self.assertRaises(ValidationError) as cm:
                 serializer.create(validated_data)
-                self.assertEquals(
-                    'This field is required.',
-                    str(cm.exception['account_arn'][0]),
-                )
+            self.assertEquals(
+                'This field is required.',
+                str(cm.exception.detail['account_arn']),
+            )
 
     def test_serialization_fails_on_unsupported_cloud_type(self):
         """Test that account is not saved with unsupported cloud_type."""
@@ -208,15 +208,15 @@ class AwsAccountSerializerTest(TransactionTestCase):
             mock_assume_role.return_value = self.role
             mock_verify.return_value = True, []
 
+            expected_error = {
+                'account_arn': [
+                    'An ARN already exists for account "{0}"'.format(
+                        self.aws_account_id)
+                ]
+            }
             with self.assertRaises(ValidationError) as cm:
                 serializer.create(self.validated_data)
-                expected_error = {
-                    'account_arn': [
-                        'An ARN already exists for account "{0}"'.format(
-                            self.aws_account_id)
-                    ]
-                }
-                self.assertEquals(expected_error, cm.exception)
+            self.assertEquals(expected_error, cm.exception.detail)
 
     def test_create_fails_access_denied(self):
         """Test that an exception is raised if access is denied to the arn."""
@@ -236,15 +236,15 @@ class AwsAccountSerializerTest(TransactionTestCase):
             mock_assume_role.side_effect = client_error
             mock_verify.return_value = True, []
 
+            expected_error = {
+                'account_arn': [
+                    'Permission denied for ARN "{0}"'.format(
+                        self.arn)
+                ]
+            }
             with self.assertRaises(ValidationError) as cm:
                 serializer.create(self.validated_data)
-                expected_error = {
-                    'account_arn': [
-                        'Permission denied for ARN "{0}"'.format(
-                            self.arn)
-                    ]
-                }
-                self.assertEquals(expected_error, cm.exception)
+            self.assertEquals(expected_error, cm.exception.detail)
 
     def test_create_fails_when_aws_verify_fails(self):
         """Test that an exception is raised if verify_account_access fails."""
@@ -259,14 +259,14 @@ class AwsAccountSerializerTest(TransactionTestCase):
             mock_assume_role.return_value = self.role
             mock_verify.return_value = False, []
 
+            expected_error = {
+                'account_arn': [
+                    'Account verification failed.'
+                ]
+            }
             with self.assertRaises(ValidationError) as cm:
                 serializer.create(self.validated_data)
-                expected_error = {
-                    'account_arn': [
-                        'Account verification failed.'
-                    ]
-                }
-                self.assertEquals(expected_error, cm.exception)
+            self.assertEquals(expected_error, cm.exception.detail)
 
     def test_create_fails_cloudtrail_configuration_error(self):
         """Test that an exception occurs if cloudtrail configuration fails."""
@@ -288,15 +288,15 @@ class AwsAccountSerializerTest(TransactionTestCase):
             mock_verify.return_value = True, []
             mock_cloudtrail.side_effect = client_error
 
+            expected_error = {
+                'account_arn': [
+                    'Access denied to create CloudTrail for '
+                    'ARN "{0}"'.format(self.arn)
+                ]
+            }
             with self.assertRaises(ValidationError) as cm:
                 serializer.create(self.validated_data)
-                expected_error = {
-                    'account_arn': [
-                        'Access denied to create CloudTrail for '
-                        'ARN "{0}"'.format(self.arn)
-                    ]
-                }
-                self.assertEquals(expected_error, cm.exception)
+            self.assertEquals(expected_error, cm.exception.detail)
 
 
 class AwsMachineImageSerializerTest(TestCase):
