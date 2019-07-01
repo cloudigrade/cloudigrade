@@ -1,8 +1,6 @@
 """DRF API serializers for the account app v2."""
 from datetime import datetime, timedelta
 
-from botocore.exceptions import ClientError
-from django.db.transaction import on_commit
 from django.utils.translation import gettext as _
 from generic_relations.relations import GenericRelatedField
 from rest_framework import serializers
@@ -11,11 +9,14 @@ from rest_framework.fields import (BooleanField, CharField,
                                    ChoiceField, Field, IntegerField)
 from rest_framework.serializers import ModelSerializer, Serializer
 
-from api import CLOUD_PROVIDERS, tasks
+from api import CLOUD_PROVIDERS
 from api.models import (AwsCloudAccount, AwsInstance,
                         AwsMachineImage, CloudAccount, Instance,
                         MachineImage)
-from api.util import get_max_concurrent_usage
+from api.util import (
+    get_max_concurrent_usage,
+    verify_permissions_and_create_aws_cloud_account,
+)
 from util import aws
 from util.exceptions import InvalidArn
 
@@ -153,79 +154,11 @@ class CloudAccountSerializer(ModelSerializer):
 
         """
         arn = aws.AwsArn(validated_data['account_arn'])
-        aws_account_id = arn.account_id
-
-        account_exists = AwsCloudAccount.objects.filter(
-            aws_account_id=aws_account_id
-        ).exists()
-        if account_exists:
-            raise ValidationError(
-                detail={
-                    'account_arn': [
-                        _('An ARN already exists for account "{0}"').format(
-                            aws_account_id
-                        )
-                    ]
-                }
-            )
-
         user = self.context['request'].user
         name = validated_data.get('name')
-        aws_cloud_account = AwsCloudAccount(
-            account_arn=str(arn),
-            aws_account_id=aws_account_id,
+        cloud_account = verify_permissions_and_create_aws_cloud_account(
+            user, arn, name
         )
-
-        try:
-            session = aws.get_session(str(arn))
-        except ClientError as error:
-            if error.response.get('Error', {}).get('Code') == 'AccessDenied':
-                raise ValidationError(
-                    detail={
-                        'account_arn': [
-                            _('Permission denied for ARN "{0}"').format(arn)
-                        ]
-                    }
-                )
-            raise
-        account_verified, failed_actions = aws.verify_account_access(session)
-        if account_verified:
-            try:
-                aws.configure_cloudtrail(session, aws_account_id)
-            except ClientError as error:
-                if error.response.get('Error', {}).get('Code') == \
-                        'AccessDeniedException':
-                    raise ValidationError(
-                        detail={
-                            'account_arn': [
-                                _('Access denied to create CloudTrail for '
-                                  'ARN "{0}"').format(arn)
-                            ]
-                        }
-                    )
-                raise
-        else:
-            failure_details = [_('Account verification failed.')]
-            failure_details += [
-                _('Access denied for policy action "{0}".').format(action)
-                for action in failed_actions
-            ]
-            raise ValidationError(
-                detail={
-                    'account_arn': failure_details
-                }
-            )
-        aws_cloud_account.save()
-        cloud_account = CloudAccount(
-            name=name,
-            user=user,
-            content_object=aws_cloud_account
-        )
-        cloud_account.save()
-        on_commit(lambda:
-                  tasks.initial_aws_describe_instances.delay(
-                      aws_cloud_account.id)
-                  )
         return cloud_account
 
 

@@ -12,6 +12,7 @@ import jsonpickle
 from botocore.exceptions import ClientError
 from dateutil import tz
 from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
@@ -20,11 +21,13 @@ from rest_framework.serializers import ValidationError
 
 from api import AWS_PROVIDER_STRING
 from api.models import (
+    AwsCloudAccount,
     AwsEC2InstanceDefinition,
     AwsInstance,
     AwsInstanceEvent,
     AwsMachineImage,
     AwsMachineImageCopy,
+    CloudAccount,
     ConcurrentUsage,
     Instance,
     InstanceEvent,
@@ -1195,3 +1198,102 @@ def update_aws_image_status_error(ec2_ami_id):
         machine_image.status = machine_image.ERROR
         machine_image.save()
     return True
+
+
+def verify_permissions_and_create_aws_cloud_account(
+    user, customer_role_arn, cloud_account_name
+):
+    """
+    Verify AWS permissions and create AwsCloudAccount for the customer user.
+
+    This function may raise ValidationError if certain verification steps fail.
+
+    Args:
+        user (django.contrib.auth.models.User): user to own the CloudAccount
+        customer_role_arn (AwsArn): ARN to access the customer's AWS account
+        cloud_account_name (str): the name to use for our CloudAccount
+
+    Returns:
+        CloudAccount the created cloud account.
+
+    """
+    aws_account_id = customer_role_arn.account_id
+    arn_str = str(customer_role_arn)
+
+    account_exists = AwsCloudAccount.objects.filter(
+        aws_account_id=aws_account_id
+    ).exists()
+    if account_exists:
+        raise ValidationError(
+            detail={
+                'account_arn': [
+                    _('An ARN already exists for account "{0}"').format(
+                        aws_account_id
+                    )
+                ]
+            }
+        )
+
+    try:
+        session = aws.get_session(arn_str)
+    except ClientError as error:
+        if error.response.get('Error', {}).get('Code') == 'AccessDenied':
+            raise ValidationError(
+                detail={
+                    'account_arn': [
+                        _('Permission denied for ARN "{0}"').format(arn_str)
+                    ]
+                }
+            )
+        raise
+    account_verified, failed_actions = aws.verify_account_access(session)
+    if account_verified:
+        try:
+            aws.configure_cloudtrail(session, aws_account_id)
+        except ClientError as error:
+            if (
+                error.response.get('Error', {}).get('Code') ==
+                'AccessDeniedException'
+            ):
+                raise ValidationError(
+                    detail={
+                        'account_arn': [
+                            _(
+                                'Access denied to create CloudTrail for '
+                                'ARN "{0}"'
+                            ).format(arn_str)
+                        ]
+                    }
+                )
+            raise
+    else:
+        failure_details = [_('Account verification failed.')]
+        failure_details += [
+            _('Access denied for policy action "{0}".').format(action)
+            for action in failed_actions
+        ]
+        raise ValidationError(detail={'account_arn': failure_details})
+
+    with transaction.atomic():
+        aws_cloud_account, __ = AwsCloudAccount.objects.get_or_create(
+            account_arn=arn_str, defaults={'aws_account_id': aws_account_id}
+        )
+
+        # We have to do this ugly id and ContentType lookup because Django
+        # can't perform the lookup we need using GenericForeignKey.
+        content_type_id = ContentType.objects.get_for_model(AwsCloudAccount).id
+        cloud_account, __ = CloudAccount.objects.get_or_create(
+            user=user,
+            object_id=aws_cloud_account.id,
+            content_type_id=content_type_id,
+            defaults={'name': cloud_account_name},
+        )
+
+        # Local import to get around a circular import issue.
+        from api.tasks import initial_aws_describe_instances
+
+        transaction.on_commit(
+            lambda: initial_aws_describe_instances.delay(aws_cloud_account.id)
+        )
+
+    return cloud_account

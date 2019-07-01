@@ -7,7 +7,7 @@ from django.test import TransactionTestCase
 from rest_framework.test import (APIRequestFactory,
                                  force_authenticate)
 
-from api import serializers, views
+from api import serializers, util, views
 from api.models import CloudAccount
 from api.tests import helper as api_helper
 from api.views import AccountViewSet
@@ -186,9 +186,9 @@ class AccountViewSetTest(TransactionTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertResponseHasAwsAccountData(response, account)
 
-    @patch.object(views.serializers, 'aws')
-    @patch.object(views.serializers, 'tasks')
-    def test_create_account_with_name_success(self, mock_tasks, mock_aws):
+    @patch.object(util, 'aws')
+    @patch('api.tasks.initial_aws_describe_instances')
+    def test_create_account_with_name_success(self, mock_task, mock_aws):
         """Test create account with a name succeeds."""
         mock_aws.verify_account_access.return_value = True, []
         mock_aws.AwsArn = AwsArn
@@ -211,19 +211,20 @@ class AccountViewSetTest(TransactionTestCase):
             data['account_arn'])
         self.assertEqual(response.data['name'], data['name'])
         self.assertIsNotNone(response.data['name'])
-        mock_tasks.initial_aws_describe_instances.delay.assert_called()
+        mock_task.delay.assert_called()
 
-    @patch.object(views.serializers, 'aws')
-    @patch.object(views.serializers, 'tasks')
+    @patch.object(util, 'aws')
+    @patch('api.tasks.initial_aws_describe_instances')
     def test_create_account_with_duplicate_name_fail(
-            self, mock_aws, mock_tasks):
+        self, mock_aws, mock_task
+    ):
         """Test create account with a duplicate name fails."""
         mock_aws.verify_account_access.return_value = True, []
-        mock_aws.AwsArn = AwsArn
+        arn_str = util_helper.generate_dummy_arn()
 
         data = {
             'cloud_type': 'aws',
-            'account_arn': mock_aws.AwsArn,
+            'account_arn': arn_str,
             'name': 'unique',
         }
 
@@ -235,7 +236,7 @@ class AccountViewSetTest(TransactionTestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertIn('non_field_errors', response.data)
-        mock_tasks.initial_aws_describe_instances.delay.assert_not_called()
+        mock_task.delay.assert_not_called()
 
     def test_create_account_without_name_fail(self):
         """Test create account without a name fails."""
