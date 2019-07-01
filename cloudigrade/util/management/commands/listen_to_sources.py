@@ -11,14 +11,6 @@ from kafka import KafkaConsumer
 from lockfile.pidlockfile import PIDLockFile
 
 logger = logging.getLogger(__name__)
-handler = logging.StreamHandler(sys.stdout)
-formatter = logging.Formatter('%(asctime)s | %(levelname)s | '
-                              '%(filename)s:%(funcName)s:%(lineno)d | '
-                              '%(message)s')
-handler.setFormatter(formatter)
-handler.setLevel(env('LISTENER_LOG_LEVEL', default='INFO'))
-logger.addHandler(handler)
-logger.setLevel(env('LISTENER_LOG_LEVEL', default='INFO'))
 
 
 class Command(BaseCommand):
