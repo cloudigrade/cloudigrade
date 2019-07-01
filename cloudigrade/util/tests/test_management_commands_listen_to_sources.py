@@ -2,17 +2,19 @@
 import signal
 from unittest.mock import Mock, patch
 
+from django.core.management import call_command
 from django.test import TestCase
 
-from sources_listener import listen, listener_cleanup
+from util.management.commands.listen_to_sources import Command
 
 
 class SourcesListenerTest(TestCase):
     """Add App Configuration Test Case."""
 
-    @patch('sources_listener.logger')
-    @patch('sources_listener.KafkaConsumer')
-    def test_listen(self, mock_consumer, mock_logger):
+    @patch('util.management.commands.listen_to_sources.PIDLockFile')
+    @patch('util.management.commands.listen_to_sources.logger')
+    @patch('util.management.commands.listen_to_sources.KafkaConsumer')
+    def test_listen(self, mock_consumer, mock_logger, mock_pid):
         """Assert listener processes messages."""
         message1 = Mock()
         message2 = Mock()
@@ -36,14 +38,14 @@ class SourcesListenerTest(TestCase):
         mock_consumer_poll.return_value = mock_message_bundle_items
 
         with self.assertRaises(TypeError):
-            listen()
+            call_command('listen_to_sources')
 
         mock_consumer.assert_called_once()
         mock_consumer_poll.assert_called_once()
         self.assertEqual(2, mock_logger.info.call_count)
 
-    @patch('sources_listener.logger')
+    @patch('util.management.commands.listen_to_sources.logger')
     def test_listener_cleanup(self, mock_logger):
         """Assert listener SIGTERM is logged."""
-        listener_cleanup(signal.SIGTERM, Mock())
+        Command.listener_cleanup(Mock(), signal.SIGTERM, Mock())
         mock_logger.info.assert_called_once()

@@ -390,3 +390,14 @@ CLOUDIGRADE_VERSION = env('CLOUDIGRADE_VERSION', default=None)
 CLOUDIGRADE_REQUEST_HEADER = 'X-CLOUDIGRADE-REQUEST-ID'
 INSIGHTS_REQUEST_ID_HEADER = 'HTTP_X_RH_INSIGHTS_REQUEST_ID'
 INSIGHTS_IDENTITY_HEADER = 'HTTP_X_RH_IDENTITY'
+
+# Sources/Kafka Listener Values
+LISTENER_TOPIC = env('LISTENER_TOPIC', default='platform.sources.event-stream')
+LISTENER_GROUP_ID = env('LISTENER_GROUP_ID', default='cloudmeter_ci')
+LISTENER_SERVER = env(
+    'LISTENER_SERVER',
+    default='platform-mq-ci-kafka-bootstrap.platform-mq-ci.svc')
+LISTENER_PORT = env('LISTENER_PORT', default='9092')
+LISTENER_AUTO_COMMIT = env.bool('LISTENER_AUTO_COMMIT', default=True)
+LISTENER_TIMEOUT = env('LISTENER_TIMEOUT', default=1000)
+LISTENER_PID_PATH = env('LISTENER_PID_PATH', default='/var/run/cloudigrade')
