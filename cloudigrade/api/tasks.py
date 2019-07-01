@@ -42,7 +42,6 @@ from api.util import (
     create_initial_aws_instance_events,
     create_new_machine_images,
     generate_aws_ami_messages,
-    get_aws_machine_image,
     normalize_runs,
     read_messages_from_queue,
     recalculate_runs,
@@ -50,6 +49,8 @@ from api.util import (
     save_instance_events,
     save_new_aws_machine_image,
     start_image_inspection,
+    update_aws_image_status_error,
+    update_aws_image_status_inspected,
 )
 from util import aws
 from util.aws import is_windows, rewrap_aws_errors
@@ -201,7 +202,7 @@ def copy_ami_snapshot(arn, ami_id, snapshot_region, reference_ami_id=None):
             ),
             {'image_id': ami_id, 'source_region': snapshot_region},
         )
-        _mark_aws_image_error(ami_id)
+        update_aws_image_status_error(ami_id)
         return
 
     customer_snapshot_id = aws.get_ami_snapshot_id(ami)
@@ -214,7 +215,7 @@ def copy_ami_snapshot(arn, ami_id, snapshot_region, reference_ami_id=None):
             {'image_id': ami_id, 'source_region': snapshot_region},
 
         )
-        _mark_aws_image_error(ami_id)
+        update_aws_image_status_error(ami_id)
         return
     try:
         customer_snapshot = aws.get_snapshot(
@@ -353,7 +354,7 @@ def copy_ami_to_customer_account(arn, reference_ami_id, snapshot_region):
             ),
             {'image_id': reference_ami_id, 'source_region': snapshot_region},
         )
-        _mark_aws_image_error(reference_ami_id)
+        update_aws_image_status_error(reference_ami_id)
         return
 
     try:
@@ -386,7 +387,7 @@ def copy_ami_to_customer_account(arn, reference_ami_id, snapshot_region):
                     ),
                     reference_ami_id,
                 )
-                _mark_aws_image_error(reference_ami_id)
+                update_aws_image_status_error(reference_ami_id)
                 return
             elif error in public_errors:
                 # This appears to be a marketplace AMI, mark it as inspected.
@@ -397,7 +398,7 @@ def copy_ami_to_customer_account(arn, reference_ami_id, snapshot_region):
                     ),
                     reference_ami_id,
                 )
-                _mark_aws_image_inspected(
+                update_aws_image_status_inspected(
                     ec2_ami_id=reference_ami_id, aws_marketplace_image=True
                 )
                 return
@@ -711,7 +712,7 @@ def run_inspection_cluster(messages, cloud='aws'):
                     ),
                     ec2_ami_id,
                 )
-                save_success = _mark_aws_image_inspected(ec2_ami_id)
+                save_success = update_aws_image_status_inspected(ec2_ami_id)
             else:
                 logger.error(
                     _(
@@ -729,7 +730,7 @@ def run_inspection_cluster(messages, cloud='aws'):
                         'error_message': error_message,
                     },
                 )
-                save_success = _mark_aws_image_error(ec2_ami_id)
+                save_success = update_aws_image_status_error(ec2_ami_id)
 
             if not save_success:
                 logger.warning(
@@ -866,7 +867,7 @@ def persist_aws_inspection_cluster_results(inspection_results):
             inspection_results))
 
     for image_id, image_json in images.items():
-        save_success = _mark_aws_image_inspected(
+        save_success = update_aws_image_status_inspected(
             image_id, inspection_json=json.dumps(image_json)
         )
         if not save_success:
@@ -1634,66 +1635,3 @@ def _build_events_info_for_saving(account, instance, events):
         if parse(instance_event.occurred_at) >= account.created_at
     ]
     return events_info
-
-
-def _mark_aws_image_inspected(
-    ec2_ami_id, aws_marketplace_image=None, inspection_json=None
-):
-    """
-    Set an AwsMachineImage's MachineImage status to INSPECTED.
-
-    Args:
-        ec2_ami_id (str): the AWS EC2 AMI ID of the AwsMachineImage to update.
-        aws_marketplace_image (bool): optional value for aws_marketplace_image.
-        inspection_json (str): optional value for inspection_json.
-
-    Returns:
-        bool True if status is successfully updated, else False.
-
-    """
-    with transaction.atomic():
-        aws_machine_image, machine_image = get_aws_machine_image(ec2_ami_id)
-        if not aws_machine_image:
-            logger.warning(
-                _(
-                    'AwsMachineImage with EC2 AMI ID %(ec2_ami_id)s could not '
-                    'be found for _mark_aws_image_inspected'
-                ),
-                {'ec2_ami_id': ec2_ami_id},
-            )
-            return False
-        if aws_marketplace_image is not None:
-            aws_machine_image.aws_marketplace_image = aws_marketplace_image
-            aws_machine_image.save()
-        machine_image.status = machine_image.INSPECTED
-        if inspection_json is not None:
-            machine_image.inspection_json = inspection_json
-        machine_image.save()
-    return True
-
-
-def _mark_aws_image_error(ec2_ami_id):
-    """
-    Set an AwsMachineImage's MachineImage status to ERROR.
-
-    Args:
-        ec2_ami_id (str): the AWS EC2 AMI ID of the AwsMachineImage to update.
-
-    Returns:
-        bool True if status is successfully updated, else False.
-
-    """
-    with transaction.atomic():
-        aws_machine_image, machine_image = get_aws_machine_image(ec2_ami_id)
-        if not aws_machine_image:
-            logger.warning(
-                _(
-                    'AwsMachineImage with EC2 AMI ID %(ec2_ami_id)s could not '
-                    'be found for _mark_aws_image_error'
-                ),
-                {'ec2_ami_id': ec2_ami_id},
-            )
-            return False
-        machine_image.status = machine_image.ERROR
-        machine_image.save()
-    return True

@@ -1132,3 +1132,66 @@ def convert_param_to_int(name, value):
             name: [_('{} must be an integer.'.format(name))]
         }
         raise ValidationError(error)
+
+
+def update_aws_image_status_inspected(
+    ec2_ami_id, aws_marketplace_image=None, inspection_json=None
+):
+    """
+    Set an AwsMachineImage's MachineImage status to INSPECTED.
+
+    Args:
+        ec2_ami_id (str): the AWS EC2 AMI ID of the AwsMachineImage to update.
+        aws_marketplace_image (bool): optional value for aws_marketplace_image.
+        inspection_json (str): optional value for inspection_json.
+
+    Returns:
+        bool True if status is successfully updated, else False.
+
+    """
+    with transaction.atomic():
+        aws_machine_image, machine_image = get_aws_machine_image(ec2_ami_id)
+        if not aws_machine_image:
+            logger.warning(
+                _(
+                    'AwsMachineImage with EC2 AMI ID %(ec2_ami_id)s could not '
+                    'be found for update_aws_image_status_inspected'
+                ),
+                {'ec2_ami_id': ec2_ami_id},
+            )
+            return False
+        if aws_marketplace_image is not None:
+            aws_machine_image.aws_marketplace_image = aws_marketplace_image
+            aws_machine_image.save()
+        machine_image.status = machine_image.INSPECTED
+        if inspection_json is not None:
+            machine_image.inspection_json = inspection_json
+        machine_image.save()
+    return True
+
+
+def update_aws_image_status_error(ec2_ami_id):
+    """
+    Set an AwsMachineImage's MachineImage status to ERROR.
+
+    Args:
+        ec2_ami_id (str): the AWS EC2 AMI ID of the AwsMachineImage to update.
+
+    Returns:
+        bool True if status is successfully updated, else False.
+
+    """
+    with transaction.atomic():
+        aws_machine_image, machine_image = get_aws_machine_image(ec2_ami_id)
+        if not aws_machine_image:
+            logger.warning(
+                _(
+                    'AwsMachineImage with EC2 AMI ID %(ec2_ami_id)s could not '
+                    'be found for update_aws_image_status_error'
+                ),
+                {'ec2_ami_id': ec2_ami_id},
+            )
+            return False
+        machine_image.status = machine_image.ERROR
+        machine_image.save()
+    return True
