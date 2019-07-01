@@ -1580,12 +1580,18 @@ def repopulate_ec2_instance_mapping():
                 )
 
     for instance_name, attributes in instances.items():
-        AwsEC2InstanceDefinition.objects.update_or_create(
+        obj, created = AwsEC2InstanceDefinition.objects.get_or_create(
             instance_type=instance_name,
-            memory=attributes['memory'],
-            vcpu=attributes['vcpu']
+            defaults={
+                'memory': attributes['memory'],
+                'vcpu': attributes['vcpu']
+            }
         )
-        logger.info(_('Saved instance type %s'), instance_name)
+        if created:
+            logger.info(_('Saved new instance type %s'), obj.instance_type)
+        else:
+            logger.info(_(
+                'Instance type %s already exists.'), obj.instance_type)
 
     logger.info('Finished saving AWS EC2 instance type information.')
 
