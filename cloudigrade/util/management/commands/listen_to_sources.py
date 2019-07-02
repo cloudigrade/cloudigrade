@@ -74,12 +74,18 @@ class Command(BaseCommand):
                 _('An authentication object was created. Message: %s'),
                 message.value,
             )
+            if settings.ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES:
+                # TODO Future code to create user and cloud account goes here.
+                pass
 
         elif event_type == b'Authentication.destroy':
             logger.info(
                 _('An authentication object was destroyed. Message: %s'),
                 message.value,
             )
+            if settings.ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES:
+                # TODO Future code to delete cloud account goes here.
+                pass
 
     def listener_cleanup(self, signum, frame):
         """Stop listening when system signal is received."""

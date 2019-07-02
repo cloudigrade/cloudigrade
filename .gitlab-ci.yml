@@ -9,7 +9,7 @@ stages:
 ### GLOBAL VARS ###
 variables:
   SHIFTIGRADE_IMAGE: registry.gitlab.com/cloudigrade/shiftigrade
-  SHIFTIGRADE_VERSION: 0.2.11
+  SHIFTIGRADE_VERSION: 0.2.12
   IMAGE_NAME: registry.gitlab.com/${CI_PROJECT_PATH}
   IMAGE_NAME_COMMIT: registry.gitlab.com/${CI_PROJECT_PATH}/commits/${CI_PROJECT_NAME}:${CI_BUILD_REF}
   NGINX_NAME: registry.gitlab.com/${CI_PROJECT_PATH}/nginx/${CI_PROJECT_NAME}-nginx

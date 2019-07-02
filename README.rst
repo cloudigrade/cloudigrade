@@ -386,6 +386,7 @@ There are several environment variables that configure the script.
 - ``LISTENER_AUTO_COMMIT`` - Whether the messages being received should be marked as so
 - ``LISTENER_TIMEOUT`` - Timeout of the listener
 - ``LISTENER_PID_PATH`` - The path of the pid file
+- ``ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES`` - bool to feature-flag creation and deletion of users and cloud accounts driven by Kafka messages. When disabled, cloudigrade will only log a message when it reads from the Kafka topic.
 
 The listener will be automatically deployed to all OSD environments, including review. If you'd like to run it locally you don't need to do anything special, simply be in your virtual environment, set your environment variables, and call `python cloudigrade/sources_listener.py`.
 

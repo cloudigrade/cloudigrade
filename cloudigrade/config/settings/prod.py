@@ -33,3 +33,9 @@ if env('API_ENABLE_SENTRY', default=False):
         release=env('DJANGO_SENTRY_RELEASE'),
         integrations=[DjangoIntegration()]
     )
+
+# Specifically in production, this default should be False.
+ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES = env(
+    'ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES',
+    default=False,
+)
