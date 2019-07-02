@@ -7,6 +7,7 @@ import sys
 import daemon
 from django.conf import settings
 from django.core.management import BaseCommand
+from django.utils.translation import gettext as _
 from kafka import KafkaConsumer
 from lockfile.pidlockfile import PIDLockFile
 
@@ -55,24 +56,32 @@ class Command(BaseCommand):
 
         while self.run:
             message_bundle = consumer.poll()
-
             for topic_partition, messages in message_bundle.items():
                 for message in messages:
-                    event_type = None
-                    # The headers are a list of... tuples.
-                    for header in message.headers:
-                        if header[0] == 'event_type':
-                            event_type = header[1]
-                            break
+                    self._process_message(message)
 
-                    if event_type == b'Authentication.create':
-                        logger.info(f'An authentication object was created. '
-                                    f'Message: {message.value}')
-                    elif event_type == b'Authentication.destroy':
-                        logger.info(f'An authentication object was destroyed. '
-                                    f'Message: {message.value}')
+    def _process_message(self, message):
+        """Process a single Kafka message."""
+        event_type = None
+        # The headers are a list of... tuples.
+        for header in message.headers:
+            if header[0] == 'event_type':
+                event_type = header[1]
+                break
+
+        if event_type == b'Authentication.create':
+            logger.info(
+                _('An authentication object was created. Message: %s'),
+                message.value,
+            )
+
+        elif event_type == b'Authentication.destroy':
+            logger.info(
+                _('An authentication object was destroyed. Message: %s'),
+                message.value,
+            )
 
     def listener_cleanup(self, signum, frame):
         """Stop listening when system signal is received."""
-        logger.info(f'Received {signum}, stopping.')
+        logger.info(_('Received %s. Stopping.'), signum)
         self.run = False
