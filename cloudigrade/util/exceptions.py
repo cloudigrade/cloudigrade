@@ -114,6 +114,18 @@ class AwsRoleCreationException(Exception):
     """Raise when AWS Role fails creation unexpectedly."""
 
 
+class SourcesAPIException(Exception):
+    """Raise when Insights Sources API behaves unexpectedly."""
+
+
+class SourcesAPINotOkStatus(SourcesAPIException):
+    """Raise when Sources API returns a not-200 status."""
+
+
+class SourcesAPINotJsonContent(SourcesAPIException):
+    """Raise when Sources API returns not-JSON content."""
+
+
 def api_exception_handler(exc, context):
     """
     Log exception and return an appropriately formatted response.
