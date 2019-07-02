@@ -1,17 +1,21 @@
-
-"""Collection of tests for Analyzer tasks."""
+"""Collection of tests for tasks.analyze_log."""
 import json
-from unittest.mock import Mock, call, patch
+from unittest.mock import call, patch
 
 import faker
 from django.conf import settings
 from django.test import TestCase
 
 from api import cloudtrail, tasks
-from api.models import (AwsEC2InstanceDefinition, AwsInstance,
-                        AwsInstanceEvent,
-                        AwsMachineImage, Instance, InstanceEvent, MachineImage,
-                        Run)
+from api.models import (
+    AwsInstance,
+    AwsInstanceEvent,
+    AwsMachineImage,
+    Instance,
+    InstanceEvent,
+    MachineImage,
+    Run,
+)
 from api.tests import helper as helper
 from util.tests import helper as util_helper
 
@@ -19,7 +23,7 @@ _faker = faker.Faker()
 
 
 class AnalyzeLogTest(TestCase):
-    """Analyze Log management command test case."""
+    """Celery task 'analyze_log' test cases."""
 
     def setUp(self):
         """Set up common variables for tests."""
@@ -86,6 +90,7 @@ class AnalyzeLogTest(TestCase):
 
         def describe_images_side_effect(__, image_ids, ___):
             return [described_images[image_id] for image_id in image_ids]
+
         mock_describe_images.side_effect = describe_images_side_effect
 
         # Define the S3 message payload.
@@ -178,9 +183,11 @@ class AnalyzeLogTest(TestCase):
         # Assert that the correct instance events were saved.
         # We expect to find *four* events. Note that "reboot" does not cause us
         # to generate a new event because we know it's already running.
-        instanceevents = list(InstanceEvent.objects.filter(
-            instance__aws_instance__ec2_instance_id=ec2_instance_id
-        ).order_by('occurred_at'))
+        instanceevents = list(
+            InstanceEvent.objects.filter(
+                instance__aws_instance__ec2_instance_id=ec2_instance_id
+            ).order_by('occurred_at')
+        )
 
         self.assertEqual(len(instanceevents), 4)
 
@@ -194,11 +201,13 @@ class AnalyzeLogTest(TestCase):
         self.assertEqual(instanceevents[2].event_type, 'attribute_change')
         self.assertEqual(instanceevents[3].event_type, 'power_on')
 
-        self.assertEqual(instanceevents[0].content_object.instance_type,
-                         instance_type)
+        self.assertEqual(
+            instanceevents[0].content_object.instance_type, instance_type
+        )
         self.assertEqual(instanceevents[1].content_object.instance_type, None)
-        self.assertEqual(instanceevents[2].content_object.instance_type,
-                         new_instance_type)
+        self.assertEqual(
+            instanceevents[2].content_object.instance_type, new_instance_type
+        )
         self.assertEqual(instanceevents[3].content_object.instance_type, None)
 
         # Assert that as a side-effect two runs were created.
@@ -217,8 +226,9 @@ class AnalyzeLogTest(TestCase):
         self.assertEqual(
             image.owner_aws_account_id, described_image['OwnerId']
         )
-        self.assertEqual(image.machine_image.get().status,
-                         MachineImage.PENDING)
+        self.assertEqual(
+            image.machine_image.get().status, MachineImage.PENDING
+        )
 
     @patch('api.tasks.start_image_inspection')
     @patch('api.tasks.aws.get_session')
@@ -260,6 +270,7 @@ class AnalyzeLogTest(TestCase):
 
         def describe_images_side_effect(__, image_ids, ___):
             return [described_images[image_id] for image_id in image_ids]
+
         mock_describe_images.side_effect = describe_images_side_effect
 
         # Define the S3 message payload.
@@ -274,7 +285,7 @@ class AnalyzeLogTest(TestCase):
                     region=region,
                     instance_type=instance_type,
                     image_id=ec2_ami_id,
-                ),
+                )
             ]
         }
         mock_s3.return_value = json.dumps(s3_content)
@@ -301,19 +312,23 @@ class AnalyzeLogTest(TestCase):
 
         # Assert that the correct instance was saved.
         instance = Instance.objects.get(
-            aws_instance__ec2_instance_id=ec2_instance_id)
+            aws_instance__ec2_instance_id=ec2_instance_id
+        )
         self.assertEqual(instance.cloud_account, self.account)
         self.assertEqual(instance.content_object.region, region)
 
         # Assert that the correct instance event was saved.
-        instanceevents = list(InstanceEvent.objects.filter(
-            instance__aws_instance__ec2_instance_id=ec2_instance_id
-        ).order_by('occurred_at'))
+        instanceevents = list(
+            InstanceEvent.objects.filter(
+                instance__aws_instance__ec2_instance_id=ec2_instance_id
+            ).order_by('occurred_at')
+        )
         self.assertEqual(len(instanceevents), 1)
         self.assertEqual(instanceevents[0].occurred_at, occurred_at_run)
         self.assertEqual(instanceevents[0].event_type, 'power_on')
-        self.assertEqual(instanceevents[0].content_object.instance_type,
-                         instance_type)
+        self.assertEqual(
+            instanceevents[0].content_object.instance_type, instance_type
+        )
 
         # Assert that as a side-effect one run was created.
         runs = Run.objects.filter(instance=instance).order_by('start_time')
@@ -328,8 +343,9 @@ class AnalyzeLogTest(TestCase):
         self.assertEqual(
             image.owner_aws_account_id, described_image['OwnerId']
         )
-        self.assertEqual(image.machine_image.get().status,
-                         MachineImage.INSPECTED)
+        self.assertEqual(
+            image.machine_image.get().status, MachineImage.INSPECTED
+        )
         self.assertEqual(image.platform, image.WINDOWS)
 
     @patch('api.tasks.start_image_inspection')
@@ -376,7 +392,7 @@ class AnalyzeLogTest(TestCase):
                     region=region,
                     instance_type=instance_type,
                     image_id=ec2_ami_id,
-                ),
+                )
             ]
         }
         mock_s3.return_value = json.dumps(s3_content)
@@ -403,19 +419,23 @@ class AnalyzeLogTest(TestCase):
 
         # Assert that the correct instance was saved.
         instance = Instance.objects.get(
-            aws_instance__ec2_instance_id=ec2_instance_id)
+            aws_instance__ec2_instance_id=ec2_instance_id
+        )
         self.assertEqual(instance.cloud_account, self.account)
         self.assertEqual(instance.content_object.region, region)
 
         # Assert that the correct instance event was saved.
-        instanceevents = list(InstanceEvent.objects.filter(
-            instance__aws_instance__ec2_instance_id=ec2_instance_id
-        ).order_by('occurred_at'))
+        instanceevents = list(
+            InstanceEvent.objects.filter(
+                instance__aws_instance__ec2_instance_id=ec2_instance_id
+            ).order_by('occurred_at')
+        )
         self.assertEqual(len(instanceevents), 1)
         self.assertEqual(instanceevents[0].occurred_at, occurred_at_run)
         self.assertEqual(instanceevents[0].event_type, 'power_on')
-        self.assertEqual(instanceevents[0].content_object.instance_type,
-                         instance_type)
+        self.assertEqual(
+            instanceevents[0].content_object.instance_type, instance_type
+        )
 
         # Assert that as a side-effect one run was created.
         runs = Run.objects.filter(instance=instance).order_by('start_time')
@@ -466,10 +486,13 @@ class AnalyzeLogTest(TestCase):
         described_instances = {ec2_instance_id: described_instance}
 
         def describe_instances_side_effect(__, instance_ids, ___):
-            return dict([
-                (instance_id, described_instances[instance_id])
-                for instance_id in instance_ids
-            ])
+            return dict(
+                [
+                    (instance_id, described_instances[instance_id])
+                    for instance_id in instance_ids
+                ]
+            )
+
         mock_describe_instances.side_effect = describe_instances_side_effect
 
         # Define the S3 message payload.
@@ -484,7 +507,7 @@ class AnalyzeLogTest(TestCase):
                     region=region,
                     instance_type=instance_type,
                     image_id=ec2_ami_id,
-                ),
+                )
             ]
         }
         mock_s3.return_value = json.dumps(s3_content)
@@ -516,14 +539,17 @@ class AnalyzeLogTest(TestCase):
         self.assertEqual(awsinstance.region, region)
 
         # Assert that the correct instance event was saved.
-        instanceevents = list(InstanceEvent.objects.filter(
-            instance__aws_instance__ec2_instance_id=ec2_instance_id
-        ).order_by('occurred_at'))
+        instanceevents = list(
+            InstanceEvent.objects.filter(
+                instance__aws_instance__ec2_instance_id=ec2_instance_id
+            ).order_by('occurred_at')
+        )
         self.assertEqual(len(instanceevents), 1)
         self.assertEqual(instanceevents[0].occurred_at, occurred_at_start)
         self.assertEqual(instanceevents[0].event_type, 'power_on')
-        self.assertEqual(instanceevents[0].content_object.instance_type,
-                         instance_type)
+        self.assertEqual(
+            instanceevents[0].content_object.instance_type, instance_type
+        )
 
         # Assert that as a side-effect one run was created.
         runs = Run.objects.filter(instance=instance).order_by('start_time')
@@ -580,7 +606,7 @@ class AnalyzeLogTest(TestCase):
                     region=region,
                     instance_type=instance_type,
                     image_id=ec2_ami_id,
-                ),
+                )
             ]
         }
         mock_s3.return_value = json.dumps(s3_content)
@@ -614,14 +640,17 @@ class AnalyzeLogTest(TestCase):
         # Assert that the correct instance events were saved.
         # We expect to find *four* events. Note that "reboot" does not cause us
         # to generate a new event because we know it's already running.
-        instanceevents = list(InstanceEvent.objects.filter(
-            instance__aws_instance__ec2_instance_id=ec2_instance_id
-        ).order_by('occurred_at'))
+        instanceevents = list(
+            InstanceEvent.objects.filter(
+                instance__aws_instance__ec2_instance_id=ec2_instance_id
+            ).order_by('occurred_at')
+        )
         self.assertEqual(len(instanceevents), 1)
         self.assertEqual(instanceevents[0].occurred_at, occurred_at_run)
         self.assertEqual(instanceevents[0].event_type, 'power_on')
-        self.assertEqual(instanceevents[0].content_object.instance_type,
-                         instance_type)
+        self.assertEqual(
+            instanceevents[0].content_object.instance_type, instance_type
+        )
 
         # Assert that as a side-effect two runs were created.
         runs = Run.objects.filter(instance=instance).order_by('start_time')
@@ -640,7 +669,8 @@ class AnalyzeLogTest(TestCase):
     @patch('api.tasks.aws.get_object_content_from_s3')
     @patch('api.tasks.aws.yield_messages_from_queue')
     def test_analyze_log_with_multiple_sqs_messages(
-            self, mock_receive, mock_s3, mock_del):
+        self, mock_receive, mock_s3, mock_del
+    ):
         """
         Test that analyze_log correctly handles multiple SQS messages.
 
@@ -655,7 +685,7 @@ class AnalyzeLogTest(TestCase):
         sqs_messages = [
             helper.generate_mock_cloudtrail_sqs_message(),
             helper.generate_mock_cloudtrail_sqs_message(),
-            helper.generate_mock_cloudtrail_sqs_message()
+            helper.generate_mock_cloudtrail_sqs_message(),
         ]
         mock_receive.return_value = sqs_messages
         simple_content = {'Records': []}
@@ -688,8 +718,8 @@ class AnalyzeLogTest(TestCase):
     @patch('api.tasks.aws.get_object_content_from_s3')
     @patch('api.tasks.aws.yield_messages_from_queue')
     def test_analyze_log_changed_instance_type_existing_instance(
-            self, mock_receive, mock_s3, mock_del, mock_session,
-            mock_inspection):
+        self, mock_receive, mock_s3, mock_del, mock_session, mock_inspection
+    ):
         """
         Test that analyze_log correctly handles attribute change messages.
 
@@ -700,13 +730,14 @@ class AnalyzeLogTest(TestCase):
         instance_type = 't1.potato'
         sqs_message = helper.generate_mock_cloudtrail_sqs_message()
         gen_instance = helper.generate_aws_instance(
-            self.account, region='us-east-1')
-        trail_record = \
-            helper.generate_cloudtrail_modify_instance_record(
-                aws_account_id=self.aws_account_id,
-                instance_id=gen_instance.content_object.ec2_instance_id,
-                instance_type=instance_type,
-                region='us-east-1')
+            self.account, region='us-east-1'
+        )
+        trail_record = helper.generate_cloudtrail_modify_instance_record(
+            aws_account_id=self.aws_account_id,
+            instance_id=gen_instance.content_object.ec2_instance_id,
+            instance_type=instance_type,
+            region='us-east-1',
+        )
         s3_content = {'Records': [trail_record]}
         mock_receive.return_value = [sqs_message]
         mock_s3.return_value = json.dumps(s3_content)
@@ -716,8 +747,9 @@ class AnalyzeLogTest(TestCase):
         self.assertEqual(len(successes), 1)
         self.assertEqual(len(failures), 0)
         mock_inspection.assert_not_called()
-        mock_del.assert_called_with(settings.CLOUDTRAIL_EVENT_URL,
-                                    [sqs_message])
+        mock_del.assert_called_with(
+            settings.CLOUDTRAIL_EVENT_URL, [sqs_message]
+        )
 
         instances = list(AwsInstance.objects.all())
         self.assertEqual(len(instances), 1)
@@ -725,7 +757,8 @@ class AnalyzeLogTest(TestCase):
         instance = awsinstance.instance.get()
         self.assertEqual(
             awsinstance.ec2_instance_id,
-            gen_instance.content_object.ec2_instance_id)
+            gen_instance.content_object.ec2_instance_id,
+        )
         self.assertEqual(instance.cloud_account.id, self.account.id)
 
         events = list(AwsInstanceEvent.objects.all())
@@ -785,8 +818,9 @@ class AnalyzeLogTest(TestCase):
         self.assertEqual(len(successes), 1)
         self.assertEqual(len(failures), 0)
         mock_inspection.assert_not_called()
-        mock_del.assert_called_with(settings.CLOUDTRAIL_EVENT_URL,
-                                    [sqs_message])
+        mock_del.assert_called_with(
+            settings.CLOUDTRAIL_EVENT_URL, [sqs_message]
+        )
 
         instances = list(AwsInstance.objects.all())
         self.assertEqual(len(instances), 1)
@@ -818,8 +852,8 @@ class AnalyzeLogTest(TestCase):
     @patch('api.tasks.aws.get_object_content_from_s3')
     @patch('api.tasks.aws.yield_messages_from_queue')
     def test_analyze_log_when_account_is_not_known(
-            self, mock_receive, mock_s3, mock_del, mock_session,
-            mock_inspection):
+        self, mock_receive, mock_s3, mock_del, mock_session, mock_inspection
+    ):
         """
         Test appropriate handling when the account ID in the log is unknown.
 
@@ -833,7 +867,8 @@ class AnalyzeLogTest(TestCase):
         ec2_instance_id = util_helper.generate_dummy_instance_id()
         trail_record = helper.generate_cloudtrail_instances_record(
             aws_account_id=util_helper.generate_dummy_aws_account_id(),
-            instance_ids=[ec2_instance_id])
+            instance_ids=[ec2_instance_id],
+        )
         s3_content = {'Records': [trail_record]}
         mock_receive.return_value = [sqs_message]
         mock_s3.return_value = json.dumps(s3_content)
@@ -855,7 +890,8 @@ class AnalyzeLogTest(TestCase):
     @patch('api.tasks.aws.get_object_content_from_s3')
     @patch('api.tasks.aws.yield_messages_from_queue')
     def test_analyze_log_with_invalid_cloudtrail_log_content(
-            self, mock_receive, mock_s3, mock_del):
+        self, mock_receive, mock_s3, mock_del
+    ):
         """
         Test that a malformed (not JSON) log is not processed.
 
@@ -880,20 +916,15 @@ class AnalyzeLogTest(TestCase):
     @patch('api.tasks.aws.get_object_content_from_s3')
     @patch('api.tasks.aws.yield_messages_from_queue')
     def test_analyze_log_with_irrelevant_log_activity(
-            self, mock_receive, mock_s3, mock_del):
+        self, mock_receive, mock_s3, mock_del
+    ):
         """Test that logs without relevant data are effectively ignored."""
         sqs_message = helper.generate_mock_cloudtrail_sqs_message()
         irrelevant_log = {
             'Records': [
-                {
-                    'eventSource': 'null.amazonaws.com',
-                },
-                {
-                    'errorCode': 123,
-                },
-                {
-                    'eventName': 'InvalidEvent'
-                }
+                {'eventSource': 'null.amazonaws.com'},
+                {'errorCode': 123},
+                {'eventName': 'InvalidEvent'},
             ]
         }
 
@@ -906,8 +937,7 @@ class AnalyzeLogTest(TestCase):
     @patch('api.tasks.aws.delete_messages_from_queue')
     @patch('api.tasks.aws.get_object_content_from_s3')
     @patch('api.tasks.aws.yield_messages_from_queue')
-    def test_ami_tags_added_success(
-            self, mock_receive, mock_s3, mock_del):
+    def test_ami_tags_added_success(self, mock_receive, mock_s3, mock_del):
         """Test processing a CloudTrail log for ami tags added."""
         ami = helper.generate_aws_image()
         self.assertFalse(ami.openshift_detected)
@@ -937,8 +967,7 @@ class AnalyzeLogTest(TestCase):
     @patch('api.tasks.aws.delete_messages_from_queue')
     @patch('api.tasks.aws.get_object_content_from_s3')
     @patch('api.tasks.aws.yield_messages_from_queue')
-    def test_ami_tags_removed_success(
-            self, mock_receive, mock_s3, mock_del):
+    def test_ami_tags_removed_success(self, mock_receive, mock_s3, mock_del):
         """Test processing a CloudTrail log for ami tags removed."""
         ami = helper.generate_aws_image(openshift_detected=True)
         self.assertTrue(ami.openshift_detected)
@@ -960,7 +989,8 @@ class AnalyzeLogTest(TestCase):
         self.assertEqual(len(failures), 0)
 
         updated_ami = AwsMachineImage.objects.get(
-            ec2_ami_id=ami.content_object.ec2_ami_id)
+            ec2_ami_id=ami.content_object.ec2_ami_id
+        )
         self.assertFalse(updated_ami.machine_image.get().openshift_detected)
         mock_del.assert_called()
 
@@ -971,8 +1001,14 @@ class AnalyzeLogTest(TestCase):
     @patch('api.tasks.aws.yield_messages_from_queue')
     @patch('api.tasks.aws.describe_images')
     def test_ami_tags_unknown_ami_is_added(
-            self, mock_describe, mock_receive, mock_s3, mock_del,
-            mock_session, mock_inspection):
+        self,
+        mock_describe,
+        mock_receive,
+        mock_s3,
+        mock_del,
+        mock_session,
+        mock_inspection,
+    ):
         """
         Test processing a log for ami tags reference a new ami_id.
 
@@ -981,7 +1017,7 @@ class AnalyzeLogTest(TestCase):
         """
         new_ami_id = util_helper.generate_dummy_image_id()
         image_data = util_helper.generate_dummy_describe_image(
-            image_id=new_ami_id,
+            image_id=new_ami_id
         )
         mock_describe.return_value = [image_data]
 
@@ -1013,8 +1049,7 @@ class AnalyzeLogTest(TestCase):
     @patch('api.tasks.aws.delete_messages_from_queue')
     @patch('api.tasks.aws.get_object_content_from_s3')
     @patch('api.tasks.aws.yield_messages_from_queue')
-    def test_other_tags_ignored(
-            self, mock_receive, mock_s3, mock_del):
+    def test_other_tags_ignored(self, mock_receive, mock_s3, mock_del):
         """
         Test tag processing where unknown tags should be ignored.
 
@@ -1049,7 +1084,8 @@ class AnalyzeLogTest(TestCase):
     @patch('api.tasks.aws.get_object_content_from_s3')
     @patch('api.tasks.aws.yield_messages_from_queue')
     def test_non_ami_resources_with_tags_ignored(
-            self, mock_receive, mock_s3, mock_del):
+        self, mock_receive, mock_s3, mock_del
+    ):
         """Test tag processing where non-AMI resources should be ignored."""
         some_ignored_id = _faker.uuid4()
 
@@ -1072,385 +1108,3 @@ class AnalyzeLogTest(TestCase):
         all_images = list(AwsMachineImage.objects.all())
         self.assertEqual(len(all_images), 0)
         mock_del.assert_called()
-
-    @patch('api.tasks.repopulate_ec2_instance_mapping.delay')
-    @patch('api.tasks.AwsEC2InstanceDefinition.objects.get')
-    def test_get_instance_definition_returns_value_in_db(
-            self, mock_lookup, mock_remap):
-        """Test that task isn't ran if instance definition already exists."""
-        mock_instance_definition = Mock()
-        mock_instance_definition.instance_type = 't3.nano'
-        mock_instance_definition.memory = '0.5'
-        mock_instance_definition.vcpu = '2'
-        mock_lookup.return_value = mock_instance_definition
-
-        instance = mock_lookup()
-        self.assertEqual(mock_instance_definition, instance)
-        mock_remap.assert_not_called()
-
-    @patch('api.tasks.AwsEC2InstanceDefinition.objects.get_or_create')
-    @patch('api.tasks.boto3.client')
-    def test_repopulate_ec2_instance_mapping(
-            self, mock_boto3, mock_db_create):
-        """Test that repopulate_ec2_instance_mapping creates db objects."""
-        mock_instance_def = Mock()
-        mock_instance_def.instance_type.return_value = 'r5.large'
-        mock_db_create.return_value = (mock_instance_def, True)
-        paginator = mock_boto3.return_value.get_paginator.return_value
-        paginator.paginate.return_value = [{
-            'PriceList': [
-                """{
-                    "product": {
-                        "productFamily": "Compute Instance",
-                        "attributes": {
-                            "memory": "16 GiB",
-                            "vcpu": "2",
-                            "capacitystatus": "Used",
-                            "instanceType": "r5.large",
-                            "tenancy": "Host",
-                            "usagetype": "APN1-HostBoxUsage:r5.large",
-                            "locationType": "AWS Region",
-                            "storage": "EBS only",
-                            "normalizationSizeFactor": "4",
-                            "instanceFamily": "Memory optimized",
-                            "operatingSystem": "RHEL",
-                            "servicecode": "AmazonEC2",
-                            "physicalProcessor": "Intel Xeon Platinum 8175",
-                            "licenseModel": "No License required",
-                            "ecu": "10",
-                            "currentGeneration": "Yes",
-                            "preInstalledSw": "NA",
-                            "networkPerformance": "10 Gigabit",
-                            "location": "Asia Pacific (Tokyo)",
-                            "servicename": "Amazon Elastic Compute Cloud",
-                            "processorArchitecture": "64-bit",
-                            "operation": "RunInstances:0010"
-                        },
-                        "sku": "22WY57989R2PA7RB"
-                    },
-                    "serviceCode": "AmazonEC2",
-                    "terms": {
-                        "OnDemand": {
-                            "22WY57989R2PA7RB.JRTCKXETXF": {
-                                "priceDimensions": {
-                                    "22WY57989R2PA7RB.JRTCKXETXF.6YS6EN2CT7": {
-                                        "unit": "Hrs",
-                                        "endRange": "Inf",
-                                        "appliesTo": [
-                                        ],
-                                        "beginRange": "0",
-                                        "pricePerUnit": {
-                                            "USD": "0.0000000000"
-                                        }
-                                    }
-                                },
-                                "sku": "22WY57989R2PA7RB",
-                                "effectiveDate": "2018-11-01T00:00:00Z",
-                                "offerTermCode": "JRTCKXETXF",
-                                "termAttributes": {
-
-                                }
-                            }
-                        }
-                    },
-                    "version": "20181122020351",
-                    "publicationDate": "2018-11-22T02:03:51Z"
-                }"""
-            ]
-        }]
-        tasks.repopulate_ec2_instance_mapping()
-        mock_db_create.assert_called_with(
-            defaults={'memory': 16.0, 'vcpu': 2},
-            instance_type='r5.large')
-
-    # @patch('api.tasks.AwsEC2InstanceDefinition.objects.get_or_create')
-    @patch('api.tasks.boto3.client')
-    def test_repopulate_ec2_instance_mapping_exists(
-            self, mock_boto3):
-        """Test that repopulate job ignores already created objects."""
-        obj, __ = AwsEC2InstanceDefinition.objects.get_or_create(
-            instance_type='r5.large',
-            memory=float(16),
-            vcpu=2
-        )
-        paginator = mock_boto3.return_value.get_paginator.return_value
-        paginator.paginate.return_value = [{
-            'PriceList': [
-                """{
-                    "product": {
-                        "productFamily": "Compute Instance",
-                        "attributes": {
-                            "memory": "24 GiB",
-                            "vcpu": "1",
-                            "capacitystatus": "Used",
-                            "instanceType": "r5.large",
-                            "tenancy": "Host",
-                            "usagetype": "APN1-HostBoxUsage:r5.large",
-                            "locationType": "AWS Region",
-                            "storage": "EBS only",
-                            "normalizationSizeFactor": "4",
-                            "instanceFamily": "Memory optimized",
-                            "operatingSystem": "RHEL",
-                            "servicecode": "AmazonEC2",
-                            "physicalProcessor": "Intel Xeon Platinum 8175",
-                            "licenseModel": "No License required",
-                            "ecu": "10",
-                            "currentGeneration": "Yes",
-                            "preInstalledSw": "NA",
-                            "networkPerformance": "10 Gigabit",
-                            "location": "Asia Pacific (Tokyo)",
-                            "servicename": "Amazon Elastic Compute Cloud",
-                            "processorArchitecture": "64-bit",
-                            "operation": "RunInstances:0010"
-                        },
-                        "sku": "22WY57989R2PA7RB"
-                    },
-                    "serviceCode": "AmazonEC2",
-                    "terms": {
-                        "OnDemand": {
-                            "22WY57989R2PA7RB.JRTCKXETXF": {
-                                "priceDimensions": {
-                                    "22WY57989R2PA7RB.JRTCKXETXF.6YS6EN2CT7": {
-                                        "unit": "Hrs",
-                                        "endRange": "Inf",
-                                        "appliesTo": [
-                                        ],
-                                        "beginRange": "0",
-                                        "pricePerUnit": {
-                                            "USD": "0.0000000000"
-                                        }
-                                    }
-                                },
-                                "sku": "22WY57989R2PA7RB",
-                                "effectiveDate": "2018-11-01T00:00:00Z",
-                                "offerTermCode": "JRTCKXETXF",
-                                "termAttributes": {
-
-                                }
-                            }
-                        }
-                    },
-                    "version": "20181122020351",
-                    "publicationDate": "2018-11-22T02:03:51Z"
-                }"""
-            ]
-        }]
-        tasks.repopulate_ec2_instance_mapping()
-        obj.refresh_from_db()
-        # Make sure that the instance did not change
-        # As AWS would not change existing definitions
-        self.assertEqual(obj.vcpu, 2)
-        self.assertEqual(obj.memory, 16.00)
-
-    def test_build_events_info_for_saving(self):
-        """Test _build_events_info_for_saving with typical inputs."""
-        instance = helper.generate_aws_instance(self.account)
-
-        # Note: this time is *after* self.account.created_at.
-        occurred_at = '2018-01-02T12:34:56+00:00'
-
-        instance_event = helper.generate_cloudtrail_instance_event(
-            instance=instance,
-            occurred_at=occurred_at,
-            event_type=InstanceEvent.TYPE.power_on,
-            instance_type=None
-        )
-        events_info = tasks._build_events_info_for_saving(self.account,
-                                                          instance,
-                                                          [instance_event])
-        self.assertEqual(len(events_info), 1)
-
-    def test_build_events_info_for_saving_too_old_events(self):
-        """Test _build_events_info_for_saving with events that are too old."""
-        instance = helper.generate_aws_instance(self.account)
-
-        # Note: this time is *before* self.account.created_at.
-        occurred_at = '2016-01-02T12:34:56+00:00'
-
-        cloudtrail_instance_event = helper.generate_cloudtrail_instance_event(
-            instance=instance,
-            occurred_at=occurred_at,
-            event_type=InstanceEvent.TYPE.power_on,
-            instance_type=None
-        )
-        events_info = tasks._build_events_info_for_saving(
-            self.account,
-            instance,
-            [cloudtrail_instance_event])
-        self.assertEqual(len(events_info), 0)
-
-    def test_process_instance_event_recalculate_runs(self):
-        """
-        Test that we recalculate runs when new instance events occur.
-
-        Initial Runs (2,-):
-            [ #------------]
-
-        New power off event at (,13) results in the run being updated (2,13):
-            [ ############ ]
-
-        """
-        instance = helper.generate_aws_instance(self.account)
-
-        started_at = util_helper.utc_dt(2018, 1, 2, 0, 0, 0)
-
-        start_event = helper.generate_single_aws_instance_event(
-            instance,
-            occurred_at=started_at,
-            event_type=InstanceEvent.TYPE.power_on,
-            no_instance_type=True
-        )
-        tasks.process_instance_event(start_event)
-
-        occurred_at = util_helper.utc_dt(2018, 1, 13, 0, 0, 0)
-
-        instance_event = helper.generate_single_aws_instance_event(
-            instance=instance,
-            occurred_at=occurred_at,
-            event_type=InstanceEvent.TYPE.power_off,
-            no_instance_type=True
-        )
-        tasks.process_instance_event(instance_event)
-
-        runs = list(Run.objects.all())
-        self.assertEqual(1, len(runs))
-        self.assertEqual(started_at, runs[0].start_time)
-        self.assertEqual(occurred_at, runs[0].end_time)
-
-    @patch('api.tasks.recalculate_runs')
-    def test_process_instance_event_new_run(self, mock_recalculate_runs):
-        """
-        Test new run is created if it occurred after all runs and is power on.
-
-        account.util.recalculate_runs should not be ran in this case.
-
-        Initial Runs (2,5):
-            [ ####          ]
-
-        New power on event at (10,) results in 2 runs (2,5) (10,-):
-            [ ####    #-----]
-
-        """
-        instance = helper.generate_aws_instance(self.account)
-
-        run_time = (
-            util_helper.utc_dt(2018, 1, 2, 0, 0, 0),
-            util_helper.utc_dt(2018, 1, 5, 0, 0, 0)
-        )
-
-        helper.generate_single_run(instance, run_time)
-
-        occurred_at = util_helper.utc_dt(2018, 1, 10, 0, 0, 0)
-        instance_event = helper.generate_single_aws_instance_event(
-            instance=instance,
-            occurred_at=occurred_at,
-            event_type=InstanceEvent.TYPE.power_on,
-            instance_type=None
-        )
-        tasks.process_instance_event(instance_event)
-
-        runs = list(Run.objects.all())
-        self.assertEqual(2, len(runs))
-
-        # Since we're adding a new run, recalculate_runs shouldn't be called
-        mock_recalculate_runs.assert_not_called()
-
-    def test_process_instance_event_duplicate_start(self):
-        """
-        Test that recalculate works when a duplicate start event is introduced.
-
-        Initial Runs (5,7):
-            [    ###        ]
-
-        New power on event at (1,) results in the run being updated:
-            [#######        ]
-
-        New power on event at (3,) results in the run not being updated:
-            [#######        ]
-
-        """
-        instance_type = 't1.potato'
-
-        instance = helper.generate_aws_instance(self.account)
-
-        run_time = [(
-            util_helper.utc_dt(2018, 1, 5, 0, 0, 0),
-            util_helper.utc_dt(2018, 1, 7, 0, 0, 0)
-        )]
-
-        instance_events = helper.generate_aws_instance_events(
-            instance, run_time,
-            instance_type=instance_type
-        )
-        helper.recalculate_runs_from_events(instance_events)
-
-        first_start = util_helper.utc_dt(2018, 1, 1, 0, 0, 0)
-
-        instance_event = helper.generate_single_aws_instance_event(
-            instance=instance,
-            occurred_at=first_start,
-            event_type=InstanceEvent.TYPE.power_on,
-            instance_type=instance_type
-        )
-
-        tasks.process_instance_event(instance_event)
-
-        runs = list(Run.objects.all())
-        self.assertEqual(1, len(runs))
-        self.assertEqual(run_time[0][1], runs[0].end_time)
-        self.assertEqual(first_start, runs[0].start_time)
-
-        second_start = util_helper.utc_dt(2018, 1, 3, 0, 0, 0)
-
-        dup_start_instance_event = \
-            helper.generate_single_aws_instance_event(
-                instance=instance,
-                occurred_at=second_start,
-                event_type=InstanceEvent.TYPE.power_on,
-                instance_type=instance_type,
-            )
-
-        tasks.process_instance_event(dup_start_instance_event)
-
-        runs = list(Run.objects.all())
-        self.assertEqual(1, len(runs))
-        self.assertEqual(run_time[0][1], runs[0].end_time)
-        self.assertEqual(first_start, runs[0].start_time)
-
-    @patch('api.tasks.recalculate_runs')
-    def test_process_instance_event_power_off(self, mock_recalculate_runs):
-        """
-        Test new run is not if a power off event occurs after all runs.
-
-        account.util.recalculate_runs should not be ran in this case.
-
-        Initial Runs (2,5):
-            [ ####          ]
-
-        New power off event at (10,) results in 1 runs (2,5):
-            [ ####          ]
-
-        """
-        instance = helper.generate_aws_instance(self.account)
-
-        run_time = (
-            util_helper.utc_dt(2018, 1, 2, 0, 0, 0),
-            util_helper.utc_dt(2018, 1, 5, 0, 0, 0)
-        )
-
-        helper.generate_single_run(instance, run_time)
-
-        occurred_at = util_helper.utc_dt(2018, 1, 10, 0, 0, 0)
-
-        instance_event = helper.generate_single_aws_instance_event(
-            instance=instance,
-            occurred_at=occurred_at,
-            event_type=InstanceEvent.TYPE.power_off,
-            instance_type=None
-        )
-        tasks.process_instance_event(instance_event)
-
-        runs = list(Run.objects.all())
-        self.assertEqual(1, len(runs))
-
-        mock_recalculate_runs.assert_not_called()
