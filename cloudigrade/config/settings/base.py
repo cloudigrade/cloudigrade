@@ -402,6 +402,11 @@ LISTENER_AUTO_COMMIT = env.bool('LISTENER_AUTO_COMMIT', default=True)
 LISTENER_TIMEOUT = env('LISTENER_TIMEOUT', default=1000)
 LISTENER_PID_PATH = env('LISTENER_PID_PATH', default='/var/run/cloudigrade')
 
+SOURCES_API_BASE_URL = env(
+    'SOURCES_API_BASE_URL',
+    default='http://sources-api.sources-ci.svc:8080/internal/v1.0',
+)
+
 ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES = env(
     'ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES',
     default=True,
