@@ -1296,13 +1296,29 @@ def verify_permissions_and_create_aws_cloud_account(
         raise ValidationError(detail={'account_arn': failure_details})
 
     with transaction.atomic():
-        aws_cloud_account, __ = AwsCloudAccount.objects.get_or_create(
+        # How is it possible that the AwsCloudAccount already exists?
+        # The account check at the start of this function should have caught
+        # any existing accounts and exited early, but another request or task
+        # may have created the AwsCloudAccount while this function was talking
+        # with AWS (i.e. verify_account_access) and not in a transaction.
+        # We need to check for that and exit early here if it exists.
+        aws_cloud_account, created = AwsCloudAccount.objects.get_or_create(
             account_arn=arn_str,
             defaults={
                 'aws_account_id': aws_account_id,
                 'aws_access_key_id': customer_access_key_id,
             },
         )
+        if not created:
+            raise ValidationError(
+                detail={
+                    'account_arn': [
+                        _('An ARN already exists for account "{0}"').format(
+                            aws_account_id
+                        )
+                    ]
+                }
+            )
 
         # We have to do this ugly id and ContentType lookup because Django
         # can't perform the lookup we need using GenericForeignKey.
