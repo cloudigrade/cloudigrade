@@ -87,8 +87,7 @@ class Command(BaseCommand):
                 message_value,
             )
             if settings.ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES:
-                # TODO Future code to delete cloud account goes here.
-                pass
+                tasks.delete_from_sources_kafka_message.delay(message_value)
 
     def listener_cleanup(self, signum, frame):
         """Stop listening when system signal is received."""

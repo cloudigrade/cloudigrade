@@ -134,7 +134,8 @@ class SandboxedRestClient(object):
 
 
 def generate_aws_account(
-        arn=None, aws_account_id=None, user=None, name=None, created_at=None):
+        arn=None, aws_account_id=None, user=None, name=None,
+        created_at=None, aws_access_key_id=None):
     """
     Generate an AwsAccount for testing.
 
@@ -146,6 +147,7 @@ def generate_aws_account(
         user (User): Optional Django auth User to be this account's owner.
         name (str): Optional name for this account.
         created_at (datetime): Optional creation datetime for this account.
+        aws_access_key_id (str): Optional aws_access_key_id.
 
     Returns:
         CloudAccount: The created AwsAccount.
@@ -160,9 +162,13 @@ def generate_aws_account(
     if name is None:
         name = str(uuid.uuid4())
 
+    if aws_access_key_id is None:
+        aws_access_key_id = _faker.user_name()
+
     aws_cloud_account = AwsCloudAccount.objects.create(
         account_arn=arn,
         aws_account_id=aws.AwsArn(arn).account_id,
+        aws_access_key_id=aws_access_key_id
     )
     if created_at:
         aws_cloud_account.created_at = created_at

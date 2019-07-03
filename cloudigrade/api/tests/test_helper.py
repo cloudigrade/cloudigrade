@@ -118,16 +118,19 @@ class GenerateAwsAccountTest(TestCase):
     def test_generate_aws_account_with_args(self):
         """Assert generation of an AwsAccount with all specified args."""
         aws_account_id = util_helper.generate_dummy_aws_account_id()
+        aws_access_key_id = _faker.user_name()
         arn = util_helper.generate_dummy_arn(account_id=aws_account_id)
         user = util_helper.generate_test_user()
         name = _faker.name()
         created_at = util_helper.utc_dt(2017, 1, 1, 0, 0, 0)
         account = helper.generate_aws_account(
-            arn, aws_account_id, user, name, created_at
+            arn, aws_account_id, user, name, created_at, aws_access_key_id
         )
         self.assertIsInstance(account, CloudAccount)
         self.assertEqual(account.content_object.account_arn, arn)
         self.assertEqual(account.content_object.aws_account_id, aws_account_id)
+        self.assertEqual(
+            account.content_object.aws_access_key_id, aws_access_key_id)
         self.assertEqual(account.user, user)
         self.assertEqual(account.name, name)
         self.assertEqual(account.created_at, created_at)

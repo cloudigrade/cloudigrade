@@ -355,6 +355,8 @@ CELERY_TASK_ROUTES = {
         {'queue': 'repopulate_ec2_instance_mapping'},
     'api.tasks.create_from_sources_kafka_message':
         {'queue': 'create_from_sources_kafka_message'},
+    'api.tasks.delete_from_sources_kafka_message':
+        {'queue': 'delete_from_sources_kafka_message'},
     'api.tasks.configure_customer_aws_and_create_cloud_account':
         {'queue': 'configure_customer_aws_and_create_cloud_account'},
 }
