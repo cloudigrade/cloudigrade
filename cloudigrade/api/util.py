@@ -44,6 +44,7 @@ SQS_RECEIVE_BATCH_SIZE = 10  # boto3 supports receiving of up to 10 items.
 
 cloud_account_name_pattern = '{cloud_name}-account-{external_cloud_account_id}'
 
+
 def get_last_known_instance_type(instance, before_date):
     """
     Get the last known type for the given instance.
@@ -1229,14 +1230,14 @@ def verify_permissions_and_create_aws_cloud_account(
 
     Args:
         user (django.contrib.auth.models.User): user to own the CloudAccount
-        customer_role_arn (AwsArn): ARN to access the customer's AWS account
+        customer_role_arn (str): ARN to access the customer's AWS account
         cloud_account_name (str): the name to use for our CloudAccount
 
     Returns:
         CloudAccount the created cloud account.
 
     """
-    aws_account_id = customer_role_arn.account_id
+    aws_account_id = aws.AwsArn(customer_role_arn).account_id
     arn_str = str(customer_role_arn)
 
     account_exists = AwsCloudAccount.objects.filter(

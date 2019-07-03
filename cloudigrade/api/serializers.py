@@ -153,7 +153,7 @@ class CloudAccountSerializer(ModelSerializer):
         set up Cloud Trail on their clount.
 
         """
-        arn = aws.AwsArn(validated_data['account_arn'])
+        arn = validated_data['account_arn']
         user = self.context['request'].user
         name = validated_data.get('name')
         cloud_account = verify_permissions_and_create_aws_cloud_account(

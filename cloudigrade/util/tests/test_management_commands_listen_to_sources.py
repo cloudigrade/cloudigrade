@@ -14,7 +14,8 @@ class SourcesListenerTest(TestCase):
     @patch('util.management.commands.listen_to_sources.PIDLockFile')
     @patch('util.management.commands.listen_to_sources.logger')
     @patch('util.management.commands.listen_to_sources.KafkaConsumer')
-    def test_listen(self, mock_consumer, mock_logger, mock_pid):
+    @patch('api.tasks.create_from_sources_kafka_message')
+    def test_listen(self, mock_task, mock_consumer, mock_logger, mock_pid):
         """Assert listener processes messages."""
         message1 = Mock()
         message2 = Mock()
@@ -40,6 +41,7 @@ class SourcesListenerTest(TestCase):
         with self.assertRaises(TypeError):
             call_command('listen_to_sources')
 
+        mock_task.delay.assert_called_once()
         mock_consumer.assert_called_once()
         mock_consumer_poll.assert_called_once()
         self.assertEqual(2, mock_logger.info.call_count)

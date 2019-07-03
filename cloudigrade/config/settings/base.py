@@ -353,6 +353,10 @@ CELERY_TASK_ROUTES = {
         {'queue': 'process_instance_event'},
     'api.tasks.repopulate_ec2_instance_mapping':
         {'queue': 'repopulate_ec2_instance_mapping'},
+    'api.tasks.create_from_sources_kafka_message':
+        {'queue': 'create_from_sources_kafka_message'},
+    'api.tasks.configure_customer_aws_and_create_cloud_account':
+        {'queue': 'configure_customer_aws_and_create_cloud_account'},
 }
 CELERY_BEAT_SCHEDULE = {
     'scale_up_inspection_cluster_every_60_min': {

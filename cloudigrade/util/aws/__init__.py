@@ -23,7 +23,9 @@ from util.aws.ec2 import (InstanceState,
                           remove_snapshot_ownership)
 from util.aws.helper import (get_region_from_availability_zone, get_regions,
                              rewrap_aws_errors, verify_account_access)
-from util.aws.iam import get_session_from_access_key
+from util.aws.iam import (ensure_cloudigrade_policy,
+                          ensure_cloudigrade_role,
+                          get_session_from_access_key)
 from util.aws.s3 import get_object_content_from_s3
 from util.aws.sqs import (create_queue, delete_messages_from_queue,
                           ensure_queue_has_dlq,

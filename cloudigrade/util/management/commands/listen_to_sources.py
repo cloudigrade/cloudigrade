@@ -11,6 +11,8 @@ from django.utils.translation import gettext as _
 from kafka import KafkaConsumer
 from lockfile.pidlockfile import PIDLockFile
 
+from api import tasks
+
 logger = logging.getLogger(__name__)
 
 
@@ -75,8 +77,7 @@ class Command(BaseCommand):
                 message.value,
             )
             if settings.ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES:
-                # TODO Future code to create user and cloud account goes here.
-                pass
+                tasks.create_from_sources_kafka_message.delay(message)
 
         elif event_type == b'Authentication.destroy':
             logger.info(
