@@ -17,7 +17,9 @@ from api.models import (AwsCloudAccount, AwsEC2InstanceDefinition, AwsInstance,
                         CLOUD_ACCESS_NAME_TOKEN, CloudAccount, Instance,
                         InstanceEvent, MARKETPLACE_NAME_TOKEN, MachineImage,
                         Run)
-from api.util import calculate_max_concurrent_usage_from_runs, recalculate_runs
+from api.util import (_sqs_wrap_message,
+                      calculate_max_concurrent_usage_from_runs,
+                      recalculate_runs)
 from util import aws
 from util.tests import helper
 
@@ -825,3 +827,34 @@ def recalculate_runs_from_events(events):
     """
     for event in events:
         recalculate_runs(event)
+
+
+def create_messages_for_sqs(count=1):
+    """
+    Create lists of messages for testing SQS interactions.
+
+    Args:
+        count (int): number of messages to generate
+
+    Returns:
+        tuple: Three lists. The first list contains the original message
+            payloads. The second list contains the messages wrapped as we
+            would batch send to SQS. The third list contains the messages
+            wrapped as we would received from SQS.
+
+    """
+    payloads = []
+    messages_sent = []
+    messages_received = []
+    for __ in range(count):
+        message = f'Hello, {uuid.uuid4()}!'
+        wrapped = _sqs_wrap_message(message)
+        payloads.append(message)
+        messages_sent.append(wrapped)
+        received = {
+            'Id': wrapped['Id'],
+            'Body': wrapped['MessageBody'],
+            'ReceiptHandle': uuid.uuid4(),
+        }
+        messages_received.append(received)
+    return payloads, messages_sent, messages_received
