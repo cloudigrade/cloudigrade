@@ -42,6 +42,7 @@ logger = logging.getLogger(__name__)
 SQS_SEND_BATCH_SIZE = 10  # boto3 supports sending up to 10 items.
 SQS_RECEIVE_BATCH_SIZE = 10  # boto3 supports receiving of up to 10 items.
 
+cloud_account_name_pattern = '{cloud_name}-account-{external_cloud_account_id}'
 
 def get_last_known_instance_type(instance, before_date):
     """
@@ -1198,6 +1199,24 @@ def update_aws_image_status_error(ec2_ami_id):
         machine_image.status = machine_image.ERROR
         machine_image.save()
     return True
+
+
+def get_standard_cloud_account_name(cloud_name, external_cloud_account_id):
+    """
+    Get cloudigrade's standard CloudAccount name for a given account ID.
+
+    Args:
+        cloud_name (str): cloud name (e.g. 'aws')
+        external_cloud_account_id (str): customer's external cloud account id
+
+    Returns:
+        str of cloudigrade's standard CloudAccount name
+
+    """
+    return cloud_account_name_pattern.format(
+        cloud_name=cloud_name,
+        external_cloud_account_id=external_cloud_account_id,
+    )
 
 
 def verify_permissions_and_create_aws_cloud_account(
