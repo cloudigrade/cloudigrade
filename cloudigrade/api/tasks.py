@@ -126,7 +126,15 @@ def create_from_sources_kafka_message(message):
         )
         return
 
-    user, __ = User.objects.get_or_create(username=account_number)
+    with transaction.atomic():
+        user, created = User.objects.get_or_create(username=account_number)
+        if created:
+            user.set_unusable_password()
+            logger.info(
+                _('User %s was not found and has been created.'),
+                account_number,
+            )
+
     configure_customer_aws_and_create_cloud_account.delay(
         user.id, username, password
     )

@@ -73,8 +73,9 @@ class ThreeScaleAuthentication(BaseAuthentication):
 
         user, created = User.objects.get_or_create(username=account_number)
         if created:
+            user.set_unusable_password()
             logger.info(
-                _('User %s was not found and '
-                  'has been created.'), account_number
+                _('User %s was not found and has been created.'),
+                account_number,
             )
         return user, True
