@@ -71,18 +71,20 @@ class Command(BaseCommand):
                 event_type = header[1]
                 break
 
+        message_value = getattr(message, 'value', {})
+
         if event_type == b'Authentication.create':
             logger.info(
                 _('An authentication object was created. Message: %s'),
-                message.value,
+                message_value,
             )
             if settings.ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES:
-                tasks.create_from_sources_kafka_message.delay(message)
+                tasks.create_from_sources_kafka_message.delay(message_value)
 
         elif event_type == b'Authentication.destroy':
             logger.info(
                 _('An authentication object was destroyed. Message: %s'),
-                message.value,
+                message_value,
             )
             if settings.ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES:
                 # TODO Future code to delete cloud account goes here.

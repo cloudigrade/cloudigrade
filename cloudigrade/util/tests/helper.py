@@ -487,14 +487,14 @@ def get_3scale_auth_header(account_number='1337'):
     )
 
 
-def generate_mock_authentication_create_message(
+def generate_authentication_create_message_value(
     account_number='1337', username=None, authentication_id=None
 ):
     """
-    Generate a mock 'Authentication.create' message as if read from Kafka.
+    Generate a 'Authentication.create' message's value as if read from Kafka.
 
     Returns:
-        object: Kafka message-like object.
+        dict: like Kafka message's value attribute'.
 
     """
     f = faker.Faker()
@@ -503,8 +503,7 @@ def generate_mock_authentication_create_message(
     if not authentication_id:
         authentication_id = f.pyint()
 
-    message = Mock()
-    message.value = {
+    message = {
         'tenant': account_number, 'username': username, 'id': authentication_id
     }
     return message
