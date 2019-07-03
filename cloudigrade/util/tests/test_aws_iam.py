@@ -297,7 +297,7 @@ class UtilAwsIamTest(TestCase):
         created_role = {
             'Role': {
                 'Arn': role_arn,
-                'Name': role_name,
+                'RoleName': role_name,
                 'AssumeRolePolicyDocument': policy_document,
             }
         }
@@ -366,7 +366,7 @@ class UtilAwsIamTest(TestCase):
         existing_role = {
             'Role': {
                 'Arn': role_arn,
-                'Name': role_name,
+                'RoleName': role_name,
                 'AssumeRolePolicyDocument': policy_document,
             }
         }
@@ -429,7 +429,7 @@ class UtilAwsIamTest(TestCase):
         existing_role = {
             'Role': {
                 'Arn': role_arn,
-                'Name': role_name,
+                'RoleName': role_name,
                 'AssumeRolePolicyDocument': '{}',
             }
         }

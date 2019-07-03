@@ -208,12 +208,12 @@ def ensure_cloudigrade_role(session, policy_arn):
                     'expected role ARN "{role_arn}"'
                 ).format(created_arn=created_arn, role_arn=role_arn)
             )
-        created_name = role.get('Role', {}).get('Name')
+        created_name = role.get('Role', {}).get('RoleName')
         if created_name != role_name:
             raise AwsRoleCreationException(
                 _(
-                    'Created role name "%{created_name}" does not match '
-                    'expected role name "%{role_name}"'
+                    'Created role name "{created_name}" does not match '
+                    'expected role name "{role_name}"'
                 ).format(created_name=created_name, role_name=role_name)
             )
 
