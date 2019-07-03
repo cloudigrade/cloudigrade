@@ -101,6 +101,7 @@ class AwsCloudAccount(BaseModel):
     aws_account_id = models.DecimalField(
         max_digits=12, decimal_places=0, db_index=True
     )
+    aws_access_key_id = models.CharField(max_length=128, null=True, blank=True)
     account_arn = models.CharField(max_length=256, unique=True)
 
     @property

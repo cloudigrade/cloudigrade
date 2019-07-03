@@ -1221,7 +1221,7 @@ def get_standard_cloud_account_name(cloud_name, external_cloud_account_id):
 
 
 def verify_permissions_and_create_aws_cloud_account(
-    user, customer_role_arn, cloud_account_name
+    user, customer_role_arn, cloud_account_name, customer_access_key_id=None
 ):
     """
     Verify AWS permissions and create AwsCloudAccount for the customer user.
@@ -1232,6 +1232,7 @@ def verify_permissions_and_create_aws_cloud_account(
         user (django.contrib.auth.models.User): user to own the CloudAccount
         customer_role_arn (str): ARN to access the customer's AWS account
         cloud_account_name (str): the name to use for our CloudAccount
+        customer_access_key_id (str): optional customer's AWS access key ID
 
     Returns:
         CloudAccount the created cloud account.
@@ -1296,7 +1297,11 @@ def verify_permissions_and_create_aws_cloud_account(
 
     with transaction.atomic():
         aws_cloud_account, __ = AwsCloudAccount.objects.get_or_create(
-            account_arn=arn_str, defaults={'aws_account_id': aws_account_id}
+            account_arn=arn_str,
+            defaults={
+                'aws_account_id': aws_account_id,
+                'aws_access_key_id': customer_access_key_id,
+            },
         )
 
         # We have to do this ugly id and ContentType lookup because Django
