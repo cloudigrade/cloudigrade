@@ -175,6 +175,19 @@ def configure_customer_aws_and_create_cloud_account(
         customer_access_key_id, customer_secret_access_key
     )
     customer_aws_account_id = aws.get_session_account_id(session)
+    if not customer_aws_account_id:
+        logger.error(
+            _(
+                'Could not get customer AWS account ID from session using '
+                'customer AWS access key ID %(customer_aws_account_id)s for '
+                'user ID %(user_id)s. Aborting account setup.'
+            ),
+            {
+                'customer_aws_account_id': customer_aws_account_id,
+                'user_id': user_id,
+            },
+        )
+        return
     policy_name, policy_arn = aws.ensure_cloudigrade_policy(session)
     logger.info(
         _('Configured customer policy %(policy_arn)s'),

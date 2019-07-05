@@ -72,3 +72,29 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
         mock_tasks_aws.ensure_cloudigrade_policy.assert_not_called()
         mock_tasks_aws.ensure_cloudigrade_role.assert_not_called()
         mock_verify.assert_not_called()
+
+    @patch.object(tasks, 'verify_permissions_and_create_aws_cloud_account')
+    @patch.object(tasks, 'aws')
+    def test_early_return_if_bad_session(
+        self, mock_tasks_aws, mock_verify
+    ):
+        """Assert the task returns early if AWS session is invalid."""
+        # User that would ultimately own the created objects.
+        user = User.objects.create()
+
+        customer_access_key_id = _faker.user_name()
+        customer_secret_access_key = _faker.password()
+
+        session = mock_tasks_aws.get_session_from_access_key.return_value
+        mock_tasks_aws.get_session_account_id.return_value = None
+        mock_ensure_policy = mock_tasks_aws.ensure_cloudigrade_policy
+        mock_ensure_role = mock_tasks_aws.ensure_cloudigrade_role
+
+        tasks.configure_customer_aws_and_create_cloud_account(
+            user.id, customer_access_key_id, customer_secret_access_key
+        )
+
+        mock_tasks_aws.get_session_account_id.assert_called_with(session)
+        mock_ensure_policy.assert_not_called()
+        mock_ensure_role.assert_not_called()
+        mock_verify.assert_not_called()
