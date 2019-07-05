@@ -205,7 +205,7 @@ def configure_customer_aws_and_create_cloud_account(
         'aws', customer_aws_account_id
     )
     verify_permissions_and_create_aws_cloud_account(
-        user, role_arn, cloud_account_name
+        user, role_arn, cloud_account_name, customer_access_key_id
     )
 
 

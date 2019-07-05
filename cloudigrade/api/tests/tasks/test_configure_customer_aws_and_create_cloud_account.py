@@ -53,7 +53,9 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
         cloud_account_name = api_util.get_standard_cloud_account_name(
             'aws', session_account_id
         )
-        mock_verify.assert_called_with(user, role_arn, cloud_account_name)
+        mock_verify.assert_called_with(
+            user, role_arn, cloud_account_name, customer_access_key_id
+        )
 
     @patch.object(tasks, 'verify_permissions_and_create_aws_cloud_account')
     @patch.object(tasks, 'aws')
