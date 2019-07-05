@@ -2,6 +2,7 @@
 import json
 from unittest.mock import Mock, patch
 
+from botocore.exceptions import ClientError
 from django.test import TestCase
 
 from util.aws import AwsArn
@@ -47,4 +48,30 @@ class UtilAwsStsTest(TestCase):
         mock_account_id = mock_identity.get.return_value
         returned_account_id = sts.get_session_account_id(mock_session)
         self.assertEqual(mock_account_id, returned_account_id)
+        mock_identity.get.assert_called_with('Account')
+
+    def test_get_session_account_id_bad_session(self):
+        """Test failure handling when the session is invalid."""
+        mock_session = Mock()
+        mock_client = mock_session.client.return_value
+        mock_identity = mock_client.get_caller_identity.return_value
+        mock_identity.get.side_effect = ClientError(
+            error_response={'Error': {'Code': 'InvalidClientTokenId'}},
+            operation_name=None,
+        )
+        returned_account_id = sts.get_session_account_id(mock_session)
+        self.assertIsNone(returned_account_id)
+        mock_identity.get.assert_called_with('Account')
+
+    def test_get_session_account_id_mystery_error(self):
+        """Test failure handling when AWS raises error unexpectedly."""
+        mock_session = Mock()
+        mock_client = mock_session.client.return_value
+        mock_identity = mock_client.get_caller_identity.return_value
+        mock_identity.get.side_effect = ClientError(
+            error_response={'Error': {'Code': 'TooBadSoSad'}},
+            operation_name=None,
+        )
+        with self.assertRaises(ClientError):
+            sts.get_session_account_id(mock_session)
         mock_identity.get.assert_called_with('Account')

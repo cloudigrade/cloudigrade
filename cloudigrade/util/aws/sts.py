@@ -1,9 +1,15 @@
 """Helper utility module to wrap up common AWS STS operations."""
 import json
+import logging
 
 import boto3
+from botocore.exceptions import ClientError
+from django.utils.translation import gettext as _
 
 from util.aws.arn import AwsArn
+
+logger = logging.getLogger(__name__)
+
 
 cloudigrade_policy = {
     'Version': '2012-10-17',
@@ -63,8 +69,26 @@ def get_session(arn, region_name='us-east-1'):
 
 
 def get_session_account_id(session):
-    """Return the account ID for the given AWS session."""
-    return session.client('sts').get_caller_identity().get('Account')
+    """
+    Return the account ID for the given AWS session.
+
+    Args:
+        session (boto3.Session): A temporary session tied to a customer account
+
+    Returns:
+        str the sessions's account ID or None if session is invalid.
+
+    """
+    try:
+        sts_client = session.client('sts')
+        return sts_client.get_caller_identity().get('Account')
+    except ClientError as e:
+        if e.response.get('Error', {}).get('Code') == 'InvalidClientTokenId':
+            logger.info(
+                _('Invalid client token id. Cannot get session account ID.')
+            )
+            return None
+        raise e
 
 
 def _get_primary_account_id():
