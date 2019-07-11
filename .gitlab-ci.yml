@@ -9,7 +9,7 @@ stages:
 ### GLOBAL VARS ###
 variables:
   SHIFTIGRADE_IMAGE: registry.gitlab.com/cloudigrade/shiftigrade
-  SHIFTIGRADE_VERSION: 0.2.13
+  SHIFTIGRADE_VERSION: 0.2.14
   IMAGE_NAME: registry.gitlab.com/${CI_PROJECT_PATH}
   IMAGE_NAME_COMMIT: registry.gitlab.com/${CI_PROJECT_PATH}/commits/${CI_PROJECT_NAME}:${CI_BUILD_REF}
   NGINX_NAME: registry.gitlab.com/${CI_PROJECT_PATH}/nginx/${CI_PROJECT_NAME}-nginx
@@ -194,7 +194,7 @@ Deploy Review:
     - trigger
   before_script:
     - oc login --token ${KUBE_TOKEN}
-    - oc project cloudigrade-qa
+    - oc project cloudigrade-ci
     - cd /opt/shiftigrade
   script:
     - export API_ROUTE_HOST=review-${CI_COMMIT_REF_SLUG}.5a9f.insights-dev.openshiftapps.com
@@ -261,7 +261,7 @@ Clean Up Review:
     - trigger
   before_script:
     - oc login ${OPENSHIFT_URL} --token ${KUBE_TOKEN}
-    - oc project cloudigrade-qa
+    - oc project cloudigrade-ci
     - cd /opt/shiftigrade
   script:
     - export DEPLOYMENT_PREFIX=$(echo review-${CI_COMMIT_REF_SLUG} | cut -c 1-36)
@@ -295,7 +295,7 @@ Clean Up Review:
     - tags@cloudigrade/cloudigrade
   before_script:
     - oc login ${OPENSHIFT_URL} --token ${KUBE_TOKEN}
-    - oc project cloudigrade-qa
+    - oc project cloudigrade-ci
     - cd /opt/shiftigrade
   script:
     - >
@@ -388,7 +388,7 @@ Review Master:
     - tags@cloudigrade/cloudigrade
   before_script:
     - oc login ${OPENSHIFT_URL} --token ${KUBE_TOKEN}
-    - oc project cloudigrade-qa
+    - oc project cloudigrade-ci
     - cd /opt/shiftigrade
   script:
     - >
