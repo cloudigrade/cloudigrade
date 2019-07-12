@@ -9,7 +9,7 @@ stages:
 ### GLOBAL VARS ###
 variables:
   SHIFTIGRADE_IMAGE: registry.gitlab.com/cloudigrade/shiftigrade
-  SHIFTIGRADE_VERSION: 0.2.14
+  SHIFTIGRADE_VERSION: 0.2.15
   IMAGE_NAME: registry.gitlab.com/${CI_PROJECT_PATH}
   IMAGE_NAME_COMMIT: registry.gitlab.com/${CI_PROJECT_PATH}/commits/${CI_PROJECT_NAME}:${CI_BUILD_REF}
   NGINX_NAME: registry.gitlab.com/${CI_PROJECT_PATH}/nginx/${CI_PROJECT_NAME}-nginx
@@ -244,7 +244,7 @@ Deploy Review:
     - if ! oc rollout status dc/c-${DEPLOYMENT_PREFIX}-l; then oc rollout latest dc/c-${DEPLOYMENT_PREFIX}-l && oc rollout status dc/c-${DEPLOYMENT_PREFIX}-l; fi;
   environment:
     name: review/${CI_COMMIT_REF_NAME}
-    url: https://qa.cloud.paas.upshift.redhat.com/api/cloudigrade/v2/
+    url: https://qa.cloud.paas.psi.redhat.com/api/cloudigrade/v2/
     on_stop: Clean Up Review
 
 Clean Up Review:
@@ -359,7 +359,7 @@ Clean Up Review:
     - if ! oc rollout status dc/c-${DEPLOYMENT_PREFIX}-b; then oc rollout latest dc/c-${DEPLOYMENT_PREFIX}-b && oc rollout status dc/c-${DEPLOYMENT_PREFIX}-b; fi;
     - if ! oc rollout status dc/c-${DEPLOYMENT_PREFIX}-w; then oc rollout latest dc/c-${DEPLOYMENT_PREFIX}-w && oc rollout status dc/c-${DEPLOYMENT_PREFIX}-w; fi;
     - if ! oc rollout status dc/c-${DEPLOYMENT_PREFIX}-l; then oc rollout latest dc/c-${DEPLOYMENT_PREFIX}-l && oc rollout status dc/c-${DEPLOYMENT_PREFIX}-l; fi;
-    - echo -e "section_start:$( date +%s ):chat_reply\r\033[0K\nDeployed [cloudigrade] ${CHAT_INPUT}, available at https://qa.cloud.paas.upshift.redhat.com/api/cloudigrade/v2/ using HTTP headers X-4Scale-Env:ci and X-4Scale-Branch:${CI_COMMIT_REF_SLUG}\nsection_end:$( date +%s ):chat_reply\r\033[0K"
+    - echo -e "section_start:$( date +%s ):chat_reply\r\033[0K\nDeployed [cloudigrade] ${CHAT_INPUT}, available at https://qa.cloud.paas.psi.redhat.com/api/cloudigrade/v2/ using HTTP headers X-4Scale-Env:ci and X-4Scale-Branch:${CI_COMMIT_REF_SLUG}\nsection_end:$( date +%s ):chat_reply\r\033[0K"
 
 Review-Master:
   <<: *review_template
@@ -367,7 +367,7 @@ Review-Master:
     - chat
   environment:
     name: review/master-${CHAT_INPUT}
-    url: https://qa.cloud.paas.upshift.redhat.com/api/cloudigrade/v2/
+    url: https://qa.cloud.paas.psi.redhat.com/api/cloudigrade/v2/
     on_stop: Clean-up-master
 
 Review Master:
@@ -376,7 +376,7 @@ Review Master:
     - trigger
   environment:
     name: review/master-${CHAT_INPUT}
-    url: https://qa.cloud.paas.upshift.redhat.com/api/cloudigrade/v2/
+    url: https://qa.cloud.paas.psi.redhat.com/api/cloudigrade/v2/
     on_stop: Clean up master review
 
 .CleanReviewTemplate: &clean_review_definition
@@ -460,7 +460,7 @@ Deploy to Test:
     - triggers
   before_script:
     - oc login --token ${KUBE_TOKEN}
-    - oc project cloudigrade-test
+    - oc project cloudigrade-qa
     - cd /opt/shiftigrade
   script:
     - kontemplate template ocp/test.yaml -i cloudigrade | oc apply -f -
@@ -470,7 +470,7 @@ Deploy to Test:
     - if ! oc rollout status dc/c-l; then oc rollout latest dc/c-l && oc rollout status dc/c-l; fi;
   environment:
     name: test
-    url: https://stage.cloud.paas.upshift.redhat.com/api/cloudigrade/v2/
+    url: https://qa.cloud.paas.psi.redhat.com/api/cloudigrade/v2/
 
 Deploy to Stage:
   stage: deploy
@@ -497,7 +497,7 @@ Deploy to Stage:
     - if ! oc rollout status dc/c-l; then oc rollout latest dc/c-l && oc rollout status dc/c-l; fi;
   environment:
     name: stage
-    url: https://stage.cloud.paas.upshift.redhat.com/api/cloudigrade/v2/
+    url: https://stage.cloud.paas.psi.redhat.com/api/cloudigrade/v2/
 
 ### RELEASE STAGE ###
 Deploy to Production:
