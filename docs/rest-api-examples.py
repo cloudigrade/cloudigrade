@@ -148,7 +148,7 @@ class DocsApiHandler(object):
             )
             run.save()
 
-        # Force all images to have RHEL detected and OCP challenged.
+        # Force all images to have RHEL detected ("7.7") and OCP challenged.
         self.images = list(
             set(
                 instance.machine_image
@@ -158,7 +158,7 @@ class DocsApiHandler(object):
         )
         for image in self.images:
             image.inspection_json = json.dumps(
-                {'rhel_enabled_repos_found': True}
+                {'rhel_enabled_repos_found': True, 'rhel_version': '7.7'}
             )
             image.openshift_challenged = True
             image.status = image.INSPECTED

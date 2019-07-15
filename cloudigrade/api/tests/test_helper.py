@@ -265,6 +265,7 @@ class GenerateAwsImageTest(TestCase):
         self.assertIsNone(image.name)
         self.assertFalse(image.rhel_challenged)
         self.assertFalse(image.openshift_challenged)
+        self.assertIsNone(image.rhel_version)
         self.assertFalse(image.content_object.is_cloud_access)
         self.assertFalse(image.content_object.is_marketplace)
 
@@ -273,6 +274,7 @@ class GenerateAwsImageTest(TestCase):
         account_id = util_helper.generate_dummy_aws_account_id()
         ec2_ami_id = util_helper.generate_dummy_image_id()
         name = _faker.name()
+        rhel_version = _faker.slug()
 
         image = helper.generate_aws_image(
             account_id,
@@ -280,6 +282,11 @@ class GenerateAwsImageTest(TestCase):
             is_windows=True,
             ec2_ami_id=ec2_ami_id,
             rhel_detected=True,
+            rhel_detected_repos=True,
+            rhel_detected_certs=True,
+            rhel_detected_release_files=True,
+            rhel_detected_signed_packages=True,
+            rhel_version=rhel_version,
             openshift_detected=True,
             name=name,
             status=MachineImage.PREPARING,
@@ -289,10 +296,12 @@ class GenerateAwsImageTest(TestCase):
 
         self.assertIsInstance(image, MachineImage)
         self.assertEqual(image.content_object.owner_aws_account_id, account_id)
-        self.assertEqual(image.content_object.platform,
-                         image.content_object.WINDOWS)
+        self.assertEqual(
+            image.content_object.platform, image.content_object.WINDOWS
+        )
         self.assertEqual(image.content_object.ec2_ami_id, ec2_ami_id)
         self.assertTrue(image.rhel_detected)
+        self.assertEqual(image.rhel_version, rhel_version)
         self.assertTrue(image.openshift_detected)
         self.assertEqual(image.name, name)
         self.assertEqual(image.status, MachineImage.PREPARING)
@@ -303,20 +312,24 @@ class GenerateAwsImageTest(TestCase):
 
     def test_generate_aws_image_with_rhel_detected_details_args(self):
         """Assert generation of an AwsMachineImage with RHEL JSON details."""
+        rhel_version = _faker.slug()
         image = helper.generate_aws_image(
             rhel_detected=True,
             rhel_detected_repos=True,
             rhel_detected_certs=True,
             rhel_detected_release_files=True,
             rhel_detected_signed_packages=True,
+            rhel_version=rhel_version,
         )
 
         self.assertIsInstance(image, MachineImage)
+        self.assertIsNotNone(image.inspection_json)
         inspection_data = json.loads(image.inspection_json)
         self.assertTrue(inspection_data['rhel_enabled_repos_found'])
         self.assertTrue(inspection_data['rhel_product_certs_found'])
         self.assertTrue(inspection_data['rhel_release_files_found'])
         self.assertTrue(inspection_data['rhel_signed_packages_found'])
+        self.assertEqual(image.rhel_version, rhel_version)
 
     def test_generate_aws_image_with_is_cloud_access(self):
         """Assert generation of an AwsMachineImage with is_cloud_access."""

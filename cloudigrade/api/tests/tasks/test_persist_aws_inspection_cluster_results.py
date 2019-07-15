@@ -1,6 +1,7 @@
 """Collection of tests for tasks.persist_aws_inspection_cluster_results."""
 import json
 
+import faker
 from django.test import TestCase
 
 from api import tasks
@@ -8,6 +9,8 @@ from api.models import AwsMachineImage
 from api.tests import helper as api_helper
 from util.exceptions import InvalidHoundigradeJsonFormat
 from util.tests import helper as util_helper
+
+_faker = faker.Faker()
 
 
 class PersistAwsInspectionClusterResultsTest(TestCase):
@@ -19,12 +22,14 @@ class PersistAwsInspectionClusterResultsTest(TestCase):
         api_helper.generate_aws_image(
             is_encrypted=False, is_windows=False, ec2_ami_id=ami_id
         )
+        rhel_version = _faker.slug()
         inspection_results = {
             'cloud': 'aws',
             'images': {
                 ami_id: {
                     'rhel_found': True,
                     'rhel_release_files_found': True,
+                    'rhel_version': rhel_version,
                     'drive': {
                         'partition': {
                             'facts': [
@@ -49,6 +54,7 @@ class PersistAwsInspectionClusterResultsTest(TestCase):
             inspection_results['images'][ami_id],
         )
         self.assertTrue(machine_image.rhel)
+        self.assertEqual(machine_image.rhel_version, rhel_version)
         self.assertFalse(machine_image.openshift)
 
     def test_persist_aws_inspection_cluster_results(self):
@@ -63,6 +69,7 @@ class PersistAwsInspectionClusterResultsTest(TestCase):
             'images': {
                 ami_id: {
                     'rhel_found': False,
+                    'rhel_version': None,
                     'drive': {
                         'partition': {
                             'facts': [
@@ -88,6 +95,7 @@ class PersistAwsInspectionClusterResultsTest(TestCase):
             inspection_results['images'][ami_id],
         )
         self.assertFalse(machine_image.rhel)
+        self.assertIsNone(machine_image.rhel_version)
         self.assertFalse(machine_image.openshift)
 
     def test_persist_aws_inspection_cluster_results_our_model_is_gone(self):
@@ -107,6 +115,8 @@ class PersistAwsInspectionClusterResultsTest(TestCase):
         api_helper.generate_aws_image(
             is_encrypted=False, is_windows=False, ec2_ami_id=ami_id
         )
+        rhel_version_a = _faker.slug()
+        rhel_version_b = _faker.slug()
 
         inspection_results = {
             'cloud': 'aws',
@@ -114,8 +124,13 @@ class PersistAwsInspectionClusterResultsTest(TestCase):
                 deleted_ami_id: {
                     'rhel_found': True,
                     'rhel_release_files_found': True,
+                    'rhel_version': rhel_version_b,
                 },
-                ami_id: {'rhel_found': True, 'rhel_release_files_found': True},
+                ami_id: {
+                    'rhel_found': True,
+                    'rhel_release_files_found': True,
+                    'rhel_version': rhel_version_a,
+                },
             },
         }
 
@@ -123,6 +138,7 @@ class PersistAwsInspectionClusterResultsTest(TestCase):
         aws_machine_image = AwsMachineImage.objects.get(ec2_ami_id=ami_id)
         machine_image = aws_machine_image.machine_image.get()
         self.assertTrue(machine_image.rhel)
+        self.assertEqual(machine_image.rhel_version, rhel_version_a)
 
         with self.assertRaises(AwsMachineImage.DoesNotExist):
             AwsMachineImage.objects.get(ec2_ami_id=deleted_ami_id)

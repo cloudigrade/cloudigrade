@@ -242,6 +242,20 @@ class MachineImage(BaseGenericModel):
         return operator.xor(self.rhel_detected, self.rhel_challenged)
 
     @property
+    def rhel_version(self):
+        """
+        Get the detected version of RHEL.
+
+        Returns:
+            str of the detected version or None if not set.
+
+        """
+        if self.inspection_json:
+            image_json = json.loads(self.inspection_json)
+            return image_json.get('rhel_version', None)
+        return None
+
+    @property
     def rhel_enabled_repos_found(self):
         """
         Indicate if the image contains RHEL enabled repos.
