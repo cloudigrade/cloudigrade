@@ -20,8 +20,12 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
         self.account1 = api_helper.generate_aws_account(user=self.user1)
         self.account2 = api_helper.generate_aws_account(user=self.user1)
         self.image1_rhel = api_helper.generate_aws_image(rhel_detected=True)
+        self.image2_rhel = api_helper.generate_aws_image(rhel_detected=True)
         self.instance1 = api_helper.generate_aws_instance(
             self.account1, image=self.image1_rhel
+        )
+        self.instance2 = api_helper.generate_aws_instance(
+            self.account1, image=self.image2_rhel
         )
         self.instance_type1 = 'c5.xlarge'  # 4 vcpu and 8.0 memory
         self.factory = APIRequestFactory()
@@ -49,6 +53,24 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
                 util_helper.utc_dt(2019, 3, 15, 2, 0, 0),
             ),
             image=self.instance1.machine_image,
+            instance_type=self.instance_type1,
+        )
+        api_helper.generate_single_run(
+            self.instance1,
+            (
+                util_helper.utc_dt(2019, 3, 16, 1, 0, 0),
+                util_helper.utc_dt(2019, 3, 16, 2, 0, 0),
+            ),
+            image=self.instance1.machine_image,
+            instance_type=self.instance_type1,
+        )
+        api_helper.generate_single_run(
+            self.instance2,
+            (
+                util_helper.utc_dt(2019, 3, 16, 1, 0, 0),
+                util_helper.utc_dt(2019, 3, 17, 2, 0, 0),
+            ),
+            image=self.instance2.machine_image,
             instance_type=self.instance_type1,
         )
 
@@ -85,14 +107,50 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
         self.assertEqual(first_result['vcpu'], 4)
         self.assertEqual(first_result['memory'], 8.0)
         self.assertEqual(first_result['date'], str(first_date))
+        self.assertEqual(len(first_result['instances_list']), 1)
+        self.assertEqual(
+            first_result['instances_list'],
+            [{'cloud_type': self.instance1.cloud_type,
+              'cloud_instance_id': self.instance1.cloud_instance_id}])
+
+        second_date = datetime.date(2019, 3, 16)
+        second_result = body['data'][1]
+
+        self.assertEqual(second_result['instances'], 2)
+        self.assertEqual(second_result['vcpu'], 8)
+        self.assertEqual(second_result['memory'], 16.0)
+        self.assertEqual(second_result['date'], str(second_date))
+        self.assertEqual(len(second_result['instances_list']), 2)
+        self.assertEqual(
+            second_result['instances_list'][0],
+            {'cloud_type': self.instance1.cloud_type,
+             'cloud_instance_id': self.instance1.cloud_instance_id})
+        self.assertEqual(
+            second_result['instances_list'][1],
+            {'cloud_type': self.instance2.cloud_type,
+             'cloud_instance_id': self.instance2.cloud_instance_id})
+
+        third_date = datetime.date(2019, 3, 17)
+        third_result = body['data'][2]
+
+        self.assertEqual(third_result['instances'], 1)
+        self.assertEqual(third_result['vcpu'], 4)
+        self.assertEqual(third_result['memory'], 8.0)
+        self.assertEqual(third_result['date'], str(third_date))
+        self.assertEqual(len(third_result['instances_list']), 1)
+        self.assertEqual(
+            third_result['instances_list'],
+            [{'cloud_type': self.instance2.cloud_type,
+              'cloud_instance_id': self.instance2.cloud_instance_id}])
 
         # assert that every other day exists with zero reported concurrency.
-        for offset, result in enumerate(body['data'][1:]):
-            this_date = first_date + datetime.timedelta(days=offset + 1)
+        for offset, result in enumerate(body['data'][3:]):
+            this_date = third_date + datetime.timedelta(days=offset + 1)
             self.assertEqual(result['instances'], 0)
             self.assertEqual(result['vcpu'], 0)
             self.assertEqual(result['memory'], 0.0)
             self.assertEqual(result['date'], str(this_date))
+            self.assertEqual(result['instances_list'], [])
 
     def test_bad_start_date_and_end_date_arguments(self):
         """Test with bad date arguments."""

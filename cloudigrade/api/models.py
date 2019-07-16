@@ -610,6 +610,16 @@ class Instance(BaseGenericModel):
         """
         return self.content_object.cloud_type
 
+    @property
+    def cloud_instance_id(self):
+        """
+        Get the external cloud instance id.
+
+        This should be treated like an abstract method, but we can't actually
+        extend ABC here because it conflicts with Django's Meta class.
+        """
+        return self.content_object.cloud_instance_id
+
 
 class AwsInstance(BaseModel):
     """Amazon Web Services EC2 instance model."""
@@ -651,6 +661,11 @@ class AwsInstance(BaseModel):
     def cloud_type(self):
         """Get the cloud type to indicate this account uses AWS."""
         return AWS_PROVIDER_STRING
+
+    @property
+    def cloud_instance_id(self):
+        """Get the cloud instance id."""
+        return self.ec2_instance_id
 
 
 class InstanceEvent(BaseGenericModel):
@@ -842,5 +857,18 @@ class ConcurrentUsage(BaseModel):
         null=True,
     )
     instances = models.IntegerField()
+    _instances_list = models.TextField(db_column='instances_list',
+                                       null=True,
+                                       blank=True)
     memory = models.FloatField()
     vcpu = models.IntegerField()
+
+    @property
+    def instances_list(self):
+        """Get instance list."""
+        return json.loads(self._instances_list)
+
+    @instances_list.setter
+    def instances_list(self, value):
+        """Set instance list."""
+        self._instances_list = json.dumps(value)

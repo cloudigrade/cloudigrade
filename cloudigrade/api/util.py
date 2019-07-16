@@ -248,6 +248,7 @@ def get_max_concurrent_usage(date, user_id, cloud_account_id=None):
             user_id=user_id,
             cloud_account_id=cloud_account_id,
             instances=0,
+            instances_list=[],
             vcpu=0,
             memory=0.0,
         )
@@ -313,9 +314,13 @@ def calculate_max_concurrent_usage(date, user_id, cloud_account_id=None):
     for run in runs:
         if not run.machineimage.rhel:
             continue
-        rhel_on_offs.append((run.start_time, True, run.vcpu, run.memory))
+        rhel_on_offs.append((run.start_time, True, run.vcpu, run.memory,
+                             run.instance.cloud_type,
+                             run.instance.cloud_instance_id))
         if run.end_time:
-            rhel_on_offs.append((run.end_time, False, run.vcpu, run.memory))
+            rhel_on_offs.append((run.end_time, False, run.vcpu, run.memory,
+                                 run.instance.cloud_type,
+                                 run.instance.cloud_instance_id))
 
     rhel_on_offs = sorted(rhel_on_offs, key=lambda r: r[0])
 
@@ -324,7 +329,8 @@ def calculate_max_concurrent_usage(date, user_id, cloud_account_id=None):
     current_instances, max_instances = 0, 0
     current_vcpu, max_vcpu = 0, 0
     current_memory, max_memory = 0.0, 0.0
-    for __, is_start, vcpu, memory in rhel_on_offs:
+    instances_list = []
+    for __, is_start, vcpu, memory, cloud_type, instance_id in rhel_on_offs:
         if is_start:
             current_instances += 1
             current_vcpu += vcpu if vcpu is not None else 0
@@ -336,6 +342,14 @@ def calculate_max_concurrent_usage(date, user_id, cloud_account_id=None):
         max_instances = max(current_instances, max_instances)
         max_vcpu = max(current_vcpu, max_vcpu)
         max_memory = max(current_memory, max_memory)
+        instances_list.append({'cloud_type': cloud_type,
+                              'cloud_instance_id': instance_id})
+
+    # Make sure our instances list is unique
+    instances_list = [
+        i for n,
+        i in enumerate(instances_list)
+        if i not in instances_list[n + 1:]]
 
     ConcurrentUsage.objects.filter(
         date=date, user_id=user_id, cloud_account_id=cloud_account_id
@@ -347,6 +361,7 @@ def calculate_max_concurrent_usage(date, user_id, cloud_account_id=None):
         instances=max_instances,
         vcpu=max_vcpu,
         memory=max_memory,
+        instances_list=instances_list
     )
     return usage
 
