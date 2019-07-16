@@ -27,7 +27,7 @@ class PersistAwsInspectionClusterResultsTest(TestCase):
                     'rhel_release_files_found': True,
                     'drive': {
                         'partition': {
-                            'evidence': [
+                            'facts': [
                                 {
                                     'release_file': '/redhat-release',
                                     'release_file_contents': 'RHEL\n',
@@ -65,7 +65,7 @@ class PersistAwsInspectionClusterResultsTest(TestCase):
                     'rhel_found': False,
                     'drive': {
                         'partition': {
-                            'evidence': [
+                            'facts': [
                                 {
                                     'release_file': '/centos-release',
                                     'release_file_contents': 'CentOS\n',

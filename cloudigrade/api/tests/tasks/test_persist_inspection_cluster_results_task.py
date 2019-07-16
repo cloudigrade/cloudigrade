@@ -43,7 +43,7 @@ class PersistInspectionClusterResultsTaskTest(TestCase):
                     'rhel_found': False,
                     'drive': {
                         'partition': {
-                            'evidence': [
+                            'facts': [
                                 {
                                     'release_file': '/centos-release',
                                     'release_file_contents': 'CentOS\n',
