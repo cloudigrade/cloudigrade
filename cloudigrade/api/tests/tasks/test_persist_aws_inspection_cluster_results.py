@@ -23,6 +23,7 @@ class PersistAwsInspectionClusterResultsTest(TestCase):
             is_encrypted=False, is_windows=False, ec2_ami_id=ami_id
         )
         rhel_version = _faker.slug()
+        syspurpose = {_faker.slug(): _faker.text()}
         inspection_results = {
             'cloud': 'aws',
             'images': {
@@ -30,6 +31,7 @@ class PersistAwsInspectionClusterResultsTest(TestCase):
                     'rhel_found': True,
                     'rhel_release_files_found': True,
                     'rhel_version': rhel_version,
+                    'syspurpose': syspurpose,
                     'drive': {
                         'partition': {
                             'facts': [
@@ -70,6 +72,7 @@ class PersistAwsInspectionClusterResultsTest(TestCase):
                 ami_id: {
                     'rhel_found': False,
                     'rhel_version': None,
+                    'syspurpose': None,
                     'drive': {
                         'partition': {
                             'facts': [
@@ -96,6 +99,7 @@ class PersistAwsInspectionClusterResultsTest(TestCase):
         )
         self.assertFalse(machine_image.rhel)
         self.assertIsNone(machine_image.rhel_version)
+        self.assertIsNone(machine_image.syspurpose)
         self.assertFalse(machine_image.openshift)
 
     def test_persist_aws_inspection_cluster_results_our_model_is_gone(self):

@@ -238,6 +238,7 @@ class MachineImageSerializer(ModelSerializer):
             'rhel_signed_packages_found',
             'rhel_version',
             'status',
+            'syspurpose',
             'updated_at',
             'cloud_type',
             'content_object',
@@ -258,6 +259,7 @@ class MachineImageSerializer(ModelSerializer):
             'rhel_signed_packages_found',
             'rhel_version',
             'status',
+            'syspurpose',
             'updated_at',
             'cloud_type',
         )

@@ -328,6 +328,20 @@ class MachineImage(BaseGenericModel):
             self.rhel_signed_packages_found
 
     @property
+    def syspurpose(self):
+        """
+        Get the detected system purpose (syspurpose).
+
+        Returns:
+            str of the detected system purpose or None if not set.
+
+        """
+        if self.inspection_json:
+            image_json = json.loads(self.inspection_json)
+            return image_json.get('syspurpose', None)
+        return None
+
+    @property
     def openshift(self):
         """
         Indicate if the image contains OpenShift.

@@ -416,6 +416,7 @@ def generate_aws_image(
     rhel_detected_release_files=False,
     rhel_detected_signed_packages=False,
     rhel_version=None,
+    syspurpose=None,
     openshift_detected=False,
     name=None,
     status=MachineImage.INSPECTED,
@@ -444,6 +445,7 @@ def generate_aws_image(
         rhel_detected_signed_packages (bool): Optional indicates if RHEL is
             detected via signed packages.
         rhel_version (str): Optional indicates what RHEL version is detected.
+        syspurpose (dict): Optional indicates what syspurpose is detected.
         openshift_detected (bool): Optional Indicates if OpenShift is detected.
         name (str): Optional AMI name.
         status (str): Optional MachineImage inspection status.
@@ -487,6 +489,7 @@ def generate_aws_image(
                     'rhel_signed_packages_found':
                         rhel_detected_signed_packages,
                     'rhel_version': rhel_version,
+                    'syspurpose': syspurpose,
                 }
             )
     else:

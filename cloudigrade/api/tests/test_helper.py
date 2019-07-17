@@ -266,6 +266,7 @@ class GenerateAwsImageTest(TestCase):
         self.assertFalse(image.rhel_challenged)
         self.assertFalse(image.openshift_challenged)
         self.assertIsNone(image.rhel_version)
+        self.assertIsNone(image.syspurpose)
         self.assertFalse(image.content_object.is_cloud_access)
         self.assertFalse(image.content_object.is_marketplace)
 
@@ -275,6 +276,7 @@ class GenerateAwsImageTest(TestCase):
         ec2_ami_id = util_helper.generate_dummy_image_id()
         name = _faker.name()
         rhel_version = _faker.slug()
+        syspurpose = {_faker.slug(): _faker.text()}
 
         image = helper.generate_aws_image(
             account_id,
@@ -287,6 +289,7 @@ class GenerateAwsImageTest(TestCase):
             rhel_detected_release_files=True,
             rhel_detected_signed_packages=True,
             rhel_version=rhel_version,
+            syspurpose=syspurpose,
             openshift_detected=True,
             name=name,
             status=MachineImage.PREPARING,
@@ -302,6 +305,7 @@ class GenerateAwsImageTest(TestCase):
         self.assertEqual(image.content_object.ec2_ami_id, ec2_ami_id)
         self.assertTrue(image.rhel_detected)
         self.assertEqual(image.rhel_version, rhel_version)
+        self.assertEqual(image.syspurpose, syspurpose)
         self.assertTrue(image.openshift_detected)
         self.assertEqual(image.name, name)
         self.assertEqual(image.status, MachineImage.PREPARING)

@@ -42,6 +42,7 @@ class PersistInspectionClusterResultsTaskTest(TestCase):
                 'ami-12345': {
                     'rhel_found': False,
                     'rhel_version': None,
+                    'syspurpose': None,
                     'drive': {
                         'partition': {
                             'facts': [
