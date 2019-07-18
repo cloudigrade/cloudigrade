@@ -16,8 +16,16 @@ class SourcesListenerTest(TestCase):
     @patch('util.management.commands.listen_to_sources.KafkaConsumer')
     @patch('api.tasks.delete_from_sources_kafka_message')
     @patch('api.tasks.create_from_sources_kafka_message')
-    def test_listen(self, mock_create_task, mock_delete_task, mock_consumer,
-                    mock_logger, mock_pid):
+    @patch('daemon.DaemonContext')
+    def test_listen(
+        self,
+        mock_daemon_context,
+        mock_create_task,
+        mock_delete_task,
+        mock_consumer,
+        mock_logger,
+        mock_pid,
+    ):
         """Assert listener processes messages."""
         message1 = Mock()
         message2 = Mock()
