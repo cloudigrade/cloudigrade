@@ -13,6 +13,9 @@ flake8-quotes = "*"
 isort = "*"
 coverage = "*"
 tblib = "*"
+# Pin pydocstyle<4 until https://gitlab.com/pycqa/flake8-docstrings/issues/36 is resolved.
+pydocstyle = "<4"
+
 
 [packages]
 django-environ = "~=0.4.5"
