@@ -233,7 +233,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'drf_insights_pagination.pagination.InsightsPagination',
     'PAGE_SIZE': 10,
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.TokenAuthentication',
+        'api.authentication.ThreeScaleAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',

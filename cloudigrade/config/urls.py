@@ -2,7 +2,8 @@
 from django.conf.urls import url
 from django.contrib import admin
 from django.urls import include, path
-from rest_framework import routers
+from rest_framework import renderers, routers
+from rest_framework.schemas import get_schema_view
 
 from api import views
 
@@ -22,5 +23,9 @@ urlpatterns = [
     url(r'^v2/', include(router.urls)),
     url(r'^api-auth/', include('rest_framework.urls')),
     url(r'^healthz/', include('health_check.urls')),
+    path('v2/openapi.json', get_schema_view(
+        title='Cloudigrade',
+        renderer_classes=[renderers.JSONOpenAPIRenderer, ],
+    ), name='openapi-schema'),
     path('admin/', admin.site.urls),
 ]

@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "1b22a6878028595635821b6eedf605c73f39ac0eb462d0a84447e8f5c11f2bd4"
+            "sha256": "55df4483f2044cd6a57bd827cdfc72e43d341759d335f8b36e27c959ba3348e0"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -31,19 +31,19 @@
         },
         "boto3": {
             "hashes": [
-                "sha256:34a8ddb7247316be6ea94c7eeee41212312d250d99bf668fcd6748629b578622",
-                "sha256:71f3554cc69fa20be06cf20d6c9e0d8095d7c40695b48618676c3cd9a5ba0783"
+                "sha256:04a32520a546ceb4bd97b4dea87d7c079b01c6ec55280bce86ca12fc80ac7e32",
+                "sha256:24aa9be2a87bb0a7ac1dff2dc5471dde837fcb96ffc30876d688971171889301"
             ],
             "index": "pypi",
-            "version": "==1.9.189"
+            "version": "==1.9.192"
         },
         "botocore": {
             "hashes": [
-                "sha256:4febbf206d1dc8b8299aa211d8e382d5bf3f22097855b9f98d5e8c401ef8192b",
-                "sha256:b62ab3e4e98e075fc9e8e8fd4e8f5b92ebf311a6dc9f7578650938c7bc94e592"
+                "sha256:ecf8d872baec661e292e01d45f666fdc4a4eca716bbc6a7876223899a1a9d9d8",
+                "sha256:fbb621329cb41f3fcaa996ab938837ad78a4db6ad1d1a8ef48ec59a56f379049"
             ],
             "index": "pypi",
-            "version": "==1.12.189"
+            "version": "==1.12.192"
         },
         "celery": {
             "hashes": [
@@ -69,11 +69,11 @@
         },
         "django": {
             "hashes": [
-                "sha256:65e2a548a52fca560cdd4e35f4fa1a79140f405af48950e59702a37e4227e958",
-                "sha256:d4244e2c9653e1349b37ab0cdf108607ba9d1e41f71d0711ac71360e4026ce94"
+                "sha256:4d23f61b26892bac785f07401bc38cbf8fa4cec993f400e9cd9ddf28fd51c0ea",
+                "sha256:6e974d4b57e3b29e4882b244d40171d6a75202ab8d2402b8e8adbd182e25cf0c"
             ],
             "index": "pypi",
-            "version": "==2.1.10"
+            "version": "==2.2.3"
         },
         "django-celery-beat": {
             "hashes": [
@@ -131,11 +131,11 @@
         },
         "djangorestframework": {
             "hashes": [
-                "sha256:376f4b50340a46c15ae15ddd0c853085f4e66058f97e4dbe7d43ed62f5e60651",
-                "sha256:c12869cfd83c33d579b17b3cb28a2ae7322a53c3ce85580c2a2ebe4e3f56c4fb"
+                "sha256:1ca4a5599a5ec31f3d6238a687fcc1dd4c41b1d90edab9ad398fcbf87872b7ba",
+                "sha256:c3c5edfdbc5dd33f9121bb84305bfd603d2c791f20cff9782772f44a7684a4e4"
             ],
             "index": "pypi",
-            "version": "==3.9.4"
+            "version": "==3.10.1"
         },
         "docutils": {
             "hashes": [
@@ -291,13 +291,9 @@
             "index": "pypi",
             "version": "==2.22.0"
         },
-        "rest-framework-generic-relations": {
-            "hashes": [
-                "sha256:3fbcec76623ff0571b6da2c3fd93af0f7971b0a61b71fa79e2422ee1784a7121",
-                "sha256:4ff1120aad417eb3e4a90bd719b5aa0b6704338a62ce08a8bb09fec923f31872"
-            ],
-            "index": "pypi",
-            "version": "==1.2.1"
+        "rest-framework-generic-relations-1-2-1": {
+            "git": "https://gitlab.com/xyzzy.sh/rest-framework-generic-relations.git",
+            "ref": "7fbef0cdbc3a00c3b35bb908e982cde071005810"
         },
         "s3transfer": {
             "hashes": [
@@ -321,6 +317,13 @@
             ],
             "version": "==1.12.0"
         },
+        "sqlparse": {
+            "hashes": [
+                "sha256:40afe6b8d4b1117e7dff5504d7a8ce07d9a1b15aeeade8a2d10f130a834f8177",
+                "sha256:7c3dca29c022744e95b547e867cee89f4fce4373f3549ccd8797d8eb52cdb873"
+            ],
+            "version": "==0.3.0"
+        },
         "text-unidecode": {
             "hashes": [
                 "sha256:5a1375bb2ba7968740508ae38d92e1f889a0832913cb1c447d5e2046061a396d",
@@ -335,6 +338,15 @@
             ],
             "index": "pypi",
             "version": "==4.31.1"
+        },
+        "uritemplate": {
+            "hashes": [
+                "sha256:01c69f4fe8ed503b2951bef85d996a9d22434d2431584b5b107b2981ff416fbd",
+                "sha256:1b9c467a940ce9fb9f50df819e8ddd14696f89b9a8cc87ac77952ba416e0a8fd",
+                "sha256:c02643cebe23fc8adb5e6becffe201185bf06c40bda5c0b4028a93f1527d011d"
+            ],
+            "index": "pypi",
+            "version": "==3.0.0"
         },
         "urllib3": {
             "hashes": [
