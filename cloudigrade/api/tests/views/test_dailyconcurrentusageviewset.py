@@ -19,7 +19,11 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
         self.superuser = util_helper.generate_test_user(is_superuser=True)
         self.account1 = api_helper.generate_aws_account(user=self.user1)
         self.account2 = api_helper.generate_aws_account(user=self.user1)
-        self.image1_rhel = api_helper.generate_aws_image(rhel_detected=True)
+        self.image1_rhel = api_helper.generate_aws_image(
+            rhel_detected=True,
+            rhel_version='7.7',
+            syspurpose={'role': 'potato'},
+        )
         self.image2_rhel = api_helper.generate_aws_image(rhel_detected=True)
         self.instance1 = api_helper.generate_aws_instance(
             self.account1, image=self.image1_rhel
@@ -110,8 +114,15 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
         self.assertEqual(len(first_result['instances_list']), 1)
         self.assertEqual(
             first_result['instances_list'],
-            [{'cloud_type': self.instance1.cloud_type,
-              'cloud_instance_id': self.instance1.cloud_instance_id}])
+            [
+                {
+                    'cloud_type': self.instance1.cloud_type,
+                    'cloud_instance_id': self.instance1.cloud_instance_id,
+                    'rhel_version': self.image1_rhel.rhel_version,
+                    'syspurpose': self.image1_rhel.syspurpose,
+                }
+            ],
+        )
 
         second_date = datetime.date(2019, 3, 16)
         second_result = body['data'][1]
@@ -123,12 +134,22 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
         self.assertEqual(len(second_result['instances_list']), 2)
         self.assertEqual(
             second_result['instances_list'][0],
-            {'cloud_type': self.instance1.cloud_type,
-             'cloud_instance_id': self.instance1.cloud_instance_id})
+            {
+                'cloud_type': self.instance1.cloud_type,
+                'cloud_instance_id': self.instance1.cloud_instance_id,
+                'rhel_version': self.image1_rhel.rhel_version,
+                'syspurpose': self.image1_rhel.syspurpose,
+            },
+        )
         self.assertEqual(
             second_result['instances_list'][1],
-            {'cloud_type': self.instance2.cloud_type,
-             'cloud_instance_id': self.instance2.cloud_instance_id})
+            {
+                'cloud_type': self.instance2.cloud_type,
+                'cloud_instance_id': self.instance2.cloud_instance_id,
+                'rhel_version': self.image2_rhel.rhel_version,
+                'syspurpose': self.image2_rhel.syspurpose,
+            },
+        )
 
         third_date = datetime.date(2019, 3, 17)
         third_result = body['data'][2]
@@ -140,8 +161,15 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
         self.assertEqual(len(third_result['instances_list']), 1)
         self.assertEqual(
             third_result['instances_list'],
-            [{'cloud_type': self.instance2.cloud_type,
-              'cloud_instance_id': self.instance2.cloud_instance_id}])
+            [
+                {
+                    'cloud_type': self.instance2.cloud_type,
+                    'cloud_instance_id': self.instance2.cloud_instance_id,
+                    'rhel_version': self.image2_rhel.rhel_version,
+                    'syspurpose': self.image2_rhel.syspurpose,
+                }
+            ],
+        )
 
         # assert that every other day exists with zero reported concurrency.
         for offset, result in enumerate(body['data'][3:]):

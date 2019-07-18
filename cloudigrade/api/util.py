@@ -314,13 +314,32 @@ def calculate_max_concurrent_usage(date, user_id, cloud_account_id=None):
     for run in runs:
         if not run.machineimage.rhel:
             continue
-        rhel_on_offs.append((run.start_time, True, run.vcpu, run.memory,
-                             run.instance.cloud_type,
-                             run.instance.cloud_instance_id))
+        rhel_on_offs.append(
+            (
+                run.start_time,
+                True,
+                run.vcpu,
+                run.memory,
+                run.instance.cloud_type,
+                run.instance.cloud_instance_id,
+                run.instance.machine_image.rhel_version,
+                run.instance.machine_image.syspurpose,
+            )
+        )
+
         if run.end_time:
-            rhel_on_offs.append((run.end_time, False, run.vcpu, run.memory,
-                                 run.instance.cloud_type,
-                                 run.instance.cloud_instance_id))
+            rhel_on_offs.append(
+                (
+                    run.end_time,
+                    False,
+                    run.vcpu,
+                    run.memory,
+                    run.instance.cloud_type,
+                    run.instance.cloud_instance_id,
+                    run.instance.machine_image.rhel_version,
+                    run.instance.machine_image.syspurpose,
+                )
+            )
 
     rhel_on_offs = sorted(rhel_on_offs, key=lambda r: r[0])
 
@@ -330,7 +349,16 @@ def calculate_max_concurrent_usage(date, user_id, cloud_account_id=None):
     current_vcpu, max_vcpu = 0, 0
     current_memory, max_memory = 0.0, 0.0
     instances_list = []
-    for __, is_start, vcpu, memory, cloud_type, instance_id in rhel_on_offs:
+    for (
+        __,
+        is_start,
+        vcpu,
+        memory,
+        cloud_type,
+        instance_id,
+        rhel_version,
+        syspurpose,
+    ) in rhel_on_offs:
         if is_start:
             current_instances += 1
             current_vcpu += vcpu if vcpu is not None else 0
@@ -342,8 +370,14 @@ def calculate_max_concurrent_usage(date, user_id, cloud_account_id=None):
         max_instances = max(current_instances, max_instances)
         max_vcpu = max(current_vcpu, max_vcpu)
         max_memory = max(current_memory, max_memory)
-        instances_list.append({'cloud_type': cloud_type,
-                              'cloud_instance_id': instance_id})
+        instances_list.append(
+            {
+                'cloud_type': cloud_type,
+                'cloud_instance_id': instance_id,
+                'rhel_version': rhel_version,
+                'syspurpose': syspurpose,
+            }
+        )
 
     # Make sure our instances list is unique
     instances_list = [
