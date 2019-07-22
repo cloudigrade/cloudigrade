@@ -435,8 +435,6 @@ def generate_test_user(account_number=None, password=None, is_superuser=False):
     """
     if not account_number:
         account_number = faker.Faker().random_int(min=100000, max=999999)
-    if not password:
-        password = str(uuid.uuid4())
     user = User.objects.create_user(
         username=account_number,
         password=password,
