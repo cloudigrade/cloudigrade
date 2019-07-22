@@ -35,6 +35,7 @@ from api.models import (AwsCloudAccount, AwsEC2InstanceDefinition, AwsInstance,
                         MachineImage, Run)
 from api.util import (
     add_messages_to_queue,
+    calculate_max_concurrent_usage_from_runs,
     create_aws_machine_image_copy,
     create_initial_aws_instance_events,
     create_new_machine_images,
@@ -328,8 +329,22 @@ def initial_aws_describe_instances(account_id):
 
 
 @shared_task
+@transaction.atomic
 def process_instance_event(event):
-    """Process instance events that have been saved during log analysis."""
+    """
+    Process instance events that have been saved during log analysis.
+
+    Note:
+        When processing power_on type events, this triggers a recalculation of
+        ConcurrentUsage objects. If the event is at some point in the
+        not-too-recent past, this may take a while as every day since the event
+        will get recalculated and saved. We do not anticipate this being a real
+        problem in practice, but this has the potential to slow down unit test
+        execution over time since their occurred_at values are often static and
+        will recede father into the past from "today", resulting in more days
+        needing to recalculate. This effect could be mitigated in tests by
+        patching parts of the datetime module that are used to find "today".
+    """
     after_run = Q(start_time__gt=event.occurred_at)
     during_run = Q(start_time__lte=event.occurred_at,
                    end_time__gt=event.occurred_at)
@@ -342,6 +357,7 @@ def process_instance_event(event):
         recalculate_runs(event)
     elif event.event_type == InstanceEvent.TYPE.power_on:
         normalized_runs = normalize_runs([event])
+        runs = []
         for index, normalized_run in enumerate(normalized_runs):
             logger.info(
                 'Processing run {} of {}'.format(index + 1,
@@ -357,6 +373,8 @@ def process_instance_event(event):
                 vcpu=normalized_run.instance_vcpu,
             )
             run.save()
+            runs.append(run)
+        calculate_max_concurrent_usage_from_runs(runs)
 
 
 @retriable_shared_task  # noqa: C901
