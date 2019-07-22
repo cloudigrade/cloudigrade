@@ -9,6 +9,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models, transaction
+from django.db.models import Q
 from django.utils.translation import gettext as _
 
 from api import AWS_PROVIDER_STRING
@@ -917,6 +918,30 @@ class Run(BaseModel):
         blank=True,
         null=True
     )
+
+    def save(self, *args, **kwargs):
+        """Save this run and delete any related ConcurrentUsage objects."""
+        date_filter = Q(date__gte=self.start_time.date())
+        if self.end_time:
+            date_filter &= Q(date__lte=self.end_time.date())
+        concurrent_usages = ConcurrentUsage.objects.filter(
+            date_filter,
+            user_id=self.instance.cloud_account.user_id,
+        )
+        concurrent_usages.delete()
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        """Delete this run and any related ConcurrentUsage objects."""
+        date_filter = Q(date__gte=self.start_time.date())
+        if self.end_time:
+            date_filter &= Q(date__lte=self.end_time.date())
+        concurrent_usages = ConcurrentUsage.objects.filter(
+            date_filter,
+            user_id=self.instance.cloud_account.user_id,
+        )
+        concurrent_usages.delete()
+        return super().delete(*args, **kwargs)
 
 
 class MachineImageInspectionStart(BaseModel):
