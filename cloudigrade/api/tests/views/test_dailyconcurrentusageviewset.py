@@ -36,6 +36,7 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
         self.factory = APIRequestFactory()
         self.faker = faker.Faker()
 
+    @util_helper.clouditardis(util_helper.utc_dt(2019, 4, 17, 0, 0, 0))
     def test_daily_pagination(self):
         """
         Test proper pagination handling of days from the custom queryset.

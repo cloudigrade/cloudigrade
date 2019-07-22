@@ -31,6 +31,7 @@ class GetMaxConcurrentUsageTest(TestCase):
         self.assertEqual(results.vcpu, vcpu)
         self.assertEqual(results.memory, memory)
 
+    @util_helper.clouditardis(util_helper.utc_dt(2019, 5, 3, 0, 0, 0))
     def test_single_rhel_run_within_day(self):
         """Test with a single RHEL instance run within the day."""
         rhel_instance = api_helper.generate_aws_instance(
@@ -60,6 +61,7 @@ class GetMaxConcurrentUsageTest(TestCase):
             expected_memory,
         )
 
+    @util_helper.clouditardis(util_helper.utc_dt(2019, 4, 24, 0, 0, 0))
     def test_get_usage_create_run_get_usage_again(self):
         """
         Test getting usage before and after creating a run.
@@ -72,13 +74,13 @@ class GetMaxConcurrentUsageTest(TestCase):
         rhel_instance = api_helper.generate_aws_instance(
             self.user1account1, image=self.image_rhel
         )
-        request_date = datetime.date(2019, 5, 1)
+        request_date = datetime.date(2019, 4, 22)
         expected_date = request_date
         results = get_max_concurrent_usage(request_date, user_id=self.user1.id)
         self.assertMaxConcurrentUsage(results, expected_date, 0, 0, 0.0)
 
-        # Simulate receiving a CloudTrail event for instance power-on.
-        occurred_at = util_helper.utc_dt(2015, 4, 20, 0, 0, 0)
+        # Simulate receiving a CloudTrail event for past instance power-on.
+        occurred_at = util_helper.utc_dt(2019, 4, 20, 0, 0, 0)
         instance_event = api_helper.generate_single_aws_instance_event(
             instance=rhel_instance,
             occurred_at=occurred_at,

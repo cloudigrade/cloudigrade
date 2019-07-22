@@ -8,6 +8,7 @@ from api import tasks
 from api.models import MachineImage
 from api.tests import helper as account_helper
 from util.misc import get_now
+from util.tests.helper import clouditardis
 
 
 class InspectPendingImagesTest(TestCase):
@@ -24,8 +25,7 @@ class InspectPendingImagesTest(TestCase):
         """
         real_now = get_now()
         yesterday = real_now - datetime.timedelta(days=1)
-        with patch('django.utils.timezone.now') as mock_now:
-            mock_now.return_value = yesterday
+        with clouditardis(yesterday):
             account = account_helper.generate_aws_account()
             image_old_inspected = account_helper.generate_aws_image()
             image_old_pending = account_helper.generate_aws_image(
@@ -47,8 +47,7 @@ class InspectPendingImagesTest(TestCase):
             )
 
         one_hour_ago = real_now - datetime.timedelta(seconds=60 * 60)
-        with patch('django.utils.timezone.now') as mock_now:
-            mock_now.return_value = one_hour_ago
+        with clouditardis(one_hour_ago):
             image_new_inspected = account_helper.generate_aws_image()
             image_new_pending = account_helper.generate_aws_image(
                 status=MachineImage.PENDING

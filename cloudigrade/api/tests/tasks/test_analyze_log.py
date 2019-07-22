@@ -36,6 +36,7 @@ class AnalyzeLogTest(TestCase):
         )
         helper.generate_aws_ec2_definitions()
 
+    @util_helper.clouditardis(util_helper.utc_dt(2018, 1, 5, 0, 0, 0))
     @patch('api.tasks.start_image_inspection')
     @patch('api.tasks.aws.get_session')
     @patch('api.tasks.aws.delete_messages_from_queue')
@@ -230,6 +231,7 @@ class AnalyzeLogTest(TestCase):
             image.machine_image.get().status, MachineImage.PENDING
         )
 
+    @util_helper.clouditardis(util_helper.utc_dt(2018, 1, 3, 0, 0, 0))
     @patch('api.tasks.start_image_inspection')
     @patch('api.tasks.aws.get_session')
     @patch('api.tasks.aws.delete_messages_from_queue')
@@ -348,6 +350,7 @@ class AnalyzeLogTest(TestCase):
         )
         self.assertEqual(image.platform, image.WINDOWS)
 
+    @util_helper.clouditardis(util_helper.utc_dt(2018, 1, 3, 0, 0, 0))
     @patch('api.tasks.start_image_inspection')
     @patch('api.tasks.aws.get_session')
     @patch('api.tasks.aws.delete_messages_from_queue')
@@ -444,6 +447,7 @@ class AnalyzeLogTest(TestCase):
         self.assertEqual(runs[0].start_time, occurred_at_run)
         self.assertIsNone(runs[0].end_time)
 
+    @util_helper.clouditardis(util_helper.utc_dt(2018, 1, 3, 0, 0, 0))
     @patch('api.tasks.start_image_inspection')
     @patch('api.tasks.aws.get_session')
     @patch('api.tasks.aws.delete_messages_from_queue')
@@ -558,6 +562,7 @@ class AnalyzeLogTest(TestCase):
         self.assertEqual(runs[0].start_time, occurred_at_start)
         self.assertIsNone(runs[0].end_time)
 
+    @util_helper.clouditardis(util_helper.utc_dt(2018, 1, 3, 0, 0, 0))
     @patch('api.tasks.start_image_inspection')
     @patch('api.tasks.aws.get_session')
     @patch('api.tasks.aws.delete_messages_from_queue')

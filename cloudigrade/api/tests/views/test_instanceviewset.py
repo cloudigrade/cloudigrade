@@ -194,6 +194,7 @@ class InstanceViewSetTest(TestCase):
         response = self.get_instance_list_response(self.superuser, params)
         self.assertEqual(response.status_code, 400)
 
+    @util_helper.clouditardis(util_helper.utc_dt(2019, 4, 20, 0, 0, 0))
     def test_list_instances_as_superuser_with_running_since_filter(self):
         """
         Assert that superuser can see all running instances.
@@ -203,68 +204,77 @@ class InstanceViewSetTest(TestCase):
         instance3 (user2/account3) started in 2019 and is still running.
         instance4 (user2/account4) has never run.
 
-        Requesting since mid 2016 should return no instances.
-        Requesting since mid 2017 should return instance1.
-        Requesting since mid 2018 should return instance1.
-        Requesting since mid 2019 should return instance1 and instance3.
+        Requesting since mid 2019-01 should return no instances.
+        Requesting since mid 2019-02 should return instance1.
+        Requesting since mid 2019-03 should return instance1.
+        Requesting since mid 2019-04 should return instance1 and instance3.
         """
         # Generate activity for instances
         api_helper.generate_single_run(
             self.instance1,
-            (util_helper.utc_dt(2017, 1, 1, 0, 0, 0), None),
+            (util_helper.utc_dt(2019, 2, 1, 0, 0, 0), None),
         )
 
         api_helper.generate_single_run(
             self.instance2,
             (
-                util_helper.utc_dt(2018, 1, 1, 0, 0, 0),
-                util_helper.utc_dt(2018, 1, 2, 0, 0, 0),
+                util_helper.utc_dt(2019, 3, 1, 0, 0, 0),
+                util_helper.utc_dt(2019, 3, 2, 0, 0, 0),
             ),
         )
 
         api_helper.generate_single_run(
             self.instance3,
-            (util_helper.utc_dt(2019, 1, 1, 0, 0, 0), None),
+            (util_helper.utc_dt(2019, 4, 1, 0, 0, 0), None),
         )
 
-        mid_2016 = util_helper.utc_dt(2016, 6, 1, 0, 0, 0)
-        mid_2017 = util_helper.utc_dt(2017, 6, 1, 0, 0, 0)
-        mid_2018 = util_helper.utc_dt(2018, 6, 1, 0, 0, 0)
-        mid_2019 = util_helper.utc_dt(2019, 6, 1, 0, 0, 0)
-        expected_instances_since_mid_2016 = set()
-        expected_instances_since_mid_2017 = {self.instance1.id}
-        expected_instances_since_mid_2018 = {self.instance1.id}
-        expected_instances_since_mid_2019 = {
+        mid_2019_01 = util_helper.utc_dt(2019, 1, 15, 0, 0, 0)
+        mid_2019_02 = util_helper.utc_dt(2019, 2, 15, 0, 0, 0)
+        mid_2019_03 = util_helper.utc_dt(2019, 3, 15, 0, 0, 0)
+        mid_2019_04 = util_helper.utc_dt(2019, 4, 15, 0, 0, 0)
+        expected_instances_since_mid_2019_01 = set()
+        expected_instances_since_mid_2019_02 = {self.instance1.id}
+        expected_instances_since_mid_2019_03 = {self.instance1.id}
+        expected_instances_since_mid_2019_04 = {
             self.instance1.id, self.instance3.id
         }
 
-        params = {'running_since': mid_2016}
+        params = {'running_since': mid_2019_01}
         response = self.get_instance_list_response(self.superuser, params)
         actual_instances = self.get_instance_ids_from_list_response(response)
-        self.assertEqual(expected_instances_since_mid_2016, actual_instances)
+        self.assertEqual(
+            expected_instances_since_mid_2019_01, actual_instances
+        )
 
-        params = {'running_since': mid_2017}
+        params = {'running_since': mid_2019_02}
         response = self.get_instance_list_response(self.superuser, params)
         actual_instances = self.get_instance_ids_from_list_response(response)
-        self.assertEqual(expected_instances_since_mid_2017, actual_instances)
+        self.assertEqual(
+            expected_instances_since_mid_2019_02, actual_instances
+        )
 
-        params = {'running_since': mid_2018}
+        params = {'running_since': mid_2019_03}
         response = self.get_instance_list_response(self.superuser, params)
         actual_instances = self.get_instance_ids_from_list_response(response)
-        self.assertEqual(expected_instances_since_mid_2018, actual_instances)
+        self.assertEqual(
+            expected_instances_since_mid_2019_03, actual_instances
+        )
 
-        params = {'running_since': mid_2019}
+        params = {'running_since': mid_2019_04}
         response = self.get_instance_list_response(self.superuser, params)
         actual_instances = self.get_instance_ids_from_list_response(response)
-        self.assertEqual(expected_instances_since_mid_2019, actual_instances)
+        self.assertEqual(
+            expected_instances_since_mid_2019_04, actual_instances
+        )
 
+    @util_helper.clouditardis(util_helper.utc_dt(2019, 4, 20, 0, 0, 0))
     def test_list_instances_as_user1_with_running_since_filter(self):
         """
         Assert that user1 can only see his/her running instances.
 
-        instance1 (user1/account1) started in 2017 and is still running.
-        instance2 (user1/account2) started in 2018 and has stopped running.
-        instance3 (user2/account3) started in 2019 and is still running.
+        instance1 (user1/account1) started in 2019-02 and is still running.
+        instance2 (user1/account2) started in 2019-03 and has stopped running.
+        instance3 (user2/account3) started in 2019-04 and is still running.
         instance4 (user2/account4) has never run.
 
         Requesting since mid 2016 as user1 should return no instances.
@@ -275,47 +285,55 @@ class InstanceViewSetTest(TestCase):
         # Generate activity for instances
         api_helper.generate_single_run(
             self.instance1,
-            (util_helper.utc_dt(2017, 1, 1, 0, 0, 0), None),
+            (util_helper.utc_dt(2019, 2, 2, 0, 0, 0), None),
         )
 
         api_helper.generate_single_run(
             self.instance2,
             (
-                util_helper.utc_dt(2018, 1, 1, 0, 0, 0),
-                util_helper.utc_dt(2018, 1, 2, 0, 0, 0),
+                util_helper.utc_dt(2019, 3, 1, 0, 0, 0),
+                util_helper.utc_dt(2019, 3, 2, 0, 0, 0),
             ),
         )
 
         api_helper.generate_single_run(
             self.instance3,
-            (util_helper.utc_dt(2019, 1, 1, 0, 0, 0), None),
+            (util_helper.utc_dt(2019, 4, 1, 0, 0, 0), None),
         )
 
-        mid_2016 = util_helper.utc_dt(2016, 6, 1, 0, 0, 0)
-        mid_2017 = util_helper.utc_dt(2017, 6, 1, 0, 0, 0)
-        mid_2018 = util_helper.utc_dt(2018, 6, 1, 0, 0, 0)
-        mid_2019 = util_helper.utc_dt(2019, 6, 1, 0, 0, 0)
-        expected_instances_since_mid_2016 = set()
-        expected_instances_since_mid_2017 = {self.instance1.id}
-        expected_instances_since_mid_2018 = {self.instance1.id}
-        expected_instances_since_mid_2019 = {self.instance1.id}
+        mid_2019_01 = util_helper.utc_dt(2019, 1, 15, 0, 0, 0)
+        mid_2019_02 = util_helper.utc_dt(2019, 2, 15, 0, 0, 0)
+        mid_2019_03 = util_helper.utc_dt(2019, 3, 15, 0, 0, 0)
+        mid_2019_04 = util_helper.utc_dt(2019, 4, 15, 0, 0, 0)
+        expected_instances_since_mid_2019_01 = set()
+        expected_instances_since_mid_2019_02 = {self.instance1.id}
+        expected_instances_since_mid_2019_03 = {self.instance1.id}
+        expected_instances_since_mid_2019_04 = {self.instance1.id}
 
-        params = {'running_since': mid_2016}
+        params = {'running_since': mid_2019_01}
         response = self.get_instance_list_response(self.user1, params)
         actual_instances = self.get_instance_ids_from_list_response(response)
-        self.assertEqual(expected_instances_since_mid_2016, actual_instances)
+        self.assertEqual(
+            expected_instances_since_mid_2019_01, actual_instances
+        )
 
-        params = {'running_since': mid_2017}
+        params = {'running_since': mid_2019_02}
         response = self.get_instance_list_response(self.user1, params)
         actual_instances = self.get_instance_ids_from_list_response(response)
-        self.assertEqual(expected_instances_since_mid_2017, actual_instances)
+        self.assertEqual(
+            expected_instances_since_mid_2019_02, actual_instances
+        )
 
-        params = {'running_since': mid_2018}
+        params = {'running_since': mid_2019_03}
         response = self.get_instance_list_response(self.user1, params)
         actual_instances = self.get_instance_ids_from_list_response(response)
-        self.assertEqual(expected_instances_since_mid_2018, actual_instances)
+        self.assertEqual(
+            expected_instances_since_mid_2019_03, actual_instances
+        )
 
-        params = {'running_since': mid_2019}
+        params = {'running_since': mid_2019_04}
         response = self.get_instance_list_response(self.user1, params)
         actual_instances = self.get_instance_ids_from_list_response(response)
-        self.assertEqual(expected_instances_since_mid_2019, actual_instances)
+        self.assertEqual(
+            expected_instances_since_mid_2019_04, actual_instances
+        )

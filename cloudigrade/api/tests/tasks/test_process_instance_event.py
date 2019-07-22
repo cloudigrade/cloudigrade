@@ -26,6 +26,7 @@ class ProcessInstanceEventTest(TestCase):
         )
         api_helper.generate_aws_ec2_definitions()
 
+    @util_helper.clouditardis(util_helper.utc_dt(2018, 1, 15, 0, 0, 0))
     def test_process_instance_event_recalculate_runs(self):
         """
         Test that we recalculate runs when new instance events occur.
@@ -65,6 +66,7 @@ class ProcessInstanceEventTest(TestCase):
         self.assertEqual(occurred_at, runs[0].end_time)
 
     @patch('api.tasks.recalculate_runs')
+    @util_helper.clouditardis(util_helper.utc_dt(2018, 1, 12, 0, 0, 0))
     def test_process_instance_event_new_run(self, mock_recalculate_runs):
         """
         Test new run is created if it occurred after all runs and is power on.
@@ -102,6 +104,7 @@ class ProcessInstanceEventTest(TestCase):
         # Since we're adding a new run, recalculate_runs shouldn't be called
         mock_recalculate_runs.assert_not_called()
 
+    @util_helper.clouditardis(util_helper.utc_dt(2018, 1, 10, 0, 0, 0))
     def test_process_instance_event_duplicate_start(self):
         """
         Test that recalculate works when a duplicate start event is introduced.
@@ -165,6 +168,7 @@ class ProcessInstanceEventTest(TestCase):
         self.assertEqual(first_start, runs[0].start_time)
 
     @patch('api.tasks.recalculate_runs')
+    @util_helper.clouditardis(util_helper.utc_dt(2018, 1, 12, 0, 0, 0))
     def test_process_instance_event_power_off(self, mock_recalculate_runs):
         """
         Test new run is not if a power off event occurs after all runs.
