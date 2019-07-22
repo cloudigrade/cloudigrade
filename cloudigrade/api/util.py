@@ -12,6 +12,7 @@ import jsonpickle
 from botocore.exceptions import ClientError
 from dateutil import tz
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from django.db.models import Q
@@ -289,8 +290,32 @@ def calculate_max_concurrent_usage(date, user_id, cloud_account_id=None):
     """
     queryset = Run.objects.all()
     if user_id:
+        if not User.objects.filter(id=user_id).exists():
+            # Return empty stub object if user doesn't exist.
+            usage = ConcurrentUsage(
+                date=date,
+                user_id=user_id,
+                cloud_account_id=cloud_account_id,
+                instances=0,
+                vcpu=0,
+                memory=0.0,
+                instances_list=[]
+            )
+            return usage
         queryset = queryset.filter(instance__cloud_account__user__id=user_id)
     if cloud_account_id:
+        if not CloudAccount.objects.filter(id=cloud_account_id).exists():
+            # Return empty stub object if account doesn't exist.
+            usage = ConcurrentUsage(
+                date=date,
+                user_id=user_id,
+                cloud_account_id=cloud_account_id,
+                instances=0,
+                vcpu=0,
+                memory=0.0,
+                instances_list=[]
+            )
+            return usage
         queryset = queryset.filter(
             instance__cloud_account__id=cloud_account_id
         )

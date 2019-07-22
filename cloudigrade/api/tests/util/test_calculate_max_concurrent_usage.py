@@ -433,3 +433,26 @@ class CalculateMaxConcurrentUsageTest(TestCase):
             expected_vcpu,
             expected_memory,
         )
+
+    def test_when_user_id_does_not_exist(self):
+        """Test when the requested user ID does not exist."""
+        request_date = datetime.date(2019, 5, 1)
+        user_id = -1  # negative id should never exit
+        expected_date = request_date
+
+        results = calculate_max_concurrent_usage(
+            request_date, user_id=user_id
+        )
+        self.assertMaxConcurrentUsage(results, expected_date, 0, 0, 0.0)
+
+    def test_when_account_id_does_not_exist(self):
+        """Test when the requested account ID does not exist."""
+        request_date = datetime.date(2019, 5, 1)
+        user_id = self.user1.id
+        cloud_account_id = -1  # negative id should never exit
+        expected_date = request_date
+
+        results = calculate_max_concurrent_usage(
+            request_date, user_id=user_id, cloud_account_id=cloud_account_id
+        )
+        self.assertMaxConcurrentUsage(results, expected_date, 0, 0, 0.0)
