@@ -5,8 +5,9 @@ import json
 import random
 import string
 import uuid
+from contextlib import contextmanager
 from decimal import Decimal
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import faker
 from dateutil import tz
@@ -505,3 +506,28 @@ def generate_authentication_create_message_value(
         'tenant': account_number, 'username': username, 'id': authentication_id
     }
     return message
+
+
+@contextmanager
+def clouditardis(destination):
+    """
+    Context manager and decorator for time-traveling.
+
+    If my calculations are correct, when this baby hits 88 miles per hour,
+    you're going to see some serious tests.
+
+    This time machine only works if the code you're calling is exclusively
+    using `get_now` or `get_today` to find the current time or day. If your
+    code is not using either of those functions to get the current time or day,
+    please consider refactoring your code to use them!
+
+    Args:
+        destination (datetime.datetime): the destination datetime
+    """
+    with patch('util.misc.get_now') as mock_get_now, patch(
+        'util.misc.get_today'
+    ) as mock_get_today, patch('django.utils.timezone.now') as mock_django_now:
+        mock_get_now.return_value = destination
+        mock_get_today.return_value = destination.date()
+        mock_django_now.return_value = destination
+        yield

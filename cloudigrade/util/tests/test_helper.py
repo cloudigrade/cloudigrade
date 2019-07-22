@@ -202,3 +202,18 @@ class UtilHelperTest(TestCase):
         original_user.refresh_from_db()
         self.assertEqual(user, original_user)
         self.assertTrue(user.check_password(password))
+
+    def test_clouditardis(self):
+        """Assert that clouditardis breaks the space-time continuum."""
+        the_present_time = datetime.datetime.now(datetime.timezone.utc)
+        the_present_date = the_present_time.date()
+
+        the_day_i_invented_time_travel = helper.utc_dt(1956, 11, 5, 4, 29)
+        with helper.clouditardis(the_day_i_invented_time_travel):
+            # local imports to simulate tests
+            from util.misc import get_now as _get_now, get_today as _get_today
+            the_past_time = _get_now()
+            the_past_date = _get_today()
+
+        self.assertLess(the_past_time, the_present_time)
+        self.assertLess(the_past_date, the_present_date)
