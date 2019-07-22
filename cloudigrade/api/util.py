@@ -273,7 +273,7 @@ def calculate_max_concurrent_usage(date, user_id, cloud_account_id=None):
     Calculate maximum concurrent usage of RHEL instances in given parameters.
 
     This always performs a new calculation of the results based on Runs. If you
-    can use pre-calculated data, see calculate_max_concurrent_usage.
+    can use pre-calculated data, see get_max_concurrent_usage.
 
     Furthermore, we save the calculation results to the database, deleting any
     conflicting existing calculated result in the process.
