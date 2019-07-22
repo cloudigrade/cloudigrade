@@ -886,3 +886,38 @@ class ConcurrentUsage(BaseModel):
     def instances_list(self, value):
         """Set instance list."""
         self._instances_list = json.dumps(value)
+
+    def __str__(self):
+        """Get the string representation."""
+        return repr(self)
+
+    def __repr__(self):
+        """Get an unambiguous string representation."""
+        date = (
+            repr(self.date.isoformat())
+            if self.date is not None
+            else None
+        )
+        created_at = (
+            repr(self.created_at.isoformat())
+            if self.created_at is not None
+            else None
+        )
+        updated_at = (
+            repr(self.updated_at.isoformat())
+            if self.updated_at is not None
+            else None
+        )
+
+        return (
+            f'{self.__class__.__name__}('
+            f'id={self.id}, '
+            f'date={date}, '
+            f'user_id={self.user_id}, '
+            f'cloud_account_id={self.cloud_account_id}, '
+            f'memory={self.memory}, '
+            f'vcpu={self.vcpu}, '
+            f'created_at={created_at}, '
+            f'updated_at={updated_at}'
+            f')'
+        )
