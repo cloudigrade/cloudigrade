@@ -67,8 +67,16 @@ class CloudAccount(BaseGenericModel):
 
     def __repr__(self):
         """Get an unambiguous string representation."""
-        created_at = repr(self.created_at.isoformat())
-        updated_at = repr(self.updated_at.isoformat())
+        created_at = (
+            repr(self.created_at.isoformat())
+            if self.created_at is not None
+            else None
+        )
+        updated_at = (
+            repr(self.updated_at.isoformat())
+            if self.updated_at is not None
+            else None
+        )
 
         return (
             f'{self.__class__.__name__}('
@@ -120,8 +128,16 @@ class AwsCloudAccount(BaseModel):
 
     def __repr__(self):
         """Get an unambiguous string representation."""
-        created_at = repr(self.created_at.isoformat())
-        updated_at = repr(self.updated_at.isoformat())
+        created_at = (
+            repr(self.created_at.isoformat())
+            if self.created_at is not None
+            else None
+        )
+        updated_at = (
+            repr(self.updated_at.isoformat())
+            if self.updated_at is not None
+            else None
+        )
 
         return (
             f'{self.__class__.__name__}('
@@ -384,8 +400,16 @@ class MachineImage(BaseGenericModel):
             if self.name is not None
             else None
         )
-        created_at = repr(self.created_at.isoformat())
-        updated_at = repr(self.updated_at.isoformat())
+        created_at = (
+            repr(self.created_at.isoformat())
+            if self.created_at is not None
+            else None
+        )
+        updated_at = (
+            repr(self.updated_at.isoformat())
+            if self.updated_at is not None
+            else None
+        )
 
         return (
             f'{self.__class__.__name__}('
@@ -486,8 +510,16 @@ class AwsMachineImage(BaseModel):
             if self.region is not None
             else None
         )
-        created_at = repr(self.created_at.isoformat())
-        updated_at = repr(self.updated_at.isoformat())
+        created_at = (
+            repr(self.created_at.isoformat())
+            if self.created_at is not None
+            else None
+        )
+        updated_at = (
+            repr(self.updated_at.isoformat())
+            if self.updated_at is not None
+            else None
+        )
 
         return (
             f'{self.__class__.__name__}('
@@ -531,8 +563,16 @@ class AwsMachineImageCopy(AwsMachineImage):
     def __repr__(self):
         """Get an unambiguous string representation."""
         reference_awsmachineimage_id = self.reference_awsmachineimage_id
-        created_at = repr(self.created_at.isoformat())
-        updated_at = repr(self.updated_at.isoformat())
+        created_at = (
+            repr(self.created_at.isoformat())
+            if self.created_at is not None
+            else None
+        )
+        updated_at = (
+            repr(self.updated_at.isoformat())
+            if self.updated_at is not None
+            else None
+        )
 
         return (
             f'{self.__class__.__name__}('
@@ -571,8 +611,16 @@ class Instance(BaseGenericModel):
             if self.machine_image_id is not None
             else None
         )
-        created_at = repr(self.created_at.isoformat())
-        updated_at = repr(self.updated_at.isoformat())
+        created_at = (
+            repr(self.created_at.isoformat())
+            if self.created_at is not None
+            else None
+        )
+        updated_at = (
+            repr(self.updated_at.isoformat())
+            if self.updated_at is not None
+            else None
+        )
 
         return (
             f'{self.__class__.__name__}('
@@ -658,8 +706,16 @@ class AwsInstance(BaseModel):
 
     def __repr__(self):
         """Get an unambiguous string representation."""
-        created_at = repr(self.created_at.isoformat())
-        updated_at = repr(self.updated_at.isoformat())
+        created_at = (
+            repr(self.created_at.isoformat())
+            if self.created_at is not None
+            else None
+        )
+        updated_at = (
+            repr(self.updated_at.isoformat())
+            if self.updated_at is not None
+            else None
+        )
 
         return (
             f'{self.__class__.__name__}('
@@ -720,9 +776,21 @@ class InstanceEvent(BaseGenericModel):
 
     def __repr__(self):
         """Get an unambiguous string representation."""
-        occurred_at = repr(self.occurred_at.isoformat())
-        created_at = repr(self.created_at.isoformat())
-        updated_at = repr(self.updated_at.isoformat())
+        occurred_at = (
+            repr(self.occurred_at.isoformat())
+            if self.occurred_at is not None
+            else None
+        )
+        created_at = (
+            repr(self.created_at.isoformat())
+            if self.created_at is not None
+            else None
+        )
+        updated_at = (
+            repr(self.updated_at.isoformat())
+            if self.updated_at is not None
+            else None
+        )
 
         return (
             f'{self.__class__.__name__}('
@@ -765,8 +833,16 @@ class AwsInstanceEvent(BaseModel):
             if self.instance_type is not None
             else None
         )
-        created_at = repr(self.created_at.isoformat())
-        updated_at = repr(self.updated_at.isoformat())
+        created_at = (
+            repr(self.created_at.isoformat())
+            if self.created_at is not None
+            else None
+        )
+        updated_at = (
+            repr(self.updated_at.isoformat())
+            if self.updated_at is not None
+            else None
+        )
 
         return (
             f'{self.__class__.__name__}('
