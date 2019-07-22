@@ -1,5 +1,5 @@
 """DRF API serializers for the account app v2."""
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from django.utils.translation import gettext as _
 from generic_relations.relations import GenericRelatedField
@@ -19,6 +19,7 @@ from api.util import (
 )
 from util import aws
 from util.exceptions import InvalidArn
+from util.misc import get_today
 
 
 class AwsCloudAccountSerializer(ModelSerializer):
@@ -383,7 +384,7 @@ class DailyConcurrentUsageDummyQueryset(object):
     def days(self):
         """Get all days."""
         if self._days is None:
-            tomorrow = datetime.utcnow().date() + timedelta(days=1)
+            tomorrow = get_today() + timedelta(days=1)
             days = []
             current = self.start_date
             delta_day = timedelta(days=1)

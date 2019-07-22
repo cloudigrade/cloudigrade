@@ -10,6 +10,7 @@ from django.utils.translation import gettext as _
 
 from api.models import InstanceEvent
 from api.tests import helper as account_helper
+from util.misc import get_now
 from util.tests import helper as util_helper
 
 
@@ -62,7 +63,7 @@ class Command(BaseCommand):
             since = since.replace(
                 tzinfo=tz.tzutc()
             )
-        now = datetime.datetime.now(tz=since.tzinfo)
+        now = get_now()
         seconds = int(datetime.timedelta.total_seconds(now - since))
 
         user = User.objects.get(pk=options['user_id'])

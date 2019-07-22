@@ -24,7 +24,6 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import transaction
 from django.db.models import Q
-from django.utils import timezone
 from django.utils.translation import gettext as _
 from requests.exceptions import BaseHTTPError, RequestException
 
@@ -57,7 +56,7 @@ from util.celery import retriable_shared_task
 from util.exceptions import (AwsECSInstanceNotReady,
                              AwsTooManyECSInstances,
                              InvalidHoundigradeJsonFormat)
-from util.misc import generate_device_name
+from util.misc import generate_device_name, get_now
 
 logger = logging.getLogger(__name__)
 
@@ -1173,7 +1172,7 @@ def inspect_pending_images():
     same image being found and getting multiple inspection tasks.
     """
     updated_since = (
-        timezone.now() - timedelta(
+        get_now() - timedelta(
             seconds=settings.INSPECT_PENDING_IMAGES_MIN_AGE
         )
     )

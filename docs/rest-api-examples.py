@@ -1,12 +1,13 @@
 import json
 import os
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 import django
 import jinja2
-from dateutil import tz
 from django.db import transaction
 from django.test import override_settings
+
+from util.misc import get_now
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.local')
 django.setup()
@@ -71,7 +72,7 @@ class DocsApiHandler(object):
             self.superuser_client.delete_account(account.id)
 
         # Times to use for various account and event activity.
-        self.now = datetime.now(tz=tz.tzutc())
+        self.now = get_now()
         self.this_morning = self.now.replace(
             hour=0, minute=0, second=0, microsecond=0
         )

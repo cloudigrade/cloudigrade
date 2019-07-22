@@ -7,6 +7,7 @@ from django.utils.translation import gettext as _
 from rest_framework.test import APIClient, APIRequestFactory
 
 from api.tests import helper as api_helper
+from util.misc import get_today
 from util.tests import helper as util_helper
 
 
@@ -232,7 +233,7 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
         since start_date is inclusive and end_date is exclusive, the resulting
         output should be data for one day: today.
         """
-        today = datetime.date.today()
+        today = get_today()
         data = {}
         client = APIClient()
         client.force_authenticate(user=self.user1)
@@ -250,7 +251,7 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
         tomorrow as the exclusive end date because we do not want to project
         calculations into the future.
         """
-        today = datetime.date.today()
+        today = get_today()
         future = today + datetime.timedelta(days=100)
         data = {'end_date': str(future)}
         client = APIClient()

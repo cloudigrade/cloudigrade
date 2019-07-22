@@ -16,7 +16,6 @@ from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from django.db.models import Q
-from django.utils import timezone
 from django.utils.translation import gettext as _
 from rest_framework.serializers import ValidationError
 
@@ -37,6 +36,7 @@ from api.models import (
     Run,
 )
 from util import aws
+from util.misc import get_now, get_today
 
 logger = logging.getLogger(__name__)
 
@@ -241,7 +241,7 @@ def get_max_concurrent_usage(date, user_id, cloud_account_id=None):
         vcpu, and memory encountered at any point during the day.
 
     """
-    today = datetime.utcnow().date()
+    today = get_today()
     if date > today:
         # Early return stub values; we never project future calculations.
         return ConcurrentUsage(
@@ -443,7 +443,7 @@ def calculate_max_concurrent_usage_from_runs(runs):
             end_date = run.end_time.date()
         else:
             # No end time on the run? Act like the run ends "today".
-            end_date = datetime.utcnow().date()
+            end_date = get_today()
         # But really the end is *tomorrow* since the end is exclusive.
         end_date = end_date + timedelta(days=1)
         cloud_acount_id = run.instance.cloud_account.id
@@ -759,7 +759,7 @@ def save_instance_events(awsinstance, instance_data, events=None):
             )
             InstanceEvent.objects.create(
                 event_type=InstanceEvent.TYPE.power_on,
-                occurred_at=timezone.now(),
+                occurred_at=get_now(),
                 instance=awsinstance.instance.get(),
                 content_object=awsevent,
             )

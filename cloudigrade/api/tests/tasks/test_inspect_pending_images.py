@@ -3,11 +3,11 @@ import datetime
 from unittest.mock import call, patch
 
 from django.test import TestCase
-from django.utils import timezone
 
 from api import tasks
 from api.models import MachineImage
 from api.tests import helper as account_helper
+from util.misc import get_now
 
 
 class InspectPendingImagesTest(TestCase):
@@ -22,7 +22,8 @@ class InspectPendingImagesTest(TestCase):
         updated_at is automatically set by Django and cannot be manually set,
         but we need things with specific older updated_at times.
         """
-        yesterday = timezone.now() - datetime.timedelta(days=1)
+        real_now = get_now()
+        yesterday = real_now - datetime.timedelta(days=1)
         with patch('django.utils.timezone.now') as mock_now:
             mock_now.return_value = yesterday
             account = account_helper.generate_aws_account()
@@ -45,7 +46,7 @@ class InspectPendingImagesTest(TestCase):
                 cloud_account=account, image=image_old_pending
             )
 
-        one_hour_ago = timezone.now() - datetime.timedelta(seconds=60 * 60)
+        one_hour_ago = real_now - datetime.timedelta(seconds=60 * 60)
         with patch('django.utils.timezone.now') as mock_now:
             mock_now.return_value = one_hour_ago
             image_new_inspected = account_helper.generate_aws_image()

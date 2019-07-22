@@ -1,5 +1,5 @@
 """DRF API views for the account app v2."""
-from datetime import date, timedelta
+from datetime import timedelta
 
 from dateutil import tz
 from dateutil.parser import parse
@@ -16,6 +16,7 @@ from api.models import CloudAccount, Instance, MachineImage
 from api.serializers import DailyConcurrentUsageDummyQueryset
 from api.util import convert_param_to_int
 from util.aws.sts import _get_primary_account_id, cloudigrade_policy
+from util.misc import get_today
 
 
 class AccountViewSet(mixins.CreateModelMixin,
@@ -187,7 +188,7 @@ class DailyConcurrentUsageViewSet(
         try:
             start_date = self.request.query_params.get('start_date', None)
             start_date = (
-                parse(start_date).date() if start_date else date.today()
+                parse(start_date).date() if start_date else get_today()
             )
         except ValueError:
             errors['start_date'] = [
@@ -199,7 +200,7 @@ class DailyConcurrentUsageViewSet(
             end_date = (
                 parse(end_date).date()
                 if end_date
-                else date.today() + timedelta(days=1)
+                else get_today() + timedelta(days=1)
             )
         except ValueError:
             errors['end_date'] = [_('end_date must be a date (YYYY-MM-DD).')]

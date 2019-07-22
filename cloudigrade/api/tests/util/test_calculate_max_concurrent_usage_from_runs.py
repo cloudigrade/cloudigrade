@@ -6,6 +6,7 @@ from django.test import TestCase
 from api.models import ConcurrentUsage
 from api.tests import helper as api_helper
 from api.util import calculate_max_concurrent_usage_from_runs
+from util.misc import get_today
 from util.tests import helper as util_helper
 
 
@@ -268,7 +269,7 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
         instance = api_helper.generate_aws_instance(
             self.account, image=self.image_rhel
         )
-        today = datetime.datetime.utcnow().date()
+        today = get_today()
         yesterday = today - datetime.timedelta(days=1)
         run = api_helper.generate_single_run(
             instance,

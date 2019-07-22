@@ -30,3 +30,33 @@ def truncate_date(original):
     """
     now = datetime.datetime.now(tz=original.tzinfo)
     return min(original, now)
+
+
+def get_today():
+    """
+    Get the date from the current time in UTC.
+
+    This function exists so we don't proliferate many different ways of getting
+    the current UTC date. It also provides a convenient single place to patch
+    in unit tests.
+
+    Returns:
+        datetime.date the current date in UTC.
+
+    """
+    return get_now().date()
+
+
+def get_now():
+    """
+    Get the current time in UTC.
+
+    This function exists so we don't proliferate many different ways of getting
+    the current UTC time. It also provides a convenient single place to patch
+    in unit tests.
+
+    Returns:
+        datetime.datetime the current datetime in UTC.
+
+    """
+    return datetime.datetime.now(datetime.timezone.utc)

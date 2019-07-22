@@ -7,6 +7,7 @@ from django.core.management.base import BaseCommand
 from django.utils.translation import gettext as _
 
 from api.tests import helper as account_helper
+from util.misc import get_today
 from util.tests import helper as util_helper
 
 
@@ -20,7 +21,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         """Handle the command execution."""
         # Dates
-        today = datetime.datetime.now()
+        today = get_today()
         today = datetime.datetime(
             today.year, today.month, 1, 0, 0, 0, 0, tz.tzutc()
         )
