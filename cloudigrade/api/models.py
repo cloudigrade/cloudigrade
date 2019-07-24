@@ -919,6 +919,7 @@ class Run(BaseModel):
         null=True
     )
 
+    @transaction.atomic
     def save(self, *args, **kwargs):
         """Save this run and delete any related ConcurrentUsage objects."""
         date_filter = Q(date__gte=self.start_time.date())
@@ -931,6 +932,7 @@ class Run(BaseModel):
         concurrent_usages.delete()
         return super().save(*args, **kwargs)
 
+    @transaction.atomic
     def delete(self, *args, **kwargs):
         """Delete this run and any related ConcurrentUsage objects."""
         date_filter = Q(date__gte=self.start_time.date())
