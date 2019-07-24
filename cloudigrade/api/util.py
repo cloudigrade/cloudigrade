@@ -422,6 +422,8 @@ def calculate_max_concurrent_usage(date, user_id, cloud_account_id=None):
         memory=max_memory,
         instances_list=instances_list
     )
+    usage.potentially_related_runs.add(*runs)
+    usage.save()
     return usage
 
 

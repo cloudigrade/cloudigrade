@@ -18,6 +18,7 @@ class GetMaxConcurrentUsageTest(TestCase):
         self.user1 = util_helper.generate_test_user()
         self.user1account1 = api_helper.generate_aws_account(user=self.user1)
         self.image_rhel = api_helper.generate_aws_image(rhel_detected=True)
+        self.image_plain = api_helper.generate_aws_image(rhel_detected=False)
         self.instance_type_large = 'c5.xlarge'  # 4 vcpu, 8.0 GB memory
         self.instance_type_large_specs = util_helper.SOME_EC2_INSTANCE_TYPES[
             self.instance_type_large
@@ -93,6 +94,55 @@ class GetMaxConcurrentUsageTest(TestCase):
         expected_vcpu = self.instance_type_large_specs['vcpu']
         expected_memory = self.instance_type_large_specs['memory']
 
+        results = get_max_concurrent_usage(request_date, user_id=self.user1.id)
+        self.assertMaxConcurrentUsage(
+            results,
+            expected_date,
+            expected_instances,
+            expected_vcpu,
+            expected_memory,
+        )
+
+    @util_helper.clouditardis(util_helper.utc_dt(2019, 5, 3, 0, 0, 0))
+    def test_get_usage_change_image_get_usage_again(self):
+        """
+        Test getting usage before and after changing an image.
+
+        Like test_get_usage_create_run_get_usage_again, this exercises a
+        condition where we should have deleted and recalculated the concurrent
+        usage data in subsequent requests. If an image's identification as
+        RHEL changes, that means any saved usage is incorrect and needs to be
+        recalculated.
+        """
+        instance = api_helper.generate_aws_instance(
+            self.user1account1, image=self.image_plain
+        )
+        api_helper.generate_single_run(
+            instance,
+            (
+                util_helper.utc_dt(2019, 5, 1, 1, 0, 0),
+                util_helper.utc_dt(2019, 5, 1, 2, 0, 0),
+            ),
+            image=instance.machine_image,
+            instance_type=self.instance_type_large,
+        )
+        request_date = datetime.date(2019, 5, 1)
+        expected_date = request_date
+
+        # Verify everything is normal "happy path" so far.
+        results = get_max_concurrent_usage(request_date, user_id=self.user1.id)
+        self.assertMaxConcurrentUsage(results, expected_date, 0, 0, 0.0)
+
+        # Change the image so it starts counting as RHEL.
+        self.assertFalse(self.image_plain.rhel)
+        self.image_plain.rhel_challenged = True
+        self.image_plain.save()
+        self.assertTrue(self.image_plain.rhel)
+
+        # Repeat the original request, but expect different results.
+        expected_instances = 1
+        expected_vcpu = self.instance_type_large_specs['vcpu']
+        expected_memory = self.instance_type_large_specs['memory']
         results = get_max_concurrent_usage(request_date, user_id=self.user1.id)
         self.assertMaxConcurrentUsage(
             results,

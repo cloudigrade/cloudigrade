@@ -9,7 +9,6 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models, transaction
-from django.db.models import Q
 from django.utils.translation import gettext as _
 
 from api import AWS_PROVIDER_STRING
@@ -425,6 +424,15 @@ class MachineImage(BaseGenericModel):
             f'updated_at=parse({updated_at})'
             f')'
         )
+
+    @transaction.atomic
+    def save(self, *args, **kwargs):
+        """Save this image and delete any related ConcurrentUsage objects."""
+        concurrent_usages = ConcurrentUsage.objects.filter(
+            potentially_related_runs__in=Run.objects.filter(machineimage=self)
+        )
+        concurrent_usages.delete()
+        return super().save(*args, **kwargs)
 
 
 class AwsMachineImage(BaseModel):
@@ -922,12 +930,8 @@ class Run(BaseModel):
     @transaction.atomic
     def save(self, *args, **kwargs):
         """Save this run and delete any related ConcurrentUsage objects."""
-        date_filter = Q(date__gte=self.start_time.date())
-        if self.end_time:
-            date_filter &= Q(date__lte=self.end_time.date())
         concurrent_usages = ConcurrentUsage.objects.filter(
-            date_filter,
-            user_id=self.instance.cloud_account.user_id,
+            potentially_related_runs=self
         )
         concurrent_usages.delete()
         return super().save(*args, **kwargs)
@@ -935,12 +939,8 @@ class Run(BaseModel):
     @transaction.atomic
     def delete(self, *args, **kwargs):
         """Delete this run and any related ConcurrentUsage objects."""
-        date_filter = Q(date__gte=self.start_time.date())
-        if self.end_time:
-            date_filter &= Q(date__lte=self.end_time.date())
         concurrent_usages = ConcurrentUsage.objects.filter(
-            date_filter,
-            user_id=self.instance.cloud_account.user_id,
+            potentially_related_runs=self
         )
         concurrent_usages.delete()
         return super().delete(*args, **kwargs)
@@ -979,6 +979,7 @@ class ConcurrentUsage(BaseModel):
                                        blank=True)
     memory = models.FloatField()
     vcpu = models.IntegerField()
+    potentially_related_runs = models.ManyToManyField(Run)
 
     @property
     def instances_list(self):
