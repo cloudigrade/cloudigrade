@@ -7,20 +7,8 @@ from django.db import models
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 from django.utils.translation import gettext as _
-from polymorphic.models import PolymorphicModel
 
 logger = logging.getLogger(__name__)
-
-
-class BasePolymorphicModel(PolymorphicModel):
-    """Abstract model to add automatic created_at and updated_at fields."""
-
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        abstract = True
-        ordering = ("created_at",)
 
 
 class BaseModel(models.Model):
