@@ -48,9 +48,10 @@ Overview
 
 The following resource paths are currently available:
 
--  ``/api/v2/account/`` returns account data
--  ``/api/v2/instance/`` returns instance data
--  ``/api/v2/image/`` returns image data
+-  ``/api/v2/accounts/`` returns account data
+-  ``/api/v2/instances/`` returns instance data
+-  ``/api/v2/images/`` returns image data
+-  ``/api/v2/concurrent/`` returns concurrent usage data
 -  ``/api/v2/sysconfig/`` returns sysconfig data
 
 

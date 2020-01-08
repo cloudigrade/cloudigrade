@@ -9,6 +9,8 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models, transaction
+from django.db.models.signals import post_delete, pre_delete
+from django.dispatch import receiver
 from django.utils.translation import gettext as _
 
 from api import AWS_PROVIDER_STRING
@@ -88,19 +90,6 @@ class CloudAccount(BaseGenericModel):
             f')'
         )
 
-    @transaction.atomic
-    def delete(self, **kwargs):
-        """
-        Delete the generic clount, and the platform specific clount.
-
-        Delete all instances belonging to the account.
-        """
-        # Note that we cannot use a bulk delete here since bulk delete
-        # does not trigger the delete() method on individual instances.
-        for instance in self.instance_set.all():
-            instance.delete()
-        super().delete(**kwargs)
-
 
 class AwsCloudAccount(BaseModel):
     """AWS Customer Cloud Account Model."""
@@ -149,73 +138,84 @@ class AwsCloudAccount(BaseModel):
             f')'
         )
 
-    def delete(self, **kwargs):
-        """Delete an AWS Account and disable logging in its AWS cloudtrail."""
-        try:
-            with transaction.atomic():
-                cloudtrial_name = '{0}{1}'.format(
-                    settings.CLOUDTRAIL_NAME_PREFIX,
-                    self.cloud_account_id
+
+@receiver(post_delete, sender=AwsCloudAccount)
+def aws_cloud_account_post_delete_callback(*args, **kwargs):
+    """
+    Disable logging in an AwsCloudAccount's cloudtrail after deleting it.
+
+    Note: Signal receivers must accept keyword arguments (**kwargs).
+
+    Raises:
+        CloudTrailCannotStopLogging: if an unexpected exception occurs, this
+            exception is raised, and the AwsCloudAccount is not deleted.
+    """
+    instance = kwargs['instance']
+
+    try:
+        with transaction.atomic():
+            cloudtrial_name = '{0}{1}'.format(
+                settings.CLOUDTRAIL_NAME_PREFIX,
+                instance.cloud_account_id
+            )
+            try:
+                session = get_session(str(instance.account_arn))
+                cloudtrail_session = session.client('cloudtrail')
+                logger.info(
+                    'attempting to disable cloudtrail "%(name)s" via ARN '
+                    '"%(arn)s"',
+                    {'name': cloudtrial_name, 'arn': instance.account_arn},
                 )
-                try:
-                    super().delete(**kwargs)
-                    session = get_session(str(self.account_arn))
-                    cloudtrail_session = session.client('cloudtrail')
-                    logger.info(
-                        'attempting to disable cloudtrail "%(name)s" via ARN '
-                        '"%(arn)s"',
-                        {'name': cloudtrial_name, 'arn': self.account_arn},
+                disable_cloudtrail(cloudtrail_session, cloudtrial_name)
+
+            except ClientError as error:
+                error_code = error.response.get('Error', {}).get('Code')
+
+                # If cloudtrail does not exist, then delete the account.
+                if error_code == 'TrailNotFoundException':
+                    pass
+
+                # If we're unable to access the account (because user
+                # deleted the role/account). Delete the cloudigrade account
+                # and log an error. This could result in an orphaned
+                # cloudtrail writing to our s3 bucket.
+                elif error_code == 'AccessDenied':
+                    logger.warning(
+                        _('Cloudigrade account %(account_id)s was deleted,'
+                          ' but could not access the AWS account to '
+                          'disable its cloudtrail %(cloudtrail_name)s.'),
+                        {'account_id': instance.cloud_account_id,
+                         'cloudtrail_name': cloudtrial_name}
                     )
-                    disable_cloudtrail(cloudtrail_session, cloudtrial_name)
+                    logger.info(error)
 
-                except ClientError as error:
-                    error_code = error.response.get('Error', {}).get('Code')
-
-                    # If cloudtrail does not exist, then delete the account.
-                    if error_code == 'TrailNotFoundException':
-                        pass
-
-                    # If we're unable to access the account (because user
-                    # deleted the role/account). Delete the cloudigrade account
-                    # and log an error. This could result in an orphaned
-                    # cloudtrail writing to our s3 bucket.
-                    elif error_code == 'AccessDenied':
-                        logger.warning(
-                            _('Cloudigrade account %(account_id)s was deleted,'
-                              ' but could not access the AWS account to '
-                              'disable its cloudtrail %(cloudtrail_name)s.'),
-                            {'account_id': self.cloud_account_id,
-                             'cloudtrail_name': cloudtrial_name}
-                        )
-                        logger.info(error)
-
-                    # If the user role does exist, but we can't stop the
-                    # cloudtrail (because of insufficient permission), delete
-                    # the cloudigrade account and log an error. This could
-                    # result in an orphaned cloudtrail writing to our s3
-                    # bucket.
-                    elif error_code == 'AccessDeniedException':
-                        logger.warning(
-                            _('Cloudigrade account %(account_id)s was deleted,'
-                              ' but we did not have permission to perform '
-                              'cloudtrail: StopLogging on cloudtrail '
-                              '%(cloudtrail_name)s.'),
-                            {'account_id': self.cloud_account_id,
-                             'cloudtrail_name': cloudtrial_name}
-                        )
-                        logger.info(error)
-                    else:
-                        raise
-        except ClientError as error:
-            log_message = _(
-                'Unexpected error occurred. The Cloud Meter account cannot be '
-                'deleted. To resolve this issue, contact Cloud Meter support.'
-            )
-            logger.error(log_message)
-            logger.exception(error)
-            raise CloudTrailCannotStopLogging(
-                detail=log_message
-            )
+                # If the user role does exist, but we can't stop the
+                # cloudtrail (because of insufficient permission), delete
+                # the cloudigrade account and log an error. This could
+                # result in an orphaned cloudtrail writing to our s3
+                # bucket.
+                elif error_code == 'AccessDeniedException':
+                    logger.warning(
+                        _('Cloudigrade account %(account_id)s was deleted,'
+                          ' but we did not have permission to perform '
+                          'cloudtrail: StopLogging on cloudtrail '
+                          '%(cloudtrail_name)s.'),
+                        {'account_id': instance.cloud_account_id,
+                         'cloudtrail_name': cloudtrial_name}
+                    )
+                    logger.info(error)
+                else:
+                    raise
+    except ClientError as error:
+        log_message = _(
+            'Unexpected error occurred. The Cloud Meter account cannot be '
+            'deleted. To resolve this issue, contact Cloud Meter support.'
+        )
+        logger.error(log_message)
+        logger.exception(error)
+        raise CloudTrailCannotStopLogging(
+            detail=log_message
+        )
 
 
 class MachineImage(BaseGenericModel):
@@ -641,36 +641,6 @@ class Instance(BaseGenericModel):
             f')'
         )
 
-    @transaction.atomic
-    def delete(self, **kwargs):
-        """
-        Delete the instance.
-
-        Delete the instance's machine image if no other instances use it.
-        Delete all instanceevents that reference this instance.
-        """
-        for event in self.instanceevent_set.all():
-            event.delete()
-
-        # Gotta delete the instance first, otherwise machine image deletion
-        # will cascade delete the instance. and not trigger the awsinstance
-        # clean up.
-        super().delete(**kwargs)
-
-        if (
-            self.machine_image is not None and
-            not Instance.objects.filter(machine_image=self.machine_image)
-            .exclude(id=self.id)
-            .exists()
-        ):
-            logger.info(
-                _(
-                    '%s is no longer used by any instances and will be deleted'
-                ),
-                self.machine_image,
-            )
-            self.machine_image.delete()
-
     @property
     def cloud_type(self):
         """
@@ -690,6 +660,44 @@ class Instance(BaseGenericModel):
         extend ABC here because it conflicts with Django's Meta class.
         """
         return self.content_object.cloud_instance_id
+
+
+@receiver(post_delete, sender=Instance)
+def instance_post_delete_callback(*args, **kwargs):
+    """
+    Delete the instance's machine image if no other instances use it.
+
+    Note: Signal receivers must accept keyword arguments (**kwargs).
+    """
+    instance = kwargs['instance']
+
+    # When multiple instances are deleted at the same time django will
+    # attempt to delete the machine image multiple times since instance
+    # objects will no longer appear to be in the database.
+    # Catch and log the raised DoesNotExist error from the additional
+    # attempts to remove a machine image.
+    try:
+        if (
+                instance.machine_image is not None and
+                not Instance.objects.filter(
+                    machine_image=instance.machine_image
+                ).exclude(id=instance.id).exists()
+        ):
+            logger.info(
+                _(
+                    '%s is no longer used by any instances and will be deleted'
+                ),
+                instance.machine_image,
+            )
+            instance.machine_image.delete()
+    except MachineImage.DoesNotExist:
+        logger.info(
+            _(
+                'Machine image associated with instance %s '
+                'has already been deleted.'
+            ),
+            instance,
+        )
 
 
 class AwsInstance(BaseModel):
@@ -936,14 +944,19 @@ class Run(BaseModel):
         concurrent_usages.delete()
         return super().save(*args, **kwargs)
 
-    @transaction.atomic
-    def delete(self, *args, **kwargs):
-        """Delete this run and any related ConcurrentUsage objects."""
-        concurrent_usages = ConcurrentUsage.objects.filter(
-            potentially_related_runs=self
-        )
-        concurrent_usages.delete()
-        return super().delete(*args, **kwargs)
+
+@receiver(pre_delete, sender=Run)
+def run_pre_delete_callback(*args, **kwargs):
+    """
+    Delete any related ConcurrentUsage objects prior to deleting the run.
+
+    Note: Signal receivers must accept keyword arguments (**kwargs).
+    """
+    run = kwargs['instance']
+    concurrent_usages = ConcurrentUsage.objects.filter(
+        potentially_related_runs=run
+    )
+    concurrent_usages.delete()
 
 
 class MachineImageInspectionStart(BaseModel):

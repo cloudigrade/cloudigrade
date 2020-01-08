@@ -3,7 +3,9 @@ import logging
 
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
-from django.db import models, transaction
+from django.db import models
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
 from django.utils.translation import gettext as _
 from polymorphic.models import PolymorphicModel
 
@@ -43,19 +45,28 @@ class BaseGenericModel(BaseModel):
         abstract = True
         ordering = ('created_at',)
 
-    @transaction.atomic
-    def delete(self, **kwargs):
-        """Delete the platform specific model along with the generic model."""
+
+@receiver(post_delete)
+def basegenericmodel_post_delete_callback(sender, instance, *args, **kwargs):
+    """
+    Delete the platform specific model along with the generic model.
+
+    Note that this receiver catches all post_delete signals, but only
+    acts if the sender is a subclass of BaseGenericModel.
+
+    Note: Signal receivers must accept keyword arguments (**kwargs).
+    """
+    if issubclass(sender, BaseGenericModel):
         logger.info(
             _(
                 'deleting %(self_class)s-related content object: '
                 '%(content_object)s'
             ),
             {
-                'self_class': self.__class__.__name__,
-                'content_object': self.content_object,
+                'self_class': sender.__class__.__name__,
+                'content_object': instance.content_object,
             },
         )
-        self.content_object.delete()
-        logger.info(_('deleting %s'), self)
-        super().delete(**kwargs)
+        if instance.content_object is not None:
+            instance.content_object.delete()
+            logger.info(_('deleting %s'), instance)
