@@ -22,7 +22,7 @@ from celery import shared_task
 from dateutil.parser import parse
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.db.models import Q
 from django.utils.translation import gettext as _
 from requests.exceptions import BaseHTTPError, RequestException
@@ -1767,6 +1767,28 @@ def repopulate_ec2_instance_mapping():
         None: Run as an asynchronous Celery task.
 
     """
+    definitions = _fetch_ec2_instance_type_definitions()
+    with transaction.atomic():
+        try:
+            _save_ec2_instance_type_definitions(definitions)
+        except Exception as e:
+            logger.exception(
+                _('Failed to save EC2 instance definitions; rolling back.')
+            )
+            raise e
+    logger.info(_('Finished saving AWS EC2 instance type definitions.'))
+
+
+def _fetch_ec2_instance_type_definitions():
+    """
+    Fetch EC2 instance type definitions from AWS Pricing API.
+
+    Returns:
+        dict: definitions dict of dicts where the outer key is the instance
+        type name and the inner dict has keys memory and vcpu. For example:
+        {'r5.large': {'memory': 24.0, 'vcpu': 1}}
+
+    """
     client = boto3.client('pricing')
     paginator = client.get_paginator('get_products')
     page_iterator = paginator.paginate(
@@ -1798,7 +1820,7 @@ def repopulate_ec2_instance_mapping():
                 }
             except ValueError:
                 logger.error(
-                    _('Could not save instance definition for instance-type '
+                    _('Could not fetch EC2 definition for instance-type '
                       '%(instance_type)s, memory %(memory)s, vcpu %(vcpu)s.'),
                     {
                         'instance_type': instance_attr['instanceType'],
@@ -1806,22 +1828,55 @@ def repopulate_ec2_instance_mapping():
                         'vcpu': instance_attr.get('vcpu', 0)
                     }
                 )
+    return instances
 
-    for instance_name, attributes in instances.items():
-        obj, created = AwsEC2InstanceDefinition.objects.get_or_create(
-            instance_type=instance_name,
-            defaults={
-                'memory': attributes['memory'],
-                'vcpu': attributes['vcpu']
-            }
-        )
-        if created:
-            logger.info(_('Saved new instance type %s'), obj.instance_type)
-        else:
-            logger.info(_(
-                'Instance type %s already exists.'), obj.instance_type)
 
-    logger.info('Finished saving AWS EC2 instance type information.')
+def _save_ec2_instance_type_definitions(definitions):
+    """
+    Save AWS EC2 instance type definitions to our database.
+
+    Note:
+        If an instance type name already exists in the DB, do NOT overwrite it.
+
+    Args:
+        definitions (dict): dict of dicts where the outer key is the instance
+            type name and the inner dict has keys memory and vcpu. For example:
+            {'r5.large': {'memory': 24.0, 'vcpu': 1}}
+
+    Returns:
+        None
+
+    """
+    for name, attributes in definitions.items():
+        try:
+            obj, created = AwsEC2InstanceDefinition.objects.get_or_create(
+                instance_type=name,
+                defaults={
+                    'memory': attributes['memory'], 'vcpu': attributes['vcpu']
+                },
+            )
+            if created:
+                logger.info(
+                    _('Saving new instance type %s'), obj.instance_type
+                )
+            else:
+                logger.info(
+                    _('Instance type %s already exists.'), obj.instance_type
+                )
+        except IntegrityError as e:
+            logger.exception(
+                _(
+                    'Failed to get_or_create an AwsEC2InstanceDefinition('
+                    'name="%(name)s", memory=%(memory)s, vcpu=%(vcpu)s'
+                    '); this should never happen.'
+                ),
+                {
+                    'name': name,
+                    'memory': attributes['memory'],
+                    'vcpu': attributes['vcpu'],
+                },
+            )
+            raise e
 
 
 def _build_events_info_for_saving(account, instance, events):

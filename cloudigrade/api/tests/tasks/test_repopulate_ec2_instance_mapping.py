@@ -2,6 +2,7 @@
 from unittest.mock import Mock, patch
 
 import faker
+from django.db import IntegrityError
 from django.test import TestCase
 
 from api import tasks
@@ -181,3 +182,23 @@ class RepopulateEc2InstanceMappingTest(TestCase):
         instance = mock_lookup()
         self.assertEqual(mock_instance_definition, instance)
         mock_remap.assert_not_called()
+
+    @patch('api.tasks._fetch_ec2_instance_type_definitions')
+    @patch('api.tasks._save_ec2_instance_type_definitions')
+    def test_repopulate_ec2_instance_mapping_error_on_save(
+        self, mock_save, mock_fetch
+    ):
+        """Test that repopulate_ec2_instance_mapping handles error on save."""
+        mock_save.side_effect = Exception()
+        with self.assertRaises(Exception):
+            tasks.repopulate_ec2_instance_mapping()
+
+    @patch('api.tasks.AwsEC2InstanceDefinition.objects.get_or_create')
+    def test_save_ec2_instance_type_definitions_mystery_integrity_error(
+        self, mock_get_or_create
+    ):
+        """Test _save_ec2_instance_type_definitions handles mystery error."""
+        mock_get_or_create.side_effect = IntegrityError('it is a mystery')
+        definitions = {'r5.large': {'memory': 420, 'vcpu': 69}}
+        with self.assertRaises(IntegrityError):
+            tasks._save_ec2_instance_type_definitions(definitions)
