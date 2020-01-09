@@ -48,7 +48,7 @@ The following commands should install everything you need:
 .. code-block:: bash
 
     brew update
-    brew install python gettext awscli postgresql openssl
+    brew install python gettext awscli postgresql openssl curl-openssl
     brew link gettext --force
 
 
@@ -76,31 +76,44 @@ Once you have pipenv installed, install our Python package requirements:
 
 .. code-block:: sh
 
+    pipenv --rm
     pipenv sync --dev
 
 If you plan to run cloudigrade or Celery locally on macOS, the required ``pycurl`` package may fail to install or may install improperly despite ``pipenv sync`` appearing to complete successfully. You can verify that ``pycurl`` is installed correctly by simply importing it in a Python shell like this:
 
 .. code-block:: sh
 
-   python -c 'import pycurl'
+    pipenv run python -c 'import pycurl'
 
 If you see no output, everything is okay! Otherwise (e.g. "libcurl link-time ssl backend (openssl) is different from compile-time ssl backend (none/other)"), it may not have installed correctly. Try the following commands force it to rebuild and install with the openssl backend:
 
 .. code-block:: sh
 
-   brew install openssl
-   export LDFLAGS="-L/usr/local/opt/openssl/lib -L/usr/local/lib -L/usr/local/opt/expat/lib"
-   export CFLAGS="-I/usr/local/opt/openssl/include/ -I/usr/local/include -I/usr/local/opt/expat/include"
-   export CPPFLAGS="-I/usr/local/opt/openssl/include/ -I/usr/local/include -I/usr/local/opt/expat/include"
-   PYCURL_SSL_LIBRARY=openssl pipenv install pycurl
+    brew update
+    brew install openssl curl-openssl
+    brew doctor  # ...and resolve any known problems.
+
+    pipenv run pip uninstall pycurl -y
+
+    BREW_PATH=$(brew --prefix)
+    export LDFLAGS="-L${BREW_PATH}/opt/openssl/lib/ -L${BREW_PATH}/opt/curl-openssl/lib -L${BREW_PATH}/opt/expat/lib/ -L${BREW_PATH}/lib -L/usr/lib/"
+    export CFLAGS="-I${BREW_PATH}/opt/openssl/include/ -I${BREW_PATH}/opt/expat/include/ -I${BREW_PATH}/include/"
+    export CPPFLAGS="-I${BREW_PATH}/opt/openssl/include/ -I${BREW_PATH}/opt/curl-openssl/include -I${BREW_PATH}/opt/expat/include/  -I${BREW_PATH}/include/"
+    export PYCURL_CURL_CONFIG="${BREW_PATH}/opt/curl-openssl/bin/curl-config"
+    export PYCURL_SSL_LIBRARY="openssl"
+
+    pipenv sync --clear --dev
+    pipenv run python -c 'import pycurl'
+
+If this resolves the import error, then you may also need to export all of those variables any time you have `tox` recreate its own virtual environments.
 
 If using a system that has dnf, try the following commands:
 
 .. code-block:: sh
 
-   sudo dnf install openssl libcurl-devel
-   export PYCURL_SSL_LIBRARY=openssl
-   pipenv install pycurl
+    sudo dnf install openssl libcurl-devel
+    export PYCURL_SSL_LIBRARY=openssl
+    pipenv install pycurl
 
 Try the aforementioned import commands again, and all should be good. If not, kindly reach out to another cloudigrade developer to seek assistance!
 
