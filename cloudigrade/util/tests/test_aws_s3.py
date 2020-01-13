@@ -13,73 +13,74 @@ class UtilAwsS3Test(TestCase):
 
     def test_get_object_content_from_s3_gzipped_name(self):
         """Assert that .gz file name is handled as gzipped data."""
-        bucket = 'test_bucket'
-        key = '/path/to/file.gz'
+        bucket = "test_bucket"
+        key = "/path/to/file.gz"
         content_bytes = b'{"Key": "Value"}'
         byte_stream = io.BytesIO(gzip.compress(content_bytes))
         object_body = {
-            'Body': byte_stream,
+            "Body": byte_stream,
         }
 
-        with patch.object(s3, 'boto3') as mock_boto3:
+        with patch.object(s3, "boto3") as mock_boto3:
             mock_resource = mock_boto3.resource.return_value
             mock_s3_object = mock_resource.Object.return_value
             mock_s3_object.get.return_value = object_body
 
             actual_content = s3.get_object_content_from_s3(bucket, key)
 
-        self.assertEqual(content_bytes.decode('utf-8'), actual_content)
+        self.assertEqual(content_bytes.decode("utf-8"), actual_content)
 
     def test_get_object_content_from_s3_gzipped_content_type(self):
         """Assert that gzip content type is handled."""
-        bucket = 'test_bucket'
-        key = '/path/to/file'
+        bucket = "test_bucket"
+        key = "/path/to/file"
         content_bytes = b'{"Key": "Value"}'
         byte_stream = io.BytesIO(gzip.compress(content_bytes))
         object_body = {
-            'Body': byte_stream,
-            'ContentType': 'application/x-gzip',
+            "Body": byte_stream,
+            "ContentType": "application/x-gzip",
         }
 
-        with patch.object(s3, 'boto3') as mock_boto3:
+        with patch.object(s3, "boto3") as mock_boto3:
             mock_resource = mock_boto3.resource.return_value
             mock_s3_object = mock_resource.Object.return_value
             mock_s3_object.get.return_value = object_body
 
             actual_content = s3.get_object_content_from_s3(bucket, key)
 
-        self.assertEqual(content_bytes.decode('utf-8'), actual_content)
+        self.assertEqual(content_bytes.decode("utf-8"), actual_content)
 
     def test_get_object_content_from_s3_uncompressed(self):
         """Assert that uncompressed content is handled."""
-        bucket = 'test_bucket'
-        key = '/path/to/file'
+        bucket = "test_bucket"
+        key = "/path/to/file"
         content_bytes = b'{"Key": "Value"}'
         byte_stream = io.BytesIO(content_bytes)
         object_body = {
-            'Body': byte_stream,
-            'ContentType': 'application/json',
+            "Body": byte_stream,
+            "ContentType": "application/json",
         }
 
-        with patch.object(s3, 'boto3') as mock_boto3:
+        with patch.object(s3, "boto3") as mock_boto3:
             mock_resource = mock_boto3.resource.return_value
             mock_s3_object = mock_resource.Object.return_value
             mock_s3_object.get.return_value = object_body
 
             actual_content = s3.get_object_content_from_s3(bucket, key)
 
-        self.assertEqual(content_bytes.decode('utf-8'), actual_content)
+        self.assertEqual(content_bytes.decode("utf-8"), actual_content)
 
     def test_get_object_content_from_s3_uncompressed_not_utf8_error(self):
         """Assert that not-gzipped not-utf8 bits raise an appropriate error."""
-        bucket = 'test_bucket'
-        key = '/path/to/file'
-        content_bytes = bytes.fromhex('deadbeef')  # not utf-8 safe!
+        bucket = "test_bucket"
+        key = "/path/to/file"
+        content_bytes = bytes.fromhex("deadbeef")  # not utf-8 safe!
         byte_stream = io.BytesIO(content_bytes)
-        object_body = {'Body': byte_stream}
+        object_body = {"Body": byte_stream}
 
-        with patch.object(s3, 'boto3') as mock_boto3, \
-                self.assertRaises(UnicodeDecodeError):
+        with patch.object(s3, "boto3") as mock_boto3, self.assertRaises(
+            UnicodeDecodeError
+        ):
             mock_resource = mock_boto3.resource.return_value
             mock_s3_object = mock_resource.Object.return_value
             mock_s3_object.get.return_value = object_body

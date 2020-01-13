@@ -20,10 +20,8 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         self.account = api_helper.generate_aws_account()
         self.user = self.account.user
 
-    @patch('api.models.CloudAccount.delete')
-    def test_delete_from_sources_kafka_message_success(
-            self, mock_clount_delete
-    ):
+    @patch("api.models.CloudAccount.delete")
+    def test_delete_from_sources_kafka_message_success(self, mock_clount_delete):
         """Assert delete_from_sources_kafka_message happy path success."""
         account_number = str(self.user.username)
         username = self.account.content_object.aws_access_key_id
@@ -35,7 +33,7 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         tasks.delete_from_sources_kafka_message(message)
         mock_clount_delete.assert_called_once()
 
-    @patch('api.models.CloudAccount.delete')
+    @patch("api.models.CloudAccount.delete")
     def test_delete_from_sources_kafka_message_fail_missing_message_data(
         self, mock_clount_delete
     ):
@@ -46,7 +44,7 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         # Delete should not have been called.
         mock_clount_delete.assert_not_called()
 
-    @patch('api.models.CloudAccount.delete')
+    @patch("api.models.CloudAccount.delete")
     def test_delete_from_sources_kafka_message_fail_wrong_account_number(
         self, mock_clount_delete
     ):
@@ -63,10 +61,8 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         # Delete should not have been called.
         mock_clount_delete.assert_not_called()
 
-    @patch('api.models.CloudAccount.delete')
-    def test_delete_from_sources_kafka_message_fail_no_clount(
-        self, mock_clount_delete
-    ):
+    @patch("api.models.CloudAccount.delete")
+    def test_delete_from_sources_kafka_message_fail_no_clount(self, mock_clount_delete):
         """Assert delete fails from nonexistent clount."""
         account_number = str(self.user.username)
         username = _faker.user_name()
@@ -80,8 +76,8 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         # Delete should not have been called.
         mock_clount_delete.assert_not_called()
 
-    @patch('api.models.AwsCloudAccount.cloud_account')
-    @patch('api.models.AwsCloudAccount.delete')
+    @patch("api.models.AwsCloudAccount.cloud_account")
+    @patch("api.models.AwsCloudAccount.delete")
     def test_delete_from_sources_kafka_message_fail_no_clount_with_aws_clount(
         self, mock_aws_clount_delete, mock_aws_clount_clount
     ):

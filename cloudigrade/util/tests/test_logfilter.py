@@ -10,7 +10,7 @@ from util.logfilter import RequestIDFilter
 class RequestIDFilterTest(TestCase):
     """Tests for RequestIDFilter."""
 
-    @patch('util.logfilter.local')
+    @patch("util.logfilter.local")
     def test_filter(self, mock_local):
         """Test that the filter adds request_id."""
         mock_local.request_id = uuid.uuid4()

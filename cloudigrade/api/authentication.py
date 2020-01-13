@@ -36,8 +36,8 @@ class ThreeScaleAuthentication(BaseAuthentication):
             settings.INSIGHTS_REQUEST_ID_HEADER, None
         )
         logger.info(
-            _('Authenticating via insights, INSIGHTS_REQUEST_ID: %s'),
-            insights_request_id
+            _("Authenticating via insights, INSIGHTS_REQUEST_ID: %s"),
+            insights_request_id,
         )
 
         auth_header = request.META.get(settings.INSIGHTS_IDENTITY_HEADER, None)
@@ -51,31 +51,31 @@ class ThreeScaleAuthentication(BaseAuthentication):
             )
 
         except (TypeError, UnicodeDecodeError, json.JSONDecodeError) as e:
-            logger.info(
-                _('Authentication Failed: 3scale header parsing error %s'), e
-            )
+            logger.info(_("Authentication Failed: 3scale header parsing error %s"), e)
             raise exceptions.AuthenticationFailed(
-                _('Invalid 3scale header: {error}').format(error=e)
+                _("Invalid 3scale header: {error}").format(error=e)
             )
 
         # If account_number is not in header, authentication fails
         try:
-            account_number = auth['identity']['account_number']
+            account_number = auth["identity"]["account_number"]
         except KeyError:
             logger.info(
-                _('Authentication Failed: '
-                  'account_number not contained '
-                  'in 3scale header %s.'), auth_header
+                _(
+                    "Authentication Failed: "
+                    "account_number not contained "
+                    "in 3scale header %s."
+                ),
+                auth_header,
             )
             raise exceptions.AuthenticationFailed(
-                _('Invalid 3scale header: missing user account_number field')
+                _("Invalid 3scale header: missing user account_number field")
             )
 
         user, created = User.objects.get_or_create(username=account_number)
         if created:
             user.set_unusable_password()
             logger.info(
-                _('User %s was not found and has been created.'),
-                account_number,
+                _("User %s was not found and has been created."), account_number,
             )
         return user, True

@@ -14,25 +14,25 @@ env = environ.Env()
 logger = logging.getLogger(__name__)
 
 
-logger.info('Starting celery.')
+logger.info("Starting celery.")
 # Django setup is required *before* Celery app can start correctly.
 django.setup()
-logger.info('Django setup.')
+logger.info("Django setup.")
 
-app = Celery('config')
-app.config_from_object('django.conf:settings', namespace='CELERY')
+app = Celery("config")
+app.config_from_object("django.conf:settings", namespace="CELERY")
 app.autodiscover_tasks()
-logger.info('Celery setup.')
+logger.info("Celery setup.")
 
-if env('CELERY_ENABLE_SENTRY', default=False):
-    logger.info('Enabling sentry.')
+if env("CELERY_ENABLE_SENTRY", default=False):
+    logger.info("Enabling sentry.")
     sentry_sdk.init(
-        dsn=env('CELERY_SENTRY_DSN'),
-        environment=env('CELERY_SENTRY_ENVIRONMENT'),
-        release=env('CELERY_SENTRY_RELEASE'),
-        integrations=[CeleryIntegration()]
+        dsn=env("CELERY_SENTRY_DSN"),
+        environment=env("CELERY_SENTRY_ENVIRONMENT"),
+        release=env("CELERY_SENTRY_RELEASE"),
+        integrations=[CeleryIntegration()],
     )
-    logger.info('Sentry setup.')
+    logger.info("Sentry setup.")
 
 
 @signals.before_task_publish.connect
@@ -44,16 +44,16 @@ def insert_request_id(headers=None, **kwargs):
     If the task is not launched from a user request, generate
     a new request_id and use that.
     """
-    request_id = getattr(local, 'request_id', None)
+    request_id = getattr(local, "request_id", None)
     if request_id is None:
         request_id = uuid.uuid4()
-    headers['request_id'] = request_id
+    headers["request_id"] = request_id
 
 
 @signals.task_prerun.connect
 def setup_request_id(**kwargs):
     """Set request_id from current task header."""
-    request_id = current_task.request.get('request_id', None)
+    request_id = current_task.request.get("request_id", None)
     local.request_id = request_id
 
 

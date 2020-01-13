@@ -4,8 +4,13 @@ from django.contrib.auth.models import User
 from django.core.management import call_command
 from django.test import TestCase
 
-from api.models import (AwsCloudAccount, AwsInstance, AwsInstanceEvent,
-                        AwsMachineImage, Run)
+from api.models import (
+    AwsCloudAccount,
+    AwsInstance,
+    AwsInstanceEvent,
+    AwsMachineImage,
+    Run,
+)
 
 
 class SyncBucketLifecycleTest(TestCase):
@@ -13,7 +18,7 @@ class SyncBucketLifecycleTest(TestCase):
 
     def test_command_output(self):
         """Test that 'seed_review_data' correctly calls seeds data."""
-        call_command('seed_review_data')
+        call_command("seed_review_data")
 
         self.assertEquals(User.objects.count(), 2)
         self.assertEquals(AwsCloudAccount.objects.count(), 5)

@@ -22,8 +22,8 @@ def configure_cloudtrail(session, aws_account_id):
         The response code of creating cloudtrail.
 
     """
-    cloudtrail = session.client('cloudtrail')
-    name = '{0}{1}'.format(settings.CLOUDTRAIL_NAME_PREFIX, aws_account_id)
+    cloudtrail = session.client("cloudtrail")
+    name = "{0}{1}".format(settings.CLOUDTRAIL_NAME_PREFIX, aws_account_id)
 
     if trail_exists(cloudtrail, name):
         response = update_cloudtrail(cloudtrail, name)
@@ -49,7 +49,7 @@ def trail_exists(cloudtrail, name):
     """
     trails = cloudtrail.describe_trails(trailNameList=[name])
     # the trailList will not be empty if a trail with the specified name exists
-    return trails.get('trailList', []) != []
+    return trails.get("trailList", []) != []
 
 
 def put_event_selectors(cloudtrail, name):
@@ -60,11 +60,10 @@ def put_event_selectors(cloudtrail, name):
         cloudtrail (boto3.Session): A temp
         name (string): The name of the cloudtrail to configure
     """
-    event_selector = [{'ReadWriteType': 'WriteOnly'}]
+    event_selector = [{"ReadWriteType": "WriteOnly"}]
     try:
         response = cloudtrail.put_event_selectors(
-            TrailName=name,
-            EventSelectors=event_selector
+            TrailName=name, EventSelectors=event_selector
         )
         return response
     except ClientError as e:
@@ -78,7 +77,7 @@ def create_cloudtrail(cloudtrail, name):
         cloudtrail (botocore client): The cloudtrail client
         name (string): The name of the cloudtrail to configure
     """
-    logger.debug(_('Creating the cloudtrail %s'), name)
+    logger.debug(_("Creating the cloudtrail %s"), name)
     try:
         response = cloudtrail.create_trail(
             Name=name,
@@ -88,10 +87,8 @@ def create_cloudtrail(cloudtrail, name):
         )
         return response
     except ClientError as e:
-        if 'MaximumNumberOfTrailsExceededException' == \
-                e.response['Error']['Code']:
-            raise MaximumNumberOfTrailsExceededException(
-                e.response['Error']['Message'])
+        if "MaximumNumberOfTrailsExceededException" == e.response["Error"]["Code"]:
+            raise MaximumNumberOfTrailsExceededException(e.response["Error"]["Message"])
         raise e
 
 
@@ -103,13 +100,13 @@ def update_cloudtrail(cloudtrail, name):
         cloudtrail (botocore client): The cloudtrail client
         name (string): The name of the cloudtrail to configure
     """
-    logger.debug(_('Updating the cloudtrail %s'), name)
+    logger.debug(_("Updating the cloudtrail %s"), name)
     try:
         response = cloudtrail.update_trail(
             Name=name,
             S3BucketName=settings.S3_BUCKET_NAME,
             IncludeGlobalServiceEvents=True,
-            IsMultiRegionTrail=True
+            IsMultiRegionTrail=True,
         )
         return response
     except ClientError as e:
@@ -123,12 +120,10 @@ def disable_cloudtrail(cloudtrail, name):
         cloudtrail (botocore client): The cloudtrail client
         name (string): The name of the cloudtrail to disable logging
     """
-    logger.debug(_('Disabling logging in the cloudtrail %s'), name)
+    logger.debug(_("Disabling logging in the cloudtrail %s"), name)
 
     try:
-        response = cloudtrail.stop_logging(
-            Name=name,
-        )
+        response = cloudtrail.stop_logging(Name=name,)
         return response
     except ClientError as e:
         raise e

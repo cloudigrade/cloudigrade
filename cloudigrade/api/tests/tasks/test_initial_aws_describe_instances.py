@@ -19,8 +19,8 @@ from util.tests import helper as util_helper
 class InitialAwsDescribeInstancesTest(TestCase):
     """Celery task 'initial_aws_describe_instances' test cases."""
 
-    @patch('api.tasks.aws')
-    @patch('api.util.aws')
+    @patch("api.tasks.aws")
+    @patch("api.util.aws")
     def test_initial_aws_describe_instances(self, mock_util_aws, mock_aws):
         """
         Test happy-path behaviors of initial_aws_describe_instances.
@@ -44,9 +44,9 @@ class InitialAwsDescribeInstancesTest(TestCase):
         )
         described_ami_windows = util_helper.generate_dummy_describe_image()
 
-        ami_id_unknown = described_ami_unknown['ImageId']
-        ami_id_openshift = described_ami_openshift['ImageId']
-        ami_id_windows = described_ami_windows['ImageId']
+        ami_id_unknown = described_ami_unknown["ImageId"]
+        ami_id_openshift = described_ami_openshift["ImageId"]
+        ami_id_windows = described_ami_windows["ImageId"]
         ami_id_unavailable = util_helper.generate_dummy_image_id()
         ami_id_gone = util_helper.generate_dummy_image_id()
 
@@ -71,9 +71,7 @@ class InitialAwsDescribeInstancesTest(TestCase):
         ]
         described_instances = {region: all_instances}
 
-        mock_aws.describe_instances_everywhere.return_value = (
-            described_instances
-        )
+        mock_aws.describe_instances_everywhere.return_value = described_instances
         mock_util_aws.describe_images.return_value = [
             described_ami_unknown,
             described_ami_openshift,
@@ -86,41 +84,37 @@ class InitialAwsDescribeInstancesTest(TestCase):
         start_inspection_calls = [
             call(
                 account.content_object.account_arn,
-                described_ami_unknown['ImageId'],
+                described_ami_unknown["ImageId"],
                 region,
             ),
             call(
                 account.content_object.account_arn,
-                described_ami_openshift['ImageId'],
+                described_ami_openshift["ImageId"],
                 region,
             ),
         ]
 
-        with patch.object(tasks, 'start_image_inspection') as mock_start:
+        with patch.object(tasks, "start_image_inspection") as mock_start:
             tasks.initial_aws_describe_instances(account.id)
             mock_start.assert_has_calls(start_inspection_calls)
 
         # Verify that we created all five instances.
-        instances_count = Instance.objects.filter(
-            cloud_account=account
-        ).count()
+        instances_count = Instance.objects.filter(cloud_account=account).count()
         self.assertEqual(instances_count, 5)
 
         # Verify that the running instances exist with power-on events.
         for described_instance in all_instances[:4]:
-            instance_id = described_instance['InstanceId']
+            instance_id = described_instance["InstanceId"]
             aws_instance = AwsInstance.objects.get(ec2_instance_id=instance_id)
             self.assertIsInstance(aws_instance, AwsInstance)
             self.assertEqual(region, aws_instance.region)
-            event = InstanceEvent.objects.get(
-                instance=aws_instance.instance.get()
-            )
+            event = InstanceEvent.objects.get(instance=aws_instance.instance.get())
             self.assertIsInstance(event, InstanceEvent)
             self.assertEqual(InstanceEvent.TYPE.power_on, event.event_type)
 
         # Verify that the not-running instances exist with no events.
         for described_instance in all_instances[4:]:
-            instance_id = described_instance['InstanceId']
+            instance_id = described_instance["InstanceId"]
             aws_instance = AwsInstance.objects.get(ec2_instance_id=instance_id)
             self.assertIsInstance(aws_instance, AwsInstance)
             self.assertEqual(region, aws_instance.region)
@@ -138,19 +132,19 @@ class InitialAwsDescribeInstancesTest(TestCase):
         image = aws_image.machine_image.get()
         self.assertFalse(image.rhel_detected)
         self.assertFalse(image.openshift_detected)
-        self.assertEqual(image.name, described_ami_unknown['Name'])
+        self.assertEqual(image.name, described_ami_unknown["Name"])
 
         aws_image = AwsMachineImage.objects.get(ec2_ami_id=ami_id_openshift)
         image = aws_image.machine_image.get()
         self.assertFalse(image.rhel_detected)
         self.assertTrue(image.openshift_detected)
-        self.assertEqual(image.name, described_ami_openshift['Name'])
+        self.assertEqual(image.name, described_ami_openshift["Name"])
 
         aws_image = AwsMachineImage.objects.get(ec2_ami_id=ami_id_windows)
         image = aws_image.machine_image.get()
         self.assertFalse(image.rhel_detected)
         self.assertFalse(image.openshift_detected)
-        self.assertEqual(image.name, described_ami_windows['Name'])
+        self.assertEqual(image.name, described_ami_windows["Name"])
         self.assertEqual(aws_image.platform, AwsMachineImage.WINDOWS)
 
         aws_image = AwsMachineImage.objects.get(ec2_ami_id=ami_id_unavailable)
@@ -159,7 +153,7 @@ class InitialAwsDescribeInstancesTest(TestCase):
         self.assertFalse(image.openshift_detected)
         self.assertEqual(image.status, MachineImage.UNAVAILABLE)
 
-    @patch('api.tasks.aws')
+    @patch("api.tasks.aws")
     def test_initial_aws_describe_instances_missing_account(self, mock_aws):
         """Test early return when account does not exist."""
         account_id = -1  # negative number account ID should never exist.

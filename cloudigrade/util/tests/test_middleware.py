@@ -16,7 +16,7 @@ class RequestIDLoggingMiddlewareTests(TestCase):
         self.middleware = RequestIDLoggingMiddleware(get_response)
 
         self.request = Mock()
-        self.request.path = '/badURL/'
+        self.request.path = "/badURL/"
         self.request.session = {}
 
     def test_request_id_set(self):
@@ -31,16 +31,12 @@ class RequestIDLoggingMiddlewareTests(TestCase):
         request_id = local.request_id
 
         response = self.middleware.process_response(self.request, {})
-        self.assertEqual(request_id,
-                         response.get(settings.CLOUDIGRADE_REQUEST_HEADER)
-                         )
+        self.assertEqual(request_id, response.get(settings.CLOUDIGRADE_REQUEST_HEADER))
 
         # Assert thread local request_id is cleaned up
-        self.assertFalse(hasattr(local, 'request_id'))
+        self.assertFalse(hasattr(local, "request_id"))
 
     def test_call(self):
         """Test CLOUDIGRADE_REQUEST_HEADER is set when middleware is called."""
         response = self.middleware(self.request)
-        self.assertIsNotNone(
-            response.get(settings.CLOUDIGRADE_REQUEST_HEADER)
-        )
+        self.assertIsNotNone(response.get(settings.CLOUDIGRADE_REQUEST_HEADER))

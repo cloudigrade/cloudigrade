@@ -30,19 +30,13 @@ class SaveInstanceTest(TestCase):
                 )
             ]
         }
-        ami_id = instances_data[region][0]['ImageId']
+        ami_id = instances_data[region][0]["ImageId"]
 
-        awsinstance = util.save_instance(
-            account, instances_data[region][0], region
-        )
+        awsinstance = util.save_instance(account, instances_data[region][0], region)
         instance = awsinstance.instance.get()
 
-        self.assertEqual(
-            instance.machine_image.content_object.ec2_ami_id, ami_id
-        )
-        self.assertEqual(
-            instance.machine_image.status, MachineImage.UNAVAILABLE
-        )
+        self.assertEqual(instance.machine_image.content_object.ec2_ami_id, ami_id)
+        self.assertEqual(instance.machine_image.status, MachineImage.UNAVAILABLE)
 
     def test_save_instance_with_missing_machineimage(self):
         """
@@ -67,29 +61,23 @@ class SaveInstanceTest(TestCase):
                 )
             ]
         }
-        ami_id = instances_data[region][0]['ImageId']
+        ami_id = instances_data[region][0]["ImageId"]
 
         # Create the AwsMachineImage without its paired MachineImage.
         aws_machine_image = AwsMachineImage.objects.create(
             owner_aws_account_id=util_helper.generate_dummy_aws_account_id(),
             ec2_ami_id=ami_id,
-            platform='none',
+            platform="none",
         )
         # Verify that the MachineImage was *not* created before proceeding.
         with self.assertRaises(MachineImage.DoesNotExist):
             aws_machine_image.machine_image.get()
 
-        awsinstance = util.save_instance(
-            account, instances_data[region][0], region
-        )
+        awsinstance = util.save_instance(account, instances_data[region][0], region)
         instance = awsinstance.instance.get()
 
-        self.assertEqual(
-            instance.machine_image.content_object.ec2_ami_id, ami_id
-        )
-        self.assertEqual(
-            instance.machine_image.status, MachineImage.UNAVAILABLE
-        )
+        self.assertEqual(instance.machine_image.content_object.ec2_ami_id, ami_id)
+        self.assertEqual(instance.machine_image.status, MachineImage.UNAVAILABLE)
 
     def test_save_instance_with_available_image(self):
         """Test that save instance events also writes image on instance."""
@@ -107,24 +95,18 @@ class SaveInstanceTest(TestCase):
                 )
             ]
         }
-        ami_id = instances_data[region][0]['ImageId']
+        ami_id = instances_data[region][0]["ImageId"]
 
         mock_session = Mock()
         described_amis = util_helper.generate_dummy_describe_image(
             image_id=ami_id, owner_id=aws_account_id
         )
 
-        with patch.object(util.aws, 'describe_images') as mock_describe_images:
+        with patch.object(util.aws, "describe_images") as mock_describe_images:
             mock_describe_images.return_value = [described_amis]
             util.create_new_machine_images(mock_session, instances_data)
-            mock_describe_images.assert_called_with(
-                mock_session, {ami_id}, region
-            )
-        awsinstance = util.save_instance(
-            account, instances_data[region][0], region
-        )
+            mock_describe_images.assert_called_with(mock_session, {ami_id}, region)
+        awsinstance = util.save_instance(account, instances_data[region][0], region)
         instance = awsinstance.instance.get()
-        self.assertEqual(
-            instance.machine_image.content_object.ec2_ami_id, ami_id
-        )
+        self.assertEqual(instance.machine_image.content_object.ec2_ami_id, ami_id)
         self.assertEqual(instance.machine_image.status, MachineImage.PENDING)

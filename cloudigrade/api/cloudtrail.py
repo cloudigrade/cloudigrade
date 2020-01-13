@@ -11,17 +11,17 @@ logger = logging.getLogger(__name__)
 
 
 ec2_instance_event_map = {
-    'RunInstances': InstanceEvent.TYPE.power_on,
-    'StartInstance': InstanceEvent.TYPE.power_on,
-    'StartInstances': InstanceEvent.TYPE.power_on,
-    'StopInstances': InstanceEvent.TYPE.power_off,
-    'TerminateInstances': InstanceEvent.TYPE.power_off,
-    'TerminateInstanceInAutoScalingGroup': InstanceEvent.TYPE.power_off,
-    'ModifyInstanceAttribute': InstanceEvent.TYPE.attribute_change,
+    "RunInstances": InstanceEvent.TYPE.power_on,
+    "StartInstance": InstanceEvent.TYPE.power_on,
+    "StartInstances": InstanceEvent.TYPE.power_on,
+    "StopInstances": InstanceEvent.TYPE.power_off,
+    "TerminateInstances": InstanceEvent.TYPE.power_off,
+    "TerminateInstanceInAutoScalingGroup": InstanceEvent.TYPE.power_off,
+    "ModifyInstanceAttribute": InstanceEvent.TYPE.attribute_change,
 }
-OPENSHIFT_MODEL_TAG = 'openshift'
-CREATE_TAG = 'CreateTags'
-DELETE_TAG = 'DeleteTags'
+OPENSHIFT_MODEL_TAG = "openshift"
+CREATE_TAG = "CreateTags"
+DELETE_TAG = "DeleteTags"
 ec2_ami_tag_event_list = [CREATE_TAG, DELETE_TAG]
 
 
@@ -29,14 +29,14 @@ class CloudTrailInstanceEvent(object):
     """Data structure for holding a Cloud Trail instance-related event."""
 
     __slots__ = (
-        'occurred_at',
-        'aws_account_id',
-        'region',
-        'ec2_instance_id',
-        'event_type',
-        'instance_type',
-        'ec2_ami_id',
-        'subnet_id',
+        "occurred_at",
+        "aws_account_id",
+        "region",
+        "ec2_instance_id",
+        "event_type",
+        "instance_type",
+        "ec2_ami_id",
+        "subnet_id",
     )
 
     def __init__(self, **kwargs):
@@ -49,12 +49,12 @@ class CloudTrailImageTagEvent(object):
     """Data structure for holding a Cloud Trail image tag-related event."""
 
     __slots__ = (
-        'occurred_at',
-        'aws_account_id',
-        'region',
-        'ec2_ami_id',
-        'tag',
-        'exists',
+        "occurred_at",
+        "aws_account_id",
+        "region",
+        "ec2_ami_id",
+        "tag",
+        "exists",
     )
 
     def __init__(self, **kwargs):
@@ -74,9 +74,9 @@ def extract_time_account_region(record):
         tuple(str, str, str)
 
     """
-    occurred_at = record['eventTime']
-    account_id = record['userIdentity']['accountId']
-    region = record['awsRegion']
+    occurred_at = record["eventTime"]
+    account_id = record["userIdentity"]["accountId"]
+    region = record["awsRegion"]
     return occurred_at, account_id, region
 
 
@@ -95,45 +95,45 @@ def extract_ec2_instance_events(record):
         return []
 
     occurred_at, aws_account_id, region = extract_time_account_region(record)
-    event_name = record['eventName']
+    event_name = record["eventName"]
     event_type = ec2_instance_event_map[event_name]
 
-    requestParameters = record.get('requestParameters', {})
+    requestParameters = record.get("requestParameters", {})
 
     # Weird! 'instanceType' definition differs based on the event name...
     # This is how 'instanceType' appears for 'RunInstances':
-    instance_type = requestParameters.get('instanceType')
+    instance_type = requestParameters.get("instanceType")
     if instance_type is not None and not isinstance(instance_type, str):
         # This is how 'instanceType' appears for 'ModifyInstanceAttribute':
-        instance_type = requestParameters.get('instanceType', {}).get('value')
+        instance_type = requestParameters.get("instanceType", {}).get("value")
 
     if (
-        event_name in ['ModifyInstanceAttribute', 'RunInstances'] and
-        instance_type is None
+        event_name in ["ModifyInstanceAttribute", "RunInstances"]
+        and instance_type is None
     ):
-        logger.info(_(
-            'Missing instanceType in %(event_name)s record: %(record)s'
-        ), {'event_name': event_name, 'record': record})
+        logger.info(
+            _("Missing instanceType in %(event_name)s record: %(record)s"),
+            {"event_name": event_name, "record": record},
+        )
         return []
 
-    ec2_instance_ami_ids = set([
-        (
-            instance_item['instanceId'],
-            instance_item.get('imageId'),
-            instance_item.get('subnetId'),
-        )
-        for instance_item in record.get('responseElements', {})
-                                   .get('instancesSet', {})
-                                   .get('items', [])
-        if 'instanceId' in instance_item
-    ])
+    ec2_instance_ami_ids = set(
+        [
+            (
+                instance_item["instanceId"],
+                instance_item.get("imageId"),
+                instance_item.get("subnetId"),
+            )
+            for instance_item in record.get("responseElements", {})
+            .get("instancesSet", {})
+            .get("items", [])
+            if "instanceId" in instance_item
+        ]
+    )
 
-    request_instance_id = requestParameters.get('instanceId')
-    if (
-        request_instance_id is not None and
-        request_instance_id not in (
-            instance_id for instance_id, __ in ec2_instance_ami_ids
-        )
+    request_instance_id = requestParameters.get("instanceId")
+    if request_instance_id is not None and request_instance_id not in (
+        instance_id for instance_id, __ in ec2_instance_ami_ids
     ):
         # We only see the instanceId in requestParameters for
         # ModifyInstanceAttribute, and that operation can't change the image.
@@ -171,20 +171,22 @@ def extract_ami_tag_events(record):
         return []
 
     occurred_at, aws_account_id, region = extract_time_account_region(record)
-    exists = record.get('eventName') == CREATE_TAG
-    ec2_ami_ids = set([
-        resource_item['resourceId']
-        for resource_item in record.get('requestParameters', {})
-                                   .get('resourcesSet', {})
-                                   .get('items', [])
-        if resource_item.get('resourceId', '').startswith('ami-')
-    ])
+    exists = record.get("eventName") == CREATE_TAG
+    ec2_ami_ids = set(
+        [
+            resource_item["resourceId"]
+            for resource_item in record.get("requestParameters", {})
+            .get("resourcesSet", {})
+            .get("items", [])
+            if resource_item.get("resourceId", "").startswith("ami-")
+        ]
+    )
     tags = [
-        tag_item['key']
-        for tag_item in record.get('requestParameters', {})
-                              .get('tagSet', {})
-                              .get('items', [])
-        if tag_item.get('key', '') == aws.OPENSHIFT_TAG
+        tag_item["key"]
+        for tag_item in record.get("requestParameters", {})
+        .get("tagSet", {})
+        .get("items", [])
+        if tag_item.get("key", "") == aws.OPENSHIFT_TAG
     ]
 
     return [
@@ -212,12 +214,12 @@ def _is_valid_event(record, valid_events):
         bool: Whether the record is valid and relevant for our analysis.
 
     """
-    if record.get('eventSource') != 'ec2.amazonaws.com':
+    if record.get("eventSource") != "ec2.amazonaws.com":
         return False
     # Currently we do not store events that have an error
-    elif record.get('errorCode'):
+    elif record.get("errorCode"):
         return False
-    elif record.get('eventName') not in valid_events:
+    elif record.get("eventName") not in valid_events:
         return False
     else:
         return True

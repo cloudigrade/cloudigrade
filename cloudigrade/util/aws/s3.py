@@ -22,25 +22,26 @@ def get_object_content_from_s3(bucket, key):
 
     """
     region = settings.S3_DEFAULT_REGION
-    s3_object = boto3.resource('s3', region_name=region).Object(bucket, key)
+    s3_object = boto3.resource("s3", region_name=region).Object(bucket, key)
     s3_object = s3_object.get()
 
-    object_bytes = s3_object['Body'].read()
+    object_bytes = s3_object["Body"].read()
 
     gzipped = (
-        key.endswith('.gz') or
-        s3_object.get('ContentType', None) == 'application/x-gzip'
+        key.endswith(".gz")
+        or s3_object.get("ContentType", None) == "application/x-gzip"
     )
 
     try:
         if gzipped:
-            content = gzip.decompress(object_bytes).decode('utf-8')
+            content = gzip.decompress(object_bytes).decode("utf-8")
         else:
-            content = object_bytes.decode('utf-8')
+            content = object_bytes.decode("utf-8")
     except UnicodeDecodeError as ex:
-        logger.exception(_('Failed to decode content of %(key)s: %(error)s'),
-                         {'key': key, 'error': ex}
-                         )
+        logger.exception(
+            _("Failed to decode content of %(key)s: %(error)s"),
+            {"key": key, "error": ex},
+        )
         raise
 
     return content

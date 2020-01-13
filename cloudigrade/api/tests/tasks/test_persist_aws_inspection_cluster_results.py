@@ -25,20 +25,20 @@ class PersistAwsInspectionClusterResultsTest(TestCase):
         rhel_version = _faker.slug()
         syspurpose = {_faker.slug(): _faker.text()}
         inspection_results = {
-            'cloud': 'aws',
-            'images': {
+            "cloud": "aws",
+            "images": {
                 ami_id: {
-                    'rhel_found': True,
-                    'rhel_release_files_found': True,
-                    'rhel_version': rhel_version,
-                    'syspurpose': syspurpose,
-                    'drive': {
-                        'partition': {
-                            'facts': [
+                    "rhel_found": True,
+                    "rhel_release_files_found": True,
+                    "rhel_version": rhel_version,
+                    "syspurpose": syspurpose,
+                    "drive": {
+                        "partition": {
+                            "facts": [
                                 {
-                                    'release_file': '/redhat-release',
-                                    'release_file_contents': 'RHEL\n',
-                                    'rhel_found': True,
+                                    "release_file": "/redhat-release",
+                                    "release_file_contents": "RHEL\n",
+                                    "rhel_found": True,
                                 }
                             ]
                         }
@@ -53,7 +53,7 @@ class PersistAwsInspectionClusterResultsTest(TestCase):
         self.assertTrue(machine_image.rhel_detected)
         self.assertEqual(
             json.loads(machine_image.inspection_json),
-            inspection_results['images'][ami_id],
+            inspection_results["images"][ami_id],
         )
         self.assertTrue(machine_image.rhel)
         self.assertEqual(machine_image.rhel_version, rhel_version)
@@ -67,19 +67,19 @@ class PersistAwsInspectionClusterResultsTest(TestCase):
         )
 
         inspection_results = {
-            'cloud': 'aws',
-            'images': {
+            "cloud": "aws",
+            "images": {
                 ami_id: {
-                    'rhel_found': False,
-                    'rhel_version': None,
-                    'syspurpose': None,
-                    'drive': {
-                        'partition': {
-                            'facts': [
+                    "rhel_found": False,
+                    "rhel_version": None,
+                    "syspurpose": None,
+                    "drive": {
+                        "partition": {
+                            "facts": [
                                 {
-                                    'release_file': '/centos-release',
-                                    'release_file_contents': 'CentOS\n',
-                                    'rhel_found': False,
+                                    "release_file": "/centos-release",
+                                    "release_file_contents": "CentOS\n",
+                                    "rhel_found": False,
                                 }
                             ]
                         }
@@ -95,7 +95,7 @@ class PersistAwsInspectionClusterResultsTest(TestCase):
         self.assertFalse(machine_image.openshift_detected)
         self.assertEqual(
             json.loads(machine_image.inspection_json),
-            inspection_results['images'][ami_id],
+            inspection_results["images"][ami_id],
         )
         self.assertFalse(machine_image.rhel)
         self.assertIsNone(machine_image.rhel_version)
@@ -123,17 +123,17 @@ class PersistAwsInspectionClusterResultsTest(TestCase):
         rhel_version_b = _faker.slug()
 
         inspection_results = {
-            'cloud': 'aws',
-            'images': {
+            "cloud": "aws",
+            "images": {
                 deleted_ami_id: {
-                    'rhel_found': True,
-                    'rhel_release_files_found': True,
-                    'rhel_version': rhel_version_b,
+                    "rhel_found": True,
+                    "rhel_release_files_found": True,
+                    "rhel_version": rhel_version_b,
                 },
                 ami_id: {
-                    'rhel_found': True,
-                    'rhel_release_files_found': True,
-                    'rhel_version': rhel_version_a,
+                    "rhel_found": True,
+                    "rhel_release_files_found": True,
+                    "rhel_version": rhel_version_a,
                 },
             },
         }
@@ -154,8 +154,8 @@ class PersistAwsInspectionClusterResultsTest(TestCase):
             is_encrypted=False, is_windows=False, ec2_ami_id=ami_id
         )
 
-        inspection_results = {'cloud': 'aws'}
-        expected_message = 'Inspection results json missing images: {}'.format(
+        inspection_results = {"cloud": "aws"}
+        expected_message = "Inspection results json missing images: {}".format(
             inspection_results
         )
 

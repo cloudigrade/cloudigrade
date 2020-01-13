@@ -19,7 +19,7 @@ class GetMaxConcurrentUsageTest(TestCase):
         self.user1account1 = api_helper.generate_aws_account(user=self.user1)
         self.image_rhel = api_helper.generate_aws_image(rhel_detected=True)
         self.image_plain = api_helper.generate_aws_image(rhel_detected=False)
-        self.instance_type_large = 'c5.xlarge'  # 4 vcpu, 8.0 GB memory
+        self.instance_type_large = "c5.xlarge"  # 4 vcpu, 8.0 GB memory
         self.instance_type_large_specs = util_helper.SOME_EC2_INSTANCE_TYPES[
             self.instance_type_large
         ]
@@ -50,16 +50,12 @@ class GetMaxConcurrentUsageTest(TestCase):
         request_date = datetime.date(2019, 5, 1)
         expected_date = request_date
         expected_instances = 1
-        expected_vcpu = self.instance_type_large_specs['vcpu']
-        expected_memory = self.instance_type_large_specs['memory']
+        expected_vcpu = self.instance_type_large_specs["vcpu"]
+        expected_memory = self.instance_type_large_specs["memory"]
 
         results = get_max_concurrent_usage(request_date, user_id=self.user1.id)
         self.assertMaxConcurrentUsage(
-            results,
-            expected_date,
-            expected_instances,
-            expected_vcpu,
-            expected_memory,
+            results, expected_date, expected_instances, expected_vcpu, expected_memory,
         )
 
     @util_helper.clouditardis(util_helper.utc_dt(2019, 4, 24, 0, 0, 0))
@@ -91,16 +87,12 @@ class GetMaxConcurrentUsageTest(TestCase):
         tasks.process_instance_event(instance_event)
 
         expected_instances = 1
-        expected_vcpu = self.instance_type_large_specs['vcpu']
-        expected_memory = self.instance_type_large_specs['memory']
+        expected_vcpu = self.instance_type_large_specs["vcpu"]
+        expected_memory = self.instance_type_large_specs["memory"]
 
         results = get_max_concurrent_usage(request_date, user_id=self.user1.id)
         self.assertMaxConcurrentUsage(
-            results,
-            expected_date,
-            expected_instances,
-            expected_vcpu,
-            expected_memory,
+            results, expected_date, expected_instances, expected_vcpu, expected_memory,
         )
 
     @util_helper.clouditardis(util_helper.utc_dt(2019, 5, 3, 0, 0, 0))
@@ -141,13 +133,9 @@ class GetMaxConcurrentUsageTest(TestCase):
 
         # Repeat the original request, but expect different results.
         expected_instances = 1
-        expected_vcpu = self.instance_type_large_specs['vcpu']
-        expected_memory = self.instance_type_large_specs['memory']
+        expected_vcpu = self.instance_type_large_specs["vcpu"]
+        expected_memory = self.instance_type_large_specs["memory"]
         results = get_max_concurrent_usage(request_date, user_id=self.user1.id)
         self.assertMaxConcurrentUsage(
-            results,
-            expected_date,
-            expected_instances,
-            expected_vcpu,
-            expected_memory,
+            results, expected_date, expected_instances, expected_vcpu, expected_memory,
         )

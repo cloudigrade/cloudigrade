@@ -12,8 +12,8 @@ from util.tests import helper as util_helper
 class RemoveSnapshotOwnershipTest(TestCase):
     """Celery task 'remove_snapshot_ownership' test cases."""
 
-    @patch('api.tasks.boto3')
-    @patch('api.tasks.aws')
+    @patch("api.tasks.boto3")
+    @patch("api.tasks.aws")
     def test_remove_snapshot_ownership_success(self, mock_aws, mock_boto3):
         """Assert that the remove snapshot ownership task succeeds."""
         mock_arn = util_helper.generate_dummy_arn()
@@ -22,9 +22,7 @@ class RemoveSnapshotOwnershipTest(TestCase):
             mock_customer_snapshot_id
         )
         mock_snapshot_copy_id = util_helper.generate_dummy_snapshot_id()
-        mock_snapshot_copy = util_helper.generate_mock_snapshot(
-            mock_snapshot_copy_id
-        )
+        mock_snapshot_copy = util_helper.generate_mock_snapshot(mock_snapshot_copy_id)
         zone = settings.HOUNDIGRADE_AWS_AVAILABILITY_ZONE
         region = zone[:-1]
 
@@ -40,15 +38,11 @@ class RemoveSnapshotOwnershipTest(TestCase):
             mock_arn, mock_customer_snapshot_id, region, mock_snapshot_copy_id
         )
 
-        mock_aws.remove_snapshot_ownership.assert_called_with(
-            mock_customer_snapshot
-        )
+        mock_aws.remove_snapshot_ownership.assert_called_with(mock_customer_snapshot)
 
-    @patch('api.tasks.boto3')
-    @patch('api.tasks.aws')
-    def test_remove_snapshot_ownership_no_copy_snapshot(
-        self, mock_aws, mock_boto3
-    ):
+    @patch("api.tasks.boto3")
+    @patch("api.tasks.aws")
+    def test_remove_snapshot_ownership_no_copy_snapshot(self, mock_aws, mock_boto3):
         """Assert remove snapshot ownership task succeeds with missing copy."""
         mock_arn = util_helper.generate_dummy_arn()
         mock_customer_snapshot_id = util_helper.generate_dummy_snapshot_id()
@@ -56,14 +50,12 @@ class RemoveSnapshotOwnershipTest(TestCase):
             mock_customer_snapshot_id
         )
         mock_snapshot_copy_id = util_helper.generate_dummy_snapshot_id()
-        mock_snapshot_copy = util_helper.generate_mock_snapshot(
-            mock_snapshot_copy_id
-        )
+        mock_snapshot_copy = util_helper.generate_mock_snapshot(mock_snapshot_copy_id)
         zone = settings.HOUNDIGRADE_AWS_AVAILABILITY_ZONE
         region = zone[:-1]
 
         client_error = ClientError(
-            error_response={'Error': {'Code': 'InvalidSnapshot.NotFound'}},
+            error_response={"Error": {"Code": "InvalidSnapshot.NotFound"}},
             operation_name=Mock(),
         )
 
@@ -80,15 +72,11 @@ class RemoveSnapshotOwnershipTest(TestCase):
             mock_arn, mock_customer_snapshot_id, region, mock_snapshot_copy_id
         )
 
-        mock_aws.remove_snapshot_ownership.assert_called_with(
-            mock_customer_snapshot
-        )
+        mock_aws.remove_snapshot_ownership.assert_called_with(mock_customer_snapshot)
 
-    @patch('api.tasks.boto3')
-    @patch('api.tasks.aws')
-    def test_remove_snapshot_ownership_unexpected_error(
-        self, mock_aws, mock_boto3
-    ):
+    @patch("api.tasks.boto3")
+    @patch("api.tasks.aws")
+    def test_remove_snapshot_ownership_unexpected_error(self, mock_aws, mock_boto3):
         """Assert remove snapshot ownership fails due to unexpected error."""
         mock_arn = util_helper.generate_dummy_arn()
         mock_customer_snapshot_id = util_helper.generate_dummy_snapshot_id()
@@ -97,7 +85,7 @@ class RemoveSnapshotOwnershipTest(TestCase):
         region = zone[:-1]
 
         client_error = ClientError(
-            error_response={'Error': {'Code': 'InvalidSnapshot.Unknown'}},
+            error_response={"Error": {"Code": "InvalidSnapshot.Unknown"}},
             operation_name=Mock(),
         )
 
@@ -106,10 +94,7 @@ class RemoveSnapshotOwnershipTest(TestCase):
 
         with self.assertRaises(RuntimeError):
             remove_snapshot_ownership(
-                mock_arn,
-                mock_customer_snapshot_id,
-                region,
-                mock_snapshot_copy_id,
+                mock_arn, mock_customer_snapshot_id, region, mock_snapshot_copy_id,
             )
 
         mock_aws.remove_snapshot_ownership.assert_not_called()

@@ -16,12 +16,12 @@ from util.exceptions import (
 )
 
 logger = logging.getLogger(__name__)
-policy_name_pattern = 'cloudigrade-policy-for-{aws_account_id}'
-role_name_pattern = 'cloudigrade-role-for-{aws_account_id}'
+policy_name_pattern = "cloudigrade-policy-for-{aws_account_id}"
+role_name_pattern = "cloudigrade-role-for-{aws_account_id}"
 
 
 def get_session_from_access_key(
-    access_key_id, secret_access_key, region_name='us-east-1'
+    access_key_id, secret_access_key, region_name="us-east-1"
 ):
     """
     Return a new session using the customer AWS access key credentials.
@@ -52,10 +52,8 @@ def get_standard_policy_name_and_arn(session):
 
     """
     customer_account_id = get_session_account_id(session)
-    policy_name = policy_name_pattern.format(
-        aws_account_id=_get_primary_account_id()
-    )
-    arn = 'arn:aws:iam::{customer_account_id}:policy/{policy_name}'.format(
+    policy_name = policy_name_pattern.format(aws_account_id=_get_primary_account_id())
+    arn = "arn:aws:iam::{customer_account_id}:policy/{policy_name}".format(
         customer_account_id=customer_account_id, policy_name=policy_name
     )
     return (policy_name, arn)
@@ -70,10 +68,8 @@ def get_standard_role_name_and_arn(session):
 
     """
     customer_account_id = get_session_account_id(session)
-    role_name = role_name_pattern.format(
-        aws_account_id=_get_primary_account_id()
-    )
-    arn = 'arn:aws:iam::{customer_account_id}:role/{role_name}'.format(
+    role_name = role_name_pattern.format(aws_account_id=_get_primary_account_id())
+    arn = "arn:aws:iam::{customer_account_id}:role/{role_name}".format(
         customer_account_id=customer_account_id, role_name=role_name
     )
     return (role_name, arn)
@@ -97,7 +93,7 @@ def ensure_cloudigrade_policy(session):
     policy_document = json.dumps(cloudigrade_policy)
     policy_name, policy_arn = get_standard_policy_name_and_arn(session)
 
-    iam_client = session.client('iam')
+    iam_client = session.client("iam")
     try:
         policy = iam_client.get_policy(PolicyArn=policy_arn)
     except iam_client.exceptions.NoSuchEntityException:
@@ -107,7 +103,7 @@ def ensure_cloudigrade_policy(session):
         policy = iam_client.create_policy(
             PolicyName=policy_name, PolicyDocument=policy_document
         )
-        created_arn = policy.get('Policy', {}).get('Arn', None)
+        created_arn = policy.get("Policy", {}).get("Arn", None)
         if created_arn != policy_arn:
             raise AwsPolicyCreationException(
                 _(
@@ -117,16 +113,16 @@ def ensure_cloudigrade_policy(session):
             )
         return (policy_name, policy_arn)
 
-    policy_versions = iam_client.list_policy_versions(
-        PolicyArn=policy_arn
-    ).get('Versions', [])
+    policy_versions = iam_client.list_policy_versions(PolicyArn=policy_arn).get(
+        "Versions", []
+    )
 
     # Find and delete the oldest not-default version because AWS caps the
     # number of versions arbitrarily low.
     oldest_not_default_version_id = None
-    for version_data in sorted(policy_versions, key=lambda v: v['CreateDate']):
-        if not version_data['IsDefaultVersion']:
-            oldest_not_default_version_id = version_data['VersionId']
+    for version_data in sorted(policy_versions, key=lambda v: v["CreateDate"]):
+        if not version_data["IsDefaultVersion"]:
+            oldest_not_default_version_id = version_data["VersionId"]
             break
     if oldest_not_default_version_id is not None:
         iam_client.delete_policy_version(
@@ -149,15 +145,15 @@ def get_standard_assume_role_policy_document():
 
     """
     aws_account_id = _get_primary_account_id()
-    cloudigrade_account_root_arn = f'arn:aws:iam::{aws_account_id}:root'
+    cloudigrade_account_root_arn = f"arn:aws:iam::{aws_account_id}:root"
     document_dict = {
-        'Version': '2012-10-17',
-        'Statement': [
+        "Version": "2012-10-17",
+        "Statement": [
             {
-                'Effect': 'Allow',
-                'Principal': {'AWS': cloudigrade_account_root_arn},
-                'Action': 'sts:AssumeRole',
-                'Condition': {},
+                "Effect": "Allow",
+                "Principal": {"AWS": cloudigrade_account_root_arn},
+                "Action": "sts:AssumeRole",
+                "Condition": {},
             }
         ],
     }
@@ -188,7 +184,7 @@ def ensure_cloudigrade_role(session, policy_arn):
     role_name, role_arn = get_standard_role_name_and_arn(session)
     assume_role_policy_document = get_standard_assume_role_policy_document()
 
-    iam_client = session.client('iam')
+    iam_client = session.client("iam")
 
     # Step 1: Ensure the Role exists.
     try:
@@ -197,10 +193,9 @@ def ensure_cloudigrade_role(session, policy_arn):
         role = None
     if role is None:
         role = iam_client.create_role(
-            RoleName=role_name,
-            AssumeRolePolicyDocument=assume_role_policy_document,
+            RoleName=role_name, AssumeRolePolicyDocument=assume_role_policy_document,
         )
-        created_arn = role.get('Role', {}).get('Arn')
+        created_arn = role.get("Role", {}).get("Arn")
         if created_arn != role_arn:
             raise AwsRoleCreationException(
                 _(
@@ -208,7 +203,7 @@ def ensure_cloudigrade_role(session, policy_arn):
                     'expected role ARN "{role_arn}"'
                 ).format(created_arn=created_arn, role_arn=role_arn)
             )
-        created_name = role.get('Role', {}).get('RoleName')
+        created_name = role.get("Role", {}).get("RoleName")
         if created_name != role_name:
             raise AwsRoleCreationException(
                 _(
@@ -219,36 +214,33 @@ def ensure_cloudigrade_role(session, policy_arn):
 
     # Step 2: Ensure the Role has our assume role policy document.
     existing_assume_role_policy_document = json.dumps(
-        role.get('Role', {}).get('AssumeRolePolicyDocument')
+        role.get("Role", {}).get("AssumeRolePolicyDocument")
     )
     if existing_assume_role_policy_document != assume_role_policy_document:
         logger.warning(
             _(
-                'Existing AssumeRolePolicyDocument for Role %(role_arn)s does'
-                'not match expected value (old: %(document)s)'
+                "Existing AssumeRolePolicyDocument for Role %(role_arn)s does"
+                "not match expected value (old: %(document)s)"
             ),
-            {
-                'role_arn': role_arn,
-                'document': existing_assume_role_policy_document,
-            },
+            {"role_arn": role_arn, "document": existing_assume_role_policy_document,},
         )
         iam_client.update_assume_role_policy(
             RoleName=role_name, PolicyDocument=assume_role_policy_document
         )
 
     # Step 3: Ensure the Role has the customer's cloudigrade Policy attached.
-    attached_policies = iam_client.list_attached_role_policies(
-        RoleName=role_name
-    ).get('AttachedPolicies', [])
+    attached_policies = iam_client.list_attached_role_policies(RoleName=role_name).get(
+        "AttachedPolicies", []
+    )
     attached_policy_found = False
     for attached_policy in attached_policies:
-        if attached_policy.get('PolicyArn') == policy_arn:
+        if attached_policy.get("PolicyArn") == policy_arn:
             attached_policy_found = True
             break
     if not attached_policy_found:
         logger.info(
-            _('Attaching policy ARN %(policy_arn)s to role ARN %(role_arn)s'),
-            {'policy_arn': policy_arn, 'role_arn': role_arn},
+            _("Attaching policy ARN %(policy_arn)s to role ARN %(role_arn)s"),
+            {"policy_arn": policy_arn, "role_arn": role_arn},
         )
         iam_client.attach_role_policy(RoleName=role_name, PolicyArn=policy_arn)
 

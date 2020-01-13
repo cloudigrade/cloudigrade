@@ -23,25 +23,25 @@ class LoadEc2DefinitionsTest(TestCase):
     def test_skip_when_any_present(self):
         """Test that 'loadec2definitions' skips task if definitions exist."""
         self.create_random_definition()
-        _path = 'util.management.commands.loadec2definitions'
-        with patch('{}.tasks'.format(_path)) as mock_tasks:
-            call_command('loadec2definitions')
+        _path = "util.management.commands.loadec2definitions"
+        with patch("{}.tasks".format(_path)) as mock_tasks:
+            call_command("loadec2definitions")
             task = mock_tasks.repopulate_ec2_instance_mapping
             task.delay.assert_not_called()
 
     def test_load_when_none(self):
         """Test that 'loadec2definitions' runs task if no definitions exist."""
-        _path = 'util.management.commands.loadec2definitions'
-        with patch('{}.tasks'.format(_path)) as mock_tasks:
-            call_command('loadec2definitions')
+        _path = "util.management.commands.loadec2definitions"
+        with patch("{}.tasks".format(_path)) as mock_tasks:
+            call_command("loadec2definitions")
             task = mock_tasks.repopulate_ec2_instance_mapping
             task.delay.assert_called()
 
     def test_skip_when_any_present_but_forced(self):
         """Test force-calling 'loadec2definitions' when definitions exist."""
         self.create_random_definition()
-        _path = 'util.management.commands.loadec2definitions'
-        with patch('{}.tasks'.format(_path)) as mock_tasks:
-            call_command('loadec2definitions', force=True)
+        _path = "util.management.commands.loadec2definitions"
+        with patch("{}.tasks".format(_path)) as mock_tasks:
+            call_command("loadec2definitions", force=True)
             task = mock_tasks.repopulate_ec2_instance_mapping
             task.delay.assert_called()

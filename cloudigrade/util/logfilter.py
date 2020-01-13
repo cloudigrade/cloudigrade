@@ -9,5 +9,5 @@ class RequestIDFilter(logging.Filter):
 
     def filter(self, record):
         """Add a request_id to the record."""
-        record.request_id = getattr(local, 'request_id', None)
+        record.request_id = getattr(local, "request_id", None)
         return True

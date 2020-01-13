@@ -24,11 +24,11 @@ def generate_http_identity_headers(account_number):
         dict with encoded Insights identity header
 
     """
-    raw_header = {'identity': {'account_number': account_number}}
-    identity_encoded = base64.b64encode(
-        json.dumps(raw_header).encode('utf-8')
-    ).decode('utf-8')
-    headers = {'X-RH-IDENTITY': identity_encoded}
+    raw_header = {"identity": {"account_number": account_number}}
+    identity_encoded = base64.b64encode(json.dumps(raw_header).encode("utf-8")).decode(
+        "utf-8"
+    )
+    headers = {"X-RH-IDENTITY": identity_encoded}
     return headers
 
 
@@ -48,28 +48,24 @@ def get_sources_authentication(account_number, authentication_id):
 
     """
     sources_api_base_url = settings.SOURCES_API_BASE_URL
-    url = f'{sources_api_base_url}/authentications/{authentication_id}/'
+    url = f"{sources_api_base_url}/authentications/{authentication_id}/"
 
     headers = generate_http_identity_headers(account_number)
-    params = {'expose_encrypted_attribute[]': 'password'}
+    params = {"expose_encrypted_attribute[]": "password"}
 
     response = requests.get(url, headers=headers, params=params)
 
     if response.status_code != http.HTTPStatus.OK:
         message = _(
-            'unexpected status {status} using account {account_number} at '
-            '{url}'
-        ).format(
-            status=response.status_code, account_number=account_number, url=url
-        )
+            "unexpected status {status} using account {account_number} at " "{url}"
+        ).format(status=response.status_code, account_number=account_number, url=url)
         raise SourcesAPINotOkStatus(message)
 
     try:
         response_json = response.json()
     except json.decoder.JSONDecodeError:
         message = _(
-            'unexpected non-json response using account {account_number} at '
-            '{url}'
+            "unexpected non-json response using account {account_number} at " "{url}"
         ).format(account_number=account_number, url=url)
         raise SourcesAPINotJsonContent(message)
 

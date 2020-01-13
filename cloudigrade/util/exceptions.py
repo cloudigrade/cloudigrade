@@ -21,7 +21,7 @@ class NotReadyException(Exception):
 
     def __init__(self, message=None):
         """Log the exception message upon creation."""
-        logger.info('%s: %s', self.__class__.__name__, message)
+        logger.info("%s: %s", self.__class__.__name__, message)
         self.message = message
 
 
@@ -81,7 +81,7 @@ class MaximumNumberOfTrailsExceededException(APIException):
     """Raise when the max number of cloud trails exceeds the limit."""
 
     status_code = http.HTTPStatus.CONFLICT
-    default_detail = _('Exceeded maximum number of cloud trails')
+    default_detail = _("Exceeded maximum number of cloud trails")
 
 
 class InvalidHoundigradeJsonFormat(Exception):

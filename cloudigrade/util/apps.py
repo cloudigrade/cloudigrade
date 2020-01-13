@@ -2,7 +2,7 @@ from django.apps import AppConfig
 
 
 class UtilConfig(AppConfig):
-    name = 'util'
+    name = "util"
 
     # TODO FIXME: Health checks previously present here
     # were causing a memory leak issue, when the time comes we need

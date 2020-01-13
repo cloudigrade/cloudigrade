@@ -12,14 +12,25 @@ from rest_framework.test import APIClient
 
 from api import tasks
 from api.cloudtrail import CloudTrailInstanceEvent
-from api.models import (AwsCloudAccount, AwsEC2InstanceDefinition, AwsInstance,
-                        AwsInstanceEvent, AwsMachineImage,
-                        CLOUD_ACCESS_NAME_TOKEN, CloudAccount, Instance,
-                        InstanceEvent, MARKETPLACE_NAME_TOKEN, MachineImage,
-                        Run)
-from api.util import (_sqs_wrap_message,
-                      calculate_max_concurrent_usage_from_runs,
-                      recalculate_runs)
+from api.models import (
+    AwsCloudAccount,
+    AwsEC2InstanceDefinition,
+    AwsInstance,
+    AwsInstanceEvent,
+    AwsMachineImage,
+    CLOUD_ACCESS_NAME_TOKEN,
+    CloudAccount,
+    Instance,
+    InstanceEvent,
+    MARKETPLACE_NAME_TOKEN,
+    MachineImage,
+    Run,
+)
+from api.util import (
+    _sqs_wrap_message,
+    calculate_max_concurrent_usage_from_runs,
+    recalculate_runs,
+)
 from util import aws
 from util.tests import helper
 
@@ -47,9 +58,7 @@ class SandboxedRestClient(object):
         self.authenticated_user = None
         self.bypass_aws_calls = True
         self.aws_account_verified = True
-        self.aws_primary_account_id = int(
-            helper.generate_dummy_aws_account_id()
-        )
+        self.aws_primary_account_id = int(helper.generate_dummy_aws_account_id())
 
     def _call_api(self, verb, path, data=None):
         """
@@ -71,20 +80,18 @@ class SandboxedRestClient(object):
         """
         if self.bypass_aws_calls:
             with patch.object(
-                aws, 'verify_account_access'
-            ) as mock_verify, patch.object(aws.sts, 'boto3'), patch.object(
-                aws, 'disable_cloudtrail'
+                aws, "verify_account_access"
+            ) as mock_verify, patch.object(aws.sts, "boto3"), patch.object(
+                aws, "disable_cloudtrail"
             ), patch.object(
-                aws, 'get_session'
+                aws, "get_session"
             ), patch.object(
-                aws.sts, '_get_primary_account_id'
+                aws.sts, "_get_primary_account_id"
             ) as mock_get_primary_account_id, patch.object(
-                tasks, 'initial_aws_describe_instances'
+                tasks, "initial_aws_describe_instances"
             ):
                 mock_verify.return_value = self.aws_account_verified, []
-                mock_get_primary_account_id.return_value = (
-                    self.aws_primary_account_id
-                )
+                mock_get_primary_account_id.return_value = self.aws_primary_account_id
                 response = getattr(self.client, verb)(path, data=data)
         else:
             response = getattr(self.client, verb)(path, data=data)
@@ -99,16 +106,15 @@ class SandboxedRestClient(object):
         example, "create_account" would handle POSTs to the account API.
         """
         try:
-            verb, noun = item.split('_')
-            if verb == 'list':
-                verb = 'get'
-            elif verb == 'create':
-                verb = 'post'
+            verb, noun = item.split("_")
+            if verb == "list":
+                verb = "get"
+            elif verb == "create":
+                verb = "post"
             return functools.partial(self.verb_noun, verb, noun)
         except Exception:
             raise AttributeError(
-                f"'{self.__class__.__name__}' object "
-                f"has no attribute '{item}'"
+                f"'{self.__class__.__name__}' object " f"has no attribute '{item}'"
             )
 
     def _force_authenticate(self, user):
@@ -118,24 +124,30 @@ class SandboxedRestClient(object):
             HTTP_X_RH_IDENTITY=helper.get_3scale_auth_header(user.username)
         )
 
-    def verb_noun(self, verb, noun, noun_id=None, detail=None, data=None,
-                  api_root='/v2'):
+    def verb_noun(
+        self, verb, noun, noun_id=None, detail=None, data=None, api_root="/v2"
+    ):
         """Make a simulated REST API call for the given inputs."""
         if detail:
-            path = f'{api_root}/{noun}/{noun_id}/{detail}/'
+            path = f"{api_root}/{noun}/{noun_id}/{detail}/"
         elif noun_id:
-            path = f'{api_root}/{noun}/{noun_id}/'
-        elif verb == 'report':
-            path = f'{api_root}/report/{noun}/'
-            verb = 'get'
+            path = f"{api_root}/{noun}/{noun_id}/"
+        elif verb == "report":
+            path = f"{api_root}/report/{noun}/"
+            verb = "get"
         else:
-            path = f'{api_root}/{noun}/'
+            path = f"{api_root}/{noun}/"
         return self._call_api(verb=verb, path=path, data=data)
 
 
 def generate_aws_account(
-        arn=None, aws_account_id=None, user=None, name=None,
-        created_at=None, aws_access_key_id=None):
+    arn=None,
+    aws_account_id=None,
+    user=None,
+    name=None,
+    created_at=None,
+    aws_access_key_id=None,
+):
     """
     Generate an AwsAccount for testing.
 
@@ -168,15 +180,13 @@ def generate_aws_account(
     aws_cloud_account = AwsCloudAccount.objects.create(
         account_arn=arn,
         aws_account_id=aws.AwsArn(arn).account_id,
-        aws_access_key_id=aws_access_key_id
+        aws_access_key_id=aws_access_key_id,
     )
     if created_at:
         aws_cloud_account.created_at = created_at
         aws_cloud_account.save()
     cloud_account = CloudAccount.objects.create(
-        user=user,
-        name=name,
-        content_object=aws_cloud_account,
+        user=user, name=name, content_object=aws_cloud_account,
     )
     if created_at:
         cloud_account.created_at = created_at
@@ -185,8 +195,9 @@ def generate_aws_account(
     return cloud_account
 
 
-def generate_aws_instance(cloud_account, ec2_instance_id=None, region=None,
-                          image=None, no_image=False):
+def generate_aws_instance(
+    cloud_account, ec2_instance_id=None, region=None, image=None, no_image=False
+):
     """
     Generate an AwsInstance for the AwsAccount for testing.
 
@@ -214,25 +225,19 @@ def generate_aws_instance(cloud_account, ec2_instance_id=None, region=None,
             aws_image, created = AwsMachineImage.objects.get_or_create(
                 ec2_ami_id=ec2_ami_id,
                 defaults={
-                    'owner_aws_account_id':
-                        cloud_account.content_object.aws_account_id,
-                }
+                    "owner_aws_account_id": cloud_account.content_object.aws_account_id,
+                },
             )
             if created:
-                image = MachineImage.objects.create(
-                    content_object=aws_image,
-                )
+                image = MachineImage.objects.create(content_object=aws_image,)
             else:
                 image = aws_image.machine_image.get()
 
     aws_instance = AwsInstance.objects.create(
-        ec2_instance_id=ec2_instance_id,
-        region=region,
+        ec2_instance_id=ec2_instance_id, region=region,
     )
     instance = Instance.objects.create(
-        cloud_account=cloud_account,
-        content_object=aws_instance,
-        machine_image=image
+        cloud_account=cloud_account, content_object=aws_instance, machine_image=image
     )
 
     return instance
@@ -280,8 +285,7 @@ def generate_single_aws_instance_event(
         event_type = InstanceEvent.TYPE.power_off
 
     aws_event = AwsInstanceEvent.objects.create(
-        subnet=subnet,
-        instance_type=instance_type,
+        subnet=subnet, instance_type=instance_type,
     )
     event = InstanceEvent.objects.create(
         instance=instance,
@@ -293,8 +297,7 @@ def generate_single_aws_instance_event(
 
 
 def generate_aws_instance_events(
-    instance, powered_times, instance_type=None, subnet=None,
-    no_instance_type=False
+    instance, powered_times, instance_type=None, subnet=None, no_instance_type=False
 ):
     """
     Generate list of InstanceEvents for the Instance for testing.
@@ -336,7 +339,7 @@ def generate_aws_instance_events(
                 event_type=InstanceEvent.TYPE.power_on,
                 instance_type=instance_type,
                 subnet=subnet,
-                no_instance_type=no_instance_type
+                no_instance_type=no_instance_type,
             )
             events.append(event)
         if power_off_time is not None:
@@ -348,20 +351,20 @@ def generate_aws_instance_events(
                 event_type=InstanceEvent.TYPE.power_off,
                 instance_type=instance_type,
                 subnet=subnet,
-                no_instance_type=no_instance_type
+                no_instance_type=no_instance_type,
             )
             events.append(event)
     return events
 
 
 def generate_cloudtrail_instance_event(
-        instance,
-        occurred_at,
-        event_type=None,
-        instance_type=None,
-        subnet=None,
-        no_instance_type=False,
-        no_subnet=False,
+    instance,
+    occurred_at,
+    event_type=None,
+    instance_type=None,
+    subnet=None,
+    no_instance_type=False,
+    no_subnet=False,
 ):
     """
     Generate a single CloudTrailInstanceEvent for testing.
@@ -477,30 +480,27 @@ def generate_aws_image(
                 rhel_detected_signed_packages,
             )
         ):
-            image_json = json.dumps(
-                {'rhel_release_files_found': rhel_detected}
-            )
+            image_json = json.dumps({"rhel_release_files_found": rhel_detected})
         else:
             image_json = json.dumps(
                 {
-                    'rhel_enabled_repos_found': rhel_detected_repos,
-                    'rhel_product_certs_found': rhel_detected_certs,
-                    'rhel_release_files_found': rhel_detected_release_files,
-                    'rhel_signed_packages_found':
-                        rhel_detected_signed_packages,
-                    'rhel_version': rhel_version,
-                    'syspurpose': syspurpose,
+                    "rhel_enabled_repos_found": rhel_detected_repos,
+                    "rhel_product_certs_found": rhel_detected_certs,
+                    "rhel_release_files_found": rhel_detected_release_files,
+                    "rhel_signed_packages_found": rhel_detected_signed_packages,
+                    "rhel_version": rhel_version,
+                    "syspurpose": syspurpose,
                 }
             )
     else:
         image_json = None
 
     if is_marketplace:
-        name = f'{name or _faker.name()}{MARKETPLACE_NAME_TOKEN}'
+        name = f"{name or _faker.name()}{MARKETPLACE_NAME_TOKEN}"
         owner_aws_account_id = random.choice(settings.RHEL_IMAGES_AWS_ACCOUNTS)
 
     if is_cloud_access:
-        name = f'{name or _faker.name()}{CLOUD_ACCESS_NAME_TOKEN}'
+        name = f"{name or _faker.name()}{CLOUD_ACCESS_NAME_TOKEN}"
         owner_aws_account_id = random.choice(settings.RHEL_IMAGES_AWS_ACCOUNTS)
 
     aws_machine_image = AwsMachineImage.objects.create(
@@ -562,17 +562,19 @@ def generate_single_run(
         instance=instance,
         machineimage=image,
         instance_type=instance_type,
-        vcpu=helper.SOME_EC2_INSTANCE_TYPES[instance_type]['vcpu'] if
-        instance_type in helper.SOME_EC2_INSTANCE_TYPES else None,
-        memory=helper.SOME_EC2_INSTANCE_TYPES[instance_type]['memory'] if
-        instance_type in helper.SOME_EC2_INSTANCE_TYPES else None,
+        vcpu=helper.SOME_EC2_INSTANCE_TYPES[instance_type]["vcpu"]
+        if instance_type in helper.SOME_EC2_INSTANCE_TYPES
+        else None,
+        memory=helper.SOME_EC2_INSTANCE_TYPES[instance_type]["memory"]
+        if instance_type in helper.SOME_EC2_INSTANCE_TYPES
+        else None,
     )
     generate_single_aws_instance_event(
         instance=instance,
         occurred_at=runtime[0],
         event_type=InstanceEvent.TYPE.power_on,
         instance_type=instance_type,
-        no_instance_type=no_instance_type
+        no_instance_type=no_instance_type,
     )
     if runtime[1]:
         generate_single_aws_instance_event(
@@ -580,7 +582,7 @@ def generate_single_run(
             occurred_at=runtime[1],
             event_type=InstanceEvent.TYPE.power_off,
             instance_type=instance_type,
-            no_instance_type=no_instance_type
+            no_instance_type=no_instance_type,
         )
     if calculate_concurrent_usage:
         calculate_max_concurrent_usage_from_runs([run])
@@ -594,15 +596,20 @@ def generate_aws_ec2_definitions():
     for name, instance in instance_types.items():
         __, created = AwsEC2InstanceDefinition.objects.get_or_create(
             instance_type=name,
-            defaults={'memory': instance['memory'], 'vcpu': instance['vcpu']},
+            defaults={"memory": instance["memory"], "vcpu": instance["vcpu"]},
         )
         if not created:
             logger.warning('"%s" EC2 definition already exists', name)
 
 
-def generate_cloudtrail_record(aws_account_id, event_name, event_time=None,
-                               region=None, request_parameters=None,
-                               response_elements=None):
+def generate_cloudtrail_record(
+    aws_account_id,
+    event_name,
+    event_time=None,
+    region=None,
+    request_parameters=None,
+    response_elements=None,
+):
     """
     Generate an example CloudTrail log's "Record" dict.
 
@@ -631,23 +638,23 @@ def generate_cloudtrail_record(aws_account_id, event_name, event_time=None,
         response_elements = {}
 
     record = {
-        'awsRegion': region,
-        'eventName': event_name,
-        'eventSource': 'ec2.amazonaws.com',
-        'eventTime': event_time.strftime('%Y-%m-%dT%H:%M:%SZ'),
-        'requestParameters': request_parameters,
-        'responseElements': response_elements,
-        'userIdentity': {
-            'accountId': int(aws_account_id)
-        }
+        "awsRegion": region,
+        "eventName": event_name,
+        "eventSource": "ec2.amazonaws.com",
+        "eventTime": event_time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "requestParameters": request_parameters,
+        "responseElements": response_elements,
+        "userIdentity": {"accountId": int(aws_account_id)},
     }
     return record
 
 
-def generate_mock_cloudtrail_sqs_message(bucket_name='analyzer-test-bucket',
-                                         object_key='path/to/file.json.gz',
-                                         receipt_handle=None,
-                                         message_id=None):
+def generate_mock_cloudtrail_sqs_message(
+    bucket_name="analyzer-test-bucket",
+    object_key="path/to/file.json.gz",
+    receipt_handle=None,
+    message_id=None,
+):
     """
     Generate a Mock object that behaves like a CloudTrail SQS message.
 
@@ -668,23 +675,12 @@ def generate_mock_cloudtrail_sqs_message(bucket_name='analyzer-test-bucket',
         message_id = str(uuid.uuid4())
 
     mock_sqs_message_body = {
-        'Records': [
-            {
-                's3': {
-                    'bucket': {
-                        'name': bucket_name,
-                    },
-                    'object': {
-                        'key': object_key,
-                    },
-                },
-            }
+        "Records": [
+            {"s3": {"bucket": {"name": bucket_name,}, "object": {"key": object_key,},},}
         ]
     }
     mock_message = helper.generate_mock_sqs_message(
-        message_id,
-        json.dumps(mock_sqs_message_body),
-        receipt_handle
+        message_id, json.dumps(mock_sqs_message_body), receipt_handle
     )
     return mock_message
 
@@ -692,12 +688,12 @@ def generate_mock_cloudtrail_sqs_message(bucket_name='analyzer-test-bucket',
 def generate_cloudtrail_instances_record(
     aws_account_id,
     instance_ids,
-    event_name='RunInstances',
+    event_name="RunInstances",
     event_time=None,
     region=None,
-    instance_type='t1.snail',
+    instance_type="t1.snail",
     image_id=None,
-    subnet_id='subnet-12345678',
+    subnet_id="subnet-12345678",
 ):
     """
     Generate an example CloudTrail log's "Record" dict for instances event.
@@ -718,19 +714,17 @@ def generate_cloudtrail_instances_record(
         dict: Data that looks like a CloudTrail log Record.
 
     """
-    if event_name == 'RunInstances':
-        request_parameters = {
-            'instanceType': instance_type, 'imageId': image_id
-        }
+    if event_name == "RunInstances":
+        request_parameters = {"instanceType": instance_type, "imageId": image_id}
 
         response_elements = {
-            'instancesSet': {
-                'items': [
+            "instancesSet": {
+                "items": [
                     {
-                        'instanceId': instance_id,
-                        'instanceType': instance_type,
-                        'imageId': image_id,
-                        'subnetId': subnet_id,
+                        "instanceId": instance_id,
+                        "instanceType": instance_type,
+                        "imageId": image_id,
+                        "subnetId": subnet_id,
                     }
                     for instance_id in instance_ids
                 ]
@@ -739,10 +733,8 @@ def generate_cloudtrail_instances_record(
     else:
         request_parameters = {}
         response_elements = {
-            'instancesSet': {
-                'items': [
-                    {'instanceId': instance_id} for instance_id in instance_ids
-                ]
+            "instancesSet": {
+                "items": [{"instanceId": instance_id} for instance_id in instance_ids]
             },
         }
 
@@ -757,9 +749,14 @@ def generate_cloudtrail_instances_record(
     return record
 
 
-def generate_cloudtrail_tag_set_record(aws_account_id, image_ids, tag_names,
-                                       event_name='CreateTags',
-                                       event_time=None, region=None):
+def generate_cloudtrail_tag_set_record(
+    aws_account_id,
+    image_ids,
+    tag_names,
+    event_name="CreateTags",
+    event_time=None,
+    region=None,
+):
     """
     Generate an example CloudTrail log's "Record" dict for tag setting events.
 
@@ -776,31 +773,23 @@ def generate_cloudtrail_tag_set_record(aws_account_id, image_ids, tag_names,
 
     """
     request_parameters = {
-        'resourcesSet': {
-            'items': [
-                {'resourceId': image_id}
-                for image_id in image_ids
-            ]
-        },
-        'tagSet': {
-            'items': [
-                {'key': tag_name, 'value': tag_name}
-                for tag_name in tag_names
-            ]
+        "resourcesSet": {"items": [{"resourceId": image_id} for image_id in image_ids]},
+        "tagSet": {
+            "items": [{"key": tag_name, "value": tag_name} for tag_name in tag_names]
         },
     }
     record = generate_cloudtrail_record(
-        aws_account_id, event_name, event_time, region,
-        request_parameters=request_parameters)
+        aws_account_id,
+        event_name,
+        event_time,
+        region,
+        request_parameters=request_parameters,
+    )
     return record
 
 
 def generate_cloudtrail_modify_instance_record(
-    aws_account_id,
-    instance_id,
-    instance_type='t2.micro',
-    event_time=None,
-    region=None,
+    aws_account_id, instance_id, instance_type="t2.micro", event_time=None, region=None,
 ):
     """
     Generate an example CloudTrail "ModifyInstanceAttribute" record dict.
@@ -816,16 +805,18 @@ def generate_cloudtrail_modify_instance_record(
         dict: Data that looks like a CloudTrail log Record.
 
     """
-    event_name = 'ModifyInstanceAttribute'
+    event_name = "ModifyInstanceAttribute"
     request_parameters = {
-        'instanceId': instance_id,
-        'instanceType': {
-            'value': instance_type
-        }
+        "instanceId": instance_id,
+        "instanceType": {"value": instance_type},
     }
     record = generate_cloudtrail_record(
-        aws_account_id, event_name, event_time, region,
-        request_parameters=request_parameters)
+        aws_account_id,
+        event_name,
+        event_time,
+        region,
+        request_parameters=request_parameters,
+    )
     return record
 
 
@@ -859,14 +850,14 @@ def create_messages_for_sqs(count=1):
     messages_sent = []
     messages_received = []
     for __ in range(count):
-        message = f'Hello, {uuid.uuid4()}!'
+        message = f"Hello, {uuid.uuid4()}!"
         wrapped = _sqs_wrap_message(message)
         payloads.append(message)
         messages_sent.append(wrapped)
         received = {
-            'Id': wrapped['Id'],
-            'Body': wrapped['MessageBody'],
-            'ReceiptHandle': uuid.uuid4(),
+            "Id": wrapped["Id"],
+            "Body": wrapped["MessageBody"],
+            "ReceiptHandle": uuid.uuid4(),
         }
         messages_received.append(received)
     return payloads, messages_sent, messages_received

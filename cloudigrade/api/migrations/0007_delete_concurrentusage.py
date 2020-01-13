@@ -5,16 +5,14 @@ from django.db import migrations
 
 def delete_concurrentusage(apps, schema_editor):
     """Delete all concurrentusage objects."""
-    ConcurrentUsage = apps.get_model('api', 'ConcurrentUsage')
+    ConcurrentUsage = apps.get_model("api", "ConcurrentUsage")
     ConcurrentUsage.objects.all().delete()
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0006_store_instances_list'),
+        ("api", "0006_store_instances_list"),
     ]
 
-    operations = [
-        migrations.RunPython(delete_concurrentusage)
-    ]
+    operations = [migrations.RunPython(delete_concurrentusage)]

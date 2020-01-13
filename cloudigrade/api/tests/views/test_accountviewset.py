@@ -4,8 +4,7 @@ from unittest.mock import patch
 
 import faker
 from django.test import TransactionTestCase
-from rest_framework.test import (APIRequestFactory,
-                                 force_authenticate)
+from rest_framework.test import APIRequestFactory, force_authenticate
 
 from api import serializers, util, views
 from api.models import CloudAccount
@@ -27,31 +26,24 @@ class AccountViewSetTest(TransactionTestCase):
         self.account2 = api_helper.generate_aws_account(user=self.user1)
         self.account3 = api_helper.generate_aws_account(user=self.user2)
         self.account4 = api_helper.generate_aws_account(user=self.user2)
-        self.account5 = api_helper.generate_aws_account(user=self.user2,
-                                                        name='unique')
+        self.account5 = api_helper.generate_aws_account(user=self.user2, name="unique")
         self.factory = APIRequestFactory()
         self.faker = faker.Faker()
 
     def assertResponseHasAwsAccountData(self, response, account):
         """Assert the response has data matching the account object."""
-        self.assertEqual(
-            response.data['account_id'], account.id
-        )
-        self.assertEqual(
-            response.data['user_id'], account.user_id
-        )
-        self.assertEqual(
-            response.data['name'], account.name
-        )
+        self.assertEqual(response.data["account_id"], account.id)
+        self.assertEqual(response.data["user_id"], account.user_id)
+        self.assertEqual(response.data["name"], account.name)
 
         if isinstance(account, CloudAccount):
             self.assertEqual(
-                response.data['content_object']['account_arn'],
-                account.content_object.account_arn
+                response.data["content_object"]["account_arn"],
+                account.content_object.account_arn,
             )
             self.assertEqual(
-                response.data['content_object']['aws_account_id'],
-                str(account.content_object.aws_account_id)
+                response.data["content_object"]["aws_account_id"],
+                str(account.content_object.aws_account_id),
             )
 
     def get_aws_account_ids_from_list_response(self, response):
@@ -65,10 +57,12 @@ class AccountViewSetTest(TransactionTestCase):
             set[int]: the aws_account_id values found in the response
 
         """
-        aws_account_ids = set([
-            account['content_object']['aws_account_id'] for account in
-            response.data['data']
-        ])
+        aws_account_ids = set(
+            [
+                account["content_object"]["aws_account_id"]
+                for account in response.data["data"]
+            ]
+        )
         return aws_account_ids
 
     def get_account_get_response(self, user, account_id):
@@ -84,9 +78,9 @@ class AccountViewSetTest(TransactionTestCase):
             Response: the generated response for this request
 
         """
-        request = self.factory.get('/accounts/')
+        request = self.factory.get("/accounts/")
         force_authenticate(request, user=user)
-        view = AccountViewSet.as_view(actions={'get': 'retrieve'})
+        view = AccountViewSet.as_view(actions={"get": "retrieve"})
         response = view(request, pk=account_id)
         return response
 
@@ -102,9 +96,9 @@ class AccountViewSetTest(TransactionTestCase):
             Response: the generated response for this request
 
         """
-        request = self.factory.get('/accounts/', data)
+        request = self.factory.get("/accounts/", data)
         force_authenticate(request, user=user)
-        view = AccountViewSet.as_view(actions={'get': 'list'})
+        view = AccountViewSet.as_view(actions={"get": "list"})
         response = view(request)
         return response
 
@@ -149,14 +143,14 @@ class AccountViewSetTest(TransactionTestCase):
             str(self.account4.content_object.aws_account_id),
             str(self.account5.content_object.aws_account_id),
         }
-        params = {'user_id': self.user2.id}
+        params = {"user_id": self.user2.id}
         response = self.get_account_list_response(self.superuser, params)
         actual_accounts = self.get_aws_account_ids_from_list_response(response)
         self.assertEqual(expected_accounts, actual_accounts)
 
     def test_list_accounts_as_superuser_with_bad_filter(self):
         """Assert that the list accounts returns 400 with bad user_id."""
-        params = {'user_id': 'not_an_int'}
+        params = {"user_id": "not_an_int"}
         response = self.get_account_list_response(self.superuser, params)
         self.assertEqual(response.status_code, 400)
 
@@ -186,126 +180,118 @@ class AccountViewSetTest(TransactionTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertResponseHasAwsAccountData(response, account)
 
-    @patch.object(util, 'aws')
-    @patch('api.tasks.initial_aws_describe_instances')
+    @patch.object(util, "aws")
+    @patch("api.tasks.initial_aws_describe_instances")
     def test_create_account_with_name_success(self, mock_task, mock_aws):
         """Test create account with a name succeeds."""
         mock_aws.verify_account_access.return_value = True, []
         mock_aws.AwsArn = AwsArn
 
         data = {
-            'cloud_type': 'aws',
-            'account_arn': util_helper.generate_dummy_arn(),
-            'name': faker.Faker().bs()[:256],
+            "cloud_type": "aws",
+            "account_arn": util_helper.generate_dummy_arn(),
+            "name": faker.Faker().bs()[:256],
         }
 
-        request = self.factory.post('/accounts/', data=data)
+        request = self.factory.post("/accounts/", data=data)
         force_authenticate(request, user=self.user2)
 
-        view = views.AccountViewSet.as_view(actions={'post': 'create'})
+        view = views.AccountViewSet.as_view(actions={"post": "create"})
 
         response = view(request)
         self.assertEqual(response.status_code, 201)
         self.assertEqual(
-            response.data['content_object']['account_arn'],
-            data['account_arn'])
-        self.assertEqual(response.data['name'], data['name'])
-        self.assertIsNotNone(response.data['name'])
+            response.data["content_object"]["account_arn"], data["account_arn"]
+        )
+        self.assertEqual(response.data["name"], data["name"])
+        self.assertIsNotNone(response.data["name"])
         mock_task.delay.assert_called()
 
-    @patch.object(util, 'aws')
-    @patch('api.tasks.initial_aws_describe_instances')
-    def test_create_account_with_duplicate_name_fail(
-        self, mock_aws, mock_task
-    ):
+    @patch.object(util, "aws")
+    @patch("api.tasks.initial_aws_describe_instances")
+    def test_create_account_with_duplicate_name_fail(self, mock_aws, mock_task):
         """Test create account with a duplicate name fails."""
         mock_aws.verify_account_access.return_value = True, []
         arn_str = util_helper.generate_dummy_arn()
 
         data = {
-            'cloud_type': 'aws',
-            'account_arn': arn_str,
-            'name': 'unique',
+            "cloud_type": "aws",
+            "account_arn": arn_str,
+            "name": "unique",
         }
 
-        request = self.factory.post('/accounts/', data=data)
+        request = self.factory.post("/accounts/", data=data)
         force_authenticate(request, user=self.user2)
 
-        view = views.AccountViewSet.as_view(actions={'post': 'create'})
+        view = views.AccountViewSet.as_view(actions={"post": "create"})
         response = view(request)
 
         self.assertEqual(response.status_code, 400)
-        self.assertIn('non_field_errors', response.data)
+        self.assertIn("non_field_errors", response.data)
         mock_task.delay.assert_not_called()
 
     def test_create_account_without_name_fail(self):
         """Test create account without a name fails."""
         data = {
-            'cloud_type': 'aws',
-            'account_arn': util_helper.generate_dummy_arn(),
+            "cloud_type": "aws",
+            "account_arn": util_helper.generate_dummy_arn(),
         }
 
-        request = self.factory.post('/accounts/', data=data)
+        request = self.factory.post("/accounts/", data=data)
         force_authenticate(request, user=self.user2)
 
-        view = views.AccountViewSet.as_view(actions={'post': 'create'})
+        view = views.AccountViewSet.as_view(actions={"post": "create"})
         response = view(request)
 
         self.assertEqual(response.status_code, 400)
-        self.assertIn('name', response.data)
+        self.assertIn("name", response.data)
 
     def test_update_account_patch_name_success(self):
         """Test updating an account with a name succeeds."""
         data = {
-            'cloud_type': 'aws',
-            'name': faker.Faker().bs()[:256],
+            "cloud_type": "aws",
+            "name": faker.Faker().bs()[:256],
         }
 
         account_id = self.account4.id
-        request = self.factory.patch('/accounts/', data=data)
+        request = self.factory.patch("/accounts/", data=data)
         force_authenticate(request, user=self.user2)
 
-        view = views.AccountViewSet.as_view(
-            actions={'patch': 'partial_update'}
-        )
+        view = views.AccountViewSet.as_view(actions={"patch": "partial_update"})
         response = view(request, pk=account_id)
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(data['name'], response.data['name'])
+        self.assertEqual(data["name"], response.data["name"])
 
     def test_update_account_patch_duplicate_name_fail(self):
         """Test updating an account with a duplicate name fails."""
         data = {
-            'cloud_type': 'aws',
-            'name': 'unique',
+            "cloud_type": "aws",
+            "name": "unique",
         }
 
         account_id = self.account3.id
-        request = self.factory.patch('/accounts/', data=data)
+        request = self.factory.patch("/accounts/", data=data)
         force_authenticate(request, user=self.user2)
 
-        view = views.AccountViewSet.as_view(
-            actions={'patch': 'partial_update'}
-        )
+        view = views.AccountViewSet.as_view(actions={"patch": "partial_update"})
         response = view(request, pk=account_id)
 
         self.assertEqual(response.status_code, 400)
-        self.assertIn('non_field_errors', response.data)
+        self.assertIn("non_field_errors", response.data)
 
     def test_update_account_patch_arn_fails(self):
         """Test that updating to change the arn fails."""
         data = {
-            'cloud_type': 'aws',
-            'account_arn': util_helper.generate_dummy_arn(),
+            "cloud_type": "aws",
+            "account_arn": util_helper.generate_dummy_arn(),
         }
 
         account_id = self.account4.id
-        request = self.factory.patch('/accounts/', data=data)
+        request = self.factory.patch("/accounts/", data=data)
         force_authenticate(request, user=self.user2)
 
-        view = views.AccountViewSet.as_view(
-            actions={'patch': 'partial_update'}
-        )
+        view = views.AccountViewSet.as_view(actions={"patch": "partial_update"})
         response = view(request, pk=account_id)
 
         self.assertEqual(response.status_code, 400)
@@ -313,45 +299,44 @@ class AccountViewSetTest(TransactionTestCase):
     def test_create_with_malformed_arn_fails(self):
         """Test create account with malformed arn returns validation error."""
         data = {
-            'cloud_type': 'aws',
-            'account_arn': self.faker.bs(),
+            "cloud_type": "aws",
+            "account_arn": self.faker.bs(),
         }
 
-        request = self.factory.post('/accounts/', data=data)
+        request = self.factory.post("/accounts/", data=data)
         force_authenticate(request, user=self.user2)
 
-        view = views.AccountViewSet.as_view(actions={'post': 'create'})
+        view = views.AccountViewSet.as_view(actions={"post": "create"})
         response = view(request)
 
         self.assertEqual(response.status_code, 400)
-        self.assertIn('account_arn', response.data)
+        self.assertIn("account_arn", response.data)
 
     def test_update_cloudtype_fails(self):
         """Test updating cloud_type returns validation error."""
+
         class MockCloudAccountSerializer(serializers.CloudAccountSerializer):
             cloud_type = serializers.ChoiceField(
-                choices=['aws', 'bad_cloud'],
-                required=True
+                choices=["aws", "bad_cloud"], required=True
             )
 
-        with patch('api.views.AccountViewSet.get_serializer_class') as\
-                mock_viewset_serializer:
+        with patch(
+            "api.views.AccountViewSet.get_serializer_class"
+        ) as mock_viewset_serializer:
             mock_viewset_serializer.return_value = MockCloudAccountSerializer
             data = {
-                'cloud_type': 'bad_cloud',
-                'name': faker.Faker().bs()[:256],
+                "cloud_type": "bad_cloud",
+                "name": faker.Faker().bs()[:256],
             }
 
             account_id = self.account4.id
-            request = self.factory.patch('/accounts/', data=data)
+            request = self.factory.patch("/accounts/", data=data)
             force_authenticate(request, user=self.user2)
 
-            view = views.AccountViewSet.as_view(
-                actions={'patch': 'partial_update'}
-            )
+            view = views.AccountViewSet.as_view(actions={"patch": "partial_update"})
 
             response = view(request, pk=account_id)
-            expected_error = 'You cannot update field cloud_type.'
+            expected_error = "You cannot update field cloud_type."
 
             self.assertEqual(response.status_code, 400)
-            self.assertEqual(expected_error, response.data['cloud_type'][0])
+            self.assertEqual(expected_error, response.data["cloud_type"][0])

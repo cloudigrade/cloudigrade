@@ -26,9 +26,7 @@ class ConfigureQueuesTest(TestCase):
         queue_urls = {
             queue_name: _faker.url() + queue_name for queue_name in queue_names
         }
-        expected_get_url_calls = [
-            call(queue_name) for queue_name in queue_names[:-1]
-        ]
+        expected_get_url_calls = [call(queue_name) for queue_name in queue_names[:-1]]
         expected_ensure_queue_has_dlq_calls = [
             call(name, url) for name, url in queue_urls.items()
         ]
@@ -37,18 +35,19 @@ class ConfigureQueuesTest(TestCase):
             """Fake calls for aws.get_sqs_queue_url."""
             return queue_urls[name]
 
-        _path = 'util.management.commands.configurequeues'
-        with patch('{}.aws'.format(_path)) as mock_aws, \
-                patch('{}.Command.queue_names'.format(_path),
-                      new_callable=PropertyMock) as mock_queue_names, \
-                patch('{}.Command.queue_urls'.format(_path),
-                      new_callable=PropertyMock) as mock_queue_urls:
+        _path = "util.management.commands.configurequeues"
+        with patch("{}.aws".format(_path)) as mock_aws, patch(
+            "{}.Command.queue_names".format(_path), new_callable=PropertyMock
+        ) as mock_queue_names, patch(
+            "{}.Command.queue_urls".format(_path), new_callable=PropertyMock
+        ) as mock_queue_urls:
             mock_queue_names.return_value = queue_names[:-1]
             mock_queue_urls.return_value = [queue_urls[queue_names[-1]]]
             mock_aws.get_sqs_queue_url.side_effect = fake_get_sqs_queue_url
 
-            call_command('configurequeues')
+            call_command("configurequeues")
 
             mock_aws.get_sqs_queue_url.assert_has_calls(expected_get_url_calls)
             mock_aws.ensure_queue_has_dlq.assert_has_calls(
-                expected_ensure_queue_has_dlq_calls)
+                expected_ensure_queue_has_dlq_calls
+            )

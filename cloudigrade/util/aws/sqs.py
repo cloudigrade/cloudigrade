@@ -29,7 +29,7 @@ def _get_queue(queue_url):
 
     """
     region = settings.SQS_DEFAULT_REGION
-    queue = boto3.resource('sqs', region_name=region).Queue(queue_url)
+    queue = boto3.resource("sqs", region_name=region).Queue(queue_url)
     return queue
 
 
@@ -48,16 +48,15 @@ def receive_messages_from_queue(queue_url, max_number=10, wait_time=10):
     """
     sqs_queue = _get_queue(queue_url)
     messages = sqs_queue.receive_messages(
-        MaxNumberOfMessages=max_number,
-        WaitTimeSeconds=wait_time,
+        MaxNumberOfMessages=max_number, WaitTimeSeconds=wait_time,
     )
 
     return messages
 
 
-def yield_messages_from_queue(queue_url,
-                              max_number=settings.AWS_SQS_MAX_YIELD_COUNT,
-                              wait_time=10):
+def yield_messages_from_queue(
+    queue_url, max_number=settings.AWS_SQS_MAX_YIELD_COUNT, wait_time=10
+):
     """
     Yield message objects from SQS Queue object.
 
@@ -76,8 +75,7 @@ def yield_messages_from_queue(queue_url,
         while messages_received < max_number:
             try:
                 messages = sqs_queue.receive_messages(
-                    MaxNumberOfMessages=1,
-                    WaitTimeSeconds=wait_time,
+                    MaxNumberOfMessages=1, WaitTimeSeconds=wait_time,
                 )
                 if not messages:
                     break
@@ -87,8 +85,8 @@ def yield_messages_from_queue(queue_url,
             except StopIteration:
                 return
     except ClientError as e:
-        if e.response['Error']['Code'].endswith('.NonExistentQueue'):
-            logger.warning(_('Queue does not yet exist at %s'), queue_url)
+        if e.response["Error"]["Code"].endswith(".NonExistentQueue"):
+            logger.warning(_("Queue does not yet exist at %s"), queue_url)
         else:
             raise
 
@@ -107,31 +105,28 @@ def delete_messages_from_queue(queue_url, messages):
     """
     if not messages:
         logger.debug(
-            _('%(label)s received no messages for deletion. Queue URL '
-              '%(queue_url)s'),
-            {'label': 'delete_messages_from_queue', 'queue_url': queue_url}
+            _(
+                "%(label)s received no messages for deletion. Queue URL "
+                "%(queue_url)s"
+            ),
+            {"label": "delete_messages_from_queue", "queue_url": queue_url},
         )
         return {}
 
     sqs_queue = _get_queue(queue_url)
 
     messages_to_delete = [
-        {
-            'Id': message.message_id,
-            'ReceiptHandle': message._receipt_handle
-        }
+        {"Id": message.message_id, "ReceiptHandle": message._receipt_handle}
         for message in messages
     ]
 
-    response = sqs_queue.delete_messages(
-        Entries=messages_to_delete
-    )
+    response = sqs_queue.delete_messages(Entries=messages_to_delete)
 
     # TODO: Deal with success/failure of message deletes
     return response
 
 
-def extract_sqs_message(message, service='s3'):
+def extract_sqs_message(message, service="s3"):
     """
     Parse SQS message for service-specific content.
 
@@ -145,7 +140,7 @@ def extract_sqs_message(message, service='s3'):
     """
     extracted_records = []
     message_body = json.loads(message.body)
-    for record in message_body.get('Records', []):
+    for record in message_body.get("Records", []):
         extracted_records.append(record[service])
     return extracted_records
 
@@ -164,17 +159,16 @@ def get_sqs_queue_url(queue_name):
 
     """
     region = settings.SQS_DEFAULT_REGION
-    sqs = boto3.client('sqs', region_name=region)
+    sqs = boto3.client("sqs", region_name=region)
     try:
-        return sqs.get_queue_url(QueueName=queue_name)['QueueUrl']
+        return sqs.get_queue_url(QueueName=queue_name)["QueueUrl"]
     except ClientError as e:
-        if e.response['Error']['Code'].endswith('.NonExistentQueue'):
+        if e.response["Error"]["Code"].endswith(".NonExistentQueue"):
             return create_queue(queue_name)
         raise
 
 
-def create_queue(queue_name, with_dlq=True,
-                 retention_period=RETENTION_DEFAULT):
+def create_queue(queue_name, with_dlq=True, retention_period=RETENTION_DEFAULT):
     """
     Create an SQS queue and return its URL.
 
@@ -188,13 +182,13 @@ def create_queue(queue_name, with_dlq=True,
 
     """
     region = settings.SQS_DEFAULT_REGION
-    sqs = boto3.client('sqs', region_name=region)
+    sqs = boto3.client("sqs", region_name=region)
     attributes = {
-        'MessageRetentionPeriod': str(retention_period),  # AWS wants a str.
+        "MessageRetentionPeriod": str(retention_period),  # AWS wants a str.
     }
 
     logger.info('Creating SQS queue "%s"', queue_name)
-    queue_url = sqs.create_queue(QueueName=queue_name)['QueueUrl']
+    queue_url = sqs.create_queue(QueueName=queue_name)["QueueUrl"]
     sqs.set_queue_attributes(QueueUrl=queue_url, Attributes=attributes)
 
     if with_dlq:
@@ -212,29 +206,33 @@ def ensure_queue_has_dlq(source_queue_name, source_queue_url):
         source_queue_URL (str): the queue URL that should have a DLQ
     """
     region = settings.SQS_DEFAULT_REGION
-    sqs = boto3.client('sqs', region_name=region)
-    redrive_policy = sqs.get_queue_attributes(
-        QueueUrl=source_queue_url, AttributeNames=['RedrivePolicy']
-    ).get('Attributes', {}).get('RedrivePolicy', '{}')
+    sqs = boto3.client("sqs", region_name=region)
+    redrive_policy = (
+        sqs.get_queue_attributes(
+            QueueUrl=source_queue_url, AttributeNames=["RedrivePolicy"]
+        )
+        .get("Attributes", {})
+        .get("RedrivePolicy", "{}")
+    )
     redrive_policy = json.loads(redrive_policy)
 
     if validate_redrive_policy(source_queue_name, redrive_policy):
         return
 
-    logger.info('SQS queue "%s" needs an updated redrive policy',
-                source_queue_name
-                )
+    logger.info('SQS queue "%s" needs an updated redrive policy', source_queue_name)
     dlq_arn = create_dlq(source_queue_name)
 
     redrive_policy = {
-        'deadLetterTargetArn': dlq_arn,
-        'maxReceiveCount': settings.AWS_SQS_MAX_RECEIVE_COUNT,
+        "deadLetterTargetArn": dlq_arn,
+        "maxReceiveCount": settings.AWS_SQS_MAX_RECEIVE_COUNT,
     }
     attributes = {
-        'RedrivePolicy': json.dumps(redrive_policy),
+        "RedrivePolicy": json.dumps(redrive_policy),
     }
-    logger.info('Assigning SQS queue "%(queue)s" redrive policy: %(policy)s',
-                {'queue': source_queue_name, 'policy': redrive_policy})
+    logger.info(
+        'Assigning SQS queue "%(queue)s" redrive policy: %(policy)s',
+        {"queue": source_queue_name, "policy": redrive_policy},
+    )
     sqs.set_queue_attributes(QueueUrl=source_queue_url, Attributes=attributes)
 
 
@@ -250,11 +248,12 @@ def validate_redrive_policy(source_queue_name, redrive_policy):
         bool: True if policy appears to be valid, else False.
 
     """
-    logger.info('SQS queue "%(queue)s" already has a redrive policy: '
-                '%(policy)s',
-                {'queue': source_queue_name, 'policy': redrive_policy})
+    logger.info(
+        'SQS queue "%(queue)s" already has a redrive policy: ' "%(policy)s",
+        {"queue": source_queue_name, "policy": redrive_policy},
+    )
 
-    dlq_queue_arn = redrive_policy.get('deadLetterTargetArn')
+    dlq_queue_arn = redrive_policy.get("deadLetterTargetArn")
 
     if not dlq_queue_arn:
         return False
@@ -266,11 +265,11 @@ def validate_redrive_policy(source_queue_name, redrive_policy):
 
     try:
         region = settings.SQS_DEFAULT_REGION
-        sqs = boto3.client('sqs', region_name=region)
-        sqs.get_queue_url(QueueName=dlq_queue_name)['QueueUrl']
+        sqs = boto3.client("sqs", region_name=region)
+        sqs.get_queue_url(QueueName=dlq_queue_name)["QueueUrl"]
         queue_exists = True
     except ClientError as e:
-        if e.response['Error']['Code'].endswith('.NonExistentQueue'):
+        if e.response["Error"]["Code"].endswith(".NonExistentQueue"):
             queue_exists = False
         else:
             raise
@@ -290,12 +289,10 @@ def create_dlq(source_queue_name):
 
     """
     region = settings.SQS_DEFAULT_REGION
-    sqs = boto3.client('sqs', region_name=region)
-    dlq_name = '{}-dlq'.format(source_queue_name[:QUEUE_NAME_LENGTH_MAX - 4])
-    dlq_url = create_queue(
-        dlq_name, with_dlq=False, retention_period=RETENTION_MAXIMUM
-    )
-    dlq_arn = sqs.get_queue_attributes(
-        QueueUrl=dlq_url, AttributeNames=['QueueArn']
-    )['Attributes']['QueueArn']
+    sqs = boto3.client("sqs", region_name=region)
+    dlq_name = "{}-dlq".format(source_queue_name[: QUEUE_NAME_LENGTH_MAX - 4])
+    dlq_url = create_queue(dlq_name, with_dlq=False, retention_period=RETENTION_MAXIMUM)
+    dlq_arn = sqs.get_queue_attributes(QueueUrl=dlq_url, AttributeNames=["QueueArn"])[
+        "Attributes"
+    ]["QueueArn"]
     return dlq_arn

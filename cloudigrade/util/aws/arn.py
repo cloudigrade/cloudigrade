@@ -32,11 +32,13 @@ class AwsArn(object):
 
     """
 
-    arn_regex = re.compile(r'^arn:(?P<partition>\w+):(?P<service>\w+):'
-                           r'(?P<region>\w+(?:-\w+)+)?:'
-                           r'(?P<account_id>\d{1,12})?:'
-                           r'(?P<resource_type>[^:/]+)'
-                           r'(?P<resource_separator>[:/])?(?P<resource>.*)')
+    arn_regex = re.compile(
+        r"^arn:(?P<partition>\w+):(?P<service>\w+):"
+        r"(?P<region>\w+(?:-\w+)+)?:"
+        r"(?P<account_id>\d{1,12})?:"
+        r"(?P<resource_type>[^:/]+)"
+        r"(?P<resource_separator>[:/])?(?P<resource>.*)"
+    )
 
     partition = None
     service = None
@@ -58,16 +60,14 @@ class AwsArn(object):
         match = self.arn_regex.match(arn)
 
         if not match:
-            raise InvalidArn('Invalid ARN: {0}'.format(arn))
+            raise InvalidArn("Invalid ARN: {0}".format(arn))
 
         for key, val in match.groupdict().items():
-            if key == 'account_id':
+            if key == "account_id":
                 try:
                     val = Decimal(val)
                 except TypeError:
-                    raise InvalidArn(
-                        'Invalid ARN account ID: {0} {1}'.format(arn, val)
-                    )
+                    raise InvalidArn("Invalid ARN account ID: {0} {1}".format(arn, val))
             setattr(self, key, val)
 
     def __repr__(self):

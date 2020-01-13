@@ -6,12 +6,11 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0001_v2_models'),
+        ("api", "0001_v2_models"),
     ]
 
     operations = [
         migrations.RenameModel(
-            old_name='AwsEC2InstanceDefinitions',
-            new_name='AwsEC2InstanceDefinition',
+            old_name="AwsEC2InstanceDefinitions", new_name="AwsEC2InstanceDefinition",
         ),
     ]

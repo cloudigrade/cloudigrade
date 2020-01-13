@@ -69,6 +69,6 @@ class InspectPendingImagesTest(TestCase):
                 instance_old_pending.content_object.region,
             )
         ]
-        with patch.object(tasks, 'start_image_inspection') as mock_start:
+        with patch.object(tasks, "start_image_inspection") as mock_start:
             tasks.inspect_pending_images()
             mock_start.assert_has_calls(expected_calls, any_order=True)

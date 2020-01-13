@@ -43,7 +43,7 @@ logger = logging.getLogger(__name__)
 SQS_SEND_BATCH_SIZE = 10  # boto3 supports sending up to 10 items.
 SQS_RECEIVE_BATCH_SIZE = 10  # boto3 supports receiving of up to 10 items.
 
-cloud_account_name_pattern = '{cloud_name}-account-{external_cloud_account_id}'
+cloud_account_name_pattern = "{cloud_name}-account-{external_cloud_account_id}"
 
 
 def get_last_known_instance_type(instance, before_date):
@@ -69,37 +69,37 @@ def get_last_known_instance_type(instance, before_date):
             occurred_at__lte=before_date,
             aws_instance_event__instance_type__isnull=False,
         )
-        .order_by('-occurred_at')
+        .order_by("-occurred_at")
         .first()
     )
     if event is None:
         logger.error(
-            _('Could not find any type for %(instance)s by %(before_date)s'),
-            {'instance': instance, 'before_date': before_date},
+            _("Could not find any type for %(instance)s by %(before_date)s"),
+            {"instance": instance, "before_date": before_date},
         )
         return None
     return event.content_object.instance_type
 
 
 NormalizedRun = collections.namedtuple(
-    'NormalizedRun',
+    "NormalizedRun",
     [
-        'start_time',
-        'end_time',
-        'image_id',
-        'instance_id',
-        'instance_memory',
-        'instance_type',
-        'instance_vcpu',
-        'is_cloud_access',
-        'is_encrypted',
-        'is_marketplace',
-        'openshift',
-        'openshift_challenged',
-        'openshift_detected',
-        'rhel',
-        'rhel_challenged',
-        'rhel_detected',
+        "start_time",
+        "end_time",
+        "image_id",
+        "instance_id",
+        "instance_memory",
+        "instance_type",
+        "instance_vcpu",
+        "is_cloud_access",
+        "is_encrypted",
+        "is_marketplace",
+        "openshift",
+        "openshift_challenged",
+        "openshift_detected",
+        "rhel",
+        "rhel_challenged",
+        "rhel_detected",
     ],
 )
 
@@ -133,7 +133,7 @@ def normalize_runs(events):  # noqa: C901
 
     """
     sorted_events_by_instance = itertools.groupby(
-        sorted(events, key=lambda e: f'{e.instance_id}_{e.occurred_at}'),
+        sorted(events, key=lambda e: f"{e.instance_id}_{e.occurred_at}"),
         key=lambda e: e.instance_id,
     )
 
@@ -163,8 +163,8 @@ def normalize_runs(events):  # noqa: C901
 
             if start_run and image is None:
                 logger.warning(
-                    _('Instance %s does not have an associated '
-                      'machine image.'), instance_id,
+                    _("Instance %s does not have an associated " "machine image."),
+                    instance_id,
                 )
 
             if start_run and end_run:
@@ -175,18 +175,14 @@ def normalize_runs(events):  # noqa: C901
                     image_id=image.id if image else None,
                     instance_id=instance_id,
                     instance_type=instance_type,
-                    instance_memory=type_definition.memory
-                    if type_definition else None,
-                    instance_vcpu=type_definition.vcpu
-                    if type_definition else None,
+                    instance_memory=type_definition.memory if type_definition else None,
+                    instance_vcpu=type_definition.vcpu if type_definition else None,
                     is_cloud_access=image.is_cloud_access if image else False,
                     is_encrypted=image.is_encrypted if image else False,
                     is_marketplace=image.is_marketplace if image else False,
                     openshift=image.openshift if image else False,
-                    openshift_challenged=image.openshift_challenged
-                    if image else False,
-                    openshift_detected=image.openshift_detected
-                    if image else False,
+                    openshift_challenged=image.openshift_challenged if image else False,
+                    openshift_detected=image.openshift_detected if image else False,
                     rhel=image.rhel if image else False,
                     rhel_challenged=image.rhel_challenged if image else False,
                     rhel_detected=image.rhel_detected if image else False,
@@ -203,18 +199,14 @@ def normalize_runs(events):  # noqa: C901
                 image_id=image.id if image else None,
                 instance_id=instance_id,
                 instance_type=instance_type,
-                instance_memory=type_definition.memory
-                if type_definition else None,
-                instance_vcpu=type_definition.vcpu
-                if type_definition else None,
+                instance_memory=type_definition.memory if type_definition else None,
+                instance_vcpu=type_definition.vcpu if type_definition else None,
                 is_cloud_access=image.is_cloud_access if image else False,
                 is_encrypted=image.is_encrypted if image else False,
                 is_marketplace=image.is_marketplace if image else False,
                 openshift=image.openshift if image else False,
-                openshift_challenged=image.openshift_challenged
-                if image else False,
-                openshift_detected=image.openshift_detected
-                if image else False,
+                openshift_challenged=image.openshift_challenged if image else False,
+                openshift_detected=image.openshift_detected if image else False,
                 rhel=image.rhel if image else False,
                 rhel_challenged=image.rhel_challenged if image else False,
                 rhel_detected=image.rhel_detected if image else False,
@@ -299,7 +291,7 @@ def calculate_max_concurrent_usage(date, user_id, cloud_account_id=None):
                 instances=0,
                 vcpu=0,
                 memory=0.0,
-                instances_list=[]
+                instances_list=[],
             )
             return usage
         queryset = queryset.filter(instance__cloud_account__user__id=user_id)
@@ -313,15 +305,11 @@ def calculate_max_concurrent_usage(date, user_id, cloud_account_id=None):
                 instances=0,
                 vcpu=0,
                 memory=0.0,
-                instances_list=[]
+                instances_list=[],
             )
             return usage
-        queryset = queryset.filter(
-            instance__cloud_account__id=cloud_account_id
-        )
-    start = datetime(
-        date.year, date.month, date.day, 0, 0, 0, tzinfo=tz.tzutc()
-    )
+        queryset = queryset.filter(instance__cloud_account__id=cloud_account_id)
+    start = datetime(date.year, date.month, date.day, 0, 0, 0, tzinfo=tz.tzutc())
     end = start + timedelta(days=1)
 
     # We want to filter to Runs that have:
@@ -329,7 +317,7 @@ def calculate_max_concurrent_usage(date, user_id, cloud_account_id=None):
     # - ended at or after our start time (inclusive) or have never stopped
     runs = queryset.filter(
         Q(end_time__isnull=True) | Q(end_time__gte=start), start_time__lt=end,
-    ).prefetch_related('machineimage')
+    ).prefetch_related("machineimage")
 
     # Now that we have the Runs, we need to extract the start and stop times
     # from each Run, put them in a list, and order them chronologically. If we
@@ -397,18 +385,17 @@ def calculate_max_concurrent_usage(date, user_id, cloud_account_id=None):
         max_memory = max(current_memory, max_memory)
         instances_list.append(
             {
-                'cloud_type': cloud_type,
-                'cloud_instance_id': instance_id,
-                'rhel_version': rhel_version,
-                'syspurpose': syspurpose,
+                "cloud_type": cloud_type,
+                "cloud_instance_id": instance_id,
+                "rhel_version": rhel_version,
+                "syspurpose": syspurpose,
             }
         )
 
     # Make sure our instances list is unique
     instances_list = [
-        i for n,
-        i in enumerate(instances_list)
-        if i not in instances_list[n + 1:]]
+        i for n, i in enumerate(instances_list) if i not in instances_list[n + 1 :]
+    ]
 
     ConcurrentUsage.objects.filter(
         date=date, user_id=user_id, cloud_account_id=cloud_account_id
@@ -420,7 +407,7 @@ def calculate_max_concurrent_usage(date, user_id, cloud_account_id=None):
         instances=max_instances,
         vcpu=max_vcpu,
         memory=max_memory,
-        instances_list=instances_list
+        instances_list=instances_list,
     )
     usage.potentially_related_runs.add(*runs)
     usage.save()
@@ -481,61 +468,67 @@ def create_new_machine_images(session, instances_data):
         list: A list of image ids that were added to the database
 
     """
-    log_prefix = 'create_new_machine_images'
+    log_prefix = "create_new_machine_images"
     seen_ami_ids = {
-        instance['ImageId']
+        instance["ImageId"]
         for instances in instances_data.values()
         for instance in instances
     }
     logger.info(
-        _('%(prefix)s: all AMI IDs found: %(seen_ami_ids)s'),
-        {'prefix': log_prefix, 'seen_ami_ids': seen_ami_ids},
+        _("%(prefix)s: all AMI IDs found: %(seen_ami_ids)s"),
+        {"prefix": log_prefix, "seen_ami_ids": seen_ami_ids},
     )
-    known_images = AwsMachineImage.objects.filter(
-        ec2_ami_id__in=list(seen_ami_ids)
-    )
+    known_images = AwsMachineImage.objects.filter(ec2_ami_id__in=list(seen_ami_ids))
     known_ami_ids = {image.ec2_ami_id for image in known_images}
     logger.info(
-        _('%(prefix)s: Skipping known AMI IDs: %(known_ami_ids)s'),
-        {'prefix': log_prefix, 'known_ami_ids': known_ami_ids},
+        _("%(prefix)s: Skipping known AMI IDs: %(known_ami_ids)s"),
+        {"prefix": log_prefix, "known_ami_ids": known_ami_ids},
     )
 
     new_described_images = {}
     windows_ami_ids = []
 
     for region_id, instances in instances_data.items():
-        ami_ids = set([instance['ImageId'] for instance in instances])
+        ami_ids = set([instance["ImageId"] for instance in instances])
         new_ami_ids = ami_ids - known_ami_ids
         if new_ami_ids:
             new_described_images[region_id] = aws.describe_images(
                 session, new_ami_ids, region_id
             )
         windows_ami_ids.extend(
-            {instance['ImageId'] for instance in instances if
-             aws.is_windows(instance)}
+            {instance["ImageId"] for instance in instances if aws.is_windows(instance)}
         )
     logger.info(
-        _('%(prefix)s: Windows AMI IDs found: %(windows_ami_ids)s'),
-        {'prefix': log_prefix, 'windows_ami_ids': windows_ami_ids},
+        _("%(prefix)s: Windows AMI IDs found: %(windows_ami_ids)s"),
+        {"prefix": log_prefix, "windows_ami_ids": windows_ami_ids},
     )
 
     new_image_ids = []
     for region_id, described_images in new_described_images.items():
         for described_image in described_images:
-            ami_id = described_image['ImageId']
-            owner_id = Decimal(described_image['OwnerId'])
-            name = described_image['Name']
+            ami_id = described_image["ImageId"]
+            owner_id = Decimal(described_image["OwnerId"])
+            name = described_image["Name"]
             windows = ami_id in windows_ami_ids
             region = region_id
-            openshift = len([
-                tag for tag in described_image.get('Tags', [])
-                if tag.get('Key') == aws.OPENSHIFT_TAG
-            ]) > 0
+            openshift = (
+                len(
+                    [
+                        tag
+                        for tag in described_image.get("Tags", [])
+                        if tag.get("Key") == aws.OPENSHIFT_TAG
+                    ]
+                )
+                > 0
+            )
 
-            logger.info(_('%(prefix)s: Saving new AMI ID: %(ami_id)s'),
-                        {'prefix': log_prefix, 'ami_id': ami_id})
+            logger.info(
+                _("%(prefix)s: Saving new AMI ID: %(ami_id)s"),
+                {"prefix": log_prefix, "ami_id": ami_id},
+            )
             image, new = save_new_aws_machine_image(
-                ami_id, name, owner_id, openshift, windows, region)
+                ami_id, name, owner_id, openshift, windows, region
+            )
             if new:
                 new_image_ids.append(ami_id)
 
@@ -543,8 +536,7 @@ def create_new_machine_images(session, instances_data):
 
 
 def save_new_aws_machine_image(
-    ami_id, name, owner_aws_account_id, openshift_detected,
-        windows_detected, region
+    ami_id, name, owner_aws_account_id, openshift_detected, windows_detected, region
 ):
     """
     Save a new AwsMachineImage image object.
@@ -576,9 +568,9 @@ def save_new_aws_machine_image(
         awsmachineimage, created = AwsMachineImage.objects.get_or_create(
             ec2_ami_id=ami_id,
             defaults={
-                'platform': platform,
-                'owner_aws_account_id': owner_aws_account_id,
-                'region': region,
+                "platform": platform,
+                "owner_aws_account_id": owner_aws_account_id,
+                "region": region,
             },
         )
 
@@ -614,7 +606,7 @@ def create_initial_aws_instance_events(account, instances_data):
     for region, instances in instances_data.items():
         for instance_data in instances:
             instance = save_instance(account, instance_data, region)
-            if aws.InstanceState.is_running(instance_data['State']['Code']):
+            if aws.InstanceState.is_running(instance_data["State"]["Code"]):
                 save_instance_events(instance, instance_data)
 
 
@@ -638,25 +630,21 @@ def save_instance(account, instance_data, region):
 
     """
     instance_id = (
-        instance_data.get('InstanceId')
+        instance_data.get("InstanceId")
         if isinstance(instance_data, dict)
-        else getattr(instance_data, 'instance_id', None)
+        else getattr(instance_data, "instance_id", None)
     )
     image_id = (
-        instance_data.get('ImageId')
+        instance_data.get("ImageId")
         if isinstance(instance_data, dict)
-        else getattr(instance_data, 'image_id', None)
+        else getattr(instance_data, "image_id", None)
     )
     logger.info(
         _(
-            'saving models for aws instance id %(instance_id)s having aws '
-            'image id %(image_id)s for %(cloud_account)s'
+            "saving models for aws instance id %(instance_id)s having aws "
+            "image id %(image_id)s for %(cloud_account)s"
         ),
-        {
-            'instance_id': instance_id,
-            'image_id': image_id,
-            'cloud_account': account,
-        },
+        {"instance_id": instance_id, "image_id": image_id, "cloud_account": account,},
     )
 
     awsinstance, created = AwsInstance.objects.get_or_create(
@@ -664,9 +652,7 @@ def save_instance(account, instance_data, region):
     )
 
     if created:
-        Instance.objects.create(
-            cloud_account=account, content_object=awsinstance
-        )
+        Instance.objects.create(cloud_account=account, content_object=awsinstance)
 
     # This should not be necessary, but we really need this to exist.
     # If it doesn't, this will kill the transaction with an exception.
@@ -677,24 +663,17 @@ def save_instance(account, instance_data, region):
     if image_id is None:
         machineimage = None
     else:
-        logger.info(
-            _('AwsMachineImage get_or_create for EC2 AMI %s'), image_id
-        )
+        logger.info(_("AwsMachineImage get_or_create for EC2 AMI %s"), image_id)
         awsmachineimage, created = AwsMachineImage.objects.get_or_create(
-            ec2_ami_id=image_id,
-            defaults={'region': region},
+            ec2_ami_id=image_id, defaults={"region": region},
         )
         if created:
             logger.info(
-                _(
-                    'Missing image data for %s; creating '
-                    'UNAVAILABLE stub image.'
-                ),
+                _("Missing image data for %s; creating " "UNAVAILABLE stub image."),
                 instance_data,
             )
             MachineImage.objects.create(
-                status=MachineImage.UNAVAILABLE,
-                content_object=awsmachineimage,
+                status=MachineImage.UNAVAILABLE, content_object=awsmachineimage,
             )
         try:
             machineimage = awsmachineimage.machine_image.get()
@@ -704,25 +683,18 @@ def save_instance(account, instance_data, region):
             # its paired MachineImage. Investigate if you see this error!
             logger.error(
                 _(
-                    'Existing AwsMachineImage %(awsmachineimage_id)s '
-                    '(ec2_ami_id=%(ec2_ami_id)s) found has no '
-                    'MachineImage. This should not happen!'
+                    "Existing AwsMachineImage %(awsmachineimage_id)s "
+                    "(ec2_ami_id=%(ec2_ami_id)s) found has no "
+                    "MachineImage. This should not happen!"
                 ),
-                {
-                    'awsmachineimage_id': awsmachineimage.id,
-                    'ec2_ami_id': image_id,
-                },
+                {"awsmachineimage_id": awsmachineimage.id, "ec2_ami_id": image_id,},
             )
             logger.info(
-                _(
-                    'Missing image data for %s; creating '
-                    'UNAVAILABLE stub image.'
-                ),
+                _("Missing image data for %s; creating " "UNAVAILABLE stub image."),
                 instance_data,
             )
             MachineImage.objects.create(
-                status=MachineImage.UNAVAILABLE,
-                content_object=awsmachineimage,
+                status=MachineImage.UNAVAILABLE, content_object=awsmachineimage,
             )
             machineimage = awsmachineimage.machine_image.get()
 
@@ -756,8 +728,8 @@ def save_instance_events(awsinstance, instance_data, events=None):
     if events is None:
         with transaction.atomic():
             awsevent = AwsInstanceEvent.objects.create(
-                subnet=instance_data['SubnetId'],
-                instance_type=instance_data['InstanceType'],
+                subnet=instance_data["SubnetId"],
+                instance_type=instance_data["InstanceType"],
             )
             InstanceEvent.objects.create(
                 event_type=InstanceEvent.TYPE.power_on,
@@ -772,10 +744,10 @@ def save_instance_events(awsinstance, instance_data, events=None):
         process_instance_event(event)
     else:
         logger.info(
-            _('Saving %(count)s new event(s) for %(instance)s'),
-            {'count': len(events), 'instance': awsinstance},
+            _("Saving %(count)s new event(s) for %(instance)s"),
+            {"count": len(events), "instance": awsinstance},
         )
-        events = sorted(events, key=lambda e: e['occurred_at'])
+        events = sorted(events, key=lambda e: e["occurred_at"])
 
         have_instance_type = False
 
@@ -784,41 +756,41 @@ def save_instance_events(awsinstance, instance_data, events=None):
             # instance type before, we need to try to get the type from the
             # described instance and use that on the event.
             if (
-                    have_instance_type is False and
-                    e['event_type'] == InstanceEvent.TYPE.power_on and
-                    e['instance_type'] is None and
-                    not AwsInstanceEvent.objects.filter(
-                        instance_event__instance__aws_instance=awsinstance,
-                        instance_event__occurred_at__lte=e['occurred_at'],
-                        instance_type__isnull=False,
-                    ).exists()
+                have_instance_type is False
+                and e["event_type"] == InstanceEvent.TYPE.power_on
+                and e["instance_type"] is None
+                and not AwsInstanceEvent.objects.filter(
+                    instance_event__instance__aws_instance=awsinstance,
+                    instance_event__occurred_at__lte=e["occurred_at"],
+                    instance_type__isnull=False,
+                ).exists()
             ):
-                instance_type = instance_data.get('InstanceType')
+                instance_type = instance_data.get("InstanceType")
                 logger.info(
                     _(
-                        'Setting type %(instance_type)s for %(event_type)s '
-                        'event at %(occurred_at)s from EC2 instance ID '
-                        '%(ec2_instance_id)s'
+                        "Setting type %(instance_type)s for %(event_type)s "
+                        "event at %(occurred_at)s from EC2 instance ID "
+                        "%(ec2_instance_id)s"
                     ),
                     {
-                        'instance_type': instance_type,
-                        'event_type': e.get('event_type'),
-                        'occurred_at': e.get('occurred_at'),
-                        'ec2_instance_id': awsinstance.ec2_instance_id,
+                        "instance_type": instance_type,
+                        "event_type": e.get("event_type"),
+                        "occurred_at": e.get("occurred_at"),
+                        "ec2_instance_id": awsinstance.ec2_instance_id,
                     },
                 )
-                e['instance_type'] = instance_type
+                e["instance_type"] = instance_type
                 have_instance_type = True
 
             awsevent = AwsInstanceEvent(
-                subnet=e['subnet'], instance_type=e['instance_type']
+                subnet=e["subnet"], instance_type=e["instance_type"]
             )
             awsevent.save()
             instance = awsinstance.instance.get()
             event = InstanceEvent(
                 instance=instance,
-                event_type=e['event_type'],
-                occurred_at=e['occurred_at'],
+                event_type=e["event_type"],
+                occurred_at=e["occurred_at"],
                 content_object=awsevent,
             )
             event.save()
@@ -842,8 +814,7 @@ def recalculate_runs(event):
     """
     # Get all runs that occurred after event or occurred during event.
     after_run = Q(start_time__gt=event.occurred_at)
-    during_run = Q(start_time__lte=event.occurred_at,
-                   end_time__gt=event.occurred_at)
+    during_run = Q(start_time__lte=event.occurred_at, end_time__gt=event.occurred_at)
     during_run_no_end = Q(start_time__lte=event.occurred_at, end_time=None)
     filters = after_run | during_run | during_run_no_end
     runs = Run.objects.filter(filters, instance_id=event.instance_id)
@@ -855,8 +826,8 @@ def recalculate_runs(event):
     # If no runs exist in this query, this event is the start of a new run
     try:
         earliest_run = (
-            runs.earliest('start_time').start_time
-            if runs.earliest('start_time').start_time < event.occurred_at
+            runs.earliest("start_time").start_time
+            if runs.earliest("start_time").start_time < event.occurred_at
             else event.occurred_at
         )
     except Run.DoesNotExist:
@@ -865,8 +836,8 @@ def recalculate_runs(event):
             saved_runs = []
             for index, normalized_run in enumerate(normalized_runs):
                 logger.info(
-                    'Processing run %(index)s of %(runs)s',
-                    {'index': index + 1, 'runs': len(normalized_runs)}
+                    "Processing run %(index)s of %(runs)s",
+                    {"index": index + 1, "runs": len(normalized_runs)},
                 )
                 run = Run(
                     start_time=normalized_run.start_time,
@@ -886,8 +857,8 @@ def recalculate_runs(event):
         InstanceEvent.objects.filter(
             instance_id=event.instance_id, occurred_at__gte=earliest_run
         )
-        .select_related('instance')
-        .order_by('occurred_at')
+        .select_related("instance")
+        .order_by("occurred_at")
     )
 
     normalized_runs = normalize_runs(events)
@@ -896,8 +867,8 @@ def recalculate_runs(event):
         saved_runs = []
         for index, normalized_run in enumerate(normalized_runs):
             logger.info(
-                'Processing run %(index)s of %(runs)s',
-                {'index': index + 1, 'runs': len(normalized_runs)}
+                "Processing run %(index)s of %(runs)s",
+                {"index": index + 1, "runs": len(normalized_runs)},
             )
             run = Run(
                 start_time=normalized_run.start_time,
@@ -932,13 +903,12 @@ def generate_aws_ami_messages(instances_data, ami_id_list):
     messages = []
     for region, instances in instances_data.items():
         for instance in instances:
-            if instance['ImageId'] in ami_id_list and not \
-                    aws.is_windows(instance):
+            if instance["ImageId"] in ami_id_list and not aws.is_windows(instance):
                 messages.append(
                     {
-                        'cloud_provider': AWS_PROVIDER_STRING,
-                        'region': region,
-                        'image_id': instance['ImageId'],
+                        "cloud_provider": AWS_PROVIDER_STRING,
+                        "region": region,
+                        "image_id": instance["ImageId"],
                     }
                 )
     return messages
@@ -960,10 +930,10 @@ def start_image_inspection(arn, ami_id, region):
     """
     logger.info(
         _(
-            'Starting inspection for ami %(ami_id)s in region %(region)s '
-            'through arn %(arn)s'
+            "Starting inspection for ami %(ami_id)s in region %(region)s "
+            "through arn %(arn)s"
         ),
-        {'ami_id': ami_id, 'region': region, 'arn': arn},
+        {"ami_id": ami_id, "region": region, "arn": arn},
     )
 
     try:
@@ -976,14 +946,12 @@ def start_image_inspection(arn, ami_id, region):
         if (
             MachineImageInspectionStart.objects.filter(
                 machineimage=machine_image
-            ).count() > settings.MAX_ALLOWED_INSPECTION_ATTEMPTS
+            ).count()
+            > settings.MAX_ALLOWED_INSPECTION_ATTEMPTS
         ):
             logger.info(
-                _('Exceeded %(count)s inspection attempts for %(ami)s'),
-                {
-                    'count': settings.MAX_ALLOWED_INSPECTION_ATTEMPTS,
-                    'ami': ami,
-                },
+                _("Exceeded %(count)s inspection attempts for %(ami)s"),
+                {"count": settings.MAX_ALLOWED_INSPECTION_ATTEMPTS, "ami": ami,},
             )
             machine_image.status = machine_image.ERROR
             machine_image.save()
@@ -1005,20 +973,20 @@ def start_image_inspection(arn, ami_id, region):
     except AwsMachineImage.DoesNotExist:
         logger.warning(
             _(
-                'AwsMachineImage for ec2_ami_id %(ec2_ami_id)s could not be '
-                'found for start_image_inspection'
+                "AwsMachineImage for ec2_ami_id %(ec2_ami_id)s could not be "
+                "found for start_image_inspection"
             ),
-            {'ec2_ami_id': ami_id},
+            {"ec2_ami_id": ami_id},
         )
         return
 
     except MachineImage.DoesNotExist:
         logger.warning(
             _(
-                'MachineImage for ec2_ami_id %(ec2_ami_id)s could not be '
-                'found for start_image_inspection'
+                "MachineImage for ec2_ami_id %(ec2_ami_id)s could not be "
+                "found for start_image_inspection"
             ),
-            {'ec2_ami_id': ami_id},
+            {"ec2_ami_id": ami_id},
         )
         return
 
@@ -1038,9 +1006,7 @@ def create_aws_machine_image_copy(copy_ami_id, reference_ami_id):
             owner_aws_account_id=reference.owner_aws_account_id,
             reference_awsmachineimage=reference,
         )
-        MachineImage.objects.create(
-            content_object=awsmachineimagecopy
-        )
+        MachineImage.objects.create(content_object=awsmachineimagecopy)
 
         # This should not be necessary, but we really need this to exist.
         # If it doesn't, this will kill the transaction with an exception.
@@ -1067,14 +1033,14 @@ def get_aws_machine_image(ec2_ami_id):
         machine_image = aws_machine_image.machine_image.get()
     except AwsMachineImage.DoesNotExist:
         logger.warning(
-            _('AwsMachineImage for ec2_ami_id %(ec2_ami_id)s not found'),
-            {'ec2_ami_id': ec2_ami_id},
+            _("AwsMachineImage for ec2_ami_id %(ec2_ami_id)s not found"),
+            {"ec2_ami_id": ec2_ami_id},
         )
         return None, None
     except MachineImage.DoesNotExist:
         logger.warning(
-            _('MachineImage for ec2_ami_id %(ec2_ami_id)s not found'),
-            {'ec2_ami_id': ec2_ami_id},
+            _("MachineImage for ec2_ami_id %(ec2_ami_id)s not found"),
+            {"ec2_ami_id": ec2_ami_id},
         )
         return None, None
     return aws_machine_image, machine_image
@@ -1090,7 +1056,7 @@ def add_messages_to_queue(queue_name, messages):
             dicts will be serialized as JSON strings.
     """
     queue_url = aws.get_sqs_queue_url(queue_name)
-    sqs = boto3.client('sqs')
+    sqs = boto3.client("sqs")
 
     wrapped_messages = [_sqs_wrap_message(message) for message in messages]
     batch_count = math.ceil(len(messages) / SQS_SEND_BATCH_SIZE)
@@ -1114,9 +1080,9 @@ def _sqs_wrap_message(message):
 
     """
     return {
-        'Id': str(uuid.uuid4()),
+        "Id": str(uuid.uuid4()),
         # Yes, the outgoing message uses MessageBody, not Body.
-        'MessageBody': jsonpickle.encode(message),
+        "MessageBody": jsonpickle.encode(message),
     }
 
 
@@ -1133,7 +1099,7 @@ def read_messages_from_queue(queue_name, max_count=1):
 
     """
     queue_url = aws.get_sqs_queue_url(queue_name)
-    sqs = boto3.client('sqs')
+    sqs = boto3.client("sqs")
     sqs_messages = []
     max_batch_size = min(SQS_RECEIVE_BATCH_SIZE, max_count)
     for __ in range(max_count):
@@ -1142,9 +1108,8 @@ def read_messages_from_queue(queue_name, max_count=1):
         # our iteration count is actually max_count and we have some
         # conditions at the end that break us out when we reach the true end.
         new_messages = sqs.receive_message(
-            QueueUrl=queue_url,
-            MaxNumberOfMessages=max_batch_size
-        ).get('Messages', [])
+            QueueUrl=queue_url, MaxNumberOfMessages=max_batch_size
+        ).get("Messages", [])
         if len(new_messages) == 0:
             break
         sqs_messages.extend(new_messages)
@@ -1155,8 +1120,7 @@ def read_messages_from_queue(queue_name, max_count=1):
         try:
             unwrapped = _sqs_unwrap_message(sqs_message)
             sqs.delete_message(
-                QueueUrl=queue_url,
-                ReceiptHandle=sqs_message['ReceiptHandle'],
+                QueueUrl=queue_url, ReceiptHandle=sqs_message["ReceiptHandle"],
             )
             messages.append(unwrapped)
         except ClientError as e:
@@ -1164,12 +1128,11 @@ def read_messages_from_queue(queue_name, max_count=1):
             # probably should log them, stop attempting further deletes, and
             # return what we have received (and thus deleted!) so far.
             logger.error(
-                _('Unexpected error when attempting to read from %(queue)s: '
-                  '%(error)s'),
-                {
-                    'queue': queue_url,
-                    'error': getattr(e, 'response', {}).get('Error')
-                }
+                _(
+                    "Unexpected error when attempting to read from %(queue)s: "
+                    "%(error)s"
+                ),
+                {"queue": queue_url, "error": getattr(e, "response", {}).get("Error")},
             )
             logger.exception(e)
             break
@@ -1189,7 +1152,7 @@ def _sqs_unwrap_message(sqs_message):
     """
     return jsonpickle.decode(
         # Yes, the response has Body, not MessageBody.
-        sqs_message['Body']
+        sqs_message["Body"]
     )
 
 
@@ -1209,9 +1172,7 @@ def convert_param_to_int(name, value):
     try:
         return int(value)
     except ValueError:
-        error = {
-            name: [_('{} must be an integer.'.format(name))]
-        }
+        error = {name: [_("{} must be an integer.".format(name))]}
         raise ValidationError(error)
 
 
@@ -1235,10 +1196,10 @@ def update_aws_image_status_inspected(
         if not aws_machine_image:
             logger.warning(
                 _(
-                    'AwsMachineImage with EC2 AMI ID %(ec2_ami_id)s could not '
-                    'be found for update_aws_image_status_inspected'
+                    "AwsMachineImage with EC2 AMI ID %(ec2_ami_id)s could not "
+                    "be found for update_aws_image_status_inspected"
                 ),
-                {'ec2_ami_id': ec2_ami_id},
+                {"ec2_ami_id": ec2_ami_id},
             )
             return False
         if aws_marketplace_image is not None:
@@ -1267,10 +1228,10 @@ def update_aws_image_status_error(ec2_ami_id):
         if not aws_machine_image:
             logger.warning(
                 _(
-                    'AwsMachineImage with EC2 AMI ID %(ec2_ami_id)s could not '
-                    'be found for update_aws_image_status_error'
+                    "AwsMachineImage with EC2 AMI ID %(ec2_ami_id)s could not "
+                    "be found for update_aws_image_status_error"
                 ),
-                {'ec2_ami_id': ec2_ami_id},
+                {"ec2_ami_id": ec2_ami_id},
             )
             return False
         machine_image.status = machine_image.ERROR
@@ -1291,8 +1252,7 @@ def get_standard_cloud_account_name(cloud_name, external_cloud_account_id):
 
     """
     return cloud_account_name_pattern.format(
-        cloud_name=cloud_name,
-        external_cloud_account_id=external_cloud_account_id,
+        cloud_name=cloud_name, external_cloud_account_id=external_cloud_account_id,
     )
 
 
@@ -1323,10 +1283,8 @@ def verify_permissions_and_create_aws_cloud_account(
     if account_exists:
         raise ValidationError(
             detail={
-                'account_arn': [
-                    _('An ARN already exists for account "{0}"').format(
-                        aws_account_id
-                    )
+                "account_arn": [
+                    _('An ARN already exists for account "{0}"').format(aws_account_id)
                 ]
             }
         )
@@ -1334,10 +1292,10 @@ def verify_permissions_and_create_aws_cloud_account(
     try:
         session = aws.get_session(arn_str)
     except ClientError as error:
-        if error.response.get('Error', {}).get('Code') == 'AccessDenied':
+        if error.response.get("Error", {}).get("Code") == "AccessDenied":
             raise ValidationError(
                 detail={
-                    'account_arn': [
+                    "account_arn": [
                         _('Permission denied for ARN "{0}"').format(arn_str)
                     ]
                 }
@@ -1348,28 +1306,24 @@ def verify_permissions_and_create_aws_cloud_account(
         try:
             aws.configure_cloudtrail(session, aws_account_id)
         except ClientError as error:
-            if (
-                error.response.get('Error', {}).get('Code') ==
-                'AccessDeniedException'
-            ):
+            if error.response.get("Error", {}).get("Code") == "AccessDeniedException":
                 raise ValidationError(
                     detail={
-                        'account_arn': [
+                        "account_arn": [
                             _(
-                                'Access denied to create CloudTrail for '
-                                'ARN "{0}"'
+                                "Access denied to create CloudTrail for " 'ARN "{0}"'
                             ).format(arn_str)
                         ]
                     }
                 )
             raise
     else:
-        failure_details = [_('Account verification failed.')]
+        failure_details = [_("Account verification failed.")]
         failure_details += [
             _('Access denied for policy action "{0}".').format(action)
             for action in failed_actions
         ]
-        raise ValidationError(detail={'account_arn': failure_details})
+        raise ValidationError(detail={"account_arn": failure_details})
 
     with transaction.atomic():
         # How is it possible that the AwsCloudAccount already exists?
@@ -1381,14 +1335,14 @@ def verify_permissions_and_create_aws_cloud_account(
         aws_cloud_account, created = AwsCloudAccount.objects.get_or_create(
             account_arn=arn_str,
             defaults={
-                'aws_account_id': aws_account_id,
-                'aws_access_key_id': customer_access_key_id,
+                "aws_account_id": aws_account_id,
+                "aws_access_key_id": customer_access_key_id,
             },
         )
         if not created:
             raise ValidationError(
                 detail={
-                    'account_arn': [
+                    "account_arn": [
                         _('An ARN already exists for account "{0}"').format(
                             aws_account_id
                         )
@@ -1403,7 +1357,7 @@ def verify_permissions_and_create_aws_cloud_account(
             user=user,
             object_id=aws_cloud_account.id,
             content_type_id=content_type_id,
-            defaults={'name': cloud_account_name},
+            defaults={"name": cloud_account_name},
         )
 
         # Local import to get around a circular import issue.

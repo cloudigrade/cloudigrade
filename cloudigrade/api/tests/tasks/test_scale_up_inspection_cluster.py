@@ -13,14 +13,14 @@ class ScaleUpInspectionClusterTest(TestCase):
 
     def setUp(self):
         """Set up expected ready_volumes queue name."""
-        self.ready_volumes_queue_name = '{0}ready_volumes'.format(
+        self.ready_volumes_queue_name = "{0}ready_volumes".format(
             settings.AWS_NAME_PREFIX
         )
 
-    @patch('api.tasks.add_messages_to_queue')
-    @patch('api.tasks.run_inspection_cluster')
-    @patch('api.tasks.read_messages_from_queue')
-    @patch('api.tasks.aws')
+    @patch("api.tasks.add_messages_to_queue")
+    @patch("api.tasks.run_inspection_cluster")
+    @patch("api.tasks.read_messages_from_queue")
+    @patch("api.tasks.aws")
     def test_scale_up_inspection_cluster_success(
         self,
         mock_aws,
@@ -39,8 +39,7 @@ class ScaleUpInspectionClusterTest(TestCase):
             settings.HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME
         )
         mock_read_messages_from_queue.assert_called_once_with(
-            self.ready_volumes_queue_name,
-            settings.HOUNDIGRADE_AWS_VOLUME_BATCH_SIZE,
+            self.ready_volumes_queue_name, settings.HOUNDIGRADE_AWS_VOLUME_BATCH_SIZE,
         )
         mock_aws.scale_up.assert_called_once_with(
             settings.HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME
@@ -48,10 +47,10 @@ class ScaleUpInspectionClusterTest(TestCase):
         mock_run_inspection_cluster.delay.assert_called_once_with(messages)
         mock_add_messages_to_queue.assert_not_called()
 
-    @patch('api.tasks.add_messages_to_queue')
-    @patch('api.tasks.run_inspection_cluster')
-    @patch('api.tasks.read_messages_from_queue')
-    @patch('api.tasks.aws')
+    @patch("api.tasks.add_messages_to_queue")
+    @patch("api.tasks.run_inspection_cluster")
+    @patch("api.tasks.read_messages_from_queue")
+    @patch("api.tasks.aws")
     def test_scale_up_inspection_cluster_aborts_when_not_scaled_down(
         self,
         mock_aws,
@@ -60,7 +59,7 @@ class ScaleUpInspectionClusterTest(TestCase):
         mock_add_messages_to_queue,
     ):
         """Assert scale up aborts when not scaled down."""
-        mock_aws.is_scaled_down.return_value = False, {'Instances': [Mock()]}
+        mock_aws.is_scaled_down.return_value = False, {"Instances": [Mock()]}
 
         tasks.scale_up_inspection_cluster()
 
@@ -72,10 +71,10 @@ class ScaleUpInspectionClusterTest(TestCase):
         mock_run_inspection_cluster.delay.assert_not_called()
         mock_add_messages_to_queue.assert_not_called()
 
-    @patch('api.tasks.add_messages_to_queue')
-    @patch('api.tasks.run_inspection_cluster')
-    @patch('api.tasks.read_messages_from_queue')
-    @patch('api.tasks.aws')
+    @patch("api.tasks.add_messages_to_queue")
+    @patch("api.tasks.run_inspection_cluster")
+    @patch("api.tasks.read_messages_from_queue")
+    @patch("api.tasks.aws")
     def test_scale_up_inspection_cluster_aborts_when_no_messages(
         self,
         mock_aws,
@@ -94,16 +93,15 @@ class ScaleUpInspectionClusterTest(TestCase):
         )
         mock_aws.scale_up.assert_not_called()
         mock_read_messages_from_queue.assert_called_once_with(
-            self.ready_volumes_queue_name,
-            settings.HOUNDIGRADE_AWS_VOLUME_BATCH_SIZE,
+            self.ready_volumes_queue_name, settings.HOUNDIGRADE_AWS_VOLUME_BATCH_SIZE,
         )
         mock_run_inspection_cluster.delay.assert_not_called()
         mock_add_messages_to_queue.assert_not_called()
 
-    @patch('api.tasks.add_messages_to_queue')
-    @patch('api.tasks.run_inspection_cluster')
-    @patch('api.tasks.read_messages_from_queue')
-    @patch('api.tasks.aws')
+    @patch("api.tasks.add_messages_to_queue")
+    @patch("api.tasks.run_inspection_cluster")
+    @patch("api.tasks.read_messages_from_queue")
+    @patch("api.tasks.aws")
     def test_scale_up_inspection_cluster_requeues_on_aws_error(
         self,
         mock_aws,

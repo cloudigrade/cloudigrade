@@ -9,7 +9,7 @@ from api.tasks import scale_down_cluster
 class ScaleDownClusterTest(TestCase):
     """Celery task 'scale_down_cluster' test cases."""
 
-    @patch('api.tasks.aws')
+    @patch("api.tasks.aws")
     def test_scale_down_cluster_success(self, mock_aws):
         """Test the scale down cluster function."""
         mock_aws.scale_down.return_value = None

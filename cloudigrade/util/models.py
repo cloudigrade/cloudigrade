@@ -20,7 +20,7 @@ class BasePolymorphicModel(PolymorphicModel):
 
     class Meta:
         abstract = True
-        ordering = ('created_at',)
+        ordering = ("created_at",)
 
 
 class BaseModel(models.Model):
@@ -31,7 +31,7 @@ class BaseModel(models.Model):
 
     class Meta:
         abstract = True
-        ordering = ('created_at',)
+        ordering = ("created_at",)
 
 
 class BaseGenericModel(BaseModel):
@@ -43,7 +43,7 @@ class BaseGenericModel(BaseModel):
 
     class Meta:
         abstract = True
-        ordering = ('created_at',)
+        ordering = ("created_at",)
 
 
 @receiver(post_delete)
@@ -58,15 +58,12 @@ def basegenericmodel_post_delete_callback(sender, instance, *args, **kwargs):
     """
     if issubclass(sender, BaseGenericModel):
         logger.info(
-            _(
-                'deleting %(self_class)s-related content object: '
-                '%(content_object)s'
-            ),
+            _("deleting %(self_class)s-related content object: " "%(content_object)s"),
             {
-                'self_class': sender.__class__.__name__,
-                'content_object': instance.content_object,
+                "self_class": sender.__class__.__name__,
+                "content_object": instance.content_object,
             },
         )
         if instance.content_object is not None:
             instance.content_object.delete()
-            logger.info(_('deleting %s'), instance)
+            logger.info(_("deleting %s"), instance)

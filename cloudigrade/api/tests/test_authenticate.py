@@ -23,7 +23,7 @@ class ThreeScaleAuthenticateTestCase(TestCase):
 
     def setUp(self):
         """Set up data for tests."""
-        self.user_email = 'test@example.com'
+        self.user_email = "test@example.com"
 
         self.rh_header = util_helper.get_3scale_auth_header(
             account_number=self.user_email
@@ -42,32 +42,26 @@ class ThreeScaleAuthenticateTestCase(TestCase):
 
     def test_3scale_authenticate_invalid_header(self):
         """Test that 3scale authentication with an invalid header fails."""
-        bad_rh_header = base64.b64encode(b'Not JSON')
+        bad_rh_header = base64.b64encode(b"Not JSON")
 
         request = Mock()
         request.META = {settings.INSIGHTS_IDENTITY_HEADER: bad_rh_header}
 
         with self.assertRaises(exceptions.AuthenticationFailed) as e:
             self.three_scale_auth.authenticate(request)
-            self.assertIn('Authentication Failed', e.exception.args[0])
+            self.assertIn("Authentication Failed", e.exception.args[0])
 
     def test_3scale_authenticate_header_bad_format(self):
         """Test that 3scale authentication with a bad json header fails."""
-        rh_identity = {
-            'user': {
-                'email': self.user_email
-            }
-        }
-        bad_rh_header = base64.b64encode(
-            json.dumps(rh_identity).encode('utf-8')
-        )
+        rh_identity = {"user": {"email": self.user_email}}
+        bad_rh_header = base64.b64encode(json.dumps(rh_identity).encode("utf-8"))
 
         request = Mock()
         request.META = {settings.INSIGHTS_IDENTITY_HEADER: bad_rh_header}
 
         with self.assertRaises(exceptions.AuthenticationFailed) as e:
             self.three_scale_auth.authenticate(request)
-            self.assertIn('Authentication Failed', e.exception.args[0])
+            self.assertIn("Authentication Failed", e.exception.args[0])
 
     def test_3scale_authenticate_no_header(self):
         """Test that 3scale authentication with no headers fails."""

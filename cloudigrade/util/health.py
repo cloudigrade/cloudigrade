@@ -20,6 +20,7 @@ class CeleryHealthCheckBackend(BaseHealthCheckBackend):
     def _get_app(self):
         """Get the current Celery app."""
         from config.celery import app
+
         return app
 
     def check_status(self):
@@ -31,10 +32,10 @@ class CeleryHealthCheckBackend(BaseHealthCheckBackend):
             connection.release()
         except ClientError as e:
             logger.exception(e)
-            self.add_error(_('Celery heartbeat failed due to boto3 error.'))
+            self.add_error(_("Celery heartbeat failed due to boto3 error."))
         except Exception as e:
             logger.exception(e)
-            self.add_error(_('Celery heartbeat failed due to unknown error.'))
+            self.add_error(_("Celery heartbeat failed due to unknown error."))
 
 
 class SqsHealthCheckBackend(BaseHealthCheckBackend):
@@ -47,7 +48,7 @@ class SqsHealthCheckBackend(BaseHealthCheckBackend):
             aws.get_sqs_queue_url(queue_name)
         except ClientError as e:
             logger.exception(e)
-            self.add_error(_('SQS check failed due to boto3 error.'))
+            self.add_error(_("SQS check failed due to boto3 error."))
         except Exception as e:
             logger.exception(e)
-            self.add_error(_('SQS check failed due to unknown error.'))
+            self.add_error(_("SQS check failed due to unknown error."))

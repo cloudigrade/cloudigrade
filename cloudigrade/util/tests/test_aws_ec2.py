@@ -6,15 +6,17 @@ from botocore.exceptions import ClientError
 from django.test import TestCase
 
 from util.aws import ec2
-from util.exceptions import (AwsImageError,
-                             AwsSnapshotCopyLimitError,
-                             AwsSnapshotError,
-                             AwsSnapshotNotOwnedError,
-                             AwsSnapshotOwnedError,
-                             AwsVolumeError,
-                             AwsVolumeNotReadyError,
-                             ImageNotReadyException,
-                             SnapshotNotReadyException)
+from util.exceptions import (
+    AwsImageError,
+    AwsSnapshotCopyLimitError,
+    AwsSnapshotError,
+    AwsSnapshotNotOwnedError,
+    AwsSnapshotOwnedError,
+    AwsVolumeError,
+    AwsVolumeNotReadyError,
+    ImageNotReadyException,
+    SnapshotNotReadyException,
+)
 from util.tests import helper
 
 
@@ -32,7 +34,7 @@ class UtilAwsEc2Test(TestCase):
         Instances into Reservations; so, we must ensure in our tests that we
         are checking for Instances in potentially multiple Reservations.
         """
-        mock_regions = [f'region-{uuid.uuid4()}']
+        mock_regions = [f"region-{uuid.uuid4()}"]
         mock_role = helper.generate_dummy_role()
 
         mock_session = Mock()
@@ -52,23 +54,10 @@ class UtilAwsEc2Test(TestCase):
             state=ec2.InstanceState.stopped
         )
         mock_described = {
-            'Reservations': [
-                {
-                    'Instances': [
-                        mock_running_instance_1,
-                        mock_stopped_instance_1,
-                    ],
-                },
-                {
-                    'Instances': [
-                        mock_running_instance_2,
-                    ],
-                },
-                {
-                    'Instances': [
-                        mock_stopped_instance_2,
-                    ],
-                },
+            "Reservations": [
+                {"Instances": [mock_running_instance_1, mock_stopped_instance_1,],},
+                {"Instances": [mock_running_instance_2,],},
+                {"Instances": [mock_stopped_instance_2,],},
             ],
         }
 
@@ -84,7 +73,7 @@ class UtilAwsEc2Test(TestCase):
             ]
         }
 
-        with patch.object(ec2, 'get_regions') as mock_get_regions:
+        with patch.object(ec2, "get_regions") as mock_get_regions:
             mock_get_regions.return_value = mock_regions
             actual_found = ec2.describe_instances_everywhere(mock_session)
 
@@ -103,13 +92,9 @@ class UtilAwsEc2Test(TestCase):
             for instance_id in instance_ids
         ]
         response = {
-            'Reservations': [
-                {
-                    'Instances': individual_described_instances[:2],
-                },
-                {
-                    'Instances': individual_described_instances[2:],
-                },
+            "Reservations": [
+                {"Instances": individual_described_instances[:2],},
+                {"Instances": individual_described_instances[2:],},
             ],
         }
 
@@ -119,15 +104,13 @@ class UtilAwsEc2Test(TestCase):
 
         region = helper.get_random_region()
 
-        described_instances = ec2.describe_instances(
-            mock_session, instance_ids, region
-        )
+        described_instances = ec2.describe_instances(mock_session, instance_ids, region)
 
         self.assertEqual(set(described_instances.keys()), set(instance_ids))
         for described_instance in individual_described_instances:
             self.assertIn(described_instance, described_instances.values())
 
-    @patch('util.aws.ec2.check_image_state')
+    @patch("util.aws.ec2.check_image_state")
     def test_get_ami(self, mock_check_image_state):
         """Assert that get_ami returns an Image."""
         mock_image_id = helper.generate_dummy_image_id()
@@ -142,12 +125,11 @@ class UtilAwsEc2Test(TestCase):
         actual_image = ec2.get_ami(mock_session, mock_image_id, mock_region)
         self.assertEqual(actual_image, mock_image)
 
-        mock_session.resource.assert_called_once_with('ec2',
-                                                      region_name=mock_region)
+        mock_session.resource.assert_called_once_with("ec2", region_name=mock_region)
         mock_resource.Image.assert_called_once_with(mock_image_id)
         mock_check_image_state.assert_called_once_with(mock_image)
 
-    @patch('util.aws.ec2.check_image_state')
+    @patch("util.aws.ec2.check_image_state")
     def test_get_ami_when_load_fails(self, mock_check_image_state):
         """Assert that get_ami returns None when load fails."""
         mock_image_id = helper.generate_dummy_image_id()
@@ -166,18 +148,18 @@ class UtilAwsEc2Test(TestCase):
 
     def test_check_image_state_available(self):
         """Assert clean return when image state is available."""
-        mock_image = helper.generate_mock_image(state='available')
+        mock_image = helper.generate_mock_image(state="available")
         ec2.check_image_state(mock_image)
 
     def test_check_image_state_failed(self):
         """Assert raised exception when image state is failed."""
-        mock_image = helper.generate_mock_image(state='failed')
+        mock_image = helper.generate_mock_image(state="failed")
         with self.assertRaises(AwsImageError):
             ec2.check_image_state(mock_image)
 
     def test_check_image_state_unhandled(self):
         """Assert raised exception when image state is unhandled."""
-        mock_image = helper.generate_mock_image(state='itisamystery.gif')
+        mock_image = helper.generate_mock_image(state="itisamystery.gif")
         with self.assertRaises(ImageNotReadyException):
             ec2.check_image_state(mock_image)
 
@@ -193,9 +175,9 @@ class UtilAwsEc2Test(TestCase):
         # Dummy response inspired by real exception recorded at
         # https://sentry.io/organizations/cloudigrade/issues/970892568/
         error_response = {
-            'Error': {
-                'Code': 'InvalidAMIID.NotFound',
-                'Message': "The image id '[POTATO]' does not exist",
+            "Error": {
+                "Code": "InvalidAMIID.NotFound",
+                "Message": "The image id '[POTATO]' does not exist",
             }
         }
         exception = ClientError(error_response, Mock())
@@ -206,11 +188,7 @@ class UtilAwsEc2Test(TestCase):
 
     def test_check_image_state_mystery_load_failure(self):
         """Assert raised exception when image loading fails mysteriously."""
-        error_response = {
-            'Error': {
-                'Code': 'itisamystery.gif',
-            }
-        }
+        error_response = {"Error": {"Code": "itisamystery.gif",}}
         exception = ClientError(error_response, Mock())
         mock_image = helper.generate_mock_image()
         mock_image.load.side_effect = exception
@@ -222,7 +200,7 @@ class UtilAwsEc2Test(TestCase):
         mock_image_id = helper.generate_dummy_image_id()
         mock_image = helper.generate_mock_image(mock_image_id)
 
-        expected_id = mock_image.block_device_mappings[0]['Ebs']['SnapshotId']
+        expected_id = mock_image.block_device_mappings[0]["Ebs"]["SnapshotId"]
         actual_id = ec2.get_ami_snapshot_id(mock_image)
         self.assertEqual(expected_id, actual_id)
 
@@ -237,12 +215,10 @@ class UtilAwsEc2Test(TestCase):
 
         mock_region = helper.get_random_region()
 
-        actual_snapshot = ec2.get_snapshot(mock_session, mock_snapshot_id,
-                                           mock_region)
+        actual_snapshot = ec2.get_snapshot(mock_session, mock_snapshot_id, mock_region)
         self.assertEqual(actual_snapshot, mock_snapshot)
 
-        mock_session.resource.assert_called_once_with('ec2',
-                                                      region_name=mock_region)
+        mock_session.resource.assert_called_once_with("ec2", region_name=mock_region)
         mock_resource.Snapshot.assert_called_once_with(mock_snapshot_id)
 
     def test_add_snapshot_ownership_success(self):
@@ -251,25 +227,25 @@ class UtilAwsEc2Test(TestCase):
 
         mock_snapshot = helper.generate_mock_snapshot()
         mock_snapshot.describe_attribute.return_value = {
-            'CreateVolumePermissions': [{'UserId': mock_user_id}],
+            "CreateVolumePermissions": [{"UserId": mock_user_id}],
         }
 
-        with patch.object(ec2, '_get_primary_account_id') as mock_get_acct_id:
+        with patch.object(ec2, "_get_primary_account_id") as mock_get_acct_id:
             mock_get_acct_id.return_value = mock_user_id
             actual_modified = ec2.add_snapshot_ownership(mock_snapshot)
 
         self.assertIsNone(actual_modified)
 
-        expected_permission = {'Add': [{'UserId': mock_user_id}]}
+        expected_permission = {"Add": [{"UserId": mock_user_id}]}
         expected_user_ids = [mock_user_id]
         mock_snapshot.modify_attribute.assert_called_once_with(
-            Attribute='createVolumePermission',
+            Attribute="createVolumePermission",
             CreateVolumePermission=expected_permission,
-            OperationType='add',
-            UserIds=expected_user_ids
+            OperationType="add",
+            UserIds=expected_user_ids,
         )
         mock_snapshot.describe_attribute.assert_called_once_with(
-            Attribute='createVolumePermission'
+            Attribute="createVolumePermission"
         )
 
     def test_add_snapshot_ownership_not_verified(self):
@@ -278,24 +254,24 @@ class UtilAwsEc2Test(TestCase):
 
         mock_snapshot = helper.generate_mock_snapshot()
         mock_snapshot.describe_attribute.return_value = {
-            'CreateVolumePermissions': [],
+            "CreateVolumePermissions": [],
         }
 
-        with patch.object(ec2, '_get_primary_account_id') as mock_get_acct_id:
+        with patch.object(ec2, "_get_primary_account_id") as mock_get_acct_id:
             mock_get_acct_id.return_value = mock_user_id
             with self.assertRaises(AwsSnapshotNotOwnedError):
                 ec2.add_snapshot_ownership(mock_snapshot)
 
-        expected_permission = {'Add': [{'UserId': mock_user_id}]}
+        expected_permission = {"Add": [{"UserId": mock_user_id}]}
         expected_user_ids = [mock_user_id]
         mock_snapshot.modify_attribute.assert_called_once_with(
-            Attribute='createVolumePermission',
+            Attribute="createVolumePermission",
             CreateVolumePermission=expected_permission,
-            OperationType='add',
-            UserIds=expected_user_ids
+            OperationType="add",
+            UserIds=expected_user_ids,
         )
         mock_snapshot.describe_attribute.assert_called_once_with(
-            Attribute='createVolumePermission'
+            Attribute="createVolumePermission"
         )
 
     def test_remove_snapshot_ownership_success(self):
@@ -304,25 +280,25 @@ class UtilAwsEc2Test(TestCase):
 
         mock_snapshot = helper.generate_mock_snapshot()
         mock_snapshot.describe_attribute.return_value = {
-            'CreateVolumePermissions': [],
+            "CreateVolumePermissions": [],
         }
 
-        with patch.object(ec2, '_get_primary_account_id') as mock_get_acct_id:
+        with patch.object(ec2, "_get_primary_account_id") as mock_get_acct_id:
             mock_get_acct_id.return_value = mock_user_id
             actual_modified = ec2.remove_snapshot_ownership(mock_snapshot)
 
         self.assertIsNone(actual_modified)
 
-        expected_permission = {'Remove': [{'UserId': mock_user_id}]}
+        expected_permission = {"Remove": [{"UserId": mock_user_id}]}
         expected_user_ids = [mock_user_id]
         mock_snapshot.modify_attribute.assert_called_once_with(
-            Attribute='createVolumePermission',
+            Attribute="createVolumePermission",
             CreateVolumePermission=expected_permission,
-            OperationType='remove',
-            UserIds=expected_user_ids
+            OperationType="remove",
+            UserIds=expected_user_ids,
         )
         mock_snapshot.describe_attribute.assert_called_once_with(
-            Attribute='createVolumePermission'
+            Attribute="createVolumePermission"
         )
 
     def test_remove_snapshot_ownership_not_verified(self):
@@ -331,24 +307,24 @@ class UtilAwsEc2Test(TestCase):
 
         mock_snapshot = helper.generate_mock_snapshot()
         mock_snapshot.describe_attribute.return_value = {
-            'CreateVolumePermissions': [{'UserId': mock_user_id}],
+            "CreateVolumePermissions": [{"UserId": mock_user_id}],
         }
 
-        with patch.object(ec2, '_get_primary_account_id') as mock_get_acct_id:
+        with patch.object(ec2, "_get_primary_account_id") as mock_get_acct_id:
             mock_get_acct_id.return_value = mock_user_id
             with self.assertRaises(AwsSnapshotOwnedError):
                 ec2.remove_snapshot_ownership(mock_snapshot)
 
-        expected_permission = {'Remove': [{'UserId': mock_user_id}]}
+        expected_permission = {"Remove": [{"UserId": mock_user_id}]}
         expected_user_ids = [mock_user_id]
         mock_snapshot.modify_attribute.assert_called_once_with(
-            Attribute='createVolumePermission',
+            Attribute="createVolumePermission",
             CreateVolumePermission=expected_permission,
-            OperationType='remove',
-            UserIds=expected_user_ids
+            OperationType="remove",
+            UserIds=expected_user_ids,
         )
         mock_snapshot.describe_attribute.assert_called_once_with(
-            Attribute='createVolumePermission'
+            Attribute="createVolumePermission"
         )
 
     def test_remove_snapshot_ownership_other_user(self):
@@ -357,94 +333,82 @@ class UtilAwsEc2Test(TestCase):
 
         mock_snapshot = helper.generate_mock_snapshot()
         mock_snapshot.describe_attribute.return_value = {
-            'CreateVolumePermissions': [{'UserId': 'mock_user_id'}],
+            "CreateVolumePermissions": [{"UserId": "mock_user_id"}],
         }
 
-        with patch.object(ec2, '_get_primary_account_id') as mock_get_acct_id:
+        with patch.object(ec2, "_get_primary_account_id") as mock_get_acct_id:
             mock_get_acct_id.return_value = mock_user_id
             ec2.remove_snapshot_ownership(mock_snapshot)
 
-        expected_permission = {'Remove': [{'UserId': mock_user_id}]}
+        expected_permission = {"Remove": [{"UserId": mock_user_id}]}
         expected_user_ids = [mock_user_id]
         mock_snapshot.modify_attribute.assert_called_once_with(
-            Attribute='createVolumePermission',
+            Attribute="createVolumePermission",
             CreateVolumePermission=expected_permission,
-            OperationType='remove',
-            UserIds=expected_user_ids
+            OperationType="remove",
+            UserIds=expected_user_ids,
         )
         mock_snapshot.describe_attribute.assert_called_once_with(
-            Attribute='createVolumePermission'
+            Attribute="createVolumePermission"
         )
 
-    @patch('util.aws.ec2.boto3')
+    @patch("util.aws.ec2.boto3")
     def test_copy_snapshot_success(self, mock_boto3):
         """Assert that a snapshot copy operation begins."""
         mock_region = helper.get_random_region()
         mock_snapshot = helper.generate_mock_snapshot()
         mock_copied_snapshot_id = helper.generate_dummy_snapshot_id()
-        mock_copy_result = {'SnapshotId': mock_copied_snapshot_id}
+        mock_copy_result = {"SnapshotId": mock_copied_snapshot_id}
 
         resource = mock_boto3.resource.return_value
         resource.Snapshot.return_value = mock_snapshot
         mock_snapshot.copy.return_value = mock_copy_result
 
         actual_copied_snapshot_id = ec2.copy_snapshot(
-            mock_snapshot.snapshot_id,
-            mock_region
+            mock_snapshot.snapshot_id, mock_region
         )
         self.assertEqual(actual_copied_snapshot_id, mock_copied_snapshot_id)
 
-    @patch('util.aws.ec2.boto3')
+    @patch("util.aws.ec2.boto3")
     def test_copy_snapshot_limit_reached(self, mock_boto3):
         """Assert that an error is returned when the copy limit is reached."""
         mock_region = helper.get_random_region()
         mock_snapshot = helper.generate_mock_snapshot()
 
         mock_copy_error = {
-            'Error': {
-                'Code': 'ResourceLimitExceeded',
-                'Message': 'You have exceeded an Amazon EC2 resource limit. '
-                           'For example, you might have too many snapshot '
-                           'copies in progress.'
+            "Error": {
+                "Code": "ResourceLimitExceeded",
+                "Message": "You have exceeded an Amazon EC2 resource limit. "
+                "For example, you might have too many snapshot "
+                "copies in progress.",
             }
         }
 
         resource = mock_boto3.resource.return_value
         resource.Snapshot.return_value = mock_snapshot
-        mock_snapshot.copy.side_effect = ClientError(
-            mock_copy_error, 'CopySnapshot')
+        mock_snapshot.copy.side_effect = ClientError(mock_copy_error, "CopySnapshot")
 
         with self.assertRaises(AwsSnapshotCopyLimitError):
-            ec2.copy_snapshot(
-                mock_snapshot.snapshot_id,
-                mock_region
-            )
+            ec2.copy_snapshot(mock_snapshot.snapshot_id, mock_region)
 
-    @patch('util.aws.ec2.boto3')
+    @patch("util.aws.ec2.boto3")
     def test_copy_snapshot_failure(self, mock_boto3):
         """Assert that an error is given when copy fails."""
         mock_region = helper.get_random_region()
         mock_snapshot = helper.generate_mock_snapshot()
 
         mock_copy_error = {
-            'Error': {
-                'Code': 'MockError',
-                'Message': 'The operation failed.'
-            }
+            "Error": {"Code": "MockError", "Message": "The operation failed."}
         }
 
         resource = mock_boto3.resource.return_value
         resource.Snapshot.return_value = mock_snapshot
-        mock_snapshot.copy.side_effect = ClientError(
-            mock_copy_error, 'CopySnapshot')
+        mock_snapshot.copy.side_effect = ClientError(mock_copy_error, "CopySnapshot")
 
         with self.assertRaises(ClientError):
-            ec2.copy_snapshot(
-                mock_snapshot.snapshot_id,
-                mock_region
-            )
+            ec2.copy_snapshot(mock_snapshot.snapshot_id, mock_region)
 
-    @patch('util.aws.ec2.boto3')
+    @patch("util.aws.ec2.boto3")
     def test_create_volume_snapshot_ready(self, mock_boto3):
         """Test that volume creation starts when snapshot is ready."""
         zone = helper.generate_dummy_availability_zone()
@@ -458,17 +422,17 @@ class UtilAwsEc2Test(TestCase):
         volume_id = ec2.create_volume(mock_snapshot.snapshot_id, zone)
 
         mock_ec2.create_volume.assert_called_with(
-            SnapshotId=mock_snapshot.snapshot_id,
-            AvailabilityZone=zone)
+            SnapshotId=mock_snapshot.snapshot_id, AvailabilityZone=zone
+        )
 
-        mock_boto3.resource.assert_called_once_with('ec2')
+        mock_boto3.resource.assert_called_once_with("ec2")
         self.assertEqual(volume_id, mock_volume.id)
 
-    @patch('util.aws.ec2.boto3')
+    @patch("util.aws.ec2.boto3")
     def test_create_volume_snapshot_not_ready(self, mock_boto3):
         """Test that volume creation aborts when snapshot is not ready."""
         zone = helper.generate_dummy_availability_zone()
-        mock_snapshot = helper.generate_mock_snapshot(state='pending')
+        mock_snapshot = helper.generate_mock_snapshot(state="pending")
 
         mock_ec2 = mock_boto3.resource.return_value
         mock_ec2.Snapshot.return_value = mock_snapshot
@@ -476,14 +440,14 @@ class UtilAwsEc2Test(TestCase):
         with self.assertRaises(SnapshotNotReadyException):
             ec2.create_volume(mock_snapshot.snapshot_id, zone)
 
-        mock_boto3.resource.assert_called_once_with('ec2')
+        mock_boto3.resource.assert_called_once_with("ec2")
         mock_ec2.create_volume.assert_not_called()
 
-    @patch('util.aws.ec2.boto3')
+    @patch("util.aws.ec2.boto3")
     def test_create_volume_snapshot_has_error(self, mock_boto3):
         """Test that volume creation aborts when snapshot has error."""
         zone = helper.generate_dummy_availability_zone()
-        mock_snapshot = helper.generate_mock_snapshot(state='error')
+        mock_snapshot = helper.generate_mock_snapshot(state="error")
 
         mock_ec2 = mock_boto3.resource.return_value
         mock_ec2.Snapshot.return_value = mock_snapshot
@@ -491,19 +455,16 @@ class UtilAwsEc2Test(TestCase):
         with self.assertRaises(AwsSnapshotError):
             ec2.create_volume(mock_snapshot.snapshot_id, zone)
 
-        mock_boto3.resource.assert_called_once_with('ec2')
+        mock_boto3.resource.assert_called_once_with("ec2")
         mock_ec2.create_volume.assert_not_called()
 
-    @patch('util.aws.ec2.boto3')
+    @patch("util.aws.ec2.boto3")
     def test_get_volume(self, mock_boto3):
         """Test that a Volume is returned."""
         region = helper.get_random_region()
         zone = helper.generate_dummy_availability_zone(region)
         volume_id = helper.generate_dummy_volume_id()
-        mock_volume = helper.generate_mock_volume(
-            volume_id=volume_id,
-            zone=zone
-        )
+        mock_volume = helper.generate_mock_volume(volume_id=volume_id, zone=zone)
 
         resource = mock_boto3.resource.return_value
         resource.Volume.return_value = mock_volume
@@ -513,33 +474,29 @@ class UtilAwsEc2Test(TestCase):
 
     def test_check_volume_state_available(self):
         """Test that a volue is available."""
-        mock_volume = helper.generate_mock_volume(state='available')
+        mock_volume = helper.generate_mock_volume(state="available")
         self.assertIsNone(ec2.check_volume_state(mock_volume))
 
     def test_check_volume_state_creating(self):
         """Test the appropriate error for still creating volumes."""
-        mock_volume = helper.generate_mock_volume(state='creating')
+        mock_volume = helper.generate_mock_volume(state="creating")
         with self.assertRaises(AwsVolumeNotReadyError):
             ec2.check_volume_state(mock_volume)
 
     def test_check_volume_state_error(self):
         """Test the appropriate error for other volume states."""
-        mock_volume = helper.generate_mock_volume(state='error')
+        mock_volume = helper.generate_mock_volume(state="error")
         with self.assertRaises(AwsVolumeError):
             ec2.check_volume_state(mock_volume)
 
     def test_is_windows_lowercase(self):
         """Test that an instance with Platform 'windows' is windows."""
-        dummy_instance = helper.generate_dummy_describe_instance(
-            platform='windows'
-        )
+        dummy_instance = helper.generate_dummy_describe_instance(platform="windows")
         self.assertTrue(ec2.is_windows(dummy_instance))
 
     def test_is_windows_with_unexpected_case(self):
         """Test that an instance with Platform 'WiNdOwS' is windows."""
-        dummy_instance = helper.generate_dummy_describe_instance(
-            platform='WiNdOwS'
-        )
+        dummy_instance = helper.generate_dummy_describe_instance(platform="WiNdOwS")
         self.assertTrue(ec2.is_windows(dummy_instance))
 
     def test_is_windows_with_empty_platform(self):
@@ -549,9 +506,7 @@ class UtilAwsEc2Test(TestCase):
 
     def test_is_windows_with_other_platform(self):
         """Test that an instance with Platform 'other' is not windows."""
-        dummy_instance = helper.generate_dummy_describe_instance(
-            platform='other'
-        )
+        dummy_instance = helper.generate_dummy_describe_instance(platform="other")
         self.assertFalse(ec2.is_windows(dummy_instance))
 
     def test_copy_ami(self):
@@ -564,13 +519,13 @@ class UtilAwsEc2Test(TestCase):
 
         image_id = mock_original_image.id
         source_region = helper.get_random_region()
-        with patch.object(ec2, 'get_ami') as mock_get_ami:
+        with patch.object(ec2, "get_ami") as mock_get_ami:
             mock_get_ami.return_value = mock_original_image
             result = ec2.copy_ami(mock_session, image_id, source_region)
 
         mock_ec2_client.copy_image.assert_called_once()
         mock_ec2_client.create_tags.assert_called_once()
-        self.assertEqual(result, mock_copied_image_dict['ImageId'])
+        self.assertEqual(result, mock_copied_image_dict["ImageId"])
 
     def test_copy_ami_abort_when_no_image_loaded(self):
         """Test that image copy aborts when no image is loaded."""
@@ -579,7 +534,7 @@ class UtilAwsEc2Test(TestCase):
 
         image_id = helper.generate_dummy_image_id()
         source_region = helper.get_random_region()
-        with patch.object(ec2, 'get_ami') as mock_get_ami:
+        with patch.object(ec2, "get_ami") as mock_get_ami:
             mock_get_ami.return_value = None
             result = ec2.copy_ami(mock_session, image_id, source_region)
 

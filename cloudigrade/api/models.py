@@ -21,27 +21,18 @@ from util.models import BaseGenericModel, BaseModel
 logger = logging.getLogger(__name__)
 
 
-CLOUD_ACCESS_NAME_TOKEN = '-Access2'
-MARKETPLACE_NAME_TOKEN = '-hourly2'
+CLOUD_ACCESS_NAME_TOKEN = "-Access2"
+MARKETPLACE_NAME_TOKEN = "-hourly2"
 
 
 class CloudAccount(BaseGenericModel):
     """Base Customer Cloud Account Model."""
 
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        db_index=True,
-        null=False,
-    )
-    name = models.CharField(
-        max_length=256,
-        null=False,
-        db_index=True
-    )
+    user = models.ForeignKey(User, on_delete=models.CASCADE, db_index=True, null=False,)
+    name = models.CharField(max_length=256, null=False, db_index=True)
 
     class Meta:
-        unique_together = ('user', 'name')
+        unique_together = ("user", "name")
 
     @property
     def cloud_account_id(self):
@@ -70,24 +61,20 @@ class CloudAccount(BaseGenericModel):
     def __repr__(self):
         """Get an unambiguous string representation."""
         created_at = (
-            repr(self.created_at.isoformat())
-            if self.created_at is not None
-            else None
+            repr(self.created_at.isoformat()) if self.created_at is not None else None
         )
         updated_at = (
-            repr(self.updated_at.isoformat())
-            if self.updated_at is not None
-            else None
+            repr(self.updated_at.isoformat()) if self.updated_at is not None else None
         )
 
         return (
-            f'{self.__class__.__name__}('
-            f'id={self.id}, '
+            f"{self.__class__.__name__}("
+            f"id={self.id}, "
             f"name='{self.name}', "
-            f'user_id={self.user_id}, '
-            f'created_at=parse({created_at}), '
-            f'updated_at=parse({updated_at})'
-            f')'
+            f"user_id={self.user_id}, "
+            f"created_at=parse({created_at}), "
+            f"updated_at=parse({updated_at})"
+            f")"
         )
 
 
@@ -95,9 +82,7 @@ class AwsCloudAccount(BaseModel):
     """AWS Customer Cloud Account Model."""
 
     cloud_account = GenericRelation(CloudAccount)
-    aws_account_id = models.DecimalField(
-        max_digits=12, decimal_places=0, db_index=True
-    )
+    aws_account_id = models.DecimalField(max_digits=12, decimal_places=0, db_index=True)
     aws_access_key_id = models.CharField(max_length=128, null=True, blank=True)
     account_arn = models.CharField(max_length=256, unique=True)
 
@@ -118,24 +103,20 @@ class AwsCloudAccount(BaseModel):
     def __repr__(self):
         """Get an unambiguous string representation."""
         created_at = (
-            repr(self.created_at.isoformat())
-            if self.created_at is not None
-            else None
+            repr(self.created_at.isoformat()) if self.created_at is not None else None
         )
         updated_at = (
-            repr(self.updated_at.isoformat())
-            if self.updated_at is not None
-            else None
+            repr(self.updated_at.isoformat()) if self.updated_at is not None else None
         )
 
         return (
-            f'{self.__class__.__name__}('
-            f'id={self.id}, '
-            f'aws_account_id={self.aws_account_id}, '
+            f"{self.__class__.__name__}("
+            f"id={self.id}, "
+            f"aws_account_id={self.aws_account_id}, "
             f"account_arn='{self.account_arn}', "
-            f'created_at=parse({created_at}), '
-            f'updated_at=parse({updated_at})'
-            f')'
+            f"created_at=parse({created_at}), "
+            f"updated_at=parse({updated_at})"
+            f")"
         )
 
 
@@ -150,42 +131,44 @@ def aws_cloud_account_post_delete_callback(*args, **kwargs):
         CloudTrailCannotStopLogging: if an unexpected exception occurs, this
             exception is raised, and the AwsCloudAccount is not deleted.
     """
-    instance = kwargs['instance']
+    instance = kwargs["instance"]
 
     try:
         with transaction.atomic():
-            cloudtrial_name = '{0}{1}'.format(
-                settings.CLOUDTRAIL_NAME_PREFIX,
-                instance.cloud_account_id
+            cloudtrial_name = "{0}{1}".format(
+                settings.CLOUDTRAIL_NAME_PREFIX, instance.cloud_account_id
             )
             try:
                 session = get_session(str(instance.account_arn))
-                cloudtrail_session = session.client('cloudtrail')
+                cloudtrail_session = session.client("cloudtrail")
                 logger.info(
-                    'attempting to disable cloudtrail "%(name)s" via ARN '
-                    '"%(arn)s"',
-                    {'name': cloudtrial_name, 'arn': instance.account_arn},
+                    'attempting to disable cloudtrail "%(name)s" via ARN ' '"%(arn)s"',
+                    {"name": cloudtrial_name, "arn": instance.account_arn},
                 )
                 disable_cloudtrail(cloudtrail_session, cloudtrial_name)
 
             except ClientError as error:
-                error_code = error.response.get('Error', {}).get('Code')
+                error_code = error.response.get("Error", {}).get("Code")
 
                 # If cloudtrail does not exist, then delete the account.
-                if error_code == 'TrailNotFoundException':
+                if error_code == "TrailNotFoundException":
                     pass
 
                 # If we're unable to access the account (because user
                 # deleted the role/account). Delete the cloudigrade account
                 # and log an error. This could result in an orphaned
                 # cloudtrail writing to our s3 bucket.
-                elif error_code == 'AccessDenied':
+                elif error_code == "AccessDenied":
                     logger.warning(
-                        _('Cloudigrade account %(account_id)s was deleted,'
-                          ' but could not access the AWS account to '
-                          'disable its cloudtrail %(cloudtrail_name)s.'),
-                        {'account_id': instance.cloud_account_id,
-                         'cloudtrail_name': cloudtrial_name}
+                        _(
+                            "Cloudigrade account %(account_id)s was deleted,"
+                            " but could not access the AWS account to "
+                            "disable its cloudtrail %(cloudtrail_name)s."
+                        ),
+                        {
+                            "account_id": instance.cloud_account_id,
+                            "cloudtrail_name": cloudtrial_name,
+                        },
                     )
                     logger.info(error)
 
@@ -194,53 +177,52 @@ def aws_cloud_account_post_delete_callback(*args, **kwargs):
                 # the cloudigrade account and log an error. This could
                 # result in an orphaned cloudtrail writing to our s3
                 # bucket.
-                elif error_code == 'AccessDeniedException':
+                elif error_code == "AccessDeniedException":
                     logger.warning(
-                        _('Cloudigrade account %(account_id)s was deleted,'
-                          ' but we did not have permission to perform '
-                          'cloudtrail: StopLogging on cloudtrail '
-                          '%(cloudtrail_name)s.'),
-                        {'account_id': instance.cloud_account_id,
-                         'cloudtrail_name': cloudtrial_name}
+                        _(
+                            "Cloudigrade account %(account_id)s was deleted,"
+                            " but we did not have permission to perform "
+                            "cloudtrail: StopLogging on cloudtrail "
+                            "%(cloudtrail_name)s."
+                        ),
+                        {
+                            "account_id": instance.cloud_account_id,
+                            "cloudtrail_name": cloudtrial_name,
+                        },
                     )
                     logger.info(error)
                 else:
                     raise
     except ClientError as error:
         log_message = _(
-            'Unexpected error occurred. The Cloud Meter account cannot be '
-            'deleted. To resolve this issue, contact Cloud Meter support.'
+            "Unexpected error occurred. The Cloud Meter account cannot be "
+            "deleted. To resolve this issue, contact Cloud Meter support."
         )
         logger.error(log_message)
         logger.exception(error)
-        raise CloudTrailCannotStopLogging(
-            detail=log_message
-        )
+        raise CloudTrailCannotStopLogging(detail=log_message)
 
 
 class MachineImage(BaseGenericModel):
     """Base model for a cloud VM image."""
 
-    PENDING = 'pending'
-    PREPARING = 'preparing'
-    INSPECTING = 'inspecting'
-    INSPECTED = 'inspected'
-    ERROR = 'error'
-    UNAVAILABLE = 'unavailable'  # images we can't access but know must exist
+    PENDING = "pending"
+    PREPARING = "preparing"
+    INSPECTING = "inspecting"
+    INSPECTED = "inspected"
+    ERROR = "error"
+    UNAVAILABLE = "unavailable"  # images we can't access but know must exist
     STATUS_CHOICES = (
-        (PENDING, 'Pending Inspection'),
-        (PREPARING, 'Preparing for Inspection'),
-        (INSPECTING, 'Being Inspected'),
-        (INSPECTED, 'Inspected'),
-        (ERROR, 'Error'),
-        (UNAVAILABLE, 'Unavailable for Inspection'),
+        (PENDING, "Pending Inspection"),
+        (PREPARING, "Preparing for Inspection"),
+        (INSPECTING, "Being Inspected"),
+        (INSPECTED, "Inspected"),
+        (ERROR, "Error"),
+        (UNAVAILABLE, "Unavailable for Inspection"),
     )
-    inspection_json = models.TextField(null=True,
-                                       blank=True)
+    inspection_json = models.TextField(null=True, blank=True)
     is_encrypted = models.BooleanField(default=False)
-    status = models.CharField(
-        max_length=32, choices=STATUS_CHOICES, default=PENDING
-    )
+    status = models.CharField(max_length=32, choices=STATUS_CHOICES, default=PENDING)
     rhel_challenged = models.BooleanField(default=False)
     openshift_detected = models.BooleanField(default=False)
     openshift_challenged = models.BooleanField(default=False)
@@ -268,7 +250,7 @@ class MachineImage(BaseGenericModel):
         """
         if self.inspection_json:
             image_json = json.loads(self.inspection_json)
-            return image_json.get('rhel_version', None)
+            return image_json.get("rhel_version", None)
         return None
 
     @property
@@ -282,7 +264,7 @@ class MachineImage(BaseGenericModel):
         """
         if self.inspection_json:
             image_json = json.loads(self.inspection_json)
-            return image_json.get('rhel_enabled_repos_found', False)
+            return image_json.get("rhel_enabled_repos_found", False)
         return False
 
     @property
@@ -296,7 +278,7 @@ class MachineImage(BaseGenericModel):
         """
         if self.inspection_json:
             image_json = json.loads(self.inspection_json)
-            return image_json.get('rhel_product_certs_found', False)
+            return image_json.get("rhel_product_certs_found", False)
         return False
 
     @property
@@ -310,7 +292,7 @@ class MachineImage(BaseGenericModel):
         """
         if self.inspection_json:
             image_json = json.loads(self.inspection_json)
-            return image_json.get('rhel_release_files_found', False)
+            return image_json.get("rhel_release_files_found", False)
         return False
 
     @property
@@ -324,7 +306,7 @@ class MachineImage(BaseGenericModel):
         """
         if self.inspection_json:
             image_json = json.loads(self.inspection_json)
-            return image_json.get('rhel_signed_packages_found', False)
+            return image_json.get("rhel_signed_packages_found", False)
         return False
 
     @property
@@ -337,11 +319,13 @@ class MachineImage(BaseGenericModel):
                 canonical definition of whether the image is marked for RHEL.
 
         """
-        return self.content_object.is_cloud_access or \
-            self.rhel_enabled_repos_found or \
-            self.rhel_product_certs_found or \
-            self.rhel_release_files_found or \
-            self.rhel_signed_packages_found
+        return (
+            self.content_object.is_cloud_access
+            or self.rhel_enabled_repos_found
+            or self.rhel_product_certs_found
+            or self.rhel_release_files_found
+            or self.rhel_signed_packages_found
+        )
 
     @property
     def syspurpose(self):
@@ -354,7 +338,7 @@ class MachineImage(BaseGenericModel):
         """
         if self.inspection_json:
             image_json = json.loads(self.inspection_json)
-            return image_json.get('syspurpose', None)
+            return image_json.get("syspurpose", None)
         return None
 
     @property
@@ -395,34 +379,26 @@ class MachineImage(BaseGenericModel):
 
     def __repr__(self):
         """Get an unambiguous string representation."""
-        name = (
-            str(repr(self.name))
-            if self.name is not None
-            else None
-        )
+        name = str(repr(self.name)) if self.name is not None else None
         created_at = (
-            repr(self.created_at.isoformat())
-            if self.created_at is not None
-            else None
+            repr(self.created_at.isoformat()) if self.created_at is not None else None
         )
         updated_at = (
-            repr(self.updated_at.isoformat())
-            if self.updated_at is not None
-            else None
+            repr(self.updated_at.isoformat()) if self.updated_at is not None else None
         )
 
         return (
-            f'{self.__class__.__name__}('
-            f'id={self.id}, '
-            f'name={name}, '
+            f"{self.__class__.__name__}("
+            f"id={self.id}, "
+            f"name={name}, "
             f"status='{self.status}', "
-            f'is_encrypted={self.is_encrypted}, '
-            f'rhel_challenged={self.rhel_challenged}, '
-            f'openshift_detected={self.openshift_detected}, '
-            f'openshift_challenged={self.openshift_challenged}, '
-            f'created_at=parse({created_at}), '
-            f'updated_at=parse({updated_at})'
-            f')'
+            f"is_encrypted={self.is_encrypted}, "
+            f"rhel_challenged={self.rhel_challenged}, "
+            f"openshift_detected={self.openshift_detected}, "
+            f"openshift_challenged={self.openshift_challenged}, "
+            f"created_at=parse({created_at}), "
+            f"updated_at=parse({updated_at})"
+            f")"
         )
 
     @transaction.atomic
@@ -438,59 +414,43 @@ class MachineImage(BaseGenericModel):
 class AwsMachineImage(BaseModel):
     """MachineImage model for an AWS EC2 instance."""
 
-    NONE = 'none'
-    WINDOWS = 'windows'
+    NONE = "none"
+    WINDOWS = "windows"
     PLATFORM_CHOICES = (
-        (NONE, 'None'),
-        (WINDOWS, 'Windows'),
+        (NONE, "None"),
+        (WINDOWS, "Windows"),
     )
-    machine_image = GenericRelation(MachineImage,
-                                    related_query_name='aws_machine_image')
+    machine_image = GenericRelation(
+        MachineImage, related_query_name="aws_machine_image"
+    )
     ec2_ami_id = models.CharField(
-        max_length=256,
-        unique=True,
-        db_index=True,
-        null=False,
-        blank=False
+        max_length=256, unique=True, db_index=True, null=False, blank=False
     )
     platform = models.CharField(
-        max_length=7,
-        choices=PLATFORM_CHOICES,
-        default=NONE,
-        null=True,
+        max_length=7, choices=PLATFORM_CHOICES, default=NONE, null=True,
     )
     owner_aws_account_id = models.DecimalField(
-        max_digits=12,
-        decimal_places=0,
-        null=True,
+        max_digits=12, decimal_places=0, null=True,
     )
-    region = models.CharField(
-        max_length=256,
-        null=True,
-        blank=True,
-    )
-    aws_marketplace_image = models.BooleanField(
-        default=False
-    )
+    region = models.CharField(max_length=256, null=True, blank=True,)
+    aws_marketplace_image = models.BooleanField(default=False)
 
     @property
     def is_cloud_access(self):
         """Indicate if the image is from Cloud Access."""
         return (
-            self.machine_image.get().name is not None and
-            CLOUD_ACCESS_NAME_TOKEN.lower() in
-            self.machine_image.get().name.lower() and
-            self.owner_aws_account_id in settings.RHEL_IMAGES_AWS_ACCOUNTS
+            self.machine_image.get().name is not None
+            and CLOUD_ACCESS_NAME_TOKEN.lower() in self.machine_image.get().name.lower()
+            and self.owner_aws_account_id in settings.RHEL_IMAGES_AWS_ACCOUNTS
         )
 
     @property
     def is_marketplace(self):
         """Indicate if the image is from AWS Marketplace."""
         return (
-            self.machine_image.get().name is not None and
-            MARKETPLACE_NAME_TOKEN.lower() in
-            self.machine_image.get().name.lower() and
-            self.owner_aws_account_id in settings.RHEL_IMAGES_AWS_ACCOUNTS
+            self.machine_image.get().name is not None
+            and MARKETPLACE_NAME_TOKEN.lower() in self.machine_image.get().name.lower()
+            and self.owner_aws_account_id in settings.RHEL_IMAGES_AWS_ACCOUNTS
         )
 
     @property
@@ -509,38 +469,26 @@ class AwsMachineImage(BaseModel):
 
     def __repr__(self):
         """Get an unambiguous string representation."""
-        platform = (
-            str(repr(self.platform))
-            if self.platform is not None
-            else None
-        )
-        region = (
-            str(repr(self.region))
-            if self.region is not None
-            else None
-        )
+        platform = str(repr(self.platform)) if self.platform is not None else None
+        region = str(repr(self.region)) if self.region is not None else None
         created_at = (
-            repr(self.created_at.isoformat())
-            if self.created_at is not None
-            else None
+            repr(self.created_at.isoformat()) if self.created_at is not None else None
         )
         updated_at = (
-            repr(self.updated_at.isoformat())
-            if self.updated_at is not None
-            else None
+            repr(self.updated_at.isoformat()) if self.updated_at is not None else None
         )
 
         return (
-            f'{self.__class__.__name__}('
-            f'id={self.id}, '
+            f"{self.__class__.__name__}("
+            f"id={self.id}, "
             f"ec2_ami_id='{self.ec2_ami_id}', "
-            f'platform={platform}, '
-            f'owner_aws_account_id={self.owner_aws_account_id}, '
-            f'region={region}, '
-            f'aws_marketplace_image={self.aws_marketplace_image}, '
-            f'created_at=parse({created_at}), '
-            f'updated_at=parse({updated_at})'
-            f')'
+            f"platform={platform}, "
+            f"owner_aws_account_id={self.owner_aws_account_id}, "
+            f"region={region}, "
+            f"aws_marketplace_image={self.aws_marketplace_image}, "
+            f"created_at=parse({created_at}), "
+            f"updated_at=parse({updated_at})"
+            f")"
         )
 
 
@@ -562,7 +510,7 @@ class AwsMachineImageCopy(AwsMachineImage):
         on_delete=models.CASCADE,
         db_index=True,
         null=False,
-        related_name='+'
+        related_name="+",
     )
 
     def __str__(self):
@@ -573,23 +521,19 @@ class AwsMachineImageCopy(AwsMachineImage):
         """Get an unambiguous string representation."""
         reference_awsmachineimage_id = self.reference_awsmachineimage_id
         created_at = (
-            repr(self.created_at.isoformat())
-            if self.created_at is not None
-            else None
+            repr(self.created_at.isoformat()) if self.created_at is not None else None
         )
         updated_at = (
-            repr(self.updated_at.isoformat())
-            if self.updated_at is not None
-            else None
+            repr(self.updated_at.isoformat()) if self.updated_at is not None else None
         )
 
         return (
-            f'{self.__class__.__name__}('
-            f'id={self.id}, '
-            f'reference_awsmachineimage_id={reference_awsmachineimage_id}, '
-            f'created_at=parse({created_at}), '
-            f'updated_at=parse({updated_at})'
-            f')'
+            f"{self.__class__.__name__}("
+            f"id={self.id}, "
+            f"reference_awsmachineimage_id={reference_awsmachineimage_id}, "
+            f"created_at=parse({created_at}), "
+            f"updated_at=parse({updated_at})"
+            f")"
         )
 
 
@@ -597,16 +541,10 @@ class Instance(BaseGenericModel):
     """Base model for a compute/VM instance in a cloud."""
 
     cloud_account = models.ForeignKey(
-        CloudAccount,
-        on_delete=models.CASCADE,
-        db_index=True,
-        null=False,
+        CloudAccount, on_delete=models.CASCADE, db_index=True, null=False,
     )
     machine_image = models.ForeignKey(
-        MachineImage,
-        on_delete=models.CASCADE,
-        db_index=True,
-        null=True,
+        MachineImage, on_delete=models.CASCADE, db_index=True, null=True,
     )
 
     def __str__(self):
@@ -621,24 +559,20 @@ class Instance(BaseGenericModel):
             else None
         )
         created_at = (
-            repr(self.created_at.isoformat())
-            if self.created_at is not None
-            else None
+            repr(self.created_at.isoformat()) if self.created_at is not None else None
         )
         updated_at = (
-            repr(self.updated_at.isoformat())
-            if self.updated_at is not None
-            else None
+            repr(self.updated_at.isoformat()) if self.updated_at is not None else None
         )
 
         return (
-            f'{self.__class__.__name__}('
-            f'id={self.id}, '
-            f'cloud_account_id={self.cloud_account_id}, '
-            f'machine_image_id={machine_image_id}, '
-            f'created_at=parse({created_at}), '
-            f'updated_at=parse({updated_at})'
-            f')'
+            f"{self.__class__.__name__}("
+            f"id={self.id}, "
+            f"cloud_account_id={self.cloud_account_id}, "
+            f"machine_image_id={machine_image_id}, "
+            f"created_at=parse({created_at}), "
+            f"updated_at=parse({updated_at})"
+            f")"
         )
 
     @property
@@ -669,7 +603,7 @@ def instance_post_delete_callback(*args, **kwargs):
 
     Note: Signal receivers must accept keyword arguments (**kwargs).
     """
-    instance = kwargs['instance']
+    instance = kwargs["instance"]
 
     # When multiple instances are deleted at the same time django will
     # attempt to delete the machine image multiple times since instance
@@ -678,24 +612,19 @@ def instance_post_delete_callback(*args, **kwargs):
     # attempts to remove a machine image.
     try:
         if (
-                instance.machine_image is not None and
-                not Instance.objects.filter(
-                    machine_image=instance.machine_image
-                ).exclude(id=instance.id).exists()
+            instance.machine_image is not None
+            and not Instance.objects.filter(machine_image=instance.machine_image)
+            .exclude(id=instance.id)
+            .exists()
         ):
             logger.info(
-                _(
-                    '%s is no longer used by any instances and will be deleted'
-                ),
+                _("%s is no longer used by any instances and will be deleted"),
                 instance.machine_image,
             )
             instance.machine_image.delete()
     except MachineImage.DoesNotExist:
         logger.info(
-            _(
-                'Machine image associated with instance %s '
-                'has already been deleted.'
-            ),
+            _("Machine image associated with instance %s " "has already been deleted."),
             instance,
         )
 
@@ -703,19 +632,11 @@ def instance_post_delete_callback(*args, **kwargs):
 class AwsInstance(BaseModel):
     """Amazon Web Services EC2 instance model."""
 
-    instance = GenericRelation(Instance, related_query_name='aws_instance')
+    instance = GenericRelation(Instance, related_query_name="aws_instance")
     ec2_instance_id = models.CharField(
-        max_length=256,
-        unique=True,
-        db_index=True,
-        null=False,
-        blank=False,
+        max_length=256, unique=True, db_index=True, null=False, blank=False,
     )
-    region = models.CharField(
-        max_length=256,
-        null=False,
-        blank=False,
-    )
+    region = models.CharField(max_length=256, null=False, blank=False,)
 
     def __str__(self):
         """Get the string representation."""
@@ -724,24 +645,20 @@ class AwsInstance(BaseModel):
     def __repr__(self):
         """Get an unambiguous string representation."""
         created_at = (
-            repr(self.created_at.isoformat())
-            if self.created_at is not None
-            else None
+            repr(self.created_at.isoformat()) if self.created_at is not None else None
         )
         updated_at = (
-            repr(self.updated_at.isoformat())
-            if self.updated_at is not None
-            else None
+            repr(self.updated_at.isoformat()) if self.updated_at is not None else None
         )
 
         return (
-            f'{self.__class__.__name__}('
-            f'id={self.id}, '
+            f"{self.__class__.__name__}("
+            f"id={self.id}, "
             f"ec2_instance_id='{self.ec2_instance_id}', "
             f"region='{self.region}', "
-            f'created_at=parse({created_at}), '
-            f'updated_at=parse({updated_at})'
-            f')'
+            f"created_at=parse({created_at}), "
+            f"updated_at=parse({updated_at})"
+            f")"
         )
 
     @property
@@ -758,23 +675,11 @@ class AwsInstance(BaseModel):
 class InstanceEvent(BaseGenericModel):
     """Base model for an event triggered by a Instance."""
 
-    TYPE = model_utils.Choices(
-        'power_on',
-        'power_off',
-        'attribute_change'
-    )
+    TYPE = model_utils.Choices("power_on", "power_off", "attribute_change")
     instance = models.ForeignKey(
-        Instance,
-        on_delete=models.CASCADE,
-        db_index=True,
-        null=False,
+        Instance, on_delete=models.CASCADE, db_index=True, null=False,
     )
-    event_type = models.CharField(
-        max_length=32,
-        choices=TYPE,
-        null=False,
-        blank=False,
-    )
+    event_type = models.CharField(max_length=32, choices=TYPE, null=False, blank=False,)
     occurred_at = models.DateTimeField(null=False)
 
     @property
@@ -794,38 +699,33 @@ class InstanceEvent(BaseGenericModel):
     def __repr__(self):
         """Get an unambiguous string representation."""
         occurred_at = (
-            repr(self.occurred_at.isoformat())
-            if self.occurred_at is not None
-            else None
+            repr(self.occurred_at.isoformat()) if self.occurred_at is not None else None
         )
         created_at = (
-            repr(self.created_at.isoformat())
-            if self.created_at is not None
-            else None
+            repr(self.created_at.isoformat()) if self.created_at is not None else None
         )
         updated_at = (
-            repr(self.updated_at.isoformat())
-            if self.updated_at is not None
-            else None
+            repr(self.updated_at.isoformat()) if self.updated_at is not None else None
         )
 
         return (
-            f'{self.__class__.__name__}('
-            f'id={self.id}, '
-            f'instance_id={self.instance_id}, '
-            f'event_type={self.event_type}, '
-            f'occurred_at=parse({occurred_at}), '
-            f'created_at=parse({created_at}), '
-            f'updated_at=parse({updated_at})'
-            f')'
+            f"{self.__class__.__name__}("
+            f"id={self.id}, "
+            f"instance_id={self.instance_id}, "
+            f"event_type={self.event_type}, "
+            f"occurred_at=parse({occurred_at}), "
+            f"created_at=parse({created_at}), "
+            f"updated_at=parse({updated_at})"
+            f")"
         )
 
 
 class AwsInstanceEvent(BaseModel):
     """Event model for an event triggered by an AwsInstance."""
 
-    instance_event = GenericRelation(InstanceEvent,
-                                     related_query_name='aws_instance_event')
+    instance_event = GenericRelation(
+        InstanceEvent, related_query_name="aws_instance_event"
+    )
     subnet = models.CharField(max_length=256, null=True, blank=True)
     instance_type = models.CharField(max_length=64, null=True, blank=True)
 
@@ -840,35 +740,25 @@ class AwsInstanceEvent(BaseModel):
 
     def __repr__(self):
         """Get an unambiguous string representation."""
-        subnet = (
-            str(repr(self.subnet))
-            if self.subnet is not None
-            else None
-        )
+        subnet = str(repr(self.subnet)) if self.subnet is not None else None
         instance_type = (
-            str(repr(self.instance_type))
-            if self.instance_type is not None
-            else None
+            str(repr(self.instance_type)) if self.instance_type is not None else None
         )
         created_at = (
-            repr(self.created_at.isoformat())
-            if self.created_at is not None
-            else None
+            repr(self.created_at.isoformat()) if self.created_at is not None else None
         )
         updated_at = (
-            repr(self.updated_at.isoformat())
-            if self.updated_at is not None
-            else None
+            repr(self.updated_at.isoformat()) if self.updated_at is not None else None
         )
 
         return (
-            f'{self.__class__.__name__}('
-            f'id={self.id}, '
-            f'subnet={subnet}, '
-            f'instance_type={instance_type}, '
-            f'created_at=parse({created_at}), '
-            f'updated_at=parse({updated_at})'
-            f')'
+            f"{self.__class__.__name__}("
+            f"id={self.id}, "
+            f"subnet={subnet}, "
+            f"instance_type={instance_type}, "
+            f"created_at=parse({created_at}), "
+            f"updated_at=parse({updated_at})"
+            f")"
         )
 
 
@@ -881,59 +771,26 @@ class AwsEC2InstanceDefinition(BaseModel):
     """
 
     instance_type = models.CharField(
-        max_length=256,
-        null=False,
-        blank=False,
-        db_index=True,
-        unique=True
+        max_length=256, null=False, blank=False, db_index=True, unique=True
     )
-    memory = models.DecimalField(
-        default=0,
-        decimal_places=2,
-        max_digits=16,
-    )
-    vcpu = models.IntegerField(
-        default=0
-    )
+    memory = models.DecimalField(default=0, decimal_places=2, max_digits=16,)
+    vcpu = models.IntegerField(default=0)
 
 
 class Run(BaseModel):
     """Base model for a Run object."""
 
-    start_time = models.DateTimeField(
-        null=False
-    )
-    end_time = models.DateTimeField(
-        blank=True,
-        null=True
-    )
+    start_time = models.DateTimeField(null=False)
+    end_time = models.DateTimeField(blank=True, null=True)
     machineimage = models.ForeignKey(
-        MachineImage,
-        on_delete=models.CASCADE,
-        db_index=True,
-        null=True,
+        MachineImage, on_delete=models.CASCADE, db_index=True, null=True,
     )
     instance = models.ForeignKey(
-        Instance,
-        on_delete=models.CASCADE,
-        db_index=True,
-        null=False,
+        Instance, on_delete=models.CASCADE, db_index=True, null=False,
     )
-    instance_type = models.CharField(
-        max_length=64,
-        null=True,
-        blank=True
-    )
-    memory = models.FloatField(
-        default=0,
-        blank=True,
-        null=True
-    )
-    vcpu = models.IntegerField(
-        default=0,
-        blank=True,
-        null=True
-    )
+    instance_type = models.CharField(max_length=64, null=True, blank=True)
+    memory = models.FloatField(default=0, blank=True, null=True)
+    vcpu = models.IntegerField(default=0, blank=True, null=True)
 
     @transaction.atomic
     def save(self, *args, **kwargs):
@@ -952,10 +809,8 @@ def run_pre_delete_callback(*args, **kwargs):
 
     Note: Signal receivers must accept keyword arguments (**kwargs).
     """
-    run = kwargs['instance']
-    concurrent_usages = ConcurrentUsage.objects.filter(
-        potentially_related_runs=run
-    )
+    run = kwargs["instance"]
+    concurrent_usages = ConcurrentUsage.objects.filter(potentially_related_runs=run)
     concurrent_usages.delete()
 
 
@@ -963,10 +818,7 @@ class MachineImageInspectionStart(BaseModel):
     """Model to track any time an image starts inspection."""
 
     machineimage = models.ForeignKey(
-        MachineImage,
-        on_delete=models.CASCADE,
-        db_index=True,
-        null=False,
+        MachineImage, on_delete=models.CASCADE, db_index=True, null=False,
     )
 
 
@@ -974,22 +826,14 @@ class ConcurrentUsage(BaseModel):
     """Saved calculation of max concurrent usage for a date+user+account."""
 
     date = models.DateField()
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        db_index=True,
-        null=False,
-    )
+    user = models.ForeignKey(User, on_delete=models.CASCADE, db_index=True, null=False,)
     cloud_account = models.ForeignKey(
-        CloudAccount,
-        on_delete=models.CASCADE,
-        db_index=True,
-        null=True,
+        CloudAccount, on_delete=models.CASCADE, db_index=True, null=True,
     )
     instances = models.IntegerField()
-    _instances_list = models.TextField(db_column='instances_list',
-                                       null=True,
-                                       blank=True)
+    _instances_list = models.TextField(
+        db_column="instances_list", null=True, blank=True
+    )
     memory = models.FloatField()
     vcpu = models.IntegerField()
     potentially_related_runs = models.ManyToManyField(Run)
@@ -1010,31 +854,23 @@ class ConcurrentUsage(BaseModel):
 
     def __repr__(self):
         """Get an unambiguous string representation."""
-        date = (
-            repr(self.date.isoformat())
-            if self.date is not None
-            else None
-        )
+        date = repr(self.date.isoformat()) if self.date is not None else None
         created_at = (
-            repr(self.created_at.isoformat())
-            if self.created_at is not None
-            else None
+            repr(self.created_at.isoformat()) if self.created_at is not None else None
         )
         updated_at = (
-            repr(self.updated_at.isoformat())
-            if self.updated_at is not None
-            else None
+            repr(self.updated_at.isoformat()) if self.updated_at is not None else None
         )
 
         return (
-            f'{self.__class__.__name__}('
-            f'id={self.id}, '
-            f'date={date}, '
-            f'user_id={self.user_id}, '
-            f'cloud_account_id={self.cloud_account_id}, '
-            f'memory={self.memory}, '
-            f'vcpu={self.vcpu}, '
-            f'created_at={created_at}, '
-            f'updated_at={updated_at}'
-            f')'
+            f"{self.__class__.__name__}("
+            f"id={self.id}, "
+            f"date={date}, "
+            f"user_id={self.user_id}, "
+            f"cloud_account_id={self.cloud_account_id}, "
+            f"memory={self.memory}, "
+            f"vcpu={self.vcpu}, "
+            f"created_at={created_at}, "
+            f"updated_at={updated_at}"
+            f")"
         )

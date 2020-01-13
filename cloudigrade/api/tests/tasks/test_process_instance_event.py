@@ -65,7 +65,7 @@ class ProcessInstanceEventTest(TestCase):
         self.assertEqual(started_at, runs[0].start_time)
         self.assertEqual(occurred_at, runs[0].end_time)
 
-    @patch('api.tasks.recalculate_runs')
+    @patch("api.tasks.recalculate_runs")
     @util_helper.clouditardis(util_helper.utc_dt(2018, 1, 12, 0, 0, 0))
     def test_process_instance_event_new_run(self, mock_recalculate_runs):
         """
@@ -119,7 +119,7 @@ class ProcessInstanceEventTest(TestCase):
             [#######        ]
 
         """
-        instance_type = 't1.potato'
+        instance_type = "t1.potato"
 
         instance = api_helper.generate_aws_instance(self.account)
 
@@ -167,7 +167,7 @@ class ProcessInstanceEventTest(TestCase):
         self.assertEqual(run_time[0][1], runs[0].end_time)
         self.assertEqual(first_start, runs[0].start_time)
 
-    @patch('api.tasks.recalculate_runs')
+    @patch("api.tasks.recalculate_runs")
     @util_helper.clouditardis(util_helper.utc_dt(2018, 1, 12, 0, 0, 0))
     def test_process_instance_event_power_off(self, mock_recalculate_runs):
         """

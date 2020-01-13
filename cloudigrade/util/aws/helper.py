@@ -16,12 +16,12 @@ logger = logging.getLogger(__name__)
 # We are uncertain what the pattern is. Manual testing revealed
 # that some codes pass and some fail, so for the time being
 # the values are hard-coded.
-DRYRUN_SNAPSHOT_ID = 'snap-0f423c31dd96866b2'
-DRYRUN_IMAGE_ID = 'ami-0f94fa2a144c74cf1'
-DRYRUN_IMAGE_REGION = 'us-east-1'
+DRYRUN_SNAPSHOT_ID = "snap-0f423c31dd96866b2"
+DRYRUN_IMAGE_ID = "ami-0f94fa2a144c74cf1"
+DRYRUN_IMAGE_REGION = "us-east-1"
 
 
-def get_regions(session, service_name='ec2'):
+def get_regions(session, service_name="ec2"):
     """
     Get the full list of available AWS regions for the given service.
 
@@ -36,8 +36,8 @@ def get_regions(session, service_name='ec2'):
     client = session.client(service_name)
     available_regions = client.describe_regions()
     region_list = []
-    for region in available_regions['Regions']:
-        region_list.append(region['RegionName'])
+    for region in available_regions["Regions"]:
+        region_list.append(region["RegionName"])
 
     return region_list
 
@@ -56,7 +56,7 @@ def verify_account_access(session):
     """
     success = True
     failed_actions = []
-    for action in cloudigrade_policy['Statement'][0]['Action']:
+    for action in cloudigrade_policy["Statement"][0]["Action"]:
         if not _verify_policy_action(session, action):
             # Mark as failure, but keep looping so we can see each specific
             # failure in logs
@@ -85,13 +85,13 @@ def _handle_dry_run_response_exception(action, e):
         bool: Whether the operation had access verified, or not.
 
     """
-    dry_run_operation = 'DryRunOperation'
-    unauthorized_operation = 'UnauthorizedOperation'
+    dry_run_operation = "DryRunOperation"
+    unauthorized_operation = "UnauthorizedOperation"
 
-    if e.response['Error']['Code'] == dry_run_operation:
+    if e.response["Error"]["Code"] == dry_run_operation:
         logger.debug(_('Verified access to "%s"'), action)
         return True
-    elif e.response['Error']['Code'] == unauthorized_operation:
+    elif e.response["Error"]["Code"] == unauthorized_operation:
         logger.warning(_('No access to "%s"'), action)
         return False
     raise e
@@ -117,59 +117,55 @@ def _verify_policy_action(session, action):  # noqa: C901
         bool: Whether the action is allowed, or not.
 
     """
-    ec2 = session.client('ec2')
+    ec2 = session.client("ec2")
     try:
-        if action == 'ec2:DescribeImages':
+        if action == "ec2:DescribeImages":
             ec2.describe_images(DryRun=True)
-        elif action == 'ec2:DescribeInstances':
+        elif action == "ec2:DescribeInstances":
             ec2.describe_instances(DryRun=True)
-        elif action == 'ec2:DescribeSnapshotAttribute':
+        elif action == "ec2:DescribeSnapshotAttribute":
             ec2.describe_snapshot_attribute(
-                DryRun=True,
-                SnapshotId=DRYRUN_SNAPSHOT_ID,
-                Attribute='productCodes'
+                DryRun=True, SnapshotId=DRYRUN_SNAPSHOT_ID, Attribute="productCodes"
             )
-        elif action == 'ec2:DescribeSnapshots':
+        elif action == "ec2:DescribeSnapshots":
             ec2.describe_snapshots(DryRun=True)
-        elif action == 'ec2:ModifySnapshotAttribute':
+        elif action == "ec2:ModifySnapshotAttribute":
             ec2.modify_snapshot_attribute(
                 SnapshotId=DRYRUN_SNAPSHOT_ID,
                 DryRun=True,
-                Attribute='createVolumePermission',
-                OperationType='add',
+                Attribute="createVolumePermission",
+                OperationType="add",
             )
-        elif action == 'ec2:CopyImage':
+        elif action == "ec2:CopyImage":
             ec2.copy_image(
-                Name=f'{uuid.uuid4()}',
+                Name=f"{uuid.uuid4()}",
                 DryRun=True,
                 SourceImageId=DRYRUN_IMAGE_ID,
                 SourceRegion=DRYRUN_IMAGE_REGION,
             )
-        elif action == 'ec2:CreateTags':
+        elif action == "ec2:CreateTags":
             ec2.create_tags(
                 DryRun=True,
                 Resources=[DRYRUN_IMAGE_ID],
-                Tags=[
-                    {
-                        'Key': 'Example',
-                        'Value': 'Hello world',
-                    },
-                ]
+                Tags=[{"Key": "Example", "Value": "Hello world",},],
             )
-        elif action == 'ec2:DescribeRegions':
+        elif action == "ec2:DescribeRegions":
             ec2.describe_regions(DryRun=True)
-        elif action.startswith('cloudtrail:'):
+        elif action.startswith("cloudtrail:"):
             # unfortunately, CloudTrail does not have a DryRun option like ec2
             # so we cannot verify whether or not our policy gives us the
             # correct permissions without carrying out the action
-            logger.warning(_('Unable to verify the policy action "%s" '
-                             'due to CloudTrail not providing a DryRun '
-                             'option.'),
-                           action)
+            logger.warning(
+                _(
+                    'Unable to verify the policy action "%s" '
+                    "due to CloudTrail not providing a DryRun "
+                    "option."
+                ),
+                action,
+            )
             return True
         else:
-            logger.warning(_('No test case exists for action "%s"'),
-                           action)
+            logger.warning(_('No test case exists for action "%s"'), action)
             return False
     except ClientError as e:
         return _handle_dry_run_response_exception(action, e)
@@ -191,14 +187,16 @@ def rewrap_aws_errors(original_function):
         function: The decorated function.
 
     """
+
     @wraps(original_function)
     def wrapped(*args, **kwargs):
         try:
             result = original_function(*args, **kwargs)
         except ClientError as e:
-            message = _('Unexpected AWS error {0}: {1}').format(type(e), e)
+            message = _("Unexpected AWS error {0}: {1}").format(type(e), e)
             raise RuntimeError(message)
         return result
+
     return wrapped
 
 
@@ -213,7 +211,5 @@ def get_region_from_availability_zone(zone):
         str: The region associated with the zone
 
     """
-    response = boto3.client('ec2').describe_availability_zones(
-        ZoneNames=[zone]
-    )
-    return response['AvailabilityZones'][0]['RegionName']
+    response = boto3.client("ec2").describe_availability_zones(ZoneNames=[zone])
+    return response["AvailabilityZones"][0]["RegionName"]

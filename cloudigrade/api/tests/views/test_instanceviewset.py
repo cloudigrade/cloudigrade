@@ -23,47 +23,34 @@ class InstanceViewSetTest(TestCase):
         self.account4 = api_helper.generate_aws_account(user=self.user2)
 
         self.image_plain = api_helper.generate_aws_image()
-        self.image_windows = api_helper.generate_aws_image(
-            is_windows=True)
-        self.image_rhel = api_helper.generate_aws_image(
-            rhel_detected=True)
-        self.image_ocp = api_helper.generate_aws_image(
-            openshift_detected=True)
+        self.image_windows = api_helper.generate_aws_image(is_windows=True)
+        self.image_rhel = api_helper.generate_aws_image(rhel_detected=True)
+        self.image_ocp = api_helper.generate_aws_image(openshift_detected=True)
 
         self.instance1 = api_helper.generate_aws_instance(
-            cloud_account=self.account1,
-            image=self.image_plain
+            cloud_account=self.account1, image=self.image_plain
         )
         self.instance2 = api_helper.generate_aws_instance(
-            cloud_account=self.account2,
-            image=self.image_windows
+            cloud_account=self.account2, image=self.image_windows
         )
         self.instance3 = api_helper.generate_aws_instance(
-            cloud_account=self.account3,
-            image=self.image_rhel
+            cloud_account=self.account3, image=self.image_rhel
         )
         self.instance4 = api_helper.generate_aws_instance(
-            cloud_account=self.account4,
-            image=self.image_ocp
+            cloud_account=self.account4, image=self.image_ocp
         )
         self.factory = APIRequestFactory()
 
     def assertResponseHasInstanceData(self, response, instance):
         """Assert the response has data matching the instance object."""
-        self.assertEqual(
-            response.data['instance_id'], instance.id
-        )
-        self.assertEqual(
-            response.data['cloud_account_id'], instance.cloud_account.id
-        )
-        self.assertEqual(
-            response.data['machine_image_id'], instance.machine_image.id
-        )
+        self.assertEqual(response.data["instance_id"], instance.id)
+        self.assertEqual(response.data["cloud_account_id"], instance.cloud_account.id)
+        self.assertEqual(response.data["machine_image_id"], instance.machine_image.id)
 
         if isinstance(instance, AwsInstance):
             self.assertEqual(
-                response.data['content_object']['ec2_instance_id'],
-                instance.ec2_instance_id
+                response.data["content_object"]["ec2_instance_id"],
+                instance.ec2_instance_id,
             )
 
     def get_instance_get_response(self, user, instance_id):
@@ -79,9 +66,9 @@ class InstanceViewSetTest(TestCase):
             Response: the generated response for this request
 
         """
-        request = self.factory.get('/instances/')
+        request = self.factory.get("/instances/")
         force_authenticate(request, user=user)
-        view = InstanceViewSet.as_view(actions={'get': 'retrieve'})
+        view = InstanceViewSet.as_view(actions={"get": "retrieve"})
         response = view(request, pk=instance_id)
         return response
 
@@ -97,9 +84,9 @@ class InstanceViewSetTest(TestCase):
             Response: the generated response for this request
 
         """
-        request = self.factory.get('/instances/', data)
+        request = self.factory.get("/instances/", data)
         force_authenticate(request, user=user)
-        view = InstanceViewSet.as_view(actions={'get': 'list'})
+        view = InstanceViewSet.as_view(actions={"get": "list"})
         response = view(request)
         return response
 
@@ -114,9 +101,9 @@ class InstanceViewSetTest(TestCase):
             set[int]: the instance id values found in the response
 
         """
-        instance_ids = set([
-            instance['instance_id'] for instance in response.data['data']
-        ])
+        instance_ids = set(
+            [instance["instance_id"] for instance in response.data["data"]]
+        )
         return instance_ids
 
     def test_list_instances_as_user1(self):
@@ -145,7 +132,7 @@ class InstanceViewSetTest(TestCase):
             self.instance1.id,
             self.instance2.id,
             self.instance3.id,
-            self.instance4.id
+            self.instance4.id,
         }
         response = self.get_instance_list_response(self.superuser)
         actual_instances = self.get_instance_ids_from_list_response(response)
@@ -153,11 +140,8 @@ class InstanceViewSetTest(TestCase):
 
     def test_list_instances_as_superuser_with_filter(self):
         """Assert that the superuser sees instances filtered by user_id."""
-        expected_instances = {
-            self.instance3.id,
-            self.instance4.id
-        }
-        params = {'user_id': self.user2.id}
+        expected_instances = {self.instance3.id, self.instance4.id}
+        params = {"user_id": self.user2.id}
         response = self.get_instance_list_response(self.superuser, params)
         actual_instances = self.get_instance_ids_from_list_response(response)
         self.assertEqual(expected_instances, actual_instances)
@@ -190,7 +174,7 @@ class InstanceViewSetTest(TestCase):
 
     def test_list_instances_as_superuser_with_bad_filter(self):
         """Assert that the list instances returns 400 with bad user_id."""
-        params = {'user_id': 'not_an_int'}
+        params = {"user_id": "not_an_int"}
         response = self.get_instance_list_response(self.superuser, params)
         self.assertEqual(response.status_code, 400)
 
@@ -211,8 +195,7 @@ class InstanceViewSetTest(TestCase):
         """
         # Generate activity for instances
         api_helper.generate_single_run(
-            self.instance1,
-            (util_helper.utc_dt(2019, 2, 1, 0, 0, 0), None),
+            self.instance1, (util_helper.utc_dt(2019, 2, 1, 0, 0, 0), None),
         )
 
         api_helper.generate_single_run(
@@ -224,8 +207,7 @@ class InstanceViewSetTest(TestCase):
         )
 
         api_helper.generate_single_run(
-            self.instance3,
-            (util_helper.utc_dt(2019, 4, 1, 0, 0, 0), None),
+            self.instance3, (util_helper.utc_dt(2019, 4, 1, 0, 0, 0), None),
         )
 
         mid_2019_01 = util_helper.utc_dt(2019, 1, 15, 0, 0, 0)
@@ -235,37 +217,27 @@ class InstanceViewSetTest(TestCase):
         expected_instances_since_mid_2019_01 = set()
         expected_instances_since_mid_2019_02 = {self.instance1.id}
         expected_instances_since_mid_2019_03 = {self.instance1.id}
-        expected_instances_since_mid_2019_04 = {
-            self.instance1.id, self.instance3.id
-        }
+        expected_instances_since_mid_2019_04 = {self.instance1.id, self.instance3.id}
 
-        params = {'running_since': mid_2019_01}
+        params = {"running_since": mid_2019_01}
         response = self.get_instance_list_response(self.superuser, params)
         actual_instances = self.get_instance_ids_from_list_response(response)
-        self.assertEqual(
-            expected_instances_since_mid_2019_01, actual_instances
-        )
+        self.assertEqual(expected_instances_since_mid_2019_01, actual_instances)
 
-        params = {'running_since': mid_2019_02}
+        params = {"running_since": mid_2019_02}
         response = self.get_instance_list_response(self.superuser, params)
         actual_instances = self.get_instance_ids_from_list_response(response)
-        self.assertEqual(
-            expected_instances_since_mid_2019_02, actual_instances
-        )
+        self.assertEqual(expected_instances_since_mid_2019_02, actual_instances)
 
-        params = {'running_since': mid_2019_03}
+        params = {"running_since": mid_2019_03}
         response = self.get_instance_list_response(self.superuser, params)
         actual_instances = self.get_instance_ids_from_list_response(response)
-        self.assertEqual(
-            expected_instances_since_mid_2019_03, actual_instances
-        )
+        self.assertEqual(expected_instances_since_mid_2019_03, actual_instances)
 
-        params = {'running_since': mid_2019_04}
+        params = {"running_since": mid_2019_04}
         response = self.get_instance_list_response(self.superuser, params)
         actual_instances = self.get_instance_ids_from_list_response(response)
-        self.assertEqual(
-            expected_instances_since_mid_2019_04, actual_instances
-        )
+        self.assertEqual(expected_instances_since_mid_2019_04, actual_instances)
 
     @util_helper.clouditardis(util_helper.utc_dt(2019, 4, 20, 0, 0, 0))
     def test_list_instances_as_user1_with_running_since_filter(self):
@@ -284,8 +256,7 @@ class InstanceViewSetTest(TestCase):
         """
         # Generate activity for instances
         api_helper.generate_single_run(
-            self.instance1,
-            (util_helper.utc_dt(2019, 2, 2, 0, 0, 0), None),
+            self.instance1, (util_helper.utc_dt(2019, 2, 2, 0, 0, 0), None),
         )
 
         api_helper.generate_single_run(
@@ -297,8 +268,7 @@ class InstanceViewSetTest(TestCase):
         )
 
         api_helper.generate_single_run(
-            self.instance3,
-            (util_helper.utc_dt(2019, 4, 1, 0, 0, 0), None),
+            self.instance3, (util_helper.utc_dt(2019, 4, 1, 0, 0, 0), None),
         )
 
         mid_2019_01 = util_helper.utc_dt(2019, 1, 15, 0, 0, 0)
@@ -310,30 +280,22 @@ class InstanceViewSetTest(TestCase):
         expected_instances_since_mid_2019_03 = {self.instance1.id}
         expected_instances_since_mid_2019_04 = {self.instance1.id}
 
-        params = {'running_since': mid_2019_01}
+        params = {"running_since": mid_2019_01}
         response = self.get_instance_list_response(self.user1, params)
         actual_instances = self.get_instance_ids_from_list_response(response)
-        self.assertEqual(
-            expected_instances_since_mid_2019_01, actual_instances
-        )
+        self.assertEqual(expected_instances_since_mid_2019_01, actual_instances)
 
-        params = {'running_since': mid_2019_02}
+        params = {"running_since": mid_2019_02}
         response = self.get_instance_list_response(self.user1, params)
         actual_instances = self.get_instance_ids_from_list_response(response)
-        self.assertEqual(
-            expected_instances_since_mid_2019_02, actual_instances
-        )
+        self.assertEqual(expected_instances_since_mid_2019_02, actual_instances)
 
-        params = {'running_since': mid_2019_03}
+        params = {"running_since": mid_2019_03}
         response = self.get_instance_list_response(self.user1, params)
         actual_instances = self.get_instance_ids_from_list_response(response)
-        self.assertEqual(
-            expected_instances_since_mid_2019_03, actual_instances
-        )
+        self.assertEqual(expected_instances_since_mid_2019_03, actual_instances)
 
-        params = {'running_since': mid_2019_04}
+        params = {"running_since": mid_2019_04}
         response = self.get_instance_list_response(self.user1, params)
         actual_instances = self.get_instance_ids_from_list_response(response)
-        self.assertEqual(
-            expected_instances_since_mid_2019_04, actual_instances
-        )
+        self.assertEqual(expected_instances_since_mid_2019_04, actual_instances)

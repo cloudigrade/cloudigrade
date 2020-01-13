@@ -16,34 +16,30 @@ from django.contrib.auth.models import User
 from util import aws
 
 SOME_AWS_REGIONS = (
-    'ap-northeast-1',
-    'ca-central-1',
-    'eu-west-1',
-    'us-east-1',
-    'us-east-2',
+    "ap-northeast-1",
+    "ca-central-1",
+    "eu-west-1",
+    "us-east-1",
+    "us-east-2",
 )
 
 SOME_EC2_INSTANCE_TYPES = {
-    'c5.xlarge': {'memory': 8, 'vcpu': 4},
-    'm5.24xlarge': {'memory': 384, 'vcpu': 96},
-    'r4.large': {'memory': 15.25, 'vcpu': 2},
-    't2.large': {'memory': 16, 'vcpu': 4},
-    't2.medium': {'memory': 8, 'vcpu': 2},
-    't2.micro': {'memory': 1, 'vcpu': 1},
-    't2.nano': {'memory': 0.5, 'vcpu': 1},
-    't2.small': {'memory': 2, 'vcpu': 1},
-    't2.xlarge': {'memory': 16, 'vcpu': 4},
-    'x1e.32xlarge': {'memory': 3904, 'vcpu': 128},
+    "c5.xlarge": {"memory": 8, "vcpu": 4},
+    "m5.24xlarge": {"memory": 384, "vcpu": 96},
+    "r4.large": {"memory": 15.25, "vcpu": 2},
+    "t2.large": {"memory": 16, "vcpu": 4},
+    "t2.medium": {"memory": 8, "vcpu": 2},
+    "t2.micro": {"memory": 1, "vcpu": 1},
+    "t2.nano": {"memory": 0.5, "vcpu": 1},
+    "t2.small": {"memory": 2, "vcpu": 1},
+    "t2.xlarge": {"memory": 16, "vcpu": 4},
+    "x1e.32xlarge": {"memory": 3904, "vcpu": 128},
 }
 
-MAX_AWS_ACCOUNT_ID = 10**12 - 1
+MAX_AWS_ACCOUNT_ID = 10 ** 12 - 1
 
 
-RH_IDENTITY = {
-    'identity': {
-        'account_number': '1337'
-    }
-}
+RH_IDENTITY = {"identity": {"account_number": "1337"}}
 
 
 def generate_dummy_aws_account_id():
@@ -55,52 +51,52 @@ def generate_dummy_availability_zone(region=None):
     """Generate a dummy AWS availability zone for testing purposes."""
     if region is None:
         region = get_random_region()
-    return '{}{}'.format(region, random.choice(string.ascii_lowercase))
+    return "{}{}".format(region, random.choice(string.ascii_lowercase))
 
 
 def generate_dummy_instance_id():
     """Generate a dummy AWS EC2 instance ID for testing purposes."""
-    return 'i-{}'.format(
-        ''.join(random.choice(string.hexdigits[:16]) for _ in range(17))
+    return "i-{}".format(
+        "".join(random.choice(string.hexdigits[:16]) for _ in range(17))
     )
 
 
 def generate_dummy_subnet_id():
     """Generate a dummy AWS EC2 subnet ID for testing purposes."""
-    return 'subnet-{}'.format(
-        ''.join(random.choice(string.hexdigits[:16]) for _ in range(8))
+    return "subnet-{}".format(
+        "".join(random.choice(string.hexdigits[:16]) for _ in range(8))
     )
 
 
 def generate_dummy_image_id():
     """Generate a dummy AWS image ID for testing purposes."""
-    return 'ami-{}'.format(
-        ''.join(random.choice(string.hexdigits[:16]) for _ in range(8))
+    return "ami-{}".format(
+        "".join(random.choice(string.hexdigits[:16]) for _ in range(8))
     )
 
 
 def generate_dummy_snapshot_id():
     """Generate a dummy AWS snapshot ID for testing purposes."""
-    return 'snap-{}'.format(
-        ''.join(random.choice(string.hexdigits[:16]) for _ in range(17))
+    return "snap-{}".format(
+        "".join(random.choice(string.hexdigits[:16]) for _ in range(17))
     )
 
 
 def generate_dummy_volume_id():
     """Generate a dummy AWS volume ID for testing purposes."""
-    return 'vol-{}'.format(
-        ''.join(random.choice(string.hexdigits[:16]) for _ in range(17))
+    return "vol-{}".format(
+        "".join(random.choice(string.hexdigits[:16]) for _ in range(17))
     )
 
 
 def generate_dummy_arn(
-        account_id=None,
-        region='',
-        partition='aws',
-        service='iam',
-        resource_type='role',
-        resource_separator='/',
-        resource='role-for-cloudigrade',
+    account_id=None,
+    region="",
+    partition="aws",
+    service="iam",
+    resource_type="role",
+    resource_separator="/",
+    resource="role-for-cloudigrade",
 ):
     """
     Generate a dummy AWS ARN for testing purposes.
@@ -124,8 +120,10 @@ def generate_dummy_arn(
         account_id = generate_dummy_aws_account_id()
     if resource is None:
         resource = faker.Faker().name()
-    arn = f'arn:{partition}:{service}:{region}:{account_id}:' \
-          f'{resource_type}{resource_separator}{resource}'
+    arn = (
+        f"arn:{partition}:{service}:{region}:{account_id}:"
+        f"{resource_type}{resource_separator}{resource}"
+    )
     return arn
 
 
@@ -157,9 +155,14 @@ def get_random_region():
     return random.choice(SOME_AWS_REGIONS)
 
 
-def generate_dummy_describe_instance(instance_id=None, image_id=None,
-                                     subnet_id=None, state=None,
-                                     instance_type=None, platform=''):
+def generate_dummy_describe_instance(
+    instance_id=None,
+    image_id=None,
+    subnet_id=None,
+    state=None,
+    instance_type=None,
+    platform="",
+):
     """
     Generate dummy instance to imitate 'describe instances' API response.
 
@@ -193,15 +196,12 @@ def generate_dummy_describe_instance(instance_id=None, image_id=None,
         instance_type = get_random_instance_type()
 
     mock_instance = {
-        'ImageId': image_id,
-        'InstanceId': instance_id,
-        'InstanceType': instance_type,
-        'Platform': platform,
-        'State': {
-            'Code': state.value,
-            'Name': state.name,
-        },
-        'SubnetId': subnet_id,
+        "ImageId": image_id,
+        "InstanceId": instance_id,
+        "InstanceType": instance_type,
+        "Platform": platform,
+        "State": {"Code": state.value, "Name": state.name,},
+        "SubnetId": subnet_id,
     }
     return mock_instance
 
@@ -236,19 +236,18 @@ def generate_dummy_describe_image(
 
     tags = []
     if openshift:
-        tags.append({
-            'Key': aws.OPENSHIFT_TAG,
-            'Value': aws.OPENSHIFT_TAG,
-        })
+        tags.append(
+            {"Key": aws.OPENSHIFT_TAG, "Value": aws.OPENSHIFT_TAG,}
+        )
 
     mock_image = {
-        'ImageId': image_id,
-        'OwnerId': owner_id,
-        'Name': name,
-        'Tags': tags,
+        "ImageId": image_id,
+        "OwnerId": owner_id,
+        "Name": name,
+        "Tags": tags,
     }
     if platform is not None:
-        mock_image['Platform'] = platform
+        mock_image["Platform"] = platform
 
     return mock_image
 
@@ -256,12 +255,12 @@ def generate_dummy_describe_image(
 def generate_dummy_role():
     """Generate a dummy AWS role for testing purposes."""
     return {
-        'Credentials': {
-            'AccessKeyId': str(uuid.uuid4()),
-            'SecretAccessKey': str(uuid.uuid4()),
-            'SessionToken': str(uuid.uuid4()),
+        "Credentials": {
+            "AccessKeyId": str(uuid.uuid4()),
+            "SecretAccessKey": str(uuid.uuid4()),
+            "SessionToken": str(uuid.uuid4()),
         },
-        'foo': 'bar',
+        "foo": "bar",
     }
 
 
@@ -278,19 +277,19 @@ def generate_mock_image(image_id=None, encrypted=False, state=None):
         Mock: A mock object with Image-like attributes.
 
     """
-    root_device_name = '/dev/sda1'
-    root_device_type = 'ebs'
-    volume_types = ('gp2', 'io1', 'st1', 'sc1')
+    root_device_name = "/dev/sda1"
+    root_device_type = "ebs"
+    volume_types = ("gp2", "io1", "st1", "sc1")
     block_device_mappings = [
         {
-            'DeviceName': root_device_name,
+            "DeviceName": root_device_name,
             root_device_type.capitalize(): {
-                'Encrypted': encrypted,
-                'DeleteOnTermination': False,
-                'SnapshotId': generate_dummy_snapshot_id(),
-                'VolumeSize': random.randint(0, 10),
-                'VolumeType': random.choice(volume_types)
-            }
+                "Encrypted": encrypted,
+                "DeleteOnTermination": False,
+                "SnapshotId": generate_dummy_snapshot_id(),
+                "VolumeSize": random.randint(0, 10),
+                "VolumeType": random.choice(volume_types),
+            },
         }
     ]
 
@@ -320,14 +319,13 @@ def generate_mock_image_dict(image_id=None):
     if image_id is None:
         image_id = generate_dummy_image_id()
 
-    mock_image = {
-        'ImageId': image_id
-    }
+    mock_image = {"ImageId": image_id}
     return mock_image
 
 
-def generate_mock_snapshot(snapshot_id=None, encrypted=False, state=None,
-                           owner_id=None):
+def generate_mock_snapshot(
+    snapshot_id=None, encrypted=False, state=None, owner_id=None
+):
     """
     Generate a mocked EC2 Image Snapshot object.
 
@@ -344,7 +342,7 @@ def generate_mock_snapshot(snapshot_id=None, encrypted=False, state=None,
     if snapshot_id is None:
         snapshot_id = generate_dummy_snapshot_id()
     if state is None:
-        state = 'completed'
+        state = "completed"
 
     mock_snapshot = Mock()
     mock_snapshot.snapshot_id = snapshot_id
@@ -354,10 +352,7 @@ def generate_mock_snapshot(snapshot_id=None, encrypted=False, state=None,
     return mock_snapshot
 
 
-def generate_mock_volume(volume_id=None,
-                         snapshot_id=None,
-                         zone=None,
-                         state=None):
+def generate_mock_volume(volume_id=None, snapshot_id=None, zone=None, state=None):
     """
     Generate a mocked EC2 EBS Volume object.
 
@@ -378,7 +373,7 @@ def generate_mock_volume(volume_id=None,
         zone = generate_dummy_availability_zone()
     if state is None:
         state = random.choice(
-            ('creating', 'available', 'in-use', 'deleting', 'deleted', 'error')
+            ("creating", "available", "in-use", "deleting", "deleted", "error")
         )
 
     mock_volume = Mock()
@@ -416,9 +411,7 @@ def utc_dt(*args, **kwargs):
         datetime.datetime
 
     """
-    return datetime.datetime(*args, **kwargs).replace(
-        tzinfo=tz.tzutc()
-    )
+    return datetime.datetime(*args, **kwargs).replace(tzinfo=tz.tzutc())
 
 
 def generate_test_user(account_number=None, password=None, is_superuser=False):
@@ -437,9 +430,7 @@ def generate_test_user(account_number=None, password=None, is_superuser=False):
     if not account_number:
         account_number = faker.Faker().random_int(min=100000, max=999999)
     user = User.objects.create_user(
-        username=account_number,
-        password=password,
-        is_superuser=is_superuser,
+        username=account_number, password=password, is_superuser=is_superuser,
     )
     return user
 
@@ -468,7 +459,7 @@ def get_test_user(account_number=None, password=None, is_superuser=False):
     return user
 
 
-def get_3scale_auth_header(account_number='1337'):
+def get_3scale_auth_header(account_number="1337"):
     """
     Get an example 3scale auth header.
 
@@ -480,14 +471,12 @@ def get_3scale_auth_header(account_number='1337'):
         str: base64 encoded 3scale header
 
     """
-    RH_IDENTITY['identity']['account_number'] = account_number
-    return base64.b64encode(
-        json.dumps(RH_IDENTITY).encode('utf-8')
-    )
+    RH_IDENTITY["identity"]["account_number"] = account_number
+    return base64.b64encode(json.dumps(RH_IDENTITY).encode("utf-8"))
 
 
 def generate_authentication_create_message_value(
-    account_number='1337', username=None, authentication_id=None
+    account_number="1337", username=None, authentication_id=None
 ):
     """
     Generate a 'Authentication.create' message's value as if read from Kafka.
@@ -502,9 +491,7 @@ def generate_authentication_create_message_value(
     if not authentication_id:
         authentication_id = f.pyint()
 
-    message = {
-        'tenant': account_number, 'username': username, 'id': authentication_id
-    }
+    message = {"tenant": account_number, "username": username, "id": authentication_id}
     return message
 
 
@@ -524,9 +511,9 @@ def clouditardis(destination):
     Args:
         destination (datetime.datetime): the destination datetime
     """
-    with patch('util.misc.get_now') as mock_get_now, patch(
-        'util.misc.get_today'
-    ) as mock_get_today, patch('django.utils.timezone.now') as mock_django_now:
+    with patch("util.misc.get_now") as mock_get_now, patch(
+        "util.misc.get_today"
+    ) as mock_get_today, patch("django.utils.timezone.now") as mock_django_now:
         mock_get_now.return_value = destination
         mock_get_today.return_value = destination.date()
         mock_django_now.return_value = destination

@@ -9,11 +9,12 @@ jinja2 = "*"
 flake8 = "*"
 flake8-docstrings = "*"
 flake8-import-order = "*"
-flake8-quotes = "*"
 isort = "*"
 coverage = "*"
 tblib = "*"
 pydocstyle = "*"
+black = "*"
+flake8-black = "*"
 
 [packages]
 django-environ = "~=0.4.5"
@@ -44,3 +45,6 @@ rest-framework-generic-relations = {git = "https://github.com/Ian-Foote/rest-fra
 
 [requires]
 python_version = "3.7"
+
+[pipenv]
+allow_prereleases = true

@@ -14,9 +14,7 @@ class GetAwsMachineImageTest(TestCase):
     def test_objects_exist(self):
         """Test happy path when both objects exist."""
         ec2_ami_id = util_helper.generate_dummy_image_id()
-        expected_machine_image = api_helper.generate_aws_image(
-            ec2_ami_id=ec2_ami_id
-        )
+        expected_machine_image = api_helper.generate_aws_image(ec2_ami_id=ec2_ami_id)
         expected_aws_machine_image = expected_machine_image.content_object
 
         result = util.get_aws_machine_image(ec2_ami_id)

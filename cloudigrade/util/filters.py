@@ -13,12 +13,12 @@ def rst_codeblock(text, code=None):
     address that a reader can simply copy, paste, and use.
     """
     if code:
-        prefix = f'.. code:: {code}'
+        prefix = f".. code:: {code}"
     else:
-        prefix = '::'
+        prefix = "::"
     output = f'{prefix}\n\n{textwrap.indent(text, "    ", lambda line: True)}'
-    output = output.replace(' http://testserver/', ' localhost:8080/').replace(
-        'testserver/', 'localhost:8080/'
+    output = output.replace(" http://testserver/", " localhost:8080/").replace(
+        "testserver/", "localhost:8080/"
     )
     return output
 
@@ -28,26 +28,18 @@ def stringify_http_response(response):
     try:
         status_text = response.status_text
     except AttributeError:
-        status_text = responses.get(response.status_code, '')
-    lines = [f'HTTP/1.1 {response.status_code} {status_text}']
+        status_text = responses.get(response.status_code, "")
+    lines = [f"HTTP/1.1 {response.status_code} {status_text}"]
     headers = sorted(response.items(), key=lambda x: x[0])
-    lines.extend(f'{key}: {value}' for (key, value) in headers)
-    fulltext = '\n'.join(lines)
+    lines.extend(f"{key}: {value}" for (key, value) in headers)
+    fulltext = "\n".join(lines)
     try:
         body = response.json() if response.content else None
-        body = (
-            json.dumps(body, indent=4, sort_keys=True)
-            if body is not None
-            else None
-        )
+        body = json.dumps(body, indent=4, sort_keys=True) if body is not None else None
     except ValueError:
-        body = (
-            response.content.decode('utf-8')
-            if response.content
-            else None
-        )
+        body = response.content.decode("utf-8") if response.content else None
     if body is not None:
-        fulltext = f'{fulltext}\n\n{body}'
+        fulltext = f"{fulltext}\n\n{body}"
     return fulltext
 
 
@@ -56,17 +48,17 @@ def httpied_command(wsgi_request, version=1):
     verb = wsgi_request.method.lower()
     url = wsgi_request.build_absolute_uri()
 
-    if verb == 'get':
-        cli_text = ' '.join(['http', url.split('?')[0]])
+    if verb == "get":
+        cli_text = " ".join(["http", url.split("?")[0]])
     else:
-        cli_text = ' '.join(['http', verb, url])
+        cli_text = " ".join(["http", verb, url])
     if version == 2:
         cli_text += ' "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}"'
     else:
-        if getattr(wsgi_request, 'user', None):
+        if getattr(wsgi_request, "user", None):
             cli_text += ' "${AUTH}"'
 
-    linewrap = ' \\\n    '
+    linewrap = " \\\n    "
     for key, value in wsgi_request.GET.items():
         cli_text += f'{linewrap}{key}=="{value}"'
     for key, value in wsgi_request.POST.items():

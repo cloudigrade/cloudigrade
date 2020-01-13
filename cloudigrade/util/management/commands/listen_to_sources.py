@@ -27,12 +27,12 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         """Launch the listener."""
         with daemon.DaemonContext(
-                pidfile=PIDLockFile(
-                    f'{settings.LISTENER_PID_PATH}/cloudilistener.pid'),
-                detach_process=False,
-                signal_map={signal.SIGTERM: self.listener_cleanup},
-                stdout=sys.stdout,
-                stderr=sys.stderr):
+            pidfile=PIDLockFile(f"{settings.LISTENER_PID_PATH}/cloudilistener.pid"),
+            detach_process=False,
+            signal_map={signal.SIGTERM: self.listener_cleanup},
+            stdout=sys.stdout,
+            stderr=sys.stderr,
+        ):
             self.listen()
 
     def listen(self):
@@ -47,12 +47,12 @@ class Command(BaseCommand):
         consumer = KafkaConsumer(
             topic,
             group_id=group_id,
-            bootstrap_servers=[
-                f'{bootstrap_server}:{bootstrap_server_port}'],
-            auto_offset_reset='earliest',
+            bootstrap_servers=[f"{bootstrap_server}:{bootstrap_server_port}"],
+            auto_offset_reset="earliest",
             enable_auto_commit=enable_auto_commit,
             consumer_timeout_ms=consumer_timeout_ms,
-            value_deserializer=lambda x: json.loads(x.decode('utf-8')))
+            value_deserializer=lambda x: json.loads(x.decode("utf-8")),
+        )
 
         self.run = True
 
@@ -67,29 +67,27 @@ class Command(BaseCommand):
         event_type = None
         # The headers are a list of... tuples.
         for header in message.headers:
-            if header[0] == 'event_type':
+            if header[0] == "event_type":
                 event_type = header[1]
                 break
 
-        message_value = getattr(message, 'value', {})
+        message_value = getattr(message, "value", {})
 
-        if event_type == b'Authentication.create':
+        if event_type == b"Authentication.create":
             logger.info(
-                _('An authentication object was created. Message: %s'),
-                message_value,
+                _("An authentication object was created. Message: %s"), message_value,
             )
             if settings.ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES:
                 tasks.create_from_sources_kafka_message.delay(message_value)
 
-        elif event_type == b'Authentication.destroy':
+        elif event_type == b"Authentication.destroy":
             logger.info(
-                _('An authentication object was destroyed. Message: %s'),
-                message_value,
+                _("An authentication object was destroyed. Message: %s"), message_value,
             )
             if settings.ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES:
                 tasks.delete_from_sources_kafka_message.delay(message_value)
 
     def listener_cleanup(self, signum, frame):
         """Stop listening when system signal is received."""
-        logger.info(_('Received %s. Stopping.'), signum)
+        logger.info(_("Received %s. Stopping."), signum)
         self.run = False

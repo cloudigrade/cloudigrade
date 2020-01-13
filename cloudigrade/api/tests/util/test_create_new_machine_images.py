@@ -28,21 +28,17 @@ class CreateNewMachineImagesTest(TestCase):
                 )
             ]
         }
-        ami_id = instances_data[region][0]['ImageId']
+        ami_id = instances_data[region][0]["ImageId"]
 
         mock_session = Mock()
         described_amis = util_helper.generate_dummy_describe_image(
             image_id=ami_id, owner_id=aws_account_id
         )
 
-        with patch.object(util.aws, 'describe_images') as mock_describe_images:
+        with patch.object(util.aws, "describe_images") as mock_describe_images:
             mock_describe_images.return_value = [described_amis]
-            result = util.create_new_machine_images(
-                mock_session, instances_data
-            )
-            mock_describe_images.assert_called_with(
-                mock_session, {ami_id}, region
-            )
+            result = util.create_new_machine_images(mock_session, instances_data)
+            mock_describe_images.assert_called_with(mock_session, {ami_id}, region)
 
         self.assertEqual(result, [ami_id])
 
@@ -64,22 +60,18 @@ class CreateNewMachineImagesTest(TestCase):
                 )
             ]
         }
-        instances_data[region][0]['Platform'] = 'Windows'
-        ami_id = instances_data[region][0]['ImageId']
+        instances_data[region][0]["Platform"] = "Windows"
+        ami_id = instances_data[region][0]["ImageId"]
 
         mock_session = Mock()
         described_amis = util_helper.generate_dummy_describe_image(
             image_id=ami_id, owner_id=aws_account_id
         )
 
-        with patch.object(util.aws, 'describe_images') as mock_describe_images:
+        with patch.object(util.aws, "describe_images") as mock_describe_images:
             mock_describe_images.return_value = [described_amis]
-            result = util.create_new_machine_images(
-                mock_session, instances_data
-            )
-            mock_describe_images.assert_called_with(
-                mock_session, {ami_id}, region
-            )
+            result = util.create_new_machine_images(mock_session, instances_data)
+            mock_describe_images.assert_called_with(mock_session, {ami_id}, region)
 
         self.assertEqual(result, [ami_id])
 

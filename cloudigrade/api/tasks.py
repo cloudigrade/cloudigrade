@@ -27,11 +27,18 @@ from django.db.models import Q
 from django.utils.translation import gettext as _
 from requests.exceptions import BaseHTTPError, RequestException
 
-from api.cloudtrail import (extract_ami_tag_events,
-                            extract_ec2_instance_events)
-from api.models import (AwsCloudAccount, AwsEC2InstanceDefinition, AwsInstance,
-                        AwsMachineImage, CloudAccount, Instance, InstanceEvent,
-                        MachineImage, Run)
+from api.cloudtrail import extract_ami_tag_events, extract_ec2_instance_events
+from api.models import (
+    AwsCloudAccount,
+    AwsEC2InstanceDefinition,
+    AwsInstance,
+    AwsMachineImage,
+    CloudAccount,
+    Instance,
+    InstanceEvent,
+    MachineImage,
+    Run,
+)
 from api.util import (
     add_messages_to_queue,
     calculate_max_concurrent_usage_from_runs,
@@ -49,20 +56,23 @@ from api.util import (
     start_image_inspection,
     update_aws_image_status_error,
     update_aws_image_status_inspected,
-    verify_permissions_and_create_aws_cloud_account)
+    verify_permissions_and_create_aws_cloud_account,
+)
 from util import aws, insights
 from util.aws import is_windows, rewrap_aws_errors
 from util.celery import retriable_shared_task
-from util.exceptions import (AwsECSInstanceNotReady,
-                             AwsTooManyECSInstances,
-                             InvalidHoundigradeJsonFormat)
+from util.exceptions import (
+    AwsECSInstanceNotReady,
+    AwsTooManyECSInstances,
+    InvalidHoundigradeJsonFormat,
+)
 from util.misc import generate_device_name, get_now
 
 logger = logging.getLogger(__name__)
 
 # Constants
-CLOUD_KEY = 'cloud'
-CLOUD_TYPE_AWS = 'aws'
+CLOUD_KEY = "cloud"
+CLOUD_TYPE_AWS = "aws"
 
 
 @retriable_shared_task(autoretry_for=(RequestException, BaseHTTPError))
@@ -82,42 +92,37 @@ def create_from_sources_kafka_message(message):
             "Authentication.create"
     """
     incomplete_data = False
-    account_number = message.get('tenant')
+    account_number = message.get("tenant")
     # We rename "tenant" to "account_number" because the latter appears to be
     # the more accepted term for this value across the platform. The sources
     # service appears to be an anomaly in calling it "tenant".
     if not account_number:
         incomplete_data = True
         logger.error(
-            _('Missing expected tenant (aka account number) from message %s'),
-            message,
+            _("Missing expected tenant (aka account number) from message %s"), message,
         )
 
-    username = message.get('username')
+    username = message.get("username")
     if not username:
         incomplete_data = True
-        logger.error(
-            _('Missing expected username from message %s'), message
-        )
+        logger.error(_("Missing expected username from message %s"), message)
 
-    authentication_id = message.get('id')
+    authentication_id = message.get("id")
     if not authentication_id:
         incomplete_data = True
-        logger.error(
-            _('Missing expected id from message %s'), message
-        )
+        logger.error(_("Missing expected id from message %s"), message)
 
     if incomplete_data:
-        logger.error(_('Aborting creation. Incorrect message details.'))
+        logger.error(_("Aborting creation. Incorrect message details."))
         return
 
     authentication = insights.get_sources_authentication(
         account_number, authentication_id
     )
-    password = authentication.get('password')
+    password = authentication.get("password")
     if not password:
         logger.error(
-            _('Missing expected password from authentication for id %s'),
+            _("Missing expected password from authentication for id %s"),
             authentication_id,
         )
         return
@@ -127,13 +132,10 @@ def create_from_sources_kafka_message(message):
         if created:
             user.set_unusable_password()
             logger.info(
-                _('User %s was not found and has been created.'),
-                account_number,
+                _("User %s was not found and has been created."), account_number,
             )
 
-    configure_customer_aws_and_create_cloud_account.delay(
-        user.id, username, password
-    )
+    configure_customer_aws_and_create_cloud_account.delay(user.id, username, password)
 
 
 @retriable_shared_task(autoretry_for=(RuntimeError,))
@@ -152,34 +154,34 @@ def delete_from_sources_kafka_message(message):
             Sources service and having event type "Authentication.destroy"
     """
     incomplete_data = False
-    account_number = message.get('tenant')
+    account_number = message.get("tenant")
     # We rename "tenant" to "account_number" because the latter appears to be
     # the more accepted term for this value across the platform. The sources
     # service appears to be an anomaly in calling it "tenant".
     if not account_number:
         incomplete_data = True
         logger.error(
-            _('Missing expected tenant (aka account number) from message %s'),
-            message,
+            _("Missing expected tenant (aka account number) from message %s"), message,
         )
 
-    username = message.get('username')
+    username = message.get("username")
     if not username:
         incomplete_data = True
-        logger.error(
-            _('Missing expected username from message %s'), message
-        )
+        logger.error(_("Missing expected username from message %s"), message)
 
     if incomplete_data:
-        logger.error(_('Aborting deletion. Incorrect message details.'))
+        logger.error(_("Aborting deletion. Incorrect message details."))
         return
 
     try:
         aws_clount = AwsCloudAccount.objects.get(aws_access_key_id=username)
     except AwsCloudAccount.DoesNotExist:
         logger.info(
-            _('We do not seem to have a cloud account for %s, '
-              'so there is nothing to delete.'), username
+            _(
+                "We do not seem to have a cloud account for %s, "
+                "so there is nothing to delete."
+            ),
+            username,
         )
         return
 
@@ -187,9 +189,12 @@ def delete_from_sources_kafka_message(message):
         clount = aws_clount.cloud_account.get()
     except CloudAccount.DoesNotExist:
         logger.warning(
-            _('We do not seem to have a CloudAccount parent for '
-              'AwsCloudAccount object %s, this should not be possible, '
-              'deleting.'), aws_clount
+            _(
+                "We do not seem to have a CloudAccount parent for "
+                "AwsCloudAccount object %s, this should not be possible, "
+                "deleting."
+            ),
+            aws_clount,
         )
         aws_clount.delete()
         return
@@ -200,9 +205,12 @@ def delete_from_sources_kafka_message(message):
     # deletes it.
     if clount.user.username != account_number:
         logger.info(
-            _('AWS Cloud Account with access_key_id %s does not belong'
-              'to a user account number %s, refusing to delete.'),
-            username, account_number
+            _(
+                "AWS Cloud Account with access_key_id %s does not belong"
+                "to a user account number %s, refusing to delete."
+            ),
+            username,
+            account_number,
         )
         return
 
@@ -232,8 +240,8 @@ def configure_customer_aws_and_create_cloud_account(
     except User.DoesNotExist:
         logger.warning(
             _(
-                'User id %s could not be found for '
-                'configure_customer_aws_and_create_cloud_account'
+                "User id %s could not be found for "
+                "configure_customer_aws_and_create_cloud_account"
             ),
             user_id,
         )
@@ -246,32 +254,23 @@ def configure_customer_aws_and_create_cloud_account(
     if not customer_aws_account_id:
         logger.error(
             _(
-                'Could not get customer AWS account ID from session using '
-                'customer AWS access key ID %(customer_aws_account_id)s for '
-                'user ID %(user_id)s. Aborting account setup.'
+                "Could not get customer AWS account ID from session using "
+                "customer AWS access key ID %(customer_aws_account_id)s for "
+                "user ID %(user_id)s. Aborting account setup."
             ),
-            {
-                'customer_aws_account_id': customer_aws_account_id,
-                'user_id': user_id,
-            },
+            {"customer_aws_account_id": customer_aws_account_id, "user_id": user_id,},
         )
         return
     policy_name, policy_arn = aws.ensure_cloudigrade_policy(session)
     logger.info(
-        _('Configured customer policy %(policy_arn)s'),
-        {'policy_arn': policy_arn},
+        _("Configured customer policy %(policy_arn)s"), {"policy_arn": policy_arn},
     )
     role_name, role_arn = aws.ensure_cloudigrade_role(session, policy_arn)
     logger.info(
-        _(
-            'Configured customer account role %(role_arn)s for '
-            'policy %(policy_arn)s'
-        ),
-        {'role_arn': role_arn, 'policy_arn': policy_arn},
+        _("Configured customer account role %(role_arn)s for " "policy %(policy_arn)s"),
+        {"role_arn": role_arn, "policy_arn": policy_arn},
     )
-    cloud_account_name = get_standard_cloud_account_name(
-        'aws', customer_aws_account_id
-    )
+    cloud_account_name = get_standard_cloud_account_name("aws", customer_aws_account_id)
     verify_permissions_and_create_aws_cloud_account(
         user, role_arn, cloud_account_name, customer_access_key_id
     )
@@ -290,7 +289,7 @@ def initial_aws_describe_instances(account_id):
         aws_account = AwsCloudAccount.objects.get(pk=account_id)
     except AwsCloudAccount.DoesNotExist:
         logger.warning(
-            _('AwsCloudAccount id %s could not be found for initial describe'),
+            _("AwsCloudAccount id %s could not be found for initial describe"),
             account_id,
         )
         # This can happen if a customer creates and then quickly deletes their
@@ -310,8 +309,8 @@ def initial_aws_describe_instances(account_id):
         except AwsCloudAccount.DoesNotExist:
             logger.warning(
                 _(
-                    'AwsCloudAccount id %s could not be found to save newly '
-                    'discovered images and instances'
+                    "AwsCloudAccount id %s could not be found to save newly "
+                    "discovered images and instances"
                 ),
                 account_id,
             )
@@ -323,8 +322,7 @@ def initial_aws_describe_instances(account_id):
 
     messages = generate_aws_ami_messages(instances_data, new_ami_ids)
     for message in messages:
-        start_image_inspection(str(arn), message['image_id'],
-                               message['region'])
+        start_image_inspection(str(arn), message["image_id"], message["region"])
 
 
 @shared_task
@@ -345,8 +343,7 @@ def process_instance_event(event):
         patching parts of the datetime module that are used to find "today".
     """
     after_run = Q(start_time__gt=event.occurred_at)
-    during_run = Q(start_time__lte=event.occurred_at,
-                   end_time__gt=event.occurred_at)
+    during_run = Q(start_time__lte=event.occurred_at, end_time__gt=event.occurred_at)
     during_run_no_end = Q(start_time__lte=event.occurred_at, end_time=None)
 
     filters = after_run | during_run | during_run_no_end
@@ -359,8 +356,7 @@ def process_instance_event(event):
         runs = []
         for index, normalized_run in enumerate(normalized_runs):
             logger.info(
-                'Processing run {} of {}'.format(index + 1,
-                                                 len(normalized_runs))
+                "Processing run {} of {}".format(index + 1, len(normalized_runs))
             )
             run = Run(
                 start_time=normalized_run.start_time,
@@ -397,24 +393,22 @@ def copy_ami_snapshot(arn, ami_id, snapshot_region, reference_ami_id=None):
 
     """
     if reference_ami_id:
-        if not AwsMachineImage.objects.filter(
-            ec2_ami_id=reference_ami_id
-        ).exists():
+        if not AwsMachineImage.objects.filter(ec2_ami_id=reference_ami_id).exists():
             logger.warning(
                 _(
-                    'AwsMachineImage with EC2 AMI ID %(ami_id)s could not be '
-                    'found for copy_ami_snapshot (using reference_ami_id).'
+                    "AwsMachineImage with EC2 AMI ID %(ami_id)s could not be "
+                    "found for copy_ami_snapshot (using reference_ami_id)."
                 ),
-                {'ami_id': ami_id},
+                {"ami_id": ami_id},
             )
             return
     elif not AwsMachineImage.objects.filter(ec2_ami_id=ami_id).exists():
         logger.warning(
             _(
-                'AwsMachineImage with EC2 AMI ID %(ami_id)s could not be '
-                'found for copy_ami_snapshot.'
+                "AwsMachineImage with EC2 AMI ID %(ami_id)s could not be "
+                "found for copy_ami_snapshot."
             ),
-            {'ami_id': ami_id},
+            {"ami_id": ami_id},
         )
         return
 
@@ -424,10 +418,10 @@ def copy_ami_snapshot(arn, ami_id, snapshot_region, reference_ami_id=None):
     if not ami:
         logger.info(
             _(
-                'Cannot copy AMI %(image_id)s snapshot from '
-                '%(source_region)s. Saving ERROR status.'
+                "Cannot copy AMI %(image_id)s snapshot from "
+                "%(source_region)s. Saving ERROR status."
             ),
-            {'image_id': ami_id, 'source_region': snapshot_region},
+            {"image_id": ami_id, "source_region": snapshot_region},
         )
         update_aws_image_status_error(ami_id)
         return
@@ -436,11 +430,10 @@ def copy_ami_snapshot(arn, ami_id, snapshot_region, reference_ami_id=None):
     if not customer_snapshot_id:
         logger.info(
             _(
-                'Cannot get customer snapshot id from AMI %(image_id)s '
-                'in %(source_region)s. Saving ERROR status.'
+                "Cannot get customer snapshot id from AMI %(image_id)s "
+                "in %(source_region)s. Saving ERROR status."
             ),
-            {'image_id': ami_id, 'source_region': snapshot_region},
-
+            {"image_id": ami_id, "source_region": snapshot_region},
         )
         update_aws_image_status_error(ami_id)
         return
@@ -459,12 +452,12 @@ def copy_ami_snapshot(arn, ami_id, snapshot_region, reference_ami_id=None):
                 _(
                     'AWS snapshot "%(snapshot_id)s" for image "%(image_id)s" '
                     'found using customer ARN "%(arn)s" is encrypted and '
-                    'cannot be copied.'
+                    "cannot be copied."
                 ),
                 {
-                    'snapshot_id': customer_snapshot.snapshot_id,
-                    'image_id': ami.id,
-                    'arn': arn,
+                    "snapshot_id": customer_snapshot.snapshot_id,
+                    "image_id": ami.id,
+                    "arn": arn,
                 },
             )
             return
@@ -476,16 +469,16 @@ def copy_ami_snapshot(arn, ami_id, snapshot_region, reference_ami_id=None):
                 '"%(account_id)s"'
             ),
             {
-                'snapshot_id': customer_snapshot.snapshot_id,
-                'image_id': ami.id,
-                'owner_id': customer_snapshot.owner_id,
-                'account_id': session_account_id,
+                "snapshot_id": customer_snapshot.snapshot_id,
+                "image_id": ami.id,
+                "owner_id": customer_snapshot.owner_id,
+                "account_id": session_account_id,
             },
         )
 
         if (
-            customer_snapshot.owner_id != session_account_id and
-                reference_ami_id is None
+            customer_snapshot.owner_id != session_account_id
+            and reference_ami_id is None
         ):
             copy_ami_to_customer_account.delay(arn, ami_id, snapshot_region)
             # Early return because we need to stop processing the current AMI.
@@ -493,7 +486,7 @@ def copy_ami_snapshot(arn, ami_id, snapshot_region, reference_ami_id=None):
             # current AMI instead.
             return
     except ClientError as e:
-        if e.response.get('Error').get('Code') == 'InvalidSnapshot.NotFound':
+        if e.response.get("Error").get("Code") == "InvalidSnapshot.NotFound":
             # Possibly a marketplace AMI, try to handle it by copying.
             copy_ami_to_customer_account.delay(arn, ami_id, snapshot_region)
             return
@@ -504,13 +497,13 @@ def copy_ami_snapshot(arn, ami_id, snapshot_region, reference_ami_id=None):
     snapshot_copy_id = aws.copy_snapshot(customer_snapshot_id, snapshot_region)
     logger.info(
         _(
-            '%(label)s: customer_snapshot_id=%(snapshot_id)s, '
-            'snapshot_copy_id=%(copy_id)s'
+            "%(label)s: customer_snapshot_id=%(snapshot_id)s, "
+            "snapshot_copy_id=%(copy_id)s"
         ),
         {
-            'label': 'copy_ami_snapshot',
-            'snapshot_id': customer_snapshot_id,
-            'copy_id': snapshot_copy_id,
+            "label": "copy_ami_snapshot",
+            "snapshot_id": customer_snapshot_id,
+            "copy_id": snapshot_copy_id,
         },
     )
 
@@ -559,15 +552,13 @@ def copy_ami_to_customer_account(arn, reference_ami_id, snapshot_region):
         None: Run as an asynchronous Celery task.
 
     """
-    if not AwsMachineImage.objects.filter(
-        ec2_ami_id=reference_ami_id
-    ).exists():
+    if not AwsMachineImage.objects.filter(ec2_ami_id=reference_ami_id).exists():
         logger.warning(
             _(
-                'AwsMachineImage with EC2 AMI ID %(reference_ami_id)s could '
-                'not be found for copy_ami_to_customer_account.'
+                "AwsMachineImage with EC2 AMI ID %(reference_ami_id)s could "
+                "not be found for copy_ami_to_customer_account."
             ),
-            {'reference_ami_id': reference_ami_id},
+            {"reference_ami_id": reference_ami_id},
         )
         return
 
@@ -576,10 +567,10 @@ def copy_ami_to_customer_account(arn, reference_ami_id, snapshot_region):
     if not reference_ami:
         logger.info(
             _(
-                'Cannot copy reference AMI %(image_id)s from '
-                '%(source_region)s. Saving ERROR status.'
+                "Cannot copy reference AMI %(image_id)s from "
+                "%(source_region)s. Saving ERROR status."
             ),
-            {'image_id': reference_ami_id, 'source_region': snapshot_region},
+            {"image_id": reference_ami_id, "source_region": snapshot_region},
         )
         update_aws_image_status_error(reference_ami_id)
         return
@@ -588,20 +579,17 @@ def copy_ami_to_customer_account(arn, reference_ami_id, snapshot_region):
         new_ami_id = aws.copy_ami(session, reference_ami.id, snapshot_region)
     except ClientError as e:
         public_errors = (
-            'Images from AWS Marketplace cannot be copied to another AWS '
-            'account',
-            'Images with EC2 BillingProduct codes cannot be copied '
-            'to another AWS account',
-            'You do not have permission to access the storage of this ami',
+            "Images from AWS Marketplace cannot be copied to another AWS " "account",
+            "Images with EC2 BillingProduct codes cannot be copied "
+            "to another AWS account",
+            "You do not have permission to access the storage of this ami",
         )
-        private_errors = (
-            'You do not have permission to access the storage of this ami'
-        )
-        if e.response.get('Error').get('Code') == 'InvalidRequest':
+        private_errors = "You do not have permission to access the storage of this ami"
+        if e.response.get("Error").get("Code") == "InvalidRequest":
             error = (
-                e.response.get('Error').get('Message')[:-1]
-                if e.response.get('Error').get('Message').endswith('.')
-                else e.response.get('Error').get('Message')
+                e.response.get("Error").get("Message")[:-1]
+                if e.response.get("Error").get("Message").endswith(".")
+                else e.response.get("Error").get("Message")
             )
 
             if not reference_ami.public and error in private_errors:
@@ -610,7 +598,7 @@ def copy_ami_to_customer_account(arn, reference_ami_id, snapshot_region):
                 logger.warning(
                     _(
                         'Found a private image "%s" with inaccessible '
-                        'storage. Saving ERROR status.'
+                        "storage. Saving ERROR status."
                     ),
                     reference_ami_id,
                 )
@@ -621,7 +609,7 @@ def copy_ami_to_customer_account(arn, reference_ami_id, snapshot_region):
                 logger.info(
                     _(
                         'Found a marketplace/community image "%s", '
-                        'marking as inspected'
+                        "marking as inspected"
                     ),
                     reference_ami_id,
                 )
@@ -653,31 +641,28 @@ def remove_snapshot_ownership(
     Returns:
         None: Run as an asynchronous Celery task.
     """
-    ec2 = boto3.resource('ec2')
+    ec2 = boto3.resource("ec2")
 
     # Wait for snapshot to be ready
     try:
         snapshot_copy = ec2.Snapshot(snapshot_copy_id)
         aws.check_snapshot_state(snapshot_copy)
     except ClientError as error:
-        if error.response.get('Error', {}).get('Code') == \
-                'InvalidSnapshot.NotFound':
+        if error.response.get("Error", {}).get("Code") == "InvalidSnapshot.NotFound":
             logger.info(
                 _(
-                    '%(label)s detected snapshot_copy_id %(copy_id)s '
-                    'already deleted.'
+                    "%(label)s detected snapshot_copy_id %(copy_id)s "
+                    "already deleted."
                 ),
-                {'label': 'remove_snapshot_ownership',
-                 'copy_id': snapshot_copy_id},
+                {"label": "remove_snapshot_ownership", "copy_id": snapshot_copy_id},
             )
         else:
             raise
 
     # Remove permissions from customer_snapshot
     logger.info(
-        _('%(label)s remove ownership from customer snapshot %(snapshot_id)s'),
-        {'label': 'remove_snapshot_ownership',
-         'snapshot_id': customer_snapshot_id},
+        _("%(label)s remove ownership from customer snapshot %(snapshot_id)s"),
+        {"label": "remove_snapshot_ownership", "snapshot_id": customer_snapshot_id},
     )
     session = aws.get_session(arn)
     customer_snapshot = aws.get_snapshot(
@@ -703,8 +688,8 @@ def create_volume(ami_id, snapshot_copy_id):
     region = aws.get_region_from_availability_zone(zone)
 
     logger.info(
-        _('%(label)s: volume_id=%(volume_id)s, volume_region=%(region)s'),
-        {'label': 'create_volume', 'volume_id': volume_id, 'region': region},
+        _("%(label)s: volume_id=%(volume_id)s, volume_region=%(region)s"),
+        {"label": "create_volume", "volume_id": volume_id, "region": region},
     )
 
     delete_snapshot.delay(snapshot_copy_id, volume_id, region)
@@ -724,7 +709,7 @@ def delete_snapshot(snapshot_copy_id, volume_id, volume_region):
     Returns:
         None: Run as an asynchronous Celery task.
     """
-    ec2 = boto3.resource('ec2')
+    ec2 = boto3.resource("ec2")
 
     # Wait for volume to be ready
     volume = aws.get_volume(volume_id, volume_region)
@@ -732,8 +717,8 @@ def delete_snapshot(snapshot_copy_id, volume_id, volume_region):
 
     # Delete snapshot_copy
     logger.info(
-        _('%(label)s delete cloudigrade snapshot copy %(copy_id)s'),
-        {'label': 'delete_snapshot', 'copy_id': snapshot_copy_id},
+        _("%(label)s delete cloudigrade snapshot copy %(copy_id)s"),
+        {"label": "delete_snapshot", "copy_id": snapshot_copy_id},
     )
     snapshot_copy = ec2.Snapshot(snapshot_copy_id)
     snapshot_copy.delete(DryRun=False)
@@ -754,9 +739,9 @@ def enqueue_ready_volume(ami_id, volume_id, volume_region):
     """
     volume = aws.get_volume(volume_id, volume_region)
     aws.check_volume_state(volume)
-    messages = [{'ami_id': ami_id, 'volume_id': volume_id}]
+    messages = [{"ami_id": ami_id, "volume_id": volume_id}]
 
-    queue_name = '{0}ready_volumes'.format(settings.AWS_NAME_PREFIX)
+    queue_name = "{0}ready_volumes".format(settings.AWS_NAME_PREFIX)
     add_messages_to_queue(queue_name, messages)
 
 
@@ -770,7 +755,7 @@ def scale_down_cluster():
         None: Run as an asynchronous Celery task.
 
     """
-    logger.info(_('Scaling down ECS cluster.'))
+    logger.info(_("Scaling down ECS cluster."))
     aws.scale_down(settings.HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME)
 
 
@@ -784,35 +769,39 @@ def scale_up_inspection_cluster():
         None: Run as a scheduled Celery task.
 
     """
-    queue_name = '{0}ready_volumes'.format(settings.AWS_NAME_PREFIX)
+    queue_name = "{0}ready_volumes".format(settings.AWS_NAME_PREFIX)
     scaled_down, auto_scaling_group = aws.is_scaled_down(
         settings.HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME
     )
     if not scaled_down:
         # Quietly exit and let a future run check the scaling.
         args = {
-            'name': settings.HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME,
-            'min_size': auto_scaling_group.get('MinSize'),
-            'max_size': auto_scaling_group.get('MinSize'),
-            'desired_capacity': auto_scaling_group.get('DesiredCapacity'),
-            'len_instances': len(auto_scaling_group.get('Instances', []))
+            "name": settings.HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME,
+            "min_size": auto_scaling_group.get("MinSize"),
+            "max_size": auto_scaling_group.get("MinSize"),
+            "desired_capacity": auto_scaling_group.get("DesiredCapacity"),
+            "len_instances": len(auto_scaling_group.get("Instances", [])),
         }
-        logger.info(_('Auto Scaling group "%(name)s" is not scaled down. '
-                      'MinSize=%(min_size)s MaxSize=%(max_size)s '
-                      'DesiredCapacity=%(desired_capacity)s '
-                      'len(Instances)=%(len_instances)s'), args)
-        for instance in auto_scaling_group.get('Instances', []):
-            logger.info(_('Instance exists: %s'), instance.get('InstanceId'))
+        logger.info(
+            _(
+                'Auto Scaling group "%(name)s" is not scaled down. '
+                "MinSize=%(min_size)s MaxSize=%(max_size)s "
+                "DesiredCapacity=%(desired_capacity)s "
+                "len(Instances)=%(len_instances)s"
+            ),
+            args,
+        )
+        for instance in auto_scaling_group.get("Instances", []):
+            logger.info(_("Instance exists: %s"), instance.get("InstanceId"))
         return
 
     messages = read_messages_from_queue(
-        queue_name,
-        settings.HOUNDIGRADE_AWS_VOLUME_BATCH_SIZE
+        queue_name, settings.HOUNDIGRADE_AWS_VOLUME_BATCH_SIZE
     )
 
     if len(messages) == 0:
         # Quietly exit and let a future run check for messages.
-        logger.info(_('Not scaling up because no new volumes were found.'))
+        logger.info(_("Not scaling up because no new volumes were found."))
         return
 
     try:
@@ -827,7 +816,7 @@ def scale_up_inspection_cluster():
 
 @retriable_shared_task  # noqa: C901
 @rewrap_aws_errors
-def run_inspection_cluster(messages, cloud='aws'):
+def run_inspection_cluster(messages, cloud="aws"):
     """
     Run task definition for "houndigrade" on the cluster.
 
@@ -843,10 +832,8 @@ def run_inspection_cluster(messages, cloud='aws'):
     relevant_messages = []
     for message in messages:
         try:
-            ec2_ami_id = message.get('ami_id')
-            aws_machine_image = AwsMachineImage.objects.get(
-                ec2_ami_id=ec2_ami_id
-            )
+            ec2_ami_id = message.get("ami_id")
+            aws_machine_image = AwsMachineImage.objects.get(ec2_ami_id=ec2_ami_id)
             machine_image = aws_machine_image.machine_image.get()
             machine_image.status = MachineImage.INSPECTING
             machine_image.save()
@@ -854,88 +841,83 @@ def run_inspection_cluster(messages, cloud='aws'):
         except AwsMachineImage.DoesNotExist:
             logger.warning(
                 _(
-                    'Skipping inspection because we do not have an '
-                    'AwsMachineImage for %(ec2_ami_id)s (%(message)s)'
+                    "Skipping inspection because we do not have an "
+                    "AwsMachineImage for %(ec2_ami_id)s (%(message)s)"
                 ),
-                {'ec2_ami_id': ec2_ami_id, 'message': message},
+                {"ec2_ami_id": ec2_ami_id, "message": message},
             )
         except MachineImage.DoesNotExist:
             logger.warning(
                 _(
-                    'Skipping inspection because we do not have a '
-                    'MachineImage for %(ec2_ami_id)s (%(message)s)'
+                    "Skipping inspection because we do not have a "
+                    "MachineImage for %(ec2_ami_id)s (%(message)s)"
                 ),
-                {'ec2_ami_id': ec2_ami_id, 'message': message},
+                {"ec2_ami_id": ec2_ami_id, "message": message},
             )
 
     if not relevant_messages:
         # Early return if nothing actually needs inspection.
         return
 
-    task_command = ['-c', cloud]
+    task_command = ["-c", cloud]
     if settings.HOUNDIGRADE_DEBUG:
-        task_command.extend(['--debug'])
+        task_command.extend(["--debug"])
 
-    ecs = boto3.client('ecs')
+    ecs = boto3.client("ecs")
     # get ecs container instance id
-    result = ecs.list_container_instances(
-        cluster=settings.HOUNDIGRADE_ECS_CLUSTER_NAME
-    )
+    result = ecs.list_container_instances(cluster=settings.HOUNDIGRADE_ECS_CLUSTER_NAME)
 
     # verify we have our single container instance
-    num_instances = len(result['containerInstanceArns'])
+    num_instances = len(result["containerInstanceArns"])
     if num_instances == 0:
         raise AwsECSInstanceNotReady
     elif num_instances > 1:
         raise AwsTooManyECSInstances
 
     result = ecs.describe_container_instances(
-        containerInstances=[result['containerInstanceArns'][0]],
+        containerInstances=[result["containerInstanceArns"][0]],
         cluster=settings.HOUNDIGRADE_ECS_CLUSTER_NAME,
     )
-    ec2_instance_id = result['containerInstances'][0]['ec2InstanceId']
+    ec2_instance_id = result["containerInstances"][0]["ec2InstanceId"]
 
     # Obtain boto EC2 Instance
-    ec2 = boto3.resource('ec2')
+    ec2 = boto3.resource("ec2")
     ec2_instance = ec2.Instance(ec2_instance_id)
 
-    logger.info(_('%s attaching volumes'), 'run_inspection_cluster')
+    logger.info(_("%s attaching volumes"), "run_inspection_cluster")
     # attach volumes
     for index, message in enumerate(relevant_messages):
-        ec2_ami_id = message['ami_id']
-        ec2_volume_id = message['volume_id']
+        ec2_ami_id = message["ami_id"]
+        ec2_volume_id = message["volume_id"]
         mount_point = generate_device_name(index)
         volume = ec2.Volume(ec2_volume_id)
         logger.info(
             _(
-                '%(label)s attaching volume %(volume_id)s from AMI '
-                '%(ami_id)s to instance %(instance)s at %(mount_point)s'
+                "%(label)s attaching volume %(volume_id)s from AMI "
+                "%(ami_id)s to instance %(instance)s at %(mount_point)s"
             ),
             {
-                'label': 'run_inspection_cluster',
-                'volume_id': ec2_volume_id,
-                'ami_id': ec2_ami_id,
-                'instance': ec2_instance_id,
-                'mount_point': mount_point,
+                "label": "run_inspection_cluster",
+                "volume_id": ec2_volume_id,
+                "ami_id": ec2_ami_id,
+                "instance": ec2_instance_id,
+                "mount_point": mount_point,
             },
         )
         try:
-            volume.attach_to_instance(
-                Device=mount_point, InstanceId=ec2_instance_id
-            )
+            volume.attach_to_instance(Device=mount_point, InstanceId=ec2_instance_id)
         except ClientError as e:
-            error_code = e.response.get('Error').get('Code')
-            error_message = e.response.get('Error').get('Message')
+            error_code = e.response.get("Error").get("Code")
+            error_message = e.response.get("Error").get("Message")
 
             if (
-                error_code
-                in ('OptInRequired', 'IncorrectInstanceState') and
-                'marketplace' in error_message.lower()
+                error_code in ("OptInRequired", "IncorrectInstanceState")
+                and "marketplace" in error_message.lower()
             ):
                 logger.info(
                     _(
                         'Found a marketplace AMI "%s" when trying to copy '
-                        'volume. This should not happen, but here we are.'
+                        "volume. This should not happen, but here we are."
                     ),
                     ec2_ami_id,
                 )
@@ -943,18 +925,18 @@ def run_inspection_cluster(messages, cloud='aws'):
             else:
                 logger.error(
                     _(
-                        'Encountered an issue when trying to attach '
+                        "Encountered an issue when trying to attach "
                         'volume "%(volume_id)s" from AMI "%(ami_id)s" '
-                        'to inspection instance. Error code: '
+                        "to inspection instance. Error code: "
                         '"%(error_code)s". Error message: '
                         '"%(error_message)s". Setting image state to '
-                        'ERROR.'
+                        "ERROR."
                     ),
                     {
-                        'volume_id': ec2_volume_id,
-                        'ami_id': ec2_ami_id,
-                        'error_code': error_code,
-                        'error_message': error_message,
+                        "volume_id": ec2_volume_id,
+                        "ami_id": ec2_ami_id,
+                        "error_code": error_code,
+                        "error_message": error_message,
                     },
                 )
                 save_success = update_aws_image_status_error(ec2_ami_id)
@@ -962,45 +944,42 @@ def run_inspection_cluster(messages, cloud='aws'):
             if not save_success:
                 logger.warning(
                     _(
-                        'Failed to save updated status to AwsMachineImage for '
-                        'EC2 AMI ID %(ec2_ami_id)s in run_inspection_cluster'
+                        "Failed to save updated status to AwsMachineImage for "
+                        "EC2 AMI ID %(ec2_ami_id)s in run_inspection_cluster"
                     ),
-                    {'ec2_ami_id': ec2_ami_id},
+                    {"ec2_ami_id": ec2_ami_id},
                 )
 
             volume.delete()
             continue
 
         logger.info(
-            _('%(label)s modify volume %(volume_id)s to auto-delete'),
-            {'label': 'run_inspection_cluster', 'volume_id': ec2_volume_id},
+            _("%(label)s modify volume %(volume_id)s to auto-delete"),
+            {"label": "run_inspection_cluster", "volume_id": ec2_volume_id},
         )
         # Configure volumes to delete when instance is scaled down
         ec2_instance.modify_attribute(
             BlockDeviceMappings=[
-                {
-                    'DeviceName': mount_point,
-                    'Ebs': {'DeleteOnTermination': True},
-                }
+                {"DeviceName": mount_point, "Ebs": {"DeleteOnTermination": True},}
             ]
         )
 
-        task_command.extend(['-t', message['ami_id'], mount_point])
+        task_command.extend(["-t", message["ami_id"], mount_point])
 
-    if '-t' not in task_command:
-        logger.warning(_('No targets left to inspect, exiting early.'))
+    if "-t" not in task_command:
+        logger.warning(_("No targets left to inspect, exiting early."))
         return
 
     result = ecs.register_task_definition(
-        family=f'{settings.HOUNDIGRADE_ECS_FAMILY_NAME}',
+        family=f"{settings.HOUNDIGRADE_ECS_FAMILY_NAME}",
         containerDefinitions=[_build_container_definition(task_command)],
-        requiresCompatibilities=['EC2'],
+        requiresCompatibilities=["EC2"],
     )
 
     # release the hounds
     ecs.run_task(
         cluster=settings.HOUNDIGRADE_ECS_CLUSTER_NAME,
-        taskDefinition=result['taskDefinition']['taskDefinitionArn'],
+        taskDefinition=result["taskDefinition"]["taskDefinitionArn"],
     )
 
 
@@ -1015,64 +994,54 @@ def _build_container_definition(task_command):
 
     """
     container_definition = {
-        'name': 'Houndigrade',
-        'image': f'{settings.HOUNDIGRADE_ECS_IMAGE_NAME}:'
-                 f'{settings.HOUNDIGRADE_ECS_IMAGE_TAG}',
-        'cpu': 0,
-        'memoryReservation': 256,
-        'essential': True,
-        'command': task_command,
-        'environment': [
+        "name": "Houndigrade",
+        "image": f"{settings.HOUNDIGRADE_ECS_IMAGE_NAME}:"
+        f"{settings.HOUNDIGRADE_ECS_IMAGE_TAG}",
+        "cpu": 0,
+        "memoryReservation": 256,
+        "essential": True,
+        "command": task_command,
+        "environment": [
+            {"name": "AWS_DEFAULT_REGION", "value": settings.AWS_SQS_REGION},
+            {"name": "AWS_ACCESS_KEY_ID", "value": settings.AWS_SQS_ACCESS_KEY_ID},
             {
-                'name': 'AWS_DEFAULT_REGION',
-                'value': settings.AWS_SQS_REGION
+                "name": "AWS_SECRET_ACCESS_KEY",
+                "value": settings.AWS_SQS_SECRET_ACCESS_KEY,
             },
             {
-                'name': 'AWS_ACCESS_KEY_ID',
-                'value': settings.AWS_SQS_ACCESS_KEY_ID
+                "name": "RESULTS_QUEUE_NAME",
+                "value": settings.HOUNDIGRADE_RESULTS_QUEUE_NAME,
             },
-            {
-                'name': 'AWS_SECRET_ACCESS_KEY',
-                'value': settings.AWS_SQS_SECRET_ACCESS_KEY
-            },
-            {
-                'name': 'RESULTS_QUEUE_NAME',
-                'value': settings.HOUNDIGRADE_RESULTS_QUEUE_NAME
-            },
-            {
-                'name': 'EXCHANGE_NAME',
-                'value': settings.HOUNDIGRADE_EXCHANGE_NAME
-            },
-            {
-                'name': 'QUEUE_CONNECTION_URL',
-                'value': settings.CELERY_BROKER_URL
-            },
+            {"name": "EXCHANGE_NAME", "value": settings.HOUNDIGRADE_EXCHANGE_NAME},
+            {"name": "QUEUE_CONNECTION_URL", "value": settings.CELERY_BROKER_URL},
         ],
-        'privileged': True,
-        'logConfiguration': {
-            'logDriver': 'awslogs',
-            'options': {
-                'awslogs-create-group': 'true',
-                'awslogs-group': f'{settings.AWS_NAME_PREFIX}cloudigrade-ecs',
-                'awslogs-region': settings.AWS_SQS_REGION,
-            }
-        }
+        "privileged": True,
+        "logConfiguration": {
+            "logDriver": "awslogs",
+            "options": {
+                "awslogs-create-group": "true",
+                "awslogs-group": f"{settings.AWS_NAME_PREFIX}cloudigrade-ecs",
+                "awslogs-region": settings.AWS_SQS_REGION,
+            },
+        },
     }
     if settings.HOUNDIGRADE_ENABLE_SENTRY:
-        container_definition['environment'].extend([
-            {
-                'name': 'HOUNDIGRADE_SENTRY_DSN',
-                'value': settings.HOUNDIGRADE_SENTRY_DSN
-            },
-            {
-                'name': 'HOUNDIGRADE_SENTRY_RELEASE',
-                'value': settings.HOUNDIGRADE_SENTRY_RELEASE
-            },
-            {
-                'name': 'HOUNDIGRADE_SENTRY_ENVIRONMENT',
-                'value': settings.HOUNDIGRADE_SENTRY_ENVIRONMENT
-            },
-        ])
+        container_definition["environment"].extend(
+            [
+                {
+                    "name": "HOUNDIGRADE_SENTRY_DSN",
+                    "value": settings.HOUNDIGRADE_SENTRY_DSN,
+                },
+                {
+                    "name": "HOUNDIGRADE_SENTRY_RELEASE",
+                    "value": settings.HOUNDIGRADE_SENTRY_RELEASE,
+                },
+                {
+                    "name": "HOUNDIGRADE_SENTRY_ENVIRONMENT",
+                    "value": settings.HOUNDIGRADE_SENTRY_ENVIRONMENT,
+                },
+            ]
+        )
 
     return container_definition
 
@@ -1087,11 +1056,11 @@ def persist_aws_inspection_cluster_results(inspection_results):
     Returns:
         None
     """
-    images = inspection_results.get('images')
+    images = inspection_results.get("images")
     if images is None:
-        raise InvalidHoundigradeJsonFormat(_(
-            'Inspection results json missing images: {}').format(
-            inspection_results))
+        raise InvalidHoundigradeJsonFormat(
+            _("Inspection results json missing images: {}").format(inspection_results)
+        )
 
     for image_id, image_json in images.items():
         save_success = update_aws_image_status_inspected(
@@ -1100,11 +1069,11 @@ def persist_aws_inspection_cluster_results(inspection_results):
         if not save_success:
             logger.warning(
                 _(
-                    'Persisting AWS inspection results for EC2 AMI ID '
-                    '%(ec2_ami_id)s, but we do not have any record of it. '
-                    'Inspection results are: %(inspection_json)s'
+                    "Persisting AWS inspection results for EC2 AMI ID "
+                    "%(ec2_ami_id)s, but we do not have any record of it. "
+                    "Inspection results are: %(inspection_json)s"
                 ),
-                {'ec2_ami_id': image_id, 'inspection_json': image_json},
+                {"ec2_ami_id": image_id, "inspection_json": image_json},
             )
 
 
@@ -1121,34 +1090,30 @@ def persist_inspection_cluster_results_task():
     queue_url = aws.get_sqs_queue_url(settings.HOUNDIGRADE_RESULTS_QUEUE_NAME)
     successes, failures = [], []
     for message in aws.yield_messages_from_queue(
-            queue_url, settings.AWS_SQS_MAX_HOUNDI_YIELD_COUNT):
-        logger.info(_('Processing inspection results with id "%s"'),
-                    message.message_id
-                    )
+        queue_url, settings.AWS_SQS_MAX_HOUNDI_YIELD_COUNT
+    ):
+        logger.info(_('Processing inspection results with id "%s"'), message.message_id)
 
         inspection_results = json.loads(message.body)
         if inspection_results.get(CLOUD_KEY) == CLOUD_TYPE_AWS:
             try:
-                persist_aws_inspection_cluster_results(
-                    inspection_results)
+                persist_aws_inspection_cluster_results(inspection_results)
             except Exception as e:
-                logger.exception(_(
-                    'Unexpected error in result processing: %s'
-                ), e)
-                logger.debug(_(
-                    'Failed message body is: %s'
-                ), message.body)
+                logger.exception(_("Unexpected error in result processing: %s"), e)
+                logger.debug(_("Failed message body is: %s"), message.body)
                 failures.append(message)
                 continue
 
-            logger.info(_(
-                'Successfully processed message id %s; deleting from queue.'
-            ), message.message_id)
+            logger.info(
+                _("Successfully processed message id %s; deleting from queue."),
+                message.message_id,
+            )
             aws.delete_messages_from_queue(queue_url, [message])
             successes.append(message)
         else:
-            logger.error(_('Unsupported cloud type: "%s"'),
-                         inspection_results.get(CLOUD_KEY))
+            logger.error(
+                _('Unsupported cloud type: "%s"'), inspection_results.get(CLOUD_KEY)
+            )
             failures.append(message)
 
     if successes or failures:
@@ -1171,10 +1136,8 @@ def inspect_pending_images():
     of it being called multiple times simultaneously which could result in the
     same image being found and getting multiple inspection tasks.
     """
-    updated_since = (
-        get_now() - timedelta(
-            seconds=settings.INSPECT_PENDING_IMAGES_MIN_AGE
-        )
+    updated_since = get_now() - timedelta(
+        seconds=settings.INSPECT_PENDING_IMAGES_MIN_AGE
     )
     restartable_statuses = [
         MachineImage.PENDING,
@@ -1187,15 +1150,15 @@ def inspect_pending_images():
         updated_at__lt=updated_since,
     ).distinct()
     logger.info(
-        _('Found %(number)s images for inspection that have not updated '
-          'since %(updated_time)s'),
-        {'number': images.count(), 'updated_time': updated_since}
+        _(
+            "Found %(number)s images for inspection that have not updated "
+            "since %(updated_time)s"
+        ),
+        {"number": images.count(), "updated_time": updated_since},
     )
 
     for image in images:
-        instance = image.instance_set.filter(
-            aws_instance__region__isnull=False
-        ).first()
+        instance = image.instance_set.filter(aws_instance__region__isnull=False).first()
         arn = instance.cloud_account.content_object.account_arn
         ami_id = image.content_object.ec2_ami_id
         region = instance.content_object.region
@@ -1215,32 +1178,29 @@ def analyze_log():
         except AwsCloudAccount.DoesNotExist:
             logger.warning(
                 _(
-                    'Encountered message %s for nonexistent account; '
-                    'deleting message from queue.'
-                ), message.message_id
+                    "Encountered message %s for nonexistent account; "
+                    "deleting message from queue."
+                ),
+                message.message_id,
             )
-            logger.info(
-                _('Deleted message body: %s'), message.body
-            )
+            logger.info(_("Deleted message body: %s"), message.body)
             aws.delete_messages_from_queue(queue_url, [message])
             continue
         except Exception as e:
-            logger.exception(_(
-                'Unexpected error in log processing: %s'
-            ), e)
+            logger.exception(_("Unexpected error in log processing: %s"), e)
         if success:
-            logger.info(_(
-                'Successfully processed message id %s; deleting from queue.'
-            ), message.message_id)
+            logger.info(
+                _("Successfully processed message id %s; deleting from queue."),
+                message.message_id,
+            )
             aws.delete_messages_from_queue(queue_url, [message])
             successes.append(message)
         else:
-            logger.error(_(
-                'Failed to process message id %s; leaving on queue.'
-            ), message.message_id)
-            logger.debug(_(
-                'Failed message body is: %s'
-            ), message.body)
+            logger.error(
+                _("Failed to process message id %s; leaving on queue."),
+                message.message_id,
+            )
+            logger.debug(_("Failed message body is: %s"), message.body)
             failures.append(message)
     return successes, failures
 
@@ -1261,22 +1221,21 @@ def _process_cloudtrail_message(message):
 
     # Get the S3 objects referenced by the SQS messages
     for extracted_message in extracted_messages:
-        bucket = extracted_message['bucket']['name']
-        key = extracted_message['object']['key']
+        bucket = extracted_message["bucket"]["name"]
+        key = extracted_message["object"]["key"]
         raw_content = aws.get_object_content_from_s3(bucket, key)
         content = json.loads(raw_content)
         logs.append((content, bucket, key))
         logger.debug(
-            _('Read CloudTrail log file from bucket %(bucket)s object key '
-              '%(key)s'),
-            {'bucket': bucket, 'key': key}
+            _("Read CloudTrail log file from bucket %(bucket)s object key " "%(key)s"),
+            {"bucket": bucket, "key": key},
         )
 
     # Extract actionable details from each of the S3 log files
     instance_events = []
     ami_tag_events = []
     for content, bucket, key in logs:
-        for record in content.get('Records', []):
+        for record in content.get("Records", []):
             instance_events.extend(extract_ec2_instance_events(record))
             ami_tag_events.extend(extract_ami_tag_events(record))
 
@@ -1290,10 +1249,7 @@ def _process_cloudtrail_message(message):
     try:
         # Save the results
         new_images = _save_cloudtrail_activity(
-            instance_events,
-            ami_tag_events,
-            described_instances,
-            described_amis,
+            instance_events, ami_tag_events, described_instances, described_amis,
         )
         # Starting image inspection MUST come after all other database writes
         # so that we are confident the atomic transaction will complete.
@@ -1304,22 +1260,21 @@ def _process_cloudtrail_message(message):
             image = awsimage.machine_image.get()
             if image.status == image.PENDING:
                 start_image_inspection(
-                    described_amis[ami_id]['found_by_account_arn'],
+                    described_amis[ami_id]["found_by_account_arn"],
                     ami_id,
-                    described_amis[ami_id]['found_in_region'],
+                    described_amis[ami_id]["found_in_region"],
                 )
 
-        logger.debug(_('Saved instances and/or events to the DB.'))
+        logger.debug(_("Saved instances and/or events to the DB."))
         return True
     except:  # noqa: E722 because we don't know what could go wrong yet.
         logger.exception(
-            _('Failed to save instances and/or events to the DB. '
-              'Instance events: %(instance_events)s AMI tag events: '
-              '%(ami_tag_events)s'),
-            {
-                'instance_events': instance_events,
-                'ami_tag_events': ami_tag_events
-            }
+            _(
+                "Failed to save instances and/or events to the DB. "
+                "Instance events: %(instance_events)s AMI tag events: "
+                "%(ami_tag_events)s"
+            ),
+            {"instance_events": instance_events, "ami_tag_events": ami_tag_events},
         )
         return False
 
@@ -1355,9 +1310,9 @@ def _load_missing_instance_data(instance_events):  # noqa: C901
             database, with the outer key being each EC2 instance's ID.
 
     """
-    all_ec2_instance_ids = set([
-        instance_event.ec2_instance_id for instance_event in instance_events
-    ])
+    all_ec2_instance_ids = set(
+        [instance_event.ec2_instance_id for instance_event in instance_events]
+    )
     described_instances = dict()
     defined_ec2_instance_ids = set()
     # First identify which instances DON'T need to be described because we
@@ -1366,19 +1321,22 @@ def _load_missing_instance_data(instance_events):  # noqa: C901
     for instance_event in instance_events:
         ec2_instance_id = instance_event.ec2_instance_id
         if (
-            _instance_event_is_complete(instance_event) or
-            ec2_instance_id in defined_ec2_instance_ids
+            _instance_event_is_complete(instance_event)
+            or ec2_instance_id in defined_ec2_instance_ids
         ):
             # This means the incoming data is sufficiently populated so we
             # should know the instance's image and type.
             defined_ec2_instance_ids.add(ec2_instance_id)
-        elif AwsInstance.objects.filter(
-            ec2_instance_id=instance_event.ec2_instance_id,
-            instance__machine_image__isnull=False,
-        ).exists() and InstanceEvent.objects.filter(
-            instance__aws_instance__ec2_instance_id=ec2_instance_id,
-            aws_instance_event__instance_type__isnull=False,
-        ).exists():
+        elif (
+            AwsInstance.objects.filter(
+                ec2_instance_id=instance_event.ec2_instance_id,
+                instance__machine_image__isnull=False,
+            ).exists()
+            and InstanceEvent.objects.filter(
+                instance__aws_instance__ec2_instance_id=ec2_instance_id,
+                aws_instance_event__instance_type__isnull=False,
+            ).exists()
+        ):
             # This means we already know the instance's image and at least once
             # we have known the instance's type from an event.
             defined_ec2_instance_ids.add(ec2_instance_id)
@@ -1409,47 +1367,42 @@ def _load_missing_instance_data(instance_events):  # noqa: C901
         # How we found these instances will be important to save *later*.
         # This wouldn't be necessary if we could save these here, but we don't
         # want to mix DB transactions with external AWS API calls.
-        for (
-            ec2_instance_id, described_instance
-        ) in new_described_instances.items():
+        for (ec2_instance_id, described_instance) in new_described_instances.items():
             logger.info(
                 _(
-                    'Loading data for EC2 Instance %(ec2_instance_id)s for '
-                    'ARN %(account_arn)s in region %(region)s'
+                    "Loading data for EC2 Instance %(ec2_instance_id)s for "
+                    "ARN %(account_arn)s in region %(region)s"
                 ),
                 {
-                    'ec2_instance_id': ec2_instance_id,
-                    'account_arn': awsaccount.account_arn,
-                    'region': region,
+                    "ec2_instance_id": ec2_instance_id,
+                    "account_arn": awsaccount.account_arn,
+                    "region": region,
                 },
             )
-            described_instance['found_by_account_arn'] = awsaccount.account_arn
-            described_instance['found_in_region'] = region
+            described_instance["found_by_account_arn"] = awsaccount.account_arn
+            described_instance["found_in_region"] = region
             described_instances[ec2_instance_id] = described_instance
 
     # Add any missing image IDs to the instance_events from the describes.
     for instance_event in instance_events:
         ec2_instance_id = instance_event.ec2_instance_id
-        if (
-            instance_event.ec2_ami_id is None and
-            ec2_instance_id in described_instances
-        ):
+        if instance_event.ec2_ami_id is None and ec2_instance_id in described_instances:
             described_instance = described_instances[ec2_instance_id]
-            instance_event.ec2_ami_id = described_instance['ImageId']
+            instance_event.ec2_ami_id = described_instance["ImageId"]
 
     # We really *should* have what we need, but just in case...
     for ec2_instance_id in all_ec2_instance_ids:
         if (
-            ec2_instance_id not in defined_ec2_instance_ids and
-            ec2_instance_id not in described_instances
+            ec2_instance_id not in defined_ec2_instance_ids
+            and ec2_instance_id not in described_instances
         ):
             logger.info(
                 _(
-                    'EC2 Instance %(ec2_instance_id)s could not be loaded '
-                    'from database or AWS. It may have been terminated before '
-                    'we processed it.'
+                    "EC2 Instance %(ec2_instance_id)s could not be loaded "
+                    "from database or AWS. It may have been terminated before "
+                    "we processed it."
                 ),
-                {'ec2_instance_id': ec2_instance_id},
+                {"ec2_instance_id": ec2_instance_id},
             )
 
     return described_instances
@@ -1503,33 +1456,33 @@ def _load_missing_ami_data(instance_events, ami_tag_events):
         # Get all relevant images in one API call for this account+region.
         new_described_amis = aws.describe_images(session, ami_ids, region)
         for described_ami in new_described_amis:
-            ami_id = described_ami['ImageId']
+            ami_id = described_ami["ImageId"]
             logger.info(
                 _(
-                    'Loading data for AMI %(ami_id)s for '
-                    'ARN %(account_arn)s in region %(region)s'
+                    "Loading data for AMI %(ami_id)s for "
+                    "ARN %(account_arn)s in region %(region)s"
                 ),
                 {
-                    'ami_id': ami_id,
-                    'account_arn': awsaccount.account_arn,
-                    'region': region,
+                    "ami_id": ami_id,
+                    "account_arn": awsaccount.account_arn,
+                    "region": region,
                 },
             )
-            described_ami['found_in_region'] = region
-            described_ami['found_by_account_arn'] = awsaccount.account_arn
+            described_ami["found_in_region"] = region
+            described_ami["found_by_account_arn"] = awsaccount.account_arn
             described_amis[ami_id] = described_ami
 
     for aws_account_id, region, ec2_ami_id in new_amis_keyed:
         if ec2_ami_id not in described_amis:
             logger.info(
                 _(
-                    'AMI %(ec2_ami_id)s could not be found in region '
-                    '%(region)s for AWS account %(aws_account_id)s.'
+                    "AMI %(ec2_ami_id)s could not be found in region "
+                    "%(region)s for AWS account %(aws_account_id)s."
                 ),
                 {
-                    'ec2_ami_id': ec2_ami_id,
-                    'region': region,
-                    'aws_account_id': aws_account_id,
+                    "ec2_ami_id": ec2_ami_id,
+                    "region": region,
+                    "aws_account_id": aws_account_id,
                 },
             )
 
@@ -1567,7 +1520,7 @@ def _save_cloudtrail_activity(
 
     """
     # Log some basic information about what we're saving.
-    log_prefix = 'analyzer'
+    log_prefix = "analyzer"
     all_ec2_instance_ids = set(
         [
             instance_event.ec2_instance_id
@@ -1576,10 +1529,8 @@ def _save_cloudtrail_activity(
         ]
     )
     logger.info(
-        _(
-            '%(prefix)s: EC2 Instance IDs found: %(all_ec2_instance_ids)s'
-        ),
-        {'prefix': log_prefix, 'all_ec2_instance_ids': all_ec2_instance_ids},
+        _("%(prefix)s: EC2 Instance IDs found: %(all_ec2_instance_ids)s"),
+        {"prefix": log_prefix, "all_ec2_instance_ids": all_ec2_instance_ids},
     )
 
     all_ami_ids = set(
@@ -1587,20 +1538,17 @@ def _save_cloudtrail_activity(
             instance_event.ec2_ami_id
             for instance_event in instance_events
             if instance_event.ec2_ami_id is not None
-        ] + [
+        ]
+        + [
             ami_tag_event.ec2_ami_id
             for ami_tag_event in ami_tag_events
             if ami_tag_event.ec2_ami_id is not None
-        ] + [
-            ec2_ami_id
-            for ec2_ami_id in described_images.keys()
         ]
+        + [ec2_ami_id for ec2_ami_id in described_images.keys()]
     )
     logger.info(
-        _(
-            '%(prefix)s: EC2 AMI IDs found: %(all_ami_ids)s'
-        ),
-        {'prefix': log_prefix, 'all_ami_ids': all_ami_ids},
+        _("%(prefix)s: EC2 AMI IDs found: %(all_ami_ids)s"),
+        {"prefix": log_prefix, "all_ami_ids": all_ami_ids},
     )
 
     # Which images have the Windows platform?
@@ -1610,10 +1558,8 @@ def _save_cloudtrail_activity(
         if is_windows(described_ami)
     }
     logger.info(
-        _(
-            '%(prefix)s: Windows AMI IDs found: %(windows_ami_ids)s'
-        ),
-        {'prefix': log_prefix, 'windows_ami_ids': windows_ami_ids},
+        _("%(prefix)s: Windows AMI IDs found: %(windows_ami_ids)s"),
+        {"prefix": log_prefix, "windows_ami_ids": windows_ami_ids},
     )
 
     # Which images need tag state changes?
@@ -1632,32 +1578,31 @@ def _save_cloudtrail_activity(
             ocp_untagged_ami_ids.add(ec2_ami_id)
 
     logger.info(
-        _('%(prefix)s: AMIs found tagged for OCP: %(ocp_tagged_ami_ids)s'),
-        {'prefix': log_prefix, 'ocp_tagged_ami_ids': ocp_tagged_ami_ids},
+        _("%(prefix)s: AMIs found tagged for OCP: %(ocp_tagged_ami_ids)s"),
+        {"prefix": log_prefix, "ocp_tagged_ami_ids": ocp_tagged_ami_ids},
     )
 
     logger.info(
-        _('%(prefix)s: AMIs found untagged for OCP: %(ocp_untagged_ami_ids)s'),
-        {'prefix': log_prefix, 'ocp_untagged_ami_ids': ocp_untagged_ami_ids},
+        _("%(prefix)s: AMIs found untagged for OCP: %(ocp_untagged_ami_ids)s"),
+        {"prefix": log_prefix, "ocp_untagged_ami_ids": ocp_untagged_ami_ids},
     )
 
     # Create only the new images.
     new_images = {}
     for ami_id, described_image in described_images.items():
-        owner_id = Decimal(described_image['OwnerId'])
-        name = described_image['Name']
+        owner_id = Decimal(described_image["OwnerId"])
+        name = described_image["Name"]
         windows = ami_id in windows_ami_ids
         openshift = ami_id in ocp_tagged_ami_ids
-        region = described_image['found_in_region']
+        region = described_image["found_in_region"]
 
         logger.info(
-            _(
-                '%(prefix)s: Saving new AMI ID %(ami_id)s in region %(region)s'
-            ),
-            {'prefix': log_prefix, 'ami_id': ami_id, 'region': region},
+            _("%(prefix)s: Saving new AMI ID %(ami_id)s in region %(region)s"),
+            {"prefix": log_prefix, "ami_id": ami_id, "region": region},
         )
         awsimage, new = save_new_aws_machine_image(
-            ami_id, name, owner_id, openshift, windows, region)
+            ami_id, name, owner_id, openshift, windows, region
+        )
 
         image = awsimage.machine_image.get()
         if new and image.status is not image.INSPECTED:
@@ -1667,14 +1612,16 @@ def _save_cloudtrail_activity(
     # don't have in our models or could not describe from AWS.
     seen_ami_ids = set(
         [
-            described_instance['ImageId']
+            described_instance["ImageId"]
             for described_instance in described_instances.values()
-            if described_instance.get('ImageId') is not None
-        ] + [
+            if described_instance.get("ImageId") is not None
+        ]
+        + [
             ami_tag_event.ec2_ami_id
             for ami_tag_event in ami_tag_events
             if ami_tag_event.ec2_ami_id is not None
-        ] + [
+        ]
+        + [
             instance_event.ec2_ami_id
             for instance_event in instance_events
             if instance_event.ec2_ami_id is not None
@@ -1682,15 +1629,16 @@ def _save_cloudtrail_activity(
     )
     described_ami_ids = set(described_images.keys())
     known_ami_ids = set(
-        image.ec2_ami_id for image in AwsMachineImage.objects.filter(
+        image.ec2_ami_id
+        for image in AwsMachineImage.objects.filter(
             ec2_ami_id__in=list(seen_ami_ids - described_ami_ids)
         )
     )
     unavailable_ami_ids = seen_ami_ids - described_ami_ids - known_ami_ids
     for ami_id in unavailable_ami_ids:
-        logger.info(_(
-            'Missing image data for %s; creating UNAVAILABLE stub image.'
-        ), ami_id)
+        logger.info(
+            _("Missing image data for %s; creating UNAVAILABLE stub image."), ami_id
+        )
         with transaction.atomic():
             awsmachineimage = AwsMachineImage.objects.create(ec2_ami_id=ami_id)
             MachineImage.objects.create(
@@ -1709,11 +1657,8 @@ def _save_cloudtrail_activity(
         ).update(openshift_detected=False)
 
     # Save instances and their events.
-    for (
-        (ec2_instance_id, region, aws_account_id), events
-    ) in itertools.groupby(
-        instance_events,
-        key=lambda e: (e.ec2_instance_id, e.region, e.aws_account_id),
+    for ((ec2_instance_id, region, aws_account_id), events) in itertools.groupby(
+        instance_events, key=lambda e: (e.ec2_instance_id, e.region, e.aws_account_id),
     ):
         awsaccount = AwsCloudAccount.objects.get(aws_account_id=aws_account_id)
         account = awsaccount.cloud_account.get()
@@ -1723,25 +1668,23 @@ def _save_cloudtrail_activity(
             instance_data = described_instances[ec2_instance_id]
         else:
             instance_data = {
-                'InstanceId': ec2_instance_id,
-                'ImageId': events[0].ec2_ami_id,
-                'SubnetId': events[0].subnet_id,
+                "InstanceId": ec2_instance_id,
+                "ImageId": events[0].ec2_ami_id,
+                "SubnetId": events[0].subnet_id,
             }
         logger.info(
             _(
-                '%(prefix)s: Saving new EC2 instance ID %(ec2_instance_id)s '
-                'for AWS account ID %(aws_account_id)s in region %(region)s'
+                "%(prefix)s: Saving new EC2 instance ID %(ec2_instance_id)s "
+                "for AWS account ID %(aws_account_id)s in region %(region)s"
             ),
             {
-                'prefix': log_prefix,
-                'ec2_instance_id': ec2_instance_id,
-                'aws_account_id': aws_account_id,
-                'region': region,
+                "prefix": log_prefix,
+                "ec2_instance_id": ec2_instance_id,
+                "aws_account_id": aws_account_id,
+                "region": region,
             },
         )
-        instance = save_instance(
-            account, instance_data, region
-        )
+        instance = save_instance(account, instance_data, region)
 
         # Build a list of event data
         events_info = _build_events_info_for_saving(account, instance, events)
@@ -1753,8 +1696,8 @@ def _save_cloudtrail_activity(
 def _instance_event_is_complete(instance_event):
     """Check if the instance_event is populated enough for its instance."""
     return (
-        instance_event.instance_type is not None and
-        instance_event.ec2_ami_id is not None
+        instance_event.instance_type is not None
+        and instance_event.ec2_ami_id is not None
     )
 
 
@@ -1773,10 +1716,10 @@ def repopulate_ec2_instance_mapping():
             _save_ec2_instance_type_definitions(definitions)
         except Exception as e:
             logger.exception(
-                _('Failed to save EC2 instance definitions; rolling back.')
+                _("Failed to save EC2 instance definitions; rolling back.")
             )
             raise e
-    logger.info(_('Finished saving AWS EC2 instance type definitions.'))
+    logger.info(_("Finished saving AWS EC2 instance type definitions."))
 
 
 def _fetch_ec2_instance_type_definitions():
@@ -1789,44 +1732,44 @@ def _fetch_ec2_instance_type_definitions():
         {'r5.large': {'memory': 24.0, 'vcpu': 1}}
 
     """
-    client = boto3.client('pricing')
-    paginator = client.get_paginator('get_products')
+    client = boto3.client("pricing")
+    paginator = client.get_paginator("get_products")
     page_iterator = paginator.paginate(
-        ServiceCode='AmazonEC2',
+        ServiceCode="AmazonEC2",
         Filters=[
             {
-                'Type': 'TERM_MATCH',
-                'Field': 'productFamily',
-                'Value': 'Compute Instance'
+                "Type": "TERM_MATCH",
+                "Field": "productFamily",
+                "Value": "Compute Instance",
             },
-        ]
+        ],
     )
-    logger.info(_('Getting AWS EC2 instance type information.'))
+    logger.info(_("Getting AWS EC2 instance type information."))
     instances = {}
     for page in page_iterator:
-        for instance in page['PriceList']:
+        for instance in page["PriceList"]:
             try:
-                instance_attr = json.loads(instance)['product']['attributes']
+                instance_attr = json.loads(instance)["product"]["attributes"]
 
                 # memory comes in formatted like: 1,952.00 GiB
-                memory = float(
-                    instance_attr.get('memory', 0)[:-4].replace(',', '')
-                )
-                vcpu = int(instance_attr.get('vcpu', 0))
+                memory = float(instance_attr.get("memory", 0)[:-4].replace(",", ""))
+                vcpu = int(instance_attr.get("vcpu", 0))
 
-                instances[instance_attr['instanceType']] = {
-                    'memory': memory,
-                    'vcpu': vcpu
+                instances[instance_attr["instanceType"]] = {
+                    "memory": memory,
+                    "vcpu": vcpu,
                 }
             except ValueError:
                 logger.error(
-                    _('Could not fetch EC2 definition for instance-type '
-                      '%(instance_type)s, memory %(memory)s, vcpu %(vcpu)s.'),
+                    _(
+                        "Could not fetch EC2 definition for instance-type "
+                        "%(instance_type)s, memory %(memory)s, vcpu %(vcpu)s."
+                    ),
                     {
-                        'instance_type': instance_attr['instanceType'],
-                        'memory': instance_attr.get('memory', 0),
-                        'vcpu': instance_attr.get('vcpu', 0)
-                    }
+                        "instance_type": instance_attr["instanceType"],
+                        "memory": instance_attr.get("memory", 0),
+                        "vcpu": instance_attr.get("vcpu", 0),
+                    },
                 )
     return instances
 
@@ -1851,29 +1794,23 @@ def _save_ec2_instance_type_definitions(definitions):
         try:
             obj, created = AwsEC2InstanceDefinition.objects.get_or_create(
                 instance_type=name,
-                defaults={
-                    'memory': attributes['memory'], 'vcpu': attributes['vcpu']
-                },
+                defaults={"memory": attributes["memory"], "vcpu": attributes["vcpu"]},
             )
             if created:
-                logger.info(
-                    _('Saving new instance type %s'), obj.instance_type
-                )
+                logger.info(_("Saving new instance type %s"), obj.instance_type)
             else:
-                logger.info(
-                    _('Instance type %s already exists.'), obj.instance_type
-                )
+                logger.info(_("Instance type %s already exists."), obj.instance_type)
         except IntegrityError as e:
             logger.exception(
                 _(
-                    'Failed to get_or_create an AwsEC2InstanceDefinition('
+                    "Failed to get_or_create an AwsEC2InstanceDefinition("
                     'name="%(name)s", memory=%(memory)s, vcpu=%(vcpu)s'
-                    '); this should never happen.'
+                    "); this should never happen."
                 ),
                 {
-                    'name': name,
-                    'memory': attributes['memory'],
-                    'vcpu': attributes['vcpu'],
+                    "name": name,
+                    "memory": attributes["memory"],
+                    "vcpu": attributes["vcpu"],
                 },
             )
             raise e
@@ -1905,13 +1842,13 @@ def _build_events_info_for_saving(account, instance, events):
     """
     events_info = [
         {
-            'subnet': getattr(instance, 'subnet_id', None),
-            'ec2_ami_id': getattr(instance, 'image_id', None),
-            'instance_type': instance_event.instance_type
+            "subnet": getattr(instance, "subnet_id", None),
+            "ec2_ami_id": getattr(instance, "image_id", None),
+            "instance_type": instance_event.instance_type
             if instance_event.instance_type is not None
-            else getattr(instance, 'instance_type', None),
-            'event_type': instance_event.event_type,
-            'occurred_at': instance_event.occurred_at,
+            else getattr(instance, "instance_type", None),
+            "event_type": instance_event.event_type,
+            "occurred_at": instance_event.occurred_at,
         }
         for instance_event in events
         if parse(instance_event.occurred_at) >= account.created_at

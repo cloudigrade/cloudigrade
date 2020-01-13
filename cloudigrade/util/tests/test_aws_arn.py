@@ -14,8 +14,9 @@ class UtilAwsArnTest(TestCase):
     def test_parse_arn_with_region_and_account(self):
         """Assert successful account ID parsing from a well-formed ARN."""
         mock_account_id = helper.generate_dummy_aws_account_id()
-        mock_arn = helper.generate_dummy_arn(account_id=mock_account_id,
-                                             region='test-region-1')
+        mock_arn = helper.generate_dummy_arn(
+            account_id=mock_account_id, region="test-region-1"
+        )
 
         arn_object = AwsArn(mock_arn)
 
@@ -40,41 +41,47 @@ class UtilAwsArnTest(TestCase):
         resource = arn_object.resource
         self.assertIsNotNone(resource)
 
-        reconstructed_arn = 'arn:' + \
-                            partition + ':' + \
-                            service + ':' + \
-                            region + ':' + \
-                            str(account_id) + ':' + \
-                            resource_type + \
-                            resource_separator + \
-                            resource
+        reconstructed_arn = (
+            "arn:"
+            + partition
+            + ":"
+            + service
+            + ":"
+            + region
+            + ":"
+            + str(account_id)
+            + ":"
+            + resource_type
+            + resource_separator
+            + resource
+        )
 
         self.assertEqual(mock_account_id, account_id)
         self.assertEqual(mock_arn, reconstructed_arn)
 
     def test_arn_requires_non_empty_account_id(self):
         """Assert ARN parsing with empty account id raises InvalidArn."""
-        mock_arn = helper.generate_dummy_arn(account_id='')
+        mock_arn = helper.generate_dummy_arn(account_id="")
         with self.assertRaises(InvalidArn):
             AwsArn(mock_arn)
 
     def test_parse_arn_with_slash_separator(self):
         """Assert successful ARN parsing with a slash separator."""
-        mock_arn = helper.generate_dummy_arn(resource_separator='/')
+        mock_arn = helper.generate_dummy_arn(resource_separator="/")
         arn_object = AwsArn(mock_arn)
 
         resource_type = arn_object.resource_type
         self.assertIsNotNone(resource_type)
 
         resource_separator = arn_object.resource_separator
-        self.assertEqual(resource_separator, '/')
+        self.assertEqual(resource_separator, "/")
 
         resource = arn_object.resource
         self.assertIsNotNone(resource)
 
     def test_parse_arn_with_custom_resource_type(self):
         """Assert valid ARN when resource type contains extra characters."""
-        mock_arn = 'arn:aws:fakeserv:test-reg-1:012345678901:test.res type:foo'
+        mock_arn = "arn:aws:fakeserv:test-reg-1:012345678901:test.res type:foo"
         arn_object = AwsArn(mock_arn)
 
         resource_type = arn_object.resource_type

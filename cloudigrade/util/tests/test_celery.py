@@ -11,9 +11,10 @@ from util.exceptions import NotReadyException
 class UtilCeleryTest(TestCase):
     """Celery utility functions test case."""
 
-    @patch('util.celery.shared_task')
+    @patch("util.celery.shared_task")
     def test_retriable_shared_task(self, mock_shared_task):
         """Test retriable_shared_task with no args decorates correctly."""
+
         def my_func(a, b):
             return a + b
 
@@ -31,17 +32,18 @@ class UtilCeleryTest(TestCase):
         args, kwargs = mock_shared_task.call_args_list[0]
         self.assertEqual(my_func, args[0])
         expected_kwargs = {
-            'autoretry_for': (NotReadyException,),
-            'max_retries': 35,
-            'retry_backoff': True,
-            'retry_jitter': True,
-            'retry_backoff_max': 120,
+            "autoretry_for": (NotReadyException,),
+            "max_retries": 35,
+            "retry_backoff": True,
+            "retry_jitter": True,
+            "retry_backoff_max": 120,
         }
         self.assertDictEqual(kwargs, expected_kwargs)
 
-    @patch('util.celery.shared_task')
+    @patch("util.celery.shared_task")
     def test_retriable_shared_task_with_args(self, mock_shared_task):
         """Test retriable_shared_task with args decorates correctly."""
+
         def my_func(a, b):
             return a + b
 
@@ -52,24 +54,22 @@ class UtilCeleryTest(TestCase):
         # @retriable_shared_task(max_retries=10)
         # def my_func():
         #    ...
-        decorated_func = celery.retriable_shared_task(
-            my_func, max_retries=10
-        )
+        decorated_func = celery.retriable_shared_task(my_func, max_retries=10)
         result = decorated_func(1, 2)
         self.assertEqual(result, 3)
 
         args, kwargs = mock_shared_task.call_args_list[0]
         self.assertEqual(my_func, args[0])
         expected_kwargs = {
-            'autoretry_for': (NotReadyException,),
-            'max_retries': 10,
-            'retry_backoff': True,
-            'retry_jitter': True,
-            'retry_backoff_max': 120,
+            "autoretry_for": (NotReadyException,),
+            "max_retries": 10,
+            "retry_backoff": True,
+            "retry_jitter": True,
+            "retry_backoff_max": 120,
         }
         self.assertDictEqual(kwargs, expected_kwargs)
 
-    @patch('util.celery.shared_task')
+    @patch("util.celery.shared_task")
     def test_retriable_shared_task_recalc_max_retries(self, mock_shared_task):
         """
         Test retriable_shared_task recalculates max_retries.
@@ -79,6 +79,7 @@ class UtilCeleryTest(TestCase):
         the new max_retries passed into the shared_task should be 8. See also
         test_calculate_max_retries_low_retry_time for more info.
         """
+
         def my_func(a, b):
             return a + b
 
@@ -86,9 +87,7 @@ class UtilCeleryTest(TestCase):
         mock_shared_task.return_value = my_func
 
         decorated_func = celery.retriable_shared_task(
-            my_func,
-            retry_backoff_max=10,
-            retry_max_elapsed_backoff=60,
+            my_func, retry_backoff_max=10, retry_max_elapsed_backoff=60,
         )
         result = decorated_func(1, 2)
         self.assertEqual(result, 3)
@@ -96,11 +95,11 @@ class UtilCeleryTest(TestCase):
         args, kwargs = mock_shared_task.call_args_list[0]
         self.assertEqual(my_func, args[0])
         expected_kwargs = {
-            'autoretry_for': (NotReadyException,),
-            'max_retries': 8,
-            'retry_backoff': True,
-            'retry_jitter': True,
-            'retry_backoff_max': 10,
+            "autoretry_for": (NotReadyException,),
+            "max_retries": 8,
+            "retry_backoff": True,
+            "retry_jitter": True,
+            "retry_backoff_max": 10,
         }
         self.assertDictEqual(kwargs, expected_kwargs)
 

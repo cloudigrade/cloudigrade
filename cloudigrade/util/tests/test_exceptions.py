@@ -18,7 +18,7 @@ class ExceptionsTest(TestCase):
         """Assert APIException is passed through for handling."""
         mock_context = Mock()
         exc = APIException()
-        with patch.object(exceptions, 'exception_handler') as mock_handler:
+        with patch.object(exceptions, "exception_handler") as mock_handler:
             response = exceptions.api_exception_handler(exc, mock_context)
             mock_handler.assert_called_with(exc, mock_context)
             self.assertEqual(response, mock_handler.return_value)
@@ -27,7 +27,7 @@ class ExceptionsTest(TestCase):
         """Assert Django's Http404 is replaced with DRF's NotFound."""
         mock_context = Mock()
         exc = Http404()
-        with patch.object(exceptions, 'exception_handler') as mock_handler:
+        with patch.object(exceptions, "exception_handler") as mock_handler:
             response = exceptions.api_exception_handler(exc, mock_context)
             mock_call_args = mock_handler.call_args_list[0][0]
             self.assertIsInstance(mock_call_args[0], NotFound)
@@ -38,7 +38,7 @@ class ExceptionsTest(TestCase):
         """Assert Django's PermissionDenied is replaced with DRF's version."""
         mock_context = Mock()
         exc = PermissionDenied()
-        with patch.object(exceptions, 'exception_handler') as mock_handler:
+        with patch.object(exceptions, "exception_handler") as mock_handler:
             response = exceptions.api_exception_handler(exc, mock_context)
             mock_call_args = mock_handler.call_args_list[0][0]
             self.assertIsInstance(mock_call_args[0], DrfPermissionDenied)
@@ -49,7 +49,7 @@ class ExceptionsTest(TestCase):
         """Assert mystery Exception is replaced with DRF's APIException."""
         mock_context = Mock()
         exc = Exception()
-        with patch.object(exceptions, 'exception_handler') as mock_handler:
+        with patch.object(exceptions, "exception_handler") as mock_handler:
             response = exceptions.api_exception_handler(exc, mock_context)
             mock_call_args = mock_handler.call_args_list[0][0]
             self.assertIsInstance(mock_call_args[0], APIException)
@@ -60,11 +60,9 @@ class ExceptionsTest(TestCase):
         """Assert NotImplementedError is replaced with our custom exception."""
         mock_context = Mock()
         exc = NotImplementedError()
-        with patch.object(exceptions, 'exception_handler') as mock_handler:
+        with patch.object(exceptions, "exception_handler") as mock_handler:
             response = exceptions.api_exception_handler(exc, mock_context)
             mock_call_args = mock_handler.call_args_list[0][0]
-            self.assertIsInstance(
-                mock_call_args[0], NotImplementedAPIException
-            )
+            self.assertIsInstance(mock_call_args[0], NotImplementedAPIException)
             self.assertEqual(mock_call_args[1], mock_context)
             self.assertEqual(response, mock_handler.return_value)

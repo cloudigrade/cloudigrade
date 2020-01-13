@@ -24,12 +24,12 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         self.image_rhel = api_helper.generate_aws_image(rhel_detected=True)
         self.image_plain = api_helper.generate_aws_image()
 
-        self.instance_type_small = 't2.nano'  # 1 vcpu, 0.5 GB memory
+        self.instance_type_small = "t2.nano"  # 1 vcpu, 0.5 GB memory
         self.instance_type_small_specs = util_helper.SOME_EC2_INSTANCE_TYPES[
             self.instance_type_small
         ]
 
-        self.instance_type_large = 'c5.xlarge'  # 4 vcpu, 8.0 GB memory
+        self.instance_type_large = "c5.xlarge"  # 4 vcpu, 8.0 GB memory
         self.instance_type_large_specs = util_helper.SOME_EC2_INSTANCE_TYPES[
             self.instance_type_large
         ]
@@ -58,18 +58,12 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         request_date = datetime.date(2019, 5, 1)
         expected_date = request_date
         expected_instances = 1
-        expected_vcpu = self.instance_type_large_specs['vcpu']
-        expected_memory = self.instance_type_large_specs['memory']
+        expected_vcpu = self.instance_type_large_specs["vcpu"]
+        expected_memory = self.instance_type_large_specs["memory"]
 
-        results = calculate_max_concurrent_usage(
-            request_date, user_id=self.user1.id
-        )
+        results = calculate_max_concurrent_usage(request_date, user_id=self.user1.id)
         self.assertMaxConcurrentUsage(
-            results,
-            expected_date,
-            expected_instances,
-            expected_vcpu,
-            expected_memory,
+            results, expected_date, expected_instances, expected_vcpu, expected_memory,
         )
 
     def test_single_rhel_run_entirely_before_day(self):
@@ -89,9 +83,7 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         request_date = datetime.date(2019, 5, 1)
         expected_date = request_date
 
-        results = calculate_max_concurrent_usage(
-            request_date, user_id=self.user1.id
-        )
+        results = calculate_max_concurrent_usage(request_date, user_id=self.user1.id)
         self.assertMaxConcurrentUsage(results, expected_date, 0, 0, 0)
 
     def test_single_rhel_run_entirely_after_day(self):
@@ -111,9 +103,7 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         request_date = datetime.date(2019, 5, 1)
         expected_date = request_date
 
-        results = calculate_max_concurrent_usage(
-            request_date, user_id=self.user1.id
-        )
+        results = calculate_max_concurrent_usage(request_date, user_id=self.user1.id)
         self.assertMaxConcurrentUsage(results, expected_date, 0, 0, 0)
 
     def test_single_run_overlapping_day_start(self):
@@ -133,18 +123,12 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         request_date = datetime.date(2019, 5, 1)
         expected_date = request_date
         expected_instances = 1
-        expected_vcpu = self.instance_type_large_specs['vcpu']
-        expected_memory = self.instance_type_large_specs['memory']
+        expected_vcpu = self.instance_type_large_specs["vcpu"]
+        expected_memory = self.instance_type_large_specs["memory"]
 
-        results = calculate_max_concurrent_usage(
-            request_date, user_id=self.user1.id
-        )
+        results = calculate_max_concurrent_usage(request_date, user_id=self.user1.id)
         self.assertMaxConcurrentUsage(
-            results,
-            expected_date,
-            expected_instances,
-            expected_vcpu,
-            expected_memory,
+            results, expected_date, expected_instances, expected_vcpu, expected_memory,
         )
 
     def test_single_run_overlapping_day_end(self):
@@ -164,18 +148,12 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         request_date = datetime.date(2019, 5, 1)
         expected_date = request_date
         expected_instances = 1
-        expected_vcpu = self.instance_type_large_specs['vcpu']
-        expected_memory = self.instance_type_large_specs['memory']
+        expected_vcpu = self.instance_type_large_specs["vcpu"]
+        expected_memory = self.instance_type_large_specs["memory"]
 
-        results = calculate_max_concurrent_usage(
-            request_date, user_id=self.user1.id
-        )
+        results = calculate_max_concurrent_usage(request_date, user_id=self.user1.id)
         self.assertMaxConcurrentUsage(
-            results,
-            expected_date,
-            expected_instances,
-            expected_vcpu,
-            expected_memory,
+            results, expected_date, expected_instances, expected_vcpu, expected_memory,
         )
 
     def test_single_run_overlapping_day_entirely(self):
@@ -195,18 +173,12 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         request_date = datetime.date(2019, 5, 1)
         expected_date = request_date
         expected_instances = 1
-        expected_vcpu = self.instance_type_large_specs['vcpu']
-        expected_memory = self.instance_type_large_specs['memory']
+        expected_vcpu = self.instance_type_large_specs["vcpu"]
+        expected_memory = self.instance_type_large_specs["memory"]
 
-        results = calculate_max_concurrent_usage(
-            request_date, user_id=self.user1.id
-        )
+        results = calculate_max_concurrent_usage(request_date, user_id=self.user1.id)
         self.assertMaxConcurrentUsage(
-            results,
-            expected_date,
-            expected_instances,
-            expected_vcpu,
-            expected_memory,
+            results, expected_date, expected_instances, expected_vcpu, expected_memory,
         )
 
     def test_single_not_rhel_run_within_day(self):
@@ -230,9 +202,7 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         request_date = datetime.date(2019, 5, 1)
         expected_date = request_date
 
-        results = calculate_max_concurrent_usage(
-            request_date, user_id=self.user1.id
-        )
+        results = calculate_max_concurrent_usage(request_date, user_id=self.user1.id)
         self.assertMaxConcurrentUsage(results, expected_date, 0, 0, 0)
 
     def test_overlapping_rhel_runs_within_day(self):
@@ -269,23 +239,17 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         expected_date = request_date
         expected_instances = 2
         expected_vcpu = (
-            self.instance_type_large_specs['vcpu'] +
-            self.instance_type_small_specs['vcpu']
+            self.instance_type_large_specs["vcpu"]
+            + self.instance_type_small_specs["vcpu"]
         )
         expected_memory = (
-            self.instance_type_large_specs['memory'] +
-            self.instance_type_small_specs['memory']
+            self.instance_type_large_specs["memory"]
+            + self.instance_type_small_specs["memory"]
         )
 
-        results = calculate_max_concurrent_usage(
-            request_date, user_id=self.user1.id
-        )
+        results = calculate_max_concurrent_usage(request_date, user_id=self.user1.id)
         self.assertMaxConcurrentUsage(
-            results,
-            expected_date,
-            expected_instances,
-            expected_vcpu,
-            expected_memory,
+            results, expected_date, expected_instances, expected_vcpu, expected_memory,
         )
 
     def test_overlapping_rhel_runs_within_day_with_user_filter(self):
@@ -322,18 +286,12 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         request_date = datetime.date(2019, 5, 1)
         expected_date = request_date
         expected_instances = 1
-        expected_vcpu = self.instance_type_large_specs['vcpu']
-        expected_memory = self.instance_type_large_specs['memory']
+        expected_vcpu = self.instance_type_large_specs["vcpu"]
+        expected_memory = self.instance_type_large_specs["memory"]
 
-        results = calculate_max_concurrent_usage(
-            request_date, user_id=self.user1.id
-        )
+        results = calculate_max_concurrent_usage(request_date, user_id=self.user1.id)
         self.assertMaxConcurrentUsage(
-            results,
-            expected_date,
-            expected_instances,
-            expected_vcpu,
-            expected_memory,
+            results, expected_date, expected_instances, expected_vcpu, expected_memory,
         )
 
     def test_overlapping_rhel_runs_within_day_with_account_filter(self):
@@ -370,20 +328,14 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         request_date = datetime.date(2019, 5, 1)
         expected_date = request_date
         expected_instances = 1
-        expected_vcpu = self.instance_type_large_specs['vcpu']
-        expected_memory = self.instance_type_large_specs['memory']
+        expected_vcpu = self.instance_type_large_specs["vcpu"]
+        expected_memory = self.instance_type_large_specs["memory"]
 
         results = calculate_max_concurrent_usage(
-            request_date,
-            user_id=self.user1.id,
-            cloud_account_id=self.user1account1.id,
+            request_date, user_id=self.user1.id, cloud_account_id=self.user1account1.id,
         )
         self.assertMaxConcurrentUsage(
-            results,
-            expected_date,
-            expected_instances,
-            expected_vcpu,
-            expected_memory,
+            results, expected_date, expected_instances, expected_vcpu, expected_memory,
         )
 
     def test_non_overlapping_rhel_runs_within_day(self):
@@ -420,18 +372,12 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         request_date = datetime.date(2019, 5, 1)
         expected_date = request_date
         expected_instances = 1
-        expected_vcpu = self.instance_type_large_specs['vcpu']
-        expected_memory = self.instance_type_large_specs['memory']
+        expected_vcpu = self.instance_type_large_specs["vcpu"]
+        expected_memory = self.instance_type_large_specs["memory"]
 
-        results = calculate_max_concurrent_usage(
-            request_date, user_id=self.user1.id
-        )
+        results = calculate_max_concurrent_usage(request_date, user_id=self.user1.id)
         self.assertMaxConcurrentUsage(
-            results,
-            expected_date,
-            expected_instances,
-            expected_vcpu,
-            expected_memory,
+            results, expected_date, expected_instances, expected_vcpu, expected_memory,
         )
 
     def test_when_user_id_does_not_exist(self):
@@ -440,9 +386,7 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         user_id = -1  # negative id should never exit
         expected_date = request_date
 
-        results = calculate_max_concurrent_usage(
-            request_date, user_id=user_id
-        )
+        results = calculate_max_concurrent_usage(request_date, user_id=user_id)
         self.assertMaxConcurrentUsage(results, expected_date, 0, 0, 0.0)
 
     def test_when_account_id_does_not_exist(self):

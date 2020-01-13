@@ -23,7 +23,7 @@ class UtilHelperTest(TestCase):
     def test_generate_dummy_aws_account_id(self):
         """Assert generation of an appropriate AWS AwsAccount ID."""
         account_id = str(helper.generate_dummy_aws_account_id())
-        self.assertIsNotNone(re.match(r'\d{1,12}', account_id))
+        self.assertIsNotNone(re.match(r"\d{1,12}", account_id))
 
     def test_generate_dummy_arn_random_account_id(self):
         """Assert generation of an ARN without a specified account ID."""
@@ -33,7 +33,7 @@ class UtilHelperTest(TestCase):
 
     def test_generate_dummy_arn_given_account_id(self):
         """Assert generation of an ARN with a specified account ID."""
-        account_id = '012345678901'
+        account_id = "012345678901"
         arn = helper.generate_dummy_arn(account_id)
         self.assertIn(account_id, arn)
 
@@ -46,13 +46,13 @@ class UtilHelperTest(TestCase):
     def test_generate_dummy_describe_instance_default(self):
         """Assert generated instance has values where expected."""
         instance = helper.generate_dummy_describe_instance()
-        self.assertIsNotNone(instance['ImageId'])
-        self.assertIsNotNone(instance['InstanceId'])
-        self.assertIsNotNone(instance['InstanceType'])
-        self.assertIsNotNone(instance['SubnetId'])
-        self.assertIsNotNone(instance['State'])
-        self.assertIsNotNone(instance['State']['Code'])
-        self.assertIsNotNone(instance['State']['Name'])
+        self.assertIsNotNone(instance["ImageId"])
+        self.assertIsNotNone(instance["InstanceId"])
+        self.assertIsNotNone(instance["InstanceType"])
+        self.assertIsNotNone(instance["SubnetId"])
+        self.assertIsNotNone(instance["State"])
+        self.assertIsNotNone(instance["State"]["Code"])
+        self.assertIsNotNone(instance["State"]["Name"])
 
     def test_generate_dummy_describe_instance_with_values(self):
         """Assert generated instance contains given values."""
@@ -64,12 +64,12 @@ class UtilHelperTest(TestCase):
         instance = helper.generate_dummy_describe_instance(
             instance_id, image_id, subnet_id, state, instance_type
         )
-        self.assertEqual(instance['ImageId'], image_id)
-        self.assertEqual(instance['InstanceId'], instance_id)
-        self.assertEqual(instance['InstanceType'], instance_type)
-        self.assertEqual(instance['SubnetId'], subnet_id)
-        self.assertEqual(instance['State']['Code'], state.value)
-        self.assertEqual(instance['State']['Name'], state.name)
+        self.assertEqual(instance["ImageId"], image_id)
+        self.assertEqual(instance["InstanceId"], instance_id)
+        self.assertEqual(instance["InstanceType"], instance_type)
+        self.assertEqual(instance["SubnetId"], subnet_id)
+        self.assertEqual(instance["State"]["Code"], state.value)
+        self.assertEqual(instance["State"]["Name"], state.name)
 
     def test_generate_mock_image(self):
         """Assert generated image contains given value."""
@@ -86,9 +86,9 @@ class UtilHelperTest(TestCase):
     def test_generate_dummy_snapshot_id(self):
         """Assert generated id has the appropriate format."""
         snapshot_id = helper.generate_dummy_snapshot_id()
-        hex_part = snapshot_id.split('snap-')[1]
+        hex_part = snapshot_id.split("snap-")[1]
 
-        self.assertIn('snap-', snapshot_id)
+        self.assertIn("snap-", snapshot_id)
         self.assertEqual(len(hex_part), 17)
         for digit in hex_part:
             self.assertIn(digit, string.hexdigits)
@@ -131,25 +131,25 @@ class UtilHelperTest(TestCase):
     def test_generate_dummy_volume_id(self):
         """Assert generation of an appropriate volume ID."""
         volume_id = helper.generate_dummy_volume_id()
-        self.assertTrue(volume_id.startswith('vol-'))
+        self.assertTrue(volume_id.startswith("vol-"))
         self.assertEqual(len(volume_id), 21)
 
     def test_generate_dummy_image_id(self):
         """Assert generation of an appropriate image ID."""
         volume_id = helper.generate_dummy_image_id()
-        self.assertTrue(volume_id.startswith('ami-'))
+        self.assertTrue(volume_id.startswith("ami-"))
         self.assertEqual(len(volume_id), 12)
 
     def test_generate_dummy_instance_id(self):
         """Assert generation of an appropriate EC2 instance ID."""
         volume_id = helper.generate_dummy_instance_id()
-        self.assertTrue(volume_id.startswith('i-'))
+        self.assertTrue(volume_id.startswith("i-"))
         self.assertEqual(len(volume_id), 19)
 
     def test_generate_dummy_subnet_id(self):
         """Assert generation of an appropriate EC2 subnet ID."""
         volume_id = helper.generate_dummy_subnet_id()
-        self.assertTrue(volume_id.startswith('subnet-'))
+        self.assertTrue(volume_id.startswith("subnet-"))
         self.assertEqual(len(volume_id), 15)
 
     def test_generate_test_user(self):
@@ -164,20 +164,21 @@ class UtilHelperTest(TestCase):
         """Assert generation of test user with specified arguments."""
         account_number = _faker.random_int(min=100000, max=999999)
         user = helper.generate_test_user(
-            account_number=account_number, is_superuser=True)
+            account_number=account_number, is_superuser=True
+        )
         self.assertEqual(user.username, account_number)
         self.assertTrue(user.is_superuser)
 
     def test_generate_mock_image_dict(self):
         """Assert generation of an image-like dict."""
         image_dict = helper.generate_mock_image_dict()
-        self.assertIn('ImageId', image_dict)
+        self.assertIn("ImageId", image_dict)
 
     def test_generate_mock_image_dict_with_args(self):
         """Assert generation of an image-like dict with specified arguments."""
         image_id = helper.generate_dummy_image_id()
         image_dict = helper.generate_mock_image_dict(image_id)
-        self.assertEqual(image_dict['ImageId'], image_id)
+        self.assertEqual(image_dict["ImageId"], image_id)
 
     def test_get_test_user_creates(self):
         """Assert get_test_user creates a user when it doesn't yet exist."""
@@ -212,6 +213,7 @@ class UtilHelperTest(TestCase):
         with helper.clouditardis(the_day_i_invented_time_travel):
             # local imports to simulate tests
             from util.misc import get_now as _get_now, get_today as _get_today
+
             the_past_time = _get_now()
             the_past_date = _get_today()
 

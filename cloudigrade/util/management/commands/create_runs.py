@@ -17,21 +17,21 @@ class Command(BaseCommand):
     def confirm(self, runs_count, concurrent_usage_count):
         """Seek manual confirmation before proceeding."""
         question = (
-            'This will destroy {} Runs and {} Concurrent Usage objects. '
-            'Are you SURE you want to proceed?'
+            "This will destroy {} Runs and {} Concurrent Usage objects. "
+            "Are you SURE you want to proceed?"
         ).format(runs_count, concurrent_usage_count)
-        result = input('{} [Y/n] '.format(question))
-        if result.lower() != 'y':
-            self.stdout.write('Aborting.')
+        result = input("{} [Y/n] ".format(question))
+        if result.lower() != "y":
+            self.stdout.write("Aborting.")
             return False
         return True
 
     def add_arguments(self, parser):
         """Add a command-line argument to skip confirmation prompt."""
         parser.add_argument(
-            '--confirm',
-            action='store_true',
-            help='automatically confirm destructive operation',
+            "--confirm",
+            action="store_true",
+            help="automatically confirm destructive operation",
         )
 
     @transaction.atomic
@@ -43,25 +43,24 @@ class Command(BaseCommand):
         concurrent_usage_count = all_concurrent_usage.count()
         if runs_count > 0 or concurrent_usage_count > 0:
             self.stdout.write(
-                'Found {} existing Runs and {} Concurrent Usage '
-                'objects.'.format(runs_count, concurrent_usage_count))
-            if not options.get('confirm') and not self.confirm(
-                    runs_count, concurrent_usage_count):
+                "Found {} existing Runs and {} Concurrent Usage "
+                "objects.".format(runs_count, concurrent_usage_count)
+            )
+            if not options.get("confirm") and not self.confirm(
+                runs_count, concurrent_usage_count
+            ):
                 return False
             all_runs.delete()
             all_concurrent_usage.delete()
 
         runs_created = 0
-        for instance in tqdm(
-            Instance.objects.all(), desc='instances'
-        ):
+        for instance in tqdm(Instance.objects.all(), desc="instances"):
             events = InstanceEvent.objects.filter(instance=instance)
 
             normalized_runs = normalize_runs(events)
 
             for normalized_run in tqdm(
-                normalized_runs,
-                desc='runs for {}'.format(instance),
+                normalized_runs, desc="runs for {}".format(instance),
             ):
                 runs_created += 1
                 run = Run(
@@ -75,4 +74,4 @@ class Command(BaseCommand):
                 )
                 run.save()
 
-        logger.info('Created {} runs.'.format(runs_created))
+        logger.info("Created {} runs.".format(runs_created))

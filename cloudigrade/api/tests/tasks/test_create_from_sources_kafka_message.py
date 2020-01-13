@@ -15,11 +15,9 @@ _faker = faker.Faker()
 class CreateFromSourcesKafkaMessageTest(TestCase):
     """Celery task 'create_from_sources_kafka_message' test cases."""
 
-    @patch('util.insights.get_sources_authentication')
-    @patch('api.tasks.configure_customer_aws_and_create_cloud_account')
-    def test_create_from_sources_kafka_message_success(
-        self, mock_task, mock_get_auth
-    ):
+    @patch("util.insights.get_sources_authentication")
+    @patch("api.tasks.configure_customer_aws_and_create_cloud_account")
+    def test_create_from_sources_kafka_message_success(self, mock_task, mock_get_auth):
         """Assert create_from_sources_kafka_message happy path success."""
         account_number = str(_faker.pyint())
         username = _faker.user_name()
@@ -28,14 +26,14 @@ class CreateFromSourcesKafkaMessageTest(TestCase):
             account_number, username, authentication_id
         )
         password = _faker.password()
-        mock_get_auth.return_value = {'password': password}
+        mock_get_auth.return_value = {"password": password}
 
         tasks.create_from_sources_kafka_message(message)
 
         user = User.objects.get(username=account_number)
         mock_task.delay.assert_called_with(user.id, username, password)
 
-    @patch('api.tasks.configure_customer_aws_and_create_cloud_account')
+    @patch("api.tasks.configure_customer_aws_and_create_cloud_account")
     def test_create_from_sources_kafka_message_fail_missing_message_data(
         self, mock_task
     ):
@@ -47,8 +45,8 @@ class CreateFromSourcesKafkaMessageTest(TestCase):
         self.assertEqual(User.objects.all().count(), 0)
         mock_task.delay.assert_not_called()
 
-    @patch('util.insights.get_sources_authentication')
-    @patch('api.tasks.configure_customer_aws_and_create_cloud_account')
+    @patch("util.insights.get_sources_authentication")
+    @patch("api.tasks.configure_customer_aws_and_create_cloud_account")
     def test_create_from_sources_kafka_message_fail_source_404(
         self, mock_task, mock_get_auth
     ):

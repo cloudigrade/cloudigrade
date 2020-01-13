@@ -14,8 +14,8 @@ class UtilMiscTest(TestCase):
 
     def test_generate_device_name_success(self):
         """Assert that names are being properly generated."""
-        self.assertEqual(generate_device_name(0), '/dev/xvdba')
-        self.assertEqual(generate_device_name(1, '/dev/sd'), '/dev/sdbb')
+        self.assertEqual(generate_device_name(0), "/dev/xvdba")
+        self.assertEqual(generate_device_name(1, "/dev/sd"), "/dev/sdbb")
 
     def test_truncate_date_return_original(self):
         """Assert we allow values from the past."""
@@ -27,7 +27,7 @@ class UtilMiscTest(TestCase):
         """Assert we truncate future dates to "now"."""
         now = datetime.now(tz=tz.tzutc())
         tomorrow = now + timedelta(days=1)
-        with patch.object(misc, 'datetime') as mock_datetime:
+        with patch.object(misc, "datetime") as mock_datetime:
             mock_datetime.datetime.now.return_value = now
             output = misc.truncate_date(tomorrow)
         self.assertEqual(output, now)

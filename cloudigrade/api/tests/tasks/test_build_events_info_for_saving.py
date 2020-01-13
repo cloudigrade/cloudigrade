@@ -29,7 +29,7 @@ class BuildEventsInfoForSavingTest(TestCase):
         instance = api_helper.generate_aws_instance(self.account)
 
         # Note: this time is *after* self.account.created_at.
-        occurred_at = '2018-01-02T12:34:56+00:00'
+        occurred_at = "2018-01-02T12:34:56+00:00"
 
         instance_event = api_helper.generate_cloudtrail_instance_event(
             instance=instance,
@@ -47,7 +47,7 @@ class BuildEventsInfoForSavingTest(TestCase):
         instance = api_helper.generate_aws_instance(self.account)
 
         # Note: this time is *before* self.account.created_at.
-        occurred_at = '2016-01-02T12:34:56+00:00'
+        occurred_at = "2016-01-02T12:34:56+00:00"
 
         instance_event = api_helper.generate_cloudtrail_instance_event(
             instance=instance,

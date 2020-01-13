@@ -7,21 +7,32 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0002_rename_AwsEC2InstanceDefinition'),
+        ("api", "0002_rename_AwsEC2InstanceDefinition"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='MachineImageInspectionStart',
+            name="MachineImageInspectionStart",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('machineimage', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='api.MachineImage')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "machineimage",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="api.MachineImage",
+                    ),
+                ),
             ],
-            options={
-                'ordering': ('created_at',),
-                'abstract': False,
-            },
+            options={"ordering": ("created_at",), "abstract": False,},
         ),
     ]

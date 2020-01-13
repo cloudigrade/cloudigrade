@@ -21,11 +21,11 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
         self.image_rhel = api_helper.generate_aws_image(rhel_detected=True)
         self.image_plain = api_helper.generate_aws_image()
 
-        self.instance_type_small = 't2.nano'  # 1 vcpu, 0.5 GB memory
+        self.instance_type_small = "t2.nano"  # 1 vcpu, 0.5 GB memory
         self.instance_type_small_specs = util_helper.SOME_EC2_INSTANCE_TYPES[
             self.instance_type_small
         ]
-        self.instance_type_large = 'c5.xlarge'  # 4 vcpu, 8.0 GB memory
+        self.instance_type_large = "c5.xlarge"  # 4 vcpu, 8.0 GB memory
         self.instance_type_large_specs = util_helper.SOME_EC2_INSTANCE_TYPES[
             self.instance_type_large
         ]
@@ -51,9 +51,7 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
         This should result in two usages: one is for the user+clount and one is
         for the user+no clount.
         """
-        instance = api_helper.generate_aws_instance(
-            self.account, image=self.image_rhel
-        )
+        instance = api_helper.generate_aws_instance(self.account, image=self.image_rhel)
         run = api_helper.generate_single_run(
             instance,
             (
@@ -77,8 +75,8 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
             user=self.user,
             cloud_account=self.account,
             instances=1,
-            memory=self.instance_type_small_specs['memory'],
-            vcpu=self.instance_type_small_specs['vcpu'],
+            memory=self.instance_type_small_specs["memory"],
+            vcpu=self.instance_type_small_specs["vcpu"],
         )
 
         no_cloud_account_usage = ConcurrentUsage.objects.filter(
@@ -90,8 +88,8 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
             user=self.user,
             cloud_account=None,
             instances=1,
-            memory=self.instance_type_small_specs['memory'],
-            vcpu=self.instance_type_small_specs['vcpu'],
+            memory=self.instance_type_small_specs["memory"],
+            vcpu=self.instance_type_small_specs["vcpu"],
         )
 
     def test_two_clounts_each_one_run_one_day(self):
@@ -104,9 +102,7 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
         - user and no clount (both instances)
         """
         runs = []
-        instance = api_helper.generate_aws_instance(
-            self.account, image=self.image_rhel
-        )
+        instance = api_helper.generate_aws_instance(self.account, image=self.image_rhel)
         runs.append(
             api_helper.generate_single_run(
                 instance,
@@ -148,12 +144,12 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
             cloud_account=None,
             instances=2,
             memory=(
-                self.instance_type_small_specs['memory'] +
-                self.instance_type_large_specs['memory']
+                self.instance_type_small_specs["memory"]
+                + self.instance_type_large_specs["memory"]
             ),
             vcpu=(
-                self.instance_type_small_specs['vcpu'] +
-                self.instance_type_large_specs['vcpu']
+                self.instance_type_small_specs["vcpu"]
+                + self.instance_type_large_specs["vcpu"]
             ),
         )
 
@@ -166,8 +162,8 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
             user=self.user,
             cloud_account=self.account,
             instances=1,
-            memory=self.instance_type_small_specs['memory'],
-            vcpu=self.instance_type_small_specs['vcpu'],
+            memory=self.instance_type_small_specs["memory"],
+            vcpu=self.instance_type_small_specs["vcpu"],
         )
 
         cloud_account2_usage = ConcurrentUsage.objects.filter(
@@ -179,8 +175,8 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
             user=self.user,
             cloud_account=self.account2,
             instances=1,
-            memory=self.instance_type_large_specs['memory'],
-            vcpu=self.instance_type_large_specs['vcpu'],
+            memory=self.instance_type_large_specs["memory"],
+            vcpu=self.instance_type_large_specs["vcpu"],
         )
 
     def test_one_clount_one_run_two_days(self):
@@ -193,9 +189,7 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
         - day 2 user and clount
         - day 2 user and no clount
         """
-        instance = api_helper.generate_aws_instance(
-            self.account, image=self.image_rhel
-        )
+        instance = api_helper.generate_aws_instance(self.account, image=self.image_rhel)
         run = api_helper.generate_single_run(
             instance,
             (
@@ -212,15 +206,15 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
 
         cloud_account_usages = ConcurrentUsage.objects.filter(
             cloud_account__isnull=False
-        ).order_by('date')
+        ).order_by("date")
         self.assertConcurrentUsageIs(
             cloud_account_usages[0],
             date=datetime.date(2019, 5, 1),
             user=self.user,
             cloud_account=self.account,
             instances=1,
-            memory=self.instance_type_small_specs['memory'],
-            vcpu=self.instance_type_small_specs['vcpu'],
+            memory=self.instance_type_small_specs["memory"],
+            vcpu=self.instance_type_small_specs["vcpu"],
         )
         self.assertConcurrentUsageIs(
             cloud_account_usages[1],
@@ -228,21 +222,21 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
             user=self.user,
             cloud_account=self.account,
             instances=1,
-            memory=self.instance_type_small_specs['memory'],
-            vcpu=self.instance_type_small_specs['vcpu'],
+            memory=self.instance_type_small_specs["memory"],
+            vcpu=self.instance_type_small_specs["vcpu"],
         )
 
         no_cloud_account_usages = ConcurrentUsage.objects.filter(
             cloud_account__isnull=True
-        ).order_by('date')
+        ).order_by("date")
         self.assertConcurrentUsageIs(
             no_cloud_account_usages[0],
             date=datetime.date(2019, 5, 1),
             user=self.user,
             cloud_account=None,
             instances=1,
-            memory=self.instance_type_small_specs['memory'],
-            vcpu=self.instance_type_small_specs['vcpu'],
+            memory=self.instance_type_small_specs["memory"],
+            vcpu=self.instance_type_small_specs["vcpu"],
         )
         self.assertConcurrentUsageIs(
             no_cloud_account_usages[1],
@@ -250,8 +244,8 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
             user=self.user,
             cloud_account=None,
             instances=1,
-            memory=self.instance_type_small_specs['memory'],
-            vcpu=self.instance_type_small_specs['vcpu'],
+            memory=self.instance_type_small_specs["memory"],
+            vcpu=self.instance_type_small_specs["vcpu"],
         )
 
     def test_one_clount_one_run_with_no_end_two_days(self):
@@ -266,9 +260,7 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
         - today user and clount
         - today user and no clount
         """
-        instance = api_helper.generate_aws_instance(
-            self.account, image=self.image_rhel
-        )
+        instance = api_helper.generate_aws_instance(self.account, image=self.image_rhel)
         today = get_today()
         yesterday = today - datetime.timedelta(days=1)
         run = api_helper.generate_single_run(
@@ -289,15 +281,15 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
 
         cloud_account_usages = ConcurrentUsage.objects.filter(
             cloud_account__isnull=False
-        ).order_by('date')
+        ).order_by("date")
         self.assertConcurrentUsageIs(
             cloud_account_usages[0],
             date=yesterday,
             user=self.user,
             cloud_account=self.account,
             instances=1,
-            memory=self.instance_type_small_specs['memory'],
-            vcpu=self.instance_type_small_specs['vcpu'],
+            memory=self.instance_type_small_specs["memory"],
+            vcpu=self.instance_type_small_specs["vcpu"],
         )
         self.assertConcurrentUsageIs(
             cloud_account_usages[1],
@@ -305,21 +297,21 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
             user=self.user,
             cloud_account=self.account,
             instances=1,
-            memory=self.instance_type_small_specs['memory'],
-            vcpu=self.instance_type_small_specs['vcpu'],
+            memory=self.instance_type_small_specs["memory"],
+            vcpu=self.instance_type_small_specs["vcpu"],
         )
 
         no_cloud_account_usages = ConcurrentUsage.objects.filter(
             cloud_account__isnull=True
-        ).order_by('date')
+        ).order_by("date")
         self.assertConcurrentUsageIs(
             no_cloud_account_usages[0],
             date=yesterday,
             user=self.user,
             cloud_account=None,
             instances=1,
-            memory=self.instance_type_small_specs['memory'],
-            vcpu=self.instance_type_small_specs['vcpu'],
+            memory=self.instance_type_small_specs["memory"],
+            vcpu=self.instance_type_small_specs["vcpu"],
         )
         self.assertConcurrentUsageIs(
             no_cloud_account_usages[1],
@@ -327,15 +319,13 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
             user=self.user,
             cloud_account=None,
             instances=1,
-            memory=self.instance_type_small_specs['memory'],
-            vcpu=self.instance_type_small_specs['vcpu'],
+            memory=self.instance_type_small_specs["memory"],
+            vcpu=self.instance_type_small_specs["vcpu"],
         )
 
     def test_new_later_dates_ignore_older_dates_data(self):
         """Test calculating from later run dates should ignore older data."""
-        instance = api_helper.generate_aws_instance(
-            self.account, image=self.image_rhel
-        )
+        instance = api_helper.generate_aws_instance(self.account, image=self.image_rhel)
         old_run = api_helper.generate_single_run(
             instance,
             (
@@ -348,7 +338,7 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
         )
         # These will act as the "old" calculated concurrent objects.
         calculate_max_concurrent_usage_from_runs([old_run])
-        old_usages = ConcurrentUsage.objects.all().order_by('created_at', 'id')
+        old_usages = ConcurrentUsage.objects.all().order_by("created_at", "id")
         self.assertEqual(len(old_usages), 2)
 
         new_run = api_helper.generate_single_run(
@@ -363,7 +353,7 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
         )
         # This should have no effect on the old calculated concurrent objects.
         calculate_max_concurrent_usage_from_runs([new_run])
-        new_usages = ConcurrentUsage.objects.all().order_by('created_at', 'id')
+        new_usages = ConcurrentUsage.objects.all().order_by("created_at", "id")
         self.assertEqual(len(new_usages), 4)
         self.assertEqual(new_usages[:2], old_usages[:2])
 
@@ -374,9 +364,7 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
         In this case, the new run also overlaps the old run, and that means the
         new calculated results should also have greater numbers than the old.
         """
-        instance = api_helper.generate_aws_instance(
-            self.account, image=self.image_rhel
-        )
+        instance = api_helper.generate_aws_instance(self.account, image=self.image_rhel)
         old_run = api_helper.generate_single_run(
             instance,
             (
@@ -389,7 +377,7 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
         )
         # These will act as the "old" calculated concurrent objects.
         calculate_max_concurrent_usage_from_runs([old_run])
-        old_usages = ConcurrentUsage.objects.all().order_by('created_at', 'id')
+        old_usages = ConcurrentUsage.objects.all().order_by("created_at", "id")
         self.assertEqual(len(old_usages), 2)
 
         new_instance = api_helper.generate_aws_instance(
@@ -407,7 +395,7 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
         )
         # This should create new and different runs.
         calculate_max_concurrent_usage_from_runs([new_run])
-        new_usages = ConcurrentUsage.objects.all().order_by('created_at', 'id')
+        new_usages = ConcurrentUsage.objects.all().order_by("created_at", "id")
         self.assertEqual(len(new_usages), 2)
         self.assertNotEqual(new_usages[0].id, old_usages[0].id)
         self.assertNotEqual(new_usages[1].id, old_usages[1].id)
@@ -422,12 +410,12 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
             cloud_account=self.account,
             instances=2,
             memory=(
-                self.instance_type_small_specs['memory'] +
-                self.instance_type_large_specs['memory']
+                self.instance_type_small_specs["memory"]
+                + self.instance_type_large_specs["memory"]
             ),
             vcpu=(
-                self.instance_type_small_specs['vcpu'] +
-                self.instance_type_large_specs['vcpu']
+                self.instance_type_small_specs["vcpu"]
+                + self.instance_type_large_specs["vcpu"]
             ),
         )
 
@@ -441,11 +429,11 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
             cloud_account=None,
             instances=2,
             memory=(
-                self.instance_type_small_specs['memory'] +
-                self.instance_type_large_specs['memory']
+                self.instance_type_small_specs["memory"]
+                + self.instance_type_large_specs["memory"]
             ),
             vcpu=(
-                self.instance_type_small_specs['vcpu'] +
-                self.instance_type_large_specs['vcpu']
+                self.instance_type_small_specs["vcpu"]
+                + self.instance_type_large_specs["vcpu"]
             ),
         )

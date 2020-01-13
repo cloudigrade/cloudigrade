@@ -14,9 +14,9 @@ _faker = faker.Faker()
 class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
     """Task 'configure_customer_aws_and_create_cloud_account' test cases."""
 
-    @patch.object(tasks, 'verify_permissions_and_create_aws_cloud_account')
-    @patch.object(tasks, 'aws')
-    @patch('util.aws.sts._get_primary_account_id')
+    @patch.object(tasks, "verify_permissions_and_create_aws_cloud_account")
+    @patch.object(tasks, "aws")
+    @patch("util.aws.sts._get_primary_account_id")
     def test_success(self, mock_primary_id, mock_tasks_aws, mock_verify):
         """Assert the task happy path upon normal operation."""
         # User that would ultimately own the created objects.
@@ -51,14 +51,14 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
         mock_ensure_policy.assert_called_with(session)
         mock_ensure_role.assert_called_with(session, policy_arn)
         cloud_account_name = api_util.get_standard_cloud_account_name(
-            'aws', session_account_id
+            "aws", session_account_id
         )
         mock_verify.assert_called_with(
             user, role_arn, cloud_account_name, customer_access_key_id
         )
 
-    @patch.object(tasks, 'verify_permissions_and_create_aws_cloud_account')
-    @patch.object(tasks, 'aws')
+    @patch.object(tasks, "verify_permissions_and_create_aws_cloud_account")
+    @patch.object(tasks, "aws")
     def test_fails_if_user_not_found(self, mock_tasks_aws, mock_verify):
         """Assert the task returns early if user is not found."""
         user_id = -1  # This user should never exist.
@@ -75,11 +75,9 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
         mock_tasks_aws.ensure_cloudigrade_role.assert_not_called()
         mock_verify.assert_not_called()
 
-    @patch.object(tasks, 'verify_permissions_and_create_aws_cloud_account')
-    @patch.object(tasks, 'aws')
-    def test_early_return_if_bad_session(
-        self, mock_tasks_aws, mock_verify
-    ):
+    @patch.object(tasks, "verify_permissions_and_create_aws_cloud_account")
+    @patch.object(tasks, "aws")
+    def test_early_return_if_bad_session(self, mock_tasks_aws, mock_verify):
         """Assert the task returns early if AWS session is invalid."""
         # User that would ultimately own the created objects.
         user = User.objects.create()

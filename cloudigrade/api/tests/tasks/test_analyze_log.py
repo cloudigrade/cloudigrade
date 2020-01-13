@@ -37,13 +37,13 @@ class AnalyzeLogTest(TestCase):
         helper.generate_aws_ec2_definitions()
 
     @util_helper.clouditardis(util_helper.utc_dt(2018, 1, 5, 0, 0, 0))
-    @patch('api.tasks.start_image_inspection')
-    @patch('api.tasks.aws.get_session')
-    @patch('api.tasks.aws.delete_messages_from_queue')
-    @patch('api.tasks.aws.get_object_content_from_s3')
-    @patch('api.tasks.aws.yield_messages_from_queue')
-    @patch('api.tasks.aws.describe_instances')
-    @patch('api.tasks.aws.describe_images')
+    @patch("api.tasks.start_image_inspection")
+    @patch("api.tasks.aws.get_session")
+    @patch("api.tasks.aws.delete_messages_from_queue")
+    @patch("api.tasks.aws.get_object_content_from_s3")
+    @patch("api.tasks.aws.yield_messages_from_queue")
+    @patch("api.tasks.aws.describe_instances")
+    @patch("api.tasks.aws.describe_images")
     def test_analyze_log_same_instance_various_things(
         self,
         mock_describe_images,
@@ -78,9 +78,7 @@ class AnalyzeLogTest(TestCase):
 
         # Starting instance type and then the one it changes to.
         instance_type = util_helper.get_random_instance_type()
-        new_instance_type = util_helper.get_random_instance_type(
-            avoid=instance_type
-        )
+        new_instance_type = util_helper.get_random_instance_type(avoid=instance_type)
 
         ec2_instance_id = util_helper.generate_dummy_instance_id()
         ec2_ami_id = util_helper.generate_dummy_image_id()
@@ -101,11 +99,11 @@ class AnalyzeLogTest(TestCase):
         occurred_at_modify = util_helper.utc_dt(2018, 1, 4, 0, 0, 0)
         occurred_at_start = util_helper.utc_dt(2018, 1, 5, 0, 0, 0)
         s3_content = {
-            'Records': [
+            "Records": [
                 helper.generate_cloudtrail_instances_record(
                     aws_account_id=self.aws_account_id,
                     instance_ids=[ec2_instance_id],
-                    event_name='RunInstances',
+                    event_name="RunInstances",
                     event_time=occurred_at_run,
                     region=region,
                     instance_type=instance_type,
@@ -114,7 +112,7 @@ class AnalyzeLogTest(TestCase):
                 helper.generate_cloudtrail_instances_record(
                     aws_account_id=self.aws_account_id,
                     instance_ids=[ec2_instance_id],
-                    event_name='RebootInstances',
+                    event_name="RebootInstances",
                     event_time=occurred_at_reboot,
                     region=region,
                     # instance_type=instance_type,  # not relevant for reboot
@@ -123,7 +121,7 @@ class AnalyzeLogTest(TestCase):
                 helper.generate_cloudtrail_instances_record(
                     aws_account_id=self.aws_account_id,
                     instance_ids=[ec2_instance_id],
-                    event_name='StopInstances',
+                    event_name="StopInstances",
                     event_time=occurred_at_stop,
                     region=region,
                     # instance_type=instance_type,  # not relevant for stop
@@ -139,7 +137,7 @@ class AnalyzeLogTest(TestCase):
                 helper.generate_cloudtrail_instances_record(
                     aws_account_id=self.aws_account_id,
                     instance_ids=[ec2_instance_id],
-                    event_name='StartInstances',
+                    event_name="StartInstances",
                     event_time=occurred_at_start,
                     region=region,
                     # instance_type=instance_type,  # not relevant for start
@@ -155,9 +153,7 @@ class AnalyzeLogTest(TestCase):
         self.assertEqual(len(failures), 0)
 
         # Assert that we deleted the message upon processing it.
-        mock_del.assert_called_with(
-            settings.CLOUDTRAIL_EVENT_URL, [sqs_message]
-        )
+        mock_del.assert_called_with(settings.CLOUDTRAIL_EVENT_URL, [sqs_message])
 
         # We should *not* have described the instance because the CloudTrail
         # messages should have enough information to proceed.
@@ -187,7 +183,7 @@ class AnalyzeLogTest(TestCase):
         instanceevents = list(
             InstanceEvent.objects.filter(
                 instance__aws_instance__ec2_instance_id=ec2_instance_id
-            ).order_by('occurred_at')
+            ).order_by("occurred_at")
         )
 
         self.assertEqual(len(instanceevents), 4)
@@ -197,14 +193,12 @@ class AnalyzeLogTest(TestCase):
         self.assertEqual(instanceevents[2].occurred_at, occurred_at_modify)
         self.assertEqual(instanceevents[3].occurred_at, occurred_at_start)
 
-        self.assertEqual(instanceevents[0].event_type, 'power_on')
-        self.assertEqual(instanceevents[1].event_type, 'power_off')
-        self.assertEqual(instanceevents[2].event_type, 'attribute_change')
-        self.assertEqual(instanceevents[3].event_type, 'power_on')
+        self.assertEqual(instanceevents[0].event_type, "power_on")
+        self.assertEqual(instanceevents[1].event_type, "power_off")
+        self.assertEqual(instanceevents[2].event_type, "attribute_change")
+        self.assertEqual(instanceevents[3].event_type, "power_on")
 
-        self.assertEqual(
-            instanceevents[0].content_object.instance_type, instance_type
-        )
+        self.assertEqual(instanceevents[0].content_object.instance_type, instance_type)
         self.assertEqual(instanceevents[1].content_object.instance_type, None)
         self.assertEqual(
             instanceevents[2].content_object.instance_type, new_instance_type
@@ -212,7 +206,7 @@ class AnalyzeLogTest(TestCase):
         self.assertEqual(instanceevents[3].content_object.instance_type, None)
 
         # Assert that as a side-effect two runs were created.
-        runs = Run.objects.filter(instance=instance).order_by('start_time')
+        runs = Run.objects.filter(instance=instance).order_by("start_time")
         self.assertEqual(len(runs), 2)
         self.assertEqual(runs[0].instance_type, instance_type)
         self.assertEqual(runs[0].start_time, occurred_at_run)
@@ -224,21 +218,17 @@ class AnalyzeLogTest(TestCase):
         # Assert that the correct image was saved.
         image = AwsMachineImage.objects.get(ec2_ami_id=ec2_ami_id)
         self.assertEqual(image.region, region)
-        self.assertEqual(
-            image.owner_aws_account_id, described_image['OwnerId']
-        )
-        self.assertEqual(
-            image.machine_image.get().status, MachineImage.PENDING
-        )
+        self.assertEqual(image.owner_aws_account_id, described_image["OwnerId"])
+        self.assertEqual(image.machine_image.get().status, MachineImage.PENDING)
 
     @util_helper.clouditardis(util_helper.utc_dt(2018, 1, 3, 0, 0, 0))
-    @patch('api.tasks.start_image_inspection')
-    @patch('api.tasks.aws.get_session')
-    @patch('api.tasks.aws.delete_messages_from_queue')
-    @patch('api.tasks.aws.get_object_content_from_s3')
-    @patch('api.tasks.aws.yield_messages_from_queue')
-    @patch('api.tasks.aws.describe_instances')
-    @patch('api.tasks.aws.describe_images')
+    @patch("api.tasks.start_image_inspection")
+    @patch("api.tasks.aws.get_session")
+    @patch("api.tasks.aws.delete_messages_from_queue")
+    @patch("api.tasks.aws.get_object_content_from_s3")
+    @patch("api.tasks.aws.yield_messages_from_queue")
+    @patch("api.tasks.aws.describe_instances")
+    @patch("api.tasks.aws.describe_images")
     def test_analyze_log_run_instance_windows_image(
         self,
         mock_describe_images,
@@ -266,7 +256,7 @@ class AnalyzeLogTest(TestCase):
 
         # Define the mocked "describe images" behavior.
         described_image = util_helper.generate_dummy_describe_image(
-            ec2_ami_id, platform='Windows'
+            ec2_ami_id, platform="Windows"
         )
         described_images = {ec2_ami_id: described_image}
 
@@ -278,11 +268,11 @@ class AnalyzeLogTest(TestCase):
         # Define the S3 message payload.
         occurred_at_run = util_helper.utc_dt(2018, 1, 1, 0, 0, 0)
         s3_content = {
-            'Records': [
+            "Records": [
                 helper.generate_cloudtrail_instances_record(
                     aws_account_id=self.aws_account_id,
                     instance_ids=[ec2_instance_id],
-                    event_name='RunInstances',
+                    event_name="RunInstances",
                     event_time=occurred_at_run,
                     region=region,
                     instance_type=instance_type,
@@ -298,9 +288,7 @@ class AnalyzeLogTest(TestCase):
         self.assertEqual(len(failures), 0)
 
         # Assert that we deleted the message upon processing it.
-        mock_del.assert_called_with(
-            settings.CLOUDTRAIL_EVENT_URL, [sqs_message]
-        )
+        mock_del.assert_called_with(settings.CLOUDTRAIL_EVENT_URL, [sqs_message])
 
         # We should *not* have described the instance because the CloudTrail
         # messages should have enough information to proceed.
@@ -313,9 +301,7 @@ class AnalyzeLogTest(TestCase):
         mock_inspection.assert_not_called()
 
         # Assert that the correct instance was saved.
-        instance = Instance.objects.get(
-            aws_instance__ec2_instance_id=ec2_instance_id
-        )
+        instance = Instance.objects.get(aws_instance__ec2_instance_id=ec2_instance_id)
         self.assertEqual(instance.cloud_account, self.account)
         self.assertEqual(instance.content_object.region, region)
 
@@ -323,17 +309,15 @@ class AnalyzeLogTest(TestCase):
         instanceevents = list(
             InstanceEvent.objects.filter(
                 instance__aws_instance__ec2_instance_id=ec2_instance_id
-            ).order_by('occurred_at')
+            ).order_by("occurred_at")
         )
         self.assertEqual(len(instanceevents), 1)
         self.assertEqual(instanceevents[0].occurred_at, occurred_at_run)
-        self.assertEqual(instanceevents[0].event_type, 'power_on')
-        self.assertEqual(
-            instanceevents[0].content_object.instance_type, instance_type
-        )
+        self.assertEqual(instanceevents[0].event_type, "power_on")
+        self.assertEqual(instanceevents[0].content_object.instance_type, instance_type)
 
         # Assert that as a side-effect one run was created.
-        runs = Run.objects.filter(instance=instance).order_by('start_time')
+        runs = Run.objects.filter(instance=instance).order_by("start_time")
         self.assertEqual(len(runs), 1)
         self.assertEqual(runs[0].instance_type, instance_type)
         self.assertEqual(runs[0].start_time, occurred_at_run)
@@ -342,22 +326,18 @@ class AnalyzeLogTest(TestCase):
         # Assert that the correct image was saved.
         image = AwsMachineImage.objects.get(ec2_ami_id=ec2_ami_id)
         self.assertEqual(image.region, region)
-        self.assertEqual(
-            image.owner_aws_account_id, described_image['OwnerId']
-        )
-        self.assertEqual(
-            image.machine_image.get().status, MachineImage.INSPECTED
-        )
+        self.assertEqual(image.owner_aws_account_id, described_image["OwnerId"])
+        self.assertEqual(image.machine_image.get().status, MachineImage.INSPECTED)
         self.assertEqual(image.platform, image.WINDOWS)
 
     @util_helper.clouditardis(util_helper.utc_dt(2018, 1, 3, 0, 0, 0))
-    @patch('api.tasks.start_image_inspection')
-    @patch('api.tasks.aws.get_session')
-    @patch('api.tasks.aws.delete_messages_from_queue')
-    @patch('api.tasks.aws.get_object_content_from_s3')
-    @patch('api.tasks.aws.yield_messages_from_queue')
-    @patch('api.tasks.aws.describe_instances')
-    @patch('api.tasks.aws.describe_images')
+    @patch("api.tasks.start_image_inspection")
+    @patch("api.tasks.aws.get_session")
+    @patch("api.tasks.aws.delete_messages_from_queue")
+    @patch("api.tasks.aws.get_object_content_from_s3")
+    @patch("api.tasks.aws.yield_messages_from_queue")
+    @patch("api.tasks.aws.describe_instances")
+    @patch("api.tasks.aws.describe_images")
     def test_analyze_log_run_instance_known_image(
         self,
         mock_describe_images,
@@ -386,11 +366,11 @@ class AnalyzeLogTest(TestCase):
         # Define the S3 message payload.
         occurred_at_run = util_helper.utc_dt(2018, 1, 1, 0, 0, 0)
         s3_content = {
-            'Records': [
+            "Records": [
                 helper.generate_cloudtrail_instances_record(
                     aws_account_id=self.aws_account_id,
                     instance_ids=[ec2_instance_id],
-                    event_name='RunInstances',
+                    event_name="RunInstances",
                     event_time=occurred_at_run,
                     region=region,
                     instance_type=instance_type,
@@ -406,9 +386,7 @@ class AnalyzeLogTest(TestCase):
         self.assertEqual(len(failures), 0)
 
         # Assert that we deleted the message upon processing it.
-        mock_del.assert_called_with(
-            settings.CLOUDTRAIL_EVENT_URL, [sqs_message]
-        )
+        mock_del.assert_called_with(settings.CLOUDTRAIL_EVENT_URL, [sqs_message])
 
         # We should *not* have described the instance because the CloudTrail
         # messages should have enough information to proceed.
@@ -421,9 +399,7 @@ class AnalyzeLogTest(TestCase):
         mock_inspection.assert_not_called()
 
         # Assert that the correct instance was saved.
-        instance = Instance.objects.get(
-            aws_instance__ec2_instance_id=ec2_instance_id
-        )
+        instance = Instance.objects.get(aws_instance__ec2_instance_id=ec2_instance_id)
         self.assertEqual(instance.cloud_account, self.account)
         self.assertEqual(instance.content_object.region, region)
 
@@ -431,30 +407,28 @@ class AnalyzeLogTest(TestCase):
         instanceevents = list(
             InstanceEvent.objects.filter(
                 instance__aws_instance__ec2_instance_id=ec2_instance_id
-            ).order_by('occurred_at')
+            ).order_by("occurred_at")
         )
         self.assertEqual(len(instanceevents), 1)
         self.assertEqual(instanceevents[0].occurred_at, occurred_at_run)
-        self.assertEqual(instanceevents[0].event_type, 'power_on')
-        self.assertEqual(
-            instanceevents[0].content_object.instance_type, instance_type
-        )
+        self.assertEqual(instanceevents[0].event_type, "power_on")
+        self.assertEqual(instanceevents[0].content_object.instance_type, instance_type)
 
         # Assert that as a side-effect one run was created.
-        runs = Run.objects.filter(instance=instance).order_by('start_time')
+        runs = Run.objects.filter(instance=instance).order_by("start_time")
         self.assertEqual(len(runs), 1)
         self.assertEqual(runs[0].instance_type, instance_type)
         self.assertEqual(runs[0].start_time, occurred_at_run)
         self.assertIsNone(runs[0].end_time)
 
     @util_helper.clouditardis(util_helper.utc_dt(2018, 1, 3, 0, 0, 0))
-    @patch('api.tasks.start_image_inspection')
-    @patch('api.tasks.aws.get_session')
-    @patch('api.tasks.aws.delete_messages_from_queue')
-    @patch('api.tasks.aws.get_object_content_from_s3')
-    @patch('api.tasks.aws.yield_messages_from_queue')
-    @patch('api.tasks.aws.describe_instances')
-    @patch('api.tasks.aws.describe_images')
+    @patch("api.tasks.start_image_inspection")
+    @patch("api.tasks.aws.get_session")
+    @patch("api.tasks.aws.delete_messages_from_queue")
+    @patch("api.tasks.aws.get_object_content_from_s3")
+    @patch("api.tasks.aws.yield_messages_from_queue")
+    @patch("api.tasks.aws.describe_instances")
+    @patch("api.tasks.aws.describe_images")
     def test_analyze_log_start_old_instance_known_image(
         self,
         mock_describe_images,
@@ -486,7 +460,7 @@ class AnalyzeLogTest(TestCase):
         described_instance = util_helper.generate_dummy_describe_instance(
             instance_id=ec2_instance_id, image_id=ec2_ami_id
         )
-        instance_type = described_instance['InstanceType']
+        instance_type = described_instance["InstanceType"]
         described_instances = {ec2_instance_id: described_instance}
 
         def describe_instances_side_effect(__, instance_ids, ___):
@@ -502,11 +476,11 @@ class AnalyzeLogTest(TestCase):
         # Define the S3 message payload.
         occurred_at_start = util_helper.utc_dt(2018, 1, 1, 0, 0, 0)
         s3_content = {
-            'Records': [
+            "Records": [
                 helper.generate_cloudtrail_instances_record(
                     aws_account_id=self.aws_account_id,
                     instance_ids=[ec2_instance_id],
-                    event_name='StartInstances',
+                    event_name="StartInstances",
                     event_time=occurred_at_start,
                     region=region,
                     instance_type=instance_type,
@@ -522,9 +496,7 @@ class AnalyzeLogTest(TestCase):
         self.assertEqual(len(failures), 0)
 
         # Assert that we deleted the message upon processing it.
-        mock_del.assert_called_with(
-            settings.CLOUDTRAIL_EVENT_URL, [sqs_message]
-        )
+        mock_del.assert_called_with(settings.CLOUDTRAIL_EVENT_URL, [sqs_message])
 
         # We *should* have described the instance because the CloudTrail record
         # should *not* have enough information to proceed.
@@ -546,30 +518,28 @@ class AnalyzeLogTest(TestCase):
         instanceevents = list(
             InstanceEvent.objects.filter(
                 instance__aws_instance__ec2_instance_id=ec2_instance_id
-            ).order_by('occurred_at')
+            ).order_by("occurred_at")
         )
         self.assertEqual(len(instanceevents), 1)
         self.assertEqual(instanceevents[0].occurred_at, occurred_at_start)
-        self.assertEqual(instanceevents[0].event_type, 'power_on')
-        self.assertEqual(
-            instanceevents[0].content_object.instance_type, instance_type
-        )
+        self.assertEqual(instanceevents[0].event_type, "power_on")
+        self.assertEqual(instanceevents[0].content_object.instance_type, instance_type)
 
         # Assert that as a side-effect one run was created.
-        runs = Run.objects.filter(instance=instance).order_by('start_time')
+        runs = Run.objects.filter(instance=instance).order_by("start_time")
         self.assertEqual(len(runs), 1)
         self.assertEqual(runs[0].instance_type, instance_type)
         self.assertEqual(runs[0].start_time, occurred_at_start)
         self.assertIsNone(runs[0].end_time)
 
     @util_helper.clouditardis(util_helper.utc_dt(2018, 1, 3, 0, 0, 0))
-    @patch('api.tasks.start_image_inspection')
-    @patch('api.tasks.aws.get_session')
-    @patch('api.tasks.aws.delete_messages_from_queue')
-    @patch('api.tasks.aws.get_object_content_from_s3')
-    @patch('api.tasks.aws.yield_messages_from_queue')
-    @patch('api.tasks.aws.describe_instances')
-    @patch('api.tasks.aws.describe_images')
+    @patch("api.tasks.start_image_inspection")
+    @patch("api.tasks.aws.get_session")
+    @patch("api.tasks.aws.delete_messages_from_queue")
+    @patch("api.tasks.aws.get_object_content_from_s3")
+    @patch("api.tasks.aws.yield_messages_from_queue")
+    @patch("api.tasks.aws.describe_instances")
+    @patch("api.tasks.aws.describe_images")
     def test_analyze_log_run_instance_unavailable_image(
         self,
         mock_describe_images,
@@ -602,11 +572,11 @@ class AnalyzeLogTest(TestCase):
         # Define the S3 message payload.
         occurred_at_run = util_helper.utc_dt(2018, 1, 1, 0, 0, 0)
         s3_content = {
-            'Records': [
+            "Records": [
                 helper.generate_cloudtrail_instances_record(
                     aws_account_id=self.aws_account_id,
                     instance_ids=[ec2_instance_id],
-                    event_name='RunInstances',
+                    event_name="RunInstances",
                     event_time=occurred_at_run,
                     region=region,
                     instance_type=instance_type,
@@ -622,9 +592,7 @@ class AnalyzeLogTest(TestCase):
         self.assertEqual(len(failures), 0)
 
         # Assert that we deleted the message upon processing it.
-        mock_del.assert_called_with(
-            settings.CLOUDTRAIL_EVENT_URL, [sqs_message]
-        )
+        mock_del.assert_called_with(settings.CLOUDTRAIL_EVENT_URL, [sqs_message])
 
         # We should *not* have described the instance because the CloudTrail
         # record should have enough information to proceed.
@@ -648,17 +616,15 @@ class AnalyzeLogTest(TestCase):
         instanceevents = list(
             InstanceEvent.objects.filter(
                 instance__aws_instance__ec2_instance_id=ec2_instance_id
-            ).order_by('occurred_at')
+            ).order_by("occurred_at")
         )
         self.assertEqual(len(instanceevents), 1)
         self.assertEqual(instanceevents[0].occurred_at, occurred_at_run)
-        self.assertEqual(instanceevents[0].event_type, 'power_on')
-        self.assertEqual(
-            instanceevents[0].content_object.instance_type, instance_type
-        )
+        self.assertEqual(instanceevents[0].event_type, "power_on")
+        self.assertEqual(instanceevents[0].content_object.instance_type, instance_type)
 
         # Assert that as a side-effect two runs were created.
-        runs = Run.objects.filter(instance=instance).order_by('start_time')
+        runs = Run.objects.filter(instance=instance).order_by("start_time")
         self.assertEqual(len(runs), 1)
         self.assertEqual(runs[0].instance_type, instance_type)
         self.assertEqual(runs[0].start_time, occurred_at_run)
@@ -670,9 +636,9 @@ class AnalyzeLogTest(TestCase):
         self.assertEqual(awsimage.owner_aws_account_id, None)
         self.assertEqual(image.status, image.UNAVAILABLE)
 
-    @patch('api.tasks.aws.delete_messages_from_queue')
-    @patch('api.tasks.aws.get_object_content_from_s3')
-    @patch('api.tasks.aws.yield_messages_from_queue')
+    @patch("api.tasks.aws.delete_messages_from_queue")
+    @patch("api.tasks.aws.get_object_content_from_s3")
+    @patch("api.tasks.aws.yield_messages_from_queue")
     def test_analyze_log_with_multiple_sqs_messages(
         self, mock_receive, mock_s3, mock_del
     ):
@@ -693,10 +659,10 @@ class AnalyzeLogTest(TestCase):
             helper.generate_mock_cloudtrail_sqs_message(),
         ]
         mock_receive.return_value = sqs_messages
-        simple_content = {'Records': []}
+        simple_content = {"Records": []}
         mock_s3.side_effect = [
             json.dumps(simple_content),
-            'hello world',  # invalid CloudTrail S3 log file content
+            "hello world",  # invalid CloudTrail S3 log file content
             json.dumps(simple_content),
         ]
 
@@ -717,11 +683,11 @@ class AnalyzeLogTest(TestCase):
         self.assertIn(delete_1_call, delete_message_calls)
         self.assertIn(delete_3_call, delete_message_calls)
 
-    @patch('api.tasks.start_image_inspection')
-    @patch('api.tasks.aws.get_session')
-    @patch('api.tasks.aws.delete_messages_from_queue')
-    @patch('api.tasks.aws.get_object_content_from_s3')
-    @patch('api.tasks.aws.yield_messages_from_queue')
+    @patch("api.tasks.start_image_inspection")
+    @patch("api.tasks.aws.get_session")
+    @patch("api.tasks.aws.delete_messages_from_queue")
+    @patch("api.tasks.aws.get_object_content_from_s3")
+    @patch("api.tasks.aws.yield_messages_from_queue")
     def test_analyze_log_changed_instance_type_existing_instance(
         self, mock_receive, mock_s3, mock_del, mock_session, mock_inspection
     ):
@@ -732,18 +698,16 @@ class AnalyzeLogTest(TestCase):
         for an already known instance. Since we already know the instance,
         we do not need to make an extra describe instance call to AWS.
         """
-        instance_type = 't1.potato'
+        instance_type = "t1.potato"
         sqs_message = helper.generate_mock_cloudtrail_sqs_message()
-        gen_instance = helper.generate_aws_instance(
-            self.account, region='us-east-1'
-        )
+        gen_instance = helper.generate_aws_instance(self.account, region="us-east-1")
         trail_record = helper.generate_cloudtrail_modify_instance_record(
             aws_account_id=self.aws_account_id,
             instance_id=gen_instance.content_object.ec2_instance_id,
             instance_type=instance_type,
-            region='us-east-1',
+            region="us-east-1",
         )
-        s3_content = {'Records': [trail_record]}
+        s3_content = {"Records": [trail_record]}
         mock_receive.return_value = [sqs_message]
         mock_s3.return_value = json.dumps(s3_content)
 
@@ -752,17 +716,14 @@ class AnalyzeLogTest(TestCase):
         self.assertEqual(len(successes), 1)
         self.assertEqual(len(failures), 0)
         mock_inspection.assert_not_called()
-        mock_del.assert_called_with(
-            settings.CLOUDTRAIL_EVENT_URL, [sqs_message]
-        )
+        mock_del.assert_called_with(settings.CLOUDTRAIL_EVENT_URL, [sqs_message])
 
         instances = list(AwsInstance.objects.all())
         self.assertEqual(len(instances), 1)
         awsinstance = instances[0]
         instance = awsinstance.instance.get()
         self.assertEqual(
-            awsinstance.ec2_instance_id,
-            gen_instance.content_object.ec2_instance_id,
+            awsinstance.ec2_instance_id, gen_instance.content_object.ec2_instance_id,
         )
         self.assertEqual(instance.cloud_account.id, self.account.id)
 
@@ -772,14 +733,14 @@ class AnalyzeLogTest(TestCase):
         event = awsevent.instance_event.get()
         self.assertEqual(event.instance, instance)
         self.assertEqual(awsevent.instance_type, instance_type)
-        self.assertEqual(event.event_type, 'attribute_change')
+        self.assertEqual(event.event_type, "attribute_change")
 
-    @patch('api.tasks.start_image_inspection')
-    @patch('api.tasks.aws.describe_instances')
-    @patch('api.tasks.aws.get_session')
-    @patch('api.tasks.aws.delete_messages_from_queue')
-    @patch('api.tasks.aws.get_object_content_from_s3')
-    @patch('api.tasks.aws.yield_messages_from_queue')
+    @patch("api.tasks.start_image_inspection")
+    @patch("api.tasks.aws.describe_instances")
+    @patch("api.tasks.aws.get_session")
+    @patch("api.tasks.aws.delete_messages_from_queue")
+    @patch("api.tasks.aws.get_object_content_from_s3")
+    @patch("api.tasks.aws.yield_messages_from_queue")
     def test_analyze_log_when_instance_was_terminated(
         self,
         mock_receive,
@@ -802,11 +763,11 @@ class AnalyzeLogTest(TestCase):
         sqs_message = helper.generate_mock_cloudtrail_sqs_message()
         described_instance = util_helper.generate_dummy_describe_instance()
         s3_content = {
-            'Records': [
+            "Records": [
                 helper.generate_cloudtrail_instances_record(
                     aws_account_id=self.aws_account_id,
-                    instance_ids=[described_instance['InstanceId']],
-                    event_name='TerminateInstances',
+                    instance_ids=[described_instance["InstanceId"]],
+                    event_name="TerminateInstances",
                 )
             ]
         }
@@ -823,17 +784,13 @@ class AnalyzeLogTest(TestCase):
         self.assertEqual(len(successes), 1)
         self.assertEqual(len(failures), 0)
         mock_inspection.assert_not_called()
-        mock_del.assert_called_with(
-            settings.CLOUDTRAIL_EVENT_URL, [sqs_message]
-        )
+        mock_del.assert_called_with(settings.CLOUDTRAIL_EVENT_URL, [sqs_message])
 
         instances = list(AwsInstance.objects.all())
         self.assertEqual(len(instances), 1)
         awsinstance = instances[0]
         instance = awsinstance.instance.get()
-        self.assertEqual(
-            awsinstance.ec2_instance_id, described_instance['InstanceId']
-        )
+        self.assertEqual(awsinstance.ec2_instance_id, described_instance["InstanceId"])
         self.assertEqual(instance.cloud_account.id, self.account.id)
 
         # Note that the event is stored in a partially known state.
@@ -851,11 +808,11 @@ class AnalyzeLogTest(TestCase):
         images = list(AwsMachineImage.objects.all())
         self.assertEqual(len(images), 0)
 
-    @patch('api.tasks.start_image_inspection')
-    @patch('api.tasks.aws.get_session')
-    @patch('api.tasks.aws.delete_messages_from_queue')
-    @patch('api.tasks.aws.get_object_content_from_s3')
-    @patch('api.tasks.aws.yield_messages_from_queue')
+    @patch("api.tasks.start_image_inspection")
+    @patch("api.tasks.aws.get_session")
+    @patch("api.tasks.aws.delete_messages_from_queue")
+    @patch("api.tasks.aws.get_object_content_from_s3")
+    @patch("api.tasks.aws.yield_messages_from_queue")
     def test_analyze_log_when_account_is_not_known(
         self, mock_receive, mock_s3, mock_del, mock_session, mock_inspection
     ):
@@ -874,7 +831,7 @@ class AnalyzeLogTest(TestCase):
             aws_account_id=util_helper.generate_dummy_aws_account_id(),
             instance_ids=[ec2_instance_id],
         )
-        s3_content = {'Records': [trail_record]}
+        s3_content = {"Records": [trail_record]}
         mock_receive.return_value = [sqs_message]
         mock_s3.return_value = json.dumps(s3_content)
 
@@ -891,9 +848,9 @@ class AnalyzeLogTest(TestCase):
         images = list(AwsMachineImage.objects.all())
         self.assertEqual(len(images), 0)
 
-    @patch('api.tasks.aws.delete_messages_from_queue')
-    @patch('api.tasks.aws.get_object_content_from_s3')
-    @patch('api.tasks.aws.yield_messages_from_queue')
+    @patch("api.tasks.aws.delete_messages_from_queue")
+    @patch("api.tasks.aws.get_object_content_from_s3")
+    @patch("api.tasks.aws.yield_messages_from_queue")
     def test_analyze_log_with_invalid_cloudtrail_log_content(
         self, mock_receive, mock_s3, mock_del
     ):
@@ -909,7 +866,7 @@ class AnalyzeLogTest(TestCase):
         """
         sqs_message = helper.generate_mock_cloudtrail_sqs_message()
         mock_receive.return_value = [sqs_message]
-        mock_s3.return_value = 'hello world'
+        mock_s3.return_value = "hello world"
 
         successes, failures = tasks.analyze_log()
         self.assertEqual(len(successes), 0)
@@ -917,19 +874,19 @@ class AnalyzeLogTest(TestCase):
 
         mock_del.assert_not_called()
 
-    @patch('api.tasks.aws.delete_messages_from_queue')
-    @patch('api.tasks.aws.get_object_content_from_s3')
-    @patch('api.tasks.aws.yield_messages_from_queue')
+    @patch("api.tasks.aws.delete_messages_from_queue")
+    @patch("api.tasks.aws.get_object_content_from_s3")
+    @patch("api.tasks.aws.yield_messages_from_queue")
     def test_analyze_log_with_irrelevant_log_activity(
         self, mock_receive, mock_s3, mock_del
     ):
         """Test that logs without relevant data are effectively ignored."""
         sqs_message = helper.generate_mock_cloudtrail_sqs_message()
         irrelevant_log = {
-            'Records': [
-                {'eventSource': 'null.amazonaws.com'},
-                {'errorCode': 123},
-                {'eventName': 'InvalidEvent'},
+            "Records": [
+                {"eventSource": "null.amazonaws.com"},
+                {"errorCode": 123},
+                {"eventName": "InvalidEvent"},
             ]
         }
 
@@ -939,9 +896,9 @@ class AnalyzeLogTest(TestCase):
         tasks.analyze_log()
         mock_del.assert_called()
 
-    @patch('api.tasks.aws.delete_messages_from_queue')
-    @patch('api.tasks.aws.get_object_content_from_s3')
-    @patch('api.tasks.aws.yield_messages_from_queue')
+    @patch("api.tasks.aws.delete_messages_from_queue")
+    @patch("api.tasks.aws.get_object_content_from_s3")
+    @patch("api.tasks.aws.yield_messages_from_queue")
     def test_ami_tags_added_success(self, mock_receive, mock_s3, mock_del):
         """Test processing a CloudTrail log for ami tags added."""
         ami = helper.generate_aws_image()
@@ -954,7 +911,7 @@ class AnalyzeLogTest(TestCase):
             tag_names=[tasks.aws.OPENSHIFT_TAG],
             event_name=cloudtrail.CREATE_TAG,
         )
-        s3_content = {'Records': [trail_record]}
+        s3_content = {"Records": [trail_record]}
         mock_receive.return_value = [sqs_message]
         mock_s3.return_value = json.dumps(s3_content)
 
@@ -969,9 +926,9 @@ class AnalyzeLogTest(TestCase):
         self.assertTrue(updated_ami.machine_image.get().openshift_detected)
         mock_del.assert_called()
 
-    @patch('api.tasks.aws.delete_messages_from_queue')
-    @patch('api.tasks.aws.get_object_content_from_s3')
-    @patch('api.tasks.aws.yield_messages_from_queue')
+    @patch("api.tasks.aws.delete_messages_from_queue")
+    @patch("api.tasks.aws.get_object_content_from_s3")
+    @patch("api.tasks.aws.yield_messages_from_queue")
     def test_ami_tags_removed_success(self, mock_receive, mock_s3, mock_del):
         """Test processing a CloudTrail log for ami tags removed."""
         ami = helper.generate_aws_image(openshift_detected=True)
@@ -984,7 +941,7 @@ class AnalyzeLogTest(TestCase):
             tag_names=[tasks.aws.OPENSHIFT_TAG],
             event_name=cloudtrail.DELETE_TAG,
         )
-        s3_content = {'Records': [trail_record]}
+        s3_content = {"Records": [trail_record]}
         mock_receive.return_value = [sqs_message]
         mock_s3.return_value = json.dumps(s3_content)
 
@@ -999,12 +956,12 @@ class AnalyzeLogTest(TestCase):
         self.assertFalse(updated_ami.machine_image.get().openshift_detected)
         mock_del.assert_called()
 
-    @patch('api.tasks.start_image_inspection')
-    @patch('api.tasks.aws.get_session')
-    @patch('api.tasks.aws.delete_messages_from_queue')
-    @patch('api.tasks.aws.get_object_content_from_s3')
-    @patch('api.tasks.aws.yield_messages_from_queue')
-    @patch('api.tasks.aws.describe_images')
+    @patch("api.tasks.start_image_inspection")
+    @patch("api.tasks.aws.get_session")
+    @patch("api.tasks.aws.delete_messages_from_queue")
+    @patch("api.tasks.aws.get_object_content_from_s3")
+    @patch("api.tasks.aws.yield_messages_from_queue")
+    @patch("api.tasks.aws.describe_images")
     def test_ami_tags_unknown_ami_is_added(
         self,
         mock_describe,
@@ -1021,9 +978,7 @@ class AnalyzeLogTest(TestCase):
         our image model.
         """
         new_ami_id = util_helper.generate_dummy_image_id()
-        image_data = util_helper.generate_dummy_describe_image(
-            image_id=new_ami_id
-        )
+        image_data = util_helper.generate_dummy_describe_image(image_id=new_ami_id)
         mock_describe.return_value = [image_data]
 
         sqs_message = helper.generate_mock_cloudtrail_sqs_message()
@@ -1035,7 +990,7 @@ class AnalyzeLogTest(TestCase):
             event_name=cloudtrail.CREATE_TAG,
             region=region,
         )
-        s3_content = {'Records': [trail_record]}
+        s3_content = {"Records": [trail_record]}
         mock_receive.return_value = [sqs_message]
         mock_s3.return_value = json.dumps(s3_content)
 
@@ -1051,9 +1006,9 @@ class AnalyzeLogTest(TestCase):
             self.account.content_object.account_arn, new_ami_id, region
         )
 
-    @patch('api.tasks.aws.delete_messages_from_queue')
-    @patch('api.tasks.aws.get_object_content_from_s3')
-    @patch('api.tasks.aws.yield_messages_from_queue')
+    @patch("api.tasks.aws.delete_messages_from_queue")
+    @patch("api.tasks.aws.get_object_content_from_s3")
+    @patch("api.tasks.aws.yield_messages_from_queue")
     def test_other_tags_ignored(self, mock_receive, mock_s3, mock_del):
         """
         Test tag processing where unknown tags should be ignored.
@@ -1072,7 +1027,7 @@ class AnalyzeLogTest(TestCase):
             tag_names=[_faker.slug()],
             event_name=cloudtrail.CREATE_TAG,
         )
-        s3_content = {'Records': [trail_record]}
+        s3_content = {"Records": [trail_record]}
         mock_receive.return_value = [sqs_message]
         mock_s3.return_value = json.dumps(s3_content)
 
@@ -1085,12 +1040,10 @@ class AnalyzeLogTest(TestCase):
         self.assertEqual(len(all_images), 0)
         mock_del.assert_called()
 
-    @patch('api.tasks.aws.delete_messages_from_queue')
-    @patch('api.tasks.aws.get_object_content_from_s3')
-    @patch('api.tasks.aws.yield_messages_from_queue')
-    def test_non_ami_resources_with_tags_ignored(
-        self, mock_receive, mock_s3, mock_del
-    ):
+    @patch("api.tasks.aws.delete_messages_from_queue")
+    @patch("api.tasks.aws.get_object_content_from_s3")
+    @patch("api.tasks.aws.yield_messages_from_queue")
+    def test_non_ami_resources_with_tags_ignored(self, mock_receive, mock_s3, mock_del):
         """Test tag processing where non-AMI resources should be ignored."""
         some_ignored_id = _faker.uuid4()
 
@@ -1101,7 +1054,7 @@ class AnalyzeLogTest(TestCase):
             tag_names=[_faker.slug()],
             event_name=cloudtrail.CREATE_TAG,
         )
-        s3_content = {'Records': [trail_record]}
+        s3_content = {"Records": [trail_record]}
         mock_receive.return_value = [sqs_message]
         mock_s3.return_value = json.dumps(s3_content)
 

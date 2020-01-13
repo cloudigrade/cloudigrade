@@ -19,15 +19,14 @@ class BaseGenericModelTest(TestCase):
         arn = util_helper.generate_dummy_arn(account_id=aws_account_id)
         self.role = util_helper.generate_dummy_role()
         self.account = helper.generate_aws_account(
-            aws_account_id=aws_account_id,
-            arn=arn,
-            name='test'
+            aws_account_id=aws_account_id, arn=arn, name="test"
         )
 
     def test_delete_base_model_removes_platform_specific_model(self):
         """Deleting a generic model removes its more specific counterpart."""
-        with patch.object(sts, 'boto3') as mock_boto3,\
-                patch.object(models, 'disable_cloudtrail'):
+        with patch.object(sts, "boto3") as mock_boto3, patch.object(
+            models, "disable_cloudtrail"
+        ):
             mock_assume_role = mock_boto3.client.return_value.assume_role
             mock_assume_role.return_value = self.role
             models.CloudAccount.objects.all().delete()

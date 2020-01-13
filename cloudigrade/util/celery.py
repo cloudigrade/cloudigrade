@@ -5,14 +5,16 @@ from celery.utils.time import get_exponential_backoff_interval
 from util.exceptions import NotReadyException
 
 
-def retriable_shared_task(original_function=None,
-                          retry_max_elapsed_backoff=None,
-                          autoretry_for=(NotReadyException,),
-                          max_retries=35,
-                          retry_backoff=True,
-                          retry_jitter=True,
-                          retry_backoff_max=120,
-                          **kwargs):
+def retriable_shared_task(
+    original_function=None,
+    retry_max_elapsed_backoff=None,
+    autoretry_for=(NotReadyException,),
+    max_retries=35,
+    retry_backoff=True,
+    retry_jitter=True,
+    retry_backoff_max=120,
+    **kwargs
+):
     """
     Decorate function to be a shared task with our standard retry settings.
 
@@ -43,8 +45,9 @@ def retriable_shared_task(original_function=None,
 
     """
     if retry_max_elapsed_backoff is not None:
-        max_retries = calculate_max_retries(retry_max_elapsed_backoff,
-                                            retry_backoff_max)
+        max_retries = calculate_max_retries(
+            retry_max_elapsed_backoff, retry_backoff_max
+        )
 
     def _retriable_shared_task(function):
         return shared_task(
@@ -82,6 +85,6 @@ def calculate_max_retries(retry_max_elapsed_backoff, retry_backoff_max):
             factor=1, retries=max_retries, maximum=retry_backoff_max
         )
         elapsed_time += retry_factor
-        if (elapsed_time < retry_max_elapsed_backoff):
+        if elapsed_time < retry_max_elapsed_backoff:
             max_retries += 1
     return max_retries

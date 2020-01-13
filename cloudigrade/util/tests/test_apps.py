@@ -10,5 +10,5 @@ class UtilConfigTest(TestCase):
 
     def test_apps(self):
         """Test the Util app configuration."""
-        self.assertEqual(UtilConfig.name, 'util')
-        self.assertEqual(apps.get_app_config('util').name, 'util')
+        self.assertEqual(UtilConfig.name, "util")
+        self.assertEqual(apps.get_app_config("util").name, "util")

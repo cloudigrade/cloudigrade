@@ -15,8 +15,8 @@ _faker = faker.Faker()
 class UtilAwsIamTest(TestCase):
     """AWS IAM utility functions test case."""
 
-    @patch('util.aws.iam.get_session_account_id')
-    @patch('util.aws.iam._get_primary_account_id')
+    @patch("util.aws.iam.get_session_account_id")
+    @patch("util.aws.iam._get_primary_account_id")
     def test_get_standard_policy_name_and_arn(
         self, mock_get_primary_account_id, mock_get_session_account_id
     ):
@@ -28,20 +28,18 @@ class UtilAwsIamTest(TestCase):
         mock_get_session_account_id.return_value = customer_account_id
 
         mock_session = Mock()
-        policy_name, policy_arn = iam.get_standard_policy_name_and_arn(
-            mock_session
-        )
+        policy_name, policy_arn = iam.get_standard_policy_name_and_arn(mock_session)
         mock_get_session_account_id.assert_called_with(mock_session)
         mock_get_primary_account_id.assert_called()
 
         arn = AwsArn(policy_arn)
         self.assertEqual(arn.account_id, customer_account_id)
-        self.assertEqual(arn.service, 'iam')
-        self.assertEqual(arn.resource_type, 'policy')
+        self.assertEqual(arn.service, "iam")
+        self.assertEqual(arn.resource_type, "policy")
         self.assertIn(str(system_account_id), arn.resource)
 
-    @patch('util.aws.iam.get_session_account_id')
-    @patch('util.aws.iam._get_primary_account_id')
+    @patch("util.aws.iam.get_session_account_id")
+    @patch("util.aws.iam._get_primary_account_id")
     def test_get_standard_role_name_and_arn(
         self, mock_get_primary_account_id, mock_get_session_account_id
     ):
@@ -53,19 +51,17 @@ class UtilAwsIamTest(TestCase):
         mock_get_session_account_id.return_value = customer_account_id
 
         mock_session = Mock()
-        policy_name, policy_arn = iam.get_standard_role_name_and_arn(
-            mock_session
-        )
+        policy_name, policy_arn = iam.get_standard_role_name_and_arn(mock_session)
         mock_get_session_account_id.assert_called_with(mock_session)
         mock_get_primary_account_id.assert_called()
 
         arn = AwsArn(policy_arn)
         self.assertEqual(arn.account_id, customer_account_id)
-        self.assertEqual(arn.service, 'iam')
-        self.assertEqual(arn.resource_type, 'role')
+        self.assertEqual(arn.service, "iam")
+        self.assertEqual(arn.resource_type, "role")
         self.assertIn(str(system_account_id), arn.resource)
 
-    @patch('util.aws.iam._get_primary_account_id')
+    @patch("util.aws.iam._get_primary_account_id")
     def test_get_standard_assume_role_policy_document(
         self, mock_get_primary_account_id
     ):
@@ -75,17 +71,12 @@ class UtilAwsIamTest(TestCase):
         document = iam.get_standard_assume_role_policy_document()
         document_dict = json.loads(document)
         self.assertIn(
-            str(primary_account_id),
-            document_dict['Statement'][0]['Principal']['AWS'],
+            str(primary_account_id), document_dict["Statement"][0]["Principal"]["AWS"],
         )
-        self.assertEqual(
-            document_dict['Statement'][0]['Action'], 'sts:AssumeRole'
-        )
+        self.assertEqual(document_dict["Statement"][0]["Action"], "sts:AssumeRole")
 
-    @patch('util.aws.iam.get_standard_policy_name_and_arn')
-    def test_ensure_cloudigrade_policy_new(
-        self, mock_get_standard_policy_name_and_arn
-    ):
+    @patch("util.aws.iam.get_standard_policy_name_and_arn")
+    def test_ensure_cloudigrade_policy_new(self, mock_get_standard_policy_name_and_arn):
         """Assert ensure_cloudigrade_policy creates a policy if none exists."""
         policy_name = _faker.slug()
         policy_arn = helper.generate_dummy_arn(resource=policy_name)
@@ -102,9 +93,7 @@ class UtilAwsIamTest(TestCase):
             mock_iam_client.exceptions.NoSuchEntityException
         )
 
-        mock_iam_client.create_policy.return_value = {
-            'Policy': {'Arn': policy_arn}
-        }
+        mock_iam_client.create_policy.return_value = {"Policy": {"Arn": policy_arn}}
         result = iam.ensure_cloudigrade_policy(mock_session)
         self.assertEqual(result[0], policy_name)
         self.assertEqual(result[1], policy_arn)
@@ -113,7 +102,7 @@ class UtilAwsIamTest(TestCase):
         mock_iam_client.delete_policy_version.assert_not_called()
         mock_iam_client.create_policy_version.assert_not_called()
 
-    @patch('util.aws.iam.get_standard_policy_name_and_arn')
+    @patch("util.aws.iam.get_standard_policy_name_and_arn")
     def test_ensure_cloudigrade_policy_new_version(
         self, mock_get_standard_policy_name_and_arn
     ):
@@ -128,18 +117,16 @@ class UtilAwsIamTest(TestCase):
         mock_iam_client = mock_session.client.return_value
 
         mock_iam_client.list_policy_versions.return_value = {
-            'Versions': [
+            "Versions": [
                 {
-                    'CreateDate': '2019-01-02T03:04:05',
-                    'IsDefaultVersion': True,
-                    'VersionId': 'v1',
+                    "CreateDate": "2019-01-02T03:04:05",
+                    "IsDefaultVersion": True,
+                    "VersionId": "v1",
                 }
             ]
         }
 
-        mock_iam_client.create_policy.return_value = {
-            'Policy': {'Arn': policy_arn}
-        }
+        mock_iam_client.create_policy.return_value = {"Policy": {"Arn": policy_arn}}
         result = iam.ensure_cloudigrade_policy(mock_session)
         self.assertEqual(result[0], policy_name)
         self.assertEqual(result[1], policy_arn)
@@ -147,7 +134,7 @@ class UtilAwsIamTest(TestCase):
         mock_iam_client.create_policy_version.assert_called()
         mock_iam_client.delete_policy_version.assert_not_called()
 
-    @patch('util.aws.iam.get_standard_policy_name_and_arn')
+    @patch("util.aws.iam.get_standard_policy_name_and_arn")
     def test_ensure_cloudigrade_policy_new_version_delete_old(
         self, mock_get_standard_policy_name_and_arn
     ):
@@ -169,48 +156,46 @@ class UtilAwsIamTest(TestCase):
         mock_iam_client = mock_session.client.return_value
 
         mock_iam_client.list_policy_versions.return_value = {
-            'Versions': [
+            "Versions": [
                 {
-                    'CreateDate': '2019-05-02T03:04:05',
-                    'IsDefaultVersion': True,
-                    'VersionId': 'v5',
+                    "CreateDate": "2019-05-02T03:04:05",
+                    "IsDefaultVersion": True,
+                    "VersionId": "v5",
                 },
                 {
-                    'CreateDate': '2019-04-02T03:04:05',
-                    'IsDefaultVersion': False,
-                    'VersionId': 'v4',
+                    "CreateDate": "2019-04-02T03:04:05",
+                    "IsDefaultVersion": False,
+                    "VersionId": "v4",
                 },
                 {
-                    'CreateDate': '2019-03-02T03:04:05',
-                    'IsDefaultVersion': False,
-                    'VersionId': 'v3',
+                    "CreateDate": "2019-03-02T03:04:05",
+                    "IsDefaultVersion": False,
+                    "VersionId": "v3",
                 },
                 {
-                    'CreateDate': '2019-02-02T03:04:05',
-                    'IsDefaultVersion': False,
-                    'VersionId': 'v2',
+                    "CreateDate": "2019-02-02T03:04:05",
+                    "IsDefaultVersion": False,
+                    "VersionId": "v2",
                 },
                 {
-                    'CreateDate': '2019-01-02T03:04:05',
-                    'IsDefaultVersion': False,
-                    'VersionId': 'v1',
+                    "CreateDate": "2019-01-02T03:04:05",
+                    "IsDefaultVersion": False,
+                    "VersionId": "v1",
                 },
             ]
         }
 
-        mock_iam_client.create_policy.return_value = {
-            'Policy': {'Arn': policy_arn}
-        }
+        mock_iam_client.create_policy.return_value = {"Policy": {"Arn": policy_arn}}
         result = iam.ensure_cloudigrade_policy(mock_session)
         self.assertEqual(result[0], policy_name)
         self.assertEqual(result[1], policy_arn)
 
         mock_iam_client.delete_policy_version.assert_called_with(
-            PolicyArn=policy_arn, VersionId='v1'
+            PolicyArn=policy_arn, VersionId="v1"
         )
         mock_iam_client.create_policy_version.assert_called()
 
-    @patch('util.aws.iam.get_standard_policy_name_and_arn')
+    @patch("util.aws.iam.get_standard_policy_name_and_arn")
     def test_ensure_cloudigrade_policy_arn_mismatch_raises_exception(
         self, mock_get_standard_policy_name_and_arn
     ):
@@ -240,7 +225,7 @@ class UtilAwsIamTest(TestCase):
         )
 
         mock_iam_client.create_policy.return_value = {
-            'Policy': {'Arn': created_policy_arn}
+            "Policy": {"Arn": created_policy_arn}
         }
         with self.assertRaises(exceptions.AwsPolicyCreationException):
             iam.ensure_cloudigrade_policy(mock_session)
@@ -249,8 +234,8 @@ class UtilAwsIamTest(TestCase):
         mock_iam_client.delete_policy_version.assert_not_called()
         mock_iam_client.create_policy_version.assert_not_called()
 
-    @patch('util.aws.iam.get_standard_role_name_and_arn')
-    @patch('util.aws.iam.get_standard_assume_role_policy_document')
+    @patch("util.aws.iam.get_standard_role_name_and_arn")
+    @patch("util.aws.iam.get_standard_assume_role_policy_document")
     def test_ensure_cloudigrade_role_new(
         self,
         mock_get_standard_assume_role_policy_document,
@@ -276,11 +261,9 @@ class UtilAwsIamTest(TestCase):
             role_arn,
         )
 
-        policy_document = {'my_great_policy': 'goes here'}
+        policy_document = {"my_great_policy": "goes here"}
         policy_document_str = json.dumps(policy_document)
-        mock_get_standard_assume_role_policy_document.return_value = (
-            policy_document_str
-        )
+        mock_get_standard_assume_role_policy_document.return_value = policy_document_str
 
         policy_arn = helper.generate_dummy_arn()
         mock_session = Mock()
@@ -295,17 +278,17 @@ class UtilAwsIamTest(TestCase):
         # Fake role response from the mock client.
         # Note that the AssumeRolePolicyDocument has the dict, not str.
         created_role = {
-            'Role': {
-                'Arn': role_arn,
-                'RoleName': role_name,
-                'AssumeRolePolicyDocument': policy_document,
+            "Role": {
+                "Arn": role_arn,
+                "RoleName": role_name,
+                "AssumeRolePolicyDocument": policy_document,
             }
         }
         mock_iam_client.create_role.return_value = created_role
 
         # Fake attached role policies list from the mock client.
         mock_iam_client.list_attached_role_policies.return_value = {
-            'AttachedPolicies': []
+            "AttachedPolicies": []
         }
 
         result = iam.ensure_cloudigrade_role(mock_session, policy_arn)
@@ -325,8 +308,8 @@ class UtilAwsIamTest(TestCase):
 
         self.assertEqual(result, (role_name, role_arn))
 
-    @patch('util.aws.iam.get_standard_role_name_and_arn')
-    @patch('util.aws.iam.get_standard_assume_role_policy_document')
+    @patch("util.aws.iam.get_standard_role_name_and_arn")
+    @patch("util.aws.iam.get_standard_assume_role_policy_document")
     def test_ensure_cloudigrade_role_update_no_changes(
         self,
         mock_get_standard_assume_role_policy_document,
@@ -351,11 +334,9 @@ class UtilAwsIamTest(TestCase):
             role_arn,
         )
 
-        policy_document = {'my_great_policy': 'goes here'}
+        policy_document = {"my_great_policy": "goes here"}
         policy_document_str = json.dumps(policy_document)
-        mock_get_standard_assume_role_policy_document.return_value = (
-            policy_document_str
-        )
+        mock_get_standard_assume_role_policy_document.return_value = policy_document_str
 
         policy_arn = helper.generate_dummy_arn()
         mock_session = Mock()
@@ -364,17 +345,17 @@ class UtilAwsIamTest(TestCase):
         # Fake role response from the mock client.
         # Note that the AssumeRolePolicyDocument has the dict, not str.
         existing_role = {
-            'Role': {
-                'Arn': role_arn,
-                'RoleName': role_name,
-                'AssumeRolePolicyDocument': policy_document,
+            "Role": {
+                "Arn": role_arn,
+                "RoleName": role_name,
+                "AssumeRolePolicyDocument": policy_document,
             }
         }
         mock_iam_client.get_role.return_value = existing_role
 
         # Fake attached role policies list from the mock client.
         mock_iam_client.list_attached_role_policies.return_value = {
-            'AttachedPolicies': [{'PolicyArn': policy_arn}]
+            "AttachedPolicies": [{"PolicyArn": policy_arn}]
         }
 
         result = iam.ensure_cloudigrade_role(mock_session, policy_arn)
@@ -390,8 +371,8 @@ class UtilAwsIamTest(TestCase):
 
         self.assertEqual(result, (role_name, role_arn))
 
-    @patch('util.aws.iam.get_standard_role_name_and_arn')
-    @patch('util.aws.iam.get_standard_assume_role_policy_document')
+    @patch("util.aws.iam.get_standard_role_name_and_arn")
+    @patch("util.aws.iam.get_standard_assume_role_policy_document")
     def test_ensure_cloudigrade_role_update_policy_document(
         self,
         mock_get_standard_assume_role_policy_document,
@@ -415,11 +396,9 @@ class UtilAwsIamTest(TestCase):
             role_arn,
         )
 
-        policy_document = {'my_great_policy': 'goes here'}
+        policy_document = {"my_great_policy": "goes here"}
         policy_document_str = json.dumps(policy_document)
-        mock_get_standard_assume_role_policy_document.return_value = (
-            policy_document_str
-        )
+        mock_get_standard_assume_role_policy_document.return_value = policy_document_str
 
         policy_arn = helper.generate_dummy_arn()
         mock_session = Mock()
@@ -427,17 +406,17 @@ class UtilAwsIamTest(TestCase):
 
         # Fake role response from the mock client with *bad* policy document.
         existing_role = {
-            'Role': {
-                'Arn': role_arn,
-                'RoleName': role_name,
-                'AssumeRolePolicyDocument': '{}',
+            "Role": {
+                "Arn": role_arn,
+                "RoleName": role_name,
+                "AssumeRolePolicyDocument": "{}",
             }
         }
         mock_iam_client.get_role.return_value = existing_role
 
         # Fake attached role policies list from the mock client.
         mock_iam_client.list_attached_role_policies.return_value = {
-            'AttachedPolicies': [{'PolicyArn': policy_arn}]
+            "AttachedPolicies": [{"PolicyArn": policy_arn}]
         }
 
         result = iam.ensure_cloudigrade_role(mock_session, policy_arn)

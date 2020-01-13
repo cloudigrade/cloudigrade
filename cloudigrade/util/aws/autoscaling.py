@@ -15,11 +15,10 @@ def describe_auto_scaling_group(name):
         dict: Details describing the Auto Scaling group
 
     """
-    autoscaling = boto3.client('autoscaling')
+    autoscaling = boto3.client("autoscaling")
     groups = autoscaling.describe_auto_scaling_groups(
-        AutoScalingGroupNames=[name],
-        MaxRecords=1
-    )['AutoScalingGroups']
+        AutoScalingGroupNames=[name], MaxRecords=1
+    )["AutoScalingGroups"]
     if len(groups) == 0:
         raise AwsAutoScalingGroupNotFound(name)
     return groups[0]
@@ -39,10 +38,12 @@ def is_scaled_down(name):
 
     """
     auto_scaling_group = describe_auto_scaling_group(name)
-    scaled_down = auto_scaling_group['MinSize'] == 0 and \
-        auto_scaling_group['MaxSize'] == 0 and \
-        auto_scaling_group['DesiredCapacity'] == 0 and \
-        len(auto_scaling_group['Instances']) == 0
+    scaled_down = (
+        auto_scaling_group["MinSize"] == 0
+        and auto_scaling_group["MaxSize"] == 0
+        and auto_scaling_group["DesiredCapacity"] == 0
+        and len(auto_scaling_group["Instances"]) == 0
+    )
     return scaled_down, auto_scaling_group
 
 
@@ -60,7 +61,7 @@ def set_scale(name, min_size, max_size, desired_capacity):
         dict: AWS response metadata
 
     """
-    autoscaling = boto3.client('autoscaling')
+    autoscaling = boto3.client("autoscaling")
     response = autoscaling.update_auto_scaling_group(
         AutoScalingGroupName=name,
         MinSize=min_size,

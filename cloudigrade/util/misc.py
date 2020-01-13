@@ -2,7 +2,7 @@
 import datetime
 
 
-def generate_device_name(index, prefix='/dev/xvd'):
+def generate_device_name(index, prefix="/dev/xvd"):
     """
     Generate a linux device name based on provided index and prefix.
 
@@ -13,8 +13,7 @@ def generate_device_name(index, prefix='/dev/xvd'):
     Returns (str): Generated device name.
 
     """
-    return f'{prefix}' \
-           f'{chr(ord("b") + int(index / 26)) + chr(ord("a") + index % 26)}'
+    return f"{prefix}" f'{chr(ord("b") + int(index / 26)) + chr(ord("a") + index % 26)}'
 
 
 def truncate_date(original):

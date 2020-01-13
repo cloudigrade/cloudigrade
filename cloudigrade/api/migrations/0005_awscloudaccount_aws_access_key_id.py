@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0004_concurrentusage'),
+        ("api", "0004_concurrentusage"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='awscloudaccount',
-            name='aws_access_key_id',
+            model_name="awscloudaccount",
+            name="aws_access_key_id",
             field=models.CharField(blank=True, max_length=128, null=True),
         ),
     ]
