@@ -1,7 +1,7 @@
 """Collection of tests for the cloudtrail module."""
 from django.test import TestCase
 
-from api import cloudtrail
+from api.clouds.aws import cloudtrail
 from api.tests import helper as analyzer_helper
 from util.tests import helper as util_helper
 
