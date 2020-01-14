@@ -16,6 +16,11 @@ from rest_framework.serializers import ModelSerializer, Serializer
 
 from api import CLOUD_PROVIDERS
 from api.clouds.aws.models import AwsCloudAccount, AwsInstance, AwsMachineImage
+from api.clouds.aws.serializers import (
+    AwsCloudAccountSerializer,
+    AwsInstanceSerializer,
+    AwsMachineImageSerializer,
+)
 from api.models import (
     CloudAccount,
     Instance,
@@ -30,24 +35,16 @@ from util.exceptions import InvalidArn
 from util.misc import get_today
 
 
-class AwsCloudAccountSerializer(ModelSerializer):
-    """Serialize a customer AWS CloudAccount for API v2."""
-
-    aws_cloud_account_id = IntegerField(source="id", read_only=True)
-
-    class Meta:
-        model = AwsCloudAccount
-        fields = (
-            "account_arn",
-            "aws_account_id",
-            "aws_cloud_account_id",
-            "created_at",
-            "updated_at",
-        )
-
-
 class CloudAccountSerializer(ModelSerializer):
-    """Serialize a customer CloudAccount for API v2."""
+    """
+    Serialize a customer CloudAccount for API v2.
+
+    Todo:
+        Further separate the AWS-specific functionality here to make cloud-specific
+        features and properties more dynamic. Consider renaming "aws_account_id" and
+        "account_arn" to more generic, cloud-agnostic names. For example, the
+        InstanceSerializer uses "cloud_account_id".
+    """
 
     account_arn = CharField(required=False)
     account_id = IntegerField(source="id", read_only=True)
@@ -164,46 +161,6 @@ class CloudAccountSerializer(ModelSerializer):
         return cloud_account
 
 
-class AwsMachineImageSerializer(ModelSerializer):
-    """Serialize a customer AwsMachineImage for API v2."""
-
-    aws_image_id = IntegerField(source="id", read_only=True)
-
-    class Meta:
-        model = AwsMachineImage
-        fields = (
-            "aws_image_id",
-            "created_at",
-            "ec2_ami_id",
-            "id",
-            "owner_aws_account_id",
-            "platform",
-            "region",
-            "updated_at",
-            "is_cloud_access",
-            "is_marketplace",
-        )
-        read_only_fields = (
-            "created_at",
-            "ec2_ami_id",
-            "id",
-            "owner_aws_account_id",
-            "platform",
-            "region",
-            "updated_at",
-            "is_cloud_access",
-            "is_marketplace",
-        )
-
-    def create(self, validated_data):
-        """Create an AwsMachineImage."""
-        raise NotImplementedError
-
-    def update(self, instance, validated_data):
-        """Update an AwsMachineImage."""
-        raise NotImplementedError
-
-
 class MachineImageSerializer(ModelSerializer):
     """Serialize a customer AwsMachineImage for API v2."""
 
@@ -265,13 +222,13 @@ class MachineImageSerializer(ModelSerializer):
 
     def update(self, image, validated_data):
         """
-        Update the AwsMachineImage challenge properties.
+        Update the MachineImage challenge properties.
 
         Args:
             image (MachineImage): Image to be updated.
             validated_data (dict): Dictionary of properties to be updated.
 
-        Returns (AwsMachineImage): Updated object.
+        Returns (MachineImage): Updated object.
 
         """
         rhel_challenged = validated_data.get("rhel_challenged", None)
@@ -287,38 +244,6 @@ class MachineImageSerializer(ModelSerializer):
             image.save()
 
         return image
-
-
-class AwsInstanceSerializer(ModelSerializer):
-    """Serialize a customer AwsInstance for API v2."""
-
-    aws_instance_id = IntegerField(source="id", read_only=True)
-
-    class Meta:
-        model = AwsInstance
-        fields = (
-            "aws_instance_id",
-            "created_at",
-            "ec2_instance_id",
-            "region",
-            "updated_at",
-        )
-        read_only_fields = (
-            "account",
-            "created_at",
-            "ec2_instance_id",
-            "id",
-            "region",
-            "updated_at",
-        )
-
-    def create(self, validated_data):
-        """Create a AwsInstance."""
-        raise NotImplementedError
-
-    def update(self, instance, validated_data):
-        """Update a AwsInstance."""
-        raise NotImplementedError
 
 
 class InstanceSerializer(ModelSerializer):
