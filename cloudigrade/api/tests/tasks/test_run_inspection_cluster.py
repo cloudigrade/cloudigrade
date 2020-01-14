@@ -66,7 +66,7 @@ class RunInspectionClusterTest(TestCase):
         mock_ec2.Volume.assert_called_once_with(messages[0]["volume_id"])
         mock_ec2.Volume.return_value.attach_to_instance.assert_called_once()
 
-    @patch("api.models.AwsMachineImage.objects")
+    @patch("api.clouds.aws.models.AwsMachineImage.objects")
     @patch("api.tasks.boto3")
     def test_run_inspection_cluster_with_no_instances(
         self, mock_boto3, mock_machine_image_objects
@@ -95,7 +95,7 @@ class RunInspectionClusterTest(TestCase):
         tasks.run_inspection_cluster(messages)
         mock_boto3.client.assert_not_called()
 
-    @patch("api.models.AwsMachineImage.objects")
+    @patch("api.clouds.aws.models.AwsMachineImage.objects")
     @patch("api.tasks.boto3")
     def test_run_inspection_cluster_with_too_many_instances(
         self, mock_boto3, mock_machine_image_objects

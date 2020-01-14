@@ -15,10 +15,8 @@ from rest_framework.fields import (
 from rest_framework.serializers import ModelSerializer, Serializer
 
 from api import CLOUD_PROVIDERS
+from api.clouds.aws.models import AwsCloudAccount, AwsInstance, AwsMachineImage
 from api.models import (
-    AwsCloudAccount,
-    AwsInstance,
-    AwsMachineImage,
     CloudAccount,
     Instance,
     MachineImage,

@@ -27,12 +27,14 @@ from django.db.models import Q
 from django.utils.translation import gettext as _
 from requests.exceptions import BaseHTTPError, RequestException
 
-from api.cloudtrail import extract_ami_tag_events, extract_ec2_instance_events
-from api.models import (
+from api.clouds.aws.models import (
     AwsCloudAccount,
     AwsEC2InstanceDefinition,
     AwsInstance,
     AwsMachineImage,
+)
+from api.cloudtrail import extract_ami_tag_events, extract_ec2_instance_events
+from api.models import (
     CloudAccount,
     Instance,
     InstanceEvent,

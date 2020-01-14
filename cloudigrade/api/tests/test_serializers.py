@@ -6,7 +6,8 @@ from botocore.exceptions import ClientError
 from django.test import TestCase, TransactionTestCase
 from rest_framework.serializers import ValidationError
 
-from api.models import AwsCloudAccount, AwsMachineImage, CloudAccount, Instance
+from api.clouds.aws.models import AwsCloudAccount, AwsMachineImage
+from api.models import CloudAccount, Instance
 from api.serializers import CloudAccountSerializer, MachineImageSerializer, aws
 from api.tests import helper
 from util.tests import helper as util_helper

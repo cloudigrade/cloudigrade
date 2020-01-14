@@ -6,7 +6,7 @@ from celery.exceptions import Retry
 from django.test import TestCase
 
 from api import tasks
-from api.models import AwsMachineImageCopy
+from api.clouds.aws.models import AwsMachineImageCopy
 from api.tasks import copy_ami_snapshot
 from api.tests import helper as account_helper
 from util.exceptions import AwsSnapshotCopyLimitError, AwsSnapshotNotOwnedError

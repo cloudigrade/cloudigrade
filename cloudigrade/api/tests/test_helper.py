@@ -13,13 +13,15 @@ import faker
 from django.conf import settings
 from django.test import TestCase
 
-from api.models import (
+from api.clouds.aws.models import (
     AwsEC2InstanceDefinition,
     CLOUD_ACCESS_NAME_TOKEN,
+    MARKETPLACE_NAME_TOKEN,
+)
+from api.models import (
     CloudAccount,
     Instance,
     InstanceEvent,
-    MARKETPLACE_NAME_TOKEN,
     MachineImage,
 )
 from api.tests import helper

@@ -76,8 +76,8 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         # Delete should not have been called.
         mock_clount_delete.assert_not_called()
 
-    @patch("api.models.AwsCloudAccount.cloud_account")
-    @patch("api.models.AwsCloudAccount.delete")
+    @patch("api.clouds.aws.models.AwsCloudAccount.cloud_account")
+    @patch("api.clouds.aws.models.AwsCloudAccount.delete")
     def test_delete_from_sources_kafka_message_fail_no_clount_with_aws_clount(
         self, mock_aws_clount_delete, mock_aws_clount_clount
     ):

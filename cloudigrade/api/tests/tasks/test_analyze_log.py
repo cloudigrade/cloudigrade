@@ -7,10 +7,8 @@ from django.conf import settings
 from django.test import TestCase
 
 from api import cloudtrail, tasks
+from api.clouds.aws.models import AwsInstance, AwsInstanceEvent, AwsMachineImage
 from api.models import (
-    AwsInstance,
-    AwsInstanceEvent,
-    AwsMachineImage,
     Instance,
     InstanceEvent,
     MachineImage,

@@ -5,7 +5,7 @@ from unittest.mock import patch
 from django.core.management import call_command
 from django.test import TestCase
 
-from api.models import AwsEC2InstanceDefinition
+from api.clouds.aws.models import AwsEC2InstanceDefinition
 from util.tests import helper
 
 

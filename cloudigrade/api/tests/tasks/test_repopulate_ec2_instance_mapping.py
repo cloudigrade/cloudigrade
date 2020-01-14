@@ -6,7 +6,7 @@ from django.db import IntegrityError
 from django.test import TestCase
 
 from api import tasks
-from api.models import AwsEC2InstanceDefinition
+from api.clouds.aws.models import AwsEC2InstanceDefinition
 
 _faker = faker.Faker()
 

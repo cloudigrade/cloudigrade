@@ -4,9 +4,8 @@ from unittest.mock import call, patch
 from django.test import TestCase
 
 from api import tasks
+from api.clouds.aws.models import AwsInstance, AwsMachineImage
 from api.models import (
-    AwsInstance,
-    AwsMachineImage,
     Instance,
     InstanceEvent,
     MachineImage,

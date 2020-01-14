@@ -20,13 +20,15 @@ from django.utils.translation import gettext as _
 from rest_framework.serializers import ValidationError
 
 from api import AWS_PROVIDER_STRING
-from api.models import (
+from api.clouds.aws.models import (
     AwsCloudAccount,
     AwsEC2InstanceDefinition,
     AwsInstance,
     AwsInstanceEvent,
     AwsMachineImage,
     AwsMachineImageCopy,
+)
+from api.models import (
     CloudAccount,
     ConcurrentUsage,
     Instance,

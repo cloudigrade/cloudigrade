@@ -11,18 +11,20 @@ from django.conf import settings
 from rest_framework.test import APIClient
 
 from api import tasks
-from api.cloudtrail import CloudTrailInstanceEvent
-from api.models import (
+from api.clouds.aws.models import (
     AwsCloudAccount,
     AwsEC2InstanceDefinition,
     AwsInstance,
     AwsInstanceEvent,
     AwsMachineImage,
     CLOUD_ACCESS_NAME_TOKEN,
+    MARKETPLACE_NAME_TOKEN,
+)
+from api.cloudtrail import CloudTrailInstanceEvent
+from api.models import (
     CloudAccount,
     Instance,
     InstanceEvent,
-    MARKETPLACE_NAME_TOKEN,
     MachineImage,
     Run,
 )

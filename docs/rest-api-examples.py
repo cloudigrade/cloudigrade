@@ -21,6 +21,7 @@ from util.tests.helper import get_test_user
 from util import filters
 
 from api import models
+from api.clouds.aws.models import AwsCloudAccount
 from api.tests import helper as api_helper
 from api.util import normalize_runs
 from util.tests import helper as util_helper
@@ -66,9 +67,7 @@ class DocsApiHandler(object):
         self.customer_arn = util_helper.generate_dummy_arn()
 
         # Make sure an account doesn't already exist with that ARN.
-        for account in models.AwsCloudAccount.objects.filter(
-            account_arn=self.customer_arn
-        ):
+        for account in AwsCloudAccount.objects.filter(account_arn=self.customer_arn):
             self.superuser_client.delete_account(account.id)
 
         # Times to use for various account and event activity.

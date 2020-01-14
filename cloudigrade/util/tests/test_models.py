@@ -5,6 +5,7 @@ from unittest.mock import patch
 from django.test import TestCase
 
 from api import models
+from api.clouds.aws import models as aws_models
 from api.tests import helper
 from util.aws import sts
 from util.tests import helper as util_helper
@@ -25,10 +26,10 @@ class BaseGenericModelTest(TestCase):
     def test_delete_base_model_removes_platform_specific_model(self):
         """Deleting a generic model removes its more specific counterpart."""
         with patch.object(sts, "boto3") as mock_boto3, patch.object(
-            models, "disable_cloudtrail"
+            aws_models, "disable_cloudtrail"
         ):
             mock_assume_role = mock_boto3.client.return_value.assume_role
             mock_assume_role.return_value = self.role
             models.CloudAccount.objects.all().delete()
             self.assertEqual(0, models.CloudAccount.objects.count())
-            self.assertEqual(0, models.AwsCloudAccount.objects.count())
+            self.assertEqual(0, aws_models.AwsCloudAccount.objects.count())

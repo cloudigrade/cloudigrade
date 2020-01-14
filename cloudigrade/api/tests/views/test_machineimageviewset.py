@@ -5,7 +5,8 @@ from decimal import Decimal
 from django.test import TestCase
 from rest_framework.test import APIRequestFactory, force_authenticate
 
-from api.models import AwsMachineImage, MachineImage
+from api.clouds.aws.models import AwsMachineImage
+from api.models import MachineImage
 from api.tests import helper as api_helper
 from api.views import MachineImageViewSet
 from util.tests import helper as util_helper

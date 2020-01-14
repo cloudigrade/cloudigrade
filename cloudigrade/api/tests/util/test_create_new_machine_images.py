@@ -5,7 +5,7 @@ from django.test import TestCase
 
 import util.aws.sqs
 from api import util
-from api.models import AwsMachineImage
+from api.clouds.aws.models import AwsMachineImage
 from api.tests import helper as api_helper
 from util import aws
 from util.tests import helper as util_helper

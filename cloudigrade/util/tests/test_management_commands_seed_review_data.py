@@ -4,13 +4,13 @@ from django.contrib.auth.models import User
 from django.core.management import call_command
 from django.test import TestCase
 
-from api.models import (
+from api.clouds.aws.models import (
     AwsCloudAccount,
     AwsInstance,
     AwsInstanceEvent,
     AwsMachineImage,
-    Run,
 )
+from api.models import Run
 
 
 class SyncBucketLifecycleTest(TestCase):
