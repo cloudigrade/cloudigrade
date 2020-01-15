@@ -181,7 +181,7 @@ class AccountViewSetTest(TransactionTestCase):
         self.assertResponseHasAwsAccountData(response, account)
 
     @patch.object(util, "aws")
-    @patch("api.tasks.initial_aws_describe_instances")
+    @patch("api.clouds.aws.tasks.initial_aws_describe_instances")
     def test_create_account_with_name_success(self, mock_task, mock_aws):
         """Test create account with a name succeeds."""
         mock_aws.verify_account_access.return_value = True, []
@@ -208,7 +208,7 @@ class AccountViewSetTest(TransactionTestCase):
         mock_task.delay.assert_called()
 
     @patch.object(util, "aws")
-    @patch("api.tasks.initial_aws_describe_instances")
+    @patch("api.clouds.aws.tasks.initial_aws_describe_instances")
     def test_create_account_with_duplicate_name_fail(self, mock_aws, mock_task):
         """Test create account with a duplicate name fails."""
         mock_aws.verify_account_access.return_value = True, []

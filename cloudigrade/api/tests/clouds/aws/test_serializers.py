@@ -141,7 +141,7 @@ class AwsAccountSerializerTest(TransactionTestCase):
                 str(serializer.errors["cloud_type"][0]),
             )
 
-    @patch("api.tasks.initial_aws_describe_instances")
+    @patch("api.clouds.aws.tasks.initial_aws_describe_instances")
     def test_create_succeeds_when_account_verified(self, mock_task):
         """Test saving of a test ARN."""
         mock_request = Mock()

@@ -4,13 +4,13 @@ from unittest.mock import patch
 from django.conf import settings
 from django.test import TestCase
 
-from api.tasks import _build_container_definition
+from api.clouds.aws.tasks import _build_container_definition
 
 
 class BuildContainerDefinitionTest(TestCase):
     """Helper function '_build_container_definition' test cases."""
 
-    @patch("api.tasks.settings")
+    @patch("api.clouds.aws.tasks.settings")
     def test_build_container_definition_with_sentry(self, mock_s):
         """Assert successful build of definition with sentry params."""
         enable_sentry = True

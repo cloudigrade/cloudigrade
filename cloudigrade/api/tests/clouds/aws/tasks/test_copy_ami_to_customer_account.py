@@ -4,9 +4,9 @@ from unittest.mock import Mock, patch
 from botocore.exceptions import ClientError
 from django.test import TestCase
 
-from api import tasks
+from api.clouds.aws import tasks
+from api.clouds.aws.tasks import copy_ami_to_customer_account
 from api.models import MachineImage
-from api.tasks import copy_ami_to_customer_account
 from api.tests import helper as api_helper
 from util.tests import helper as util_helper
 
@@ -14,7 +14,7 @@ from util.tests import helper as util_helper
 class CopyAmiToCustomerAccountTest(TestCase):
     """Celery task 'copy_ami_to_customer_account' test cases."""
 
-    @patch("api.tasks.aws")
+    @patch("api.clouds.aws.tasks.aws")
     def test_copy_ami_to_customer_account_success(self, mock_aws):
         """Assert that the task copies image using appropriate boto calls."""
         arn = util_helper.generate_dummy_arn()
@@ -40,7 +40,7 @@ class CopyAmiToCustomerAccountTest(TestCase):
             mock_aws.get_session.return_value, reference_ami.id, source_region
         )
 
-    @patch("api.tasks.aws")
+    @patch("api.clouds.aws.tasks.aws")
     def test_copy_ami_to_customer_account_marketplace(self, mock_aws):
         """Assert that the task marks marketplace image as inspected."""
         arn = util_helper.generate_dummy_arn()
@@ -80,7 +80,7 @@ class CopyAmiToCustomerAccountTest(TestCase):
         self.assertEqual(image.status, MachineImage.INSPECTED)
         self.assertTrue(aws_image.aws_marketplace_image)
 
-    @patch("api.tasks.aws")
+    @patch("api.clouds.aws.tasks.aws")
     def test_copy_ami_to_customer_account_marketplace_with_dot_error(self, mock_aws):
         """Assert that the task marks marketplace image as inspected."""
         arn = util_helper.generate_dummy_arn()
@@ -114,7 +114,7 @@ class CopyAmiToCustomerAccountTest(TestCase):
         self.assertEqual(image.status, MachineImage.INSPECTED)
         self.assertTrue(aws_image.aws_marketplace_image)
 
-    @patch("api.tasks.aws")
+    @patch("api.clouds.aws.tasks.aws")
     def test_copy_ami_to_customer_account_missing_image(self, mock_aws):
         """Assert early return if the AwsMachineImage doesn't exist."""
         arn = util_helper.generate_dummy_arn()
@@ -123,7 +123,7 @@ class CopyAmiToCustomerAccountTest(TestCase):
         copy_ami_to_customer_account(arn, reference_ami_id, region)
         mock_aws.get_session.assert_not_called()
 
-    @patch("api.tasks.aws")
+    @patch("api.clouds.aws.tasks.aws")
     def test_copy_ami_to_customer_account_community(self, mock_aws):
         """Assert that the task marks community image as inspected."""
         arn = util_helper.generate_dummy_arn()
@@ -156,7 +156,7 @@ class CopyAmiToCustomerAccountTest(TestCase):
         self.assertEqual(image.status, image.INSPECTED)
         self.assertTrue(aws_image.aws_marketplace_image)
 
-    @patch("api.tasks.aws")
+    @patch("api.clouds.aws.tasks.aws")
     def test_copy_ami_to_customer_account_private_no_copy(self, mock_aws):
         """Assert that the task marks private (no copy) image as in error."""
         arn = util_helper.generate_dummy_arn()
@@ -192,7 +192,7 @@ class CopyAmiToCustomerAccountTest(TestCase):
         )
         self.assertEqual(image.status, MachineImage.ERROR)
 
-    @patch("api.tasks.aws")
+    @patch("api.clouds.aws.tasks.aws")
     def test_copy_ami_to_customer_account_private_no_copy_dot_error(self, mock_aws):
         """Assert that the task marks private (no copy) image as in error."""
         arn = util_helper.generate_dummy_arn()
@@ -226,7 +226,7 @@ class CopyAmiToCustomerAccountTest(TestCase):
 
         self.assertEqual(image.status, MachineImage.ERROR)
 
-    @patch("api.tasks.aws")
+    @patch("api.clouds.aws.tasks.aws")
     def test_copy_ami_to_customer_account_not_marketplace(self, mock_aws):
         """Assert that the task fails when non-marketplace error occurs."""
         arn = util_helper.generate_dummy_arn()
@@ -254,7 +254,7 @@ class CopyAmiToCustomerAccountTest(TestCase):
             mock_aws.get_session.return_value, reference_ami_id, source_region
         )
 
-    @patch("api.tasks.aws")
+    @patch("api.clouds.aws.tasks.aws")
     def test_copy_ami_to_customer_account_save_error_when_image_load_fails(
         self, mock_aws
     ):

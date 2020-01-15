@@ -6,8 +6,7 @@ import faker
 from django.conf import settings
 from django.test import TestCase
 
-from api import tasks
-from api.clouds.aws import cloudtrail
+from api.clouds.aws import cloudtrail, tasks
 from api.clouds.aws.models import AwsInstance, AwsInstanceEvent, AwsMachineImage
 from api.models import (
     Instance,
@@ -36,13 +35,13 @@ class AnalyzeLogTest(TestCase):
         helper.generate_aws_ec2_definitions()
 
     @util_helper.clouditardis(util_helper.utc_dt(2018, 1, 5, 0, 0, 0))
-    @patch("api.tasks.start_image_inspection")
-    @patch("api.tasks.aws.get_session")
-    @patch("api.tasks.aws.delete_messages_from_queue")
-    @patch("api.tasks.aws.get_object_content_from_s3")
-    @patch("api.tasks.aws.yield_messages_from_queue")
-    @patch("api.tasks.aws.describe_instances")
-    @patch("api.tasks.aws.describe_images")
+    @patch("api.clouds.aws.tasks.start_image_inspection")
+    @patch("api.clouds.aws.tasks.aws.get_session")
+    @patch("api.clouds.aws.tasks.aws.delete_messages_from_queue")
+    @patch("api.clouds.aws.tasks.aws.get_object_content_from_s3")
+    @patch("api.clouds.aws.tasks.aws.yield_messages_from_queue")
+    @patch("api.clouds.aws.tasks.aws.describe_instances")
+    @patch("api.clouds.aws.tasks.aws.describe_images")
     def test_analyze_log_same_instance_various_things(
         self,
         mock_describe_images,
@@ -221,13 +220,13 @@ class AnalyzeLogTest(TestCase):
         self.assertEqual(image.machine_image.get().status, MachineImage.PENDING)
 
     @util_helper.clouditardis(util_helper.utc_dt(2018, 1, 3, 0, 0, 0))
-    @patch("api.tasks.start_image_inspection")
-    @patch("api.tasks.aws.get_session")
-    @patch("api.tasks.aws.delete_messages_from_queue")
-    @patch("api.tasks.aws.get_object_content_from_s3")
-    @patch("api.tasks.aws.yield_messages_from_queue")
-    @patch("api.tasks.aws.describe_instances")
-    @patch("api.tasks.aws.describe_images")
+    @patch("api.clouds.aws.tasks.start_image_inspection")
+    @patch("api.clouds.aws.tasks.aws.get_session")
+    @patch("api.clouds.aws.tasks.aws.delete_messages_from_queue")
+    @patch("api.clouds.aws.tasks.aws.get_object_content_from_s3")
+    @patch("api.clouds.aws.tasks.aws.yield_messages_from_queue")
+    @patch("api.clouds.aws.tasks.aws.describe_instances")
+    @patch("api.clouds.aws.tasks.aws.describe_images")
     def test_analyze_log_run_instance_windows_image(
         self,
         mock_describe_images,
@@ -330,13 +329,13 @@ class AnalyzeLogTest(TestCase):
         self.assertEqual(image.platform, image.WINDOWS)
 
     @util_helper.clouditardis(util_helper.utc_dt(2018, 1, 3, 0, 0, 0))
-    @patch("api.tasks.start_image_inspection")
-    @patch("api.tasks.aws.get_session")
-    @patch("api.tasks.aws.delete_messages_from_queue")
-    @patch("api.tasks.aws.get_object_content_from_s3")
-    @patch("api.tasks.aws.yield_messages_from_queue")
-    @patch("api.tasks.aws.describe_instances")
-    @patch("api.tasks.aws.describe_images")
+    @patch("api.clouds.aws.tasks.start_image_inspection")
+    @patch("api.clouds.aws.tasks.aws.get_session")
+    @patch("api.clouds.aws.tasks.aws.delete_messages_from_queue")
+    @patch("api.clouds.aws.tasks.aws.get_object_content_from_s3")
+    @patch("api.clouds.aws.tasks.aws.yield_messages_from_queue")
+    @patch("api.clouds.aws.tasks.aws.describe_instances")
+    @patch("api.clouds.aws.tasks.aws.describe_images")
     def test_analyze_log_run_instance_known_image(
         self,
         mock_describe_images,
@@ -421,13 +420,13 @@ class AnalyzeLogTest(TestCase):
         self.assertIsNone(runs[0].end_time)
 
     @util_helper.clouditardis(util_helper.utc_dt(2018, 1, 3, 0, 0, 0))
-    @patch("api.tasks.start_image_inspection")
-    @patch("api.tasks.aws.get_session")
-    @patch("api.tasks.aws.delete_messages_from_queue")
-    @patch("api.tasks.aws.get_object_content_from_s3")
-    @patch("api.tasks.aws.yield_messages_from_queue")
-    @patch("api.tasks.aws.describe_instances")
-    @patch("api.tasks.aws.describe_images")
+    @patch("api.clouds.aws.tasks.start_image_inspection")
+    @patch("api.clouds.aws.tasks.aws.get_session")
+    @patch("api.clouds.aws.tasks.aws.delete_messages_from_queue")
+    @patch("api.clouds.aws.tasks.aws.get_object_content_from_s3")
+    @patch("api.clouds.aws.tasks.aws.yield_messages_from_queue")
+    @patch("api.clouds.aws.tasks.aws.describe_instances")
+    @patch("api.clouds.aws.tasks.aws.describe_images")
     def test_analyze_log_start_old_instance_known_image(
         self,
         mock_describe_images,
@@ -532,13 +531,13 @@ class AnalyzeLogTest(TestCase):
         self.assertIsNone(runs[0].end_time)
 
     @util_helper.clouditardis(util_helper.utc_dt(2018, 1, 3, 0, 0, 0))
-    @patch("api.tasks.start_image_inspection")
-    @patch("api.tasks.aws.get_session")
-    @patch("api.tasks.aws.delete_messages_from_queue")
-    @patch("api.tasks.aws.get_object_content_from_s3")
-    @patch("api.tasks.aws.yield_messages_from_queue")
-    @patch("api.tasks.aws.describe_instances")
-    @patch("api.tasks.aws.describe_images")
+    @patch("api.clouds.aws.tasks.start_image_inspection")
+    @patch("api.clouds.aws.tasks.aws.get_session")
+    @patch("api.clouds.aws.tasks.aws.delete_messages_from_queue")
+    @patch("api.clouds.aws.tasks.aws.get_object_content_from_s3")
+    @patch("api.clouds.aws.tasks.aws.yield_messages_from_queue")
+    @patch("api.clouds.aws.tasks.aws.describe_instances")
+    @patch("api.clouds.aws.tasks.aws.describe_images")
     def test_analyze_log_run_instance_unavailable_image(
         self,
         mock_describe_images,
@@ -635,9 +634,9 @@ class AnalyzeLogTest(TestCase):
         self.assertEqual(awsimage.owner_aws_account_id, None)
         self.assertEqual(image.status, image.UNAVAILABLE)
 
-    @patch("api.tasks.aws.delete_messages_from_queue")
-    @patch("api.tasks.aws.get_object_content_from_s3")
-    @patch("api.tasks.aws.yield_messages_from_queue")
+    @patch("api.clouds.aws.tasks.aws.delete_messages_from_queue")
+    @patch("api.clouds.aws.tasks.aws.get_object_content_from_s3")
+    @patch("api.clouds.aws.tasks.aws.yield_messages_from_queue")
     def test_analyze_log_with_multiple_sqs_messages(
         self, mock_receive, mock_s3, mock_del
     ):
@@ -682,11 +681,11 @@ class AnalyzeLogTest(TestCase):
         self.assertIn(delete_1_call, delete_message_calls)
         self.assertIn(delete_3_call, delete_message_calls)
 
-    @patch("api.tasks.start_image_inspection")
-    @patch("api.tasks.aws.get_session")
-    @patch("api.tasks.aws.delete_messages_from_queue")
-    @patch("api.tasks.aws.get_object_content_from_s3")
-    @patch("api.tasks.aws.yield_messages_from_queue")
+    @patch("api.clouds.aws.tasks.start_image_inspection")
+    @patch("api.clouds.aws.tasks.aws.get_session")
+    @patch("api.clouds.aws.tasks.aws.delete_messages_from_queue")
+    @patch("api.clouds.aws.tasks.aws.get_object_content_from_s3")
+    @patch("api.clouds.aws.tasks.aws.yield_messages_from_queue")
     def test_analyze_log_changed_instance_type_existing_instance(
         self, mock_receive, mock_s3, mock_del, mock_session, mock_inspection
     ):
@@ -734,12 +733,12 @@ class AnalyzeLogTest(TestCase):
         self.assertEqual(awsevent.instance_type, instance_type)
         self.assertEqual(event.event_type, "attribute_change")
 
-    @patch("api.tasks.start_image_inspection")
-    @patch("api.tasks.aws.describe_instances")
-    @patch("api.tasks.aws.get_session")
-    @patch("api.tasks.aws.delete_messages_from_queue")
-    @patch("api.tasks.aws.get_object_content_from_s3")
-    @patch("api.tasks.aws.yield_messages_from_queue")
+    @patch("api.clouds.aws.tasks.start_image_inspection")
+    @patch("api.clouds.aws.tasks.aws.describe_instances")
+    @patch("api.clouds.aws.tasks.aws.get_session")
+    @patch("api.clouds.aws.tasks.aws.delete_messages_from_queue")
+    @patch("api.clouds.aws.tasks.aws.get_object_content_from_s3")
+    @patch("api.clouds.aws.tasks.aws.yield_messages_from_queue")
     def test_analyze_log_when_instance_was_terminated(
         self,
         mock_receive,
@@ -807,11 +806,11 @@ class AnalyzeLogTest(TestCase):
         images = list(AwsMachineImage.objects.all())
         self.assertEqual(len(images), 0)
 
-    @patch("api.tasks.start_image_inspection")
-    @patch("api.tasks.aws.get_session")
-    @patch("api.tasks.aws.delete_messages_from_queue")
-    @patch("api.tasks.aws.get_object_content_from_s3")
-    @patch("api.tasks.aws.yield_messages_from_queue")
+    @patch("api.clouds.aws.tasks.start_image_inspection")
+    @patch("api.clouds.aws.tasks.aws.get_session")
+    @patch("api.clouds.aws.tasks.aws.delete_messages_from_queue")
+    @patch("api.clouds.aws.tasks.aws.get_object_content_from_s3")
+    @patch("api.clouds.aws.tasks.aws.yield_messages_from_queue")
     def test_analyze_log_when_account_is_not_known(
         self, mock_receive, mock_s3, mock_del, mock_session, mock_inspection
     ):
@@ -847,9 +846,9 @@ class AnalyzeLogTest(TestCase):
         images = list(AwsMachineImage.objects.all())
         self.assertEqual(len(images), 0)
 
-    @patch("api.tasks.aws.delete_messages_from_queue")
-    @patch("api.tasks.aws.get_object_content_from_s3")
-    @patch("api.tasks.aws.yield_messages_from_queue")
+    @patch("api.clouds.aws.tasks.aws.delete_messages_from_queue")
+    @patch("api.clouds.aws.tasks.aws.get_object_content_from_s3")
+    @patch("api.clouds.aws.tasks.aws.yield_messages_from_queue")
     def test_analyze_log_with_invalid_cloudtrail_log_content(
         self, mock_receive, mock_s3, mock_del
     ):
@@ -873,9 +872,9 @@ class AnalyzeLogTest(TestCase):
 
         mock_del.assert_not_called()
 
-    @patch("api.tasks.aws.delete_messages_from_queue")
-    @patch("api.tasks.aws.get_object_content_from_s3")
-    @patch("api.tasks.aws.yield_messages_from_queue")
+    @patch("api.clouds.aws.tasks.aws.delete_messages_from_queue")
+    @patch("api.clouds.aws.tasks.aws.get_object_content_from_s3")
+    @patch("api.clouds.aws.tasks.aws.yield_messages_from_queue")
     def test_analyze_log_with_irrelevant_log_activity(
         self, mock_receive, mock_s3, mock_del
     ):
@@ -895,9 +894,9 @@ class AnalyzeLogTest(TestCase):
         tasks.analyze_log()
         mock_del.assert_called()
 
-    @patch("api.tasks.aws.delete_messages_from_queue")
-    @patch("api.tasks.aws.get_object_content_from_s3")
-    @patch("api.tasks.aws.yield_messages_from_queue")
+    @patch("api.clouds.aws.tasks.aws.delete_messages_from_queue")
+    @patch("api.clouds.aws.tasks.aws.get_object_content_from_s3")
+    @patch("api.clouds.aws.tasks.aws.yield_messages_from_queue")
     def test_ami_tags_added_success(self, mock_receive, mock_s3, mock_del):
         """Test processing a CloudTrail log for ami tags added."""
         ami = helper.generate_aws_image()
@@ -925,9 +924,9 @@ class AnalyzeLogTest(TestCase):
         self.assertTrue(updated_ami.machine_image.get().openshift_detected)
         mock_del.assert_called()
 
-    @patch("api.tasks.aws.delete_messages_from_queue")
-    @patch("api.tasks.aws.get_object_content_from_s3")
-    @patch("api.tasks.aws.yield_messages_from_queue")
+    @patch("api.clouds.aws.tasks.aws.delete_messages_from_queue")
+    @patch("api.clouds.aws.tasks.aws.get_object_content_from_s3")
+    @patch("api.clouds.aws.tasks.aws.yield_messages_from_queue")
     def test_ami_tags_removed_success(self, mock_receive, mock_s3, mock_del):
         """Test processing a CloudTrail log for ami tags removed."""
         ami = helper.generate_aws_image(openshift_detected=True)
@@ -955,12 +954,12 @@ class AnalyzeLogTest(TestCase):
         self.assertFalse(updated_ami.machine_image.get().openshift_detected)
         mock_del.assert_called()
 
-    @patch("api.tasks.start_image_inspection")
-    @patch("api.tasks.aws.get_session")
-    @patch("api.tasks.aws.delete_messages_from_queue")
-    @patch("api.tasks.aws.get_object_content_from_s3")
-    @patch("api.tasks.aws.yield_messages_from_queue")
-    @patch("api.tasks.aws.describe_images")
+    @patch("api.clouds.aws.tasks.start_image_inspection")
+    @patch("api.clouds.aws.tasks.aws.get_session")
+    @patch("api.clouds.aws.tasks.aws.delete_messages_from_queue")
+    @patch("api.clouds.aws.tasks.aws.get_object_content_from_s3")
+    @patch("api.clouds.aws.tasks.aws.yield_messages_from_queue")
+    @patch("api.clouds.aws.tasks.aws.describe_images")
     def test_ami_tags_unknown_ami_is_added(
         self,
         mock_describe,
@@ -1005,9 +1004,9 @@ class AnalyzeLogTest(TestCase):
             self.account.content_object.account_arn, new_ami_id, region
         )
 
-    @patch("api.tasks.aws.delete_messages_from_queue")
-    @patch("api.tasks.aws.get_object_content_from_s3")
-    @patch("api.tasks.aws.yield_messages_from_queue")
+    @patch("api.clouds.aws.tasks.aws.delete_messages_from_queue")
+    @patch("api.clouds.aws.tasks.aws.get_object_content_from_s3")
+    @patch("api.clouds.aws.tasks.aws.yield_messages_from_queue")
     def test_other_tags_ignored(self, mock_receive, mock_s3, mock_del):
         """
         Test tag processing where unknown tags should be ignored.
@@ -1039,9 +1038,9 @@ class AnalyzeLogTest(TestCase):
         self.assertEqual(len(all_images), 0)
         mock_del.assert_called()
 
-    @patch("api.tasks.aws.delete_messages_from_queue")
-    @patch("api.tasks.aws.get_object_content_from_s3")
-    @patch("api.tasks.aws.yield_messages_from_queue")
+    @patch("api.clouds.aws.tasks.aws.delete_messages_from_queue")
+    @patch("api.clouds.aws.tasks.aws.get_object_content_from_s3")
+    @patch("api.clouds.aws.tasks.aws.yield_messages_from_queue")
     def test_non_ami_resources_with_tags_ignored(self, mock_receive, mock_s3, mock_del):
         """Test tag processing where non-AMI resources should be ignored."""
         some_ignored_id = _faker.uuid4()

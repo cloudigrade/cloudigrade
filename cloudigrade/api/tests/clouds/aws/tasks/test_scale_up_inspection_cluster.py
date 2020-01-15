@@ -5,7 +5,7 @@ from botocore.exceptions import ClientError
 from django.conf import settings
 from django.test import TestCase
 
-from api import tasks
+from api.clouds.aws import tasks
 
 
 class ScaleUpInspectionClusterTest(TestCase):
@@ -17,10 +17,10 @@ class ScaleUpInspectionClusterTest(TestCase):
             settings.AWS_NAME_PREFIX
         )
 
-    @patch("api.tasks.add_messages_to_queue")
-    @patch("api.tasks.run_inspection_cluster")
-    @patch("api.tasks.read_messages_from_queue")
-    @patch("api.tasks.aws")
+    @patch("api.clouds.aws.tasks.add_messages_to_queue")
+    @patch("api.clouds.aws.tasks.run_inspection_cluster")
+    @patch("api.clouds.aws.tasks.read_messages_from_queue")
+    @patch("api.clouds.aws.tasks.aws")
     def test_scale_up_inspection_cluster_success(
         self,
         mock_aws,
@@ -47,10 +47,10 @@ class ScaleUpInspectionClusterTest(TestCase):
         mock_run_inspection_cluster.delay.assert_called_once_with(messages)
         mock_add_messages_to_queue.assert_not_called()
 
-    @patch("api.tasks.add_messages_to_queue")
-    @patch("api.tasks.run_inspection_cluster")
-    @patch("api.tasks.read_messages_from_queue")
-    @patch("api.tasks.aws")
+    @patch("api.clouds.aws.tasks.add_messages_to_queue")
+    @patch("api.clouds.aws.tasks.run_inspection_cluster")
+    @patch("api.clouds.aws.tasks.read_messages_from_queue")
+    @patch("api.clouds.aws.tasks.aws")
     def test_scale_up_inspection_cluster_aborts_when_not_scaled_down(
         self,
         mock_aws,
@@ -71,10 +71,10 @@ class ScaleUpInspectionClusterTest(TestCase):
         mock_run_inspection_cluster.delay.assert_not_called()
         mock_add_messages_to_queue.assert_not_called()
 
-    @patch("api.tasks.add_messages_to_queue")
-    @patch("api.tasks.run_inspection_cluster")
-    @patch("api.tasks.read_messages_from_queue")
-    @patch("api.tasks.aws")
+    @patch("api.clouds.aws.tasks.add_messages_to_queue")
+    @patch("api.clouds.aws.tasks.run_inspection_cluster")
+    @patch("api.clouds.aws.tasks.read_messages_from_queue")
+    @patch("api.clouds.aws.tasks.aws")
     def test_scale_up_inspection_cluster_aborts_when_no_messages(
         self,
         mock_aws,
@@ -98,10 +98,10 @@ class ScaleUpInspectionClusterTest(TestCase):
         mock_run_inspection_cluster.delay.assert_not_called()
         mock_add_messages_to_queue.assert_not_called()
 
-    @patch("api.tasks.add_messages_to_queue")
-    @patch("api.tasks.run_inspection_cluster")
-    @patch("api.tasks.read_messages_from_queue")
-    @patch("api.tasks.aws")
+    @patch("api.clouds.aws.tasks.add_messages_to_queue")
+    @patch("api.clouds.aws.tasks.run_inspection_cluster")
+    @patch("api.clouds.aws.tasks.read_messages_from_queue")
+    @patch("api.clouds.aws.tasks.aws")
     def test_scale_up_inspection_cluster_requeues_on_aws_error(
         self,
         mock_aws,

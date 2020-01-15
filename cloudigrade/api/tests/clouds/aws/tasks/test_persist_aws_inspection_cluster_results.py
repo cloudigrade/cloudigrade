@@ -4,7 +4,7 @@ import json
 import faker
 from django.test import TestCase
 
-from api import tasks
+from api.clouds.aws import tasks
 from api.clouds.aws.models import AwsMachineImage
 from api.tests import helper as api_helper
 from util.exceptions import InvalidHoundigradeJsonFormat

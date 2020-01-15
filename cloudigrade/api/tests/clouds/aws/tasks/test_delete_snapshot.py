@@ -3,15 +3,15 @@ from unittest.mock import patch
 
 from django.test import TestCase
 
-from api.tasks import delete_snapshot
+from api.clouds.aws.tasks import delete_snapshot
 from util.tests import helper as util_helper
 
 
 class DeleteSnapshotTest(TestCase):
     """Celery task 'delete_snapshot' test cases."""
 
-    @patch("api.tasks.boto3")
-    @patch("api.tasks.aws")
+    @patch("api.clouds.aws.tasks.boto3")
+    @patch("api.clouds.aws.tasks.aws")
     def test_delete_snapshot_success(self, mock_aws, mock_boto3):
         """Assert that the delete snapshot succeeds."""
         mock_snapshot_copy_id = util_helper.generate_dummy_snapshot_id()

@@ -5,7 +5,8 @@ import faker
 from django.contrib.auth.models import User
 from django.test import TestCase
 
-from api import tasks, util as api_util
+from api import util as api_util
+from api.clouds.aws import tasks
 from util.tests import helper as util_helper
 
 _faker = faker.Faker()

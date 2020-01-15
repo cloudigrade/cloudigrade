@@ -5,15 +5,15 @@ from botocore.exceptions import ClientError
 from django.conf import settings
 from django.test import TestCase
 
-from api.tasks import remove_snapshot_ownership
+from api.clouds.aws import tasks
 from util.tests import helper as util_helper
 
 
 class RemoveSnapshotOwnershipTest(TestCase):
     """Celery task 'remove_snapshot_ownership' test cases."""
 
-    @patch("api.tasks.boto3")
-    @patch("api.tasks.aws")
+    @patch("api.clouds.aws.tasks.boto3")
+    @patch("api.clouds.aws.tasks.aws")
     def test_remove_snapshot_ownership_success(self, mock_aws, mock_boto3):
         """Assert that the remove snapshot ownership task succeeds."""
         mock_arn = util_helper.generate_dummy_arn()
@@ -34,14 +34,14 @@ class RemoveSnapshotOwnershipTest(TestCase):
 
         mock_aws.get_region_from_availability_zone.return_value = region
 
-        remove_snapshot_ownership(
+        tasks.remove_snapshot_ownership(
             mock_arn, mock_customer_snapshot_id, region, mock_snapshot_copy_id
         )
 
         mock_aws.remove_snapshot_ownership.assert_called_with(mock_customer_snapshot)
 
-    @patch("api.tasks.boto3")
-    @patch("api.tasks.aws")
+    @patch("api.clouds.aws.tasks.boto3")
+    @patch("api.clouds.aws.tasks.aws")
     def test_remove_snapshot_ownership_no_copy_snapshot(self, mock_aws, mock_boto3):
         """Assert remove snapshot ownership task succeeds with missing copy."""
         mock_arn = util_helper.generate_dummy_arn()
@@ -68,14 +68,14 @@ class RemoveSnapshotOwnershipTest(TestCase):
 
         mock_aws.get_region_from_availability_zone.return_value = region
 
-        remove_snapshot_ownership(
+        tasks.remove_snapshot_ownership(
             mock_arn, mock_customer_snapshot_id, region, mock_snapshot_copy_id
         )
 
         mock_aws.remove_snapshot_ownership.assert_called_with(mock_customer_snapshot)
 
-    @patch("api.tasks.boto3")
-    @patch("api.tasks.aws")
+    @patch("api.clouds.aws.tasks.boto3")
+    @patch("api.clouds.aws.tasks.aws")
     def test_remove_snapshot_ownership_unexpected_error(self, mock_aws, mock_boto3):
         """Assert remove snapshot ownership fails due to unexpected error."""
         mock_arn = util_helper.generate_dummy_arn()
@@ -93,7 +93,7 @@ class RemoveSnapshotOwnershipTest(TestCase):
         resource.Snapshot.side_effect = client_error
 
         with self.assertRaises(RuntimeError):
-            remove_snapshot_ownership(
+            tasks.remove_snapshot_ownership(
                 mock_arn, mock_customer_snapshot_id, region, mock_snapshot_copy_id,
             )
 

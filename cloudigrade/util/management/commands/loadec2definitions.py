@@ -8,7 +8,7 @@ Note:
 from django.core.management.base import BaseCommand
 from django.utils.translation import gettext as _
 
-from api import tasks
+from api.clouds.aws import tasks
 from api.clouds.aws.models import AwsEC2InstanceDefinition
 
 

@@ -966,7 +966,7 @@ def start_image_inspection(arn, ami_id, region):
             machine_image.save()
         else:
             # Local import to get around a circular import issue
-            from api.tasks import copy_ami_snapshot
+            from api.clouds.aws.tasks import copy_ami_snapshot
 
             copy_ami_snapshot.delay(arn, ami_id, region)
 
@@ -1363,7 +1363,7 @@ def verify_permissions_and_create_aws_cloud_account(
         )
 
         # Local import to get around a circular import issue.
-        from api.tasks import initial_aws_describe_instances
+        from api.clouds.aws.tasks import initial_aws_describe_instances
 
         transaction.on_commit(
             lambda: initial_aws_describe_instances.delay(aws_cloud_account.id)

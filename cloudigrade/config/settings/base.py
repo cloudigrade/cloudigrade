@@ -300,61 +300,69 @@ INSPECT_PENDING_IMAGES_MIN_AGE = env.int(
 )
 
 CELERY_TASK_ROUTES = {
-    "api.tasks.initial_aws_describe_instances": {
-        "queue": "initial_aws_describe_instances"
-    },
-    "api.tasks.copy_ami_snapshot": {"queue": "copy_ami_snapshot"},
-    "api.tasks.copy_ami_to_customer_account": {"queue": "copy_ami_to_customer_account"},
-    "api.tasks.remove_snapshot_ownership": {"queue": "remove_snapshot_ownership"},
-    "api.tasks.create_volume": {"queue": "create_volume"},
-    "api.tasks.enqueue_ready_volume": {"queue": "enqueue_ready_volumes"},
-    "api.tasks.delete_snapshot": {"queue": "delete_snapshot"},
-    "api.tasks.inspect_pending_images": {"queue": "inspect_pending_images"},
-    "api.tasks.scale_up_inspection_cluster": {"queue": "scale_up_inspection_cluster"},
-    "api.tasks.run_inspection_cluster": {"queue": "run_inspection_cluster"},
-    "api.tasks.persist_inspection_cluster_results_task": {
-        "queue": "persist_inspection_cluster_results_task"
-    },
-    "api.tasks.scale_down_cluster": {"queue": "scale_down_cluster"},
-    "api.tasks.analyze_log": {"queue": "analyze_log"},
-    "api.tasks.process_instance_event": {"queue": "process_instance_event"},
-    "api.tasks.repopulate_ec2_instance_mapping": {
-        "queue": "repopulate_ec2_instance_mapping"
-    },
+    # api.tasks
     "api.tasks.create_from_sources_kafka_message": {
         "queue": "create_from_sources_kafka_message"
     },
     "api.tasks.delete_from_sources_kafka_message": {
         "queue": "delete_from_sources_kafka_message"
     },
-    "api.tasks.configure_customer_aws_and_create_cloud_account": {
+    "api.tasks.inspect_pending_images": {"queue": "inspect_pending_images"},
+    "api.tasks.persist_inspection_cluster_results_task": {
+        "queue": "persist_inspection_cluster_results_task"
+    },
+    "api.tasks.process_instance_event": {"queue": "process_instance_event"},
+    # api.clouds.aws.tasks
+    "api.clouds.aws.tasks.repopulate_ec2_instance_mapping": {
+        "queue": "repopulate_ec2_instance_mapping"
+    },
+    "api.clouds.aws.tasks.configure_customer_aws_and_create_cloud_account": {
         "queue": "configure_customer_aws_and_create_cloud_account"
     },
-}
-CELERY_BEAT_SCHEDULE = {
-    "scale_up_inspection_cluster_every_60_min": {
-        "task": "api.tasks.scale_up_inspection_cluster",
-        # seconds
-        "schedule": env.int("SCALE_UP_INSPECTION_CLUSTER_SCHEDULE", default=60 * 60),
+    "api.clouds.aws.tasks.initial_aws_describe_instances": {
+        "queue": "initial_aws_describe_instances"
     },
+    "api.clouds.aws.tasks.copy_ami_snapshot": {"queue": "copy_ami_snapshot"},
+    "api.clouds.aws.tasks.copy_ami_to_customer_account": {
+        "queue": "copy_ami_to_customer_account"
+    },
+    "api.clouds.aws.tasks.remove_snapshot_ownership": {
+        "queue": "remove_snapshot_ownership"
+    },
+    "api.clouds.aws.tasks.create_volume": {"queue": "create_volume"},
+    "api.clouds.aws.tasks.enqueue_ready_volume": {"queue": "enqueue_ready_volumes"},
+    "api.clouds.aws.tasks.delete_snapshot": {"queue": "delete_snapshot"},
+    "api.clouds.aws.tasks.scale_up_inspection_cluster": {
+        "queue": "scale_up_inspection_cluster"
+    },
+    "api.clouds.aws.tasks.run_inspection_cluster": {"queue": "run_inspection_cluster"},
+    "api.clouds.aws.tasks.scale_down_cluster": {"queue": "scale_down_cluster"},
+    "api.clouds.aws.tasks.analyze_log": {"queue": "analyze_log"},
+}
+# Remember: the "schedule" values are integer numbers of seconds.
+CELERY_BEAT_SCHEDULE = {
+    # api.tasks
     "persist_inspection_cluster_results": {
         "task": "api.tasks.persist_inspection_cluster_results_task",
-        # seconds
         "schedule": env.int(
             "PERSIST_INSPECTION_CLUSTER_RESULTS_SCHEDULE", default=5 * 60
         ),
-    },
-    "analyze_log_every_2_mins": {
-        "task": "api.tasks.analyze_log",
-        # seconds
-        "schedule": env.int("ANALYZE_LOG_SCHEDULE", default=2 * 60),
     },
     "inspect_pending_images": {
         "task": "api.tasks.inspect_pending_images",
         "schedule": env.int("INSPECT_PENDING_IMAGES_SCHEDULE", default=15 * 60),
     },
+    # api.clouds.aws.tasks
+    "scale_up_inspection_cluster_every_60_min": {
+        "task": "api.clouds.aws.tasks.scale_up_inspection_cluster",
+        "schedule": env.int("SCALE_UP_INSPECTION_CLUSTER_SCHEDULE", default=60 * 60),
+    },
+    "analyze_log_every_2_mins": {
+        "task": "api.clouds.aws.tasks.analyze_log",
+        "schedule": env.int("ANALYZE_LOG_SCHEDULE", default=2 * 60),
+    },
     "repopulate_ec2_instance_mapping_every_week": {
-        "task": "api.tasks.repopulate_ec2_instance_mapping",
+        "task": "api.clouds.aws.tasks.repopulate_ec2_instance_mapping",
         "schedule": env.int(
             "REPOPULATE_EC2_INSTANCE_MAPPING_SCHEDULE",
             default=60 * 60 * 24 * 7,  # 1 week in seconds

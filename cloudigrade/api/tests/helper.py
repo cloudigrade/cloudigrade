@@ -10,7 +10,7 @@ import faker
 from django.conf import settings
 from rest_framework.test import APIClient
 
-from api import tasks
+from api.clouds.aws import tasks
 from api.clouds.aws.cloudtrail import CloudTrailInstanceEvent
 from api.clouds.aws.models import (
     AwsCloudAccount,

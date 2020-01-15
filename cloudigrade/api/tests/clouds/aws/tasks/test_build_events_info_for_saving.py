@@ -2,7 +2,7 @@
 import faker
 from django.test import TestCase
 
-from api import tasks
+from api.clouds.aws import tasks
 from api.models import InstanceEvent
 from api.tests import helper as api_helper
 from util.tests import helper as util_helper

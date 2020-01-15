@@ -3,14 +3,14 @@ from unittest.mock import call, patch
 
 from django.test import TestCase
 
-from api import tasks
+from api.clouds.aws import tasks
 from api.clouds.aws.models import AwsInstance, AwsMachineImage
+from api.clouds.aws.tasks import aws
 from api.models import (
     Instance,
     InstanceEvent,
     MachineImage,
 )
-from api.tasks import aws
 from api.tests import helper as account_helper
 from util.tests import helper as util_helper
 
@@ -18,7 +18,7 @@ from util.tests import helper as util_helper
 class InitialAwsDescribeInstancesTest(TestCase):
     """Celery task 'initial_aws_describe_instances' test cases."""
 
-    @patch("api.tasks.aws")
+    @patch("api.clouds.aws.tasks.aws")
     @patch("api.util.aws")
     def test_initial_aws_describe_instances(self, mock_util_aws, mock_aws):
         """
@@ -152,7 +152,7 @@ class InitialAwsDescribeInstancesTest(TestCase):
         self.assertFalse(image.openshift_detected)
         self.assertEqual(image.status, MachineImage.UNAVAILABLE)
 
-    @patch("api.tasks.aws")
+    @patch("api.clouds.aws.tasks.aws")
     def test_initial_aws_describe_instances_missing_account(self, mock_aws):
         """Test early return when account does not exist."""
         account_id = -1  # negative number account ID should never exist.
