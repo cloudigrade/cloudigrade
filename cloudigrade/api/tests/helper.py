@@ -29,11 +29,11 @@ from api.models import (
     Run,
 )
 from api.util import (
-    _sqs_wrap_message,
     calculate_max_concurrent_usage_from_runs,
     recalculate_runs,
 )
 from util import aws
+from util.aws.sqs import _sqs_wrap_message
 from util.tests import helper
 
 _faker = faker.Faker()

@@ -1,8 +1,11 @@
 """Helper utility module to wrap up common AWS SQS operations."""
 import json
 import logging
+import math
+import uuid
 
 import boto3
+import jsonpickle
 from botocore.exceptions import ClientError
 from django.conf import settings
 from django.utils.translation import gettext as _
@@ -15,6 +18,8 @@ logger = logging.getLogger(__name__)
 QUEUE_NAME_LENGTH_MAX = 80  # AWS SQS's maximum name length.
 RETENTION_DEFAULT = 345600  # "4 days" is AWS SQS's default retention time.
 RETENTION_MAXIMUM = 1209600  # "14 days" is AWS SQS's maximum retention time.
+SQS_SEND_BATCH_SIZE = 10  # boto3 supports sending up to 10 items.
+SQS_RECEIVE_BATCH_SIZE = 10  # boto3 supports receiving of up to 10 items.
 
 
 def _get_queue(queue_url):
@@ -296,3 +301,113 @@ def create_dlq(source_queue_name):
         "Attributes"
     ]["QueueArn"]
     return dlq_arn
+
+
+def add_messages_to_queue(queue_name, messages):
+    """
+    Send messages to an SQS queue.
+
+    Args:
+        queue_name (str): The queue to add messages to
+        messages (list[dict]): A list of message dictionaries. The message
+            dicts will be serialized as JSON strings.
+    """
+    queue_url = aws.get_sqs_queue_url(queue_name)
+    sqs = boto3.client("sqs")
+
+    wrapped_messages = [_sqs_wrap_message(message) for message in messages]
+    batch_count = math.ceil(len(messages) / SQS_SEND_BATCH_SIZE)
+
+    for batch_num in range(batch_count):
+        start_pos = batch_num * SQS_SEND_BATCH_SIZE
+        end_pos = start_pos + SQS_SEND_BATCH_SIZE - 1
+        batch = wrapped_messages[start_pos:end_pos]
+        sqs.send_message_batch(QueueUrl=queue_url, Entries=batch)
+
+
+def _sqs_wrap_message(message):
+    """
+    Wrap the message in a dict for SQS batch sending.
+
+    Args:
+        message (object): message to encode and wrap
+
+    Returns:
+        dict: structured entry for sending to send_message_batch
+
+    """
+    return {
+        "Id": str(uuid.uuid4()),
+        # Yes, the outgoing message uses MessageBody, not Body.
+        "MessageBody": jsonpickle.encode(message),
+    }
+
+
+def read_messages_from_queue(queue_name, max_count=1):
+    """
+    Read messages (up to max_count) from an SQS queue.
+
+    Args:
+        queue_name (str): The queue to read messages from
+        max_count (int): Max number of messages to read
+
+    Returns:
+        list[object]: The de-queued messages.
+
+    """
+    queue_url = aws.get_sqs_queue_url(queue_name)
+    sqs = boto3.client("sqs")
+    sqs_messages = []
+    max_batch_size = min(SQS_RECEIVE_BATCH_SIZE, max_count)
+    for __ in range(max_count):
+        # Because receive_message does *not* actually reliably return
+        # MaxNumberOfMessages number of messages especially (read the docs),
+        # our iteration count is actually max_count and we have some
+        # conditions at the end that break us out when we reach the true end.
+        new_messages = sqs.receive_message(
+            QueueUrl=queue_url, MaxNumberOfMessages=max_batch_size
+        ).get("Messages", [])
+        if len(new_messages) == 0:
+            break
+        sqs_messages.extend(new_messages)
+        if len(sqs_messages) >= max_count:
+            break
+    messages = []
+    for sqs_message in sqs_messages:
+        try:
+            unwrapped = _sqs_unwrap_message(sqs_message)
+            sqs.delete_message(
+                QueueUrl=queue_url, ReceiptHandle=sqs_message["ReceiptHandle"],
+            )
+            messages.append(unwrapped)
+        except ClientError as e:
+            # I'm not sure exactly what exceptions could land here, but we
+            # probably should log them, stop attempting further deletes, and
+            # return what we have received (and thus deleted!) so far.
+            logger.error(
+                _(
+                    "Unexpected error when attempting to read from %(queue)s: "
+                    "%(error)s"
+                ),
+                {"queue": queue_url, "error": getattr(e, "response", {}).get("Error")},
+            )
+            logger.exception(e)
+            break
+    return messages
+
+
+def _sqs_unwrap_message(sqs_message):
+    """
+    Unwrap the sqs_message to get the original message.
+
+    Args:
+        sqs_message (dict): object to unwrap and decode
+
+    Returns:
+        object: the unwrapped and decoded message object
+
+    """
+    return jsonpickle.decode(
+        # Yes, the response has Body, not MessageBody.
+        sqs_message["Body"]
+    )

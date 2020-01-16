@@ -39,13 +39,11 @@ from api.models import (
     MachineImage,
 )
 from api.util import (
-    add_messages_to_queue,
     create_aws_machine_image_copy,
     create_initial_aws_instance_events,
     create_new_machine_images,
     generate_aws_ami_messages,
     get_standard_cloud_account_name,
-    read_messages_from_queue,
     save_instance,
     save_instance_events,
     save_new_aws_machine_image,
@@ -56,6 +54,7 @@ from api.util import (
 )
 from util import aws
 from util.aws import is_windows, rewrap_aws_errors
+from util.aws.sqs import add_messages_to_queue, read_messages_from_queue
 from util.celery import retriable_shared_task
 from util.exceptions import (
     AwsECSInstanceNotReady,
