@@ -6,7 +6,8 @@ import faker
 from django.test import TransactionTestCase
 from rest_framework.test import APIRequestFactory, force_authenticate
 
-from api import serializers, util, views
+from api import serializers, views
+from api.clouds.aws import util
 from api.models import CloudAccount
 from api.tests import helper as api_helper
 from api.views import AccountViewSet

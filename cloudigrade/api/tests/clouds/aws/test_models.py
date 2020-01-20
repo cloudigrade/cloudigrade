@@ -4,7 +4,8 @@ from unittest.mock import Mock, patch
 from botocore.exceptions import ClientError
 from django.test import TestCase, TransactionTestCase
 
-from api import models, util as api_util
+import api.clouds.aws.util
+from api import models
 from api.clouds.aws import models as aws_models
 from api.tests import helper
 from util.aws import sts
@@ -267,7 +268,7 @@ class MachineImageModelTest(TestCase):
         """Set up basic image objects."""
         self.machine_image = helper.generate_aws_image()
         copy_ec2_ami_id = util_helper.generate_dummy_image_id()
-        api_util.create_aws_machine_image_copy(
+        api.clouds.aws.util.create_aws_machine_image_copy(
             copy_ec2_ami_id, self.machine_image.content_object.ec2_ami_id
         )
         self.aws_machine_image_copy = aws_models.AwsMachineImageCopy.objects.get(

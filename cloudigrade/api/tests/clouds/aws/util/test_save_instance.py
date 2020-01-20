@@ -1,10 +1,9 @@
-"""Collection of tests for api.util.save_instance."""
+"""Collection of tests for api.cloud.aws.util.save_instance."""
 from unittest.mock import Mock, patch
 
 from django.test import TestCase
 
-import util.aws.sqs
-from api import util
+from api.clouds.aws import util
 from api.clouds.aws.models import AwsMachineImage
 from api.models import MachineImage
 from api.tests import helper as api_helper
@@ -13,7 +12,7 @@ from util.tests import helper as util_helper
 
 
 class SaveInstanceTest(TestCase):
-    """Test cases for api.util.save_instance."""
+    """Test cases for api.cloud.aws.util.save_instance."""
 
     def test_save_instance_with_unavailable_image(self):
         """Test that save instance events also writes image on instance."""

@@ -21,15 +21,13 @@ from api.clouds.aws.serializers import (
     AwsInstanceSerializer,
     AwsMachineImageSerializer,
 )
+from api.clouds.aws.util import verify_permissions_and_create_aws_cloud_account
 from api.models import (
     CloudAccount,
     Instance,
     MachineImage,
 )
-from api.util import (
-    get_max_concurrent_usage,
-    verify_permissions_and_create_aws_cloud_account,
-)
+from api.util import get_max_concurrent_usage
 from util import aws
 from util.exceptions import InvalidArn
 from util.misc import get_today

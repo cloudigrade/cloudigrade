@@ -4,7 +4,6 @@ import random
 import faker
 from django.test import TestCase
 
-import util.aws.sqs
 from api import util
 from api.tests import helper as api_helper
 from util.tests import helper as util_helper

@@ -34,16 +34,11 @@ from api.clouds.aws.models import (
     AwsInstance,
     AwsMachineImage,
 )
-from api.models import (
-    InstanceEvent,
-    MachineImage,
-)
-from api.util import (
+from api.clouds.aws.util import (
     create_aws_machine_image_copy,
     create_initial_aws_instance_events,
     create_new_machine_images,
     generate_aws_ami_messages,
-    get_standard_cloud_account_name,
     save_instance,
     save_instance_events,
     save_new_aws_machine_image,
@@ -52,6 +47,11 @@ from api.util import (
     update_aws_image_status_inspected,
     verify_permissions_and_create_aws_cloud_account,
 )
+from api.models import (
+    InstanceEvent,
+    MachineImage,
+)
+from api.util import get_standard_cloud_account_name
 from util import aws
 from util.aws import is_windows, rewrap_aws_errors
 from util.aws.sqs import add_messages_to_queue, read_messages_from_queue

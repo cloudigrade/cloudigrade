@@ -30,6 +30,7 @@ from api.clouds.aws.tasks import (
     persist_aws_inspection_cluster_results,
     scale_down_cluster,
 )
+from api.clouds.aws.util import start_image_inspection
 from api.models import (
     CloudAccount,
     Instance,
@@ -41,10 +42,8 @@ from api.util import (
     calculate_max_concurrent_usage_from_runs,
     normalize_runs,
     recalculate_runs,
-    start_image_inspection,
 )
 from util import aws, insights
-from util.aws import rewrap_aws_errors
 from util.celery import retriable_shared_task
 from util.misc import get_now
 
@@ -115,7 +114,7 @@ def create_from_sources_kafka_message(message):
 
 
 @retriable_shared_task(autoretry_for=(RuntimeError,))
-@rewrap_aws_errors
+@aws.rewrap_aws_errors
 def delete_from_sources_kafka_message(message):
     """
     Delete our cloud account as per the Sources Kafka message.
@@ -245,7 +244,7 @@ def process_instance_event(event):
 
 
 @shared_task
-@rewrap_aws_errors
+@aws.rewrap_aws_errors
 def persist_inspection_cluster_results_task():
     """
     Task to run periodically and read houndigrade messages.

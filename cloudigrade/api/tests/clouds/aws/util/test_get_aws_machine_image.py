@@ -1,15 +1,14 @@
-"""Collection of tests for api.util.get_aws_machine_image."""
+"""Collection of tests for api.clouds.aws.util.get_aws_machine_image."""
 from django.test import TestCase
 
-import util.aws.sqs
-from api import util
+from api.clouds.aws import util
 from api.clouds.aws.models import AwsMachineImage
 from api.tests import helper as api_helper
 from util.tests import helper as util_helper
 
 
 class GetAwsMachineImageTest(TestCase):
-    """Test cases for api.util.get_aws_machine_image."""
+    """Test cases for api.clouds.aws.util.get_aws_machine_image."""
 
     def test_objects_exist(self):
         """Test happy path when both objects exist."""

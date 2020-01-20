@@ -1,16 +1,16 @@
-"""Collection of tests for api.util.start_image_inspection."""
+"""Collection of tests for api.cloud.aws.util.start_image_inspection."""
 from unittest.mock import Mock, patch
 
 from django.conf import settings
 from django.test import TestCase
 
-from api import util
+from api.clouds.aws import util
 from api.models import MachineImageInspectionStart
 from api.tests import helper as api_helper
 
 
 class StartImageInspectionTest(TestCase):
-    """Test cases for api.util.start_image_inspection."""
+    """Test cases for api.cloud.aws.util.start_image_inspection."""
 
     @patch("api.clouds.aws.tasks.copy_ami_snapshot")
     def test_start_image_inspection_runs(self, mock_copy):

@@ -1,10 +1,9 @@
-"""Collection of tests for api.util.create_new_machine_images."""
+"""Collection of tests for api.clouds.aws.util.create_new_machine_images."""
 from unittest.mock import Mock, patch
 
 from django.test import TestCase
 
-import util.aws.sqs
-from api import util
+from api.clouds.aws import util
 from api.clouds.aws.models import AwsMachineImage
 from api.tests import helper as api_helper
 from util import aws

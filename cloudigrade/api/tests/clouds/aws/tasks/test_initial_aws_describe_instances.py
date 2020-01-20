@@ -19,7 +19,7 @@ class InitialAwsDescribeInstancesTest(TestCase):
     """Celery task 'initial_aws_describe_instances' test cases."""
 
     @patch("api.clouds.aws.tasks.aws")
-    @patch("api.util.aws")
+    @patch("api.clouds.aws.util.aws")
     def test_initial_aws_describe_instances(self, mock_util_aws, mock_aws):
         """
         Test happy-path behaviors of initial_aws_describe_instances.
@@ -94,6 +94,7 @@ class InitialAwsDescribeInstancesTest(TestCase):
         ]
 
         with patch.object(tasks, "start_image_inspection") as mock_start:
+            # with patch("api.clouds.aws.tasks.start_image_inspection") as mock_start:
             tasks.initial_aws_describe_instances(account.id)
             mock_start.assert_has_calls(start_inspection_calls)
 
