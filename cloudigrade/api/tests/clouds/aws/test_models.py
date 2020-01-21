@@ -1,7 +1,9 @@
 """Collection of tests for custom Django model logic."""
+from random import choice
 from unittest.mock import Mock, patch
 
 from botocore.exceptions import ClientError
+from django.conf import settings
 from django.test import TestCase, TransactionTestCase
 
 import api.clouds.aws.util
@@ -298,6 +300,21 @@ class MachineImageModelTest(TestCase):
         info_calls = mock_logger.info.mock_calls
         message = info_calls[0][1][0]
         self.assertTrue(message.startswith("AwsMachineImageCopy("))
+
+    def test_is_marketplace_name_check(self):
+        """Test that is_marketplace is True if image name and owner matches."""
+        machine_image = helper.generate_aws_image(
+            name="marketplace-hourly2",
+            owner_aws_account_id=choice(settings.RHEL_IMAGES_AWS_ACCOUNTS),
+        )
+        self.assertTrue(machine_image.content_object.is_marketplace)
+
+    def test_is_marketplace_true_if_aws_marketplace_image(self):
+        """Test that the AwsMachineImageCopy str (and repr) is valid."""
+        aws_machine_image = helper.generate_aws_image().content_object
+        aws_machine_image.aws_marketplace_image = True
+        aws_machine_image.save()
+        self.assertTrue(aws_machine_image.is_marketplace)
 
 
 class RunModelTest(TransactionTestCase):

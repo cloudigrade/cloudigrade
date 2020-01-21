@@ -181,7 +181,7 @@ class AwsMachineImage(BaseModel):
     @property
     def is_marketplace(self):
         """Indicate if the image is from AWS Marketplace."""
-        return (
+        return self.aws_marketplace_image or (
             self.machine_image.get().name is not None
             and MARKETPLACE_NAME_TOKEN.lower() in self.machine_image.get().name.lower()
             and self.owner_aws_account_id in settings.RHEL_IMAGES_AWS_ACCOUNTS

@@ -386,7 +386,8 @@ def copy_ami_to_customer_account(arn, reference_ami_id, snapshot_region):
     except ClientError as e:
         public_errors = (
             "Images from AWS Marketplace cannot be copied to another AWS account",
-            "Images with EC2 BillingProduct codes cannot be copied to another AWS account",
+            "Images with EC2 BillingProduct codes cannot be copied to another "
+            "AWS account",
             "You do not have permission to access the storage of this ami",
         )
         private_errors = "You do not have permission to access the storage of this ami"

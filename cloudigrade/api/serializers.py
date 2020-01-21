@@ -88,9 +88,9 @@ class CloudAccountSerializer(ModelSerializer):
             return data
 
         raise ValidationError(
-            _(
-                "Account with name '{0}' for account number '{1}' already exists"
-            ).format(name, user.username)
+            _("Account with name '{0}' for account number '{1}' already exists").format(
+                name, user.username
+            )
         )
 
     def validate_account_arn(self, value):
