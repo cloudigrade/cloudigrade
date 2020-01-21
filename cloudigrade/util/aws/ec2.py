@@ -163,7 +163,7 @@ def get_ami(session, image_id, source_region):
     except AwsImageError as e:
         logger.exception(e)
         logger.info(
-            _("Failed to get AMI %(image_id)s in %(source_region)s. " "%(message)s",),
+            _("Failed to get AMI %(image_id)s in %(source_region)s. %(message)s",),
             {"image_id": image_id, "source_region": source_region, "message": str(e),},
         )
         image = None
@@ -189,7 +189,7 @@ def check_image_state(image):
 
     if image.meta.data is None:
         message = _(
-            "Image {id} cannot be loaded, it has probably been " "deregistered."
+            "Image {id} cannot be loaded, it has probably been deregistered."
         ).format(id=image.id)
         raise AwsImageError(message)
 

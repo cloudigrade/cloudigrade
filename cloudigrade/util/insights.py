@@ -57,7 +57,7 @@ def get_sources_authentication(account_number, authentication_id):
 
     if response.status_code != http.HTTPStatus.OK:
         message = _(
-            "unexpected status {status} using account {account_number} at " "{url}"
+            "unexpected status {status} using account {account_number} at {url}"
         ).format(status=response.status_code, account_number=account_number, url=url)
         raise SourcesAPINotOkStatus(message)
 
@@ -65,7 +65,7 @@ def get_sources_authentication(account_number, authentication_id):
         response_json = response.json()
     except json.decoder.JSONDecodeError:
         message = _(
-            "unexpected non-json response using account {account_number} at " "{url}"
+            "unexpected non-json response using account {account_number} at {url}"
         ).format(account_number=account_number, url=url)
         raise SourcesAPINotJsonContent(message)
 

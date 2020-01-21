@@ -58,7 +58,7 @@ def basegenericmodel_post_delete_callback(sender, instance, *args, **kwargs):
     """
     if issubclass(sender, BaseGenericModel):
         logger.info(
-            _("deleting %(self_class)s-related content object: " "%(content_object)s"),
+            _("deleting %(self_class)s-related content object: %(content_object)s"),
             {
                 "self_class": sender.__class__.__name__,
                 "content_object": instance.content_object,

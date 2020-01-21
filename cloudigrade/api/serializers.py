@@ -89,7 +89,7 @@ class CloudAccountSerializer(ModelSerializer):
 
         raise ValidationError(
             _(
-                "Account with name '{0}' for account " "number '{1}' already exists"
+                "Account with name '{0}' for account number '{1}' already exists"
             ).format(name, user.username)
         )
 

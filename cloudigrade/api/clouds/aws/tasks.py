@@ -120,7 +120,7 @@ def configure_customer_aws_and_create_cloud_account(
     )
     role_name, role_arn = aws.ensure_cloudigrade_role(session, policy_arn)
     logger.info(
-        _("Configured customer account role %(role_arn)s for " "policy %(policy_arn)s"),
+        _("Configured customer account role %(role_arn)s for policy %(policy_arn)s"),
         {"role_arn": role_arn, "policy_arn": policy_arn},
     )
     cloud_account_name = get_standard_cloud_account_name("aws", customer_aws_account_id)
@@ -385,9 +385,8 @@ def copy_ami_to_customer_account(arn, reference_ami_id, snapshot_region):
         new_ami_id = aws.copy_ami(session, reference_ami.id, snapshot_region)
     except ClientError as e:
         public_errors = (
-            "Images from AWS Marketplace cannot be copied to another AWS " "account",
-            "Images with EC2 BillingProduct codes cannot be copied "
-            "to another AWS account",
+            "Images from AWS Marketplace cannot be copied to another AWS account",
+            "Images with EC2 BillingProduct codes cannot be copied to another AWS account",
             "You do not have permission to access the storage of this ami",
         )
         private_errors = "You do not have permission to access the storage of this ami"
@@ -945,7 +944,7 @@ def _process_cloudtrail_message(message):
         content = json.loads(raw_content)
         logs.append((content, bucket, key))
         logger.debug(
-            _("Read CloudTrail log file from bucket %(bucket)s object key " "%(key)s"),
+            _("Read CloudTrail log file from bucket %(bucket)s object key %(key)s"),
             {"bucket": bucket, "key": key},
         )
 

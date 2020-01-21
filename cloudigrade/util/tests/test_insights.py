@@ -25,7 +25,7 @@ class InsightsTest(TestCase):
         known_account_number = "1234567890"
         expected = {
             "X-RH-IDENTITY": (
-                "eyJpZGVudGl0eSI6IHsiYWNjb3VudF9u" "dW1iZXIiOiAiMTIzNDU2Nzg5MCJ9fQ=="
+                "eyJpZGVudGl0eSI6IHsiYWNjb3VudF9udW1iZXIiOiAiMTIzNDU2Nzg5MCJ9fQ=="
             )
         }
         actual = insights.generate_http_identity_headers(known_account_number)

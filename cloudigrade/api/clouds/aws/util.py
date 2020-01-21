@@ -250,7 +250,7 @@ def save_instance(account, instance_data, region):
         )
         if created:
             logger.info(
-                _("Missing image data for %s; creating " "UNAVAILABLE stub image."),
+                _("Missing image data for %s; creating UNAVAILABLE stub image."),
                 instance_data,
             )
             MachineImage.objects.create(
@@ -271,7 +271,7 @@ def save_instance(account, instance_data, region):
                 {"awsmachineimage_id": awsmachineimage.id, "ec2_ami_id": image_id,},
             )
             logger.info(
-                _("Missing image data for %s; creating " "UNAVAILABLE stub image."),
+                _("Missing image data for %s; creating UNAVAILABLE stub image."),
                 instance_data,
             )
             MachineImage.objects.create(

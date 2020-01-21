@@ -143,7 +143,7 @@ def normalize_runs(events):  # noqa: C901
 
             if start_run and image is None:
                 logger.warning(
-                    _("Instance %s does not have an associated " "machine image."),
+                    _("Instance %s does not have an associated machine image."),
                     instance_id,
                 )
 

@@ -363,7 +363,7 @@ def instance_post_delete_callback(*args, **kwargs):
             instance.machine_image.delete()
     except MachineImage.DoesNotExist:
         logger.info(
-            _("Machine image associated with instance %s " "has already been deleted."),
+            _("Machine image associated with instance %s has already been deleted."),
             instance,
         )
 
