@@ -6,7 +6,6 @@ from generic_relations.relations import GenericRelatedField
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import (
-    BooleanField,
     CharField,
     ChoiceField,
     Field,
@@ -169,9 +168,6 @@ class MachineImageSerializer(ModelSerializer):
 
     image_id = IntegerField(source="id", read_only=True)
 
-    rhel_challenged = BooleanField(required=False)
-    openshift_challenged = BooleanField(required=False)
-
     class Meta:
         model = MachineImage
         fields = (
@@ -181,10 +177,8 @@ class MachineImageSerializer(ModelSerializer):
             "is_encrypted",
             "name",
             "openshift",
-            "openshift_challenged",
             "openshift_detected",
             "rhel",
-            "rhel_challenged",
             "rhel_detected",
             "rhel_enabled_repos_found",
             "rhel_product_certs_found",
@@ -217,31 +211,6 @@ class MachineImageSerializer(ModelSerializer):
             "updated_at",
             "cloud_type",
         )
-
-    def update(self, image, validated_data):
-        """
-        Update the MachineImage challenge properties.
-
-        Args:
-            image (MachineImage): Image to be updated.
-            validated_data (dict): Dictionary of properties to be updated.
-
-        Returns (MachineImage): Updated object.
-
-        """
-        rhel_challenged = validated_data.get("rhel_challenged", None)
-        openshift_challenged = validated_data.get("openshift_challenged", None)
-
-        if rhel_challenged is not None:
-            image.rhel_challenged = rhel_challenged
-
-        if openshift_challenged is not None:
-            image.openshift_challenged = openshift_challenged
-
-        if rhel_challenged is not None or openshift_challenged is not None:
-            image.save()
-
-        return image
 
 
 class InstanceSerializer(ModelSerializer):

@@ -143,7 +143,7 @@ class DocsApiHandler(object):
             )
             run.save()
 
-        # Force all images to have RHEL detected ("7.7") and OCP challenged.
+        # Force all images to have RHEL detected ("7.7")
         self.images = list(
             set(
                 instance.machine_image
@@ -163,7 +163,6 @@ class DocsApiHandler(object):
                     },
                 }
             )
-            image.openshift_challenged = True
             image.status = image.INSPECTED
             image.region = "us-east-1"
             image.save()
@@ -305,26 +304,6 @@ class DocsApiHandler(object):
         )
         assert_status(response, 200)
         responses["v2_reinspect_image"] = response
-
-        # Issuing challenges/flags
-        response = self.superuser_client.patch_images(
-            self.images[0].id, data={"rhel_challenged": True}
-        )
-        assert_status(response, 200)
-        responses["v2_patch_image"] = response
-
-        response = self.superuser_client.patch_images(
-            self.images[0].id, data={"rhel_challenged": False}
-        )
-        assert_status(response, 200)
-        responses["v2_patch_image_false"] = response
-
-        response = self.superuser_client.patch_images(
-            self.images[0].id,
-            data={"rhel_challenged": True, "openshift_challenged": True},
-        )
-        assert_status(response, 200)
-        responses["v2_patch_image_both"] = response
 
         #######################
         # Report Commands

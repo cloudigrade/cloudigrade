@@ -264,40 +264,6 @@ Response:
 {{ v2_reinspect_image | stringify_http_response | rst_codeblock }}
 
 
-Issuing challenges/flags
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-Note that ``resourcetype`` is required when making these calls.
-
-Request:
-
-{{ v2_patch_image.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
-
-Response:
-
-{{ v2_patch_image | stringify_http_response | rst_codeblock }}
-
-If you'd like to remove a challenge, simply send the same challenge with False as the value.
-
-Request:
-
-{{ v2_patch_image_false.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
-
-Response:
-
-{{ v2_patch_image_false | stringify_http_response | rst_codeblock }}
-
-You can challenge both at the same time.
-
-Request:
-
-{{ v2_patch_image_both.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
-
-Response:
-
-{{ v2_patch_image_both | stringify_http_response | rst_codeblock }}
-
-
 Report Commands
 ---------------
 

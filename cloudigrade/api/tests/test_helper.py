@@ -253,8 +253,6 @@ class GenerateAwsImageTest(TestCase):
         self.assertFalse(image.rhel_detected)
         self.assertFalse(image.openshift_detected)
         self.assertIsNone(image.name)
-        self.assertFalse(image.rhel_challenged)
-        self.assertFalse(image.openshift_challenged)
         self.assertIsNone(image.rhel_version)
         self.assertIsNone(image.syspurpose)
         self.assertFalse(image.content_object.is_cloud_access)
@@ -283,8 +281,6 @@ class GenerateAwsImageTest(TestCase):
             openshift_detected=True,
             name=name,
             status=MachineImage.PREPARING,
-            rhel_challenged=True,
-            openshift_challenged=True,
         )
 
         self.assertIsInstance(image, MachineImage)
@@ -297,8 +293,6 @@ class GenerateAwsImageTest(TestCase):
         self.assertTrue(image.openshift_detected)
         self.assertEqual(image.name, name)
         self.assertEqual(image.status, MachineImage.PREPARING)
-        self.assertTrue(image.rhel_challenged)
-        self.assertTrue(image.openshift_challenged)
         self.assertFalse(image.content_object.is_cloud_access)
         self.assertFalse(image.content_object.is_marketplace)
 

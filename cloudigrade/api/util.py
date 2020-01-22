@@ -75,10 +75,8 @@ NormalizedRun = collections.namedtuple(
         "is_encrypted",
         "is_marketplace",
         "openshift",
-        "openshift_challenged",
         "openshift_detected",
         "rhel",
-        "rhel_challenged",
         "rhel_detected",
     ],
 )
@@ -161,10 +159,8 @@ def normalize_runs(events):  # noqa: C901
                     is_encrypted=image.is_encrypted if image else False,
                     is_marketplace=image.is_marketplace if image else False,
                     openshift=image.openshift if image else False,
-                    openshift_challenged=image.openshift_challenged if image else False,
                     openshift_detected=image.openshift_detected if image else False,
                     rhel=image.rhel if image else False,
-                    rhel_challenged=image.rhel_challenged if image else False,
                     rhel_detected=image.rhel_detected if image else False,
                 )
                 normalized_runs.append(run)
@@ -185,10 +181,8 @@ def normalize_runs(events):  # noqa: C901
                 is_encrypted=image.is_encrypted if image else False,
                 is_marketplace=image.is_marketplace if image else False,
                 openshift=image.openshift if image else False,
-                openshift_challenged=image.openshift_challenged if image else False,
                 openshift_detected=image.openshift_detected if image else False,
                 rhel=image.rhel if image else False,
-                rhel_challenged=image.rhel_challenged if image else False,
                 rhel_detected=image.rhel_detected if image else False,
             )
             normalized_runs.append(run)

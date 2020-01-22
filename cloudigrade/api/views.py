@@ -90,11 +90,13 @@ class InstanceViewSet(viewsets.ReadOnlyModelViewSet):
         return self.queryset
 
 
-class MachineImageViewSet(viewsets.ReadOnlyModelViewSet, mixins.UpdateModelMixin):
+class MachineImageViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    List all, retrieve, or update a single machine image.
+    List all, or retrieve a single machine image.
 
     Authenticate via 3scale.
+    Do not allow to create, update, replace, or delete an machine image at
+    this view.
     """
 
     authentication_classes = (ThreeScaleAuthentication,)

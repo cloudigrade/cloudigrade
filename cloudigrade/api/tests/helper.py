@@ -425,8 +425,6 @@ def generate_aws_image(
     openshift_detected=False,
     name=None,
     status=MachineImage.INSPECTED,
-    rhel_challenged=False,
-    openshift_challenged=False,
     is_cloud_access=False,
     is_marketplace=False,
 ):
@@ -454,8 +452,6 @@ def generate_aws_image(
         openshift_detected (bool): Optional Indicates if OpenShift is detected.
         name (str): Optional AMI name.
         status (str): Optional MachineImage inspection status.
-        rhel_challenged (bool): Optional indicates if RHEL is challenged.
-        openshift_challenged (bool): Optional indicates if OCP is challenged.
         is_cloud_access (bool): Optional indicates if image is from Cloud
             Access. Has side-effect of modifying the owner_aws_account_id and
             name as appropriate.
@@ -516,8 +512,6 @@ def generate_aws_image(
         openshift_detected=openshift_detected,
         name=name,
         status=status,
-        rhel_challenged=rhel_challenged,
-        openshift_challenged=openshift_challenged,
         content_object=aws_machine_image,
     )
 

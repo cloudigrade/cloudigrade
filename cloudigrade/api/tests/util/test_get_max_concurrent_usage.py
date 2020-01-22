@@ -1,5 +1,6 @@
 """Collection of tests for api.util.get_max_concurrent_usage."""
 import datetime
+import json
 
 from django.test import TestCase
 
@@ -127,7 +128,8 @@ class GetMaxConcurrentUsageTest(TestCase):
 
         # Change the image so it starts counting as RHEL.
         self.assertFalse(self.image_plain.rhel)
-        self.image_plain.rhel_challenged = True
+        updated_inspection_results = {"rhel_signed_packages_found": True}
+        self.image_plain.inspection_json = json.dumps(updated_inspection_results)
         self.image_plain.save()
         self.assertTrue(self.image_plain.rhel)
 

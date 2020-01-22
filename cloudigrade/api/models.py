@@ -1,7 +1,6 @@
 """Cloudigrade API v2 Models."""
 import json
 import logging
-import operator
 
 import model_utils
 from django.contrib.auth.models import User
@@ -88,9 +87,7 @@ class MachineImage(BaseGenericModel):
     inspection_json = models.TextField(null=True, blank=True)
     is_encrypted = models.BooleanField(default=False)
     status = models.CharField(max_length=32, choices=STATUS_CHOICES, default=PENDING)
-    rhel_challenged = models.BooleanField(default=False)
     openshift_detected = models.BooleanField(default=False)
-    openshift_challenged = models.BooleanField(default=False)
     name = models.CharField(max_length=256, null=True, blank=True)
 
     @property
@@ -99,10 +96,10 @@ class MachineImage(BaseGenericModel):
         Indicate if the image contains RHEL.
 
         Returns:
-            bool: XOR of `rhel_detected` and `rhel_challenged` properties.
+            bool: calculated using the `rhel_detected` property.
 
         """
-        return operator.xor(self.rhel_detected, self.rhel_challenged)
+        return self.rhel_detected
 
     @property
     def rhel_version(self):
@@ -212,11 +209,10 @@ class MachineImage(BaseGenericModel):
         Indicate if the image contains OpenShift.
 
         Returns:
-            bool: XOR of `openshift_detected` and `openshift_challenged`
-                properties.
+            bool: the `openshift_detected` property.
 
         """
-        return operator.xor(self.openshift_detected, self.openshift_challenged)
+        return self.openshift_detected
 
     @property
     def cloud_image_id(self):
@@ -258,9 +254,7 @@ class MachineImage(BaseGenericModel):
             f"name={name}, "
             f"status='{self.status}', "
             f"is_encrypted={self.is_encrypted}, "
-            f"rhel_challenged={self.rhel_challenged}, "
             f"openshift_detected={self.openshift_detected}, "
-            f"openshift_challenged={self.openshift_challenged}, "
             f"created_at=parse({created_at}), "
             f"updated_at=parse({updated_at})"
             f")"

@@ -112,12 +112,8 @@ class MachineImageViewSetTest(TestCase):
         self.assertEqual(response.data["name"], image.name)
         self.assertEqual(response.data["status"], image.status)
         self.assertEqual(response.data["rhel"], image.rhel)
-        self.assertEqual(response.data["rhel_challenged"], image.rhel_challenged)
         self.assertEqual(response.data["openshift"], image.openshift)
         self.assertEqual(response.data["openshift_detected"], image.openshift_detected)
-        self.assertEqual(
-            response.data["openshift_challenged"], image.openshift_challenged
-        )
 
         if isinstance(image, AwsMachineImage):
             self.assertEqual(
@@ -303,137 +299,6 @@ class MachineImageViewSetTest(TestCase):
         """Assert that a windows image has an appropriate property."""
         image = self.image_windows
         self.assertEqual(image.content_object.platform, image.content_object.WINDOWS)
-
-    def test_user1_challenge_non_rhel_returns_ok(self):
-        """Assert that user can challenge RHEL image as non RHEL."""
-        data = {"rhel_challenged": True}
-
-        response = self.get_image_patch_response(self.user1, self.image_rhel.id, data)
-        self.assertTrue(response.data["rhel_challenged"])
-        self.assertFalse(response.data["rhel"])
-
-    def test_user1_challenge_using_put_returns_ok(self):
-        """Assert that user can challenge RHEL image as non RHEL."""
-        data1 = {"rhel_challenged": True}
-        data2 = {"openshift_challenged": True}
-
-        response = self.get_image_put_response(self.user1, self.image_rhel.id, data1)
-        self.assertTrue(response.data["rhel_challenged"])
-        self.assertFalse(response.data["rhel"])
-
-        response = self.get_image_put_response(self.user1, self.image_rhel.id, data2)
-
-        self.assertTrue(response.data["openshift_challenged"])
-        self.assertTrue(response.data["openshift"])
-        self.assertFalse(response.data["rhel_challenged"])
-        self.assertTrue(response.data["rhel"])
-        updated_image = MachineImage.objects.get(pk=response.data["image_id"])
-        self.assertResponseHasImageData(response, updated_image)
-
-    def test_user1_challenge_rhel_returns_ok(self):
-        """Assert that user can challenge non RHEL image as RHEL."""
-        data = {"rhel_challenged": True}
-
-        response = self.get_image_patch_response(self.user1, self.image_plain.id, data)
-        self.assertTrue(response.data["rhel_challenged"])
-        self.assertTrue(response.data["rhel"])
-        updated_image = MachineImage.objects.get(pk=response.data["image_id"])
-        self.assertResponseHasImageData(response, updated_image)
-
-    def test_user2_challenge_non_ocp_returns_ok(self):
-        """Assert that user can challenge OCP image as non OCP."""
-        data = {"openshift_challenged": True}
-
-        response = self.get_image_patch_response(self.user2, self.image_ocp.id, data)
-        self.assertTrue(response.data["openshift_challenged"])
-        self.assertFalse(response.data["openshift"])
-        updated_image = MachineImage.objects.get(pk=response.data["image_id"])
-        self.assertResponseHasImageData(response, updated_image)
-
-    def test_user1_challenge_ocp_returns_ok(self):
-        """Assert that user can challenge non OCP image as OCP."""
-        data = {"openshift_challenged": True}
-
-        response = self.get_image_patch_response(self.user1, self.image_plain.id, data)
-        self.assertTrue(response.data["openshift_challenged"])
-        self.assertTrue(response.data["openshift"])
-        updated_image = MachineImage.objects.get(pk=response.data["image_id"])
-        self.assertResponseHasImageData(response, updated_image)
-
-    def test_user1_challenge_user2_returns_404(self):
-        """Assert that user can not challenge image it hasn't used."""
-        data = {"rhel_challenged": True}
-
-        response = self.get_image_patch_response(self.user1, self.image_ocp.id, data)
-        self.assertEqual(response.status_code, 404)
-
-    def test_user2_challenge_both_individually_returns_ok(self):
-        """Assert that user can challenge RHEL and OCP individually."""
-        data1 = {"rhel_challenged": True}
-        data2 = {"openshift_challenged": True}
-
-        response = self.get_image_patch_response(
-            self.user2, self.image_rhel_ocp.id, data1
-        )
-        self.assertTrue(response.data["rhel_challenged"])
-        self.assertFalse(response.data["rhel"])
-        self.assertFalse(response.data["openshift_challenged"])
-        self.assertTrue(response.data["openshift"])
-        updated_image = MachineImage.objects.get(pk=response.data["image_id"])
-        self.assertResponseHasImageData(response, updated_image)
-
-        response = self.get_image_patch_response(
-            self.user2, self.image_rhel_ocp.id, data2
-        )
-        self.assertTrue(response.data["openshift_challenged"])
-        self.assertFalse(response.data["openshift"])
-        self.assertTrue(response.data["rhel_challenged"])
-        self.assertFalse(response.data["rhel"])
-        updated_image = MachineImage.objects.get(pk=response.data["image_id"])
-        self.assertResponseHasImageData(response, updated_image)
-
-    def test_user2_challenge_both_together_returns_ok(self):
-        """Assert that user can challenge RHEL and OCP at the same time."""
-        data = {"rhel_challenged": True, "openshift_challenged": True}
-
-        response = self.get_image_patch_response(
-            self.user2, self.image_rhel_ocp.id, data
-        )
-        self.assertTrue(response.data["rhel_challenged"])
-        self.assertFalse(response.data["rhel"])
-        self.assertTrue(response.data["openshift_challenged"])
-        self.assertFalse(response.data["openshift"])
-        updated_image = MachineImage.objects.get(pk=response.data["image_id"])
-        self.assertResponseHasImageData(response, updated_image)
-
-    def test_user1_undo_challenge_returns_ok(self):
-        """Assert that user can redact a challenge RHEL."""
-        data1 = {"rhel_challenged": True}
-        data2 = {"rhel_challenged": False}
-
-        response = self.get_image_patch_response(self.user1, self.image_rhel.id, data1)
-        self.assertTrue(response.data["rhel_challenged"])
-        self.assertFalse(response.data["rhel"])
-        updated_image = MachineImage.objects.get(pk=response.data["image_id"])
-        self.assertResponseHasImageData(response, updated_image)
-
-        response = self.get_image_patch_response(self.user1, self.image_rhel.id, data2)
-        self.assertFalse(response.data["rhel_challenged"])
-        self.assertTrue(response.data["rhel"])
-        updated_image = MachineImage.objects.get(pk=response.data["image_id"])
-        self.assertResponseHasImageData(response, updated_image)
-
-    def test_superuser_can_challenge_image_returns_ok(self):
-        """Assert that superuser can challenge image it hasn't used."""
-        data = {"rhel_challenged": True}
-
-        response = self.get_image_patch_response(
-            self.superuser, self.image_rhel.id, data
-        )
-        self.assertTrue(response.data["rhel_challenged"])
-        self.assertFalse(response.data["rhel"])
-        updated_image = MachineImage.objects.get(pk=response.data["image_id"])
-        self.assertResponseHasImageData(response, updated_image)
 
     def test_reinspect_superuser(self):
         """Assert that a superuser can reinspect an image."""

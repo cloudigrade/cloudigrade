@@ -3,12 +3,12 @@ from unittest.mock import Mock, patch
 
 import faker
 from botocore.exceptions import ClientError
-from django.test import TestCase, TransactionTestCase
+from django.test import TransactionTestCase
 from rest_framework.serializers import ValidationError
 
 from api.clouds.aws.models import AwsCloudAccount, AwsMachineImage
 from api.models import CloudAccount, Instance
-from api.serializers import CloudAccountSerializer, MachineImageSerializer, aws
+from api.serializers import CloudAccountSerializer, aws
 from api.tests import helper
 from util.tests import helper as util_helper
 
@@ -278,47 +278,3 @@ class AwsAccountSerializerTest(TransactionTestCase):
             with self.assertRaises(ValidationError) as cm:
                 serializer.create(self.validated_data)
             self.assertEquals(expected_error, cm.exception.detail)
-
-
-class AwsMachineImageSerializerTest(TestCase):
-    """AwsMachineImage serializer test case."""
-
-    def test_update_succeeds_when_rhel_challenged_is_unset(self):
-        """If RHEL challenged is unset, test that the update succeeds."""
-        mock_image = Mock()
-        mock_image.rhel_challenged = True
-        mock_image.openshift_challenged = True
-        mock_image.save = Mock(return_value=None)
-        validated_data = {"rhel_challenged": False}
-        serializer = MachineImageSerializer()
-        serializer.update(mock_image, validated_data)
-        self.assertFalse(mock_image.rhel_challenged)
-        mock_image.save.assert_called()
-
-    def test_update_succeeds_when_rhel_challenged_is_set(self):
-        """If RHEL challenged is set, test that the update succeeds."""
-        mock_image = Mock()
-        mock_image.rhel_challenged = False
-        mock_image.openshift_challenged = True
-        mock_image.save = Mock(return_value=None)
-
-        validated_data = {"rhel_challenged": True}
-        serializer = MachineImageSerializer()
-        serializer.update(mock_image, validated_data)
-        self.assertTrue(mock_image.rhel_challenged)
-
-    def test_no_update_when_nothing_changes(self):
-        """If RHEL challenged is set, test that the update succeeds."""
-        mock_image = Mock()
-        mock_image.rhel_challenged = False
-        mock_image.openshift_challenged = False
-        mock_image.save = Mock(return_value=None)
-
-        validated_data = {}
-
-        serializer = MachineImageSerializer()
-        serializer.update(mock_image, validated_data)
-
-        self.assertFalse(mock_image.rhel_challenged)
-        self.assertFalse(mock_image.openshift_challenged)
-        mock_image.save.assert_not_called()

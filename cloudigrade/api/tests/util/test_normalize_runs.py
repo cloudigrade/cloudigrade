@@ -74,12 +74,10 @@ class NormalizeRunsTest(TestCase):
         # rhel detection
         self.assertFalse(run.rhel)
         self.assertFalse(run.rhel_detected)
-        self.assertFalse(run.rhel_challenged)
 
         # openshift detection
         self.assertFalse(run.openshift)
         self.assertFalse(run.openshift_detected)
-        self.assertFalse(run.openshift_challenged)
 
     def test_normalize_instance_on_never_off(self):
         """Test normalize_runs for an instance that starts but never stops."""
