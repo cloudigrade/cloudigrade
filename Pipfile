@@ -41,7 +41,7 @@ python-daemon = "~=2.2.4"
 kafka-python = "~=1.4.7"
 requests = "~=2.22.0"
 uritemplate = "~=3.0.0"
-rest-framework-generic-relations = {git = "https://github.com/Ian-Foote/rest-framework-generic-relations.git",ref = "drop-python2"}
+rest-framework-generic-relations = {git = "https://github.com/Ian-Foote/rest-framework-generic-relations.git",ref = "master"}
 
 [requires]
 python_version = "3.7"
