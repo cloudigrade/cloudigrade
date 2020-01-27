@@ -479,10 +479,11 @@ def generate_authentication_create_message_value(
     account_number="1337", username=None, authentication_id=None
 ):
     """
-    Generate a 'Authentication.create' message's value as if read from Kafka.
+    Generate a 'Authentication.create' message's value and header as if read from Kafka.
 
     Returns:
-        dict: like Kafka message's value attribute'.
+        message (dict): like Kafka message's value attribute'.
+        headers (list): like Kafka headers.
 
     """
     f = faker.Faker()
@@ -491,8 +492,15 @@ def generate_authentication_create_message_value(
     if not authentication_id:
         authentication_id = f.pyint()
 
-    message = {"tenant": account_number, "username": username, "id": authentication_id}
-    return message
+    message = {"username": username, "id": authentication_id}
+    auth_header = base64.b64encode(
+        json.dumps({"identity": {"account_number": account_number}}).encode("utf-8")
+    )
+    headers = [
+        ("x-rh-identity", auth_header),
+    ]
+
+    return message, headers
 
 
 @contextmanager

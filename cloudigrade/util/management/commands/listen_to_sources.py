@@ -72,20 +72,34 @@ class Command(BaseCommand):
                 break
 
         message_value = getattr(message, "value", {})
+        # So we've established the headers are a list of tuples, but wait,
+        # there's more! It is a tuple with a string key, and a bytestring
+        # value because... reasons..? Let's clean that up.
+        message_headers = [
+            (key, value.decode("utf-8"),) for key, value in message.headers
+        ]
 
         if event_type == b"Authentication.create":
             logger.info(
-                _("An authentication object was created. Message: %s"), message_value,
+                _("An authentication object was created. Message: %s. Headers: %s"),
+                message_value,
+                message_headers,
             )
             if settings.ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES:
-                tasks.create_from_sources_kafka_message.delay(message_value)
+                tasks.create_from_sources_kafka_message.delay(
+                    message_value, message_headers
+                )
 
         elif event_type == b"Authentication.destroy":
             logger.info(
-                _("An authentication object was destroyed. Message: %s"), message_value,
+                _("An authentication object was destroyed. Message: %s. Headers: %s"),
+                message_value,
+                message_headers,
             )
             if settings.ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES:
-                tasks.delete_from_sources_kafka_message.delay(message_value)
+                tasks.delete_from_sources_kafka_message.delay(
+                    message_value, message_headers
+                )
 
     def listener_cleanup(self, signum, frame):
         """Stop listening when system signal is received."""

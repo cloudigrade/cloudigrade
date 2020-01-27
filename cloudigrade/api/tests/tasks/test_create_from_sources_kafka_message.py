@@ -22,13 +22,13 @@ class CreateFromSourcesKafkaMessageTest(TestCase):
         account_number = str(_faker.pyint())
         username = _faker.user_name()
         authentication_id = _faker.pyint()
-        message = util_helper.generate_authentication_create_message_value(
+        message, headers = util_helper.generate_authentication_create_message_value(
             account_number, username, authentication_id
         )
         password = _faker.password()
         mock_get_auth.return_value = {"password": password}
 
-        tasks.create_from_sources_kafka_message(message)
+        tasks.create_from_sources_kafka_message(message, headers)
 
         user = User.objects.get(username=account_number)
         mock_task.delay.assert_called_with(user.id, username, password)
@@ -39,7 +39,8 @@ class CreateFromSourcesKafkaMessageTest(TestCase):
     ):
         """Assert create_from_sources_kafka_message fails from missing data."""
         message = {}
-        tasks.create_from_sources_kafka_message(message)
+        headers = []
+        tasks.create_from_sources_kafka_message(message, headers)
 
         # User should not have been created.
         self.assertEqual(User.objects.all().count(), 0)
@@ -56,11 +57,11 @@ class CreateFromSourcesKafkaMessageTest(TestCase):
         This could happen if the authentication has been deleted from the
         sources API by the time this task runs.
         """
-        message = util_helper.generate_authentication_create_message_value()
+        message, headers = util_helper.generate_authentication_create_message_value()
         mock_get_auth.side_effect = SourcesAPINotOkStatus
 
         with self.assertRaises(SourcesAPINotOkStatus):
-            tasks.create_from_sources_kafka_message(message)
+            tasks.create_from_sources_kafka_message(message, headers)
 
         # User should not have been created.
         self.assertEqual(User.objects.all().count(), 0)

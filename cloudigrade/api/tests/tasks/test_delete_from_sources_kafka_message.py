@@ -26,11 +26,11 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         account_number = str(self.user.username)
         username = self.account.content_object.aws_access_key_id
         authentication_id = _faker.pyint()
-        message = util_helper.generate_authentication_create_message_value(
+        message, headers = util_helper.generate_authentication_create_message_value(
             account_number, username, authentication_id
         )
 
-        tasks.delete_from_sources_kafka_message(message)
+        tasks.delete_from_sources_kafka_message(message, headers)
         mock_clount_delete.assert_called_once()
 
     @patch("api.models.CloudAccount.delete")
@@ -39,7 +39,8 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
     ):
         """Assert delete_from_sources_kafka_message fails from missing data."""
         message = {}
-        tasks.delete_from_sources_kafka_message(message)
+        headers = []
+        tasks.delete_from_sources_kafka_message(message, headers)
 
         # Delete should not have been called.
         mock_clount_delete.assert_not_called()
@@ -52,11 +53,11 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         account_number = _faker.user_name()
         username = self.account.content_object.aws_access_key_id
         authentication_id = _faker.pyint()
-        message = util_helper.generate_authentication_create_message_value(
+        message, headers = util_helper.generate_authentication_create_message_value(
             account_number, username, authentication_id
         )
 
-        tasks.delete_from_sources_kafka_message(message)
+        tasks.delete_from_sources_kafka_message(message, headers)
 
         # Delete should not have been called.
         mock_clount_delete.assert_not_called()
@@ -67,11 +68,11 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         account_number = str(self.user.username)
         username = _faker.user_name()
         authentication_id = _faker.pyint()
-        message = util_helper.generate_authentication_create_message_value(
+        message, headers = util_helper.generate_authentication_create_message_value(
             account_number, username, authentication_id
         )
 
-        tasks.delete_from_sources_kafka_message(message)
+        tasks.delete_from_sources_kafka_message(message, headers)
 
         # Delete should not have been called.
         mock_clount_delete.assert_not_called()
@@ -87,9 +88,9 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         account_number = str(self.user.username)
         username = self.account.content_object.aws_access_key_id
         authentication_id = _faker.pyint()
-        message = util_helper.generate_authentication_create_message_value(
+        message, headers = util_helper.generate_authentication_create_message_value(
             account_number, username, authentication_id
         )
 
-        tasks.delete_from_sources_kafka_message(message)
+        tasks.delete_from_sources_kafka_message(message, headers)
         mock_aws_clount_delete.assert_called_once()
