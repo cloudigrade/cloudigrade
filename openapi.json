@@ -1,0 +1,1115 @@
+{
+  "openapi": "3.0.2",
+  "info": {
+    "title": "Cloudigrade",
+    "version": ""
+  },
+  "paths": {
+    "/v2/accounts/": {
+      "get": {
+        "operationId": "listCloudAccounts",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "The initial index from which to return the results.",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "count": {
+                      "type": "integer",
+                      "example": 123
+                    },
+                    "next": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "previous": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "properties": {
+                          "account_id": {
+                            "type": "integer",
+                            "readOnly": true
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "readOnly": true
+                          },
+                          "name": {
+                            "type": "string",
+                            "maxLength": 256
+                          },
+                          "updated_at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "readOnly": true
+                          },
+                          "user_id": {
+                            "type": "string",
+                            "readOnly": true
+                          },
+                          "content_object": {
+                            "type": "string"
+                          },
+                          "cloud_type": {
+                            "enum": [
+                              "aws"
+                            ]
+                          },
+                          "account_arn": {
+                            "type": "string"
+                          },
+                          "aws_account_id": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "name",
+                          "cloud_type"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "operationId": "createCloudAccount",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "maxLength": 256
+                  },
+                  "content_object": {
+                    "type": "string"
+                  },
+                  "cloud_type": {
+                    "enum": [
+                      "aws"
+                    ]
+                  },
+                  "account_arn": {
+                    "type": "string"
+                  },
+                  "aws_account_id": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "cloud_type"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "account_id": {
+                      "type": "integer",
+                      "readOnly": true
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "readOnly": true
+                    },
+                    "name": {
+                      "type": "string",
+                      "maxLength": 256
+                    },
+                    "updated_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "readOnly": true
+                    },
+                    "user_id": {
+                      "type": "string",
+                      "readOnly": true
+                    },
+                    "content_object": {
+                      "type": "string"
+                    },
+                    "cloud_type": {
+                      "enum": [
+                        "aws"
+                      ]
+                    },
+                    "account_arn": {
+                      "type": "string"
+                    },
+                    "aws_account_id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "cloud_type"
+                  ]
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v2/accounts/{id}/": {
+      "get": {
+        "operationId": "retrieveCloudAccount",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "A unique integer value identifying this cloud account.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "account_id": {
+                      "type": "integer",
+                      "readOnly": true
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "readOnly": true
+                    },
+                    "name": {
+                      "type": "string",
+                      "maxLength": 256
+                    },
+                    "updated_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "readOnly": true
+                    },
+                    "user_id": {
+                      "type": "string",
+                      "readOnly": true
+                    },
+                    "content_object": {
+                      "type": "string"
+                    },
+                    "cloud_type": {
+                      "enum": [
+                        "aws"
+                      ]
+                    },
+                    "account_arn": {
+                      "type": "string"
+                    },
+                    "aws_account_id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "cloud_type"
+                  ]
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "put": {
+        "operationId": "updateCloudAccount",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "A unique integer value identifying this cloud account.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "maxLength": 256
+                  },
+                  "content_object": {
+                    "type": "string"
+                  },
+                  "cloud_type": {
+                    "enum": [
+                      "aws"
+                    ]
+                  },
+                  "account_arn": {
+                    "type": "string"
+                  },
+                  "aws_account_id": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "cloud_type"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "account_id": {
+                      "type": "integer",
+                      "readOnly": true
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "readOnly": true
+                    },
+                    "name": {
+                      "type": "string",
+                      "maxLength": 256
+                    },
+                    "updated_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "readOnly": true
+                    },
+                    "user_id": {
+                      "type": "string",
+                      "readOnly": true
+                    },
+                    "content_object": {
+                      "type": "string"
+                    },
+                    "cloud_type": {
+                      "enum": [
+                        "aws"
+                      ]
+                    },
+                    "account_arn": {
+                      "type": "string"
+                    },
+                    "aws_account_id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "cloud_type"
+                  ]
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "patch": {
+        "operationId": "partial_updateCloudAccount",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "A unique integer value identifying this cloud account.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "maxLength": 256
+                  },
+                  "content_object": {
+                    "type": "string"
+                  },
+                  "cloud_type": {
+                    "enum": [
+                      "aws"
+                    ]
+                  },
+                  "account_arn": {
+                    "type": "string"
+                  },
+                  "aws_account_id": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "account_id": {
+                      "type": "integer",
+                      "readOnly": true
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "readOnly": true
+                    },
+                    "name": {
+                      "type": "string",
+                      "maxLength": 256
+                    },
+                    "updated_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "readOnly": true
+                    },
+                    "user_id": {
+                      "type": "string",
+                      "readOnly": true
+                    },
+                    "content_object": {
+                      "type": "string"
+                    },
+                    "cloud_type": {
+                      "enum": [
+                        "aws"
+                      ]
+                    },
+                    "account_arn": {
+                      "type": "string"
+                    },
+                    "aws_account_id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "cloud_type"
+                  ]
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "delete": {
+        "operationId": "destroyCloudAccount",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "A unique integer value identifying this cloud account.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v2/instances/": {
+      "get": {
+        "operationId": "listInstances",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "The initial index from which to return the results.",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "count": {
+                      "type": "integer",
+                      "example": 123
+                    },
+                    "next": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "previous": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "properties": {
+                          "cloud_account_id": {
+                            "type": "string",
+                            "readOnly": true
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "readOnly": true
+                          },
+                          "instance_id": {
+                            "type": "integer",
+                            "readOnly": true
+                          },
+                          "machine_image_id": {
+                            "type": "string",
+                            "readOnly": true
+                          },
+                          "updated_at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "readOnly": true
+                          },
+                          "cloud_type": {
+                            "enum": [
+                              "aws"
+                            ]
+                          },
+                          "content_object": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v2/instances/{id}/": {
+      "get": {
+        "operationId": "retrieveInstance",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "A unique integer value identifying this instance.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "cloud_account_id": {
+                      "type": "string",
+                      "readOnly": true
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "readOnly": true
+                    },
+                    "instance_id": {
+                      "type": "integer",
+                      "readOnly": true
+                    },
+                    "machine_image_id": {
+                      "type": "string",
+                      "readOnly": true
+                    },
+                    "updated_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "readOnly": true
+                    },
+                    "cloud_type": {
+                      "enum": [
+                        "aws"
+                      ]
+                    },
+                    "content_object": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v2/images/": {
+      "get": {
+        "operationId": "listMachineImages",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "The initial index from which to return the results.",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "count": {
+                      "type": "integer",
+                      "example": 123
+                    },
+                    "next": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "previous": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "properties": {
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "readOnly": true
+                          },
+                          "image_id": {
+                            "type": "integer",
+                            "readOnly": true
+                          },
+                          "inspection_json": {
+                            "type": "string",
+                            "readOnly": true
+                          },
+                          "is_encrypted": {
+                            "type": "boolean",
+                            "readOnly": true
+                          },
+                          "name": {
+                            "type": "string",
+                            "readOnly": true
+                          },
+                          "openshift": {
+                            "type": "string",
+                            "readOnly": true
+                          },
+                          "openshift_detected": {
+                            "type": "boolean",
+                            "readOnly": true
+                          },
+                          "rhel": {
+                            "type": "string",
+                            "readOnly": true
+                          },
+                          "rhel_detected": {
+                            "type": "string",
+                            "readOnly": true
+                          },
+                          "rhel_enabled_repos_found": {
+                            "type": "string",
+                            "readOnly": true
+                          },
+                          "rhel_product_certs_found": {
+                            "type": "string",
+                            "readOnly": true
+                          },
+                          "rhel_release_files_found": {
+                            "type": "string",
+                            "readOnly": true
+                          },
+                          "rhel_signed_packages_found": {
+                            "type": "string",
+                            "readOnly": true
+                          },
+                          "rhel_version": {
+                            "type": "string",
+                            "readOnly": true
+                          },
+                          "status": {
+                            "enum": [
+                              "pending",
+                              "preparing",
+                              "inspecting",
+                              "inspected",
+                              "error",
+                              "unavailable"
+                            ],
+                            "readOnly": true
+                          },
+                          "syspurpose": {
+                            "type": "string",
+                            "readOnly": true
+                          },
+                          "updated_at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "readOnly": true
+                          },
+                          "cloud_type": {
+                            "enum": [
+                              "aws"
+                            ]
+                          },
+                          "content_object": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v2/images/{id}/": {
+      "get": {
+        "operationId": "retrieveMachineImage",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "A unique integer value identifying this machine image.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "readOnly": true
+                    },
+                    "image_id": {
+                      "type": "integer",
+                      "readOnly": true
+                    },
+                    "inspection_json": {
+                      "type": "string",
+                      "readOnly": true
+                    },
+                    "is_encrypted": {
+                      "type": "boolean",
+                      "readOnly": true
+                    },
+                    "name": {
+                      "type": "string",
+                      "readOnly": true
+                    },
+                    "openshift": {
+                      "type": "string",
+                      "readOnly": true
+                    },
+                    "openshift_detected": {
+                      "type": "boolean",
+                      "readOnly": true
+                    },
+                    "rhel": {
+                      "type": "string",
+                      "readOnly": true
+                    },
+                    "rhel_detected": {
+                      "type": "string",
+                      "readOnly": true
+                    },
+                    "rhel_enabled_repos_found": {
+                      "type": "string",
+                      "readOnly": true
+                    },
+                    "rhel_product_certs_found": {
+                      "type": "string",
+                      "readOnly": true
+                    },
+                    "rhel_release_files_found": {
+                      "type": "string",
+                      "readOnly": true
+                    },
+                    "rhel_signed_packages_found": {
+                      "type": "string",
+                      "readOnly": true
+                    },
+                    "rhel_version": {
+                      "type": "string",
+                      "readOnly": true
+                    },
+                    "status": {
+                      "enum": [
+                        "pending",
+                        "preparing",
+                        "inspecting",
+                        "inspected",
+                        "error",
+                        "unavailable"
+                      ],
+                      "readOnly": true
+                    },
+                    "syspurpose": {
+                      "type": "string",
+                      "readOnly": true
+                    },
+                    "updated_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "readOnly": true
+                    },
+                    "cloud_type": {
+                      "enum": [
+                        "aws"
+                      ]
+                    },
+                    "content_object": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v2/sysconfig/": {
+      "get": {
+        "operationId": "listSysconfigViewSets",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {}
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v2/concurrent/": {
+      "get": {
+        "operationId": "listDailyConcurrentUsages",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "The initial index from which to return the results.",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "count": {
+                      "type": "integer",
+                      "example": 123
+                    },
+                    "next": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "previous": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "properties": {
+                          "date": {
+                            "type": "string",
+                            "format": "date"
+                          },
+                          "instances": {
+                            "type": "integer"
+                          },
+                          "instances_list": {
+                            "type": "array",
+                            "items": {}
+                          },
+                          "vcpu": {
+                            "type": "integer"
+                          },
+                          "memory": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "date",
+                          "instances",
+                          "instances_list",
+                          "vcpu",
+                          "memory"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v2/images/{id}/reinspect/": {
+      "post": {
+        "operationId": "reinspectMachineImage",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "A unique integer value identifying this machine image.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "cloud_type": {
+                    "enum": [
+                      "aws"
+                    ]
+                  },
+                  "content_object": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "readOnly": true
+                    },
+                    "image_id": {
+                      "type": "integer",
+                      "readOnly": true
+                    },
+                    "inspection_json": {
+                      "type": "string",
+                      "readOnly": true
+                    },
+                    "is_encrypted": {
+                      "type": "boolean",
+                      "readOnly": true
+                    },
+                    "name": {
+                      "type": "string",
+                      "readOnly": true
+                    },
+                    "openshift": {
+                      "type": "string",
+                      "readOnly": true
+                    },
+                    "openshift_detected": {
+                      "type": "boolean",
+                      "readOnly": true
+                    },
+                    "rhel": {
+                      "type": "string",
+                      "readOnly": true
+                    },
+                    "rhel_detected": {
+                      "type": "string",
+                      "readOnly": true
+                    },
+                    "rhel_enabled_repos_found": {
+                      "type": "string",
+                      "readOnly": true
+                    },
+                    "rhel_product_certs_found": {
+                      "type": "string",
+                      "readOnly": true
+                    },
+                    "rhel_release_files_found": {
+                      "type": "string",
+                      "readOnly": true
+                    },
+                    "rhel_signed_packages_found": {
+                      "type": "string",
+                      "readOnly": true
+                    },
+                    "rhel_version": {
+                      "type": "string",
+                      "readOnly": true
+                    },
+                    "status": {
+                      "enum": [
+                        "pending",
+                        "preparing",
+                        "inspecting",
+                        "inspected",
+                        "error",
+                        "unavailable"
+                      ],
+                      "readOnly": true
+                    },
+                    "syspurpose": {
+                      "type": "string",
+                      "readOnly": true
+                    },
+                    "updated_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "readOnly": true
+                    },
+                    "cloud_type": {
+                      "enum": [
+                        "aws"
+                      ]
+                    },
+                    "content_object": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    }
+  }
+}

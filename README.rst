@@ -353,6 +353,21 @@ Once the database is available, you may run the following Make target to generat
 
 This will create many use-case-specific records in the database, simulate API calls through cloudigrade, and generate an updated document with the API calls. You should review any changes made by this command before adding and committing them to source control.
 
+Generate a Spec File
+--------------------
+
+Generation of the spec file is handled by the same mechanism that serves our spec file via api, to ensure that they are the same. If you've recently made changes to the api and need to update the spec file, run the following command:
+
+.. code-block:: sh
+
+    make spec
+
+Otherwise, if you'd simply like to verify that the spec is current, you can run the following:
+
+.. code-block:: sh
+
+    make spec-test
+
 
 Authentication
 ==============

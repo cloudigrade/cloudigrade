@@ -87,6 +87,18 @@ NGINX S2i:
   script:
     - s2i build --context-dir=${CONTEXT_DIR} --ref ${CI_COMMIT_REF_NAME} ${CI_PROJECT_URL} ${NGINX_S2I_IMAGE} ${IMAGE_NAME}:latest
 
+Spec File:
+  stage: test
+  image: registry.gitlab.com/cloudigrade/images/build-container:latest
+  except:
+    - chat
+    - trigger
+  before_script:
+    - pip install pipenv
+    - pipenv install --dev
+  script:
+    - AWS_SQS_ACCESS_KEY_ID=foo AWS_SQS_SECRET_ACCESS_KEY=bar pipenv run make spec-test
+
 ### BUILD STAGE ###
 Push Cloudigrade Image:
   stage: build
