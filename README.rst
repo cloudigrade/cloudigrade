@@ -403,9 +403,9 @@ Amazon SQS is used to broker messages between **cloudigrade**, Celery workers, a
 Kafka Listener
 ==============
 
-``sources_listener.py`` is a special script whose purpose is to listen to the platform kafka instance. Currently we only listen to a topic from the sources application to inform us of when new source authentication objects are created so we can proceed to add them to cloud meter.
+``listen_to_sources`` is a special Django management command whose purpose is to listen to the Red Hat Insights platform Kafka instance. Currently we only listen to a topic from the `Sources API <https://github.com/RedHatInsights/sources-api>`_ to inform us of when new source authentication objects are created so we can proceed to add them to **cloudigrade**.
 
-There are several environment variables that configure the script.
+Several environment variables may override defaults from ``config.settings`` to configure this command:
 
 - ``LISTENER_TOPIC`` - The topic to listen to
 - ``LISTENER_GROUP_ID`` - The listener group
@@ -416,7 +416,7 @@ There are several environment variables that configure the script.
 - ``LISTENER_PID_PATH`` - The path of the pid file
 - ``ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES`` - bool to feature-flag creation and deletion of users and cloud accounts driven by Kafka messages. When disabled, cloudigrade will only log a message when it reads from the Kafka topic.
 
-The listener will be automatically deployed to all OSD environments, including review. If you'd like to run it locally you don't need to do anything special, simply be in your virtual environment, set your environment variables, and call ``python cloudigrade/sources_listener.py``.
+The listener will be automatically deployed to all OSD environments, including review. If you'd like to run it locally you don't need to do anything special, simply be in your virtual environment, set your environment variables, and call ``python cloudigrade/manage.py listen_to_sources``.
 
 .. |license| image:: https://img.shields.io/github/license/cloudigrade/cloudigrade.svg
    :target: https://github.com/cloudigrade/cloudigrade/blob/master/LICENSE
