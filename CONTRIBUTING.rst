@@ -58,19 +58,19 @@ On `the cloudigrade issue board in GitLab <https://gitlab.com/groups/cloudigrade
 Coding style
 ============
 
-**cloudigrade** is a Python Django project and officially supports only Python 3.6.
+**cloudigrade** is a Python Django project and officially supports only Python 3.7.
 
-We enforce consistency in the code using `Flake8 <https://pypi.python.org/pypi/flake8>`_ with the following additional plugins enabled:
+We enforce consistency in the code using `Flake8 <https://pypi.org/project/flake8/>`_ with the following additional plugins enabled:
 
-- `flake8-docstrings <https://pypi.python.org/pypi/flake8-docstrings>`_
-- `flake8-quotes <https://pypi.python.org/pypi/flake8-quotes>`_
-- `flake8-import-order <https://pypi.python.org/pypi/flake8-import-order>`_
+- `flake8-docstrings <https://pypi.org/pypi/flake8-docstrings>`_
+- `flake8-import-order <https://pypi.org/pypi/flake8-import-order>`_
+- `flake8-black <https://pypi.org/project/flake8-black/>`_
 
-This means that all our submitted code conforms to `PEP 8 <https://www.python.org/dev/peps/pep-0008/>`_ standards.
+This means that all our submitted code conforms to `PEP 8 <https://www.python.org/dev/peps/pep-0008/>`_ standards and `Black's opinionated code style <https://black.readthedocs.io/en/stable/the_black_code_style.html>`_.
 
 All code **must** cleanly pass Flake8 checks before it can be accepted. Occasional exceptions may be made to skip checks with ``# noqa`` comments, but these are strongly discouraged and must be reasonably justified.
 
-Imports should be grouped and then sorted alphabetically following the `pycharm style <https://github.com/PyCQA/flake8-import-order#styles>`_. You may use the command-line tool `isort <https://pypi.python.org/pypi/isort>`_ to automatically clean up imports, but please manually review its changes before committing to ensure that there are no unintended side-effects. Only commit changes to imports if they are specifically relevant to other code you are changing. Example ``isort`` usage:
+Imports should be grouped and then sorted alphabetically following the `pycharm style <https://github.com/PyCQA/flake8-import-order#styles>`_. You may use the command-line tool `isort <https://pypi.org/project/isort/>`_ to automatically clean up imports, but please manually review its changes before committing to ensure that there are no unintended side-effects. Only commit changes to imports if they are specifically relevant to other code you are changing. Example ``isort`` usage:
 
 .. code-block:: bash
 
@@ -130,13 +130,14 @@ When you submit your merge request, include a link in the description to the iss
 
 - running Flake8 lint checks
 - executing Django unit tests
+- checking that the openapi.spec file matches the current API implementation
 - checking code coverage of the unit tests
 - building a Docker image and pushing it to `the GitLab container registry <https://gitlab.com/cloudigrade/cloudigrade/container_registry>`_
 - deploying to a review environment
 
 See the ``.gitlab-ci.yml`` file for more details.
 
-QE engineers belonging to the **cloudigrade** group are generally responsible for merging and closing accepted merge requests. Merge requests that have little or no material affect on the user experience or integrations may be merged by developers at the team's discretion.
+Merge requests may be merged and closed by members of the **cloudigrade** group in GitLab. Generally, the same contributor who authored the change will merge their request shortly after the request is approved by other team members.
 
 
 Test coverage
@@ -144,7 +145,7 @@ Test coverage
 
 All code changes should be accompanied by automated tests to cover the affected behavior and lines of code. Ideal submissions include tests to cover "happy path" cases, error cases, and known edge cases.
 
-**cloudigrade** tests run in tox's ``py36`` environment and must pass cleanly before we can accept a merge request. The full test suite should take on the order of seconds to complete, and because the tests are reasonably fast, we encourage contributors to run all tests before submitting any changes.
+**cloudigrade** tests run in tox's ``py37`` environment and must pass cleanly before we can accept a merge request. The full test suite should take on the order of seconds to complete, and because the tests are reasonably fast, we encourage contributors to run all tests locally before submitting any changes.
 
 We strive for very high coverage of our code by tests, and any code additions or changes that reduce our rate of coverage should be justified. codecov integration will comment on merge requests and halt the process if coverage drops below our project thresholds.
 
@@ -167,8 +168,8 @@ Once your environment is set up, simply use ``tox``:
     # run all tests and code quality checks
     tox
 
-    # run only tests for Python 3.6
-    tox -e py36
+    # run only tests for Python 3.7
+    tox -e py37
 
     # run only code quality checks
     tox -e flake8
