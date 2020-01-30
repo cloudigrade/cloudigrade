@@ -8,7 +8,7 @@ cloudigrade
 What is cloudigrade?
 ====================
 
-**cloudigrade** is an open-source suite of tools for tracking Linux distribution use (although chiefly targeting RHEL) in public cloud platforms. **cloudigrade** actively checks a user's account in a particular cloud for running instances, tracks when instances are powered on, determines what Linux distributions are installed on them, and provides the ability to generate reports to see how long different distributions have run in a given window.
+**cloudigrade** is an open-source suite of tools for tracking Linux distribution use (although chiefly targeting RHEL) in public cloud platforms. **cloudigrade** actively checks a user's account in a particular cloud for running instances, tracks when instances are powered on, determines what Linux distributions are installed on them, and provides the ability to generate reports to see how many cloud compute resources have been used in a given time period.
 
 
 What is this "Doppler" I see referenced in various places?
@@ -32,7 +32,7 @@ Developer Environment
 
 Because **cloudigrade** is actually a suite of interacting services, setting up a development environment may require installing some or all of the following dependencies:
 
--  Python (one of the versions we support)
+-  Python 3.7
 -  `Docker <https://www.docker.com/community-edition#/download>`_
 -  `tox <https://tox.readthedocs.io/>`_
 -  `gettext <https://www.gnu.org/software/gettext/>`_
@@ -373,7 +373,7 @@ Authentication
 ==============
 
 3Scale authentication is used to authenticate
-users, for a local deployment, this means including a `HTTP_X_RH_IDENTITY`
+users, for a local deployment, this means including a ``HTTP_X_RH_IDENTITY``
 header in all requests.
 
 API access is restricted to authenticated users.
@@ -381,7 +381,7 @@ API access is restricted to authenticated users.
 For more information about this header see `examples. <./docs/rest-api-example.rst#Authorization>`_
 
 
-When accessing any endpoint with the HTTP_X_RH_IDENTITY header,
+When accessing any endpoint with the ``HTTP_X_RH_IDENTITY`` header,
 if the user found in the header does not exist, it will be created.
 It is also possible to programmatically create users on the command line,
 for instance for testing. To create a user this way, use:
@@ -403,7 +403,7 @@ Amazon SQS is used to broker messages between **cloudigrade**, Celery workers, a
 Kafka Listener
 ==============
 
-`sources_listener.py` is a special script whose purpose is to listen to the platform kafka instance. Currently we only listen to a topic from the sources application to inform us of when new source authentication objects are created so we can proceed to add them to cloud meter.
+``sources_listener.py`` is a special script whose purpose is to listen to the platform kafka instance. Currently we only listen to a topic from the sources application to inform us of when new source authentication objects are created so we can proceed to add them to cloud meter.
 
 There are several environment variables that configure the script.
 
@@ -416,7 +416,7 @@ There are several environment variables that configure the script.
 - ``LISTENER_PID_PATH`` - The path of the pid file
 - ``ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES`` - bool to feature-flag creation and deletion of users and cloud accounts driven by Kafka messages. When disabled, cloudigrade will only log a message when it reads from the Kafka topic.
 
-The listener will be automatically deployed to all OSD environments, including review. If you'd like to run it locally you don't need to do anything special, simply be in your virtual environment, set your environment variables, and call `python cloudigrade/sources_listener.py`.
+The listener will be automatically deployed to all OSD environments, including review. If you'd like to run it locally you don't need to do anything special, simply be in your virtual environment, set your environment variables, and call ``python cloudigrade/sources_listener.py``.
 
 .. |license| image:: https://img.shields.io/github/license/cloudigrade/cloudigrade.svg
    :target: https://github.com/cloudigrade/cloudigrade/blob/master/LICENSE
