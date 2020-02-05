@@ -116,10 +116,13 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
             first_result["instances_list"],
             [
                 {
+                    "cloud_account_id": self.account1.cloud_account_id,
                     "cloud_type": self.instance1.cloud_type,
                     "cloud_instance_id": self.instance1.cloud_instance_id,
+                    "memory": 8.0,
                     "rhel_version": self.image1_rhel.rhel_version,
                     "syspurpose": self.image1_rhel.syspurpose,
+                    "vcpu": 4,
                 }
             ],
         )
@@ -135,19 +138,25 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
         self.assertEqual(
             second_result["instances_list"][0],
             {
+                "cloud_account_id": self.account1.cloud_account_id,
                 "cloud_type": self.instance1.cloud_type,
                 "cloud_instance_id": self.instance1.cloud_instance_id,
+                "memory": 8.0,
                 "rhel_version": self.image1_rhel.rhel_version,
                 "syspurpose": self.image1_rhel.syspurpose,
+                "vcpu": 4,
             },
         )
         self.assertEqual(
             second_result["instances_list"][1],
             {
+                "cloud_account_id": self.account1.cloud_account_id,
                 "cloud_type": self.instance2.cloud_type,
                 "cloud_instance_id": self.instance2.cloud_instance_id,
+                "memory": 8.0,
                 "rhel_version": self.image2_rhel.rhel_version,
                 "syspurpose": self.image2_rhel.syspurpose,
+                "vcpu": 4,
             },
         )
 
@@ -163,10 +172,13 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
             third_result["instances_list"],
             [
                 {
+                    "cloud_account_id": self.account1.cloud_account_id,
                     "cloud_type": self.instance2.cloud_type,
                     "cloud_instance_id": self.instance2.cloud_instance_id,
+                    "memory": 8.0,
                     "rhel_version": self.image2_rhel.rhel_version,
                     "syspurpose": self.image2_rhel.syspurpose,
+                    "vcpu": 4,
                 }
             ],
         )

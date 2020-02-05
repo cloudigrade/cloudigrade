@@ -307,6 +307,7 @@ def calculate_max_concurrent_usage(date, user_id, cloud_account_id=None):
                 True,
                 run.vcpu,
                 run.memory,
+                run.instance.cloud_account.cloud_account_id,
                 run.instance.cloud_type,
                 run.instance.cloud_instance_id,
                 run.instance.machine_image.rhel_version,
@@ -321,6 +322,7 @@ def calculate_max_concurrent_usage(date, user_id, cloud_account_id=None):
                     False,
                     run.vcpu,
                     run.memory,
+                    run.instance.cloud_account.cloud_account_id,
                     run.instance.cloud_type,
                     run.instance.cloud_instance_id,
                     run.instance.machine_image.rhel_version,
@@ -341,6 +343,7 @@ def calculate_max_concurrent_usage(date, user_id, cloud_account_id=None):
         is_start,
         vcpu,
         memory,
+        instance_cloud_account_id,
         cloud_type,
         instance_id,
         rhel_version,
@@ -359,10 +362,13 @@ def calculate_max_concurrent_usage(date, user_id, cloud_account_id=None):
         max_memory = max(current_memory, max_memory)
         instances_list.append(
             {
+                "cloud_account_id": instance_cloud_account_id,
                 "cloud_type": cloud_type,
                 "cloud_instance_id": instance_id,
+                "memory": memory,
                 "rhel_version": rhel_version,
                 "syspurpose": syspurpose,
+                "vcpu": vcpu,
             }
         )
 
