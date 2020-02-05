@@ -52,6 +52,7 @@ The following resource paths are currently available:
 -  ``/api/v2/instance/`` returns instance data
 -  ``/api/v2/image/`` returns image data
 -  ``/api/v2/sysconfig/`` returns sysconfig data
+-  ``/api/v2/concurrent/`` returns concurrency data
 
 
 User Setup
@@ -77,7 +78,7 @@ Request:
 .. code:: bash
 
     http post localhost:8080/v2/accounts/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
-        account_arn="arn:aws:iam::43804552951:role/role-for-cloudigrade" \
+        account_arn="arn:aws:iam::146624814801:role/role-for-cloudigrade" \
         name="yet another account" \
         cloud_type="aws"
 
@@ -87,26 +88,26 @@ Response:
 
     HTTP/1.1 201 Created
     Allow: GET, POST, HEAD, OPTIONS
-    Content-Length: 390
+    Content-Length: 392
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: f397c2bd-ecb3-40e2-b7ff-689131804d13
+    X-CLOUDIGRADE-REQUEST-ID: b9d70971-9692-48ed-b2c2-a3a419f02065
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
     {
-        "account_id": 4,
+        "account_id": 6,
         "cloud_type": "aws",
         "content_object": {
-            "account_arn": "arn:aws:iam::43804552951:role/role-for-cloudigrade",
-            "aws_account_id": "43804552951",
-            "aws_cloud_account_id": 4,
-            "created_at": "2020-01-22T17:00:59.566477Z",
-            "updated_at": "2020-01-22T17:00:59.566504Z"
+            "account_arn": "arn:aws:iam::146624814801:role/role-for-cloudigrade",
+            "aws_account_id": "146624814801",
+            "aws_cloud_account_id": 6,
+            "created_at": "2020-02-05T18:37:40.637650Z",
+            "updated_at": "2020-02-05T18:37:40.637675Z"
         },
-        "created_at": "2020-01-22T17:00:59.572283Z",
+        "created_at": "2020-02-05T18:37:40.644303Z",
         "name": "yet another account",
-        "updated_at": "2020-01-22T17:00:59.572303Z",
+        "updated_at": "2020-02-05T18:37:40.644324Z",
         "user_id": 4
     }
 
@@ -118,7 +119,7 @@ Request:
 .. code:: bash
 
     http post localhost:8080/v2/accounts/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
-        account_arn="arn:aws:iam::43804552951:role/role-for-cloudigrade" \
+        account_arn="arn:aws:iam::146624814801:role/role-for-cloudigrade" \
         name="but this account already exists" \
         cloud_type="aws"
 
@@ -128,16 +129,16 @@ Response:
 
     HTTP/1.1 400 Bad Request
     Allow: GET, POST, HEAD, OPTIONS
-    Content-Length: 69
+    Content-Length: 70
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: 92b1288b-0e70-4d6e-9abb-23d37b59b45c
+    X-CLOUDIGRADE-REQUEST-ID: 654b1825-9fbc-48f4-9cb9-7a7564dff34d
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
     {
         "account_arn": [
-            "An ARN already exists for account \"43804552951\""
+            "An ARN already exists for account \"146624814801\""
         ]
     }
 
@@ -160,43 +161,43 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, POST, HEAD, OPTIONS
-    Content-Length: 954
+    Content-Length: 956
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: b3db02e5-1948-4931-a0fa-e6bbc0c506e4
+    X-CLOUDIGRADE-REQUEST-ID: aba48b7d-12f6-4846-b0d7-44037dd29792
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
     {
         "data": [
             {
-                "account_id": 4,
+                "account_id": 6,
                 "cloud_type": "aws",
                 "content_object": {
-                    "account_arn": "arn:aws:iam::43804552951:role/role-for-cloudigrade",
-                    "aws_account_id": "43804552951",
-                    "aws_cloud_account_id": 4,
-                    "created_at": "2020-01-22T17:00:59.566477Z",
-                    "updated_at": "2020-01-22T17:00:59.566504Z"
+                    "account_arn": "arn:aws:iam::146624814801:role/role-for-cloudigrade",
+                    "aws_account_id": "146624814801",
+                    "aws_cloud_account_id": 6,
+                    "created_at": "2020-02-05T18:37:40.637650Z",
+                    "updated_at": "2020-02-05T18:37:40.637675Z"
                 },
-                "created_at": "2020-01-22T17:00:59.572283Z",
+                "created_at": "2020-02-05T18:37:40.644303Z",
                 "name": "yet another account",
-                "updated_at": "2020-01-22T17:00:59.572303Z",
+                "updated_at": "2020-02-05T18:37:40.644324Z",
                 "user_id": 4
             },
             {
-                "account_id": 3,
+                "account_id": 5,
                 "cloud_type": "aws",
                 "content_object": {
-                    "account_arn": "arn:aws:iam::635839671420:role/role-for-cloudigrade",
-                    "aws_account_id": "635839671420",
-                    "aws_cloud_account_id": 3,
-                    "created_at": "2020-01-08T00:00:00Z",
-                    "updated_at": "2020-01-22T17:00:59.394785Z"
+                    "account_arn": "arn:aws:iam::617346468227:role/role-for-cloudigrade",
+                    "aws_account_id": "617346468227",
+                    "aws_cloud_account_id": 5,
+                    "created_at": "2020-01-22T00:00:00Z",
+                    "updated_at": "2020-02-05T18:37:40.403086Z"
                 },
-                "created_at": "2020-01-08T00:00:00Z",
+                "created_at": "2020-01-22T00:00:00Z",
                 "name": "greatest account ever",
-                "updated_at": "2020-01-22T17:00:59.397171Z",
+                "updated_at": "2020-02-05T18:37:40.407278Z",
                 "user_id": 4
             }
         ],
@@ -219,7 +220,7 @@ Request:
 
 .. code:: bash
 
-    http localhost:8080/v2/accounts/4/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}"
+    http localhost:8080/v2/accounts/6/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}"
 
 Response:
 
@@ -227,26 +228,26 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, PUT, PATCH, DELETE, HEAD, OPTIONS
-    Content-Length: 390
+    Content-Length: 392
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: 35ab4db4-d837-489d-ac4a-179276f8817a
+    X-CLOUDIGRADE-REQUEST-ID: fec74e76-3b70-44c5-9e2b-180df6d5a0ba
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
     {
-        "account_id": 4,
+        "account_id": 6,
         "cloud_type": "aws",
         "content_object": {
-            "account_arn": "arn:aws:iam::43804552951:role/role-for-cloudigrade",
-            "aws_account_id": "43804552951",
-            "aws_cloud_account_id": 4,
-            "created_at": "2020-01-22T17:00:59.566477Z",
-            "updated_at": "2020-01-22T17:00:59.566504Z"
+            "account_arn": "arn:aws:iam::146624814801:role/role-for-cloudigrade",
+            "aws_account_id": "146624814801",
+            "aws_cloud_account_id": 6,
+            "created_at": "2020-02-05T18:37:40.637650Z",
+            "updated_at": "2020-02-05T18:37:40.637675Z"
         },
-        "created_at": "2020-01-22T17:00:59.572283Z",
+        "created_at": "2020-02-05T18:37:40.644303Z",
         "name": "yet another account",
-        "updated_at": "2020-01-22T17:00:59.572303Z",
+        "updated_at": "2020-02-05T18:37:40.644324Z",
         "user_id": 4
     }
 
@@ -264,7 +265,7 @@ Request:
 
 .. code:: bash
 
-    http patch localhost:8080/v2/accounts/4/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
+    http patch localhost:8080/v2/accounts/6/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
         name="name updated using PATCH"
 
 Response:
@@ -273,26 +274,26 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, PUT, PATCH, DELETE, HEAD, OPTIONS
-    Content-Length: 395
+    Content-Length: 397
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: af4705d1-7502-43b5-806a-1a38aeef9e31
+    X-CLOUDIGRADE-REQUEST-ID: 04c8747c-87e6-4e55-97c7-4a252f19a8e0
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
     {
-        "account_id": 4,
+        "account_id": 6,
         "cloud_type": "aws",
         "content_object": {
-            "account_arn": "arn:aws:iam::43804552951:role/role-for-cloudigrade",
-            "aws_account_id": "43804552951",
-            "aws_cloud_account_id": 4,
-            "created_at": "2020-01-22T17:00:59.566477Z",
-            "updated_at": "2020-01-22T17:00:59.566504Z"
+            "account_arn": "arn:aws:iam::146624814801:role/role-for-cloudigrade",
+            "aws_account_id": "146624814801",
+            "aws_cloud_account_id": 6,
+            "created_at": "2020-02-05T18:37:40.637650Z",
+            "updated_at": "2020-02-05T18:37:40.637675Z"
         },
-        "created_at": "2020-01-22T17:00:59.572283Z",
+        "created_at": "2020-02-05T18:37:40.644303Z",
         "name": "name updated using PATCH",
-        "updated_at": "2020-01-22T17:00:59.635554Z",
+        "updated_at": "2020-02-05T18:37:40.727236Z",
         "user_id": 4
     }
 
@@ -303,9 +304,9 @@ Request:
 
 .. code:: bash
 
-    http put localhost:8080/v2/accounts/4/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
+    http put localhost:8080/v2/accounts/6/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
         name="name updated using PUT" \
-        account_arn="arn:aws:iam::43804552951:role/role-for-cloudigrade" \
+        account_arn="arn:aws:iam::146624814801:role/role-for-cloudigrade" \
         cloud_type="aws"
 
 Response:
@@ -314,27 +315,27 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, PUT, PATCH, DELETE, HEAD, OPTIONS
-    Content-Length: 460
+    Content-Length: 463
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: 222436b1-39d6-4baf-94d6-d8a2e3500325
+    X-CLOUDIGRADE-REQUEST-ID: 9709c18f-9de8-42c5-b4e5-a828184808b8
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
     {
-        "account_arn": "arn:aws:iam::43804552951:role/role-for-cloudigrade",
-        "account_id": 4,
+        "account_arn": "arn:aws:iam::146624814801:role/role-for-cloudigrade",
+        "account_id": 6,
         "cloud_type": "aws",
         "content_object": {
-            "account_arn": "arn:aws:iam::43804552951:role/role-for-cloudigrade",
-            "aws_account_id": "43804552951",
-            "aws_cloud_account_id": 4,
-            "created_at": "2020-01-22T17:00:59.566477Z",
-            "updated_at": "2020-01-22T17:00:59.566504Z"
+            "account_arn": "arn:aws:iam::146624814801:role/role-for-cloudigrade",
+            "aws_account_id": "146624814801",
+            "aws_cloud_account_id": 6,
+            "created_at": "2020-02-05T18:37:40.637650Z",
+            "updated_at": "2020-02-05T18:37:40.637675Z"
         },
-        "created_at": "2020-01-22T17:00:59.572283Z",
+        "created_at": "2020-02-05T18:37:40.644303Z",
         "name": "name updated using PUT",
-        "updated_at": "2020-01-22T17:00:59.653477Z",
+        "updated_at": "2020-02-05T18:37:40.761317Z",
         "user_id": 4
     }
 
@@ -344,7 +345,7 @@ Request:
 
 .. code:: bash
 
-    http patch localhost:8080/v2/accounts/4/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
+    http patch localhost:8080/v2/accounts/6/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
         account_arn="arn:aws:iam::999999999999:role/role-for-cloudigrade"
 
 Response:
@@ -356,7 +357,7 @@ Response:
     Content-Length: 50
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: e2c1685e-d201-431c-9789-21a264453def
+    X-CLOUDIGRADE-REQUEST-ID: c0a67465-b655-47cd-a703-03423a7bc642
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -388,56 +389,56 @@ Response:
     Content-Length: 1242
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: 8583ae54-384c-4337-a963-c6c1b8cf4b3c
+    X-CLOUDIGRADE-REQUEST-ID: 31bec76e-0c28-4018-a30e-66aa9536c771
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
     {
         "data": [
             {
-                "cloud_account_id": 3,
+                "cloud_account_id": 5,
                 "cloud_type": "aws",
                 "content_object": {
-                    "aws_instance_id": 2,
-                    "created_at": "2020-01-22T17:00:59.408982Z",
-                    "ec2_instance_id": "i-4b1b7b6d513d8bc6b",
-                    "region": "us-east-1",
-                    "updated_at": "2020-01-22T17:00:59.408996Z"
-                },
-                "created_at": "2020-01-22T17:00:59.410236Z",
-                "instance_id": 2,
-                "machine_image_id": 3,
-                "updated_at": "2020-01-22T17:00:59.410250Z"
-            },
-            {
-                "cloud_account_id": 3,
-                "cloud_type": "aws",
-                "content_object": {
-                    "aws_instance_id": 3,
-                    "created_at": "2020-01-22T17:00:59.420524Z",
-                    "ec2_instance_id": "i-077f4f2462f978242",
-                    "region": "us-east-1",
-                    "updated_at": "2020-01-22T17:00:59.420537Z"
-                },
-                "created_at": "2020-01-22T17:00:59.421726Z",
-                "instance_id": 3,
-                "machine_image_id": 4,
-                "updated_at": "2020-01-22T17:00:59.421739Z"
-            },
-            {
-                "cloud_account_id": 3,
-                "cloud_type": "aws",
-                "content_object": {
-                    "aws_instance_id": 4,
-                    "created_at": "2020-01-22T17:00:59.433862Z",
-                    "ec2_instance_id": "i-35380cca21574cc35",
+                    "aws_instance_id": 6,
+                    "created_at": "2020-02-05T18:37:40.420885Z",
+                    "ec2_instance_id": "i-922afc524b3472a83",
                     "region": "ap-northeast-1",
-                    "updated_at": "2020-01-22T17:00:59.433885Z"
+                    "updated_at": "2020-02-05T18:37:40.420903Z"
                 },
-                "created_at": "2020-01-22T17:00:59.435015Z",
-                "instance_id": 4,
-                "machine_image_id": 5,
-                "updated_at": "2020-01-22T17:00:59.435027Z"
+                "created_at": "2020-02-05T18:37:40.422439Z",
+                "instance_id": 6,
+                "machine_image_id": 6,
+                "updated_at": "2020-02-05T18:37:40.422455Z"
+            },
+            {
+                "cloud_account_id": 5,
+                "cloud_type": "aws",
+                "content_object": {
+                    "aws_instance_id": 7,
+                    "created_at": "2020-02-05T18:37:40.436782Z",
+                    "ec2_instance_id": "i-1eea72ea779bd28a0",
+                    "region": "eu-west-1",
+                    "updated_at": "2020-02-05T18:37:40.436802Z"
+                },
+                "created_at": "2020-02-05T18:37:40.438347Z",
+                "instance_id": 7,
+                "machine_image_id": 7,
+                "updated_at": "2020-02-05T18:37:40.438363Z"
+            },
+            {
+                "cloud_account_id": 5,
+                "cloud_type": "aws",
+                "content_object": {
+                    "aws_instance_id": 8,
+                    "created_at": "2020-02-05T18:37:40.452206Z",
+                    "ec2_instance_id": "i-5fcb84b2cf425d9ca",
+                    "region": "us-east-2",
+                    "updated_at": "2020-02-05T18:37:40.452224Z"
+                },
+                "created_at": "2020-02-05T18:37:40.453708Z",
+                "instance_id": 8,
+                "machine_image_id": 8,
+                "updated_at": "2020-02-05T18:37:40.453723Z"
             }
         ],
         "links": {
@@ -459,7 +460,7 @@ Request:
 
 .. code:: bash
 
-    http localhost:8080/v2/instances/2/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}"
+    http localhost:8080/v2/instances/6/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}"
 
 Response:
 
@@ -467,27 +468,27 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 350
+    Content-Length: 355
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: 17c2bcd1-39b7-4fe9-abde-2a7b218b7e4f
+    X-CLOUDIGRADE-REQUEST-ID: 819f0772-0ea0-41b1-a004-b8d0f7e1fd21
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
     {
-        "cloud_account_id": 3,
+        "cloud_account_id": 5,
         "cloud_type": "aws",
         "content_object": {
-            "aws_instance_id": 2,
-            "created_at": "2020-01-22T17:00:59.408982Z",
-            "ec2_instance_id": "i-4b1b7b6d513d8bc6b",
-            "region": "us-east-1",
-            "updated_at": "2020-01-22T17:00:59.408996Z"
+            "aws_instance_id": 6,
+            "created_at": "2020-02-05T18:37:40.420885Z",
+            "ec2_instance_id": "i-922afc524b3472a83",
+            "region": "ap-northeast-1",
+            "updated_at": "2020-02-05T18:37:40.420903Z"
         },
-        "created_at": "2020-01-22T17:00:59.410236Z",
-        "instance_id": 2,
-        "machine_image_id": 3,
-        "updated_at": "2020-01-22T17:00:59.410250Z"
+        "created_at": "2020-02-05T18:37:40.422439Z",
+        "instance_id": 6,
+        "machine_image_id": 6,
+        "updated_at": "2020-02-05T18:37:40.422455Z"
     }
 
 
@@ -513,71 +514,71 @@ Response:
     Content-Length: 1619
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: eb70a797-f105-4ec4-9dd5-25b2fade039a
+    X-CLOUDIGRADE-REQUEST-ID: 5166ea75-878b-4e6a-84b1-bfe405d4f11b
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
     {
         "data": [
             {
-                "cloud_account_id": 2,
+                "cloud_account_id": 4,
                 "cloud_type": "aws",
                 "content_object": {
-                    "aws_instance_id": 1,
-                    "created_at": "2020-01-22T17:00:59.383193Z",
-                    "ec2_instance_id": "i-e1a904595c30a430b",
+                    "aws_instance_id": 5,
+                    "created_at": "2020-02-05T18:37:40.377059Z",
+                    "ec2_instance_id": "i-419c0b4e8acf44b72",
                     "region": "us-east-1",
-                    "updated_at": "2020-01-22T17:00:59.383207Z"
+                    "updated_at": "2020-02-05T18:37:40.377078Z"
                 },
-                "created_at": "2020-01-22T17:00:59.386998Z",
-                "instance_id": 1,
-                "machine_image_id": 2,
-                "updated_at": "2020-01-22T17:00:59.387012Z"
-            },
-            {
-                "cloud_account_id": 3,
-                "cloud_type": "aws",
-                "content_object": {
-                    "aws_instance_id": 2,
-                    "created_at": "2020-01-22T17:00:59.408982Z",
-                    "ec2_instance_id": "i-4b1b7b6d513d8bc6b",
-                    "region": "us-east-1",
-                    "updated_at": "2020-01-22T17:00:59.408996Z"
-                },
-                "created_at": "2020-01-22T17:00:59.410236Z",
-                "instance_id": 2,
-                "machine_image_id": 3,
-                "updated_at": "2020-01-22T17:00:59.410250Z"
-            },
-            {
-                "cloud_account_id": 3,
-                "cloud_type": "aws",
-                "content_object": {
-                    "aws_instance_id": 3,
-                    "created_at": "2020-01-22T17:00:59.420524Z",
-                    "ec2_instance_id": "i-077f4f2462f978242",
-                    "region": "us-east-1",
-                    "updated_at": "2020-01-22T17:00:59.420537Z"
-                },
-                "created_at": "2020-01-22T17:00:59.421726Z",
-                "instance_id": 3,
-                "machine_image_id": 4,
-                "updated_at": "2020-01-22T17:00:59.421739Z"
-            },
-            {
-                "cloud_account_id": 3,
-                "cloud_type": "aws",
-                "content_object": {
-                    "aws_instance_id": 4,
-                    "created_at": "2020-01-22T17:00:59.433862Z",
-                    "ec2_instance_id": "i-35380cca21574cc35",
-                    "region": "ap-northeast-1",
-                    "updated_at": "2020-01-22T17:00:59.433885Z"
-                },
-                "created_at": "2020-01-22T17:00:59.435015Z",
-                "instance_id": 4,
+                "created_at": "2020-02-05T18:37:40.386876Z",
+                "instance_id": 5,
                 "machine_image_id": 5,
-                "updated_at": "2020-01-22T17:00:59.435027Z"
+                "updated_at": "2020-02-05T18:37:40.386897Z"
+            },
+            {
+                "cloud_account_id": 5,
+                "cloud_type": "aws",
+                "content_object": {
+                    "aws_instance_id": 6,
+                    "created_at": "2020-02-05T18:37:40.420885Z",
+                    "ec2_instance_id": "i-922afc524b3472a83",
+                    "region": "ap-northeast-1",
+                    "updated_at": "2020-02-05T18:37:40.420903Z"
+                },
+                "created_at": "2020-02-05T18:37:40.422439Z",
+                "instance_id": 6,
+                "machine_image_id": 6,
+                "updated_at": "2020-02-05T18:37:40.422455Z"
+            },
+            {
+                "cloud_account_id": 5,
+                "cloud_type": "aws",
+                "content_object": {
+                    "aws_instance_id": 7,
+                    "created_at": "2020-02-05T18:37:40.436782Z",
+                    "ec2_instance_id": "i-1eea72ea779bd28a0",
+                    "region": "eu-west-1",
+                    "updated_at": "2020-02-05T18:37:40.436802Z"
+                },
+                "created_at": "2020-02-05T18:37:40.438347Z",
+                "instance_id": 7,
+                "machine_image_id": 7,
+                "updated_at": "2020-02-05T18:37:40.438363Z"
+            },
+            {
+                "cloud_account_id": 5,
+                "cloud_type": "aws",
+                "content_object": {
+                    "aws_instance_id": 8,
+                    "created_at": "2020-02-05T18:37:40.452206Z",
+                    "ec2_instance_id": "i-5fcb84b2cf425d9ca",
+                    "region": "us-east-2",
+                    "updated_at": "2020-02-05T18:37:40.452224Z"
+                },
+                "created_at": "2020-02-05T18:37:40.453708Z",
+                "instance_id": 8,
+                "machine_image_id": 8,
+                "updated_at": "2020-02-05T18:37:40.453723Z"
             }
         ],
         "links": {
@@ -600,7 +601,7 @@ Request:
 .. code:: bash
 
     http localhost:8080/v2/instances/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
-        running_since=="2020-01-22 17:00:59.359269+00:00"
+        running_since=="2020-02-05 18:37:40.326975+00:00"
 
 Response:
 
@@ -608,64 +609,64 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 1347
+    Content-Length: 1352
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: 1df697fd-00ed-418e-92cb-d52967b0b0bd
+    X-CLOUDIGRADE-REQUEST-ID: 6afe9dff-b4db-4904-b939-c2441b0f8048
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
     {
         "data": [
             {
-                "cloud_account_id": 2,
+                "cloud_account_id": 4,
                 "cloud_type": "aws",
                 "content_object": {
-                    "aws_instance_id": 1,
-                    "created_at": "2020-01-22T17:00:59.383193Z",
-                    "ec2_instance_id": "i-e1a904595c30a430b",
+                    "aws_instance_id": 5,
+                    "created_at": "2020-02-05T18:37:40.377059Z",
+                    "ec2_instance_id": "i-419c0b4e8acf44b72",
                     "region": "us-east-1",
-                    "updated_at": "2020-01-22T17:00:59.383207Z"
+                    "updated_at": "2020-02-05T18:37:40.377078Z"
                 },
-                "created_at": "2020-01-22T17:00:59.386998Z",
-                "instance_id": 1,
-                "machine_image_id": 2,
-                "updated_at": "2020-01-22T17:00:59.387012Z"
+                "created_at": "2020-02-05T18:37:40.386876Z",
+                "instance_id": 5,
+                "machine_image_id": 5,
+                "updated_at": "2020-02-05T18:37:40.386897Z"
             },
             {
-                "cloud_account_id": 3,
+                "cloud_account_id": 5,
                 "cloud_type": "aws",
                 "content_object": {
-                    "aws_instance_id": 2,
-                    "created_at": "2020-01-22T17:00:59.408982Z",
-                    "ec2_instance_id": "i-4b1b7b6d513d8bc6b",
-                    "region": "us-east-1",
-                    "updated_at": "2020-01-22T17:00:59.408996Z"
+                    "aws_instance_id": 6,
+                    "created_at": "2020-02-05T18:37:40.420885Z",
+                    "ec2_instance_id": "i-922afc524b3472a83",
+                    "region": "ap-northeast-1",
+                    "updated_at": "2020-02-05T18:37:40.420903Z"
                 },
-                "created_at": "2020-01-22T17:00:59.410236Z",
-                "instance_id": 2,
-                "machine_image_id": 3,
-                "updated_at": "2020-01-22T17:00:59.410250Z"
+                "created_at": "2020-02-05T18:37:40.422439Z",
+                "instance_id": 6,
+                "machine_image_id": 6,
+                "updated_at": "2020-02-05T18:37:40.422455Z"
             },
             {
-                "cloud_account_id": 3,
+                "cloud_account_id": 5,
                 "cloud_type": "aws",
                 "content_object": {
-                    "aws_instance_id": 3,
-                    "created_at": "2020-01-22T17:00:59.420524Z",
-                    "ec2_instance_id": "i-077f4f2462f978242",
-                    "region": "us-east-1",
-                    "updated_at": "2020-01-22T17:00:59.420537Z"
+                    "aws_instance_id": 7,
+                    "created_at": "2020-02-05T18:37:40.436782Z",
+                    "ec2_instance_id": "i-1eea72ea779bd28a0",
+                    "region": "eu-west-1",
+                    "updated_at": "2020-02-05T18:37:40.436802Z"
                 },
-                "created_at": "2020-01-22T17:00:59.421726Z",
-                "instance_id": 3,
-                "machine_image_id": 4,
-                "updated_at": "2020-01-22T17:00:59.421739Z"
+                "created_at": "2020-02-05T18:37:40.438347Z",
+                "instance_id": 7,
+                "machine_image_id": 7,
+                "updated_at": "2020-02-05T18:37:40.438363Z"
             }
         ],
         "links": {
-            "first": "/api/cloudigrade/v2/instances/?limit=10&offset=0&running_since=2020-01-22+17%3A00%3A59.359269%2B00%3A00",
-            "last": "/api/cloudigrade/v2/instances/?limit=10&offset=0&running_since=2020-01-22+17%3A00%3A59.359269%2B00%3A00",
+            "first": "/api/cloudigrade/v2/instances/?limit=10&offset=0&running_since=2020-02-05+18%3A37%3A40.326975%2B00%3A00",
+            "last": "/api/cloudigrade/v2/instances/?limit=10&offset=0&running_since=2020-02-05+18%3A37%3A40.326975%2B00%3A00",
             "next": null,
             "previous": null
         },
@@ -698,7 +699,7 @@ Response:
     Content-Length: 3247
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: 64fc560e-919c-445f-a213-d4a5d1460e6b
+    X-CLOUDIGRADE-REQUEST-ID: 90a7d06b-57f7-4eee-84e6-70a4fbb52f29
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -707,19 +708,19 @@ Response:
             {
                 "cloud_type": "aws",
                 "content_object": {
-                    "aws_image_id": 3,
-                    "created_at": "2020-01-22T17:00:59.400463Z",
-                    "ec2_ami_id": "ami-b82c5686",
-                    "id": 3,
+                    "aws_image_id": 6,
+                    "created_at": "2020-02-05T18:37:40.411746Z",
+                    "ec2_ami_id": "ami-76bfd6f3",
+                    "id": 6,
                     "is_cloud_access": false,
                     "is_marketplace": false,
-                    "owner_aws_account_id": "635839671420",
+                    "owner_aws_account_id": "617346468227",
                     "platform": "none",
                     "region": null,
-                    "updated_at": "2020-01-22T17:00:59.400478Z"
+                    "updated_at": "2020-02-05T18:37:40.411764Z"
                 },
-                "created_at": "2020-01-22T17:00:59.406642Z",
-                "image_id": 3,
+                "created_at": "2020-02-05T18:37:40.418312Z",
+                "image_id": 6,
                 "inspection_json": "{\"rhel_enabled_repos_found\": true, \"rhel_version\": \"7.7\", \"syspurpose\": {\"role\": \"Red Hat Enterprise Linux Server\", \"service_level_agreement\": \"Premium\", \"usage\": \"Development/Test\"}}",
                 "is_encrypted": false,
                 "name": null,
@@ -738,24 +739,24 @@ Response:
                     "service_level_agreement": "Premium",
                     "usage": "Development/Test"
                 },
-                "updated_at": "2020-01-22T17:00:59.524850Z"
+                "updated_at": "2020-02-05T18:37:40.589716Z"
             },
             {
                 "cloud_type": "aws",
                 "content_object": {
-                    "aws_image_id": 4,
-                    "created_at": "2020-01-22T17:00:59.413525Z",
-                    "ec2_ami_id": "ami-6f76952d",
-                    "id": 4,
+                    "aws_image_id": 7,
+                    "created_at": "2020-02-05T18:37:40.427150Z",
+                    "ec2_ami_id": "ami-28f357c8",
+                    "id": 7,
                     "is_cloud_access": false,
                     "is_marketplace": false,
-                    "owner_aws_account_id": "635839671420",
+                    "owner_aws_account_id": "617346468227",
                     "platform": "none",
                     "region": null,
-                    "updated_at": "2020-01-22T17:00:59.413540Z"
+                    "updated_at": "2020-02-05T18:37:40.427168Z"
                 },
-                "created_at": "2020-01-22T17:00:59.418601Z",
-                "image_id": 4,
+                "created_at": "2020-02-05T18:37:40.433985Z",
+                "image_id": 7,
                 "inspection_json": "{\"rhel_enabled_repos_found\": true, \"rhel_version\": \"7.7\", \"syspurpose\": {\"role\": \"Red Hat Enterprise Linux Server\", \"service_level_agreement\": \"Premium\", \"usage\": \"Development/Test\"}}",
                 "is_encrypted": false,
                 "name": null,
@@ -774,24 +775,24 @@ Response:
                     "service_level_agreement": "Premium",
                     "usage": "Development/Test"
                 },
-                "updated_at": "2020-01-22T17:00:59.529673Z"
+                "updated_at": "2020-02-05T18:37:40.595993Z"
             },
             {
                 "cloud_type": "aws",
                 "content_object": {
-                    "aws_image_id": 5,
-                    "created_at": "2020-01-22T17:00:59.425131Z",
-                    "ec2_ami_id": "ami-48a1dc30",
-                    "id": 5,
+                    "aws_image_id": 8,
+                    "created_at": "2020-02-05T18:37:40.442461Z",
+                    "ec2_ami_id": "ami-60edbdeb",
+                    "id": 8,
                     "is_cloud_access": false,
                     "is_marketplace": false,
-                    "owner_aws_account_id": "635839671420",
+                    "owner_aws_account_id": "617346468227",
                     "platform": "none",
                     "region": null,
-                    "updated_at": "2020-01-22T17:00:59.425157Z"
+                    "updated_at": "2020-02-05T18:37:40.442479Z"
                 },
-                "created_at": "2020-01-22T17:00:59.431809Z",
-                "image_id": 5,
+                "created_at": "2020-02-05T18:37:40.449262Z",
+                "image_id": 8,
                 "inspection_json": "{\"rhel_enabled_repos_found\": true, \"rhel_version\": \"7.7\", \"syspurpose\": {\"role\": \"Red Hat Enterprise Linux Server\", \"service_level_agreement\": \"Premium\", \"usage\": \"Development/Test\"}}",
                 "is_encrypted": false,
                 "name": null,
@@ -810,7 +811,7 @@ Response:
                     "service_level_agreement": "Premium",
                     "usage": "Development/Test"
                 },
-                "updated_at": "2020-01-22T17:00:59.534307Z"
+                "updated_at": "2020-02-05T18:37:40.583617Z"
             }
         ],
         "links": {
@@ -845,7 +846,7 @@ Response:
     Content-Length: 919
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: 8cb00c56-e13f-4f6c-a018-9a0d5ae85840
+    X-CLOUDIGRADE-REQUEST-ID: 9a9e4c26-5b3b-4c6c-8268-48e3f1270287
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -854,19 +855,19 @@ Response:
             {
                 "cloud_type": "aws",
                 "content_object": {
-                    "aws_image_id": 2,
-                    "created_at": "2020-01-22T17:00:59.370991Z",
-                    "ec2_ami_id": "ami-1be3d10f",
-                    "id": 2,
+                    "aws_image_id": 5,
+                    "created_at": "2020-02-05T18:37:40.353275Z",
+                    "ec2_ami_id": "ami-0536779c",
+                    "id": 5,
                     "is_cloud_access": false,
                     "is_marketplace": false,
-                    "owner_aws_account_id": "201073811003",
+                    "owner_aws_account_id": "782521851004",
                     "platform": "none",
                     "region": null,
-                    "updated_at": "2020-01-22T17:00:59.371006Z"
+                    "updated_at": "2020-02-05T18:37:40.353303Z"
                 },
-                "created_at": "2020-01-22T17:00:59.380547Z",
-                "image_id": 2,
+                "created_at": "2020-02-05T18:37:40.374210Z",
+                "image_id": 5,
                 "inspection_json": null,
                 "is_encrypted": false,
                 "name": null,
@@ -881,7 +882,7 @@ Response:
                 "rhel_version": null,
                 "status": "pending",
                 "syspurpose": null,
-                "updated_at": "2020-01-22T17:00:59.380565Z"
+                "updated_at": "2020-02-05T18:37:40.374234Z"
             }
         ],
         "links": {
@@ -903,37 +904,37 @@ Request:
 
 .. code:: bash
 
-    http localhost:8080/v2/images/3/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}"
+    http localhost:8080/v2/images/8/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}"
 
 Response:
 
 ::
 
     HTTP/1.1 200 OK
-    Allow: GET, PUT, PATCH, HEAD, OPTIONS
+    Allow: GET, HEAD, OPTIONS
     Content-Length: 1022
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: a89fb236-e29a-45f7-933f-9fa0db18e02f
+    X-CLOUDIGRADE-REQUEST-ID: 497852a9-4832-4812-bdf8-05dc6d86d9fb
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
     {
         "cloud_type": "aws",
         "content_object": {
-            "aws_image_id": 3,
-            "created_at": "2020-01-22T17:00:59.400463Z",
-            "ec2_ami_id": "ami-b82c5686",
-            "id": 3,
+            "aws_image_id": 8,
+            "created_at": "2020-02-05T18:37:40.442461Z",
+            "ec2_ami_id": "ami-60edbdeb",
+            "id": 8,
             "is_cloud_access": false,
             "is_marketplace": false,
-            "owner_aws_account_id": "635839671420",
+            "owner_aws_account_id": "617346468227",
             "platform": "none",
             "region": null,
-            "updated_at": "2020-01-22T17:00:59.400478Z"
+            "updated_at": "2020-02-05T18:37:40.442479Z"
         },
-        "created_at": "2020-01-22T17:00:59.406642Z",
-        "image_id": 3,
+        "created_at": "2020-02-05T18:37:40.449262Z",
+        "image_id": 8,
         "inspection_json": "{\"rhel_enabled_repos_found\": true, \"rhel_version\": \"7.7\", \"syspurpose\": {\"role\": \"Red Hat Enterprise Linux Server\", \"service_level_agreement\": \"Premium\", \"usage\": \"Development/Test\"}}",
         "is_encrypted": false,
         "name": null,
@@ -952,7 +953,7 @@ Response:
             "service_level_agreement": "Premium",
             "usage": "Development/Test"
         },
-        "updated_at": "2020-01-22T17:00:59.524850Z"
+        "updated_at": "2020-02-05T18:37:40.583617Z"
     }
 
 
@@ -967,7 +968,7 @@ Request:
 
 .. code:: bash
 
-    http post localhost:8080/v2/images/3/reinspect/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}"
+    http post localhost:8080/v2/images/8/reinspect/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}"
 
 Response:
 
@@ -978,26 +979,26 @@ Response:
     Content-Length: 1020
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: ec642d33-f619-4735-8225-6077c89d14a6
+    X-CLOUDIGRADE-REQUEST-ID: 05f7bca1-5c96-4d86-8a70-5dd30950b00f
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
     {
         "cloud_type": "aws",
         "content_object": {
-            "aws_image_id": 3,
-            "created_at": "2020-01-22T17:00:59.400463Z",
-            "ec2_ami_id": "ami-b82c5686",
-            "id": 3,
+            "aws_image_id": 8,
+            "created_at": "2020-02-05T18:37:40.442461Z",
+            "ec2_ami_id": "ami-60edbdeb",
+            "id": 8,
             "is_cloud_access": false,
             "is_marketplace": false,
-            "owner_aws_account_id": "635839671420",
+            "owner_aws_account_id": "617346468227",
             "platform": "none",
             "region": null,
-            "updated_at": "2020-01-22T17:00:59.400478Z"
+            "updated_at": "2020-02-05T18:37:40.442479Z"
         },
-        "created_at": "2020-01-22T17:00:59.406642Z",
-        "image_id": 3,
+        "created_at": "2020-02-05T18:37:40.449262Z",
+        "image_id": 8,
         "inspection_json": "{\"rhel_enabled_repos_found\": true, \"rhel_version\": \"7.7\", \"syspurpose\": {\"role\": \"Red Hat Enterprise Linux Server\", \"service_level_agreement\": \"Premium\", \"usage\": \"Development/Test\"}}",
         "is_encrypted": false,
         "name": null,
@@ -1016,7 +1017,7 @@ Response:
             "service_level_agreement": "Premium",
             "usage": "Development/Test"
         },
-        "updated_at": "2020-01-22T17:00:59.857786Z"
+        "updated_at": "2020-02-05T18:37:41.004253Z"
     }
 
 
@@ -1043,7 +1044,7 @@ Request:
 .. code:: bash
 
     http localhost:8080/v2/concurrent/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
-        start_date=="2020-01-15"
+        start_date=="2020-01-29"
 
 Response:
 
@@ -1051,222 +1052,264 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 3689
+    Content-Length: 4543
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: fa0ce820-2f7b-4bbe-bf3d-4e5b031a8d20
+    X-CLOUDIGRADE-REQUEST-ID: 362e6497-33e9-43ae-9e41-c07f5927b8de
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
     {
         "data": [
             {
-                "date": "2020-01-15",
+                "date": "2020-01-29",
                 "instances": 2,
                 "instances_list": [
                     {
-                        "cloud_instance_id": "i-4b1b7b6d513d8bc6b",
+                        "cloud_account_id": "617346468227",
+                        "cloud_instance_id": "i-922afc524b3472a83",
                         "cloud_type": "aws",
+                        "memory": 3904.0,
                         "rhel_version": "7.7",
                         "syspurpose": {
                             "role": "Red Hat Enterprise Linux Server",
                             "service_level_agreement": "Premium",
                             "usage": "Development/Test"
-                        }
+                        },
+                        "vcpu": 128
                     },
                     {
-                        "cloud_instance_id": "i-077f4f2462f978242",
+                        "cloud_account_id": "617346468227",
+                        "cloud_instance_id": "i-1eea72ea779bd28a0",
                         "cloud_type": "aws",
+                        "memory": 8.0,
                         "rhel_version": "7.7",
                         "syspurpose": {
                             "role": "Red Hat Enterprise Linux Server",
                             "service_level_agreement": "Premium",
                             "usage": "Development/Test"
-                        }
+                        },
+                        "vcpu": 2
                     }
                 ],
-                "memory": 1.5,
-                "vcpu": 2
+                "memory": 3912.0,
+                "vcpu": 130
             },
             {
-                "date": "2020-01-16",
+                "date": "2020-01-30",
                 "instances": 2,
                 "instances_list": [
                     {
-                        "cloud_instance_id": "i-4b1b7b6d513d8bc6b",
+                        "cloud_account_id": "617346468227",
+                        "cloud_instance_id": "i-922afc524b3472a83",
                         "cloud_type": "aws",
+                        "memory": 3904.0,
                         "rhel_version": "7.7",
                         "syspurpose": {
                             "role": "Red Hat Enterprise Linux Server",
                             "service_level_agreement": "Premium",
                             "usage": "Development/Test"
-                        }
+                        },
+                        "vcpu": 128
                     },
                     {
-                        "cloud_instance_id": "i-077f4f2462f978242",
+                        "cloud_account_id": "617346468227",
+                        "cloud_instance_id": "i-1eea72ea779bd28a0",
                         "cloud_type": "aws",
+                        "memory": 8.0,
                         "rhel_version": "7.7",
                         "syspurpose": {
                             "role": "Red Hat Enterprise Linux Server",
                             "service_level_agreement": "Premium",
                             "usage": "Development/Test"
-                        }
+                        },
+                        "vcpu": 2
                     }
                 ],
-                "memory": 1.5,
-                "vcpu": 2
+                "memory": 3912.0,
+                "vcpu": 130
             },
             {
-                "date": "2020-01-17",
+                "date": "2020-01-31",
                 "instances": 2,
                 "instances_list": [
                     {
-                        "cloud_instance_id": "i-4b1b7b6d513d8bc6b",
+                        "cloud_account_id": "617346468227",
+                        "cloud_instance_id": "i-922afc524b3472a83",
                         "cloud_type": "aws",
+                        "memory": 3904.0,
                         "rhel_version": "7.7",
                         "syspurpose": {
                             "role": "Red Hat Enterprise Linux Server",
                             "service_level_agreement": "Premium",
                             "usage": "Development/Test"
-                        }
+                        },
+                        "vcpu": 128
                     },
                     {
-                        "cloud_instance_id": "i-077f4f2462f978242",
+                        "cloud_account_id": "617346468227",
+                        "cloud_instance_id": "i-1eea72ea779bd28a0",
                         "cloud_type": "aws",
+                        "memory": 8.0,
                         "rhel_version": "7.7",
                         "syspurpose": {
                             "role": "Red Hat Enterprise Linux Server",
                             "service_level_agreement": "Premium",
                             "usage": "Development/Test"
-                        }
+                        },
+                        "vcpu": 2
                     }
                 ],
-                "memory": 1.5,
-                "vcpu": 2
+                "memory": 3912.0,
+                "vcpu": 130
             },
             {
-                "date": "2020-01-18",
+                "date": "2020-02-01",
                 "instances": 2,
                 "instances_list": [
                     {
-                        "cloud_instance_id": "i-4b1b7b6d513d8bc6b",
+                        "cloud_account_id": "617346468227",
+                        "cloud_instance_id": "i-922afc524b3472a83",
                         "cloud_type": "aws",
+                        "memory": 3904.0,
                         "rhel_version": "7.7",
                         "syspurpose": {
                             "role": "Red Hat Enterprise Linux Server",
                             "service_level_agreement": "Premium",
                             "usage": "Development/Test"
-                        }
+                        },
+                        "vcpu": 128
                     },
                     {
-                        "cloud_instance_id": "i-077f4f2462f978242",
+                        "cloud_account_id": "617346468227",
+                        "cloud_instance_id": "i-1eea72ea779bd28a0",
                         "cloud_type": "aws",
+                        "memory": 8.0,
                         "rhel_version": "7.7",
                         "syspurpose": {
                             "role": "Red Hat Enterprise Linux Server",
                             "service_level_agreement": "Premium",
                             "usage": "Development/Test"
-                        }
+                        },
+                        "vcpu": 2
                     }
                 ],
-                "memory": 1.5,
-                "vcpu": 2
+                "memory": 3912.0,
+                "vcpu": 130
             },
             {
-                "date": "2020-01-19",
+                "date": "2020-02-02",
                 "instances": 2,
                 "instances_list": [
                     {
-                        "cloud_instance_id": "i-4b1b7b6d513d8bc6b",
+                        "cloud_account_id": "617346468227",
+                        "cloud_instance_id": "i-922afc524b3472a83",
                         "cloud_type": "aws",
+                        "memory": 3904.0,
                         "rhel_version": "7.7",
                         "syspurpose": {
                             "role": "Red Hat Enterprise Linux Server",
                             "service_level_agreement": "Premium",
                             "usage": "Development/Test"
-                        }
+                        },
+                        "vcpu": 128
                     },
                     {
-                        "cloud_instance_id": "i-077f4f2462f978242",
+                        "cloud_account_id": "617346468227",
+                        "cloud_instance_id": "i-1eea72ea779bd28a0",
                         "cloud_type": "aws",
+                        "memory": 8.0,
                         "rhel_version": "7.7",
                         "syspurpose": {
                             "role": "Red Hat Enterprise Linux Server",
                             "service_level_agreement": "Premium",
                             "usage": "Development/Test"
-                        }
+                        },
+                        "vcpu": 2
                     }
                 ],
-                "memory": 1.5,
-                "vcpu": 2
+                "memory": 3912.0,
+                "vcpu": 130
             },
             {
-                "date": "2020-01-20",
+                "date": "2020-02-03",
                 "instances": 0,
                 "instances_list": [],
                 "memory": 0.0,
                 "vcpu": 0
             },
             {
-                "date": "2020-01-21",
+                "date": "2020-02-04",
                 "instances": 2,
                 "instances_list": [
                     {
-                        "cloud_instance_id": "i-4b1b7b6d513d8bc6b",
+                        "cloud_account_id": "617346468227",
+                        "cloud_instance_id": "i-922afc524b3472a83",
                         "cloud_type": "aws",
+                        "memory": 3904.0,
                         "rhel_version": "7.7",
                         "syspurpose": {
                             "role": "Red Hat Enterprise Linux Server",
                             "service_level_agreement": "Premium",
                             "usage": "Development/Test"
-                        }
+                        },
+                        "vcpu": 128
                     },
                     {
-                        "cloud_instance_id": "i-077f4f2462f978242",
+                        "cloud_account_id": "617346468227",
+                        "cloud_instance_id": "i-1eea72ea779bd28a0",
                         "cloud_type": "aws",
+                        "memory": 8.0,
                         "rhel_version": "7.7",
                         "syspurpose": {
                             "role": "Red Hat Enterprise Linux Server",
                             "service_level_agreement": "Premium",
                             "usage": "Development/Test"
-                        }
+                        },
+                        "vcpu": 2
                     }
                 ],
-                "memory": 1.5,
-                "vcpu": 2
+                "memory": 3912.0,
+                "vcpu": 130
             },
             {
-                "date": "2020-01-22",
+                "date": "2020-02-05",
                 "instances": 2,
                 "instances_list": [
                     {
-                        "cloud_instance_id": "i-4b1b7b6d513d8bc6b",
+                        "cloud_account_id": "617346468227",
+                        "cloud_instance_id": "i-922afc524b3472a83",
                         "cloud_type": "aws",
+                        "memory": 3904.0,
                         "rhel_version": "7.7",
                         "syspurpose": {
                             "role": "Red Hat Enterprise Linux Server",
                             "service_level_agreement": "Premium",
                             "usage": "Development/Test"
-                        }
+                        },
+                        "vcpu": 128
                     },
                     {
-                        "cloud_instance_id": "i-077f4f2462f978242",
+                        "cloud_account_id": "617346468227",
+                        "cloud_instance_id": "i-1eea72ea779bd28a0",
                         "cloud_type": "aws",
+                        "memory": 8.0,
                         "rhel_version": "7.7",
                         "syspurpose": {
                             "role": "Red Hat Enterprise Linux Server",
                             "service_level_agreement": "Premium",
                             "usage": "Development/Test"
-                        }
+                        },
+                        "vcpu": 2
                     }
                 ],
-                "memory": 1.5,
-                "vcpu": 2
+                "memory": 3912.0,
+                "vcpu": 130
             }
         ],
         "links": {
-            "first": "/api/cloudigrade/v2/concurrent/?limit=10&offset=0&start_date=2020-01-15",
-            "last": "/api/cloudigrade/v2/concurrent/?limit=10&offset=0&start_date=2020-01-15",
+            "first": "/api/cloudigrade/v2/concurrent/?limit=10&offset=0&start_date=2020-01-29",
+            "last": "/api/cloudigrade/v2/concurrent/?limit=10&offset=0&start_date=2020-01-29",
             "next": null,
             "previous": null
         },
@@ -1285,8 +1328,8 @@ Request:
 .. code:: bash
 
     http localhost:8080/v2/concurrent/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
-        start_date=="2020-01-23" \
-        end_date=="2020-01-29"
+        start_date=="2020-02-06" \
+        end_date=="2020-02-12"
 
 Response:
 
@@ -1297,15 +1340,15 @@ Response:
     Content-Length: 271
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: f69e16ed-9852-4adb-b3e9-e650e91668d7
+    X-CLOUDIGRADE-REQUEST-ID: 2967971d-6583-41e0-972a-0acf8bc1bd7f
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
     {
         "data": [],
         "links": {
-            "first": "/api/cloudigrade/v2/concurrent/?end_date=2020-01-29&limit=10&offset=0&start_date=2020-01-23",
-            "last": "/api/cloudigrade/v2/concurrent/?end_date=2020-01-29&limit=10&offset=0&start_date=2020-01-23",
+            "first": "/api/cloudigrade/v2/concurrent/?end_date=2020-02-12&limit=10&offset=0&start_date=2020-02-06",
+            "last": "/api/cloudigrade/v2/concurrent/?end_date=2020-02-12&limit=10&offset=0&start_date=2020-02-06",
             "next": null,
             "previous": null
         },
@@ -1337,12 +1380,12 @@ Response:
     Content-Length: 608
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: fe0c918e-987c-4040-8b2f-003462bad232
+    X-CLOUDIGRADE-REQUEST-ID: 24a8d3b9-0201-43e4-bb10-9de4ae762d3e
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
     {
-        "aws_account_id": 270406268848,
+        "aws_account_id": 833425682365,
         "aws_policies": {
             "traditional_inspection": {
                 "Statement": [
