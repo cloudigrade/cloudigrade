@@ -416,6 +416,7 @@ def generate_aws_image(
     is_windows=False,
     ec2_ami_id=None,
     rhel_detected=False,
+    rhel_detected_by_tag=False,
     rhel_detected_repos=False,
     rhel_detected_certs=False,
     rhel_detected_release_files=False,
@@ -439,6 +440,7 @@ def generate_aws_image(
         is_windows (bool): Optional Indicates if AMI is Windows.
         ec2_ami_id (str): Optional EC2 AMI ID of the image
         rhel_detected (bool): Optional Indicates if RHEL is detected.
+        rhel_detected_by_tag (bool): Optional indicates if RHEL is detected by tag.
         rhel_detected_repos (bool): Optional indicates if RHEL is detected via
             enabled yum repos.
         rhel_detected_certs (bool): Optional indicates if RHEL is detected via
@@ -509,6 +511,7 @@ def generate_aws_image(
     machine_image = MachineImage.objects.create(
         is_encrypted=is_encrypted,
         inspection_json=image_json,
+        rhel_detected_by_tag=rhel_detected_by_tag,
         openshift_detected=openshift_detected,
         name=name,
         status=status,

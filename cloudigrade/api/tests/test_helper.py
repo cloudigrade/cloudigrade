@@ -251,6 +251,7 @@ class GenerateAwsImageTest(TestCase):
         self.assertIsNotNone(image.content_object.ec2_ami_id)
         self.assertGreater(len(image.content_object.ec2_ami_id), 0)
         self.assertFalse(image.rhel_detected)
+        self.assertFalse(image.rhel_detected_by_tag)
         self.assertFalse(image.openshift_detected)
         self.assertIsNone(image.name)
         self.assertIsNone(image.rhel_version)
@@ -272,6 +273,7 @@ class GenerateAwsImageTest(TestCase):
             is_windows=True,
             ec2_ami_id=ec2_ami_id,
             rhel_detected=True,
+            rhel_detected_by_tag=True,
             rhel_detected_repos=True,
             rhel_detected_certs=True,
             rhel_detected_release_files=True,
@@ -288,6 +290,7 @@ class GenerateAwsImageTest(TestCase):
         self.assertEqual(image.content_object.platform, image.content_object.WINDOWS)
         self.assertEqual(image.content_object.ec2_ami_id, ec2_ami_id)
         self.assertTrue(image.rhel_detected)
+        self.assertTrue(image.rhel_detected_by_tag)
         self.assertEqual(image.rhel_version, rhel_version)
         self.assertEqual(image.syspurpose, syspurpose)
         self.assertTrue(image.openshift_detected)

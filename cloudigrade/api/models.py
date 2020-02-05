@@ -87,6 +87,7 @@ class MachineImage(BaseGenericModel):
     inspection_json = models.TextField(null=True, blank=True)
     is_encrypted = models.BooleanField(default=False)
     status = models.CharField(max_length=32, choices=STATUS_CHOICES, default=PENDING)
+    rhel_detected_by_tag = models.BooleanField(default=False)
     openshift_detected = models.BooleanField(default=False)
     name = models.CharField(max_length=256, null=True, blank=True)
 
@@ -182,7 +183,8 @@ class MachineImage(BaseGenericModel):
 
         """
         return (
-            self.content_object.is_cloud_access
+            self.rhel_detected_by_tag
+            or self.content_object.is_cloud_access
             or self.rhel_enabled_repos_found
             or self.rhel_product_certs_found
             or self.rhel_release_files_found
@@ -254,6 +256,7 @@ class MachineImage(BaseGenericModel):
             f"name={name}, "
             f"status='{self.status}', "
             f"is_encrypted={self.is_encrypted}, "
+            f"rhel_detected_by_tag={self.rhel_detected_by_tag}, "
             f"openshift_detected={self.openshift_detected}, "
             f"created_at=parse({created_at}), "
             f"updated_at=parse({updated_at})"
