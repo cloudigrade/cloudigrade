@@ -24,7 +24,7 @@ py37:
     - chat
     - trigger
   before_script:
-    - pip install tox codecov pipenv
+    - pip install tox codecov pipenv "virtualenv<20"
   script:
     - tox -e py37
     - codecov
@@ -36,7 +36,7 @@ flake8:
     - chat
     - trigger
   before_script:
-    - pip install tox pipenv
+    - pip install tox pipenv "virtualenv<20"
   script: tox -e flake8
 
 vulnerability:
@@ -48,7 +48,7 @@ vulnerability:
     - chat
     - trigger
   before_script:
-    - pip install pipenv
+    - pip install pipenv "virtualenv<20"
   script:
     - pipenv sync
     - pipenv check
@@ -94,7 +94,7 @@ Spec File:
     - chat
     - trigger
   before_script:
-    - pip install pipenv
+    - pip install pipenv "virtualenv<20"
     - pipenv install --dev
   script:
     - AWS_SQS_ACCESS_KEY_ID=foo AWS_SQS_SECRET_ACCESS_KEY=bar pipenv run make spec-test
