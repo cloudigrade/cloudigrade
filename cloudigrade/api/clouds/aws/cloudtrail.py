@@ -186,7 +186,7 @@ def extract_ami_tag_events(record):
         for tag_item in record.get("requestParameters", {})
         .get("tagSet", {})
         .get("items", [])
-        if tag_item.get("key", "") == aws.OPENSHIFT_TAG
+        if tag_item.get("key", "") in (aws.OPENSHIFT_TAG, aws.RHEL_TAG)
     ]
 
     return [

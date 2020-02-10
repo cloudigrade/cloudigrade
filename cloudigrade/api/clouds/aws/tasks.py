@@ -53,7 +53,7 @@ from api.models import (
 )
 from api.util import get_standard_cloud_account_name
 from util import aws
-from util.aws import is_windows, rewrap_aws_errors
+from util.aws import OPENSHIFT_TAG, RHEL_TAG, is_windows, rewrap_aws_errors
 from util.aws.sqs import add_messages_to_queue, read_messages_from_queue
 from util.celery import retriable_shared_task
 from util.exceptions import (
@@ -927,6 +927,9 @@ def _process_cloudtrail_message(message):
     """
     Process a single CloudTrail log update's SQS message.
 
+    This may have the side-effect of starting the inspection process for newly
+    discovered images.
+
     Args:
         message (Message): the SQS Message object to process
 
@@ -1281,28 +1284,28 @@ def _save_cloudtrail_activity(
     )
 
     # Which images need tag state changes?
-    ocp_tagged_ami_ids = set()
-    ocp_untagged_ami_ids = set()
-    for ec2_ami_id, events_info in itertools.groupby(
-        ami_tag_events, key=lambda e: e.ec2_ami_id
-    ):
-        # Get only the most recent event for each image
-        latest_event = sorted(events_info, key=lambda e: e.occurred_at)[-1]
-        # IMPORTANT NOTE: This assumes all tags are the OCP tag!
-        # This will need to change if we ever support other ami tags.
-        if latest_event.exists:
-            ocp_tagged_ami_ids.add(ec2_ami_id)
-        else:
-            ocp_untagged_ami_ids.add(ec2_ami_id)
-
+    ocp_tagged_ami_ids, ocp_untagged_ami_ids = _extract_ami_ids_by_tag_change(
+        ami_tag_events, OPENSHIFT_TAG
+    )
     logger.info(
         _("%(prefix)s: AMIs found tagged for OCP: %(ocp_tagged_ami_ids)s"),
         {"prefix": log_prefix, "ocp_tagged_ami_ids": ocp_tagged_ami_ids},
     )
-
     logger.info(
         _("%(prefix)s: AMIs found untagged for OCP: %(ocp_untagged_ami_ids)s"),
         {"prefix": log_prefix, "ocp_untagged_ami_ids": ocp_untagged_ami_ids},
+    )
+
+    rhel_tagged_ami_ids, rhel_untagged_ami_ids = _extract_ami_ids_by_tag_change(
+        ami_tag_events, RHEL_TAG
+    )
+    logger.info(
+        _("%(prefix)s: AMIs found tagged for RHEL: %(rhel_tagged_ami_ids)s"),
+        {"prefix": log_prefix, "rhel_tagged_ami_ids": rhel_tagged_ami_ids},
+    )
+    logger.info(
+        _("%(prefix)s: AMIs found untagged for RHEL: %(rhel_untagged_ami_ids)s"),
+        {"prefix": log_prefix, "rhel_untagged_ami_ids": rhel_untagged_ami_ids},
     )
 
     # Create only the new images.
@@ -1311,7 +1314,8 @@ def _save_cloudtrail_activity(
         owner_id = Decimal(described_image["OwnerId"])
         name = described_image["Name"]
         windows = ami_id in windows_ami_ids
-        openshift = ami_id in ocp_tagged_ami_ids
+        rhel_detected_by_tag = ami_id in rhel_tagged_ami_ids
+        openshift_detected = ami_id in ocp_tagged_ami_ids
         region = described_image["found_in_region"]
 
         logger.info(
@@ -1319,7 +1323,13 @@ def _save_cloudtrail_activity(
             {"prefix": log_prefix, "ami_id": ami_id, "region": region},
         )
         awsimage, new = save_new_aws_machine_image(
-            ami_id, name, owner_id, openshift, windows, region
+            ami_id,
+            name,
+            owner_id,
+            rhel_detected_by_tag,
+            openshift_detected,
+            windows,
+            region,
         )
 
         image = awsimage.machine_image.get()
@@ -1374,6 +1384,16 @@ def _save_cloudtrail_activity(
             aws_machine_image__ec2_ami_id__in=ocp_untagged_ami_ids
         ).update(openshift_detected=False)
 
+    # Update images with RHEL tag changes.
+    if rhel_tagged_ami_ids:
+        MachineImage.objects.filter(
+            aws_machine_image__ec2_ami_id__in=rhel_tagged_ami_ids
+        ).update(rhel_detected_by_tag=True)
+    if rhel_untagged_ami_ids:
+        MachineImage.objects.filter(
+            aws_machine_image__ec2_ami_id__in=rhel_untagged_ami_ids
+        ).update(rhel_detected_by_tag=False)
+
     # Save instances and their events.
     for ((ec2_instance_id, region, aws_account_id), events) in itertools.groupby(
         instance_events, key=lambda e: (e.ec2_instance_id, e.region, e.aws_account_id),
@@ -1409,6 +1429,43 @@ def _save_cloudtrail_activity(
         save_instance_events(instance, instance_data, events_info)
 
     return new_images
+
+
+def _extract_ami_ids_by_tag_change(ami_tag_events, tag):
+    """
+    Extract the AMI IDs from a list of events that have tag-related changes.
+
+    If the same AMI has changed multiple times for the same tag, we only care about
+    the most recent change. For example, if an AMI creates and then deletes the tag, the
+    net effect is that the tag was deleted, and the AMI ID should only be included in
+    the set of "untagged AMI IDs".
+
+    Args:
+        ami_tag_events list(CloudTrailImageTagEvent): list of CloudTrailImageTagEvents
+        tag (str): the tag for filtering
+
+    Returns:
+        tuple (set, set). First value is the set of AMI IDs where the tag was created,
+        and the second is the set of AMI IDs where the tag was deleted.
+
+    """
+    tagged_ami_ids = set()
+    untagged_ami_ids = set()
+    for ec2_ami_id, events_info in itertools.groupby(
+        ami_tag_events, key=lambda e: e.ec2_ami_id
+    ):
+        ordered_events = sorted(
+            itertools.filterfalse(lambda e: e.tag != tag, events_info),
+            key=lambda e: e.occurred_at,
+        )
+        for event in ordered_events[::-1]:
+            # stop looking for tag changes after we find one.
+            if ec2_ami_id not in tagged_ami_ids and ec2_ami_id not in untagged_ami_ids:
+                if event.exists:
+                    tagged_ami_ids.add(ec2_ami_id)
+                else:
+                    untagged_ami_ids.add(ec2_ami_id)
+    return tagged_ami_ids, untagged_ami_ids
 
 
 def _instance_event_is_complete(instance_event):

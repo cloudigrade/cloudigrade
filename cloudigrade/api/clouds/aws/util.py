@@ -92,23 +92,17 @@ def create_new_machine_images(session, instances_data):
             name = described_image["Name"]
             windows = ami_id in windows_ami_ids
             region = region_id
-            openshift = (
-                len(
-                    [
-                        tag
-                        for tag in described_image.get("Tags", [])
-                        if tag.get("Key") == aws.OPENSHIFT_TAG
-                    ]
-                )
-                > 0
-            )
+
+            tag_keys = [tag.get("Key") for tag in described_image.get("Tags", [])]
+            rhel_detected_by_tag = aws.RHEL_TAG in tag_keys
+            openshift = aws.OPENSHIFT_TAG in tag_keys
 
             logger.info(
                 _("%(prefix)s: Saving new AMI ID: %(ami_id)s"),
                 {"prefix": log_prefix, "ami_id": ami_id},
             )
             image, new = save_new_aws_machine_image(
-                ami_id, name, owner_id, openshift, windows, region
+                ami_id, name, owner_id, rhel_detected_by_tag, openshift, windows, region
             )
             if new:
                 new_image_ids.append(ami_id)
@@ -117,7 +111,13 @@ def create_new_machine_images(session, instances_data):
 
 
 def save_new_aws_machine_image(
-    ami_id, name, owner_aws_account_id, openshift_detected, windows_detected, region
+    ami_id,
+    name,
+    owner_aws_account_id,
+    rhel_detected_by_tag,
+    openshift_detected,
+    windows_detected,
+    region,
 ):
     """
     Save a new AwsMachineImage image object.
@@ -131,6 +131,7 @@ def save_new_aws_machine_image(
         ami_id (str): The AWS AMI ID.
         name (str): the name of the image
         owner_aws_account_id (Decimal): the AWS account ID that owns this image
+        rhel_detected_by_tag (bool) was RHEL detected by tag for this image
         openshift_detected (bool): was openshift detected for this image
         windows_detected (bool): was windows detected for this image
         region (str): Region where the image was found
@@ -159,6 +160,7 @@ def save_new_aws_machine_image(
             MachineImage.objects.create(
                 name=name,
                 status=status,
+                rhel_detected_by_tag=rhel_detected_by_tag,
                 openshift_detected=openshift_detected,
                 content_object=awsmachineimage,
             )
@@ -442,6 +444,21 @@ def start_image_inspection(arn, ami_id, region):
         machine_image = ami.machine_image.get()
         machine_image.status = machine_image.PREPARING
         machine_image.save()
+
+        if machine_image.rhel_detected_by_tag:
+            # If we saw a tag indicating RHEL, we choose to trust the customer and
+            # short-circuit the inspection process. The customer may have set that tag
+            # with the intent to prevent us from looking at the image's contents.
+            logger.info(
+                _(
+                    "AwsMachineImage for ec2_ami_id %(ec2_ami_id)s must not start "
+                    "inspection because rhel_detected_by_tag is True."
+                ),
+                {"ec2_ami_id": ami_id},
+            )
+            machine_image.status = machine_image.INSPECTED
+            machine_image.save()
+            return machine_image
 
         if (
             MachineImageInspectionStart.objects.filter(

@@ -1,5 +1,6 @@
 """Collection of tests for tasks.analyze_log."""
 import json
+from datetime import timedelta
 from unittest.mock import call, patch
 
 import faker
@@ -15,6 +16,7 @@ from api.models import (
     Run,
 )
 from api.tests import helper as helper
+from util.misc import get_now
 from util.tests import helper as util_helper
 
 _faker = faker.Faker()
@@ -906,7 +908,7 @@ class AnalyzeLogTest(TestCase):
         trail_record = helper.generate_cloudtrail_tag_set_record(
             aws_account_id=self.aws_account_id,
             image_ids=[ami.content_object.ec2_ami_id],
-            tag_names=[tasks.aws.OPENSHIFT_TAG],
+            tag_names=[_faker.word(), tasks.aws.OPENSHIFT_TAG, _faker.word()],
             event_name=cloudtrail.CREATE_TAG,
         )
         s3_content = {"Records": [trail_record]}
@@ -921,6 +923,7 @@ class AnalyzeLogTest(TestCase):
         updated_ami = AwsMachineImage.objects.get(
             ec2_ami_id=ami.content_object.ec2_ami_id
         )
+        self.assertFalse(updated_ami.machine_image.get().rhel_detected_by_tag)
         self.assertTrue(updated_ami.machine_image.get().openshift_detected)
         mock_del.assert_called()
 
@@ -929,17 +932,26 @@ class AnalyzeLogTest(TestCase):
     @patch("api.clouds.aws.tasks.aws.yield_messages_from_queue")
     def test_ami_tags_removed_success(self, mock_receive, mock_s3, mock_del):
         """Test processing a CloudTrail log for ami tags removed."""
-        ami = helper.generate_aws_image(openshift_detected=True)
+        ami = helper.generate_aws_image(
+            rhel_detected_by_tag=True, openshift_detected=True
+        )
+        self.assertTrue(ami.rhel_detected_by_tag)
         self.assertTrue(ami.openshift_detected)
 
         sqs_message = helper.generate_mock_cloudtrail_sqs_message()
-        trail_record = helper.generate_cloudtrail_tag_set_record(
+        trail_record_1 = helper.generate_cloudtrail_tag_set_record(
             aws_account_id=self.aws_account_id,
             image_ids=[ami.content_object.ec2_ami_id],
-            tag_names=[tasks.aws.OPENSHIFT_TAG],
+            tag_names=[_faker.word(), tasks.aws.OPENSHIFT_TAG],
             event_name=cloudtrail.DELETE_TAG,
         )
-        s3_content = {"Records": [trail_record]}
+        trail_record_2 = helper.generate_cloudtrail_tag_set_record(
+            aws_account_id=self.aws_account_id,
+            image_ids=[ami.content_object.ec2_ami_id],
+            tag_names=[tasks.aws.RHEL_TAG, _faker.word()],
+            event_name=cloudtrail.DELETE_TAG,
+        )
+        s3_content = {"Records": [trail_record_1, trail_record_2]}
         mock_receive.return_value = [sqs_message]
         mock_s3.return_value = json.dumps(s3_content)
 
@@ -951,7 +963,56 @@ class AnalyzeLogTest(TestCase):
         updated_ami = AwsMachineImage.objects.get(
             ec2_ami_id=ami.content_object.ec2_ami_id
         )
-        self.assertFalse(updated_ami.machine_image.get().openshift_detected)
+        updated_image = updated_ami.machine_image.get()
+        self.assertFalse(updated_image.rhel_detected_by_tag)
+        self.assertFalse(updated_image.openshift_detected)
+        mock_del.assert_called()
+
+    @patch("api.clouds.aws.tasks.aws.delete_messages_from_queue")
+    @patch("api.clouds.aws.tasks.aws.get_object_content_from_s3")
+    @patch("api.clouds.aws.tasks.aws.yield_messages_from_queue")
+    def test_ami_multiple_tag_changes_success(self, mock_receive, mock_s3, mock_del):
+        """
+        Test processing a CloudTrail log for multiple ami tag changes.
+
+        If we see that one of our tags is both added and removed within a set of logs,
+        we only want to know about and save the most recent change.
+        """
+        ami = helper.generate_aws_image(rhel_detected_by_tag=True)
+        self.assertTrue(ami.rhel_detected_by_tag)
+
+        first_record_time = get_now() - timedelta(minutes=10)
+        second_record_time = first_record_time + timedelta(minutes=5)
+
+        sqs_message = helper.generate_mock_cloudtrail_sqs_message()
+        trail_record_1 = helper.generate_cloudtrail_tag_set_record(
+            aws_account_id=self.aws_account_id,
+            image_ids=[ami.content_object.ec2_ami_id],
+            tag_names=[_faker.word(), tasks.aws.RHEL_TAG],
+            event_name=cloudtrail.DELETE_TAG,
+            event_time=first_record_time,
+        )
+        trail_record_2 = helper.generate_cloudtrail_tag_set_record(
+            aws_account_id=self.aws_account_id,
+            image_ids=[ami.content_object.ec2_ami_id],
+            tag_names=[tasks.aws.RHEL_TAG, _faker.word()],
+            event_name=cloudtrail.CREATE_TAG,
+            event_time=second_record_time,
+        )
+        s3_content = {"Records": [trail_record_1, trail_record_2]}
+        mock_receive.return_value = [sqs_message]
+        mock_s3.return_value = json.dumps(s3_content)
+
+        successes, failures = tasks.analyze_log()
+
+        self.assertEqual(len(successes), 1)
+        self.assertEqual(len(failures), 0)
+
+        updated_ami = AwsMachineImage.objects.get(
+            ec2_ami_id=ami.content_object.ec2_ami_id
+        )
+        updated_image = updated_ami.machine_image.get()
+        self.assertTrue(updated_image.rhel_detected_by_tag)
         mock_del.assert_called()
 
     @patch("api.clouds.aws.tasks.start_image_inspection")

@@ -42,6 +42,16 @@ class StartImageInspectionTest(TestCase):
         self.assertEqual(image.status, image.INSPECTED)
 
     @patch("api.clouds.aws.tasks.copy_ami_snapshot")
+    def test_start_image_inspection_rhel_tagged_skips(self, mock_copy):
+        """Test that inspection skips for RHEL-tagged images."""
+        image = api_helper.generate_aws_image(rhel_detected_by_tag=True)
+        util.start_image_inspection(None, image.content_object.ec2_ami_id, None)
+        mock_copy.delay.assert_not_called()
+        image.refresh_from_db()
+        self.assertEqual(image.status, image.INSPECTED)
+        self.assertTrue(image.rhel_detected_by_tag)
+
+    @patch("api.clouds.aws.tasks.copy_ami_snapshot")
     def test_start_image_inspection_cloud_access_skips(self, mock_copy):
         """Test that inspection skips for Cloud Access images."""
         image = api_helper.generate_aws_image(is_cloud_access=True)
