@@ -112,6 +112,9 @@ class MachineImageViewSetTest(TestCase):
         self.assertEqual(response.data["name"], image.name)
         self.assertEqual(response.data["status"], image.status)
         self.assertEqual(response.data["rhel"], image.rhel)
+        self.assertEqual(
+            response.data["rhel_detected_by_tag"], image.rhel_detected_by_tag
+        )
         self.assertEqual(response.data["openshift"], image.openshift)
         self.assertEqual(response.data["openshift_detected"], image.openshift_detected)
 

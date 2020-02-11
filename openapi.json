@@ -704,6 +704,10 @@
                             "type": "string",
                             "readOnly": true
                           },
+                          "rhel_detected_by_tag": {
+                            "type": "boolean",
+                            "readOnly": true
+                          },
                           "rhel_enabled_repos_found": {
                             "type": "string",
                             "readOnly": true
@@ -819,6 +823,10 @@
                     },
                     "rhel_detected": {
                       "type": "string",
+                      "readOnly": true
+                    },
+                    "rhel_detected_by_tag": {
+                      "type": "boolean",
                       "readOnly": true
                     },
                     "rhel_enabled_repos_found": {
@@ -1052,6 +1060,10 @@
                     },
                     "rhel_detected": {
                       "type": "string",
+                      "readOnly": true
+                    },
+                    "rhel_detected_by_tag": {
+                      "type": "boolean",
                       "readOnly": true
                     },
                     "rhel_enabled_repos_found": {
