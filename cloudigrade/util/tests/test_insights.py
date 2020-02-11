@@ -19,6 +19,7 @@ class InsightsTest(TestCase):
         """Set up test data."""
         self.account_number = str(_faker.pyint())
         self.authentication_id = _faker.user_name()
+        self.endpoint_id = _faker.pyint()
 
     def test_generate_http_identity_headers(self):
         """Assert generation of an appropriate HTTP identity headers."""
@@ -29,6 +30,20 @@ class InsightsTest(TestCase):
             )
         }
         actual = insights.generate_http_identity_headers(known_account_number)
+        self.assertEqual(actual, expected)
+
+    def test_generate_org_admin_http_identity_headers(self):
+        """Assert generation of an appropriate HTTP identity headers."""
+        known_account_number = "1234567890"
+        expected = {
+            "X-RH-IDENTITY": (
+                "eyJpZGVudGl0eSI6IHsiYWNjb3VudF9udW1iZXIiOiAiMTIzND"
+                "U2Nzg5MCIsICJ1c2VyIjogeyJpc19vcmdfYWRtaW4iOiB0cnVlfX19"
+            )
+        }
+        actual = insights.generate_http_identity_headers(
+            known_account_number, is_org_admin=True
+        )
         self.assertEqual(actual, expected)
 
     @patch("requests.get")
@@ -65,4 +80,15 @@ class InsightsTest(TestCase):
             insights.get_sources_authentication(
                 self.account_number, self.authentication_id
             )
+        mock_get.assert_called()
+
+    @patch("requests.get")
+    def test_get_sources_endpoint_success(self, mock_get):
+        """Assert get_sources_endpoint returns response content."""
+        expected = {"hello": "world"}
+        mock_get.return_value.status_code = http.HTTPStatus.OK
+        mock_get.return_value.json.return_value = expected
+
+        endpoint = insights.get_sources_endpoint(self.account_number, self.endpoint_id)
+        self.assertEqual(endpoint, expected)
         mock_get.assert_called()

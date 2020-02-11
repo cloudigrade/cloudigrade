@@ -389,11 +389,26 @@ LISTENER_AUTO_COMMIT = env.bool("LISTENER_AUTO_COMMIT", default=True)
 LISTENER_TIMEOUT = env("LISTENER_TIMEOUT", default=1000)
 LISTENER_PID_PATH = env("LISTENER_PID_PATH", default="/var/run/cloudigrade")
 
-SOURCES_API_BASE_URL = env(
-    "SOURCES_API_BASE_URL",
-    default="http://sources-api.sources-ci.svc:8080/internal/v1.0",
-)
-
 ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES = env(
     "ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES", default=True,
+)
+
+SOURCES_API_BASE_URL = env(
+    "SOURCES_API_BASE_URL", default="http://sources-api.sources-ci.svc:8080",
+)
+
+SOURCE_API_INTERNAL_URI = "/internal/v1.0/"
+SOURCES_API_EXTERNAL_URI = "/api/sources/v1.0/"
+
+SOURCES_CLOUDMETER_ARN_AUTHTYPE = "cloud-meter-arn"
+SOURCES_CLOUDMETER_AUTHTYPES = (SOURCES_CLOUDMETER_ARN_AUTHTYPE,)
+
+SOURCE_DESTROY_EVENT = "Source.destroy"
+ENDPOINT_DESTROY_EVENT = "Endpoint.destroy"
+AUTHENTICATION_DESTROY_EVENT = "Authentication.destroy"
+
+KAFKA_DESTROY_EVENTS = (
+    SOURCE_DESTROY_EVENT,
+    ENDPOINT_DESTROY_EVENT,
+    AUTHENTICATION_DESTROY_EVENT,
 )

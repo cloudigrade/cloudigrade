@@ -11,6 +11,7 @@ from unittest.mock import Mock, patch
 
 import faker
 from dateutil import tz
+from django.conf import settings
 from django.contrib.auth.models import User
 
 from util import aws
@@ -476,7 +477,11 @@ def get_3scale_auth_header(account_number="1337"):
 
 
 def generate_authentication_create_message_value(
-    account_number="1337", username=None, authentication_id=None
+    account_number="1337",
+    username=None,
+    platform_id=None,
+    authentication_type=None,
+    resource_id=None,
 ):
     """
     Generate a 'Authentication.create' message's value and header as if read from Kafka.
@@ -489,17 +494,24 @@ def generate_authentication_create_message_value(
     f = faker.Faker()
     if not username:
         username = f.user_name()
-    if not authentication_id:
-        authentication_id = f.pyint()
-
-    message = {"username": username, "id": authentication_id}
+    if not platform_id:
+        platform_id = f.pyint()
+    if not resource_id:
+        resource_id = f.pyint()
+    if not authentication_type:
+        authentication_type = random.choice(settings.SOURCES_CLOUDMETER_AUTHTYPES)
+    message = {
+        "username": username,
+        "id": platform_id,
+        "authtype": authentication_type,
+        "resource_id": resource_id,
+    }
     auth_header = base64.b64encode(
         json.dumps({"identity": {"account_number": account_number}}).encode("utf-8")
     )
     headers = [
         ("x-rh-identity", auth_header),
     ]
-
     return message, headers
 
 

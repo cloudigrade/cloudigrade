@@ -73,7 +73,7 @@ CLOUD_TYPE_AWS = "aws"
 @retriable_shared_task(autoretry_for=(RuntimeError,))
 @rewrap_aws_errors
 def configure_customer_aws_and_create_cloud_account(
-    user_id, customer_access_key_id, customer_secret_access_key
+    user_id, customer_arn, authentication_id, endpoint_id, source_id
 ):
     """
     Configure the customer's AWS account and create our CloudAccount.
@@ -85,8 +85,10 @@ def configure_customer_aws_and_create_cloud_account(
 
     Args:
         user_id (int): id of User that will own the new cloud account
-        customer_access_key_id (str): customer's AWS access key id
-        customer_secret_access_key (str): customer's AWS secret access key
+        customer_arn (str): customer's ARN
+        authentication_id (str): Platform Sources' Authentication object id
+        endpoint_id (str): Platform Sources' Endpoint object id
+        source_id (str): Platform Sources' Source object id
     """
     try:
         user = User.objects.get(pk=user_id)
@@ -99,33 +101,16 @@ def configure_customer_aws_and_create_cloud_account(
             user_id,
         )
         return
+    customer_aws_account_id = aws.AwsArn(customer_arn).account_id
 
-    session = aws.get_session_from_access_key(
-        customer_access_key_id, customer_secret_access_key
-    )
-    customer_aws_account_id = aws.get_session_account_id(session)
-    if not customer_aws_account_id:
-        logger.error(
-            _(
-                "Could not get customer AWS account ID from session using "
-                "customer AWS access key ID %(customer_aws_account_id)s for "
-                "user ID %(user_id)s. Aborting account setup."
-            ),
-            {"customer_aws_account_id": customer_aws_account_id, "user_id": user_id,},
-        )
-        return
-    policy_name, policy_arn = aws.ensure_cloudigrade_policy(session)
-    logger.info(
-        _("Configured customer policy %(policy_arn)s"), {"policy_arn": policy_arn},
-    )
-    role_name, role_arn = aws.ensure_cloudigrade_role(session, policy_arn)
-    logger.info(
-        _("Configured customer account role %(role_arn)s for policy %(policy_arn)s"),
-        {"role_arn": role_arn, "policy_arn": policy_arn},
-    )
     cloud_account_name = get_standard_cloud_account_name("aws", customer_aws_account_id)
     verify_permissions_and_create_aws_cloud_account(
-        user, role_arn, cloud_account_name, customer_access_key_id
+        user,
+        customer_arn,
+        cloud_account_name,
+        authentication_id,
+        endpoint_id,
+        source_id,
     )
 
 

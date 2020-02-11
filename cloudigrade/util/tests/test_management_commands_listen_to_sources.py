@@ -1,7 +1,9 @@
 """Collection of tests for the Sources Listener."""
+import random
 import signal
 from unittest.mock import Mock, patch
 
+from django.conf import settings
 from django.core.management import call_command
 from django.test import TestCase
 
@@ -30,8 +32,11 @@ class SourcesListenerTest(TestCase):
         message1 = Mock()
         message2 = Mock()
         message3 = Mock()
+        message4 = Mock()
 
-        message1.value = "test message 1"
+        message1.value = {
+            "authtype": random.choice(settings.SOURCES_CLOUDMETER_AUTHTYPES)
+        }
         message1.headers = [
             ("event_type", b"Authentication.create"),
             ("encoding", b"json"),
@@ -46,7 +51,15 @@ class SourcesListenerTest(TestCase):
         message3.value = "bad message"
         message3.headers = [Mock(), Mock()]
 
-        mock_message_bundle_items = {"Partition 1": [message1, message2, message3]}
+        message4.value = {"authtype": "INVALID"}
+        message4.headers = [
+            ("event_type", b"Authentication.create"),
+            ("encoding", b"json"),
+        ]
+
+        mock_message_bundle_items = {
+            "Partition 1": [message1, message2, message3, message4]
+        }
 
         mock_consumer_poll = mock_consumer.return_value.poll
         mock_consumer_poll.return_value = mock_message_bundle_items

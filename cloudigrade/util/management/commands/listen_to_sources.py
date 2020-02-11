@@ -65,13 +65,8 @@ class Command(BaseCommand):
     def _process_message(self, message):
         """Process a single Kafka message."""
         event_type = None
-        # The headers are a list of... tuples.
-        for header in message.headers:
-            if header[0] == "event_type":
-                event_type = header[1]
-                break
-
         message_value = getattr(message, "value", {})
+        # The headers are a list of... tuples.
         # So we've established the headers are a list of tuples, but wait,
         # there's more! It is a tuple with a string key, and a bytestring
         # value because... reasons..? Let's clean that up.
@@ -79,7 +74,14 @@ class Command(BaseCommand):
             (key, value.decode("utf-8"),) for key, value in message.headers
         ]
 
-        if event_type == b"Authentication.create":
+        for header in message_headers:
+            if header[0] == "event_type":
+                event_type = header[1]
+                break
+        if (
+            event_type == "Authentication.create"
+            and message_value["authtype"] in settings.SOURCES_CLOUDMETER_AUTHTYPES
+        ):
             logger.info(
                 _("An authentication object was created. Message: %s. Headers: %s"),
                 message_value,
@@ -90,15 +92,15 @@ class Command(BaseCommand):
                     message_value, message_headers
                 )
 
-        elif event_type == b"Authentication.destroy":
+        elif event_type in settings.KAFKA_DESTROY_EVENTS:
             logger.info(
-                _("An authentication object was destroyed. Message: %s. Headers: %s"),
+                _("An Sources object was destroyed. Message: %s. Headers: %s"),
                 message_value,
                 message_headers,
             )
             if settings.ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES:
                 tasks.delete_from_sources_kafka_message.delay(
-                    message_value, message_headers
+                    message_value, message_headers, event_type
                 )
 
     def listener_cleanup(self, signum, frame):

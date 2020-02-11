@@ -32,11 +32,6 @@ from util.aws.helper import (
     rewrap_aws_errors,
     verify_account_access,
 )
-from util.aws.iam import (
-    ensure_cloudigrade_policy,
-    ensure_cloudigrade_role,
-    get_session_from_access_key,
-)
 from util.aws.s3 import get_object_content_from_s3
 from util.aws.sqs import (
     SQS_RECEIVE_BATCH_SIZE,

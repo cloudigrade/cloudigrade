@@ -148,7 +148,9 @@ def generate_aws_account(
     user=None,
     name=None,
     created_at=None,
-    aws_access_key_id=None,
+    authentication_id=None,
+    endpoint_id=None,
+    source_id=None,
 ):
     """
     Generate an AwsAccount for testing.
@@ -161,7 +163,6 @@ def generate_aws_account(
         user (User): Optional Django auth User to be this account's owner.
         name (str): Optional name for this account.
         created_at (datetime): Optional creation datetime for this account.
-        aws_access_key_id (str): Optional aws_access_key_id.
 
     Returns:
         CloudAccount: The created AwsAccount.
@@ -176,19 +177,19 @@ def generate_aws_account(
     if name is None:
         name = str(uuid.uuid4())
 
-    if aws_access_key_id is None:
-        aws_access_key_id = _faker.user_name()
-
     aws_cloud_account = AwsCloudAccount.objects.create(
-        account_arn=arn,
-        aws_account_id=aws.AwsArn(arn).account_id,
-        aws_access_key_id=aws_access_key_id,
+        account_arn=arn, aws_account_id=aws.AwsArn(arn).account_id,
     )
     if created_at:
         aws_cloud_account.created_at = created_at
         aws_cloud_account.save()
     cloud_account = CloudAccount.objects.create(
-        user=user, name=name, content_object=aws_cloud_account,
+        user=user,
+        name=name,
+        content_object=aws_cloud_account,
+        platform_authentication_id=authentication_id,
+        platform_endpoint_id=endpoint_id,
+        platform_source_id=source_id,
     )
     if created_at:
         cloud_account.created_at = created_at

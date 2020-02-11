@@ -20,6 +20,15 @@ class CloudAccount(BaseGenericModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE, db_index=True, null=False,)
     name = models.CharField(max_length=256, null=False, db_index=True)
 
+    # We must store the platform authentication_id in order to know things
+    # like when to delete the Clount.
+    # Unfortunately because of the way platform Sources is designed
+    # we must also keep track of the source_id and the endpoint_id.
+    # Why? see https://github.com/RedHatInsights/sources-api/issues/179
+    platform_authentication_id = models.IntegerField(null=True)
+    platform_endpoint_id = models.IntegerField(null=True)
+    platform_source_id = models.IntegerField(null=True)
+
     class Meta:
         unique_together = ("user", "name")
 
@@ -61,6 +70,9 @@ class CloudAccount(BaseGenericModel):
             f"id={self.id}, "
             f"name='{self.name}', "
             f"user_id={self.user_id}, "
+            f"platform_authentication_id={self.platform_authentication_id}, "
+            f"platform_endpoint_id={self.platform_endpoint_id}, "
+            f"platform_source_id={self.platform_source_id}, "
             f"created_at=parse({created_at}), "
             f"updated_at=parse({updated_at})"
             f")"

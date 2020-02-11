@@ -13,18 +13,24 @@ from util.exceptions import SourcesAPINotJsonContent, SourcesAPINotOkStatus
 logger = logging.getLogger(__name__)
 
 
-def generate_http_identity_headers(account_number):
+def generate_http_identity_headers(account_number, is_org_admin=False):
     """
     Generate an Insights-specific identity HTTP header.
 
+    For calls to the Authentication API, the account_number must match the
+    customer's account number, and is_org_admin should be set to True.
+
     Args:
         account_number (str): account number identifier for Insights auth
+        is_org_admin (bool): boolean for creating an org admin header
 
     Returns:
         dict with encoded Insights identity header
 
     """
     raw_header = {"identity": {"account_number": account_number}}
+    if is_org_admin:
+        raw_header["identity"]["user"] = {"is_org_admin": True}
     identity_encoded = base64.b64encode(json.dumps(raw_header).encode("utf-8")).decode(
         "utf-8"
     )
@@ -48,11 +54,58 @@ def get_sources_authentication(account_number, authentication_id):
 
     """
     sources_api_base_url = settings.SOURCES_API_BASE_URL
-    url = f"{sources_api_base_url}/authentications/{authentication_id}/"
+    sources_api_internal_uri = settings.SOURCE_API_INTERNAL_URI
 
-    headers = generate_http_identity_headers(account_number)
+    url = (
+        f"{sources_api_base_url}/{sources_api_internal_uri}"
+        f"authentications/{authentication_id}/"
+    )
+
+    headers = generate_http_identity_headers(account_number, is_org_admin=True)
     params = {"expose_encrypted_attribute[]": "password"}
 
+    return make_sources_call(account_number, url, headers, params)
+
+
+def get_sources_endpoint(account_number, endpoint_id):
+    """
+    Get an Endpoint object from the Sources API.
+
+    If the `requests.get` itself fails unexpectedly, let the exception bubble
+    up to be handled by a higher level in the stack.
+
+    Args:
+        account_number (str): account number identifier for Insights auth
+        endpoint_id (int): the requested endpoint's id
+
+    Returns:
+        dict response payload from the sources api.
+    """
+    sources_api_base_url = settings.SOURCES_API_BASE_URL
+    sources_api_external_uri = settings.SOURCES_API_EXTERNAL_URI
+
+    url = f"{sources_api_base_url}/{sources_api_external_uri}endpoints/{endpoint_id}/"
+
+    headers = generate_http_identity_headers(account_number, is_org_admin=True)
+    return make_sources_call(account_number, url, headers)
+
+
+def make_sources_call(account_number, url, headers, params=None):
+    """
+    Make an API call to the Sources API.
+
+    If the `requests.get` itself fails unexpectedly, let the exception bubble
+    up to be handled by a higher level in the stack.
+
+    Args:
+        account_number (str): account number identifier for Insights auth
+        url (str): the requested url
+        headers (dict): a dict of headers for the request.
+        params (dict): a dict of params for the request
+
+    Returns:
+        dict response payload from the sources api.
+    """
     response = requests.get(url, headers=headers, params=params)
 
     if response.status_code != http.HTTPStatus.OK:

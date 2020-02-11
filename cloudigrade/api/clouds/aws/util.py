@@ -627,7 +627,12 @@ def update_aws_image_status_error(ec2_ami_id):
 
 
 def verify_permissions_and_create_aws_cloud_account(
-    user, customer_role_arn, cloud_account_name, customer_access_key_id=None
+    user,
+    customer_role_arn,
+    cloud_account_name,
+    authentication_id=None,
+    endpoint_id=None,
+    source_id=None,
 ):
     """
     Verify AWS permissions and create AwsCloudAccount for the customer user.
@@ -638,7 +643,9 @@ def verify_permissions_and_create_aws_cloud_account(
         user (django.contrib.auth.models.User): user to own the CloudAccount
         customer_role_arn (str): ARN to access the customer's AWS account
         cloud_account_name (str): the name to use for our CloudAccount
-        customer_access_key_id (str): optional customer's AWS access key ID
+        authentication_id (str): Platform Sources' Authentication object id
+        endpoint_id (str): Platform Sources' Endpoint object id
+        source_id (str): Platform Sources' Source object id
 
     Returns:
         CloudAccount the created cloud account.
@@ -703,11 +710,7 @@ def verify_permissions_and_create_aws_cloud_account(
         # with AWS (i.e. verify_account_access) and not in a transaction.
         # We need to check for that and exit early here if it exists.
         aws_cloud_account, created = AwsCloudAccount.objects.get_or_create(
-            account_arn=arn_str,
-            defaults={
-                "aws_account_id": aws_account_id,
-                "aws_access_key_id": customer_access_key_id,
-            },
+            account_arn=arn_str, defaults={"aws_account_id": aws_account_id,},
         )
         if not created:
             raise ValidationError(
@@ -727,7 +730,12 @@ def verify_permissions_and_create_aws_cloud_account(
             user=user,
             object_id=aws_cloud_account.id,
             content_type_id=content_type_id,
-            defaults={"name": cloud_account_name},
+            platform_endpoint_id=endpoint_id,
+            platform_source_id=source_id,
+            defaults={
+                "name": cloud_account_name,
+                "platform_authentication_id": authentication_id,
+            },
         )
 
         # Local import to get around a circular import issue.
