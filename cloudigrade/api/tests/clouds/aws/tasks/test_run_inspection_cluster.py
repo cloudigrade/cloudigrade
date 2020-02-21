@@ -11,13 +11,15 @@ from api.tests import helper as account_helper
 from util.exceptions import AwsECSInstanceNotReady, AwsTooManyECSInstances
 from util.tests import helper as util_helper
 
+EC2_INSTANCE_STATE_RUNNING = {"Code": 16, "Name": "Running"}
+EC2_INSTANCE_STATE_STOPPED = {"Code": 80, "Name": "Stopped"}
+
 
 class RunInspectionClusterTest(TestCase):
     """Celery task 'run_inspection_cluster' test cases."""
 
     @patch("api.clouds.aws.tasks.boto3")
-    @patch("api.clouds.aws.tasks.aws")
-    def test_run_inspection_cluster_success(self, mock_aws, mock_boto3):
+    def test_run_inspection_cluster_success(self, mock_boto3):
         """Asserts successful starting of the houndigrade task."""
         mock_ami_id = util_helper.generate_dummy_image_id()
 
@@ -29,15 +31,14 @@ class RunInspectionClusterTest(TestCase):
             "containerInstanceArns": [util_helper.generate_dummy_instance_id()]
         }
         mock_ec2 = Mock()
-        mock_ecs = MagicMock()
+        mock_ec2_instance = mock_ec2.Instance.return_value
+        mock_ec2_instance.state = EC2_INSTANCE_STATE_RUNNING
 
+        mock_ecs = MagicMock()
         mock_ecs.list_container_instances.return_value = mock_list_container_instances
 
         mock_boto3.client.return_value = mock_ecs
         mock_boto3.resource.return_value = mock_ec2
-
-        mock_session = mock_aws.boto3.Session.return_value
-        mock_aws.get_session.return_value = mock_session
 
         messages = [
             {
@@ -89,6 +90,37 @@ class RunInspectionClusterTest(TestCase):
             tasks.run_inspection_cluster(messages)
 
     @patch("api.clouds.aws.tasks.boto3")
+    def test_run_inspection_cluster_instance_not_running(self, mock_boto3):
+        """Asserts that an exception is raised if instance exists but is not running."""
+        mock_ami_id = util_helper.generate_dummy_image_id()
+        account_helper.generate_aws_image(
+            ec2_ami_id=mock_ami_id, status=MachineImage.PENDING
+        )
+
+        mock_list_container_instances = {
+            "containerInstanceArns": [util_helper.generate_dummy_instance_id()]
+        }
+        mock_ec2 = Mock()
+        mock_ec2_instance = mock_ec2.Instance.return_value
+        mock_ec2_instance.state = EC2_INSTANCE_STATE_STOPPED
+
+        mock_ecs = MagicMock()
+        mock_ecs.list_container_instances.return_value = mock_list_container_instances
+
+        mock_boto3.client.return_value = mock_ecs
+        mock_boto3.resource.return_value = mock_ec2
+
+        messages = [
+            {
+                "ami_id": mock_ami_id,
+                "volume_id": util_helper.generate_dummy_volume_id(),
+            }
+        ]
+
+        with self.assertRaises(AwsECSInstanceNotReady):
+            tasks.run_inspection_cluster(messages)
+
+    @patch("api.clouds.aws.tasks.boto3")
     def test_run_inspection_cluster_with_no_known_images(self, mock_boto3):
         """Assert that inspection is skipped if no known images are given."""
         messages = [{"ami_id": util_helper.generate_dummy_image_id()}]
@@ -123,8 +155,7 @@ class RunInspectionClusterTest(TestCase):
             tasks.run_inspection_cluster(messages)
 
     @patch("api.clouds.aws.tasks.boto3")
-    @patch("api.clouds.aws.tasks.aws")
-    def test_run_inspection_cluster_with_marketplace_volume(self, mock_aws, mock_boto3):
+    def test_run_inspection_cluster_with_marketplace_volume(self, mock_boto3):
         """Assert that ami is marked as inspected if marketplace volume."""
         mock_ami_id = util_helper.generate_dummy_image_id()
 
@@ -136,10 +167,10 @@ class RunInspectionClusterTest(TestCase):
             "containerInstanceArns": [util_helper.generate_dummy_instance_id()]
         }
         mock_ec2 = Mock()
-        mock_ecs = MagicMock()
+        mock_ec2_instance = mock_ec2.Instance.return_value
+        mock_ec2_instance.state = EC2_INSTANCE_STATE_RUNNING
 
         mock_volume = mock_ec2.Volume.return_value
-
         mock_volume.attach_to_instance.side_effect = ClientError(
             error_response={
                 "Error": {"Code": "OptInRequired", "Message": "Marketplace Error",}
@@ -147,13 +178,11 @@ class RunInspectionClusterTest(TestCase):
             operation_name=Mock(),
         )
 
+        mock_ecs = MagicMock()
         mock_ecs.list_container_instances.return_value = mock_list_container_instances
 
         mock_boto3.client.return_value = mock_ecs
         mock_boto3.resource.return_value = mock_ec2
-
-        mock_session = mock_aws.boto3.Session.return_value
-        mock_aws.get_session.return_value = mock_session
 
         messages = [
             {
@@ -183,8 +212,7 @@ class RunInspectionClusterTest(TestCase):
         mock_ec2.Volume.return_value.attach_to_instance.assert_called_once()
 
     @patch("api.clouds.aws.tasks.boto3")
-    @patch("api.clouds.aws.tasks.aws")
-    def test_run_inspection_cluster_with_unknown_error(self, mock_aws, mock_boto3):
+    def test_run_inspection_cluster_with_unknown_error(self, mock_boto3):
         """Assert that non marketplace errors are still raised."""
         mock_ami_id = util_helper.generate_dummy_image_id()
 
@@ -196,10 +224,10 @@ class RunInspectionClusterTest(TestCase):
             "containerInstanceArns": [util_helper.generate_dummy_instance_id()]
         }
         mock_ec2 = Mock()
-        mock_ecs = MagicMock()
+        mock_ec2_instance = mock_ec2.Instance.return_value
+        mock_ec2_instance.state = EC2_INSTANCE_STATE_RUNNING
 
         mock_volume = mock_ec2.Volume.return_value
-
         mock_volume.attach_to_instance.side_effect = ClientError(
             error_response={
                 "Error": {"Code": "ItIsAMystery", "Message": "Mystery Error"}
@@ -207,13 +235,11 @@ class RunInspectionClusterTest(TestCase):
             operation_name=Mock(),
         )
 
+        mock_ecs = MagicMock()
         mock_ecs.list_container_instances.return_value = mock_list_container_instances
 
         mock_boto3.client.return_value = mock_ecs
         mock_boto3.resource.return_value = mock_ec2
-
-        mock_session = mock_aws.boto3.Session.return_value
-        mock_aws.get_session.return_value = mock_session
 
         messages = [
             {

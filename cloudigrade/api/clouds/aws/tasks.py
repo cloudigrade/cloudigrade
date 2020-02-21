@@ -689,6 +689,20 @@ def run_inspection_cluster(messages, cloud="aws"):
     # Obtain boto EC2 Instance
     ec2 = boto3.resource("ec2")
     ec2_instance = ec2.Instance(ec2_instance_id)
+    current_state = ec2_instance.state
+    if not aws.InstanceState.is_running(current_state["Code"]):
+        logger.warning(
+            _(
+                "ECS cluster %(cluster)s has container instance %(ec2_instance_id)s "
+                "but instance state is %(current_state)s"
+            ),
+            {
+                "cluster": settings.HOUNDIGRADE_ECS_CLUSTER_NAME,
+                "ec2_instance_id": ec2_instance_id,
+                "current_state": current_state,
+            },
+        )
+        raise AwsECSInstanceNotReady
 
     logger.info(_("%s attaching volumes"), "run_inspection_cluster")
     # attach volumes
