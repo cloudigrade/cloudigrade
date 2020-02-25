@@ -52,6 +52,7 @@ class Command(BaseCommand):
         bootstrap_server_port = settings.LISTENER_PORT
         enable_auto_commit = settings.LISTENER_AUTO_COMMIT
         consumer_timeout_ms = settings.LISTENER_TIMEOUT
+        session_timeout_ms = settings.KAFKA_SESSION_TIMEOUT_MS
 
         consumer = KafkaConsumer(
             topic,
@@ -61,6 +62,7 @@ class Command(BaseCommand):
             enable_auto_commit=enable_auto_commit,
             consumer_timeout_ms=consumer_timeout_ms,
             value_deserializer=lambda x: json.loads(x.decode("utf-8")),
+            session_timeout_ms=session_timeout_ms,
         )
 
         self.run = True
