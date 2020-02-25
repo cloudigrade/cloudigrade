@@ -9,6 +9,7 @@ from django.conf import settings
 from django.core.management import BaseCommand
 from django.utils.translation import gettext as _
 from kafka import KafkaConsumer
+from lockfile import AlreadyLocked
 from lockfile.pidlockfile import PIDLockFile
 
 from api import tasks
@@ -26,14 +27,22 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """Launch the listener."""
-        with daemon.DaemonContext(
-            pidfile=PIDLockFile(f"{settings.LISTENER_PID_PATH}/cloudilistener.pid"),
-            detach_process=False,
-            signal_map={signal.SIGTERM: self.listener_cleanup},
-            stdout=sys.stdout,
-            stderr=sys.stderr,
-        ):
-            self.listen()
+        try:
+            with daemon.DaemonContext(
+                pidfile=PIDLockFile(f"{settings.LISTENER_PID_PATH}/cloudilistener.pid"),
+                detach_process=False,
+                signal_map={signal.SIGTERM: self.listener_cleanup},
+                stdout=sys.stdout,
+                stderr=sys.stderr,
+            ):
+                self.listen()
+        except AlreadyLocked:
+            logger.exception(
+                _(
+                    "Listener attempted to start with an existing pidfile. "
+                    "There should never be two instances of the listener running. "
+                )
+            )
 
     def listen(self):
         """Listen to the configured topic."""
