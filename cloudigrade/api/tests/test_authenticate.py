@@ -25,20 +25,32 @@ class ThreeScaleAuthenticateTestCase(TestCase):
         """Set up data for tests."""
         self.user_email = "test@example.com"
 
-        self.rh_header = util_helper.get_3scale_auth_header(
+        self.rh_header_as_admin = util_helper.get_3scale_auth_header(
             account_number=self.user_email
+        )
+        self.rh_header_not_admin = util_helper.get_3scale_auth_header(
+            account_number=self.user_email, is_org_admin=False
         )
         self.three_scale_auth = ThreeScaleAuthentication()
 
     def test_3scale_authenticate(self):
         """Test that 3scale authentication with the correct header succeeds."""
         request = Mock()
-        request.META = {settings.INSIGHTS_IDENTITY_HEADER: self.rh_header}
+        request.META = {settings.INSIGHTS_IDENTITY_HEADER: self.rh_header_as_admin}
 
         user, auth = self.three_scale_auth.authenticate(request)
 
         self.assertTrue(auth)
         self.assertEqual(self.user_email, user.username)
+
+    def test_3scale_authenticate_not_admin(self):
+        """Test that 3scale authentication header without org admin user fails."""
+        request = Mock()
+        request.META = {settings.INSIGHTS_IDENTITY_HEADER: self.rh_header_not_admin}
+
+        with self.assertRaises(exceptions.PermissionDenied) as e:
+            self.three_scale_auth.authenticate(request)
+            self.assertIn("User must be an org admin", e.exception.args[0])
 
     def test_3scale_authenticate_invalid_header(self):
         """Test that 3scale authentication with an invalid header fails."""
@@ -77,7 +89,7 @@ class ThreeScaleAuthenticateTestCase(TestCase):
         self.assertEqual(0, len(users))
 
         request = Mock()
-        request.META = {settings.INSIGHTS_IDENTITY_HEADER: self.rh_header}
+        request.META = {settings.INSIGHTS_IDENTITY_HEADER: self.rh_header_as_admin}
 
         user, auth = self.three_scale_auth.authenticate(request)
 

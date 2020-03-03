@@ -72,6 +72,16 @@ class ThreeScaleAuthentication(BaseAuthentication):
                 _("Invalid 3scale header: missing user account_number field")
             )
 
+        if not auth["identity"].get("user", {}).get("is_org_admin"):
+            logger.info(
+                _(
+                    "Authentication Failed: identity user is not org admin "
+                    "in 3scale header %s."
+                ),
+                auth_header,
+            )
+            raise exceptions.PermissionDenied(_("User must be an org admin."))
+
         user, created = User.objects.get_or_create(username=account_number)
         if created:
             user.set_unusable_password()

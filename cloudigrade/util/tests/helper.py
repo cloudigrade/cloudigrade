@@ -1,5 +1,6 @@
 """Helper functions for generating test data."""
 import base64
+import copy
 import datetime
 import json
 import random
@@ -40,7 +41,10 @@ SOME_EC2_INSTANCE_TYPES = {
 MAX_AWS_ACCOUNT_ID = 10 ** 12 - 1
 
 
-RH_IDENTITY = {"identity": {"account_number": "1337"}}
+RH_IDENTITY_ORG_ADMIN = {
+    "identity": {"account_number": "1337", "user": {"is_org_admin": True}}
+}
+RH_IDENTITY_NOT_ORG_ADMIN = {"identity": {"account_number": "1337"}}
 
 
 def generate_dummy_aws_account_id():
@@ -460,20 +464,24 @@ def get_test_user(account_number=None, password=None, is_superuser=False):
     return user
 
 
-def get_3scale_auth_header(account_number="1337"):
+def get_3scale_auth_header(account_number="1337", is_org_admin=True):
     """
     Get an example 3scale auth header.
 
     Args:
         account_number (str): account number associated w/the 3scale account.
             defaults to 1337
+        is_org_admin (bool): should the user be an org admin. defaults to True.
 
     Returns:
         str: base64 encoded 3scale header
 
     """
-    RH_IDENTITY["identity"]["account_number"] = account_number
-    return base64.b64encode(json.dumps(RH_IDENTITY).encode("utf-8"))
+    header = copy.deepcopy(
+        RH_IDENTITY_ORG_ADMIN if is_org_admin else RH_IDENTITY_NOT_ORG_ADMIN
+    )
+    header["identity"]["account_number"] = account_number
+    return base64.b64encode(json.dumps(header).encode("utf-8"))
 
 
 def generate_authentication_create_message_value(
