@@ -109,20 +109,61 @@ class CreateFromSourcesKafkaMessageTest(TestCase):
 
     @patch("util.insights.get_sources_authentication")
     @patch("api.tasks.configure_customer_aws_and_create_cloud_account")
-    def test_create_from_sources_kafka_message_fail_source_404(
+    def test_create_from_sources_kafka_message_fail_source_unexpected_response(
         self, mock_task, mock_get_auth
     ):
         """
-        Assert create_from_sources_kafka_message fails from 404 source reply.
+        Assert create_from_sources_kafka_message fails from not-200/404 source reply.
 
-        This could happen if the authentication has been deleted from the
-        sources API by the time this task runs.
+        This could happen if the sources API is misbehaving unexpectedly.
         """
         message, headers = util_helper.generate_authentication_create_message_value()
         mock_get_auth.side_effect = SourcesAPINotOkStatus
 
         with self.assertRaises(SourcesAPINotOkStatus):
             tasks.create_from_sources_kafka_message(message, headers)
+
+        # User should not have been created.
+        self.assertEqual(User.objects.all().count(), 0)
+        mock_task.delay.assert_not_called()
+
+    @patch("util.insights.get_sources_authentication")
+    @patch("api.tasks.configure_customer_aws_and_create_cloud_account")
+    def test_create_from_sources_kafka_message_returns_early_when_authentication_404(
+        self, mock_task, mock_get_auth
+    ):
+        """
+        Assert create_from_sources_kafka_message returns if sources authentication 404s.
+
+        This could happen if the authentication has been deleted from the
+        sources API by the time this task runs.
+        """
+        message, headers = util_helper.generate_authentication_create_message_value()
+        mock_get_auth.return_value = None
+
+        tasks.create_from_sources_kafka_message(message, headers)
+
+        # User should not have been created.
+        self.assertEqual(User.objects.all().count(), 0)
+        mock_task.delay.assert_not_called()
+
+    @patch("util.insights.get_sources_authentication")
+    @patch("util.insights.get_sources_endpoint")
+    @patch("api.tasks.configure_customer_aws_and_create_cloud_account")
+    def test_create_from_sources_kafka_message_returns_early_when_endpoint_404(
+        self, mock_task, mock_get_endpoint, mock_get_auth
+    ):
+        """
+        Assert create_from_sources_kafka_message returns if sources endpoint 404s.
+
+        This could happen if the endpoint has been deleted from the
+        sources API by the time this task runs.
+        """
+        message, headers = util_helper.generate_authentication_create_message_value()
+        mock_get_auth.return_value = {"resource_id": _faker.pyint()}
+        mock_get_endpoint.return_value = None
+
+        tasks.create_from_sources_kafka_message(message, headers)
 
         # User should not have been created.
         self.assertEqual(User.objects.all().count(), 0)

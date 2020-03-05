@@ -1,4 +1,5 @@
 """Collection of tests for ``util.insights`` module."""
+import base64
 import http
 import json
 from unittest.mock import MagicMock, Mock, patch
@@ -60,13 +61,14 @@ class InsightsTest(TestCase):
         mock_get.assert_called()
 
     @patch("requests.get")
-    def test_get_sources_authentication_fail_404(self, mock_get):
-        """Assert get_sources_authentication fails when response is 404."""
+    def test_get_sources_authentication_not_found(self, mock_get):
+        """Assert get_sources_authentication returns None if not found."""
         mock_get.return_value.status_code = http.HTTPStatus.NOT_FOUND
-        with self.assertRaises(SourcesAPINotOkStatus):
-            insights.get_sources_authentication(
-                self.account_number, self.authentication_id
-            )
+
+        endpoint = insights.get_sources_authentication(
+            self.account_number, self.authentication_id
+        )
+        self.assertIsNone(endpoint)
         mock_get.assert_called()
 
     @patch("requests.get")
@@ -92,3 +94,39 @@ class InsightsTest(TestCase):
         endpoint = insights.get_sources_endpoint(self.account_number, self.endpoint_id)
         self.assertEqual(endpoint, expected)
         mock_get.assert_called()
+
+    @patch("requests.get")
+    def test_get_sources_authentication_fail_500(self, mock_get):
+        """Assert get_sources_authentication fails when response is not-200/404."""
+        mock_get.return_value.status_code = http.HTTPStatus.INTERNAL_SERVER_ERROR
+        with self.assertRaises(SourcesAPINotOkStatus):
+            insights.get_sources_authentication(
+                self.account_number, self.authentication_id
+            )
+
+        mock_get.assert_called()
+
+    @patch("requests.get")
+    def test_get_sources_endpoint_not_found(self, mock_get):
+        """Assert get_sources_endpoint returns None if not found."""
+        mock_get.return_value.status_code = http.HTTPStatus.NOT_FOUND
+
+        endpoint = insights.get_sources_endpoint(self.account_number, self.endpoint_id)
+        self.assertIsNone(endpoint)
+        mock_get.assert_called()
+
+    def test_get_x_rh_identity_header_success(self):
+        """Assert get_x_rh_identity_header succeeds for a valid header."""
+        expected_value = {"identity": {"account_number": _faker.pyint()}}
+        encoded_value = base64.b64encode(json.dumps(expected_value).encode("utf-8"))
+        headers = ((_faker.slug(), _faker.slug()), ("x-rh-identity", encoded_value))
+
+        extracted_value = insights.get_x_rh_identity_header(headers)
+        self.assertEqual(extracted_value, expected_value)
+
+    def test_get_x_rh_identity_header_missing(self):
+        """Assert get_x_rh_identity_header returns empty dict if not found."""
+        headers = ((_faker.slug(), _faker.slug()),)
+
+        extracted_value = insights.get_x_rh_identity_header(headers)
+        self.assertEqual(extracted_value, {})

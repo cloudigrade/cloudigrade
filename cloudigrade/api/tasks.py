@@ -10,7 +10,6 @@ waiting tasks), please be sure to update all the relevant configurations to
 use that custom queue. This includes CELERY_TASK_ROUTES in config and the
 Celery worker's --queues argument (see deployment-configs.yaml in shiftigrade).
 """
-import base64
 import json
 import logging
 from datetime import timedelta
@@ -72,13 +71,7 @@ def create_from_sources_kafka_message(message, headers):
     """
     incomplete_data = False
 
-    auth_header = {}
-    # The headers are a list of... tuples.
-    for header in headers:
-        if header[0] == "x-rh-identity":
-            auth_header = header[1]
-            break
-
+    auth_header = insights.get_x_rh_identity_header(headers)
     if not auth_header:
         incomplete_data = True
         logger.error(
@@ -86,8 +79,6 @@ def create_from_sources_kafka_message(message, headers):
             message,
             headers,
         )
-    else:
-        auth_header = json.loads(base64.b64decode(auth_header).decode("utf-8"))
 
     account_number = auth_header.get("identity", {}).get("account_number")
     if not account_number:
@@ -112,8 +103,27 @@ def create_from_sources_kafka_message(message, headers):
     authentication = insights.get_sources_authentication(
         account_number, authentication_id
     )
+    if not authentication:
+        logger.info(
+            _(
+                "Authentication ID %(authentication_id)s for account number "
+                "%(account_number)s does not exist; aborting cloud account creation."
+            ),
+            {"authentication_id": authentication_id, "account_number": account_number},
+        )
+        return
     endpoint_id = authentication.get("resource_id")
     endpoint = insights.get_sources_endpoint(account_number, endpoint_id)
+    if not endpoint:
+        logger.info(
+            _(
+                "Endpoint ID %(endpoint_id)s for account number "
+                "%(account_number)s does not exist; aborting cloud account creation."
+            ),
+            {"endpoint_id": endpoint_id, "account_number": account_number},
+        )
+        return
+
     source_id = endpoint.get("source_id")
 
     password = authentication.get("password")
@@ -162,13 +172,7 @@ def delete_from_sources_kafka_message(message, headers, event_type):
     """
     incomplete_data = False
 
-    auth_header = {}
-    # The headers are a list of... tuples.
-    for header in headers:
-        if header[0] == "x-rh-identity":
-            auth_header = header[1]
-            break
-
+    auth_header = insights.get_x_rh_identity_header(headers)
     if not auth_header:
         incomplete_data = True
         logger.error(
@@ -176,8 +180,6 @@ def delete_from_sources_kafka_message(message, headers, event_type):
             message,
             headers,
         )
-    else:
-        auth_header = json.loads(base64.b64decode(auth_header).decode("utf-8"))
 
     account_number = auth_header.get("identity", {}).get("account_number")
     if not account_number:
