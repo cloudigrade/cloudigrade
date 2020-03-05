@@ -89,6 +89,7 @@ class Command(BaseCommand):
             if header[0] == "event_type":
                 event_type = header[1]
                 break
+
         if (
             event_type == "Authentication.create"
             and message_value["authtype"] in settings.SOURCES_CLOUDMETER_AUTHTYPES
@@ -112,6 +113,17 @@ class Command(BaseCommand):
             if settings.ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES:
                 tasks.delete_from_sources_kafka_message.delay(
                     message_value, message_headers, event_type
+                )
+
+        elif event_type == "Authentication.update":
+            logger.info(
+                _("An authentication object was updated. Message: %s. Headers: %s"),
+                message_value,
+                message_headers,
+            )
+            if settings.ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES:
+                tasks.update_from_source_kafka_message.delay(
+                    message_value, message_headers
                 )
 
     def listener_cleanup(self, signum, frame):

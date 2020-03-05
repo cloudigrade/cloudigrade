@@ -20,7 +20,7 @@ from api.clouds.aws.serializers import (
     AwsInstanceSerializer,
     AwsMachineImageSerializer,
 )
-from api.clouds.aws.util import verify_permissions_and_create_aws_cloud_account
+from api.clouds.aws.util import create_aws_cloud_account, verify_permissions
 from api.models import (
     CloudAccount,
     Instance,
@@ -154,7 +154,8 @@ class CloudAccountSerializer(ModelSerializer):
         arn = validated_data["account_arn"]
         user = self.context["request"].user
         name = validated_data.get("name")
-        cloud_account = verify_permissions_and_create_aws_cloud_account(user, arn, name)
+        verify_permissions(arn)
+        cloud_account = create_aws_cloud_account(user, arn, name)
         return cloud_account
 
 

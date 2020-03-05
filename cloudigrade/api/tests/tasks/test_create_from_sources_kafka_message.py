@@ -85,7 +85,7 @@ class CreateFromSourcesKafkaMessageTest(TestCase):
     def test_aws_task_not_called_for_unsupported_authtype(
         self, mock_task, mock_get_auth, mock_get_endpoint
     ):
-        """Assert no account gets created for unspported authtype."""
+        """Assert no account gets created for unsupported authtype."""
         account_number = str(_faker.pyint())
         authentication_id = _faker.pyint()
         message, headers = util_helper.generate_authentication_create_message_value(

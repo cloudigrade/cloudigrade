@@ -15,10 +15,11 @@ _faker = faker.Faker()
 class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
     """Task 'configure_customer_aws_and_create_cloud_account' test cases."""
 
-    @patch.object(tasks, "verify_permissions_and_create_aws_cloud_account")
+    @patch.object(tasks, "create_aws_cloud_account")
+    @patch.object(tasks, "verify_permissions")
     @patch.object(tasks, "aws")
     @patch("util.aws.sts._get_primary_account_id")
-    def test_success(self, mock_primary_id, mock_tasks_aws, mock_verify):
+    def test_success(self, mock_primary_id, mock_tasks_aws, mock_verify, mock_create):
         """Assert the task happy path upon normal operation."""
         # User that would ultimately own the created objects.
         user = User.objects.create()
@@ -56,13 +57,15 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
         cloud_account_name = api_util.get_standard_cloud_account_name(
             "aws", session_account_id
         )
-        mock_verify.assert_called_with(
+        mock_verify.assert_called_with(role_arn)
+        mock_create.assert_called_with(
             user, role_arn, cloud_account_name, auth_id, endpoint_id, source_id
         )
 
-    @patch.object(tasks, "verify_permissions_and_create_aws_cloud_account")
+    @patch.object(tasks, "create_aws_cloud_account")
+    @patch.object(tasks, "verify_permissions")
     @patch.object(tasks, "aws")
-    def test_fails_if_user_not_found(self, mock_tasks_aws, mock_verify):
+    def test_fails_if_user_not_found(self, mock_tasks_aws, mock_verify, mock_create):
         """Assert the task returns early if user is not found."""
         user_id = -1  # This user should never exist.
 
@@ -79,3 +82,24 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
         mock_tasks_aws.ensure_cloudigrade_policy.assert_not_called()
         mock_tasks_aws.ensure_cloudigrade_role.assert_not_called()
         mock_verify.assert_not_called()
+        mock_create.assert_not_called()
+
+    @patch.object(tasks, "create_aws_cloud_account")
+    @patch.object(tasks, "verify_permissions")
+    @patch.object(tasks, "aws")
+    def test_account_not_created_if_verification_fails(
+        self, mock_tasks_aws, mock_verify, mock_create
+    ):
+        """Assert the account is not created if verification fails."""
+        user = User.objects.create()
+
+        customer_secret_access_key = util_helper.generate_dummy_arn()
+        auth_id = _faker.pyint()
+        endpoint_id = _faker.pyint()
+        source_id = _faker.pyint()
+        mock_verify.return_value = False
+
+        tasks.configure_customer_aws_and_create_cloud_account(
+            user.id, customer_secret_access_key, auth_id, endpoint_id, source_id
+        )
+        mock_create.assert_not_called()

@@ -4,6 +4,7 @@ from decimal import Decimal
 
 from botocore.exceptions import ClientError
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from django.utils.translation import gettext as _
@@ -626,29 +627,17 @@ def update_aws_image_status_error(ec2_ami_id):
     return True
 
 
-def verify_permissions_and_create_aws_cloud_account(
-    user,
-    customer_role_arn,
-    cloud_account_name,
-    authentication_id=None,
-    endpoint_id=None,
-    source_id=None,
-):
+def verify_permissions(customer_role_arn):
     """
-    Verify AWS permissions and create AwsCloudAccount for the customer user.
+    Verify AWS permissions.
 
     This function may raise ValidationError if certain verification steps fail.
 
     Args:
-        user (django.contrib.auth.models.User): user to own the CloudAccount
         customer_role_arn (str): ARN to access the customer's AWS account
-        cloud_account_name (str): the name to use for our CloudAccount
-        authentication_id (str): Platform Sources' Authentication object id
-        endpoint_id (str): Platform Sources' Endpoint object id
-        source_id (str): Platform Sources' Source object id
 
     Returns:
-        CloudAccount the created cloud account.
+        boolean indicating if the arn being verified is good.
 
     """
     aws_account_id = aws.AwsArn(customer_role_arn).account_id
@@ -701,6 +690,36 @@ def verify_permissions_and_create_aws_cloud_account(
             for action in failed_actions
         ]
         raise ValidationError(detail={"account_arn": failure_details})
+    return account_verified
+
+
+def create_aws_cloud_account(
+    user,
+    customer_role_arn,
+    cloud_account_name,
+    authentication_id=None,
+    endpoint_id=None,
+    source_id=None,
+):
+    """
+    Create AwsCloudAccount for the customer user.
+
+    This function may raise ValidationError if certain verification steps fail.
+
+    Args:
+        user (django.contrib.auth.models.User): user to own the CloudAccount
+        customer_role_arn (str): ARN to access the customer's AWS account
+        cloud_account_name (str): the name to use for our CloudAccount
+        authentication_id (str): Platform Sources' Authentication object id
+        endpoint_id (str): Platform Sources' Endpoint object id
+        source_id (str): Platform Sources' Source object id
+
+    Returns:
+        CloudAccount the created cloud account.
+
+    """
+    aws_account_id = aws.AwsArn(customer_role_arn).account_id
+    arn_str = str(customer_role_arn)
 
     with transaction.atomic():
         # How is it possible that the AwsCloudAccount already exists?
@@ -746,3 +765,70 @@ def verify_permissions_and_create_aws_cloud_account(
         )
 
     return cloud_account
+
+
+def update_aws_cloud_account(
+    cloud_account,
+    customer_arn,
+    account_number,
+    authentication_id,
+    endpoint_id,
+    source_id,
+):
+    """
+    Update aws_cloud_account with the new arn.
+
+    Args:
+        cloud_account (api.models.CloudAccount)
+        customer_arn (str): customer's ARN
+        account_number (str): customer's account number
+        authentication_id (str): Platform Sources' Authentication object id
+        endpoint_id (str): Platform Sources' Endpoint object id
+        source_id (str): Platform Sources' Source object id
+    """
+    customer_aws_account_id = aws.AwsArn(customer_arn).account_id
+
+    # If the aws_account_id is different, then we delete and recreate the CloudAccount
+    # Otherwise just update the account_arn.
+    if cloud_account.content_object.aws_account_id != customer_aws_account_id:
+        logger.info(
+            _(
+                "Cloud Account with ID %(clount_id)s and aws_account_id "
+                "%(old_aws_account_id)s has received an update request for ARN "
+                "%(new_arn)s and aws_account_id %(new_aws_account_id)s. "
+                "Since the aws_account_id is different, Cloud Account ID "
+                "%(clount_id)s will be deleted. A new Cloud Account will be created "
+                "with aws_account_id %(new_aws_account_id)s and arn %(new_arn)s."
+            ),
+            {
+                "clount_id": cloud_account.id,
+                "old_aws_account_id": cloud_account.content_object.aws_account_id,
+                "new_aws_account_id": customer_aws_account_id,
+                "new_arn": customer_arn,
+            },
+        )
+        cloud_account.delete()
+        user = User.objects.get(username=account_number)
+
+        from api.clouds.aws.tasks import configure_customer_aws_and_create_cloud_account
+
+        configure_customer_aws_and_create_cloud_account.delay(
+            user.id, customer_arn, authentication_id, endpoint_id, source_id
+        )
+
+    else:
+        try:
+            verify_permissions(customer_arn)
+        except ValidationError:
+            # TODO mark account as disabled.
+            logger.info(
+                _("ARN %s failed validation. The Cloud Account will still be updated."),
+                customer_arn,
+            )
+        logger.info(
+            _("Cloud Account with ID %s has been updated with arn %s. "),
+            cloud_account.id,
+            customer_arn,
+        )
+        cloud_account.content_object.account_arn = customer_arn
+        cloud_account.content_object.save()

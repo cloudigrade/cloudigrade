@@ -17,6 +17,7 @@ class SourcesListenerTest(TestCase):
     @patch("util.management.commands.listen_to_sources.PIDLockFile")
     @patch("util.management.commands.listen_to_sources.logger")
     @patch("util.management.commands.listen_to_sources.KafkaConsumer")
+    @patch("api.tasks.update_from_source_kafka_message")
     @patch("api.tasks.delete_from_sources_kafka_message")
     @patch("api.tasks.create_from_sources_kafka_message")
     @patch("daemon.DaemonContext")
@@ -25,6 +26,7 @@ class SourcesListenerTest(TestCase):
         mock_daemon_context,
         mock_create_task,
         mock_delete_task,
+        mock_update_task,
         mock_consumer,
         mock_logger,
         mock_pid,
@@ -34,6 +36,7 @@ class SourcesListenerTest(TestCase):
         message2 = Mock()
         message3 = Mock()
         message4 = Mock()
+        message5 = Mock()
 
         message1.value = {
             "authtype": random.choice(settings.SOURCES_CLOUDMETER_AUTHTYPES)
@@ -49,8 +52,11 @@ class SourcesListenerTest(TestCase):
             ("encoding", b"json"),
         ]
 
-        message3.value = "bad message"
-        message3.headers = [Mock(), Mock()]
+        message3.value = "test message 3"
+        message3.headers = [
+            ("event_type", b"Authentication.update"),
+            ("encoding", b"json"),
+        ]
 
         message4.value = {"authtype": "INVALID"}
         message4.headers = [
@@ -58,8 +64,13 @@ class SourcesListenerTest(TestCase):
             ("encoding", b"json"),
         ]
 
+        # Make sure to send this message last,
+        # since it raises the TypeError that terminates the listener
+        message5.value = "bad message"
+        message5.headers = [Mock(), Mock()]
+
         mock_message_bundle_items = {
-            "Partition 1": [message1, message2, message3, message4]
+            "Partition 1": [message1, message2, message3, message4, message5]
         }
 
         mock_consumer_poll = mock_consumer.return_value.poll
@@ -70,9 +81,10 @@ class SourcesListenerTest(TestCase):
 
         mock_create_task.delay.assert_called_once()
         mock_delete_task.delay.assert_called_once()
+        mock_update_task.delay.assert_called_once()
         mock_consumer.assert_called_once()
         mock_consumer_poll.assert_called_once()
-        self.assertEqual(2, mock_logger.info.call_count)
+        self.assertEqual(3, mock_logger.info.call_count)
 
     @patch("util.management.commands.listen_to_sources.logger")
     def test_listener_cleanup(self, mock_logger):

@@ -35,6 +35,7 @@ from api.clouds.aws.models import (
     AwsMachineImage,
 )
 from api.clouds.aws.util import (
+    create_aws_cloud_account,
     create_aws_machine_image_copy,
     create_initial_aws_instance_events,
     create_new_machine_images,
@@ -45,7 +46,7 @@ from api.clouds.aws.util import (
     start_image_inspection,
     update_aws_image_status_error,
     update_aws_image_status_inspected,
-    verify_permissions_and_create_aws_cloud_account,
+    verify_permissions,
 )
 from api.models import (
     InstanceEvent,
@@ -104,14 +105,16 @@ def configure_customer_aws_and_create_cloud_account(
     customer_aws_account_id = aws.AwsArn(customer_arn).account_id
 
     cloud_account_name = get_standard_cloud_account_name("aws", customer_aws_account_id)
-    verify_permissions_and_create_aws_cloud_account(
-        user,
-        customer_arn,
-        cloud_account_name,
-        authentication_id,
-        endpoint_id,
-        source_id,
-    )
+    verified = verify_permissions(customer_arn)
+    if verified:
+        create_aws_cloud_account(
+            user,
+            customer_arn,
+            cloud_account_name,
+            authentication_id,
+            endpoint_id,
+            source_id,
+        )
 
 
 @retriable_shared_task
