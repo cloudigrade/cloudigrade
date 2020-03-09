@@ -206,6 +206,7 @@ class AccountViewSetTest(TransactionTestCase):
         )
         self.assertEqual(response.data["name"], data["name"])
         self.assertIsNotNone(response.data["name"])
+        self.assertEqual(response.data["is_enabled"], True)  # True by default
         mock_task.delay.assert_called()
 
     @patch.object(util, "aws")

@@ -157,6 +157,7 @@ def generate_aws_account(
     authentication_id=None,
     endpoint_id=None,
     source_id=None,
+    is_enabled=True,
 ):
     """
     Generate an AwsAccount for testing.
@@ -169,6 +170,10 @@ def generate_aws_account(
         user (User): Optional Django auth User to be this account's owner.
         name (str): Optional name for this account.
         created_at (datetime): Optional creation datetime for this account.
+        authentication_id (int): Optional platform source authentication ID.
+        endpoint_id (int): Optional platform source endpoint ID.
+        source_id (int): Optional platform source source ID.
+        is_enabled (bool): Optional should the account be enabled.
 
     Returns:
         CloudAccount: The created AwsAccount.
@@ -196,6 +201,7 @@ def generate_aws_account(
         platform_authentication_id=authentication_id,
         platform_endpoint_id=endpoint_id,
         platform_source_id=source_id,
+        is_enabled=is_enabled,
     )
     if created_at:
         cloud_account.created_at = created_at

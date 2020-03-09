@@ -19,6 +19,7 @@ class CloudAccount(BaseGenericModel):
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, db_index=True, null=False,)
     name = models.CharField(max_length=256, null=False, db_index=True)
+    is_enabled = models.BooleanField(null=False, default=True)
 
     # We must store the platform authentication_id in order to know things
     # like when to delete the Clount.
@@ -69,6 +70,7 @@ class CloudAccount(BaseGenericModel):
             f"{self.__class__.__name__}("
             f"id={self.id}, "
             f"name='{self.name}', "
+            f"is_enabled='{self.is_enabled}', "
             f"user_id={self.user_id}, "
             f"platform_authentication_id={self.platform_authentication_id}, "
             f"platform_endpoint_id={self.platform_endpoint_id}, "

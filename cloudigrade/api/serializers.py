@@ -64,11 +64,13 @@ class CloudAccountSerializer(ModelSerializer):
             "cloud_type",
             "account_arn",
             "aws_account_id",
+            "is_enabled",
         )
         read_only_fields = (
             "aws_account_id",
             "user_id",
             "content_object",
+            "is_enabled",
         )
         create_only_fields = ("cloud_type",)
 
