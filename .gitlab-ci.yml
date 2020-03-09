@@ -51,7 +51,8 @@ vulnerability:
     - pip install pipenv
   script:
     - pipenv sync
-    - pipenv check
+    ## workaround for https://github.com/pypa/pipenv/issues/4147
+    - pipenv check --ignore 37752
 
 Cloudigrade Docker:
   stage: test
