@@ -69,20 +69,24 @@ def create_from_sources_kafka_message(message, headers):
             "Authentication.create"
 
     """
-    account_number, auth_id = insights.extract_ids_from_kafka_message(message, headers)
+    account_number, authentication_id = insights.extract_ids_from_kafka_message(
+        message, headers
+    )
 
-    if account_number is None or auth_id is None:
+    if account_number is None or authentication_id is None:
         logger.error(_("Aborting creation. Incorrect message details."))
         return
 
-    authentication = insights.get_sources_authentication(account_number, auth_id)
+    authentication = insights.get_sources_authentication(
+        account_number, authentication_id
+    )
     if not authentication:
         logger.info(
             _(
                 "Authentication ID %(authentication_id)s for account number "
                 "%(account_number)s does not exist; aborting cloud account creation."
             ),
-            {"authentication_id": auth_id, "account_number": account_number},
+            {"authentication_id": authentication_id, "account_number": account_number},
         )
         return
 
@@ -116,7 +120,8 @@ def create_from_sources_kafka_message(message, headers):
 
     if not password:
         logger.error(
-            _("Missing expected password from authentication for id %s"), auth_id,
+            _("Missing expected password from authentication for id %s"),
+            authentication_id,
         )
         return
 
@@ -131,7 +136,7 @@ def create_from_sources_kafka_message(message, headers):
     # Conditionalize the logic for different cloud providers
     if message.get("authtype") == settings.SOURCES_CLOUDMETER_ARN_AUTHTYPE:
         configure_customer_aws_and_create_cloud_account.delay(
-            user.id, password, auth_id, endpoint_id, source_id
+            user.id, password, authentication_id, endpoint_id, source_id
         )
 
 
@@ -210,16 +215,20 @@ def update_from_source_kafka_message(message, headers):
             "Authentication.update"
 
     """
-    account_number, auth_id = insights.extract_ids_from_kafka_message(message, headers)
+    account_number, authentication_id = insights.extract_ids_from_kafka_message(
+        message, headers
+    )
 
-    if account_number is None or auth_id is None:
+    if account_number is None or authentication_id is None:
         logger.error(_("Aborting update. Incorrect message details."))
         return
 
     try:
-        clount = CloudAccount.objects.get(platform_authentication_id=auth_id)
+        clount = CloudAccount.objects.get(platform_authentication_id=authentication_id)
 
-        authentication = insights.get_sources_authentication(account_number, auth_id)
+        authentication = insights.get_sources_authentication(
+            account_number, authentication_id
+        )
 
         if not authentication:
             logger.info(
@@ -227,13 +236,15 @@ def update_from_source_kafka_message(message, headers):
                     "Authentication ID %(authentication_id)s for account number "
                     "%(account_number)s does not exist; aborting cloud account update."
                 ),
-                {"authentication_id": auth_id, "account_number": account_number,},
+                {
+                    "authentication_id": authentication_id,
+                    "account_number": account_number,
+                },
             )
             return
 
         resource_type = authentication.get("resource_type")
         endpoint_id = authentication.get("resource_id")
-
         if resource_type != settings.SOURCES_ENDPOINT_TYPE:
             logger.info(
                 _(
@@ -265,7 +276,7 @@ def update_from_source_kafka_message(message, headers):
                 clount,
                 authentication.get("password"),
                 account_number,
-                auth_id,
+                authentication_id,
                 endpoint_id,
                 source_id,
             )
@@ -275,7 +286,7 @@ def update_from_source_kafka_message(message, headers):
                 "The updated authentication with ID %s and account number %s "
                 "is not managed by cloud meter."
             ),
-            auth_id,
+            authentication_id,
             account_number,
         )
         return
