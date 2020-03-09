@@ -21,7 +21,7 @@ py37:
     - chat
     - trigger
   before_script:
-    - pip install tox codecov pipenv
+    - pip install tox codecov poetry
   script:
     - tox -e py37
     - codecov
@@ -33,7 +33,7 @@ flake8:
     - chat
     - trigger
   before_script:
-    - pip install tox pipenv
+    - pip install tox poetry
   script: tox -e flake8
 
 vulnerability:
@@ -45,11 +45,10 @@ vulnerability:
     - chat
     - trigger
   before_script:
-    - pip install pipenv
+    - pip install poetry safety
   script:
-    - pipenv sync
-    ## workaround for https://github.com/pypa/pipenv/issues/4147
-    - pipenv check --ignore 37752
+    - poetry install
+    - safety check
 
 Cloudigrade Docker:
   stage: test
@@ -92,10 +91,10 @@ Spec File:
     - chat
     - trigger
   before_script:
-    - pip install pipenv
-    - pipenv install --dev
+    - pip install poetry
+    - poetry install
   script:
-    - AWS_SQS_ACCESS_KEY_ID=foo AWS_SQS_SECRET_ACCESS_KEY=bar pipenv run make spec-test
+    - AWS_SQS_ACCESS_KEY_ID=foo AWS_SQS_SECRET_ACCESS_KEY=bar poetry run make spec-test
 
 ### REVIEW STAGE ###
 Deploy Review:

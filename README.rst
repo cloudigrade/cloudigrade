@@ -65,25 +65,25 @@ We recommend developing on the latest version of Fedora. Follow the following co
 Python virtual environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-We strongly encourage all developers to use a virtual environment to isolate **cloudigrade**\ 's Python package dependencies. You may use whatever tooling you feel confortable with, but here are some initial notes for setting up with `pipenv <https://pypi.org/project/pipenv/>`_:
+We strongly encourage all developers to use a virtual environment to isolate **cloudigrade**\ 's Python package dependencies. You may use whatever tooling you feel comfortable with, but here are some initial notes for setting up with `poetry <https://python-poetry.org/docs/>`_:
 
 .. code-block:: bash
 
-    # install pipenv
-    pip install pipenv
+    # install poetry
+    pip install poetry
 
-Once you have pipenv installed, install our Python package requirements:
-
-.. code-block:: sh
-
-    pipenv --rm
-    pipenv sync --dev
-
-If you plan to run cloudigrade or Celery locally on macOS, the required ``pycurl`` package may fail to install or may install improperly despite ``pipenv sync`` appearing to complete successfully. You can verify that ``pycurl`` is installed correctly by simply importing it in a Python shell like this:
+Once you have poetry installed, install our Python package requirements:
 
 .. code-block:: sh
 
-    pipenv run python -c 'import pycurl'
+    poetry env remove
+    poetry install
+
+If you plan to run cloudigrade or Celery locally on macOS, the required ``pycurl`` package may fail to install or may install improperly despite ``poetry install`` appearing to complete successfully. You can verify that ``pycurl`` is installed correctly by simply importing it in a Python shell like this:
+
+.. code-block:: sh
+
+    poetry run python -c 'import pycurl'
 
 If you see no output, everything is okay! Otherwise (e.g. "libcurl link-time ssl backend (openssl) is different from compile-time ssl backend (none/other)"), it may not have installed correctly. Try the following commands force it to rebuild and install with the openssl backend:
 
@@ -93,7 +93,7 @@ If you see no output, everything is okay! Otherwise (e.g. "libcurl link-time ssl
     brew install openssl curl-openssl
     brew doctor  # ...and resolve any known problems.
 
-    pipenv run pip uninstall pycurl -y
+    poetry run pip uninstall pycurl -y
 
     BREW_PATH=$(brew --prefix)
     export LDFLAGS="-L${BREW_PATH}/opt/openssl/lib/ -L${BREW_PATH}/opt/curl-openssl/lib -L${BREW_PATH}/opt/expat/lib/ -L${BREW_PATH}/lib -L/usr/lib/"
@@ -102,8 +102,8 @@ If you see no output, everything is okay! Otherwise (e.g. "libcurl link-time ssl
     export PYCURL_CURL_CONFIG="${BREW_PATH}/opt/curl-openssl/bin/curl-config"
     export PYCURL_SSL_LIBRARY="openssl"
 
-    pipenv sync --clear --dev
-    pipenv run python -c 'import pycurl'
+    poetry install
+    poetry run python -c 'import pycurl'
 
 If this resolves the import error, then you may also need to export all of those variables any time you have `tox` recreate its own virtual environments.
 
@@ -111,13 +111,14 @@ If using a system that has dnf, try the following commands:
 
 .. code-block:: sh
 
+    poetry run pip uninstall pycurl -y
     sudo dnf install openssl libcurl-devel
     export PYCURL_SSL_LIBRARY=openssl
-    pipenv install pycurl
+    poetry install
 
 Try the aforementioned import commands again, and all should be good. If not, kindly reach out to another cloudigrade developer to seek assistance!
 
-After finishing the installation of dependencies you can grab a shell that uses the virtual environment by calling ``pipenv shell``.
+After finishing the installation of dependencies you can grab a shell that uses the virtual environment by calling ``poetry shell``.
 
 
 Configure AWS account credentials
@@ -177,18 +178,27 @@ First we'll create the policy.
         "Version": "2012-10-17",
         "Statement": [
             {
+                "Sid": "CloudigradePolicy",
                 "Effect": "Allow",
                 "Action": [
-                    "logs:CreateLogGroup",
-                    "logs:CreateLogStream",
-                    "logs:PutLogEvents",
-                    "logs:DescribeLogStreams"
+                    "ec2:DescribeImages",
+                    "ec2:DescribeInstances",
+                    "ec2:ModifySnapshotAttribute",
+                    "ec2:DescribeSnapshotAttribute",
+                    "ec2:DescribeSnapshots",
+                    "ec2:CopyImage",
+                    "ec2:CreateTags",
+                    "ec2:DescribeRegions",
+                    "cloudtrail:CreateTrail",
+                    "cloudtrail:UpdateTrail",
+                    "cloudtrail:PutEventSelectors",
+                    "cloudtrail:DescribeTrails",
+                    "cloudtrail:StartLogging",
+                    "cloudtrail:StopLogging",
                 ],
-                "Resource": [
-                    "arn:aws:logs:*:*:*"
-                ]
+                "Resource": "*",
             }
-        ]
+        ],
     }
 
 - Choose Review policy.
