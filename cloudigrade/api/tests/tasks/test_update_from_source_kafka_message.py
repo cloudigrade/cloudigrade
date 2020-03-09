@@ -187,3 +187,69 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
         )
         tasks.update_from_source_kafka_message(message, headers)
         mock_update_account.assert_not_called()
+
+    @patch("util.insights.get_sources_authentication")
+    @patch("api.tasks.update_aws_cloud_account")
+    def test_update_from_sources_kafka_message_returns_early_when_authentication_404(
+        self, mock_update_account, mock_get_auth
+    ):
+        """
+        Assert update_from_sources_kafka_message returns if sources authentication 404s.
+
+        This could happen if the authentication has been deleted from the
+        sources API by the time this task runs.
+        """
+        message, headers = util_helper.generate_authentication_create_message_value(
+            account_number=self.account_number, platform_id=self.authentication_id
+        )
+        mock_get_auth.return_value = None
+
+        tasks.update_from_source_kafka_message(message, headers)
+        mock_get_auth.assert_called()
+        mock_update_account.delay.assert_not_called()
+
+    @patch("util.insights.get_sources_authentication")
+    @patch("util.insights.get_sources_endpoint")
+    @patch("api.tasks.update_aws_cloud_account")
+    def test_update_from_sources_kafka_message_returns_early_when_endpoint_404(
+        self, mock_update_account, mock_get_endpoint, mock_get_auth
+    ):
+        """
+        Assert update_from_sources_kafka_message returns if sources endpoint 404s.
+
+        This could happen if the endpoint has been deleted from the
+        sources API by the time this task runs.
+        """
+        message, headers = util_helper.generate_authentication_create_message_value(
+            account_number=self.account_number, platform_id=self.authentication_id
+        )
+        mock_get_auth.return_value = {
+            "resource_id": _faker.pyint(),
+            "resource_type": settings.SOURCES_ENDPOINT_TYPE,
+        }
+        mock_get_endpoint.return_value = None
+
+        tasks.update_from_source_kafka_message(message, headers)
+
+        mock_get_endpoint.assert_called()
+        mock_update_account.delay.assert_not_called()
+
+    @patch("util.insights.get_sources_authentication")
+    @patch("util.insights.get_sources_endpoint")
+    @patch("api.tasks.update_aws_cloud_account")
+    def test_create_returns_early_when_resource_type_invalid(
+        self, mock_update_account, mock_get_endpoint, mock_get_auth
+    ):
+        """Assert task returns if resource_type is invalid."""
+        message, headers = util_helper.generate_authentication_create_message_value(
+            account_number=self.account_number, platform_id=self.authentication_id
+        )
+        mock_get_auth.return_value = {
+            "resource_id": _faker.pyint(),
+            "resource_type": "INVALID",
+        }
+
+        tasks.update_from_source_kafka_message(message, headers)
+
+        mock_get_endpoint.assert_not_called()
+        mock_update_account.delay.assert_not_called()

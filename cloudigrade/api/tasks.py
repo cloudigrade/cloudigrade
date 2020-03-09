@@ -69,50 +69,36 @@ def create_from_sources_kafka_message(message, headers):
             "Authentication.create"
 
     """
-    incomplete_data = False
+    account_number, auth_id = insights.extract_ids_from_kafka_message(message, headers)
 
-    auth_header = insights.get_x_rh_identity_header(headers)
-    if not auth_header:
-        incomplete_data = True
-        logger.error(
-            _("Missing expected auth header from message %s, headers %s"),
-            message,
-            headers,
-        )
-
-    account_number = auth_header.get("identity", {}).get("account_number")
-    if not account_number:
-        incomplete_data = True
-        logger.error(
-            _("Missing expected account number from message %s, headers %s"),
-            message,
-            headers,
-        )
-
-    authentication_id = message.get("id")
-    if not authentication_id:
-        incomplete_data = True
-        logger.error(
-            _("Missing expected id from message %s, headers %s"), message, headers
-        )
-
-    if incomplete_data:
+    if account_number is None or auth_id is None:
         logger.error(_("Aborting creation. Incorrect message details."))
         return
 
-    authentication = insights.get_sources_authentication(
-        account_number, authentication_id
-    )
+    authentication = insights.get_sources_authentication(account_number, auth_id)
     if not authentication:
         logger.info(
             _(
                 "Authentication ID %(authentication_id)s for account number "
                 "%(account_number)s does not exist; aborting cloud account creation."
             ),
-            {"authentication_id": authentication_id, "account_number": account_number},
+            {"authentication_id": auth_id, "account_number": account_number},
         )
         return
+
+    resource_type = authentication.get("resource_type")
     endpoint_id = authentication.get("resource_id")
+
+    if resource_type != settings.SOURCES_ENDPOINT_TYPE:
+        logger.info(
+            _(
+                "Resource ID %(endpoint_id)s for account number %(account_number)s "
+                "is not of type Endpoint; aborting cloud account creation."
+            ),
+            {"endpoint_id": endpoint_id, "account_number": account_number},
+        )
+        return
+
     endpoint = insights.get_sources_endpoint(account_number, endpoint_id)
     if not endpoint:
         logger.info(
@@ -130,8 +116,7 @@ def create_from_sources_kafka_message(message, headers):
 
     if not password:
         logger.error(
-            _("Missing expected password from authentication for id %s"),
-            authentication_id,
+            _("Missing expected password from authentication for id %s"), auth_id,
         )
         return
 
@@ -146,7 +131,7 @@ def create_from_sources_kafka_message(message, headers):
     # Conditionalize the logic for different cloud providers
     if message.get("authtype") == settings.SOURCES_CLOUDMETER_ARN_AUTHTYPE:
         configure_customer_aws_and_create_cloud_account.delay(
-            user.id, password, authentication_id, endpoint_id, source_id
+            user.id, password, auth_id, endpoint_id, source_id
         )
 
 
@@ -170,34 +155,11 @@ def delete_from_sources_kafka_message(message, headers, event_type):
         event_type (str): A string describing the type of destroy event.
 
     """
-    incomplete_data = False
+    account_number, platform_id = insights.extract_ids_from_kafka_message(
+        message, headers
+    )
 
-    auth_header = insights.get_x_rh_identity_header(headers)
-    if not auth_header:
-        incomplete_data = True
-        logger.error(
-            _("Missing expected auth header from message %s, headers %s"),
-            message,
-            headers,
-        )
-
-    account_number = auth_header.get("identity", {}).get("account_number")
-    if not account_number:
-        incomplete_data = True
-        logger.error(
-            _("Missing expected account number from message %s, headers %s"),
-            message,
-            headers,
-        )
-
-    platform_id = message.get("id")
-    if not platform_id:
-        incomplete_data = True
-        logger.error(
-            _("Missing expected id from message %s, headers %s"), message, headers
-        )
-
-    if incomplete_data:
+    if account_number is None or platform_id is None:
         logger.error(_("Aborting deletion. Incorrect message details."))
         return
     try:
@@ -248,45 +210,51 @@ def update_from_source_kafka_message(message, headers):
             "Authentication.update"
 
     """
-    incomplete_data = False
-    auth_header = insights.get_x_rh_identity_header(headers)
+    account_number, auth_id = insights.extract_ids_from_kafka_message(message, headers)
 
-    if not auth_header:
-        incomplete_data = True
-        logger.error(
-            _("Missing expected auth header from message %s, headers %s"),
-            message,
-            headers,
-        )
-
-    account_number = auth_header.get("identity", {}).get("account_number")
-    if not account_number:
-        incomplete_data = True
-        logger.error(
-            _("Missing expected account number from message %s, headers %s"),
-            message,
-            headers,
-        )
-
-    authentication_id = message.get("id")
-    if not authentication_id:
-        incomplete_data = True
-        logger.error(
-            _("Missing expected id from message %s, headers %s"), message, headers
-        )
-
-    if incomplete_data:
+    if account_number is None or auth_id is None:
         logger.error(_("Aborting update. Incorrect message details."))
         return
 
     try:
-        clount = CloudAccount.objects.get(platform_authentication_id=authentication_id)
+        clount = CloudAccount.objects.get(platform_authentication_id=auth_id)
 
-        authentication = insights.get_sources_authentication(
-            account_number, authentication_id
-        )
+        authentication = insights.get_sources_authentication(account_number, auth_id)
+
+        if not authentication:
+            logger.info(
+                _(
+                    "Authentication ID %(authentication_id)s for account number "
+                    "%(account_number)s does not exist; aborting cloud account update."
+                ),
+                {"authentication_id": auth_id, "account_number": account_number,},
+            )
+            return
+
+        resource_type = authentication.get("resource_type")
         endpoint_id = authentication.get("resource_id")
+
+        if resource_type != settings.SOURCES_ENDPOINT_TYPE:
+            logger.info(
+                _(
+                    "Resource ID %(endpoint_id)s for account number %(account_number)s "
+                    "is not of type Endpoint; aborting cloud account update."
+                ),
+                {"endpoint_id": endpoint_id, "account_number": account_number},
+            )
+            return
+
         endpoint = insights.get_sources_endpoint(account_number, endpoint_id)
+        if not endpoint:
+            logger.info(
+                _(
+                    "Endpoint ID %(endpoint_id)s for account number "
+                    "%(account_number)s does not exist; aborting cloud account update."
+                ),
+                {"endpoint_id": endpoint_id, "account_number": account_number},
+            )
+            return
+
         source_id = endpoint.get("source_id")
 
         # If the Authentication being updated is arn, do arn things.
@@ -297,7 +265,7 @@ def update_from_source_kafka_message(message, headers):
                 clount,
                 authentication.get("password"),
                 account_number,
-                authentication_id,
+                auth_id,
                 endpoint_id,
                 source_id,
             )
@@ -307,7 +275,7 @@ def update_from_source_kafka_message(message, headers):
                 "The updated authentication with ID %s and account number %s "
                 "is not managed by cloud meter."
             ),
-            authentication_id,
+            auth_id,
             account_number,
         )
         return

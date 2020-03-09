@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 import faker
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.test import TestCase
 
@@ -160,11 +161,35 @@ class CreateFromSourcesKafkaMessageTest(TestCase):
         sources API by the time this task runs.
         """
         message, headers = util_helper.generate_authentication_create_message_value()
-        mock_get_auth.return_value = {"resource_id": _faker.pyint()}
+        mock_get_auth.return_value = {
+            "resource_id": _faker.pyint(),
+            "resource_type": settings.SOURCES_ENDPOINT_TYPE,
+        }
         mock_get_endpoint.return_value = None
 
         tasks.create_from_sources_kafka_message(message, headers)
 
         # User should not have been created.
         self.assertEqual(User.objects.all().count(), 0)
+        mock_get_endpoint.assert_called()
+        mock_task.delay.assert_not_called()
+
+    @patch("util.insights.get_sources_authentication")
+    @patch("util.insights.get_sources_endpoint")
+    @patch("api.tasks.configure_customer_aws_and_create_cloud_account")
+    def test_create_returns_early_when_resource_type_invalid(
+        self, mock_task, mock_get_endpoint, mock_get_auth
+    ):
+        """Assert task returns if resource_type is invalid."""
+        message, headers = util_helper.generate_authentication_create_message_value()
+        mock_get_auth.return_value = {
+            "resource_id": _faker.pyint(),
+            "resource_type": "INVALID",
+        }
+
+        tasks.create_from_sources_kafka_message(message, headers)
+
+        # User should not have been created.
+        self.assertEqual(User.objects.all().count(), 0)
+        mock_get_endpoint.assert_not_called()
         mock_task.delay.assert_not_called()
