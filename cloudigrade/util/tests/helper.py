@@ -38,6 +38,7 @@ SOME_EC2_INSTANCE_TYPES = {
     "x1e.32xlarge": {"memory": 3904, "vcpu": 128},
 }
 
+MIN_AWS_ACCOUNT_ID = 10 ** 10  # start "big" to better test handling of "big" numbers
 MAX_AWS_ACCOUNT_ID = 10 ** 12 - 1
 
 
@@ -49,7 +50,7 @@ RH_IDENTITY_NOT_ORG_ADMIN = {"identity": {"account_number": "1337"}}
 
 def generate_dummy_aws_account_id():
     """Generate a dummy AWS AwsAccount ID for testing purposes."""
-    return Decimal(random.randrange(1, MAX_AWS_ACCOUNT_ID))
+    return Decimal(random.randrange(MIN_AWS_ACCOUNT_ID, MAX_AWS_ACCOUNT_ID))
 
 
 def generate_dummy_availability_zone(region=None):
