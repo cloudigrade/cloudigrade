@@ -10,6 +10,19 @@ from util.exceptions import MaximumNumberOfTrailsExceededException
 logger = logging.getLogger(__name__)
 
 
+def get_cloudtrail_name(aws_account_id):
+    """
+    Get the standard cloudigrade-formatted CloudTrail name.
+
+    Args:
+        aws_account_id (str): The AWS account ID.
+
+    Returns:
+        str the standard cloudigrade-formatted CloudTrail name for the given account ID.
+    """
+    return "{0}{1}".format(settings.CLOUDTRAIL_NAME_PREFIX, aws_account_id)
+
+
 def configure_cloudtrail(session, aws_account_id):
     """
     Configure a CloudTrail in the customer account.
@@ -23,7 +36,7 @@ def configure_cloudtrail(session, aws_account_id):
 
     """
     cloudtrail = session.client("cloudtrail")
-    name = "{0}{1}".format(settings.CLOUDTRAIL_NAME_PREFIX, aws_account_id)
+    name = get_cloudtrail_name(aws_account_id)
 
     if trail_exists(cloudtrail, name):
         response = update_cloudtrail(cloudtrail, name)
