@@ -9,6 +9,7 @@ from django.db.models.signals import post_delete, pre_delete
 from django.dispatch import receiver
 from django.utils.translation import gettext as _
 
+from util.misc import get_now
 from util.models import BaseGenericModel, BaseModel
 
 logger = logging.getLogger(__name__)
@@ -79,6 +80,48 @@ class CloudAccount(BaseGenericModel):
             f"updated_at=parse({updated_at})"
             f")"
         )
+
+    @transaction.atomic
+    def disable(self):
+        """
+        Mark this CloudAccount as disabled and perform operations to make it so.
+
+        This has the side effect of finding all related powered-on instances and
+        recording a new "power_off" event them. It also calls the related content_object
+        (e.g. AwsCloudAccount) to make any cloud-specific changes.
+        """
+        if self.is_enabled:
+            self.is_enabled = False
+            self.save()
+        self._power_off_instances(power_off_time=get_now())
+        self.content_object.disable()
+
+    def _power_off_instances(self, power_off_time):
+        """
+        Mark all running instances belonging to this CloudAccount as powered off.
+
+        Args:
+            power_off_time (datetime.datetime): time to set when stopping the instances
+        """
+        from api.util import recalculate_runs  # Avoid circular import.
+
+        instances = self.instance_set.all()
+        for instance in instances:
+            last_event = (
+                InstanceEvent.objects.filter(instance=instance)
+                .order_by("-occurred_at")
+                .first()
+            )
+            if last_event and last_event.event_type != InstanceEvent.TYPE.power_off:
+                content_object_class = last_event.content_object.__class__
+                cloud_specific_event = content_object_class.objects.create()
+                event = InstanceEvent.objects.create(
+                    event_type=InstanceEvent.TYPE.power_off,
+                    occurred_at=power_off_time,
+                    instance=instance,
+                    content_object=cloud_specific_event,
+                )
+                recalculate_runs(event)
 
 
 class MachineImage(BaseGenericModel):

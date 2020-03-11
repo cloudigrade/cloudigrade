@@ -61,6 +61,9 @@ class AwsCloudAccount(BaseModel):
         """
         Disable this AwsCloudAccount.
 
+        This method only handles the AWS-specific piece of disabling a cloud account.
+        If you want to completely disable a cloud account, use CloudAccount.disable().
+
         Disabling an AwsCloudAccount has the side effect of attempting to disable the
         AWS CloudTrail only upon committing the transaction.  If we cannot disable the
         CloudTrail, we simply log a message and proceed regardless.

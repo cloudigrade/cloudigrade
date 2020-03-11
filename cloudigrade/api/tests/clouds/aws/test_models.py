@@ -1,4 +1,5 @@
 """Collection of tests for custom Django model logic."""
+import logging
 from random import choice
 from unittest.mock import Mock, patch
 
@@ -10,6 +11,9 @@ from api import models
 from api.clouds.aws import models as aws_models
 from api.tests import helper
 from util.tests import helper as util_helper
+
+
+logger = logging.getLogger(__name__)
 
 
 class AwsCloudAccountModelTest(TransactionTestCase):
@@ -39,6 +43,66 @@ class AwsCloudAccountModelTest(TransactionTestCase):
         info_calls = mock_logger.info.mock_calls
         message = info_calls[0][1][0]
         self.assertTrue(message.startswith("AwsCloudAccount("))
+
+    def test_disable_succeeds(self):
+        """
+        Test that disabling an account does all the relevant cleanup.
+
+        Disabling a CloudAccount having an AwsCloudAccount should:
+
+        - set the CloudAccount.is_enabled to False
+        - create a power_off InstanceEvent for any powered-on instances
+        - disable the CloudTrail (via AwsCloudAccount.disable)
+        """
+        self.assertTrue(self.account.is_enabled)
+        instance = helper.generate_aws_instance(cloud_account=self.account)
+        runtimes = [
+            (
+                util_helper.utc_dt(2019, 1, 1, 0, 0, 0),
+                util_helper.utc_dt(2019, 1, 2, 0, 0, 0),
+            ),
+            (util_helper.utc_dt(2019, 1, 3, 0, 0, 0), None),
+        ]
+
+        disable_date = util_helper.utc_dt(2019, 1, 4, 0, 0, 0)
+        with util_helper.clouditardis(disable_date):
+            # We need to generate the runs while inside the clouditardis because we
+            # don't need an ever-growing number of daily ConcurrentUsage objects being
+            # created as the real-world clock ticks forward.
+            for runtime in runtimes:
+                helper.generate_single_run(instance=instance, runtime=runtime)
+            self.assertEqual(3, aws_models.AwsInstanceEvent.objects.count())
+            with patch(
+                "api.clouds.aws.util.disable_cloudtrail"
+            ) as mock_disable_cloudtrail:
+                mock_disable_cloudtrail.return_value = True
+                self.account.disable()
+                mock_disable_cloudtrail.assert_called()
+
+        self.account.refresh_from_db()
+        self.assertFalse(self.account.is_enabled)
+        self.assertEqual(4, aws_models.AwsInstanceEvent.objects.count())
+
+        last_event = (
+            models.InstanceEvent.objects.filter(instance=instance)
+            .order_by("-occurred_at")
+            .first()
+        )
+        self.assertEqual(last_event.event_type, models.InstanceEvent.TYPE.power_off)
+
+    def test_disable_succeeds_if_no_instance_events(self):
+        """Test that disabling an account works despite having no instance events."""
+        self.assertTrue(self.account.is_enabled)
+        instance = helper.generate_aws_instance(cloud_account=self.account)
+
+        with patch("api.clouds.aws.util.disable_cloudtrail") as mock_disable_cloudtrail:
+            mock_disable_cloudtrail.return_value = True
+            self.account.disable()
+            mock_disable_cloudtrail.assert_called()
+
+        self.account.refresh_from_db()
+        self.assertFalse(self.account.is_enabled)
+        self.assertEqual(0, aws_models.AwsInstanceEvent.objects.count())
 
     def test_delete_succeeds(self):
         """Test that an account is deleted if there are no errors."""
