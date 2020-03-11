@@ -2,7 +2,6 @@
 from random import choice
 from unittest.mock import Mock, patch
 
-from botocore.exceptions import ClientError
 from django.conf import settings
 from django.test import TestCase, TransactionTestCase
 
@@ -10,8 +9,6 @@ import api.clouds.aws.util
 from api import models
 from api.clouds.aws import models as aws_models
 from api.tests import helper
-from util.aws import sts
-from util.exceptions import CloudTrailCannotStopLogging
 from util.tests import helper as util_helper
 
 
@@ -45,81 +42,16 @@ class AwsCloudAccountModelTest(TransactionTestCase):
 
     def test_delete_succeeds(self):
         """Test that an account is deleted if there are no errors."""
-        with patch.object(sts, "boto3") as mock_boto3, patch.object(
-            aws_models, "disable_cloudtrail"
-        ):
-            mock_assume_role = mock_boto3.client.return_value.assume_role
-            mock_assume_role.return_value = self.role
+        with patch("api.clouds.aws.util.disable_cloudtrail") as mock_disable_cloudtrail:
+            mock_disable_cloudtrail.return_value = True
             self.account.delete()
-            self.assertEqual(0, aws_models.AwsCloudAccount.objects.count())
-
-    def test_delete_succeeds_on_access_denied_exception(self):
-        """Test that the account is deleted on CloudTrail access denied."""
-        client_error = ClientError(
-            error_response={"Error": {"Code": "AccessDeniedException"}},
-            operation_name=Mock(),
-        )
-
-        with patch.object(
-            aws_models, "disable_cloudtrail"
-        ) as mock_cloudtrail, patch.object(sts, "boto3") as mock_boto3:
-            mock_assume_role = mock_boto3.client.return_value.assume_role
-            mock_assume_role.return_value = self.role
-            mock_cloudtrail.side_effect = client_error
-
-            self.account.delete()
-
         self.assertEqual(0, aws_models.AwsCloudAccount.objects.count())
 
-    def test_delete_fails_on_other_cloudtrail_exception(self):
-        """Test that the account is not deleted on other AWS error."""
-        client_error = ClientError(
-            error_response={"Error": {"Code": "OtherException"}}, operation_name=Mock(),
-        )
-        with patch.object(
-            aws_models, "disable_cloudtrail"
-        ) as mock_cloudtrail, patch.object(sts, "boto3") as mock_boto3:
-            mock_assume_role = mock_boto3.client.return_value.assume_role
-            mock_assume_role.return_value = self.role
-            mock_cloudtrail.side_effect = client_error
-            with self.assertRaises(CloudTrailCannotStopLogging):
-                self.account.delete()
-
-        self.assertEqual(1, aws_models.AwsCloudAccount.objects.count())
-
-    def test_delete_succeeds_when_cloudtrial_does_not_exist(self):
-        """Test that an account is deleted if cloudtrail does not exist."""
-        client_error = ClientError(
-            error_response={"Error": {"Code": "TrailNotFoundException"}},
-            operation_name=Mock(),
-        )
-
-        with patch.object(
-            aws_models, "disable_cloudtrail"
-        ) as mock_cloudtrail, patch.object(sts, "boto3") as mock_boto3:
-            mock_assume_role = mock_boto3.client.return_value.assume_role
-            mock_assume_role.return_value = self.role
-            mock_cloudtrail.side_effect = client_error
-
+    def test_delete_succeeds_if_disable_cloudtrail_fails(self):
+        """Test that the account is deleted even if the CloudTrail is not disabled."""
+        with patch("api.clouds.aws.util.disable_cloudtrail") as mock_disable_cloudtrail:
+            mock_disable_cloudtrail.return_value = False
             self.account.delete()
-
-        self.assertEqual(0, aws_models.AwsCloudAccount.objects.count())
-
-    def test_delete_succeeds_when_aws_account_cannot_be_accessed(self):
-        """Test that an account is deleted if AWS account can't be accessed."""
-        client_error = ClientError(
-            error_response={"Error": {"Code": "AccessDenied"}}, operation_name=Mock(),
-        )
-
-        with patch.object(
-            aws_models, "disable_cloudtrail"
-        ) as mock_cloudtrail, patch.object(sts, "boto3") as mock_boto3:
-            mock_assume_role = mock_boto3.client.return_value.assume_role
-            mock_assume_role.return_value = self.role
-            mock_cloudtrail.side_effect = client_error
-
-            self.account.delete()
-
         self.assertEqual(0, aws_models.AwsCloudAccount.objects.count())
 
     def test_delete_cleans_up_instance_events_run(self):
@@ -132,11 +64,8 @@ class AwsCloudAccountModelTest(TransactionTestCase):
 
         helper.generate_single_run(instance=instance, runtime=runtime)
 
-        with patch.object(aws_models, "disable_cloudtrail"), patch.object(
-            sts, "boto3"
-        ) as mock_boto3:
-            mock_assume_role = mock_boto3.client.return_value.assume_role
-            mock_assume_role.return_value = self.role
+        with patch("api.clouds.aws.util.disable_cloudtrail") as mock_disable_cloudtrail:
+            mock_disable_cloudtrail.return_value = True
             self.account.delete()
         self.assertEqual(0, aws_models.AwsCloudAccount.objects.count())
         self.assertEqual(0, models.CloudAccount.objects.count())
@@ -146,34 +75,12 @@ class AwsCloudAccountModelTest(TransactionTestCase):
         self.assertEqual(0, aws_models.AwsInstance.objects.count())
         self.assertEqual(0, models.Instance.objects.count())
 
-    def test_delete_via_queryset_succeeds_on_known_exception(self):
-        """Account is deleted via queryset if a known exception occurs."""
-        client_error = ClientError(
-            error_response={"Error": {"Code": "AccessDenied"}}, operation_name=Mock(),
-        )
-        with patch.object(
-            aws_models, "disable_cloudtrail"
-        ) as mock_cloudtrail, patch.object(sts, "boto3") as mock_boto3:
-            mock_assume_role = mock_boto3.client.return_value.assume_role
-            mock_assume_role.return_value = self.role
-            mock_cloudtrail.side_effect = client_error
+    def test_delete_via_queryset_succeeds_if_disable_cloudtrail_fails(self):
+        """Account is deleted via queryset even if the CloudTrail is not disabled."""
+        with patch("api.clouds.aws.util.disable_cloudtrail") as mock_disable_cloudtrail:
+            mock_disable_cloudtrail.return_value = False
             aws_models.AwsCloudAccount.objects.all().delete()
         self.assertEqual(0, aws_models.AwsCloudAccount.objects.count())
-
-    def test_delete_via_queryset_fails_on_other_exception(self):
-        """Account is not deleted via queryset on unexpected AWS error."""
-        client_error = ClientError(
-            error_response={"Error": {"Code": "OtherException"}}, operation_name=Mock(),
-        )
-        with patch.object(
-            aws_models, "disable_cloudtrail"
-        ) as mock_cloudtrail, patch.object(sts, "boto3") as mock_boto3:
-            mock_assume_role = mock_boto3.client.return_value.assume_role
-            mock_assume_role.return_value = self.role
-            mock_cloudtrail.side_effect = client_error
-            with self.assertRaises(CloudTrailCannotStopLogging):
-                aws_models.AwsCloudAccount.objects.all().delete()
-        self.assertEqual(1, aws_models.AwsCloudAccount.objects.count())
 
     def test_delete_via_queryset_cleans_up_instance_events_run(self):
         """Deleting an account via queryset cleans up instances/events/runs."""
@@ -183,11 +90,8 @@ class AwsCloudAccountModelTest(TransactionTestCase):
             util_helper.utc_dt(2019, 1, 2, 0, 0, 0),
         )
         helper.generate_single_run(instance=instance, runtime=runtime)
-        with patch.object(aws_models, "disable_cloudtrail"), patch.object(
-            sts, "boto3"
-        ) as mock_boto3:
-            mock_assume_role = mock_boto3.client.return_value.assume_role
-            mock_assume_role.return_value = self.role
+        with patch("api.clouds.aws.util.disable_cloudtrail") as mock_disable_cloudtrail:
+            mock_disable_cloudtrail.return_value = True
             aws_models.AwsCloudAccount.objects.all().delete()
         self.assertEqual(0, aws_models.AwsCloudAccount.objects.count())
         self.assertEqual(0, models.CloudAccount.objects.count())

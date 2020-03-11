@@ -2,6 +2,7 @@
 import uuid
 from unittest.mock import Mock, patch
 
+from botocore.exceptions import ClientError
 from django.test import TestCase
 
 from api import AWS_PROVIDER_STRING
@@ -72,3 +73,96 @@ class CloudsAwsUtilTest(TestCase):
         mock_sqs.send_message_batch.assert_called_with(
             QueueUrl=mock_queue_url, Entries=wrapped_messages
         )
+
+
+class CloudsAwsUtilCloudTrailTest(TestCase):
+    """Test cases for CloudTrail related functions in api.clouds.aws.util."""
+
+    def setUp(self):
+        """Set up basic aws account."""
+        aws_account_id = util_helper.generate_dummy_aws_account_id()
+        arn = util_helper.generate_dummy_arn(account_id=aws_account_id)
+        self.account = api_helper.generate_aws_account(
+            aws_account_id=aws_account_id, arn=arn, name="test"
+        )
+
+    def test_disable_cloudtrail_success(self):
+        """Test disable_cloudtrail normal happy path."""
+        with patch.object(util.aws, "get_session"), patch.object(
+            util.aws, "disable_cloudtrail"
+        ) as mock_disable_cloudtrail:
+            success = util.disable_cloudtrail(self.account.content_object)
+            mock_disable_cloudtrail.assert_called()
+        self.assertTrue(success)
+
+    def test_disable_cloudtrail_not_found(self):
+        """
+        Test disable_cloudtrail handles when AWS raises an TrailNotFoundException error.
+
+        This could happen if the trail has already been deleted. We treat this as a
+        success since the same effective outcome is no trail for us.
+        """
+        client_error = ClientError(
+            error_response={"Error": {"Code": "TrailNotFoundException"}},
+            operation_name=Mock(),
+        )
+        with patch.object(util.aws, "get_session"), patch.object(
+            util.aws, "disable_cloudtrail"
+        ) as mock_disable_cloudtrail:
+            mock_disable_cloudtrail.side_effect = client_error
+            success = util.disable_cloudtrail(self.account.content_object)
+            mock_disable_cloudtrail.assert_called()
+        self.assertTrue(success)
+
+    def test_disable_cloudtrail_access_denied(self):
+        """
+        Test disable_cloudtrail handles when AWS raises an AccessDenied error.
+
+        This could happen if the user has deleted the AWS account or role. We treat this
+        as a non-blocking failure and simply log messages.
+        """
+        client_error = ClientError(
+            error_response={"Error": {"Code": "AccessDenied"}}, operation_name=Mock(),
+        )
+        expected_warnings = [
+            "encountered AccessDenied and cannot disable cloudtrail",
+            f"CloudAccount ID {self.account.id}",
+        ]
+        with self.assertLogs(
+            "api.clouds.aws.util", level="WARNING"
+        ) as logger, patch.object(util.aws, "get_session"), patch.object(
+            util.aws, "disable_cloudtrail"
+        ) as mock_disable_cloudtrail:
+            mock_disable_cloudtrail.side_effect = client_error
+            success = util.disable_cloudtrail(self.account.content_object)
+            mock_disable_cloudtrail.assert_called()
+            for expected_warning in expected_warnings:
+                self.assertIn(expected_warning, logger.output[0])
+        self.assertFalse(success)
+
+    def test_disable_cloudtrail_unexpected_error_code(self):
+        """
+        Test disable_cloudtrail handles when AWS raises an unexpected error code.
+
+        This could happen if AWS is misbehaving unexpectedly. We treat this as a
+        non-blocking failure and simply log messages.
+        """
+        client_error = ClientError(
+            error_response={"Error": {"Code": "Potatoes"}}, operation_name=Mock(),
+        )
+        expected_errors = [
+            "Unexpected error Potatoes occurred disabling CloudTrail",
+            f"CloudAccount ID {self.account.id}",
+        ]
+        with self.assertLogs(
+            "api.clouds.aws.util", level="ERROR"
+        ) as logger, patch.object(util.aws, "get_session"), patch.object(
+            util.aws, "disable_cloudtrail"
+        ) as mock_disable_cloudtrail:
+            mock_disable_cloudtrail.side_effect = client_error
+            success = util.disable_cloudtrail(self.account.content_object)
+            mock_disable_cloudtrail.assert_called()
+            self.assertIn("Traceback", logger.output[0])  # from logger.exception
+            for expected_error in expected_errors:
+                self.assertIn(expected_error, logger.output[1])  # from logger.error
+        self.assertFalse(success)

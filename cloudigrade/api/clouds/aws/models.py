@@ -1,7 +1,6 @@
 """Cloudigrade API v2 Models for AWS."""
 import logging
 
-from botocore.exceptions import ClientError
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models, transaction
@@ -11,8 +10,6 @@ from django.utils.translation import gettext as _
 
 from api import AWS_PROVIDER_STRING
 from api.models import CloudAccount, Instance, InstanceEvent, MachineImage
-from util.aws import disable_cloudtrail, get_session
-from util.exceptions import CloudTrailCannotStopLogging
 from util.models import BaseModel
 
 logger = logging.getLogger(__name__)
@@ -60,88 +57,43 @@ class AwsCloudAccount(BaseModel):
             f")"
         )
 
+    def disable(self):
+        """
+        Disable this AwsCloudAccount.
+
+        Disabling an AwsCloudAccount has the side effect of attempting to disable the
+        AWS CloudTrail only upon committing the transaction.  If we cannot disable the
+        CloudTrail, we simply log a message and proceed regardless.
+        """
+        transaction.on_commit(lambda: _disable_cloudtrail(self))
+
+
+def _disable_cloudtrail(aws_cloud_account):
+    """Disable the given AwsCloudAccount's AWS CloudTrail."""
+    from api.clouds.aws import util  # Avoid circular import.
+
+    if not util.disable_cloudtrail(aws_cloud_account):
+        logger.info(
+            _(
+                "Failed to disable CloudTrail when disabling AwsCloudAccount ID "
+                "%(aws_cloud_account_id)s (AWS account ID %(aws_account_id)s)"
+            ),
+            {
+                "aws_cloud_account_id": aws_cloud_account.id,
+                "aws_account_id": aws_cloud_account.aws_account_id,
+            },
+        )
+
 
 @receiver(post_delete, sender=AwsCloudAccount)
 def aws_cloud_account_post_delete_callback(*args, **kwargs):
     """
-    Disable logging in an AwsCloudAccount's cloudtrail after deleting it.
+    Disable logging in an AwsCloudAccount's CloudTrail after deleting it.
 
     Note: Signal receivers must accept keyword arguments (**kwargs).
-
-    Raises:
-        CloudTrailCannotStopLogging: if an unexpected exception occurs, this
-            exception is raised, and the AwsCloudAccount is not deleted.
     """
     instance = kwargs["instance"]
-
-    try:
-        with transaction.atomic():
-            cloudtrial_name = "{0}{1}".format(
-                settings.CLOUDTRAIL_NAME_PREFIX, instance.cloud_account_id
-            )
-            try:
-                session = get_session(str(instance.account_arn))
-                cloudtrail_session = session.client("cloudtrail")
-                logger.info(
-                    'attempting to disable cloudtrail "%(name)s" via ARN ' '"%(arn)s"',
-                    {"name": cloudtrial_name, "arn": instance.account_arn},
-                )
-                disable_cloudtrail(cloudtrail_session, cloudtrial_name)
-
-            except ClientError as error:
-                error_code = error.response.get("Error", {}).get("Code")
-
-                # If cloudtrail does not exist, then delete the account.
-                if error_code == "TrailNotFoundException":
-                    pass
-
-                # If we're unable to access the account (because user
-                # deleted the role/account). Delete the cloudigrade account
-                # and log an error. This could result in an orphaned
-                # cloudtrail writing to our s3 bucket.
-                elif error_code == "AccessDenied":
-                    logger.warning(
-                        _(
-                            "Cloudigrade account %(account_id)s was deleted,"
-                            " but could not access the AWS account to "
-                            "disable its cloudtrail %(cloudtrail_name)s."
-                        ),
-                        {
-                            "account_id": instance.cloud_account_id,
-                            "cloudtrail_name": cloudtrial_name,
-                        },
-                    )
-                    logger.info(error)
-
-                # If the user role does exist, but we can't stop the
-                # cloudtrail (because of insufficient permission), delete
-                # the cloudigrade account and log an error. This could
-                # result in an orphaned cloudtrail writing to our s3
-                # bucket.
-                elif error_code == "AccessDeniedException":
-                    logger.warning(
-                        _(
-                            "Cloudigrade account %(account_id)s was deleted,"
-                            " but we did not have permission to perform "
-                            "cloudtrail: StopLogging on cloudtrail "
-                            "%(cloudtrail_name)s."
-                        ),
-                        {
-                            "account_id": instance.cloud_account_id,
-                            "cloudtrail_name": cloudtrial_name,
-                        },
-                    )
-                    logger.info(error)
-                else:
-                    raise
-    except ClientError as error:
-        log_message = _(
-            "Unexpected error occurred. The Cloud Meter account cannot be "
-            "deleted. To resolve this issue, contact Cloud Meter support."
-        )
-        logger.error(log_message)
-        logger.exception(error)
-        raise CloudTrailCannotStopLogging(detail=log_message)
+    instance.disable()
 
 
 class AwsMachineImage(BaseModel):

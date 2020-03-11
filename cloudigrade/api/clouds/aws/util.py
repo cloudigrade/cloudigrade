@@ -832,3 +832,66 @@ def update_aws_cloud_account(
         )
         cloud_account.content_object.account_arn = customer_arn
         cloud_account.content_object.save()
+
+
+def disable_cloudtrail(aws_cloud_account):
+    """
+    Disable logging in an AwsCloudAccount's CloudTrail.
+
+    Args:
+        aws_cloud_account (api.clouds.aws.models.AwsCloudAccount): the AwsCloudAccount
+            for which we should disable the CloudTrail
+
+    Returns:
+        bool True if CloudTrail was successfully disabled, else False.
+
+    """
+    cloudtrail_name = aws.get_cloudtrail_name(aws_cloud_account.cloud_account_id)
+
+    try:
+        session = aws.get_session(str(aws_cloud_account.account_arn))
+        cloudtrail_session = session.client("cloudtrail")
+        logger.info(
+            "attempting to disable cloudtrail '%(name)s' via ARN '%(arn)s'",
+            {"name": cloudtrail_name, "arn": aws_cloud_account.account_arn},
+        )
+        aws.disable_cloudtrail(cloudtrail_session, cloudtrail_name)
+        return True
+
+    except ClientError as error:
+        error_code = error.response.get("Error", {}).get("Code")
+        if error_code == "TrailNotFoundException":
+            # If a cloudtrail does not exist, then we have nothing to do here!
+            return True
+        elif error_code in ("AccessDenied", "AccessDeniedException"):
+            # We may get AccessDenied if the user deletes the AWS account or role.
+            # We may get AccessDeniedException if the role or policy is broken.
+            # These could result in an orphaned cloudtrail writing to our s3 bucket.
+            logger.warning(
+                _(
+                    "CloudAccount ID %(cloud_account_id)s for AWS account ID "
+                    "%(aws_account_id)s encountered %(error_code)s and cannot "
+                    "disable cloudtrail %(cloudtrail_name)s."
+                ),
+                {
+                    "cloud_account_id": aws_cloud_account.cloud_account.get().id,
+                    "aws_account_id": aws_cloud_account.cloud_account_id,
+                    "error_code": error_code,
+                    "cloudtrail_name": cloudtrail_name,
+                },
+            )
+            logger.info(error)
+        else:
+            logger.exception(error)
+            logger.error(
+                _(
+                    "Unexpected error %(error_code)s occurred disabling CloudTrail "
+                    "%(cloudtrail_name)s for CloudAccount ID %(cloud_account_id)s. "
+                ),
+                {
+                    "error_code": error_code,
+                    "cloudtrail_name": cloudtrail_name,
+                    "cloud_account_id": aws_cloud_account.cloud_account.get().id,
+                },
+            )
+    return False

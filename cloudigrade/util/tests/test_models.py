@@ -26,7 +26,7 @@ class BaseGenericModelTest(TestCase):
     def test_delete_base_model_removes_platform_specific_model(self):
         """Deleting a generic model removes its more specific counterpart."""
         with patch.object(sts, "boto3") as mock_boto3, patch.object(
-            aws_models, "disable_cloudtrail"
+            aws_models, "_disable_cloudtrail"
         ):
             mock_assume_role = mock_boto3.client.return_value.assume_role
             mock_assume_role.return_value = self.role

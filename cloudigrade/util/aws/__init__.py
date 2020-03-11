@@ -6,7 +6,11 @@ from util.aws.autoscaling import (
     scale_down,
     scale_up,
 )
-from util.aws.cloudtrail import configure_cloudtrail, disable_cloudtrail
+from util.aws.cloudtrail import (
+    configure_cloudtrail,
+    disable_cloudtrail,
+    get_cloudtrail_name,
+)
 from util.aws.ec2 import (
     InstanceState,
     add_snapshot_ownership,

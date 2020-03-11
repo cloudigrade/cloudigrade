@@ -42,7 +42,7 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         self.assertGreaterEqual(aws_models.AwsCloudAccount.objects.count(), 0)
 
         with patch.object(sts, "boto3") as mock_boto3, patch.object(
-            aws_models, "disable_cloudtrail"
+            aws_models, "_disable_cloudtrail"
         ):
             role = util_helper.generate_dummy_role()
             mock_assume_role = mock_boto3.client.return_value.assume_role
@@ -115,7 +115,7 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         self.assertGreaterEqual(aws_models.AwsCloudAccount.objects.count(), 0)
 
         with patch.object(sts, "boto3") as mock_boto3, patch.object(
-            aws_models, "disable_cloudtrail"
+            aws_models, "_disable_cloudtrail"
         ):
             role = util_helper.generate_dummy_role()
             mock_assume_role = mock_boto3.client.return_value.assume_role
@@ -138,7 +138,7 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         self.assertGreaterEqual(aws_models.AwsCloudAccount.objects.count(), 0)
 
         with patch.object(sts, "boto3") as mock_boto3, patch.object(
-            aws_models, "disable_cloudtrail"
+            aws_models, "_disable_cloudtrail"
         ):
             role = util_helper.generate_dummy_role()
             mock_assume_role = mock_boto3.client.return_value.assume_role
@@ -161,7 +161,7 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         self.assertGreaterEqual(aws_models.AwsCloudAccount.objects.count(), 0)
 
         with patch.object(sts, "boto3") as mock_boto3, patch.object(
-            aws_models, "disable_cloudtrail"
+            aws_models, "_disable_cloudtrail"
         ):
             role = util_helper.generate_dummy_role()
             mock_assume_role = mock_boto3.client.return_value.assume_role
