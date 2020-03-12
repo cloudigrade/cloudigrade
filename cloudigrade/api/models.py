@@ -82,6 +82,31 @@ class CloudAccount(BaseGenericModel):
         )
 
     @transaction.atomic
+    def enable(self):
+        """
+        Mark this CloudAccount as enabled and perform operations to make it so.
+
+        This has the side effect of calling the related content_object (e.g.
+        AwsCloudAccount) to make any cloud-specific changes. If any that cloud-specific
+        function fails, we rollback our state change and re-raise the exception for the
+        caller to handle further.
+        """
+        if not self.is_enabled:
+            self.is_enabled = True
+            self.save()
+        try:
+            self.content_object.enable()
+        except Exception as e:
+            logger.warning(
+                _(
+                    "Cannot enable CloudAccount ID %(cloud_account_id)s "
+                    "because %(exception)s"
+                ),
+                {"cloud_account_id": self.id, "exception": e},
+            )
+            raise e
+
+    @transaction.atomic
     def disable(self):
         """
         Mark this CloudAccount as disabled and perform operations to make it so.

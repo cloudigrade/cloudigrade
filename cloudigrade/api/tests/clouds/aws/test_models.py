@@ -44,6 +44,58 @@ class AwsCloudAccountModelTest(TransactionTestCase):
         message = info_calls[0][1][0]
         self.assertTrue(message.startswith("AwsCloudAccount("))
 
+    def test_enable_succeeds(self):
+        """
+        Test that enabling an account does all the relevant verification and setup.
+
+        Disabling a CloudAccount having an AwsCloudAccount should:
+
+        - set the CloudAccount.is_enabled to True
+        - verify AWS IAM access and permissions
+        - delay task to describe instances
+        """
+        # Normally you shouldn't directly manipulate the is_enabled value,
+        # but here we need to force it down to check that it gets set back.
+        self.account.is_enabled = False
+        self.account.save()
+        self.account.refresh_from_db()
+        self.assertFalse(self.account.is_enabled)
+
+        with patch(
+            "api.clouds.aws.util.verify_permissions"
+        ) as mock_verify_permissions, patch(
+            "api.clouds.aws.tasks.initial_aws_describe_instances"
+        ) as mock_initial_aws_describe_instances:
+            self.account.enable()
+            mock_verify_permissions.assert_called()
+            mock_initial_aws_describe_instances.delay.assert_called()
+
+        self.account.refresh_from_db()
+        self.assertTrue(self.account.is_enabled)
+
+    def test_enable_failure(self):
+        """Test that enabling an account rolls back if cloud-specific step fails."""
+        # Normally you shouldn't directly manipulate the is_enabled value,
+        # but here we need to force it down to check that it gets set back.
+        self.account.is_enabled = False
+        self.account.save()
+        self.account.refresh_from_db()
+        self.assertFalse(self.account.is_enabled)
+
+        with patch(
+            "api.clouds.aws.util.verify_permissions"
+        ) as mock_verify_permissions, patch(
+            "api.clouds.aws.tasks.initial_aws_describe_instances"
+        ) as mock_initial_aws_describe_instances:
+            mock_verify_permissions.side_effect = Exception("Something broke.")
+            with self.assertRaises(Exception):
+                self.account.enable()
+            mock_verify_permissions.assert_called()
+            mock_initial_aws_describe_instances.delay.assert_not_called()
+
+        self.account.refresh_from_db()
+        self.assertFalse(self.account.is_enabled)
+
     def test_disable_succeeds(self):
         """
         Test that disabling an account does all the relevant cleanup.

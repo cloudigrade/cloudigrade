@@ -57,6 +57,29 @@ class AwsCloudAccount(BaseModel):
             f")"
         )
 
+    def enable(self):
+        """
+        Enable this AwsCloudAccount.
+
+        This method only handles the AWS-specific piece of enabling a cloud account.
+        If you want to completely enable a cloud account, use CloudAccount.enable().
+
+        Enabling an AwsCloudAccount has the side effect of attempting to verify our
+        expected IAM permissions in the customer's AWS account and then to configure and
+        enable CloudTrail in the customer's AWS account. If either of these fails, we
+        raise an exception for the caller to handle. Otherwise, we proceed to perform
+        the "initial" describe to discover current EC2 instances.
+
+        Raises:
+            ValidationError or ClientError from verify_permissions if it fails.
+        """
+        from api.clouds.aws import tasks, util  # Avoid circular import.
+
+        util.verify_permissions(self.account_arn)
+        transaction.on_commit(
+            lambda: tasks.initial_aws_describe_instances.delay(self.id)
+        )
+
     def disable(self):
         """
         Disable this AwsCloudAccount.
