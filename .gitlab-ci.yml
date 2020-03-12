@@ -72,7 +72,7 @@ NGINX S2i:
   services:
     - docker:dind
   variables:
-    CONTEXT_DIR: deployment/prod/
+    CONTEXT_DIR: deployment/nginx/
     NGINX_S2I_IMAGE: centos/nginx-112-centos7:latest
     S2I_VERSION: v1.1.10
     S2I_RELEASE: source-to-image-v1.1.10-27f0729d-linux-amd64
