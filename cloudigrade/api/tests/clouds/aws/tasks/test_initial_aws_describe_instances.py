@@ -1,7 +1,7 @@
 """Collection of tests for tasks.initial_aws_describe_instances."""
 from unittest.mock import call, patch
 
-from django.test import TestCase
+from django.test import TestCase, TransactionTestCase
 
 from api.clouds.aws import tasks
 from api.clouds.aws.models import AwsInstance, AwsMachineImage
@@ -166,3 +166,129 @@ class InitialAwsDescribeInstancesTest(TestCase):
         account = account_helper.generate_aws_account(is_enabled=False)
         tasks.initial_aws_describe_instances(account.id)
         mock_aws.get_session.assert_not_called()
+
+
+class InitialAwsDescribeInstancesTransactionTest(TransactionTestCase):
+    """Test cases for 'initial_aws_describe_instances', but with transactions."""
+
+    @patch("api.clouds.aws.tasks.aws")
+    @patch("api.clouds.aws.util.aws")
+    def test_initial_aws_describe_instances_after_disable_enable(
+        self, mock_util_aws, mock_aws
+    ):
+        """
+        Test calling initial_aws_describe_instances multiple times.
+
+        Historically (and in the simplified ideal happy-path), we would only ever call
+        initial_aws_describe_instances exactly once when an AwsCloudAccount was first
+        created. However, since we added support to disable accounts, it's now possible
+        (and likely common) for an account to be created (and enabled), call describe,
+        be disabled, be enabled again, and call describe again during the enable.
+
+        We need to ensure that running described instances that generated "power_off"
+        InstanceEvents as a result of AwsCloudAccount.disable would later correctly get
+        new "power_on" InstanceEvents as a result of AwsCloudAccount.enable.
+        """
+        account = account_helper.generate_aws_account()
+
+        # Set up mocked data in AWS API responses.
+        region = util_helper.get_random_region()
+
+        described_ami = util_helper.generate_dummy_describe_image()
+        ami_id = described_ami["ImageId"]
+        all_instances = [
+            util_helper.generate_dummy_describe_instance(
+                image_id=ami_id, state=aws.InstanceState.running
+            ),
+        ]
+        described_instances = {region: all_instances}
+        mock_aws.describe_instances_everywhere.return_value = described_instances
+        mock_util_aws.describe_images.return_value = [described_ami]
+        mock_util_aws.is_windows.side_effect = aws.is_windows
+        mock_util_aws.InstanceState.is_running = aws.InstanceState.is_running
+        mock_util_aws.AwsArn = aws.AwsArn
+        mock_util_aws.verify_account_access.return_value = True, []
+
+        inspection_call = call(
+            account.content_object.account_arn, described_ami["ImageId"], region,
+        )
+
+        date_of_initial_describe = util_helper.utc_dt(2020, 3, 1, 0, 0, 0)
+        date_of_disable = util_helper.utc_dt(2020, 3, 2, 0, 0, 0)
+        date_of_reenable = util_helper.utc_dt(2020, 3, 3, 0, 0, 0)
+
+        with patch.object(
+            tasks, "start_image_inspection"
+        ) as mock_start, util_helper.clouditardis(date_of_initial_describe,):
+            tasks.initial_aws_describe_instances(account.id)
+            mock_start.assert_has_calls([inspection_call])
+
+        with util_helper.clouditardis(date_of_disable):
+            account.disable()
+            mock_util_aws.disable_cloudtrail.assert_called()
+
+        # Before calling "start_image_inspection" again, let's change the mocked return
+        # values from AWS to include another instance and image. We should ultimately
+        # expect the original instance + ami to be found but *not* describe its image.
+        # Only the new instance + ami should be fully described.
+
+        described_ami_2 = util_helper.generate_dummy_describe_image()
+        ami_id_2 = described_ami_2["ImageId"]
+        all_instances.append(
+            util_helper.generate_dummy_describe_instance(
+                image_id=ami_id_2, state=aws.InstanceState.running
+            )
+        )
+        described_instances = {region: all_instances}
+        mock_aws.describe_instances_everywhere.return_value = described_instances
+        mock_util_aws.describe_images.return_value = [described_ami, described_ami_2]
+
+        inspection_call_2 = call(
+            account.content_object.account_arn, described_ami_2["ImageId"], region,
+        )
+
+        with patch.object(
+            tasks, "initial_aws_describe_instances"
+        ) as mock_initial, util_helper.clouditardis(date_of_reenable):
+            # Even though we want to test initial_aws_describe_instances, we need to
+            # mock this particular call because we need to short-circuit Celery.
+            account.enable()
+            mock_initial.delay.assert_called()
+
+        with patch.object(
+            tasks, "start_image_inspection"
+        ) as mock_start, util_helper.clouditardis(date_of_reenable):
+            tasks.initial_aws_describe_instances(account.id)
+            mock_start.assert_has_calls([inspection_call_2])
+
+        # Now that the dust has settled, let's check that the two instances have events
+        # in the right configuration. The first instance is on, off, and on; the second
+        # instance is on.
+
+        aws_instance_1_events = (
+            AwsInstance.objects.get(ec2_instance_id=all_instances[0]["InstanceId"])
+            .instance.get()
+            .instanceevent_set.order_by("occurred_at")
+            .all()
+        )
+        self.assertEqual(len(aws_instance_1_events), 3)
+        instance_1_event_1 = aws_instance_1_events[0]
+        self.assertEqual(instance_1_event_1.occurred_at, date_of_initial_describe)
+        self.assertEqual(instance_1_event_1.event_type, InstanceEvent.TYPE.power_on)
+        instance_1_event_2 = aws_instance_1_events[1]
+        self.assertEqual(instance_1_event_2.occurred_at, date_of_disable)
+        self.assertEqual(instance_1_event_2.event_type, InstanceEvent.TYPE.power_off)
+        instance_1_event_3 = aws_instance_1_events[2]
+        self.assertEqual(instance_1_event_3.occurred_at, date_of_reenable)
+        self.assertEqual(instance_1_event_3.event_type, InstanceEvent.TYPE.power_on)
+
+        aws_instance_2_events = (
+            AwsInstance.objects.get(ec2_instance_id=all_instances[1]["InstanceId"])
+            .instance.get()
+            .instanceevent_set.order_by("occurred_at")
+            .all()
+        )
+        self.assertEqual(len(aws_instance_2_events), 1)
+        instance_2_event_1 = aws_instance_2_events[0]
+        self.assertEqual(instance_2_event_1.occurred_at, date_of_reenable)
+        self.assertEqual(instance_2_event_1.event_type, InstanceEvent.TYPE.power_on)

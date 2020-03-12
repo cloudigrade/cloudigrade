@@ -646,18 +646,6 @@ def verify_permissions(customer_role_arn):
     aws_account_id = aws.AwsArn(customer_role_arn).account_id
     arn_str = str(customer_role_arn)
 
-    account_exists = AwsCloudAccount.objects.filter(
-        aws_account_id=aws_account_id
-    ).exists()
-    if account_exists:
-        raise ValidationError(
-            detail={
-                "account_arn": [
-                    _('An ARN already exists for account "{0}"').format(aws_account_id)
-                ]
-            }
-        )
-
     try:
         session = aws.get_session(arn_str)
     except ClientError as error:
