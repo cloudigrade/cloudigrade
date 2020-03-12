@@ -9,7 +9,7 @@ stages:
 ### GLOBAL VARS ###
 variables:
   SHIFTIGRADE_IMAGE: registry.gitlab.com/cloudigrade/shiftigrade
-  SHIFTIGRADE_VERSION: 0.2.20
+  SHIFTIGRADE_VERSION: 0.3.0
   IMAGE_NAME: registry.gitlab.com/${CI_PROJECT_PATH}
   DOCKER_DRIVER: overlay2
 
