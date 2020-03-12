@@ -209,7 +209,7 @@ class UtilHelperTest(TestCase):
         the_present_time = datetime.datetime.now(datetime.timezone.utc)
         the_present_date = the_present_time.date()
 
-        the_day_i_invented_time_travel = helper.utc_dt(1956, 11, 5, 4, 29)
+        the_day_i_invented_time_travel = helper.utc_dt(1955, 11, 5, 4, 29)
         with helper.clouditardis(the_day_i_invented_time_travel):
             # local imports to simulate tests
             from util.misc import get_now as _get_now, get_today as _get_today
