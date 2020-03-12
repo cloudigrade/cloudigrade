@@ -74,13 +74,10 @@ def put_event_selectors(cloudtrail, name):
         name (string): The name of the cloudtrail to configure
     """
     event_selector = [{"ReadWriteType": "WriteOnly"}]
-    try:
-        response = cloudtrail.put_event_selectors(
-            TrailName=name, EventSelectors=event_selector
-        )
-        return response
-    except ClientError as e:
-        raise e
+    response = cloudtrail.put_event_selectors(
+        TrailName=name, EventSelectors=event_selector
+    )
+    return response
 
 
 def create_cloudtrail(cloudtrail, name):
@@ -114,16 +111,13 @@ def update_cloudtrail(cloudtrail, name):
         name (string): The name of the cloudtrail to configure
     """
     logger.debug(_("Updating the cloudtrail %s"), name)
-    try:
-        response = cloudtrail.update_trail(
-            Name=name,
-            S3BucketName=settings.S3_BUCKET_NAME,
-            IncludeGlobalServiceEvents=True,
-            IsMultiRegionTrail=True,
-        )
-        return response
-    except ClientError as e:
-        raise e
+    response = cloudtrail.update_trail(
+        Name=name,
+        S3BucketName=settings.S3_BUCKET_NAME,
+        IncludeGlobalServiceEvents=True,
+        IsMultiRegionTrail=True,
+    )
+    return response
 
 
 def disable_cloudtrail(cloudtrail, name):
@@ -134,9 +128,5 @@ def disable_cloudtrail(cloudtrail, name):
         name (string): The name of the cloudtrail to disable logging
     """
     logger.debug(_("Disabling logging in the cloudtrail %s"), name)
-
-    try:
-        response = cloudtrail.stop_logging(Name=name,)
-        return response
-    except ClientError as e:
-        raise e
+    response = cloudtrail.stop_logging(Name=name,)
+    return response
