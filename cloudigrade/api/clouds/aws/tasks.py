@@ -895,17 +895,6 @@ def analyze_log():
         success = False
         try:
             success = _process_cloudtrail_message(message)
-        except AwsCloudAccount.DoesNotExist:
-            logger.warning(
-                _(
-                    "Encountered message %s for nonexistent account; "
-                    "deleting message from queue."
-                ),
-                message.message_id,
-            )
-            logger.info(_("Deleted message body: %s"), message.body)
-            aws.delete_messages_from_queue(queue_url, [message])
-            continue
         except Exception as e:
             logger.exception(_("Unexpected error in log processing: %s"), e)
         if success:
@@ -1212,7 +1201,7 @@ def _load_missing_ami_data(instance_events, ami_tag_events):
     return described_amis
 
 
-@transaction.atomic
+@transaction.atomic  # noqa: C901
 def _save_cloudtrail_activity(
     instance_events, ami_tag_events, described_instances, described_images
 ):
@@ -1402,6 +1391,12 @@ def _save_cloudtrail_activity(
     ):
         awsaccount = AwsCloudAccount.objects.get(aws_account_id=aws_account_id)
         account = awsaccount.cloud_account.get()
+        if not account.is_enabled:
+            # Do not process activity for disabled accounts.
+            # We should not have gotten items this far if the account was disabled,
+            # but this condition exists as one final sanity check.
+            continue
+
         events = list(events)
 
         if ec2_instance_id in described_instances:

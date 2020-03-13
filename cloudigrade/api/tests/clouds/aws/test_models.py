@@ -145,7 +145,7 @@ class AwsCloudAccountModelTest(TransactionTestCase):
     def test_disable_succeeds_if_no_instance_events(self):
         """Test that disabling an account works despite having no instance events."""
         self.assertTrue(self.account.is_enabled)
-        instance = helper.generate_aws_instance(cloud_account=self.account)
+        helper.generate_aws_instance(cloud_account=self.account)
 
         with patch("api.clouds.aws.util.disable_cloudtrail") as mock_disable_cloudtrail:
             mock_disable_cloudtrail.return_value = True

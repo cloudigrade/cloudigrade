@@ -822,8 +822,9 @@ class AnalyzeLogTest(TestCase):
         This can happen when a user deletes their AWS role, deletes their
         cloudigrade account, and leave their cloudtrail running.
 
-        If this happens, we want to delete the message for the nonexistant
-        account from the queue, and log a warning.
+        The net effect of this is that the extracted parts of the message related
+        to the unknown account return no new results, and the overall operation
+        completes successfully with no new objects written to the database.
         """
         sqs_message = helper.generate_mock_cloudtrail_sqs_message()
         ec2_instance_id = util_helper.generate_dummy_instance_id()
@@ -837,9 +838,52 @@ class AnalyzeLogTest(TestCase):
 
         successes, failures = tasks.analyze_log()
 
-        self.assertEqual(len(successes), 0)
+        self.assertEqual(len(successes), 1)
         self.assertEqual(len(failures), 0)
         mock_inspection.assert_not_called()
+        mock_del.assert_called()
+
+        instances = list(AwsInstance.objects.all())
+        self.assertEqual(len(instances), 0)
+        events = list(AwsInstanceEvent.objects.all())
+        self.assertEqual(len(events), 0)
+        images = list(AwsMachineImage.objects.all())
+        self.assertEqual(len(images), 0)
+
+    @patch("api.clouds.aws.tasks.start_image_inspection")
+    @patch("api.clouds.aws.tasks.aws.get_session")
+    @patch("api.clouds.aws.tasks.aws.delete_messages_from_queue")
+    @patch("api.clouds.aws.tasks.aws.get_object_content_from_s3")
+    @patch("api.clouds.aws.tasks.aws.yield_messages_from_queue")
+    def test_analyze_log_when_account_is_disabled(
+        self, mock_receive, mock_s3, mock_del, mock_session, mock_inspection
+    ):
+        """
+        Test appropriate handling when the account ID in the log is disabled.
+
+        This can happen if we receive a cloudtrail message after the related
+        CloudAccount has been disabled.
+
+        The expected result is similar to test_analyze_log_when_account_is_not_known.
+        """
+        self.account.is_enabled = False
+        self.account.save()
+
+        sqs_message = helper.generate_mock_cloudtrail_sqs_message()
+        ec2_instance_id = util_helper.generate_dummy_instance_id()
+        trail_record = helper.generate_cloudtrail_instances_record(
+            aws_account_id=self.aws_account_id, instance_ids=[ec2_instance_id],
+        )
+        s3_content = {"Records": [trail_record]}
+        mock_receive.return_value = [sqs_message]
+        mock_s3.return_value = json.dumps(s3_content)
+
+        successes, failures = tasks.analyze_log()
+
+        self.assertEqual(len(successes), 1)
+        self.assertEqual(len(failures), 0)
+        mock_inspection.assert_not_called()
+        mock_del.assert_called()
 
         instances = list(AwsInstance.objects.all())
         self.assertEqual(len(instances), 0)

@@ -4,6 +4,7 @@ import logging
 
 from django.utils.translation import gettext as _
 
+from api.clouds.aws.models import AwsCloudAccount
 from api.models import InstanceEvent
 from util import aws
 
@@ -95,6 +96,17 @@ def extract_ec2_instance_events(record):
         return []
 
     occurred_at, aws_account_id, region = extract_time_account_region(record)
+
+    if not _aws_cloud_account_is_enabled(aws_account_id):
+        logger.info(
+            _(
+                "Skipping CloudTrail record EC2 event extraction for AWS account ID "
+                "%(aws_account_id)s that does not exist or is disabled."
+            ),
+            {"aws_account_id": aws_account_id},
+        )
+        return []
+
     event_name = record["eventName"]
     event_type = ec2_instance_event_map[event_name]
 
@@ -171,6 +183,17 @@ def extract_ami_tag_events(record):
         return []
 
     occurred_at, aws_account_id, region = extract_time_account_region(record)
+
+    if not _aws_cloud_account_is_enabled(aws_account_id):
+        logger.info(
+            _(
+                "Skipping CloudTrail record AMI event extraction for AWS account ID "
+                "%(aws_account_id)s that does not exist or is disabled."
+            ),
+            {"aws_account_id": aws_account_id},
+        )
+        return []
+
     exists = record.get("eventName") == CREATE_TAG
     ec2_ami_ids = set(
         [
@@ -223,3 +246,23 @@ def _is_valid_event(record, valid_events):
         return False
     else:
         return True
+
+
+def _aws_cloud_account_is_enabled(aws_account_id):
+    """
+    Determine if a CloudAccount with the given AWS account ID exists and is enabled.
+
+    Args:
+        aws_account_id (str): the AWS account ID
+
+    Returns:
+        bool: True if a CloudAccount exists and is enabled, else False.
+
+    """
+    aws_cloud_account = AwsCloudAccount.objects.filter(
+        aws_account_id=aws_account_id
+    ).first()
+    if not aws_cloud_account:
+        return False
+    cloud_account = aws_cloud_account.cloud_account.get()
+    return cloud_account.is_enabled
