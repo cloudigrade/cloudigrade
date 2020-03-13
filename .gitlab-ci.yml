@@ -202,3 +202,15 @@ Clean Up Review:
   environment:
     name: review/${CI_COMMIT_REF_NAME}
     action: stop
+
+### DEPLOY STAGE ###
+Trigger OSD Builds:
+  stage: deploy
+  image: registry.gitlab.com/cloudigrade/images/test-container:latest
+  only:
+    - master@cloudigrade/cloudigrade
+  except:
+    - triggers
+  script:
+    - curl -X POST -k https://api.insights-dev.openshift.com/apis/build.openshift.io/v1/namespaces/buildfactory/buildconfigs/cloudigrade/webhooks/${WEBHOOK_SECRET}/generic
+    - curl -X POST -k https://api.insights-dev.openshift.com/apis/build.openshift.io/v1/namespaces/buildfactory/buildconfigs/cloudinginx/webhooks/${WEBHOOK_SECRET}/generic
