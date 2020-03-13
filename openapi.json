@@ -5,7 +5,7 @@
     "version": ""
   },
   "paths": {
-    "/v2/accounts/": {
+    "/api/cloudigrade/v2/accounts/": {
       "get": {
         "operationId": "listCloudAccounts",
         "parameters": [
@@ -192,7 +192,7 @@
         }
       }
     },
-    "/v2/accounts/{id}/": {
+    "/api/cloudigrade/v2/accounts/{id}/": {
       "get": {
         "operationId": "retrieveCloudAccount",
         "parameters": [
@@ -474,7 +474,7 @@
         }
       }
     },
-    "/v2/instances/": {
+    "/api/cloudigrade/v2/instances/": {
       "get": {
         "operationId": "listInstances",
         "parameters": [
@@ -562,7 +562,7 @@
         }
       }
     },
-    "/v2/instances/{id}/": {
+    "/api/cloudigrade/v2/instances/{id}/": {
       "get": {
         "operationId": "retrieveInstance",
         "parameters": [
@@ -621,7 +621,7 @@
         }
       }
     },
-    "/v2/images/": {
+    "/api/cloudigrade/v2/images/": {
       "get": {
         "operationId": "listMachineImages",
         "parameters": [
@@ -768,7 +768,7 @@
         }
       }
     },
-    "/v2/images/{id}/": {
+    "/api/cloudigrade/v2/images/{id}/": {
       "get": {
         "operationId": "retrieveMachineImage",
         "parameters": [
@@ -886,7 +886,7 @@
         }
       }
     },
-    "/v2/sysconfig/": {
+    "/api/cloudigrade/v2/sysconfig/": {
       "get": {
         "operationId": "listSysconfigViewSets",
         "parameters": [],
@@ -905,7 +905,7 @@
         }
       }
     },
-    "/v2/concurrent/": {
+    "/api/cloudigrade/v2/concurrent/": {
       "get": {
         "operationId": "listDailyConcurrentUsages",
         "parameters": [
@@ -987,7 +987,7 @@
         }
       }
     },
-    "/v2/images/{id}/reinspect/": {
+    "/api/cloudigrade/v2/images/{id}/reinspect/": {
       "post": {
         "operationId": "reinspectMachineImage",
         "parameters": [

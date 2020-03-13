@@ -81,7 +81,9 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
         data = {"start_date": "2019-03-15", "end_date": "2019-04-15"}
         client = APIClient()
         client.force_authenticate(user=self.user1)
-        response = client.get("/v2/concurrent/", data=data, format="json")
+        response = client.get(
+            "/api/cloudigrade/v2/concurrent/", data=data, format="json"
+        )
         body = response.json()
 
         self.assertEquals(body["meta"]["count"], 31)
@@ -197,7 +199,9 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
         data = {"start_date": "potato", "end_date": "gems"}
         client = APIClient()
         client.force_authenticate(user=self.user1)
-        response = client.get("/v2/concurrent/", data=data, format="json")
+        response = client.get(
+            "/api/cloudigrade/v2/concurrent/", data=data, format="json"
+        )
         self.assertEqual(response.status_code, 400)
         body = response.json()
         self.assertEqual(
@@ -210,7 +214,9 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
         data = {"user_id": "potato", "cloud_account_id": "gems"}
         client = APIClient()
         client.force_authenticate(user=self.superuser)
-        response = client.get("/v2/concurrent/", data=data, format="json")
+        response = client.get(
+            "/api/cloudigrade/v2/concurrent/", data=data, format="json"
+        )
         self.assertEqual(response.status_code, 400)
         body = response.json()
         self.assertEqual(
@@ -226,7 +232,9 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
         data = {"start_date": "2019-01-01", "end_date": "2019-01-04"}
         client = APIClient()
         client.force_authenticate(user=self.user1)
-        response = client.get("/v2/concurrent/", data=data, format="json")
+        response = client.get(
+            "/api/cloudigrade/v2/concurrent/", data=data, format="json"
+        )
         body = response.json()
         self.assertEqual(body["meta"]["count"], 3)
         self.assertEqual(len(body["data"]), 3)
@@ -246,7 +254,9 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
         data = {}
         client = APIClient()
         client.force_authenticate(user=self.user1)
-        response = client.get("/v2/concurrent/", data=data, format="json")
+        response = client.get(
+            "/api/cloudigrade/v2/concurrent/", data=data, format="json"
+        )
         body = response.json()
         self.assertEqual(body["meta"]["count"], 1)
         self.assertEqual(len(body["data"]), 1)
@@ -265,7 +275,9 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
         data = {"end_date": str(future)}
         client = APIClient()
         client.force_authenticate(user=self.user1)
-        response = client.get("/v2/concurrent/", data=data, format="json")
+        response = client.get(
+            "/api/cloudigrade/v2/concurrent/", data=data, format="json"
+        )
         body = response.json()
         self.assertEqual(body["meta"]["count"], 1)
         self.assertEqual(len(body["data"]), 1)

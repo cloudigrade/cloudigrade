@@ -96,13 +96,16 @@ class Jinja2FiltersTest(TestCase):
 
     def test_httpied_command_v2_includes_x_hr_identity(self):
         """Assert httpied_command with version=2 includes X_RH_IDENTITY."""
-        uri = "http://localhost/v2/ok"
+        uri = "http://localhost/api/cloudigrade/v2/ok"
 
         mock_request = MagicMock()
         mock_request.method = "get"
         mock_request.user = None
         mock_request.build_absolute_uri.return_value = uri
 
-        expected = 'http http://localhost/v2/ok "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}"'
+        expected = (
+            "http http://localhost/api/cloudigrade/v2/ok "
+            '"X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}"'
+        )
         actual = filters.httpied_command(mock_request, version=2)
         self.assertEqual(expected, actual)

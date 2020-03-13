@@ -127,7 +127,13 @@ class SandboxedRestClient(object):
         )
 
     def verb_noun(
-        self, verb, noun, noun_id=None, detail=None, data=None, api_root="/v2"
+        self,
+        verb,
+        noun,
+        noun_id=None,
+        detail=None,
+        data=None,
+        api_root="/api/cloudigrade/v2",
     ):
         """Make a simulated REST API call for the given inputs."""
         if detail:

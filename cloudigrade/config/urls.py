@@ -17,11 +17,11 @@ router.register(
 )
 
 urlpatterns = [
-    url(r"^v2/", include(router.urls)),
+    url(r"^api/cloudigrade/v2/", include(router.urls)),
     url(r"^api-auth/", include("rest_framework.urls")),
     url(r"^healthz/", include("health_check.urls")),
     path(
-        "v2/openapi.json",
+        "api/cloudigrade/v2/openapi.json",
         get_schema_view(
             title="Cloudigrade", renderer_classes=[renderers.JSONOpenAPIRenderer,],
         ),
