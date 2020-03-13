@@ -159,3 +159,10 @@ class InitialAwsDescribeInstancesTest(TestCase):
         account_id = -1  # negative number account ID should never exist.
         tasks.initial_aws_describe_instances(account_id)
         mock_aws.get_session.assert_not_called()
+
+    @patch("api.clouds.aws.tasks.aws")
+    def test_initial_aws_describe_instances_account_disabled(self, mock_aws):
+        """Test early return when account exists but is disabled."""
+        account = account_helper.generate_aws_account(is_enabled=False)
+        tasks.initial_aws_describe_instances(account.id)
+        mock_aws.get_session.assert_not_called()

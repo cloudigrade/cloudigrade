@@ -138,6 +138,14 @@ def initial_aws_describe_instances(account_id):
         return
 
     account = aws_account.cloud_account.get()
+    if not account.is_enabled:
+        logger.warning(
+            _("AwsCloudAccount id %s is not enabled; skipping initial describe"),
+            account_id,
+        )
+        # This can happen if a customer creates and then quickly disabled their
+        # cloud account before this async task has started to run. Early exit!
+        return
     arn = aws_account.account_arn
 
     session = aws.get_session(arn)
