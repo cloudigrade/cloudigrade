@@ -5,6 +5,7 @@ import faker
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.test import TestCase
+from rest_framework.serializers import ValidationError
 
 from api import tasks
 from api.clouds.aws import models as aws_models
@@ -90,8 +91,55 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
         }
         mock_get_endpoint.return_value = {"id": endpoint_id, "source_id": source_id}
 
-        tasks.update_from_source_kafka_message(message, headers)
+        with patch("api.clouds.aws.util.verify_permissions") as mock_verify_permissions:
+            mock_verify_permissions.return_value = True
+            tasks.update_from_source_kafka_message(message, headers)
+            mock_verify_permissions.assert_called()
+
+        self.clount.refresh_from_db()
         self.assertEqual(self.clount.content_object.account_arn, new_arn)
+        self.assertTrue(self.clount.is_enabled)
+
+    @patch("util.insights.get_sources_endpoint")
+    @patch("util.insights.get_sources_authentication")
+    def test_update_from_sources_kafka_message_updates_arn_but_disables_cloud_account(
+        self, mock_get_auth, mock_get_endpoint
+    ):
+        """
+        Assert update_from_source_kafka_message updates the arn and disables clount.
+
+        This can happen if we get a well-formed ARN, but the AWS-side verification fails
+        due to something like badly configured IAM Role or Policy. In this case, we do
+        want to save the updated ARN, but we need to disable the Cloud Account until it
+        can verify its permissions (at a later date).
+        """
+        username = _faker.user_name()
+        endpoint_id = _faker.pyint()
+        source_id = _faker.pyint()
+
+        message, headers = util_helper.generate_authentication_create_message_value(
+            self.account_number, username, self.authentication_id
+        )
+        new_arn = util_helper.generate_dummy_arn(account_id=self.account_id)
+        mock_get_auth.return_value = {
+            "password": new_arn,
+            "username": username,
+            "resource_type": "Endpoint",
+            "resource_id": endpoint_id,
+            "id": self.authentication_id,
+            "authtype": settings.SOURCES_CLOUDMETER_ARN_AUTHTYPE,
+        }
+        mock_get_endpoint.return_value = {"id": endpoint_id, "source_id": source_id}
+
+        validation_error = ValidationError(detail={_faker.slug(): _faker.slug()})
+        with patch("api.clouds.aws.util.verify_permissions") as mock_verify_permissions:
+            mock_verify_permissions.side_effect = validation_error
+            tasks.update_from_source_kafka_message(message, headers)
+            mock_verify_permissions.assert_called()
+
+        self.clount.refresh_from_db()
+        self.assertEqual(self.clount.content_object.account_arn, new_arn)
+        self.assertFalse(self.clount.is_enabled)
 
     @patch("api.tasks.update_aws_cloud_account")
     def test_update_from_sources_kafka_message_fail_missing_message_data(
@@ -167,7 +215,7 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
 
         with patch.object(sts, "boto3") as mock_boto3, patch.object(
             aws_models, "_disable_cloudtrail"
-        ):
+        ), patch("api.clouds.aws.util.verify_permissions"):
             mock_assume_role = mock_boto3.client.return_value.assume_role
             mock_assume_role.return_value = util_helper.generate_dummy_role()
             tasks.update_from_source_kafka_message(message, headers)

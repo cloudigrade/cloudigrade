@@ -823,11 +823,11 @@ def update_aws_cloud_account(
         try:
             verify_permissions(customer_arn)
         except ValidationError:
-            # TODO mark account as disabled.
             logger.info(
                 _("ARN %s failed validation. The Cloud Account will still be updated."),
                 customer_arn,
             )
+            cloud_account.disable()
         logger.info(
             _("Cloud Account with ID %s has been updated with arn %s. "),
             cloud_account.id,
