@@ -156,6 +156,16 @@ class AwsCloudAccountModelTest(TransactionTestCase):
         self.assertFalse(self.account.is_enabled)
         self.assertEqual(0, aws_models.AwsInstanceEvent.objects.count())
 
+    def test_disable_returns_early_if_account_is_enabled(self):
+        """Test that AwsCloudAccount.disable returns early if is_enabled."""
+        self.assertTrue(self.account.is_enabled)
+        helper.generate_aws_instance(cloud_account=self.account)
+
+        with patch("api.clouds.aws.util.disable_cloudtrail") as mock_disable_cloudtrail:
+            mock_disable_cloudtrail.return_value = True
+            self.account.content_object.disable()
+            mock_disable_cloudtrail.assert_not_called()
+
     def test_delete_succeeds(self):
         """Test that an account is deleted if there are no errors."""
         with patch("api.clouds.aws.util.disable_cloudtrail") as mock_disable_cloudtrail:

@@ -96,6 +96,20 @@ class AwsCloudAccount(BaseModel):
 
 def _disable_cloudtrail(aws_cloud_account):
     """Disable the given AwsCloudAccount's AWS CloudTrail."""
+    try:
+        cloud_account = aws_cloud_account.cloud_account.get()
+        if cloud_account.is_enabled:
+            logger.warning(
+                _(
+                    "Aborting _disable_cloudtrail because CloudAccount ID "
+                    "%(cloud_account_id)s is enabled."
+                ),
+                {"cloud_account_id": cloud_account.id},
+            )
+            return
+    except CloudAccount.DoesNotExist:
+        pass
+
     from api.clouds.aws import util  # Avoid circular import.
 
     if not util.disable_cloudtrail(aws_cloud_account):
