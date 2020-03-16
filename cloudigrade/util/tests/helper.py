@@ -540,10 +540,9 @@ def clouditardis(destination):
     Args:
         destination (datetime.datetime): the destination datetime
     """
-    with patch("util.misc.get_now") as mock_get_now, patch(
-        "util.misc.get_today"
-    ) as mock_get_today, patch("django.utils.timezone.now") as mock_django_now:
-        mock_get_now.return_value = destination
-        mock_get_today.return_value = destination.date()
+    with patch("util.misc.datetime") as mock_datetime, patch(
+        "django.utils.timezone.now"
+    ) as mock_django_now:
+        mock_datetime.datetime.now.return_value = destination
         mock_django_now.return_value = destination
         yield
