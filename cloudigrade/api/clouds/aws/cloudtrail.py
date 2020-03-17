@@ -2,6 +2,7 @@
 import itertools
 import logging
 
+from dateutil.parser import parse
 from django.utils.translation import gettext as _
 
 from api.clouds.aws.models import AwsCloudAccount
@@ -97,13 +98,38 @@ def extract_ec2_instance_events(record):
 
     occurred_at, aws_account_id, region = extract_time_account_region(record)
 
-    if not _aws_cloud_account_is_enabled(aws_account_id):
+    cloud_account = _get_cloud_account_for_aws_account_id(aws_account_id)
+    if not cloud_account:
         logger.info(
             _(
                 "Skipping CloudTrail record EC2 event extraction for AWS account ID "
-                "%(aws_account_id)s that does not exist or is disabled."
+                "%(aws_account_id)s because a matching CloudAccount does not exist."
             ),
             {"aws_account_id": aws_account_id},
+        )
+        return []
+    if not cloud_account.is_enabled:
+        logger.info(
+            _(
+                "Skipping CloudTrail record EC2 event extraction for AWS account ID "
+                "%(aws_account_id)s because CloudAccount %(cloud_account_id)s is not "
+                "enabled."
+            ),
+            {"aws_account_id": aws_account_id, "cloud_account_id": cloud_account.id},
+        )
+        return []
+    if cloud_account.enabled_at > parse(occurred_at):
+        logger.info(
+            _(
+                "Skipping CloudTrail record EC2 event extraction for AWS account ID "
+                "%(aws_account_id)s because the event occurred (%(occurred_at)s) "
+                "before the CloudAccount was enabled %(enabled_at)s)."
+            ),
+            {
+                "aws_account_id": aws_account_id,
+                "occurred_at": occurred_at,
+                "enabled_at": cloud_account.enabled_at,
+            },
         )
         return []
 
@@ -184,13 +210,38 @@ def extract_ami_tag_events(record):
 
     occurred_at, aws_account_id, region = extract_time_account_region(record)
 
-    if not _aws_cloud_account_is_enabled(aws_account_id):
+    cloud_account = _get_cloud_account_for_aws_account_id(aws_account_id)
+    if not cloud_account:
         logger.info(
             _(
                 "Skipping CloudTrail record AMI event extraction for AWS account ID "
-                "%(aws_account_id)s that does not exist or is disabled."
+                "%(aws_account_id)s because a matching CloudAccount does not exist."
             ),
             {"aws_account_id": aws_account_id},
+        )
+        return []
+    if not cloud_account.is_enabled:
+        logger.info(
+            _(
+                "Skipping CloudTrail record AMI event extraction for AWS account ID "
+                "%(aws_account_id)s because CloudAccount %(cloud_account_id)s is not "
+                "enabled."
+            ),
+            {"aws_account_id": aws_account_id, "cloud_account_id": cloud_account.id},
+        )
+        return []
+    if cloud_account.enabled_at > parse(occurred_at):
+        logger.info(
+            _(
+                "Skipping CloudTrail record AMI event extraction for AWS account ID "
+                "%(aws_account_id)s because the event occurred (%(occurred_at)s) "
+                "before the CloudAccount was enabled %(enabled_at)s)."
+            ),
+            {
+                "aws_account_id": aws_account_id,
+                "occurred_at": occurred_at,
+                "enabled_at": cloud_account.enabled_at,
+            },
         )
         return []
 
@@ -248,21 +299,25 @@ def _is_valid_event(record, valid_events):
         return True
 
 
-def _aws_cloud_account_is_enabled(aws_account_id):
+def _get_cloud_account_for_aws_account_id(aws_account_id):
     """
-    Determine if a CloudAccount with the given AWS account ID exists and is enabled.
+    Get the CloudAccount for the given AWS account ID.
+
+    Note:
+        If we ever support tracking multiple ARNs for the same AWS account ID,
+        this helper function will need to change how it queries for objects.
 
     Args:
         aws_account_id (str): the AWS account ID
 
     Returns:
-        bool: True if a CloudAccount exists and is enabled, else False.
+        CloudAccount if a match is found, else None.
 
     """
     aws_cloud_account = AwsCloudAccount.objects.filter(
         aws_account_id=aws_account_id
     ).first()
     if not aws_cloud_account:
-        return False
+        return None
     cloud_account = aws_cloud_account.cloud_account.get()
-    return cloud_account.is_enabled
+    return cloud_account

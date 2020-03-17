@@ -1169,3 +1169,42 @@ class AnalyzeLogTest(TestCase):
         all_images = list(AwsMachineImage.objects.all())
         self.assertEqual(len(all_images), 0)
         mock_del.assert_called()
+
+    @patch("api.clouds.aws.tasks.aws.delete_messages_from_queue")
+    @patch("api.clouds.aws.tasks.aws.get_object_content_from_s3")
+    @patch("api.clouds.aws.tasks.aws.yield_messages_from_queue")
+    def test_events_before_cloud_account_enabled_at_are_ignored(
+        self, mock_receive, mock_s3, mock_del
+    ):
+        """Test ignoring events that occurred before CloudAccount.enabled_at."""
+        event_time = util_helper.utc_dt(2019, 11, 1, 0, 0, 0)
+        enabled_at = util_helper.utc_dt(2020, 2, 1, 0, 0, 0)
+        self.account.enabled_at = enabled_at
+        self.account.save()
+
+        sqs_message = helper.generate_mock_cloudtrail_sqs_message()
+        trail_record_instance = helper.generate_cloudtrail_instances_record(
+            aws_account_id=self.aws_account_id,
+            instance_ids=[util_helper.generate_dummy_instance_id()],
+            event_name="RunInstances",
+            event_time=event_time,
+        )
+        trail_record_image_tag = helper.generate_cloudtrail_tag_set_record(
+            aws_account_id=self.aws_account_id,
+            image_ids=[util_helper.generate_dummy_image_id()],
+            tag_names=[_faker.word(), tasks.aws.OPENSHIFT_TAG, _faker.word()],
+            event_name=cloudtrail.CREATE_TAG,
+            event_time=event_time,
+        )
+        s3_content = {"Records": [trail_record_instance, trail_record_image_tag]}
+        mock_receive.return_value = [sqs_message]
+        mock_s3.return_value = json.dumps(s3_content)
+
+        successes, failures = tasks.analyze_log()
+
+        self.assertEqual(len(successes), 1)
+        self.assertEqual(len(failures), 0)
+
+        all_images = list(AwsInstance.objects.all())
+        self.assertEqual(len(all_images), 0)
+        mock_del.assert_called()
