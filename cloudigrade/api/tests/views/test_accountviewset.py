@@ -11,7 +11,6 @@ from api.clouds.aws import util
 from api.models import CloudAccount
 from api.tests import helper as api_helper
 from api.views import AccountViewSet
-from util.aws import AwsArn
 from util.tests import helper as util_helper
 
 
@@ -181,12 +180,11 @@ class AccountViewSetTest(TransactionTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertResponseHasAwsAccountData(response, account)
 
-    @patch.object(util, "aws")
+    @patch("api.serializers.verify_permissions")
     @patch("api.clouds.aws.tasks.initial_aws_describe_instances")
-    def test_create_account_with_name_success(self, mock_task, mock_aws):
+    def test_create_account_with_name_success(self, mock_task, mock_verify):
         """Test create account with a name succeeds."""
-        mock_aws.verify_account_access.return_value = True, []
-        mock_aws.AwsArn = AwsArn
+        mock_verify.return_value = True
 
         data = {
             "cloud_type": "aws",
@@ -200,6 +198,7 @@ class AccountViewSetTest(TransactionTestCase):
         view = views.AccountViewSet.as_view(actions={"post": "create"})
 
         response = view(request)
+        mock_verify.assert_called()
         self.assertEqual(response.status_code, 201)
         self.assertEqual(
             response.data["content_object"]["account_arn"], data["account_arn"]

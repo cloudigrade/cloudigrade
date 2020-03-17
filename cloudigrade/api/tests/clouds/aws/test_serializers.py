@@ -150,15 +150,10 @@ class AwsAccountSerializerTest(TransactionTestCase):
 
         serializer = CloudAccountSerializer(context=context)
 
-        with patch.object(aws, "verify_account_access") as mock_verify, patch.object(
-            aws.sts, "boto3"
-        ) as mock_boto3:
-            mock_assume_role = mock_boto3.client.return_value.assume_role
-            mock_assume_role.return_value = self.role
-            mock_verify.return_value = True, []
-
+        with patch("api.serializers.verify_permissions") as mock_verify:
             result = serializer.create(self.validated_data)
             self.assertIsInstance(result, CloudAccount)
+            mock_verify.assert_called()
             mock_task.delay.assert_called()
 
         # Verify that we created the account.
@@ -187,13 +182,7 @@ class AwsAccountSerializerTest(TransactionTestCase):
             aws_account_id=self.aws_account_id, arn=self.arn, name="account_name"
         )
 
-        with patch.object(aws, "verify_account_access") as mock_verify, patch.object(
-            aws.sts, "boto3"
-        ) as mock_boto3:
-            mock_assume_role = mock_boto3.client.return_value.assume_role
-            mock_assume_role.return_value = self.role
-            mock_verify.return_value = True, []
-
+        with patch("api.serializers.verify_permissions") as mock_verify:
             expected_error = {
                 "account_arn": [
                     'An ARN already exists for account "{0}"'.format(
@@ -203,6 +192,7 @@ class AwsAccountSerializerTest(TransactionTestCase):
             }
             with self.assertRaises(ValidationError) as cm:
                 serializer.create(self.validated_data)
+            mock_verify.assert_called()
             self.assertEquals(expected_error, cm.exception.detail)
 
     def test_create_fails_access_denied(self):

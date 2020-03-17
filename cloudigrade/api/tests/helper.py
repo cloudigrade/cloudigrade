@@ -71,6 +71,7 @@ class SandboxedRestClient(object):
 
         - aws.verify_account_access is used in account creation
         - aws.sts.boto3 is used in account creation
+        - api.serializers.verify_permissions is used in account creation
         - aws.disable_cloudtrail is used in account deletion
         - aws.get_session is used in account deletion
         - aws.sts._get_primary_account_id is used in sysconfig
@@ -81,9 +82,9 @@ class SandboxedRestClient(object):
 
         """
         if self.bypass_aws_calls:
-            with patch.object(
-                aws, "verify_account_access"
-            ) as mock_verify, patch.object(aws.sts, "boto3"), patch.object(
+            with patch.object(aws, "verify_account_access") as mock_verify, patch(
+                "api.serializers.verify_permissions"
+            ) as mock_verify_permissions, patch.object(aws.sts, "boto3"), patch.object(
                 aws, "disable_cloudtrail"
             ), patch.object(
                 aws, "get_session"
@@ -93,6 +94,7 @@ class SandboxedRestClient(object):
                 tasks, "initial_aws_describe_instances"
             ):
                 mock_verify.return_value = self.aws_account_verified, []
+                mock_verify_permissions.return_value = True
                 mock_get_primary_account_id.return_value = self.aws_primary_account_id
                 response = getattr(self.client, verb)(path, data=data)
         else:
