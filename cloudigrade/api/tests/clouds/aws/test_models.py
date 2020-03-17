@@ -21,11 +21,15 @@ class AwsCloudAccountModelTest(TransactionTestCase):
 
     def setUp(self):
         """Set up basic aws account."""
+        self.created_at = util_helper.utc_dt(2019, 1, 1, 0, 0, 0)
         aws_account_id = util_helper.generate_dummy_aws_account_id()
         arn = util_helper.generate_dummy_arn(account_id=aws_account_id)
         self.role = util_helper.generate_dummy_role()
         self.account = helper.generate_aws_account(
-            aws_account_id=aws_account_id, arn=arn, name="test"
+            aws_account_id=aws_account_id,
+            arn=arn,
+            name="test",
+            created_at=self.created_at,
         )
 
     def test_cloud_account_str(self):
@@ -61,17 +65,21 @@ class AwsCloudAccountModelTest(TransactionTestCase):
         self.account.refresh_from_db()
         self.assertFalse(self.account.is_enabled)
 
+        enable_date = util_helper.utc_dt(2019, 1, 4, 0, 0, 0)
         with patch(
             "api.clouds.aws.util.verify_permissions"
         ) as mock_verify_permissions, patch(
             "api.clouds.aws.tasks.initial_aws_describe_instances"
-        ) as mock_initial_aws_describe_instances:
+        ) as mock_initial_aws_describe_instances, util_helper.clouditardis(
+            enable_date
+        ):
             self.account.enable()
             mock_verify_permissions.assert_called()
             mock_initial_aws_describe_instances.delay.assert_called()
 
         self.account.refresh_from_db()
         self.assertTrue(self.account.is_enabled)
+        self.assertEqual(self.account.enabled_at, enable_date)
 
     def test_enable_failure(self):
         """Test that enabling an account rolls back if cloud-specific step fails."""
@@ -81,6 +89,7 @@ class AwsCloudAccountModelTest(TransactionTestCase):
         self.account.save()
         self.account.refresh_from_db()
         self.assertFalse(self.account.is_enabled)
+        self.assertEqual(self.account.enabled_at, self.account.created_at)
 
         with patch(
             "api.clouds.aws.util.verify_permissions"
@@ -95,6 +104,7 @@ class AwsCloudAccountModelTest(TransactionTestCase):
 
         self.account.refresh_from_db()
         self.assertFalse(self.account.is_enabled)
+        self.assertEqual(self.account.enabled_at, self.account.created_at)
 
     def test_disable_succeeds(self):
         """
@@ -107,6 +117,7 @@ class AwsCloudAccountModelTest(TransactionTestCase):
         - disable the CloudTrail (via AwsCloudAccount.disable)
         """
         self.assertTrue(self.account.is_enabled)
+        self.assertEqual(self.account.enabled_at, self.account.created_at)
         instance = helper.generate_aws_instance(cloud_account=self.account)
         runtimes = [
             (
@@ -133,6 +144,7 @@ class AwsCloudAccountModelTest(TransactionTestCase):
 
         self.account.refresh_from_db()
         self.assertFalse(self.account.is_enabled)
+        self.assertEqual(self.account.enabled_at, self.created_at)
         self.assertEqual(4, aws_models.AwsInstanceEvent.objects.count())
 
         last_event = (

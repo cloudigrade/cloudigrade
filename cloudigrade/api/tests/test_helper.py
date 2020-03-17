@@ -104,11 +104,16 @@ class GenerateAwsAccountTest(TestCase):
 
     def test_generate_aws_account_default(self):
         """Assert generation of an AwsAccount with default/no args."""
-        account = helper.generate_aws_account()
+        created_at = util_helper.utc_dt(2017, 1, 1, 0, 0, 0)
+        with util_helper.clouditardis(created_at):
+            account = helper.generate_aws_account()
         self.assertIsInstance(account, CloudAccount)
         self.assertIsNotNone(
             re.match(r"\d{1,12}", str(account.content_object.aws_account_id))
         )
+        self.assertEqual(account.created_at, created_at)
+        self.assertTrue(account.is_enabled)
+        self.assertEqual(account.enabled_at, created_at)
 
     def test_generate_aws_account_with_args(self):
         """Assert generation of an AwsAccount with all specified args."""
@@ -120,8 +125,19 @@ class GenerateAwsAccountTest(TestCase):
         auth_id = _faker.pyint()
         endpoint_id = _faker.pyint()
         source_id = _faker.pyint()
+        is_enabled = False
+        enabled_at = util_helper.utc_dt(2017, 1, 2, 0, 0, 0)
         account = helper.generate_aws_account(
-            arn, aws_account_id, user, name, created_at, auth_id, endpoint_id, source_id
+            arn,
+            aws_account_id,
+            user,
+            name,
+            created_at,
+            auth_id,
+            endpoint_id,
+            source_id,
+            is_enabled,
+            enabled_at,
         )
         self.assertIsInstance(account, CloudAccount)
         self.assertEqual(account.content_object.account_arn, arn)
@@ -133,6 +149,8 @@ class GenerateAwsAccountTest(TestCase):
         self.assertEqual(account.user, user)
         self.assertEqual(account.name, name)
         self.assertEqual(account.created_at, created_at)
+        self.assertFalse(account.is_enabled)
+        self.assertEqual(account.enabled_at, enabled_at)
 
 
 class GenerateAwsInstanceTest(TestCase):

@@ -21,6 +21,7 @@ class CloudAccount(BaseGenericModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE, db_index=True, null=False,)
     name = models.CharField(max_length=256, null=False, db_index=True)
     is_enabled = models.BooleanField(null=False, default=True)
+    enabled_at = models.DateTimeField(auto_now_add=True)
 
     # We must store the platform authentication_id in order to know things
     # like when to delete the Clount.
@@ -93,6 +94,7 @@ class CloudAccount(BaseGenericModel):
         """
         if not self.is_enabled:
             self.is_enabled = True
+            self.enabled_at = get_now()
             self.save()
         try:
             self.content_object.enable()

@@ -34,6 +34,7 @@ from api.util import (
 )
 from util import aws
 from util.aws.sqs import _sqs_wrap_message
+from util.misc import get_now
 from util.tests import helper
 
 _faker = faker.Faker()
@@ -160,6 +161,7 @@ def generate_aws_account(
     endpoint_id=None,
     source_id=None,
     is_enabled=True,
+    enabled_at=None,
 ):
     """
     Generate an AwsAccount for testing.
@@ -176,6 +178,7 @@ def generate_aws_account(
         endpoint_id (int): Optional platform source endpoint ID.
         source_id (int): Optional platform source source ID.
         is_enabled (bool): Optional should the account be enabled.
+        enabled_at (datetime): Optional enabled datetime for this account.
 
     Returns:
         CloudAccount: The created AwsAccount.
@@ -189,6 +192,12 @@ def generate_aws_account(
 
     if name is None:
         name = str(uuid.uuid4())
+
+    if created_at is None:
+        created_at = get_now()
+
+    if enabled_at is None:
+        enabled_at = created_at
 
     aws_cloud_account = AwsCloudAccount.objects.create(
         account_arn=arn, aws_account_id=aws.AwsArn(arn).account_id,
@@ -207,6 +216,9 @@ def generate_aws_account(
     )
     if created_at:
         cloud_account.created_at = created_at
+        cloud_account.save()
+    if enabled_at:
+        cloud_account.enabled_at = enabled_at
         cloud_account.save()
 
     return cloud_account
