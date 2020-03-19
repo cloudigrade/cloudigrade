@@ -187,9 +187,6 @@ def create_initial_aws_instance_events(account, instances_data):
         instances_data (dict): Dict whose keys are AWS region IDs and values
             are each a list of dictionaries that represent an instance
     """
-    if not account.is_enabled:
-        # Early exit if the account is not enabled.
-        return
     for region, instances in instances_data.items():
         for instance_data in instances:
             instance = save_instance(account, instance_data, region)

@@ -1407,14 +1407,6 @@ def _save_cloudtrail_activity(
     for ((ec2_instance_id, region, aws_account_id), events) in itertools.groupby(
         instance_events, key=lambda e: (e.ec2_instance_id, e.region, e.aws_account_id),
     ):
-        awsaccount = AwsCloudAccount.objects.get(aws_account_id=aws_account_id)
-        account = awsaccount.cloud_account.get()
-        if not account.is_enabled:
-            # Do not process activity for disabled accounts.
-            # We should not have gotten items this far if the account was disabled,
-            # but this condition exists as one final sanity check.
-            continue
-
         events = list(events)
 
         if ec2_instance_id in described_instances:
@@ -1437,6 +1429,9 @@ def _save_cloudtrail_activity(
                 "region": region,
             },
         )
+
+        awsaccount = AwsCloudAccount.objects.get(aws_account_id=aws_account_id)
+        account = awsaccount.cloud_account.get()
         instance = save_instance(account, instance_data, region)
 
         # Build a list of event data
