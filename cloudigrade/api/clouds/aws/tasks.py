@@ -669,6 +669,8 @@ def run_inspection_cluster(messages, cloud="aws"):
 
     if not relevant_messages:
         # Early return if nothing actually needs inspection.
+        # The cluster has likely scaled up now and needs to scale down.
+        scale_down_cluster.delay()
         return
 
     task_command = ["-c", cloud]

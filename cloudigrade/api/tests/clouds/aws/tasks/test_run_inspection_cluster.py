@@ -120,11 +120,15 @@ class RunInspectionClusterTest(TestCase):
         with self.assertRaises(AwsECSInstanceNotReady):
             tasks.run_inspection_cluster(messages)
 
+    @patch("api.clouds.aws.tasks.scale_down_cluster")
     @patch("api.clouds.aws.tasks.boto3")
-    def test_run_inspection_cluster_with_no_known_images(self, mock_boto3):
+    def test_run_inspection_cluster_with_no_known_images(
+        self, mock_boto3, mock_scale_down
+    ):
         """Assert that inspection is skipped if no known images are given."""
         messages = [{"ami_id": util_helper.generate_dummy_image_id()}]
         tasks.run_inspection_cluster(messages)
+        mock_scale_down.delay.assert_called()
         mock_boto3.client.assert_not_called()
 
     @patch("api.clouds.aws.models.AwsMachineImage.objects")
