@@ -1,9 +1,7 @@
 """Collection of tests for the Sources Listener."""
-import random
 import signal
 from unittest.mock import Mock, patch
 
-from django.conf import settings
 from django.core.management import call_command
 from django.test import TestCase
 from lockfile import AlreadyLocked
@@ -38,11 +36,9 @@ class SourcesListenerTest(TestCase):
         message4 = Mock()
         message5 = Mock()
 
-        message1.value = {
-            "authtype": random.choice(settings.SOURCES_CLOUDMETER_AUTHTYPES)
-        }
+        message1.value = {"application_id": Mock(), "authentication_id": Mock()}
         message1.headers = [
-            ("event_type", b"Authentication.create"),
+            ("event_type", b"ApplicationAuthentication.create"),
             ("encoding", b"json"),
         ]
 

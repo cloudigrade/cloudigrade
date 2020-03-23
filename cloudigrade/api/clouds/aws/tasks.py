@@ -74,7 +74,7 @@ CLOUD_TYPE_AWS = "aws"
 @retriable_shared_task(autoretry_for=(RuntimeError,))
 @rewrap_aws_errors
 def configure_customer_aws_and_create_cloud_account(
-    user_id, customer_arn, authentication_id, endpoint_id, source_id
+    user_id, customer_arn, authentication_id, application_id, endpoint_id, source_id
 ):
     """
     Configure the customer's AWS account and create our CloudAccount.
@@ -122,6 +122,7 @@ def configure_customer_aws_and_create_cloud_account(
             customer_arn,
             cloud_account_name,
             authentication_id,
+            application_id,
             endpoint_id,
             source_id,
         )

@@ -27,6 +27,7 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
         # Dummy values for the various interactions.
         session_account_id = util_helper.generate_dummy_aws_account_id()
         auth_id = _faker.pyint()
+        application_id = _faker.pyint()
         endpoint_id = _faker.pyint()
         source_id = _faker.pyint()
 
@@ -51,7 +52,12 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
         mock_ensure_role.return_value = (role_name, role_arn)
 
         tasks.configure_customer_aws_and_create_cloud_account(
-            user.id, customer_secret_access_key, auth_id, endpoint_id, source_id
+            user.id,
+            customer_secret_access_key,
+            auth_id,
+            application_id,
+            endpoint_id,
+            source_id,
         )
 
         cloud_account_name = api_util.get_standard_cloud_account_name(
@@ -59,7 +65,13 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
         )
         mock_verify.assert_called_with(role_arn)
         mock_create.assert_called_with(
-            user, role_arn, cloud_account_name, auth_id, endpoint_id, source_id
+            user,
+            role_arn,
+            cloud_account_name,
+            auth_id,
+            application_id,
+            endpoint_id,
+            source_id,
         )
 
     @patch.object(tasks, "create_aws_cloud_account")
@@ -71,11 +83,17 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
 
         customer_secret_access_key = util_helper.generate_dummy_arn()
         auth_id = _faker.pyint()
+        application_id = _faker.pyint()
         endpoint_id = _faker.pyint()
         source_id = _faker.pyint()
 
         tasks.configure_customer_aws_and_create_cloud_account(
-            user_id, customer_secret_access_key, auth_id, endpoint_id, source_id
+            user_id,
+            customer_secret_access_key,
+            auth_id,
+            application_id,
+            endpoint_id,
+            source_id,
         )
 
         mock_tasks_aws.get_session_account_id.assert_not_called()
@@ -95,11 +113,17 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
 
         customer_secret_access_key = util_helper.generate_dummy_arn()
         auth_id = _faker.pyint()
+        application_id = _faker.pyint()
         endpoint_id = _faker.pyint()
         source_id = _faker.pyint()
         mock_verify.return_value = False
 
         tasks.configure_customer_aws_and_create_cloud_account(
-            user.id, customer_secret_access_key, auth_id, endpoint_id, source_id
+            user.id,
+            customer_secret_access_key,
+            auth_id,
+            application_id,
+            endpoint_id,
+            source_id,
         )
         mock_create.assert_not_called()

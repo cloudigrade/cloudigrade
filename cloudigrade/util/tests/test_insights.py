@@ -21,6 +21,7 @@ class InsightsTest(TestCase):
         self.account_number = str(_faker.pyint())
         self.authentication_id = _faker.user_name()
         self.endpoint_id = _faker.pyint()
+        self.application_id = _faker.pyint()
 
     def test_generate_http_identity_headers(self):
         """Assert generation of an appropriate HTTP identity headers."""
@@ -130,3 +131,52 @@ class InsightsTest(TestCase):
 
         extracted_value = insights.get_x_rh_identity_header(headers)
         self.assertEqual(extracted_value, {})
+
+    @patch("requests.get")
+    def test_get_sources_application_success(self, mock_get):
+        """Assert get_sources_application returns response content."""
+        expected = {"hello": "world"}
+        mock_get.return_value.status_code = http.HTTPStatus.OK
+        mock_get.return_value.json.return_value = expected
+
+        application = insights.get_sources_application(
+            self.account_number, self.application_id
+        )
+        self.assertEqual(application, expected)
+        mock_get.assert_called()
+
+    @patch("requests.get")
+    def test_get_sources_application_fail(self, mock_get):
+        """Assert get_sources_application returns None if not found."""
+        mock_get.return_value.status_code = http.HTTPStatus.NOT_FOUND
+
+        application = insights.get_sources_application(
+            self.account_number, self.application_id
+        )
+        self.assertIsNone(application)
+        mock_get.assert_called()
+
+    @patch("requests.get")
+    def test_get_sources_cloudigrade_application_type_success(self, mock_get):
+        """Assert get_sources_cloudigrade_application_type_id returns id."""
+        cloudigrade_app_type_id = _faker.pyint()
+        expected = {"id": cloudigrade_app_type_id}
+        mock_get.return_value.status_code = http.HTTPStatus.OK
+        mock_get.return_value.json.return_value = expected
+
+        response_app_type_id = insights.get_sources_cloudigrade_application_type_id(
+            self.account_number
+        )
+        self.assertEqual(response_app_type_id, cloudigrade_app_type_id)
+        mock_get.assert_called()
+
+    @patch("requests.get")
+    def test_get_sources_cloudigrade_application_type_fail(self, mock_get):
+        """Assert get_sources_cloudigrade_application_type_id returns None."""
+        mock_get.return_value.status_code = http.HTTPStatus.NOT_FOUND
+
+        response_app_type_id = insights.get_sources_cloudigrade_application_type_id(
+            self.account_number
+        )
+        self.assertIsNone(response_app_type_id)
+        mock_get.assert_called()

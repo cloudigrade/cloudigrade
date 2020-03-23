@@ -123,6 +123,7 @@ class GenerateAwsAccountTest(TestCase):
         name = _faker.name()
         created_at = util_helper.utc_dt(2017, 1, 1, 0, 0, 0)
         auth_id = _faker.pyint()
+        application_id = _faker.pyint()
         endpoint_id = _faker.pyint()
         source_id = _faker.pyint()
         is_enabled = False
@@ -134,6 +135,7 @@ class GenerateAwsAccountTest(TestCase):
             name,
             created_at,
             auth_id,
+            application_id,
             endpoint_id,
             source_id,
             is_enabled,

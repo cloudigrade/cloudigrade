@@ -524,6 +524,38 @@ def generate_authentication_create_message_value(
     return message, headers
 
 
+def generate_applicationauthentication_create_message_value(
+    account_number="1337",
+    platform_id=None,
+    application_id=None,
+    authentication_id=None,
+):
+    """
+    Generate an 'ApplicationAuthentication.create' message's value and header.
+
+    Returns:
+        message (dict): like Kafka message's value attribute'.
+        headers (list): like Kafka headers.
+
+    """
+    f = faker.Faker()
+    if not platform_id:
+        platform_id = f.pyint()
+
+    message = {
+        "id": platform_id,
+        "application_id": application_id,
+        "authentication_id": authentication_id,
+    }
+    auth_header = base64.b64encode(
+        json.dumps({"identity": {"account_number": account_number}}).encode("utf-8")
+    )
+    headers = [
+        ("x-rh-identity", auth_header),
+    ]
+    return message, headers
+
+
 @contextmanager
 def clouditardis(destination):
     """

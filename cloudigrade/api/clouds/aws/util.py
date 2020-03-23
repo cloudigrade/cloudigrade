@@ -686,6 +686,7 @@ def create_aws_cloud_account(
     customer_role_arn,
     cloud_account_name,
     authentication_id=None,
+    application_id=None,
     endpoint_id=None,
     source_id=None,
 ):
@@ -739,6 +740,7 @@ def create_aws_cloud_account(
             content_type_id=content_type_id,
             platform_endpoint_id=endpoint_id,
             platform_source_id=source_id,
+            platform_application_id=application_id,
             defaults={
                 "name": cloud_account_name,
                 "platform_authentication_id": authentication_id,

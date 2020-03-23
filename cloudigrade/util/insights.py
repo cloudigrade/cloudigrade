@@ -90,6 +90,32 @@ def get_sources_endpoint(account_number, endpoint_id):
     return make_sources_call(account_number, url, headers)
 
 
+def get_sources_application(account_number, application_id):
+    """
+    Get an Application object from the Sources API.
+
+    If the `requests.get` itself fails unexpectedly, let the exception bubble
+    up to be handled by a higher level in the stack.
+
+    Args:
+        account_number (str): account number identifier for Insights auth
+        application_id (int): the requested application's id
+
+    Returns:
+        dict response payload from the sources api.
+    """
+    sources_api_base_url = settings.SOURCES_API_BASE_URL
+    sources_api_external_uri = settings.SOURCES_API_EXTERNAL_URI
+
+    url = (
+        f"{sources_api_base_url}/{sources_api_external_uri}"
+        f"applications/{application_id}/"
+    )
+
+    headers = generate_http_identity_headers(account_number, is_org_admin=True)
+    return make_sources_call(account_number, url, headers)
+
+
 def make_sources_call(account_number, url, headers, params=None):
     """
     Make an API call to the Sources API.
@@ -185,3 +211,19 @@ def extract_ids_from_kafka_message(message, headers):
         )
 
     return account_number, platform_id
+
+
+def get_sources_cloudigrade_application_type_id(account_number):
+    """Get the cloudigrade application type id from sources."""
+    sources_api_base_url = settings.SOURCES_API_BASE_URL
+    sources_api_external_uri = settings.SOURCES_API_EXTERNAL_URI
+    url = (
+        f"{sources_api_base_url}/{sources_api_external_uri}"
+        f"application_types?filter[name]=/insights/platform/cloud-meter"
+    )
+
+    headers = generate_http_identity_headers(account_number)
+    cloudigrade_application_type = make_sources_call(account_number, url, headers)
+    if cloudigrade_application_type:
+        return cloudigrade_application_type.get("id")
+    return None

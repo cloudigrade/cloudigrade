@@ -29,6 +29,7 @@ class CloudAccount(BaseGenericModel):
     # we must also keep track of the source_id and the endpoint_id.
     # Why? see https://github.com/RedHatInsights/sources-api/issues/179
     platform_authentication_id = models.IntegerField(null=True)
+    platform_application_id = models.IntegerField(null=True)
     platform_endpoint_id = models.IntegerField(null=True)
     platform_source_id = models.IntegerField(null=True)
 

@@ -21,11 +21,13 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
     def setUp(self):
         """Set up common variables for tests."""
         self.authentication_id = _faker.pyint()
+        self.application_id = _faker.pyint()
         self.endpoint_id = _faker.pyint()
         self.source_id = _faker.pyint()
 
         self.account = api_helper.generate_aws_account(
             authentication_id=self.authentication_id,
+            application_id=self.application_id,
             endpoint_id=self.endpoint_id,
             source_id=self.source_id,
         )
@@ -170,3 +172,53 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
             tasks.delete_from_sources_kafka_message(message, headers, "BAD EVENT")
         self.assertEqual(CloudAccount.objects.count(), 1)
         self.assertEqual(aws_models.AwsCloudAccount.objects.count(), 1)
+
+    def test_delete_application_from_sources_kafka_message_success(self):
+        """Assert application delete remove clount."""
+        account_number = str(self.user.username)
+        username = _faker.user_name()
+        message, headers = util_helper.generate_authentication_create_message_value(
+            account_number, username, platform_id=self.application_id
+        )
+        self.assertGreaterEqual(CloudAccount.objects.count(), 0)
+        self.assertGreaterEqual(aws_models.AwsCloudAccount.objects.count(), 0)
+
+        with patch.object(sts, "boto3") as mock_boto3, patch.object(
+            aws_models, "_disable_cloudtrail"
+        ):
+            role = util_helper.generate_dummy_role()
+            mock_assume_role = mock_boto3.client.return_value.assume_role
+            mock_assume_role.return_value = role
+
+            tasks.delete_from_sources_kafka_message(
+                message, headers, settings.APPLICATION_DESTROY_EVENT
+            )
+        self.assertEqual(CloudAccount.objects.count(), 0)
+        self.assertEqual(aws_models.AwsCloudAccount.objects.count(), 0)
+
+    def test_delete_application_authentication_from_sources_kafka_message_success(self):
+        """Assert application_authentication delete remove clount."""
+        account_number = str(self.user.username)
+        (
+            message,
+            headers,
+        ) = util_helper.generate_applicationauthentication_create_message_value(
+            account_number,
+            application_id=self.application_id,
+            authentication_id=self.authentication_id,
+        )
+        self.assertGreaterEqual(CloudAccount.objects.count(), 0)
+        self.assertGreaterEqual(aws_models.AwsCloudAccount.objects.count(), 0)
+
+        with patch.object(sts, "boto3") as mock_boto3, patch.object(
+            aws_models, "_disable_cloudtrail"
+        ):
+            role = util_helper.generate_dummy_role()
+            mock_assume_role = mock_boto3.client.return_value.assume_role
+            mock_assume_role.return_value = role
+
+            tasks.delete_from_sources_kafka_message(
+                message, headers, settings.APPLICATION_AUTHENTICATION_DESTROY_EVENT
+            )
+        self.assertEqual(CloudAccount.objects.count(), 0)
+        self.assertEqual(aws_models.AwsCloudAccount.objects.count(), 0)

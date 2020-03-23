@@ -90,12 +90,12 @@ class Command(BaseCommand):
                 event_type = header[1]
                 break
 
-        if (
-            event_type == "Authentication.create"
-            and message_value["authtype"] in settings.SOURCES_CLOUDMETER_AUTHTYPES
-        ):
+        if event_type == "ApplicationAuthentication.create":
             logger.info(
-                _("An authentication object was created. Message: %s. Headers: %s"),
+                _(
+                    "An ApplicationAuthentication object was created. "
+                    "Message: %s. Headers: %s"
+                ),
                 message_value,
                 message_headers,
             )
