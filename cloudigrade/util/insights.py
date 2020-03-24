@@ -225,5 +225,5 @@ def get_sources_cloudigrade_application_type_id(account_number):
     headers = generate_http_identity_headers(account_number)
     cloudigrade_application_type = make_sources_call(account_number, url, headers)
     if cloudigrade_application_type:
-        return cloudigrade_application_type.get("id")
+        return cloudigrade_application_type.get("data")[0].get("id")
     return None

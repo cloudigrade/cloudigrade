@@ -94,7 +94,7 @@ def create_from_sources_kafka_message(message, headers):
     if application_type is not insights.get_sources_cloudigrade_application_type_id(
         account_number
     ):
-        logger.debug(_("Aborting creation. Application Type is not cloudmeter."))
+        logger.info(_("Aborting creation. Application Type is not cloudmeter."))
         return
 
     authentication = insights.get_sources_authentication(
@@ -112,7 +112,7 @@ def create_from_sources_kafka_message(message, headers):
 
     authtype = authentication.get("authtype")
     if authtype not in settings.SOURCES_CLOUDMETER_AUTHTYPES:
-        logger.debug(
+        logger.info(
             "Aborting creation. Authentication ID %(authentication_id)s is of "
             "unsupported type %(authtype)s.",
             {"authentication_id": authentication_id, "authtype": authtype,},

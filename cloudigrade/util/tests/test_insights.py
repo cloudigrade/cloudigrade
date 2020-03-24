@@ -160,7 +160,7 @@ class InsightsTest(TestCase):
     def test_get_sources_cloudigrade_application_type_success(self, mock_get):
         """Assert get_sources_cloudigrade_application_type_id returns id."""
         cloudigrade_app_type_id = _faker.pyint()
-        expected = {"id": cloudigrade_app_type_id}
+        expected = {"data": [{"id": cloudigrade_app_type_id}]}
         mock_get.return_value.status_code = http.HTTPStatus.OK
         mock_get.return_value.json.return_value = expected
 
