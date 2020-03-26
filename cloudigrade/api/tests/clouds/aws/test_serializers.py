@@ -9,7 +9,6 @@ from rest_framework.serializers import ValidationError
 from api.clouds.aws.models import AwsCloudAccount, AwsMachineImage
 from api.models import CloudAccount, Instance
 from api.serializers import CloudAccountSerializer, aws
-from api.tests import helper
 from util.tests import helper as util_helper
 
 _faker = faker.Faker()
@@ -170,30 +169,6 @@ class AwsAccountSerializerTest(TransactionTestCase):
         # Verify that we created no images yet.
         amis = AwsMachineImage.objects.all()
         self.assertEqual(len(amis), 0)
-
-    def test_create_fails_duplicate_arn(self):
-        """Test that an exception is raised if arn already exists."""
-        mock_request = Mock()
-        mock_request.user = util_helper.generate_test_user()
-        context = {"request": mock_request}
-        serializer = CloudAccountSerializer(context=context)
-
-        helper.generate_aws_account(
-            aws_account_id=self.aws_account_id, arn=self.arn, name="account_name"
-        )
-
-        with patch("api.serializers.verify_permissions") as mock_verify:
-            expected_error = {
-                "account_arn": [
-                    'An ARN already exists for account "{0}"'.format(
-                        self.aws_account_id
-                    )
-                ]
-            }
-            with self.assertRaises(ValidationError) as cm:
-                serializer.create(self.validated_data)
-            mock_verify.assert_called()
-            self.assertEquals(expected_error, cm.exception.detail)
 
     def test_create_fails_access_denied(self):
         """Test that an exception is raised if access is denied to the arn."""

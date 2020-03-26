@@ -227,3 +227,54 @@ def get_sources_cloudigrade_application_type_id(account_number):
     if cloudigrade_application_type:
         return cloudigrade_application_type.get("data")[0].get("id")
     return None
+
+
+def notify_sources_application_availability(
+    account_number, application_id, availability_status, availability_status_error=""
+):
+    """
+    Update Sources application's availability status.
+
+    Args:
+        account_number (str): account number identifier for Insights auth
+        application_id (int): Platform insights application id
+        availability_status (string): Availability status to set
+        availability_status_error (string): Optional status error
+    """
+    sources_api_base_url = settings.SOURCES_API_BASE_URL
+    sources_api_external_uri = settings.SOURCES_API_EXTERNAL_URI
+
+    url = (
+        f"{sources_api_base_url}/{sources_api_external_uri}"
+        f"applications/{application_id}/"
+    )
+    payload = {
+        "availability_status": availability_status,
+        "availability_status_error": availability_status_error,
+    }
+
+    logger.info(
+        _(
+            "Setting the availability status for application "
+            "%(application_id)s as %(status)s"
+        ),
+        {"application_id": application_id, "status": availability_status},
+    )
+
+    headers = generate_http_identity_headers(account_number, is_org_admin=True)
+    response = requests.patch(url, headers=headers, data=json.dumps(payload))
+
+    if response.status_code == http.HTTPStatus.NOT_FOUND:
+        logger.info(
+            _(
+                "Cannot update availability status, application id "
+                "%(application_id)s not found."
+            ),
+            {"application_id": application_id},
+        )
+    elif response.status_code != http.HTTPStatus.NO_CONTENT:
+        message = _(
+            "Unexpected status {status} updating application "
+            "{application_id} status at {url}"
+        ).format(status=response.status_code, application_id=application_id, url=url)
+        raise SourcesAPINotOkStatus(message)

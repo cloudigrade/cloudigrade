@@ -180,3 +180,50 @@ class InsightsTest(TestCase):
         )
         self.assertIsNone(response_app_type_id)
         mock_get.assert_called()
+
+    @patch("requests.patch")
+    def test_notify_sources_application_availability_success(self, mock_patch):
+        """Test notify sources happy path success."""
+        application_id = _faker.pyint()
+        availability_status = "available"
+        mock_patch.return_value.status_code = http.HTTPStatus.NO_CONTENT
+
+        insights.notify_sources_application_availability(
+            self.account_number, application_id, availability_status=availability_status
+        )
+        mock_patch.assert_called()
+
+    @patch("requests.patch")
+    def test_notify_sources_application_availability_not_found(self, mock_patch):
+        """Test 404 status for patching sources."""
+        application_id = _faker.pyint()
+        availability_status = "available"
+
+        mock_patch.return_value.status_code = http.HTTPStatus.NOT_FOUND
+
+        with self.assertLogs("util.insights", level="INFO") as logger:
+            insights.notify_sources_application_availability(
+                self.account_number,
+                application_id,
+                availability_status=availability_status,
+            )
+            self.assertIn("Cannot update availability", logger.output[1])
+
+        mock_patch.assert_called()
+
+    @patch("requests.patch")
+    def test_notify_sources_application_availability_other_status(self, mock_patch):
+        """Test unknown status for patching sources."""
+        application_id = _faker.pyint()
+        availability_status = "available"
+
+        mock_patch.return_value.status_code = http.HTTPStatus.INTERNAL_SERVER_ERROR
+
+        with self.assertRaises(SourcesAPINotOkStatus):
+            insights.notify_sources_application_availability(
+                self.account_number,
+                application_id,
+                availability_status=availability_status,
+            )
+
+        mock_patch.assert_called()

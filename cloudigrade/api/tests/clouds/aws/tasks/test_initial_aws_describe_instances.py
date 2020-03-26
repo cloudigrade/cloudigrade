@@ -171,10 +171,11 @@ class InitialAwsDescribeInstancesTest(TestCase):
 class InitialAwsDescribeInstancesTransactionTest(TransactionTestCase):
     """Test cases for 'initial_aws_describe_instances', but with transactions."""
 
+    @patch("api.models.notify_sources_application_availability")
     @patch("api.clouds.aws.tasks.aws")
     @patch("api.clouds.aws.util.aws")
     def test_initial_aws_describe_instances_after_disable_enable(
-        self, mock_util_aws, mock_aws
+        self, mock_util_aws, mock_aws, mock_sources_notify
     ):
         """
         Test calling initial_aws_describe_instances multiple times.

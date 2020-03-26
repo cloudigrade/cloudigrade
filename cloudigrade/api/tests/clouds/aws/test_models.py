@@ -48,7 +48,8 @@ class AwsCloudAccountModelTest(TransactionTestCase):
         message = info_calls[0][1][0]
         self.assertTrue(message.startswith("AwsCloudAccount("))
 
-    def test_enable_succeeds(self):
+    @patch("api.models.notify_sources_application_availability")
+    def test_enable_succeeds(self, mock_sources_notify):
         """
         Test that enabling an account does all the relevant verification and setup.
 
@@ -106,7 +107,8 @@ class AwsCloudAccountModelTest(TransactionTestCase):
         self.assertFalse(self.account.is_enabled)
         self.assertEqual(self.account.enabled_at, self.account.created_at)
 
-    def test_disable_succeeds(self):
+    @patch("api.models.notify_sources_application_availability")
+    def test_disable_succeeds(self, mock_sources_notify):
         """
         Test that disabling an account does all the relevant cleanup.
 
@@ -154,7 +156,8 @@ class AwsCloudAccountModelTest(TransactionTestCase):
         )
         self.assertEqual(last_event.event_type, models.InstanceEvent.TYPE.power_off)
 
-    def test_disable_succeeds_if_no_instance_events(self):
+    @patch("api.models.notify_sources_application_availability")
+    def test_disable_succeeds_if_no_instance_events(self, mock_sources_notify):
         """Test that disabling an account works despite having no instance events."""
         self.assertTrue(self.account.is_enabled)
         helper.generate_aws_instance(cloud_account=self.account)
@@ -178,7 +181,8 @@ class AwsCloudAccountModelTest(TransactionTestCase):
             self.account.content_object.disable()
             mock_disable_cloudtrail.assert_not_called()
 
-    def test_delete_succeeds(self):
+    @patch("api.models.notify_sources_application_availability")
+    def test_delete_succeeds(self, mock_sources_notify):
         """Test that an account is deleted if there are no errors."""
         with patch("api.clouds.aws.util.disable_cloudtrail") as mock_disable_cloudtrail:
             mock_disable_cloudtrail.return_value = True

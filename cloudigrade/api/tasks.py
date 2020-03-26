@@ -306,7 +306,7 @@ def update_from_source_kafka_message(message, headers):
         source_id = endpoint.get("source_id")
 
         # If the Authentication being updated is arn, do arn things.
-        # The kafka messgae does not always include authtype, so we get this from
+        # The kafka message does not always include authtype, so we get this from
         # the sources API call
         if authentication.get("authtype") == settings.SOURCES_CLOUDMETER_ARN_AUTHTYPE:
             update_aws_cloud_account(

@@ -88,6 +88,7 @@ def configure_customer_aws_and_create_cloud_account(
         user_id (int): id of User that will own the new cloud account
         customer_arn (str): customer's ARN
         authentication_id (str): Platform Sources' Authentication object id
+        authentication_id (str): Platform Sources' Application object id
         endpoint_id (str): Platform Sources' Endpoint object id
         source_id (str): Platform Sources' Source object id
     """

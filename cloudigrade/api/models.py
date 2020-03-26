@@ -9,6 +9,7 @@ from django.db.models.signals import post_delete, pre_delete
 from django.dispatch import receiver
 from django.utils.translation import gettext as _
 
+from util.insights import notify_sources_application_availability
 from util.misc import get_now
 from util.models import BaseGenericModel, BaseModel
 
@@ -99,6 +100,9 @@ class CloudAccount(BaseGenericModel):
             self.save()
         try:
             self.content_object.enable()
+            notify_sources_application_availability(
+                self.user.username, self.platform_application_id, "available"
+            )
         except Exception as e:
             logger.warning(
                 _(
@@ -110,7 +114,7 @@ class CloudAccount(BaseGenericModel):
             raise e
 
     @transaction.atomic
-    def disable(self):
+    def disable(self, message=None):
         """
         Mark this CloudAccount as disabled and perform operations to make it so.
 
@@ -123,6 +127,9 @@ class CloudAccount(BaseGenericModel):
             self.save()
         self._power_off_instances(power_off_time=get_now())
         self.content_object.disable()
+        notify_sources_application_availability(
+            self.user.username, self.platform_application_id, "unavailable", message
+        )
 
     def _power_off_instances(self, power_off_time):
         """

@@ -717,19 +717,9 @@ def create_aws_cloud_account(
         # may have created the AwsCloudAccount while this function was talking
         # with AWS (i.e. verify_account_access) and not in a transaction.
         # We need to check for that and exit early here if it exists.
-        aws_cloud_account, created = AwsCloudAccount.objects.get_or_create(
+        aws_cloud_account, aws_clount_created = AwsCloudAccount.objects.get_or_create(
             account_arn=arn_str, defaults={"aws_account_id": aws_account_id,},
         )
-        if not created:
-            raise ValidationError(
-                detail={
-                    "account_arn": [
-                        _('An ARN already exists for account "{0}"').format(
-                            aws_account_id
-                        )
-                    ]
-                }
-            )
 
         # We have to do this ugly id and ContentType lookup because Django
         # can't perform the lookup we need using GenericForeignKey.
@@ -746,6 +736,11 @@ def create_aws_cloud_account(
                 "platform_authentication_id": authentication_id,
             },
         )
+
+        # If the account already exists, but is disabled,
+        # then we should enable the account.
+        if not aws_clount_created and not cloud_account.is_enabled:
+            cloud_account.enable()
 
         # Local import to get around a circular import issue.
         from api.clouds.aws.tasks import initial_aws_describe_instances
@@ -777,6 +772,7 @@ def update_aws_cloud_account(
         source_id (str): Platform Sources' Source object id
     """
     customer_aws_account_id = aws.AwsArn(customer_arn).account_id
+    application_id = cloud_account.platform_application_id
 
     # If the aws_account_id is different, then we delete and recreate the CloudAccount
     # Otherwise just update the account_arn.
@@ -803,7 +799,12 @@ def update_aws_cloud_account(
         from api.clouds.aws.tasks import configure_customer_aws_and_create_cloud_account
 
         configure_customer_aws_and_create_cloud_account.delay(
-            user.id, customer_arn, authentication_id, endpoint_id, source_id
+            user.id,
+            customer_arn,
+            authentication_id,
+            application_id,
+            endpoint_id,
+            source_id,
         )
 
     else:

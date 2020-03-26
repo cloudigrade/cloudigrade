@@ -100,10 +100,11 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
         self.assertEqual(self.clount.content_object.account_arn, new_arn)
         self.assertTrue(self.clount.is_enabled)
 
+    @patch("api.models.notify_sources_application_availability")
     @patch("util.insights.get_sources_endpoint")
     @patch("util.insights.get_sources_authentication")
     def test_update_from_sources_kafka_message_updates_arn_but_disables_cloud_account(
-        self, mock_get_auth, mock_get_endpoint
+        self, mock_get_auth, mock_get_endpoint, mock_sources_notify
     ):
         """
         Assert update_from_source_kafka_message updates the arn and disables clount.
