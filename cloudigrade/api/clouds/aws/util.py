@@ -709,15 +709,8 @@ def create_aws_cloud_account(
     """
     aws_account_id = aws.AwsArn(customer_role_arn).account_id
     arn_str = str(customer_role_arn)
-
     with transaction.atomic():
-        # How is it possible that the AwsCloudAccount already exists?
-        # The account check at the start of this function should have caught
-        # any existing accounts and exited early, but another request or task
-        # may have created the AwsCloudAccount while this function was talking
-        # with AWS (i.e. verify_account_access) and not in a transaction.
-        # We need to check for that and exit early here if it exists.
-        aws_cloud_account, aws_clount_created = AwsCloudAccount.objects.get_or_create(
+        aws_cloud_account, __ = AwsCloudAccount.objects.get_or_create(
             account_arn=arn_str, defaults={"aws_account_id": aws_account_id,},
         )
 
@@ -736,18 +729,7 @@ def create_aws_cloud_account(
                 "platform_authentication_id": authentication_id,
             },
         )
-
-        # If the account already exists, but is disabled,
-        # then we should enable the account.
-        if not aws_clount_created and not cloud_account.is_enabled:
-            cloud_account.enable()
-
-        # Local import to get around a circular import issue.
-        from api.clouds.aws.tasks import initial_aws_describe_instances
-
-        transaction.on_commit(
-            lambda: initial_aws_describe_instances.delay(aws_cloud_account.id)
-        )
+    cloud_account.enable()
 
     return cloud_account
 

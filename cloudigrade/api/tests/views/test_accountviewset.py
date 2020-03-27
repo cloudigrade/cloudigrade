@@ -181,8 +181,8 @@ class AccountViewSetTest(TransactionTestCase):
         self.assertResponseHasAwsAccountData(response, account)
 
     @patch("api.serializers.verify_permissions")
-    @patch("api.clouds.aws.tasks.initial_aws_describe_instances")
-    def test_create_account_with_name_success(self, mock_task, mock_verify):
+    @patch.object(CloudAccount, "enable")
+    def test_create_account_with_name_success(self, mock_enable, mock_verify):
         """Test create account with a name succeeds."""
         mock_verify.return_value = True
 
@@ -206,7 +206,7 @@ class AccountViewSetTest(TransactionTestCase):
         self.assertEqual(response.data["name"], data["name"])
         self.assertIsNotNone(response.data["name"])
         self.assertEqual(response.data["is_enabled"], True)  # True by default
-        mock_task.delay.assert_called()
+        mock_enable.assert_called()
 
     @patch.object(util, "aws")
     @patch("api.clouds.aws.tasks.initial_aws_describe_instances")

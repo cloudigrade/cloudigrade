@@ -57,7 +57,8 @@ class SandboxedRestClientTest(TestCase):
         self.assertIn("first", response_json["links"])
         self.assertIn("last", response_json["links"])
 
-    def test_create_noun(self):
+    @patch("api.models.notify_sources_application_availability")
+    def test_create_noun(self, mock_notify_sources):
         """Assert "create" requests work."""
         client = helper.SandboxedRestClient()
         client._force_authenticate(self.user)
