@@ -33,7 +33,8 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         )
         self.user = self.account.user
 
-    def test_delete_from_sources_kafka_message_success(self):
+    @patch("api.models.notify_sources_application_availability")
+    def test_delete_from_sources_kafka_message_success(self, mock_notify_sources):
         """Assert delete_from_sources_kafka_message happy path success."""
         account_number = str(self.user.username)
         username = _faker.user_name()
@@ -55,6 +56,7 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
             )
         self.assertEqual(CloudAccount.objects.count(), 0)
         self.assertEqual(aws_models.AwsCloudAccount.objects.count(), 0)
+        mock_notify_sources.assert_called()
 
     @patch("api.models.CloudAccount.delete")
     def test_delete_from_sources_kafka_message_fail_missing_message_data(
@@ -106,7 +108,10 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         # Delete should not have been called.
         mock_clount_delete.assert_not_called()
 
-    def test_delete_endpoint_from_sources_kafka_message_success(self):
+    @patch("api.models.notify_sources_application_availability")
+    def test_delete_endpoint_from_sources_kafka_message_success(
+        self, mock_notify_sources
+    ):
         """Assert delete_from_sources_kafka_message with endpoint delete success."""
         account_number = str(self.user.username)
         username = _faker.user_name()
@@ -129,7 +134,10 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         self.assertEqual(CloudAccount.objects.count(), 0)
         self.assertEqual(aws_models.AwsCloudAccount.objects.count(), 0)
 
-    def test_delete_source_from_sources_kafka_message_success(self):
+    @patch("api.models.notify_sources_application_availability")
+    def test_delete_source_from_sources_kafka_message_success(
+        self, mock_notify_sources
+    ):
         """Assert delete_from_sources_kafka_message with source delete success."""
         account_number = str(self.user.username)
         username = _faker.user_name()
@@ -173,7 +181,10 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         self.assertEqual(CloudAccount.objects.count(), 1)
         self.assertEqual(aws_models.AwsCloudAccount.objects.count(), 1)
 
-    def test_delete_application_from_sources_kafka_message_success(self):
+    @patch("api.models.notify_sources_application_availability")
+    def test_delete_application_from_sources_kafka_message_success(
+        self, mock_notify_sources
+    ):
         """Assert application delete remove clount."""
         account_number = str(self.user.username)
         username = _faker.user_name()
@@ -196,7 +207,10 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         self.assertEqual(CloudAccount.objects.count(), 0)
         self.assertEqual(aws_models.AwsCloudAccount.objects.count(), 0)
 
-    def test_delete_application_authentication_from_sources_kafka_message_success(self):
+    @patch("api.models.notify_sources_application_availability")
+    def test_delete_application_authentication_from_sources_kafka_message_success(
+        self, mock_notify_sources
+    ):
         """Assert application_authentication delete remove clount."""
         account_number = str(self.user.username)
         (
@@ -222,3 +236,4 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
             )
         self.assertEqual(CloudAccount.objects.count(), 0)
         self.assertEqual(aws_models.AwsCloudAccount.objects.count(), 0)
+        mock_notify_sources.assert_called()

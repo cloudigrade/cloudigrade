@@ -189,14 +189,16 @@ class AwsCloudAccountModelTest(TransactionTestCase):
             self.account.delete()
         self.assertEqual(0, aws_models.AwsCloudAccount.objects.count())
 
-    def test_delete_succeeds_if_disable_cloudtrail_fails(self):
+    @patch("api.models.notify_sources_application_availability")
+    def test_delete_succeeds_if_disable_cloudtrail_fails(self, mock_notify_sources):
         """Test that the account is deleted even if the CloudTrail is not disabled."""
         with patch("api.clouds.aws.util.disable_cloudtrail") as mock_disable_cloudtrail:
             mock_disable_cloudtrail.return_value = False
             self.account.delete()
         self.assertEqual(0, aws_models.AwsCloudAccount.objects.count())
 
-    def test_delete_cleans_up_instance_events_run(self):
+    @patch("api.models.notify_sources_application_availability")
+    def test_delete_cleans_up_instance_events_run(self, mock_notify_sources):
         """Test that deleting an account cleans up instances/events/runs."""
         instance = helper.generate_aws_instance(cloud_account=self.account)
         runtime = (
@@ -217,14 +219,20 @@ class AwsCloudAccountModelTest(TransactionTestCase):
         self.assertEqual(0, aws_models.AwsInstance.objects.count())
         self.assertEqual(0, models.Instance.objects.count())
 
-    def test_delete_via_queryset_succeeds_if_disable_cloudtrail_fails(self):
+    @patch("api.models.notify_sources_application_availability")
+    def test_delete_via_queryset_succeeds_if_disable_cloudtrail_fails(
+        self, mock_notify_sources
+    ):
         """Account is deleted via queryset even if the CloudTrail is not disabled."""
         with patch("api.clouds.aws.util.disable_cloudtrail") as mock_disable_cloudtrail:
             mock_disable_cloudtrail.return_value = False
             aws_models.AwsCloudAccount.objects.all().delete()
         self.assertEqual(0, aws_models.AwsCloudAccount.objects.count())
 
-    def test_delete_via_queryset_cleans_up_instance_events_run(self):
+    @patch("api.models.notify_sources_application_availability")
+    def test_delete_via_queryset_cleans_up_instance_events_run(
+        self, mock_notify_sources
+    ):
         """Deleting an account via queryset cleans up instances/events/runs."""
         instance = helper.generate_aws_instance(cloud_account=self.account)
         runtime = (

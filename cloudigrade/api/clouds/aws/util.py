@@ -719,13 +719,13 @@ def create_aws_cloud_account(
         content_type_id = ContentType.objects.get_for_model(AwsCloudAccount).id
         cloud_account, __ = CloudAccount.objects.get_or_create(
             user=user,
-            object_id=aws_cloud_account.id,
-            content_type_id=content_type_id,
-            platform_endpoint_id=endpoint_id,
-            platform_source_id=source_id,
-            platform_application_id=application_id,
+            name=cloud_account_name,
             defaults={
-                "name": cloud_account_name,
+                "object_id": aws_cloud_account.id,
+                "content_type_id": content_type_id,
+                "platform_endpoint_id": endpoint_id,
+                "platform_source_id": source_id,
+                "platform_application_id": application_id,
                 "platform_authentication_id": authentication_id,
             },
         )
@@ -791,20 +791,22 @@ def update_aws_cloud_account(
 
     else:
         try:
+            cloud_account.content_object.account_arn = customer_arn
+            cloud_account.content_object.save()
             verify_permissions(customer_arn)
+            cloud_account.enable()
         except ValidationError:
             logger.info(
                 _("ARN %s failed validation. The Cloud Account will still be updated."),
                 customer_arn,
             )
             cloud_account.disable()
+
         logger.info(
             _("Cloud Account with ID %s has been updated with arn %s. "),
             cloud_account.id,
             customer_arn,
         )
-        cloud_account.content_object.account_arn = customer_arn
-        cloud_account.content_object.save()
 
 
 def disable_cloudtrail(aws_cloud_account):

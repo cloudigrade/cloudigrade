@@ -114,7 +114,7 @@ class CloudAccount(BaseGenericModel):
             raise e
 
     @transaction.atomic
-    def disable(self, message=None):
+    def disable(self, message=""):
         """
         Mark this CloudAccount as disabled and perform operations to make it so.
 
@@ -157,6 +157,20 @@ class CloudAccount(BaseGenericModel):
                     content_object=cloud_specific_event,
                 )
                 recalculate_runs(event)
+
+
+@receiver(pre_delete, sender=CloudAccount)
+def cloud_account_pre_delete_callback(*args, **kwargs):
+    """
+    Disable CloudAccount before deleting it.
+
+    This runs the logic to notify sources of application availability.
+    And additionally run the cloud specific disable function.
+
+    Note: Signal receivers must accept keyword arguments (**kwargs).
+    """
+    instance = kwargs["instance"]
+    instance.disable()
 
 
 class MachineImage(BaseGenericModel):

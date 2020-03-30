@@ -67,10 +67,11 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
             source_id,
         )
 
+    @patch("api.models.notify_sources_application_availability")
     @patch("util.insights.get_sources_endpoint")
     @patch("util.insights.get_sources_authentication")
     def test_update_from_sources_kafka_message_updates_arn(
-        self, mock_get_auth, mock_get_endpoint
+        self, mock_get_auth, mock_get_endpoint, mock_notify_sources
     ):
         """Assert update_from_source_kafka_message updates the arn on the clount."""
         username = _faker.user_name()
@@ -99,12 +100,13 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
         self.clount.refresh_from_db()
         self.assertEqual(self.clount.content_object.account_arn, new_arn)
         self.assertTrue(self.clount.is_enabled)
+        mock_notify_sources.assert_called()
 
     @patch("api.models.notify_sources_application_availability")
     @patch("util.insights.get_sources_endpoint")
     @patch("util.insights.get_sources_authentication")
     def test_update_from_sources_kafka_message_updates_arn_but_disables_cloud_account(
-        self, mock_get_auth, mock_get_endpoint, mock_sources_notify
+        self, mock_get_auth, mock_get_endpoint, mock_notify_sources
     ):
         """
         Assert update_from_source_kafka_message updates the arn and disables clount.
@@ -182,11 +184,12 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
 
         mock_update_account.assert_not_called()
 
+    @patch("api.models.notify_sources_application_availability")
     @patch("api.clouds.aws.tasks.configure_customer_aws_and_create_cloud_account")
     @patch("util.insights.get_sources_endpoint")
     @patch("util.insights.get_sources_authentication")
     def test_update_from_sources_kafka_message_new_aws_account_id(
-        self, mock_get_auth, mock_get_endpoint, mock_create_clount
+        self, mock_get_auth, mock_get_endpoint, mock_create_clount, mock_notify_sources
     ):
         """
         Assert the new cloud account created for new aws_account_id.

@@ -23,7 +23,10 @@ class BaseGenericModelTest(TestCase):
             aws_account_id=aws_account_id, arn=arn, name="test"
         )
 
-    def test_delete_base_model_removes_platform_specific_model(self):
+    @patch("api.models.notify_sources_application_availability")
+    def test_delete_base_model_removes_platform_specific_model(
+        self, mock_notify_sources
+    ):
         """Deleting a generic model removes its more specific counterpart."""
         with patch.object(sts, "boto3") as mock_boto3, patch.object(
             aws_models, "_disable_cloudtrail"

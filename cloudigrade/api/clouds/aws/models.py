@@ -4,8 +4,6 @@ import logging
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models, transaction
-from django.db.models.signals import post_delete
-from django.dispatch import receiver
 from django.utils.translation import gettext as _
 
 from api import AWS_PROVIDER_STRING
@@ -123,17 +121,6 @@ def _disable_cloudtrail(aws_cloud_account):
                 "aws_account_id": aws_cloud_account.aws_account_id,
             },
         )
-
-
-@receiver(post_delete, sender=AwsCloudAccount)
-def aws_cloud_account_post_delete_callback(*args, **kwargs):
-    """
-    Disable logging in an AwsCloudAccount's CloudTrail after deleting it.
-
-    Note: Signal receivers must accept keyword arguments (**kwargs).
-    """
-    instance = kwargs["instance"]
-    instance.disable()
 
 
 class AwsMachineImage(BaseModel):
