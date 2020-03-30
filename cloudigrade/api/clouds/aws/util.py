@@ -795,12 +795,13 @@ def update_aws_cloud_account(
             cloud_account.content_object.save()
             verify_permissions(customer_arn)
             cloud_account.enable()
-        except ValidationError:
+        except ValidationError as e:
             logger.info(
                 _("ARN %s failed validation. The Cloud Account will still be updated."),
                 customer_arn,
             )
-            cloud_account.disable()
+            # Tell the cloud account why we're disabling it
+            cloud_account.disable(message=str(e.detail))
 
         logger.info(
             _("Cloud Account with ID %s has been updated with arn %s. "),
