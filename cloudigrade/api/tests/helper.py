@@ -176,6 +176,7 @@ def generate_aws_account(
         name (str): Optional name for this account.
         created_at (datetime): Optional creation datetime for this account.
         platform_authentication_id (int): Optional platform source authentication ID.
+        platform_application_id (int): Optional platform source application ID.
         platform_endpoint_id (int): Optional platform source endpoint ID.
         platform_source_id (int): Optional platform source source ID.
         is_enabled (bool): Optional should the account be enabled.
