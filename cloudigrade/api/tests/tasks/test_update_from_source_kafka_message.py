@@ -27,7 +27,7 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
         self.arn = util_helper.generate_dummy_arn(account_id=self.account_id)
 
         self.clount = api_helper.generate_aws_account(
-            arn=self.arn, authentication_id=self.authentication_id
+            arn=self.arn, platform_authentication_id=self.authentication_id
         )
         self.account_number = str(_faker.pyint())
         self.user = User.objects.create(username=self.account_number)

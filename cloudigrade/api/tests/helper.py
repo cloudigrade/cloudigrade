@@ -157,10 +157,10 @@ def generate_aws_account(
     user=None,
     name=None,
     created_at=None,
-    authentication_id=None,
-    application_id=None,
-    endpoint_id=None,
-    source_id=None,
+    platform_authentication_id=None,
+    platform_application_id=None,
+    platform_endpoint_id=None,
+    platform_source_id=None,
     is_enabled=True,
     enabled_at=None,
 ):
@@ -175,9 +175,9 @@ def generate_aws_account(
         user (User): Optional Django auth User to be this account's owner.
         name (str): Optional name for this account.
         created_at (datetime): Optional creation datetime for this account.
-        authentication_id (int): Optional platform source authentication ID.
-        endpoint_id (int): Optional platform source endpoint ID.
-        source_id (int): Optional platform source source ID.
+        platform_authentication_id (int): Optional platform source authentication ID.
+        platform_endpoint_id (int): Optional platform source endpoint ID.
+        platform_source_id (int): Optional platform source source ID.
         is_enabled (bool): Optional should the account be enabled.
         enabled_at (datetime): Optional enabled datetime for this account.
 
@@ -210,10 +210,10 @@ def generate_aws_account(
         user=user,
         name=name,
         content_object=aws_cloud_account,
-        platform_authentication_id=authentication_id,
-        platform_application_id=application_id,
-        platform_endpoint_id=endpoint_id,
-        platform_source_id=source_id,
+        platform_authentication_id=platform_authentication_id,
+        platform_application_id=platform_application_id,
+        platform_endpoint_id=platform_endpoint_id,
+        platform_source_id=platform_source_id,
         is_enabled=is_enabled,
     )
     if created_at:

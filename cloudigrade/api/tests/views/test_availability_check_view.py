@@ -23,18 +23,18 @@ class AvailabilityCheckViewTest(TestCase):
         source_id = _faker.pyint()
         self.account = api_helper.generate_aws_account(
             user=self.user,
-            authentication_id=_faker.pyint(),
-            application_id=_faker.pyint(),
-            endpoint_id=_faker.pyint(),
-            source_id=source_id,
+            platform_authentication_id=_faker.pyint(),
+            platform_application_id=_faker.pyint(),
+            platform_endpoint_id=_faker.pyint(),
+            platform_source_id=source_id,
             is_enabled=False,
         )
         self.account2 = api_helper.generate_aws_account(
             user=self.user,
-            authentication_id=_faker.pyint(),
-            application_id=_faker.pyint(),
-            endpoint_id=_faker.pyint(),
-            source_id=source_id,
+            platform_authentication_id=_faker.pyint(),
+            platform_application_id=_faker.pyint(),
+            platform_endpoint_id=_faker.pyint(),
+            platform_source_id=source_id,
             is_enabled=False,
         )
         self.factory = APIRequestFactory()

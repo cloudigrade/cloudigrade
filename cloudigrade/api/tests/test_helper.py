@@ -123,10 +123,10 @@ class GenerateAwsAccountTest(TestCase):
         user = util_helper.generate_test_user()
         name = _faker.name()
         created_at = util_helper.utc_dt(2017, 1, 1, 0, 0, 0)
-        auth_id = _faker.pyint()
-        application_id = _faker.pyint()
-        endpoint_id = _faker.pyint()
-        source_id = _faker.pyint()
+        platform_authentication_id = _faker.pyint()
+        platform_application_id = _faker.pyint()
+        platform_endpoint_id = _faker.pyint()
+        platform_source_id = _faker.pyint()
         is_enabled = False
         enabled_at = util_helper.utc_dt(2017, 1, 2, 0, 0, 0)
         account = helper.generate_aws_account(
@@ -135,10 +135,10 @@ class GenerateAwsAccountTest(TestCase):
             user,
             name,
             created_at,
-            auth_id,
-            application_id,
-            endpoint_id,
-            source_id,
+            platform_authentication_id,
+            platform_application_id,
+            platform_endpoint_id,
+            platform_source_id,
             is_enabled,
             enabled_at,
         )
@@ -146,9 +146,10 @@ class GenerateAwsAccountTest(TestCase):
         self.assertEqual(account.content_object.account_arn, arn)
         self.assertEqual(account.content_object.aws_account_id, aws_account_id)
 
-        self.assertEqual(account.platform_authentication_id, auth_id)
-        self.assertEqual(account.platform_endpoint_id, endpoint_id)
-        self.assertEqual(account.platform_source_id, source_id)
+        self.assertEqual(account.platform_authentication_id, platform_authentication_id)
+        self.assertEqual(account.platform_application_id, platform_application_id)
+        self.assertEqual(account.platform_endpoint_id, platform_endpoint_id)
+        self.assertEqual(account.platform_source_id, platform_source_id)
         self.assertEqual(account.user, user)
         self.assertEqual(account.name, name)
         self.assertEqual(account.created_at, created_at)
