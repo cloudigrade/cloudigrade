@@ -151,7 +151,7 @@ class SandboxedRestClient(object):
         return self._call_api(verb=verb, path=path, data=data)
 
 
-def generate_aws_account(
+def generate_aws_account(  # noqa: C901
     arn=None,
     aws_account_id=None,
     user=None,
@@ -200,6 +200,18 @@ def generate_aws_account(
 
     if enabled_at is None:
         enabled_at = created_at
+
+    if platform_authentication_id is None:
+        platform_authentication_id = _faker.pyint()
+
+    if platform_application_id is None:
+        platform_application_id = _faker.pyint()
+
+    if platform_endpoint_id is None:
+        platform_endpoint_id = _faker.pyint()
+
+    if platform_source_id is None:
+        platform_source_id = _faker.pyint()
 
     aws_cloud_account = AwsCloudAccount.objects.create(
         account_arn=arn, aws_account_id=aws.AwsArn(arn).account_id,

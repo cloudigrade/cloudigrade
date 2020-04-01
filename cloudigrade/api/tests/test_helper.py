@@ -115,6 +115,10 @@ class GenerateAwsAccountTest(TestCase):
         self.assertEqual(account.created_at, created_at)
         self.assertTrue(account.is_enabled)
         self.assertEqual(account.enabled_at, created_at)
+        self.assertIsNotNone(account.platform_authentication_id)
+        self.assertIsNotNone(account.platform_application_id)
+        self.assertIsNotNone(account.platform_endpoint_id)
+        self.assertIsNotNone(account.platform_source_id)
 
     def test_generate_aws_account_with_args(self):
         """Assert generation of an AwsAccount with all specified args."""
