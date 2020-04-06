@@ -90,6 +90,22 @@
                           "is_enabled": {
                             "type": "boolean",
                             "readOnly": true
+                          },
+                          "platform_authentication_id": {
+                            "type": "integer",
+                            "nullable": true
+                          },
+                          "platform_application_id": {
+                            "type": "integer",
+                            "nullable": true
+                          },
+                          "platform_endpoint_id": {
+                            "type": "integer",
+                            "nullable": true
+                          },
+                          "platform_source_id": {
+                            "type": "integer",
+                            "nullable": true
                           }
                         },
                         "required": [
@@ -131,6 +147,22 @@
                   },
                   "aws_account_id": {
                     "type": "string"
+                  },
+                  "platform_authentication_id": {
+                    "type": "integer",
+                    "nullable": true
+                  },
+                  "platform_application_id": {
+                    "type": "integer",
+                    "nullable": true
+                  },
+                  "platform_endpoint_id": {
+                    "type": "integer",
+                    "nullable": true
+                  },
+                  "platform_source_id": {
+                    "type": "integer",
+                    "nullable": true
                   }
                 },
                 "required": [
@@ -186,6 +218,22 @@
                     "is_enabled": {
                       "type": "boolean",
                       "readOnly": true
+                    },
+                    "platform_authentication_id": {
+                      "type": "integer",
+                      "nullable": true
+                    },
+                    "platform_application_id": {
+                      "type": "integer",
+                      "nullable": true
+                    },
+                    "platform_endpoint_id": {
+                      "type": "integer",
+                      "nullable": true
+                    },
+                    "platform_source_id": {
+                      "type": "integer",
+                      "nullable": true
                     }
                   },
                   "required": [
@@ -259,6 +307,22 @@
                     "is_enabled": {
                       "type": "boolean",
                       "readOnly": true
+                    },
+                    "platform_authentication_id": {
+                      "type": "integer",
+                      "nullable": true
+                    },
+                    "platform_application_id": {
+                      "type": "integer",
+                      "nullable": true
+                    },
+                    "platform_endpoint_id": {
+                      "type": "integer",
+                      "nullable": true
+                    },
+                    "platform_source_id": {
+                      "type": "integer",
+                      "nullable": true
                     }
                   },
                   "required": [
@@ -307,6 +371,22 @@
                   },
                   "aws_account_id": {
                     "type": "string"
+                  },
+                  "platform_authentication_id": {
+                    "type": "integer",
+                    "nullable": true
+                  },
+                  "platform_application_id": {
+                    "type": "integer",
+                    "nullable": true
+                  },
+                  "platform_endpoint_id": {
+                    "type": "integer",
+                    "nullable": true
+                  },
+                  "platform_source_id": {
+                    "type": "integer",
+                    "nullable": true
                   }
                 },
                 "required": [
@@ -362,6 +442,22 @@
                     "is_enabled": {
                       "type": "boolean",
                       "readOnly": true
+                    },
+                    "platform_authentication_id": {
+                      "type": "integer",
+                      "nullable": true
+                    },
+                    "platform_application_id": {
+                      "type": "integer",
+                      "nullable": true
+                    },
+                    "platform_endpoint_id": {
+                      "type": "integer",
+                      "nullable": true
+                    },
+                    "platform_source_id": {
+                      "type": "integer",
+                      "nullable": true
                     }
                   },
                   "required": [
@@ -410,6 +506,22 @@
                   },
                   "aws_account_id": {
                     "type": "string"
+                  },
+                  "platform_authentication_id": {
+                    "type": "integer",
+                    "nullable": true
+                  },
+                  "platform_application_id": {
+                    "type": "integer",
+                    "nullable": true
+                  },
+                  "platform_endpoint_id": {
+                    "type": "integer",
+                    "nullable": true
+                  },
+                  "platform_source_id": {
+                    "type": "integer",
+                    "nullable": true
                   }
                 }
               }
@@ -461,6 +573,22 @@
                     "is_enabled": {
                       "type": "boolean",
                       "readOnly": true
+                    },
+                    "platform_authentication_id": {
+                      "type": "integer",
+                      "nullable": true
+                    },
+                    "platform_application_id": {
+                      "type": "integer",
+                      "nullable": true
+                    },
+                    "platform_endpoint_id": {
+                      "type": "integer",
+                      "nullable": true
+                    },
+                    "platform_source_id": {
+                      "type": "integer",
+                      "nullable": true
                     }
                   },
                   "required": [

@@ -65,6 +65,10 @@ class CloudAccountSerializer(ModelSerializer):
             "account_arn",
             "aws_account_id",
             "is_enabled",
+            "platform_authentication_id",
+            "platform_application_id",
+            "platform_endpoint_id",
+            "platform_source_id",
         )
         read_only_fields = (
             "aws_account_id",
@@ -149,8 +153,20 @@ class CloudAccountSerializer(ModelSerializer):
         arn = validated_data["account_arn"]
         user = self.context["request"].user
         name = validated_data.get("name")
+        platform_authentication_id = validated_data.get("platform_authentication_id")
+        platform_application_id = validated_data.get("platform_application_id")
+        platform_endpoint_id = validated_data.get("platform_endpoint_id")
+        platform_source_id = validated_data.get("platform_source_id")
         verify_permissions(arn)
-        cloud_account = create_aws_cloud_account(user, arn, name)
+        cloud_account = create_aws_cloud_account(
+            user,
+            arn,
+            name,
+            platform_authentication_id,
+            platform_application_id,
+            platform_endpoint_id,
+            platform_source_id,
+        )
         return cloud_account
 
 
