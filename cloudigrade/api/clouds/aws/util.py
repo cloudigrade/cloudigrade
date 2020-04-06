@@ -685,10 +685,10 @@ def create_aws_cloud_account(
     user,
     customer_role_arn,
     cloud_account_name,
-    authentication_id=None,
-    application_id=None,
-    endpoint_id=None,
-    source_id=None,
+    platform_authentication_id,
+    platform_application_id,
+    platform_endpoint_id,
+    platform_source_id,
 ):
     """
     Create AwsCloudAccount for the customer user.
@@ -699,9 +699,10 @@ def create_aws_cloud_account(
         user (django.contrib.auth.models.User): user to own the CloudAccount
         customer_role_arn (str): ARN to access the customer's AWS account
         cloud_account_name (str): the name to use for our CloudAccount
-        authentication_id (str): Platform Sources' Authentication object id
-        endpoint_id (str): Platform Sources' Endpoint object id
-        source_id (str): Platform Sources' Source object id
+        platform_authentication_id (str): Platform Sources' Authentication object id
+        platform_application_id (str): Platform Sources' Application object id
+        platform_endpoint_id (str): Platform Sources' Endpoint object id
+        platform_source_id (str): Platform Sources' Source object id
 
     Returns:
         CloudAccount the created cloud account.
@@ -743,10 +744,10 @@ def create_aws_cloud_account(
             defaults={
                 "object_id": aws_cloud_account.id,
                 "content_type_id": content_type_id,
-                "platform_endpoint_id": endpoint_id,
-                "platform_source_id": source_id,
-                "platform_application_id": application_id,
-                "platform_authentication_id": authentication_id,
+                "platform_endpoint_id": platform_endpoint_id,
+                "platform_source_id": platform_source_id,
+                "platform_application_id": platform_application_id,
+                "platform_authentication_id": platform_authentication_id,
             },
         )
 

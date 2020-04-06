@@ -13,6 +13,8 @@ from api.tests import helper as api_helper
 from api.views import AccountViewSet
 from util.tests import helper as util_helper
 
+_faker = faker.Faker()
+
 
 class AccountViewSetTest(TransactionTestCase):
     """AccountViewSet test case."""
@@ -186,11 +188,7 @@ class AccountViewSetTest(TransactionTestCase):
         """Test create account with a name succeeds."""
         mock_verify.return_value = True
 
-        data = {
-            "cloud_type": "aws",
-            "account_arn": util_helper.generate_dummy_arn(),
-            "name": faker.Faker().bs()[:256],
-        }
+        data = util_helper.generate_dummy_aws_cloud_account_post_data()
 
         request = self.factory.post("/accounts/", data=data)
         force_authenticate(request, user=self.user2)
@@ -213,13 +211,9 @@ class AccountViewSetTest(TransactionTestCase):
     def test_create_account_with_duplicate_name_fail(self, mock_aws, mock_task):
         """Test create account with a duplicate name fails."""
         mock_aws.verify_account_access.return_value = True, []
-        arn_str = util_helper.generate_dummy_arn()
 
-        data = {
-            "cloud_type": "aws",
-            "account_arn": arn_str,
-            "name": "unique",
-        }
+        data = util_helper.generate_dummy_aws_cloud_account_post_data()
+        data["name"] = "unique"  # should collide with self.account5
 
         request = self.factory.post("/accounts/", data=data)
         force_authenticate(request, user=self.user2)
@@ -233,10 +227,8 @@ class AccountViewSetTest(TransactionTestCase):
 
     def test_create_account_without_name_fail(self):
         """Test create account without a name fails."""
-        data = {
-            "cloud_type": "aws",
-            "account_arn": util_helper.generate_dummy_arn(),
-        }
+        data = util_helper.generate_dummy_aws_cloud_account_post_data()
+        del data["name"]
 
         request = self.factory.post("/accounts/", data=data)
         force_authenticate(request, user=self.user2)
@@ -299,10 +291,8 @@ class AccountViewSetTest(TransactionTestCase):
 
     def test_create_with_malformed_arn_fails(self):
         """Test create account with malformed arn returns validation error."""
-        data = {
-            "cloud_type": "aws",
-            "account_arn": self.faker.bs(),
-        }
+        data = util_helper.generate_dummy_aws_cloud_account_post_data()
+        data["account_arn"] = self.faker.bs()
 
         request = self.factory.post("/accounts/", data=data)
         force_authenticate(request, user=self.user2)

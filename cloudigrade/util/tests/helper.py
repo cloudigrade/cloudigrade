@@ -17,6 +17,8 @@ from django.contrib.auth.models import User
 
 from util import aws
 
+_faker = faker.Faker()
+
 SOME_AWS_REGIONS = (
     "ap-northeast-1",
     "ca-central-1",
@@ -131,6 +133,25 @@ def generate_dummy_arn(
         f"{resource_type}{resource_separator}{resource}"
     )
     return arn
+
+
+def generate_dummy_aws_cloud_account_post_data():
+    """
+    Generate all post data needed for creating an AwsCloudAccount.
+
+    Returns:
+        dict with dummy data fully populated.
+    """
+    data = {
+        "cloud_type": "aws",
+        "account_arn": generate_dummy_arn(),
+        "name": _faker.bs()[:256],
+        "platform_authentication_id": _faker.pyint(),
+        "platform_application_id": _faker.pyint(),
+        "platform_endpoint_id": _faker.pyint(),
+        "platform_source_id": _faker.pyint(),
+    }
+    return data
 
 
 def get_random_instance_type(avoid=None):

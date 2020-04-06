@@ -22,11 +22,8 @@ class AwsAccountSerializerTest(TransactionTestCase):
         self.aws_account_id = util_helper.generate_dummy_aws_account_id()
         self.arn = util_helper.generate_dummy_arn(self.aws_account_id)
         self.role = util_helper.generate_dummy_role()
-        self.validated_data = {
-            "account_arn": self.arn,
-            "name": "account_name",
-            "cloud_type": "aws",
-        }
+        self.validated_data = util_helper.generate_dummy_aws_cloud_account_post_data()
+        self.validated_data.update({"account_arn": self.arn, "name": "account_name"})
 
     def test_serialization_fails_when_all_empty_fields(self):
         """Test that an account is not saved if all fields are empty."""

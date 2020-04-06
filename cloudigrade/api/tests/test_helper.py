@@ -64,9 +64,9 @@ class SandboxedRestClientTest(TestCase):
         client._force_authenticate(self.user)
         arn = util_helper.generate_dummy_arn()
         name = _faker.sentence()
-        response = client.create_accounts(
-            data={"account_arn": arn, "name": name, "cloud_type": "aws",}
-        )
+        data = util_helper.generate_dummy_aws_cloud_account_post_data()
+        data.update({"account_arn": arn, "name": name})
+        response = client.create_accounts(data=data)
         self.assertEqual(response.status_code, http.HTTPStatus.CREATED)
         response_json = response.json()
         self.assertEqual(response_json["content_object"]["account_arn"], arn)

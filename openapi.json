@@ -92,25 +92,25 @@
                             "readOnly": true
                           },
                           "platform_authentication_id": {
-                            "type": "integer",
-                            "nullable": true
+                            "type": "integer"
                           },
                           "platform_application_id": {
-                            "type": "integer",
-                            "nullable": true
+                            "type": "integer"
                           },
                           "platform_endpoint_id": {
-                            "type": "integer",
-                            "nullable": true
+                            "type": "integer"
                           },
                           "platform_source_id": {
-                            "type": "integer",
-                            "nullable": true
+                            "type": "integer"
                           }
                         },
                         "required": [
                           "name",
-                          "cloud_type"
+                          "cloud_type",
+                          "platform_authentication_id",
+                          "platform_application_id",
+                          "platform_endpoint_id",
+                          "platform_source_id"
                         ]
                       }
                     }
@@ -149,25 +149,25 @@
                     "type": "string"
                   },
                   "platform_authentication_id": {
-                    "type": "integer",
-                    "nullable": true
+                    "type": "integer"
                   },
                   "platform_application_id": {
-                    "type": "integer",
-                    "nullable": true
+                    "type": "integer"
                   },
                   "platform_endpoint_id": {
-                    "type": "integer",
-                    "nullable": true
+                    "type": "integer"
                   },
                   "platform_source_id": {
-                    "type": "integer",
-                    "nullable": true
+                    "type": "integer"
                   }
                 },
                 "required": [
                   "name",
-                  "cloud_type"
+                  "cloud_type",
+                  "platform_authentication_id",
+                  "platform_application_id",
+                  "platform_endpoint_id",
+                  "platform_source_id"
                 ]
               }
             }
@@ -220,25 +220,25 @@
                       "readOnly": true
                     },
                     "platform_authentication_id": {
-                      "type": "integer",
-                      "nullable": true
+                      "type": "integer"
                     },
                     "platform_application_id": {
-                      "type": "integer",
-                      "nullable": true
+                      "type": "integer"
                     },
                     "platform_endpoint_id": {
-                      "type": "integer",
-                      "nullable": true
+                      "type": "integer"
                     },
                     "platform_source_id": {
-                      "type": "integer",
-                      "nullable": true
+                      "type": "integer"
                     }
                   },
                   "required": [
                     "name",
-                    "cloud_type"
+                    "cloud_type",
+                    "platform_authentication_id",
+                    "platform_application_id",
+                    "platform_endpoint_id",
+                    "platform_source_id"
                   ]
                 }
               }
@@ -309,25 +309,25 @@
                       "readOnly": true
                     },
                     "platform_authentication_id": {
-                      "type": "integer",
-                      "nullable": true
+                      "type": "integer"
                     },
                     "platform_application_id": {
-                      "type": "integer",
-                      "nullable": true
+                      "type": "integer"
                     },
                     "platform_endpoint_id": {
-                      "type": "integer",
-                      "nullable": true
+                      "type": "integer"
                     },
                     "platform_source_id": {
-                      "type": "integer",
-                      "nullable": true
+                      "type": "integer"
                     }
                   },
                   "required": [
                     "name",
-                    "cloud_type"
+                    "cloud_type",
+                    "platform_authentication_id",
+                    "platform_application_id",
+                    "platform_endpoint_id",
+                    "platform_source_id"
                   ]
                 }
               }
@@ -373,25 +373,25 @@
                     "type": "string"
                   },
                   "platform_authentication_id": {
-                    "type": "integer",
-                    "nullable": true
+                    "type": "integer"
                   },
                   "platform_application_id": {
-                    "type": "integer",
-                    "nullable": true
+                    "type": "integer"
                   },
                   "platform_endpoint_id": {
-                    "type": "integer",
-                    "nullable": true
+                    "type": "integer"
                   },
                   "platform_source_id": {
-                    "type": "integer",
-                    "nullable": true
+                    "type": "integer"
                   }
                 },
                 "required": [
                   "name",
-                  "cloud_type"
+                  "cloud_type",
+                  "platform_authentication_id",
+                  "platform_application_id",
+                  "platform_endpoint_id",
+                  "platform_source_id"
                 ]
               }
             }
@@ -444,25 +444,25 @@
                       "readOnly": true
                     },
                     "platform_authentication_id": {
-                      "type": "integer",
-                      "nullable": true
+                      "type": "integer"
                     },
                     "platform_application_id": {
-                      "type": "integer",
-                      "nullable": true
+                      "type": "integer"
                     },
                     "platform_endpoint_id": {
-                      "type": "integer",
-                      "nullable": true
+                      "type": "integer"
                     },
                     "platform_source_id": {
-                      "type": "integer",
-                      "nullable": true
+                      "type": "integer"
                     }
                   },
                   "required": [
                     "name",
-                    "cloud_type"
+                    "cloud_type",
+                    "platform_authentication_id",
+                    "platform_application_id",
+                    "platform_endpoint_id",
+                    "platform_source_id"
                   ]
                 }
               }
@@ -508,20 +508,16 @@
                     "type": "string"
                   },
                   "platform_authentication_id": {
-                    "type": "integer",
-                    "nullable": true
+                    "type": "integer"
                   },
                   "platform_application_id": {
-                    "type": "integer",
-                    "nullable": true
+                    "type": "integer"
                   },
                   "platform_endpoint_id": {
-                    "type": "integer",
-                    "nullable": true
+                    "type": "integer"
                   },
                   "platform_source_id": {
-                    "type": "integer",
-                    "nullable": true
+                    "type": "integer"
                   }
                 }
               }
@@ -575,25 +571,25 @@
                       "readOnly": true
                     },
                     "platform_authentication_id": {
-                      "type": "integer",
-                      "nullable": true
+                      "type": "integer"
                     },
                     "platform_application_id": {
-                      "type": "integer",
-                      "nullable": true
+                      "type": "integer"
                     },
                     "platform_endpoint_id": {
-                      "type": "integer",
-                      "nullable": true
+                      "type": "integer"
                     },
                     "platform_source_id": {
-                      "type": "integer",
-                      "nullable": true
+                      "type": "integer"
                     }
                   },
                   "required": [
                     "name",
-                    "cloud_type"
+                    "cloud_type",
+                    "platform_authentication_id",
+                    "platform_application_id",
+                    "platform_endpoint_id",
+                    "platform_source_id"
                   ]
                 }
               }
