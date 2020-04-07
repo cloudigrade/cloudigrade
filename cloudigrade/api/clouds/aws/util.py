@@ -720,8 +720,8 @@ def create_aws_cloud_account(
         content_type_id = ContentType.objects.get_for_model(AwsCloudAccount).id
 
         # Verify that no one already has a CloudAccount for this AwsCloudAccount.
-        # How could that happen? Since we use `get_or_create`, the same user using the
-        # same ARN but different name or platform_* values could result in the previous
+        # How could that happen? Since we use `get_or_create`, using the
+        # same ARN but different name could result in the previous
         # AwsCloudAccount.objects.get_or_create returning an existing object and the
         # upcoming CloudAccount.objects.get_or_create creates a new object. If that
         # happened, both CloudAccount objects would reference the same AwsCloudAccount,
@@ -744,12 +744,26 @@ def create_aws_cloud_account(
             defaults={
                 "object_id": aws_cloud_account.id,
                 "content_type_id": content_type_id,
-                "platform_endpoint_id": platform_endpoint_id,
-                "platform_source_id": platform_source_id,
                 "platform_application_id": platform_application_id,
                 "platform_authentication_id": platform_authentication_id,
+                "platform_endpoint_id": platform_endpoint_id,
+                "platform_source_id": platform_source_id,
             },
         )
+
+        if not account_created and (
+            cloud_account.platform_application_id != platform_application_id
+            or cloud_account.platform_authentication_id != platform_authentication_id
+            or cloud_account.platform_endpoint_id != platform_endpoint_id
+            or cloud_account.platform_source_id != platform_source_id
+        ):
+            raise ValidationError(
+                {
+                    "account_arn": _(
+                        "CloudAccount exists with this ARN but different platform IDs."
+                    )
+                }
+            )
 
     cloud_account.enable()
 
