@@ -710,14 +710,34 @@ def create_aws_cloud_account(
     aws_account_id = aws.AwsArn(customer_role_arn).account_id
     arn_str = str(customer_role_arn)
     with transaction.atomic():
-        aws_cloud_account, __ = AwsCloudAccount.objects.get_or_create(
+        aws_cloud_account, aws_created = AwsCloudAccount.objects.get_or_create(
             account_arn=arn_str, defaults={"aws_account_id": aws_account_id,},
         )
 
         # We have to do this ugly id and ContentType lookup because Django
         # can't perform the lookup we need using GenericForeignKey.
         content_type_id = ContentType.objects.get_for_model(AwsCloudAccount).id
-        cloud_account, __ = CloudAccount.objects.get_or_create(
+
+        # Verify that no one already has a CloudAccount for this AwsCloudAccount.
+        # How could that happen? Since we use `get_or_create`, the same user using the
+        # same ARN but different name or platform_* values could result in the previous
+        # AwsCloudAccount.objects.get_or_create returning an existing object and the
+        # upcoming CloudAccount.objects.get_or_create creates a new object. If that
+        # happened, both CloudAccount objects would reference the same AwsCloudAccount,
+        # and very strange and unexpected things could result later.
+        if (
+            not aws_created
+            and CloudAccount.objects.filter(
+                object_id=aws_cloud_account.id, content_type_id=content_type_id,
+            ).exists()
+        ):
+            message = _(
+                "CloudAccount already exists linked to AwsCloudAccount with ARN '{0}'"
+            ).format(arn_str)
+            logger.error(message)
+            raise ValidationError({"account_arn": message})
+
+        cloud_account, account_created = CloudAccount.objects.get_or_create(
             user=user,
             name=cloud_account_name,
             defaults={
@@ -729,6 +749,7 @@ def create_aws_cloud_account(
                 "platform_authentication_id": authentication_id,
             },
         )
+
     cloud_account.enable()
 
     return cloud_account
