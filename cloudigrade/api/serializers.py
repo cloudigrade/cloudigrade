@@ -74,25 +74,18 @@ class CloudAccountSerializer(ModelSerializer):
         )
         create_only_fields = ("cloud_type",)
 
-    def validate(self, data):
-        """
-        Validate conditions across multiple fields.
-
-        - name must be unique per user
-        """
+    def validate_name(self, value):
+        """Validate the input name is unique."""
         user = self.context["request"].user
-        name = data.get("name")
 
-        try:
-            CloudAccount.objects.get(user=user, name=name)
-        except CloudAccount.DoesNotExist:
-            return data
-
-        raise ValidationError(
-            _("Account with name '{0}' for account number '{1}' already exists").format(
-                name, user.username
+        if CloudAccount.objects.filter(user=user, name=value).exists():
+            raise ValidationError(
+                _(
+                    "Account with name '{0}' for account number '{1}' already exists"
+                ).format(value, user.username)
             )
-        )
+
+        return value
 
     def validate_account_arn(self, value):
         """Validate the input account_arn."""

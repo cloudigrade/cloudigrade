@@ -228,7 +228,7 @@ class AccountViewSetTest(TransactionTestCase):
         response = view(request)
 
         self.assertEqual(response.status_code, 400)
-        self.assertIn("non_field_errors", response.data)
+        self.assertIn("name", response.data)
         mock_task.delay.assert_not_called()
 
     def test_create_account_without_name_fail(self):
@@ -279,7 +279,7 @@ class AccountViewSetTest(TransactionTestCase):
         response = view(request, pk=account_id)
 
         self.assertEqual(response.status_code, 400)
-        self.assertIn("non_field_errors", response.data)
+        self.assertIn("name", response.data)
 
     def test_update_account_patch_arn_fails(self):
         """Test that updating to change the arn fails."""
