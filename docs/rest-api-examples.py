@@ -188,13 +188,13 @@ class DocsApiHandler(object):
 
         # Create an AWS account (success)
         another_arn = util_helper.generate_dummy_arn()
-        response = self.customer_client.create_accounts(
-            data={
-                "account_arn": another_arn,
-                "name": "yet another account",
-                "cloud_type": "aws",
-            }
+        aws_cloud_account_data = (
+            util_helper.generate_dummy_aws_cloud_account_post_data()
         )
+        aws_cloud_account_data.update(
+            {"account_arn": another_arn, "name": "yet another account"}
+        )
+        response = self.customer_client.create_accounts(data=aws_cloud_account_data)
         assert_status(response, 201)
         responses["v2_account_create"] = response
 
@@ -203,12 +203,14 @@ class DocsApiHandler(object):
         )
 
         # Create an AWS account (fail: duplicate ARN)
+        aws_cloud_account_duplicate_arn_data = (
+            util_helper.generate_dummy_aws_cloud_account_post_data()
+        )
+        aws_cloud_account_duplicate_arn_data.update(
+            {"account_arn": another_arn, "name": "but this account already exists"}
+        )
         response = self.customer_client.create_accounts(
-            data={
-                "account_arn": another_arn,
-                "name": "but this account already exists",
-                "cloud_type": "aws",
-            }
+            data=aws_cloud_account_duplicate_arn_data
         )
         assert_status(response, 400)
         responses["v2_account_create_duplicate_arn"] = response
@@ -233,13 +235,12 @@ class DocsApiHandler(object):
         assert_status(response, 200)
         responses["v2_account_patch"] = response
 
+        aws_cloud_account_put_different_name_data = aws_cloud_account_data.copy()
+        aws_cloud_account_put_different_name_data.update(
+            {"name": "name updated using PUT"}
+        )
         response = self.customer_client.put_accounts(
-            customer_account.id,
-            data={
-                "name": "name updated using PUT",
-                "account_arn": another_arn,
-                "cloud_type": "aws",
-            },
+            customer_account.id, data=aws_cloud_account_put_different_name_data,
         )
         assert_status(response, 200)
         responses["v2_account_put"] = response
@@ -366,7 +367,9 @@ def render(data):
 
 if __name__ == "__main__":
     empty_check()
-    with transaction.atomic():
+    with transaction.atomic(), override_settings(
+        ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES=False
+    ):
         api_hander = DocsApiHandler()
         responses = api_hander.gather_api_responses()
         transaction.set_rollback(True)
