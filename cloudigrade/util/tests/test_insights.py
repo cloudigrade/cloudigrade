@@ -5,7 +5,7 @@ import json
 from unittest.mock import MagicMock, Mock, patch
 
 import faker
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from util import insights
 from util.exceptions import SourcesAPINotJsonContent, SourcesAPINotOkStatus
@@ -192,6 +192,20 @@ class InsightsTest(TestCase):
             self.account_number, application_id, availability_status=availability_status
         )
         mock_patch.assert_called()
+
+    @patch("requests.patch")
+    def test_notify_sources_application_availability_skip(self, mock_patch):
+        """Test notify sources skips if not enabled."""
+        application_id = _faker.pyint()
+        availability_status = "available"
+
+        with override_settings(ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES=False):
+            insights.notify_sources_application_availability(
+                self.account_number,
+                application_id,
+                availability_status=availability_status,
+            )
+        mock_patch.assert_not_called()
 
     @patch("requests.patch")
     def test_notify_sources_application_availability_not_found(self, mock_patch):
