@@ -35,7 +35,10 @@ class CloudAccount(BaseGenericModel):
     platform_source_id = models.IntegerField()
 
     class Meta:
-        unique_together = ("user", "name")
+        unique_together = (
+            ("user", "name"),
+            ("platform_authentication_id", "platform_application_id"),
+        )
 
     @property
     def cloud_account_id(self):
