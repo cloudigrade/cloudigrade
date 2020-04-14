@@ -18,8 +18,9 @@ router.register(
 
 urlpatterns = [
     url(r"^api/cloudigrade/v2/", include(router.urls)),
-    url(r"^api-auth/", include("rest_framework.urls")),
-    url(r"^healthz/", include("health_check.urls")),
+    url(r"^internal/api/cloudigrade/v1/", views.availability_check),
+    url(r"^internal/api-auth/", include("rest_framework.urls")),
+    url(r"^internal/healthz/", include("health_check.urls")),
     path(
         "api/cloudigrade/v2/openapi.json",
         get_schema_view(
@@ -27,5 +28,5 @@ urlpatterns = [
         ),
         name="openapi-schema",
     ),
-    path("admin/", admin.site.urls),
+    path("internal/admin/", admin.site.urls),
 ]

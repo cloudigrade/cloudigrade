@@ -7,7 +7,7 @@ from django.conf import settings
 from django.db.models import Max
 from django.utils.translation import gettext as _
 from rest_framework import exceptions, mixins, status, viewsets
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, schema
 from rest_framework.response import Response
 
 from api import serializers
@@ -224,3 +224,23 @@ class DailyConcurrentUsageViewSet(viewsets.GenericViewSet, mixins.ListModelMixin
             start_date, end_date, user_id, cloud_account_id
         )
         return queryset
+
+
+@api_view(["POST"])
+@schema(None)
+def availability_check(request):
+    """
+    Attempt to re-enable cloudigrade accounts with matching source_id.
+
+    This is an internal only API, so we do not want it to be in the openapi.spec.
+    """
+    data = request.data
+    source_id = data.get("source_id")
+    if not source_id:
+        raise exceptions.ValidationError(detail="source_id field is required")
+
+    cloudaccounts = CloudAccount.objects.filter(platform_source_id=source_id)
+    for cloudaccount in cloudaccounts:
+        cloudaccount.enable()
+
+    return Response(status=status.HTTP_204_NO_CONTENT)
