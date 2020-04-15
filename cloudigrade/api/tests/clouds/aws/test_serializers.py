@@ -146,11 +146,9 @@ class AwsAccountSerializerTest(TransactionTestCase):
 
         serializer = CloudAccountSerializer(context=context)
 
-        with patch("api.serializers.verify_permissions") as mock_verify:
-            result = serializer.create(self.validated_data)
-            self.assertIsInstance(result, CloudAccount)
-            mock_verify.assert_called()
-            mock_enable.assert_called()
+        result = serializer.create(self.validated_data)
+        self.assertIsInstance(result, CloudAccount)
+        mock_enable.assert_called()
 
         # Verify that we created the account.
         account = AwsCloudAccount.objects.get(aws_account_id=self.aws_account_id)

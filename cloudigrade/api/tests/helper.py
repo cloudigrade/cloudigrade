@@ -84,7 +84,7 @@ class SandboxedRestClient(object):
         """
         if self.bypass_aws_calls:
             with patch.object(aws, "verify_account_access") as mock_verify, patch(
-                "api.serializers.verify_permissions"
+                "api.clouds.aws.util.verify_permissions"
             ) as mock_verify_permissions, patch.object(aws.sts, "boto3"), patch.object(
                 aws, "disable_cloudtrail"
             ), patch.object(

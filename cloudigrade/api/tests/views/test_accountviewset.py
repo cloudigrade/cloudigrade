@@ -180,12 +180,9 @@ class AccountViewSetTest(TransactionTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertResponseHasAwsAccountData(response, account)
 
-    @patch("api.serializers.verify_permissions")
     @patch.object(CloudAccount, "enable")
-    def test_create_account_with_name_success(self, mock_enable, mock_verify):
+    def test_create_account_with_name_success(self, mock_enable):
         """Test create account with a name succeeds."""
-        mock_verify.return_value = True
-
         data = util_helper.generate_dummy_aws_cloud_account_post_data()
 
         request = self.factory.post("/accounts/", data=data)
@@ -194,7 +191,6 @@ class AccountViewSetTest(TransactionTestCase):
         view = views.AccountViewSet.as_view(actions={"post": "create"})
 
         response = view(request)
-        mock_verify.assert_called()
         self.assertEqual(response.status_code, 201)
         self.assertEqual(
             response.data["content_object"]["account_arn"], data["account_arn"]

@@ -5,7 +5,6 @@ from decimal import Decimal
 from botocore.exceptions import ClientError
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from django.utils.translation import gettext as _
 from rest_framework.serializers import ValidationError
@@ -636,6 +635,13 @@ def verify_permissions(customer_role_arn):
     Args:
         customer_role_arn (str): ARN to access the customer's AWS account
 
+    Note:
+        This function not only verifies; it also has the side effect of configuring
+        the AWS CloudTrail. This should be refactored into a more explicit operation,
+        but at the time of this writing, there is no "dry run" check for CloudTrail
+        operations. Callers should be aware of the risk that we may configure CloudTrail
+        but somewhere else rollback our transaction, leaving that Trail orphaned.
+
     Returns:
         boolean indicating if the arn being verified is good.
 
@@ -695,6 +701,10 @@ def create_aws_cloud_account(
 
     This function may raise ValidationError if certain verification steps fail.
 
+    We call CloudAccount.enable after creating it, and that effectively verifies AWS
+    permission and configures CloudTrail. If that fails, we must abort this creation.
+    That is why we put almost everything here in a transaction.atomic() context.
+
     Args:
         user (django.contrib.auth.models.User): user to own the CloudAccount
         customer_role_arn (str): ARN to access the customer's AWS account
@@ -710,62 +720,52 @@ def create_aws_cloud_account(
     """
     aws_account_id = aws.AwsArn(customer_role_arn).account_id
     arn_str = str(customer_role_arn)
+
     with transaction.atomic():
-        aws_cloud_account, aws_created = AwsCloudAccount.objects.get_or_create(
-            account_arn=arn_str, defaults={"aws_account_id": aws_account_id,},
-        )
-
-        # We have to do this ugly id and ContentType lookup because Django
-        # can't perform the lookup we need using GenericForeignKey.
-        content_type_id = ContentType.objects.get_for_model(AwsCloudAccount).id
-
-        # Verify that no one already has a CloudAccount for this AwsCloudAccount.
-        # How could that happen? Since we use `get_or_create`, using the
-        # same ARN but different name could result in the previous
-        # AwsCloudAccount.objects.get_or_create returning an existing object and the
-        # upcoming CloudAccount.objects.get_or_create creates a new object. If that
-        # happened, both CloudAccount objects would reference the same AwsCloudAccount,
-        # and very strange and unexpected things could result later.
-        if (
-            not aws_created
-            and CloudAccount.objects.filter(
-                object_id=aws_cloud_account.id, content_type_id=content_type_id,
-            ).exists()
-        ):
-            message = _(
-                "CloudAccount already exists linked to AwsCloudAccount with ARN '{0}'"
-            ).format(arn_str)
-            logger.error(message)
+        # Verify that no AwsCloudAccount already exists with the same ARN.
+        if AwsCloudAccount.objects.filter(account_arn=arn_str).exists():
+            # TODO Should we change the message if the AwsCloudAccount belongs to
+            # a CloudAccount that belongs to a different User to hide this information?
+            message = _("CloudAccount already exists with ARN '{0}'").format(arn_str)
+            logger.info(message)
             raise ValidationError({"account_arn": message})
 
-        cloud_account, account_created = CloudAccount.objects.get_or_create(
-            user=user,
-            name=cloud_account_name,
-            defaults={
-                "object_id": aws_cloud_account.id,
-                "content_type_id": content_type_id,
-                "platform_application_id": platform_application_id,
-                "platform_authentication_id": platform_authentication_id,
-                "platform_endpoint_id": platform_endpoint_id,
-                "platform_source_id": platform_source_id,
-            },
+        # Verify that no AwsCloudAccount already exists with the same AWS Account ID.
+        if AwsCloudAccount.objects.filter(aws_account_id=aws_account_id).exists():
+            # TODO Should we change the message if the AwsCloudAccount belongs to
+            # a CloudAccount that belongs to a different User to hide this information?
+            message = _(
+                "CloudAccount already exists with AWS Account ID for ARN '{0}'"
+            ).format(arn_str)
+            logger.info(message)
+            raise ValidationError({"account_arn": message})
+
+        # Verify that no CloudAccount exists with the same name.
+        if CloudAccount.objects.filter(user=user, name=cloud_account_name).exists():
+            message = _("CloudAccount already exists with name '{0}'").format(
+                cloud_account_name
+            )
+            logger.info(message)
+            raise ValidationError({"name": message})
+
+        aws_cloud_account = AwsCloudAccount.objects.create(
+            aws_account_id=aws_account_id, account_arn=arn_str
         )
 
-        if not account_created and (
-            cloud_account.platform_application_id != platform_application_id
-            or cloud_account.platform_authentication_id != platform_authentication_id
-            or cloud_account.platform_endpoint_id != platform_endpoint_id
-            or cloud_account.platform_source_id != platform_source_id
-        ):
-            raise ValidationError(
-                {
-                    "account_arn": _(
-                        "CloudAccount exists with this ARN but different platform IDs."
-                    )
-                }
-            )
+        cloud_account = CloudAccount.objects.create(
+            user=user,
+            name=cloud_account_name,
+            content_object=aws_cloud_account,
+            platform_application_id=platform_application_id,
+            platform_authentication_id=platform_authentication_id,
+            platform_endpoint_id=platform_endpoint_id,
+            platform_source_id=platform_source_id,
+        )
 
-    cloud_account.enable()
+        # This enable call *must* be inside the transaction because we need to know
+        # to rollback the transaction if anything related to enabling fails.
+        # Yes, this means holding the transaction open while we wait on calls to AWS.
+        cloud_account.enable()
 
     return cloud_account
 

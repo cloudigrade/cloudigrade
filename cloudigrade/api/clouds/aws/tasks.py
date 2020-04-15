@@ -46,7 +46,6 @@ from api.clouds.aws.util import (
     start_image_inspection,
     update_aws_image_status_error,
     update_aws_image_status_inspected,
-    verify_permissions,
 )
 from api.models import (
     InstanceEvent,
@@ -106,27 +105,15 @@ def configure_customer_aws_and_create_cloud_account(
     customer_aws_account_id = aws.AwsArn(customer_arn).account_id
 
     cloud_account_name = get_standard_cloud_account_name("aws", customer_aws_account_id)
-    # TODO verify_permissions should not be called directly. In a future version of this
-    # code, we should in some way simply call `account.enable()` and allow the `enable`
-    # function to handle the call to `verify_permissions`. When we do this, we should
-    # change the default value of `CloudAccount.is_enabled` to `False`; this requires
-    # solving the problem of malicious User A creating an AwsCloudAccount for an AWS
-    # account ID that they don't really have access to but have slipped into our system
-    # with a CloudAccount object that exists in an is_enabled=False state. Until we
-    # allow multiple users to have different ARNs for the same AWS account ID, that
-    # first User A blocks any other legitimate User B from registering their ARN for
-    # the same AWS account ID with cloudigrade.
-    verified = verify_permissions(customer_arn)
-    if verified:
-        create_aws_cloud_account(
-            user,
-            customer_arn,
-            cloud_account_name,
-            authentication_id,
-            application_id,
-            endpoint_id,
-            source_id,
-        )
+    create_aws_cloud_account(
+        user,
+        customer_arn,
+        cloud_account_name,
+        authentication_id,
+        application_id,
+        endpoint_id,
+        source_id,
+    )
 
 
 @retriable_shared_task
