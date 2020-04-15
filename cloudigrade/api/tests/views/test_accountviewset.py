@@ -13,8 +13,6 @@ from api.tests import helper as api_helper
 from api.views import AccountViewSet
 from util.tests import helper as util_helper
 
-_faker = faker.Faker()
-
 
 class AccountViewSetTest(TransactionTestCase):
     """AccountViewSet test case."""
@@ -243,7 +241,7 @@ class AccountViewSetTest(TransactionTestCase):
         """Test updating an account with a name succeeds."""
         data = {
             "cloud_type": "aws",
-            "name": faker.Faker().bs()[:256],
+            "name": self.faker.bs()[:256],
         }
 
         account_id = self.account4.id
@@ -317,7 +315,7 @@ class AccountViewSetTest(TransactionTestCase):
             mock_viewset_serializer.return_value = MockCloudAccountSerializer
             data = {
                 "cloud_type": "bad_cloud",
-                "name": faker.Faker().bs()[:256],
+                "name": self.faker.bs()[:256],
             }
 
             account_id = self.account4.id
