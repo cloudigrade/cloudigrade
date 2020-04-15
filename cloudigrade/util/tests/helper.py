@@ -127,7 +127,7 @@ def generate_dummy_arn(
     if account_id is None:
         account_id = generate_dummy_aws_account_id()
     if resource is None:
-        resource = faker.Faker().name()
+        resource = _faker.name()
     arn = (
         f"arn:{partition}:{service}:{region}:{account_id}:"
         f"{resource_type}{resource_separator}{resource}"
@@ -259,7 +259,7 @@ def generate_dummy_describe_image(
         owner_id = Decimal(generate_dummy_aws_account_id())
 
     if name is None:
-        name = faker.Faker().bs()
+        name = _faker.bs()
 
     tags = []
     if openshift:
@@ -455,7 +455,7 @@ def generate_test_user(account_number=None, password=None, is_superuser=False):
 
     """
     if not account_number:
-        account_number = faker.Faker().random_int(min=100000, max=999999)
+        account_number = _faker.random_int(min=100000, max=999999)
     user = User.objects.create_user(
         username=account_number, password=password, is_superuser=is_superuser,
     )
@@ -521,13 +521,12 @@ def generate_authentication_create_message_value(
         headers (list): like Kafka headers.
 
     """
-    f = faker.Faker()
     if not username:
-        username = f.user_name()
+        username = _faker.user_name()
     if not platform_id:
-        platform_id = f.pyint()
+        platform_id = _faker.pyint()
     if not resource_id:
-        resource_id = f.pyint()
+        resource_id = _faker.pyint()
     if not authentication_type:
         authentication_type = random.choice(settings.SOURCES_CLOUDMETER_AUTHTYPES)
     message = {
@@ -559,9 +558,8 @@ def generate_applicationauthentication_create_message_value(
         headers (list): like Kafka headers.
 
     """
-    f = faker.Faker()
     if not platform_id:
-        platform_id = f.pyint()
+        platform_id = _faker.pyint()
 
     message = {
         "id": platform_id,
