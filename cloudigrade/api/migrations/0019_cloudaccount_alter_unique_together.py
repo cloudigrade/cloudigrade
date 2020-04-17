@@ -8,7 +8,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ("api", "0017_cloudaccount_platform"),
+        ("api", "0018_cloudaccount_platform_not_null"),
     ]
 
     operations = [
