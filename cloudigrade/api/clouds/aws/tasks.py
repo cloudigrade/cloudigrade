@@ -18,11 +18,13 @@ from decimal import Decimal
 import boto3
 from botocore.exceptions import ClientError
 from celery import shared_task
+from celery.task import task
 from dateutil.parser import parse
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import IntegrityError, transaction
 from django.utils.translation import gettext as _
+from rest_framework.exceptions import ValidationError
 
 from api import error_codes
 from api.clouds.aws.cloudtrail import (
@@ -47,6 +49,7 @@ from api.clouds.aws.util import (
     start_image_inspection,
     update_aws_image_status_error,
     update_aws_image_status_inspected,
+    verify_permissions,
 )
 from api.models import (
     InstanceEvent,
@@ -1496,6 +1499,37 @@ def repopulate_ec2_instance_mapping():
             )
             raise e
     logger.info(_("Finished saving AWS EC2 instance type definitions."))
+
+
+@task
+def verify_account_permissions(account_arn):
+    """
+    Periodic task that verifies the account arn is still valid.
+
+    Args:
+        account_arn: The ARN for the account to check
+
+    Returns:
+        bool: True if the ARN is still valid.
+
+    """
+    valid = False
+    try:
+        valid = verify_permissions(account_arn)
+    except ValidationError as e:
+        logger.info(
+            _("ARN %s failed validation. Disabling the cloud account."), account_arn,
+        )
+        # Disable the cloud account.
+        aws_cloud_account = AwsCloudAccount.objects.get(account_arn=account_arn)
+        aws_cloud_account.cloud_account.get().disable(message=str(e.detail))
+
+    logger.debug(
+        _("ARN %(account_arn)s is valid: %(valid)s."),
+        {"account_arn": account_arn, "valid": valid,},
+    )
+
+    return valid
 
 
 def _fetch_ec2_instance_type_definitions():

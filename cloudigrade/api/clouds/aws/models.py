@@ -1,10 +1,12 @@
 """Cloudigrade API v2 Models for AWS."""
+import json
 import logging
 
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models, transaction
 from django.utils.translation import gettext as _
+from django_celery_beat.models import IntervalSchedule, PeriodicTask
 
 from api import AWS_PROVIDER_STRING
 from api.models import CloudAccount, Instance, InstanceEvent, MachineImage
@@ -21,6 +23,9 @@ class AwsCloudAccount(BaseModel):
     cloud_account = GenericRelation(CloudAccount)
     aws_account_id = models.DecimalField(max_digits=12, decimal_places=0, db_index=True)
     account_arn = models.CharField(max_length=256, unique=True)
+    verify_task = models.OneToOneField(
+        PeriodicTask, models.CASCADE, blank=True, null=True
+    )
 
     @property
     def cloud_account_id(self):
@@ -74,6 +79,7 @@ class AwsCloudAccount(BaseModel):
         from api.clouds.aws import tasks, util  # Avoid circular import.
 
         util.verify_permissions(self.account_arn)
+        self._enable_verify_task()
         transaction.on_commit(
             lambda: tasks.initial_aws_describe_instances.delay(self.id)
         )
@@ -89,7 +95,43 @@ class AwsCloudAccount(BaseModel):
         AWS CloudTrail only upon committing the transaction.  If we cannot disable the
         CloudTrail, we simply log a message and proceed regardless.
         """
+        self._disable_verify_task()
         transaction.on_commit(lambda: _disable_cloudtrail(self))
+
+    def _enable_verify_task(self):
+        """Enable the given AwsCloudAccount's Verify Task."""
+        schedule, _ = IntervalSchedule.objects.get_or_create(
+            every=1, period=IntervalSchedule.DAYS
+        )
+        verify_task, created = PeriodicTask.objects.get_or_create(
+            interval=schedule,
+            name=f"Verify {self.account_arn}.",
+            task="api.clouds.aws.tasks.verify_account_permissions",
+            kwargs=json.dumps({"account_arn": self.account_arn,}),
+            defaults={"start_time": self.created_at},
+        )
+        if created:
+            self.verify_task = verify_task
+            self.save()
+        else:
+            verify_task.enabled = True
+            verify_task.save()
+
+    def _disable_verify_task(self):
+        """Disable the given AwsCloudAccount's Verify Task."""
+        if self.verify_task:
+            self.verify_task.enabled = False
+            self.verify_task.save()
+        else:
+            logger.error(
+                _(
+                    "Disable verify task for AWSCloudAccount ID "
+                    "%(aws_cloud_account_id)s failed, as no verify "
+                    "task was present. This should not be possible "
+                    "as every AwsCloudAccount should have a verify task."
+                ),
+                {"aws_cloud_account_id": self.id},
+            )
 
 
 def _disable_cloudtrail(aws_cloud_account):

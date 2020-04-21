@@ -1,10 +1,12 @@
 """Collection of tests for custom Django model logic."""
+import json
 import logging
 from random import choice
 from unittest.mock import Mock, patch
 
 from django.conf import settings
 from django.test import TestCase, TransactionTestCase
+from django_celery_beat.models import IntervalSchedule, PeriodicTask
 
 import api.clouds.aws.util
 from api import models
@@ -81,6 +83,12 @@ class AwsCloudAccountModelTest(TransactionTestCase):
         self.account.refresh_from_db()
         self.assertTrue(self.account.is_enabled)
         self.assertEqual(self.account.enabled_at, enable_date)
+
+        self.assertTrue(self.account.content_object.verify_task.enabled)
+        self.assertEqual(
+            self.account.content_object.verify_task.start_time,
+            self.account.content_object.created_at,
+        )
 
     def test_enable_failure(self):
         """Test that enabling an account rolls back if cloud-specific step fails."""
@@ -250,6 +258,69 @@ class AwsCloudAccountModelTest(TransactionTestCase):
         self.assertEqual(0, models.Run.objects.count())
         self.assertEqual(0, aws_models.AwsInstance.objects.count())
         self.assertEqual(0, models.Instance.objects.count())
+
+    def test_enable_verify_task_created(self):
+        """Verify Task is created."""
+        aws_clount = self.account.content_object
+        self.assertIsNone(aws_clount.verify_task)
+
+        aws_clount._enable_verify_task()
+
+        self.assertIsNotNone(aws_clount.verify_task)
+        self.assertTrue(aws_clount.verify_task.enabled)
+        self.assertEqual(aws_clount.verify_task.start_time, aws_clount.created_at)
+
+    def test_enable_verify_task_existing(self):
+        """Verify Task is re-enabled since it already existed."""
+        aws_clount = self.account.content_object
+        self.assertIsNone(aws_clount.verify_task)
+
+        schedule, _ = IntervalSchedule.objects.get_or_create(
+            every=1, period=IntervalSchedule.DAYS
+        )
+        verify_task = PeriodicTask.objects.create(
+            interval=schedule,
+            name=f"Verify {aws_clount.account_arn}.",
+            task="api.clouds.aws.tasks.verify_account_permissions",
+            kwargs=json.dumps({"account_arn": aws_clount.account_arn,}),
+            start_time=self.created_at,
+        )
+
+        verify_task.enabled = False
+        verify_task.save()
+
+        aws_clount.verify_task = verify_task
+        aws_clount.save()
+        aws_clount.refresh_from_db()
+
+        aws_clount._enable_verify_task()
+
+        self.assertIsNotNone(aws_clount.verify_task)
+        self.assertTrue(aws_clount.verify_task.enabled)
+        self.assertEqual(aws_clount.verify_task.start_time, verify_task.start_time)
+        self.assertEqual(aws_clount.verify_task.id, verify_task.pk)
+
+    @patch("api.models.notify_sources_application_availability")
+    def test_disable_verify_task_existing(self, mock_sources_notify):
+        """Verify Task is disabled."""
+        aws_clount = self.account.content_object
+        enable_date = util_helper.utc_dt(2019, 1, 4, 0, 0, 0)
+        with patch("api.clouds.aws.util.verify_permissions"), patch(
+            "api.clouds.aws.tasks.initial_aws_describe_instances"
+        ), util_helper.clouditardis(enable_date):
+            self.account.enable()
+
+        self.assertTrue(aws_clount.verify_task.enabled)
+        self.account.content_object._disable_verify_task()
+        self.assertFalse(aws_clount.verify_task.enabled)
+
+    def test_disable_verify_task_fail(self):
+        """Verify Task fails to be disabled, since it does not exist."""
+        aws_clount = self.account.content_object
+        self.assertIsNone(aws_clount.verify_task)
+        with self.assertLogs("api.clouds.aws.models", level="ERROR") as cm:
+            self.account.content_object._disable_verify_task()
+            self.assertIn("ERROR", cm.output[0])
 
 
 class InstanceModelTest(TestCase):
