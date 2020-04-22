@@ -165,7 +165,8 @@ class AwsAccountSerializerTest(TransactionTestCase):
         amis = AwsMachineImage.objects.all()
         self.assertEqual(len(amis), 0)
 
-    def test_create_fails_access_denied(self):
+    @patch("api.error_codes.notify_sources_application_availability")
+    def test_create_fails_access_denied(self, mock_notify_sources):
         """Test that an exception is raised if access is denied to the arn."""
         client_error = ClientError(
             error_response={"Error": {"Code": "AccessDenied"}}, operation_name=Mock(),
@@ -190,7 +191,8 @@ class AwsAccountSerializerTest(TransactionTestCase):
                 serializer.create(self.validated_data)
             self.assertEquals(expected_error, cm.exception.detail)
 
-    def test_create_fails_when_aws_verify_fails(self):
+    @patch("api.error_codes.notify_sources_application_availability")
+    def test_create_fails_when_aws_verify_fails(self, mock_notify_sources):
         """Test that an exception is raised if verify_account_access fails."""
         mock_request = Mock()
         mock_request.user = util_helper.generate_test_user()
@@ -209,7 +211,8 @@ class AwsAccountSerializerTest(TransactionTestCase):
                 serializer.create(self.validated_data)
             self.assertEquals(expected_error, cm.exception.detail)
 
-    def test_create_fails_cloudtrail_configuration_error(self):
+    @patch("api.error_codes.notify_sources_application_availability")
+    def test_create_fails_cloudtrail_configuration_error(self, mock_notify_sources):
         """Test that an exception occurs if cloudtrail configuration fails."""
         mock_request = Mock()
         mock_request.user = util_helper.generate_test_user()

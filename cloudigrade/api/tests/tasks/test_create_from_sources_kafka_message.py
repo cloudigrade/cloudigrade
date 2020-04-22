@@ -72,7 +72,7 @@ class CreateFromSourcesKafkaMessageTest(TestCase):
 
         user = User.objects.get(username=self.account_number)
         mock_task.delay.assert_called_with(
-            user.id,
+            user.username,
             password,
             self.authentication_id,
             self.application_id,
@@ -104,6 +104,7 @@ class CreateFromSourcesKafkaMessageTest(TestCase):
         mock_task.delay.assert_not_called()
         mock_get_application.assert_not_called()
 
+    @patch("api.error_codes.notify_sources_application_availability")
     @patch("util.insights.get_sources_endpoint")
     @patch("util.insights.get_sources_authentication")
     @patch("util.insights.get_sources_cloudigrade_application_type_id")
@@ -116,6 +117,7 @@ class CreateFromSourcesKafkaMessageTest(TestCase):
         mock_get_app_type_id,
         mock_get_auth,
         mock_get_endpoint,
+        mock_notify_sources,
     ):
         """Assert no account gets created for unsupported authtype."""
         mock_get_app.return_value = {
@@ -174,12 +176,18 @@ class CreateFromSourcesKafkaMessageTest(TestCase):
         self.assertEqual(User.objects.all().count(), 0)
         mock_task.delay.assert_not_called()
 
+    @patch("api.error_codes.notify_sources_application_availability")
     @patch("util.insights.get_sources_authentication")
     @patch("util.insights.get_sources_cloudigrade_application_type_id")
     @patch("util.insights.get_sources_application")
     @patch("api.tasks.configure_customer_aws_and_create_cloud_account")
     def test_create_from_sources_kafka_message_returns_early_when_authentication_404(
-        self, mock_task, mock_get_app, mock_get_app_type_id, mock_get_auth
+        self,
+        mock_task,
+        mock_get_app,
+        mock_get_app_type_id,
+        mock_get_auth,
+        mock_notify_sources,
     ):
         """
         Assert create_from_sources_kafka_message returns if sources authentication 404s.
@@ -198,6 +206,7 @@ class CreateFromSourcesKafkaMessageTest(TestCase):
         self.assertEqual(User.objects.all().count(), 0)
         mock_task.delay.assert_not_called()
 
+    @patch("api.error_codes.notify_sources_application_availability")
     @patch("util.insights.get_sources_authentication")
     @patch("util.insights.get_sources_endpoint")
     @patch("util.insights.get_sources_cloudigrade_application_type_id")
@@ -210,6 +219,7 @@ class CreateFromSourcesKafkaMessageTest(TestCase):
         mock_get_app_type_id,
         mock_get_endpoint,
         mock_get_auth,
+        mock_notify_sources,
     ):
         """
         Assert create_from_sources_kafka_message returns if sources endpoint 404s.
@@ -221,9 +231,15 @@ class CreateFromSourcesKafkaMessageTest(TestCase):
             "application_type_id": self.cloudigrade_sources_app_id
         }
         mock_get_app_type_id.return_value = self.cloudigrade_sources_app_id
+        password = util_helper.generate_dummy_arn()
+
         mock_get_auth.return_value = {
             "resource_id": _faker.pyint(),
             "resource_type": settings.SOURCES_ENDPOINT_TYPE,
+            "authtype": settings.SOURCES_CLOUDMETER_ARN_AUTHTYPE,
+            "password": password,
+            "username": self.username,
+            "id": self.authentication_id,
         }
         mock_get_endpoint.return_value = None
 
@@ -234,6 +250,7 @@ class CreateFromSourcesKafkaMessageTest(TestCase):
         mock_get_endpoint.assert_called()
         mock_task.delay.assert_not_called()
 
+    @patch("api.error_codes.notify_sources_application_availability")
     @patch("util.insights.get_sources_authentication")
     @patch("util.insights.get_sources_endpoint")
     @patch("util.insights.get_sources_cloudigrade_application_type_id")
@@ -246,6 +263,7 @@ class CreateFromSourcesKafkaMessageTest(TestCase):
         mock_get_app_type_id,
         mock_get_endpoint,
         mock_get_auth,
+        mock_notify_sources,
     ):
         """Assert task returns if resource_type is invalid."""
         mock_get_app.return_value = {
@@ -253,15 +271,58 @@ class CreateFromSourcesKafkaMessageTest(TestCase):
         }
         mock_get_app_type_id.return_value = self.cloudigrade_sources_app_id
 
+        password = util_helper.generate_dummy_arn()
+
         mock_get_auth.return_value = {
+            "password": password,
+            "username": self.username,
             "resource_id": _faker.pyint(),
             "resource_type": "INVALID",
+            "id": self.authentication_id,
+            "authtype": settings.SOURCES_CLOUDMETER_ARN_AUTHTYPE,
         }
 
         tasks.create_from_sources_kafka_message(self.message, self.headers)
         # User should not have been created.
         self.assertEqual(User.objects.all().count(), 0)
         mock_get_endpoint.assert_not_called()
+        mock_task.delay.assert_not_called()
+
+    @patch("api.error_codes.notify_sources_application_availability")
+    @patch("util.insights.get_sources_endpoint")
+    @patch("util.insights.get_sources_authentication")
+    @patch("util.insights.get_sources_cloudigrade_application_type_id")
+    @patch("util.insights.get_sources_application")
+    @patch("api.tasks.configure_customer_aws_and_create_cloud_account")
+    def test_create_fails_if_no_password(
+        self,
+        mock_task,
+        mock_get_app,
+        mock_get_app_type_id,
+        mock_get_auth,
+        mock_get_endpoint,
+        mock_notify_sources,
+    ):
+        """Assert create_from_sources_kafka_message fails if auth has no password."""
+        mock_get_app.return_value = {
+            "application_type_id": self.cloudigrade_sources_app_id
+        }
+        mock_get_app_type_id.return_value = self.cloudigrade_sources_app_id
+
+        mock_get_auth.return_value = {
+            "username": self.username,
+            "resource_type": "Endpoint",
+            "resource_id": self.endpoint_id,
+            "id": self.authentication_id,
+            "authtype": settings.SOURCES_CLOUDMETER_ARN_AUTHTYPE,
+        }
+        mock_get_endpoint.return_value = {
+            "id": self.endpoint_id,
+            "source_id": self.source_id,
+        }
+
+        tasks.create_from_sources_kafka_message(self.message, self.headers)
+
         mock_task.delay.assert_not_called()
 
     @patch("util.insights.get_sources_authentication")

@@ -255,6 +255,7 @@ def notify_sources_application_availability(
         f"{sources_api_base_url}/{sources_api_external_uri}"
         f"applications/{application_id}/"
     )
+
     payload = {
         "availability_status": availability_status,
         "availability_status_error": availability_status_error,

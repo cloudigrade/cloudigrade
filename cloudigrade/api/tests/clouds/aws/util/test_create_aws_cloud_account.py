@@ -41,8 +41,11 @@ class CreateAWSClountTest(TestCase):
 
         mock_enable.assert_called()
 
+    @patch("api.error_codes.notify_sources_application_availability")
     @patch.object(CloudAccount, "enable")
-    def test_create_aws_clount_fails_same_aws_account_different_arn(self, mock_enable):
+    def test_create_aws_clount_fails_same_aws_account_different_arn(
+        self, mock_enable, mock_notify_sources
+    ):
         """
         Test create_aws_cloud_account fails with same ARN and different AWS Account.
 
@@ -60,7 +63,10 @@ class CreateAWSClountTest(TestCase):
         )
 
         other_name = self.name = _faker.word()
-        other_arn = util_helper.generate_dummy_arn(account_id=self.aws_account_id)
+        other_arn = util_helper.generate_dummy_arn(
+            account_id=self.aws_account_id, resource=_faker.word()
+        )
+        self.assertNotEqual(self.arn, other_arn)
 
         with self.assertRaises(ValidationError) as raise_context:
             util.create_aws_cloud_account(
@@ -75,11 +81,15 @@ class CreateAWSClountTest(TestCase):
         exception_detail = raise_context.exception.detail
         self.assertIn("account_arn", exception_detail)
         self.assertIn(
-            "CloudAccount already exists with ARN", exception_detail["account_arn"]
+            "Could not set up cloud metering.", exception_detail["account_arn"]
         )
+        self.assertIn("CG1002", exception_detail["account_arn"])
 
+    @patch("api.error_codes.notify_sources_application_availability")
     @patch.object(CloudAccount, "enable")
-    def test_create_aws_clount_fails_with_same_arn_different_user(self, mock_enable):
+    def test_create_aws_clount_fails_with_same_arn_different_user(
+        self, mock_enable, mock_notify_sources
+    ):
         """Test create_aws_cloud_account fails with same ARN and a different user."""
         util.create_aws_cloud_account(
             self.user,
@@ -107,11 +117,14 @@ class CreateAWSClountTest(TestCase):
         exception_detail = raise_context.exception.detail
         self.assertIn("account_arn", exception_detail)
         self.assertIn(
-            "CloudAccount already exists with ARN", exception_detail["account_arn"]
+            "Could not set up cloud metering.", exception_detail["account_arn"]
         )
 
+    @patch("api.error_codes.notify_sources_application_availability")
     @patch.object(CloudAccount, "enable")
-    def test_create_aws_clount_fails_with_same_user_same_name(self, mock_enable):
+    def test_create_aws_clount_fails_with_same_user_same_name(
+        self, mock_enable, mock_notify_sources
+    ):
         """Test create_aws_cloud_account fails with same name different platform IDs."""
         # The first call just creates the existing objects.
         util.create_aws_cloud_account(
@@ -142,4 +155,4 @@ class CreateAWSClountTest(TestCase):
             )
         exception_detail = raise_context.exception.detail
         self.assertIn("name", exception_detail)
-        self.assertIn("CloudAccount already exists with name", exception_detail["name"])
+        self.assertIn("Could not set up cloud metering.", exception_detail["name"])

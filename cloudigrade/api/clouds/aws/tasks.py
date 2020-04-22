@@ -24,6 +24,7 @@ from django.contrib.auth.models import User
 from django.db import IntegrityError, transaction
 from django.utils.translation import gettext as _
 
+from api import error_codes
 from api.clouds.aws.cloudtrail import (
     extract_ami_tag_events,
     extract_ec2_instance_events,
@@ -73,7 +74,7 @@ CLOUD_TYPE_AWS = "aws"
 @retriable_shared_task(autoretry_for=(RuntimeError,))
 @rewrap_aws_errors
 def configure_customer_aws_and_create_cloud_account(
-    user_id, customer_arn, authentication_id, application_id, endpoint_id, source_id
+    username, customer_arn, authentication_id, application_id, endpoint_id, source_id
 ):
     """
     Configure the customer's AWS account and create our CloudAccount.
@@ -84,23 +85,22 @@ def configure_customer_aws_and_create_cloud_account(
     if AWS is misbehaving.
 
     Args:
-        user_id (int): id of User that will own the new cloud account
+        username (string): Username of the user that will own the new cloud account
         customer_arn (str): customer's ARN
         authentication_id (str): Platform Sources' Authentication object id
-        authentication_id (str): Platform Sources' Application object id
+        application_id (str): Platform Sources' Application object id
         endpoint_id (str): Platform Sources' Endpoint object id
         source_id (str): Platform Sources' Source object id
     """
     try:
-        user = User.objects.get(pk=user_id)
+        user = User.objects.get(username=username)
     except User.DoesNotExist:
-        logger.warning(
-            _(
-                "User id %s could not be found for "
-                "configure_customer_aws_and_create_cloud_account"
-            ),
-            user_id,
+        error = error_codes.CG1000
+        error.log_internal_message(
+            logger, {"application_id": application_id, "username": username}
         )
+        error.notify(username, application_id)
+
         return
     customer_aws_account_id = aws.AwsArn(customer_arn).account_id
 

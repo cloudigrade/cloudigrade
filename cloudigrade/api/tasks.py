@@ -22,6 +22,7 @@ from django.db.models import Q
 from django.utils.translation import gettext as _
 from requests.exceptions import BaseHTTPError, RequestException
 
+from api import error_codes
 from api.clouds.aws.tasks import (
     CLOUD_KEY,
     CLOUD_TYPE_AWS,
@@ -101,45 +102,41 @@ def create_from_sources_kafka_message(message, headers):
         account_number, authentication_id
     )
     if not authentication:
-        logger.info(
-            _(
-                "Authentication ID %(authentication_id)s for account number "
-                "%(account_number)s does not exist; aborting cloud account creation."
-            ),
+        error_code = error_codes.CG2000
+        error_code.log_internal_message(
+            logger,
             {"authentication_id": authentication_id, "account_number": account_number},
         )
+        error_code.notify(account_number, application_id)
         return
 
     authtype = authentication.get("authtype")
     if authtype not in settings.SOURCES_CLOUDMETER_AUTHTYPES:
-        logger.info(
-            "Aborting creation. Authentication ID %(authentication_id)s is of "
-            "unsupported type %(authtype)s.",
-            {"authentication_id": authentication_id, "authtype": authtype,},
+        error_code = error_codes.CG2001
+        error_code.log_internal_message(
+            logger, {"authentication_id": authentication_id, "authtype": authtype}
         )
+        error_code.notify(account_number, application_id)
+        return
 
     resource_type = authentication.get("resource_type")
     endpoint_id = authentication.get("resource_id")
 
     if resource_type != settings.SOURCES_ENDPOINT_TYPE:
-        logger.info(
-            _(
-                "Resource ID %(endpoint_id)s for account number %(account_number)s "
-                "is not of type Endpoint; aborting cloud account creation."
-            ),
-            {"endpoint_id": endpoint_id, "account_number": account_number},
+        error_code = error_codes.CG2002
+        error_code.log_internal_message(
+            logger, {"endpoint_id": endpoint_id, "account_number": account_number}
         )
+        error_code.notify(account_number, application_id)
         return
 
     endpoint = insights.get_sources_endpoint(account_number, endpoint_id)
     if not endpoint:
-        logger.info(
-            _(
-                "Endpoint ID %(endpoint_id)s for account number "
-                "%(account_number)s does not exist; aborting cloud account creation."
-            ),
-            {"endpoint_id": endpoint_id, "account_number": account_number},
+        error_code = error_codes.CG2003
+        error_code.log_internal_message(
+            logger, {"endpoint_id": endpoint_id, "account_number": account_number}
         )
+        error_code.notify(account_number, application_id)
         return
 
     source_id = endpoint.get("source_id")
@@ -147,10 +144,11 @@ def create_from_sources_kafka_message(message, headers):
     password = authentication.get("password")
 
     if not password:
-        logger.error(
-            _("Missing expected password from authentication for id %s"),
-            authentication_id,
+        error_code = error_codes.CG2004
+        error_code.log_internal_message(
+            logger, {"authentication_id": authentication_id}
         )
+        error_code.notify(account_number, application_id)
         return
 
     with transaction.atomic():
@@ -164,7 +162,12 @@ def create_from_sources_kafka_message(message, headers):
     # Conditionalize the logic for different cloud providers
     if authtype == settings.SOURCES_CLOUDMETER_ARN_AUTHTYPE:
         configure_customer_aws_and_create_cloud_account.delay(
-            user.id, password, authentication_id, application_id, endpoint_id, source_id
+            user.username,
+            password,
+            authentication_id,
+            application_id,
+            endpoint_id,
+            source_id,
         )
 
 

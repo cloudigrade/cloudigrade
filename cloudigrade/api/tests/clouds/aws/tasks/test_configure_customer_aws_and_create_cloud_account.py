@@ -54,7 +54,7 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
         mock_ensure_role.return_value = (role_name, role_arn)
 
         tasks.configure_customer_aws_and_create_cloud_account(
-            user.id,
+            user.username,
             customer_secret_access_key,
             auth_id,
             application_id,
@@ -75,11 +75,14 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
             source_id,
         )
 
+    @patch("api.error_codes.notify_sources_application_availability")
     @patch.object(tasks, "create_aws_cloud_account")
     @patch.object(tasks, "aws")
-    def test_fails_if_user_not_found(self, mock_tasks_aws, mock_create):
+    def test_fails_if_user_not_found(
+        self, mock_tasks_aws, mock_create, mock_notify_sources
+    ):
         """Assert the task returns early if user is not found."""
-        user_id = -1  # This user should never exist.
+        username = -1  # This user should never exist.
 
         customer_secret_access_key = util_helper.generate_dummy_arn()
         auth_id = _faker.pyint()
@@ -88,7 +91,7 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
         source_id = _faker.pyint()
 
         tasks.configure_customer_aws_and_create_cloud_account(
-            user_id,
+            username,
             customer_secret_access_key,
             auth_id,
             application_id,
@@ -101,8 +104,11 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
         mock_tasks_aws.ensure_cloudigrade_role.assert_not_called()
         mock_create.assert_not_called()
 
+    @patch("api.error_codes.notify_sources_application_availability")
     @patch.object(AwsCloudAccount, "enable")
-    def test_account_not_created_if_enable_fails(self, mock_enable):
+    def test_account_not_created_if_enable_fails(
+        self, mock_enable, mock_notify_sources
+    ):
         """
         Assert the account is not created if enable fails.
 
@@ -123,7 +129,7 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
 
         with self.assertRaises(ValidationError) as raise_context:
             tasks.configure_customer_aws_and_create_cloud_account(
-                user.id,
+                user.username,
                 customer_secret_access_key,
                 auth_id,
                 application_id,

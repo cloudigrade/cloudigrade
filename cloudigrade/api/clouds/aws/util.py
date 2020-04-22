@@ -4,12 +4,11 @@ from decimal import Decimal
 
 from botocore.exceptions import ClientError
 from django.conf import settings
-from django.contrib.auth.models import User
 from django.db import transaction
 from django.utils.translation import gettext as _
 from rest_framework.serializers import ValidationError
 
-from api import AWS_PROVIDER_STRING
+from api import AWS_PROVIDER_STRING, error_codes
 from api.clouds.aws.models import (
     AwsCloudAccount,
     AwsInstance,
@@ -726,27 +725,36 @@ def create_aws_cloud_account(
         if AwsCloudAccount.objects.filter(account_arn=arn_str).exists():
             # TODO Should we change the message if the AwsCloudAccount belongs to
             # a CloudAccount that belongs to a different User to hide this information?
-            message = _("CloudAccount already exists with ARN '{0}'").format(arn_str)
-            logger.info(message)
-            raise ValidationError({"account_arn": message})
+            error_code = error_codes.CG1001
+            error_code.log_internal_message(
+                logger, {"application_id": platform_application_id, "arn": arn_str,}
+            )
+            error_code.notify(user.username, platform_application_id)
+            raise ValidationError({"account_arn": error_code.get_message()})
 
         # Verify that no AwsCloudAccount already exists with the same AWS Account ID.
         if AwsCloudAccount.objects.filter(aws_account_id=aws_account_id).exists():
             # TODO Should we change the message if the AwsCloudAccount belongs to
             # a CloudAccount that belongs to a different User to hide this information?
-            message = _(
-                "CloudAccount already exists with AWS Account ID for ARN '{0}'"
-            ).format(arn_str)
-            logger.info(message)
-            raise ValidationError({"account_arn": message})
+            error_code = error_codes.CG1002
+            error_code.log_internal_message(
+                logger, {"application_id": platform_application_id, "arn": arn_str,}
+            )
+            error_code.notify(user.username, platform_application_id)
+            raise ValidationError({"account_arn": error_code.get_message()})
 
         # Verify that no CloudAccount exists with the same name.
         if CloudAccount.objects.filter(user=user, name=cloud_account_name).exists():
-            message = _("CloudAccount already exists with name '{0}'").format(
-                cloud_account_name
+            error_code = error_codes.CG1003
+            error_code.log_internal_message(
+                logger,
+                {
+                    "application_id": platform_application_id,
+                    "name": cloud_account_name,
+                },
             )
-            logger.info(message)
-            raise ValidationError({"name": message})
+            error_code.notify(user.username, platform_application_id)
+            raise ValidationError({"name": error_code.get_message()})
 
         aws_cloud_account = AwsCloudAccount.objects.create(
             aws_account_id=aws_account_id, account_arn=arn_str
@@ -812,12 +820,11 @@ def update_aws_cloud_account(
             },
         )
         cloud_account.delete()
-        user = User.objects.get(username=account_number)
 
         from api.clouds.aws.tasks import configure_customer_aws_and_create_cloud_account
 
         configure_customer_aws_and_create_cloud_account.delay(
-            user.id,
+            account_number,
             customer_arn,
             authentication_id,
             application_id,
