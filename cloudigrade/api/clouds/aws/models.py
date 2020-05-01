@@ -55,6 +55,7 @@ class AwsCloudAccount(BaseModel):
             f"id={self.id}, "
             f"aws_account_id={self.aws_account_id}, "
             f"account_arn='{self.account_arn}', "
+            f"verify_task_id='{self.verify_task_id}', "
             f"created_at=parse({created_at}), "
             f"updated_at=parse({updated_at})"
             f")"
