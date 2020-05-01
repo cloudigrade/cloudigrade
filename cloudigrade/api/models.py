@@ -67,6 +67,9 @@ class CloudAccount(BaseGenericModel):
 
     def __repr__(self):
         """Get an unambiguous string representation."""
+        enabled_at = (
+            repr(self.enabled_at.isoformat()) if self.enabled_at is not None else None
+        )
         created_at = (
             repr(self.created_at.isoformat()) if self.created_at is not None else None
         )
@@ -79,6 +82,7 @@ class CloudAccount(BaseGenericModel):
             f"id={self.id}, "
             f"name='{self.name}', "
             f"is_enabled='{self.is_enabled}', "
+            f"enabled_at=parse({enabled_at}), "
             f"user_id={self.user_id}, "
             f"platform_authentication_id={self.platform_authentication_id}, "
             f"platform_endpoint_id={self.platform_endpoint_id}, "
