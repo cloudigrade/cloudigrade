@@ -85,6 +85,7 @@ class CloudAccount(BaseGenericModel):
             f"enabled_at=parse({enabled_at}), "
             f"user_id={self.user_id}, "
             f"platform_authentication_id={self.platform_authentication_id}, "
+            f"platform_application_id={self.platform_application_id}, "
             f"platform_endpoint_id={self.platform_endpoint_id}, "
             f"platform_source_id={self.platform_source_id}, "
             f"created_at=parse({created_at}), "
