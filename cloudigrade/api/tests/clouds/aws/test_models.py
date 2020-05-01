@@ -2,9 +2,10 @@
 import json
 import logging
 from random import choice
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 from django.conf import settings
+from django.db.models import ForeignKey
 from django.test import TestCase, TransactionTestCase
 from django_celery_beat.models import IntervalSchedule, PeriodicTask
 
@@ -14,11 +15,34 @@ from api.clouds.aws import models as aws_models
 from api.tests import helper
 from util.tests import helper as util_helper
 
-
 logger = logging.getLogger(__name__)
 
 
-class AwsCloudAccountModelTest(TransactionTestCase):
+class ModelStrTestMixin:
+    """Mixin for test classes to add common assertion for str correctness."""
+
+    def assertTypicalStrOutput(self, instance, exclude_field_names=None):
+        """
+        Assert instance's str output includes all relevant data.
+
+        Our typical model string representation should look like:
+            ClassName(field="value", other_field="value", related_model_id=1)
+        """
+        if exclude_field_names is None:
+            exclude_field_names = ()
+        output = str(instance)
+        self.assertEqual(output, repr(instance))
+        self.assertTrue(output.startswith(f"{instance.__class__.__name__}("))
+        field_names = (
+            field.name if not isinstance(field, ForeignKey) else f"{field.name}_id"
+            for field in instance.__class__._meta.local_fields
+            if field.name not in exclude_field_names
+        )
+        for field_name in field_names:
+            self.assertIn(f"{field_name}=", output)
+
+
+class AwsCloudAccountModelTest(TransactionTestCase, ModelStrTestMixin):
     """AwsCloudAccount Model Test Cases."""
 
     def setUp(self):
@@ -36,19 +60,12 @@ class AwsCloudAccountModelTest(TransactionTestCase):
 
     def test_cloud_account_str(self):
         """Test that the CloudAccount str (and repr) is valid."""
-        mock_logger = Mock()
-        mock_logger.info(str(self.account))
-        info_calls = mock_logger.info.mock_calls
-        message = info_calls[0][1][0]
-        self.assertTrue(message.startswith("CloudAccount("))
+        excluded_field_names = {"content_type", "object_id"}
+        self.assertTypicalStrOutput(self.account, excluded_field_names)
 
     def test_aws_cloud_account_str(self):
         """Test that the AwsCloudAccount str (and repr) is valid."""
-        mock_logger = Mock()
-        mock_logger.info(str(self.account.content_object))
-        info_calls = mock_logger.info.mock_calls
-        message = info_calls[0][1][0]
-        self.assertTrue(message.startswith("AwsCloudAccount("))
+        self.assertTypicalStrOutput(self.account.content_object)
 
     @patch("api.models.notify_sources_application_availability")
     def test_enable_succeeds(self, mock_sources_notify):
@@ -323,7 +340,7 @@ class AwsCloudAccountModelTest(TransactionTestCase):
             self.assertIn("ERROR", cm.output[0])
 
 
-class InstanceModelTest(TestCase):
+class InstanceModelTest(TestCase, ModelStrTestMixin):
     """Instance Model Test Cases."""
 
     def setUp(self):
@@ -340,19 +357,12 @@ class InstanceModelTest(TestCase):
 
     def test_instance_str(self):
         """Test that the Instance str (and repr) is valid."""
-        mock_logger = Mock()
-        mock_logger.info(str(self.instance))
-        info_calls = mock_logger.info.mock_calls
-        message = info_calls[0][1][0]
-        self.assertTrue(message.startswith("Instance("))
+        excluded_field_names = ("content_type", "object_id")
+        self.assertTypicalStrOutput(self.instance, excluded_field_names)
 
     def test_aws_instance_str(self):
         """Test that the AwsInstance str (and repr) is valid."""
-        mock_logger = Mock()
-        mock_logger.info(str(self.instance.content_object))
-        info_calls = mock_logger.info.mock_calls
-        message = info_calls[0][1][0]
-        self.assertTrue(message.startswith("AwsInstance("))
+        self.assertTypicalStrOutput(self.instance.content_object)
 
     def test_delete_instance_cleans_up_machineimage(self):
         """Test that deleting an instance cleans up its associated image."""
@@ -388,7 +398,7 @@ class InstanceModelTest(TestCase):
         self.assertEqual(0, models.Instance.objects.count())
 
 
-class MachineImageModelTest(TestCase):
+class MachineImageModelTest(TestCase, ModelStrTestMixin):
     """Instance Model Test Cases."""
 
     def setUp(self):
@@ -404,27 +414,17 @@ class MachineImageModelTest(TestCase):
 
     def test_machine_image_str(self):
         """Test that the MachineImage str (and repr) is valid."""
-        mock_logger = Mock()
-        mock_logger.info(str(self.machine_image))
-        info_calls = mock_logger.info.mock_calls
-        message = info_calls[0][1][0]
-        self.assertTrue(message.startswith("MachineImage("))
+        excluded_field_names = ("content_type", "object_id", "inspection_json")
+        self.assertTypicalStrOutput(self.machine_image, excluded_field_names)
 
     def test_aws_machine_image_str(self):
         """Test that the AwsMachineImage str (and repr) is valid."""
-        mock_logger = Mock()
-        mock_logger.info(str(self.machine_image.content_object))
-        info_calls = mock_logger.info.mock_calls
-        message = info_calls[0][1][0]
-        self.assertTrue(message.startswith("AwsMachineImage("))
+        self.assertTypicalStrOutput(self.machine_image.content_object)
 
     def test_aws_machine_image_copy_str(self):
         """Test that the AwsMachineImageCopy str (and repr) is valid."""
-        mock_logger = Mock()
-        mock_logger.info(str(self.aws_machine_image_copy))
-        info_calls = mock_logger.info.mock_calls
-        message = info_calls[0][1][0]
-        self.assertTrue(message.startswith("AwsMachineImageCopy("))
+        excluded_field_names = {"awsmachineimage_ptr"}
+        self.assertTypicalStrOutput(self.aws_machine_image_copy, excluded_field_names)
 
     def test_is_marketplace_name_check(self):
         """Test that is_marketplace is True if image name and owner matches."""
