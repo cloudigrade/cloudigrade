@@ -6,7 +6,9 @@ from dateutil import tz
 from dateutil.parser import parse as dateutil_parse
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
+from django.db import transaction
 from django.utils.translation import gettext as _
+from tqdm import tqdm
 
 from api.models import InstanceEvent
 from api.tests import helper as account_helper
@@ -75,6 +77,7 @@ class Command(BaseCommand):
             return False
         return True
 
+    @transaction.atomic()
     def handle(self, *args, **options):
         """Handle the command execution."""
         if not self.confirm(options):
@@ -88,31 +91,42 @@ class Command(BaseCommand):
 
         user = User.objects.get(pk=options["user_id"])
 
-        accounts = [
-            account_helper.generate_aws_account(user=user)
-            for __ in range(options["account_count"])
-        ]
+        accounts = []
+        for __ in tqdm(
+            range(options["account_count"]),
+            desc="Spawn account progress",
+            unit="accounts",
+        ):
+            accounts.append(account_helper.generate_aws_account(user=user))
         self.stdout.write(_("Created {} account(s)").format(len(accounts)))
 
-        images = [
-            account_helper.generate_aws_image(
-                owner_aws_account_id=int(choice(accounts).cloud_account_id)
-                if random() < options["other_owner_chance"]
-                else util_helper.generate_dummy_aws_account_id(),
-                rhel_detected=random() < options["rhel_chance"],
-                openshift_detected=random() < options["ocp_chance"],
+        images = []
+        for __ in tqdm(
+            range(options["image_count"]), desc="Spawn image progress", unit="images"
+        ):
+            images.append(
+                account_helper.generate_aws_image(
+                    owner_aws_account_id=int(choice(accounts).cloud_account_id)
+                    if random() < options["other_owner_chance"]
+                    else util_helper.generate_dummy_aws_account_id(),
+                    rhel_detected=random() < options["rhel_chance"],
+                    openshift_detected=random() < options["ocp_chance"],
+                )
             )
-            for __ in range(options["image_count"])
-        ]
-        self.stdout.write(_("Created {} images(s)").format(len(images)))
+        self.stdout.write(_("Created {} images").format(len(images)))
 
-        instances = [
-            account_helper.generate_aws_instance(cloud_account=choice(accounts),)
-            for __ in range(options["instance_count"])
-        ]
+        instances = []
+        for __ in tqdm(
+            range(options["instance_count"]),
+            desc="Spawn instance progress",
+            unit="instances",
+        ):
+            instances.append(
+                account_helper.generate_aws_instance(cloud_account=choice(accounts))
+            )
         self.stdout.write(_("Created {} instances(s)").format(len(instances)))
 
-        for instance in instances:
+        for instance in tqdm(instances, desc="Spawn event progress", unit="events"):
             account_helper.generate_single_aws_instance_event(
                 instance=instance,
                 occurred_at=since + datetime.timedelta(seconds=randrange(seconds)),
