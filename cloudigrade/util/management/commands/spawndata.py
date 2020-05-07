@@ -5,6 +5,7 @@ from random import choice, random, randrange
 from dateutil import tz
 from dateutil.parser import parse as dateutil_parse
 from django.contrib.auth.models import User
+from django.core.management import call_command
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.utils.translation import gettext as _
@@ -135,3 +136,5 @@ class Command(BaseCommand):
                 event_type=InstanceEvent.TYPE.power_on,
             )
         self.stdout.write(_("Created {} events(s)").format(len(instances)))
+
+        call_command("create_runs", "--confirm")
