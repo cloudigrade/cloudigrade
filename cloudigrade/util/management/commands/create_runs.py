@@ -60,7 +60,9 @@ class Command(BaseCommand):
             normalized_runs = normalize_runs(events)
 
             for normalized_run in tqdm(
-                normalized_runs, desc="runs for {}".format(instance),
+                normalized_runs,
+                desc="runs for instance {}".format(instance.id),
+                leave=False,
             ):
                 runs_created += 1
                 run = Run(
