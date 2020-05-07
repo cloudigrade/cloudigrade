@@ -1,13 +1,12 @@
 """Seed a bunch of users, accounts, images, instances, and events."""
 import datetime
 
-from dateutil import tz
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
 from django.utils.translation import gettext as _
 
 from api.tests import helper as account_helper
-from util.misc import get_today
+from util.misc import get_now, truncate_date
 from util.tests import helper as util_helper
 
 
@@ -23,8 +22,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         """Handle the command execution."""
         # Dates
-        today = get_today()
-        today = datetime.datetime(today.year, today.month, 1, 0, 0, 0, 0, tz.tzutc())
+        today = truncate_date(get_now())
         two_years = today - datetime.timedelta(days=365 * 2)
         one_year = today - datetime.timedelta(days=365)
         one_year_minus_two_days = one_year + datetime.timedelta(days=2)
