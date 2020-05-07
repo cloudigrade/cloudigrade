@@ -122,7 +122,9 @@ class Command(BaseCommand):
             unit="instances",
         ):
             instances.append(
-                account_helper.generate_aws_instance(cloud_account=choice(accounts))
+                account_helper.generate_aws_instance(
+                    cloud_account=choice(accounts), image=choice(images)
+                )
             )
         self.stdout.write(_("Created {} instances(s)").format(len(instances)))
 
