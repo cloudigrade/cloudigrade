@@ -51,7 +51,9 @@ class Command(BaseCommand):
             ):
                 return False
             all_runs.delete()
+            logger.info("Deleted all Run objects.")
             all_concurrent_usage.delete()
+            logger.info("Deleted all ConcurrentUsage objects.")
 
         runs_created = 0
         for instance in tqdm(Instance.objects.all(), desc="instances"):
