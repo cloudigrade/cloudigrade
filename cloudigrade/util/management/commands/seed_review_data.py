@@ -37,6 +37,7 @@ class Command(BaseCommand):
         fourteen_days = today - datetime.timedelta(days=14)
         twelve_days = today - datetime.timedelta(days=12)
         seven_days = today - datetime.timedelta(days=7)
+        three_days = today - datetime.timedelta(days=3)
         one_day = today - datetime.timedelta(days=1)
         twelve_hours = today - datetime.timedelta(hours=12)
         three_hours = today - datetime.timedelta(hours=3)
@@ -94,6 +95,7 @@ class Command(BaseCommand):
         user1clount2image3 = account_helper.generate_aws_image(
             owner_aws_account_id=int(user1clount2.content_object.aws_account_id),
             rhel_detected=True,
+            rhel_detected_by_tag=True,
             rhel_detected_certs=True,
             rhel_detected_repos=True,
             rhel_detected_release_files=True,
@@ -171,11 +173,19 @@ class Command(BaseCommand):
         )
         account_helper.generate_aws_instance_events(
             instance=user1clount2image2instance1,
-            powered_times=[(one_year, one_year_minus_seven_days)],
+            powered_times=[
+                (one_year, one_year_minus_seven_days),
+                (seventeen_days, twelve_days),
+                (three_days, one_day),
+            ],
         )
         account_helper.generate_aws_instance_events(
             instance=user1clount2image3instance1,
-            powered_times=[(one_year, one_year_minus_seven_days)],
+            powered_times=[
+                (one_year, one_year_minus_seven_days),
+                (twenty_one_days, seven_days),
+                (three_days, None),
+            ],
         )
         # User 2 Clount 1
         account_helper.generate_aws_instance_events(

@@ -13,7 +13,7 @@ from api.clouds.aws.models import (
 from api.models import Run
 
 
-class SyncBucketLifecycleTest(TestCase):
+class SeedReviewDataTest(TestCase):
     """Management command 'seed_review_data' test case."""
 
     def test_command_output(self):
@@ -24,5 +24,5 @@ class SyncBucketLifecycleTest(TestCase):
         self.assertEquals(AwsCloudAccount.objects.count(), 5)
         self.assertEquals(AwsMachineImage.objects.count(), 8)
         self.assertEquals(AwsInstance.objects.count(), 11)
-        self.assertEquals(AwsInstanceEvent.objects.count(), 28)
-        self.assertEquals(Run.objects.count(), 16)
+        self.assertEquals(AwsInstanceEvent.objects.count(), 35)
+        self.assertEquals(Run.objects.count(), 20)
