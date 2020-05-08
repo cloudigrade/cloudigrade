@@ -207,7 +207,7 @@ class Command(BaseCommand):
         )
         runs_made = 0
         events_count = 0
-        for __ in tqdm(range(runs_to_make), total=runs_to_make, leave=False):
+        for __ in range(runs_to_make):
             # Always create the first "on" event.
             account_helper.generate_single_aws_instance_event(
                 instance=instance,

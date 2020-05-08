@@ -56,16 +56,12 @@ class Command(BaseCommand):
             logger.info("Deleted all ConcurrentUsage objects.")
 
         runs_created = 0
-        for instance in tqdm(Instance.objects.all(), desc="instances"):
+        for instance in tqdm(Instance.objects.all(), desc="Runs for instances"):
             events = InstanceEvent.objects.filter(instance=instance)
 
             normalized_runs = normalize_runs(events)
 
-            for normalized_run in tqdm(
-                normalized_runs,
-                desc="runs for instance {}".format(instance.id),
-                leave=False,
-            ):
+            for normalized_run in normalized_runs:
                 runs_created += 1
                 run = Run(
                     start_time=normalized_run.start_time,
