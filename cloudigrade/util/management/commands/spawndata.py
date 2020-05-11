@@ -94,24 +94,16 @@ class Command(BaseCommand):
                 "of this user's accounts (0-1)"
             ),
         )
+        parser.add_argument(
+            "--confirm", action="store_true", help="automatically confirm operation",
+        )
 
-    def confirm(self, options):
+    def confirm(self):
         """Seek manual confirmation before proceeding."""
-        question = _(
-            "Are you SURE you want to proceed? This will generate "
-            "data representing:\n"
-            "- {account_count} AWS account(s)\n"
-            "- {image_count} AWS image(s)\n"
-            "- {instance_count} AWS instance(s)\n"
-            "- {mean_run_count} mean runs for each instance\n"
-            "- {min_run_hours} minimum and {mean_run_hours} mean hours duration for each run\n"
-            "- {mean_hours_between_runs} mean hours between runs for the same instance\n"
-            "- power-on event(s) since {since}\n\n"
-            "Enter YES to proceed:"
-        ).format(**options)
-        result = input("{} ".format(question))
-        if result != "YES":
-            self.stdout.write(_("Aborting."))
+        question = _("Are you SURE you want to proceed?")
+        result = input("{} [Y/n] ".format(question))
+        if result.lower() != "y":
+            self.stdout.write("Aborting.")
             return False
         return True
 
@@ -288,7 +280,22 @@ class Command(BaseCommand):
     @transaction.atomic()
     def handle(self, *args, **options):
         """Handle the command execution."""
-        if not self.confirm(options):
+        self.stdout.write(
+            _(
+                "This command will generate data representing:\n"
+                "- {account_count} AWS account(s)\n"
+                "- {image_count} AWS image(s)\n"
+                "- {instance_count} AWS instance(s)\n"
+                "- {mean_run_count} mean runs for each instance\n"
+                "- {min_run_hours} minimum and {mean_run_hours} mean hours duration "
+                "for each run\n"
+                "- {mean_hours_between_runs} mean hours between runs for the same "
+                "instance\n"
+                "- power-on event(s) since {since}"
+            ).format(**options)
+        )
+
+        if not options.get("confirm") and not self.confirm():
             return False
 
         user = User.objects.get(pk=options["user_id"])
