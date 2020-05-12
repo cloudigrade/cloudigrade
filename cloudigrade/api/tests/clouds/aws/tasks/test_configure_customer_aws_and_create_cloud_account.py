@@ -139,3 +139,18 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
         self.assertEqual(raise_context.exception, validation_error)
 
         self.assertFalse(CloudAccount.objects.filter(user=user).exists())
+
+    @patch("api.error_codes.notify_sources_application_availability")
+    def test_account_not_created_if_arn_invalid(self, mock_verify_sources):
+        """Test that error is logged if arn is invalid."""
+        user = User.objects.create()
+        auth_id = _faker.pyint()
+        application_id = _faker.pyint()
+        endpoint_id = _faker.pyint()
+        source_id = _faker.pyint()
+        arn = "Badly formatted arn"
+        with self.assertLogs("api.clouds.aws.tasks", level="INFO") as cm:
+            tasks.configure_customer_aws_and_create_cloud_account(
+                user.username, arn, auth_id, application_id, endpoint_id, source_id,
+            )
+        self.assertIn("Invalid ARN.", cm.output[1])

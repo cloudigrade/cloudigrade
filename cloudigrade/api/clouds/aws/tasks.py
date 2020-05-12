@@ -63,6 +63,7 @@ from util.celery import retriable_shared_task
 from util.exceptions import (
     AwsECSInstanceNotReady,
     AwsTooManyECSInstances,
+    InvalidArn,
     InvalidHoundigradeJsonFormat,
 )
 from util.misc import generate_device_name
@@ -103,9 +104,14 @@ def configure_customer_aws_and_create_cloud_account(
             logger, {"application_id": application_id, "username": username}
         )
         error.notify(username, application_id)
-
         return
-    customer_aws_account_id = aws.AwsArn(customer_arn).account_id
+    try:
+        customer_aws_account_id = aws.AwsArn(customer_arn).account_id
+    except InvalidArn:
+        error = error_codes.CG1004
+        error.log_internal_message(logger, {"application_id": application_id})
+        error.notify(username, application_id)
+        return
 
     cloud_account_name = get_standard_cloud_account_name("aws", customer_aws_account_id)
     create_aws_cloud_account(
