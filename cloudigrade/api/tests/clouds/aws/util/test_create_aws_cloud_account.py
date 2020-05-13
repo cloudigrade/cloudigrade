@@ -119,6 +119,7 @@ class CreateAWSClountTest(TestCase):
         self.assertIn(
             "Could not set up cloud metering.", exception_detail["account_arn"]
         )
+        self.assertNotIn("CG1002", exception_detail["account_arn"])
 
     @patch("api.error_codes.notify_sources_application_availability")
     @patch.object(CloudAccount, "enable")
@@ -156,3 +157,80 @@ class CreateAWSClountTest(TestCase):
         exception_detail = raise_context.exception.detail
         self.assertIn("name", exception_detail)
         self.assertIn("Could not set up cloud metering.", exception_detail["name"])
+        self.assertIn("CG1003", exception_detail["name"])
+
+    @patch("api.error_codes.notify_sources_application_availability")
+    @patch.object(CloudAccount, "enable")
+    def test_create_aws_clount_fails_with_same_arn_same_user(
+        self, mock_enable, mock_notify_sources
+    ):
+        """Test create_aws_cloud_account failure message for same user."""
+        util.create_aws_cloud_account(
+            self.user,
+            self.arn,
+            self.name,
+            self.auth_id,
+            self.app_id,
+            self.endpoint_id,
+            self.source_id,
+        )
+
+        other_name = self.name = _faker.word()
+        with self.assertRaises(ValidationError) as raise_context:
+            util.create_aws_cloud_account(
+                self.user,
+                self.arn,
+                other_name,
+                self.auth_id,
+                self.app_id,
+                self.endpoint_id,
+                self.source_id,
+            )
+        exception_detail = raise_context.exception.detail
+        self.assertIn("account_arn", exception_detail)
+        self.assertIn(
+            "Could not set up cloud metering.", exception_detail["account_arn"]
+        )
+        self.assertIn("CG1001", exception_detail["account_arn"])
+
+    @patch("api.error_codes.notify_sources_application_availability")
+    @patch.object(CloudAccount, "enable")
+    def test_create_aws_clount_fails_with_different_user_same_account_id(
+        self, mock_enable, mock_notify_sources
+    ):
+        """Test create_aws_cloud_account failure message for different user."""
+        # The first call just creates the existing objects.
+        util.create_aws_cloud_account(
+            self.user,
+            self.arn,
+            self.name,
+            self.auth_id,
+            self.app_id,
+            self.endpoint_id,
+            self.source_id,
+        )
+
+        other_arn = util_helper.generate_dummy_arn(
+            account_id=self.aws_account_id, resource=_faker.word()
+        )
+        other_auth_id = _faker.pyint()
+        other_app_id = _faker.pyint()
+        other_endpoint_id = _faker.pyint()
+        other_source_id = _faker.pyint()
+        other_user = util_helper.generate_test_user()
+
+        with self.assertRaises(ValidationError) as raise_context:
+            util.create_aws_cloud_account(
+                other_user,
+                other_arn,
+                self.name,
+                other_auth_id,
+                other_app_id,
+                other_endpoint_id,
+                other_source_id,
+            )
+        exception_detail = raise_context.exception.detail
+        self.assertIn(
+            "Could not set up cloud metering.", exception_detail["account_arn"]
+        )
+        self.assertNotIn("CG1002", exception_detail["account_arn"])

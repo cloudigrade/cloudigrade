@@ -6,8 +6,11 @@ from util.insights import notify_sources_application_availability
 
 
 GENERIC_ACCOUNT_SETUP_ERROR_MESSAGE = (
-    "Could not set up cloud metering. Please contact support. "
-    "Error code %(error_code)s."
+    "Could not set up cloud metering. Please contact support."
+)
+
+GENERIC_ACCOUNT_SETUP_ERROR_MESSAGE_WITH_ERROR_CODE = (
+    GENERIC_ACCOUNT_SETUP_ERROR_MESSAGE + " Error code %(error_code)s."
 )
 
 
@@ -17,7 +20,7 @@ class CloudigradeError:
 
     code: str
     internal_message: str
-    message: str = _(GENERIC_ACCOUNT_SETUP_ERROR_MESSAGE)
+    message: str = _(GENERIC_ACCOUNT_SETUP_ERROR_MESSAGE_WITH_ERROR_CODE)
 
     def log_internal_message(self, logger, message_details):
         """Log an internal message for an error."""
@@ -28,13 +31,15 @@ class CloudigradeError:
         """Get the external message for an error."""
         return self.message % {"error_code": self.code}
 
-    def notify(self, account_number, application_id):
+    def notify(self, account_number, application_id, error_message=None):
         """Tell sources an application is not available because of error."""
+        if not error_message:
+            error_message = self.get_message()
         notify_sources_application_availability(
             account_number,
             application_id,
             availability_status="unavailable",
-            availability_status_error=self.get_message(),
+            availability_status_error=error_message,
         )
 
 
@@ -98,7 +103,7 @@ CG2000 = CloudigradeError(
         "%(account_number)s does not exist; aborting cloud account creation."
     ),
     _(
-        GENERIC_ACCOUNT_SETUP_ERROR_MESSAGE
+        GENERIC_ACCOUNT_SETUP_ERROR_MESSAGE_WITH_ERROR_CODE
         + " Attached Sources Authentication object does not exist."
     ),
 )
@@ -111,7 +116,7 @@ CG2001 = CloudigradeError(
         "unsupported type %(authtype)s.",
     ),
     _(
-        GENERIC_ACCOUNT_SETUP_ERROR_MESSAGE
+        GENERIC_ACCOUNT_SETUP_ERROR_MESSAGE_WITH_ERROR_CODE
         + " Attached Authentication has unsupported authentication_type."
     ),
 )
@@ -125,7 +130,7 @@ CG2002 = CloudigradeError(
         "is not of type Endpoint; aborting cloud account creation."
     ),
     _(
-        GENERIC_ACCOUNT_SETUP_ERROR_MESSAGE
+        GENERIC_ACCOUNT_SETUP_ERROR_MESSAGE_WITH_ERROR_CODE
         + " Associated resource is not of type Endpoint."
     ),
 )
@@ -138,7 +143,10 @@ CG2003 = CloudigradeError(
         "Endpoint ID %(endpoint_id)s for account number "
         "%(account_number)s does not exist; aborting cloud account creation."
     ),
-    _(GENERIC_ACCOUNT_SETUP_ERROR_MESSAGE + " No Endpoint Resource exist for Source."),
+    _(
+        GENERIC_ACCOUNT_SETUP_ERROR_MESSAGE_WITH_ERROR_CODE
+        + " No Endpoint Resource exist for Source."
+    ),
 )
 
 # No Authentication Password provided
@@ -146,7 +154,7 @@ CG2004 = CloudigradeError(
     "CG2004",
     _("Missing expected password from authentication for id %(authentication_id)s"),
     _(
-        GENERIC_ACCOUNT_SETUP_ERROR_MESSAGE
+        GENERIC_ACCOUNT_SETUP_ERROR_MESSAGE_WITH_ERROR_CODE
         + " Attached Authentication missing password field."
     ),
 )
