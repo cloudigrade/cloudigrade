@@ -228,16 +228,49 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
 
         mock_create_clount.delay.assert_called()
 
+    @patch("api.tasks.insights.list_sources_application_authentications")
     @patch("api.tasks.update_aws_cloud_account")
-    def test_update_non_cloudmeter_authid_does_nothing(self, mock_update_account):
+    def test_update_non_cloudmeter_authid_does_nothing(
+        self, mock_update_account, mock_list_sources_app_auths
+    ):
         """Assert that nothing happens if update is called on an unknown authid."""
         username = _faker.user_name()
         new_authentication_id = _faker.pyint()
+        mock_list_sources_app_auths.return_value = {"data": [], "meta": {"count": 0,}}
 
         message, headers = util_helper.generate_authentication_create_message_value(
             self.account_number, username, new_authentication_id
         )
         tasks.update_from_source_kafka_message(message, headers)
+        mock_update_account.assert_not_called()
+
+    @patch("api.tasks.insights.list_sources_application_authentications")
+    @patch("api.tasks.create_from_sources_kafka_message")
+    @patch("api.tasks.update_aws_cloud_account")
+    def test_update_fixed_cloudmeter_authid_succeeds(
+        self, mock_update_account, mock_create_account, mock_list_sources_app_auths
+    ):
+        """Assert that updating an unknown Auth obj meant for us creates account."""
+        username = _faker.user_name()
+        new_authentication_id = _faker.pyint()
+        app_auth_data = {
+            "application_id": "1001",
+            "authentication_id": "2001",
+            "created_at": "2020-05-10T17:06:10Z",
+            "id": "100",
+            "tenant": "100001",
+            "updated_at": "2020-05-10T17:06:10Z",
+        }
+        mock_list_sources_app_auths.return_value = {
+            "data": [app_auth_data,],
+            "meta": {"count": 1,},
+        }
+
+        message, headers = util_helper.generate_authentication_create_message_value(
+            self.account_number, username, new_authentication_id
+        )
+        tasks.update_from_source_kafka_message(message, headers)
+        mock_create_account.delay.assert_called_once_with(app_auth_data, headers)
         mock_update_account.assert_not_called()
 
     @patch("util.insights.get_sources_authentication")

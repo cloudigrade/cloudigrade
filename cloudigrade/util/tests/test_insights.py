@@ -157,6 +157,19 @@ class InsightsTest(TestCase):
         mock_get.assert_called()
 
     @patch("requests.get")
+    def test_list_sources_application_authentications_success(self, mock_get):
+        """Assert list_sources_application_authentications returns response content."""
+        expected = {"hello": "world"}
+        mock_get.return_value.status_code = http.HTTPStatus.OK
+        mock_get.return_value.json.return_value = expected
+
+        application = insights.list_sources_application_authentications(
+            self.account_number, self.authentication_id
+        )
+        self.assertEqual(application, expected)
+        mock_get.assert_called()
+
+    @patch("requests.get")
     def test_get_sources_cloudigrade_application_type_success(self, mock_get):
         """Assert get_sources_cloudigrade_application_type_id returns id."""
         cloudigrade_app_type_id = _faker.pyint()

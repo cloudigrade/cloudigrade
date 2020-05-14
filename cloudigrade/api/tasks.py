@@ -321,15 +321,26 @@ def update_from_source_kafka_message(message, headers):
                 source_id,
             )
     except CloudAccount.DoesNotExist:
-        logger.debug(
-            _(
-                "The updated authentication with ID %s and account number %s "
-                "is not managed by cloud meter."
-            ),
-            authentication_id,
-            account_number,
+        # Is this authentication meant to be for us? We should check.
+        # Get list of all app-auth objects and filter by our authentication
+        response_json = insights.list_sources_application_authentications(
+            account_number, authentication_id
         )
-        return
+
+        if response_json.get("meta").get("count") > 0:
+            for application_authentication in response_json.get("data"):
+                create_from_sources_kafka_message.delay(
+                    application_authentication, headers
+                )
+        else:
+            logger.info(
+                _(
+                    "The updated authentication with ID %s and account number %s "
+                    "is not managed by cloud meter."
+                ),
+                authentication_id,
+                account_number,
+            )
 
 
 @shared_task
