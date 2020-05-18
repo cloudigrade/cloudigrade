@@ -56,6 +56,7 @@ class AwsCloudAccountModelTest(TransactionTestCase, ModelStrTestMixin):
             arn=arn,
             name="test",
             created_at=self.created_at,
+            generate_verify_task=False,
         )
 
     def test_cloud_account_str(self):

@@ -12,6 +12,7 @@ from unittest.mock import patch
 import faker
 from django.conf import settings
 from django.test import TestCase
+from django_celery_beat.models import IntervalSchedule, PeriodicTask
 
 from api.clouds.aws.models import (
     AwsEC2InstanceDefinition,
@@ -119,6 +120,7 @@ class GenerateAwsAccountTest(TestCase):
         self.assertIsNotNone(account.platform_application_id)
         self.assertIsNotNone(account.platform_endpoint_id)
         self.assertIsNotNone(account.platform_source_id)
+        self.assertIsNotNone(account.content_object.verify_task)
 
     def test_generate_aws_account_with_args(self):
         """Assert generation of an AwsAccount with all specified args."""
@@ -133,6 +135,18 @@ class GenerateAwsAccountTest(TestCase):
         platform_source_id = _faker.pyint()
         is_enabled = False
         enabled_at = util_helper.utc_dt(2017, 1, 2, 0, 0, 0)
+
+        schedule, _ = IntervalSchedule.objects.get_or_create(
+            every=1, period=IntervalSchedule.DAYS
+        )
+        verify_task, _ = PeriodicTask.objects.get_or_create(
+            interval=schedule,
+            name=f"Verify {arn}.",
+            task="api.clouds.aws.tasks.verify_account_permissions",
+            kwargs=json.dumps({"account_arn": arn,}),
+            defaults={"start_time": created_at},
+        )
+
         account = helper.generate_aws_account(
             arn,
             aws_account_id,
@@ -145,6 +159,7 @@ class GenerateAwsAccountTest(TestCase):
             platform_source_id,
             is_enabled,
             enabled_at,
+            verify_task,
         )
         self.assertIsInstance(account, CloudAccount)
         self.assertEqual(account.content_object.account_arn, arn)
@@ -159,6 +174,7 @@ class GenerateAwsAccountTest(TestCase):
         self.assertEqual(account.created_at, created_at)
         self.assertFalse(account.is_enabled)
         self.assertEqual(account.enabled_at, enabled_at)
+        self.assertEqual(account.content_object.verify_task, verify_task)
 
 
 class GenerateAwsInstanceTest(TestCase):

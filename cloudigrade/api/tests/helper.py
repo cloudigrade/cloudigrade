@@ -8,6 +8,7 @@ from unittest.mock import patch
 
 import faker
 from django.conf import settings
+from django_celery_beat.models import IntervalSchedule, PeriodicTask
 from rest_framework.test import APIClient
 
 from api.clouds.aws import tasks
@@ -163,6 +164,8 @@ def generate_aws_account(  # noqa: C901
     platform_source_id=None,
     is_enabled=True,
     enabled_at=None,
+    verify_task=None,
+    generate_verify_task=True,
 ):
     """
     Generate an AwsAccount for testing.
@@ -181,6 +184,8 @@ def generate_aws_account(  # noqa: C901
         platform_source_id (int): Optional platform source source ID.
         is_enabled (bool): Optional should the account be enabled.
         enabled_at (datetime): Optional enabled datetime for this account.
+        verify_task (PeriodicTask): Optional Celery verify task for this account.
+        generate_verify_task (bool): Optional should a verify_task be generated here.
 
     Returns:
         CloudAccount: The created AwsAccount.
@@ -213,8 +218,22 @@ def generate_aws_account(  # noqa: C901
     if platform_source_id is None:
         platform_source_id = _faker.pyint()
 
+    if verify_task is None and generate_verify_task:
+        schedule, _ = IntervalSchedule.objects.get_or_create(
+            every=1, period=IntervalSchedule.DAYS
+        )
+        verify_task, _ = PeriodicTask.objects.get_or_create(
+            interval=schedule,
+            name=f"Verify {arn}.",
+            task="api.clouds.aws.tasks.verify_account_permissions",
+            kwargs=json.dumps({"account_arn": arn,}),
+            defaults={"start_time": created_at},
+        )
+
     aws_cloud_account = AwsCloudAccount.objects.create(
-        account_arn=arn, aws_account_id=aws.AwsArn(arn).account_id,
+        account_arn=arn,
+        aws_account_id=aws.AwsArn(arn).account_id,
+        verify_task=verify_task,
     )
     if created_at:
         aws_cloud_account.created_at = created_at
