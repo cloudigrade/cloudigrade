@@ -1101,24 +1101,11 @@
                           },
                           "instances": {
                             "type": "integer"
-                          },
-                          "instances_list": {
-                            "type": "array",
-                            "items": {}
-                          },
-                          "vcpu": {
-                            "type": "integer"
-                          },
-                          "memory": {
-                            "type": "number"
                           }
                         },
                         "required": [
                           "date",
-                          "instances",
-                          "instances_list",
-                          "vcpu",
-                          "memory"
+                          "instances"
                         ]
                       }
                     }
