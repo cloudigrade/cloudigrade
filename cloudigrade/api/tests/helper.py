@@ -235,9 +235,8 @@ def generate_aws_account(  # noqa: C901
         aws_account_id=aws.AwsArn(arn).account_id,
         verify_task=verify_task,
     )
-    if created_at:
-        aws_cloud_account.created_at = created_at
-        aws_cloud_account.save()
+    aws_cloud_account.created_at = created_at
+    aws_cloud_account.save()
     cloud_account = CloudAccount.objects.create(
         user=user,
         name=name,
@@ -248,9 +247,8 @@ def generate_aws_account(  # noqa: C901
         platform_source_id=platform_source_id,
         is_enabled=is_enabled,
     )
-    if created_at:
-        cloud_account.created_at = created_at
-        cloud_account.save()
+    cloud_account.created_at = created_at
+    cloud_account.save()
     if enabled_at:
         cloud_account.enabled_at = enabled_at
         cloud_account.save()
