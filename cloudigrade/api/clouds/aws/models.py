@@ -5,6 +5,8 @@ import logging
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models, transaction
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
 from django.utils.translation import gettext as _
 from django_celery_beat.models import IntervalSchedule, PeriodicTask
 
@@ -132,6 +134,29 @@ class AwsCloudAccount(BaseModel):
                 ),
                 {"aws_cloud_account_id": self.id},
             )
+
+
+@receiver(post_delete, sender=AwsCloudAccount)
+def awscloudaccount_post_delete_callback(*args, **kwargs):
+    """
+    Delete AwsCloudAccount.verify_task upon deleting AwsCloudAccount.
+
+    Note: Signal receivers must accept keyword arguments (**kwargs).
+    """
+    aws_cloud_account = kwargs["instance"]
+
+    if aws_cloud_account.verify_task:
+        logger.info(
+            _(
+                "%(periodic_task)s is no longer used by %(aws_cloud_account)s and "
+                "will be deleted."
+            ),
+            {
+                "periodic_task": aws_cloud_account.verify_task,
+                "aws_cloud_account": aws_cloud_account,
+            },
+        )
+        aws_cloud_account.verify_task.delete()
 
 
 def _disable_cloudtrail(aws_cloud_account):

@@ -223,15 +223,35 @@ class AwsCloudAccountModelTest(TransactionTestCase, ModelStrTestMixin):
         self.assertEqual(0, aws_models.AwsCloudAccount.objects.count())
 
     @patch("api.models.notify_sources_application_availability")
-    def test_delete_cleans_up_instance_events_run(self, mock_notify_sources):
-        """Test that deleting an account cleans up instances/events/runs."""
+    @patch("api.clouds.aws.util.verify_permissions")
+    @patch("api.clouds.aws.tasks.initial_aws_describe_instances")
+    def test_delete_cleans_up_related_objects(
+        self, mock_describe, mock_verify, mock_notify
+    ):
+        """
+        Verify that deleting an AWS account cleans up related objects.
+
+        Deleting the account should also delete instances, events, runs, and the
+        periodic verify task related to it.
+        """
         instance = helper.generate_aws_instance(cloud_account=self.account)
         runtime = (
             util_helper.utc_dt(2019, 1, 1, 0, 0, 0),
             util_helper.utc_dt(2019, 1, 2, 0, 0, 0),
         )
 
+        self.account.enable()
         helper.generate_single_run(instance=instance, runtime=runtime)
+
+        # First, verify that objects exist *before* deleting the AwsCloudAccount.
+        self.assertGreater(aws_models.AwsCloudAccount.objects.count(), 0)
+        self.assertGreater(models.CloudAccount.objects.count(), 0)
+        self.assertGreater(aws_models.AwsInstanceEvent.objects.count(), 0)
+        self.assertGreater(models.InstanceEvent.objects.count(), 0)
+        self.assertGreater(models.Run.objects.count(), 0)
+        self.assertGreater(aws_models.AwsInstance.objects.count(), 0)
+        self.assertGreater(models.Instance.objects.count(), 0)
+        self.assertGreater(PeriodicTask.objects.count(), 0)
 
         with patch("api.clouds.aws.util.disable_cloudtrail") as mock_disable_cloudtrail:
             mock_disable_cloudtrail.return_value = True
@@ -243,6 +263,7 @@ class AwsCloudAccountModelTest(TransactionTestCase, ModelStrTestMixin):
         self.assertEqual(0, models.Run.objects.count())
         self.assertEqual(0, aws_models.AwsInstance.objects.count())
         self.assertEqual(0, models.Instance.objects.count())
+        self.assertEqual(0, PeriodicTask.objects.count())
 
     @patch("api.models.notify_sources_application_availability")
     def test_delete_via_queryset_succeeds_if_disable_cloudtrail_fails(
