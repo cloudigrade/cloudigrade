@@ -287,8 +287,11 @@ class AwsCloudAccountModelTest(TransactionTestCase, ModelStrTestMixin):
         self.assertTrue(aws_clount.verify_task.enabled)
         self.assertEqual(aws_clount.verify_task.start_time, aws_clount.created_at)
 
-    def test_enable_verify_task_existing(self):
-        """Verify Task is re-enabled since it already existed."""
+    @patch("api.models.notify_sources_application_availability")
+    @patch("api.clouds.aws.util.verify_permissions")
+    @patch("api.clouds.aws.tasks.initial_aws_describe_instances")
+    def test_enable_verify_task_existing(self, mock_describe, mock_verify, mock_notify):
+        """Verify Task is assigned and re-enabled since it already existed."""
         aws_clount = self.account.content_object
         self.assertIsNone(aws_clount.verify_task)
 
@@ -306,16 +309,11 @@ class AwsCloudAccountModelTest(TransactionTestCase, ModelStrTestMixin):
         verify_task.enabled = False
         verify_task.save()
 
-        aws_clount.verify_task = verify_task
-        aws_clount.save()
-        aws_clount.refresh_from_db()
-
-        aws_clount._enable_verify_task()
+        enable_date = util_helper.utc_dt(2019, 1, 4, 0, 0, 0)
+        with util_helper.clouditardis(enable_date):
+            self.account.enable()
 
         self.assertIsNotNone(aws_clount.verify_task)
-        self.assertTrue(aws_clount.verify_task.enabled)
-        self.assertEqual(aws_clount.verify_task.start_time, verify_task.start_time)
-        self.assertEqual(aws_clount.verify_task.id, verify_task.pk)
 
     @patch("api.models.notify_sources_application_availability")
     def test_disable_verify_task_existing(self, mock_sources_notify):

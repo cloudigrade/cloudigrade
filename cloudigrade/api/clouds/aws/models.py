@@ -111,10 +111,9 @@ class AwsCloudAccount(BaseModel):
             kwargs=json.dumps({"account_arn": self.account_arn,}),
             defaults={"start_time": self.created_at},
         )
-        if created:
-            self.verify_task = verify_task
-            self.save()
-        else:
+        self.verify_task = verify_task
+        self.save()
+        if not created:
             verify_task.enabled = True
             verify_task.save()
 
