@@ -121,18 +121,28 @@ class CloudAccount(BaseGenericModel):
             raise e
 
     @transaction.atomic
-    def disable(self, message=""):
+    def disable(self, message="", power_off_instances=True):
         """
         Mark this CloudAccount as disabled and perform operations to make it so.
 
         This has the side effect of finding all related powered-on instances and
         recording a new "power_off" event them. It also calls the related content_object
         (e.g. AwsCloudAccount) to make any cloud-specific changes.
+
+        Args:
+            message (string): status message to set on the Sources Application
+            power_off_instances (bool): if this is set to false, we do not create
+                power_off instance events when disabling the account. This is used on
+                account deletion, when we still want to run the rest of the account
+                disable logic, but should not be creating power_off instance events.
+                Since creating the instance event in the same transaction as deleting
+                the account causes Django errors.
         """
         if self.is_enabled:
             self.is_enabled = False
             self.save()
-        self._power_off_instances(power_off_time=get_now())
+        if power_off_instances:
+            self._power_off_instances(power_off_time=get_now())
         self.content_object.disable()
         notify_sources_application_availability(
             self.user.username, self.platform_application_id, "unavailable", message
@@ -172,12 +182,13 @@ def cloud_account_pre_delete_callback(*args, **kwargs):
     Disable CloudAccount before deleting it.
 
     This runs the logic to notify sources of application availability.
-    And additionally run the cloud specific disable function.
+    This additionally runs the cloud specific disable function with the
+    power_off_instances set to False.
 
     Note: Signal receivers must accept keyword arguments (**kwargs).
     """
     instance = kwargs["instance"]
-    instance.disable()
+    instance.disable(power_off_instances=False)
 
 
 class MachineImage(BaseGenericModel):

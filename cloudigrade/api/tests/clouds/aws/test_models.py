@@ -359,6 +359,28 @@ class AwsCloudAccountModelTest(TransactionTestCase, ModelStrTestMixin):
             self.account.content_object._disable_verify_task()
             self.assertIn("ERROR", cm.output[0])
 
+    @patch("api.models.notify_sources_application_availability")
+    def test_delete_account_with_instance_event_succeeds(self, mock_notify_sources):
+        """
+        Test that the account deleted succeeds when account has power_on instance event.
+
+        When account is deleted, we call disable() on the account with the
+        power_off_instances flag set to false. This prevents the disable from
+        attempting to create an instance event in the same transaction as the delete,
+        since doing so will fail.
+        """
+        image = helper.generate_aws_image()
+        instance = helper.generate_aws_instance(cloud_account=self.account, image=image)
+        helper.generate_single_aws_instance_event(
+            instance=instance,
+            occurred_at=util_helper.utc_dt(2019, 1, 1, 0, 0, 0),
+            event_type=models.InstanceEvent.TYPE.power_on,
+        )
+        with patch("api.clouds.aws.util.disable_cloudtrail") as mock_disable_cloudtrail:
+            mock_disable_cloudtrail.return_value = True
+            self.account.delete()
+        self.assertEqual(0, aws_models.AwsCloudAccount.objects.count())
+
 
 class InstanceModelTest(TestCase, ModelStrTestMixin):
     """Instance Model Test Cases."""
