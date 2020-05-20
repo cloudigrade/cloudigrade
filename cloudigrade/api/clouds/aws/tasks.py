@@ -24,6 +24,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import IntegrityError, transaction
 from django.utils.translation import gettext as _
+from django_celery_beat.models import PeriodicTask
 from rest_framework.exceptions import ValidationError
 
 from api import error_codes
@@ -52,6 +53,7 @@ from api.clouds.aws.util import (
     verify_permissions,
 )
 from api.models import (
+    CloudAccount,
     InstanceEvent,
     MachineImage,
 )
@@ -1536,6 +1538,49 @@ def verify_account_permissions(account_arn):
     )
 
     return valid
+
+
+@retriable_shared_task
+def verify_verify_tasks():
+    """
+    Periodic task that maintains periodic verify permissions tasks.
+
+    It checks for Cloud Accounts that are enabled, but have
+    no verify task, and adds one. It also checks for any orphaned
+    verify tasks, and cleans those up to.
+
+    Returns:
+        None: runs as an async task.
+
+    """
+    # Check for enabled accounts without a verify task.
+    cloud_accounts = CloudAccount.objects.filter(
+        is_enabled=True, aws_cloud_account__verify_task=None
+    )
+    for cloud_account in cloud_accounts:
+        logger.error(
+            _(
+                "Cloud Account ID %(cloud_account_id)s is enabled, "
+                "but missing verification task. Creating."
+            ),
+            {"cloud_account_id": cloud_account.id,},
+        )
+        aws_cloud_account = cloud_account.content_object
+        aws_cloud_account._enable_verify_task()
+
+    # Check for orphaned verify tasks
+    linked_task_ids = AwsCloudAccount.objects.exclude(
+        verify_task_id__isnull=True
+    ).values_list("verify_task_id", flat=True)
+    verify_tasks = PeriodicTask.objects.filter(
+        task="api.clouds.aws.tasks.verify_account_permissions",
+    ).exclude(pk__in=linked_task_ids)
+    for verify_task in verify_tasks:
+        logger.error(
+            _("Found orphaned verify task '%(verify_task)s', deleting."),
+            {"verify_task": verify_task,},
+        )
+        verify_task.delete()
 
 
 def _fetch_ec2_instance_type_definitions():

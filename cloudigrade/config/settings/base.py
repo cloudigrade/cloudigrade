@@ -368,6 +368,10 @@ CELERY_BEAT_SCHEDULE = {
             default=60 * 60 * 24 * 7,  # 1 week in seconds
         ),
     },
+    "verify_verify_tasks_every_60_min": {
+        "task": "api.clouds.aws.tasks.verify_verify_tasks",
+        "schedule": env.int("VERIFY_VERIFY_TASKS_SCHEDULE", default=60 * 60),
+    },
 }
 
 # Misc Config Values

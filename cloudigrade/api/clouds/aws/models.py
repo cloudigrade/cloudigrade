@@ -22,7 +22,9 @@ MARKETPLACE_NAME_TOKEN = "-hourly2"
 class AwsCloudAccount(BaseModel):
     """AWS Customer Cloud Account Model."""
 
-    cloud_account = GenericRelation(CloudAccount)
+    cloud_account = GenericRelation(
+        CloudAccount, related_query_name="aws_cloud_account"
+    )
     aws_account_id = models.DecimalField(max_digits=12, decimal_places=0, db_index=True)
     account_arn = models.CharField(max_length=256, unique=True)
     verify_task = models.OneToOneField(
