@@ -1,19 +1,20 @@
-FROM fedora:31
+FROM registry.access.redhat.com/ubi8/ubi-minimal:8.2
 
 WORKDIR /opt/cloudigrade
-RUN useradd -r cloudigrade
+RUN microdnf install shadow-utils \
+	&& useradd -r cloudigrade \
+	&& microdnf clean all
 
 COPY pyproject.toml poetry.lock ./
-RUN dnf update -y \
-    && dnf install git which procps-ng nmap-ncat libcurl-devel gcc openssl-devel python3-devel python3-pip redhat-rpm-config -y \
-    && if [ ! -e /usr/bin/pip ]; then ln -s /usr/bin/pip3.7 /usr/bin/pip ; fi \
-    && if [[ ! -e /usr/bin/python ]]; then ln -sf /usr/bin/python3.7 /usr/bin/python; fi \
+RUN microdnf update \
+    && microdnf install git which procps-ng nmap-ncat libcurl-devel gcc openssl-devel python38-devel python38-pip redhat-rpm-config -y \
+    && if [ ! -e /usr/bin/pip ]; then ln -s /usr/bin/pip3.8 /usr/bin/pip ; fi \
+    && if [[ ! -e /usr/bin/python ]]; then ln -sf /usr/bin/python3.8 /usr/bin/python; fi \
     && pip install poetry \
     && poetry config virtualenvs.create false \
     && PYCURL_SSL_LIBRARY=openssl poetry install -n --no-dev \
-    && dnf erase libcurl-devel gcc python3-devel openssl-devel -y \
-    && dnf clean all \
-    && rm -rf /var/cache/dnf
+    && microdnf remove libcurl-devel gcc python3-devel openssl-devel annobin -y \
+    && microdnf clean all
 
 COPY cloudigrade .
 USER cloudigrade

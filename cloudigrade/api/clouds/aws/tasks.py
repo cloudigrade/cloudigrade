@@ -184,9 +184,11 @@ def initial_aws_describe_instances(account_id):
         start_image_inspection(str(arn), message["image_id"], message["region"])
 
 
-@retriable_shared_task  # noqa: C901
+@retriable_shared_task
 @rewrap_aws_errors
-def copy_ami_snapshot(arn, ami_id, snapshot_region, reference_ami_id=None):
+def copy_ami_snapshot(  # noqa: C901
+    arn, ami_id, snapshot_region, reference_ami_id=None
+):
     """
     Copy an AWS Snapshot to the primary AWS account.
 
@@ -628,7 +630,7 @@ def scale_up_inspection_cluster():
 
 @retriable_shared_task  # noqa: C901
 @rewrap_aws_errors
-def run_inspection_cluster(messages, cloud="aws"):
+def run_inspection_cluster(messages, cloud="aws"):  # noqa: C901
     """
     Run task definition for "houndigrade" on the cluster.
 

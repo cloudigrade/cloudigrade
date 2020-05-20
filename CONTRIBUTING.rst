@@ -58,7 +58,7 @@ On `the cloudigrade issue board in GitLab <https://gitlab.com/groups/cloudigrade
 Coding style
 ============
 
-**cloudigrade** is a Python Django project and officially supports only Python 3.7.
+**cloudigrade** is a Python Django project and officially supports only Python 3.8.
 
 We enforce consistency in the code using `Flake8 <https://pypi.org/project/flake8/>`_ with the following additional plugins enabled:
 

@@ -32,7 +32,7 @@ Developer Environment
 
 Because **cloudigrade** is actually a suite of interacting services, setting up a development environment may require installing some or all of the following dependencies:
 
--  Python 3.7
+-  Python 3.8
 -  `Docker <https://www.docker.com/community-edition#/download>`_
 -  `tox <https://tox.readthedocs.io/>`_
 -  `gettext <https://www.gnu.org/software/gettext/>`_
@@ -48,7 +48,7 @@ The following commands should install everything you need:
 .. code-block:: bash
 
     brew update
-    brew install python gettext awscli postgresql openssl curl-openssl
+    brew install python@3.8 gettext awscli postgresql openssl curl-openssl
     brew link gettext --force
 
 

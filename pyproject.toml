@@ -6,7 +6,7 @@ authors = ["Cloudigrade Dev Team <doppler-dev@redhat.com>"]
 license = "GPL-3.0-or-later"
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.8"
 django-environ = "~=0.4.5"
 boto3 = "~=1.12.0"
 botocore = "~=1.15.0"

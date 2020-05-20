@@ -50,8 +50,8 @@ from util.misc import get_now
 logger = logging.getLogger(__name__)
 
 
-@retriable_shared_task(autoretry_for=(RequestException, BaseHTTPError))  # noqa: C901
-def create_from_sources_kafka_message(message, headers):
+@retriable_shared_task(autoretry_for=(RequestException, BaseHTTPError))
+def create_from_sources_kafka_message(message, headers):  # noqa: C901
     """
     Create our model objects from the Sources Kafka message.
 
@@ -173,7 +173,7 @@ def create_from_sources_kafka_message(message, headers):
 
 @retriable_shared_task(autoretry_for=(RuntimeError,))  # noqa: C901
 @aws.rewrap_aws_errors
-def delete_from_sources_kafka_message(message, headers, event_type):
+def delete_from_sources_kafka_message(message, headers, event_type):  # noqa: C901
     """
     Delete our cloud account as per the Sources Kafka message.
 

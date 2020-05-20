@@ -14,7 +14,7 @@ variables:
   DOCKER_DRIVER: overlay2
 
 ### TEST STAGE ###
-py37:
+py38:
   stage: test
   image: registry.gitlab.com/cloudigrade/images/build-container:latest
   except:
@@ -23,7 +23,7 @@ py37:
   before_script:
     - pip install tox codecov poetry
   script:
-    - tox -e py37
+    - tox -e py38
     - codecov
 
 flake8:
@@ -72,15 +72,16 @@ NGINX S2i:
     - docker:dind
   variables:
     CONTEXT_DIR: deployment/nginx/
-    NGINX_S2I_IMAGE: centos/nginx-112-centos7:latest
-    S2I_VERSION: v1.1.10
-    S2I_RELEASE: source-to-image-v1.1.10-27f0729d-linux-amd64
+    NGINX_S2I_IMAGE: registry.redhat.io/rhel8/nginx-116:latest
+    S2I_VERSION: v1.3.0
+    S2I_RELEASE: source-to-image-v1.3.0-eed2850f-linux-amd64
   before_script:
     - apk --no-cache add git
     - mkdir /opt && cd /opt
     - wget https://github.com/openshift/source-to-image/releases/download/${S2I_VERSION}/${S2I_RELEASE}.tar.gz -O /opt/s2i.tar.gz
     - tar --strip-components=1 -xzvf /opt/s2i.tar.gz -C /opt/
     - mv /opt/s2i /usr/bin/
+    - ${REDHAT_REGISTRY_LOGIN}
   script:
     - s2i build --context-dir=${CONTEXT_DIR} --ref ${CI_COMMIT_REF_NAME} ${CI_PROJECT_URL} ${NGINX_S2I_IMAGE} ${IMAGE_NAME}:latest
 
@@ -206,7 +207,7 @@ Clean Up Review:
 ### DEPLOY STAGE ###
 Trigger OSD Builds:
   stage: deploy
-  image: registry.gitlab.com/cloudigrade/images/test-container:latest
+  image: registry.gitlab.com/cloudigrade/images/build-container:latest
   only:
     - master@cloudigrade/cloudigrade
   except:
