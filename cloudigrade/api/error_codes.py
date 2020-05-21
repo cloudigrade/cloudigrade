@@ -89,7 +89,7 @@ CG1004 = CloudigradeError(
         "Failed to create Cloud Account for Sources Application id "
         "%(application_id)s: Invalid ARN."
     ),
-    _(GENERIC_ACCOUNT_SETUP_ERROR_MESSAGE + " Invalid ARN."),
+    _(GENERIC_ACCOUNT_SETUP_ERROR_MESSAGE_WITH_ERROR_CODE + " Invalid ARN."),
 )
 
 
