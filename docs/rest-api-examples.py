@@ -1,8 +1,12 @@
 import json
+import uuid
 import os
+import random
 from datetime import timedelta
+from unittest.mock import patch
 
 import django
+import faker
 import jinja2
 from django.db import transaction
 from django.test import override_settings
@@ -365,11 +369,21 @@ def render(data):
     return template.render(**data)
 
 
+def seeded_uuid4():
+    """Generate uuid4 using insecure random so we can control its seed."""
+    return uuid.UUID(bytes=bytes([random.getrandbits(8) for _ in range(16)]), version=4)
+
+
 if __name__ == "__main__":
     empty_check()
+    # Reset random seeds for more consistent output.
+    random.seed(0)
+    faker.Faker.seed(0)
+    docs_date = util_helper.utc_dt(2020, 5, 18, 13, 51, 59, 722367)
     with transaction.atomic(), override_settings(
         ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES=False
-    ):
+    ), patch.object(uuid, "uuid4") as mock_uuid4, util_helper.clouditardis(docs_date):
+        mock_uuid4.side_effect = seeded_uuid4
         api_hander = DocsApiHandler()
         responses = api_hander.gather_api_responses()
         transaction.set_rollback(True)
