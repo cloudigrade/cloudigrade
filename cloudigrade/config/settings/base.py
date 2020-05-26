@@ -293,6 +293,10 @@ CELERY_BROKER_TRANSPORT_OPTIONS = {
 CELERY_BROKER_URL = AWS_SQS_URL
 QUEUE_EXCHANGE_NAME = None
 
+VERIFY_VERIFY_TASKS_SCHEDULE_INTERVAL = env.int(
+    "VERIFY_VERIFY_TASKS_SCHEDULE_INTERVAL", default=60 * 60 * 24
+)  # 24 Hours)
+
 MAX_ALLOWED_INSPECTION_ATTEMPTS = env.int("MAX_ALLOWED_INSPECTION_ATTEMPTS", default=5)
 
 INSPECT_PENDING_IMAGES_MIN_AGE = env.int(
@@ -367,10 +371,6 @@ CELERY_BEAT_SCHEDULE = {
             "REPOPULATE_EC2_INSTANCE_MAPPING_SCHEDULE",
             default=60 * 60 * 24 * 7,  # 1 week in seconds
         ),
-    },
-    "verify_verify_tasks_every_60_min": {
-        "task": "api.clouds.aws.tasks.verify_verify_tasks",
-        "schedule": env.int("VERIFY_VERIFY_TASKS_SCHEDULE", default=60 * 60),
     },
 }
 

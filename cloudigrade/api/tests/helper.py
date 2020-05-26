@@ -220,7 +220,8 @@ def generate_aws_account(  # noqa: C901
 
     if verify_task is None and generate_verify_task:
         schedule, _ = IntervalSchedule.objects.get_or_create(
-            every=1, period=IntervalSchedule.DAYS
+            every=settings.VERIFY_VERIFY_TASKS_SCHEDULE_INTERVAL,
+            period=IntervalSchedule.SECONDS,
         )
         verify_task, _ = PeriodicTask.objects.get_or_create(
             interval=schedule,

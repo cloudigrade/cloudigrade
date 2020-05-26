@@ -318,7 +318,8 @@ class AwsCloudAccountModelTest(TransactionTestCase, ModelStrTestMixin):
         self.assertIsNone(aws_clount.verify_task)
 
         schedule, _ = IntervalSchedule.objects.get_or_create(
-            every=1, period=IntervalSchedule.DAYS
+            every=settings.VERIFY_VERIFY_TASKS_SCHEDULE_INTERVAL,
+            period=IntervalSchedule.SECONDS,
         )
         verify_task = PeriodicTask.objects.create(
             interval=schedule,
