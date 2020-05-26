@@ -182,6 +182,7 @@ class MachineImageSerializer(ModelSerializer):
     class Meta:
         model = MachineImage
         fields = (
+            "architecture",
             "created_at",
             "image_id",
             "inspection_json",
@@ -204,6 +205,7 @@ class MachineImageSerializer(ModelSerializer):
             "content_object",
         )
         read_only_fields = (
+            "architecture",
             "created_at",
             "id",
             "inspection_json",

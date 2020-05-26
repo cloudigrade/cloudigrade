@@ -811,6 +811,10 @@
                       "type": "array",
                       "items": {
                         "properties": {
+                          "architecture": {
+                            "type": "string",
+                            "readOnly": true
+                          },
                           "created_at": {
                             "type": "string",
                             "format": "date-time",
@@ -932,6 +936,10 @@
               "application/json": {
                 "schema": {
                   "properties": {
+                    "architecture": {
+                      "type": "string",
+                      "readOnly": true
+                    },
                     "created_at": {
                       "type": "string",
                       "format": "date-time",
@@ -1156,6 +1164,10 @@
               "application/json": {
                 "schema": {
                   "properties": {
+                    "architecture": {
+                      "type": "string",
+                      "readOnly": true
+                    },
                     "created_at": {
                       "type": "string",
                       "format": "date-time",

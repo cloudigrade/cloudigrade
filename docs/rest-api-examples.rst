@@ -741,7 +741,7 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 3366
+    Content-Length: 3438
     Content-Type: application/json
     Vary: Accept
     X-CLOUDIGRADE-REQUEST-ID: fb7c2590-67a3-4e6c-a085-7eadeae352d5
@@ -751,6 +751,7 @@ Response:
     {
         "data": [
             {
+                "architecture": "x86_64",
                 "cloud_type": "aws",
                 "content_object": {
                     "aws_image_id": 2,
@@ -788,6 +789,7 @@ Response:
                 "updated_at": "2020-05-18T13:51:59.722367Z"
             },
             {
+                "architecture": "x86_64",
                 "cloud_type": "aws",
                 "content_object": {
                     "aws_image_id": 3,
@@ -825,6 +827,7 @@ Response:
                 "updated_at": "2020-05-18T13:51:59.722367Z"
             },
             {
+                "architecture": "x86_64",
                 "cloud_type": "aws",
                 "content_object": {
                     "aws_image_id": 4,
@@ -891,7 +894,7 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 980
+    Content-Length: 1004
     Content-Type: application/json
     Vary: Accept
     X-CLOUDIGRADE-REQUEST-ID: 7fff7fa2-abdf-438a-9cee-380257b4f6bf
@@ -901,6 +904,7 @@ Response:
     {
         "data": [
             {
+                "architecture": "x86_64",
                 "cloud_type": "aws",
                 "content_object": {
                     "aws_image_id": 1,
@@ -961,7 +965,7 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 1051
+    Content-Length: 1075
     Content-Type: application/json
     Vary: Accept
     X-CLOUDIGRADE-REQUEST-ID: e651d152-0986-45df-819a-c827d761954b
@@ -969,6 +973,7 @@ Response:
     X-Frame-Options: DENY
 
     {
+        "architecture": "x86_64",
         "cloud_type": "aws",
         "content_object": {
             "aws_image_id": 2,
@@ -1026,7 +1031,7 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: POST, OPTIONS
-    Content-Length: 1049
+    Content-Length: 1073
     Content-Type: application/json
     Vary: Accept
     X-CLOUDIGRADE-REQUEST-ID: b7b4ce78-10cc-4584-9eea-0a1039210a4c
@@ -1034,6 +1039,7 @@ Response:
     X-Frame-Options: DENY
 
     {
+        "architecture": "x86_64",
         "cloud_type": "aws",
         "content_object": {
             "aws_image_id": 2,

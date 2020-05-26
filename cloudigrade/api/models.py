@@ -214,6 +214,7 @@ class MachineImage(BaseGenericModel):
     rhel_detected_by_tag = models.BooleanField(default=False)
     openshift_detected = models.BooleanField(default=False)
     name = models.CharField(max_length=256, null=True, blank=True)
+    architecture = models.CharField(max_length=32, null=True, blank=True)
 
     @property
     def rhel(self):
@@ -377,11 +378,12 @@ class MachineImage(BaseGenericModel):
         return (
             f"{self.__class__.__name__}("
             f"id={self.id}, "
-            f"name={name}, "
-            f"status='{self.status}', "
+            f"name={repr(name)}, "
+            f"status={repr(self.status)}, "
             f"is_encrypted={self.is_encrypted}, "
             f"rhel_detected_by_tag={self.rhel_detected_by_tag}, "
             f"openshift_detected={self.openshift_detected}, "
+            f"architecture={repr(self.architecture)}, "
             f"created_at=parse({created_at}), "
             f"updated_at=parse({updated_at})"
             f")"
