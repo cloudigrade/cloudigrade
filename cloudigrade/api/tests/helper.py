@@ -284,16 +284,15 @@ def generate_aws_instance(
         if not no_image:
             ec2_ami_id = helper.generate_dummy_image_id()
 
-            aws_image, created = AwsMachineImage.objects.get_or_create(
-                ec2_ami_id=ec2_ami_id,
-                defaults={
-                    "owner_aws_account_id": cloud_account.content_object.aws_account_id,
-                },
-            )
-            if created:
-                image = MachineImage.objects.create(content_object=aws_image,)
-            else:
+            try:
+                aws_image = AwsMachineImage.objects.get(ec2_ami_id=ec2_ami_id)
                 image = aws_image.machine_image.get()
+            except AwsMachineImage.DoesNotExist:
+                image = generate_aws_image(
+                    ec2_ami_id=ec2_ami_id,
+                    owner_aws_account_id=cloud_account.content_object.aws_account_id,
+                    status=MachineImage.PENDING,
+                )
 
     aws_instance = AwsInstance.objects.create(
         ec2_instance_id=ec2_instance_id, region=region,
@@ -488,6 +487,7 @@ def generate_aws_image(
     status=MachineImage.INSPECTED,
     is_cloud_access=False,
     is_marketplace=False,
+    architecture="x86_64",
 ):
     """
     Generate an AwsMachineImage.
@@ -520,6 +520,7 @@ def generate_aws_image(
         is_marketplace (bool): Optional indicates if image is from Marketplace.
             Has side-effect of modifying the owner_aws_account_id and name as
             appropriate.
+        architecture (str): Optional indicates the detected CPU architecture.
 
     Returns:
         MachineImage: The created AwsMachineImage.
@@ -576,6 +577,7 @@ def generate_aws_image(
         name=name,
         status=status,
         content_object=aws_machine_image,
+        architecture=architecture,
     )
 
     return machine_image
