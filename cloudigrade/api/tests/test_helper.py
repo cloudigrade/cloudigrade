@@ -306,6 +306,7 @@ class GenerateAwsImageTest(TestCase):
         self.assertIsNone(image.syspurpose)
         self.assertFalse(image.content_object.is_cloud_access)
         self.assertFalse(image.content_object.is_marketplace)
+        self.assertEqual(image.architecture, "x86_64")
 
     def test_generate_aws_image_with_args(self):
         """Assert generation of an AwsMachineImage with all specified args."""
@@ -314,6 +315,7 @@ class GenerateAwsImageTest(TestCase):
         name = _faker.name()
         rhel_version = _faker.slug()
         syspurpose = {_faker.slug(): _faker.text()}
+        architecture = _faker.slug()
 
         image = helper.generate_aws_image(
             account_id,
@@ -331,6 +333,7 @@ class GenerateAwsImageTest(TestCase):
             openshift_detected=True,
             name=name,
             status=MachineImage.PREPARING,
+            architecture=architecture,
         )
 
         self.assertIsInstance(image, MachineImage)
@@ -346,6 +349,7 @@ class GenerateAwsImageTest(TestCase):
         self.assertEqual(image.status, MachineImage.PREPARING)
         self.assertFalse(image.content_object.is_cloud_access)
         self.assertFalse(image.content_object.is_marketplace)
+        self.assertEqual(image.architecture, architecture)
 
     def test_generate_aws_image_with_rhel_detected_details_args(self):
         """Assert generation of an AwsMachineImage with RHEL JSON details."""

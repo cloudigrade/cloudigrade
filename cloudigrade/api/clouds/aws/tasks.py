@@ -1326,6 +1326,7 @@ def _save_cloudtrail_activity(
     for ami_id, described_image in described_images.items():
         owner_id = Decimal(described_image["OwnerId"])
         name = described_image["Name"]
+        architecture = described_image.get("Architecture")
         windows = ami_id in windows_ami_ids
         rhel_detected_by_tag = ami_id in rhel_tagged_ami_ids
         openshift_detected = ami_id in ocp_tagged_ami_ids
@@ -1343,6 +1344,7 @@ def _save_cloudtrail_activity(
             openshift_detected,
             windows,
             region,
+            architecture,
         )
 
         image = awsimage.machine_image.get()

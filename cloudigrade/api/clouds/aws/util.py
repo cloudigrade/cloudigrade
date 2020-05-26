@@ -91,6 +91,7 @@ def create_new_machine_images(session, instances_data):
             name = described_image["Name"]
             windows = ami_id in windows_ami_ids
             region = region_id
+            architecture = described_image.get("Architecture")
 
             tag_keys = [tag.get("Key") for tag in described_image.get("Tags", [])]
             rhel_detected_by_tag = aws.RHEL_TAG in tag_keys
@@ -101,7 +102,14 @@ def create_new_machine_images(session, instances_data):
                 {"prefix": log_prefix, "ami_id": ami_id},
             )
             image, new = save_new_aws_machine_image(
-                ami_id, name, owner_id, rhel_detected_by_tag, openshift, windows, region
+                ami_id,
+                name,
+                owner_id,
+                rhel_detected_by_tag,
+                openshift,
+                windows,
+                region,
+                architecture,
             )
             if new:
                 new_image_ids.append(ami_id)
@@ -117,6 +125,7 @@ def save_new_aws_machine_image(
     openshift_detected,
     windows_detected,
     region,
+    architecture,
 ):
     """
     Save a new AwsMachineImage image object.
@@ -134,6 +143,7 @@ def save_new_aws_machine_image(
         openshift_detected (bool): was openshift detected for this image
         windows_detected (bool): was windows detected for this image
         region (str): Region where the image was found
+        architecture (str): CPU architecture detected for this image
 
     Returns (AwsMachineImage, bool): The object representing the saved model
         and a boolean of whether it was new or not.
@@ -162,6 +172,7 @@ def save_new_aws_machine_image(
                 rhel_detected_by_tag=rhel_detected_by_tag,
                 openshift_detected=openshift_detected,
                 content_object=awsmachineimage,
+                architecture=architecture,
             )
 
         # This should not be necessary, but we really need this to exist.

@@ -234,7 +234,12 @@ def generate_dummy_describe_instance(
 
 
 def generate_dummy_describe_image(
-    image_id=None, owner_id=None, name=None, openshift=False, platform=None
+    image_id=None,
+    owner_id=None,
+    name=None,
+    openshift=False,
+    platform=None,
+    architecture=None,
 ):
     """
     Generate dummy image to imitate 'describe images' API response.
@@ -247,6 +252,7 @@ def generate_dummy_describe_image(
         name (str): Optional image name.
         openshift (bool): Optional indicator for openshift.
         platform (str): Optional known Platform value.
+        architecture (str): Optional known Architecture value.
 
     Returns:
         dict: Well-formed image data structure.
@@ -275,6 +281,8 @@ def generate_dummy_describe_image(
     }
     if platform is not None:
         mock_image["Platform"] = platform
+    if architecture is not None:
+        mock_image["Architecture"] = architecture
 
     return mock_image
 
