@@ -116,15 +116,18 @@ def configure_customer_aws_and_create_cloud_account(
         return
 
     cloud_account_name = get_standard_cloud_account_name("aws", customer_aws_account_id)
-    create_aws_cloud_account(
-        user,
-        customer_arn,
-        cloud_account_name,
-        authentication_id,
-        application_id,
-        endpoint_id,
-        source_id,
-    )
+    try:
+        create_aws_cloud_account(
+            user,
+            customer_arn,
+            cloud_account_name,
+            authentication_id,
+            application_id,
+            endpoint_id,
+            source_id,
+        )
+    except ValidationError as e:
+        logger.info("Unable to create cloud account: error %s", e.detail)
 
 
 @retriable_shared_task

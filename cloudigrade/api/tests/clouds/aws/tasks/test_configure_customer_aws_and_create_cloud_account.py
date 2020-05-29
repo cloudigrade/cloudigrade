@@ -127,16 +127,14 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
         validation_error = ValidationError({"account_arn": "uh oh"})
         mock_enable.side_effect = validation_error
 
-        with self.assertRaises(ValidationError) as raise_context:
-            tasks.configure_customer_aws_and_create_cloud_account(
-                user.username,
-                customer_secret_access_key,
-                auth_id,
-                application_id,
-                endpoint_id,
-                source_id,
-            )
-        self.assertEqual(raise_context.exception, validation_error)
+        tasks.configure_customer_aws_and_create_cloud_account(
+            user.username,
+            customer_secret_access_key,
+            auth_id,
+            application_id,
+            endpoint_id,
+            source_id,
+        )
 
         self.assertFalse(CloudAccount.objects.filter(user=user).exists())
 
