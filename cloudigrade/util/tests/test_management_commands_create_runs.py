@@ -47,7 +47,7 @@ class CreateRunsTest(TestCase):
         """Test calling create_runs with no input."""
         call_command("create_runs")
         self.assertEqual(Run.objects.all().count(), 1)
-        self.assertEqual(ConcurrentUsage.objects.all().count(), 2)
+        self.assertEqual(ConcurrentUsage.objects.all().count(), 1)
 
     @patch("builtins.input", return_value="Y")
     def test_handle_yes(self, mock_input):

@@ -30,16 +30,10 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
             self.instance_type_large
         ]
 
-    def assertConcurrentUsageIs(
-        self, usage, date, user, cloud_account, instances, memory, vcpu
-    ):
+    def assertConcurrentUsageIs(self, usage, date, user, instances, memory, vcpu):
         """Assert ConcurrentUsage matches expected values."""
         self.assertEqual(usage.date, date)
         self.assertEqual(usage.user, user)
-        if cloud_account is None:
-            self.assertIsNone(usage.cloud_account)
-        else:
-            self.assertEqual(usage.cloud_account, cloud_account)
         self.assertEqual(usage.instances, instances)
         self.assertEqual(usage.memory, memory)
         self.assertEqual(usage.vcpu, vcpu)
@@ -64,119 +58,16 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
         )
         calculate_max_concurrent_usage_from_runs([run])
         usages = ConcurrentUsage.objects.all()
-        self.assertEqual(len(usages), 2)
+        self.assertEqual(len(usages), 1)
 
-        cloud_account_usage = ConcurrentUsage.objects.filter(
-            cloud_account__isnull=False
-        ).get()
-        self.assertConcurrentUsageIs(
-            cloud_account_usage,
-            date=datetime.date(2019, 5, 1),
-            user=self.user,
-            cloud_account=self.account,
-            instances=1,
-            memory=self.instance_type_small_specs["memory"],
-            vcpu=self.instance_type_small_specs["vcpu"],
-        )
-
-        no_cloud_account_usage = ConcurrentUsage.objects.filter(
-            cloud_account__isnull=True
-        ).get()
+        no_cloud_account_usage = ConcurrentUsage.objects.filter().get()
         self.assertConcurrentUsageIs(
             no_cloud_account_usage,
             date=datetime.date(2019, 5, 1),
             user=self.user,
-            cloud_account=None,
             instances=1,
             memory=self.instance_type_small_specs["memory"],
             vcpu=self.instance_type_small_specs["vcpu"],
-        )
-
-    def test_two_clounts_each_one_run_one_day(self):
-        """
-        Test with two same-user clounts each having one run in the same day.
-
-        This should result in three usages:
-        - user and clount 1 (small instance)
-        - user and clount 2 (large instance)
-        - user and no clount (both instances)
-        """
-        runs = []
-        instance = api_helper.generate_aws_instance(self.account, image=self.image_rhel)
-        runs.append(
-            api_helper.generate_single_run(
-                instance,
-                (
-                    util_helper.utc_dt(2019, 5, 1, 1, 0, 0),
-                    util_helper.utc_dt(2019, 5, 1, 2, 0, 0),
-                ),
-                image=instance.machine_image,
-                instance_type=self.instance_type_small,
-                calculate_concurrent_usage=False,
-            )
-        )
-        instance2 = api_helper.generate_aws_instance(
-            self.account2, image=self.image_rhel
-        )
-        runs.append(
-            api_helper.generate_single_run(
-                instance2,
-                (
-                    util_helper.utc_dt(2019, 5, 1, 1, 30, 0),
-                    util_helper.utc_dt(2019, 5, 1, 2, 30, 0),
-                ),
-                image=instance2.machine_image,
-                instance_type=self.instance_type_large,
-                calculate_concurrent_usage=False,
-            )
-        )
-        calculate_max_concurrent_usage_from_runs(runs)
-        usages = ConcurrentUsage.objects.all()
-        self.assertEqual(len(usages), 3)
-
-        no_cloud_account_usage = ConcurrentUsage.objects.filter(
-            cloud_account__isnull=True
-        ).get()
-        self.assertConcurrentUsageIs(
-            no_cloud_account_usage,
-            date=datetime.date(2019, 5, 1),
-            user=self.user,
-            cloud_account=None,
-            instances=2,
-            memory=(
-                self.instance_type_small_specs["memory"]
-                + self.instance_type_large_specs["memory"]
-            ),
-            vcpu=(
-                self.instance_type_small_specs["vcpu"]
-                + self.instance_type_large_specs["vcpu"]
-            ),
-        )
-
-        cloud_account_usage = ConcurrentUsage.objects.filter(
-            cloud_account=self.account
-        ).get()
-        self.assertConcurrentUsageIs(
-            cloud_account_usage,
-            date=datetime.date(2019, 5, 1),
-            user=self.user,
-            cloud_account=self.account,
-            instances=1,
-            memory=self.instance_type_small_specs["memory"],
-            vcpu=self.instance_type_small_specs["vcpu"],
-        )
-
-        cloud_account2_usage = ConcurrentUsage.objects.filter(
-            cloud_account=self.account2
-        ).get()
-        self.assertConcurrentUsageIs(
-            cloud_account2_usage,
-            date=datetime.date(2019, 5, 1),
-            user=self.user,
-            cloud_account=self.account2,
-            instances=1,
-            memory=self.instance_type_large_specs["memory"],
-            vcpu=self.instance_type_large_specs["vcpu"],
         )
 
     def test_one_clount_one_run_two_days(self):
@@ -202,38 +93,13 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
         )
         calculate_max_concurrent_usage_from_runs([run])
         usages = ConcurrentUsage.objects.all()
-        self.assertEqual(len(usages), 4)
+        self.assertEqual(len(usages), 2)
 
-        cloud_account_usages = ConcurrentUsage.objects.filter(
-            cloud_account__isnull=False
-        ).order_by("date")
-        self.assertConcurrentUsageIs(
-            cloud_account_usages[0],
-            date=datetime.date(2019, 5, 1),
-            user=self.user,
-            cloud_account=self.account,
-            instances=1,
-            memory=self.instance_type_small_specs["memory"],
-            vcpu=self.instance_type_small_specs["vcpu"],
-        )
-        self.assertConcurrentUsageIs(
-            cloud_account_usages[1],
-            date=datetime.date(2019, 5, 2),
-            user=self.user,
-            cloud_account=self.account,
-            instances=1,
-            memory=self.instance_type_small_specs["memory"],
-            vcpu=self.instance_type_small_specs["vcpu"],
-        )
-
-        no_cloud_account_usages = ConcurrentUsage.objects.filter(
-            cloud_account__isnull=True
-        ).order_by("date")
+        no_cloud_account_usages = ConcurrentUsage.objects.filter().order_by("date")
         self.assertConcurrentUsageIs(
             no_cloud_account_usages[0],
             date=datetime.date(2019, 5, 1),
             user=self.user,
-            cloud_account=None,
             instances=1,
             memory=self.instance_type_small_specs["memory"],
             vcpu=self.instance_type_small_specs["vcpu"],
@@ -242,7 +108,6 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
             no_cloud_account_usages[1],
             date=datetime.date(2019, 5, 2),
             user=self.user,
-            cloud_account=None,
             instances=1,
             memory=self.instance_type_small_specs["memory"],
             vcpu=self.instance_type_small_specs["vcpu"],
@@ -277,38 +142,13 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
         )
         calculate_max_concurrent_usage_from_runs([run])
         usages = ConcurrentUsage.objects.all()
-        self.assertEqual(len(usages), 4)
+        self.assertEqual(len(usages), 2)
 
-        cloud_account_usages = ConcurrentUsage.objects.filter(
-            cloud_account__isnull=False
-        ).order_by("date")
-        self.assertConcurrentUsageIs(
-            cloud_account_usages[0],
-            date=yesterday,
-            user=self.user,
-            cloud_account=self.account,
-            instances=1,
-            memory=self.instance_type_small_specs["memory"],
-            vcpu=self.instance_type_small_specs["vcpu"],
-        )
-        self.assertConcurrentUsageIs(
-            cloud_account_usages[1],
-            date=today,
-            user=self.user,
-            cloud_account=self.account,
-            instances=1,
-            memory=self.instance_type_small_specs["memory"],
-            vcpu=self.instance_type_small_specs["vcpu"],
-        )
-
-        no_cloud_account_usages = ConcurrentUsage.objects.filter(
-            cloud_account__isnull=True
-        ).order_by("date")
+        no_cloud_account_usages = ConcurrentUsage.objects.filter().order_by("date")
         self.assertConcurrentUsageIs(
             no_cloud_account_usages[0],
             date=yesterday,
             user=self.user,
-            cloud_account=None,
             instances=1,
             memory=self.instance_type_small_specs["memory"],
             vcpu=self.instance_type_small_specs["vcpu"],
@@ -317,7 +157,6 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
             no_cloud_account_usages[1],
             date=today,
             user=self.user,
-            cloud_account=None,
             instances=1,
             memory=self.instance_type_small_specs["memory"],
             vcpu=self.instance_type_small_specs["vcpu"],
@@ -339,7 +178,7 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
         # These will act as the "old" calculated concurrent objects.
         calculate_max_concurrent_usage_from_runs([old_run])
         old_usages = ConcurrentUsage.objects.all().order_by("created_at", "id")
-        self.assertEqual(len(old_usages), 2)
+        self.assertEqual(len(old_usages), 1)
 
         new_run = api_helper.generate_single_run(
             instance,
@@ -354,8 +193,8 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
         # This should have no effect on the old calculated concurrent objects.
         calculate_max_concurrent_usage_from_runs([new_run])
         new_usages = ConcurrentUsage.objects.all().order_by("created_at", "id")
-        self.assertEqual(len(new_usages), 4)
-        self.assertEqual(new_usages[:2], old_usages[:2])
+        self.assertEqual(len(new_usages), 2)
+        self.assertEqual(new_usages[0], old_usages[0])
 
     def test_same_date_new_run_causes_deletion_and_recreation(self):
         """
@@ -378,7 +217,7 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
         # These will act as the "old" calculated concurrent objects.
         calculate_max_concurrent_usage_from_runs([old_run])
         old_usages = ConcurrentUsage.objects.all().order_by("created_at", "id")
-        self.assertEqual(len(old_usages), 2)
+        self.assertEqual(len(old_usages), 1)
 
         new_instance = api_helper.generate_aws_instance(
             self.account, image=self.image_rhel
@@ -396,37 +235,14 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
         # This should create new and different runs.
         calculate_max_concurrent_usage_from_runs([new_run])
         new_usages = ConcurrentUsage.objects.all().order_by("created_at", "id")
-        self.assertEqual(len(new_usages), 2)
+        self.assertEqual(len(new_usages), 1)
         self.assertNotEqual(new_usages[0].id, old_usages[0].id)
-        self.assertNotEqual(new_usages[1].id, old_usages[1].id)
 
-        cloud_account_usage = ConcurrentUsage.objects.filter(
-            cloud_account__isnull=False
-        ).get()
-        self.assertConcurrentUsageIs(
-            cloud_account_usage,
-            date=datetime.date(2019, 5, 1),
-            user=self.user,
-            cloud_account=self.account,
-            instances=2,
-            memory=(
-                self.instance_type_small_specs["memory"]
-                + self.instance_type_large_specs["memory"]
-            ),
-            vcpu=(
-                self.instance_type_small_specs["vcpu"]
-                + self.instance_type_large_specs["vcpu"]
-            ),
-        )
-
-        no_cloud_account_usage = ConcurrentUsage.objects.filter(
-            cloud_account__isnull=True
-        ).get()
+        no_cloud_account_usage = ConcurrentUsage.objects.filter().get()
         self.assertConcurrentUsageIs(
             no_cloud_account_usage,
             date=datetime.date(2019, 5, 1),
             user=self.user,
-            cloud_account=None,
             instances=2,
             memory=(
                 self.instance_type_small_specs["memory"]

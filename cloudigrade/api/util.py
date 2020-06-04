@@ -13,7 +13,6 @@ from rest_framework.serializers import ValidationError
 
 from api.clouds.aws.models import AwsEC2InstanceDefinition
 from api.models import (
-    CloudAccount,
     ConcurrentUsage,
     Instance,
     InstanceEvent,
@@ -190,7 +189,7 @@ def normalize_runs(events):  # noqa: C901
     return normalized_runs
 
 
-def get_max_concurrent_usage(date, user_id, cloud_account_id=None):
+def get_max_concurrent_usage(date, user_id):
     """
     Get maximum concurrent usage of RHEL instances in given parameters.
 
@@ -213,7 +212,6 @@ def get_max_concurrent_usage(date, user_id, cloud_account_id=None):
         return ConcurrentUsage(
             date=date,
             user_id=user_id,
-            cloud_account_id=cloud_account_id,
             instances=0,
             instances_list=[],
             vcpu=0,
@@ -221,21 +219,15 @@ def get_max_concurrent_usage(date, user_id, cloud_account_id=None):
         )
 
     try:
-        saved_usage = ConcurrentUsage.objects.get(
-            date=date, user_id=user_id, cloud_account_id=cloud_account_id
-        )
+        saved_usage = ConcurrentUsage.objects.get(date=date, user_id=user_id)
     except ConcurrentUsage.DoesNotExist:
-        calculate_max_concurrent_usage(
-            date=date, user_id=user_id, cloud_account_id=cloud_account_id
-        )
-        saved_usage = ConcurrentUsage.objects.get(
-            date=date, user_id=user_id, cloud_account_id=cloud_account_id
-        )
+        calculate_max_concurrent_usage(date=date, user_id=user_id)
+        saved_usage = ConcurrentUsage.objects.get(date=date, user_id=user_id)
 
     return saved_usage
 
 
-def calculate_max_concurrent_usage(date, user_id, cloud_account_id=None):
+def calculate_max_concurrent_usage(date, user_id):
     """
     Calculate maximum concurrent usage of RHEL instances in given parameters.
 
@@ -261,7 +253,6 @@ def calculate_max_concurrent_usage(date, user_id, cloud_account_id=None):
             usage = ConcurrentUsage(
                 date=date,
                 user_id=user_id,
-                cloud_account_id=cloud_account_id,
                 instances=0,
                 vcpu=0,
                 memory=0.0,
@@ -269,20 +260,7 @@ def calculate_max_concurrent_usage(date, user_id, cloud_account_id=None):
             )
             return usage
         queryset = queryset.filter(instance__cloud_account__user__id=user_id)
-    if cloud_account_id:
-        if not CloudAccount.objects.filter(id=cloud_account_id).exists():
-            # Return empty stub object if account doesn't exist.
-            usage = ConcurrentUsage(
-                date=date,
-                user_id=user_id,
-                cloud_account_id=cloud_account_id,
-                instances=0,
-                vcpu=0,
-                memory=0.0,
-                instances_list=[],
-            )
-            return usage
-        queryset = queryset.filter(instance__cloud_account__id=cloud_account_id)
+
     start = datetime(date.year, date.month, date.day, 0, 0, 0, tzinfo=tz.tzutc())
     end = start + timedelta(days=1)
 
@@ -377,13 +355,10 @@ def calculate_max_concurrent_usage(date, user_id, cloud_account_id=None):
         i for n, i in enumerate(instances_list) if i not in instances_list[n + 1 :]
     ]
 
-    ConcurrentUsage.objects.filter(
-        date=date, user_id=user_id, cloud_account_id=cloud_account_id
-    ).delete()
+    ConcurrentUsage.objects.filter(date=date, user_id=user_id).delete()
     usage = ConcurrentUsage.objects.create(
         date=date,
         user_id=user_id,
-        cloud_account_id=cloud_account_id,
         instances=max_instances,
         vcpu=max_vcpu,
         memory=max_memory,
@@ -415,18 +390,17 @@ def calculate_max_concurrent_usage_from_runs(runs):
             end_date = get_today()
         # But really the end is *tomorrow* since the end is exclusive.
         end_date = end_date + timedelta(days=1)
-        cloud_acount_id = run.instance.cloud_account.id
         user_id = run.instance.cloud_account.user.id
         delta_days = (end_date - start_date).days
         for offset in range(delta_days):
             date = start_date + timedelta(days=offset)
-            date_user_cloud_account = (date, user_id, cloud_acount_id)
+            date_user_cloud_account = (date, user_id)
             date_user_cloud_accounts.add(date_user_cloud_account)
-            date_user_no_cloud_account = (date, user_id, None)
+            date_user_no_cloud_account = (date, user_id)
             date_user_cloud_accounts.add(date_user_no_cloud_account)
 
-    for date, user_id, cloud_account_id in date_user_cloud_accounts:
-        calculate_max_concurrent_usage(date, user_id, cloud_account_id)
+    for date, user_id in date_user_cloud_accounts:
+        calculate_max_concurrent_usage(date, user_id)
 
 
 def recalculate_runs(event):

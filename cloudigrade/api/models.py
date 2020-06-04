@@ -589,9 +589,6 @@ class ConcurrentUsage(BaseModel):
 
     date = models.DateField()
     user = models.ForeignKey(User, on_delete=models.CASCADE, db_index=True, null=False,)
-    cloud_account = models.ForeignKey(
-        CloudAccount, on_delete=models.CASCADE, db_index=True, null=True,
-    )
     instances = models.IntegerField()
     _instances_list = models.TextField(
         db_column="instances_list", null=True, blank=True
@@ -629,7 +626,6 @@ class ConcurrentUsage(BaseModel):
             f"id={self.id}, "
             f"date={date}, "
             f"user_id={self.user_id}, "
-            f"cloud_account_id={self.cloud_account_id}, "
             f"memory={self.memory}, "
             f"vcpu={self.vcpu}, "
             f"created_at={created_at}, "

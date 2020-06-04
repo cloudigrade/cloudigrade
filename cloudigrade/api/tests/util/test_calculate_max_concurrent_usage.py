@@ -294,50 +294,6 @@ class CalculateMaxConcurrentUsageTest(TestCase):
             results, expected_date, expected_instances, expected_vcpu, expected_memory,
         )
 
-    def test_overlapping_rhel_runs_within_day_with_account_filter(self):
-        """
-        Test with two overlapping RHEL instances run within the day.
-
-        Because a account filter is applied, only one instance's data is seen.
-        """
-        rhel_instance1 = api_helper.generate_aws_instance(
-            self.user1account1, image=self.image_rhel
-        )
-        rhel_instance2 = api_helper.generate_aws_instance(
-            self.user1account2, image=self.image_rhel
-        )
-        api_helper.generate_single_run(
-            rhel_instance1,
-            (
-                util_helper.utc_dt(2019, 5, 1, 1, 0, 0),
-                util_helper.utc_dt(2019, 5, 1, 2, 0, 0),
-            ),
-            image=rhel_instance1.machine_image,
-            instance_type=self.instance_type_large,
-        )
-        # This second instance run should be filtered away.
-        api_helper.generate_single_run(
-            rhel_instance2,
-            (
-                util_helper.utc_dt(2019, 5, 1, 1, 30, 0),
-                util_helper.utc_dt(2019, 5, 1, 2, 30, 0),
-            ),
-            image=rhel_instance2.machine_image,
-            instance_type=self.instance_type_small,
-        )
-        request_date = datetime.date(2019, 5, 1)
-        expected_date = request_date
-        expected_instances = 1
-        expected_vcpu = self.instance_type_large_specs["vcpu"]
-        expected_memory = self.instance_type_large_specs["memory"]
-
-        results = calculate_max_concurrent_usage(
-            request_date, user_id=self.user1.id, cloud_account_id=self.user1account1.id,
-        )
-        self.assertMaxConcurrentUsage(
-            results, expected_date, expected_instances, expected_vcpu, expected_memory,
-        )
-
     def test_non_overlapping_rhel_runs_within_day(self):
         """
         Test with two non-overlapping RHEL instances run within the day.
@@ -387,16 +343,4 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         expected_date = request_date
 
         results = calculate_max_concurrent_usage(request_date, user_id=user_id)
-        self.assertMaxConcurrentUsage(results, expected_date, 0, 0, 0.0)
-
-    def test_when_account_id_does_not_exist(self):
-        """Test when the requested account ID does not exist."""
-        request_date = datetime.date(2019, 5, 1)
-        user_id = self.user1.id
-        cloud_account_id = -1  # negative id should never exit
-        expected_date = request_date
-
-        results = calculate_max_concurrent_usage(
-            request_date, user_id=user_id, cloud_account_id=cloud_account_id
-        )
         self.assertMaxConcurrentUsage(results, expected_date, 0, 0, 0.0)

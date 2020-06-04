@@ -208,21 +208,10 @@ class DailyConcurrentUsageViewSet(viewsets.GenericViewSet, mixins.ListModelMixin
             except exceptions.ValidationError as e:
                 errors.update(e.detail)
 
-        cloud_account_id = self.request.query_params.get("cloud_account_id", None)
-        if cloud_account_id is not None:
-            try:
-                cloud_account_id = convert_param_to_int(
-                    "cloud_account_id", cloud_account_id
-                )
-            except exceptions.ValidationError as e:
-                errors.update(e.detail)
-
         if errors:
             raise exceptions.ValidationError(errors)
 
-        queryset = DailyConcurrentUsageDummyQueryset(
-            start_date, end_date, user_id, cloud_account_id
-        )
+        queryset = DailyConcurrentUsageDummyQueryset(start_date, end_date, user_id)
         return queryset
 
 

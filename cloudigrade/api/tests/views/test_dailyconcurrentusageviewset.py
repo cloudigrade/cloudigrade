@@ -146,7 +146,7 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
         self.assertEqual(body["end_date"], [_("end_date must be a date (YYYY-MM-DD).")])
 
     def test_bad_user_id_and_cloud_account_id_arguments(self):
-        """Test with bad user_id and cloud_account_id arguments."""
+        """Test with bad user_id argument."""
         data = {"user_id": "potato", "cloud_account_id": "gems"}
         client = APIClient()
         client.force_authenticate(user=self.superuser)
@@ -157,10 +157,6 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
         body = response.json()
         self.assertEqual(
             body["user_id"], [_("{} must be an integer.").format("user_id")]
-        )
-        self.assertEqual(
-            body["cloud_account_id"],
-            [_("{} must be an integer.").format("cloud_account_id")],
         )
 
     def test_start_date_is_inclusive_and_end_date_is_exclusive(self):

@@ -269,13 +269,12 @@ class DailyConcurrentUsageDummyQueryset(object):
     """Dummy queryset for getting days with their max concurrent usage."""
 
     def __init__(
-        self, start_date=None, end_date=None, user_id=None, cloud_account_id=None,
+        self, start_date=None, end_date=None, user_id=None,
     ):
         """Initialize parameters."""
         self.start_date = start_date
         self.end_date = end_date
         self.user_id = user_id
-        self.cloud_account_id = cloud_account_id
         self._days = None
 
     @property
@@ -302,7 +301,7 @@ class DailyConcurrentUsageDummyQueryset(object):
         days = self.days[index]
         results = []
         for date in days:
-            result = get_max_concurrent_usage(date, self.user_id, self.cloud_account_id)
+            result = get_max_concurrent_usage(date, self.user_id)
             results.append(result)
 
         return results
