@@ -13,6 +13,7 @@ from rest_framework.response import Response
 from api import serializers
 from api.authentication import ThreeScaleAuthentication
 from api.models import CloudAccount, Instance, MachineImage
+from api.schemas import SysconfigSchema
 from api.serializers import DailyConcurrentUsageDummyQueryset
 from api.util import convert_param_to_int
 from util.aws.sts import _get_primary_account_id, cloudigrade_policy
@@ -163,6 +164,7 @@ class SysconfigViewSet(viewsets.ViewSet):
     """
 
     authentication_classes = (ThreeScaleAuthentication,)
+    schema = SysconfigSchema()
 
     def list(self, *args, **kwargs):
         """Get cloud account ids currently used by this installation."""

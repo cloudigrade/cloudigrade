@@ -1040,19 +1040,18 @@
     },
     "/api/cloudigrade/v2/sysconfig/": {
       "get": {
-        "operationId": "listSysconfigViewSets",
-        "parameters": [],
+        "operationId": "Listsysconfigviewsets",
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {}
+                  "items": {},
+                  "type": "object"
                 }
               }
             },
-            "description": ""
+            "description": "Retrieve current system configuration."
           }
         }
       }

@@ -2,7 +2,7 @@
 from django.conf.urls import url
 from django.contrib import admin
 from django.urls import include, path
-from rest_framework import renderers, routers
+from rest_framework import permissions, renderers, routers
 from rest_framework.schemas import get_schema_view
 
 from api import views
@@ -24,7 +24,11 @@ urlpatterns = [
     path(
         "api/cloudigrade/v2/openapi.json",
         get_schema_view(
-            title="Cloudigrade", renderer_classes=[renderers.JSONOpenAPIRenderer,],
+            title="Cloudigrade",
+            renderer_classes=[renderers.JSONOpenAPIRenderer,],
+            permission_classes=[permissions.AllowAny],
+            authentication_classes=[],
+            public=True,
         ),
         name="openapi-schema",
     ),
