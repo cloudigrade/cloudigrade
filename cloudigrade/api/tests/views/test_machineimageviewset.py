@@ -39,9 +39,11 @@ class MachineImageViewSetTest(TestCase):
         self.image_plain = api_helper.generate_aws_image()
         self.image_windows = api_helper.generate_aws_image(is_windows=True)
         self.image_rhel = api_helper.generate_aws_image(rhel_detected=True)
-        self.image_ocp = api_helper.generate_aws_image(openshift_detected=True)
+        self.image_ocp = api_helper.generate_aws_image(
+            openshift_detected=True, architecture="arm64"
+        )
         self.image_rhel_ocp = api_helper.generate_aws_image(
-            rhel_detected=True, openshift_detected=True
+            rhel_detected=True, openshift_detected=True, status=MachineImage.UNAVAILABLE
         )
         self.inspected_image = api_helper.generate_aws_image(
             status=MachineImage.INSPECTED
@@ -242,6 +244,26 @@ class MachineImageViewSetTest(TestCase):
         actual_images = self.get_image_ids_from_list_response(response)
         self.assertEqual(expected_images, actual_images)
 
+    def test_list_images_with_architecture_filter(self):
+        """Assert that a user sees images filtered by architecture."""
+        expected_images = {
+            self.image_ocp.id,
+        }
+        response = self.get_image_list_response(self.user2, {"architecture": "arm64"})
+        actual_images = self.get_image_ids_from_list_response(response)
+        self.assertEqual(expected_images, actual_images)
+
+    def test_list_images_with_status_filter(self):
+        """Assert that a user sees images filtered by status."""
+        expected_images = {
+            self.image_rhel_ocp.id,
+        }
+        response = self.get_image_list_response(
+            self.user2, {"status": MachineImage.UNAVAILABLE}
+        )
+        actual_images = self.get_image_ids_from_list_response(response)
+        self.assertEqual(expected_images, actual_images)
+
     def test_list_images_as_superuser(self):
         """Assert that the superuser sees all images regardless of owner."""
         expected_images = {
@@ -256,7 +278,7 @@ class MachineImageViewSetTest(TestCase):
         actual_images = self.get_image_ids_from_list_response(response)
         self.assertEqual(expected_images, actual_images)
 
-    def test_list_images_as_superuser_with_filter(self):
+    def test_list_images_as_superuser_with_user_filter(self):
         """Assert that the superuser sees images filtered by user_id."""
         expected_images = {self.image_ocp.id, self.image_rhel_ocp.id}
         params = {"user_id": self.user2.id}

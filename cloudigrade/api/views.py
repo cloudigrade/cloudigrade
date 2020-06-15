@@ -120,10 +120,20 @@ class MachineImageViewSet(viewsets.ReadOnlyModelViewSet):
         instances, we will need to expand the conditions on this filter to
         exclude images used by archived instances (via archived accounts).
         """
+        queryset = self.queryset
+
+        architecture = self.request.query_params.get("architecture", None)
+        if architecture is not None:
+            queryset = queryset.filter(architecture=architecture)
+
+        status = self.request.query_params.get("status", None)
+        if status is not None:
+            queryset = queryset.filter(status=status)
+
         user = self.request.user
         if not user.is_superuser:
             return (
-                self.queryset.filter(instance__cloud_account__user_id=user.id)
+                queryset.filter(instance__cloud_account__user_id=user.id)
                 .order_by("id")
                 .distinct()
             )
@@ -131,11 +141,11 @@ class MachineImageViewSet(viewsets.ReadOnlyModelViewSet):
         if user_id is not None:
             user_id = convert_param_to_int("user_id", user_id)
             return (
-                self.queryset.filter(instance__cloud_account__user_id=user_id)
+                queryset.filter(instance__cloud_account__user_id=user_id)
                 .order_by("id")
                 .distinct()
             )
-        return self.queryset.order_by("id")
+        return queryset.order_by("id")
 
     @action(detail=True, methods=["post"])
     def reinspect(self, request, pk=None):
