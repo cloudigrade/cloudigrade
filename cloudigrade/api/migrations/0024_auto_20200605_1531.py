@@ -11,9 +11,7 @@ def delete_concurrentusage_with_cloud_account_id(apps, schema_editor):
     """Delete verify_account_permissions PeriodicTasks that have no AwsCloudAccount."""
     ConcurrentUsage = apps.get_model("api", "ConcurrentUsage")
 
-    concurrent_usages = ConcurrentUsage.objects.filter(
-        cloud_account_id__isnull=False
-    )
+    concurrent_usages = ConcurrentUsage.objects.filter(cloud_account_id__isnull=False)
     logger.info(
         "Deleting %(number_concurrent)s ConcurrentUsages with cloud_account field set.",
         {"number_concurrent": concurrent_usages.count()},
@@ -24,7 +22,7 @@ def delete_concurrentusage_with_cloud_account_id(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0023_machineimage_architecture'),
+        ("api", "0023_machineimage_architecture"),
     ]
 
     operations = [

@@ -6,12 +6,9 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0024_auto_20200605_1531'),
+        ("api", "0024_auto_20200605_1531"),
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='concurrentusage',
-            name='cloud_account',
-        ),
+        migrations.RemoveField(model_name="concurrentusage", name="cloud_account",),
     ]
