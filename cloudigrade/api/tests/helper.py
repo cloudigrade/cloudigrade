@@ -533,6 +533,8 @@ def generate_aws_image(
     platform = AwsMachineImage.WINDOWS if is_windows else AwsMachineImage.NONE
 
     if rhel_detected:
+        if not syspurpose:
+            syspurpose = generate_syspurpose()
         if not any(
             (
                 rhel_detected_certs,
@@ -541,7 +543,9 @@ def generate_aws_image(
                 rhel_detected_signed_packages,
             )
         ):
-            image_json = json.dumps({"rhel_release_files_found": rhel_detected})
+            image_json = json.dumps(
+                {"rhel_release_files_found": rhel_detected, "syspurpose": syspurpose,}
+            )
         else:
             image_json = json.dumps(
                 {
@@ -581,6 +585,48 @@ def generate_aws_image(
     )
 
     return machine_image
+
+
+def generate_syspurpose(role=None, sla=None, usage=None):
+    """
+    Generate a syspurpose for testing.
+
+    Args:
+        role (str): Optional. Role to specify.
+        sla (str): Optional. SLA to specify.
+        usage (str): Optional. Usage to specify.
+
+    Returns:
+        dict: A dictionary representing a syspurpose.
+
+    """
+    roles = [
+        "Red Hat Enterprise Linux Server",
+        "Red Hat Enterprise Linux Workstation",
+        "Red Hat Enterprise Linux Compute Node",
+    ]
+    slas = [
+        "Premium",
+        "Standard",
+        "Self-Support",
+    ]
+    usages = [
+        "Production",
+        "Disaster Recovery",
+        "Development/Test",
+    ]
+    if not role:
+        role = random.choice(roles)
+    if not sla:
+        sla = random.choice(slas)
+    if not usage:
+        usage = random.choice(usages)
+
+    return {
+        "role": f"{role}",
+        "service_level_agreement": f"{sla}",
+        "usage": f"{usage}",
+    }
 
 
 def generate_single_run(

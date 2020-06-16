@@ -1106,13 +1106,13 @@
                             "type": "string",
                             "format": "date"
                           },
-                          "instances": {
-                            "type": "integer"
+                          "maximum_counts": {
+                            "type": "string",
+                            "readOnly": true
                           }
                         },
                         "required": [
-                          "date",
-                          "instances"
+                          "date"
                         ]
                       }
                     }

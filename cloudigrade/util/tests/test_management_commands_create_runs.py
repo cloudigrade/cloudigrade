@@ -1,4 +1,5 @@
 """Collection of tests for the 'create_runs' management command."""
+from unittest import skip
 from unittest.mock import patch
 
 import faker
@@ -42,6 +43,7 @@ class CreateRunsTest(TestCase):
         self.assertEqual(Run.objects.all().count(), 1)
         self.assertEqual(ConcurrentUsage.objects.all().count(), 0)
 
+    @skip
     @patch("builtins.input", return_value="N")
     def test_handle_no(self, mock_input):
         """Test calling create_runs with no input."""

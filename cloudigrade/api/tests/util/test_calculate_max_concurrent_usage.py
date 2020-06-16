@@ -21,30 +21,79 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         self.user1account2 = api_helper.generate_aws_account(user=self.user1)
         self.user2account1 = api_helper.generate_aws_account(user=self.user2)
 
-        self.image_rhel = api_helper.generate_aws_image(rhel_detected=True)
-        self.image_plain = api_helper.generate_aws_image()
+        self.syspurpose1 = {
+            "role": "Red Hat Enterprise Linux Server",
+            "service_level_agreement": "Standard",
+            "usage": "Development/Test",
+        }
+        self.syspurpose2 = {
+            "role": "Red Hat Enterprise Linux Server",
+            "service_level_agreement": "Premium",
+            "usage": "Development/Test",
+        }
+        self.syspurpose3 = {
+            "role": "Red Hat Enterprise Linux Server",
+            "service_level_agreement": "",
+            "usage": "Development/Test",
+        }
+        self.syspurpose4 = {
+            "role": "Red Hat Enterprise Linux Server Workstation",
+            "service_level_agreement": "," * 10485760,  # 10 mb of commas
+            "usage": "Development/Test",
+        }
+        self.syspurpose5 = {
+            "role": "The quick brown fox jumps over the lazy dog. " * 3,
+            "service_level_agreement": "Self-Support",
+            "usage": "Development/Test",
+        }
 
-        self.instance_type_small = "t2.nano"  # 1 vcpu, 0.5 GB memory
-        self.instance_type_small_specs = util_helper.SOME_EC2_INSTANCE_TYPES[
-            self.instance_type_small
-        ]
+        self.image_rhel1 = api_helper.generate_aws_image(
+            owner_aws_account_id=self.user1account1.id,
+            rhel_detected=True,
+            syspurpose=self.syspurpose1,
+            architecture="x86_64",
+        )
+        self.image_rhel2 = api_helper.generate_aws_image(
+            owner_aws_account_id=self.user1account1.id,
+            rhel_detected=True,
+            syspurpose=self.syspurpose1,
+            architecture="arm64",
+        )
+        self.image_rhel3 = api_helper.generate_aws_image(
+            owner_aws_account_id=self.user1account1.id,
+            rhel_detected=True,
+            syspurpose=self.syspurpose2,
+            architecture="x86_64",
+        )
+        self.image_rhel4 = api_helper.generate_aws_image(
+            owner_aws_account_id=self.user1account1.id,
+            rhel_detected=True,
+            syspurpose=self.syspurpose3,
+            architecture="x86_64",
+        )
+        self.image_rhel5 = api_helper.generate_aws_image(
+            owner_aws_account_id=self.user1account1.id,
+            rhel_detected=True,
+            syspurpose=self.syspurpose4,
+            architecture="x86_64",
+        )
+        self.image_plain = api_helper.generate_aws_image(
+            owner_aws_account_id=self.user1account1.id,
+            rhel_detected=False,
+            syspurpose=self.syspurpose5,
+            architecture="PowerPC",
+        )
 
-        self.instance_type_large = "c5.xlarge"  # 4 vcpu, 8.0 GB memory
-        self.instance_type_large_specs = util_helper.SOME_EC2_INSTANCE_TYPES[
-            self.instance_type_large
-        ]
-
-    def assertMaxConcurrentUsage(self, results, date, instances, vcpu, memory):
+    def assertMaxConcurrentUsage(self, results, date, instances):
         """Assert expected calculate_max_concurrent_usage results."""
-        self.assertEqual(results.date, date)
-        self.assertEqual(results.instances, instances)
-        self.assertEqual(results.vcpu, vcpu)
-        self.assertEqual(results.memory, memory)
+        self.assertEqual(results["date"], date)
+        for k, v in results["maximum_counts"].items():
+            self.assertEqual(v["max_count"], instances)
 
     def test_single_rhel_run_within_day(self):
         """Test with a single RHEL instance run within the day."""
         rhel_instance = api_helper.generate_aws_instance(
-            self.user1account1, image=self.image_rhel
+            self.user1account1, image=self.image_rhel1
         )
         api_helper.generate_single_run(
             rhel_instance,
@@ -53,23 +102,21 @@ class CalculateMaxConcurrentUsageTest(TestCase):
                 util_helper.utc_dt(2019, 5, 1, 2, 0, 0),
             ),
             image=rhel_instance.machine_image,
-            instance_type=self.instance_type_large,
         )
         request_date = datetime.date(2019, 5, 1)
         expected_date = request_date
         expected_instances = 1
-        expected_vcpu = self.instance_type_large_specs["vcpu"]
-        expected_memory = self.instance_type_large_specs["memory"]
 
         results = calculate_max_concurrent_usage(request_date, user_id=self.user1.id)
+        self.assertEqual(len(results.get("maximum_counts")), 4)
         self.assertMaxConcurrentUsage(
-            results, expected_date, expected_instances, expected_vcpu, expected_memory,
+            results, expected_date, expected_instances,
         )
 
     def test_single_rhel_run_entirely_before_day(self):
         """Test with a RHEL instance run entirely before the day."""
         rhel_instance = api_helper.generate_aws_instance(
-            self.user1account1, image=self.image_rhel
+            self.user1account1, image=self.image_rhel1
         )
         api_helper.generate_single_run(
             rhel_instance,
@@ -78,18 +125,17 @@ class CalculateMaxConcurrentUsageTest(TestCase):
                 util_helper.utc_dt(2019, 4, 30, 2, 0, 0),
             ),
             image=rhel_instance.machine_image,
-            instance_type=self.instance_type_large,
         )
         request_date = datetime.date(2019, 5, 1)
         expected_date = request_date
 
         results = calculate_max_concurrent_usage(request_date, user_id=self.user1.id)
-        self.assertMaxConcurrentUsage(results, expected_date, 0, 0, 0)
+        self.assertMaxConcurrentUsage(results, expected_date, 0)
 
     def test_single_rhel_run_entirely_after_day(self):
         """Test with a RHEL instance run entirely after the day."""
         rhel_instance = api_helper.generate_aws_instance(
-            self.user1account1, image=self.image_rhel
+            self.user1account1, image=self.image_rhel1
         )
         api_helper.generate_single_run(
             rhel_instance,
@@ -98,18 +144,17 @@ class CalculateMaxConcurrentUsageTest(TestCase):
                 util_helper.utc_dt(2019, 5, 2, 2, 0, 0),
             ),
             image=rhel_instance.machine_image,
-            instance_type=self.instance_type_large,
         )
         request_date = datetime.date(2019, 5, 1)
         expected_date = request_date
 
         results = calculate_max_concurrent_usage(request_date, user_id=self.user1.id)
-        self.assertMaxConcurrentUsage(results, expected_date, 0, 0, 0)
+        self.assertMaxConcurrentUsage(results, expected_date, 0)
 
     def test_single_run_overlapping_day_start(self):
         """Test with a RHEL instance run overlapping the start of the day."""
         rhel_instance = api_helper.generate_aws_instance(
-            self.user1account1, image=self.image_rhel
+            self.user1account1, image=self.image_rhel1
         )
         api_helper.generate_single_run(
             rhel_instance,
@@ -118,23 +163,20 @@ class CalculateMaxConcurrentUsageTest(TestCase):
                 util_helper.utc_dt(2019, 5, 1, 2, 0, 0),
             ),
             image=rhel_instance.machine_image,
-            instance_type=self.instance_type_large,
         )
         request_date = datetime.date(2019, 5, 1)
         expected_date = request_date
         expected_instances = 1
-        expected_vcpu = self.instance_type_large_specs["vcpu"]
-        expected_memory = self.instance_type_large_specs["memory"]
 
         results = calculate_max_concurrent_usage(request_date, user_id=self.user1.id)
         self.assertMaxConcurrentUsage(
-            results, expected_date, expected_instances, expected_vcpu, expected_memory,
+            results, expected_date, expected_instances,
         )
 
     def test_single_run_overlapping_day_end(self):
         """Test with a RHEL instance run overlapping the end of the day."""
         rhel_instance = api_helper.generate_aws_instance(
-            self.user1account1, image=self.image_rhel
+            self.user1account1, image=self.image_rhel1
         )
         api_helper.generate_single_run(
             rhel_instance,
@@ -143,23 +185,20 @@ class CalculateMaxConcurrentUsageTest(TestCase):
                 util_helper.utc_dt(2019, 5, 2, 2, 0, 0),
             ),
             image=rhel_instance.machine_image,
-            instance_type=self.instance_type_large,
         )
         request_date = datetime.date(2019, 5, 1)
         expected_date = request_date
         expected_instances = 1
-        expected_vcpu = self.instance_type_large_specs["vcpu"]
-        expected_memory = self.instance_type_large_specs["memory"]
 
         results = calculate_max_concurrent_usage(request_date, user_id=self.user1.id)
         self.assertMaxConcurrentUsage(
-            results, expected_date, expected_instances, expected_vcpu, expected_memory,
+            results, expected_date, expected_instances,
         )
 
     def test_single_run_overlapping_day_entirely(self):
         """Test with a RHEL instance run overlapping the entire day."""
         rhel_instance = api_helper.generate_aws_instance(
-            self.user1account1, image=self.image_rhel
+            self.user1account1, image=self.image_rhel1
         )
         api_helper.generate_single_run(
             rhel_instance,
@@ -168,17 +207,14 @@ class CalculateMaxConcurrentUsageTest(TestCase):
                 util_helper.utc_dt(2019, 5, 2, 2, 0, 0),
             ),
             image=rhel_instance.machine_image,
-            instance_type=self.instance_type_large,
         )
         request_date = datetime.date(2019, 5, 1)
         expected_date = request_date
         expected_instances = 1
-        expected_vcpu = self.instance_type_large_specs["vcpu"]
-        expected_memory = self.instance_type_large_specs["memory"]
 
         results = calculate_max_concurrent_usage(request_date, user_id=self.user1.id)
         self.assertMaxConcurrentUsage(
-            results, expected_date, expected_instances, expected_vcpu, expected_memory,
+            results, expected_date, expected_instances,
         )
 
     def test_single_not_rhel_run_within_day(self):
@@ -197,13 +233,14 @@ class CalculateMaxConcurrentUsageTest(TestCase):
                 util_helper.utc_dt(2019, 5, 1, 2, 0, 0),
             ),
             image=rhel_instance.machine_image,
-            instance_type=self.instance_type_large,
         )
         request_date = datetime.date(2019, 5, 1)
         expected_date = request_date
 
         results = calculate_max_concurrent_usage(request_date, user_id=self.user1.id)
-        self.assertMaxConcurrentUsage(results, expected_date, 0, 0, 0)
+        self.assertMaxConcurrentUsage(
+            results, expected_date, 0,
+        )
 
     def test_overlapping_rhel_runs_within_day(self):
         """
@@ -212,10 +249,10 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         Because no account filter is applied, both instances are seen.
         """
         rhel_instance1 = api_helper.generate_aws_instance(
-            self.user1account1, image=self.image_rhel
+            self.user1account1, image=self.image_rhel1
         )
         rhel_instance2 = api_helper.generate_aws_instance(
-            self.user1account1, image=self.image_rhel
+            self.user1account1, image=self.image_rhel2
         )
         api_helper.generate_single_run(
             rhel_instance1,
@@ -224,7 +261,6 @@ class CalculateMaxConcurrentUsageTest(TestCase):
                 util_helper.utc_dt(2019, 5, 1, 2, 0, 0),
             ),
             image=rhel_instance1.machine_image,
-            instance_type=self.instance_type_large,
         )
         api_helper.generate_single_run(
             rhel_instance2,
@@ -233,24 +269,12 @@ class CalculateMaxConcurrentUsageTest(TestCase):
                 util_helper.utc_dt(2019, 5, 1, 2, 30, 0),
             ),
             image=rhel_instance2.machine_image,
-            instance_type=self.instance_type_small,
         )
-        request_date = datetime.date(2019, 5, 1)
-        expected_date = request_date
-        expected_instances = 2
-        expected_vcpu = (
-            self.instance_type_large_specs["vcpu"]
-            + self.instance_type_small_specs["vcpu"]
-        )
-        expected_memory = (
-            self.instance_type_large_specs["memory"]
-            + self.instance_type_small_specs["memory"]
-        )
+        expected_date = request_date = datetime.date(2019, 5, 1)
 
         results = calculate_max_concurrent_usage(request_date, user_id=self.user1.id)
-        self.assertMaxConcurrentUsage(
-            results, expected_date, expected_instances, expected_vcpu, expected_memory,
-        )
+        self.assertEqual(results["date"], expected_date)
+        self.assertEqual(len(results["maximum_counts"]), 5)
 
     def test_overlapping_rhel_runs_within_day_with_user_filter(self):
         """
@@ -259,10 +283,10 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         Because a user filter is applied, only one instance's data is seen.
         """
         rhel_instance1 = api_helper.generate_aws_instance(
-            self.user1account1, image=self.image_rhel
+            self.user1account1, image=self.image_rhel3
         )
         rhel_instance2 = api_helper.generate_aws_instance(
-            self.user2account1, image=self.image_rhel
+            self.user2account1, image=self.image_rhel4
         )
         api_helper.generate_single_run(
             rhel_instance1,
@@ -271,7 +295,6 @@ class CalculateMaxConcurrentUsageTest(TestCase):
                 util_helper.utc_dt(2019, 5, 1, 2, 0, 0),
             ),
             image=rhel_instance1.machine_image,
-            instance_type=self.instance_type_large,
         )
         # This second instance run should be filtered away.
         api_helper.generate_single_run(
@@ -281,17 +304,14 @@ class CalculateMaxConcurrentUsageTest(TestCase):
                 util_helper.utc_dt(2019, 5, 1, 2, 30, 0),
             ),
             image=rhel_instance2.machine_image,
-            instance_type=self.instance_type_small,
         )
         request_date = datetime.date(2019, 5, 1)
         expected_date = request_date
         expected_instances = 1
-        expected_vcpu = self.instance_type_large_specs["vcpu"]
-        expected_memory = self.instance_type_large_specs["memory"]
 
         results = calculate_max_concurrent_usage(request_date, user_id=self.user1.id)
         self.assertMaxConcurrentUsage(
-            results, expected_date, expected_instances, expected_vcpu, expected_memory,
+            results, expected_date, expected_instances,
         )
 
     def test_non_overlapping_rhel_runs_within_day(self):
@@ -302,10 +322,10 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         should see the *larger* of the two matching the max values.
         """
         rhel_instance1 = api_helper.generate_aws_instance(
-            self.user1account1, image=self.image_rhel
+            self.user1account1, image=self.image_rhel4
         )
         rhel_instance2 = api_helper.generate_aws_instance(
-            self.user1account2, image=self.image_rhel
+            self.user1account2, image=self.image_rhel5
         )
         api_helper.generate_single_run(
             rhel_instance1,
@@ -314,7 +334,6 @@ class CalculateMaxConcurrentUsageTest(TestCase):
                 util_helper.utc_dt(2019, 5, 1, 2, 0, 0),
             ),
             image=rhel_instance1.machine_image,
-            instance_type=self.instance_type_small,
         )
         api_helper.generate_single_run(
             rhel_instance2,
@@ -323,17 +342,14 @@ class CalculateMaxConcurrentUsageTest(TestCase):
                 util_helper.utc_dt(2019, 5, 1, 4, 0, 0),
             ),
             image=rhel_instance2.machine_image,
-            instance_type=self.instance_type_large,
         )
         request_date = datetime.date(2019, 5, 1)
         expected_date = request_date
         expected_instances = 1
-        expected_vcpu = self.instance_type_large_specs["vcpu"]
-        expected_memory = self.instance_type_large_specs["memory"]
 
         results = calculate_max_concurrent_usage(request_date, user_id=self.user1.id)
         self.assertMaxConcurrentUsage(
-            results, expected_date, expected_instances, expected_vcpu, expected_memory,
+            results, expected_date, expected_instances,
         )
 
     def test_when_user_id_does_not_exist(self):
@@ -343,4 +359,6 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         expected_date = request_date
 
         results = calculate_max_concurrent_usage(request_date, user_id=user_id)
-        self.assertMaxConcurrentUsage(results, expected_date, 0, 0, 0.0)
+        self.assertMaxConcurrentUsage(
+            results, expected_date, 0,
+        )

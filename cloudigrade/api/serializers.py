@@ -311,4 +311,18 @@ class DailyConcurrentUsageSerializer(Serializer):
     """Serialize a report of daily RHEL concurrency over time for the API."""
 
     date = serializers.DateField(required=True)
-    instances = serializers.IntegerField(required=True)
+    maximum_counts = serializers.SerializerMethodField("get_maximum_counts")
+
+    def get_maximum_counts(self, obj):
+        """Massage the results dict a bit."""
+        response = []
+        for key, value in obj["maximum_counts"].items():
+            response.append(
+                {
+                    "arch": key.arch,
+                    "role": key.role,
+                    "sla": key.sla,
+                    "instances_count": value["max_count"],
+                }
+            )
+        return response

@@ -24,6 +24,8 @@ logger = logging.getLogger(__name__)
 
 cloud_account_name_pattern = "{cloud_name}-account-{external_cloud_account_id}"
 
+ANY = "_ANY"
+
 
 def get_last_known_instance_type(instance, before_date):
     """
@@ -218,13 +220,15 @@ def get_max_concurrent_usage(date, user_id):
             memory=0.0,
         )
 
-    try:
-        saved_usage = ConcurrentUsage.objects.get(date=date, user_id=user_id)
-    except ConcurrentUsage.DoesNotExist:
-        calculate_max_concurrent_usage(date=date, user_id=user_id)
-        saved_usage = ConcurrentUsage.objects.get(date=date, user_id=user_id)
+    # try:
+    #     saved_usage = ConcurrentUsage.objects.get(date=date, user_id=user_id)
+    # except ConcurrentUsage.DoesNotExist:
+    #     calculate_max_concurrent_usage(date=date, user_id=user_id)
+    #     saved_usage = ConcurrentUsage.objects.get(date=date, user_id=user_id)
 
-    return saved_usage
+    results = calculate_max_concurrent_usage(date=date, user_id=user_id)
+
+    return results
 
 
 def calculate_max_concurrent_usage(date, user_id):
@@ -290,6 +294,7 @@ def calculate_max_concurrent_usage(date, user_id):
                 run.instance.cloud_instance_id,
                 run.instance.machine_image.rhel_version,
                 run.instance.machine_image.syspurpose,
+                run.instance.machine_image.architecture,
             )
         )
 
@@ -305,6 +310,7 @@ def calculate_max_concurrent_usage(date, user_id):
                     run.instance.cloud_instance_id,
                     run.instance.machine_image.rhel_version,
                     run.instance.machine_image.syspurpose,
+                    run.instance.machine_image.architecture,
                 )
             )
 
@@ -312,10 +318,7 @@ def calculate_max_concurrent_usage(date, user_id):
 
     # Now that we have the start and stop times ordered, we can easily find the
     # maximum concurrency by walking forward in time and counting up.
-    current_instances, max_instances = 0, 0
-    current_vcpu, max_vcpu = 0, 0
-    current_memory, max_memory = 0.0, 0.0
-    instances_list = []
+    results = {"date": date, "maximum_counts": {}}
     for (
         __,
         is_start,
@@ -326,47 +329,83 @@ def calculate_max_concurrent_usage(date, user_id):
         instance_id,
         rhel_version,
         syspurpose,
+        architecture,
     ) in rhel_on_offs:
-        if is_start:
-            current_instances += 1
-            current_vcpu += vcpu if vcpu is not None else 0
-            current_memory += memory if memory is not None else 0.0
-        else:
-            current_instances -= 1
-            current_vcpu -= vcpu if vcpu is not None else 0
-            current_memory -= memory if memory is not None else 0.0
-        max_instances = max(current_instances, max_instances)
-        max_vcpu = max(current_vcpu, max_vcpu)
-        max_memory = max(current_memory, max_memory)
-        instances_list.append(
-            {
-                "cloud_account_id": instance_cloud_account_id,
-                "cloud_type": cloud_type,
-                "cloud_instance_id": instance_id,
-                "memory": memory,
-                "rhel_version": rhel_version,
-                "syspurpose": syspurpose,
-                "vcpu": vcpu,
-            }
-        )
+        _record_results(results["maximum_counts"], is_start, syspurpose, architecture)
 
-    # Make sure our instances list is unique
-    instances_list = [
-        i for n, i in enumerate(instances_list) if i not in instances_list[n + 1 :]
-    ]
+    return results
 
-    ConcurrentUsage.objects.filter(date=date, user_id=user_id).delete()
-    usage = ConcurrentUsage.objects.create(
-        date=date,
-        user_id=user_id,
-        instances=max_instances,
-        vcpu=max_vcpu,
-        memory=max_memory,
-        instances_list=instances_list,
+
+def _record_results(results, is_start, syspurpose=None, arch=None):
+    """
+    Process data from the runs and tally up concurrent counts.
+
+    Args:
+        results (dict): The results dict that'll be populated with counts.
+        is_start (bool): Is this a start event?
+        syspurpose (dict): Optional. Dict representing the sypurpose.
+        arch (str): Optional. Architecture of the image.
+
+    Returns:
+        Dict: The updated results dictionary.
+
+    """
+    role = syspurpose.get("role", "")[:64] if syspurpose is not None else ""
+    sla = (
+        syspurpose.get("service_level_agreement", "")[:64]
+        if syspurpose is not None
+        else ""
     )
-    usage.potentially_related_runs.add(*runs)
-    usage.save()
-    return usage
+    arch = arch if arch is not None else ""
+
+    ConcurrentKey = collections.namedtuple("ConcurrentKey", ["role", "sla", "arch"])
+
+    # first, get the main _ANY count recorded
+    key = ConcurrentKey(role=ANY, sla=ANY, arch=ANY)
+    entry = results.setdefault(key, {"current_count": 0, "max_count": 0,})
+    entry["current_count"] += 1 if is_start else -1
+
+    # Do we have an sla? Let's file that next
+    if sla:
+        key = ConcurrentKey(role=ANY, sla=sla, arch=ANY)
+        entry = results.setdefault(key, {"current_count": 0, "max_count": 0,})
+        entry["current_count"] += 1 if is_start else -1
+
+    # Unknown SLA?
+    if sla == "":
+        key = ConcurrentKey(role=ANY, sla=sla, arch=ANY)
+        entry = results.setdefault(key, {"current_count": 0, "max_count": 0,})
+        entry["current_count"] += 1 if is_start else -1
+
+    # Do we have a role and an sla?
+    if sla and role:
+        key = ConcurrentKey(role=role, sla=sla, arch=ANY)
+        entry = results.setdefault(key, {"current_count": 0, "max_count": 0,})
+        entry["current_count"] += 1 if is_start else -1
+
+    # How about known role and unknown sla?
+    if role and sla == "":
+        key = ConcurrentKey(role=role, sla=sla, arch=ANY)
+        entry = results.setdefault(key, {"current_count": 0, "max_count": 0,})
+        entry["current_count"] += 1 if is_start else -1
+
+    # Known arch and known sla
+    if arch and sla:
+        key = ConcurrentKey(role=ANY, sla=sla, arch=arch)
+        entry = results.setdefault(key, {"current_count": 0, "max_count": 0,})
+        entry["current_count"] += 1 if is_start else -1
+
+    # Finally, arch and unknown sla
+    if arch and sla == "":
+        key = ConcurrentKey(role=ANY, sla=sla, arch=arch)
+        entry = results.setdefault(key, {"current_count": 0, "max_count": 0,})
+        entry["current_count"] += 1 if is_start else -1
+
+    # Now, let's record the max
+    for __, entry in results.items():
+        entry["max_count"] = max(entry["current_count"], entry["max_count"])
+
+    return results
 
 
 def calculate_max_concurrent_usage_from_runs(runs):
