@@ -193,8 +193,20 @@ def rewrap_aws_errors(original_function):
         try:
             result = original_function(*args, **kwargs)
         except ClientError as e:
-            message = _("Unexpected AWS error {0}: {1}").format(type(e), e)
-            raise RuntimeError(message)
+            # Carefully dissect the object to avoid AttributeError and KeyError.
+            response_error = getattr(e, "response", {}).get("Error", {})
+            error_code = response_error.get("Code")
+
+            if error_code == "UnauthorizedOperation":
+                error_message = response_error.get("Message")
+                message = _("Unexpected AWS UnauthorizedOperation: {0}").format(
+                    error_message
+                )
+                logger.warning(message, exc_info=True)
+                return None
+            else:
+                message = _("Unexpected AWS error {0}: {1}").format(type(e), e)
+                raise RuntimeError(message)
         return result
 
     return wrapped

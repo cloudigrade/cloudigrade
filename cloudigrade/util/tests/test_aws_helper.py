@@ -12,6 +12,58 @@ from util.tests import helper as test_helper
 class UtilAwsHelperTest(TestCase):
     """AWS helper utility functions test case."""
 
+    def test_rewrap_aws_errors_returns_inner_return(self):
+        """Assert rewrap_aws_errors returns inner function's result if no exception."""
+
+        @helper.rewrap_aws_errors
+        def dummy_adder(a, b):
+            return a + b
+
+        expected_result = 3
+        actual_result = dummy_adder(1, 2)
+        self.assertEqual(actual_result, expected_result)
+
+    def test_rewrap_aws_errors_raises_not_aws_clienterror(self):
+        """Assert rewrap_aws_errors allows non-ClientError exceptions to raise."""
+
+        class DummyException(Exception):
+            pass
+
+        @helper.rewrap_aws_errors
+        def dummy_adder(a, b):
+            raise DummyException
+
+        with self.assertRaises(DummyException):
+            dummy_adder(1, 2)
+
+    def test_rewrap_aws_errors_quietly_logs_aws_unauthorizedoperation(self):
+        """
+        Assert rewrap_aws_errors quietly logs UnauthorizedOperation exceptions.
+
+        When we encounter UnauthorizedOperation, that means we did not have permission
+        to perform the operation on behalf of the customer. This should only happen if
+        the customer's AWS IAM configuration has broken. When this happens, we want to
+        processing to stop gracefully (such as the async tasks) and to allow the
+        periodic task responsible for checking permissions to disable the account if
+        necessary.
+        """
+        mock_error = {
+            "Error": {
+                "Code": "UnauthorizedOperation",
+                "Message": "Something bad happened.",
+            }
+        }
+
+        @helper.rewrap_aws_errors
+        def dummy_adder(a, b):
+            raise ClientError(mock_error, "SomeRandomAction")
+
+        with self.assertLogs("util.aws.helper", level="WARNING") as logging_watcher:
+            actual_result = dummy_adder(1, 2)
+            self.assertIn("Something bad happened.", logging_watcher.output[0])
+
+        self.assertIsNone(actual_result)
+
     def test_get_regions_with_no_args(self):
         """Assert get_regions with no args returns expected regions."""
         mock_region_names = [
