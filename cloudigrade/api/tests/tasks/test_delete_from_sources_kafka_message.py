@@ -36,13 +36,14 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
     @patch("api.models.notify_sources_application_availability")
     def test_delete_from_sources_kafka_message_success(self, mock_notify_sources):
         """Assert delete_from_sources_kafka_message happy path success."""
+        self.assertEqual(CloudAccount.objects.count(), 1)
+        self.assertEqual(aws_models.AwsCloudAccount.objects.count(), 1)
+
         account_number = str(self.user.username)
         username = _faker.user_name()
         message, headers = util_helper.generate_authentication_create_message_value(
             account_number, username, platform_id=self.authentication_id
         )
-        self.assertGreaterEqual(CloudAccount.objects.count(), 0)
-        self.assertGreaterEqual(aws_models.AwsCloudAccount.objects.count(), 0)
 
         with patch.object(sts, "boto3") as mock_boto3, patch.object(
             aws_models, "_disable_cloudtrail"
@@ -58,11 +59,10 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         self.assertEqual(aws_models.AwsCloudAccount.objects.count(), 0)
         mock_notify_sources.assert_called()
 
-    @patch("api.models.CloudAccount.delete")
-    def test_delete_from_sources_kafka_message_fail_missing_message_data(
-        self, mock_clount_delete
-    ):
+    def test_delete_from_sources_kafka_message_fail_missing_message_data(self):
         """Assert delete_from_sources_kafka_message fails from missing data."""
+        self.assertEqual(CloudAccount.objects.count(), 1)
+
         message = {}
         headers = []
         tasks.delete_from_sources_kafka_message(
@@ -70,13 +70,11 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         )
 
         # Delete should not have been called.
-        mock_clount_delete.assert_not_called()
+        self.assertEqual(CloudAccount.objects.count(), 1)
 
-    @patch("api.models.CloudAccount.delete")
-    def test_delete_from_sources_kafka_message_fail_wrong_account_number(
-        self, mock_clount_delete
-    ):
+    def test_delete_from_sources_kafka_message_fail_wrong_account_number(self):
         """Assert delete fails from mismatched data."""
+        self.assertEqual(CloudAccount.objects.count(), 1)
         account_number = _faker.user_name()
         username = _faker.user_name()
         authentication_id = _faker.pyint()
@@ -89,11 +87,12 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         )
 
         # Delete should not have been called.
-        mock_clount_delete.assert_not_called()
+        self.assertEqual(CloudAccount.objects.count(), 1)
 
-    @patch("api.models.CloudAccount.delete")
-    def test_delete_from_sources_kafka_message_fail_no_clount(self, mock_clount_delete):
+    def test_delete_from_sources_kafka_message_fail_no_clount(self):
         """Assert delete fails from nonexistent clount."""
+        self.assertEqual(CloudAccount.objects.count(), 1)
+
         account_number = str(self.user.username)
         username = _faker.user_name()
         authentication_id = _faker.pyint()
@@ -106,20 +105,21 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         )
 
         # Delete should not have been called.
-        mock_clount_delete.assert_not_called()
+        self.assertEqual(CloudAccount.objects.count(), 1)
 
     @patch("api.models.notify_sources_application_availability")
     def test_delete_endpoint_from_sources_kafka_message_success(
         self, mock_notify_sources
     ):
         """Assert delete_from_sources_kafka_message with endpoint delete success."""
+        self.assertEqual(CloudAccount.objects.count(), 1)
+        self.assertEqual(aws_models.AwsCloudAccount.objects.count(), 1)
+
         account_number = str(self.user.username)
         username = _faker.user_name()
         message, headers = util_helper.generate_authentication_create_message_value(
             account_number, username, platform_id=self.endpoint_id
         )
-        self.assertGreaterEqual(CloudAccount.objects.count(), 0)
-        self.assertGreaterEqual(aws_models.AwsCloudAccount.objects.count(), 0)
 
         with patch.object(sts, "boto3") as mock_boto3, patch.object(
             aws_models, "_disable_cloudtrail"
@@ -139,13 +139,14 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         self, mock_notify_sources
     ):
         """Assert delete_from_sources_kafka_message with source delete success."""
+        self.assertEqual(CloudAccount.objects.count(), 1)
+        self.assertEqual(aws_models.AwsCloudAccount.objects.count(), 1)
+
         account_number = str(self.user.username)
         username = _faker.user_name()
         message, headers = util_helper.generate_authentication_create_message_value(
             account_number, username, platform_id=self.source_id
         )
-        self.assertGreaterEqual(CloudAccount.objects.count(), 0)
-        self.assertGreaterEqual(aws_models.AwsCloudAccount.objects.count(), 0)
 
         with patch.object(sts, "boto3") as mock_boto3, patch.object(
             aws_models, "_disable_cloudtrail"
@@ -162,13 +163,14 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
 
     def test_delete_fails_unsupported_event_type(self):
         """Assert delete_from_sources_kafka_message fails for bad event type."""
+        self.assertEqual(CloudAccount.objects.count(), 1)
+        self.assertEqual(aws_models.AwsCloudAccount.objects.count(), 1)
+
         account_number = str(self.user.username)
         username = _faker.user_name()
         message, headers = util_helper.generate_authentication_create_message_value(
             account_number, username
         )
-        self.assertGreaterEqual(CloudAccount.objects.count(), 0)
-        self.assertGreaterEqual(aws_models.AwsCloudAccount.objects.count(), 0)
 
         with patch.object(sts, "boto3") as mock_boto3, patch.object(
             aws_models, "_disable_cloudtrail"
@@ -186,13 +188,14 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         self, mock_notify_sources
     ):
         """Assert application delete remove clount."""
+        self.assertEqual(CloudAccount.objects.count(), 1)
+        self.assertEqual(aws_models.AwsCloudAccount.objects.count(), 1)
+
         account_number = str(self.user.username)
         username = _faker.user_name()
         message, headers = util_helper.generate_authentication_create_message_value(
             account_number, username, platform_id=self.application_id
         )
-        self.assertGreaterEqual(CloudAccount.objects.count(), 0)
-        self.assertGreaterEqual(aws_models.AwsCloudAccount.objects.count(), 0)
 
         with patch.object(sts, "boto3") as mock_boto3, patch.object(
             aws_models, "_disable_cloudtrail"
@@ -212,6 +215,9 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         self, mock_notify_sources
     ):
         """Assert application_authentication delete remove clount."""
+        self.assertEqual(CloudAccount.objects.count(), 1)
+        self.assertEqual(aws_models.AwsCloudAccount.objects.count(), 1)
+
         account_number = str(self.user.username)
         (
             message,
@@ -221,8 +227,6 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
             application_id=self.application_id,
             authentication_id=self.authentication_id,
         )
-        self.assertGreaterEqual(CloudAccount.objects.count(), 0)
-        self.assertGreaterEqual(aws_models.AwsCloudAccount.objects.count(), 0)
 
         with patch.object(sts, "boto3") as mock_boto3, patch.object(
             aws_models, "_disable_cloudtrail"

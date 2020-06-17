@@ -198,38 +198,32 @@ def delete_from_sources_kafka_message(message, headers, event_type):  # noqa: C9
     if account_number is None or platform_id is None:
         logger.error(_("Aborting deletion. Incorrect message details."))
         return
-    try:
-        clount = None
-        if event_type == settings.SOURCE_DESTROY_EVENT:
-            clount = CloudAccount.objects.filter(platform_source_id=platform_id)
-        elif event_type == settings.ENDPOINT_DESTROY_EVENT:
-            clount = CloudAccount.objects.filter(platform_endpoint_id=platform_id)
-        elif event_type == settings.AUTHENTICATION_DESTROY_EVENT:
-            clount = CloudAccount.objects.filter(platform_authentication_id=platform_id)
-        elif event_type == settings.APPLICATION_DESTROY_EVENT:
-            clount = CloudAccount.objects.filter(platform_application_id=platform_id)
-        elif event_type == settings.APPLICATION_AUTHENTICATION_DESTROY_EVENT:
-            authentication_id = message["authentication_id"]
-            application_id = message["application_id"]
-            clount = CloudAccount.objects.filter(
-                platform_application_id=application_id,
-                platform_authentication_id=authentication_id,
-            )
 
-        if clount:
-            clount.delete()
+    filter = None
+    if event_type == settings.SOURCE_DESTROY_EVENT:
+        filter = Q(platform_source_id=platform_id)
+    elif event_type == settings.ENDPOINT_DESTROY_EVENT:
+        filter = Q(platform_endpoint_id=platform_id)
+    elif event_type == settings.AUTHENTICATION_DESTROY_EVENT:
+        filter = Q(platform_authentication_id=platform_id)
+    elif event_type == settings.APPLICATION_DESTROY_EVENT:
+        filter = Q(platform_application_id=platform_id)
+    elif event_type == settings.APPLICATION_AUTHENTICATION_DESTROY_EVENT:
+        authentication_id = message["authentication_id"]
+        application_id = message["application_id"]
+        filter = Q(
+            platform_application_id=application_id,
+            platform_authentication_id=authentication_id,
+        )
 
-    # We could receive and queue up several delete tasks for the same clount,
-    # handle the error in case that happens.
-    except CloudAccount.DoesNotExist:
-        logger.info(
-            _(
-                "The cloud account associated with delete message %s has "
-                "already been deleted, so there is nothing else to delete."
-            ),
-            message,
+    if not filter:
+        logger.error(
+            _("Not enough details to delete a CloudAccount from message: %s"), message
         )
         return
+
+    with transaction.atomic():
+        CloudAccount.objects.filter(filter).delete()
 
 
 @retriable_shared_task(autoretry_for=(RequestException, BaseHTTPError, RuntimeError))
