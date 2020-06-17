@@ -5,8 +5,13 @@ import logging
 from django.core.exceptions import PermissionDenied
 from django.http import Http404
 from django.utils.translation import gettext as _
-from rest_framework.exceptions import APIException, NotFound, ParseError
-from rest_framework.exceptions import PermissionDenied as DrfPermissionDenied
+from rest_framework.exceptions import (
+    APIException,
+    NotFound,
+    ParseError,
+    PermissionDenied as DrfPermissionDenied,
+    ValidationError,
+)
 from rest_framework.views import exception_handler
 
 logger = logging.getLogger(__name__)
@@ -77,7 +82,7 @@ class AwsTooManyECSInstances(NotReadyException):
     """Raise when there are too many AWS ECS Container Instances."""
 
 
-class MaximumNumberOfTrailsExceededException(APIException):
+class MaximumNumberOfTrailsExceededException(ValidationError):
     """Raise when the max number of cloud trails exceeds the limit."""
 
     status_code = http.HTTPStatus.CONFLICT
