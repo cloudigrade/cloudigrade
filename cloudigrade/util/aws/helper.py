@@ -193,19 +193,25 @@ def rewrap_aws_errors(original_function):
         try:
             result = original_function(*args, **kwargs)
         except ClientError as e:
+            # Log the original exception to help us diagnose problems later.
+            logger.info(e, exc_info=True)
+
             # Carefully dissect the object to avoid AttributeError and KeyError.
             response_error = getattr(e, "response", {}).get("Error", {})
             error_code = response_error.get("Code")
 
-            if error_code == "UnauthorizedOperation":
+            if error_code in ("UnauthorizedOperation", "AuthFailure"):
+                # If we failed due to missing AWS permissions, return quietly for now.
+                # We rely on the verify_account_permissions task to periodically check
+                # the account and disable it if necessary.
                 error_message = response_error.get("Message")
-                message = _("Unexpected AWS UnauthorizedOperation: {0}").format(
-                    error_message
-                )
-                logger.warning(message, exc_info=True)
+                message = _("Unexpected AWS {0}: {1}").format(error_code, error_message)
+                logger.warning(message)
                 return None
             else:
-                message = _("Unexpected AWS error {0}: {1}").format(type(e), e)
+                message = _("Unexpected AWS error {0} ({1}): {2}").format(
+                    type(e), error_code, e
+                )
                 raise RuntimeError(message)
         return result
 
