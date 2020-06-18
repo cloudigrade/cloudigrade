@@ -389,15 +389,6 @@ class MachineImage(BaseGenericModel):
             f")"
         )
 
-    @transaction.atomic
-    def save(self, *args, **kwargs):
-        """Save this image and delete any related ConcurrentUsage objects."""
-        concurrent_usages = ConcurrentUsage.objects.filter(
-            potentially_related_runs__in=Run.objects.filter(machineimage=self)
-        )
-        concurrent_usages.delete()
-        return super().save(*args, **kwargs)
-
 
 class Instance(BaseGenericModel):
     """Base model for a compute/VM instance in a cloud."""
@@ -554,27 +545,6 @@ class Run(BaseModel):
     memory = models.FloatField(default=0, blank=True, null=True)
     vcpu = models.IntegerField(default=0, blank=True, null=True)
 
-    @transaction.atomic
-    def save(self, *args, **kwargs):
-        """Save this run and delete any related ConcurrentUsage objects."""
-        concurrent_usages = ConcurrentUsage.objects.filter(
-            potentially_related_runs=self
-        )
-        concurrent_usages.delete()
-        return super().save(*args, **kwargs)
-
-
-@receiver(pre_delete, sender=Run)
-def run_pre_delete_callback(*args, **kwargs):
-    """
-    Delete any related ConcurrentUsage objects prior to deleting the run.
-
-    Note: Signal receivers must accept keyword arguments (**kwargs).
-    """
-    run = kwargs["instance"]
-    concurrent_usages = ConcurrentUsage.objects.filter(potentially_related_runs=run)
-    concurrent_usages.delete()
-
 
 class MachineImageInspectionStart(BaseModel):
     """Model to track any time an image starts inspection."""
@@ -582,53 +552,3 @@ class MachineImageInspectionStart(BaseModel):
     machineimage = models.ForeignKey(
         MachineImage, on_delete=models.CASCADE, db_index=True, null=False,
     )
-
-
-class ConcurrentUsage(BaseModel):
-    """Saved calculation of max concurrent usage for a date+user+account."""
-
-    date = models.DateField()
-    user = models.ForeignKey(User, on_delete=models.CASCADE, db_index=True, null=False,)
-    instances = models.IntegerField()
-    _instances_list = models.TextField(
-        db_column="instances_list", null=True, blank=True
-    )
-    memory = models.FloatField()
-    vcpu = models.IntegerField()
-    potentially_related_runs = models.ManyToManyField(Run)
-
-    @property
-    def instances_list(self):
-        """Get instance list."""
-        return json.loads(self._instances_list)
-
-    @instances_list.setter
-    def instances_list(self, value):
-        """Set instance list."""
-        self._instances_list = json.dumps(value)
-
-    def __str__(self):
-        """Get the string representation."""
-        return repr(self)
-
-    def __repr__(self):
-        """Get an unambiguous string representation."""
-        date = repr(self.date.isoformat()) if self.date is not None else None
-        created_at = (
-            repr(self.created_at.isoformat()) if self.created_at is not None else None
-        )
-        updated_at = (
-            repr(self.updated_at.isoformat()) if self.updated_at is not None else None
-        )
-
-        return (
-            f"{self.__class__.__name__}("
-            f"id={self.id}, "
-            f"date={date}, "
-            f"user_id={self.user_id}, "
-            f"memory={self.memory}, "
-            f"vcpu={self.vcpu}, "
-            f"created_at={created_at}, "
-            f"updated_at={updated_at}"
-            f")"
-        )

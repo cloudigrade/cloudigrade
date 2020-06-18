@@ -7,7 +7,7 @@ from django.core.management import call_command
 from django.test import TestCase
 from rest_framework.test import APIRequestFactory
 
-from api.models import ConcurrentUsage, Run
+from api.models import Run
 from api.tests import helper as api_helper
 from util.tests import helper as util_helper
 
@@ -41,7 +41,6 @@ class CreateRunsTest(TestCase):
         """Test calling create_runs with confirm arg."""
         call_command("create_runs", "--confirm")
         self.assertEqual(Run.objects.all().count(), 1)
-        self.assertEqual(ConcurrentUsage.objects.all().count(), 0)
 
     @skip
     @patch("builtins.input", return_value="N")
@@ -49,11 +48,9 @@ class CreateRunsTest(TestCase):
         """Test calling create_runs with no input."""
         call_command("create_runs")
         self.assertEqual(Run.objects.all().count(), 1)
-        self.assertEqual(ConcurrentUsage.objects.all().count(), 1)
 
     @patch("builtins.input", return_value="Y")
     def test_handle_yes(self, mock_input):
         """Test calling create_runs with yes input."""
         call_command("create_runs")
         self.assertEqual(Run.objects.all().count(), 1)
-        self.assertEqual(ConcurrentUsage.objects.all().count(), 0)

@@ -13,7 +13,6 @@ from rest_framework.serializers import ValidationError
 
 from api.clouds.aws.models import AwsEC2InstanceDefinition
 from api.models import (
-    ConcurrentUsage,
     Instance,
     InstanceEvent,
     Run,
@@ -211,20 +210,7 @@ def get_max_concurrent_usage(date, user_id):
     today = get_today()
     if date > today:
         # Early return stub values; we never project future calculations.
-        return ConcurrentUsage(
-            date=date,
-            user_id=user_id,
-            instances=0,
-            instances_list=[],
-            vcpu=0,
-            memory=0.0,
-        )
-
-    # try:
-    #     saved_usage = ConcurrentUsage.objects.get(date=date, user_id=user_id)
-    # except ConcurrentUsage.DoesNotExist:
-    #     calculate_max_concurrent_usage(date=date, user_id=user_id)
-    #     saved_usage = ConcurrentUsage.objects.get(date=date, user_id=user_id)
+        return {"date": date, "maximum_counts": {}}
 
     results = calculate_max_concurrent_usage(date=date, user_id=user_id)
 
@@ -235,34 +221,21 @@ def calculate_max_concurrent_usage(date, user_id):
     """
     Calculate maximum concurrent usage of RHEL instances in given parameters.
 
-    This always performs a new calculation of the results based on Runs. If you
-    can use pre-calculated data, see get_max_concurrent_usage.
-
-    Furthermore, we save the calculation results to the database, deleting any
-    conflicting existing calculated result in the process.
+    This always performs a new calculation of the results based on Runs.
 
     Args:
         date (datetime.date): the day during which we are measuring usage
         user_id (int): required filter on user
-        cloud_account_id (int): optional filter on cloud account
 
     Returns:
-        ConcurrentUsage instance containing calculated max concurrent values.
+        Dict containing calculated max concurrent values.
 
     """
     queryset = Run.objects.all()
     if user_id:
         if not User.objects.filter(id=user_id).exists():
             # Return empty stub object if user doesn't exist.
-            usage = ConcurrentUsage(
-                date=date,
-                user_id=user_id,
-                instances=0,
-                vcpu=0,
-                memory=0.0,
-                instances_list=[],
-            )
-            return usage
+            return {"date": date, "maximum_counts": {}}
         queryset = queryset.filter(instance__cloud_account__user__id=user_id)
 
     start = datetime(date.year, date.month, date.day, 0, 0, 0, tzinfo=tz.tzutc())

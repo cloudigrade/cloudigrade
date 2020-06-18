@@ -109,25 +109,25 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
         first_date = datetime.date(2019, 3, 15)
         first_result = body["data"][0]
 
-        self.assertEqual(first_result["instances"], 1)
+        self.assertEqual(first_result["maximum_counts"][0]["instances_count"], 1)
         self.assertEqual(first_result["date"], str(first_date))
 
         second_date = datetime.date(2019, 3, 16)
         second_result = body["data"][1]
 
-        self.assertEqual(second_result["instances"], 2)
+        self.assertEqual(second_result["maximum_counts"][0]["instances_count"], 2)
         self.assertEqual(second_result["date"], str(second_date))
 
         third_date = datetime.date(2019, 3, 17)
         third_result = body["data"][2]
 
-        self.assertEqual(third_result["instances"], 1)
+        self.assertEqual(third_result["maximum_counts"][0]["instances_count"], 1)
         self.assertEqual(third_result["date"], str(third_date))
 
         # assert that every other day exists with zero reported concurrency.
         for offset, result in enumerate(body["data"][3:]):
             this_date = third_date + datetime.timedelta(days=offset + 1)
-            self.assertEqual(result["instances"], 0)
+            self.assertEqual(result["maximum_counts"], [])
             self.assertEqual(result["date"], str(this_date))
 
     def test_bad_start_date_and_end_date_arguments(self):
