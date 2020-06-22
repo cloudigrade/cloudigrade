@@ -155,7 +155,7 @@ def _verify_policy_action(session, action):  # noqa: C901
             # unfortunately, CloudTrail does not have a DryRun option like ec2
             # so we cannot verify whether or not our policy gives us the
             # correct permissions without carrying out the action
-            logger.warning(
+            logger.debug(
                 _(
                     'Unable to verify the policy action "%s" '
                     "due to CloudTrail not providing a DryRun "
