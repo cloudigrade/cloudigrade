@@ -195,6 +195,18 @@ def delete_from_sources_kafka_message(message, headers, event_type):  # noqa: C9
         message, headers
     )
 
+    logger.info(
+        _(
+            "delete_from_sources_kafka_message for account_number %(account_number)s, "
+            " platform_id %(platform_id)s, and event_type %(event_type)s"
+        ),
+        {
+            "account_number": account_number,
+            "platform_id": platform_id,
+            "event_type": event_type,
+        },
+    )
+
     if account_number is None or platform_id is None:
         logger.error(_("Aborting deletion. Incorrect message details."))
         return
@@ -223,6 +235,7 @@ def delete_from_sources_kafka_message(message, headers, event_type):  # noqa: C9
         return
 
     with transaction.atomic():
+        logger.info(_("Deleting CloudAccounts using filter %()s"), format(filter))
         CloudAccount.objects.filter(filter).delete()
 
 
