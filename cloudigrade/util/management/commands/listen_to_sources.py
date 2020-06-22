@@ -94,10 +94,9 @@ class Command(BaseCommand):
             logger.info(
                 _(
                     "An ApplicationAuthentication object was created. "
-                    "Message: %s. Headers: %s"
+                    "Message: %(message_value)s. Headers: %(message_headers)s"
                 ),
-                message_value,
-                message_headers,
+                {"message_value": message_value, "message_headers": message_headers},
             )
             if settings.ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES:
                 tasks.create_from_sources_kafka_message.delay(
@@ -106,9 +105,11 @@ class Command(BaseCommand):
 
         elif event_type in settings.KAFKA_DESTROY_EVENTS:
             logger.info(
-                _("An Sources object was destroyed. Message: %s. Headers: %s"),
-                message_value,
-                message_headers,
+                _(
+                    "A Sources object was destroyed. "
+                    "Message: %(message_value)s. Headers: %(message_headers)s"
+                ),
+                {"message_value": message_value, "message_headers": message_headers},
             )
             if settings.ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES:
                 tasks.delete_from_sources_kafka_message.delay(
@@ -117,9 +118,11 @@ class Command(BaseCommand):
 
         elif event_type == "Authentication.update":
             logger.info(
-                _("An authentication object was updated. Message: %s. Headers: %s"),
-                message_value,
-                message_headers,
+                _(
+                    "An authentication object was updated. "
+                    "Message: %(message_value)s. Headers: %(message_headers)s"
+                ),
+                {"message_value": message_value, "message_headers": message_headers},
             )
             if settings.ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES:
                 tasks.update_from_source_kafka_message.delay(
