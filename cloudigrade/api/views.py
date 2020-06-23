@@ -7,11 +7,14 @@ from django.conf import settings
 from django.db.models import Max
 from django.utils.translation import gettext as _
 from rest_framework import exceptions, mixins, status, viewsets
-from rest_framework.decorators import action, api_view, schema
+from rest_framework.decorators import action, api_view, authentication_classes, schema
 from rest_framework.response import Response
 
 from api import serializers
-from api.authentication import ThreeScaleAuthentication
+from api.authentication import (
+    ThreeScaleAuthentication,
+    ThreeScaleAuthenticationNoOrgAdmin,
+)
 from api.models import CloudAccount, Instance, MachineImage
 from api.schemas import SysconfigSchema
 from api.serializers import DailyConcurrentUsageDummyQueryset
@@ -228,6 +231,7 @@ class DailyConcurrentUsageViewSet(viewsets.GenericViewSet, mixins.ListModelMixin
 
 
 @api_view(["POST"])
+@authentication_classes([ThreeScaleAuthenticationNoOrgAdmin])
 @schema(None)
 def availability_check(request):
     """
