@@ -45,9 +45,17 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
             account_number, username, platform_id=self.authentication_id
         )
 
+        expected_logger_infos = [
+            "INFO:api.tasks:delete_from_sources_kafka_message for account_number "
+            f"{account_number}, platform_id {self.authentication_id}, and event_type "
+            "Authentication.destroy",
+            "INFO:api.tasks:Deleting CloudAccounts using filter "
+            f"(AND: ('platform_authentication_id', {self.authentication_id}))",
+        ]
+
         with patch.object(sts, "boto3") as mock_boto3, patch.object(
             aws_models, "_disable_cloudtrail"
-        ):
+        ), self.assertLogs("api.tasks", level="INFO") as logging_watcher:
             role = util_helper.generate_dummy_role()
             mock_assume_role = mock_boto3.client.return_value.assume_role
             mock_assume_role.return_value = role
@@ -55,6 +63,8 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
             tasks.delete_from_sources_kafka_message(
                 message, headers, settings.AUTHENTICATION_DESTROY_EVENT
             )
+            for index, expected_logger_info in enumerate(expected_logger_infos):
+                self.assertEqual(expected_logger_info, logging_watcher.output[index])
         self.assertEqual(CloudAccount.objects.count(), 0)
         self.assertEqual(aws_models.AwsCloudAccount.objects.count(), 0)
         mock_notify_sources.assert_called()

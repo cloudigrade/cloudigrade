@@ -198,7 +198,7 @@ def delete_from_sources_kafka_message(message, headers, event_type):  # noqa: C9
     logger.info(
         _(
             "delete_from_sources_kafka_message for account_number %(account_number)s, "
-            " platform_id %(platform_id)s, and event_type %(event_type)s"
+            "platform_id %(platform_id)s, and event_type %(event_type)s"
         ),
         {
             "account_number": account_number,
@@ -235,7 +235,7 @@ def delete_from_sources_kafka_message(message, headers, event_type):  # noqa: C9
         return
 
     with transaction.atomic():
-        logger.info(_("Deleting CloudAccounts using filter %()s"), format(filter))
+        logger.info(_("Deleting CloudAccounts using filter %s"), filter)
         CloudAccount.objects.filter(filter).delete()
 
 
