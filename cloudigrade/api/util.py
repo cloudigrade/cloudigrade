@@ -210,7 +210,7 @@ def get_max_concurrent_usage(date, user_id):
     today = get_today()
     if date > today:
         # Early return stub values; we never project future calculations.
-        return {"date": date, "maximum_counts": {}}
+        return {"date": date, "maximum_counts": []}
 
     results = calculate_max_concurrent_usage(date=date, user_id=user_id)
 
@@ -304,7 +304,7 @@ def calculate_max_concurrent_usage(date, user_id):
         syspurpose,
         architecture,
     ) in rhel_on_offs:
-        _record_results(results["maximum_counts"], is_start, syspurpose, architecture)
+        results = _record_results(results, is_start, syspurpose, architecture)
 
     return results
 
@@ -335,48 +335,48 @@ def _record_results(results, is_start, syspurpose=None, arch=None):
 
     # first, get the main _ANY count recorded
     key = ConcurrentKey(role=ANY, sla=ANY, arch=ANY)
-    entry = results.setdefault(key, {"current_count": 0, "max_count": 0,})
-    entry["current_count"] += 1 if is_start else -1
+    results = record(results, key, is_start)
 
     # Do we have an sla? Let's file that next
     if sla:
         key = ConcurrentKey(role=ANY, sla=sla, arch=ANY)
-        entry = results.setdefault(key, {"current_count": 0, "max_count": 0,})
-        entry["current_count"] += 1 if is_start else -1
+        results = record(results, key, is_start)
 
     # Unknown SLA?
     if sla == "":
         key = ConcurrentKey(role=ANY, sla=sla, arch=ANY)
-        entry = results.setdefault(key, {"current_count": 0, "max_count": 0,})
-        entry["current_count"] += 1 if is_start else -1
+        results = record(results, key, is_start)
 
     # Do we have a role and an sla?
     if sla and role:
         key = ConcurrentKey(role=role, sla=sla, arch=ANY)
-        entry = results.setdefault(key, {"current_count": 0, "max_count": 0,})
-        entry["current_count"] += 1 if is_start else -1
+        results = record(results, key, is_start)
 
     # How about known role and unknown sla?
     if role and sla == "":
         key = ConcurrentKey(role=role, sla=sla, arch=ANY)
-        entry = results.setdefault(key, {"current_count": 0, "max_count": 0,})
-        entry["current_count"] += 1 if is_start else -1
+        results = record(results, key, is_start)
 
     # Known arch and known sla
     if arch and sla:
         key = ConcurrentKey(role=ANY, sla=sla, arch=arch)
-        entry = results.setdefault(key, {"current_count": 0, "max_count": 0,})
-        entry["current_count"] += 1 if is_start else -1
+        results = record(results, key, is_start)
 
     # Finally, arch and unknown sla
     if arch and sla == "":
         key = ConcurrentKey(role=ANY, sla=sla, arch=arch)
-        entry = results.setdefault(key, {"current_count": 0, "max_count": 0,})
-        entry["current_count"] += 1 if is_start else -1
+        results = record(results, key, is_start)
 
-    # Now, let's record the max
-    for __, entry in results.items():
-        entry["max_count"] = max(entry["current_count"], entry["max_count"])
+    return results
+
+
+def record(results, key, is_start):
+    """Record the count."""
+    entry = results["maximum_counts"].setdefault(
+        key, {"current_count": 0, "max_count": 0,}
+    )
+    entry["current_count"] += 1 if is_start else -1
+    entry["max_count"] = max(entry["current_count"], entry["max_count"])
 
     return results
 

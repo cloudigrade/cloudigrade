@@ -16,7 +16,7 @@ from api.authentication import (
     ThreeScaleAuthenticationNoOrgAdmin,
 )
 from api.models import CloudAccount, Instance, MachineImage
-from api.schemas import SysconfigSchema
+from api.schemas import ConcurrentSchema, SysconfigSchema
 from api.serializers import DailyConcurrentUsageDummyQueryset
 from api.util import convert_param_to_int
 from util.aws.sts import _get_primary_account_id, cloudigrade_policy
@@ -194,6 +194,7 @@ class DailyConcurrentUsageViewSet(viewsets.GenericViewSet, mixins.ListModelMixin
 
     authentication_classes = (ThreeScaleAuthentication,)
     serializer_class = serializers.DailyConcurrentUsageSerializer
+    schema = ConcurrentSchema()
 
     def get_queryset(self):  # noqa: C901
         """Get the queryset of dates filtered to the appropriate inputs."""

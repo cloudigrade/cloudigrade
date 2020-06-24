@@ -73,7 +73,7 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         ]
 
         for (is_start, syspurpose, arch) in test_items:
-            _record_results(self.results["maximum_counts"], is_start, syspurpose, arch)
+            _record_results(self.results, is_start, syspurpose, arch)
 
         self.assertEqual(self.results["date"], self.date)
         self.assertEqual(len(self.results["maximum_counts"]), 17)
@@ -87,7 +87,7 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         ]
 
         for (is_start, syspurpose, arch) in test_items:
-            _record_results(self.results["maximum_counts"], is_start, syspurpose, arch)
+            _record_results(self.results, is_start, syspurpose, arch)
 
         self.assertEqual(self.results["date"], self.date)
         self.assertEqual(len(self.results["maximum_counts"]), 10)
@@ -116,7 +116,7 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         ]
 
         for (is_start, syspurpose, arch) in test_items:
-            _record_results(self.results["maximum_counts"], is_start, syspurpose, arch)
+            _record_results(self.results, is_start, syspurpose, arch)
 
         self.assertEqual(self.results["date"], self.date)
         self.assertEqual(len(self.results["maximum_counts"]), 4)
@@ -139,7 +139,7 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         ]
 
         for (is_start, syspurpose, arch) in test_items:
-            _record_results(self.results["maximum_counts"], is_start, syspurpose, arch)
+            _record_results(self.results, is_start, syspurpose, arch)
 
         self.assertEqual(self.results["date"], self.date)
         self.assertEqual(len(self.results["maximum_counts"]), 10)
@@ -175,7 +175,7 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         ]
 
         for (is_start, syspurpose, arch) in test_items:
-            _record_results(self.results["maximum_counts"], is_start, syspurpose, arch)
+            _record_results(self.results, is_start, syspurpose, arch)
 
         self.assertEqual(self.results["date"], self.date)
         self.assertEqual(len(self.results["maximum_counts"]), 4)
@@ -206,7 +206,7 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         ]
 
         for (is_start, syspurpose, arch) in test_items:
-            _record_results(self.results["maximum_counts"], is_start, syspurpose, arch)
+            _record_results(self.results, is_start, syspurpose, arch)
 
         self.assertEqual(self.results["date"], self.date)
         self.assertEqual(len(self.results["maximum_counts"]), 8)
@@ -237,7 +237,7 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         ]
 
         for (is_start, syspurpose, arch) in test_items:
-            _record_results(self.results["maximum_counts"], is_start, syspurpose, arch)
+            _record_results(self.results, is_start, syspurpose, arch)
 
         self.assertEqual(self.results["date"], self.date)
         self.assertEqual(len(self.results["maximum_counts"]), 5)

@@ -1107,7 +1107,7 @@
                             "format": "date"
                           },
                           "maximum_counts": {
-                            "type": "string",
+                            "type": "array",
                             "readOnly": true
                           }
                         },
@@ -1120,7 +1120,7 @@
                 }
               }
             },
-            "description": ""
+            "description": "Generate report of concurrent usage within a time frame."
           }
         }
       }
