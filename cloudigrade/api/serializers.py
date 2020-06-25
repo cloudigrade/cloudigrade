@@ -285,6 +285,9 @@ class DailyConcurrentUsageDummyQueryset(object):
             days = []
             current = self.start_date
             delta_day = timedelta(days=1)
+            # always add the start day
+            days.append(current)
+            current += delta_day
             end_date = min(self.end_date, tomorrow)
             while current < end_date:
                 days.append(current)
@@ -316,13 +319,14 @@ class DailyConcurrentUsageSerializer(Serializer):
     def get_maximum_counts(self, obj):
         """Massage the results dict a bit."""
         response = []
-        for key, value in obj["maximum_counts"].items():
-            response.append(
-                {
-                    "arch": key.arch,
-                    "role": key.role,
-                    "sla": key.sla,
-                    "instances_count": value["max_count"],
-                }
-            )
+        if obj.get("maximum_counts", None):
+            for key, value in obj["maximum_counts"].items():
+                response.append(
+                    {
+                        "arch": key.arch,
+                        "role": key.role,
+                        "sla": key.sla,
+                        "instances_count": value["max_count"],
+                    }
+                )
         return response

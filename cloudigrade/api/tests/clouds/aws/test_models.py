@@ -2,7 +2,6 @@
 import json
 import logging
 from random import choice
-from unittest import skip
 from unittest.mock import Mock, patch
 
 from botocore.exceptions import ClientError

@@ -204,7 +204,7 @@ def get_max_concurrent_usage(date, user_id):
 
     Returns:
         dict containing the values of maximum concurrent number of instances,
-        vcpu, and memory encountered at any point during the day.
+        grouped by role, sla, and architecture.
 
     """
     today = get_today()
@@ -335,42 +335,42 @@ def _record_results(results, is_start, syspurpose=None, arch=None):
 
     # first, get the main _ANY count recorded
     key = ConcurrentKey(role=ANY, sla=ANY, arch=ANY)
-    results = record(results, key, is_start)
+    results = _record_concurrency_count(results, key, is_start)
 
     # Do we have an sla? Let's file that next
     if sla:
         key = ConcurrentKey(role=ANY, sla=sla, arch=ANY)
-        results = record(results, key, is_start)
+        results = _record_concurrency_count(results, key, is_start)
 
     # Unknown SLA?
     if sla == "":
         key = ConcurrentKey(role=ANY, sla=sla, arch=ANY)
-        results = record(results, key, is_start)
+        results = _record_concurrency_count(results, key, is_start)
 
     # Do we have a role and an sla?
     if sla and role:
         key = ConcurrentKey(role=role, sla=sla, arch=ANY)
-        results = record(results, key, is_start)
+        results = _record_concurrency_count(results, key, is_start)
 
     # How about known role and unknown sla?
     if role and sla == "":
         key = ConcurrentKey(role=role, sla=sla, arch=ANY)
-        results = record(results, key, is_start)
+        results = _record_concurrency_count(results, key, is_start)
 
     # Known arch and known sla
     if arch and sla:
         key = ConcurrentKey(role=ANY, sla=sla, arch=arch)
-        results = record(results, key, is_start)
+        results = _record_concurrency_count(results, key, is_start)
 
     # Finally, arch and unknown sla
     if arch and sla == "":
         key = ConcurrentKey(role=ANY, sla=sla, arch=arch)
-        results = record(results, key, is_start)
+        results = _record_concurrency_count(results, key, is_start)
 
     return results
 
 
-def record(results, key, is_start):
+def _record_concurrency_count(results, key, is_start):
     """Record the count."""
     entry = results["maximum_counts"].setdefault(
         key, {"current_count": 0, "max_count": 0,}

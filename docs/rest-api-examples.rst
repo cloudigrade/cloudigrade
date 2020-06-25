@@ -187,26 +187,6 @@ Response:
     {
         "data": [
             {
-                "account_id": 2,
-                "cloud_type": "aws",
-                "content_object": {
-                    "account_arn": "arn:aws:iam::636708824399:role/role-for-cloudigrade",
-                    "aws_account_id": "636708824399",
-                    "aws_cloud_account_id": 2,
-                    "created_at": "2020-05-04T00:00:00Z",
-                    "updated_at": "2020-05-18T13:51:59.722367Z"
-                },
-                "created_at": "2020-05-04T00:00:00Z",
-                "is_enabled": true,
-                "name": "greatest account ever",
-                "platform_application_id": 7961,
-                "platform_authentication_id": 8376,
-                "platform_endpoint_id": 6634,
-                "platform_source_id": 4969,
-                "updated_at": "2020-05-18T13:51:59.722367Z",
-                "user_id": 2
-            },
-            {
                 "account_id": 3,
                 "cloud_type": "aws",
                 "content_object": {
@@ -223,6 +203,26 @@ Response:
                 "platform_authentication_id": 3578,
                 "platform_endpoint_id": 2281,
                 "platform_source_id": 4617,
+                "updated_at": "2020-05-18T13:51:59.722367Z",
+                "user_id": 2
+            },
+            {
+                "account_id": 2,
+                "cloud_type": "aws",
+                "content_object": {
+                    "account_arn": "arn:aws:iam::636708824399:role/role-for-cloudigrade",
+                    "aws_account_id": "636708824399",
+                    "aws_cloud_account_id": 2,
+                    "created_at": "2020-05-04T00:00:00Z",
+                    "updated_at": "2020-05-18T13:51:59.722367Z"
+                },
+                "created_at": "2020-05-04T00:00:00Z",
+                "is_enabled": true,
+                "name": "greatest account ever",
+                "platform_application_id": 7961,
+                "platform_authentication_id": 8376,
+                "platform_endpoint_id": 6634,
+                "platform_source_id": 4969,
                 "updated_at": "2020-05-18T13:51:59.722367Z",
                 "user_id": 2
             }
@@ -1087,8 +1087,8 @@ Daily Max Concurrency
 ~~~~~~~~~~~~~~~~~~~~~
 
 The concurrency API returns a paginated list of days, and each day includes the
-maximum concurrent number of instances, number of vCPUs, and amount of memory
-in GBs seen concurrently in use during that day.
+maximum concurrent number of instances, grouped by various combinations of role,
+sla, and architecture seen concurrently in use during that day.
 
 Optional ``start_date`` is an ISO-8601 date that is the inclusive start of the
 reporting period. If not defined, default is "today".
@@ -1109,7 +1109,7 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 550
+    Content-Length: 2621
     Content-Type: application/json
     Vary: Accept
     X-CLOUDIGRADE-REQUEST-ID: 03c2d872-54dc-49cc-a6de-a775f75f8161
@@ -1120,35 +1120,210 @@ Response:
         "data": [
             {
                 "date": "2020-05-11",
-                "instances": 2
+                "maximum_counts": [
+                    {
+                        "arch": "_ANY",
+                        "instances_count": 2,
+                        "role": "_ANY",
+                        "sla": "_ANY"
+                    },
+                    {
+                        "arch": "_ANY",
+                        "instances_count": 2,
+                        "role": "_ANY",
+                        "sla": "Premium"
+                    },
+                    {
+                        "arch": "_ANY",
+                        "instances_count": 2,
+                        "role": "Red Hat Enterprise Linux Server",
+                        "sla": "Premium"
+                    },
+                    {
+                        "arch": "x86_64",
+                        "instances_count": 2,
+                        "role": "_ANY",
+                        "sla": "Premium"
+                    }
+                ]
             },
             {
                 "date": "2020-05-12",
-                "instances": 2
+                "maximum_counts": [
+                    {
+                        "arch": "_ANY",
+                        "instances_count": 2,
+                        "role": "_ANY",
+                        "sla": "_ANY"
+                    },
+                    {
+                        "arch": "_ANY",
+                        "instances_count": 2,
+                        "role": "_ANY",
+                        "sla": "Premium"
+                    },
+                    {
+                        "arch": "_ANY",
+                        "instances_count": 2,
+                        "role": "Red Hat Enterprise Linux Server",
+                        "sla": "Premium"
+                    },
+                    {
+                        "arch": "x86_64",
+                        "instances_count": 2,
+                        "role": "_ANY",
+                        "sla": "Premium"
+                    }
+                ]
             },
             {
                 "date": "2020-05-13",
-                "instances": 2
+                "maximum_counts": [
+                    {
+                        "arch": "_ANY",
+                        "instances_count": 2,
+                        "role": "_ANY",
+                        "sla": "_ANY"
+                    },
+                    {
+                        "arch": "_ANY",
+                        "instances_count": 2,
+                        "role": "_ANY",
+                        "sla": "Premium"
+                    },
+                    {
+                        "arch": "_ANY",
+                        "instances_count": 2,
+                        "role": "Red Hat Enterprise Linux Server",
+                        "sla": "Premium"
+                    },
+                    {
+                        "arch": "x86_64",
+                        "instances_count": 2,
+                        "role": "_ANY",
+                        "sla": "Premium"
+                    }
+                ]
             },
             {
                 "date": "2020-05-14",
-                "instances": 2
+                "maximum_counts": [
+                    {
+                        "arch": "_ANY",
+                        "instances_count": 2,
+                        "role": "_ANY",
+                        "sla": "_ANY"
+                    },
+                    {
+                        "arch": "_ANY",
+                        "instances_count": 2,
+                        "role": "_ANY",
+                        "sla": "Premium"
+                    },
+                    {
+                        "arch": "_ANY",
+                        "instances_count": 2,
+                        "role": "Red Hat Enterprise Linux Server",
+                        "sla": "Premium"
+                    },
+                    {
+                        "arch": "x86_64",
+                        "instances_count": 2,
+                        "role": "_ANY",
+                        "sla": "Premium"
+                    }
+                ]
             },
             {
                 "date": "2020-05-15",
-                "instances": 2
+                "maximum_counts": [
+                    {
+                        "arch": "_ANY",
+                        "instances_count": 2,
+                        "role": "_ANY",
+                        "sla": "_ANY"
+                    },
+                    {
+                        "arch": "_ANY",
+                        "instances_count": 2,
+                        "role": "_ANY",
+                        "sla": "Premium"
+                    },
+                    {
+                        "arch": "_ANY",
+                        "instances_count": 2,
+                        "role": "Red Hat Enterprise Linux Server",
+                        "sla": "Premium"
+                    },
+                    {
+                        "arch": "x86_64",
+                        "instances_count": 2,
+                        "role": "_ANY",
+                        "sla": "Premium"
+                    }
+                ]
             },
             {
                 "date": "2020-05-16",
-                "instances": 0
+                "maximum_counts": []
             },
             {
                 "date": "2020-05-17",
-                "instances": 2
+                "maximum_counts": [
+                    {
+                        "arch": "_ANY",
+                        "instances_count": 2,
+                        "role": "_ANY",
+                        "sla": "_ANY"
+                    },
+                    {
+                        "arch": "_ANY",
+                        "instances_count": 2,
+                        "role": "_ANY",
+                        "sla": "Premium"
+                    },
+                    {
+                        "arch": "_ANY",
+                        "instances_count": 2,
+                        "role": "Red Hat Enterprise Linux Server",
+                        "sla": "Premium"
+                    },
+                    {
+                        "arch": "x86_64",
+                        "instances_count": 2,
+                        "role": "_ANY",
+                        "sla": "Premium"
+                    }
+                ]
             },
             {
                 "date": "2020-05-18",
-                "instances": 2
+                "maximum_counts": [
+                    {
+                        "arch": "_ANY",
+                        "instances_count": 2,
+                        "role": "_ANY",
+                        "sla": "_ANY"
+                    },
+                    {
+                        "arch": "_ANY",
+                        "instances_count": 2,
+                        "role": "_ANY",
+                        "sla": "Premium"
+                    },
+                    {
+                        "arch": "_ANY",
+                        "instances_count": 2,
+                        "role": "Red Hat Enterprise Linux Server",
+                        "sla": "Premium"
+                    },
+                    {
+                        "arch": "x86_64",
+                        "instances_count": 2,
+                        "role": "_ANY",
+                        "sla": "Premium"
+                    }
+                ]
             }
         ],
         "links": {
@@ -1181,7 +1356,7 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 303
+    Content-Length: 344
     Content-Type: application/json
     Vary: Accept
     X-CLOUDIGRADE-REQUEST-ID: e6878008-9217-4dcb-8e84-c299fd13bf6d
@@ -1189,7 +1364,12 @@ Response:
     X-Frame-Options: DENY
 
     {
-        "data": [],
+        "data": [
+            {
+                "date": "2020-05-19",
+                "maximum_counts": []
+            }
+        ],
         "links": {
             "first": "/api/cloudigrade/api/cloudigrade/v2/concurrent/?end_date=2020-05-25&limit=10&offset=0&start_date=2020-05-19",
             "last": "/api/cloudigrade/api/cloudigrade/v2/concurrent/?end_date=2020-05-25&limit=10&offset=0&start_date=2020-05-19",
@@ -1197,7 +1377,7 @@ Response:
             "previous": null
         },
         "meta": {
-            "count": 0
+            "count": 1
         }
     }
 

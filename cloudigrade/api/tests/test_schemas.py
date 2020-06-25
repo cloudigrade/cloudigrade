@@ -74,20 +74,29 @@ class SchemaTestCase(TestCase):
                                                     "format": "date",
                                                 },
                                                 "maximum_counts": {
-                                                    "type": "array",
-                                                    "readOnly": True,
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "arch": {"type": "string"},
+                                                            "sla": {"type": "string"},
+                                                            "role": {"type": "string"},
+                                                            "instance_count": {
+                                                                "type": "integer"
+                                                            },
+                                                        },
+                                                    },
                                                 },
                                             },
-                                            "required": ["date"],
                                         },
+                                        "required": ["date"],
                                     },
                                 },
-                            }
+                            },
                         }
-                    },
-                    "description": "Generate report of concurrent "
-                    "usage within a time frame.",
-                }
+                    }
+                },
+                "description": "Generate report of concurrent "
+                "usage within a time frame.",
             },
         }
 
