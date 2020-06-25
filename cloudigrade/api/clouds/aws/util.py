@@ -890,6 +890,12 @@ def disable_cloudtrail(aws_cloud_account):
     """
     Disable logging in an AwsCloudAccount's CloudTrail.
 
+    Note:
+        If the incoming AwsCloudAccount instance is being deleted, this call to
+        disable_cloudtrail may occur after the DB record has been deleted, and we are
+        only working with a shallow reference copy of the AwsCloudAccount. This means we
+        cannot reliably load related objects (e.g. aws_cloud_account.cloud_account).
+
     Args:
         aws_cloud_account (api.clouds.aws.models.AwsCloudAccount): the AwsCloudAccount
             for which we should disable the CloudTrail
@@ -921,12 +927,12 @@ def disable_cloudtrail(aws_cloud_account):
             # These could result in an orphaned cloudtrail writing to our s3 bucket.
             logger.warning(
                 _(
-                    "CloudAccount ID %(cloud_account_id)s for AWS account ID "
+                    "AwsCloudAccount ID %(aws_cloud_account_id)s for AWS account ID "
                     "%(aws_account_id)s encountered %(error_code)s and cannot "
                     "disable cloudtrail %(cloudtrail_name)s."
                 ),
                 {
-                    "cloud_account_id": aws_cloud_account.cloud_account.get().id,
+                    "aws_cloud_account_id": aws_cloud_account.id,
                     "aws_account_id": aws_cloud_account.cloud_account_id,
                     "error_code": error_code,
                     "cloudtrail_name": cloudtrail_name,
@@ -938,12 +944,13 @@ def disable_cloudtrail(aws_cloud_account):
             logger.error(
                 _(
                     "Unexpected error %(error_code)s occurred disabling CloudTrail "
-                    "%(cloudtrail_name)s for CloudAccount ID %(cloud_account_id)s. "
+                    "%(cloudtrail_name)s for AwsCloudAccount ID "
+                    "%(aws_cloud_account_id)s. "
                 ),
                 {
                     "error_code": error_code,
                     "cloudtrail_name": cloudtrail_name,
-                    "cloud_account_id": aws_cloud_account.cloud_account.get().id,
+                    "aws_cloud_account_id": aws_cloud_account.id,
                 },
             )
     return False

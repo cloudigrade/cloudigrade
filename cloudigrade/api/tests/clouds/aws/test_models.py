@@ -2,8 +2,9 @@
 import json
 import logging
 from random import choice
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
+from botocore.exceptions import ClientError
 from django.conf import settings
 from django.db.models import ForeignKey
 from django.test import TestCase, TransactionTestCase
@@ -379,6 +380,28 @@ class AwsCloudAccountModelTest(TransactionTestCase, ModelStrTestMixin):
         )
         with patch("api.clouds.aws.util.disable_cloudtrail") as mock_disable_cloudtrail:
             mock_disable_cloudtrail.return_value = True
+            self.account.delete()
+        self.assertEqual(0, aws_models.AwsCloudAccount.objects.count())
+
+    @patch("api.models.notify_sources_application_availability")
+    def test_delete_account_when_aws_access_denied(self, mock_notify_sources):
+        """
+        Test that account deleted succeeds when AWS access is denied.
+
+        This situation could happen when the customer removes IAM access before we
+        delete the account instance.
+
+        This test specifically exercises a fix for a bug where we would attempt and fail
+        to load an object after it had been deleted, resulting in DoesNotExist being
+        raised. See also:
+
+        https://sentry.io/organizations/cloudigrade/issues/1744148258/?project=1270362
+        """
+        client_error = ClientError(
+            error_response={"Error": {"Code": "AccessDenied"}}, operation_name=Mock(),
+        )
+        with patch("api.clouds.aws.util.aws.get_session") as mock_get_session:
+            mock_get_session.side_effect = client_error
             self.account.delete()
         self.assertEqual(0, aws_models.AwsCloudAccount.objects.count())
 

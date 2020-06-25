@@ -152,7 +152,7 @@ class CloudsAwsUtilCloudTrailTest(TestCase):
         )
         expected_errors = [
             "Unexpected error Potatoes occurred disabling CloudTrail",
-            f"CloudAccount ID {self.account.id}",
+            f"AwsCloudAccount ID {self.account.id}",
         ]
         with self.assertLogs(
             "api.clouds.aws.util", level="ERROR"
