@@ -4,7 +4,23 @@ stages:
   - build
   - review
   - deploy
-  - release
+
+### WORKFLOW ###
+# This is kinda confusing, but what this effectively says is
+# that we want to run jobs only when we have a tag or a 
+# branch (master would fall into that), but if we want to 
+# enable merge request pipelines (like github!) we would add 
+# "- if: $CI_MERGE_REQUEST_IID" to the rules list here.
+#
+# Put another way, this is the check before the jobs are
+# even created. Once one of the below vars is set, the jobs
+# are instantiated, and then are allowed to check their own 
+# rules to see if they should be running or not.
+#  
+workflow:
+  rules:
+    - if: $CI_COMMIT_TAG
+    - if: $CI_COMMIT_BRANCH
 
 ### GLOBAL VARS ###
 variables:
@@ -17,9 +33,10 @@ variables:
 py38:
   stage: test
   image: registry.gitlab.com/cloudigrade/images/build-container:latest
-  except:
-    - chat
-    - trigger
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "chat" || $CI_PIPELINE_SOURCE == "trigger"
+      when: never
+    - when: on_success
   before_script:
     - pip install tox codecov poetry
   script:
@@ -29,9 +46,10 @@ py38:
 flake8:
   stage: test
   image: registry.gitlab.com/cloudigrade/images/build-container:latest
-  except:
-    - chat
-    - trigger
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "chat" || $CI_PIPELINE_SOURCE == "trigger"
+      when: never
+    - when: on_success
   before_script:
     - pip install tox poetry
   script: tox -e flake8
@@ -41,9 +59,10 @@ vulnerability:
   image: registry.gitlab.com/cloudigrade/images/build-container:latest
   variables:
     PYCURL_SSL_LIBRARY: openssl
-  except:
-    - chat
-    - trigger
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "chat" || $CI_PIPELINE_SOURCE == "trigger"
+      when: never
+    - when: on_success
   before_script:
     - pip install poetry safety
   script:
@@ -53,9 +72,10 @@ vulnerability:
 Cloudigrade Docker:
   stage: test
   image: docker:stable
-  except:
-    - chat
-    - trigger
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "chat" || $CI_PIPELINE_SOURCE == "trigger"
+      when: never
+    - when: on_success
   services:
     - docker:dind
   script:
@@ -65,9 +85,10 @@ Cloudigrade Docker:
 NGINX S2i:
   stage: test
   image: docker:stable
-  except:
-    - chat
-    - trigger
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "chat" || $CI_PIPELINE_SOURCE == "trigger"
+      when: never
+    - when: on_success
   services:
     - docker:dind
   variables:
@@ -88,9 +109,10 @@ NGINX S2i:
 Spec File:
   stage: test
   image: registry.gitlab.com/cloudigrade/images/build-container:latest
-  except:
-    - chat
-    - trigger
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "chat" || $CI_PIPELINE_SOURCE == "trigger"
+      when: never
+    - when: on_success
   before_script:
     - pip install poetry
     - poetry install
@@ -104,13 +126,11 @@ Deploy Review:
   image: ${SHIFTIGRADE_IMAGE}:${SHIFTIGRADE_VERSION}
   variables:
     GIT_STRATEGY: none
-  only:
-    - branches@cloudigrade/cloudigrade
-  except:
-    - master@cloudigrade/cloudigrade
-    - tags@cloudigrade/cloudigrade
-    - chat
-    - trigger
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "chat" || $CI_PIPELINE_SOURCE == "trigger" || $CI_COMMIT_TAG || $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: never
+    - if: $CI_COMMIT_BRANCH
+      when: on_success
   before_script:
     - oc login --token ${KUBE_TOKEN}
     - oc project cloudigrade-ci
@@ -171,13 +191,12 @@ Clean Up Review:
   image: ${SHIFTIGRADE_IMAGE}:${SHIFTIGRADE_VERSION}
   variables:
     GIT_STRATEGY: none
-  only:
-    - branches@cloudigrade/cloudigrade
-  except:
-    - master@cloudigrade/cloudigrade
-    - tags@cloudigrade/cloudigrade
-    - chat
-    - trigger
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "chat" || $CI_PIPELINE_SOURCE == "trigger" || $CI_COMMIT_TAG || $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: never
+    - if: $CI_COMMIT_BRANCH
+      when: manual
+      allow_failure: true
   before_script:
     - oc login ${OPENSHIFT_URL} --token ${KUBE_TOKEN}
     - oc project cloudigrade-ci
@@ -200,7 +219,6 @@ Clean Up Review:
         -e sqs_state=absent \
         ansible/provision-aws-resources.yaml
     - ansible-playbook -e aws_prefix="review-${CI_COMMIT_REF_SLUG}" -e sqs_state=absent ansible/clean-sqs.yaml
-  when: manual
   environment:
     name: review/${CI_COMMIT_REF_NAME}
     action: stop
@@ -209,10 +227,9 @@ Clean Up Review:
 Trigger OSD Builds:
   stage: deploy
   image: registry.gitlab.com/cloudigrade/images/build-container:latest
-  only:
-    - master@cloudigrade/cloudigrade
-  except:
-    - triggers
+  rules:
+    - if: $CI_PIPELINE_SOURCE != "chat" && $CI_PIPELINE_SOURCE != "trigger" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
   script:
     - curl -X POST -k https://api.insights-dev.openshift.com/apis/build.openshift.io/v1/namespaces/buildfactory/buildconfigs/cloudigrade/webhooks/${WEBHOOK_SECRET}/generic
     - curl -X POST -k https://api.insights-dev.openshift.com/apis/build.openshift.io/v1/namespaces/buildfactory/buildconfigs/cloudinginx/webhooks/${WEBHOOK_SECRET}/generic
