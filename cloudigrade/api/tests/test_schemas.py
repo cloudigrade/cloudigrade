@@ -93,10 +93,10 @@ class SchemaTestCase(TestCase):
                                 },
                             },
                         }
-                    }
-                },
-                "description": "Generate report of concurrent "
-                "usage within a time frame.",
+                    },
+                    "description": "Generate report of concurrent "
+                    "usage within a time frame.",
+                }
             },
         }
 
