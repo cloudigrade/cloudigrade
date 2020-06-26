@@ -96,6 +96,7 @@ Spec File:
     - poetry install
   script:
     - AWS_SQS_ACCESS_KEY_ID=foo AWS_SQS_SECRET_ACCESS_KEY=bar poetry run make spec-test
+    - poetry run openapi-spec-validator openapi.json
 
 ### REVIEW STAGE ###
 Deploy Review:
