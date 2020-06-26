@@ -7,16 +7,16 @@ stages:
 
 ### WORKFLOW ###
 # This is kinda confusing, but what this effectively says is
-# that we want to run jobs only when we have a tag or a 
-# branch (master would fall into that), but if we want to 
-# enable merge request pipelines (like github!) we would add 
+# that we want to run jobs only when we have a tag or a
+# branch (master would fall into that), but if we want to
+# enable merge request pipelines (like github!) we would add
 # "- if: $CI_MERGE_REQUEST_IID" to the rules list here.
 #
 # Put another way, this is the check before the jobs are
 # even created. Once one of the below vars is set, the jobs
-# are instantiated, and then are allowed to check their own 
+# are instantiated, and then are allowed to check their own
 # rules to see if they should be running or not.
-#  
+#
 workflow:
   rules:
     - if: $CI_COMMIT_TAG
@@ -229,7 +229,7 @@ Trigger OSD Builds:
   image: registry.gitlab.com/cloudigrade/images/build-container:latest
   rules:
     - if: $CI_PIPELINE_SOURCE != "chat" && $CI_PIPELINE_SOURCE != "trigger" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      when: manual
+      when: on_success
   script:
     - curl -X POST -k https://api.insights-dev.openshift.com/apis/build.openshift.io/v1/namespaces/buildfactory/buildconfigs/cloudigrade/webhooks/${WEBHOOK_SECRET}/generic
     - curl -X POST -k https://api.insights-dev.openshift.com/apis/build.openshift.io/v1/namespaces/buildfactory/buildconfigs/cloudinginx/webhooks/${WEBHOOK_SECRET}/generic
