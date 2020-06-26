@@ -186,6 +186,11 @@ def cloud_account_pre_delete_callback(*args, **kwargs):
     power_off_instances set to False.
 
     Note: Signal receivers must accept keyword arguments (**kwargs).
+
+    Note: Django does *not* (as of 3.0 at the time of this writing) lock the sender
+    instance for deletion when the pre_delete signal fires. This means another request
+    could fetch and attempt to alter the same instance while this function is running,
+    and bad things could happen. See also api.tasks.delete_from_sources_kafka_message.
     """
     instance = kwargs["instance"]
     instance.disable(power_off_instances=False)

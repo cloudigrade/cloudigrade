@@ -236,7 +236,30 @@ def delete_from_sources_kafka_message(message, headers, event_type):  # noqa: C9
 
     with transaction.atomic():
         logger.info(_("Deleting CloudAccounts using filter %s"), filter)
-        CloudAccount.objects.filter(filter).delete()
+        # IMPORTANT NOTES FOR FUTURE DEVELOPERS:
+        #
+        # This for loop and select_for_update may seem unnecessary, but they actually
+        # serve a very important purpose. We use pre_delete Django signals with
+        # CloudAccount, but that has the unfortunate side effect of Django *not* getting
+        # a row-level lock in the DB for each CloudAccount we want to delete until
+        # *after* all of the pre_delete logic completes. Why is that bad? If we receive
+        # two requests in quick succession to delete the same CloudAccount but we don't
+        # have it locked, the second request can get the CloudAccount and expect it to
+        # be available while the first request is processing that CloudAccount's
+        # pre_delete signal, and they can collide when making changes related to the
+        # deletion.
+        #
+        # Using a for loop and select_for_update here means that we *immediately*
+        # acquire each row-level lock *before* any signals fire, and that better
+        # guarantees no two requests can attempt to delete the same CloudAccount
+        # instance.
+        #
+        # Since select_for_update is a rather heavy-handed solution to this problem and
+        # DB row-level locks can cause other in-transaction requests to hang waiting,
+        # eventually we should consider refactoring away the pre_delete logic to avoid
+        # possible resource contention issues and slowdowns.
+        for cloud_account in CloudAccount.objects.select_for_update().filter(filter):
+            cloud_account.delete()
 
 
 @retriable_shared_task(autoretry_for=(RequestException, BaseHTTPError, RuntimeError))
