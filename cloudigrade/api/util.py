@@ -231,12 +231,10 @@ def calculate_max_concurrent_usage(date, user_id):
         Dict containing calculated max concurrent values.
 
     """
-    queryset = Run.objects.all()
-    if user_id:
-        if not User.objects.filter(id=user_id).exists():
-            # Return empty stub object if user doesn't exist.
-            return {"date": date, "maximum_counts": {}}
-        queryset = queryset.filter(instance__cloud_account__user__id=user_id)
+    if not User.objects.filter(id=user_id).exists():
+        # Return empty stub object if user doesn't exist.
+        return {"date": date, "maximum_counts": {}}
+    queryset = Run.objects.filter(instance__cloud_account__user__id=user_id)
 
     start = datetime(date.year, date.month, date.day, 0, 0, 0, tzinfo=tz.tzutc())
     end = start + timedelta(days=1)
