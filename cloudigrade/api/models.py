@@ -557,3 +557,48 @@ class MachineImageInspectionStart(BaseModel):
     machineimage = models.ForeignKey(
         MachineImage, on_delete=models.CASCADE, db_index=True, null=False,
     )
+
+
+class ConcurrentUsage(BaseModel):
+    """Saved calculation of max concurrent usage for a date+user."""
+
+    date = models.DateField()
+    user = models.ForeignKey(User, on_delete=models.CASCADE, db_index=True)
+    _maximum_counts = models.TextField(db_column="maximum_counts", default="[]")
+
+    class Meta:
+        unique_together = (("date", "user"),)
+
+    @property
+    def maximum_counts(self):
+        """Get maximum_counts list."""
+        return json.loads(self._maximum_counts)
+
+    @maximum_counts.setter
+    def maximum_counts(self, value):
+        """Set maximum_counts list."""
+        self._maximum_counts = json.dumps(value)
+
+    def __str__(self):
+        """Get the string representation."""
+        return repr(self)
+
+    def __repr__(self):
+        """Get an unambiguous string representation."""
+        date = repr(self.date.isoformat()) if self.date is not None else None
+        created_at = (
+            repr(self.created_at.isoformat()) if self.created_at is not None else None
+        )
+        updated_at = (
+            repr(self.updated_at.isoformat()) if self.updated_at is not None else None
+        )
+
+        return (
+            f"{self.__class__.__name__}("
+            f"id={self.id}, "
+            f"date={date}, "
+            f"user_id={self.user_id}, "
+            f"created_at={created_at}, "
+            f"updated_at={updated_at}"
+            f")"
+        )
