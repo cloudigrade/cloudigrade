@@ -12,11 +12,47 @@ class SysconfigSchema(AutoSchema):
         TODO: Reassess the need for this when drf schema generation is improved.
         """
         operation = {
-            "operationId": self._get_operation_id(path, method).capitalize(),
+            "operationId": "Listsysconfigviewsets",
             "responses": {
                 "200": {
                     "content": {
-                        "application/json": {"schema": {"items": {}, "type": "object"}}
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "aws_account_id": {"type": "string"},
+                                    "aws_policies": {
+                                        "type": "object",
+                                        "properties": {
+                                            "traditional_inspection": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "Statement": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "Action": {
+                                                                    "type": "array",
+                                                                    "items": {
+                                                                        "type": "string"
+                                                                    },
+                                                                },
+                                                            },
+                                                            "additionalProperties": {
+                                                                "type": "string"
+                                                            },
+                                                        },
+                                                    },
+                                                    "Version": {"type": "string"},
+                                                },
+                                            },
+                                        },
+                                    },
+                                    "version": {"type": "string"},
+                                },
+                            }
+                        }
                     },
                     "description": "Retrieve current system configuration.",
                 }
