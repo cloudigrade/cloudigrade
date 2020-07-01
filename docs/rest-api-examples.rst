@@ -187,26 +187,6 @@ Response:
     {
         "data": [
             {
-                "account_id": 3,
-                "cloud_type": "aws",
-                "content_object": {
-                    "account_arn": "arn:aws:iam::294324068142:role/role-for-cloudigrade",
-                    "aws_account_id": "294324068142",
-                    "aws_cloud_account_id": 3,
-                    "created_at": "2020-05-18T13:51:59.722367Z",
-                    "updated_at": "2020-05-18T13:51:59.722367Z"
-                },
-                "created_at": "2020-05-18T13:51:59.722367Z",
-                "is_enabled": true,
-                "name": "yet another account",
-                "platform_application_id": 8268,
-                "platform_authentication_id": 3578,
-                "platform_endpoint_id": 2281,
-                "platform_source_id": 4617,
-                "updated_at": "2020-05-18T13:51:59.722367Z",
-                "user_id": 2
-            },
-            {
                 "account_id": 2,
                 "cloud_type": "aws",
                 "content_object": {
@@ -223,6 +203,26 @@ Response:
                 "platform_authentication_id": 8376,
                 "platform_endpoint_id": 6634,
                 "platform_source_id": 4969,
+                "updated_at": "2020-05-18T13:51:59.722367Z",
+                "user_id": 2
+            },
+            {
+                "account_id": 3,
+                "cloud_type": "aws",
+                "content_object": {
+                    "account_arn": "arn:aws:iam::294324068142:role/role-for-cloudigrade",
+                    "aws_account_id": "294324068142",
+                    "aws_cloud_account_id": 3,
+                    "created_at": "2020-05-18T13:51:59.722367Z",
+                    "updated_at": "2020-05-18T13:51:59.722367Z"
+                },
+                "created_at": "2020-05-18T13:51:59.722367Z",
+                "is_enabled": true,
+                "name": "yet another account",
+                "platform_application_id": 8268,
+                "platform_authentication_id": 3578,
+                "platform_endpoint_id": 2281,
+                "platform_source_id": 4617,
                 "updated_at": "2020-05-18T13:51:59.722367Z",
                 "user_id": 2
             }
@@ -1337,10 +1337,80 @@ Response:
         }
     }
 
-If your requested ``start_date`` and ``end_date`` values would result in
+If your requested ``start_date`` and ``end_date`` values would result in some
 future dates beyond "today", those future dates will not be included. Daily
 max concurrency results will end "today" at the latest. In the following
-example, the request is for dates "tomorrow" through "one week from today".
+example, the request is for dates "today" through "one week from today".
+This means only one day ("today") is included in the response data.
+
+Request:
+
+.. code:: bash
+
+    http localhost:8080/api/cloudigrade/v2/concurrent/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
+        start_date=="2020-05-18" \
+        end_date=="2020-05-25"
+
+Response:
+
+::
+
+    HTTP/1.1 200 OK
+    Allow: GET, HEAD, OPTIONS
+    Content-Length: 633
+    Content-Type: application/json
+    Vary: Accept
+    X-CLOUDIGRADE-REQUEST-ID: e6878008-9217-4dcb-8e84-c299fd13bf6d
+    X-Content-Type-Options: nosniff
+    X-Frame-Options: DENY
+
+    {
+        "data": [
+            {
+                "date": "2020-05-18",
+                "maximum_counts": [
+                    {
+                        "arch": "_ANY",
+                        "instances_count": 2,
+                        "role": "_ANY",
+                        "sla": "_ANY"
+                    },
+                    {
+                        "arch": "_ANY",
+                        "instances_count": 2,
+                        "role": "_ANY",
+                        "sla": "Premium"
+                    },
+                    {
+                        "arch": "_ANY",
+                        "instances_count": 2,
+                        "role": "Red Hat Enterprise Linux Server",
+                        "sla": "Premium"
+                    },
+                    {
+                        "arch": "x86_64",
+                        "instances_count": 2,
+                        "role": "_ANY",
+                        "sla": "Premium"
+                    }
+                ]
+            }
+        ],
+        "links": {
+            "first": "/api/cloudigrade/api/cloudigrade/v2/concurrent/?end_date=2020-05-25&limit=10&offset=0&start_date=2020-05-18",
+            "last": "/api/cloudigrade/api/cloudigrade/v2/concurrent/?end_date=2020-05-25&limit=10&offset=0&start_date=2020-05-18",
+            "next": null,
+            "previous": null
+        },
+        "meta": {
+            "count": 1
+        }
+    }
+
+If your requested ``start_date`` and ``end_date`` values would result in exclusively
+future dates beyond "today", since those future dates will not be included, zero days
+will be included in the response data. In the following example, the request is for
+dates "tomorrow" through "one week from today".
 
 Request:
 
@@ -1356,20 +1426,15 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 344
+    Content-Length: 303
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: e6878008-9217-4dcb-8e84-c299fd13bf6d
+    X-CLOUDIGRADE-REQUEST-ID: e7c1344a-89e6-496a-93f8-7bd8caf8639b
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
     {
-        "data": [
-            {
-                "date": "2020-05-19",
-                "maximum_counts": []
-            }
-        ],
+        "data": [],
         "links": {
             "first": "/api/cloudigrade/api/cloudigrade/v2/concurrent/?end_date=2020-05-25&limit=10&offset=0&start_date=2020-05-19",
             "last": "/api/cloudigrade/api/cloudigrade/v2/concurrent/?end_date=2020-05-25&limit=10&offset=0&start_date=2020-05-19",
@@ -1377,7 +1442,7 @@ Response:
             "previous": null
         },
         "meta": {
-            "count": 1
+            "count": 0
         }
     }
 
@@ -1404,7 +1469,7 @@ Response:
     Content-Length: 608
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: e7c1344a-89e6-496a-93f8-7bd8caf8639b
+    X-CLOUDIGRADE-REQUEST-ID: 963bd9dd-cc05-48e2-80bd-2e4d81914155
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 

@@ -214,3 +214,24 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
         self.assertEqual(body["meta"]["count"], 1)
         self.assertEqual(len(body["data"]), 1)
         self.assertEqual(body["data"][0]["date"], str(today))
+
+    def test_future_start_and_end_date_no_results(self):
+        """
+        Test with far-future start_date and end_date, expecting no results.
+
+        If the request filters result in dates that are only in the future, we must
+        always expect zero days in the response data because we cannot possibly know
+        anything beyond today.
+        """
+        today = get_today()
+        future_start = today + datetime.timedelta(days=50)
+        future_end = today + datetime.timedelta(days=100)
+        data = {"start_date": str(future_start), "end_date": str(future_end)}
+        client = APIClient()
+        client.force_authenticate(user=self.user1)
+        response = client.get(
+            "/api/cloudigrade/v2/concurrent/", data=data, format="json"
+        )
+        body = response.json()
+        self.assertEqual(body["meta"]["count"], 0)
+        self.assertEqual(len(body["data"]), 0)

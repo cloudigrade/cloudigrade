@@ -285,9 +285,6 @@ class DailyConcurrentUsageDummyQueryset(object):
             days = []
             current = self.start_date
             delta_day = timedelta(days=1)
-            # always add the start day
-            days.append(current)
-            current += delta_day
             end_date = min(self.end_date, tomorrow)
             while current < end_date:
                 days.append(current)

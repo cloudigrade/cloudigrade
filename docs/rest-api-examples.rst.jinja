@@ -275,7 +275,9 @@ These APIs may be used to generate calculated and aggregated report data.
 Daily Max Concurrency
 ~~~~~~~~~~~~~~~~~~~~~
 
-The concurrency API returns a paginated list of days, and each day includes the maximum concurrent number of instances, grouped by various combinations of role, sla, and architecture seen concurrently in use during that day.
+The concurrency API returns a paginated list of days, and each day includes the
+maximum concurrent number of instances, grouped by various combinations of role,
+sla, and architecture seen concurrently in use during that day.
 
 Optional ``start_date`` is an ISO-8601 date that is the inclusive start of the
 reporting period. If not defined, default is "today".
@@ -291,18 +293,32 @@ Response:
 
 {{ v2_list_concurrent | stringify_http_response | rst_codeblock }}
 
-If your requested ``start_date`` and ``end_date`` values would result in
+If your requested ``start_date`` and ``end_date`` values would result in some
 future dates beyond "today", those future dates will not be included. Daily
 max concurrency results will end "today" at the latest. In the following
-example, the request is for dates "tomorrow" through "one week from today".
+example, the request is for dates "today" through "one week from today".
+This means only one day ("today") is included in the response data.
 
 Request:
 
-{{ v2_list_concurrent_future.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
+{{ v2_list_concurrent_partial_future.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
 
 Response:
 
-{{ v2_list_concurrent_future | stringify_http_response | rst_codeblock }}
+{{ v2_list_concurrent_partial_future | stringify_http_response | rst_codeblock }}
+
+If your requested ``start_date`` and ``end_date`` values would result in exclusively
+future dates beyond "today", since those future dates will not be included, zero days
+will be included in the response data. In the following example, the request is for
+dates "tomorrow" through "one week from today".
+
+Request:
+
+{{ v2_list_concurrent_all_future.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
+
+Response:
+
+{{ v2_list_concurrent_all_future | stringify_http_response | rst_codeblock }}
 
 Miscellaneous Commands
 ----------------------

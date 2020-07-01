@@ -322,12 +322,21 @@ class DocsApiHandler(object):
 
         response = self.customer_client.list_concurrent(
             data={
+                "start_date": self.this_morning.date(),
+                "end_date": self.next_week.date(),
+            }
+        )
+        assert_status(response, 200)
+        responses["v2_list_concurrent_partial_future"] = response
+
+        response = self.customer_client.list_concurrent(
+            data={
                 "start_date": self.tomorrow.date(),
                 "end_date": self.next_week.date(),
             }
         )
         assert_status(response, 200)
-        responses["v2_list_concurrent_future"] = response
+        responses["v2_list_concurrent_all_future"] = response
 
         ########################
         # V2 Miscellaneous Commands
