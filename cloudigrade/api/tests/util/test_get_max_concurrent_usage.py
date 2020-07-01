@@ -3,6 +3,7 @@ import datetime
 
 from django.test import TestCase
 
+from api import models
 from api.tests import helper as api_helper
 from api.util import get_max_concurrent_usage
 from util.tests import helper as util_helper
@@ -30,20 +31,72 @@ class GetMaxConcurrentUsageTest(TestCase):
                 util_helper.utc_dt(2019, 5, 1, 2, 0, 0),
             ),
             image=rhel_instance.machine_image,
+            calculate_concurrent_usage=False,
         )
         request_date = datetime.date(2019, 5, 1)
         expected_date = request_date
         expected_instances = 1
 
-        results = get_max_concurrent_usage(request_date, user_id=self.user1.id)
-        self.assertEqual(results["date"], expected_date)
-        self.assertEqual(len(results.get("maximum_counts")), 4)
-        for k, v in results["maximum_counts"].items():
-            self.assertEqual(v["max_count"], expected_instances)
+        self.assertEqual(
+            models.ConcurrentUsage.objects.filter(
+                date=request_date, user_id=self.user1.id
+            ).count(),
+            0,
+        )
+        concurrent_usage = get_max_concurrent_usage(request_date, user_id=self.user1.id)
+        self.assertEqual(
+            models.ConcurrentUsage.objects.filter(
+                date=request_date, user_id=self.user1.id
+            ).count(),
+            1,
+        )
+        self.assertEqual(concurrent_usage.date, expected_date)
+        self.assertEqual(len(concurrent_usage.maximum_counts), 4)
+        for single_day_counts in concurrent_usage.maximum_counts:
+            self.assertEqual(single_day_counts["instances_count"], expected_instances)
 
     @util_helper.clouditardis(util_helper.utc_dt(2019, 5, 3, 0, 0, 0))
     def test_single_rhel_run_no_result(self):
-        """Test with a single RHEL instance requesting results in futures."""
+        """
+        Test with a single RHEL instance requesting results in futures.
+
+        Also assert that no ConcurrentUsage is saved to the database because the
+        requested date is in the future, and we cannot know that data yet.
+        """
+        rhel_instance = api_helper.generate_aws_instance(
+            self.user1account1, image=self.image_rhel
+        )
+        api_helper.generate_single_run(
+            rhel_instance,
+            (
+                util_helper.utc_dt(2019, 5, 1, 1, 0, 0),
+                util_helper.utc_dt(2019, 5, 1, 2, 0, 0),
+            ),
+            image=rhel_instance.machine_image,
+            calculate_concurrent_usage=False,
+        )
+        request_date = datetime.date(2019, 5, 4)
+        expected_date = request_date
+
+        self.assertEqual(
+            models.ConcurrentUsage.objects.filter(
+                date=request_date, user_id=self.user1.id
+            ).count(),
+            0,
+        )
+        concurrent_usage = get_max_concurrent_usage(request_date, user_id=self.user1.id)
+        self.assertEqual(
+            models.ConcurrentUsage.objects.filter(
+                date=request_date, user_id=self.user1.id
+            ).count(),
+            0,
+        )
+        self.assertEqual(concurrent_usage.date, expected_date)
+        self.assertEqual(len(concurrent_usage.maximum_counts), 0)
+
+    @util_helper.clouditardis(util_helper.utc_dt(2019, 5, 3, 0, 0, 0))
+    def test_multiple_requests_use_precalculated_data(self):
+        """Test multiple requests use the same saved pre-calculated data."""
         rhel_instance = api_helper.generate_aws_instance(
             self.user1account1, image=self.image_rhel
         )
@@ -55,9 +108,20 @@ class GetMaxConcurrentUsageTest(TestCase):
             ),
             image=rhel_instance.machine_image,
         )
-        request_date = datetime.date(2019, 5, 4)
+        request_date = datetime.date(2019, 5, 1)
         expected_date = request_date
+        expected_instances = 1
 
-        results = get_max_concurrent_usage(request_date, user_id=self.user1.id)
-        self.assertEqual(results["date"], expected_date)
-        self.assertEqual(len(results.get("maximum_counts")), 0)
+        concurrent_usage = get_max_concurrent_usage(request_date, user_id=self.user1.id)
+        concurrent_usage_2 = get_max_concurrent_usage(
+            request_date, user_id=self.user1.id
+        )
+        concurrent_usage_3 = get_max_concurrent_usage(
+            request_date, user_id=self.user1.id
+        )
+        self.assertEqual(concurrent_usage, concurrent_usage_2)
+        self.assertEqual(concurrent_usage, concurrent_usage_3)
+        self.assertEqual(concurrent_usage.date, expected_date)
+        self.assertEqual(len(concurrent_usage.maximum_counts), 4)
+        for single_day_counts in concurrent_usage.maximum_counts:
+            self.assertEqual(single_day_counts["instances_count"], expected_instances)

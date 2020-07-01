@@ -299,31 +299,16 @@ class DailyConcurrentUsageDummyQueryset(object):
     def __getitem__(self, index):
         """Get a specific day."""
         days = self.days[index]
-        results = []
+        concurrent_usages = []
         for date in days:
-            result = get_max_concurrent_usage(date, self.user_id)
-            results.append(result)
+            concurrent_usage = get_max_concurrent_usage(date, self.user_id)
+            concurrent_usages.append(concurrent_usage)
 
-        return results
+        return concurrent_usages
 
 
 class DailyConcurrentUsageSerializer(Serializer):
     """Serialize a report of daily RHEL concurrency over time for the API."""
 
     date = serializers.DateField(required=True)
-    maximum_counts = serializers.SerializerMethodField()
-
-    def get_maximum_counts(self, obj):
-        """Massage the results dict a bit."""
-        response = []
-        if obj.get("maximum_counts", None):
-            for key, value in obj["maximum_counts"].items():
-                response.append(
-                    {
-                        "arch": key.arch,
-                        "role": key.role,
-                        "sla": key.sla,
-                        "instances_count": value["max_count"],
-                    }
-                )
-        return response
+    maximum_counts = serializers.ReadOnlyField()

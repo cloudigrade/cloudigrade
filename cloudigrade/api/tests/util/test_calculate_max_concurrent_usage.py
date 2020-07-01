@@ -85,10 +85,15 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         )
 
     def assertMaxConcurrentUsage(self, results, date, instances):
-        """Assert expected calculate_max_concurrent_usage results."""
-        self.assertEqual(results["date"], date)
-        for k, v in results["maximum_counts"].items():
-            self.assertEqual(v["max_count"], instances)
+        """
+        Assert expected calculate_max_concurrent_usage results.
+
+        Note: this only naively assumes there is *all* in maximum_counts have the same
+        number of instances.
+        """
+        self.assertEqual(results.date, date)
+        for single_count in results.maximum_counts:
+            self.assertEqual(single_count["instances_count"], instances)
 
     def test_single_rhel_run_within_day(self):
         """Test with a single RHEL instance run within the day."""
@@ -107,11 +112,9 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         expected_date = request_date
         expected_instances = 1
 
-        results = calculate_max_concurrent_usage(request_date, user_id=self.user1.id)
-        self.assertEqual(len(results.get("maximum_counts")), 4)
-        self.assertMaxConcurrentUsage(
-            results, expected_date, expected_instances,
-        )
+        usage = calculate_max_concurrent_usage(request_date, user_id=self.user1.id)
+        self.assertEqual(len(usage.maximum_counts), 4)
+        self.assertMaxConcurrentUsage(usage, expected_date, expected_instances)
 
     def test_single_rhel_run_entirely_before_day(self):
         """Test with a RHEL instance run entirely before the day."""
@@ -129,8 +132,8 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         request_date = datetime.date(2019, 5, 1)
         expected_date = request_date
 
-        results = calculate_max_concurrent_usage(request_date, user_id=self.user1.id)
-        self.assertMaxConcurrentUsage(results, expected_date, 0)
+        usage = calculate_max_concurrent_usage(request_date, user_id=self.user1.id)
+        self.assertMaxConcurrentUsage(usage, expected_date, 0)
 
     def test_single_rhel_run_entirely_after_day(self):
         """Test with a RHEL instance run entirely after the day."""
@@ -148,8 +151,8 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         request_date = datetime.date(2019, 5, 1)
         expected_date = request_date
 
-        results = calculate_max_concurrent_usage(request_date, user_id=self.user1.id)
-        self.assertMaxConcurrentUsage(results, expected_date, 0)
+        usage = calculate_max_concurrent_usage(request_date, user_id=self.user1.id)
+        self.assertMaxConcurrentUsage(usage, expected_date, 0)
 
     def test_single_run_overlapping_day_start(self):
         """Test with a RHEL instance run overlapping the start of the day."""
@@ -168,10 +171,8 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         expected_date = request_date
         expected_instances = 1
 
-        results = calculate_max_concurrent_usage(request_date, user_id=self.user1.id)
-        self.assertMaxConcurrentUsage(
-            results, expected_date, expected_instances,
-        )
+        usage = calculate_max_concurrent_usage(request_date, user_id=self.user1.id)
+        self.assertMaxConcurrentUsage(usage, expected_date, expected_instances)
 
     def test_single_run_overlapping_day_end(self):
         """Test with a RHEL instance run overlapping the end of the day."""
@@ -190,10 +191,8 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         expected_date = request_date
         expected_instances = 1
 
-        results = calculate_max_concurrent_usage(request_date, user_id=self.user1.id)
-        self.assertMaxConcurrentUsage(
-            results, expected_date, expected_instances,
-        )
+        usage = calculate_max_concurrent_usage(request_date, user_id=self.user1.id)
+        self.assertMaxConcurrentUsage(usage, expected_date, expected_instances)
 
     def test_single_run_overlapping_day_entirely(self):
         """Test with a RHEL instance run overlapping the entire day."""
@@ -212,10 +211,8 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         expected_date = request_date
         expected_instances = 1
 
-        results = calculate_max_concurrent_usage(request_date, user_id=self.user1.id)
-        self.assertMaxConcurrentUsage(
-            results, expected_date, expected_instances,
-        )
+        usage = calculate_max_concurrent_usage(request_date, user_id=self.user1.id)
+        self.assertMaxConcurrentUsage(usage, expected_date, expected_instances)
 
     def test_single_not_rhel_run_within_day(self):
         """
@@ -237,10 +234,8 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         request_date = datetime.date(2019, 5, 1)
         expected_date = request_date
 
-        results = calculate_max_concurrent_usage(request_date, user_id=self.user1.id)
-        self.assertMaxConcurrentUsage(
-            results, expected_date, 0,
-        )
+        usage = calculate_max_concurrent_usage(request_date, user_id=self.user1.id)
+        self.assertMaxConcurrentUsage(usage, expected_date, 0)
 
     def test_overlapping_rhel_runs_within_day(self):
         """
@@ -272,9 +267,9 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         )
         expected_date = request_date = datetime.date(2019, 5, 1)
 
-        results = calculate_max_concurrent_usage(request_date, user_id=self.user1.id)
-        self.assertEqual(results["date"], expected_date)
-        self.assertEqual(len(results["maximum_counts"]), 5)
+        usage = calculate_max_concurrent_usage(request_date, user_id=self.user1.id)
+        self.assertEqual(usage.date, expected_date)
+        self.assertEqual(len(usage.maximum_counts), 5)
 
     def test_overlapping_rhel_runs_within_day_with_user_filter(self):
         """
@@ -309,10 +304,8 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         expected_date = request_date
         expected_instances = 1
 
-        results = calculate_max_concurrent_usage(request_date, user_id=self.user1.id)
-        self.assertMaxConcurrentUsage(
-            results, expected_date, expected_instances,
-        )
+        usage = calculate_max_concurrent_usage(request_date, user_id=self.user1.id)
+        self.assertMaxConcurrentUsage(usage, expected_date, expected_instances)
 
     def test_non_overlapping_rhel_runs_within_day(self):
         """
@@ -347,10 +340,8 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         expected_date = request_date
         expected_instances = 1
 
-        results = calculate_max_concurrent_usage(request_date, user_id=self.user1.id)
-        self.assertMaxConcurrentUsage(
-            results, expected_date, expected_instances,
-        )
+        usage = calculate_max_concurrent_usage(request_date, user_id=self.user1.id)
+        self.assertMaxConcurrentUsage(usage, expected_date, expected_instances)
 
     def test_when_user_id_does_not_exist(self):
         """Test when the requested user ID does not exist."""
@@ -358,7 +349,5 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         user_id = -1  # negative id should never exit
         expected_date = request_date
 
-        results = calculate_max_concurrent_usage(request_date, user_id=user_id)
-        self.assertMaxConcurrentUsage(
-            results, expected_date, 0,
-        )
+        usage = calculate_max_concurrent_usage(request_date, user_id=user_id)
+        self.assertMaxConcurrentUsage(usage, expected_date, 0)

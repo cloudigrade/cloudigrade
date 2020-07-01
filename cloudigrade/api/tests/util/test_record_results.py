@@ -19,7 +19,6 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         self.user1 = util_helper.generate_test_user()
         self.user1account1 = api_helper.generate_aws_account(user=self.user1)
         self.date = datetime.date(2019, 5, 1)
-        self.results = {"date": self.date, "maximum_counts": {}}
 
         self.x86_64 = "x86_64"
         self.arm64 = "arm64"
@@ -72,11 +71,11 @@ class CalculateMaxConcurrentUsageTest(TestCase):
             (True, self.syspurpose6, self.x86_64,),
         ]
 
+        results = {}
         for (is_start, syspurpose, arch) in test_items:
-            _record_results(self.results, is_start, syspurpose, arch)
+            _record_results(results, is_start, syspurpose, arch)
 
-        self.assertEqual(self.results["date"], self.date)
-        self.assertEqual(len(self.results["maximum_counts"]), 17)
+        self.assertEqual(len(results), 17)
 
     def test_one_for_each_sla(self):
         """Record one for each SLA."""
@@ -86,28 +85,26 @@ class CalculateMaxConcurrentUsageTest(TestCase):
             (True, self.syspurpose3, self.x86_64,),
         ]
 
+        results = {}
         for (is_start, syspurpose, arch) in test_items:
-            _record_results(self.results, is_start, syspurpose, arch)
+            _record_results(results, is_start, syspurpose, arch)
 
-        self.assertEqual(self.results["date"], self.date)
-        self.assertEqual(len(self.results["maximum_counts"]), 10)
+        self.assertEqual(len(results), 10)
         key = ConcurrentKey(role=ANY, sla=ANY, arch=ANY)
-        self.assertEqual(
-            self.results["maximum_counts"].get(key)["max_count"], len(test_items)
-        )
+        self.assertEqual(results[key]["max_count"], len(test_items))
 
         key = ConcurrentKey(
             role=ANY, sla=self.syspurpose1["service_level_agreement"], arch=ANY
         )
-        self.assertEqual(self.results["maximum_counts"].get(key)["max_count"], 1)
+        self.assertEqual(results[key]["max_count"], 1)
         key = ConcurrentKey(
             role=ANY, sla=self.syspurpose2["service_level_agreement"], arch=ANY
         )
-        self.assertEqual(self.results["maximum_counts"].get(key)["max_count"], 1)
+        self.assertEqual(results[key]["max_count"], 1)
         key = ConcurrentKey(
             role=ANY, sla=self.syspurpose3["service_level_agreement"], arch=ANY
         )
-        self.assertEqual(self.results["maximum_counts"].get(key)["max_count"], 1)
+        self.assertEqual(results[key]["max_count"], 1)
 
     def test_unknown_sla(self):
         """Record for unknown SLA."""
@@ -115,20 +112,19 @@ class CalculateMaxConcurrentUsageTest(TestCase):
             (True, self.syspurpose7, self.x86_64,),
         ]
 
+        results = {}
         for (is_start, syspurpose, arch) in test_items:
-            _record_results(self.results, is_start, syspurpose, arch)
+            _record_results(results, is_start, syspurpose, arch)
 
-        self.assertEqual(self.results["date"], self.date)
-        self.assertEqual(len(self.results["maximum_counts"]), 4)
+        # self.assertEqual(self.results["date"], self.date)
+        self.assertEqual(len(results), 4)
         key = ConcurrentKey(role=ANY, sla=ANY, arch=ANY)
-        self.assertEqual(
-            self.results["maximum_counts"].get(key)["max_count"], len(test_items)
-        )
+        self.assertEqual(results[key]["max_count"], len(test_items))
 
         key = ConcurrentKey(
             role=ANY, sla=self.syspurpose7["service_level_agreement"], arch=ANY
         )
-        self.assertEqual(self.results["maximum_counts"].get(key)["max_count"], 1)
+        self.assertEqual(results[key]["max_count"], 1)
 
     def test_one_for_each_sla_role(self):
         """Record for each role and sla combination."""
@@ -138,34 +134,32 @@ class CalculateMaxConcurrentUsageTest(TestCase):
             (True, self.syspurpose4, self.x86_64,),
         ]
 
+        results = {}
         for (is_start, syspurpose, arch) in test_items:
-            _record_results(self.results, is_start, syspurpose, arch)
+            _record_results(results, is_start, syspurpose, arch)
 
-        self.assertEqual(self.results["date"], self.date)
-        self.assertEqual(len(self.results["maximum_counts"]), 10)
+        self.assertEqual(len(results), 10)
         key = ConcurrentKey(role=ANY, sla=ANY, arch=ANY)
-        self.assertEqual(
-            self.results["maximum_counts"].get(key)["max_count"], len(test_items)
-        )
+        self.assertEqual(results[key]["max_count"], len(test_items))
 
         key = ConcurrentKey(
             role=self.syspurpose1["role"],
             sla=self.syspurpose1["service_level_agreement"],
             arch=ANY,
         )
-        self.assertEqual(self.results["maximum_counts"].get(key)["max_count"], 1)
+        self.assertEqual(results[key]["max_count"], 1)
         key = ConcurrentKey(
             role=self.syspurpose2["role"],
             sla=self.syspurpose2["service_level_agreement"],
             arch=ANY,
         )
-        self.assertEqual(self.results["maximum_counts"].get(key)["max_count"], 1)
+        self.assertEqual(results[key]["max_count"], 1)
         key = ConcurrentKey(
             role=self.syspurpose4["role"],
             sla=self.syspurpose4["service_level_agreement"][:64],
             arch=ANY,
         )
-        self.assertEqual(self.results["maximum_counts"].get(key)["max_count"], 1)
+        self.assertEqual(results[key]["max_count"], 1)
 
     def test_one_for_each_role_no_sla(self):
         """Record for each role and unknown sla combination."""
@@ -174,28 +168,26 @@ class CalculateMaxConcurrentUsageTest(TestCase):
             (True, self.syspurpose7, self.x86_64,),
         ]
 
+        results = {}
         for (is_start, syspurpose, arch) in test_items:
-            _record_results(self.results, is_start, syspurpose, arch)
+            _record_results(results, is_start, syspurpose, arch)
 
-        self.assertEqual(self.results["date"], self.date)
-        self.assertEqual(len(self.results["maximum_counts"]), 4)
+        self.assertEqual(len(results), 4)
         key = ConcurrentKey(role=ANY, sla=ANY, arch=ANY)
-        self.assertEqual(
-            self.results["maximum_counts"].get(key)["max_count"], len(test_items)
-        )
+        self.assertEqual(results[key]["max_count"], len(test_items))
 
         key = ConcurrentKey(
             role=self.syspurpose3["role"],
             sla=self.syspurpose3["service_level_agreement"],
             arch=ANY,
         )
-        self.assertEqual(self.results["maximum_counts"].get(key)["max_count"], 2)
+        self.assertEqual(results[key]["max_count"], 2)
         key = ConcurrentKey(
             role=self.syspurpose7["role"],
             sla=self.syspurpose7["service_level_agreement"],
             arch=ANY,
         )
-        self.assertEqual(self.results["maximum_counts"].get(key)["max_count"], 2)
+        self.assertEqual(results[key]["max_count"], 2)
 
     def test_one_for_each_arch_sla(self):
         """Record one for each arch and sla combination."""
@@ -205,28 +197,26 @@ class CalculateMaxConcurrentUsageTest(TestCase):
             (True, self.syspurpose2, self.arm64,),
         ]
 
+        results = {}
         for (is_start, syspurpose, arch) in test_items:
-            _record_results(self.results, is_start, syspurpose, arch)
+            _record_results(results, is_start, syspurpose, arch)
 
-        self.assertEqual(self.results["date"], self.date)
-        self.assertEqual(len(self.results["maximum_counts"]), 8)
+        self.assertEqual(len(results), 8)
         key = ConcurrentKey(role=ANY, sla=ANY, arch=ANY)
-        self.assertEqual(
-            self.results["maximum_counts"].get(key)["max_count"], len(test_items)
-        )
+        self.assertEqual(results[key]["max_count"], len(test_items))
 
         key = ConcurrentKey(
             role=ANY, sla=self.syspurpose1["service_level_agreement"], arch=self.x86_64
         )
-        self.assertEqual(self.results["maximum_counts"].get(key)["max_count"], 1)
+        self.assertEqual(results[key]["max_count"], 1)
         key = ConcurrentKey(
             role=ANY, sla=self.syspurpose1["service_level_agreement"], arch=self.arm64
         )
-        self.assertEqual(self.results["maximum_counts"].get(key)["max_count"], 1)
+        self.assertEqual(results[key]["max_count"], 1)
         key = ConcurrentKey(
             role=ANY, sla=self.syspurpose2["service_level_agreement"], arch=self.arm64
         )
-        self.assertEqual(self.results["maximum_counts"].get(key)["max_count"], 1)
+        self.assertEqual(results[key]["max_count"], 1)
 
     def test_one_for_each_arch_no_sla(self):
         """Record for each arch and no sla combination."""
@@ -236,25 +226,23 @@ class CalculateMaxConcurrentUsageTest(TestCase):
             (True, self.syspurpose7, self.arm64,),
         ]
 
+        results = {}
         for (is_start, syspurpose, arch) in test_items:
-            _record_results(self.results, is_start, syspurpose, arch)
+            _record_results(results, is_start, syspurpose, arch)
 
-        self.assertEqual(self.results["date"], self.date)
-        self.assertEqual(len(self.results["maximum_counts"]), 5)
+        self.assertEqual(len(results), 5)
         key = ConcurrentKey(role=ANY, sla=ANY, arch=ANY)
-        self.assertEqual(
-            self.results["maximum_counts"].get(key)["max_count"], len(test_items)
-        )
+        self.assertEqual(results[key]["max_count"], len(test_items))
 
         key = ConcurrentKey(
             role=ANY, sla=self.syspurpose3["service_level_agreement"], arch=self.x86_64
         )
-        self.assertEqual(self.results["maximum_counts"].get(key)["max_count"], 1)
+        self.assertEqual(results[key]["max_count"], 1)
         key = ConcurrentKey(
             role=ANY, sla=self.syspurpose6["service_level_agreement"], arch=self.arm64
         )
-        self.assertEqual(self.results["maximum_counts"].get(key)["max_count"], 2)
+        self.assertEqual(results[key]["max_count"], 2)
         key = ConcurrentKey(
             role=ANY, sla=self.syspurpose7["service_level_agreement"], arch=self.arm64
         )
-        self.assertEqual(self.results["maximum_counts"].get(key)["max_count"], 2)
+        self.assertEqual(results[key]["max_count"], 2)

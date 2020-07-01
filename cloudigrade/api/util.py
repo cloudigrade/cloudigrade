@@ -13,6 +13,7 @@ from rest_framework.serializers import ValidationError
 
 from api.clouds.aws.models import AwsEC2InstanceDefinition
 from api.models import (
+    ConcurrentUsage,
     Instance,
     InstanceEvent,
     Run,
@@ -194,27 +195,32 @@ def get_max_concurrent_usage(date, user_id):
     """
     Get maximum concurrent usage of RHEL instances in given parameters.
 
-    This gets a pre-calculated version of the results from ConcurrentUsage. If
-    you only need to calculate new results, see calculate_max_concurrent_usage.
+    This may get a pre-calculated version of the results from ConcurrentUsage. We
+    attempt to load stored results from the database; we only perform the underlying
+    calculation (and save results for future requests) if the result does not yet exist.
 
     Args:
         date (datetime.date): the day during which we are measuring usage
         user_id (int): required filter on user
-        cloud_account_id (int): optional filter on cloud account
 
     Returns:
-        dict containing the values of maximum concurrent number of instances,
-        grouped by role, sla, and architecture.
+        ConcurrentUsage for the give date and user_id.
 
     """
     today = get_today()
     if date > today:
         # Early return stub values; we never project future calculations.
-        return {"date": date, "maximum_counts": []}
+        return ConcurrentUsage(date=date, user_id=user_id)
 
-    results = calculate_max_concurrent_usage(date=date, user_id=user_id)
+    try:
+        concurrent_usage = ConcurrentUsage.objects.get(date=date, user_id=user_id)
+        return concurrent_usage
+    except ConcurrentUsage.DoesNotExist:
+        # If it does not exist, we will create it after this exception handler.
+        pass
 
-    return results
+    concurrent_usage_data = calculate_max_concurrent_usage(date=date, user_id=user_id)
+    return concurrent_usage_data
 
 
 def calculate_max_concurrent_usage(date, user_id):
@@ -222,18 +228,22 @@ def calculate_max_concurrent_usage(date, user_id):
     Calculate maximum concurrent usage of RHEL instances in given parameters.
 
     This always performs a new calculation of the results based on Runs.
+    Results are saved to the database before returning as a ConcurrentUsage object.
+    Any preexisting saved results will be updated with newly calculated results.
 
     Args:
         date (datetime.date): the day during which we are measuring usage
         user_id (int): required filter on user
 
     Returns:
-        Dict containing calculated max concurrent values.
+        ConcurrentUsage for the given date and user ID.
 
     """
     if not User.objects.filter(id=user_id).exists():
         # Return empty stub object if user doesn't exist.
-        return {"date": date, "maximum_counts": {}}
+        # TODO Is this even possible to reach via the API?
+        return ConcurrentUsage(date=date, user_id=user_id)
+
     queryset = Run.objects.filter(instance__cloud_account__user__id=user_id)
 
     start = datetime(date.year, date.month, date.day, 0, 0, 0, tzinfo=tz.tzutc())
@@ -289,7 +299,7 @@ def calculate_max_concurrent_usage(date, user_id):
 
     # Now that we have the start and stop times ordered, we can easily find the
     # maximum concurrency by walking forward in time and counting up.
-    results = {"date": date, "maximum_counts": {}}
+    complex_maximum_counts = {}
     for (
         __,
         is_start,
@@ -302,9 +312,29 @@ def calculate_max_concurrent_usage(date, user_id):
         syspurpose,
         architecture,
     ) in rhel_on_offs:
-        results = _record_results(results, is_start, syspurpose, architecture)
+        complex_maximum_counts = _record_results(
+            complex_maximum_counts, is_start, syspurpose, architecture
+        )
 
-    return results
+    # complex_maximum_counts is a dict with objects for keys that cannot natively
+    # convert to JSON for storage and eventual API output. So, we simplify it here.
+    simplified_maximum_counts = []
+    for key, value in complex_maximum_counts.items():
+        simplified_maximum_counts.append(
+            {
+                "arch": key.arch,
+                "role": key.role,
+                "sla": key.sla,
+                "instances_count": value["max_count"],
+            }
+        )
+
+    concurrent_usage, __ = ConcurrentUsage.objects.update_or_create(
+        date=date,
+        user_id=user_id,
+        defaults={"maximum_counts": simplified_maximum_counts},
+    )
+    return concurrent_usage
 
 
 def _record_results(results, is_start, syspurpose=None, arch=None):
@@ -370,9 +400,7 @@ def _record_results(results, is_start, syspurpose=None, arch=None):
 
 def _record_concurrency_count(results, key, is_start):
     """Record the count."""
-    entry = results["maximum_counts"].setdefault(
-        key, {"current_count": 0, "max_count": 0,}
-    )
+    entry = results.setdefault(key, {"current_count": 0, "max_count": 0,})
     entry["current_count"] += 1 if is_start else -1
     entry["max_count"] = max(entry["current_count"], entry["max_count"])
 
