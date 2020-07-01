@@ -32,6 +32,7 @@ if env("API_ENABLE_SENTRY", default=False):
         environment=env("DJANGO_SENTRY_ENVIRONMENT"),
         release=env("DJANGO_SENTRY_RELEASE"),
         integrations=[DjangoIntegration()],
+        send_default_pii=True,
     )
 
 # Specifically in production, this default should be False.
