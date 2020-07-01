@@ -12,7 +12,7 @@ class SysconfigSchema(AutoSchema):
         TODO: Reassess the need for this when drf schema generation is improved.
         """
         operation = {
-            "operationId": "Listsysconfigviewsets",
+            "operationId": "listSysconfigViewSets",
             "responses": {
                 "200": {
                     "content": {
