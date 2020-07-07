@@ -14,6 +14,7 @@ import api.clouds.aws.util
 from api import models
 from api.clouds.aws import models as aws_models
 from api.tests import helper
+from util import aws
 from util.tests import helper as util_helper
 
 logger = logging.getLogger(__name__)
@@ -125,9 +126,50 @@ class AwsCloudAccountModelTest(TransactionTestCase, ModelStrTestMixin):
             "api.clouds.aws.tasks.initial_aws_describe_instances"
         ) as mock_initial_aws_describe_instances:
             mock_verify_permissions.side_effect = Exception("Something broke.")
-            with self.assertRaises(Exception):
+            with self.assertLogs("api.models", level="INFO") as cm:
                 self.account.enable()
+            self.assertEqual(
+                str(mock_verify_permissions.side_effect), cm.records[0].message
+            )
             mock_verify_permissions.assert_called()
+            mock_initial_aws_describe_instances.delay.assert_not_called()
+
+        self.account.refresh_from_db()
+        self.assertFalse(self.account.is_enabled)
+        self.assertEqual(self.account.enabled_at, self.account.created_at)
+
+    @patch("api.error_codes.notify_sources_application_availability")
+    def test_enable_failure_too_many_trails(self, mock_sources_notify):
+        """Test that enabling an account rolls back if too many trails present."""
+        # Normally you shouldn't directly manipulate the is_enabled value,
+        # but here we need to force it down to check that it gets set back.
+        self.account.is_enabled = False
+        self.account.save()
+        self.account.refresh_from_db()
+        self.assertFalse(self.account.is_enabled)
+
+        enable_date = util_helper.utc_dt(2019, 1, 4, 0, 0, 0)
+        with patch.object(aws, "configure_cloudtrail") as mock_cloudtrail, patch.object(
+            aws, "verify_account_access"
+        ) as mock_verify, patch.object(aws, "get_session"), patch(
+            "api.clouds.aws.tasks.initial_aws_describe_instances"
+        ) as mock_initial_aws_describe_instances, util_helper.clouditardis(
+            enable_date
+        ):
+            mock_cloudtrail.side_effect = ClientError(
+                error_response={
+                    "Error": {"Code": "MaximumNumberOfTrailsExceededException",}
+                },
+                operation_name="MaximumNumberOfTrailsExceededException",
+            )
+            mock_verify.return_value = (True, "")
+            with self.assertLogs("api.clouds.aws.util", level="WARNING") as cm:
+                self.account.enable()
+                self.assertIn(
+                    mock_cloudtrail.side_effect.response["Error"]["Code"],
+                    cm.records[1].message,
+                )
+            mock_cloudtrail.assert_called()
             mock_initial_aws_describe_instances.delay.assert_not_called()
 
         self.account.refresh_from_db()

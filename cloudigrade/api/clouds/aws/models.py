@@ -9,6 +9,7 @@ from django.db.models.signals import post_delete
 from django.dispatch import receiver
 from django.utils.translation import gettext as _
 from django_celery_beat.models import IntervalSchedule, PeriodicTask
+from rest_framework.exceptions import ValidationError
 
 from api import AWS_PROVIDER_STRING
 from api.models import CloudAccount, Instance, InstanceEvent, MachineImage
@@ -83,7 +84,18 @@ class AwsCloudAccount(BaseModel):
         """
         from api.clouds.aws import tasks, util  # Avoid circular import.
 
-        util.verify_permissions(self.account_arn)
+        try:
+            util.verify_permissions(self.account_arn)
+        except ValidationError as e:
+            logger.info(
+                _(
+                    "Could not enable %(aws_cloud_account)s, the ARN "
+                    "did not pass validation. Exception: %(e)s"
+                ),
+                {"aws_cloud_account": repr(self), "e": repr(e)},
+            )
+            raise e
+
         self._enable_verify_task()
         transaction.on_commit(
             lambda: tasks.initial_aws_describe_instances.delay(self.id)

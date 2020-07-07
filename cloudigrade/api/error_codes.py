@@ -168,3 +168,14 @@ CG3000 = CloudigradeError(
         "Please contact support. Error code %(error_code)s."
     ),
 )
+
+# Too many cloudtrails
+CG3001 = CloudigradeError(
+    "CG3001",
+    _("Failed to enable Cloud Account %(cloud_account_id)s: " "because %(exception)s"),
+    _(
+        "Could not enable cloud metering. You've reached the AWS CloudTrail "
+        "limit for your account. Please either increase the CloudTrail limit, or "
+        "delete an existing CloudTrail. Error code %(error_code)s."
+    ),
+)

@@ -9,7 +9,6 @@ from django.db.models.signals import post_delete, pre_delete
 from django.dispatch import receiver
 from django.utils.translation import gettext as _
 
-from api import error_codes
 from util.insights import notify_sources_application_availability
 from util.misc import get_now
 from util.models import BaseGenericModel, BaseModel
@@ -109,16 +108,15 @@ class CloudAccount(BaseGenericModel):
             self.save()
         try:
             self.content_object.enable()
-            notify_sources_application_availability(
-                self.user.username, self.platform_application_id, "available"
-            )
         except Exception as e:
-            error_code = error_codes.CG3000
-            error_code.log_internal_message(
-                logger, {"cloud_account_id": self.id, "exception": e}
-            )
-            error_code.notify(self.user.username, self.platform_application_id)
-            raise e
+            # All failure notifications should happen during the failure
+            logger.info(e)
+            transaction.set_rollback(True)
+            return False
+
+        notify_sources_application_availability(
+            self.user.username, self.platform_application_id, "available"
+        )
 
     @transaction.atomic
     def disable(self, message="", power_off_instances=True):

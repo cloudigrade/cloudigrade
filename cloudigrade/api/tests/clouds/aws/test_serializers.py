@@ -187,9 +187,12 @@ class AwsAccountSerializerTest(TransactionTestCase):
             expected_error = {
                 "account_arn": ['Permission denied for ARN "{0}"'.format(self.arn)]
             }
-            with self.assertRaises(ValidationError) as cm:
+            with self.assertLogs("api.models", level="INFO") as cm:
                 serializer.create(self.validated_data)
-            self.assertEquals(expected_error, cm.exception.detail)
+            self.assertIn(
+                expected_error["account_arn"][0],
+                cm.records[0].msg.detail["account_arn"][0],
+            )
 
     @patch("api.error_codes.notify_sources_application_availability")
     def test_create_fails_when_aws_verify_fails(self, mock_notify_sources):
@@ -207,9 +210,12 @@ class AwsAccountSerializerTest(TransactionTestCase):
             mock_verify.return_value = False, []
 
             expected_error = {"account_arn": ["Account verification failed."]}
-            with self.assertRaises(ValidationError) as cm:
+            with self.assertLogs("api.models", level="INFO") as cm:
                 serializer.create(self.validated_data)
-            self.assertEquals(expected_error, cm.exception.detail)
+            self.assertIn(
+                expected_error["account_arn"][0],
+                cm.records[0].msg.detail["account_arn"][0],
+            )
 
     @patch("api.error_codes.notify_sources_application_availability")
     def test_create_fails_cloudtrail_configuration_error(self, mock_notify_sources):
@@ -238,6 +244,9 @@ class AwsAccountSerializerTest(TransactionTestCase):
                     'ARN "{0}"'.format(self.arn)
                 ]
             }
-            with self.assertRaises(ValidationError) as cm:
+            with self.assertLogs("api.models", level="INFO") as cm:
                 serializer.create(self.validated_data)
-            self.assertEquals(expected_error, cm.exception.detail)
+            self.assertIn(
+                expected_error["account_arn"][0],
+                cm.records[0].msg.detail["account_arn"][0],
+            )

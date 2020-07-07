@@ -677,6 +677,18 @@ def verify_permissions(customer_role_arn):
             aws.configure_cloudtrail(session, aws_account_id)
         except ClientError as error:
             if error.response.get("Error", {}).get("Code") == "AccessDeniedException":
+                cloud_account = CloudAccount.objects.get(
+                    aws_cloud_account__aws_account_id=aws_account_id
+                )
+
+                error_code = error_codes.CG3000
+                error_code.log_internal_message(
+                    logger, {"cloud_account_id": aws_account_id, "exception": error}
+                )
+                error_code.notify(
+                    cloud_account.user.username, cloud_account.platform_application_id
+                )
+
                 raise ValidationError(
                     detail={
                         "account_arn": [
@@ -686,6 +698,23 @@ def verify_permissions(customer_role_arn):
                         ]
                     }
                 )
+            elif (
+                error.response.get("Error", {}).get("Code")
+                == "MaximumNumberOfTrailsExceededException"
+            ):
+                cloud_account = CloudAccount.objects.get(
+                    aws_cloud_account__account_arn=arn_str
+                )
+
+                error_code = error_codes.CG3001
+                error_code.log_internal_message(
+                    logger, {"cloud_account_id": cloud_account.id, "exception": error}
+                )
+                error_code.notify(
+                    cloud_account.user.username, cloud_account.platform_application_id
+                )
+                raise ValidationError(detail={"account_arn": error_code.get_message()})
+
             raise
     else:
         failure_details = [_("Account verification failed.")]
@@ -806,7 +835,10 @@ def create_aws_cloud_account(
         # This enable call *must* be inside the transaction because we need to know
         # to rollback the transaction if anything related to enabling fails.
         # Yes, this means holding the transaction open while we wait on calls to AWS.
-        cloud_account.enable()
+        if cloud_account.enable() is False:
+            # Enabling of cloud account failed, rolling back.
+            transaction.set_rollback(True)
+            return
 
     return cloud_account
 
