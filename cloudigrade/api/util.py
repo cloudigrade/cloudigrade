@@ -229,7 +229,7 @@ def calculate_max_concurrent_usage(date, user_id):
 
     This always performs a new calculation of the results based on Runs.
     Results are saved to the database before returning as a ConcurrentUsage object.
-    Any preexisting saved results will be updated with newly calculated results.
+    Any preexisting saved results will be replaced with newly calculated results.
 
     Args:
         date (datetime.date): the day during which we are measuring usage
@@ -329,11 +329,14 @@ def calculate_max_concurrent_usage(date, user_id):
             }
         )
 
-    concurrent_usage, __ = ConcurrentUsage.objects.update_or_create(
-        date=date,
-        user_id=user_id,
-        defaults={"maximum_counts": simplified_maximum_counts},
-    )
+    with transaction.atomic():
+        ConcurrentUsage.objects.filter(date=date, user_id=user_id).delete()
+        concurrent_usage = ConcurrentUsage.objects.create(
+            date=date, user_id=user_id, maximum_counts=simplified_maximum_counts
+        )
+        concurrent_usage.potentially_related_runs.add(*runs)
+        concurrent_usage.save()
+
     return concurrent_usage
 
 

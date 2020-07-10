@@ -394,6 +394,15 @@ class MachineImage(BaseGenericModel):
             f")"
         )
 
+    @transaction.atomic
+    def save(self, *args, **kwargs):
+        """Save this image and delete any related ConcurrentUsage objects."""
+        concurrent_usages = ConcurrentUsage.objects.filter(
+            potentially_related_runs__in=Run.objects.filter(machineimage=self)
+        )
+        concurrent_usages.delete()
+        return super().save(*args, **kwargs)
+
 
 class Instance(BaseGenericModel):
     """Base model for a compute/VM instance in a cloud."""
@@ -550,6 +559,32 @@ class Run(BaseModel):
     memory = models.FloatField(default=0, blank=True, null=True)
     vcpu = models.IntegerField(default=0, blank=True, null=True)
 
+    @transaction.atomic
+    def save(self, *args, **kwargs):
+        """Save this run and delete any related ConcurrentUsage objects."""
+        concurrent_usages = ConcurrentUsage.objects.filter(
+            potentially_related_runs=self
+        )
+        concurrent_usages.delete()
+        return super().save(*args, **kwargs)
+
+
+@receiver(pre_delete, sender=Run)
+def run_pre_delete_callback(*args, **kwargs):
+    """
+    Delete any related ConcurrentUsage prior to deleting the Run.
+
+    This must be pre_delete not post_delete because the ManyToMany relationship's
+    "through" table row may have already deleted by post_delete, and that leaves us no
+    way to find the related ConcurrentUsage.
+
+    Note: Signal receivers must accept keyword arguments (**kwargs).
+    """
+    run = kwargs["instance"]
+    ConcurrentUsage.objects.filter()
+    concurrent_usages = ConcurrentUsage.objects.filter(potentially_related_runs=run)
+    concurrent_usages.delete()
+
 
 class MachineImageInspectionStart(BaseModel):
     """Model to track any time an image starts inspection."""
@@ -565,6 +600,7 @@ class ConcurrentUsage(BaseModel):
     date = models.DateField()
     user = models.ForeignKey(User, on_delete=models.CASCADE, db_index=True)
     _maximum_counts = models.TextField(db_column="maximum_counts", default="[]")
+    potentially_related_runs = models.ManyToManyField(Run)
 
     class Meta:
         unique_together = (("date", "user"),)

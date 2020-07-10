@@ -269,3 +269,75 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
         new_usages = ConcurrentUsage.objects.all().order_by("created_at", "id")
         self.assertEqual(len(new_usages), 2)
         self.assertEqual(new_usages[0], old_usages[0])
+
+    def test_same_date_new_run_causes_deletion_and_recreation(self):
+        """
+        Test calculation from a run on the same day deletes and recalculates.
+
+        In this case, the new run also overlaps the old run, and that means the
+        new calculated results should also have greater numbers than the old.
+        """
+        instance = api_helper.generate_aws_instance(self.account, image=self.image_rhel)
+        old_run = api_helper.generate_single_run(
+            instance,
+            (
+                util_helper.utc_dt(2019, 5, 1, 1, 0, 0),
+                util_helper.utc_dt(2019, 5, 1, 2, 0, 0),
+            ),
+            image=instance.machine_image,
+            instance_type=self.instance_type_small,
+            calculate_concurrent_usage=False,
+        )
+        # These will act as the "old" calculated concurrent objects.
+        calculate_max_concurrent_usage_from_runs([old_run])
+        old_usages = ConcurrentUsage.objects.all().order_by("created_at", "id")
+        self.assertEqual(len(old_usages), 1)
+
+        new_instance = api_helper.generate_aws_instance(
+            self.account, image=self.image_rhel
+        )
+        new_run = api_helper.generate_single_run(
+            new_instance,
+            (
+                util_helper.utc_dt(2019, 5, 1, 1, 30, 0),
+                util_helper.utc_dt(2019, 5, 1, 2, 30, 0),
+            ),
+            image=instance.machine_image,
+            instance_type=self.instance_type_large,
+            calculate_concurrent_usage=False,
+        )
+        # This should create new and different runs.
+        calculate_max_concurrent_usage_from_runs([new_run])
+        new_usages = ConcurrentUsage.objects.all().order_by("created_at", "id")
+        self.assertEqual(len(new_usages), 1)
+        self.assertNotEqual(new_usages[0].id, old_usages[0].id)
+
+        expected_counts = [
+            {"arch": "_ANY", "role": "_ANY", "sla": "_ANY", "instances_count": 2},
+            {
+                "arch": "_ANY",
+                "role": "_ANY",
+                "sla": self.image_rhel_sla,
+                "instances_count": 2,
+            },
+            {
+                "arch": "_ANY",
+                "role": self.image_rhel_role,
+                "sla": self.image_rhel_sla,
+                "instances_count": 2,
+            },
+            {
+                "arch": "x86_64",
+                "role": "_ANY",
+                "sla": self.image_rhel_sla,
+                "instances_count": 2,
+            },
+        ]
+
+        no_cloud_account_usage = ConcurrentUsage.objects.filter().get()
+        self.assertConcurrentUsageIs(
+            no_cloud_account_usage,
+            date=datetime.date(2019, 5, 1),
+            user=self.user,
+            expected_counts=expected_counts,
+        )
