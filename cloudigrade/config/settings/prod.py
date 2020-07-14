@@ -4,6 +4,8 @@ from sentry_sdk.integrations.django import DjangoIntegration
 
 from .base import *
 
+IS_PRODUCTION = True
+
 # FIXME: After our OpenShift setup is finalized we should force debug to False.
 DEBUG = env.bool("DJANGO_DEBUG", default=False)
 SECRET_KEY = env("DJANGO_SECRET_KEY")
