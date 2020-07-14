@@ -2,6 +2,7 @@
 import logging
 
 import requests
+from django.conf import settings
 from django.core.management.base import BaseCommand
 
 from api import models
@@ -60,6 +61,12 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """Handle the command execution."""
+        if settings.IS_PRODUCTION:
+            self.stdout.write(
+                "You cannot run this command in production.", self.style.WARNING
+            )
+            return
+
         accounts = models.CloudAccount.objects.filter(is_enabled=True)
         accounts_count = accounts.count()
         if accounts_count == 0:

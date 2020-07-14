@@ -64,3 +64,18 @@ class DeleteAccountsTest(TransactionTestCase):
         call_command("disable_accounts")
         self.assertDisabled()
         mock_disable_cloudtrail.assert_called()
+
+    @override_settings(IS_PRODUCTION=True)
+    @override_settings(ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES=True)
+    @patch("api.models.notify_sources_application_availability")
+    @patch("api.clouds.aws.util.disable_cloudtrail")
+    @patch("builtins.input", return_value="Y")
+    def test_handle_in_production_aborts(
+        self, mock_input, mock_disable_cloudtrail, mock_notify
+    ):
+        """Test calling disable_accounts in production does nothing."""
+        self.assertPresent()
+        call_command("disable_accounts")
+        self.assertPresent()
+        mock_disable_cloudtrail.assert_not_called()
+        mock_notify.assert_not_called()
