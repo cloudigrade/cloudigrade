@@ -212,6 +212,7 @@ class AwsCloudAccountModelTest(TransactionTestCase, ModelStrTestMixin):
                 mock_disable_cloudtrail.return_value = True
                 self.account.disable()
                 mock_disable_cloudtrail.assert_called()
+        mock_sources_notify.assert_called()
 
         self.account.refresh_from_db()
         self.assertFalse(self.account.is_enabled)
@@ -224,6 +225,23 @@ class AwsCloudAccountModelTest(TransactionTestCase, ModelStrTestMixin):
             .first()
         )
         self.assertEqual(last_event.event_type, models.InstanceEvent.TYPE.power_off)
+
+    @patch("api.models.notify_sources_application_availability")
+    def test_disable_with_notify_sources_false_succeeds(self, mock_sources_notify):
+        """
+        Test that disabling an account does not notify sources when specified not to.
+
+        Setting notify_sources=False should *only* affect sources-api interactions.
+        """
+        self.assertTrue(self.account.is_enabled)
+        with patch("api.clouds.aws.util.disable_cloudtrail") as mock_disable_cloudtrail:
+            mock_disable_cloudtrail.return_value = True
+            self.account.disable(notify_sources=False)
+            mock_disable_cloudtrail.assert_called()
+        mock_sources_notify.assert_not_called()
+
+        self.account.refresh_from_db()
+        self.assertFalse(self.account.is_enabled)
 
     @patch("api.models.notify_sources_application_availability")
     def test_disable_succeeds_if_no_instance_events(self, mock_sources_notify):

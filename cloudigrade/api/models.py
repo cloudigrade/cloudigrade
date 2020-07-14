@@ -119,7 +119,7 @@ class CloudAccount(BaseGenericModel):
         )
 
     @transaction.atomic
-    def disable(self, message="", power_off_instances=True):
+    def disable(self, message="", power_off_instances=True, notify_sources=True):
         """
         Mark this CloudAccount as disabled and perform operations to make it so.
 
@@ -135,6 +135,8 @@ class CloudAccount(BaseGenericModel):
                 disable logic, but should not be creating power_off instance events.
                 Since creating the instance event in the same transaction as deleting
                 the account causes Django errors.
+            notify_sources (bool): determines if we notify sources about this operation.
+                This should always be true except for very special cases.
         """
         if self.is_enabled:
             self.is_enabled = False
@@ -142,9 +144,10 @@ class CloudAccount(BaseGenericModel):
         if power_off_instances:
             self._power_off_instances(power_off_time=get_now())
         self.content_object.disable()
-        notify_sources_application_availability(
-            self.user.username, self.platform_application_id, "unavailable", message
-        )
+        if notify_sources:
+            notify_sources_application_availability(
+                self.user.username, self.platform_application_id, "unavailable", message
+            )
 
     def _power_off_instances(self, power_off_time):
         """
