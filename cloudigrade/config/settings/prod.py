@@ -4,7 +4,10 @@ from sentry_sdk.integrations.django import DjangoIntegration
 
 from .base import *
 
-IS_PRODUCTION = True
+# TODO Change this when we start using real versions in our deployments.
+# Currently this works because our deployment configs use static tokens like
+# "ci" and "prod" for the version.
+IS_PRODUCTION = CLOUDIGRADE_VERSION == "prod"
 
 # FIXME: After our OpenShift setup is finalized we should force debug to False.
 DEBUG = env.bool("DJANGO_DEBUG", default=False)
