@@ -205,8 +205,8 @@ Clean Up Review:
     - export DEPLOYMENT_PREFIX=$(echo review-${CI_COMMIT_REF_SLUG} | cut -c 1-36)
     - export DJANGO_DATABASE_HOST=${DEPLOYMENT_PREFIX}-db.${OPENSHIFT_PROJECT}.svc
     - >
-      oc rsh -c c-${DEPLOYMENT_PREFIX}-a \
-        $(oc get pods -o jsonpath='{.items[*].metadata.name}' -l name=c-${DEPLOYMENT_PREFIX}-a) \
+      oc rsh -c c-${DEPLOYMENT_PREFIX}-l \
+        $(oc get pods -o jsonpath='{.items[*].metadata.name}' -l name=c-${DEPLOYMENT_PREFIX}-l) \
         python3 manage.py disable_accounts --confirm || true
     - oc delete bc,cm,dc,is,routes,secrets,svc -l gitlab-deployment="${CI_COMMIT_REF_SLUG}-cloudigrade"
     - oc delete dc,svc,secret "${DEPLOYMENT_PREFIX}-db"
