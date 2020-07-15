@@ -120,13 +120,13 @@ def update_cloudtrail(cloudtrail, name):
     return response
 
 
-def disable_cloudtrail(cloudtrail, name):
-    """Disable logging in the existing customer CloudTrail.
+def delete_cloudtrail(cloudtrail, name):
+    """Delete the customer CloudTrail.
 
     Args:
         cloudtrail (botocore client): The cloudtrail client
-        name (string): The name of the cloudtrail to disable logging
+        name (string): The name of the cloudtrail to delete
     """
-    logger.debug(_("Disabling logging in the cloudtrail %s"), name)
-    response = cloudtrail.stop_logging(Name=name,)
+    logger.debug(_("Deleting the cloudtrail %s"), name)
+    response = cloudtrail.delete_trail(Name=name)
     return response

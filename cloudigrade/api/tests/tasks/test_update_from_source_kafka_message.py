@@ -218,7 +218,7 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
         mock_get_endpoint.return_value = {"id": endpoint_id, "source_id": source_id}
 
         with patch.object(sts, "boto3") as mock_boto3, patch.object(
-            aws_models, "_disable_cloudtrail"
+            aws_models, "_delete_cloudtrail"
         ), patch("api.clouds.aws.util.verify_permissions"):
             mock_assume_role = mock_boto3.client.return_value.assume_role
             mock_assume_role.return_value = util_helper.generate_dummy_role()

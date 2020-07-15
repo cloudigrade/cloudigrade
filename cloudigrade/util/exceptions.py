@@ -93,12 +93,6 @@ class InvalidHoundigradeJsonFormat(Exception):
     """Raise when houndigrade returns json that does not have images."""
 
 
-class CloudTrailCannotStopLogging(APIException):
-    """Raise when we cannot stop cloud trail logging on client account."""
-
-    status_code = http.HTTPStatus.INTERNAL_SERVER_ERROR
-
-
 class NormalizeRunException(APIException):
     """Raise when something unexpected happens in building NormalizeRuns."""
 

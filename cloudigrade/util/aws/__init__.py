@@ -8,7 +8,7 @@ from util.aws.autoscaling import (
 )
 from util.aws.cloudtrail import (
     configure_cloudtrail,
-    disable_cloudtrail,
+    delete_cloudtrail,
     get_cloudtrail_name,
 )
 from util.aws.ec2 import (

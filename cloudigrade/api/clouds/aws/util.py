@@ -918,22 +918,22 @@ def update_aws_cloud_account(
         )
 
 
-def disable_cloudtrail(aws_cloud_account):
+def delete_cloudtrail(aws_cloud_account):
     """
-    Disable logging in an AwsCloudAccount's CloudTrail.
+    Delete an AwsCloudAccount's CloudTrail.
 
     Note:
         If the incoming AwsCloudAccount instance is being deleted, this call to
-        disable_cloudtrail may occur after the DB record has been deleted, and we are
+        delete_cloudtrail may occur after the DB record has been deleted, and we are
         only working with a shallow reference copy of the AwsCloudAccount. This means we
         cannot reliably load related objects (e.g. aws_cloud_account.cloud_account).
 
     Args:
         aws_cloud_account (api.clouds.aws.models.AwsCloudAccount): the AwsCloudAccount
-            for which we should disable the CloudTrail
+            for which we should delete the CloudTrail
 
     Returns:
-        bool True if CloudTrail was successfully disabled, else False.
+        bool True if CloudTrail was successfully deleted, else False.
 
     """
     cloudtrail_name = aws.get_cloudtrail_name(aws_cloud_account.cloud_account_id)
@@ -942,10 +942,10 @@ def disable_cloudtrail(aws_cloud_account):
         session = aws.get_session(str(aws_cloud_account.account_arn))
         cloudtrail_session = session.client("cloudtrail")
         logger.info(
-            "attempting to disable cloudtrail '%(name)s' via ARN '%(arn)s'",
+            "attempting to delete cloudtrail '%(name)s' via ARN '%(arn)s'",
             {"name": cloudtrail_name, "arn": aws_cloud_account.account_arn},
         )
-        aws.disable_cloudtrail(cloudtrail_session, cloudtrail_name)
+        aws.delete_cloudtrail(cloudtrail_session, cloudtrail_name)
         return True
 
     except ClientError as error:
@@ -961,7 +961,7 @@ def disable_cloudtrail(aws_cloud_account):
                 _(
                     "AwsCloudAccount ID %(aws_cloud_account_id)s for AWS account ID "
                     "%(aws_account_id)s encountered %(error_code)s and cannot "
-                    "disable cloudtrail %(cloudtrail_name)s."
+                    "delete cloudtrail %(cloudtrail_name)s."
                 ),
                 {
                     "aws_cloud_account_id": aws_cloud_account.id,

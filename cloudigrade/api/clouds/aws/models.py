@@ -108,12 +108,12 @@ class AwsCloudAccount(BaseModel):
         This method only handles the AWS-specific piece of disabling a cloud account.
         If you want to completely disable a cloud account, use CloudAccount.disable().
 
-        Disabling an AwsCloudAccount has the side effect of attempting to disable the
-        AWS CloudTrail only upon committing the transaction.  If we cannot disable the
+        Disabling an AwsCloudAccount has the side effect of attempting to delete the
+        AWS CloudTrail only upon committing the transaction.  If we cannot delete the
         CloudTrail, we simply log a message and proceed regardless.
         """
         self._disable_verify_task()
-        transaction.on_commit(lambda: _disable_cloudtrail(self))
+        transaction.on_commit(lambda: _delete_cloudtrail(self))
 
     def _enable_verify_task(self):
         """Enable the given AwsCloudAccount's Verify Task."""
@@ -174,14 +174,14 @@ def awscloudaccount_post_delete_callback(*args, **kwargs):
         aws_cloud_account.verify_task.delete()
 
 
-def _disable_cloudtrail(aws_cloud_account):
-    """Disable the given AwsCloudAccount's AWS CloudTrail."""
+def _delete_cloudtrail(aws_cloud_account):
+    """Delete the given AwsCloudAccount's AWS CloudTrail."""
     try:
         cloud_account = aws_cloud_account.cloud_account.get()
         if cloud_account.is_enabled:
             logger.warning(
                 _(
-                    "Aborting _disable_cloudtrail because CloudAccount ID "
+                    "Aborting _delete_cloudtrail because CloudAccount ID "
                     "%(cloud_account_id)s is enabled."
                 ),
                 {"cloud_account_id": cloud_account.id},
@@ -192,10 +192,10 @@ def _disable_cloudtrail(aws_cloud_account):
 
     from api.clouds.aws import util  # Avoid circular import.
 
-    if not util.disable_cloudtrail(aws_cloud_account):
+    if not util.delete_cloudtrail(aws_cloud_account):
         logger.info(
             _(
-                "Failed to disable CloudTrail when disabling AwsCloudAccount ID "
+                "Failed to delete CloudTrail when disabling AwsCloudAccount ID "
                 "%(aws_cloud_account_id)s (AWS account ID %(aws_account_id)s)"
             ),
             {

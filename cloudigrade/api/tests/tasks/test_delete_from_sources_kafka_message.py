@@ -54,7 +54,7 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         ]
 
         with patch.object(sts, "boto3") as mock_boto3, patch.object(
-            aws_models, "_disable_cloudtrail"
+            aws_models, "_delete_cloudtrail"
         ), self.assertLogs("api.tasks", level="INFO") as logging_watcher:
             role = util_helper.generate_dummy_role()
             mock_assume_role = mock_boto3.client.return_value.assume_role
@@ -132,7 +132,7 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         )
 
         with patch.object(sts, "boto3") as mock_boto3, patch.object(
-            aws_models, "_disable_cloudtrail"
+            aws_models, "_delete_cloudtrail"
         ):
             role = util_helper.generate_dummy_role()
             mock_assume_role = mock_boto3.client.return_value.assume_role
@@ -159,7 +159,7 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         )
 
         with patch.object(sts, "boto3") as mock_boto3, patch.object(
-            aws_models, "_disable_cloudtrail"
+            aws_models, "_delete_cloudtrail"
         ):
             role = util_helper.generate_dummy_role()
             mock_assume_role = mock_boto3.client.return_value.assume_role
@@ -183,7 +183,7 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         )
 
         with patch.object(sts, "boto3") as mock_boto3, patch.object(
-            aws_models, "_disable_cloudtrail"
+            aws_models, "_delete_cloudtrail"
         ):
             role = util_helper.generate_dummy_role()
             mock_assume_role = mock_boto3.client.return_value.assume_role
@@ -208,7 +208,7 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         )
 
         with patch.object(sts, "boto3") as mock_boto3, patch.object(
-            aws_models, "_disable_cloudtrail"
+            aws_models, "_delete_cloudtrail"
         ):
             role = util_helper.generate_dummy_role()
             mock_assume_role = mock_boto3.client.return_value.assume_role
@@ -239,7 +239,7 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         )
 
         with patch.object(sts, "boto3") as mock_boto3, patch.object(
-            aws_models, "_disable_cloudtrail"
+            aws_models, "_delete_cloudtrail"
         ):
             role = util_helper.generate_dummy_role()
             mock_assume_role = mock_boto3.client.return_value.assume_role

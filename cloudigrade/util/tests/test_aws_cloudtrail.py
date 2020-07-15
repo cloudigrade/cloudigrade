@@ -363,41 +363,42 @@ class UtilAwsCloudTrailTest(TestCase):
         with self.assertRaises(ClientError):
             cloudtrail.update_cloudtrail(mock_client, name)
 
-    def test_disable_cloudtrail(self):
-        """Test the disable_cloudtrail function.
+    def test_delete_cloudtrail(self):
+        """Test the delete_cloudtrail function.
 
-        Assert that disable_cloudtrail function returns the response returned
-        from calling the cloudtrail stop_logging function.
+        Assert that delete_cloudtrail function returns the response returned
+        from calling the cloudtrail delete_trail function.
         """
         aws_account_id = helper.generate_dummy_aws_account_id()
         name = "{0}{1}".format(settings.CLOUDTRAIL_NAME_PREFIX, aws_account_id)
 
         mock_session = Mock()
 
+        # This was the real response from a delete_trail call made on 2020-07-15.
         mock_response = {
             "ResponseMetadata": {
-                "RequestId": "398432984738",
+                "RequestId": "cd3513ab-6c5f-490a-b94f-7dea5faa9e40",
                 "HTTPStatusCode": 200,
                 "HTTPHeaders": {
-                    "x-amzn-requestid": "56564546",
+                    "x-amzn-requestid": "cd3513ab-6c5f-490a-b94f-7dea5faa9e40",
                     "content-type": "application/x-amz-json-1.1",
                     "content-length": "2",
-                    "date": "Mon, 24 Sep 2018 18:50:55 GMT",
+                    "date": "Wed, 15 Jul 2020 15:31:25 GMT",
                 },
                 "RetryAttempts": 0,
             }
         }
 
         mock_client = mock_session.client.return_value
-        mock_client.stop_logging.return_value = mock_response
+        mock_client.delete_trail.return_value = mock_response
         expected_value = mock_response
-        actual_value = cloudtrail.disable_cloudtrail(mock_client, name)
+        actual_value = cloudtrail.delete_cloudtrail(mock_client, name)
 
         self.assertEqual(expected_value, actual_value)
 
-    def test_disable_cloudtrail_exception(self):
+    def test_delete_cloudtrail_exception(self):
         """
-        Test the disable_cloudtrail function.
+        Test the delete_cloudtrail function.
 
         Assert that an error is returned when the CloudTrail does not exist.
         """
@@ -409,14 +410,15 @@ class UtilAwsCloudTrailTest(TestCase):
         mock_error = {
             "Error": {
                 "Code": "TrailNotFoundException",
-                "Message": "Unknown trail: {0} for the user "
-                "{1}".format(name, aws_account_id),
+                "Message": "Unknown trail: {0} for the user: {1}".format(
+                    name, aws_account_id
+                ),
             }
         }
 
         mock_client = mock_session.client.return_value
 
-        mock_client.stop_logging.side_effect = ClientError(mock_error, "StopLogging")
+        mock_client.delete_trail.side_effect = ClientError(mock_error, "DeleteTrail")
 
         with self.assertRaises(ClientError):
-            cloudtrail.disable_cloudtrail(mock_client, name)
+            cloudtrail.delete_cloudtrail(mock_client, name)

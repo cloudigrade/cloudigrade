@@ -31,7 +31,7 @@ cloudigrade_policy = {
                 "cloudtrail:PutEventSelectors",
                 "cloudtrail:DescribeTrails",
                 "cloudtrail:StartLogging",
-                "cloudtrail:StopLogging",
+                "cloudtrail:DeleteTrail",
             ],
             "Resource": "*",
         }

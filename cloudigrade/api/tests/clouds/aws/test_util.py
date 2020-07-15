@@ -86,18 +86,18 @@ class CloudsAwsUtilCloudTrailTest(TestCase):
             aws_account_id=aws_account_id, arn=arn, name="test"
         )
 
-    def test_disable_cloudtrail_success(self):
-        """Test disable_cloudtrail normal happy path."""
+    def test_delete_cloudtrail_success(self):
+        """Test delete_cloudtrail normal happy path."""
         with patch.object(util.aws, "get_session"), patch.object(
-            util.aws, "disable_cloudtrail"
-        ) as mock_disable_cloudtrail:
-            success = util.disable_cloudtrail(self.account.content_object)
-            mock_disable_cloudtrail.assert_called()
+            util.aws, "delete_cloudtrail"
+        ) as mock_delete_cloudtrail:
+            success = util.delete_cloudtrail(self.account.content_object)
+            mock_delete_cloudtrail.assert_called()
         self.assertTrue(success)
 
-    def test_disable_cloudtrail_not_found(self):
+    def test_delete_cloudtrail_not_found(self):
         """
-        Test disable_cloudtrail handles when AWS raises an TrailNotFoundException error.
+        Test delete_cloudtrail handles when AWS raises an TrailNotFoundException error.
 
         This could happen if the trail has already been deleted. We treat this as a
         success since the same effective outcome is no trail for us.
@@ -107,16 +107,16 @@ class CloudsAwsUtilCloudTrailTest(TestCase):
             operation_name=Mock(),
         )
         with patch.object(util.aws, "get_session"), patch.object(
-            util.aws, "disable_cloudtrail"
-        ) as mock_disable_cloudtrail:
-            mock_disable_cloudtrail.side_effect = client_error
-            success = util.disable_cloudtrail(self.account.content_object)
-            mock_disable_cloudtrail.assert_called()
+            util.aws, "delete_cloudtrail"
+        ) as mock_delete_cloudtrail:
+            mock_delete_cloudtrail.side_effect = client_error
+            success = util.delete_cloudtrail(self.account.content_object)
+            mock_delete_cloudtrail.assert_called()
         self.assertTrue(success)
 
-    def test_disable_cloudtrail_access_denied(self):
+    def test_delete_cloudtrail_access_denied(self):
         """
-        Test disable_cloudtrail handles when AWS raises an AccessDenied error.
+        Test delete_cloudtrail handles when AWS raises an AccessDenied error.
 
         This could happen if the user has deleted the AWS account or role. We treat this
         as a non-blocking failure and simply log messages.
@@ -125,24 +125,24 @@ class CloudsAwsUtilCloudTrailTest(TestCase):
             error_response={"Error": {"Code": "AccessDenied"}}, operation_name=Mock(),
         )
         expected_warnings = [
-            "encountered AccessDenied and cannot disable cloudtrail",
+            "encountered AccessDenied and cannot delete cloudtrail",
             f"CloudAccount ID {self.account.id}",
         ]
         with self.assertLogs(
             "api.clouds.aws.util", level="WARNING"
         ) as logger, patch.object(util.aws, "get_session"), patch.object(
-            util.aws, "disable_cloudtrail"
-        ) as mock_disable_cloudtrail:
-            mock_disable_cloudtrail.side_effect = client_error
-            success = util.disable_cloudtrail(self.account.content_object)
-            mock_disable_cloudtrail.assert_called()
+            util.aws, "delete_cloudtrail"
+        ) as mock_delete_cloudtrail:
+            mock_delete_cloudtrail.side_effect = client_error
+            success = util.delete_cloudtrail(self.account.content_object)
+            mock_delete_cloudtrail.assert_called()
             for expected_warning in expected_warnings:
                 self.assertIn(expected_warning, logger.output[0])
         self.assertFalse(success)
 
-    def test_disable_cloudtrail_unexpected_error_code(self):
+    def test_delete_cloudtrail_unexpected_error_code(self):
         """
-        Test disable_cloudtrail handles when AWS raises an unexpected error code.
+        Test delete_cloudtrail handles when AWS raises an unexpected error code.
 
         This could happen if AWS is misbehaving unexpectedly. We treat this as a
         non-blocking failure and simply log messages.
@@ -157,11 +157,11 @@ class CloudsAwsUtilCloudTrailTest(TestCase):
         with self.assertLogs(
             "api.clouds.aws.util", level="ERROR"
         ) as logger, patch.object(util.aws, "get_session"), patch.object(
-            util.aws, "disable_cloudtrail"
-        ) as mock_disable_cloudtrail:
-            mock_disable_cloudtrail.side_effect = client_error
-            success = util.disable_cloudtrail(self.account.content_object)
-            mock_disable_cloudtrail.assert_called()
+            util.aws, "delete_cloudtrail"
+        ) as mock_delete_cloudtrail:
+            mock_delete_cloudtrail.side_effect = client_error
+            success = util.delete_cloudtrail(self.account.content_object)
+            mock_delete_cloudtrail.assert_called()
             self.assertIn("Traceback", logger.output[0])  # from logger.exception
             for expected_error in expected_errors:
                 self.assertIn(expected_error, logger.output[1])  # from logger.error

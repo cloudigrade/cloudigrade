@@ -128,7 +128,7 @@ class UtilAwsHelperTest(TestCase):
             call(mock_session, "cloudtrail:PutEventSelectors"),
             call(mock_session, "cloudtrail:DescribeTrails"),
             call(mock_session, "cloudtrail:StartLogging"),
-            call(mock_session, "cloudtrail:StopLogging"),
+            call(mock_session, "cloudtrail:DeleteTrail"),
         ]
         mock_verify_policy_action.side_effect = [
             True,
@@ -169,7 +169,7 @@ class UtilAwsHelperTest(TestCase):
             call(mock_session, "cloudtrail:PutEventSelectors"),
             call(mock_session, "cloudtrail:DescribeTrails"),
             call(mock_session, "cloudtrail:StartLogging"),
-            call(mock_session, "cloudtrail:StopLogging"),
+            call(mock_session, "cloudtrail:DeleteTrail"),
         ]
         mock_verify_policy_action.side_effect = [
             True,

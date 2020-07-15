@@ -226,7 +226,7 @@ class InitialAwsDescribeInstancesTransactionTest(TransactionTestCase):
 
         with util_helper.clouditardis(date_of_disable):
             account.disable()
-            mock_util_aws.disable_cloudtrail.assert_called()
+            mock_util_aws.delete_cloudtrail.assert_called()
 
         # Before calling "start_image_inspection" again, let's change the mocked return
         # values from AWS to include another instance and image. We should ultimately
