@@ -423,6 +423,12 @@ def generate_aws_ami_messages(instances_data, ami_id_list):
                         "image_id": instance["ImageId"],
                     }
                 )
+    # Ensure there is only one of each message.
+    # If there were multiple instances using the same image, the message.append could
+    # have been reached once for *each* of those multiple instances.
+    # Unfortunately, dict objects are not hashable and cannot be de-duped using sets.
+    # So, this ugly comprehension iterates their contents to ensure unique messages.
+    messages = [dict(s) for s in set(frozenset(m.items()) for m in messages)]
     return messages
 
 

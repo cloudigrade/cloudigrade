@@ -35,6 +35,36 @@ class CloudsAwsUtilTest(TestCase):
 
         self.assertEqual(result, expected)
 
+    def test_generate_aws_ami_messages_deduplicate(self):
+        """Test that messages are also deduplicated."""
+        region = util_helper.get_random_region()
+        image_id_1 = util_helper.generate_dummy_image_id()
+        image_id_2 = util_helper.generate_dummy_image_id()
+        instance_1 = util_helper.generate_dummy_describe_instance(image_id=image_id_1)
+        instance_2 = util_helper.generate_dummy_describe_instance(image_id=image_id_1)
+        instance_3 = util_helper.generate_dummy_describe_instance(image_id=image_id_1)
+        instance_4 = util_helper.generate_dummy_describe_instance(image_id=image_id_2)
+        instances_data = {region: [instance_1, instance_2, instance_3, instance_4]}
+        ami_list = [image_id_1, image_id_2]
+
+        expected = [
+            {
+                "cloud_provider": AWS_PROVIDER_STRING,
+                "region": region,
+                "image_id": image_id_1,
+            },
+            {
+                "cloud_provider": AWS_PROVIDER_STRING,
+                "region": region,
+                "image_id": image_id_2,
+            },
+        ]
+
+        result = generate_aws_ami_messages(instances_data, ami_list)
+        self.assertEqual(len(result), len(expected))
+        for message in expected:
+            self.assertIn(message, result)
+
     def test_sqs_wrap_message(self):
         """Test SQS message wrapping."""
         message_decoded = {"hello": "world"}

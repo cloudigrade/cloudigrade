@@ -85,12 +85,7 @@ class InitialAwsDescribeInstancesTest(TestCase):
                 account.content_object.account_arn,
                 described_ami_unknown["ImageId"],
                 region,
-            ),
-            call(
-                account.content_object.account_arn,
-                described_ami_openshift["ImageId"],
-                region,
-            ),
+            )
         ]
 
         with patch.object(tasks, "start_image_inspection") as mock_start:
