@@ -209,6 +209,19 @@ def copy_ami_snapshot(  # noqa: C901
         None: Run as an asynchronous Celery task.
 
     """
+    logger.info(
+        _(
+            "Starting copy_ami_snapshot using ARN %(arn)s for AMI %(ami_id)s "
+            "in region %(snapshot_region)s (reference AMI %(reference_ami_id)s)"
+        ),
+        {
+            "arn": arn,
+            "ami_id": ami_id,
+            "snapshot_region": snapshot_region,
+            "reference_ami_id": reference_ami_id,
+        },
+    )
+
     if reference_ami_id:
         if not AwsMachineImage.objects.filter(ec2_ami_id=reference_ami_id).exists():
             logger.warning(
@@ -369,6 +382,19 @@ def copy_ami_to_customer_account(arn, reference_ami_id, snapshot_region):
         None: Run as an asynchronous Celery task.
 
     """
+    logger.info(
+        _(
+            "Starting copy_ami_to_customer_account using ARN %(arn)s "
+            "for reference AMI %(reference_ami_id)s "
+            "in region %(snapshot_region)s"
+        ),
+        {
+            "arn": arn,
+            "reference_ami_id": reference_ami_id,
+            "snapshot_region": snapshot_region,
+        },
+    )
+
     if not AwsMachineImage.objects.filter(ec2_ami_id=reference_ami_id).exists():
         logger.warning(
             _(
@@ -505,8 +531,17 @@ def create_volume(ami_id, snapshot_copy_id):
     region = aws.get_region_from_availability_zone(zone)
 
     logger.info(
-        _("%(label)s: volume_id=%(volume_id)s, volume_region=%(region)s"),
-        {"label": "create_volume", "volume_id": volume_id, "region": region},
+        _(
+            "%(label)s: ami_id=%(ami_id)s, snapshot_copy_id=%(snapshot_copy_id)s, "
+            "volume_id=%(volume_id)s, volume_region=%(region)s"
+        ),
+        {
+            "label": "create_volume",
+            "ami_id": ami_id,
+            "snapshot_copy_id": snapshot_copy_id,
+            "volume_id": volume_id,
+            "region": region,
+        },
     )
 
     delete_snapshot.delay(snapshot_copy_id, volume_id, region)
@@ -559,6 +594,10 @@ def enqueue_ready_volume(ami_id, volume_id, volume_region):
     messages = [{"ami_id": ami_id, "volume_id": volume_id}]
 
     queue_name = "{0}ready_volumes".format(settings.AWS_NAME_PREFIX)
+    logger.info(
+        _("Adding ready volume to queue %(queue_name)s: %(messages)s"),
+        {"queue_name": queue_name, "messages": messages},
+    )
     add_messages_to_queue(queue_name, messages)
 
 

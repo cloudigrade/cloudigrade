@@ -490,9 +490,33 @@ def start_image_inspection(arn, ami_id, region):
             machine_image.save()
             return machine_image
 
-        MachineImageInspectionStart.objects.create(machineimage=machine_image)
+        start = MachineImageInspectionStart.objects.create(machineimage=machine_image)
+        logger.info(
+            _(
+                "MachineImageInspectionStart %(inspection_start_id)s created for "
+                "MachineImage %(machine_image_id)s (AMI %(ami)s)"
+            ),
+            {
+                "inspection_start_id": start.id,
+                "machine_image_id": machine_image.id,
+                "ami": ami,
+            },
+        )
 
         if machine_image.is_marketplace or machine_image.is_cloud_access:
+            logger.info(
+                _(
+                    "Saving image %(machine_image_id)s for AMI %(ami)s as INSPECTED. "
+                    "is_marketplace is %(is_marketplace)s. "
+                    "is_cloud_access is %(is_cloud_access)s."
+                ),
+                {
+                    "machine_image_id": machine_image.id,
+                    "ami": ami,
+                    "is_marketplace": machine_image.is_marketplace,
+                    "is_cloud_access": machine_image.is_cloud_access,
+                },
+            )
             machine_image.status = machine_image.INSPECTED
             machine_image.save()
         else:
