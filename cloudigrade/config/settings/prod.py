@@ -36,7 +36,7 @@ if env("API_ENABLE_SENTRY", default=False):
         dsn=env("DJANGO_SENTRY_DSN"),
         environment=env("DJANGO_SENTRY_ENVIRONMENT"),
         release=env("DJANGO_SENTRY_RELEASE"),
-        traces_sample_rate=env("SENTRY_TRACES_SAMPLE_RATE", default="0.0"),
+        traces_sample_rate=env.float("SENTRY_TRACES_SAMPLE_RATE", default=0.0),
         integrations=[DjangoIntegration()],
         send_default_pii=True,
     )
