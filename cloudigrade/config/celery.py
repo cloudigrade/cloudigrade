@@ -30,6 +30,7 @@ if env("CELERY_ENABLE_SENTRY", default=False):
         dsn=env("CELERY_SENTRY_DSN"),
         environment=env("CELERY_SENTRY_ENVIRONMENT"),
         release=env("CELERY_SENTRY_RELEASE"),
+        traces_sample_rate=env("SENTRY_TRACES_SAMPLE_RATE", default="0.0"),
         integrations=[CeleryIntegration()],
     )
     logger.info("Sentry setup.")
