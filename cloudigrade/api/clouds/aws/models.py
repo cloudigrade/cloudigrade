@@ -112,8 +112,10 @@ class AwsCloudAccount(BaseModel):
         AWS CloudTrail only upon committing the transaction.  If we cannot delete the
         CloudTrail, we simply log a message and proceed regardless.
         """
+        logger.info(_("Attempting to disable %(account)s"), {"account": self})
         self._disable_verify_task()
         transaction.on_commit(lambda: _delete_cloudtrail(self))
+        logger.info(_("Finished disabling %(account)s"), {"account": self})
 
     def _enable_verify_task(self):
         """Enable the given AwsCloudAccount's Verify Task."""
@@ -176,6 +178,10 @@ def awscloudaccount_post_delete_callback(*args, **kwargs):
 
 def _delete_cloudtrail(aws_cloud_account):
     """Delete the given AwsCloudAccount's AWS CloudTrail."""
+    logger.info(
+        _("Attempting _delete_cloudtrail for %(account)s"),
+        {"account": aws_cloud_account},
+    )
     try:
         cloud_account = aws_cloud_account.cloud_account.get()
         if cloud_account.is_enabled:

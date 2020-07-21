@@ -138,6 +138,7 @@ class CloudAccount(BaseGenericModel):
             notify_sources (bool): determines if we notify sources about this operation.
                 This should always be true except for very special cases.
         """
+        logger.info(_("Attempting to disable %(account)s"), {"account": self})
         if self.is_enabled:
             self.is_enabled = False
             self.save()
@@ -148,6 +149,7 @@ class CloudAccount(BaseGenericModel):
             notify_sources_application_availability(
                 self.user.username, self.platform_application_id, "unavailable", message
             )
+        logger.info(_("Finished disabling %(account)s"), {"account": self})
 
     def _power_off_instances(self, power_off_time):
         """
