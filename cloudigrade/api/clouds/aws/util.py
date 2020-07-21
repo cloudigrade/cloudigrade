@@ -69,6 +69,13 @@ def create_new_machine_images(session, instances_data):
     windows_ami_ids = []
 
     for region_id, instances in instances_data.items():
+        logger.info(
+            _("%(prefix)s: found instances in region %(region_id)s"),
+            {"prefix": log_prefix, "region_id": region_id},
+        )
+        logger.info("%s", instances)
+
+    for region_id, instances in instances_data.items():
         ami_ids = set([instance["ImageId"] for instance in instances])
         new_ami_ids = ami_ids - known_ami_ids
         if new_ami_ids:
@@ -78,6 +85,7 @@ def create_new_machine_images(session, instances_data):
         windows_ami_ids.extend(
             {instance["ImageId"] for instance in instances if aws.is_windows(instance)}
         )
+
     logger.info(
         _("%(prefix)s: Windows AMI IDs found: %(windows_ami_ids)s"),
         {"prefix": log_prefix, "windows_ami_ids": windows_ami_ids},
@@ -92,6 +100,18 @@ def create_new_machine_images(session, instances_data):
             windows = ami_id in windows_ami_ids
             region = region_id
             architecture = described_image.get("Architecture")
+            if not architecture:
+                logger.warning(
+                    _(
+                        "%(prefix)s: No architecture found in region %(region_id)s for "
+                        "described image %(described_image)s"
+                    ),
+                    {
+                        "prefix": log_prefix,
+                        "region_id": region_id,
+                        "described_image": described_image,
+                    },
+                )
 
             tag_keys = [tag.get("Key") for tag in described_image.get("Tags", [])]
             rhel_detected_by_tag = aws.RHEL_TAG in tag_keys
@@ -166,13 +186,21 @@ def save_new_aws_machine_image(
         )
 
         if created:
-            MachineImage.objects.create(
+            logger.info(
+                _("save_new_aws_machine_image created %(awsmachineimage)s"),
+                {"awsmachineimage": awsmachineimage},
+            )
+            machineimage = MachineImage.objects.create(
                 name=name,
                 status=status,
                 rhel_detected_by_tag=rhel_detected_by_tag,
                 openshift_detected=openshift_detected,
                 content_object=awsmachineimage,
                 architecture=architecture,
+            )
+            logger.info(
+                _("save_new_aws_machine_image created %(machineimage)s"),
+                {"machineimage": machineimage},
             )
 
         # This should not be necessary, but we really need this to exist.

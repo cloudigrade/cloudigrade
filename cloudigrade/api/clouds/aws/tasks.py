@@ -167,6 +167,10 @@ def initial_aws_describe_instances(account_id):
         try:
             AwsCloudAccount.objects.get(pk=account_id)
             new_ami_ids = create_new_machine_images(session, instances_data)
+            logger.info(
+                _("Created new machine images include: %(new_ami_ids)s"),
+                {"new_ami_ids": new_ami_ids},
+            )
             create_initial_aws_instance_events(account, instances_data)
         except AwsCloudAccount.DoesNotExist:
             logger.warning(
