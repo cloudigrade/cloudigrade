@@ -952,6 +952,10 @@ def persist_aws_inspection_cluster_results(inspection_results):
                 {"ec2_ami_id": image_id, "inspection_json": image_json},
             )
 
+    general_errors = inspection_results.get("errors", [])
+    for error in general_errors:
+        logger.info(_("General error reported in inspection results: %s"), error)
+
 
 @shared_task
 @rewrap_aws_errors
