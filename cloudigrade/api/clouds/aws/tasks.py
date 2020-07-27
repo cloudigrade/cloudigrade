@@ -939,6 +939,14 @@ def persist_aws_inspection_cluster_results(inspection_results):
         )
 
     for image_id, image_json in images.items():
+        for error in image_json.get("errors", []):
+            logger.info(
+                _(
+                    "Error reported in inspection results for image %(image_id)s: "
+                    "%(error)s"
+                ),
+                {"image_id": image_id, "error": error},
+            )
         save_success = update_aws_image_status_inspected(
             image_id, inspection_json=json.dumps(image_json)
         )

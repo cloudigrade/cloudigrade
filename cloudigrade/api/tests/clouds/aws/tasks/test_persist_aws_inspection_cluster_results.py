@@ -43,6 +43,7 @@ class PersistAwsInspectionClusterResultsTest(TestCase):
                             ]
                         }
                     },
+                    "errors": [],
                 }
             },
         }
@@ -84,6 +85,7 @@ class PersistAwsInspectionClusterResultsTest(TestCase):
                             ]
                         }
                     },
+                    "errors": [],
                 }
             },
         }
@@ -162,3 +164,36 @@ class PersistAwsInspectionClusterResultsTest(TestCase):
         with self.assertRaises(InvalidHoundigradeJsonFormat) as e:
             tasks.persist_aws_inspection_cluster_results(inspection_results)
         self.assertIn(expected_message, str(e.exception))
+
+    def test_persist_aws_inspection_cluster_results_image_has_errors(self):
+        """Assert that inspection results with image errors are logged."""
+        ami_id = util_helper.generate_dummy_image_id()
+        api_helper.generate_aws_image(
+            is_encrypted=False, is_windows=False, ec2_ami_id=ami_id
+        )
+
+        error_message = _faker.sentence()
+        inspection_results = {
+            "cloud": "aws",
+            "images": {
+                ami_id: {
+                    "rhel_found": False,
+                    "rhel_version": None,
+                    "syspurpose": None,
+                    "errors": [error_message],
+                }
+            },
+        }
+
+        with self.assertLogs("api.clouds.aws.tasks", level="INFO") as logging_watcher:
+            tasks.persist_aws_inspection_cluster_results(inspection_results)
+            self.assertIn(
+                "Error reported in inspection results for image",
+                logging_watcher.output[0],
+            )
+            self.assertIn(ami_id, logging_watcher.output[0])
+            self.assertIn(error_message, logging_watcher.output[0])
+
+        aws_machine_image = AwsMachineImage.objects.get(ec2_ami_id=ami_id)
+        machine_image = aws_machine_image.machine_image.get()
+        self.assertFalse(machine_image.rhel_detected)
