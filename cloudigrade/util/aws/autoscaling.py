@@ -1,7 +1,12 @@
 """Helper utility module to wrap up common AWS AutoScaling operations."""
+import logging
+
 import boto3
+from django.utils.translation import gettext as _
 
 from util.exceptions import AwsAutoScalingGroupNotFound
+
+logger = logging.getLogger(__name__)
 
 
 def describe_auto_scaling_group(name):
@@ -61,6 +66,18 @@ def set_scale(name, min_size, max_size, desired_capacity):
         dict: AWS response metadata
 
     """
+    logger.info(
+        _(
+            "Updating %(name)s autoscaling to "
+            "min %(min_size)s max %(max_size)s desired %(desired_capacity)s"
+        ),
+        {
+            "name": name,
+            "min_size": min_size,
+            "max_size": max_size,
+            "desired_capacity": desired_capacity,
+        },
+    )
     autoscaling = boto3.client("autoscaling")
     response = autoscaling.update_auto_scaling_group(
         AutoScalingGroupName=name,
