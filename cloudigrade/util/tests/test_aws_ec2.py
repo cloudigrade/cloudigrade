@@ -23,7 +23,7 @@ from util.tests import helper
 class UtilAwsEc2Test(TestCase):
     """AWS EC2 utility functions test case."""
 
-    def test_describe_all_instances(self):
+    def test_describe_instances_everywhere(self):
         """
         Assert we get expected instances in a dict keyed by regions.
 
@@ -53,11 +53,18 @@ class UtilAwsEc2Test(TestCase):
         mock_stopped_instance_2 = helper.generate_dummy_describe_instance(
             state=ec2.InstanceState.stopped
         )
+        mock_terminated_instance_1 = helper.generate_dummy_describe_instance(
+            state=ec2.InstanceState.terminated
+        )
+        mock_terminated_instance_2 = helper.generate_dummy_describe_instance(
+            state=ec2.InstanceState.terminated
+        )
+
         mock_described = {
             "Reservations": [
-                {"Instances": [mock_running_instance_1, mock_stopped_instance_1,],},
-                {"Instances": [mock_running_instance_2,],},
-                {"Instances": [mock_stopped_instance_2,],},
+                {"Instances": [mock_running_instance_1, mock_stopped_instance_1]},
+                {"Instances": [mock_terminated_instance_1, mock_running_instance_2]},
+                {"Instances": [mock_stopped_instance_2, mock_terminated_instance_2]},
             ],
         }
 

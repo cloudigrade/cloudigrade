@@ -59,6 +59,16 @@ def describe_instances_everywhere(session):
     """
     Describe all EC2 instances visible to the given ARN in every known region.
 
+    Note:
+        When we collect and return the results of the AWS describe calls, we now
+        specifically exclude instances that have the terminated state. Although we
+        should be able to extract useful data from them, in our integration tests when
+        we are rapidly creating and terminating EC2 instances, it has been confusing to
+        see data from terminated instances from a previous test affect later tests.
+        There does not appear to be a convenient way to handle this in those tests since
+        AWS also takes an unknown length of time to actually remove terminated
+        instances. So, we are "solving" this problem here by unilaterally ignoring them.
+
     Args:
         session (boto3.Session): A temporary session tied to a customer account
 
@@ -75,7 +85,12 @@ def describe_instances_everywhere(session):
         running_instances[region_name] = list()
         for reservation in instances.get("Reservations", []):
             running_instances[region_name].extend(
-                [instance for instance in reservation.get("Instances", [])]
+                [
+                    instance
+                    for instance in reservation.get("Instances", [])
+                    if instance.get("State", {}).get("Code", None)
+                    != InstanceState.terminated.value
+                ]
             )
 
     return running_instances
