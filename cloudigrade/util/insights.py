@@ -298,6 +298,10 @@ def notify_sources_application_availability(
     headers = generate_http_identity_headers(account_number, is_org_admin=True)
     response = requests.patch(url, headers=headers, data=json.dumps(payload))
 
+    logger.debug(
+        _("Notify sources response: %(response)s"), {"response": response.json()},
+    )
+
     if response.status_code == http.HTTPStatus.NOT_FOUND:
         logger.info(
             _(
