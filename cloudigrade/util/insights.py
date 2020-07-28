@@ -299,7 +299,8 @@ def notify_sources_application_availability(
     response = requests.patch(url, headers=headers, data=json.dumps(payload))
 
     logger.debug(
-        _("Notify sources response: %(response)s"), {"response": response.json()},
+        _("Notify sources response: %(code)s - %(response)s"),
+        {"code": response.status_code, "response": response.content},
     )
 
     if response.status_code == http.HTTPStatus.NOT_FOUND:
