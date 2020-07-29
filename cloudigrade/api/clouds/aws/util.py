@@ -823,6 +823,26 @@ def create_aws_cloud_account(
         CloudAccount the created cloud account.
 
     """
+    logger.info(
+        _(
+            "Creating an AwsCloudAccount. "
+            "user=%(user)s customer_role_arn=%(customer_role_arn)s) "
+            "cloud_account_name=%(cloud_account_name)s) "
+            "platform_authentication_id=%(platform_authentication_id)s "
+            "platform_application_id=%(platform_application_id)s "
+            "platform_endpoint_id=%(platform_endpoint_id)s "
+            "platform_source_id=%(platform_source_id)s"
+        ),
+        {
+            "user": user,
+            "customer_role_arn": customer_role_arn,
+            "cloud_account_name": cloud_account_name,
+            "platform_authentication_id": platform_authentication_id,
+            "platform_application_id": platform_application_id,
+            "platform_endpoint_id": platform_endpoint_id,
+            "platform_source_id": platform_source_id,
+        },
+    )
     aws_account_id = aws.AwsArn(customer_role_arn).account_id
     arn_str = str(customer_role_arn)
 
@@ -928,6 +948,26 @@ def update_aws_cloud_account(
         endpoint_id (str): Platform Sources' Endpoint object id
         source_id (str): Platform Sources' Source object id
     """
+    logger.info(
+        _(
+            "Updating an AwsCloudAccount. "
+            "cloud_account=%(cloud_account)s, "
+            "customer_arn=%(customer_arn)s, "
+            "account_number=%(account_number)s, "
+            "authentication_id=%(authentication_id)s, "
+            "endpoint_id=%(endpoint_id)s, "
+            "source_id=%(source_id)s"
+        ),
+        {
+            "cloud_account": cloud_account,
+            "customer_arn": customer_arn,
+            "account_number": account_number,
+            "authentication_id": authentication_id,
+            "endpoint_id": endpoint_id,
+            "source_id": source_id,
+        },
+    )
+
     customer_aws_account_id = aws.AwsArn(customer_arn).account_id
     application_id = cloud_account.platform_application_id
 
