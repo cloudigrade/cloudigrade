@@ -826,11 +826,12 @@ def create_aws_cloud_account(
     logger.info(
         _(
             "Creating an AwsCloudAccount. "
-            "user=%(user)s customer_role_arn=%(customer_role_arn)s) "
-            "cloud_account_name=%(cloud_account_name)s) "
-            "platform_authentication_id=%(platform_authentication_id)s "
-            "platform_application_id=%(platform_application_id)s "
-            "platform_endpoint_id=%(platform_endpoint_id)s "
+            "user=%(user)s, "
+            "customer_role_arn=%(customer_role_arn)s, "
+            "cloud_account_name=%(cloud_account_name)s, "
+            "platform_authentication_id=%(platform_authentication_id)s, "
+            "platform_application_id=%(platform_application_id)s, "
+            "platform_endpoint_id=%(platform_endpoint_id)s, "
             "platform_source_id=%(platform_source_id)s"
         ),
         {
