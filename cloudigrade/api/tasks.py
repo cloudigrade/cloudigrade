@@ -461,6 +461,8 @@ def persist_inspection_cluster_results_task():
 
     if successes or failures:
         scale_down_cluster.delay()
+    else:
+        logger.info("No inspection results found.")
 
     return successes, failures
 
