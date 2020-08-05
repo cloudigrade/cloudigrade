@@ -641,3 +641,39 @@ class ConcurrentUsage(BaseModel):
             f"updated_at={updated_at}"
             f")"
         )
+
+
+class ConcurrentUsageCalculationTask(BaseModel):
+    """Model for tracking concurrent usage tasks."""
+
+    SCHEDULED = "SCHEDULED"
+    RUNNING = "RUNNING"
+    COMPLETE = "COMPLETE"
+    CANCELED = "CANCELED"
+    ERROR = "ERROR"
+
+    STATUS_CHOICES = (
+        (SCHEDULED, "Task has been scheduled"),
+        (RUNNING, "Task is running"),
+        (COMPLETE, "Task is completed"),
+        (CANCELED, "Task is canceled"),
+        (ERROR, "Task has encountered an error"),
+    )
+    status = models.CharField(max_length=32, choices=STATUS_CHOICES, default=SCHEDULED)
+
+    task_id = models.TextField(unique=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, db_index=True)
+    date = models.DateField(db_index=True)
+
+    def cancel(self):
+        """Revokes the task if it is not currently running."""
+        logger.info(
+            "Revoking task to calculate concurrent usage for user_id: "
+            "%(user_id)s and date: %(date)s. This task will be marked as canceled."
+            % {"user_id": self.user.id, "date": self.date}
+        )
+        from celery import current_app
+
+        current_app.control.revoke(self.task_id)
+        self.status = self.CANCELED
+        self.save()

@@ -829,7 +829,7 @@ def create_aws_cloud_account(
             "platform_source_id=%(platform_source_id)s"
         ),
         {
-            "user": user,
+            "user": user.username,
             "customer_role_arn": customer_role_arn,
             "cloud_account_name": cloud_account_name,
             "platform_authentication_id": platform_authentication_id,

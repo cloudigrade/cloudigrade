@@ -18,9 +18,12 @@ from util.tests import helper as util_helper
 class InitialAwsDescribeInstancesTest(TestCase):
     """Celery task 'initial_aws_describe_instances' test cases."""
 
+    @patch("api.tasks.calculate_max_concurrent_usage_task")
     @patch("api.clouds.aws.tasks.aws")
     @patch("api.clouds.aws.util.aws")
-    def test_initial_aws_describe_instances(self, mock_util_aws, mock_aws):
+    def test_initial_aws_describe_instances(
+        self, mock_util_aws, mock_aws, mock_calculate_concurrent_usage_task
+    ):
         """
         Test happy-path behaviors of initial_aws_describe_instances.
 
@@ -166,11 +169,16 @@ class InitialAwsDescribeInstancesTest(TestCase):
 class InitialAwsDescribeInstancesTransactionTest(TransactionTestCase):
     """Test cases for 'initial_aws_describe_instances', but with transactions."""
 
+    @patch("api.util.schedule_concurrent_calculation_task")
     @patch("api.models.notify_sources_application_availability")
     @patch("api.clouds.aws.tasks.aws")
     @patch("api.clouds.aws.util.aws")
     def test_initial_aws_describe_instances_after_disable_enable(
-        self, mock_util_aws, mock_aws, mock_sources_notify
+        self,
+        mock_util_aws,
+        mock_aws,
+        mock_sources_notify,
+        mock_schedule_concurrent_calculation_task,
     ):
         """
         Test calling initial_aws_describe_instances multiple times.

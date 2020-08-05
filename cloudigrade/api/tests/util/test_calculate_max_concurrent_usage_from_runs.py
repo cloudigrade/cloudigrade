@@ -1,11 +1,16 @@
 """Tests for api.util.calculate_max_concurrent_usage_from_runs."""
 import datetime
+from unittest.mock import MagicMock, patch
 
+from dateutil import tz
 from django.test import TestCase
 
-from api.models import ConcurrentUsage
+from api.models import ConcurrentUsage, ConcurrentUsageCalculationTask
 from api.tests import helper as api_helper
-from api.util import calculate_max_concurrent_usage_from_runs
+from api.util import (
+    calculate_max_concurrent_usage,
+    calculate_max_concurrent_usage_from_runs,
+)
 from util.misc import get_today
 from util.tests import helper as util_helper
 
@@ -56,13 +61,17 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
         for actual, expected in zip(sorted_actual_counts, sorted_expected_counts):
             self.assertEqual(actual, expected)
 
-    def test_one_clount_one_run_one_day(self):
+    @patch("api.util.schedule_concurrent_calculation_task")
+    def test_one_clount_one_run_one_day(self, mock_schedule_concurrent_task):
         """
         Test with one clount having one run in one day.
 
         This should result in two usages: one is for the user+clount and one is
         for the user+no clount.
         """
+        # Calculate the runs directly instead of scheduling a task for testing purposes
+        mock_schedule_concurrent_task.side_effect = calculate_max_concurrent_usage
+
         instance = api_helper.generate_aws_instance(self.account, image=self.image_rhel)
         run = api_helper.generate_single_run(
             instance,
@@ -108,7 +117,8 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
             expected_counts=expected_counts,
         )
 
-    def test_one_clount_one_run_two_days(self):
+    @patch("api.util.schedule_concurrent_calculation_task")
+    def test_one_clount_one_run_two_days(self, mock_schedule_concurrent_task):
         """
         Test with one clount having one run spanning two days.
 
@@ -118,6 +128,9 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
         - day 2 user and clount
         - day 2 user and no clount
         """
+        # Calculate the runs directly instead of scheduling a task for testing purposes
+        mock_schedule_concurrent_task.side_effect = calculate_max_concurrent_usage
+
         instance = api_helper.generate_aws_instance(self.account, image=self.image_rhel)
         run = api_helper.generate_single_run(
             instance,
@@ -169,7 +182,10 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
             expected_counts=expected_counts,
         )
 
-    def test_one_clount_one_run_with_no_end_two_days(self):
+    @patch("api.util.schedule_concurrent_calculation_task")
+    def test_one_clount_one_run_with_no_end_two_days(
+        self, mock_schedule_concurrent_task
+    ):
         """
         Test with one clount having one run starting yesterday and no end.
 
@@ -181,6 +197,9 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
         - today user and clount
         - today user and no clount
         """
+        # Calculate the runs directly instead of scheduling a task for testing purposes
+        mock_schedule_concurrent_task.side_effect = calculate_max_concurrent_usage
+
         instance = api_helper.generate_aws_instance(self.account, image=self.image_rhel)
         today = get_today()
         yesterday = today - datetime.timedelta(days=1)
@@ -236,8 +255,14 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
             expected_counts=expected_counts,
         )
 
-    def test_new_later_dates_ignore_older_dates_data(self):
+    @patch("api.util.schedule_concurrent_calculation_task")
+    def test_new_later_dates_ignore_older_dates_data(
+        self, mock_schedule_concurrent_task
+    ):
         """Test calculating from later run dates should ignore older data."""
+        # Calculate the runs directly instead of scheduling a task for testing purposes
+        mock_schedule_concurrent_task.side_effect = calculate_max_concurrent_usage
+
         instance = api_helper.generate_aws_instance(self.account, image=self.image_rhel)
         old_run = api_helper.generate_single_run(
             instance,
@@ -270,13 +295,19 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
         self.assertEqual(len(new_usages), 2)
         self.assertEqual(new_usages[0], old_usages[0])
 
-    def test_same_date_new_run_causes_deletion_and_recreation(self):
+    @patch("api.util.schedule_concurrent_calculation_task")
+    def test_same_date_new_run_causes_deletion_and_recreation(
+        self, mock_schedule_concurrent_task
+    ):
         """
         Test calculation from a run on the same day deletes and recalculates.
 
         In this case, the new run also overlaps the old run, and that means the
         new calculated results should also have greater numbers than the old.
         """
+        # Calculate the runs directly instead of scheduling a task for testing purposes
+        mock_schedule_concurrent_task.side_effect = calculate_max_concurrent_usage
+
         instance = api_helper.generate_aws_instance(self.account, image=self.image_rhel)
         old_run = api_helper.generate_single_run(
             instance,
@@ -341,3 +372,83 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
             user=self.user,
             expected_counts=expected_counts,
         )
+
+    @patch("api.util.schedule_concurrent_calculation_task")
+    def test_concurrent_usage_tasks_exists(self, mock_schedule_concurrent_task):
+        """Test that new concurrent calc task is scheduled even if one exists."""
+        concurrent_task = ConcurrentUsageCalculationTask(
+            date=datetime.date(2019, 5, 1), user_id=self.user.id, task_id="test123"
+        )
+        concurrent_task.status = ConcurrentUsageCalculationTask.COMPLETE
+        concurrent_task.save()
+
+        instance = api_helper.generate_aws_instance(self.account, image=self.image_rhel)
+        run = api_helper.generate_single_run(
+            instance,
+            (
+                util_helper.utc_dt(2019, 5, 1, 1, 0, 0),
+                util_helper.utc_dt(2019, 5, 1, 2, 0, 0),
+            ),
+            image=instance.machine_image,
+            instance_type=self.instance_type_small,
+            calculate_concurrent_usage=False,
+        )
+        calculate_max_concurrent_usage_from_runs([run])
+        mock_schedule_concurrent_task.assert_called()
+
+    @patch("api.util.get_last_scheduled_concurrent_usage_calculation_task")
+    @patch("api.util.schedule_concurrent_calculation_task")
+    def test_concurrent_usage_task_scheduled_expired(
+        self,
+        mock_schedule_concurrent_task,
+        mock_get_last_scheduled_concurrent_usage_calculation_task,
+    ):
+        """Test that new concurrent calc task is scheduled if old one is expired."""
+        concurrent_task = ConcurrentUsageCalculationTask(
+            date=datetime.date(2019, 5, 1), user_id=self.user.id, task_id="test123"
+        )
+        concurrent_task.status = ConcurrentUsageCalculationTask.SCHEDULED
+        concurrent_task.created_at = datetime.datetime(2019, 5, 1, tzinfo=tz.tzutc())
+        concurrent_task.cancel = MagicMock(name="cancel")
+
+        mock_get_last_scheduled_concurrent_usage_calculation_task.return_value = (
+            concurrent_task
+        )
+
+        instance = api_helper.generate_aws_instance(self.account, image=self.image_rhel)
+        run = api_helper.generate_single_run(
+            instance,
+            (
+                util_helper.utc_dt(2019, 5, 1, 1, 0, 0),
+                util_helper.utc_dt(2019, 5, 1, 2, 0, 0),
+            ),
+            image=instance.machine_image,
+            instance_type=self.instance_type_small,
+            calculate_concurrent_usage=False,
+        )
+        calculate_max_concurrent_usage_from_runs([run])
+        mock_schedule_concurrent_task.assert_called()
+        concurrent_task.cancel.assert_called()
+
+    @patch("api.util.schedule_concurrent_calculation_task")
+    def test_concurrent_usage_tasks_scheduled(self, mock_schedule_concurrent_task):
+        """Test concurrent calc task is not scheduled if one is already scheduled."""
+        concurrent_task = ConcurrentUsageCalculationTask(
+            date=datetime.date(2019, 5, 1), user_id=self.user.id, task_id="test123"
+        )
+        concurrent_task.status = ConcurrentUsageCalculationTask.SCHEDULED
+        concurrent_task.save()
+
+        instance = api_helper.generate_aws_instance(self.account, image=self.image_rhel)
+        run = api_helper.generate_single_run(
+            instance,
+            (
+                util_helper.utc_dt(2019, 5, 1, 1, 0, 0),
+                util_helper.utc_dt(2019, 5, 1, 2, 0, 0),
+            ),
+            image=instance.machine_image,
+            instance_type=self.instance_type_small,
+            calculate_concurrent_usage=False,
+        )
+        calculate_max_concurrent_usage_from_runs([run])
+        mock_schedule_concurrent_task.assert_not_called()

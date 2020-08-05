@@ -362,6 +362,9 @@ CELERY_TASK_ROUTES = {
     "api.clouds.aws.tasks.run_inspection_cluster": {"queue": "run_inspection_cluster"},
     "api.clouds.aws.tasks.scale_down_cluster": {"queue": "scale_down_cluster"},
     "api.clouds.aws.tasks.analyze_log": {"queue": "analyze_log"},
+    "api.tasks.calculate_max_concurrent_usage": {
+        "queue": "calculate_max_concurrent_usage"
+    },
 }
 # Remember: the "schedule" values are integer numbers of seconds.
 CELERY_BEAT_SCHEDULE = {
@@ -393,6 +396,11 @@ CELERY_BEAT_SCHEDULE = {
         ),
     },
 }
+
+# Delay in seconds for concurrent usage calculation
+CONCURRENT_USAGE_CALCULATION_DELAY = env(
+    "CONCURRENT_USAGE_CALCULATION_DELAY", default=30 * 60
+)
 
 # Misc Config Values
 CLOUDIGRADE_VERSION = env("CLOUDIGRADE_VERSION", default=None)

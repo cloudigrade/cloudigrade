@@ -125,6 +125,18 @@ class SourcesAPINotJsonContent(SourcesAPIException):
     """Raise when Sources API returns not-JSON content."""
 
 
+class ResultsUnavailable(APIException):
+    """
+    Raise when results are temporarily unavailable.
+
+    See https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/425
+    """
+
+    status_code = 425
+    default_detail = "Results are currently unavailable, try again later."
+    default_code = "result_unavailable"
+
+
 def api_exception_handler(exc, context):
     """
     Log exception and return an appropriately formatted response.

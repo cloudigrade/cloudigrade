@@ -7,6 +7,7 @@ from django.test import TestCase
 from api import tasks
 from api.models import InstanceEvent, Run
 from api.tests import helper as api_helper
+from api.util import calculate_max_concurrent_usage
 from util.tests import helper as util_helper
 
 _faker = faker.Faker()
@@ -26,8 +27,11 @@ class ProcessInstanceEventTest(TestCase):
         )
         api_helper.generate_aws_ec2_definitions()
 
+    @patch("api.util.schedule_concurrent_calculation_task")
     @util_helper.clouditardis(util_helper.utc_dt(2018, 1, 15, 0, 0, 0))
-    def test_process_instance_event_recalculate_runs(self):
+    def test_process_instance_event_recalculate_runs(
+        self, mock_schedule_concurrent_task
+    ):
         """
         Test that we recalculate runs when new instance events occur.
 
@@ -38,6 +42,9 @@ class ProcessInstanceEventTest(TestCase):
             [ ############ ]
 
         """
+        # Calculate the runs directly instead of scheduling a task for testing purposes
+        mock_schedule_concurrent_task.side_effect = calculate_max_concurrent_usage
+
         instance = api_helper.generate_aws_instance(self.account)
 
         started_at = util_helper.utc_dt(2018, 1, 2, 0, 0, 0)
@@ -65,9 +72,12 @@ class ProcessInstanceEventTest(TestCase):
         self.assertEqual(started_at, runs[0].start_time)
         self.assertEqual(occurred_at, runs[0].end_time)
 
+    @patch("api.util.schedule_concurrent_calculation_task")
     @patch("api.tasks.recalculate_runs")
     @util_helper.clouditardis(util_helper.utc_dt(2018, 1, 12, 0, 0, 0))
-    def test_process_instance_event_new_run(self, mock_recalculate_runs):
+    def test_process_instance_event_new_run(
+        self, mock_recalculate_runs, mock_schedule_concurrent_task
+    ):
         """
         Test new run is created if it occurred after all runs and is power on.
 
@@ -80,6 +90,9 @@ class ProcessInstanceEventTest(TestCase):
             [ ####    #-----]
 
         """
+        # Calculate the runs directly instead of scheduling a task for testing purposes
+        mock_schedule_concurrent_task.side_effect = calculate_max_concurrent_usage
+
         instance = api_helper.generate_aws_instance(self.account)
 
         run_time = (
@@ -104,8 +117,14 @@ class ProcessInstanceEventTest(TestCase):
         # Since we're adding a new run, recalculate_runs shouldn't be called
         mock_recalculate_runs.assert_not_called()
 
+    @patch("api.util.get_last_scheduled_concurrent_usage_calculation_task")
+    @patch("api.tasks.calculate_max_concurrent_usage_task")
     @util_helper.clouditardis(util_helper.utc_dt(2018, 1, 10, 0, 0, 0))
-    def test_process_instance_event_duplicate_start(self):
+    def test_process_instance_event_duplicate_start(
+        self,
+        mock_calculate_concurrent_usage_task,
+        mock_get_last_scheduled_concurrent_usage_calculation_task,
+    ):
         """
         Test that recalculate works when a duplicate start event is introduced.
 

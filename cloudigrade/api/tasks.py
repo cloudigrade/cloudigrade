@@ -33,12 +33,14 @@ from api.clouds.aws.tasks import (
 from api.clouds.aws.util import start_image_inspection, update_aws_cloud_account
 from api.models import (
     CloudAccount,
+    ConcurrentUsageCalculationTask,
     Instance,
     InstanceEvent,
     MachineImage,
     Run,
 )
 from api.util import (
+    calculate_max_concurrent_usage,
     calculate_max_concurrent_usage_from_runs,
     normalize_runs,
     recalculate_runs,
@@ -508,3 +510,61 @@ def inspect_pending_images():
         ami_id = image.content_object.ec2_ami_id
         region = instance.content_object.region
         start_image_inspection(arn, ami_id, region)
+
+
+@shared_task(bind=True, default_retry_delay=settings.CONCURRENT_USAGE_CALCULATION_DELAY)
+def calculate_max_concurrent_usage_task(self, date, user_id):
+    """
+    Schedule a task to calculate maximum concurrent usage of RHEL instances.
+
+    Args:
+        date (datetime.date): the day during which we are measuring usage
+        user_id (int): required filter on user
+
+    Returns:
+        ConcurrentUsage for the given date and user ID.
+
+    """
+    # If the user does not exist, all the related ConcurrentUsage
+    # objects should also have been removed, so we can exit early.
+    if not User.objects.filter(id=user_id).exists():
+        return
+
+    # If there is already an calculate_max_concurrent_usage running for given
+    # user and date, then retry this task later.
+    if ConcurrentUsageCalculationTask.objects.filter(
+        date=date, user__id=user_id, status=ConcurrentUsageCalculationTask.RUNNING
+    ):
+        logger.info(
+            "calculate_max_concurrent_usage_task for user_id %(user_id)s "
+            "and date %(date)s is already running. The current task will "
+            "be retried later.",
+            {"user_id": user_id, "date": date},
+        )
+        self.retry()
+
+    logger.info(
+        "Running calculate_max_concurrent_usage_task for user_id %(user_id)s "
+        "and date %(date)s.",
+        {"user_id": user_id, "date": date},
+    )
+    # Set task to running
+    task_id = self.request.id
+    calculation_task = ConcurrentUsageCalculationTask.objects.get(task_id=task_id)
+    calculation_task.status = ConcurrentUsageCalculationTask.RUNNING
+    calculation_task.save()
+
+    try:
+        calculate_max_concurrent_usage(date, user_id)
+    except Exception:
+        calculation_task.status = ConcurrentUsageCalculationTask.ERROR
+        calculation_task.save()
+        raise
+
+    calculation_task.status = ConcurrentUsageCalculationTask.COMPLETE
+    calculation_task.save()
+    logger.info(
+        "Completed calculate_max_concurrent_usage_task for user_id %(user_id)s "
+        "and date %(date)s.",
+        {"user_id": user_id, "date": date},
+    )

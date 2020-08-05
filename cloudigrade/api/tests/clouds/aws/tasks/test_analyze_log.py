@@ -37,6 +37,7 @@ class AnalyzeLogTest(TestCase):
         helper.generate_aws_ec2_definitions()
 
     @util_helper.clouditardis(util_helper.utc_dt(2018, 1, 5, 0, 0, 0))
+    @patch("api.util.schedule_concurrent_calculation_task")
     @patch("api.clouds.aws.tasks.start_image_inspection")
     @patch("api.clouds.aws.tasks.aws.get_session")
     @patch("api.clouds.aws.tasks.aws.delete_messages_from_queue")
@@ -53,6 +54,7 @@ class AnalyzeLogTest(TestCase):
         mock_del,
         mock_session,
         mock_inspection,
+        mock_schedule_concurrent_calculation_task,
     ):
         """
         Analyze CloudTrail records for one instance doing various things.
@@ -222,6 +224,7 @@ class AnalyzeLogTest(TestCase):
         self.assertEqual(image.machine_image.get().status, MachineImage.PENDING)
 
     @util_helper.clouditardis(util_helper.utc_dt(2018, 1, 3, 0, 0, 0))
+    @patch("api.tasks.calculate_max_concurrent_usage_task")
     @patch("api.clouds.aws.tasks.start_image_inspection")
     @patch("api.clouds.aws.tasks.aws.get_session")
     @patch("api.clouds.aws.tasks.aws.delete_messages_from_queue")
@@ -238,6 +241,7 @@ class AnalyzeLogTest(TestCase):
         mock_del,
         mock_session,
         mock_inspection,
+        mock_calculate_concurrent_usage_task,
     ):
         """
         Analyze CloudTrail records for a Windows instance.
@@ -331,6 +335,7 @@ class AnalyzeLogTest(TestCase):
         self.assertEqual(image.platform, image.WINDOWS)
 
     @util_helper.clouditardis(util_helper.utc_dt(2018, 1, 3, 0, 0, 0))
+    @patch("api.tasks.calculate_max_concurrent_usage_task")
     @patch("api.clouds.aws.tasks.start_image_inspection")
     @patch("api.clouds.aws.tasks.aws.get_session")
     @patch("api.clouds.aws.tasks.aws.delete_messages_from_queue")
@@ -347,6 +352,7 @@ class AnalyzeLogTest(TestCase):
         mock_del,
         mock_session,
         mock_inspection,
+        mock_calculate_max_concurrent_usage_task,
     ):
         """
         Analyze CloudTrail records for a new instance with an image we know.
@@ -422,6 +428,7 @@ class AnalyzeLogTest(TestCase):
         self.assertIsNone(runs[0].end_time)
 
     @util_helper.clouditardis(util_helper.utc_dt(2018, 1, 3, 0, 0, 0))
+    @patch("api.tasks.calculate_max_concurrent_usage_task")
     @patch("api.clouds.aws.tasks.start_image_inspection")
     @patch("api.clouds.aws.tasks.aws.get_session")
     @patch("api.clouds.aws.tasks.aws.delete_messages_from_queue")
@@ -438,6 +445,7 @@ class AnalyzeLogTest(TestCase):
         mock_del,
         mock_session,
         mock_inspection,
+        mock_calculate_concurrent_usage_task,
     ):
         """
         Analyze CloudTrail records to start an instance with a known image.
@@ -533,6 +541,7 @@ class AnalyzeLogTest(TestCase):
         self.assertIsNone(runs[0].end_time)
 
     @util_helper.clouditardis(util_helper.utc_dt(2018, 1, 3, 0, 0, 0))
+    @patch("api.tasks.calculate_max_concurrent_usage_task")
     @patch("api.clouds.aws.tasks.start_image_inspection")
     @patch("api.clouds.aws.tasks.aws.get_session")
     @patch("api.clouds.aws.tasks.aws.delete_messages_from_queue")
@@ -549,6 +558,7 @@ class AnalyzeLogTest(TestCase):
         mock_del,
         mock_session,
         mock_inspection,
+        mock_calculate_concurrent_usage_task,
     ):
         """
         Analyze CloudTrail records for an instance with an unavailable image.

@@ -30,6 +30,7 @@ from api.models import (
     Run,
 )
 from api.util import (
+    calculate_max_concurrent_usage,
     calculate_max_concurrent_usage_from_runs,
     recalculate_runs,
 )
@@ -692,7 +693,12 @@ def generate_single_run(
             no_instance_type=no_instance_type,
         )
     if calculate_concurrent_usage:
-        calculate_max_concurrent_usage_from_runs([run])
+        # Calculate the runs directly instead of scheduling a task for testing purposes
+        with patch(
+            "api.util.schedule_concurrent_calculation_task"
+        ) as mock_schedule_concurrent_task:
+            mock_schedule_concurrent_task.side_effect = calculate_max_concurrent_usage
+            calculate_max_concurrent_usage_from_runs([run])
     return run
 
 
