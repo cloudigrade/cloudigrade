@@ -57,11 +57,26 @@ LOGGING = {
             "handlers": ["console",],
             "level": env("DJANGO_ALL_LOG_LEVEL", default="INFO"),
         },
+        "api": {
+            "handlers": ["console",],
+            "level": env("CLOUDIGRADE_LOG_LEVEL", default="INFO"),
+            "propagate": False,
+        },
+        "config": {
+            "handlers": ["console",],
+            "level": env("CLOUDIGRADE_LOG_LEVEL", default="INFO"),
+            "propagate": False,
+        },
+        "util": {
+            "handlers": ["console",],
+            "level": env("CLOUDIGRADE_LOG_LEVEL", default="INFO"),
+            "propagate": False,
+        },
         "django": {
             "handlers": ["console",],
             "level": env("DJANGO_LOG_LEVEL", default="INFO"),
-            'propagate': False,
-        }
+            "propagate": False,
+        },
     },
 }
 
