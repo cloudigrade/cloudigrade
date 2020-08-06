@@ -15,6 +15,7 @@ from api import models
 from api.clouds.aws import models as aws_models
 from api.tests import helper
 from util import aws
+from util.exceptions import MaximumNumberOfTrailsExceededException
 from util.tests import helper as util_helper
 
 logger = logging.getLogger(__name__)
@@ -156,18 +157,14 @@ class AwsCloudAccountModelTest(TransactionTestCase, ModelStrTestMixin):
         ) as mock_initial_aws_describe_instances, util_helper.clouditardis(
             enable_date
         ):
-            mock_cloudtrail.side_effect = ClientError(
-                error_response={
-                    "Error": {"Code": "MaximumNumberOfTrailsExceededException",}
-                },
-                operation_name="MaximumNumberOfTrailsExceededException",
+            mock_cloudtrail.side_effect = MaximumNumberOfTrailsExceededException(
+                "MaximumNumberOfTrailsExceededException",
             )
             mock_verify.return_value = (True, "")
             with self.assertLogs("api.clouds.aws.util", level="WARNING") as cm:
                 self.account.enable()
                 self.assertIn(
-                    mock_cloudtrail.side_effect.response["Error"]["Code"],
-                    cm.records[1].message,
+                    str(mock_cloudtrail.side_effect.detail), cm.records[1].message,
                 )
             mock_cloudtrail.assert_called()
             mock_initial_aws_describe_instances.delay.assert_not_called()

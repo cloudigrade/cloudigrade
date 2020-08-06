@@ -24,6 +24,7 @@ from api.models import (
     MachineImageInspectionStart,
 )
 from util import aws
+from util.exceptions import MaximumNumberOfTrailsExceededException
 from util.misc import get_now
 
 logger = logging.getLogger(__name__)
@@ -734,10 +735,6 @@ def verify_permissions(customer_role_arn):
         try:
             aws.configure_cloudtrail(session, aws_account_id)
         except ClientError as error:
-            logger.debug(
-                _("An exception was thrown when verifying permissions. %(error)s"),
-                {"error": error},
-            )
             if error.response.get("Error", {}).get("Code") == "AccessDeniedException":
                 logger.debug(_("Trying to throw a CG3000."))
                 cloud_account = CloudAccount.objects.get(
@@ -762,26 +759,23 @@ def verify_permissions(customer_role_arn):
                         ]
                     }
                 )
-            elif (
-                error.response.get("Error", {}).get("Code")
-                == "MaximumNumberOfTrailsExceededException"
-            ):
-                logger.debug(_("Trying to throw a CG3001."))
-                cloud_account = CloudAccount.objects.get(
-                    aws_cloud_account__account_arn=arn_str
-                )
-
-                error_code = error_codes.CG3001
-                error_code.log_internal_message(
-                    logger, {"cloud_account_id": cloud_account.id, "exception": error}
-                )
-                error_code.notify(
-                    cloud_account.user.username, cloud_account.platform_application_id
-                )
-                logger.debug(_("CG3001 notify called, raising ValidationError."))
-                raise ValidationError(detail={"account_arn": error_code.get_message()})
-
             raise
+        except MaximumNumberOfTrailsExceededException as error:
+            logger.debug(_("Trying to throw a CG3001."))
+            cloud_account = CloudAccount.objects.get(
+                aws_cloud_account__account_arn=arn_str
+            )
+
+            error_code = error_codes.CG3001
+            error_code.log_internal_message(
+                logger, {"cloud_account_id": cloud_account.id, "exception": error}
+            )
+            error_code.notify(
+                cloud_account.user.username, cloud_account.platform_application_id
+            )
+            logger.debug(_("CG3001 notify called, raising ValidationError."))
+            raise ValidationError(detail={"account_arn": error_code.get_message()})
+
     else:
         failure_details = [_("Account verification failed.")]
         failure_details += [
