@@ -866,19 +866,24 @@ def create_aws_cloud_account(
         # Verify that no AwsCloudAccount already exists with the same AWS Account ID.
         if AwsCloudAccount.objects.filter(aws_account_id=aws_account_id).exists():
             error_code = error_codes.CG1002
+            existing_user_id = (
+                AwsCloudAccount.objects.get(aws_account_id=aws_account_id)
+                .cloud_account.get()
+                .user.id
+            )
             error_code.log_internal_message(
-                logger, {"application_id": platform_application_id, "arn": arn_str,}
+                logger,
+                {
+                    "application_id": platform_application_id,
+                    "arn": arn_str,
+                    "username": existing_user_id,
+                },
             )
 
             # If the CloudAccount with the duplicate AWS Account ID belongs to
             # the same user, we want to give the error code in addition to the
             # generic message
-            if (
-                user.id
-                == AwsCloudAccount.objects.get(aws_account_id=aws_account_id)
-                .cloud_account.get()
-                .user.id
-            ):
+            if user.id == existing_user_id:
                 error_message = error_code.get_message()
             else:
                 error_message = error_codes.GENERIC_ACCOUNT_SETUP_ERROR_MESSAGE
