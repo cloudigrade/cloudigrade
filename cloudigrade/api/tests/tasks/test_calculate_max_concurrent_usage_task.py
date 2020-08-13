@@ -43,7 +43,7 @@ class CalculateMaxConcurrentUsageTaskTest(TestCase):
 
         calculate_max_concurrent_usage_task.push_request(id=task_id)
 
-        calculate_max_concurrent_usage_task.run(request_date, self.user.id)
+        calculate_max_concurrent_usage_task.run(str(request_date), self.user.id)
         self.assertEqual(
             ConcurrentUsageCalculationTask.objects.get(task_id=task_id).status,
             ConcurrentUsageCalculationTask.COMPLETE,
@@ -61,7 +61,7 @@ class CalculateMaxConcurrentUsageTaskTest(TestCase):
         concurrent_task.save()
 
         with self.assertRaises(Retry):
-            calculate_max_concurrent_usage_task(request_date, self.user.id)
+            calculate_max_concurrent_usage_task(str(request_date), self.user.id)
 
     @patch("api.tasks.calculate_max_concurrent_usage")
     def test_invalid_user(self, mock_calculate_max_concurrent_usage):
@@ -95,7 +95,7 @@ class CalculateMaxConcurrentUsageTaskTest(TestCase):
         calculate_max_concurrent_usage_task.push_request(id=task_id)
 
         with self.assertRaises(Exception):
-            calculate_max_concurrent_usage_task.run(request_date, self.user.id)
+            calculate_max_concurrent_usage_task.run(str(request_date), self.user.id)
 
         self.assertEqual(
             ConcurrentUsageCalculationTask.objects.get(task_id=task_id).status,

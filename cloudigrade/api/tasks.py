@@ -15,6 +15,7 @@ import logging
 from datetime import timedelta
 
 from celery import shared_task
+from dateutil import parser as date_parser
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import transaction
@@ -518,7 +519,8 @@ def calculate_max_concurrent_usage_task(self, date, user_id):
     Schedule a task to calculate maximum concurrent usage of RHEL instances.
 
     Args:
-        date (datetime.date): the day during which we are measuring usage
+        date (str): the day during which we are measuring usage.
+            Celery serializes the date as a string in the format "%Y-%B-%dT%H:%M:%S.
         user_id (int): required filter on user
 
     Returns:
@@ -529,6 +531,8 @@ def calculate_max_concurrent_usage_task(self, date, user_id):
     # objects should also have been removed, so we can exit early.
     if not User.objects.filter(id=user_id).exists():
         return
+
+    date = date_parser.parse(date).date()
 
     # If there is already an calculate_max_concurrent_usage running for given
     # user and date, then retry this task later.
