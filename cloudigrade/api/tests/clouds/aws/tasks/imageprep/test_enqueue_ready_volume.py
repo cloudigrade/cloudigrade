@@ -1,4 +1,4 @@
-"""Collection of tests for tasks.enqueue_ready_volume."""
+"""Collection of tests for aws.tasks.cloudtrail.enqueue_ready_volume."""
 import random
 from unittest.mock import patch
 
@@ -20,8 +20,8 @@ class EnqueueReadyVolumeTest(TestCase):
             settings.AWS_NAME_PREFIX
         )
 
-    @patch("api.clouds.aws.tasks.add_messages_to_queue")
-    @patch("api.clouds.aws.tasks.aws")
+    @patch("api.clouds.aws.tasks.imageprep.add_messages_to_queue")
+    @patch("api.clouds.aws.tasks.imageprep.aws")
     def test_enqueue_ready_volume_success(self, mock_aws, mock_queue):
         """Assert that volumes are enqueued when ready."""
         ami_id = util_helper.generate_dummy_image_id()
@@ -38,7 +38,7 @@ class EnqueueReadyVolumeTest(TestCase):
 
         mock_queue.assert_called_with(self.ready_volumes_queue_name, messages)
 
-    @patch("api.clouds.aws.tasks.aws")
+    @patch("api.clouds.aws.tasks.imageprep.aws")
     def test_enqueue_ready_volume_error(self, mock_aws):
         """Assert that an error is raised on bad volume state."""
         ami_id = util_helper.generate_dummy_image_id()
@@ -55,7 +55,7 @@ class EnqueueReadyVolumeTest(TestCase):
         with self.assertRaises(AwsVolumeError):
             enqueue_ready_volume(ami_id, volume_id, region)
 
-    @patch("api.clouds.aws.tasks.aws")
+    @patch("api.clouds.aws.tasks.imageprep.aws")
     def test_enqueue_ready_volume_retry(self, mock_aws):
         """Assert that the task retries when volume is not available."""
         ami_id = util_helper.generate_dummy_image_id()

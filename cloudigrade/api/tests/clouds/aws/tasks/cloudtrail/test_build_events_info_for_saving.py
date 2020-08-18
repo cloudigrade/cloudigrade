@@ -1,8 +1,8 @@
-"""Collection of tests for tasks._build_events_info_for_saving."""
+"""Collection of tests for aws.tasks.cloudtrail._build_events_info_for_saving."""
 import faker
 from django.test import TestCase
 
-from api.clouds.aws import tasks
+from api.clouds.aws.tasks import cloudtrail as tasks
 from api.models import InstanceEvent
 from api.tests import helper as api_helper
 from util.tests import helper as util_helper

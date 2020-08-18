@@ -1,4 +1,4 @@
-"""Collection of tests for tasks.verify_verify_tasks."""
+"""Collection of tests for aws.tasks.cloudtrail.verify_verify_tasks."""
 
 from django.test import TestCase
 from django_celery_beat.models import PeriodicTask

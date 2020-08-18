@@ -1,4 +1,5 @@
 """Utility functions for AWS models and use cases."""
+import json
 import logging
 from decimal import Decimal
 
@@ -24,7 +25,10 @@ from api.models import (
     MachineImageInspectionStart,
 )
 from util import aws
-from util.exceptions import MaximumNumberOfTrailsExceededException
+from util.exceptions import (
+    InvalidHoundigradeJsonFormat,
+    MaximumNumberOfTrailsExceededException,
+)
 from util.misc import get_now
 
 logger = logging.getLogger(__name__)
@@ -1092,3 +1096,46 @@ def delete_cloudtrail(aws_cloud_account):
                 },
             )
     return False
+
+
+@transaction.atomic
+def persist_aws_inspection_cluster_results(inspection_results):
+    """
+    Persist the aws houndigrade inspection result.
+
+    Args:
+        inspection_results (dict): A dict containing houndigrade results
+    Returns:
+        None
+    """
+    images = inspection_results.get("images")
+    if images is None:
+        raise InvalidHoundigradeJsonFormat(
+            _("Inspection results json missing images: {}").format(inspection_results)
+        )
+
+    for image_id, image_json in images.items():
+        for error in image_json.get("errors", []):
+            logger.info(
+                _(
+                    "Error reported in inspection results for image %(image_id)s: "
+                    "%(error)s"
+                ),
+                {"image_id": image_id, "error": error},
+            )
+        save_success = update_aws_image_status_inspected(
+            image_id, inspection_json=json.dumps(image_json)
+        )
+        if not save_success:
+            logger.warning(
+                _(
+                    "Persisting AWS inspection results for EC2 AMI ID "
+                    "%(ec2_ami_id)s, but we do not have any record of it. "
+                    "Inspection results are: %(inspection_json)s"
+                ),
+                {"ec2_ami_id": image_id, "inspection_json": image_json},
+            )
+
+    general_errors = inspection_results.get("errors", [])
+    for error in general_errors:
+        logger.info(_("General error reported in inspection results: %s"), error)

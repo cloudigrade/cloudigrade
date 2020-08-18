@@ -1,4 +1,4 @@
-"""Collection of tests for tasks.copy_ami_snapshot."""
+"""Collection of tests for aws.tasks.cloudtrail.copy_ami_snapshot."""
 from unittest.mock import Mock, patch
 
 from botocore.exceptions import ClientError
@@ -15,7 +15,7 @@ from util.tests import helper as util_helper
 class CopyAmiSnapshotTest(TestCase):
     """Celery task 'copy_ami_snapshot' test cases."""
 
-    @patch("api.clouds.aws.tasks.aws")
+    @patch("api.clouds.aws.tasks.imageprep.aws")
     def test_copy_ami_snapshot_success(self, mock_aws):
         """Assert that the snapshot copy task succeeds."""
         mock_session = mock_aws.boto3.Session.return_value
@@ -39,9 +39,9 @@ class CopyAmiSnapshotTest(TestCase):
         mock_aws.get_snapshot.return_value = mock_snapshot
         mock_aws.copy_snapshot.return_value = mock_new_snapshot_id
 
-        with patch.object(tasks, "create_volume") as mock_create_volume:
+        with patch.object(tasks.imageprep, "create_volume") as mock_create_volume:
             with patch.object(
-                tasks, "remove_snapshot_ownership"
+                tasks.imageprep, "remove_snapshot_ownership"
             ) as mock_remove_snapshot_ownership:
                 tasks.copy_ami_snapshot(mock_arn, mock_image_id, mock_region)
                 mock_create_volume.delay.assert_called_with(
@@ -57,7 +57,7 @@ class CopyAmiSnapshotTest(TestCase):
         mock_aws.add_snapshot_ownership.assert_called_with(mock_snapshot)
         mock_aws.copy_snapshot.assert_called_with(mock_snapshot_id, mock_region)
 
-    @patch("api.clouds.aws.tasks.aws")
+    @patch("api.clouds.aws.tasks.imageprep.aws")
     def test_copy_ami_snapshot_success_with_reference(self, mock_aws):
         """Assert the snapshot copy task succeeds using a reference AMI ID."""
         mock_session = mock_aws.boto3.Session.return_value
@@ -90,8 +90,10 @@ class CopyAmiSnapshotTest(TestCase):
         mock_aws.get_snapshot.return_value = mock_snapshot
         mock_aws.copy_snapshot.return_value = mock_new_snapshot_id
 
-        with patch.object(tasks, "create_volume") as mock_create_volume, patch.object(
-            tasks, "remove_snapshot_ownership"
+        with patch.object(
+            tasks.imageprep, "create_volume"
+        ) as mock_create_volume, patch.object(
+            tasks.imageprep, "remove_snapshot_ownership"
         ) as mock_remove_snapshot_ownership:
             tasks.copy_ami_snapshot(arn, new_image_id, region, reference_image_id)
             # arn, customer_snapshot_id, snapshot_region, snapshot_copy_id
@@ -115,7 +117,7 @@ class CopyAmiSnapshotTest(TestCase):
             copied_image.reference_awsmachineimage.ec2_ami_id, reference_image_id,
         )
 
-    @patch("api.clouds.aws.tasks.aws")
+    @patch("api.clouds.aws.tasks.imageprep.aws")
     def test_copy_ami_snapshot_encrypted(self, mock_aws):
         """Assert that the task marks the image as encrypted in the DB."""
         mock_account_id = util_helper.generate_dummy_aws_account_id()
@@ -144,7 +146,7 @@ class CopyAmiSnapshotTest(TestCase):
             self.assertEqual(ami.status, ami.ERROR)
             mock_create_volume.delay.assert_not_called()
 
-    @patch("api.clouds.aws.tasks.aws")
+    @patch("api.clouds.aws.tasks.imageprep.aws")
     def test_copy_ami_snapshot_retry_on_copy_limit(self, mock_aws):
         """Assert that the copy task is retried."""
         mock_session = mock_aws.boto3.Session.return_value
@@ -176,7 +178,7 @@ class CopyAmiSnapshotTest(TestCase):
                 tasks.copy_ami_snapshot(mock_arn, mock_image_id, mock_region)
             mock_create_volume.delay.assert_not_called()
 
-    @patch("api.clouds.aws.tasks.aws")
+    @patch("api.clouds.aws.tasks.imageprep.aws")
     def test_copy_ami_snapshot_missing_image(self, mock_aws):
         """Assert early return if the AwsMachineImage doesn't exist."""
         arn = util_helper.generate_dummy_arn()
@@ -185,7 +187,7 @@ class CopyAmiSnapshotTest(TestCase):
         tasks.copy_ami_snapshot(arn, ec2_ami_id, region)
         mock_aws.get_session.assert_not_called()
 
-    @patch("api.clouds.aws.tasks.aws")
+    @patch("api.clouds.aws.tasks.imageprep.aws")
     def test_copy_ami_snapshot_retry_on_ownership_not_verified(self, mock_aws):
         """Assert that the snapshot copy task fails."""
         mock_session = mock_aws.boto3.Session.return_value
@@ -216,7 +218,7 @@ class CopyAmiSnapshotTest(TestCase):
                 tasks.copy_ami_snapshot(mock_arn, mock_image_id, mock_region)
             mock_create_volume.delay.assert_not_called()
 
-    @patch("api.clouds.aws.tasks.aws")
+    @patch("api.clouds.aws.tasks.imageprep.aws")
     def test_copy_ami_snapshot_private_shared(self, mock_aws):
         """Assert that the task copies the image when it is private/shared."""
         mock_account_id = util_helper.generate_dummy_aws_account_id()
@@ -243,8 +245,10 @@ class CopyAmiSnapshotTest(TestCase):
 
         account_helper.generate_aws_image(ec2_ami_id=mock_image_id)
 
-        with patch.object(tasks, "create_volume") as mock_create_volume, patch.object(
-            tasks, "copy_ami_to_customer_account"
+        with patch.object(
+            tasks.imageprep, "create_volume"
+        ) as mock_create_volume, patch.object(
+            tasks.imageprep, "copy_ami_to_customer_account"
         ) as mock_copy_ami_to_customer_account:
             tasks.copy_ami_snapshot(mock_arn, mock_image_id, mock_region)
             mock_create_volume.delay.assert_not_called()
@@ -252,7 +256,7 @@ class CopyAmiSnapshotTest(TestCase):
                 mock_arn, mock_image_id, mock_region
             )
 
-    @patch("api.clouds.aws.tasks.aws")
+    @patch("api.clouds.aws.tasks.imageprep.aws")
     def test_copy_ami_snapshot_marketplace(self, mock_aws):
         """Assert that a suspected marketplace image is checked."""
         mock_account_id = util_helper.generate_dummy_aws_account_id()
@@ -276,8 +280,10 @@ class CopyAmiSnapshotTest(TestCase):
 
         account_helper.generate_aws_image(ec2_ami_id=mock_image_id)
 
-        with patch.object(tasks, "create_volume") as mock_create_volume, patch.object(
-            tasks, "copy_ami_to_customer_account"
+        with patch.object(
+            tasks.imageprep, "create_volume"
+        ) as mock_create_volume, patch.object(
+            tasks.imageprep, "copy_ami_to_customer_account"
         ) as mock_copy_ami_to_customer_account:
             tasks.copy_ami_snapshot(mock_arn, mock_image_id, mock_region)
             mock_create_volume.delay.assert_not_called()
@@ -285,7 +291,7 @@ class CopyAmiSnapshotTest(TestCase):
                 mock_arn, mock_image_id, mock_region
             )
 
-    @patch("api.clouds.aws.tasks.aws")
+    @patch("api.clouds.aws.tasks.imageprep.aws")
     def test_copy_ami_snapshot_not_marketplace(self, mock_aws):
         """Assert that an exception is raised when there is an error."""
         mock_account_id = util_helper.generate_dummy_aws_account_id()
@@ -317,7 +323,7 @@ class CopyAmiSnapshotTest(TestCase):
         self.assertIn("ItIsAMystery", e.exception.args[0])
         self.assertIn("Mystery Error", e.exception.args[0])
 
-    @patch("api.clouds.aws.tasks.aws")
+    @patch("api.clouds.aws.tasks.imageprep.aws")
     def test_copy_ami_snapshot_save_error_when_image_load_fails(self, mock_aws):
         """Assert that we save error status if image load fails."""
         arn = util_helper.generate_dummy_arn()
@@ -337,7 +343,7 @@ class CopyAmiSnapshotTest(TestCase):
         image.refresh_from_db()
         self.assertEquals(image.status, image.ERROR)
 
-    @patch("api.clouds.aws.tasks.aws")
+    @patch("api.clouds.aws.tasks.imageprep.aws")
     def test_copy_ami_snapshot_save_error_when_image_snapshot_id_get_fails(
         self, mock_aws
     ):

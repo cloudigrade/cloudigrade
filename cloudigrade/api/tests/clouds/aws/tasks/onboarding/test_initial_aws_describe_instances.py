@@ -1,11 +1,11 @@
-"""Collection of tests for tasks.initial_aws_describe_instances."""
+"""Collection of tests for aws.tasks.cloudtrail.initial_aws_describe_instances."""
 from unittest.mock import call, patch
 
 from django.test import TestCase, TransactionTestCase
 
 from api.clouds.aws import tasks
 from api.clouds.aws.models import AwsInstance, AwsMachineImage
-from api.clouds.aws.tasks import aws
+from api.clouds.aws.tasks.onboarding import aws
 from api.models import (
     Instance,
     InstanceEvent,
@@ -19,10 +19,11 @@ class InitialAwsDescribeInstancesTest(TestCase):
     """Celery task 'initial_aws_describe_instances' test cases."""
 
     @patch("api.tasks.calculate_max_concurrent_usage_task")
-    @patch("api.clouds.aws.tasks.aws")
+    @patch("api.clouds.aws.tasks.onboarding.start_image_inspection")
+    @patch("api.clouds.aws.tasks.onboarding.aws")
     @patch("api.clouds.aws.util.aws")
     def test_initial_aws_describe_instances(
-        self, mock_util_aws, mock_aws, mock_calculate_concurrent_usage_task
+        self, mock_util_aws, mock_aws, mock_start, mock_calculate_concurrent_usage_task
     ):
         """
         Test happy-path behaviors of initial_aws_describe_instances.
@@ -91,10 +92,8 @@ class InitialAwsDescribeInstancesTest(TestCase):
             )
         ]
 
-        with patch.object(tasks, "start_image_inspection") as mock_start:
-            # with patch("api.clouds.aws.tasks.start_image_inspection") as mock_start:
-            tasks.initial_aws_describe_instances(account.id)
-            mock_start.assert_has_calls(start_inspection_calls)
+        tasks.initial_aws_describe_instances(account.id)
+        mock_start.assert_has_calls(start_inspection_calls)
 
         # Verify that we created all five instances.
         instances_count = Instance.objects.filter(cloud_account=account).count()
@@ -151,14 +150,14 @@ class InitialAwsDescribeInstancesTest(TestCase):
         self.assertFalse(image.openshift_detected)
         self.assertEqual(image.status, MachineImage.UNAVAILABLE)
 
-    @patch("api.clouds.aws.tasks.aws")
+    @patch("api.clouds.aws.tasks.onboarding.aws")
     def test_initial_aws_describe_instances_missing_account(self, mock_aws):
         """Test early return when account does not exist."""
         account_id = -1  # negative number account ID should never exist.
         tasks.initial_aws_describe_instances(account_id)
         mock_aws.get_session.assert_not_called()
 
-    @patch("api.clouds.aws.tasks.aws")
+    @patch("api.clouds.aws.tasks.onboarding.aws")
     def test_initial_aws_describe_instances_account_disabled(self, mock_aws):
         """Test early return when account exists but is disabled."""
         account = account_helper.generate_aws_account(is_enabled=False)
@@ -171,12 +170,14 @@ class InitialAwsDescribeInstancesTransactionTest(TransactionTestCase):
 
     @patch("api.util.schedule_concurrent_calculation_task")
     @patch("api.models.notify_sources_application_availability")
-    @patch("api.clouds.aws.tasks.aws")
+    @patch("api.clouds.aws.tasks.onboarding.start_image_inspection")
+    @patch("api.clouds.aws.tasks.onboarding.aws")
     @patch("api.clouds.aws.util.aws")
     def test_initial_aws_describe_instances_after_disable_enable(
         self,
         mock_util_aws,
         mock_aws,
+        mock_start,
         mock_sources_notify,
         mock_schedule_concurrent_calculation_task,
     ):
@@ -221,9 +222,7 @@ class InitialAwsDescribeInstancesTransactionTest(TransactionTestCase):
         date_of_disable = util_helper.utc_dt(2020, 3, 2, 0, 0, 0)
         date_of_reenable = util_helper.utc_dt(2020, 3, 3, 0, 0, 0)
 
-        with patch.object(
-            tasks, "start_image_inspection"
-        ) as mock_start, util_helper.clouditardis(date_of_initial_describe,):
+        with util_helper.clouditardis(date_of_initial_describe):
             tasks.initial_aws_describe_instances(account.id)
             mock_start.assert_has_calls([inspection_call])
 
@@ -259,9 +258,7 @@ class InitialAwsDescribeInstancesTransactionTest(TransactionTestCase):
             account.enable()
             mock_initial.delay.assert_called()
 
-        with patch.object(
-            tasks, "start_image_inspection"
-        ) as mock_start, util_helper.clouditardis(date_of_reenable):
+        with util_helper.clouditardis(date_of_reenable):
             tasks.initial_aws_describe_instances(account.id)
             mock_start.assert_has_calls([inspection_call_2])
 

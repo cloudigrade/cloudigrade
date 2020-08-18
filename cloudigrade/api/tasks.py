@@ -28,10 +28,13 @@ from api.clouds.aws.tasks import (
     CLOUD_KEY,
     CLOUD_TYPE_AWS,
     configure_customer_aws_and_create_cloud_account,
-    persist_aws_inspection_cluster_results,
     scale_down_cluster,
 )
-from api.clouds.aws.util import start_image_inspection, update_aws_cloud_account
+from api.clouds.aws.util import (
+    persist_aws_inspection_cluster_results,
+    start_image_inspection,
+    update_aws_cloud_account,
+)
 from api.models import (
     CloudAccount,
     ConcurrentUsageCalculationTask,

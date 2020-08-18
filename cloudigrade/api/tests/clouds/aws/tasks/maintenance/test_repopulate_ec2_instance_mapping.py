@@ -1,4 +1,4 @@
-"""Collection of tests for tasks.repopulate_ec2_instance_mapping."""
+"""Collection of tests for aws.tasks.cloudtrail.repopulate_ec2_instance_mapping."""
 from unittest.mock import Mock, patch
 
 import faker
@@ -10,12 +10,15 @@ from api.clouds.aws.models import AwsEC2InstanceDefinition
 
 _faker = faker.Faker()
 
+# Token for this string since some of the paths in "patch" uses are very long.
+_MAINTENANCE = "api.clouds.aws.tasks.maintenance"
+
 
 class RepopulateEc2InstanceMappingTest(TestCase):
     """Celery task 'repopulate_ec2_instance_mapping' test cases."""
 
-    @patch("api.clouds.aws.tasks.AwsEC2InstanceDefinition.objects.get_or_create")
-    @patch("api.clouds.aws.tasks.boto3.client")
+    @patch(f"{_MAINTENANCE}.AwsEC2InstanceDefinition.objects.get_or_create")
+    @patch(f"{_MAINTENANCE}.boto3.client")
     def test_repopulate_ec2_instance_mapping(self, mock_boto3, mock_db_create):
         """Test that repopulate_ec2_instance_mapping creates db objects."""
         mock_instance_def = Mock()
@@ -90,7 +93,7 @@ class RepopulateEc2InstanceMappingTest(TestCase):
             defaults={"memory": 16.0, "vcpu": 2}, instance_type="r5.large"
         )
 
-    @patch("api.clouds.aws.tasks.boto3.client")
+    @patch(f"{_MAINTENANCE}.boto3.client")
     def test_repopulate_ec2_instance_mapping_exists(self, mock_boto3):
         """Test that repopulate job ignores already created objects."""
         obj, __ = AwsEC2InstanceDefinition.objects.get_or_create(
@@ -167,8 +170,8 @@ class RepopulateEc2InstanceMappingTest(TestCase):
         self.assertEqual(obj.vcpu, 2)
         self.assertEqual(obj.memory, 16.00)
 
-    @patch("api.clouds.aws.tasks.repopulate_ec2_instance_mapping.delay")
-    @patch("api.clouds.aws.tasks.AwsEC2InstanceDefinition.objects.get")
+    @patch(f"{_MAINTENANCE}.repopulate_ec2_instance_mapping.delay")
+    @patch(f"{_MAINTENANCE}.AwsEC2InstanceDefinition.objects.get")
     def test_get_instance_definition_returns_value_in_db(self, mock_lookup, mock_remap):
         """Test that task isn't run if instance definition already exists."""
         mock_instance_definition = Mock()
@@ -181,15 +184,15 @@ class RepopulateEc2InstanceMappingTest(TestCase):
         self.assertEqual(mock_instance_definition, instance)
         mock_remap.assert_not_called()
 
-    @patch("api.clouds.aws.tasks._fetch_ec2_instance_type_definitions")
-    @patch("api.clouds.aws.tasks._save_ec2_instance_type_definitions")
+    @patch(f"{_MAINTENANCE}._fetch_ec2_instance_type_definitions")
+    @patch(f"{_MAINTENANCE}._save_ec2_instance_type_definitions")
     def test_repopulate_ec2_instance_mapping_error_on_save(self, mock_save, mock_fetch):
         """Test that repopulate_ec2_instance_mapping handles error on save."""
         mock_save.side_effect = Exception()
         with self.assertRaises(Exception):
             tasks.repopulate_ec2_instance_mapping()
 
-    @patch("api.clouds.aws.tasks.AwsEC2InstanceDefinition.objects.get_or_create")
+    @patch(f"{_MAINTENANCE}.AwsEC2InstanceDefinition.objects.get_or_create")
     def test_save_ec2_instance_type_definitions_mystery_integrity_error(
         self, mock_get_or_create
     ):
@@ -197,4 +200,4 @@ class RepopulateEc2InstanceMappingTest(TestCase):
         mock_get_or_create.side_effect = IntegrityError("it is a mystery")
         definitions = {"r5.large": {"memory": 420, "vcpu": 69}}
         with self.assertRaises(IntegrityError):
-            tasks._save_ec2_instance_type_definitions(definitions)
+            tasks.maintenance._save_ec2_instance_type_definitions(definitions)

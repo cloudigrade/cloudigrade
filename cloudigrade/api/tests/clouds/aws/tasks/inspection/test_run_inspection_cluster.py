@@ -1,4 +1,4 @@
-"""Collection of tests for tasks.run_inspection_cluster."""
+"""Collection of tests for aws.tasks.cloudtrail.run_inspection_cluster."""
 from unittest.mock import MagicMock, Mock, patch
 
 from botocore.exceptions import ClientError
@@ -18,7 +18,7 @@ EC2_INSTANCE_STATE_STOPPED = {"Code": 80, "Name": "Stopped"}
 class RunInspectionClusterTest(TestCase):
     """Celery task 'run_inspection_cluster' test cases."""
 
-    @patch("api.clouds.aws.tasks.boto3")
+    @patch("api.clouds.aws.tasks.inspection.boto3")
     def test_run_inspection_cluster_success(self, mock_boto3):
         """Asserts successful starting of the houndigrade task."""
         mock_ami_id = util_helper.generate_dummy_image_id()
@@ -68,7 +68,7 @@ class RunInspectionClusterTest(TestCase):
         mock_ec2.Volume.return_value.attach_to_instance.assert_called_once()
 
     @patch("api.clouds.aws.models.AwsMachineImage.objects")
-    @patch("api.clouds.aws.tasks.boto3")
+    @patch("api.clouds.aws.tasks.inspection.boto3")
     def test_run_inspection_cluster_with_no_instances(
         self, mock_boto3, mock_machine_image_objects
     ):
@@ -89,7 +89,7 @@ class RunInspectionClusterTest(TestCase):
         with self.assertRaises(AwsECSInstanceNotReady):
             tasks.run_inspection_cluster(messages)
 
-    @patch("api.clouds.aws.tasks.boto3")
+    @patch("api.clouds.aws.tasks.inspection.boto3")
     def test_run_inspection_cluster_instance_not_running(self, mock_boto3):
         """Asserts that an exception is raised if instance exists but is not running."""
         mock_ami_id = util_helper.generate_dummy_image_id()
@@ -120,8 +120,8 @@ class RunInspectionClusterTest(TestCase):
         with self.assertRaises(AwsECSInstanceNotReady):
             tasks.run_inspection_cluster(messages)
 
-    @patch("api.clouds.aws.tasks.scale_down_cluster")
-    @patch("api.clouds.aws.tasks.boto3")
+    @patch("api.clouds.aws.tasks.inspection.scale_down_cluster")
+    @patch("api.clouds.aws.tasks.inspection.boto3")
     def test_run_inspection_cluster_with_no_known_images(
         self, mock_boto3, mock_scale_down
     ):
@@ -132,7 +132,7 @@ class RunInspectionClusterTest(TestCase):
         mock_boto3.client.assert_not_called()
 
     @patch("api.clouds.aws.models.AwsMachineImage.objects")
-    @patch("api.clouds.aws.tasks.boto3")
+    @patch("api.clouds.aws.tasks.inspection.boto3")
     def test_run_inspection_cluster_with_too_many_instances(
         self, mock_boto3, mock_machine_image_objects
     ):
@@ -158,7 +158,7 @@ class RunInspectionClusterTest(TestCase):
         with self.assertRaises(AwsTooManyECSInstances):
             tasks.run_inspection_cluster(messages)
 
-    @patch("api.clouds.aws.tasks.boto3")
+    @patch("api.clouds.aws.tasks.inspection.boto3")
     def test_run_inspection_cluster_with_marketplace_volume(self, mock_boto3):
         """Assert that ami is marked as inspected if marketplace volume."""
         mock_ami_id = util_helper.generate_dummy_image_id()
@@ -215,7 +215,7 @@ class RunInspectionClusterTest(TestCase):
         mock_ec2.Volume.assert_called_once_with(messages[0]["volume_id"])
         mock_ec2.Volume.return_value.attach_to_instance.assert_called_once()
 
-    @patch("api.clouds.aws.tasks.boto3")
+    @patch("api.clouds.aws.tasks.inspection.boto3")
     def test_run_inspection_cluster_with_unknown_error(self, mock_boto3):
         """Assert that non marketplace errors are still raised."""
         mock_ami_id = util_helper.generate_dummy_image_id()

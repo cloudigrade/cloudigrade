@@ -1,4 +1,4 @@
-"""Collection of tests for tasks.remove_snapshot_ownership."""
+"""Collection of tests for aws.tasks.cloudtrail.remove_snapshot_ownership."""
 from unittest.mock import Mock, patch
 
 from botocore.exceptions import ClientError
@@ -12,8 +12,8 @@ from util.tests import helper as util_helper
 class RemoveSnapshotOwnershipTest(TestCase):
     """Celery task 'remove_snapshot_ownership' test cases."""
 
-    @patch("api.clouds.aws.tasks.boto3")
-    @patch("api.clouds.aws.tasks.aws")
+    @patch("api.clouds.aws.tasks.imageprep.boto3")
+    @patch("api.clouds.aws.tasks.imageprep.aws")
     def test_remove_snapshot_ownership_success(self, mock_aws, mock_boto3):
         """Assert that the remove snapshot ownership task succeeds."""
         mock_arn = util_helper.generate_dummy_arn()
@@ -40,8 +40,8 @@ class RemoveSnapshotOwnershipTest(TestCase):
 
         mock_aws.remove_snapshot_ownership.assert_called_with(mock_customer_snapshot)
 
-    @patch("api.clouds.aws.tasks.boto3")
-    @patch("api.clouds.aws.tasks.aws")
+    @patch("api.clouds.aws.tasks.imageprep.boto3")
+    @patch("api.clouds.aws.tasks.imageprep.aws")
     def test_remove_snapshot_ownership_no_copy_snapshot(self, mock_aws, mock_boto3):
         """Assert remove snapshot ownership task succeeds with missing copy."""
         mock_arn = util_helper.generate_dummy_arn()
@@ -74,8 +74,8 @@ class RemoveSnapshotOwnershipTest(TestCase):
 
         mock_aws.remove_snapshot_ownership.assert_called_with(mock_customer_snapshot)
 
-    @patch("api.clouds.aws.tasks.boto3")
-    @patch("api.clouds.aws.tasks.aws")
+    @patch("api.clouds.aws.tasks.imageprep.boto3")
+    @patch("api.clouds.aws.tasks.imageprep.aws")
     def test_remove_snapshot_ownership_unexpected_error(self, mock_aws, mock_boto3):
         """Assert remove snapshot ownership fails due to unexpected error."""
         mock_arn = util_helper.generate_dummy_arn()

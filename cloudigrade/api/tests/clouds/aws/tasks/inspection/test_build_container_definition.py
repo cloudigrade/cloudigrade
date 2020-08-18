@@ -1,16 +1,16 @@
-"""Collection of tests for tasks._build_container_definition."""
+"""Collection of tests for aws.tasks.cloudtrail._build_container_definition."""
 from unittest.mock import patch
 
 from django.conf import settings
 from django.test import TestCase
 
-from api.clouds.aws.tasks import _build_container_definition
+from api.clouds.aws.tasks.inspection import _build_container_definition
 
 
 class BuildContainerDefinitionTest(TestCase):
     """Helper function '_build_container_definition' test cases."""
 
-    @patch("api.clouds.aws.tasks.settings")
+    @patch("api.clouds.aws.tasks.inspection.settings")
     def test_build_container_definition_with_sentry(self, mock_s):
         """Assert successful build of definition with sentry params."""
         enable_sentry = True

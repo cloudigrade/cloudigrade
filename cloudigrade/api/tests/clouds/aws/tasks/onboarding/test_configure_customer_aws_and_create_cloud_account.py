@@ -18,8 +18,8 @@ _faker = faker.Faker()
 class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
     """Task 'configure_customer_aws_and_create_cloud_account' test cases."""
 
-    @patch.object(tasks, "create_aws_cloud_account")
-    @patch.object(tasks, "aws")
+    @patch("api.clouds.aws.tasks.onboarding.create_aws_cloud_account")
+    @patch("api.clouds.aws.tasks.onboarding.aws")
     @patch("util.aws.sts._get_primary_account_id")
     def test_success(self, mock_primary_id, mock_tasks_aws, mock_create):
         """Assert the task happy path upon normal operation."""
@@ -76,8 +76,8 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
         )
 
     @patch("api.error_codes.notify_sources_application_availability")
-    @patch.object(tasks, "create_aws_cloud_account")
-    @patch.object(tasks, "aws")
+    @patch("api.clouds.aws.tasks.onboarding.create_aws_cloud_account")
+    @patch("api.clouds.aws.tasks.onboarding.aws")
     def test_fails_if_user_not_found(
         self, mock_tasks_aws, mock_create, mock_notify_sources
     ):

@@ -1,10 +1,10 @@
-"""Collection of tests for tasks.persist_aws_inspection_cluster_results."""
+"""Collection of tests for api.cloud.aws.util.persist_aws_inspection_cluster_results."""
 import json
 
 import faker
 from django.test import TestCase
 
-from api.clouds.aws import tasks
+from api.clouds.aws import util
 from api.clouds.aws.models import AwsMachineImage
 from api.tests import helper as api_helper
 from util.exceptions import InvalidHoundigradeJsonFormat
@@ -48,7 +48,7 @@ class PersistAwsInspectionClusterResultsTest(TestCase):
             },
         }
 
-        tasks.persist_aws_inspection_cluster_results(inspection_results)
+        util.persist_aws_inspection_cluster_results(inspection_results)
         aws_machine_image = AwsMachineImage.objects.get(ec2_ami_id=ami_id)
         machine_image = aws_machine_image.machine_image.get()
         self.assertTrue(machine_image.rhel_detected)
@@ -90,7 +90,7 @@ class PersistAwsInspectionClusterResultsTest(TestCase):
             },
         }
 
-        tasks.persist_aws_inspection_cluster_results(inspection_results)
+        util.persist_aws_inspection_cluster_results(inspection_results)
         aws_machine_image = AwsMachineImage.objects.get(ec2_ami_id=ami_id)
         machine_image = aws_machine_image.machine_image.get()
         self.assertFalse(machine_image.rhel_detected)
@@ -140,7 +140,7 @@ class PersistAwsInspectionClusterResultsTest(TestCase):
             },
         }
 
-        tasks.persist_aws_inspection_cluster_results(inspection_results)
+        util.persist_aws_inspection_cluster_results(inspection_results)
         aws_machine_image = AwsMachineImage.objects.get(ec2_ami_id=ami_id)
         machine_image = aws_machine_image.machine_image.get()
         self.assertTrue(machine_image.rhel)
@@ -162,7 +162,7 @@ class PersistAwsInspectionClusterResultsTest(TestCase):
         )
 
         with self.assertRaises(InvalidHoundigradeJsonFormat) as e:
-            tasks.persist_aws_inspection_cluster_results(inspection_results)
+            util.persist_aws_inspection_cluster_results(inspection_results)
         self.assertIn(expected_message, str(e.exception))
 
     def test_persist_aws_inspection_cluster_results_image_has_errors(self):
@@ -185,8 +185,8 @@ class PersistAwsInspectionClusterResultsTest(TestCase):
             },
         }
 
-        with self.assertLogs("api.clouds.aws.tasks", level="INFO") as logging_watcher:
-            tasks.persist_aws_inspection_cluster_results(inspection_results)
+        with self.assertLogs("api.clouds.aws.util", level="INFO") as logging_watcher:
+            util.persist_aws_inspection_cluster_results(inspection_results)
             self.assertIn(
                 "Error reported in inspection results for image",
                 logging_watcher.output[0],

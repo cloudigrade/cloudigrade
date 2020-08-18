@@ -1,4 +1,4 @@
-"""Collection of tests for tasks.verify_account_permissions."""
+"""Collection of tests for aws.tasks.cloudtrail.verify_account_permissions."""
 from unittest.mock import patch
 
 from django.test import TestCase
@@ -11,7 +11,7 @@ from util.tests import helper as util_helper
 class VerifyAccountPermissionsTest(TestCase):
     """Task 'configure_customer_aws_and_create_cloud_account' test cases."""
 
-    @patch("api.clouds.aws.tasks.verify_permissions")
+    @patch("api.clouds.aws.tasks.verification.verify_permissions")
     def test_success(self, mock_verify_permissions):
         """Account permissions are verified successfully."""
         arn = util_helper.generate_dummy_arn
@@ -21,8 +21,8 @@ class VerifyAccountPermissionsTest(TestCase):
         mock_verify_permissions.assert_called()
         self.assertTrue(valid)
 
-    @patch("api.clouds.aws.tasks.AwsCloudAccount")
-    @patch("api.clouds.aws.tasks.verify_permissions")
+    @patch("api.clouds.aws.tasks.verification.AwsCloudAccount")
+    @patch("api.clouds.aws.tasks.verification.verify_permissions")
     def test_failure(self, mock_verify_permissions, mock_aws_cloud_account):
         """Account permission verification fails."""
         arn = util_helper.generate_dummy_arn
