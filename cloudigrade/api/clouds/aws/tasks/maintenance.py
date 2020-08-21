@@ -12,7 +12,7 @@ from util.celery import retriable_shared_task
 logger = logging.getLogger(__name__)
 
 
-@retriable_shared_task
+@retriable_shared_task(name="api.clouds.aws.tasks.repopulate_ec2_instance_mapping")
 def repopulate_ec2_instance_mapping():
     """
     Use the Boto3 pricing client to update the EC2 instancetype lookup table.

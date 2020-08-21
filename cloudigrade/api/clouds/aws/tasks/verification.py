@@ -14,7 +14,7 @@ from util.celery import retriable_shared_task
 logger = logging.getLogger(__name__)
 
 
-@task
+@task(name="api.clouds.aws.tasks.verify_account_permissions")
 def verify_account_permissions(account_arn):
     """
     Periodic task that verifies the account arn is still valid.
@@ -45,7 +45,7 @@ def verify_account_permissions(account_arn):
     return valid
 
 
-@retriable_shared_task
+@retriable_shared_task(name="api.clouds.aws.tasks.verify_verify_tasks")
 def verify_verify_tasks():
     """
     Periodic task that maintains periodic verify permissions tasks.

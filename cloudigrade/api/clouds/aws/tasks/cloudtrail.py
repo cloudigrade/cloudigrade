@@ -35,7 +35,7 @@ from util.aws import OPENSHIFT_TAG, RHEL_TAG, is_windows, rewrap_aws_errors
 logger = logging.getLogger(__name__)
 
 
-@shared_task
+@shared_task(name="api.clouds.aws.tasks.analyze_log")
 @rewrap_aws_errors
 def analyze_log():
     """Read SQS Queue for log location, and parse log for events."""

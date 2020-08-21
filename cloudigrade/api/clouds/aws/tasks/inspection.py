@@ -24,7 +24,7 @@ from util.misc import generate_device_name
 logger = logging.getLogger(__name__)
 
 
-@retriable_shared_task
+@retriable_shared_task(name="api.clouds.aws.tasks.scale_down_cluster")
 @aws.rewrap_aws_errors
 def scale_down_cluster():
     """
@@ -38,7 +38,7 @@ def scale_down_cluster():
     aws.scale_down(settings.HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME)
 
 
-@shared_task
+@shared_task(name="api.clouds.aws.tasks.scale_up_inspection_cluster")
 @aws.rewrap_aws_errors
 def scale_up_inspection_cluster():
     """
@@ -93,7 +93,7 @@ def scale_up_inspection_cluster():
     run_inspection_cluster.delay(messages)
 
 
-@retriable_shared_task  # noqa: C901
+@retriable_shared_task(name="api.clouds.aws.tasks.run_inspection_cluster")  # noqa: C901
 @aws.rewrap_aws_errors
 def run_inspection_cluster(messages, cloud="aws"):  # noqa: C901
     """

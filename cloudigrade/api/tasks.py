@@ -1,14 +1,24 @@
 """
 Celery tasks for use in the api v2 app.
 
-Note for developers:
+Important notes for developers:
+
 If you find yourself adding a new Celery task, please be aware of how Celery
 determines which queue to read and write to work on that task. By default,
 Celery tasks will go to a queue named "celery". If you wish to separate a task
 onto a different queue (which may make it easier to see the volume of specific
 waiting tasks), please be sure to update all the relevant configurations to
 use that custom queue. This includes CELERY_TASK_ROUTES in config and the
-Celery worker's --queues argument (see deployment-configs.yaml in shiftigrade).
+Celery worker's --queues argument (see deployment-configs.yaml in shiftigrade
+and related configs in e2e-deploy and saas-templates).
+
+Please also include a specific name in each task decorator. If a task function
+is ever moved in the future, but it was previously using automatic names, that
+will cause a problem if Celery tries to execute an instance of a task that was
+created *before* the function moved. Why? The old automatic name will not match
+the new automatic name, and Celery cannot know that the two were once the same.
+Therefore, we should always preserve the original name in each task function's
+decorator even if the function itself is renamed or moved elsewhere.
 """
 import json
 import logging
@@ -56,7 +66,10 @@ from util.misc import get_now
 logger = logging.getLogger(__name__)
 
 
-@retriable_shared_task(autoretry_for=(RequestException, BaseHTTPError))
+@retriable_shared_task(
+    autoretry_for=(RequestException, BaseHTTPError),
+    name="api.tasks.create_from_sources_kafka_message",
+)
 def create_from_sources_kafka_message(message, headers):  # noqa: C901
     """
     Create our model objects from the Sources Kafka message.
@@ -177,7 +190,9 @@ def create_from_sources_kafka_message(message, headers):  # noqa: C901
         )
 
 
-@retriable_shared_task(autoretry_for=(RuntimeError,))  # noqa: C901
+@retriable_shared_task(
+    autoretry_for=(RuntimeError,), name="api.tasks.delete_from_sources_kafka_message"
+)  # noqa: C901
 @aws.rewrap_aws_errors
 def delete_from_sources_kafka_message(message, headers, event_type):  # noqa: C901
     """
@@ -268,7 +283,10 @@ def delete_from_sources_kafka_message(message, headers, event_type):  # noqa: C9
             cloud_account.delete()
 
 
-@retriable_shared_task(autoretry_for=(RequestException, BaseHTTPError, RuntimeError))
+@retriable_shared_task(
+    autoretry_for=(RequestException, BaseHTTPError, RuntimeError),
+    name="api.tasks.update_from_source_kafka_message",
+)
 @aws.rewrap_aws_errors
 def update_from_source_kafka_message(message, headers):
     """
@@ -379,7 +397,7 @@ def update_from_source_kafka_message(message, headers):
             )
 
 
-@shared_task
+@shared_task(name="api.tasks.process_instance_event")
 @transaction.atomic
 def process_instance_event(event):
     """
@@ -426,7 +444,7 @@ def process_instance_event(event):
         calculate_max_concurrent_usage_from_runs(runs)
 
 
-@shared_task
+@shared_task(name="api.tasks.persist_inspection_cluster_results_task")
 @aws.rewrap_aws_errors
 def persist_inspection_cluster_results_task():
     """
@@ -473,7 +491,7 @@ def persist_inspection_cluster_results_task():
     return successes, failures
 
 
-@shared_task
+@shared_task(name="api.tasks.inspect_pending_images")
 @transaction.atomic
 def inspect_pending_images():
     """
@@ -516,7 +534,11 @@ def inspect_pending_images():
         start_image_inspection(arn, ami_id, region)
 
 
-@shared_task(bind=True, default_retry_delay=settings.CONCURRENT_USAGE_CALCULATION_DELAY)
+@shared_task(
+    bind=True,
+    default_retry_delay=settings.CONCURRENT_USAGE_CALCULATION_DELAY,
+    name="api.tasks.calculate_max_concurrent_usage_task",
+)
 def calculate_max_concurrent_usage_task(self, date, user_id):
     """
     Schedule a task to calculate maximum concurrent usage of RHEL instances.

@@ -24,7 +24,10 @@ from util.exceptions import InvalidArn
 logger = logging.getLogger(__name__)
 
 
-@retriable_shared_task(autoretry_for=(RuntimeError,))
+@retriable_shared_task(
+    autoretry_for=(RuntimeError,),
+    name="api.clouds.aws.tasks.configure_customer_aws_and_create_cloud_account",
+)
 @rewrap_aws_errors
 def configure_customer_aws_and_create_cloud_account(
     username, customer_arn, authentication_id, application_id, endpoint_id, source_id
@@ -77,7 +80,7 @@ def configure_customer_aws_and_create_cloud_account(
         logger.info("Unable to create cloud account: error %s", e.detail)
 
 
-@retriable_shared_task
+@retriable_shared_task(name="api.clouds.aws.tasks.initial_aws_describe_instances")
 @rewrap_aws_errors
 def initial_aws_describe_instances(account_id):
     """

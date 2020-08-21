@@ -24,7 +24,7 @@ CLOUD_KEY = "cloud"
 CLOUD_TYPE_AWS = "aws"
 
 
-@retriable_shared_task
+@retriable_shared_task(name="api.clouds.aws.tasks.copy_ami_snapshot")
 @rewrap_aws_errors
 def copy_ami_snapshot(  # noqa: C901
     arn, ami_id, snapshot_region, reference_ami_id=None
@@ -198,7 +198,7 @@ def copy_ami_snapshot(  # noqa: C901
     create_volume.delay(ami_id, snapshot_copy_id)
 
 
-@retriable_shared_task
+@retriable_shared_task(name="api.clouds.aws.tasks.copy_ami_to_customer_account")
 @rewrap_aws_errors
 def copy_ami_to_customer_account(arn, reference_ami_id, snapshot_region):
     """
@@ -303,7 +303,7 @@ def copy_ami_to_customer_account(arn, reference_ami_id, snapshot_region):
     copy_ami_snapshot.delay(arn, new_ami_id, snapshot_region, reference_ami_id)
 
 
-@retriable_shared_task
+@retriable_shared_task(name="api.clouds.aws.tasks.remove_snapshot_ownership")
 @rewrap_aws_errors
 def remove_snapshot_ownership(
     arn, customer_snapshot_id, customer_snapshot_region, snapshot_copy_id
@@ -351,7 +351,7 @@ def remove_snapshot_ownership(
     aws.remove_snapshot_ownership(customer_snapshot)
 
 
-@retriable_shared_task
+@retriable_shared_task(name="api.clouds.aws.tasks.create_volume")
 @rewrap_aws_errors
 def create_volume(ami_id, snapshot_copy_id):
     """
@@ -385,7 +385,7 @@ def create_volume(ami_id, snapshot_copy_id):
     enqueue_ready_volume.delay(ami_id, volume_id, region)
 
 
-@retriable_shared_task
+@retriable_shared_task(name="api.clouds.aws.tasks.delete_snapshot")
 @rewrap_aws_errors
 def delete_snapshot(snapshot_copy_id, volume_id, volume_region):
     """
@@ -413,7 +413,7 @@ def delete_snapshot(snapshot_copy_id, volume_id, volume_region):
     snapshot_copy.delete(DryRun=False)
 
 
-@retriable_shared_task
+@retriable_shared_task(name="api.clouds.aws.tasks.enqueue_ready_volume")
 @rewrap_aws_errors
 def enqueue_ready_volume(ami_id, volume_id, volume_region):
     """
