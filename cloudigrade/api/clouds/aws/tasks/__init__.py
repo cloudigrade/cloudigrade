@@ -23,7 +23,6 @@ the new automatic name, and Celery cannot know that the two were once the same.
 Therefore, we should always preserve the original name in each task function's
 decorator even if the function itself is renamed or moved elsewhere.
 """
-
 from api.clouds.aws.tasks.cloudtrail import analyze_log
 from api.clouds.aws.tasks.imageprep import (
     CLOUD_KEY,
@@ -36,7 +35,6 @@ from api.clouds.aws.tasks.imageprep import (
     remove_snapshot_ownership,
 )
 from api.clouds.aws.tasks.inspection import (
-    # persist_aws_inspection_cluster_results,
     run_inspection_cluster,
     scale_down_cluster,
     scale_up_inspection_cluster,
