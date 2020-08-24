@@ -26,7 +26,9 @@ class AwsCloudAccount(BaseModel):
     cloud_account = GenericRelation(
         CloudAccount, related_query_name="aws_cloud_account"
     )
-    aws_account_id = models.DecimalField(max_digits=12, decimal_places=0, db_index=True)
+    aws_account_id = models.DecimalField(
+        max_digits=12, decimal_places=0, db_index=True, unique=True
+    )
     account_arn = models.CharField(max_length=256, unique=True)
     verify_task = models.OneToOneField(
         PeriodicTask, models.CASCADE, blank=True, null=True

@@ -59,7 +59,8 @@ CG1001 = CloudigradeError(
     "CG1001",
     _(
         "Failed to create Cloud Account for Sources Application id "
-        "%(application_id)s: CloudAccount already exists with ARN %(arn)s."
+        "%(application_id)s: CloudAccount already exists with ARN "
+        "%(arn)s for user %(username)s."
     ),
 )
 
