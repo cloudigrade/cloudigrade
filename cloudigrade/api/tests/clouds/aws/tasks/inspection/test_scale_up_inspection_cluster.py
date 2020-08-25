@@ -1,4 +1,4 @@
-"""Collection of tests for aws.tasks.cloudtrail.scale_up_inspection_cluster."""
+"""Collection of tests for aws.tasks.inspection.scale_up_inspection_cluster."""
 from unittest.mock import Mock, patch
 
 from botocore.exceptions import ClientError
@@ -6,6 +6,7 @@ from django.conf import settings
 from django.test import TestCase
 
 from api.clouds.aws import tasks
+from util.tests import helper
 
 
 class ScaleUpInspectionClusterTest(TestCase):
@@ -18,9 +19,10 @@ class ScaleUpInspectionClusterTest(TestCase):
         )
 
     @patch("api.clouds.aws.tasks.inspection.run_inspection_cluster")
+    @patch("api.clouds.aws.tasks.inspection.check_cluster_instances_age")
     @patch("api.clouds.aws.tasks.inspection.aws")
     def test_scale_up_inspection_cluster_success(
-        self, mock_aws, mock_run_inspection_cluster
+        self, mock_aws, mock_check, mock_run_inspection_cluster
     ):
         """Assert successful scaling with empty cluster and queued messages."""
         messages = [Mock()]
@@ -29,6 +31,7 @@ class ScaleUpInspectionClusterTest(TestCase):
 
         tasks.scale_up_inspection_cluster()
 
+        mock_check.assert_not_called()
         mock_aws.is_scaled_down.assert_called_once_with(
             settings.HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME
         )
@@ -42,15 +45,28 @@ class ScaleUpInspectionClusterTest(TestCase):
         mock_aws.add_messages_to_queue.assert_not_called()
 
     @patch("api.clouds.aws.tasks.inspection.run_inspection_cluster")
+    @patch("api.clouds.aws.tasks.inspection.check_cluster_instances_age")
     @patch("api.clouds.aws.tasks.inspection.aws")
     def test_scale_up_inspection_cluster_aborts_when_not_scaled_down(
-        self, mock_aws, mock_run_inspection_cluster
+        self, mock_aws, mock_check, mock_run_inspection_cluster
     ):
         """Assert scale up aborts when not scaled down."""
-        mock_aws.is_scaled_down.return_value = False, {"Instances": [Mock()]}
+        instance_ids = [
+            helper.generate_dummy_instance_id(),
+            helper.generate_dummy_instance_id(),
+        ]
+        mock_aws.is_scaled_down.return_value = (
+            False,
+            {
+                "Instances": [
+                    {"InstanceId": instance_id} for instance_id in instance_ids
+                ]
+            },
+        )
 
         tasks.scale_up_inspection_cluster()
 
+        mock_check.assert_called_once_with(instance_ids)
         mock_aws.is_scaled_down.assert_called_once_with(
             settings.HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME
         )
@@ -60,9 +76,10 @@ class ScaleUpInspectionClusterTest(TestCase):
         mock_aws.add_messages_to_queue.assert_not_called()
 
     @patch("api.clouds.aws.tasks.inspection.run_inspection_cluster")
+    @patch("api.clouds.aws.tasks.inspection.check_cluster_instances_age")
     @patch("api.clouds.aws.tasks.inspection.aws")
     def test_scale_up_inspection_cluster_aborts_when_no_messages(
-        self, mock_aws, mock_run_inspection_cluster
+        self, mock_aws, mock_check, mock_run_inspection_cluster
     ):
         """Assert scale up aborts when not scaled down."""
         mock_aws.is_scaled_down.return_value = True, dict()
@@ -70,6 +87,7 @@ class ScaleUpInspectionClusterTest(TestCase):
 
         tasks.scale_up_inspection_cluster()
 
+        mock_check.assert_not_called()
         mock_aws.is_scaled_down.assert_called_once_with(
             settings.HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME
         )
@@ -81,9 +99,10 @@ class ScaleUpInspectionClusterTest(TestCase):
         mock_aws.add_messages_to_queue.assert_not_called()
 
     @patch("api.clouds.aws.tasks.inspection.run_inspection_cluster")
+    @patch("api.clouds.aws.tasks.inspection.check_cluster_instances_age")
     @patch("api.clouds.aws.tasks.inspection.aws")
     def test_scale_up_inspection_cluster_requeues_on_aws_error(
-        self, mock_aws, mock_run_inspection_cluster
+        self, mock_aws, mock_check, mock_run_inspection_cluster
     ):
         """Assert messages requeue when scale_up encounters AWS exception."""
         messages = [Mock()]
@@ -94,6 +113,7 @@ class ScaleUpInspectionClusterTest(TestCase):
         with self.assertRaises(RuntimeError):
             tasks.scale_up_inspection_cluster()
 
+        mock_check.assert_not_called()
         mock_aws.is_scaled_down.assert_called_once_with(
             settings.HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME
         )

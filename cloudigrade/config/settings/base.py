@@ -397,6 +397,11 @@ CELERY_BEAT_SCHEDULE = {
     },
 }
 
+# Limit in seconds for how long we expect the inspection cluster instance to exist.
+INSPECTION_CLUSTER_INSTANCE_AGE_LIMIT = env.int(
+    "INSPECTION_CLUSTER_INSTANCE_AGE_LIMIT", default=10 * 60  # 10 minutes
+)
+
 # Delay in seconds for concurrent usage calculation
 CONCURRENT_USAGE_CALCULATION_DELAY = env(
     "CONCURRENT_USAGE_CALCULATION_DELAY", default=30 * 60

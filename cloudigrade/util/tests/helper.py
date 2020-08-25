@@ -189,6 +189,7 @@ def generate_dummy_describe_instance(
     state=None,
     instance_type=None,
     platform="",
+    launch_time="",
 ):
     """
     Generate dummy instance to imitate 'describe instances' API response.
@@ -202,6 +203,7 @@ def generate_dummy_describe_instance(
         state (aws.InstanceState): Optional known state of the AwsInstance.
         instance_type (str): Optional known EC2 type of AwsInstance.
         platform (str): Optional known Platform value.
+        launch_time (str): Optional known LaunchTime value.
 
     Returns:
         dict: Well-formed instance data structure.
@@ -226,6 +228,7 @@ def generate_dummy_describe_instance(
         "ImageId": image_id,
         "InstanceId": instance_id,
         "InstanceType": instance_type,
+        "LaunchTime": launch_time,
         "Platform": platform,
         "State": {"Code": state.value, "Name": state.name,},
         "SubnetId": subnet_id,

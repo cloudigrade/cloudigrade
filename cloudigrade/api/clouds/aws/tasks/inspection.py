@@ -19,7 +19,7 @@ from util.exceptions import (
     AwsECSInstanceNotReady,
     AwsTooManyECSInstances,
 )
-from util.misc import generate_device_name
+from util.misc import generate_device_name, get_now
 
 logger = logging.getLogger(__name__)
 
@@ -70,8 +70,11 @@ def scale_up_inspection_cluster():
             ),
             args,
         )
-        for instance in auto_scaling_group.get("Instances", []):
-            logger.info(_("Instance exists: %s"), instance.get("InstanceId"))
+        instance_ids = [
+            instance.get("InstanceId")
+            for instance in auto_scaling_group.get("Instances", [])
+        ]
+        check_cluster_instances_age(instance_ids)
         return
 
     messages = aws.read_messages_from_queue(
@@ -91,6 +94,79 @@ def scale_up_inspection_cluster():
         raise
 
     run_inspection_cluster.delay(messages)
+
+
+def check_cluster_instances_age(instance_ids):
+    """
+    Check the age of the given ECS cluster EC2 instance IDs.
+
+    This function returns nothing, but it will log an error for any instance
+    that exists with a launch time ago older than the configured limit.
+
+    Args:
+        instance_ids (list): list of EC2 instance IDs
+    """
+    if not instance_ids:
+        return
+
+    for instance_id in instance_ids:
+        logger.info(_("Inspection cluster instance exists: %s"), instance_id)
+
+    instances = aws.describe_instances(
+        boto3.Session(), instance_ids, aws.ECS_CLUSTER_REGION
+    )
+
+    age_limit = settings.INSPECTION_CLUSTER_INSTANCE_AGE_LIMIT
+    now = get_now()
+
+    for (ec2_instance_id, described_instance) in instances.items():
+        state = described_instance.get("State", {}).get("Name")
+        launch_time = described_instance.get("LaunchTime")
+        if not launch_time:
+            logger.error(
+                _(
+                    "Inspection cluster instance %(ec2_instance_id)s has state "
+                    "%(state)s but no launch time."
+                ),
+                {"ec2_instance_id": ec2_instance_id, "state": state},
+            )
+            continue
+
+        launch_age = round((now - launch_time).total_seconds(), 1)
+        if launch_age > age_limit:
+            logger.error(
+                _(
+                    "Inspection cluster instance %(ec2_instance_id)s has state "
+                    "%(state)s and launched %(launch_age)s seconds ago at "
+                    "%(launch_time)s. This exceeds our configured limit of "
+                    "%(age_limit)s seconds by %(delta)s seconds."
+                ),
+                {
+                    "ec2_instance_id": ec2_instance_id,
+                    "state": state,
+                    "launch_time": launch_time,
+                    "launch_age": launch_age,
+                    "age_limit": age_limit,
+                    "delta": round(launch_age - age_limit, 1),
+                },
+            )
+        else:
+            logger.debug(
+                _(
+                    "Inspection cluster instance %(ec2_instance_id)s has state "
+                    "%(state)s and launched %(launch_age)s seconds ago at "
+                    "%(launch_time)s. This fits within our configured limit of "
+                    "%(age_limit)s seconds by %(delta)s seconds."
+                ),
+                {
+                    "ec2_instance_id": ec2_instance_id,
+                    "state": state,
+                    "launch_time": launch_time,
+                    "launch_age": launch_age,
+                    "age_limit": age_limit,
+                    "delta": round(age_limit - launch_age, 1),
+                },
+            )
 
 
 @retriable_shared_task(name="api.clouds.aws.tasks.run_inspection_cluster")  # noqa: C901
