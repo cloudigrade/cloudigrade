@@ -187,7 +187,9 @@ class AwsAccountSerializerTest(TransactionTestCase):
             expected_error = {
                 "account_arn": ['Permission denied for ARN "{0}"'.format(self.arn)]
             }
-            with self.assertLogs("api.models", level="INFO") as cm:
+            with self.assertLogs("api.models", level="INFO") as cm, self.assertRaises(
+                ValidationError
+            ):
                 serializer.create(self.validated_data)
             self.assertIn(
                 expected_error["account_arn"][0],
@@ -210,7 +212,9 @@ class AwsAccountSerializerTest(TransactionTestCase):
             mock_verify.return_value = False, []
 
             expected_error = {"account_arn": ["Account verification failed."]}
-            with self.assertLogs("api.models", level="INFO") as cm:
+            with self.assertLogs("api.models", level="INFO") as cm, self.assertRaises(
+                ValidationError
+            ):
                 serializer.create(self.validated_data)
             self.assertIn(
                 expected_error["account_arn"][0],
@@ -244,7 +248,9 @@ class AwsAccountSerializerTest(TransactionTestCase):
                     'ARN "{0}"'.format(self.arn)
                 ]
             }
-            with self.assertLogs("api.models", level="INFO") as cm:
+            with self.assertLogs("api.models", level="INFO") as cm, self.assertRaises(
+                ValidationError
+            ):
                 serializer.create(self.validated_data)
             self.assertIn(
                 expected_error["account_arn"][0],

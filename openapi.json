@@ -78,13 +78,20 @@
                           },
                           "cloud_type": {
                             "enum": [
-                              "aws"
+                              "aws",
+                              "azure"
                             ]
                           },
                           "account_arn": {
                             "type": "string"
                           },
                           "aws_account_id": {
+                            "type": "string"
+                          },
+                          "subscription_id": {
+                            "type": "string"
+                          },
+                          "tenant_id": {
                             "type": "string"
                           },
                           "is_enabled": {
@@ -139,13 +146,20 @@
                   },
                   "cloud_type": {
                     "enum": [
-                      "aws"
+                      "aws",
+                      "azure"
                     ]
                   },
                   "account_arn": {
                     "type": "string"
                   },
                   "aws_account_id": {
+                    "type": "string"
+                  },
+                  "subscription_id": {
+                    "type": "string"
+                  },
+                  "tenant_id": {
                     "type": "string"
                   },
                   "platform_authentication_id": {
@@ -206,13 +220,20 @@
                     },
                     "cloud_type": {
                       "enum": [
-                        "aws"
+                        "aws",
+                        "azure"
                       ]
                     },
                     "account_arn": {
                       "type": "string"
                     },
                     "aws_account_id": {
+                      "type": "string"
+                    },
+                    "subscription_id": {
+                      "type": "string"
+                    },
+                    "tenant_id": {
                       "type": "string"
                     },
                     "is_enabled": {
@@ -295,13 +316,20 @@
                     },
                     "cloud_type": {
                       "enum": [
-                        "aws"
+                        "aws",
+                        "azure"
                       ]
                     },
                     "account_arn": {
                       "type": "string"
                     },
                     "aws_account_id": {
+                      "type": "string"
+                    },
+                    "subscription_id": {
+                      "type": "string"
+                    },
+                    "tenant_id": {
                       "type": "string"
                     },
                     "is_enabled": {
@@ -363,13 +391,20 @@
                   },
                   "cloud_type": {
                     "enum": [
-                      "aws"
+                      "aws",
+                      "azure"
                     ]
                   },
                   "account_arn": {
                     "type": "string"
                   },
                   "aws_account_id": {
+                    "type": "string"
+                  },
+                  "subscription_id": {
+                    "type": "string"
+                  },
+                  "tenant_id": {
                     "type": "string"
                   },
                   "platform_authentication_id": {
@@ -430,13 +465,20 @@
                     },
                     "cloud_type": {
                       "enum": [
-                        "aws"
+                        "aws",
+                        "azure"
                       ]
                     },
                     "account_arn": {
                       "type": "string"
                     },
                     "aws_account_id": {
+                      "type": "string"
+                    },
+                    "subscription_id": {
+                      "type": "string"
+                    },
+                    "tenant_id": {
                       "type": "string"
                     },
                     "is_enabled": {
@@ -498,13 +540,20 @@
                   },
                   "cloud_type": {
                     "enum": [
-                      "aws"
+                      "aws",
+                      "azure"
                     ]
                   },
                   "account_arn": {
                     "type": "string"
                   },
                   "aws_account_id": {
+                    "type": "string"
+                  },
+                  "subscription_id": {
+                    "type": "string"
+                  },
+                  "tenant_id": {
                     "type": "string"
                   },
                   "platform_authentication_id": {
@@ -557,13 +606,20 @@
                     },
                     "cloud_type": {
                       "enum": [
-                        "aws"
+                        "aws",
+                        "azure"
                       ]
                     },
                     "account_arn": {
                       "type": "string"
                     },
                     "aws_account_id": {
+                      "type": "string"
+                    },
+                    "subscription_id": {
+                      "type": "string"
+                    },
+                    "tenant_id": {
                       "type": "string"
                     },
                     "is_enabled": {
@@ -688,7 +744,8 @@
                           },
                           "cloud_type": {
                             "enum": [
-                              "aws"
+                              "aws",
+                              "azure"
                             ]
                           },
                           "content_object": {
@@ -750,7 +807,8 @@
                     },
                     "cloud_type": {
                       "enum": [
-                        "aws"
+                        "aws",
+                        "azure"
                       ]
                     },
                     "content_object": {
@@ -898,7 +956,8 @@
                           },
                           "cloud_type": {
                             "enum": [
-                              "aws"
+                              "aws",
+                              "azure"
                             ]
                           },
                           "content_object": {
@@ -1023,7 +1082,8 @@
                     },
                     "cloud_type": {
                       "enum": [
-                        "aws"
+                        "aws",
+                        "azure"
                       ]
                     },
                     "content_object": {
@@ -1198,7 +1258,8 @@
                 "properties": {
                   "cloud_type": {
                     "enum": [
-                      "aws"
+                      "aws",
+                      "azure"
                     ]
                   },
                   "content_object": {
@@ -1302,7 +1363,8 @@
                     },
                     "cloud_type": {
                       "enum": [
-                        "aws"
+                        "aws",
+                        "azure"
                       ]
                     },
                     "content_object": {

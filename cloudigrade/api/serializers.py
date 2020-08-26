@@ -13,7 +13,7 @@ from rest_framework.fields import (
 )
 from rest_framework.serializers import ModelSerializer, Serializer
 
-from api import CLOUD_PROVIDERS
+from api import AWS_PROVIDER_STRING, AZURE_PROVIDER_STRING, CLOUD_PROVIDERS
 from api.clouds.aws.models import AwsCloudAccount, AwsInstance, AwsMachineImage
 from api.clouds.aws.serializers import (
     AwsCloudAccountSerializer,
@@ -21,6 +21,13 @@ from api.clouds.aws.serializers import (
     AwsMachineImageSerializer,
 )
 from api.clouds.aws.util import create_aws_cloud_account
+from api.clouds.azure.models import AzureCloudAccount, AzureInstance, AzureMachineImage
+from api.clouds.azure.serializers import (
+    AzureCloudAccountSerializer,
+    AzureInstanceSerializer,
+    AzureMachineImageSerializer,
+)
+from api.clouds.azure.util import create_azure_cloud_account
 from api.models import (
     CloudAccount,
     Instance,
@@ -43,13 +50,20 @@ class CloudAccountSerializer(ModelSerializer):
         InstanceSerializer uses "cloud_account_id".
     """
 
-    account_arn = CharField(required=False)
     account_id = IntegerField(source="id", read_only=True)
+    account_arn = CharField(required=False)
     aws_account_id = CharField(required=False)
+
+    subscription_id = CharField(required=False)
+    tenant_id = CharField(required=False)
 
     cloud_type = ChoiceField(choices=CLOUD_PROVIDERS, required=True)
     content_object = GenericRelatedField(
-        {AwsCloudAccount: AwsCloudAccountSerializer(),}, required=False
+        {
+            AwsCloudAccount: AwsCloudAccountSerializer(),
+            AzureCloudAccount: AzureCloudAccountSerializer(),
+        },
+        required=False,
     )
 
     class Meta:
@@ -64,6 +78,8 @@ class CloudAccountSerializer(ModelSerializer):
             "cloud_type",
             "account_arn",
             "aws_account_id",
+            "subscription_id",
+            "tenant_id",
             "is_enabled",
             "platform_authentication_id",
             "platform_application_id",
@@ -76,7 +92,7 @@ class CloudAccountSerializer(ModelSerializer):
             "content_object",
             "is_enabled",
         )
-        create_only_fields = ("cloud_type",)
+        create_only_fields = ("cloud_type", "subscription_id", "tenant_id")
 
     def validate_name(self, value):
         """Validate the input name is unique."""
@@ -113,7 +129,7 @@ class CloudAccountSerializer(ModelSerializer):
         """
         cloud_type = validated_data["cloud_type"]
 
-        if cloud_type == "aws":
+        if cloud_type == AWS_PROVIDER_STRING:
             account_arn = validated_data.get("account_arn")
             if account_arn is None:
                 raise ValidationError(
@@ -121,6 +137,20 @@ class CloudAccountSerializer(ModelSerializer):
                     "required",
                 )
             return self.create_aws_cloud_account(validated_data)
+        elif cloud_type == AZURE_PROVIDER_STRING:
+            subscription_id = validated_data.get("subscription_id")
+            tenant_id = validated_data.get("tenant_id")
+            errors = {}
+            if subscription_id is None:
+                errors["subscription_id"] = Field.default_error_messages["required"]
+            if tenant_id is None:
+                errors["tenant_id"] = Field.default_error_messages["required"]
+            if errors:
+                raise ValidationError(
+                    errors, "required",
+                )
+            return self.create_azure_cloud_account(validated_data)
+
         else:
             raise NotImplementedError
 
@@ -168,13 +198,40 @@ class CloudAccountSerializer(ModelSerializer):
         )
         return cloud_account
 
+    def create_azure_cloud_account(self, validated_data):
+        """Create an Azure flavored CloudAccount."""
+        user = self.context["request"].user
+        name = validated_data.get("name")
+        subscription_id = validated_data["subscription_id"]
+        tenant_id = validated_data["tenant_id"]
+
+        platform_authentication_id = validated_data.get("platform_authentication_id")
+        platform_application_id = validated_data.get("platform_application_id")
+        platform_endpoint_id = validated_data.get("platform_endpoint_id")
+        platform_source_id = validated_data.get("platform_source_id")
+        cloud_account = create_azure_cloud_account(
+            user,
+            name,
+            subscription_id,
+            tenant_id,
+            platform_authentication_id,
+            platform_application_id,
+            platform_endpoint_id,
+            platform_source_id,
+        )
+        return cloud_account
+
 
 class MachineImageSerializer(ModelSerializer):
     """Serialize a customer AwsMachineImage for API v2."""
 
-    cloud_type = ChoiceField(choices=["aws"], required=False)
+    cloud_type = ChoiceField(CLOUD_PROVIDERS, required=False)
     content_object = GenericRelatedField(
-        {AwsMachineImage: AwsMachineImageSerializer(),}, required=False
+        {
+            AwsMachineImage: AwsMachineImageSerializer(),
+            AzureMachineImage: AzureMachineImageSerializer(),
+        },
+        required=False,
     )
 
     image_id = IntegerField(source="id", read_only=True)
@@ -231,9 +288,13 @@ class MachineImageSerializer(ModelSerializer):
 class InstanceSerializer(ModelSerializer):
     """Serialize a customer AwsInstance for API v2."""
 
-    cloud_type = ChoiceField(choices=["aws"], required=False)
+    cloud_type = ChoiceField(choices=CLOUD_PROVIDERS, required=False)
     content_object = GenericRelatedField(
-        {AwsInstance: AwsInstanceSerializer(),}, required=False
+        {
+            AwsInstance: AwsInstanceSerializer(),
+            AzureInstance: AzureInstanceSerializer(),
+        },
+        required=False,
     )
     instance_id = IntegerField(source="id", read_only=True)
 

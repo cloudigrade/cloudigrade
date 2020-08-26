@@ -938,7 +938,12 @@ def create_aws_cloud_account(
         if cloud_account.enable() is False:
             # Enabling of cloud account failed, rolling back.
             transaction.set_rollback(True)
-            return
+            raise ValidationError(
+                {
+                    "is_enabled": "Could not enable cloud account. "
+                    "Please check your credentials."
+                }
+            )
 
     return cloud_account
 

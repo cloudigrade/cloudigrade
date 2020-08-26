@@ -7,6 +7,12 @@ from api.clouds.aws.models import (
     AwsInstanceEvent,
     AwsMachineImage,
 )
+from api.clouds.azure.models import (
+    AzureCloudAccount,
+    AzureInstance,
+    AzureInstanceEvent,
+    AzureMachineImage,
+)
 from api.models import (
     CloudAccount,
     Instance,
@@ -23,3 +29,8 @@ admin.site.register(AwsCloudAccount)
 admin.site.register(AwsMachineImage)
 admin.site.register(AwsInstance)
 admin.site.register(AwsInstanceEvent)
+
+admin.site.register(AzureCloudAccount)
+admin.site.register(AzureMachineImage)
+admin.site.register(AzureInstance)
+admin.site.register(AzureInstanceEvent)

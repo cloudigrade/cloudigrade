@@ -13,11 +13,11 @@ from django.db.models import Q
 from django.utils.translation import gettext as _
 from rest_framework.serializers import ValidationError
 
-from api.models import InstanceDefinition
 from api.models import (
     ConcurrentUsage,
     ConcurrentUsageCalculationTask,
     Instance,
+    InstanceDefinition,
     InstanceEvent,
     Run,
 )

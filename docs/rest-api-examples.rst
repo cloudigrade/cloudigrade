@@ -150,7 +150,7 @@ Response:
     Content-Length: 93
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: 5fdf892d-3560-464a-8223-26455556ca5e
+    X-CLOUDIGRADE-REQUEST-ID: 1d7abb3d-ef0c-4e2d-9b85-ba124d67d554
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -180,32 +180,12 @@ Response:
     Content-Length: 1262
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: b71756c7-9e09-4a45-a926-fb954a5c65fd
+    X-CLOUDIGRADE-REQUEST-ID: 4c6a1b19-8fe8-4b79-96d7-ccf9cf571f7a
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
     {
         "data": [
-            {
-                "account_id": 2,
-                "cloud_type": "aws",
-                "content_object": {
-                    "account_arn": "arn:aws:iam::636708824399:role/role-for-cloudigrade",
-                    "aws_account_id": "636708824399",
-                    "aws_cloud_account_id": 2,
-                    "created_at": "2020-05-04T00:00:00Z",
-                    "updated_at": "2020-05-18T13:51:59.722367Z"
-                },
-                "created_at": "2020-05-04T00:00:00Z",
-                "is_enabled": true,
-                "name": "greatest account ever",
-                "platform_application_id": 7961,
-                "platform_authentication_id": 8376,
-                "platform_endpoint_id": 6634,
-                "platform_source_id": 4969,
-                "updated_at": "2020-05-18T13:51:59.722367Z",
-                "user_id": 2
-            },
             {
                 "account_id": 3,
                 "cloud_type": "aws",
@@ -223,6 +203,26 @@ Response:
                 "platform_authentication_id": 3578,
                 "platform_endpoint_id": 2281,
                 "platform_source_id": 4617,
+                "updated_at": "2020-05-18T13:51:59.722367Z",
+                "user_id": 2
+            },
+            {
+                "account_id": 2,
+                "cloud_type": "aws",
+                "content_object": {
+                    "account_arn": "arn:aws:iam::636708824399:role/role-for-cloudigrade",
+                    "aws_account_id": "636708824399",
+                    "aws_cloud_account_id": 2,
+                    "created_at": "2020-05-04T00:00:00Z",
+                    "updated_at": "2020-05-18T13:51:59.722367Z"
+                },
+                "created_at": "2020-05-04T00:00:00Z",
+                "is_enabled": true,
+                "name": "greatest account ever",
+                "platform_application_id": 7961,
+                "platform_authentication_id": 8376,
+                "platform_endpoint_id": 6634,
+                "platform_source_id": 4969,
                 "updated_at": "2020-05-18T13:51:59.722367Z",
                 "user_id": 2
             }
@@ -257,7 +257,7 @@ Response:
     Content-Length: 529
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: 8c214b1d-7abb-4def-8c4e-2ddb85ba124d
+    X-CLOUDIGRADE-REQUEST-ID: 1db37f6d-094d-45bc-afe4-27eb2aa09060
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -308,7 +308,7 @@ Response:
     Content-Length: 534
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: 67d5544c-6a1b-498f-a87b-7956d7ccf9cf
+    X-CLOUDIGRADE-REQUEST-ID: cef9fda3-1610-4e15-b2bf-380f62021964
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -358,7 +358,7 @@ Response:
     Content-Length: 600
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: 571f7a1d-b37f-4d09-8d55-bcafe427eb2a
+    X-CLOUDIGRADE-REQUEST-ID: 8e844a72-eb7d-4995-b6ad-376c155e38fd
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -402,7 +402,7 @@ Response:
     Content-Length: 50
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: a09060ce-f9fd-4316-90ce-1532bf380f62
+    X-CLOUDIGRADE-REQUEST-ID: ff4295c6-2a6e-415b-9d10-d2dddab307e7
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -434,7 +434,7 @@ Response:
     Content-Length: 1279
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: 0219648e-844a-42eb-bdc9-95b6ad376c15
+    X-CLOUDIGRADE-REQUEST-ID: 8673c0ad-331e-4f65-8135-a40afff2cc37
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -516,7 +516,7 @@ Response:
     Content-Length: 350
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: 5e38fdff-4295-462a-ae31-5b1d10d2ddda
+    X-CLOUDIGRADE-REQUEST-ID: 9f251a32-7560-4c8b-9326-1afd98fb7c25
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -559,7 +559,7 @@ Response:
     Content-Length: 1656
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: b307e786-73c0-4d33-9e7f-654135a40aff
+    X-CLOUDIGRADE-REQUEST-ID: 9067a3ae-6ce0-457e-adea-e352d57fff7f
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -657,7 +657,7 @@ Response:
     Content-Length: 1384
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: f2cc379f-251a-4275-a05c-8bd3261afd98
+    X-CLOUDIGRADE-REQUEST-ID: a2abdf33-8a9c-4e38-8257-b4f6bfe651d1
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -744,7 +744,7 @@ Response:
     Content-Length: 3438
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: fb7c2590-67a3-4e6c-a085-7eadeae352d5
+    X-CLOUDIGRADE-REQUEST-ID: 52098625-df41-4ac8-a7d7-61954bb7b4ce
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -897,7 +897,7 @@ Response:
     Content-Length: 1004
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: 7fff7fa2-abdf-438a-9cee-380257b4f6bf
+    X-CLOUDIGRADE-REQUEST-ID: 7810cc15-84de-4a0a-9039-210a4c03c2d8
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -968,7 +968,7 @@ Response:
     Content-Length: 1075
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: e651d152-0986-45df-819a-c827d761954b
+    X-CLOUDIGRADE-REQUEST-ID: 7254dc29-cc26-4ea7-b5f7-5f8161e68780
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -1034,7 +1034,7 @@ Response:
     Content-Length: 1073
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: b7b4ce78-10cc-4584-9eea-0a1039210a4c
+    X-CLOUDIGRADE-REQUEST-ID: 089217ad-cbce-44c2-99fd-13bf6de7c134
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -1112,7 +1112,7 @@ Response:
     Content-Length: 2621
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: 03c2d872-54dc-49cc-a6de-a775f75f8161
+    X-CLOUDIGRADE-REQUEST-ID: 4a89e699-6ad3-487b-98ca-f8639b963bd9
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -1360,7 +1360,7 @@ Response:
     Content-Length: 633
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: e6878008-9217-4dcb-8e84-c299fd13bf6d
+    X-CLOUDIGRADE-REQUEST-ID: ddcc05a8-e200-4d2e-8d81-914155107edc
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -1429,7 +1429,7 @@ Response:
     Content-Length: 303
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: e7c1344a-89e6-496a-93f8-7bd8caf8639b
+    X-CLOUDIGRADE-REQUEST-ID: 43f1d34d-c568-42cf-a20f-29a4ef203d49
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -1469,7 +1469,7 @@ Response:
     Content-Length: 608
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: 963bd9dd-cc05-48e2-80bd-2e4d81914155
+    X-CLOUDIGRADE-REQUEST-ID: bad4550e-f109-4b6a-a47d-e3dd9ab714ac
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -1493,7 +1493,7 @@ Response:
                             "cloudtrail:PutEventSelectors",
                             "cloudtrail:DescribeTrails",
                             "cloudtrail:StartLogging",
-                            "cloudtrail:StopLogging"
+                            "cloudtrail:DeleteTrail"
                         ],
                         "Effect": "Allow",
                         "Resource": "*",
