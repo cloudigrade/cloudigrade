@@ -9,6 +9,7 @@ from django.db.models.signals import post_delete, pre_delete
 from django.dispatch import receiver
 from django.utils.translation import gettext as _
 
+from api import AWS_PROVIDER_STRING, AZURE_PROVIDER_STRING
 from util.insights import notify_sources_application_availability
 from util.misc import get_now
 from util.models import BaseGenericModel, BaseModel
@@ -677,3 +678,31 @@ class ConcurrentUsageCalculationTask(BaseModel):
         current_app.control.revoke(self.task_id)
         self.status = self.CANCELED
         self.save()
+
+
+class InstanceDefinition(BaseModel):
+    """
+    Lookup table for cloud provider instance definitions.
+
+    Data should be retrieved from this table using the helper function
+    get_instance_type_definition.
+    """
+
+    AWS = AWS_PROVIDER_STRING
+    AZURE = AZURE_PROVIDER_STRING
+    CLOUD_TYPE_CHOICES = (
+        (AWS, "AWS EC2 instance definitions."),
+        (AZURE, "Azure VM instance definitions."),
+    )
+
+    instance_type = models.CharField(
+        max_length=256, null=False, blank=False, db_index=True
+    )
+    memory = models.DecimalField(default=0, decimal_places=2, max_digits=16,)
+    vcpu = models.IntegerField(default=0)
+    cloud_type = models.CharField(
+        max_length=32, choices=CLOUD_TYPE_CHOICES, null=False, blank=False
+    )
+
+    class Meta:
+        unique_together = (("instance_type", "cloud_type"),)

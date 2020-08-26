@@ -6,7 +6,8 @@ import boto3
 from django.db import IntegrityError, transaction
 from django.utils.translation import gettext as _
 
-from api.clouds.aws.models import AwsEC2InstanceDefinition
+from api import AWS_PROVIDER_STRING
+from api.models import InstanceDefinition
 from util.celery import retriable_shared_task
 
 logger = logging.getLogger(__name__)
@@ -103,8 +104,9 @@ def _save_ec2_instance_type_definitions(definitions):
     """
     for name, attributes in definitions.items():
         try:
-            obj, created = AwsEC2InstanceDefinition.objects.get_or_create(
+            obj, created = InstanceDefinition.objects.get_or_create(
                 instance_type=name,
+                cloud_type=AWS_PROVIDER_STRING,
                 defaults={"memory": attributes["memory"], "vcpu": attributes["vcpu"]},
             )
             if created:
@@ -114,7 +116,7 @@ def _save_ec2_instance_type_definitions(definitions):
         except IntegrityError as e:
             logger.exception(
                 _(
-                    "Failed to get_or_create an AwsEC2InstanceDefinition("
+                    "Failed to get_or_create an InstanceDefinition("
                     'name="%(name)s", memory=%(memory)s, vcpu=%(vcpu)s'
                     "); this should never happen."
                 ),

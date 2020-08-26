@@ -15,13 +15,13 @@ from django.test import TestCase
 from django_celery_beat.models import IntervalSchedule, PeriodicTask
 
 from api.clouds.aws.models import (
-    AwsEC2InstanceDefinition,
     CLOUD_ACCESS_NAME_TOKEN,
     MARKETPLACE_NAME_TOKEN,
 )
 from api.models import (
     CloudAccount,
     Instance,
+    InstanceDefinition,
     InstanceEvent,
     MachineImage,
 )
@@ -409,15 +409,15 @@ class GenerateAwsImageTest(TestCase):
         self.assertTrue(image.content_object.is_marketplace)
 
 
-class GenerateAwsEc2InstanceDefinitionsTest(TestCase):
+class GenerateInstanceDefinitionsTest(TestCase):
     """generate_aws_ec2_definitions test case."""
 
     def test_generate_aws_ec2_definitions_when_empty(self):
         """Assert generation of AWS EC2 instance definitions."""
-        self.assertEqual(AwsEC2InstanceDefinition.objects.count(), 0)
+        self.assertEqual(InstanceDefinition.objects.count(), 0)
         helper.generate_aws_ec2_definitions()
         self.assertEqual(
-            AwsEC2InstanceDefinition.objects.count(),
+            InstanceDefinition.objects.count(),
             len(util_helper.SOME_EC2_INSTANCE_TYPES),
         )
 
@@ -427,7 +427,7 @@ class GenerateAwsEc2InstanceDefinitionsTest(TestCase):
         helper.generate_aws_ec2_definitions()
         helper.generate_aws_ec2_definitions()
         self.assertEqual(
-            AwsEC2InstanceDefinition.objects.count(),
+            InstanceDefinition.objects.count(),
             len(util_helper.SOME_EC2_INSTANCE_TYPES),
         )
         # warning counts should match because each type was attempted twice.

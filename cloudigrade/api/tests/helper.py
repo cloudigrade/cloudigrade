@@ -15,7 +15,6 @@ from api.clouds.aws import tasks
 from api.clouds.aws.cloudtrail import CloudTrailInstanceEvent
 from api.clouds.aws.models import (
     AwsCloudAccount,
-    AwsEC2InstanceDefinition,
     AwsInstance,
     AwsInstanceEvent,
     AwsMachineImage,
@@ -25,6 +24,7 @@ from api.clouds.aws.models import (
 from api.models import (
     CloudAccount,
     Instance,
+    InstanceDefinition,
     InstanceEvent,
     MachineImage,
     Run,
@@ -702,13 +702,14 @@ def generate_single_run(
     return run
 
 
-def generate_aws_ec2_definitions():
-    """Generate AwsEC2InstanceDefinitions from SOME_EC2_INSTANCE_TYPES."""
+def generate_aws_ec2_definitions(cloud_type="aws"):
+    """Generate InstanceDefinitions from SOME_EC2_INSTANCE_TYPES."""
     instance_types = helper.SOME_EC2_INSTANCE_TYPES
 
     for name, instance in instance_types.items():
-        __, created = AwsEC2InstanceDefinition.objects.get_or_create(
+        __, created = InstanceDefinition.objects.get_or_create(
             instance_type=name,
+            cloud_type=cloud_type,
             defaults={"memory": instance["memory"], "vcpu": instance["vcpu"]},
         )
         if not created:

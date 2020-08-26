@@ -8,8 +8,9 @@ Note:
 from django.core.management.base import BaseCommand
 from django.utils.translation import gettext as _
 
+from api import AWS_PROVIDER_STRING
 from api.clouds.aws import tasks
-from api.clouds.aws.models import AwsEC2InstanceDefinition
+from api.models import InstanceDefinition
 
 
 class Command(BaseCommand):
@@ -27,10 +28,16 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """Handle the command execution."""
-        if not options["force"] and AwsEC2InstanceDefinition.objects.exists():
+        if (
+            not options["force"]
+            and InstanceDefinition.objects.filter(
+                cloud_type=AWS_PROVIDER_STRING
+            ).exists()
+        ):
             self.stdout.write(
                 _("Nothing to do. EC2 instance definitions already exist.")
             )
             return
+        # TODO: launch task to populate azure instance definitions
         tasks.repopulate_ec2_instance_mapping.delay()
         self.stdout.write(_("Async task launched to load EC2 instance definitions."))

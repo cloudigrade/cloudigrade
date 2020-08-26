@@ -422,18 +422,3 @@ class AwsInstanceEvent(BaseModel):
             f"updated_at=parse({updated_at})"
             f")"
         )
-
-
-class AwsEC2InstanceDefinition(BaseModel):
-    """
-    Lookup table for AWS EC2 instance definitions.
-
-    Data should be retrieved from this table using the helper function
-    getInstanceDefinition.
-    """
-
-    instance_type = models.CharField(
-        max_length=256, null=False, blank=False, db_index=True, unique=True
-    )
-    memory = models.DecimalField(default=0, decimal_places=2, max_digits=16,)
-    vcpu = models.IntegerField(default=0)

@@ -5,7 +5,7 @@ from unittest.mock import patch
 from django.core.management import call_command
 from django.test import TestCase
 
-from api.clouds.aws.models import AwsEC2InstanceDefinition
+from api.models import InstanceDefinition
 from util.tests import helper
 
 
@@ -14,10 +14,11 @@ class LoadEc2DefinitionsTest(TestCase):
 
     def create_random_definition(self):
         """Create and save a random definition."""
-        AwsEC2InstanceDefinition.objects.create(
+        InstanceDefinition.objects.create(
             instance_type=helper.get_random_instance_type(),
             memory=random.randrange(4),
             vcpu=random.randrange(4),
+            cloud_type="aws",
         )
 
     def test_skip_when_any_present(self):

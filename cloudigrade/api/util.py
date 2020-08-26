@@ -13,7 +13,7 @@ from django.db.models import Q
 from django.utils.translation import gettext as _
 from rest_framework.serializers import ValidationError
 
-from api.clouds.aws.models import AwsEC2InstanceDefinition
+from api.models import InstanceDefinition
 from api.models import (
     ConcurrentUsage,
     ConcurrentUsageCalculationTask,
@@ -87,15 +87,17 @@ NormalizedRun = collections.namedtuple(
 )
 
 
-def get_instance_type_definition(instance_type):
+def get_instance_type_definition(instance_type, cloud_type):
     """Gracefully get the definition for the instance type."""
     try:
         type_definition = (
-            AwsEC2InstanceDefinition.objects.get(instance_type=instance_type)
+            InstanceDefinition.objects.get(
+                instance_type=instance_type, cloud_type=cloud_type
+            )
             if instance_type
             else None
         )
-    except AwsEC2InstanceDefinition.DoesNotExist:
+    except InstanceDefinition.DoesNotExist:
         type_definition = None
     return type_definition
 
@@ -128,7 +130,8 @@ def normalize_runs(events):  # noqa: C901
         ].content_object.instance_type or get_last_known_instance_type(
             events[0].instance, events[0].occurred_at
         )
-        type_definition = get_instance_type_definition(instance_type)
+        cloud_type = events[0].cloud_type
+        type_definition = get_instance_type_definition(instance_type, cloud_type)
         start_run = None
         end_run = None
         image = Instance.objects.get(id=instance_id).machine_image
