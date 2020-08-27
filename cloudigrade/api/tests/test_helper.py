@@ -78,7 +78,7 @@ class SandboxedRestClientTest(TestCase):
         """Assert "get" requests work."""
         client = helper.SandboxedRestClient()
         client._force_authenticate(self.user)
-        account = helper.generate_aws_account(user=self.user)
+        account = helper.generate_cloud_account(user=self.user)
         response = client.get_accounts(account.id)
         self.assertEqual(response.status_code, http.HTTPStatus.OK)
         response_json = response.json()
@@ -95,20 +95,20 @@ class SandboxedRestClientTest(TestCase):
         client = helper.SandboxedRestClient()
         client._force_authenticate(self.superuser)
 
-        image = helper.generate_aws_image(status=MachineImage.INSPECTED)
+        image = helper.generate_image(status=MachineImage.INSPECTED)
         response = client.post_images(noun_id=image.id, detail="reinspect")
         self.assertEqual(response.status_code, http.HTTPStatus.OK)
         self.assertEqual(MachineImage.PENDING, response.data["status"])
 
 
-class GenerateAwsAccountTest(TestCase):
-    """generate_aws_account tests."""
+class GenerateCloudAccountTest(TestCase):
+    """generate_cloud_account tests."""
 
     def test_generate_aws_account_default(self):
         """Assert generation of an AwsAccount with default/no args."""
         created_at = util_helper.utc_dt(2017, 1, 1, 0, 0, 0)
         with util_helper.clouditardis(created_at):
-            account = helper.generate_aws_account()
+            account = helper.generate_cloud_account()
         self.assertIsInstance(account, CloudAccount)
         self.assertIsNotNone(
             re.match(r"\d{1,12}", str(account.content_object.aws_account_id))
@@ -121,6 +121,22 @@ class GenerateAwsAccountTest(TestCase):
         self.assertIsNotNone(account.platform_endpoint_id)
         self.assertIsNotNone(account.platform_source_id)
         self.assertIsNotNone(account.content_object.verify_task)
+
+    def test_generate_azure_account_default(self):
+        """Assert generation of an AwsAccount with default/no args."""
+        created_at = util_helper.utc_dt(2017, 1, 1, 0, 0, 0)
+        with util_helper.clouditardis(created_at):
+            account = helper.generate_cloud_account(cloud_type="azure")
+        self.assertIsInstance(account, CloudAccount)
+        self.assertIsNotNone(account.content_object.subscription_id)
+        self.assertIsNotNone(account.content_object.tenant_id)
+        self.assertEqual(account.created_at, created_at)
+        self.assertTrue(account.is_enabled)
+        self.assertEqual(account.enabled_at, created_at)
+        self.assertIsNotNone(account.platform_authentication_id)
+        self.assertIsNotNone(account.platform_application_id)
+        self.assertIsNotNone(account.platform_endpoint_id)
+        self.assertIsNotNone(account.platform_source_id)
 
     def test_generate_aws_account_with_args(self):
         """Assert generation of an AwsAccount with all specified args."""
@@ -148,7 +164,7 @@ class GenerateAwsAccountTest(TestCase):
             defaults={"start_time": created_at},
         )
 
-        account = helper.generate_aws_account(
+        account = helper.generate_cloud_account(
             arn,
             aws_account_id,
             user,
@@ -178,13 +194,13 @@ class GenerateAwsAccountTest(TestCase):
         self.assertEqual(account.content_object.verify_task, verify_task)
 
 
-class GenerateAwsInstanceTest(TestCase):
-    """generate_aws_instance test case."""
+class GenerateInstanceTest(TestCase):
+    """generate_instance test case."""
 
     def test_generate_aws_instance_default(self):
         """Assert generation of an Instance with minimal args."""
-        account = helper.generate_aws_account()
-        instance = helper.generate_aws_instance(account)
+        account = helper.generate_cloud_account()
+        instance = helper.generate_instance(account)
         self.assertIsInstance(instance, Instance)
         self.assertEqual(instance.cloud_account, account)
         self.assertIsNotNone(instance.content_object.ec2_instance_id)
@@ -192,12 +208,22 @@ class GenerateAwsInstanceTest(TestCase):
         self.assertIsNotNone(instance.content_object.region)
         self.assertGreater(len(instance.content_object.region), 0)
 
+    def test_generate_azure_instance_default(self):
+        """Assert generation of an Instance with minimal args."""
+        account = helper.generate_cloud_account(cloud_type="azure")
+        instance = helper.generate_instance(account, cloud_type="azure")
+        self.assertIsInstance(instance, Instance)
+        self.assertEqual(instance.cloud_account, account)
+        self.assertIsNotNone(instance.content_object.resource_id)
+        self.assertIsNotNone(instance.content_object.region)
+        self.assertGreater(len(instance.content_object.region), 0)
+
     def test_generate_aws_instance_with_args(self):
         """Assert generation of an AwsInstance with all specified args."""
-        account = helper.generate_aws_account()
+        account = helper.generate_cloud_account()
         ec2_instance_id = util_helper.generate_dummy_instance_id()
         region = util_helper.get_random_region()
-        instance = helper.generate_aws_instance(
+        instance = helper.generate_instance(
             account, ec2_instance_id=ec2_instance_id, region=region,
         )
         self.assertIsInstance(instance, Instance)
@@ -206,26 +232,33 @@ class GenerateAwsInstanceTest(TestCase):
         self.assertEqual(instance.content_object.region, region)
 
 
-class GenerateAwsInstanceEventsTest(TestCase):
-    """generate_aws_instance_events test case."""
+class GenerateInstanceEventsTest(TestCase):
+    """generate_instance_events test case."""
 
     def test_generate_aws_events_default_and_no_times(self):
         """Assert generation of InstanceEvents with minimal args."""
-        account = helper.generate_aws_account()
-        instance = helper.generate_aws_instance(account)
-        events = helper.generate_aws_instance_events(instance, tuple())
+        account = helper.generate_cloud_account()
+        instance = helper.generate_instance(account)
+        events = helper.generate_instance_events(instance, tuple())
+        self.assertEqual(len(events), 0)
+
+    def test_generate_azure_events_default_and_no_times(self):
+        """Assert generation of an azure InstanceEvent."""
+        account = helper.generate_cloud_account(cloud_type="azure")
+        instance = helper.generate_instance(account, cloud_type="azure")
+        events = helper.generate_instance_events(instance, tuple(), cloud_type="azure")
         self.assertEqual(len(events), 0)
 
     def test_generate_aws_events_with_some_times(self):
         """Assert generation of InstanceEvents with some times."""
-        account = helper.generate_aws_account()
-        instance = helper.generate_aws_instance(account)
+        account = helper.generate_cloud_account()
+        instance = helper.generate_instance(account)
         powered_times = (
             (None, util_helper.utc_dt(2017, 1, 1)),
             (util_helper.utc_dt(2017, 1, 2), util_helper.utc_dt(2017, 1, 3)),
             (util_helper.utc_dt(2017, 1, 4), None),
         )
-        events = helper.generate_aws_instance_events(instance, powered_times)
+        events = helper.generate_instance_events(instance, powered_times)
 
         self.assertEqual(len(events), 4)
         self.assertEqual(events[0].occurred_at, powered_times[0][1])
@@ -260,10 +293,10 @@ class GenerateAwsInstanceEventsTest(TestCase):
 
     def test_generate_aws_events_with_args_and_some_times(self):
         """Assert generation of InstanceEvents with all specified args."""
-        account = helper.generate_aws_account()
+        account = helper.generate_cloud_account()
         ec2_ami_id = util_helper.generate_dummy_image_id()
-        image = helper.generate_aws_image(ec2_ami_id=ec2_ami_id)
-        instance = helper.generate_aws_instance(account, image=image)
+        image = helper.generate_image(ec2_ami_id=ec2_ami_id)
+        instance = helper.generate_instance(account, image=image)
         powered_times = (
             (None, util_helper.utc_dt(2017, 1, 1)),
             (util_helper.utc_dt(2017, 1, 2), util_helper.utc_dt(2017, 1, 3)),
@@ -271,7 +304,7 @@ class GenerateAwsInstanceEventsTest(TestCase):
         )
         instance_type = util_helper.get_random_instance_type()
         subnet = str(uuid.uuid4())
-        events = helper.generate_aws_instance_events(
+        events = helper.generate_instance_events(
             instance, powered_times, instance_type=instance_type, subnet=subnet,
         )
 
@@ -293,7 +326,7 @@ class GenerateAwsImageTest(TestCase):
 
     def test_generate_aws_image_default(self):
         """Assert generation of an AwsMachineImage with minimal args."""
-        image = helper.generate_aws_image()
+        image = helper.generate_image()
         self.assertIsInstance(image.content_object.owner_aws_account_id, Decimal)
         self.assertEqual(image.content_object.platform, image.content_object.NONE)
         self.assertIsNotNone(image.content_object.ec2_ami_id)
@@ -317,7 +350,7 @@ class GenerateAwsImageTest(TestCase):
         syspurpose = {_faker.slug(): _faker.text()}
         architecture = _faker.slug()
 
-        image = helper.generate_aws_image(
+        image = helper.generate_image(
             account_id,
             is_encrypted=True,
             is_windows=True,
@@ -354,7 +387,7 @@ class GenerateAwsImageTest(TestCase):
     def test_generate_aws_image_with_rhel_detected_details_args(self):
         """Assert generation of an AwsMachineImage with RHEL JSON details."""
         rhel_version = _faker.slug()
-        image = helper.generate_aws_image(
+        image = helper.generate_image(
             rhel_detected=True,
             rhel_detected_repos=True,
             rhel_detected_certs=True,
@@ -377,7 +410,7 @@ class GenerateAwsImageTest(TestCase):
         account_id = util_helper.generate_dummy_aws_account_id()
         name = _faker.name()
 
-        image = helper.generate_aws_image(account_id, name=name, is_cloud_access=True,)
+        image = helper.generate_image(account_id, name=name, is_cloud_access=True,)
 
         self.assertNotEqual(image.content_object.owner_aws_account_id, account_id)
         self.assertIn(
@@ -395,7 +428,7 @@ class GenerateAwsImageTest(TestCase):
         account_id = util_helper.generate_dummy_aws_account_id()
         name = _faker.name()
 
-        image = helper.generate_aws_image(account_id, name=name, is_marketplace=True,)
+        image = helper.generate_image(account_id, name=name, is_marketplace=True,)
 
         self.assertNotEqual(image.content_object.owner_aws_account_id, account_id)
         self.assertIn(
@@ -415,7 +448,7 @@ class GenerateInstanceDefinitionsTest(TestCase):
     def test_generate_aws_ec2_definitions_when_empty(self):
         """Assert generation of AWS EC2 instance definitions."""
         self.assertEqual(InstanceDefinition.objects.count(), 0)
-        helper.generate_aws_ec2_definitions()
+        helper.generate_instance_type_definitions()
         self.assertEqual(
             InstanceDefinition.objects.count(),
             len(util_helper.SOME_EC2_INSTANCE_TYPES),
@@ -424,8 +457,8 @@ class GenerateInstanceDefinitionsTest(TestCase):
     @patch.object(helper, "logger")
     def test_generate_aws_ec2_definitions_warns_when_not_empty(self, mock_logger):
         """Assert warning when generating definition that already exists."""
-        helper.generate_aws_ec2_definitions()
-        helper.generate_aws_ec2_definitions()
+        helper.generate_instance_type_definitions()
+        helper.generate_instance_type_definitions()
         self.assertEqual(
             InstanceDefinition.objects.count(),
             len(util_helper.SOME_EC2_INSTANCE_TYPES),

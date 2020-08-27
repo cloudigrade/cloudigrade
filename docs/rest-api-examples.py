@@ -26,7 +26,9 @@ from util import filters
 
 from api import models
 from api.clouds.aws.models import AwsCloudAccount
+from api.clouds.azure.models import AzureCloudAccount
 from api.tests import helper as api_helper
+
 from api.util import normalize_runs
 from util.tests import helper as util_helper
 
@@ -53,7 +55,8 @@ class DocsApiHandler(object):
 
     def __init__(self):
         """Initialize all the data for the examples."""
-        api_helper.generate_aws_ec2_definitions()
+        api_helper.generate_instance_type_definitions(cloud_type="aws")
+        api_helper.generate_instance_type_definitions(cloud_type="azure")
 
         self.superuser_account_number = "100000"
         self.superuser = get_test_user(self.superuser_account_number, is_superuser=True)
@@ -87,36 +90,53 @@ class DocsApiHandler(object):
 
         ##################################
         # Generate data for the superuser.
-        self.superuser_account = api_helper.generate_aws_account(
+        self.superuser_account = api_helper.generate_cloud_account(
             arn=util_helper.generate_dummy_arn(),
             user=self.superuser,
             name="super duper account",
             created_at=self.two_weeks_ago,
         )
         self.superuser_instances = [
-            api_helper.generate_aws_instance(self.superuser_account)
+            api_helper.generate_instance(self.superuser_account)
         ]
 
         self.events = []
         # This event represents one instance starting yesterday.
         self.events.extend(
-            api_helper.generate_aws_instance_events(
+            api_helper.generate_instance_events(
                 self.superuser_instances[0], [(self.yesterday, None)]
             )
         )
 
         ######################################
-        # Generate data for the customer user.
-        self.customer_account = api_helper.generate_aws_account(
+        # Generate AWS data for the customer user.
+        self.aws_customer_account = api_helper.generate_cloud_account(
             arn=util_helper.generate_dummy_arn(),
             user=self.customer_user,
             name="greatest account ever",
             created_at=self.two_weeks_ago,
         )
+        self.azure_customer_account = api_helper.generate_cloud_account(
+            azure_subscription_id=uuid.uuid4(),
+            azure_tenant_id=uuid.uuid4(),
+            user=self.customer_user,
+            name="meh account",
+            created_at=self.two_weeks_ago,
+            cloud_type="azure",
+        )
         self.customer_instances = [
-            api_helper.generate_aws_instance(self.customer_account),
-            api_helper.generate_aws_instance(self.customer_account),
-            api_helper.generate_aws_instance(self.customer_account),
+            api_helper.generate_instance(self.aws_customer_account),
+            api_helper.generate_instance(self.aws_customer_account),
+            api_helper.generate_instance(self.aws_customer_account),
+            api_helper.generate_instance(
+                self.azure_customer_account, cloud_type="azure"
+            ),
+            api_helper.generate_instance(
+                self.azure_customer_account, cloud_type="azure"
+            ),
+            api_helper.generate_instance(
+                self.azure_customer_account, cloud_type="azure"
+            ),
         ]
 
         # Generate events so we can see customer activity in the responses.
@@ -124,9 +144,17 @@ class DocsApiHandler(object):
         # stopping two days ago, and starting again yesterday.
         for instance in self.customer_instances[:2]:
             self.events.extend(
-                api_helper.generate_aws_instance_events(
+                api_helper.generate_instance_events(
                     instance,
                     [(self.last_week, self.three_days_ago), (self.yesterday, None),],
+                )
+            )
+        for instance in self.customer_instances[3:6]:
+            self.events.extend(
+                api_helper.generate_instance_events(
+                    instance,
+                    [(self.last_week, self.three_days_ago), (self.yesterday, None),],
+                    cloud_type="azure",
                 )
             )
 
@@ -187,8 +215,8 @@ class DocsApiHandler(object):
         # convert from binary string to string.
         responses["v2_header"] = util_helper.get_3scale_auth_header().decode("utf-8")
 
-        ########################
-        # Customer Account Setup
+        ############################
+        # Customer Account Setup AWS
 
         # Create an AWS account (success)
         another_arn = util_helper.generate_dummy_arn()
@@ -218,6 +246,21 @@ class DocsApiHandler(object):
         )
         assert_status(response, 400)
         responses["v2_account_create_duplicate_arn"] = response
+
+        ##############################
+        # Customer Account Setup Azure
+
+        # Create an Azure account (success)
+        tenant_id = uuid.uuid4()
+        azure_cloud_account_data = (
+            util_helper.generate_dummy_azure_cloud_account_post_data()
+        )
+        azure_cloud_account_data.update(
+            {"tenant_id": tenant_id, "name": "it's an azure account"}
+        )
+        response = self.customer_client.create_accounts(data=azure_cloud_account_data)
+        assert_status(response, 201)
+        responses["v2_account_create_azure"] = response
 
         ##########################
         # v2 Customer Account Info

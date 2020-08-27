@@ -37,7 +37,7 @@ class InitialAwsDescribeInstancesTest(TestCase):
         images should be saved, and two new tasks should be spawned for
         inspecting the two not-windows images.
         """
-        account = account_helper.generate_aws_account()
+        account = account_helper.generate_cloud_account()
 
         # Set up mocked data in AWS API responses.
         region = util_helper.get_random_region()
@@ -160,7 +160,7 @@ class InitialAwsDescribeInstancesTest(TestCase):
     @patch("api.clouds.aws.tasks.onboarding.aws")
     def test_initial_aws_describe_instances_account_disabled(self, mock_aws):
         """Test early return when account exists but is disabled."""
-        account = account_helper.generate_aws_account(is_enabled=False)
+        account = account_helper.generate_cloud_account(is_enabled=False)
         tasks.initial_aws_describe_instances(account.id)
         mock_aws.get_session.assert_not_called()
 
@@ -194,7 +194,7 @@ class InitialAwsDescribeInstancesTransactionTest(TransactionTestCase):
         InstanceEvents as a result of AwsCloudAccount.disable would later correctly get
         new "power_on" InstanceEvents as a result of AwsCloudAccount.enable.
         """
-        account = account_helper.generate_aws_account()
+        account = account_helper.generate_cloud_account()
 
         # Set up mocked data in AWS API responses.
         region = util_helper.get_random_region()

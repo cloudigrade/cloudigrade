@@ -18,16 +18,16 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
         """Set up a bunch of test data."""
         self.user1 = util_helper.generate_test_user()
         self.superuser = util_helper.generate_test_user(is_superuser=True)
-        self.account1 = api_helper.generate_aws_account(user=self.user1)
-        self.account2 = api_helper.generate_aws_account(user=self.user1)
-        self.image1_rhel = api_helper.generate_aws_image(
+        self.account1 = api_helper.generate_cloud_account(user=self.user1)
+        self.account2 = api_helper.generate_cloud_account(user=self.user1)
+        self.image1_rhel = api_helper.generate_image(
             rhel_detected=True, rhel_version="7.7", syspurpose={"role": "potato"},
         )
-        self.image2_rhel = api_helper.generate_aws_image(rhel_detected=True)
-        self.instance1 = api_helper.generate_aws_instance(
+        self.image2_rhel = api_helper.generate_image(rhel_detected=True)
+        self.instance1 = api_helper.generate_instance(
             self.account1, image=self.image1_rhel
         )
-        self.instance2 = api_helper.generate_aws_instance(
+        self.instance2 = api_helper.generate_instance(
             self.account1, image=self.image2_rhel
         )
         self.instance_type1 = "c5.xlarge"  # 4 vcpu and 8.0 memory

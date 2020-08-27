@@ -25,7 +25,7 @@ class CopyAmiSnapshotTest(TestCase):
         mock_region = util_helper.get_random_region()
         mock_image_id = util_helper.generate_dummy_image_id()
         mock_image = util_helper.generate_mock_image(mock_image_id)
-        account_helper.generate_aws_image(ec2_ami_id=mock_image_id)
+        account_helper.generate_image(ec2_ami_id=mock_image_id)
         block_mapping = mock_image.block_device_mappings
         mock_snapshot_id = block_mapping[0]["Ebs"]["SnapshotId"]
         mock_snapshot = util_helper.generate_mock_snapshot(
@@ -63,7 +63,7 @@ class CopyAmiSnapshotTest(TestCase):
         mock_session = mock_aws.boto3.Session.return_value
         mock_account_id = mock_aws.get_session_account_id.return_value
 
-        account = account_helper.generate_aws_account()
+        account = account_helper.generate_cloud_account()
         arn = account.content_object.account_arn
 
         region = util_helper.get_random_region()
@@ -81,7 +81,7 @@ class CopyAmiSnapshotTest(TestCase):
 
         # This is the original ID of a private/shared image.
         # It would have been saved to our DB upon initial discovery.
-        reference_image = account_helper.generate_aws_image()
+        reference_image = account_helper.generate_image()
         reference_image_id = reference_image.content_object.ec2_ami_id
 
         mock_aws.get_session.return_value = mock_session
@@ -137,7 +137,7 @@ class CopyAmiSnapshotTest(TestCase):
         mock_aws.get_ami_snapshot_id.return_value = mock_snapshot_id
         mock_aws.get_snapshot.return_value = mock_snapshot
 
-        ami = account_helper.generate_aws_image(ec2_ami_id=mock_image_id)
+        ami = account_helper.generate_image(ec2_ami_id=mock_image_id)
 
         with patch.object(tasks, "create_volume") as mock_create_volume:
             tasks.copy_ami_snapshot(mock_arn, mock_image_id, mock_region)
@@ -155,7 +155,7 @@ class CopyAmiSnapshotTest(TestCase):
         mock_arn = util_helper.generate_dummy_arn()
         mock_region = util_helper.get_random_region()
         mock_image_id = util_helper.generate_dummy_image_id()
-        account_helper.generate_aws_image(ec2_ami_id=mock_image_id)
+        account_helper.generate_image(ec2_ami_id=mock_image_id)
         mock_image = util_helper.generate_mock_image(mock_image_id)
         block_mapping = mock_image.block_device_mappings
         mock_snapshot_id = block_mapping[0]["Ebs"]["SnapshotId"]
@@ -197,7 +197,7 @@ class CopyAmiSnapshotTest(TestCase):
         mock_region = util_helper.get_random_region()
         mock_image_id = util_helper.generate_dummy_image_id()
         mock_image = util_helper.generate_mock_image(mock_image_id)
-        account_helper.generate_aws_image(ec2_ami_id=mock_image_id)
+        account_helper.generate_image(ec2_ami_id=mock_image_id)
         block_mapping = mock_image.block_device_mappings
         mock_snapshot_id = block_mapping[0]["Ebs"]["SnapshotId"]
         mock_snapshot = util_helper.generate_mock_snapshot(
@@ -243,7 +243,7 @@ class CopyAmiSnapshotTest(TestCase):
         mock_aws.get_ami_snapshot_id.return_value = mock_snapshot_id
         mock_aws.get_snapshot.return_value = mock_snapshot
 
-        account_helper.generate_aws_image(ec2_ami_id=mock_image_id)
+        account_helper.generate_image(ec2_ami_id=mock_image_id)
 
         with patch.object(
             tasks.imageprep, "create_volume"
@@ -278,7 +278,7 @@ class CopyAmiSnapshotTest(TestCase):
             operation_name=Mock(),
         )
 
-        account_helper.generate_aws_image(ec2_ami_id=mock_image_id)
+        account_helper.generate_image(ec2_ami_id=mock_image_id)
 
         with patch.object(
             tasks.imageprep, "create_volume"
@@ -302,7 +302,7 @@ class CopyAmiSnapshotTest(TestCase):
         mock_arn = util_helper.generate_dummy_arn(mock_account_id, mock_region)
 
         mock_image_id = util_helper.generate_dummy_image_id()
-        account_helper.generate_aws_image(ec2_ami_id=mock_image_id)
+        account_helper.generate_image(ec2_ami_id=mock_image_id)
         mock_image = util_helper.generate_mock_image(mock_image_id)
         mock_snapshot_id = util_helper.generate_dummy_snapshot_id()
 
@@ -329,7 +329,7 @@ class CopyAmiSnapshotTest(TestCase):
         arn = util_helper.generate_dummy_arn()
         ami_id = util_helper.generate_dummy_image_id()
         snapshot_region = util_helper.get_random_region()
-        image = account_helper.generate_aws_image(ec2_ami_id=ami_id)
+        image = account_helper.generate_image(ec2_ami_id=ami_id)
 
         mock_aws.get_ami.return_value = None
 
@@ -351,7 +351,7 @@ class CopyAmiSnapshotTest(TestCase):
         arn = util_helper.generate_dummy_arn()
         ami_id = util_helper.generate_dummy_image_id()
         snapshot_region = util_helper.get_random_region()
-        image = account_helper.generate_aws_image(ec2_ami_id=ami_id)
+        image = account_helper.generate_image(ec2_ami_id=ami_id)
 
         mock_aws.get_ami.return_value = image
         mock_aws.get_ami_snapshot_id.return_value = None

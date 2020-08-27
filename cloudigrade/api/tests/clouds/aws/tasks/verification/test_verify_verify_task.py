@@ -13,7 +13,7 @@ class VerifyVerifyAccountPeriodicTaskTest(TestCase):
 
     def test_noop(self):
         """No tasks need creation or cleaning up."""
-        account_helper.generate_aws_account(generate_verify_task=True)
+        account_helper.generate_cloud_account(generate_verify_task=True)
 
         aws_clount_before_count = AwsCloudAccount.objects.filter(
             verify_task_id__isnull=False
@@ -66,7 +66,7 @@ class VerifyVerifyAccountPeriodicTaskTest(TestCase):
 
     def test_enabled_task_missing(self):
         """Enabled clounts get a task."""
-        account_helper.generate_aws_account(generate_verify_task=False)
+        account_helper.generate_cloud_account(generate_verify_task=False)
 
         self.assertEqual(AwsCloudAccount.objects.all().count(), 1)
         self.assertEqual(

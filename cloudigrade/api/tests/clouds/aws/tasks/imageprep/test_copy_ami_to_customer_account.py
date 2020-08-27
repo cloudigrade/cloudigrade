@@ -20,7 +20,7 @@ class CopyAmiToCustomerAccountTest(TestCase):
         reference_ami_id = util_helper.generate_dummy_image_id()
         source_region = util_helper.get_random_region()
 
-        api_helper.generate_aws_image(ec2_ami_id=reference_ami_id)
+        api_helper.generate_image(ec2_ami_id=reference_ami_id)
 
         new_ami_id = mock_aws.copy_ami.return_value
 
@@ -48,7 +48,7 @@ class CopyAmiToCustomerAccountTest(TestCase):
         reference_ami_id = util_helper.generate_dummy_image_id()
         source_region = util_helper.get_random_region()
 
-        image = api_helper.generate_aws_image(
+        image = api_helper.generate_image(
             ec2_ami_id=reference_ami_id, status=MachineImage.INSPECTING
         )
 
@@ -87,7 +87,7 @@ class CopyAmiToCustomerAccountTest(TestCase):
         arn = util_helper.generate_dummy_arn()
         reference_ami_id = util_helper.generate_dummy_image_id()
         source_region = util_helper.get_random_region()
-        image = api_helper.generate_aws_image(
+        image = api_helper.generate_image(
             ec2_ami_id=reference_ami_id, status=MachineImage.INSPECTING
         )
 
@@ -130,7 +130,7 @@ class CopyAmiToCustomerAccountTest(TestCase):
         arn = util_helper.generate_dummy_arn()
         reference_ami_id = util_helper.generate_dummy_image_id()
         source_region = util_helper.get_random_region()
-        image = api_helper.generate_aws_image(
+        image = api_helper.generate_image(
             ec2_ami_id=reference_ami_id, status=MachineImage.INSPECTING
         )
         mock_aws.copy_ami.side_effect = ClientError(
@@ -164,7 +164,7 @@ class CopyAmiToCustomerAccountTest(TestCase):
         reference_ami_id = util_helper.generate_dummy_image_id()
         source_region = util_helper.get_random_region()
 
-        image = api_helper.generate_aws_image(
+        image = api_helper.generate_image(
             ec2_ami_id=reference_ami_id, status=MachineImage.INSPECTING
         )
 
@@ -199,7 +199,7 @@ class CopyAmiToCustomerAccountTest(TestCase):
         arn = util_helper.generate_dummy_arn()
         reference_ami_id = util_helper.generate_dummy_image_id()
         source_region = util_helper.get_random_region()
-        image = api_helper.generate_aws_image(
+        image = api_helper.generate_image(
             ec2_ami_id=reference_ami_id, status=MachineImage.INSPECTING
         )
         mock_reference_ami = Mock()
@@ -234,7 +234,7 @@ class CopyAmiToCustomerAccountTest(TestCase):
         reference_ami_id = util_helper.generate_dummy_image_id()
         source_region = util_helper.get_random_region()
 
-        api_helper.generate_aws_image(ec2_ami_id=reference_ami_id)
+        api_helper.generate_image(ec2_ami_id=reference_ami_id)
 
         mock_aws.copy_ami.side_effect = ClientError(
             error_response={
@@ -263,7 +263,7 @@ class CopyAmiToCustomerAccountTest(TestCase):
         arn = util_helper.generate_dummy_arn()
         reference_ami_id = util_helper.generate_dummy_image_id()
         snapshot_region = util_helper.get_random_region()
-        image = api_helper.generate_aws_image(ec2_ami_id=reference_ami_id)
+        image = api_helper.generate_image(ec2_ami_id=reference_ami_id)
 
         mock_aws.get_ami.return_value = None
         with patch.object(tasks.imageprep, "copy_ami_snapshot") as mock_copy:

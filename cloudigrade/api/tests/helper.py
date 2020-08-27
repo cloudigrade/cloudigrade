@@ -11,6 +11,7 @@ from django.conf import settings
 from django_celery_beat.models import IntervalSchedule, PeriodicTask
 from rest_framework.test import APIClient
 
+from api import AWS_PROVIDER_STRING, AZURE_PROVIDER_STRING
 from api.clouds.aws import tasks
 from api.clouds.aws.cloudtrail import CloudTrailInstanceEvent
 from api.clouds.aws.models import (
@@ -20,6 +21,12 @@ from api.clouds.aws.models import (
     AwsMachineImage,
     CLOUD_ACCESS_NAME_TOKEN,
     MARKETPLACE_NAME_TOKEN,
+)
+from api.clouds.azure.models import (
+    AzureCloudAccount,
+    AzureInstance,
+    AzureInstanceEvent,
+    AzureMachineImage,
 )
 from api.models import (
     CloudAccount,
@@ -82,7 +89,6 @@ class SandboxedRestClient(object):
 
         Returns:
             rest_framework.response.Response
-
         """
         if self.bypass_aws_calls:
             with patch.object(aws, "verify_account_access") as mock_verify, patch(
@@ -153,7 +159,7 @@ class SandboxedRestClient(object):
         return self._call_api(verb=verb, path=path, data=data)
 
 
-def generate_aws_account(  # noqa: C901
+def generate_cloud_account(  # noqa: C901
     arn=None,
     aws_account_id=None,
     user=None,
@@ -167,9 +173,12 @@ def generate_aws_account(  # noqa: C901
     enabled_at=None,
     verify_task=None,
     generate_verify_task=True,
+    cloud_type=AWS_PROVIDER_STRING,
+    azure_subscription_id=None,
+    azure_tenant_id=None,
 ):
     """
-    Generate an AwsAccount for testing.
+    Generate an CloudAccount for testing.
 
     Any optional arguments not provided will be randomly generated.
 
@@ -187,14 +196,14 @@ def generate_aws_account(  # noqa: C901
         enabled_at (datetime): Optional enabled datetime for this account.
         verify_task (PeriodicTask): Optional Celery verify task for this account.
         generate_verify_task (bool): Optional should a verify_task be generated here.
+        cloud_type (str): Str denoting cloud type, defaults to "aws"
+        azure_subscription_id (str): optional uuid str for azure subscription id
+        azure_tenant_id (str): optional uuid str for azure tenant id
 
     Returns:
-        CloudAccount: The created AwsAccount.
+        CloudAccount: The created Cloud Account.
 
     """
-    if arn is None:
-        arn = helper.generate_dummy_arn(account_id=aws_account_id)
-
     if user is None:
         user = helper.generate_test_user()
 
@@ -219,30 +228,47 @@ def generate_aws_account(  # noqa: C901
     if platform_source_id is None:
         platform_source_id = _faker.pyint()
 
-    if verify_task is None and generate_verify_task:
-        schedule, _ = IntervalSchedule.objects.get_or_create(
-            every=settings.VERIFY_VERIFY_TASKS_SCHEDULE_INTERVAL,
-            period=IntervalSchedule.SECONDS,
-        )
-        verify_task, _ = PeriodicTask.objects.get_or_create(
-            interval=schedule,
-            name=f"Verify {arn}.",
-            task="api.clouds.aws.tasks.verify_account_permissions",
-            kwargs=json.dumps({"account_arn": arn,}),
-            defaults={"start_time": created_at},
+    if cloud_type == AZURE_PROVIDER_STRING:
+        if azure_subscription_id is None:
+            azure_subscription_id = uuid.uuid4()
+
+        if azure_tenant_id is None:
+            azure_tenant_id = uuid.uuid4()
+        cloud_provider_account = AzureCloudAccount.objects.create(
+            subscription_id=azure_subscription_id, tenant_id=azure_tenant_id
         )
 
-    aws_cloud_account = AwsCloudAccount.objects.create(
-        account_arn=arn,
-        aws_account_id=aws.AwsArn(arn).account_id,
-        verify_task=verify_task,
-    )
-    aws_cloud_account.created_at = created_at
-    aws_cloud_account.save()
+    # default to AWS
+    else:
+        if arn is None:
+            arn = helper.generate_dummy_arn(account_id=aws_account_id)
+
+        if verify_task is None and generate_verify_task:
+            schedule, _ = IntervalSchedule.objects.get_or_create(
+                every=settings.VERIFY_VERIFY_TASKS_SCHEDULE_INTERVAL,
+                period=IntervalSchedule.SECONDS,
+            )
+            verify_task, _ = PeriodicTask.objects.get_or_create(
+                interval=schedule,
+                name=f"Verify {arn}.",
+                task="api.clouds.aws.tasks.verify_account_permissions",
+                kwargs=json.dumps({"account_arn": arn,}),
+                defaults={"start_time": created_at},
+            )
+
+        cloud_provider_account = AwsCloudAccount.objects.create(
+            account_arn=arn,
+            aws_account_id=aws.AwsArn(arn).account_id,
+            verify_task=verify_task,
+        )
+
+    cloud_provider_account.created_at = created_at
+    cloud_provider_account.save()
+
     cloud_account = CloudAccount.objects.create(
         user=user,
         name=name,
-        content_object=aws_cloud_account,
+        content_object=cloud_provider_account,
         platform_authentication_id=platform_authentication_id,
         platform_application_id=platform_application_id,
         platform_endpoint_id=platform_endpoint_id,
@@ -258,8 +284,14 @@ def generate_aws_account(  # noqa: C901
     return cloud_account
 
 
-def generate_aws_instance(
-    cloud_account, ec2_instance_id=None, region=None, image=None, no_image=False
+def generate_instance(  # noqa: C901
+    cloud_account,
+    ec2_instance_id=None,
+    region=None,
+    image=None,
+    no_image=False,
+    cloud_type=AWS_PROVIDER_STRING,
+    azure_instance_resource_id=None,
 ):
     """
     Generate an AwsInstance for the AwsAccount for testing.
@@ -272,40 +304,68 @@ def generate_aws_instance(
         region (str): Optional AWS region where the instance runs.
         image (MachineImage): Optional image to add instead of creating one.
         no_image (bool): Whether an image should be attached to this instance.
+        cloud_type (str): Str denoting cloud type, defaults to "aws"
+        azure_instance_resource_id (str): optional str for azure instance resource id
 
     Returns:
-        Instance: The created AwsInstance.
+        Instance: The created Instance.
 
     """
-    if ec2_instance_id is None:
-        ec2_instance_id = helper.generate_dummy_instance_id()
     if region is None:
-        region = helper.get_random_region()
-    if image is None:
-        if not no_image:
-            ec2_ami_id = helper.generate_dummy_image_id()
+        region = helper.get_random_region(cloud_type=cloud_type)
 
-            try:
-                aws_image = AwsMachineImage.objects.get(ec2_ami_id=ec2_ami_id)
-                image = aws_image.machine_image.get()
-            except AwsMachineImage.DoesNotExist:
-                image = generate_aws_image(
-                    ec2_ami_id=ec2_ami_id,
-                    owner_aws_account_id=cloud_account.content_object.aws_account_id,
-                    status=MachineImage.PENDING,
-                )
+    if cloud_type == AZURE_PROVIDER_STRING:
+        if azure_instance_resource_id is None:
+            azure_instance_resource_id = helper.generate_dummy_azure_instance_id()
+        if image is None:
+            if not no_image:
+                image_resource_id = helper.generate_dummy_azure_image_id()
 
-    aws_instance = AwsInstance.objects.create(
-        ec2_instance_id=ec2_instance_id, region=region,
-    )
+                try:
+                    azure_image = AzureMachineImage.objects.get(
+                        resource_id=image_resource_id
+                    )
+                    image = azure_image.machine_image.get()
+                except AzureMachineImage.DoesNotExist:
+                    image = generate_image(
+                        azure_image_resource_id=image_resource_id,
+                        status=MachineImage.PENDING,
+                        cloud_type=cloud_type,
+                    )
+        provider_instance = AzureInstance.objects.create(
+            resource_id=azure_instance_resource_id, region=region,
+        )
+    else:
+        if ec2_instance_id is None:
+            ec2_instance_id = helper.generate_dummy_instance_id()
+        if image is None:
+            if not no_image:
+                ec2_ami_id = helper.generate_dummy_image_id()
+
+                try:
+                    aws_image = AwsMachineImage.objects.get(ec2_ami_id=ec2_ami_id)
+                    image = aws_image.machine_image.get()
+                except AwsMachineImage.DoesNotExist:
+                    aws_account_id = cloud_account.content_object.aws_account_id
+                    image = generate_image(
+                        ec2_ami_id=ec2_ami_id,
+                        owner_aws_account_id=aws_account_id,
+                        status=MachineImage.PENDING,
+                    )
+
+        provider_instance = AwsInstance.objects.create(
+            ec2_instance_id=ec2_instance_id, region=region,
+        )
     instance = Instance.objects.create(
-        cloud_account=cloud_account, content_object=aws_instance, machine_image=image
+        cloud_account=cloud_account,
+        content_object=provider_instance,
+        machine_image=image,
     )
 
     return instance
 
 
-def generate_single_aws_instance_event(
+def generate_single_instance_event(
     instance,
     occurred_at,
     event_type=None,
@@ -313,6 +373,7 @@ def generate_single_aws_instance_event(
     subnet=None,
     no_instance_type=False,
     no_subnet=False,
+    cloud_type=AWS_PROVIDER_STRING,
 ):
     """
     Generate single AwsInstanceEvent for testing.
@@ -336,30 +397,41 @@ def generate_single_aws_instance_event(
     if no_instance_type:
         instance_type = None
     elif instance_type is None:
-        instance_type = helper.get_random_instance_type()
-
-    if no_subnet:
-        subnet = None
-    elif subnet is None:
-        subnet = helper.generate_dummy_subnet_id()
+        instance_type = helper.get_random_instance_type(cloud_type=cloud_type)
 
     if event_type is None:
         event_type = InstanceEvent.TYPE.power_off
 
-    aws_event = AwsInstanceEvent.objects.create(
-        subnet=subnet, instance_type=instance_type,
-    )
+    if cloud_type == AZURE_PROVIDER_STRING:
+        cloud_provider_event = AzureInstanceEvent.objects.create(
+            instance_type=instance_type,
+        )
+
+    else:
+        if no_subnet:
+            subnet = None
+        elif subnet is None:
+            subnet = helper.generate_dummy_subnet_id()
+
+        cloud_provider_event = AwsInstanceEvent.objects.create(
+            subnet=subnet, instance_type=instance_type,
+        )
     event = InstanceEvent.objects.create(
         instance=instance,
         event_type=event_type,
         occurred_at=occurred_at,
-        content_object=aws_event,
+        content_object=cloud_provider_event,
     )
     return event
 
 
-def generate_aws_instance_events(
-    instance, powered_times, instance_type=None, subnet=None, no_instance_type=False
+def generate_instance_events(
+    instance,
+    powered_times,
+    instance_type=None,
+    subnet=None,
+    no_instance_type=False,
+    cloud_type=AWS_PROVIDER_STRING,
 ):
     """
     Generate list of InstanceEvents for the Instance for testing.
@@ -388,32 +460,34 @@ def generate_aws_instance_events(
     if no_instance_type:
         instance_type = None
     elif instance_type is None:
-        instance_type = helper.get_random_instance_type()
+        instance_type = helper.get_random_instance_type(cloud_type=cloud_type)
     if subnet is None:
         subnet = helper.generate_dummy_subnet_id()
 
     events = []
     for power_on_time, power_off_time in powered_times:
         if power_on_time is not None:
-            event = generate_single_aws_instance_event(
+            event = generate_single_instance_event(
                 instance=instance,
                 occurred_at=power_on_time,
                 event_type=InstanceEvent.TYPE.power_on,
                 instance_type=instance_type,
                 subnet=subnet,
                 no_instance_type=no_instance_type,
+                cloud_type=cloud_type,
             )
             events.append(event)
         if power_off_time is not None:
             # power_off events typically do *not* have an image defined.
             # So, ignore inputs and *always* set ec2_ami_id=None.
-            event = generate_single_aws_instance_event(
+            event = generate_single_instance_event(
                 instance=instance,
                 occurred_at=power_off_time,
                 event_type=InstanceEvent.TYPE.power_off,
                 instance_type=instance_type,
                 subnet=subnet,
                 no_instance_type=no_instance_type,
+                cloud_type=cloud_type,
             )
             events.append(event)
     return events
@@ -470,7 +544,7 @@ def generate_cloudtrail_instance_event(
     return event
 
 
-def generate_aws_image(
+def generate_image(  # noqa: C901
     owner_aws_account_id=None,
     is_encrypted=False,
     is_windows=False,
@@ -489,9 +563,11 @@ def generate_aws_image(
     is_cloud_access=False,
     is_marketplace=False,
     architecture="x86_64",
+    cloud_type=AWS_PROVIDER_STRING,
+    azure_image_resource_id=None,
 ):
     """
-    Generate an AwsMachineImage.
+    Generate an MachineImage.
 
     Any optional arguments not provided will be randomly generated.
 
@@ -527,12 +603,6 @@ def generate_aws_image(
         MachineImage: The created AwsMachineImage.
 
     """
-    if not owner_aws_account_id:
-        owner_aws_account_id = helper.generate_dummy_aws_account_id()
-    if not ec2_ami_id:
-        ec2_ami_id = helper.generate_dummy_image_id()
-    platform = AwsMachineImage.WINDOWS if is_windows else AwsMachineImage.NONE
-
     if rhel_detected:
         if not syspurpose:
             syspurpose = generate_syspurpose()
@@ -561,19 +631,32 @@ def generate_aws_image(
     else:
         image_json = None
 
-    if is_marketplace:
-        name = f"{name or _faker.name()}{MARKETPLACE_NAME_TOKEN}"
-        owner_aws_account_id = random.choice(settings.RHEL_IMAGES_AWS_ACCOUNTS)
+    if cloud_type == AZURE_PROVIDER_STRING:
+        if azure_image_resource_id is None:
+            azure_image_resource_id = helper.generate_dummy_azure_image_id()
+        provider_machine_image = AzureMachineImage.objects.create(
+            resource_id=azure_image_resource_id, azure_marketplace_image=is_marketplace,
+        )
+    else:
+        if not owner_aws_account_id:
+            owner_aws_account_id = helper.generate_dummy_aws_account_id()
+        if not ec2_ami_id:
+            ec2_ami_id = helper.generate_dummy_image_id()
+        platform = AwsMachineImage.WINDOWS if is_windows else AwsMachineImage.NONE
 
-    if is_cloud_access:
-        name = f"{name or _faker.name()}{CLOUD_ACCESS_NAME_TOKEN}"
-        owner_aws_account_id = random.choice(settings.RHEL_IMAGES_AWS_ACCOUNTS)
+        if is_marketplace:
+            name = f"{name or _faker.name()}{MARKETPLACE_NAME_TOKEN}"
+            owner_aws_account_id = random.choice(settings.RHEL_IMAGES_AWS_ACCOUNTS)
 
-    aws_machine_image = AwsMachineImage.objects.create(
-        owner_aws_account_id=owner_aws_account_id,
-        ec2_ami_id=ec2_ami_id,
-        platform=platform,
-    )
+        if is_cloud_access:
+            name = f"{name or _faker.name()}{CLOUD_ACCESS_NAME_TOKEN}"
+            owner_aws_account_id = random.choice(settings.RHEL_IMAGES_AWS_ACCOUNTS)
+
+        provider_machine_image = AwsMachineImage.objects.create(
+            owner_aws_account_id=owner_aws_account_id,
+            ec2_ami_id=ec2_ami_id,
+            platform=platform,
+        )
     machine_image = MachineImage.objects.create(
         is_encrypted=is_encrypted,
         inspection_json=image_json,
@@ -581,7 +664,7 @@ def generate_aws_image(
         openshift_detected=openshift_detected,
         name=name,
         status=status,
-        content_object=aws_machine_image,
+        content_object=provider_machine_image,
         architecture=architecture,
     )
 
@@ -662,7 +745,7 @@ def generate_single_run(
         instance_type = helper.get_random_instance_type()
 
     if not no_image and image is None:
-        image = generate_aws_image()
+        image = generate_image()
 
     run = Run.objects.create(
         start_time=runtime[0],
@@ -677,7 +760,7 @@ def generate_single_run(
         if instance_type in helper.SOME_EC2_INSTANCE_TYPES
         else None,
     )
-    generate_single_aws_instance_event(
+    generate_single_instance_event(
         instance=instance,
         occurred_at=runtime[0],
         event_type=InstanceEvent.TYPE.power_on,
@@ -685,7 +768,7 @@ def generate_single_run(
         no_instance_type=no_instance_type,
     )
     if runtime[1]:
-        generate_single_aws_instance_event(
+        generate_single_instance_event(
             instance=instance,
             occurred_at=runtime[1],
             event_type=InstanceEvent.TYPE.power_off,
@@ -702,7 +785,7 @@ def generate_single_run(
     return run
 
 
-def generate_aws_ec2_definitions(cloud_type="aws"):
+def generate_instance_type_definitions(cloud_type="aws"):
     """Generate InstanceDefinitions from SOME_EC2_INSTANCE_TYPES."""
     instance_types = helper.SOME_EC2_INSTANCE_TYPES
 

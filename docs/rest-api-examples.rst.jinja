@@ -89,6 +89,24 @@ Response:
 {{ v2_account_create_duplicate_arn | stringify_http_response | rst_codeblock }}
 
 
+
+
+Create an Azure account
+~~~~~~~~~~~~~~~~~~~~~
+The "name" attribute is required and has a maximum supported length of 256 characters.
+The "platform_authentication_id", "platform_application_id", "platform_endpoint_id",
+and "platform_source_id" attributes are all required and should be integers.
+
+Request:
+
+{{ v2_account_create_azure.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
+
+Response:
+
+{{ v2_account_create_azure | stringify_http_response | rst_codeblock }}
+
+
+
 Customer Account Info
 ---------------------
 

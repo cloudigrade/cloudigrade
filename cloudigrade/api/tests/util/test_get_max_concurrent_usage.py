@@ -17,13 +17,13 @@ class GetMaxConcurrentUsageTest(TestCase):
     def setUp(self):
         """Set up a bunch of test data."""
         self.user1 = util_helper.generate_test_user()
-        self.user1account1 = api_helper.generate_aws_account(user=self.user1)
-        self.image_rhel = api_helper.generate_aws_image(rhel_detected=True)
+        self.user1account1 = api_helper.generate_cloud_account(user=self.user1)
+        self.image_rhel = api_helper.generate_image(rhel_detected=True)
 
     @util_helper.clouditardis(util_helper.utc_dt(2019, 5, 3, 0, 0, 0))
     def test_single_rhel_run_result(self):
         """Test with a single RHEL instance run within the day."""
-        rhel_instance = api_helper.generate_aws_instance(
+        rhel_instance = api_helper.generate_instance(
             self.user1account1, image=self.image_rhel
         )
         api_helper.generate_single_run(
@@ -65,7 +65,7 @@ class GetMaxConcurrentUsageTest(TestCase):
         Also assert that no ConcurrentUsage is saved to the database because the
         requested date is in the future, and we cannot know that data yet.
         """
-        rhel_instance = api_helper.generate_aws_instance(
+        rhel_instance = api_helper.generate_instance(
             self.user1account1, image=self.image_rhel
         )
         api_helper.generate_single_run(
@@ -99,7 +99,7 @@ class GetMaxConcurrentUsageTest(TestCase):
     @util_helper.clouditardis(util_helper.utc_dt(2019, 5, 3, 0, 0, 0))
     def test_multiple_requests_use_precalculated_data(self):
         """Test multiple requests use the same saved pre-calculated data."""
-        rhel_instance = api_helper.generate_aws_instance(
+        rhel_instance = api_helper.generate_instance(
             self.user1account1, image=self.image_rhel
         )
         api_helper.generate_single_run(
@@ -130,7 +130,7 @@ class GetMaxConcurrentUsageTest(TestCase):
 
     def test_calculation_in_progress(self):
         """Test exception is raised if calculation is currently running."""
-        rhel_instance = api_helper.generate_aws_instance(
+        rhel_instance = api_helper.generate_instance(
             self.user1account1, image=self.image_rhel
         )
         api_helper.generate_single_run(
@@ -181,7 +181,7 @@ class GetMaxConcurrentUsageTest(TestCase):
     @patch("api.util.get_last_scheduled_concurrent_usage_calculation_task")
     def test_concurrent_task_is_canceled(self, mock_get_last_scheduled_concurrent_task):
         """Test that concurrent usage task is canceled if get_max_usage is called."""
-        rhel_instance = api_helper.generate_aws_instance(
+        rhel_instance = api_helper.generate_instance(
             self.user1account1, image=self.image_rhel
         )
         api_helper.generate_single_run(

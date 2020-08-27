@@ -26,39 +26,39 @@ class InspectPendingImagesTest(TestCase):
         real_now = get_now()
         yesterday = real_now - datetime.timedelta(days=1)
         with clouditardis(yesterday):
-            account = account_helper.generate_aws_account()
-            image_old_inspected = account_helper.generate_aws_image()
-            image_old_pending = account_helper.generate_aws_image(
+            account = account_helper.generate_cloud_account()
+            image_old_inspected = account_helper.generate_image()
+            image_old_pending = account_helper.generate_image(
                 status=MachineImage.PENDING
             )
             # an instance exists using old inspected image.
-            account_helper.generate_aws_instance(
+            account_helper.generate_instance(
                 cloud_account=account, image=image_old_inspected
             )
             # an instance exists using old pending image.
-            instance_old_pending = account_helper.generate_aws_instance(
+            instance_old_pending = account_helper.generate_instance(
                 cloud_account=account, image=image_old_pending
             )
             # another instance exists using the same old pending image, but the
             # image should still only be reinspected once regardless of how
             # many instances used it.
-            account_helper.generate_aws_instance(
+            account_helper.generate_instance(
                 cloud_account=account, image=image_old_pending
             )
 
         one_hour_ago = real_now - datetime.timedelta(seconds=60 * 60)
         with clouditardis(one_hour_ago):
-            image_new_inspected = account_helper.generate_aws_image()
-            image_new_pending = account_helper.generate_aws_image(
+            image_new_inspected = account_helper.generate_image()
+            image_new_pending = account_helper.generate_image(
                 status=MachineImage.PENDING
             )
             # an instance exists using new inspected image.
-            account_helper.generate_aws_instance(
+            account_helper.generate_instance(
                 cloud_account=account, image=image_new_inspected
             )
             # an instance exists using new pending image, but it should not
             # trigger inspection because the image is not old enough.
-            account_helper.generate_aws_instance(
+            account_helper.generate_instance(
                 cloud_account=account, image=image_new_pending
             )
 

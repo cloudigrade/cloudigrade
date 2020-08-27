@@ -19,7 +19,7 @@ class PersistAwsInspectionClusterResultsTest(TestCase):
     def test_persist_aws_inspection_cluster_results_mark_rhel(self):
         """Assert that rhel_images are tagged rhel."""
         ami_id = util_helper.generate_dummy_image_id()
-        api_helper.generate_aws_image(
+        api_helper.generate_image(
             is_encrypted=False, is_windows=False, ec2_ami_id=ami_id
         )
         rhel_version = _faker.slug()
@@ -63,7 +63,7 @@ class PersistAwsInspectionClusterResultsTest(TestCase):
     def test_persist_aws_inspection_cluster_results(self):
         """Assert that non rhel_images are not tagged rhel."""
         ami_id = util_helper.generate_dummy_image_id()
-        api_helper.generate_aws_image(
+        api_helper.generate_image(
             is_encrypted=False, is_windows=False, ec2_ami_id=ami_id
         )
 
@@ -118,7 +118,7 @@ class PersistAwsInspectionClusterResultsTest(TestCase):
         deleted_ami_id = util_helper.generate_dummy_image_id()
 
         ami_id = util_helper.generate_dummy_image_id()
-        api_helper.generate_aws_image(
+        api_helper.generate_image(
             is_encrypted=False, is_windows=False, ec2_ami_id=ami_id
         )
         rhel_version_a = _faker.slug()
@@ -152,7 +152,7 @@ class PersistAwsInspectionClusterResultsTest(TestCase):
     def test_persist_aws_inspection_cluster_results_no_images(self):
         """Assert that non rhel_images are not tagged rhel."""
         ami_id = util_helper.generate_dummy_image_id()
-        api_helper.generate_aws_image(
+        api_helper.generate_image(
             is_encrypted=False, is_windows=False, ec2_ami_id=ami_id
         )
 
@@ -168,7 +168,7 @@ class PersistAwsInspectionClusterResultsTest(TestCase):
     def test_persist_aws_inspection_cluster_results_image_has_errors(self):
         """Assert that inspection results with image errors are logged."""
         ami_id = util_helper.generate_dummy_image_id()
-        api_helper.generate_aws_image(
+        api_helper.generate_image(
             is_encrypted=False, is_windows=False, ec2_ami_id=ami_id
         )
 

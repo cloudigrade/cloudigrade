@@ -219,3 +219,25 @@ class UtilHelperTest(TestCase):
 
         self.assertLess(the_past_time, the_present_time)
         self.assertLess(the_past_date, the_present_date)
+
+    def test_generate_dummy_azure_instance_id(self):
+        """Assert generation of an appropriate Azure Instance ID."""
+        instance_id = str(helper.generate_dummy_azure_instance_id())
+        self.assertIsNotNone(
+            re.fullmatch(
+                r"\/subscriptions\/[\w\-]*\/resourceGroups\/[\w]*\/providers"
+                r"\/Microsoft.Compute\/virtualMachines/[\w]*",
+                instance_id,
+            )
+        )
+
+    def test_generate_dummy_azure_image_id(self):
+        """Assert generation of an appropriate Azure Image ID."""
+        instance_id = str(helper.generate_dummy_azure_image_id())
+        self.assertIsNotNone(
+            re.fullmatch(
+                r"\/subscriptions\/[\w\-]*\/resourceGroups\/[\w]*\/providers"
+                r"\/Microsoft.Compute\/images/[\w]*",
+                instance_id,
+            )
+        )

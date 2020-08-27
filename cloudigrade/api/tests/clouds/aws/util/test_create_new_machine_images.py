@@ -17,7 +17,7 @@ class CreateNewMachineImagesTest(TestCase):
         """Test that new machine images are saved to the DB."""
         aws_account_id = util_helper.generate_dummy_aws_account_id()
         arn = util_helper.generate_dummy_arn(aws_account_id)
-        api_helper.generate_aws_account(arn=arn, aws_account_id=aws_account_id)
+        api_helper.generate_cloud_account(arn=arn, aws_account_id=aws_account_id)
 
         region = util_helper.get_random_region()
         instances_data = {
@@ -49,7 +49,7 @@ class CreateNewMachineImagesTest(TestCase):
         """Test that new windows machine images are marked appropriately."""
         aws_account_id = util_helper.generate_dummy_aws_account_id()
         arn = util_helper.generate_dummy_arn(aws_account_id)
-        api_helper.generate_aws_account(arn=arn, aws_account_id=aws_account_id)
+        api_helper.generate_cloud_account(arn=arn, aws_account_id=aws_account_id)
 
         region = util_helper.get_random_region()
         instances_data = {

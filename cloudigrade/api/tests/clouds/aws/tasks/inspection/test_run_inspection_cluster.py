@@ -23,7 +23,7 @@ class RunInspectionClusterTest(TestCase):
         """Asserts successful starting of the houndigrade task."""
         mock_ami_id = util_helper.generate_dummy_image_id()
 
-        image = account_helper.generate_aws_image(
+        image = account_helper.generate_image(
             ec2_ami_id=mock_ami_id, status=MachineImage.PENDING
         )
 
@@ -93,7 +93,7 @@ class RunInspectionClusterTest(TestCase):
     def test_run_inspection_cluster_instance_not_running(self, mock_boto3):
         """Asserts that an exception is raised if instance exists but is not running."""
         mock_ami_id = util_helper.generate_dummy_image_id()
-        account_helper.generate_aws_image(
+        account_helper.generate_image(
             ec2_ami_id=mock_ami_id, status=MachineImage.PENDING
         )
 
@@ -163,7 +163,7 @@ class RunInspectionClusterTest(TestCase):
         """Assert that ami is marked as inspected if marketplace volume."""
         mock_ami_id = util_helper.generate_dummy_image_id()
 
-        image = account_helper.generate_aws_image(
+        image = account_helper.generate_image(
             ec2_ami_id=mock_ami_id, status=MachineImage.PENDING
         )
 
@@ -220,7 +220,7 @@ class RunInspectionClusterTest(TestCase):
         """Assert that non marketplace errors are still raised."""
         mock_ami_id = util_helper.generate_dummy_image_id()
 
-        image = account_helper.generate_aws_image(
+        image = account_helper.generate_image(
             ec2_ami_id=mock_ami_id, status=MachineImage.PENDING
         )
 

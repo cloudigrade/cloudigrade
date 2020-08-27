@@ -18,7 +18,7 @@ class SaveInstanceTest(TestCase):
         """Test that save instance events also writes image on instance."""
         aws_account_id = util_helper.generate_dummy_aws_account_id()
         arn = util_helper.generate_dummy_arn(aws_account_id)
-        account = api_helper.generate_aws_account(
+        account = api_helper.generate_cloud_account(
             arn=arn, aws_account_id=aws_account_id
         )
 
@@ -49,7 +49,7 @@ class SaveInstanceTest(TestCase):
         """
         aws_account_id = util_helper.generate_dummy_aws_account_id()
         arn = util_helper.generate_dummy_arn(aws_account_id)
-        account = api_helper.generate_aws_account(
+        account = api_helper.generate_cloud_account(
             arn=arn, aws_account_id=aws_account_id
         )
 
@@ -83,7 +83,7 @@ class SaveInstanceTest(TestCase):
         """Test that save instance events also writes image on instance."""
         aws_account_id = util_helper.generate_dummy_aws_account_id()
         arn = util_helper.generate_dummy_arn(aws_account_id)
-        account = api_helper.generate_aws_account(
+        account = api_helper.generate_cloud_account(
             arn=arn, aws_account_id=aws_account_id
         )
 

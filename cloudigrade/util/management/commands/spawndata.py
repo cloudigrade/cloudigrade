@@ -121,7 +121,7 @@ class Command(BaseCommand):
             desc="Spawn account progress",
             unit="accounts",
         ):
-            accounts.append(account_helper.generate_aws_account(user=user))
+            accounts.append(account_helper.generate_cloud_account(user=user))
         self.stdout.write(_("Created {} account(s)").format(len(accounts)))
         return accounts
 
@@ -138,7 +138,7 @@ class Command(BaseCommand):
             range(options["image_count"]), desc="Spawn image progress", unit="images"
         ):
             images.append(
-                account_helper.generate_aws_image(
+                account_helper.generate_image(
                     owner_aws_account_id=int(random.choice(accounts).cloud_account_id)
                     if random.random() < options["other_owner_chance"]
                     else util_helper.generate_dummy_aws_account_id(),
@@ -164,7 +164,7 @@ class Command(BaseCommand):
             unit="instances",
         ):
             instances.append(
-                account_helper.generate_aws_instance(
+                account_helper.generate_instance(
                     cloud_account=random.choice(accounts), image=random.choice(images)
                 )
             )
@@ -201,7 +201,7 @@ class Command(BaseCommand):
         events_count = 0
         for __ in range(runs_to_make):
             # Always create the first "on" event.
-            account_helper.generate_single_aws_instance_event(
+            account_helper.generate_single_instance_event(
                 instance=instance,
                 occurred_at=start_time,
                 event_type=InstanceEvent.TYPE.power_on,
@@ -216,7 +216,7 @@ class Command(BaseCommand):
                 # Don't allow creating events in the future.
                 break
 
-            account_helper.generate_single_aws_instance_event(
+            account_helper.generate_single_instance_event(
                 instance=instance,
                 occurred_at=stop_time,
                 event_type=InstanceEvent.TYPE.power_off,

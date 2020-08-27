@@ -21,7 +21,7 @@ class AvailabilityCheckViewTest(TestCase):
         self.user = util_helper.generate_test_user()
 
         source_id = _faker.pyint()
-        self.account = api_helper.generate_aws_account(
+        self.account = api_helper.generate_cloud_account(
             user=self.user,
             platform_authentication_id=_faker.pyint(),
             platform_application_id=_faker.pyint(),
@@ -29,7 +29,7 @@ class AvailabilityCheckViewTest(TestCase):
             platform_source_id=source_id,
             is_enabled=False,
         )
-        self.account2 = api_helper.generate_aws_account(
+        self.account2 = api_helper.generate_cloud_account(
             user=self.user,
             platform_authentication_id=_faker.pyint(),
             platform_application_id=_faker.pyint(),

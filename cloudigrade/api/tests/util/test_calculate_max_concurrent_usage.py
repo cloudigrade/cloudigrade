@@ -17,9 +17,9 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         self.user2 = util_helper.generate_test_user()
         self.superuser = util_helper.generate_test_user(is_superuser=True)
 
-        self.user1account1 = api_helper.generate_aws_account(user=self.user1)
-        self.user1account2 = api_helper.generate_aws_account(user=self.user1)
-        self.user2account1 = api_helper.generate_aws_account(user=self.user2)
+        self.user1account1 = api_helper.generate_cloud_account(user=self.user1)
+        self.user1account2 = api_helper.generate_cloud_account(user=self.user1)
+        self.user2account1 = api_helper.generate_cloud_account(user=self.user2)
 
         self.syspurpose1 = {
             "role": "Red Hat Enterprise Linux Server",
@@ -47,37 +47,37 @@ class CalculateMaxConcurrentUsageTest(TestCase):
             "usage": "Development/Test",
         }
 
-        self.image_rhel1 = api_helper.generate_aws_image(
+        self.image_rhel1 = api_helper.generate_image(
             owner_aws_account_id=self.user1account1.id,
             rhel_detected=True,
             syspurpose=self.syspurpose1,
             architecture="x86_64",
         )
-        self.image_rhel2 = api_helper.generate_aws_image(
+        self.image_rhel2 = api_helper.generate_image(
             owner_aws_account_id=self.user1account1.id,
             rhel_detected=True,
             syspurpose=self.syspurpose1,
             architecture="arm64",
         )
-        self.image_rhel3 = api_helper.generate_aws_image(
+        self.image_rhel3 = api_helper.generate_image(
             owner_aws_account_id=self.user1account1.id,
             rhel_detected=True,
             syspurpose=self.syspurpose2,
             architecture="x86_64",
         )
-        self.image_rhel4 = api_helper.generate_aws_image(
+        self.image_rhel4 = api_helper.generate_image(
             owner_aws_account_id=self.user1account1.id,
             rhel_detected=True,
             syspurpose=self.syspurpose3,
             architecture="x86_64",
         )
-        self.image_rhel5 = api_helper.generate_aws_image(
+        self.image_rhel5 = api_helper.generate_image(
             owner_aws_account_id=self.user1account1.id,
             rhel_detected=True,
             syspurpose=self.syspurpose4,
             architecture="x86_64",
         )
-        self.image_plain = api_helper.generate_aws_image(
+        self.image_plain = api_helper.generate_image(
             owner_aws_account_id=self.user1account1.id,
             rhel_detected=False,
             syspurpose=self.syspurpose5,
@@ -97,7 +97,7 @@ class CalculateMaxConcurrentUsageTest(TestCase):
 
     def test_single_rhel_run_within_day(self):
         """Test with a single RHEL instance run within the day."""
-        rhel_instance = api_helper.generate_aws_instance(
+        rhel_instance = api_helper.generate_instance(
             self.user1account1, image=self.image_rhel1
         )
         api_helper.generate_single_run(
@@ -118,7 +118,7 @@ class CalculateMaxConcurrentUsageTest(TestCase):
 
     def test_single_rhel_run_entirely_before_day(self):
         """Test with a RHEL instance run entirely before the day."""
-        rhel_instance = api_helper.generate_aws_instance(
+        rhel_instance = api_helper.generate_instance(
             self.user1account1, image=self.image_rhel1
         )
         api_helper.generate_single_run(
@@ -137,7 +137,7 @@ class CalculateMaxConcurrentUsageTest(TestCase):
 
     def test_single_rhel_run_entirely_after_day(self):
         """Test with a RHEL instance run entirely after the day."""
-        rhel_instance = api_helper.generate_aws_instance(
+        rhel_instance = api_helper.generate_instance(
             self.user1account1, image=self.image_rhel1
         )
         api_helper.generate_single_run(
@@ -156,7 +156,7 @@ class CalculateMaxConcurrentUsageTest(TestCase):
 
     def test_single_run_overlapping_day_start(self):
         """Test with a RHEL instance run overlapping the start of the day."""
-        rhel_instance = api_helper.generate_aws_instance(
+        rhel_instance = api_helper.generate_instance(
             self.user1account1, image=self.image_rhel1
         )
         api_helper.generate_single_run(
@@ -176,7 +176,7 @@ class CalculateMaxConcurrentUsageTest(TestCase):
 
     def test_single_run_overlapping_day_end(self):
         """Test with a RHEL instance run overlapping the end of the day."""
-        rhel_instance = api_helper.generate_aws_instance(
+        rhel_instance = api_helper.generate_instance(
             self.user1account1, image=self.image_rhel1
         )
         api_helper.generate_single_run(
@@ -196,7 +196,7 @@ class CalculateMaxConcurrentUsageTest(TestCase):
 
     def test_single_run_overlapping_day_entirely(self):
         """Test with a RHEL instance run overlapping the entire day."""
-        rhel_instance = api_helper.generate_aws_instance(
+        rhel_instance = api_helper.generate_instance(
             self.user1account1, image=self.image_rhel1
         )
         api_helper.generate_single_run(
@@ -220,7 +220,7 @@ class CalculateMaxConcurrentUsageTest(TestCase):
 
         This instance should have zero effect on max calculations.
         """
-        rhel_instance = api_helper.generate_aws_instance(
+        rhel_instance = api_helper.generate_instance(
             self.user1account1, image=self.image_plain
         )
         api_helper.generate_single_run(
@@ -243,10 +243,10 @@ class CalculateMaxConcurrentUsageTest(TestCase):
 
         Because no account filter is applied, both instances are seen.
         """
-        rhel_instance1 = api_helper.generate_aws_instance(
+        rhel_instance1 = api_helper.generate_instance(
             self.user1account1, image=self.image_rhel1
         )
-        rhel_instance2 = api_helper.generate_aws_instance(
+        rhel_instance2 = api_helper.generate_instance(
             self.user1account1, image=self.image_rhel2
         )
         api_helper.generate_single_run(
@@ -277,10 +277,10 @@ class CalculateMaxConcurrentUsageTest(TestCase):
 
         Because a user filter is applied, only one instance's data is seen.
         """
-        rhel_instance1 = api_helper.generate_aws_instance(
+        rhel_instance1 = api_helper.generate_instance(
             self.user1account1, image=self.image_rhel3
         )
-        rhel_instance2 = api_helper.generate_aws_instance(
+        rhel_instance2 = api_helper.generate_instance(
             self.user2account1, image=self.image_rhel4
         )
         api_helper.generate_single_run(
@@ -314,10 +314,10 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         Two instances of different size run at different times, and this test
         should see the *larger* of the two matching the max values.
         """
-        rhel_instance1 = api_helper.generate_aws_instance(
+        rhel_instance1 = api_helper.generate_instance(
             self.user1account1, image=self.image_rhel4
         )
-        rhel_instance2 = api_helper.generate_aws_instance(
+        rhel_instance2 = api_helper.generate_instance(
             self.user1account2, image=self.image_rhel5
         )
         api_helper.generate_single_run(

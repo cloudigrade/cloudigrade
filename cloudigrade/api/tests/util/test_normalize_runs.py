@@ -17,9 +17,9 @@ class NormalizeRunsTest(TestCase):
     def setUp(self):
         """Set up commonly used data for each test."""
         # various images not belonging to any particular cloud account
-        self.image_plain = api_helper.generate_aws_image()
-        self.image_rhel = api_helper.generate_aws_image(rhel_detected=True)
-        self.image_ocp = api_helper.generate_aws_image(openshift_detected=True)
+        self.image_plain = api_helper.generate_image()
+        self.image_rhel = api_helper.generate_image(rhel_detected=True)
+        self.image_ocp = api_helper.generate_image(openshift_detected=True)
 
         # define users
         self.user_1 = util_helper.generate_test_user()
@@ -27,25 +27,25 @@ class NormalizeRunsTest(TestCase):
         self.user_super = util_helper.generate_test_user(is_superuser=True)
 
         # define users' cloud accounts
-        self.account_1 = api_helper.generate_aws_account(
+        self.account_1 = api_helper.generate_cloud_account(
             user=self.user_1, name=_faker.bs()
         )
 
         # define instances that belong to user_1 account_1
-        self.instance_plain = api_helper.generate_aws_instance(
+        self.instance_plain = api_helper.generate_instance(
             cloud_account=self.account_1, image=self.image_plain
         )
-        self.instance_rhel = api_helper.generate_aws_instance(
+        self.instance_rhel = api_helper.generate_instance(
             cloud_account=self.account_1, image=self.image_rhel
         )
-        self.instance_ocp = api_helper.generate_aws_instance(
+        self.instance_ocp = api_helper.generate_instance(
             cloud_account=self.account_1, image=self.image_ocp
         )
-        self.instance_noimage = api_helper.generate_aws_instance(
+        self.instance_noimage = api_helper.generate_instance(
             cloud_account=self.account_1, no_image=True
         )
 
-        api_helper.generate_aws_ec2_definitions()
+        api_helper.generate_instance_type_definitions()
 
     def test_normalize_instance_on_off(self):
         """Test normalize_runs for one plain instance."""
@@ -55,9 +55,7 @@ class NormalizeRunsTest(TestCase):
                 util_helper.utc_dt(2019, 1, 10, 0, 0, 0),
             ),
         )
-        events = api_helper.generate_aws_instance_events(
-            self.instance_plain, powered_times
-        )
+        events = api_helper.generate_instance_events(self.instance_plain, powered_times)
         runs = util.normalize_runs(events)
         self.assertEquals(len(runs), 1)
         run = runs[0]
@@ -82,9 +80,7 @@ class NormalizeRunsTest(TestCase):
     def test_normalize_instance_on_never_off(self):
         """Test normalize_runs for an instance that starts but never stops."""
         powered_times = ((util_helper.utc_dt(2019, 1, 9, 0, 0, 0), None),)
-        events = api_helper.generate_aws_instance_events(
-            self.instance_plain, powered_times
-        )
+        events = api_helper.generate_instance_events(self.instance_plain, powered_times)
         runs = util.normalize_runs(events)
         self.assertEquals(len(runs), 1)
         run = runs[0]
@@ -107,10 +103,10 @@ class NormalizeRunsTest(TestCase):
                 util_helper.utc_dt(2019, 1, 11, 0, 0, 0),
             ),
         )
-        rhel_events = api_helper.generate_aws_instance_events(
+        rhel_events = api_helper.generate_instance_events(
             self.instance_rhel, rhel_powered_times
         )
-        ocp_events = api_helper.generate_aws_instance_events(
+        ocp_events = api_helper.generate_instance_events(
             self.instance_ocp, ocp_powered_times
         )
 
@@ -151,9 +147,7 @@ class NormalizeRunsTest(TestCase):
             ),
             (util_helper.utc_dt(2019, 1, 13, 0, 0, 0), None),
         )
-        events = api_helper.generate_aws_instance_events(
-            self.instance_plain, powered_times
-        )
+        events = api_helper.generate_instance_events(self.instance_plain, powered_times)
         random.shuffle(events)
 
         runs = util.normalize_runs(events)
@@ -180,9 +174,7 @@ class NormalizeRunsTest(TestCase):
                 util_helper.utc_dt(2019, 1, 14, 0, 0, 0),
             ),
         )
-        events = api_helper.generate_aws_instance_events(
-            self.instance_plain, powered_times
-        )
+        events = api_helper.generate_instance_events(self.instance_plain, powered_times)
         random.shuffle(events)
 
         runs = util.normalize_runs(events)
@@ -208,9 +200,7 @@ class NormalizeRunsTest(TestCase):
             (None, util_helper.utc_dt(2019, 1, 12, 0, 0, 0)),
             (None, util_helper.utc_dt(2019, 1, 14, 0, 0, 0)),
         )
-        events = api_helper.generate_aws_instance_events(
-            self.instance_plain, powered_times
-        )
+        events = api_helper.generate_instance_events(self.instance_plain, powered_times)
         random.shuffle(events)
 
         runs = util.normalize_runs(events)
@@ -239,9 +229,7 @@ class NormalizeRunsTest(TestCase):
                 util_helper.utc_dt(2019, 1, 19, 0, 0, 0),
             ),
         )
-        events = api_helper.generate_aws_instance_events(
-            self.instance_plain, powered_times
-        )
+        events = api_helper.generate_instance_events(self.instance_plain, powered_times)
         random.shuffle(events)
 
         runs = util.normalize_runs(events)

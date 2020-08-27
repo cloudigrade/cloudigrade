@@ -17,9 +17,9 @@ class CreateRunsTest(TestCase):
     def setUp(self):
         """Set up test data."""
         self.user = util_helper.generate_test_user()
-        self.account = api_helper.generate_aws_account(user=self.user)
-        self.image_rhel = api_helper.generate_aws_image(rhel_detected=True)
-        self.instance = api_helper.generate_aws_instance(
+        self.account = api_helper.generate_cloud_account(user=self.user)
+        self.image_rhel = api_helper.generate_image(rhel_detected=True)
+        self.instance = api_helper.generate_instance(
             self.account, image=self.image_rhel
         )
         self.instance_type = "c5.xlarge"  # 4 vcpu and 8.0 memory

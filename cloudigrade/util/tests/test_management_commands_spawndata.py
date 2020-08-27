@@ -21,7 +21,7 @@ class SpawnDataTest(TestCase):
     def setUp(self):
         """Set up common variables for tests."""
         self.user = util_helper.generate_test_user()
-        api_helper.generate_aws_ec2_definitions()
+        api_helper.generate_instance_type_definitions()
 
     @util_helper.clouditardis(util_helper.utc_dt(2019, 4, 20, 0, 0, 0))
     @patch("util.management.commands.spawndata.random")

@@ -17,26 +17,26 @@ class InstanceViewSetTest(TestCase):
         self.user2 = util_helper.generate_test_user()
         self.superuser = util_helper.generate_test_user(is_superuser=True)
 
-        self.account1 = api_helper.generate_aws_account(user=self.user1)
-        self.account2 = api_helper.generate_aws_account(user=self.user1)
-        self.account3 = api_helper.generate_aws_account(user=self.user2)
-        self.account4 = api_helper.generate_aws_account(user=self.user2)
+        self.account1 = api_helper.generate_cloud_account(user=self.user1)
+        self.account2 = api_helper.generate_cloud_account(user=self.user1)
+        self.account3 = api_helper.generate_cloud_account(user=self.user2)
+        self.account4 = api_helper.generate_cloud_account(user=self.user2)
 
-        self.image_plain = api_helper.generate_aws_image()
-        self.image_windows = api_helper.generate_aws_image(is_windows=True)
-        self.image_rhel = api_helper.generate_aws_image(rhel_detected=True)
-        self.image_ocp = api_helper.generate_aws_image(openshift_detected=True)
+        self.image_plain = api_helper.generate_image()
+        self.image_windows = api_helper.generate_image(is_windows=True)
+        self.image_rhel = api_helper.generate_image(rhel_detected=True)
+        self.image_ocp = api_helper.generate_image(openshift_detected=True)
 
-        self.instance1 = api_helper.generate_aws_instance(
+        self.instance1 = api_helper.generate_instance(
             cloud_account=self.account1, image=self.image_plain
         )
-        self.instance2 = api_helper.generate_aws_instance(
+        self.instance2 = api_helper.generate_instance(
             cloud_account=self.account2, image=self.image_windows
         )
-        self.instance3 = api_helper.generate_aws_instance(
+        self.instance3 = api_helper.generate_instance(
             cloud_account=self.account3, image=self.image_rhel
         )
-        self.instance4 = api_helper.generate_aws_instance(
+        self.instance4 = api_helper.generate_instance(
             cloud_account=self.account4, image=self.image_ocp
         )
         self.factory = APIRequestFactory()

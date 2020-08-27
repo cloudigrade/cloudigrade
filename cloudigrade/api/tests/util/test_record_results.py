@@ -17,7 +17,7 @@ class CalculateMaxConcurrentUsageTest(TestCase):
     def setUp(self):
         """Set up a bunch of test data."""
         self.user1 = util_helper.generate_test_user()
-        self.user1account1 = api_helper.generate_aws_account(user=self.user1)
+        self.user1account1 = api_helper.generate_cloud_account(user=self.user1)
         self.date = datetime.date(2019, 5, 1)
 
         self.x86_64 = "x86_64"

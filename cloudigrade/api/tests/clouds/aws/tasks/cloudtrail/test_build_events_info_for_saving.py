@@ -17,16 +17,16 @@ class BuildEventsInfoForSavingTest(TestCase):
         """Set up common variables for tests."""
         self.user = util_helper.generate_test_user()
         self.aws_account_id = util_helper.generate_dummy_aws_account_id()
-        self.account = api_helper.generate_aws_account(
+        self.account = api_helper.generate_cloud_account(
             aws_account_id=self.aws_account_id,
             user=self.user,
             created_at=util_helper.utc_dt(2017, 12, 1, 0, 0, 0),
         )
-        api_helper.generate_aws_ec2_definitions()
+        api_helper.generate_instance_type_definitions()
 
     def test_build_events_info_for_saving(self):
         """Test _build_events_info_for_saving with typical inputs."""
-        instance = api_helper.generate_aws_instance(self.account)
+        instance = api_helper.generate_instance(self.account)
 
         # Note: this time is *after* self.account.created_at.
         occurred_at = "2018-01-02T12:34:56+00:00"
@@ -44,7 +44,7 @@ class BuildEventsInfoForSavingTest(TestCase):
 
     def test_build_events_info_for_saving_too_old_events(self):
         """Test _build_events_info_for_saving with events that are too old."""
-        instance = api_helper.generate_aws_instance(self.account)
+        instance = api_helper.generate_instance(self.account)
 
         # Note: this time is *before* self.account.created_at.
         occurred_at = "2016-01-02T12:34:56+00:00"

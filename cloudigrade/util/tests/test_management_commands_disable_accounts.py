@@ -16,8 +16,8 @@ class DeleteAccountsTest(TransactionTestCase):
     def setUp(self):
         """Set up test data."""
         self.user = util_helper.generate_test_user()
-        self.account = api_helper.generate_aws_account(user=self.user)
-        self.account_2 = api_helper.generate_aws_account(user=self.user)
+        self.account = api_helper.generate_cloud_account(user=self.user)
+        self.account_2 = api_helper.generate_cloud_account(user=self.user)
 
     def assertPresent(self):
         """Assert that all expected objects are present."""

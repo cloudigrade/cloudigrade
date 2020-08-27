@@ -20,12 +20,12 @@ class ProcessInstanceEventTest(TestCase):
         """Set up common variables for tests."""
         self.user = util_helper.generate_test_user()
         self.aws_account_id = util_helper.generate_dummy_aws_account_id()
-        self.account = api_helper.generate_aws_account(
+        self.account = api_helper.generate_cloud_account(
             aws_account_id=self.aws_account_id,
             user=self.user,
             created_at=util_helper.utc_dt(2017, 12, 1, 0, 0, 0),
         )
-        api_helper.generate_aws_ec2_definitions()
+        api_helper.generate_instance_type_definitions()
 
     @patch("api.util.schedule_concurrent_calculation_task")
     @util_helper.clouditardis(util_helper.utc_dt(2018, 1, 15, 0, 0, 0))
@@ -45,11 +45,11 @@ class ProcessInstanceEventTest(TestCase):
         # Calculate the runs directly instead of scheduling a task for testing purposes
         mock_schedule_concurrent_task.side_effect = calculate_max_concurrent_usage
 
-        instance = api_helper.generate_aws_instance(self.account)
+        instance = api_helper.generate_instance(self.account)
 
         started_at = util_helper.utc_dt(2018, 1, 2, 0, 0, 0)
 
-        start_event = api_helper.generate_single_aws_instance_event(
+        start_event = api_helper.generate_single_instance_event(
             instance,
             occurred_at=started_at,
             event_type=InstanceEvent.TYPE.power_on,
@@ -59,7 +59,7 @@ class ProcessInstanceEventTest(TestCase):
 
         occurred_at = util_helper.utc_dt(2018, 1, 13, 0, 0, 0)
 
-        instance_event = api_helper.generate_single_aws_instance_event(
+        instance_event = api_helper.generate_single_instance_event(
             instance=instance,
             occurred_at=occurred_at,
             event_type=InstanceEvent.TYPE.power_off,
@@ -93,7 +93,7 @@ class ProcessInstanceEventTest(TestCase):
         # Calculate the runs directly instead of scheduling a task for testing purposes
         mock_schedule_concurrent_task.side_effect = calculate_max_concurrent_usage
 
-        instance = api_helper.generate_aws_instance(self.account)
+        instance = api_helper.generate_instance(self.account)
 
         run_time = (
             util_helper.utc_dt(2018, 1, 2, 0, 0, 0),
@@ -103,7 +103,7 @@ class ProcessInstanceEventTest(TestCase):
         api_helper.generate_single_run(instance, run_time)
 
         occurred_at = util_helper.utc_dt(2018, 1, 10, 0, 0, 0)
-        instance_event = api_helper.generate_single_aws_instance_event(
+        instance_event = api_helper.generate_single_instance_event(
             instance=instance,
             occurred_at=occurred_at,
             event_type=InstanceEvent.TYPE.power_on,
@@ -140,7 +140,7 @@ class ProcessInstanceEventTest(TestCase):
         """
         instance_type = "t1.potato"
 
-        instance = api_helper.generate_aws_instance(self.account)
+        instance = api_helper.generate_instance(self.account)
 
         run_time = [
             (
@@ -149,14 +149,14 @@ class ProcessInstanceEventTest(TestCase):
             )
         ]
 
-        instance_events = api_helper.generate_aws_instance_events(
+        instance_events = api_helper.generate_instance_events(
             instance, run_time, instance_type=instance_type
         )
         api_helper.recalculate_runs_from_events(instance_events)
 
         first_start = util_helper.utc_dt(2018, 1, 1, 0, 0, 0)
 
-        instance_event = api_helper.generate_single_aws_instance_event(
+        instance_event = api_helper.generate_single_instance_event(
             instance=instance,
             occurred_at=first_start,
             event_type=InstanceEvent.TYPE.power_on,
@@ -172,7 +172,7 @@ class ProcessInstanceEventTest(TestCase):
 
         second_start = util_helper.utc_dt(2018, 1, 3, 0, 0, 0)
 
-        duplicate_start_event = api_helper.generate_single_aws_instance_event(
+        duplicate_start_event = api_helper.generate_single_instance_event(
             instance=instance,
             occurred_at=second_start,
             event_type=InstanceEvent.TYPE.power_on,
@@ -201,7 +201,7 @@ class ProcessInstanceEventTest(TestCase):
             [ ####          ]
 
         """
-        instance = api_helper.generate_aws_instance(self.account)
+        instance = api_helper.generate_instance(self.account)
 
         run_time = (
             util_helper.utc_dt(2018, 1, 2, 0, 0, 0),
@@ -212,7 +212,7 @@ class ProcessInstanceEventTest(TestCase):
 
         occurred_at = util_helper.utc_dt(2018, 1, 10, 0, 0, 0)
 
-        instance_event = api_helper.generate_single_aws_instance_event(
+        instance_event = api_helper.generate_single_instance_event(
             instance=instance,
             occurred_at=occurred_at,
             event_type=InstanceEvent.TYPE.power_off,

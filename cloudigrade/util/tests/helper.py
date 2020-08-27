@@ -15,6 +15,7 @@ from dateutil import tz
 from django.conf import settings
 from django.contrib.auth.models import User
 
+from api import AWS_PROVIDER_STRING, AZURE_PROVIDER_STRING
 from util import aws
 
 _faker = faker.Faker()
@@ -38,6 +39,22 @@ SOME_EC2_INSTANCE_TYPES = {
     "t2.small": {"memory": 2, "vcpu": 1},
     "t2.xlarge": {"memory": 16, "vcpu": 4},
     "x1e.32xlarge": {"memory": 3904, "vcpu": 128},
+}
+
+SOME_AZURE_REGIONS = (
+    "East US",
+    "East US 2",
+    "South Central US",
+    "North Europe",
+    "EAST US 2 EUAP",
+)
+
+SOME_AZURE_INSTANCE_TYPES = {
+    "Standard_B4ms": {"memory": 16, "vcpu": 4},
+    "Standard_A1_v2": {"memory": 2, "vcpu": 1},
+    "Standard_D96a_v4": {"memory": 384, "vcpu": 96},
+    "Standard_D16as_v4": {"memory": 64, "vcpu": 16},
+    "Standard_D64d_v4": {"memory": 256, "vcpu": 64},
 }
 
 MIN_AWS_ACCOUNT_ID = 10 ** 10  # start "big" to better test handling of "big" numbers
@@ -69,6 +86,14 @@ def generate_dummy_instance_id():
     )
 
 
+def generate_dummy_azure_instance_id():
+    """Generate a dummy Azure instance ID for testing purposes."""
+    return (
+        f"/subscriptions/{uuid.uuid4()}/resourceGroups/{_faker.word()}"
+        f"/providers/Microsoft.Compute/virtualMachines/{_faker.word()}"
+    )
+
+
 def generate_dummy_subnet_id():
     """Generate a dummy AWS EC2 subnet ID for testing purposes."""
     return "subnet-{}".format(
@@ -80,6 +105,14 @@ def generate_dummy_image_id():
     """Generate a dummy AWS image ID for testing purposes."""
     return "ami-{}".format(
         "".join(random.choice(string.hexdigits[:16]) for _ in range(8))
+    )
+
+
+def generate_dummy_azure_image_id():
+    """Generate a dummy AWS image ID for testing purposes."""
+    return (
+        f"/subscriptions/{uuid.uuid4()}/resourceGroups/{_faker.word()}"
+        f"/providers/Microsoft.Compute/images/{_faker.word()}"
     )
 
 
@@ -143,7 +176,7 @@ def generate_dummy_aws_cloud_account_post_data():
         dict with dummy data fully populated.
     """
     data = {
-        "cloud_type": "aws",
+        "cloud_type": AWS_PROVIDER_STRING,
         "account_arn": generate_dummy_arn(),
         "name": _faker.bs()[:256],
         "platform_authentication_id": _faker.pyint(),
@@ -154,9 +187,29 @@ def generate_dummy_aws_cloud_account_post_data():
     return data
 
 
-def get_random_instance_type(avoid=None):
+def generate_dummy_azure_cloud_account_post_data():
     """
-    Get a randomly selected AWS EC2 instance type.
+    Generate all post data needed for creating an AzureCloudAccount.
+
+    Returns:
+        dict with dummy data fully populated.
+    """
+    data = {
+        "cloud_type": AZURE_PROVIDER_STRING,
+        "subscription_id": uuid.uuid4(),
+        "tenant_id": uuid.uuid4(),
+        "name": _faker.bs()[:256],
+        "platform_authentication_id": _faker.pyint(),
+        "platform_application_id": _faker.pyint(),
+        "platform_endpoint_id": _faker.pyint(),
+        "platform_source_id": _faker.pyint(),
+    }
+    return data
+
+
+def get_random_instance_type(avoid=None, cloud_type=AWS_PROVIDER_STRING):
+    """
+    Get a randomly selected cloud provider instance type. Defaults to AWS.
 
     Args:
         avoid (str): optional specific instance type to avoid
@@ -165,21 +218,27 @@ def get_random_instance_type(avoid=None):
         str: AWS EC2 instance type
 
     """
-    instance_types = set(SOME_EC2_INSTANCE_TYPES.keys())
+    if cloud_type == AZURE_PROVIDER_STRING:
+        instance_types = set(SOME_AZURE_INSTANCE_TYPES.keys())
+    else:
+        instance_types = set(SOME_EC2_INSTANCE_TYPES.keys())
     instance_types.discard(avoid)
     instance_type = random.choice(tuple(instance_types))
     return instance_type
 
 
-def get_random_region():
+def get_random_region(cloud_type=AWS_PROVIDER_STRING):
     """
-    Get a randomly selected AWS region.
+    Get a randomly selected region. Default to AWS.
 
     Returns:
-        str: AWS region name
+        str: A cloud provider region name
 
     """
-    return random.choice(SOME_AWS_REGIONS)
+    if cloud_type == AZURE_PROVIDER_STRING:
+        return random.choice(SOME_AZURE_REGIONS)
+    else:
+        return random.choice(SOME_AWS_REGIONS)
 
 
 def generate_dummy_describe_instance(

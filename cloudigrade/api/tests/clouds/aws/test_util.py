@@ -112,7 +112,7 @@ class CloudsAwsUtilCloudTrailTest(TestCase):
         """Set up basic aws account."""
         aws_account_id = util_helper.generate_dummy_aws_account_id()
         arn = util_helper.generate_dummy_arn(account_id=aws_account_id)
-        self.account = api_helper.generate_aws_account(
+        self.account = api_helper.generate_cloud_account(
             aws_account_id=aws_account_id, arn=arn, name="test"
         )
 

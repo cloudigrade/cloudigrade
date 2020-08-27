@@ -25,7 +25,7 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         self.endpoint_id = _faker.pyint()
         self.source_id = _faker.pyint()
 
-        self.account = api_helper.generate_aws_account(
+        self.account = api_helper.generate_cloud_account(
             platform_authentication_id=self.authentication_id,
             platform_application_id=self.application_id,
             platform_endpoint_id=self.endpoint_id,

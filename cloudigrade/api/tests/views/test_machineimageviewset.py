@@ -29,40 +29,38 @@ class MachineImageViewSetTest(TestCase):
         self.superuser = util_helper.generate_test_user(is_superuser=True)
 
         # Accounts for the users
-        self.account_u1_1 = api_helper.generate_aws_account(user=self.user1)
-        self.account_u1_2 = api_helper.generate_aws_account(user=self.user1)
-        self.account_u2_1 = api_helper.generate_aws_account(user=self.user2)
-        self.account_u2_2 = api_helper.generate_aws_account(user=self.user2)
-        self.account_su = api_helper.generate_aws_account(user=self.superuser)
+        self.account_u1_1 = api_helper.generate_cloud_account(user=self.user1)
+        self.account_u1_2 = api_helper.generate_cloud_account(user=self.user1)
+        self.account_u2_1 = api_helper.generate_cloud_account(user=self.user2)
+        self.account_u2_2 = api_helper.generate_cloud_account(user=self.user2)
+        self.account_su = api_helper.generate_cloud_account(user=self.superuser)
 
         # Images with various contents
-        self.image_plain = api_helper.generate_aws_image()
-        self.image_windows = api_helper.generate_aws_image(is_windows=True)
-        self.image_rhel = api_helper.generate_aws_image(rhel_detected=True)
-        self.image_ocp = api_helper.generate_aws_image(
+        self.image_plain = api_helper.generate_image()
+        self.image_windows = api_helper.generate_image(is_windows=True)
+        self.image_rhel = api_helper.generate_image(rhel_detected=True)
+        self.image_ocp = api_helper.generate_image(
             openshift_detected=True, architecture="arm64"
         )
-        self.image_rhel_ocp = api_helper.generate_aws_image(
+        self.image_rhel_ocp = api_helper.generate_image(
             rhel_detected=True, openshift_detected=True, status=MachineImage.UNAVAILABLE
         )
-        self.inspected_image = api_helper.generate_aws_image(
-            status=MachineImage.INSPECTED
-        )
+        self.inspected_image = api_helper.generate_image(status=MachineImage.INSPECTED)
 
         # Instances for the accounts
-        self.instance_u1_1 = api_helper.generate_aws_instance(
+        self.instance_u1_1 = api_helper.generate_instance(
             cloud_account=self.account_u1_1, image=self.image_plain
         )
-        self.instance_u1_2 = api_helper.generate_aws_instance(
+        self.instance_u1_2 = api_helper.generate_instance(
             cloud_account=self.account_u1_2, image=self.image_rhel
         )
-        self.instance_u2_1 = api_helper.generate_aws_instance(
+        self.instance_u2_1 = api_helper.generate_instance(
             cloud_account=self.account_u2_1, image=self.image_ocp
         )
-        self.instance_u2_2 = api_helper.generate_aws_instance(
+        self.instance_u2_2 = api_helper.generate_instance(
             cloud_account=self.account_u2_2, image=self.image_rhel_ocp
         )
-        self.instance_su = api_helper.generate_aws_instance(
+        self.instance_su = api_helper.generate_instance(
             cloud_account=self.account_su, image=self.image_windows
         )
 
@@ -98,7 +96,7 @@ class MachineImageViewSetTest(TestCase):
             list[InstanceEvent]: The list of events
 
         """
-        events = api_helper.generate_aws_instance_events(
+        events = api_helper.generate_instance_events(
             instance, powered_times, image.content_object.ec2_ami_id,
         )
         return events

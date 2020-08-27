@@ -30,12 +30,12 @@ class AnalyzeLogTest(TestCase):
         """Set up common variables for tests."""
         self.user = util_helper.generate_test_user()
         self.aws_account_id = util_helper.generate_dummy_aws_account_id()
-        self.account = helper.generate_aws_account(
+        self.account = helper.generate_cloud_account(
             aws_account_id=self.aws_account_id,
             user=self.user,
             created_at=util_helper.utc_dt(2017, 12, 1, 0, 0, 0),
         )
-        helper.generate_aws_ec2_definitions()
+        helper.generate_instance_type_definitions()
 
     @util_helper.clouditardis(util_helper.utc_dt(2018, 1, 5, 0, 0, 0))
     @patch("api.util.schedule_concurrent_calculation_task")
@@ -367,7 +367,7 @@ class AnalyzeLogTest(TestCase):
         instance_type = util_helper.get_random_instance_type()
 
         ec2_instance_id = util_helper.generate_dummy_instance_id()
-        known_image = helper.generate_aws_image()
+        known_image = helper.generate_image()
         ec2_ami_id = known_image.content_object.ec2_ami_id
 
         # Define the S3 message payload.
@@ -461,7 +461,7 @@ class AnalyzeLogTest(TestCase):
         mock_receive.return_value = [sqs_message]
         region = util_helper.get_random_region()
 
-        image = helper.generate_aws_image()
+        image = helper.generate_image()
         ec2_ami_id = image.content_object.ec2_ami_id
 
         # Define the mocked "describe instances" behavior.
@@ -711,7 +711,7 @@ class AnalyzeLogTest(TestCase):
         """
         instance_type = "t1.potato"
         sqs_message = helper.generate_mock_cloudtrail_sqs_message()
-        gen_instance = helper.generate_aws_instance(self.account, region="us-east-1")
+        gen_instance = helper.generate_instance(self.account, region="us-east-1")
         trail_record = helper.generate_cloudtrail_modify_instance_record(
             aws_account_id=self.aws_account_id,
             instance_id=gen_instance.content_object.ec2_instance_id,
@@ -956,7 +956,7 @@ class AnalyzeLogTest(TestCase):
     @patch("api.clouds.aws.tasks.cloudtrail.aws.yield_messages_from_queue")
     def test_ami_tags_added_success(self, mock_receive, mock_s3, mock_del):
         """Test processing a CloudTrail log for ami tags added."""
-        ami = helper.generate_aws_image()
+        ami = helper.generate_image()
         self.assertFalse(ami.openshift_detected)
 
         sqs_message = helper.generate_mock_cloudtrail_sqs_message()
@@ -987,9 +987,7 @@ class AnalyzeLogTest(TestCase):
     @patch("api.clouds.aws.tasks.cloudtrail.aws.yield_messages_from_queue")
     def test_ami_tags_removed_success(self, mock_receive, mock_s3, mock_del):
         """Test processing a CloudTrail log for ami tags removed."""
-        ami = helper.generate_aws_image(
-            rhel_detected_by_tag=True, openshift_detected=True
-        )
+        ami = helper.generate_image(rhel_detected_by_tag=True, openshift_detected=True)
         self.assertTrue(ami.rhel_detected_by_tag)
         self.assertTrue(ami.openshift_detected)
 
@@ -1033,7 +1031,7 @@ class AnalyzeLogTest(TestCase):
         If we see that one of our tags is both added and removed within a set of logs,
         we only want to know about and save the most recent change.
         """
-        ami = helper.generate_aws_image(rhel_detected_by_tag=True)
+        ami = helper.generate_image(rhel_detected_by_tag=True)
         self.assertTrue(ami.rhel_detected_by_tag)
 
         first_record_time = get_now() - timedelta(minutes=10)

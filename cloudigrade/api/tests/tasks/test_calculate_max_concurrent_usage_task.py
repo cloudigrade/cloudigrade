@@ -23,12 +23,12 @@ class CalculateMaxConcurrentUsageTaskTest(TestCase):
         self.user = util_helper.generate_test_user()
 
         self.aws_account_id = util_helper.generate_dummy_aws_account_id()
-        self.account = api_helper.generate_aws_account(
+        self.account = api_helper.generate_cloud_account(
             aws_account_id=self.aws_account_id,
             user=self.user,
             created_at=util_helper.utc_dt(2017, 12, 1, 0, 0, 0),
         )
-        api_helper.generate_aws_ec2_definitions()
+        api_helper.generate_instance_type_definitions()
 
     def test_calculate_max_concurrent_usage_task(self):
         """Test ConcurrentUsageCalculationTask is set to complete."""

@@ -21,12 +21,12 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
     def setUp(self):
         """Set up a bunch of test data."""
         self.user = util_helper.generate_test_user()
-        self.account = api_helper.generate_aws_account(user=self.user)
-        self.account2 = api_helper.generate_aws_account(user=self.user)
+        self.account = api_helper.generate_cloud_account(user=self.user)
+        self.account2 = api_helper.generate_cloud_account(user=self.user)
         self.image_rhel_role = "Red Hat Enterprise Linux Workstation"
         self.image_rhel_sla = "Premium"
         self.image_rhel_usage = "Production"
-        self.image_rhel = api_helper.generate_aws_image(
+        self.image_rhel = api_helper.generate_image(
             rhel_detected=True,
             syspurpose={
                 "role": f"{self.image_rhel_role}",
@@ -34,7 +34,7 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
                 "usage": f"{self.image_rhel_usage}",
             },
         )
-        self.image_plain = api_helper.generate_aws_image()
+        self.image_plain = api_helper.generate_image()
 
         self.instance_type_small = "t2.nano"  # 1 vcpu, 0.5 GB memory
         self.instance_type_small_specs = util_helper.SOME_EC2_INSTANCE_TYPES[
@@ -72,7 +72,7 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
         # Calculate the runs directly instead of scheduling a task for testing purposes
         mock_schedule_concurrent_task.side_effect = calculate_max_concurrent_usage
 
-        instance = api_helper.generate_aws_instance(self.account, image=self.image_rhel)
+        instance = api_helper.generate_instance(self.account, image=self.image_rhel)
         run = api_helper.generate_single_run(
             instance,
             (
@@ -131,7 +131,7 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
         # Calculate the runs directly instead of scheduling a task for testing purposes
         mock_schedule_concurrent_task.side_effect = calculate_max_concurrent_usage
 
-        instance = api_helper.generate_aws_instance(self.account, image=self.image_rhel)
+        instance = api_helper.generate_instance(self.account, image=self.image_rhel)
         run = api_helper.generate_single_run(
             instance,
             (
@@ -200,7 +200,7 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
         # Calculate the runs directly instead of scheduling a task for testing purposes
         mock_schedule_concurrent_task.side_effect = calculate_max_concurrent_usage
 
-        instance = api_helper.generate_aws_instance(self.account, image=self.image_rhel)
+        instance = api_helper.generate_instance(self.account, image=self.image_rhel)
         today = get_today()
         yesterday = today - datetime.timedelta(days=1)
         run = api_helper.generate_single_run(
@@ -263,7 +263,7 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
         # Calculate the runs directly instead of scheduling a task for testing purposes
         mock_schedule_concurrent_task.side_effect = calculate_max_concurrent_usage
 
-        instance = api_helper.generate_aws_instance(self.account, image=self.image_rhel)
+        instance = api_helper.generate_instance(self.account, image=self.image_rhel)
         old_run = api_helper.generate_single_run(
             instance,
             (
@@ -308,7 +308,7 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
         # Calculate the runs directly instead of scheduling a task for testing purposes
         mock_schedule_concurrent_task.side_effect = calculate_max_concurrent_usage
 
-        instance = api_helper.generate_aws_instance(self.account, image=self.image_rhel)
+        instance = api_helper.generate_instance(self.account, image=self.image_rhel)
         old_run = api_helper.generate_single_run(
             instance,
             (
@@ -324,9 +324,7 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
         old_usages = ConcurrentUsage.objects.all().order_by("created_at", "id")
         self.assertEqual(len(old_usages), 1)
 
-        new_instance = api_helper.generate_aws_instance(
-            self.account, image=self.image_rhel
-        )
+        new_instance = api_helper.generate_instance(self.account, image=self.image_rhel)
         new_run = api_helper.generate_single_run(
             new_instance,
             (
@@ -382,7 +380,7 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
         concurrent_task.status = ConcurrentUsageCalculationTask.COMPLETE
         concurrent_task.save()
 
-        instance = api_helper.generate_aws_instance(self.account, image=self.image_rhel)
+        instance = api_helper.generate_instance(self.account, image=self.image_rhel)
         run = api_helper.generate_single_run(
             instance,
             (
@@ -415,7 +413,7 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
             concurrent_task
         )
 
-        instance = api_helper.generate_aws_instance(self.account, image=self.image_rhel)
+        instance = api_helper.generate_instance(self.account, image=self.image_rhel)
         run = api_helper.generate_single_run(
             instance,
             (
@@ -439,7 +437,7 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
         concurrent_task.status = ConcurrentUsageCalculationTask.SCHEDULED
         concurrent_task.save()
 
-        instance = api_helper.generate_aws_instance(self.account, image=self.image_rhel)
+        instance = api_helper.generate_instance(self.account, image=self.image_rhel)
         run = api_helper.generate_single_run(
             instance,
             (
