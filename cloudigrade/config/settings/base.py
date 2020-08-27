@@ -189,8 +189,8 @@ DATABASES = {
         "HOST": env("DJANGO_DATABASE_HOST", default="localhost"),
         "USER": env("DJANGO_DATABASE_USER", default="postgres"),
         "PASSWORD": env("DJANGO_DATABASE_PASSWORD", default="postgres"),
-        "PORT": env("DJANGO_DATABASE_PORT", default=5432),
-        "CONN_MAX_AGE": env("DJANGO_DATABASE_CONN_MAX_AGE", default=0),
+        "PORT": env.int("DJANGO_DATABASE_PORT", default=5432),
+        "CONN_MAX_AGE": env.int("DJANGO_DATABASE_CONN_MAX_AGE", default=0),
     }
 }
 
@@ -273,11 +273,11 @@ AWS_SQS_URL = env(
         quote(AWS_SQS_ACCESS_KEY_ID, safe=""), quote(AWS_SQS_SECRET_ACCESS_KEY, safe="")
     ),
 )
-AWS_SQS_MAX_RECEIVE_COUNT = env("AWS_SQS_MAX_RECEIVE_COUNT", default=5)
+AWS_SQS_MAX_RECEIVE_COUNT = env.int("AWS_SQS_MAX_RECEIVE_COUNT", default=5)
 
 # We appear to be receiving ~300 messages an hour currently,
-AWS_SQS_MAX_YIELD_COUNT = env("AWS_SQS_MAX_YIELD_COUNT", default=100)
-AWS_SQS_MAX_HOUNDI_YIELD_COUNT = env("AWS_SQS_MAX_HOUNDI_YIELD_COUNT", default=10)
+AWS_SQS_MAX_YIELD_COUNT = env.int("AWS_SQS_MAX_YIELD_COUNT", default=100)
+AWS_SQS_MAX_HOUNDI_YIELD_COUNT = env.int("AWS_SQS_MAX_HOUNDI_YIELD_COUNT", default=10)
 AWS_NAME_PREFIX = env("AWS_NAME_PREFIX", default=env("USER", default="anonymous") + "-")
 
 HOUNDIGRADE_RESULTS_QUEUE_NAME = env(
@@ -300,9 +300,9 @@ CLOUDTRAIL_EVENT_URL = env(
 S3_BUCKET_NAME = env("S3_BUCKET_NAME", default="{0}cloudigrade".format(AWS_NAME_PREFIX))
 
 S3_BUCKET_LC_NAME = env("S3_BUCKET_LC_NAME", default="s3_lifecycle_policy")
-S3_BUCKET_LC_IA_TRANSITION = env("S3_BUCKET_LC_IA_TRANSITION", default=30)
-S3_BUCKET_LC_GLACIER_TRANSITION = env("S3_BUCKET_LC_GLACIER_TRANSITION", default=60)
-S3_BUCKET_LC_MAX_AGE = env("S3_BUCKET_LC_MAX_AGE", default=1460)
+S3_BUCKET_LC_IA_TRANSITION = env.int("S3_BUCKET_LC_IA_TRANSITION", default=30)
+S3_BUCKET_LC_GLACIER_TRANSITION = env.int("S3_BUCKET_LC_GLACIER_TRANSITION", default=60)
+S3_BUCKET_LC_MAX_AGE = env.int("S3_BUCKET_LC_MAX_AGE", default=1460)
 
 CLOUDTRAIL_NAME_PREFIX = "cloudigrade-"
 
@@ -403,7 +403,7 @@ INSPECTION_CLUSTER_INSTANCE_AGE_LIMIT = env.int(
 )
 
 # Delay in seconds for concurrent usage calculation
-CONCURRENT_USAGE_CALCULATION_DELAY = env(
+CONCURRENT_USAGE_CALCULATION_DELAY = env.int(
     "CONCURRENT_USAGE_CALCULATION_DELAY", default=30 * 60
 )
 
@@ -421,14 +421,14 @@ LISTENER_GROUP_ID = env("LISTENER_GROUP_ID", default="cloudmeter_ci")
 LISTENER_SERVER = env(
     "LISTENER_SERVER", default="platform-mq-ci-kafka-bootstrap.platform-mq-ci.svc"
 )
-LISTENER_PORT = env("LISTENER_PORT", default="9092")
+LISTENER_PORT = env.int("LISTENER_PORT", default=9092)
 LISTENER_AUTO_COMMIT = env.bool("LISTENER_AUTO_COMMIT", default=True)
-LISTENER_TIMEOUT = env("LISTENER_TIMEOUT", default=1000)
-KAFKA_SESSION_TIMEOUT_MS = env("KAFKA_SESSION_TIMEOUT_MS", default=20000)
+LISTENER_TIMEOUT = env.int("LISTENER_TIMEOUT", default=1000)
+KAFKA_SESSION_TIMEOUT_MS = env.int("KAFKA_SESSION_TIMEOUT_MS", default=20000)
 
 LISTENER_PID_PATH = env("LISTENER_PID_PATH", default="/var/run/cloudigrade")
 
-ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES = env(
+ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES = env.bool(
     "ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES", default=True,
 )
 
