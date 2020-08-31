@@ -177,7 +177,6 @@ Deploy Review:
     - oc start-build -F c-${DEPLOYMENT_PREFIX}-api
     - oc start-build -F c-${DEPLOYMENT_PREFIX}-nginx
     - if ! oc rollout status dc/c-${DEPLOYMENT_PREFIX}-a; then oc rollout latest dc/c-${DEPLOYMENT_PREFIX}-a && oc rollout status dc/c-${DEPLOYMENT_PREFIX}-a; fi;
-    - oc rsh -c c-${DEPLOYMENT_PREFIX}-a $(oc get pods -o jsonpath='{.items[*].metadata.name}' -l name=c-${DEPLOYMENT_PREFIX}-a) python3 manage.py seed_review_data || true
     - if ! oc rollout status dc/c-${DEPLOYMENT_PREFIX}-b; then oc rollout latest dc/c-${DEPLOYMENT_PREFIX}-b && oc rollout status dc/c-${DEPLOYMENT_PREFIX}-b; fi;
     - if ! oc rollout status dc/c-${DEPLOYMENT_PREFIX}-w; then oc rollout latest dc/c-${DEPLOYMENT_PREFIX}-w && oc rollout status dc/c-${DEPLOYMENT_PREFIX}-w; fi;
     - if ! oc rollout status dc/c-${DEPLOYMENT_PREFIX}-l; then oc rollout latest dc/c-${DEPLOYMENT_PREFIX}-l && oc rollout status dc/c-${DEPLOYMENT_PREFIX}-l; fi;
