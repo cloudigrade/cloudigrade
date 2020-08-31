@@ -49,6 +49,7 @@ class Command(BaseCommand):
         parser.add_argument("--account_count", type=int, default=4)
         parser.add_argument("--image_count", type=int, default=100)
         parser.add_argument("--instance_count", type=int, default=5000)
+        parser.add_argument("--cloud_type", type=str, default="aws")
         parser.add_argument(
             "--min_run_hours",
             type=float_non_negative,
@@ -121,7 +122,11 @@ class Command(BaseCommand):
             desc="Spawn account progress",
             unit="accounts",
         ):
-            accounts.append(account_helper.generate_cloud_account(user=user))
+            accounts.append(
+                account_helper.generate_cloud_account(
+                    user=user, cloud_type=options["cloud_type"]
+                )
+            )
         self.stdout.write(_("Created {} account(s)").format(len(accounts)))
         return accounts
 
@@ -139,11 +144,12 @@ class Command(BaseCommand):
         ):
             images.append(
                 account_helper.generate_image(
-                    owner_aws_account_id=int(random.choice(accounts).cloud_account_id)
+                    owner_aws_account_id=random.choice(accounts).cloud_account_id
                     if random.random() < options["other_owner_chance"]
                     else util_helper.generate_dummy_aws_account_id(),
                     rhel_detected=random.random() < options["rhel_chance"],
                     openshift_detected=random.random() < options["ocp_chance"],
+                    cloud_type=options["cloud_type"],
                 )
             )
         self.stdout.write(_("Created {} images").format(len(images)))
@@ -165,7 +171,9 @@ class Command(BaseCommand):
         ):
             instances.append(
                 account_helper.generate_instance(
-                    cloud_account=random.choice(accounts), image=random.choice(images)
+                    cloud_account=random.choice(accounts),
+                    image=random.choice(images),
+                    cloud_type=options["cloud_type"],
                 )
             )
         self.stdout.write(_("Created {} instances(s)").format(len(instances)))
@@ -182,6 +190,7 @@ class Command(BaseCommand):
         min_run_secs,
         max_run_secs,
         runs_counts,
+        cloud_type,
     ):
         """
         Create random InstanceEvents for a specific Instance.
@@ -205,6 +214,7 @@ class Command(BaseCommand):
                 instance=instance,
                 occurred_at=start_time,
                 event_type=InstanceEvent.TYPE.power_on,
+                cloud_type=cloud_type,
             )
             events_count += 1
             runs_made += 1
@@ -220,6 +230,7 @@ class Command(BaseCommand):
                 instance=instance,
                 occurred_at=stop_time,
                 event_type=InstanceEvent.TYPE.power_off,
+                cloud_type=cloud_type,
             )
             events_count += 1
 
@@ -274,6 +285,7 @@ class Command(BaseCommand):
                     min_run_secs,
                     max_run_secs,
                     runs_counts,
+                    options["cloud_type"],
                 )
         return events_count, runs_counts
 
@@ -283,9 +295,9 @@ class Command(BaseCommand):
         self.stdout.write(
             _(
                 "This command will generate data representing:\n"
-                "- {account_count} AWS account(s)\n"
-                "- {image_count} AWS image(s)\n"
-                "- {instance_count} AWS instance(s)\n"
+                "- {account_count} {cloud_type} account(s)\n"
+                "- {image_count} {cloud_type} image(s)\n"
+                "- {instance_count} {cloud_type} instance(s)\n"
                 "- {mean_run_count} mean runs for each instance\n"
                 "- {min_run_hours} minimum and {mean_run_hours} mean hours duration "
                 "for each run\n"
