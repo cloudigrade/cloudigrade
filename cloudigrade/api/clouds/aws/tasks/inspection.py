@@ -346,11 +346,19 @@ def run_inspection_cluster(messages, cloud="aws"):  # noqa: C901
         containerDefinitions=[_build_container_definition(task_command)],
         requiresCompatibilities=["EC2"],
     )
+    task_definition_arn = result["taskDefinition"]["taskDefinitionArn"]
 
     # release the hounds
+    logger.info(
+        _("Running task %(task_definition)s in cluster %(cluster)s"),
+        {
+            "task_definition": task_definition_arn,
+            "cluster": settings.HOUNDIGRADE_ECS_CLUSTER_NAME,
+        },
+    )
     ecs.run_task(
         cluster=settings.HOUNDIGRADE_ECS_CLUSTER_NAME,
-        taskDefinition=result["taskDefinition"]["taskDefinitionArn"],
+        taskDefinition=task_definition_arn,
     )
 
 
