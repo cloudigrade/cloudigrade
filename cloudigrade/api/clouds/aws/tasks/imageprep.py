@@ -147,14 +147,29 @@ def copy_ami_snapshot(  # noqa: C901
             customer_snapshot.owner_id != session_account_id
             and reference_ami_id is None
         ):
+            logger.info(
+                _(
+                    "Snapshot owner is not current session account. "
+                    "Copying AMI %(ami)s to customer account with ARN %(arn)s"
+                ),
+                {"ami": ami, "arn": arn},
+            )
             copy_ami_to_customer_account.delay(arn, ami_id, snapshot_region)
             # Early return because we need to stop processing the current AMI.
             # A future call will process this new copy of the
             # current AMI instead.
             return
     except ClientError as e:
-        if e.response.get("Error").get("Code") == "InvalidSnapshot.NotFound":
+        error_code = e.response.get("Error").get("Code")
+        if error_code == "InvalidSnapshot.NotFound":
             # Possibly a marketplace AMI, try to handle it by copying.
+            logger.info(
+                _(
+                    "Encountered %(error_code)s. Possibly a marketplace AMI? "
+                    "Copying AMI %(ami)s to customer account with ARN %(arn)s"
+                ),
+                {"error_code": error_code, "ami": ami, "arn": arn},
+            )
             copy_ami_to_customer_account.delay(arn, ami_id, snapshot_region)
             return
         raise e
@@ -257,6 +272,13 @@ def copy_ami_to_customer_account(arn, reference_ami_id, snapshot_region):
 
     try:
         new_ami_id = aws.copy_ami(session, reference_ami.id, snapshot_region)
+        logger.info(
+            _(
+                "New temporary copy AMI ID is %(new_ami_id)s "
+                "from reference AMI ID %(reference_ami_id)s"
+            ),
+            {"new_ami_id": new_ami_id, "reference_ami_id": reference_ami.id},
+        )
     except ClientError as e:
         public_errors = (
             "Images from AWS Marketplace cannot be copied to another AWS account",
