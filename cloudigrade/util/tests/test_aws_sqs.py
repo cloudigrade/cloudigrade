@@ -100,27 +100,61 @@ class UtilAwsSqsTest(TestCase):
         error_response = {"Error": {"Code": ".NonExistentQueue"}}
         exception = ClientError(error_response, Mock())
 
-        with patch.object(sqs, "boto3") as mock_boto3:
+        with self.assertLogs(
+            "util.aws.sqs", level="WARNING"
+        ) as logging_watcher, patch.object(sqs, "boto3") as mock_boto3:
             mock_resource = mock_boto3.resource.return_value
             mock_queue = mock_resource.Queue.return_value
             mock_queue.receive_messages.side_effect = exception
             yielded_messages = list(sqs.yield_messages_from_queue(queue_url))
 
         self.assertEqual(len(yielded_messages), 0)
+        self.assertIn("Queue does not yet exist at", logging_watcher.output[0])
 
-    def test_yield_messages_from_queue_raises_unhandled_exception(self):
-        """Assert yield_messages_from_queue raises unhandled exceptions."""
+    def test_yield_messages_from_queue_other_client_error(self):
+        """Assert yield_messages_from_queue logs and raises other ClientError."""
         queue_url = _faker.url()
         error_response = {"Error": {"Code": ".Potatoes"}}
         exception = ClientError(error_response, Mock())
 
-        with patch.object(sqs, "boto3") as mock_boto3:
+        with self.assertLogs(
+            "util.aws.sqs", level="ERROR"
+        ) as logging_watcher, patch.object(sqs, "boto3") as mock_boto3:
             mock_resource = mock_boto3.resource.return_value
             mock_queue = mock_resource.Queue.return_value
             mock_queue.receive_messages.side_effect = exception
             with self.assertRaises(ClientError) as raised_exception:
                 list(sqs.yield_messages_from_queue(queue_url))
-            self.assertEqual(raised_exception.exception, exception)
+
+        self.assertEqual(raised_exception.exception, exception)
+        self.assertIn(
+            "Unexpected ClientError when receiving message from SQS",
+            logging_watcher.output[0],
+        )
+
+    def test_yield_messages_from_queue_raises_unhandled_exception(self):
+        """Assert yield_messages_from_queue logs and raises other exceptions."""
+        queue_url = _faker.url()
+
+        class UnexpectedException(Exception):
+            pass
+
+        exception = UnexpectedException()
+
+        with self.assertLogs(
+            "util.aws.sqs", level="ERROR"
+        ) as logging_watcher, patch.object(sqs, "boto3") as mock_boto3:
+            mock_resource = mock_boto3.resource.return_value
+            mock_queue = mock_resource.Queue.return_value
+            mock_queue.receive_messages.side_effect = exception
+            with self.assertRaises(UnexpectedException) as raised_exception:
+                list(sqs.yield_messages_from_queue(queue_url))
+
+        self.assertEqual(raised_exception.exception, exception)
+        self.assertIn(
+            "Unexpected not-ClientError exception when receiving message from SQS",
+            logging_watcher.output[0],
+        )
 
     def test_delete_message_from_queue(self):
         """Assert that messages are deleted from SQS queue."""

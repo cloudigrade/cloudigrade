@@ -93,7 +93,25 @@ def yield_messages_from_queue(
         if e.response["Error"]["Code"].endswith(".NonExistentQueue"):
             logger.warning(_("Queue does not yet exist at %s"), queue_url)
         else:
+            logger.exception(
+                _(
+                    "Unexpected ClientError when receiving message from "
+                    "SQS %(queue_url)s "
+                    "with wait time %(wait_time)s: %(e)s"
+                ),
+                {"queue_url": queue_url, "wait_time": wait_time, "e": e},
+            )
             raise
+    except Exception as e:
+        logger.exception(
+            _(
+                "Unexpected not-ClientError exception when receiving message from "
+                "SQS %(queue_url)s "
+                "with wait time %(wait_time)s: %(e)s"
+            ),
+            {"queue_url": queue_url, "wait_time": wait_time, "e": e},
+        )
+        raise
 
 
 def delete_messages_from_queue(queue_url, messages):
