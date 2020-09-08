@@ -53,7 +53,7 @@ class GetMaxConcurrentUsageTest(TestCase):
             1,
         )
         self.assertEqual(concurrent_usage.date, expected_date)
-        self.assertEqual(len(concurrent_usage.maximum_counts), 4)
+        self.assertEqual(len(concurrent_usage.maximum_counts), 24)
         for single_day_counts in concurrent_usage.maximum_counts:
             self.assertEqual(single_day_counts["instances_count"], expected_instances)
 
@@ -124,7 +124,7 @@ class GetMaxConcurrentUsageTest(TestCase):
         self.assertEqual(concurrent_usage, concurrent_usage_2)
         self.assertEqual(concurrent_usage, concurrent_usage_3)
         self.assertEqual(concurrent_usage.date, expected_date)
-        self.assertEqual(len(concurrent_usage.maximum_counts), 4)
+        self.assertEqual(len(concurrent_usage.maximum_counts), 24)
         for single_day_counts in concurrent_usage.maximum_counts:
             self.assertEqual(single_day_counts["instances_count"], expected_instances)
 
@@ -174,7 +174,7 @@ class GetMaxConcurrentUsageTest(TestCase):
             1,
         )
         self.assertEqual(concurrent_usage.date, expected_date)
-        self.assertEqual(len(concurrent_usage.maximum_counts), 4)
+        self.assertEqual(len(concurrent_usage.maximum_counts), 24)
         for single_day_counts in concurrent_usage.maximum_counts:
             self.assertEqual(single_day_counts["instances_count"], expected_instances)
 
@@ -223,6 +223,6 @@ class GetMaxConcurrentUsageTest(TestCase):
             1,
         )
         self.assertEqual(concurrent_usage.date, expected_date)
-        self.assertEqual(len(concurrent_usage.maximum_counts), 4)
+        self.assertEqual(len(concurrent_usage.maximum_counts), 24)
         for single_day_counts in concurrent_usage.maximum_counts:
             self.assertEqual(single_day_counts["instances_count"], expected_instances)

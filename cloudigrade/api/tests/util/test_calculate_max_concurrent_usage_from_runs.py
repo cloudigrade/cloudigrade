@@ -26,12 +26,14 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
         self.image_rhel_role = "Red Hat Enterprise Linux Workstation"
         self.image_rhel_sla = "Premium"
         self.image_rhel_usage = "Production"
+        self.image_service_type = "L3"
         self.image_rhel = api_helper.generate_image(
             rhel_detected=True,
             syspurpose={
-                "role": f"{self.image_rhel_role}",
-                "service_level_agreement": f"{self.image_rhel_sla}",
-                "usage": f"{self.image_rhel_usage}",
+                "role": self.image_rhel_role,
+                "service_level_agreement": self.image_rhel_sla,
+                "usage": self.image_rhel_usage,
+                "service_type": self.image_service_type,
             },
         )
         self.image_plain = api_helper.generate_image()
@@ -51,15 +53,227 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
         self.assertEqual(usage.user, user)
 
         sorted_actual_counts = sorted(
-            usage.maximum_counts, key=lambda d: (d["arch"], d["role"], d["sla"])
+            usage.maximum_counts,
+            key=lambda d: (
+                d["arch"],
+                d["role"],
+                d["sla"],
+                d["usage"],
+                d["service_type"],
+            ),
         )
         sorted_expected_counts = sorted(
-            expected_counts, key=lambda d: (d["arch"], d["role"], d["sla"])
+            expected_counts,
+            key=lambda d: (
+                d["arch"],
+                d["role"],
+                d["sla"],
+                d["usage"],
+                d["service_type"],
+            ),
         )
-
         self.assertEqual(len(sorted_actual_counts), len(sorted_expected_counts))
         for actual, expected in zip(sorted_actual_counts, sorted_expected_counts):
             self.assertEqual(actual, expected)
+
+    def generate_all_concurrent_usage_keys(
+        self, arch, role, sla, usage, service_type, instance_count=1
+    ):
+        """Generate the set of all concurrent usage keys for one run."""
+        return [
+            {
+                "arch": "_ANY",
+                "role": "_ANY",
+                "sla": "_ANY",
+                "usage": "_ANY",
+                "service_type": "_ANY",
+                "instances_count": instance_count,
+            },
+            {
+                "arch": "_ANY",
+                "role": "_ANY",
+                "sla": "_ANY",
+                "usage": "_ANY",
+                "service_type": service_type,
+                "instances_count": instance_count,
+            },
+            {
+                "arch": "_ANY",
+                "role": "_ANY",
+                "sla": "_ANY",
+                "usage": usage,
+                "service_type": "_ANY",
+                "instances_count": instance_count,
+            },
+            {
+                "arch": "_ANY",
+                "role": "_ANY",
+                "sla": "_ANY",
+                "usage": usage,
+                "service_type": service_type,
+                "instances_count": instance_count,
+            },
+            {
+                "arch": "_ANY",
+                "role": "_ANY",
+                "sla": sla,
+                "usage": "_ANY",
+                "service_type": "_ANY",
+                "instances_count": instance_count,
+            },
+            {
+                "arch": "_ANY",
+                "role": "_ANY",
+                "sla": sla,
+                "usage": "_ANY",
+                "service_type": service_type,
+                "instances_count": instance_count,
+            },
+            {
+                "arch": "_ANY",
+                "role": "_ANY",
+                "sla": sla,
+                "usage": usage,
+                "service_type": "_ANY",
+                "instances_count": instance_count,
+            },
+            {
+                "arch": "_ANY",
+                "role": "_ANY",
+                "sla": sla,
+                "usage": usage,
+                "service_type": service_type,
+                "instances_count": instance_count,
+            },
+            {
+                "arch": arch,
+                "role": "_ANY",
+                "sla": "_ANY",
+                "usage": "_ANY",
+                "service_type": "_ANY",
+                "instances_count": instance_count,
+            },
+            {
+                "arch": arch,
+                "role": "_ANY",
+                "sla": "_ANY",
+                "usage": "_ANY",
+                "service_type": service_type,
+                "instances_count": instance_count,
+            },
+            {
+                "arch": arch,
+                "role": "_ANY",
+                "sla": "_ANY",
+                "usage": usage,
+                "service_type": "_ANY",
+                "instances_count": instance_count,
+            },
+            {
+                "arch": arch,
+                "role": "_ANY",
+                "sla": "_ANY",
+                "usage": usage,
+                "service_type": service_type,
+                "instances_count": instance_count,
+            },
+            {
+                "arch": arch,
+                "role": "_ANY",
+                "sla": sla,
+                "usage": "_ANY",
+                "service_type": "_ANY",
+                "instances_count": instance_count,
+            },
+            {
+                "arch": arch,
+                "role": "_ANY",
+                "sla": sla,
+                "usage": "_ANY",
+                "service_type": service_type,
+                "instances_count": instance_count,
+            },
+            {
+                "arch": arch,
+                "role": "_ANY",
+                "sla": sla,
+                "usage": usage,
+                "service_type": "_ANY",
+                "instances_count": instance_count,
+            },
+            {
+                "arch": arch,
+                "role": "_ANY",
+                "sla": sla,
+                "usage": usage,
+                "service_type": service_type,
+                "instances_count": instance_count,
+            },
+            {
+                "arch": "_ANY",
+                "role": role,
+                "sla": "_ANY",
+                "usage": "_ANY",
+                "service_type": "_ANY",
+                "instances_count": instance_count,
+            },
+            {
+                "arch": "_ANY",
+                "role": role,
+                "sla": "_ANY",
+                "usage": "_ANY",
+                "service_type": service_type,
+                "instances_count": instance_count,
+            },
+            {
+                "arch": "_ANY",
+                "role": role,
+                "sla": "_ANY",
+                "usage": usage,
+                "service_type": "_ANY",
+                "instances_count": instance_count,
+            },
+            {
+                "arch": "_ANY",
+                "role": role,
+                "sla": "_ANY",
+                "usage": usage,
+                "service_type": service_type,
+                "instances_count": instance_count,
+            },
+            {
+                "arch": "_ANY",
+                "role": role,
+                "sla": sla,
+                "usage": "_ANY",
+                "service_type": "_ANY",
+                "instances_count": instance_count,
+            },
+            {
+                "arch": "_ANY",
+                "role": role,
+                "sla": sla,
+                "usage": "_ANY",
+                "service_type": service_type,
+                "instances_count": instance_count,
+            },
+            {
+                "arch": "_ANY",
+                "role": role,
+                "sla": sla,
+                "usage": usage,
+                "service_type": "_ANY",
+                "instances_count": instance_count,
+            },
+            {
+                "arch": "_ANY",
+                "role": role,
+                "sla": sla,
+                "usage": usage,
+                "service_type": service_type,
+                "instances_count": instance_count,
+            },
+        ]
 
     @patch("api.util.schedule_concurrent_calculation_task")
     def test_one_clount_one_run_one_day(self, mock_schedule_concurrent_task):
@@ -87,28 +301,13 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
         usages = ConcurrentUsage.objects.all()
         self.assertEqual(len(usages), 1)
 
-        expected_counts = [
-            {"arch": "_ANY", "role": "_ANY", "sla": "_ANY", "instances_count": 1},
-            {
-                "arch": "_ANY",
-                "role": "_ANY",
-                "sla": self.image_rhel_sla,
-                "instances_count": 1,
-            },
-            {
-                "arch": "_ANY",
-                "role": self.image_rhel_role,
-                "sla": self.image_rhel_sla,
-                "instances_count": 1,
-            },
-            {
-                "arch": "x86_64",
-                "role": "_ANY",
-                "sla": self.image_rhel_sla,
-                "instances_count": 1,
-            },
-        ]
-
+        expected_counts = self.generate_all_concurrent_usage_keys(
+            "x86_64",
+            self.image_rhel_role,
+            self.image_rhel_sla,
+            self.image_rhel_usage,
+            self.image_service_type,
+        )
         no_cloud_account_usage = ConcurrentUsage.objects.filter().get()
         self.assertConcurrentUsageIs(
             no_cloud_account_usage,
@@ -146,27 +345,13 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
         usages = ConcurrentUsage.objects.all()
         self.assertEqual(len(usages), 2)
 
-        expected_counts = [
-            {"arch": "_ANY", "role": "_ANY", "sla": "_ANY", "instances_count": 1},
-            {
-                "arch": "_ANY",
-                "role": "_ANY",
-                "sla": self.image_rhel_sla,
-                "instances_count": 1,
-            },
-            {
-                "arch": "_ANY",
-                "role": self.image_rhel_role,
-                "sla": self.image_rhel_sla,
-                "instances_count": 1,
-            },
-            {
-                "arch": "x86_64",
-                "role": "_ANY",
-                "sla": self.image_rhel_sla,
-                "instances_count": 1,
-            },
-        ]
+        expected_counts = self.generate_all_concurrent_usage_keys(
+            "x86_64",
+            self.image_rhel_role,
+            self.image_rhel_sla,
+            self.image_rhel_usage,
+            self.image_service_type,
+        )
 
         no_cloud_account_usages = ConcurrentUsage.objects.filter().order_by("date")
         self.assertConcurrentUsageIs(
@@ -219,27 +404,13 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
         usages = ConcurrentUsage.objects.all()
         self.assertEqual(len(usages), 2)
 
-        expected_counts = [
-            {"arch": "_ANY", "role": "_ANY", "sla": "_ANY", "instances_count": 1},
-            {
-                "arch": "_ANY",
-                "role": "_ANY",
-                "sla": self.image_rhel_sla,
-                "instances_count": 1,
-            },
-            {
-                "arch": "_ANY",
-                "role": self.image_rhel_role,
-                "sla": self.image_rhel_sla,
-                "instances_count": 1,
-            },
-            {
-                "arch": "x86_64",
-                "role": "_ANY",
-                "sla": self.image_rhel_sla,
-                "instances_count": 1,
-            },
-        ]
+        expected_counts = self.generate_all_concurrent_usage_keys(
+            "x86_64",
+            self.image_rhel_role,
+            self.image_rhel_sla,
+            self.image_rhel_usage,
+            self.image_service_type,
+        )
 
         no_cloud_account_usages = ConcurrentUsage.objects.filter().order_by("date")
         self.assertConcurrentUsageIs(
@@ -341,27 +512,14 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
         self.assertEqual(len(new_usages), 1)
         self.assertNotEqual(new_usages[0].id, old_usages[0].id)
 
-        expected_counts = [
-            {"arch": "_ANY", "role": "_ANY", "sla": "_ANY", "instances_count": 2},
-            {
-                "arch": "_ANY",
-                "role": "_ANY",
-                "sla": self.image_rhel_sla,
-                "instances_count": 2,
-            },
-            {
-                "arch": "_ANY",
-                "role": self.image_rhel_role,
-                "sla": self.image_rhel_sla,
-                "instances_count": 2,
-            },
-            {
-                "arch": "x86_64",
-                "role": "_ANY",
-                "sla": self.image_rhel_sla,
-                "instances_count": 2,
-            },
-        ]
+        expected_counts = self.generate_all_concurrent_usage_keys(
+            "x86_64",
+            self.image_rhel_role,
+            self.image_rhel_sla,
+            self.image_rhel_usage,
+            self.image_service_type,
+            instance_count=2,
+        )
 
         no_cloud_account_usage = ConcurrentUsage.objects.filter().get()
         self.assertConcurrentUsageIs(

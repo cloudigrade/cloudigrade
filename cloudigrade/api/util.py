@@ -30,6 +30,10 @@ cloud_account_name_pattern = "{cloud_name}-account-{external_cloud_account_id}"
 
 ANY = "_ANY"
 
+ConcurrentKey = collections.namedtuple(
+    "ConcurrentKey", ["role", "sla", "arch", "usage", "service_type"]
+)
+
 
 def get_last_known_instance_type(instance, before_date):
     """
@@ -341,6 +345,8 @@ def calculate_max_concurrent_usage(date, user_id):
                 "arch": key.arch,
                 "role": key.role,
                 "sla": key.sla,
+                "usage": key.usage,
+                "service_type": key.service_type,
                 "instances_count": value["max_count"],
             }
         )
@@ -362,6 +368,11 @@ def _record_results(results, is_start, syspurpose=None, arch=None):
     """
     Process data from the runs and tally up concurrent counts.
 
+    Role and Arch independently map to different products within SWatch.
+    This function should generate the combination of all other relevant syspurpose
+    fields (sla, usage, etc.) and count the number of occurrences with
+    respect to Role and Arch.
+
     Args:
         results (dict): The results dict that'll be populated with counts.
         is_start (bool): Is this a start event?
@@ -372,56 +383,60 @@ def _record_results(results, is_start, syspurpose=None, arch=None):
         Dict: The updated results dictionary.
 
     """
+    arch = arch if arch is not None else ""
     role = syspurpose.get("role", "")[:64] if syspurpose is not None else ""
+
     sla = (
         syspurpose.get("service_level_agreement", "")[:64]
         if syspurpose is not None
         else ""
     )
-    arch = arch if arch is not None else ""
+    usage = syspurpose.get("usage", "")[:64] if syspurpose is not None else ""
+    service_type = (
+        syspurpose.get("service_type", "")[:64] if syspurpose is not None else ""
+    )
 
-    ConcurrentKey = collections.namedtuple("ConcurrentKey", ["role", "sla", "arch"])
+    # This is a combination of the product categories we want.
+    # Note that we don't care about the category (role, arch)
+    product_categories = [(ANY, ANY), (ANY, arch), (role, ANY)]
 
-    # first, get the main _ANY count recorded
-    key = ConcurrentKey(role=ANY, sla=ANY, arch=ANY)
-    results = _record_concurrency_count(results, key, is_start)
+    # Create the possible sla, usage, service_type categories this records belongs to.
+    slas = [ANY, sla]
+    usages = [ANY, usage]
+    service_types = [ANY, service_type]
 
-    # Do we have an sla? Let's file that next
-    if sla:
-        key = ConcurrentKey(role=ANY, sla=sla, arch=ANY)
-        results = _record_concurrency_count(results, key, is_start)
+    # This generates all possible combinations of sla, usage, and
+    # service_type in the form (sla, usage, service_type)
+    # For example if sla, usage, and service_type are all known,
+    # the filterable categories would be:
+    #
+    # (SLA=ANY, usage=ANY, service_type=ANY)
+    # (SLA=ANY, usage=ANY, service_type=my_service_type)
+    # (SLA=ANY, usage=my_usage, service_type=ANY)
+    # (SLA=ANY, usage=my_usage, service_type=my_service_type)
+    # (SLA=my_sla, usage=ANY, service_type=ANY)
+    # (SLA=my_sla, usage=ANY, service_type=my_service_type)
+    # (SLA=my_sla, usage=my_usage, service_type=ANY)
+    # (SLA=my_sla, usage=my_usage, service_type=my_service_type)
+    syspurpose_categories = list(itertools.product(slas, usages, service_types))
 
-    # Unknown SLA?
-    if sla == "":
-        key = ConcurrentKey(role=ANY, sla=sla, arch=ANY)
-        results = _record_concurrency_count(results, key, is_start)
-
-    # Do we have a role and an sla?
-    if sla and role:
-        key = ConcurrentKey(role=role, sla=sla, arch=ANY)
-        results = _record_concurrency_count(results, key, is_start)
-
-    # How about known role and unknown sla?
-    if role and sla == "":
-        key = ConcurrentKey(role=role, sla=sla, arch=ANY)
-        results = _record_concurrency_count(results, key, is_start)
-
-    # Known arch and known sla
-    if arch and sla:
-        key = ConcurrentKey(role=ANY, sla=sla, arch=arch)
-        results = _record_concurrency_count(results, key, is_start)
-
-    # Finally, arch and unknown sla
-    if arch and sla == "":
-        key = ConcurrentKey(role=ANY, sla=sla, arch=arch)
-        results = _record_concurrency_count(results, key, is_start)
+    for product in product_categories:
+        for syspurpose_category in syspurpose_categories:
+            key = ConcurrentKey(
+                role=product[0],
+                sla=syspurpose_category[0],
+                arch=product[1],
+                usage=syspurpose_category[1],
+                service_type=syspurpose_category[2],
+            )
+            results = _record_concurrency_count(results, key, is_start)
 
     return results
 
 
 def _record_concurrency_count(results, key, is_start):
     """Record the count."""
-    entry = results.setdefault(key, {"current_count": 0, "max_count": 0,})
+    entry = results.setdefault(key, {"current_count": 0, "max_count": 0,},)
     entry["current_count"] += 1 if is_start else -1
     entry["max_count"] = max(entry["current_count"], entry["max_count"])
 

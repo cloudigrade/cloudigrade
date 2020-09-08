@@ -113,7 +113,7 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         expected_instances = 1
 
         usage = calculate_max_concurrent_usage(request_date, user_id=self.user1.id)
-        self.assertEqual(len(usage.maximum_counts), 4)
+        self.assertEqual(len(usage.maximum_counts), 24)
         self.assertMaxConcurrentUsage(usage, expected_date, expected_instances)
 
     def test_single_rhel_run_entirely_before_day(self):
@@ -269,7 +269,7 @@ class CalculateMaxConcurrentUsageTest(TestCase):
 
         usage = calculate_max_concurrent_usage(request_date, user_id=self.user1.id)
         self.assertEqual(usage.date, expected_date)
-        self.assertEqual(len(usage.maximum_counts), 5)
+        self.assertEqual(len(usage.maximum_counts), 32)
 
     def test_overlapping_rhel_runs_within_day_with_user_filter(self):
         """

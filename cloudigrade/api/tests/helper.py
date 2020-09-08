@@ -671,7 +671,7 @@ def generate_image(  # noqa: C901
     return machine_image
 
 
-def generate_syspurpose(role=None, sla=None, usage=None):
+def generate_syspurpose(role=None, sla=None, usage=None, service_type=None):
     """
     Generate a syspurpose for testing.
 
@@ -699,17 +699,21 @@ def generate_syspurpose(role=None, sla=None, usage=None):
         "Disaster Recovery",
         "Development/Test",
     ]
+
+    service_types = ["PSF", "L3", "L1-L3", "Embedded L3"]
     if not role:
         role = random.choice(roles)
     if not sla:
         sla = random.choice(slas)
     if not usage:
         usage = random.choice(usages)
-
+    if not service_type:
+        service_type = random.choice(service_types)
     return {
-        "role": f"{role}",
-        "service_level_agreement": f"{sla}",
-        "usage": f"{usage}",
+        "role": role,
+        "service_level_agreement": sla,
+        "usage": usage,
+        "service_type": service_type,
     }
 
 
