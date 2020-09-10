@@ -82,7 +82,11 @@ class Command(BaseCommand):
         # there's more! It is a tuple with a string key, and a bytestring
         # value because... reasons..? Let's clean that up.
         message_headers = [
-            (key, value.decode("utf-8"),) for key, value in message.headers
+            (
+                key,
+                value.decode("utf-8"),
+            )
+            for key, value in message.headers
         ]
 
         for header in message_headers:

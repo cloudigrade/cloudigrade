@@ -252,7 +252,11 @@ def generate_cloud_account(  # noqa: C901
                 interval=schedule,
                 name=f"Verify {arn}.",
                 task="api.clouds.aws.tasks.verify_account_permissions",
-                kwargs=json.dumps({"account_arn": arn,}),
+                kwargs=json.dumps(
+                    {
+                        "account_arn": arn,
+                    }
+                ),
                 defaults={"start_time": created_at},
             )
 
@@ -333,7 +337,8 @@ def generate_instance(  # noqa: C901
                         cloud_type=cloud_type,
                     )
         provider_instance = AzureInstance.objects.create(
-            resource_id=azure_instance_resource_id, region=region,
+            resource_id=azure_instance_resource_id,
+            region=region,
         )
     else:
         if ec2_instance_id is None:
@@ -354,7 +359,8 @@ def generate_instance(  # noqa: C901
                     )
 
         provider_instance = AwsInstance.objects.create(
-            ec2_instance_id=ec2_instance_id, region=region,
+            ec2_instance_id=ec2_instance_id,
+            region=region,
         )
     instance = Instance.objects.create(
         cloud_account=cloud_account,
@@ -414,7 +420,8 @@ def generate_single_instance_event(
             subnet = helper.generate_dummy_subnet_id()
 
         cloud_provider_event = AwsInstanceEvent.objects.create(
-            subnet=subnet, instance_type=instance_type,
+            subnet=subnet,
+            instance_type=instance_type,
         )
     event = InstanceEvent.objects.create(
         instance=instance,
@@ -615,7 +622,10 @@ def generate_image(  # noqa: C901
             )
         ):
             image_json = json.dumps(
-                {"rhel_release_files_found": rhel_detected, "syspurpose": syspurpose,}
+                {
+                    "rhel_release_files_found": rhel_detected,
+                    "syspurpose": syspurpose,
+                }
             )
         else:
             image_json = json.dumps(
@@ -635,7 +645,8 @@ def generate_image(  # noqa: C901
         if azure_image_resource_id is None:
             azure_image_resource_id = helper.generate_dummy_azure_image_id()
         provider_machine_image = AzureMachineImage.objects.create(
-            resource_id=azure_image_resource_id, azure_marketplace_image=is_marketplace,
+            resource_id=azure_image_resource_id,
+            azure_marketplace_image=is_marketplace,
         )
     else:
         if not owner_aws_account_id:
@@ -877,7 +888,16 @@ def generate_mock_cloudtrail_sqs_message(
 
     mock_sqs_message_body = {
         "Records": [
-            {"s3": {"bucket": {"name": bucket_name,}, "object": {"key": object_key,},},}
+            {
+                "s3": {
+                    "bucket": {
+                        "name": bucket_name,
+                    },
+                    "object": {
+                        "key": object_key,
+                    },
+                },
+            }
         ]
     }
     mock_message = helper.generate_mock_sqs_message(
@@ -990,7 +1010,11 @@ def generate_cloudtrail_tag_set_record(
 
 
 def generate_cloudtrail_modify_instance_record(
-    aws_account_id, instance_id, instance_type="t2.micro", event_time=None, region=None,
+    aws_account_id,
+    instance_id,
+    instance_type="t2.micro",
+    event_time=None,
+    region=None,
 ):
     """
     Generate an example CloudTrail "ModifyInstanceAttribute" record dict.

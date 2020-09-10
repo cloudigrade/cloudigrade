@@ -20,7 +20,12 @@ logger = logging.getLogger(__name__)
 class CloudAccount(BaseGenericModel):
     """Base Customer Cloud Account Model."""
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE, db_index=True, null=False,)
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        db_index=True,
+        null=False,
+    )
     name = models.CharField(max_length=256, null=False, db_index=True)
     is_enabled = models.BooleanField(null=False, default=True)
     enabled_at = models.DateTimeField(auto_now_add=True)
@@ -412,10 +417,16 @@ class Instance(BaseGenericModel):
     """Base model for a compute/VM instance in a cloud."""
 
     cloud_account = models.ForeignKey(
-        CloudAccount, on_delete=models.CASCADE, db_index=True, null=False,
+        CloudAccount,
+        on_delete=models.CASCADE,
+        db_index=True,
+        null=False,
     )
     machine_image = models.ForeignKey(
-        MachineImage, on_delete=models.CASCADE, db_index=True, null=True,
+        MachineImage,
+        on_delete=models.CASCADE,
+        db_index=True,
+        null=True,
     )
 
     def __str__(self):
@@ -505,9 +516,17 @@ class InstanceEvent(BaseGenericModel):
 
     TYPE = model_utils.Choices("power_on", "power_off", "attribute_change")
     instance = models.ForeignKey(
-        Instance, on_delete=models.CASCADE, db_index=True, null=False,
+        Instance,
+        on_delete=models.CASCADE,
+        db_index=True,
+        null=False,
     )
-    event_type = models.CharField(max_length=32, choices=TYPE, null=False, blank=False,)
+    event_type = models.CharField(
+        max_length=32,
+        choices=TYPE,
+        null=False,
+        blank=False,
+    )
     occurred_at = models.DateTimeField(null=False)
 
     @property
@@ -554,10 +573,16 @@ class Run(BaseModel):
     start_time = models.DateTimeField(null=False)
     end_time = models.DateTimeField(blank=True, null=True)
     machineimage = models.ForeignKey(
-        MachineImage, on_delete=models.CASCADE, db_index=True, null=True,
+        MachineImage,
+        on_delete=models.CASCADE,
+        db_index=True,
+        null=True,
     )
     instance = models.ForeignKey(
-        Instance, on_delete=models.CASCADE, db_index=True, null=False,
+        Instance,
+        on_delete=models.CASCADE,
+        db_index=True,
+        null=False,
     )
     instance_type = models.CharField(max_length=64, null=True, blank=True)
     memory = models.FloatField(default=0, blank=True, null=True)
@@ -594,7 +619,10 @@ class MachineImageInspectionStart(BaseModel):
     """Model to track any time an image starts inspection."""
 
     machineimage = models.ForeignKey(
-        MachineImage, on_delete=models.CASCADE, db_index=True, null=False,
+        MachineImage,
+        on_delete=models.CASCADE,
+        db_index=True,
+        null=False,
     )
 
 
@@ -698,7 +726,11 @@ class InstanceDefinition(BaseModel):
     instance_type = models.CharField(
         max_length=256, null=False, blank=False, db_index=True
     )
-    memory = models.DecimalField(default=0, decimal_places=2, max_digits=16,)
+    memory = models.DecimalField(
+        default=0,
+        decimal_places=2,
+        max_digits=16,
+    )
     vcpu = models.IntegerField(default=0)
     cloud_type = models.CharField(
         max_length=32, choices=CLOUD_TYPE_CHOICES, null=False, blank=False

@@ -21,7 +21,10 @@ class BuildContainerDefinitionTest(TestCase):
         expected_result = [
             {"name": "HOUNDIGRADE_SENTRY_DSN", "value": sentry_dsn},
             {"name": "HOUNDIGRADE_SENTRY_RELEASE", "value": sentry_release},
-            {"name": "HOUNDIGRADE_SENTRY_ENVIRONMENT", "value": sentry_environment,},
+            {
+                "name": "HOUNDIGRADE_SENTRY_ENVIRONMENT",
+                "value": sentry_environment,
+            },
         ]
 
         mock_s.HOUNDIGRADE_ENABLE_SENTRY = enable_sentry
@@ -52,12 +55,15 @@ class BuildContainerDefinitionTest(TestCase):
             result["environment"][1]["value"], settings.AWS_SQS_ACCESS_KEY_ID
         )
         self.assertEqual(
-            result["environment"][2]["value"], settings.AWS_SQS_SECRET_ACCESS_KEY,
+            result["environment"][2]["value"],
+            settings.AWS_SQS_SECRET_ACCESS_KEY,
         )
         self.assertEqual(
-            result["environment"][3]["value"], settings.HOUNDIGRADE_RESULTS_QUEUE_NAME,
+            result["environment"][3]["value"],
+            settings.HOUNDIGRADE_RESULTS_QUEUE_NAME,
         )
         self.assertEqual(
-            result["environment"][4]["value"], settings.HOUNDIGRADE_EXCHANGE_NAME,
+            result["environment"][4]["value"],
+            settings.HOUNDIGRADE_EXCHANGE_NAME,
         )
         self.assertEqual(result["environment"][5]["value"], settings.CELERY_BROKER_URL)

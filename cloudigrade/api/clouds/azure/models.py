@@ -81,8 +81,17 @@ class AzureMachineImage(BaseModel):
     machine_image = GenericRelation(
         MachineImage, related_query_name="azure_machine_image"
     )
-    region = models.CharField(max_length=256, null=True, blank=True,)
-    resource_id = models.CharField(max_length=256, unique=True, null=True, blank=True,)
+    region = models.CharField(
+        max_length=256,
+        null=True,
+        blank=True,
+    )
+    resource_id = models.CharField(
+        max_length=256,
+        unique=True,
+        null=True,
+        blank=True,
+    )
     azure_marketplace_image = models.BooleanField(default=False)
 
     @property
@@ -135,9 +144,17 @@ class AzureInstance(BaseModel):
 
     instance = GenericRelation(Instance, related_query_name="azure_instance")
     resource_id = models.CharField(
-        max_length=256, unique=True, db_index=True, null=False, blank=False,
+        max_length=256,
+        unique=True,
+        db_index=True,
+        null=False,
+        blank=False,
     )
-    region = models.CharField(max_length=256, null=False, blank=False,)
+    region = models.CharField(
+        max_length=256,
+        null=False,
+        blank=False,
+    )
 
     def __str__(self):
         """Get the string representation."""

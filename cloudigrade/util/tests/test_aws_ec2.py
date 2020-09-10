@@ -100,8 +100,12 @@ class UtilAwsEc2Test(TestCase):
         ]
         response = {
             "Reservations": [
-                {"Instances": individual_described_instances[:2],},
-                {"Instances": individual_described_instances[2:],},
+                {
+                    "Instances": individual_described_instances[:2],
+                },
+                {
+                    "Instances": individual_described_instances[2:],
+                },
             ],
         }
 
@@ -195,7 +199,11 @@ class UtilAwsEc2Test(TestCase):
 
     def test_check_image_state_mystery_load_failure(self):
         """Assert raised exception when image loading fails mysteriously."""
-        error_response = {"Error": {"Code": "itisamystery.gif",}}
+        error_response = {
+            "Error": {
+                "Code": "itisamystery.gif",
+            }
+        }
         exception = ClientError(error_response, Mock())
         mock_image = helper.generate_mock_image()
         mock_image.load.side_effect = exception

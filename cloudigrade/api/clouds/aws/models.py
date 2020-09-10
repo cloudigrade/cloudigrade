@@ -129,7 +129,11 @@ class AwsCloudAccount(BaseModel):
             interval=schedule,
             name=f"Verify {self.account_arn}.",
             task="api.clouds.aws.tasks.verify_account_permissions",
-            kwargs=json.dumps({"account_arn": self.account_arn,}),
+            kwargs=json.dumps(
+                {
+                    "account_arn": self.account_arn,
+                }
+            ),
             defaults={"start_time": self.created_at},
         )
         self.verify_task = verify_task
@@ -229,12 +233,21 @@ class AwsMachineImage(BaseModel):
         max_length=256, unique=True, db_index=True, null=False, blank=False
     )
     platform = models.CharField(
-        max_length=7, choices=PLATFORM_CHOICES, default=NONE, null=True,
+        max_length=7,
+        choices=PLATFORM_CHOICES,
+        default=NONE,
+        null=True,
     )
     owner_aws_account_id = models.DecimalField(
-        max_digits=12, decimal_places=0, null=True,
+        max_digits=12,
+        decimal_places=0,
+        null=True,
     )
-    region = models.CharField(max_length=256, null=True, blank=True,)
+    region = models.CharField(
+        max_length=256,
+        null=True,
+        blank=True,
+    )
     aws_marketplace_image = models.BooleanField(default=False)
 
     @property
@@ -344,9 +357,17 @@ class AwsInstance(BaseModel):
 
     instance = GenericRelation(Instance, related_query_name="aws_instance")
     ec2_instance_id = models.CharField(
-        max_length=256, unique=True, db_index=True, null=False, blank=False,
+        max_length=256,
+        unique=True,
+        db_index=True,
+        null=False,
+        blank=False,
     )
-    region = models.CharField(max_length=256, null=False, blank=False,)
+    region = models.CharField(
+        max_length=256,
+        null=False,
+        blank=False,
+    )
 
     def __str__(self):
         """Get the string representation."""

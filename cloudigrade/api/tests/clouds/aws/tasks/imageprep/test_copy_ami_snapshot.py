@@ -48,7 +48,10 @@ class CopyAmiSnapshotTest(TestCase):
                     mock_image_id, mock_new_snapshot_id
                 )
                 mock_remove_snapshot_ownership.delay.assert_called_with(
-                    mock_arn, mock_snapshot_id, mock_region, mock_new_snapshot_id,
+                    mock_arn,
+                    mock_snapshot_id,
+                    mock_region,
+                    mock_new_snapshot_id,
                 )
 
         mock_aws.get_session.assert_called_with(mock_arn)
@@ -114,7 +117,8 @@ class CopyAmiSnapshotTest(TestCase):
         copied_image = AwsMachineImageCopy.objects.get(ec2_ami_id=new_image_id)
         self.assertIsNotNone(copied_image)
         self.assertEqual(
-            copied_image.reference_awsmachineimage.ec2_ami_id, reference_image_id,
+            copied_image.reference_awsmachineimage.ec2_ami_id,
+            reference_image_id,
         )
 
     @patch("api.clouds.aws.tasks.imageprep.aws")

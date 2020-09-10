@@ -273,7 +273,8 @@ def calculate_max_concurrent_usage(date, user_id):
     # - started before (not inclusive) our end time
     # - ended at or after our start time (inclusive) or have never stopped
     runs = queryset.filter(
-        Q(end_time__isnull=True) | Q(end_time__gte=start), start_time__lt=end,
+        Q(end_time__isnull=True) | Q(end_time__gte=start),
+        start_time__lt=end,
     ).prefetch_related("machineimage")
 
     # Now that we have the Runs, we need to extract the start and stop times
@@ -436,7 +437,13 @@ def _record_results(results, is_start, syspurpose=None, arch=None):
 
 def _record_concurrency_count(results, key, is_start):
     """Record the count."""
-    entry = results.setdefault(key, {"current_count": 0, "max_count": 0,},)
+    entry = results.setdefault(
+        key,
+        {
+            "current_count": 0,
+            "max_count": 0,
+        },
+    )
     entry["current_count"] += 1 if is_start else -1
     entry["max_count"] = max(entry["current_count"], entry["max_count"])
 
@@ -652,7 +659,8 @@ def get_standard_cloud_account_name(cloud_name, external_cloud_account_id):
 
     """
     return cloud_account_name_pattern.format(
-        cloud_name=cloud_name, external_cloud_account_id=external_cloud_account_id,
+        cloud_name=cloud_name,
+        external_cloud_account_id=external_cloud_account_id,
     )
 
 

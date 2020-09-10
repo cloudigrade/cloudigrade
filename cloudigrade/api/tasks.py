@@ -175,7 +175,8 @@ def create_from_sources_kafka_message(message, headers):  # noqa: C901
         if created:
             user.set_unusable_password()
             logger.info(
-                _("User %s was not found and has been created."), account_number,
+                _("User %s was not found and has been created."),
+                account_number,
             )
 
     # Conditionalize the logic for different cloud providers

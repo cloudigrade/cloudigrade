@@ -64,7 +64,9 @@ class CheckClusterInstanceAgeTest(TestCase):
 
         mock_boto3.Session.assert_called_once()
         mock_aws.describe_instances.assert_called_once_with(
-            mock_boto3.Session.return_value, instance_ids, mock_aws.ECS_CLUSTER_REGION,
+            mock_boto3.Session.return_value,
+            instance_ids,
+            mock_aws.ECS_CLUSTER_REGION,
         )
 
     @helper.clouditardis(TEST_TIME)
@@ -104,7 +106,9 @@ class CheckClusterInstanceAgeTest(TestCase):
 
         mock_boto3.Session.assert_called_once()
         mock_aws.describe_instances.assert_called_once_with(
-            mock_boto3.Session.return_value, instance_ids, mock_aws.ECS_CLUSTER_REGION,
+            mock_boto3.Session.return_value,
+            instance_ids,
+            mock_aws.ECS_CLUSTER_REGION,
         )
 
     @helper.clouditardis(TEST_TIME)
@@ -144,5 +148,7 @@ class CheckClusterInstanceAgeTest(TestCase):
 
         mock_boto3.Session.assert_called_once()
         mock_aws.describe_instances.assert_called_once_with(
-            mock_boto3.Session.return_value, instance_ids, mock_aws.ECS_CLUSTER_REGION,
+            mock_boto3.Session.return_value,
+            instance_ids,
+            mock_aws.ECS_CLUSTER_REGION,
         )

@@ -147,7 +147,12 @@ def _verify_policy_action(session, action):  # noqa: C901
             ec2.create_tags(
                 DryRun=True,
                 Resources=[DRYRUN_IMAGE_ID],
-                Tags=[{"Key": "Example", "Value": "Hello world",},],
+                Tags=[
+                    {
+                        "Key": "Example",
+                        "Value": "Hello world",
+                    },
+                ],
             )
         elif action == "ec2:DescribeRegions":
             ec2.describe_regions(DryRun=True)

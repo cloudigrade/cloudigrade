@@ -66,7 +66,8 @@ class UtilAwsStsTest(TestCase):
         mock_client = mock_session.client.return_value
         mock_identity = mock_client.get_caller_identity.return_value
         mock_identity.get.side_effect = ClientError(
-            error_response={"Error": {"Code": "TooBadSoSad"}}, operation_name=None,
+            error_response={"Error": {"Code": "TooBadSoSad"}},
+            operation_name=None,
         )
         with self.assertRaises(ClientError):
             sts.get_session_account_id(mock_session)

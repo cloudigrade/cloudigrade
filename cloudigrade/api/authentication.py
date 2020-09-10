@@ -26,7 +26,8 @@ def parse_requests_header(request):
     """
     insights_request_id = request.META.get(settings.INSIGHTS_REQUEST_ID_HEADER, None)
     logger.info(
-        _("Authenticating via insights, INSIGHTS_REQUEST_ID: %s"), insights_request_id,
+        _("Authenticating via insights, INSIGHTS_REQUEST_ID: %s"),
+        insights_request_id,
     )
 
     auth_header = request.META.get(settings.INSIGHTS_IDENTITY_HEADER, None)
@@ -108,7 +109,8 @@ class ThreeScaleAuthentication(BaseAuthentication):
         if created:
             user.set_unusable_password()
             logger.info(
-                _("User %s was not found and has been created."), account_number,
+                _("User %s was not found and has been created."),
+                account_number,
             )
         return user, True
 
@@ -145,7 +147,8 @@ class ThreeScaleAuthenticationNoOrgAdmin(BaseAuthentication):
 
         if not User.objects.filter(username=account_number).exists():
             logger.info(
-                _("Authentication Failed: user %s does not exist."), account_number,
+                _("Authentication Failed: user %s does not exist."),
+                account_number,
             )
             raise exceptions.AuthenticationFailed(
                 _("Authentication Failed: user {username} does not exist.").format(

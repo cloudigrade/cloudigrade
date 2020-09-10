@@ -43,7 +43,8 @@ class AwsAccountSerializerTest(TransactionTestCase):
             serializer = CloudAccountSerializer(context=context, data=validated_data)
             serializer.is_valid()
             self.assertEquals(
-                "This field is required.", str(serializer.errors["cloud_type"][0]),
+                "This field is required.",
+                str(serializer.errors["cloud_type"][0]),
             )
             self.assertEquals(
                 "This field is required.", str(serializer.errors["name"][0])
@@ -88,7 +89,8 @@ class AwsAccountSerializerTest(TransactionTestCase):
             serializer = CloudAccountSerializer(context=context, data=validated_data)
             serializer.is_valid()
             self.assertEquals(
-                "This field is required.", str(serializer.errors["cloud_type"][0]),
+                "This field is required.",
+                str(serializer.errors["cloud_type"][0]),
             )
 
     def test_serialization_fails_on_only_empty_account_arn(self):
@@ -111,7 +113,8 @@ class AwsAccountSerializerTest(TransactionTestCase):
             with self.assertRaises(ValidationError) as cm:
                 serializer.create(validated_data)
             self.assertEquals(
-                "This field is required.", str(cm.exception.detail["account_arn"]),
+                "This field is required.",
+                str(cm.exception.detail["account_arn"]),
             )
 
     def test_serialization_fails_on_unsupported_cloud_type(self):
@@ -169,7 +172,8 @@ class AwsAccountSerializerTest(TransactionTestCase):
     def test_create_fails_access_denied(self, mock_notify_sources):
         """Test that an exception is raised if access is denied to the arn."""
         client_error = ClientError(
-            error_response={"Error": {"Code": "AccessDenied"}}, operation_name=Mock(),
+            error_response={"Error": {"Code": "AccessDenied"}},
+            operation_name=Mock(),
         )
 
         mock_request = Mock()

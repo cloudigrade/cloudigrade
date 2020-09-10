@@ -10,6 +10,12 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(model_name="machineimage", name="openshift_challenged",),
-        migrations.RemoveField(model_name="machineimage", name="rhel_challenged",),
+        migrations.RemoveField(
+            model_name="machineimage",
+            name="openshift_challenged",
+        ),
+        migrations.RemoveField(
+            model_name="machineimage",
+            name="rhel_challenged",
+        ),
     ]

@@ -160,7 +160,11 @@ class GenerateCloudAccountTest(TestCase):
             interval=schedule,
             name=f"Verify {arn}.",
             task="api.clouds.aws.tasks.verify_account_permissions",
-            kwargs=json.dumps({"account_arn": arn,}),
+            kwargs=json.dumps(
+                {
+                    "account_arn": arn,
+                }
+            ),
             defaults={"start_time": created_at},
         )
 
@@ -224,7 +228,9 @@ class GenerateInstanceTest(TestCase):
         ec2_instance_id = util_helper.generate_dummy_instance_id()
         region = util_helper.get_random_region()
         instance = helper.generate_instance(
-            account, ec2_instance_id=ec2_instance_id, region=region,
+            account,
+            ec2_instance_id=ec2_instance_id,
+            region=region,
         )
         self.assertIsInstance(instance, Instance)
         self.assertEqual(instance.cloud_account, account)
@@ -305,7 +311,10 @@ class GenerateInstanceEventsTest(TestCase):
         instance_type = util_helper.get_random_instance_type()
         subnet = str(uuid.uuid4())
         events = helper.generate_instance_events(
-            instance, powered_times, instance_type=instance_type, subnet=subnet,
+            instance,
+            powered_times,
+            instance_type=instance_type,
+            subnet=subnet,
         )
 
         self.assertEqual(len(events), 4)
@@ -410,7 +419,11 @@ class GenerateAwsImageTest(TestCase):
         account_id = util_helper.generate_dummy_aws_account_id()
         name = _faker.name()
 
-        image = helper.generate_image(account_id, name=name, is_cloud_access=True,)
+        image = helper.generate_image(
+            account_id,
+            name=name,
+            is_cloud_access=True,
+        )
 
         self.assertNotEqual(image.content_object.owner_aws_account_id, account_id)
         self.assertIn(
@@ -428,7 +441,11 @@ class GenerateAwsImageTest(TestCase):
         account_id = util_helper.generate_dummy_aws_account_id()
         name = _faker.name()
 
-        image = helper.generate_image(account_id, name=name, is_marketplace=True,)
+        image = helper.generate_image(
+            account_id,
+            name=name,
+            is_marketplace=True,
+        )
 
         self.assertNotEqual(image.content_object.owner_aws_account_id, account_id)
         self.assertIn(

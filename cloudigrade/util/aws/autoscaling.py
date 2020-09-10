@@ -113,4 +113,9 @@ def scale_down(name):
         dict: AWS response metadata
 
     """
-    return set_scale(name, 0, 0, 0,)
+    return set_scale(
+        name,
+        0,
+        0,
+        0,
+    )

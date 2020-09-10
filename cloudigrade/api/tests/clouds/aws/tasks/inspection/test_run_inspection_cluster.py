@@ -177,7 +177,10 @@ class RunInspectionClusterTest(TestCase):
         mock_volume = mock_ec2.Volume.return_value
         mock_volume.attach_to_instance.side_effect = ClientError(
             error_response={
-                "Error": {"Code": "OptInRequired", "Message": "Marketplace Error",}
+                "Error": {
+                    "Code": "OptInRequired",
+                    "Message": "Marketplace Error",
+                }
             },
             operation_name=Mock(),
         )

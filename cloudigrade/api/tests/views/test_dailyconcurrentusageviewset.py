@@ -21,7 +21,9 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
         self.account1 = api_helper.generate_cloud_account(user=self.user1)
         self.account2 = api_helper.generate_cloud_account(user=self.user1)
         self.image1_rhel = api_helper.generate_image(
-            rhel_detected=True, rhel_version="7.7", syspurpose={"role": "potato"},
+            rhel_detected=True,
+            rhel_version="7.7",
+            syspurpose={"role": "potato"},
         )
         self.image2_rhel = api_helper.generate_image(rhel_detected=True)
         self.instance1 = api_helper.generate_instance(

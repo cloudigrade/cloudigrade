@@ -10,7 +10,10 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AlterModelOptions(name="instancedefinition", options={},),
+        migrations.AlterModelOptions(
+            name="instancedefinition",
+            options={},
+        ),
         migrations.AddField(
             model_name="instancedefinition",
             name="cloud_type",

@@ -164,7 +164,8 @@ class AwsCloudAccountModelTest(TransactionTestCase, ModelStrTestMixin):
             with self.assertLogs("api.clouds.aws.util", level="WARNING") as cm:
                 self.account.enable()
                 self.assertIn(
-                    str(mock_cloudtrail.side_effect.detail), cm.records[1].message,
+                    str(mock_cloudtrail.side_effect.detail),
+                    cm.records[1].message,
                 )
             mock_cloudtrail.assert_called()
             mock_initial_aws_describe_instances.delay.assert_not_called()
@@ -382,7 +383,11 @@ class AwsCloudAccountModelTest(TransactionTestCase, ModelStrTestMixin):
             interval=schedule,
             name=f"Verify {aws_clount.account_arn}.",
             task="api.clouds.aws.tasks.verify_account_permissions",
-            kwargs=json.dumps({"account_arn": aws_clount.account_arn,}),
+            kwargs=json.dumps(
+                {
+                    "account_arn": aws_clount.account_arn,
+                }
+            ),
             start_time=self.created_at,
         )
 
@@ -454,7 +459,8 @@ class AwsCloudAccountModelTest(TransactionTestCase, ModelStrTestMixin):
         https://sentry.io/organizations/cloudigrade/issues/1744148258/?project=1270362
         """
         client_error = ClientError(
-            error_response={"Error": {"Code": "AccessDenied"}}, operation_name=Mock(),
+            error_response={"Error": {"Code": "AccessDenied"}},
+            operation_name=Mock(),
         )
         with patch("api.clouds.aws.util.aws.get_session") as mock_get_session:
             mock_get_session.side_effect = client_error
@@ -474,7 +480,8 @@ class InstanceModelTest(TestCase, ModelStrTestMixin):
             cloud_account=self.account, image=self.image
         )
         self.instance_without_image = helper.generate_instance(
-            cloud_account=self.account, no_image=True,
+            cloud_account=self.account,
+            no_image=True,
         )
 
     def test_instance_str(self):

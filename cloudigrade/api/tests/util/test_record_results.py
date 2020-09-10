@@ -94,8 +94,16 @@ class CalculateMaxConcurrentUsageTest(TestCase):
     def test_one_empty_one_mostly_record(self):
         """Test two almost empty records."""
         test_items = [
-            (True, self.syspurpose6, "",),
-            (True, self.syspurpose10, "",),
+            (
+                True,
+                self.syspurpose6,
+                "",
+            ),
+            (
+                True,
+                self.syspurpose10,
+                "",
+            ),
         ]
         results = {}
         for (is_start, syspurpose, arch) in test_items:
@@ -117,16 +125,56 @@ class CalculateMaxConcurrentUsageTest(TestCase):
     def test_records_all(self):
         """Record everything."""
         test_items = [
-            (True, self.syspurpose1, self.x86_64,),
-            (True, self.syspurpose2, self.arm64,),
-            (True, self.syspurpose3, self.x86_64,),
-            (True, self.syspurpose4, self.arm64,),
-            (True, self.syspurpose5, self.x86_64,),
-            (True, self.syspurpose6, self.x86_64,),
-            (True, self.syspurpose7, self.x86_64,),
-            (True, self.syspurpose8, self.arm64,),
-            (True, self.syspurpose9, self.x86_64,),
-            (True, self.syspurpose10, self.arm64,),
+            (
+                True,
+                self.syspurpose1,
+                self.x86_64,
+            ),
+            (
+                True,
+                self.syspurpose2,
+                self.arm64,
+            ),
+            (
+                True,
+                self.syspurpose3,
+                self.x86_64,
+            ),
+            (
+                True,
+                self.syspurpose4,
+                self.arm64,
+            ),
+            (
+                True,
+                self.syspurpose5,
+                self.x86_64,
+            ),
+            (
+                True,
+                self.syspurpose6,
+                self.x86_64,
+            ),
+            (
+                True,
+                self.syspurpose7,
+                self.x86_64,
+            ),
+            (
+                True,
+                self.syspurpose8,
+                self.arm64,
+            ),
+            (
+                True,
+                self.syspurpose9,
+                self.x86_64,
+            ),
+            (
+                True,
+                self.syspurpose10,
+                self.arm64,
+            ),
         ]
 
         results = {}
@@ -150,9 +198,21 @@ class CalculateMaxConcurrentUsageTest(TestCase):
     def test_one_for_each_sla(self):
         """Record one for each SLA."""
         test_items = [
-            (True, self.syspurpose1, self.x86_64,),
-            (True, self.syspurpose2, self.x86_64,),
-            (True, self.syspurpose3, self.x86_64,),
+            (
+                True,
+                self.syspurpose1,
+                self.x86_64,
+            ),
+            (
+                True,
+                self.syspurpose2,
+                self.x86_64,
+            ),
+            (
+                True,
+                self.syspurpose3,
+                self.x86_64,
+            ),
         ]
 
         results = {}
@@ -189,7 +249,11 @@ class CalculateMaxConcurrentUsageTest(TestCase):
     def test_unknown_sla(self):
         """Record for unknown SLA."""
         test_items = [
-            (True, self.syspurpose7, self.x86_64,),
+            (
+                True,
+                self.syspurpose7,
+                self.x86_64,
+            ),
         ]
 
         results = {}
@@ -211,9 +275,21 @@ class CalculateMaxConcurrentUsageTest(TestCase):
     def test_one_for_each_sla_role(self):
         """Record for each role and sla combination."""
         test_items = [
-            (True, self.syspurpose1, self.x86_64,),
-            (True, self.syspurpose2, self.x86_64,),
-            (True, self.syspurpose4, self.x86_64,),
+            (
+                True,
+                self.syspurpose1,
+                self.x86_64,
+            ),
+            (
+                True,
+                self.syspurpose2,
+                self.x86_64,
+            ),
+            (
+                True,
+                self.syspurpose4,
+                self.x86_64,
+            ),
         ]
 
         results = {}
@@ -251,8 +327,16 @@ class CalculateMaxConcurrentUsageTest(TestCase):
     def test_one_for_each_role_no_sla(self):
         """Record for each role and unknown sla combination."""
         test_items = [
-            (True, self.syspurpose3, self.x86_64,),
-            (True, self.syspurpose8, self.x86_64,),
+            (
+                True,
+                self.syspurpose3,
+                self.x86_64,
+            ),
+            (
+                True,
+                self.syspurpose8,
+                self.x86_64,
+            ),
         ]
 
         results = {}
@@ -282,9 +366,21 @@ class CalculateMaxConcurrentUsageTest(TestCase):
     def test_one_for_each_arch_sla(self):
         """Record one for each arch and sla combination."""
         test_items = [
-            (True, self.syspurpose1, self.x86_64,),
-            (True, self.syspurpose1, self.arm64,),
-            (True, self.syspurpose2, self.arm64,),
+            (
+                True,
+                self.syspurpose1,
+                self.x86_64,
+            ),
+            (
+                True,
+                self.syspurpose1,
+                self.arm64,
+            ),
+            (
+                True,
+                self.syspurpose2,
+                self.arm64,
+            ),
         ]
 
         results = {}
@@ -322,9 +418,21 @@ class CalculateMaxConcurrentUsageTest(TestCase):
     def test_one_for_each_arch_no_sla(self):
         """Record for each arch and no sla combination."""
         test_items = [
-            (True, self.syspurpose3, self.x86_64,),
-            (True, self.syspurpose6, self.arm64,),
-            (True, self.syspurpose7, self.arm64,),
+            (
+                True,
+                self.syspurpose3,
+                self.x86_64,
+            ),
+            (
+                True,
+                self.syspurpose6,
+                self.arm64,
+            ),
+            (
+                True,
+                self.syspurpose7,
+                self.arm64,
+            ),
         ]
 
         results = {}
@@ -362,7 +470,11 @@ class CalculateMaxConcurrentUsageTest(TestCase):
     def test_unknown_usage(self):
         """Record for unknown role."""
         test_items = [
-            (True, self.syspurpose9, self.x86_64,),
+            (
+                True,
+                self.syspurpose9,
+                self.x86_64,
+            ),
         ]
 
         results = {}
@@ -372,13 +484,23 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         key = ConcurrentKey(role=ANY, sla=ANY, arch=ANY, usage=ANY, service_type=ANY)
         self.assertEqual(results[key]["max_count"], len(test_items))
 
-        key = ConcurrentKey(role=ANY, sla=ANY, arch=ANY, usage="", service_type=ANY,)
+        key = ConcurrentKey(
+            role=ANY,
+            sla=ANY,
+            arch=ANY,
+            usage="",
+            service_type=ANY,
+        )
         self.assertEqual(results[key]["max_count"], 1)
 
     def test_unknown_service_type(self):
         """Record for unknown role."""
         test_items = [
-            (True, self.syspurpose5, self.x86_64,),
+            (
+                True,
+                self.syspurpose5,
+                self.x86_64,
+            ),
         ]
 
         results = {}
@@ -388,14 +510,28 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         key = ConcurrentKey(role=ANY, sla=ANY, arch=ANY, usage=ANY, service_type=ANY)
         self.assertEqual(results[key]["max_count"], len(test_items))
 
-        key = ConcurrentKey(role=ANY, sla=ANY, arch=ANY, usage=ANY, service_type="",)
+        key = ConcurrentKey(
+            role=ANY,
+            sla=ANY,
+            arch=ANY,
+            usage=ANY,
+            service_type="",
+        )
         self.assertEqual(results[key]["max_count"], 1)
 
     def test_two_different_sysconfig(self):
         """Record for two sysconfigs that share no similarities."""
         test_items = [
-            (True, self.syspurpose1, self.x86_64,),
-            (True, self.syspurpose8, self.arm64,),
+            (
+                True,
+                self.syspurpose1,
+                self.x86_64,
+            ),
+            (
+                True,
+                self.syspurpose8,
+                self.arm64,
+            ),
         ]
 
         results = {}

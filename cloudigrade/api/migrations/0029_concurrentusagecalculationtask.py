@@ -51,6 +51,9 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"ordering": ("created_at",), "abstract": False,},
+            options={
+                "ordering": ("created_at",),
+                "abstract": False,
+            },
         ),
     ]

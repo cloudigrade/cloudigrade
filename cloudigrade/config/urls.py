@@ -25,7 +25,9 @@ urlpatterns = [
         "api/cloudigrade/v2/openapi.json",
         get_schema_view(
             title="Cloudigrade",
-            renderer_classes=[renderers.JSONOpenAPIRenderer,],
+            renderer_classes=[
+                renderers.JSONOpenAPIRenderer,
+            ],
             permission_classes=[permissions.AllowAny],
             authentication_classes=[],
             public=True,

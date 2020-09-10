@@ -96,7 +96,9 @@ class Command(BaseCommand):
             ),
         )
         parser.add_argument(
-            "--confirm", action="store_true", help="automatically confirm operation",
+            "--confirm",
+            action="store_true",
+            help="automatically confirm operation",
         )
 
     def confirm(self):
@@ -203,7 +205,8 @@ class Command(BaseCommand):
         start_time = since + datetime.timedelta(seconds=random.randrange(0, seconds))
         runs_to_make = int(
             min(
-                random.gauss(max_run_count / 2 + 0.5, max_run_count / 5), max_run_count,
+                random.gauss(max_run_count / 2 + 0.5, max_run_count / 5),
+                max_run_count,
             )
         )
         runs_made = 0

@@ -97,7 +97,9 @@ class MachineImageViewSetTest(TestCase):
 
         """
         events = api_helper.generate_instance_events(
-            instance, powered_times, image.content_object.ec2_ami_id,
+            instance,
+            powered_times,
+            image.content_object.ec2_ami_id,
         )
         return events
 

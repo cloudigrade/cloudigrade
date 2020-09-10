@@ -35,7 +35,10 @@ class Migration(migrations.Migration):
                 ),
                 ("account_arn", models.CharField(max_length=256, unique=True)),
             ],
-            options={"ordering": ("created_at",), "abstract": False,},
+            options={
+                "ordering": ("created_at",),
+                "abstract": False,
+            },
         ),
         migrations.CreateModel(
             name="AwsEC2InstanceDefinitions",
@@ -61,7 +64,10 @@ class Migration(migrations.Migration):
                 ),
                 ("vcpu", models.IntegerField(default=0)),
             ],
-            options={"ordering": ("created_at",), "abstract": False,},
+            options={
+                "ordering": ("created_at",),
+                "abstract": False,
+            },
         ),
         migrations.CreateModel(
             name="AwsInstance",
@@ -83,7 +89,10 @@ class Migration(migrations.Migration):
                 ),
                 ("region", models.CharField(max_length=256)),
             ],
-            options={"ordering": ("created_at",), "abstract": False,},
+            options={
+                "ordering": ("created_at",),
+                "abstract": False,
+            },
         ),
         migrations.CreateModel(
             name="AwsInstanceEvent",
@@ -105,7 +114,10 @@ class Migration(migrations.Migration):
                     models.CharField(blank=True, max_length=64, null=True),
                 ),
             ],
-            options={"ordering": ("created_at",), "abstract": False,},
+            options={
+                "ordering": ("created_at",),
+                "abstract": False,
+            },
         ),
         migrations.CreateModel(
             name="AwsMachineImage",
@@ -141,7 +153,10 @@ class Migration(migrations.Migration):
                 ("region", models.CharField(blank=True, max_length=256, null=True)),
                 ("aws_marketplace_image", models.BooleanField(default=False)),
             ],
-            options={"ordering": ("created_at",), "abstract": False,},
+            options={
+                "ordering": ("created_at",),
+                "abstract": False,
+            },
         ),
         migrations.CreateModel(
             name="CloudAccount",
@@ -205,7 +220,10 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"ordering": ("created_at",), "abstract": False,},
+            options={
+                "ordering": ("created_at",),
+                "abstract": False,
+            },
         ),
         migrations.CreateModel(
             name="InstanceEvent",
@@ -248,7 +266,10 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"ordering": ("created_at",), "abstract": False,},
+            options={
+                "ordering": ("created_at",),
+                "abstract": False,
+            },
         ),
         migrations.CreateModel(
             name="MachineImage",
@@ -294,7 +315,10 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"ordering": ("created_at",), "abstract": False,},
+            options={
+                "ordering": ("created_at",),
+                "abstract": False,
+            },
         ),
         migrations.CreateModel(
             name="Run",
@@ -333,7 +357,10 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"ordering": ("created_at",), "abstract": False,},
+            options={
+                "ordering": ("created_at",),
+                "abstract": False,
+            },
         ),
         migrations.CreateModel(
             name="AwsMachineImageCopy",
@@ -358,7 +385,10 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"ordering": ("created_at",), "abstract": False,},
+            options={
+                "ordering": ("created_at",),
+                "abstract": False,
+            },
             bases=("api.awsmachineimage",),
         ),
         migrations.AddField(
@@ -371,6 +401,7 @@ class Migration(migrations.Migration):
             ),
         ),
         migrations.AlterUniqueTogether(
-            name="cloudaccount", unique_together={("user", "name")},
+            name="cloudaccount",
+            unique_together={("user", "name")},
         ),
     ]

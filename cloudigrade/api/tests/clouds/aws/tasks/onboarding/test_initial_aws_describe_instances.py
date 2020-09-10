@@ -215,7 +215,9 @@ class InitialAwsDescribeInstancesTransactionTest(TransactionTestCase):
         mock_util_aws.verify_account_access.return_value = True, []
 
         inspection_call = call(
-            account.content_object.account_arn, described_ami["ImageId"], region,
+            account.content_object.account_arn,
+            described_ami["ImageId"],
+            region,
         )
 
         date_of_initial_describe = util_helper.utc_dt(2020, 3, 1, 0, 0, 0)
@@ -247,7 +249,9 @@ class InitialAwsDescribeInstancesTransactionTest(TransactionTestCase):
         mock_util_aws.describe_images.return_value = [described_ami, described_ami_2]
 
         inspection_call_2 = call(
-            account.content_object.account_arn, described_ami_2["ImageId"], region,
+            account.content_object.account_arn,
+            described_ami_2["ImageId"],
+            region,
         )
 
         with patch.object(

@@ -270,11 +270,16 @@ def save_instance(account, instance_data, region):
             "saving models for aws instance id %(instance_id)s having aws "
             "image id %(image_id)s for %(cloud_account)s"
         ),
-        {"instance_id": instance_id, "image_id": image_id, "cloud_account": account,},
+        {
+            "instance_id": instance_id,
+            "image_id": image_id,
+            "cloud_account": account,
+        },
     )
 
     awsinstance, created = AwsInstance.objects.get_or_create(
-        ec2_instance_id=instance_id, region=region,
+        ec2_instance_id=instance_id,
+        region=region,
     )
 
     if created:
@@ -291,7 +296,8 @@ def save_instance(account, instance_data, region):
     else:
         logger.info(_("AwsMachineImage get_or_create for EC2 AMI %s"), image_id)
         awsmachineimage, created = AwsMachineImage.objects.get_or_create(
-            ec2_ami_id=image_id, defaults={"region": region},
+            ec2_ami_id=image_id,
+            defaults={"region": region},
         )
         if created:
             logger.info(
@@ -299,7 +305,8 @@ def save_instance(account, instance_data, region):
                 instance_data,
             )
             MachineImage.objects.create(
-                status=MachineImage.UNAVAILABLE, content_object=awsmachineimage,
+                status=MachineImage.UNAVAILABLE,
+                content_object=awsmachineimage,
             )
         try:
             machineimage = awsmachineimage.machine_image.get()
@@ -313,14 +320,18 @@ def save_instance(account, instance_data, region):
                     "(ec2_ami_id=%(ec2_ami_id)s) found has no "
                     "MachineImage. This should not happen!"
                 ),
-                {"awsmachineimage_id": awsmachineimage.id, "ec2_ami_id": image_id,},
+                {
+                    "awsmachineimage_id": awsmachineimage.id,
+                    "ec2_ami_id": image_id,
+                },
             )
             logger.info(
                 _("Missing image data for %s; creating UNAVAILABLE stub image."),
                 instance_data,
             )
             MachineImage.objects.create(
-                status=MachineImage.UNAVAILABLE, content_object=awsmachineimage,
+                status=MachineImage.UNAVAILABLE,
+                content_object=awsmachineimage,
             )
             machineimage = awsmachineimage.machine_image.get()
 
@@ -517,7 +528,10 @@ def start_image_inspection(arn, ami_id, region):
         ):
             logger.info(
                 _("Exceeded %(count)s inspection attempts for %(ami)s"),
-                {"count": settings.MAX_ALLOWED_INSPECTION_ATTEMPTS, "ami": ami,},
+                {
+                    "count": settings.MAX_ALLOWED_INSPECTION_ATTEMPTS,
+                    "ami": ami,
+                },
             )
             machine_image.status = machine_image.ERROR
             machine_image.save()

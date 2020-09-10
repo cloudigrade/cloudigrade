@@ -353,7 +353,9 @@ class UtilAwsSqsTest(TestCase):
         source_queue_url = _faker.url()
         mock_client = Mock()
         mock_client.get_queue_attributes.return_value = {
-            "Attributes": {"RedrivePolicy": '{"hello": "world"}',}
+            "Attributes": {
+                "RedrivePolicy": '{"hello": "world"}',
+            }
         }
         with patch.object(sqs, "boto3") as mock_boto3, patch.object(
             sqs, "create_dlq"
@@ -392,7 +394,11 @@ class UtilAwsSqsTest(TestCase):
         }
         mock_client = Mock()
         mock_client.get_queue_url.side_effect = ClientError(
-            error_response={"Error": {"Code": "Random.Something.NonExistentQueue",}},
+            error_response={
+                "Error": {
+                    "Code": "Random.Something.NonExistentQueue",
+                }
+            },
             operation_name=Mock(),
         )
         with patch.object(sqs, "boto3") as mock_boto3:

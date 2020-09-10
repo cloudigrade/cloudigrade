@@ -147,7 +147,8 @@ class CloudAccountSerializer(ModelSerializer):
                 errors["tenant_id"] = Field.default_error_messages["required"]
             if errors:
                 raise ValidationError(
-                    errors, "required",
+                    errors,
+                    "required",
                 )
             return self.create_azure_cloud_account(validated_data)
 
@@ -330,7 +331,10 @@ class DailyConcurrentUsageDummyQueryset(object):
     """Dummy queryset for getting days with their max concurrent usage."""
 
     def __init__(
-        self, start_date=None, end_date=None, user_id=None,
+        self,
+        start_date=None,
+        end_date=None,
+        user_id=None,
     ):
         """Initialize parameters."""
         self.start_date = start_date

@@ -87,7 +87,9 @@ class UtilCeleryTest(TestCase):
         mock_shared_task.return_value = my_func
 
         decorated_func = celery.retriable_shared_task(
-            my_func, retry_backoff_max=10, retry_max_elapsed_backoff=60,
+            my_func,
+            retry_backoff_max=10,
+            retry_max_elapsed_backoff=60,
         )
         result = decorated_func(1, 2)
         self.assertEqual(result, 3)

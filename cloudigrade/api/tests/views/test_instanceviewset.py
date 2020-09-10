@@ -195,7 +195,8 @@ class InstanceViewSetTest(TestCase):
         """
         # Generate activity for instances
         api_helper.generate_single_run(
-            self.instance1, (util_helper.utc_dt(2019, 2, 1, 0, 0, 0), None),
+            self.instance1,
+            (util_helper.utc_dt(2019, 2, 1, 0, 0, 0), None),
         )
 
         api_helper.generate_single_run(
@@ -207,7 +208,8 @@ class InstanceViewSetTest(TestCase):
         )
 
         api_helper.generate_single_run(
-            self.instance3, (util_helper.utc_dt(2019, 4, 1, 0, 0, 0), None),
+            self.instance3,
+            (util_helper.utc_dt(2019, 4, 1, 0, 0, 0), None),
         )
 
         mid_2019_01 = util_helper.utc_dt(2019, 1, 15, 0, 0, 0)
@@ -256,7 +258,8 @@ class InstanceViewSetTest(TestCase):
         """
         # Generate activity for instances
         api_helper.generate_single_run(
-            self.instance1, (util_helper.utc_dt(2019, 2, 2, 0, 0, 0), None),
+            self.instance1,
+            (util_helper.utc_dt(2019, 2, 2, 0, 0, 0), None),
         )
 
         api_helper.generate_single_run(
@@ -268,7 +271,8 @@ class InstanceViewSetTest(TestCase):
         )
 
         api_helper.generate_single_run(
-            self.instance3, (util_helper.utc_dt(2019, 4, 1, 0, 0, 0), None),
+            self.instance3,
+            (util_helper.utc_dt(2019, 4, 1, 0, 0, 0), None),
         )
 
         mid_2019_01 = util_helper.utc_dt(2019, 1, 15, 0, 0, 0)

@@ -27,7 +27,10 @@ class Migration(migrations.Migration):
                 ("subscription_id", models.UUIDField()),
                 ("tenant_id", models.UUIDField(unique=True)),
             ],
-            options={"ordering": ("created_at",), "abstract": False,},
+            options={
+                "ordering": ("created_at",),
+                "abstract": False,
+            },
         ),
         migrations.CreateModel(
             name="AzureInstance",
@@ -49,7 +52,10 @@ class Migration(migrations.Migration):
                 ),
                 ("region", models.CharField(max_length=256)),
             ],
-            options={"ordering": ("created_at",), "abstract": False,},
+            options={
+                "ordering": ("created_at",),
+                "abstract": False,
+            },
         ),
         migrations.CreateModel(
             name="AzureInstanceEvent",
@@ -70,7 +76,10 @@ class Migration(migrations.Migration):
                     models.CharField(blank=True, max_length=256, null=True),
                 ),
             ],
-            options={"ordering": ("created_at",), "abstract": False,},
+            options={
+                "ordering": ("created_at",),
+                "abstract": False,
+            },
         ),
         migrations.CreateModel(
             name="AzureMachineImage",
@@ -95,6 +104,9 @@ class Migration(migrations.Migration):
                 ("azure_marketplace_image", models.BooleanField(default=False)),
                 ("region", models.CharField(blank=True, max_length=256, null=True)),
             ],
-            options={"ordering": ("created_at",), "abstract": False,},
+            options={
+                "ordering": ("created_at",),
+                "abstract": False,
+            },
         ),
     ]

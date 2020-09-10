@@ -149,6 +149,11 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
         arn = "Badly formatted arn"
         with self.assertLogs("api.clouds.aws.tasks", level="INFO") as cm:
             tasks.configure_customer_aws_and_create_cloud_account(
-                user.username, arn, auth_id, application_id, endpoint_id, source_id,
+                user.username,
+                arn,
+                auth_id,
+                application_id,
+                endpoint_id,
+                source_id,
             )
         self.assertIn("Invalid ARN.", cm.output[1])

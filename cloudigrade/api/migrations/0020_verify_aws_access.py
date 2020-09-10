@@ -19,7 +19,11 @@ def create_verify_tasks(apps, schema_editor):
             name=f"Verify {aws_clount.account_arn}.",
             start_time=aws_clount.created_at,
             task="api.clouds.aws.tasks.verify_account_permissions",
-            kwargs=json.dumps({"account_arn": aws_clount.account_arn,}),
+            kwargs=json.dumps(
+                {
+                    "account_arn": aws_clount.account_arn,
+                }
+            ),
         )
         aws_clount.verify_task = verify_task
         aws_clount.save()

@@ -152,7 +152,8 @@ class CloudsAwsUtilCloudTrailTest(TestCase):
         as a non-blocking failure and simply log messages.
         """
         client_error = ClientError(
-            error_response={"Error": {"Code": "AccessDenied"}}, operation_name=Mock(),
+            error_response={"Error": {"Code": "AccessDenied"}},
+            operation_name=Mock(),
         )
         expected_warnings = [
             "encountered AccessDenied and cannot delete cloudtrail",
@@ -178,7 +179,8 @@ class CloudsAwsUtilCloudTrailTest(TestCase):
         non-blocking failure and simply log messages.
         """
         client_error = ClientError(
-            error_response={"Error": {"Code": "Potatoes"}}, operation_name=Mock(),
+            error_response={"Error": {"Code": "Potatoes"}},
+            operation_name=Mock(),
         )
         expected_errors = [
             "Unexpected error Potatoes occurred disabling CloudTrail",

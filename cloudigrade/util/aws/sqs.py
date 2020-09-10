@@ -53,7 +53,8 @@ def receive_messages_from_queue(queue_url, max_number=10, wait_time=10):
     """
     sqs_queue = _get_queue(queue_url)
     messages = sqs_queue.receive_messages(
-        MaxNumberOfMessages=max_number, WaitTimeSeconds=wait_time,
+        MaxNumberOfMessages=max_number,
+        WaitTimeSeconds=wait_time,
     )
 
     return messages
@@ -80,7 +81,8 @@ def yield_messages_from_queue(
         while messages_received < max_number:
             try:
                 messages = sqs_queue.receive_messages(
-                    MaxNumberOfMessages=1, WaitTimeSeconds=wait_time,
+                    MaxNumberOfMessages=1,
+                    WaitTimeSeconds=wait_time,
                 )
                 if not messages:
                     break
@@ -395,7 +397,8 @@ def read_messages_from_queue(queue_name, max_count=1):
         try:
             unwrapped = _sqs_unwrap_message(sqs_message)
             sqs.delete_message(
-                QueueUrl=queue_url, ReceiptHandle=sqs_message["ReceiptHandle"],
+                QueueUrl=queue_url,
+                ReceiptHandle=sqs_message["ReceiptHandle"],
             )
             messages.append(unwrapped)
         except ClientError as e:

@@ -236,7 +236,12 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
         """Assert that nothing happens if update is called on an unknown authid."""
         username = _faker.user_name()
         new_authentication_id = _faker.pyint()
-        mock_list_sources_app_auths.return_value = {"data": [], "meta": {"count": 0,}}
+        mock_list_sources_app_auths.return_value = {
+            "data": [],
+            "meta": {
+                "count": 0,
+            },
+        }
 
         message, headers = util_helper.generate_authentication_create_message_value(
             self.account_number, username, new_authentication_id
@@ -262,8 +267,12 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
             "updated_at": "2020-05-10T17:06:10Z",
         }
         mock_list_sources_app_auths.return_value = {
-            "data": [app_auth_data,],
-            "meta": {"count": 1,},
+            "data": [
+                app_auth_data,
+            ],
+            "meta": {
+                "count": 1,
+            },
         }
 
         message, headers = util_helper.generate_authentication_create_message_value(

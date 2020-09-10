@@ -94,7 +94,10 @@ class RemoveSnapshotOwnershipTest(TestCase):
 
         with self.assertRaises(RuntimeError):
             tasks.remove_snapshot_ownership(
-                mock_arn, mock_customer_snapshot_id, region, mock_snapshot_copy_id,
+                mock_arn,
+                mock_customer_snapshot_id,
+                region,
+                mock_snapshot_copy_id,
             )
 
         mock_aws.remove_snapshot_ownership.assert_not_called()

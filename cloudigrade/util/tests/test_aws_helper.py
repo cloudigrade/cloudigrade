@@ -295,7 +295,12 @@ class UtilAwsHelperTest(TestCase):
             func_kwargs={
                 "DryRun": True,
                 "Resources": [helper.DRYRUN_IMAGE_ID],
-                "Tags": [{"Key": "Example", "Value": "Hello world",},],
+                "Tags": [
+                    {
+                        "Key": "Example",
+                        "Value": "Hello world",
+                    },
+                ],
             },
         )
 

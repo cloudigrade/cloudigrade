@@ -178,8 +178,14 @@ def get_ami(session, image_id, source_region):
     except AwsImageError as e:
         logger.exception(e)
         logger.info(
-            _("Failed to get AMI %(image_id)s in %(source_region)s. %(message)s",),
-            {"image_id": image_id, "source_region": source_region, "message": str(e),},
+            _(
+                "Failed to get AMI %(image_id)s in %(source_region)s. %(message)s",
+            ),
+            {
+                "image_id": image_id,
+                "source_region": source_region,
+                "message": str(e),
+            },
         )
         image = None
     return image
@@ -244,7 +250,9 @@ def copy_ami(session, image_id, source_region):
     new_name = "cloudigrade reference copy ({0})".format(old_image.name)[:128]
     ec2 = session.client("ec2", region_name=source_region)
     new_image = ec2.copy_image(
-        Name=new_name, SourceImageId=image_id, SourceRegion=source_region,
+        Name=new_name,
+        SourceImageId=image_id,
+        SourceRegion=source_region,
     )
     ec2.create_tags(
         Resources=[new_image["ImageId"]],
@@ -255,8 +263,14 @@ def copy_ami(session, image_id, source_region):
                 "Key": "Name",
                 "Value": new_name,
             },
-            {"Key": "cloudigrade original image id", "Value": old_image.id,},
-            {"Key": "cloudigrade original image name", "Value": old_image.name,},
+            {
+                "Key": "cloudigrade original image id",
+                "Value": old_image.id,
+            },
+            {
+                "Key": "cloudigrade original image name",
+                "Value": old_image.name,
+            },
         ],
     )
 
@@ -314,7 +328,11 @@ def add_snapshot_ownership(snapshot):
     attribute = "createVolumePermission"
     user_id = _get_primary_account_id()
 
-    permission = {"Add": [{"UserId": user_id},]}
+    permission = {
+        "Add": [
+            {"UserId": user_id},
+        ]
+    }
 
     snapshot.modify_attribute(
         Attribute=attribute,
@@ -354,7 +372,11 @@ def remove_snapshot_ownership(snapshot):
     attribute = "createVolumePermission"
     user_id = _get_primary_account_id()
 
-    permission = {"Remove": [{"UserId": user_id},]}
+    permission = {
+        "Remove": [
+            {"UserId": user_id},
+        ]
+    }
 
     snapshot.modify_attribute(
         Attribute=attribute,
@@ -426,7 +448,9 @@ def check_snapshot_state(snapshot):
     if snapshot.state == "completed":
         return
     message = "Snapshot {id} has state {state} at {progress}".format(
-        id=snapshot.snapshot_id, state=snapshot.state, progress=snapshot.progress,
+        id=snapshot.snapshot_id,
+        state=snapshot.state,
+        progress=snapshot.progress,
     )
     if snapshot.state == "error":
         raise AwsSnapshotError(message)

@@ -43,5 +43,6 @@ if env.bool("API_ENABLE_SENTRY", default=False):
 
 # Specifically in production, this default should be False.
 ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES = env.bool(
-    "ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES", default=False,
+    "ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES",
+    default=False,
 )

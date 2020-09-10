@@ -10,5 +10,8 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(model_name="concurrentusage", name="cloud_account",),
+        migrations.RemoveField(
+            model_name="concurrentusage",
+            name="cloud_account",
+        ),
     ]

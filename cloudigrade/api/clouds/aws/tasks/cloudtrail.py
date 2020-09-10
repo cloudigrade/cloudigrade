@@ -111,7 +111,10 @@ def _process_cloudtrail_message(message):
     try:
         # Save the results
         new_images = _save_cloudtrail_activity(
-            instance_events, ami_tag_events, described_instances, described_amis,
+            instance_events,
+            ami_tag_events,
+            described_instances,
+            described_amis,
         )
         # Starting image inspection MUST come after all other database writes
         # so that we are confident the atomic transaction will complete.
@@ -539,7 +542,8 @@ def _save_cloudtrail_activity(
 
     # Save instances and their events.
     for ((ec2_instance_id, region, aws_account_id), events) in itertools.groupby(
-        instance_events, key=lambda e: (e.ec2_instance_id, e.region, e.aws_account_id),
+        instance_events,
+        key=lambda e: (e.ec2_instance_id, e.region, e.aws_account_id),
     ):
         events = list(events)
 

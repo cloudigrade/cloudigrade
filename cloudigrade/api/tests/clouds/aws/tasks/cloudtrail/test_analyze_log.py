@@ -734,7 +734,8 @@ class AnalyzeLogTest(TestCase):
         awsinstance = instances[0]
         instance = awsinstance.instance.get()
         self.assertEqual(
-            awsinstance.ec2_instance_id, gen_instance.content_object.ec2_instance_id,
+            awsinstance.ec2_instance_id,
+            gen_instance.content_object.ec2_instance_id,
         )
         self.assertEqual(instance.cloud_account.id, self.account.id)
 
@@ -883,7 +884,8 @@ class AnalyzeLogTest(TestCase):
         sqs_message = helper.generate_mock_cloudtrail_sqs_message()
         ec2_instance_id = util_helper.generate_dummy_instance_id()
         trail_record = helper.generate_cloudtrail_instances_record(
-            aws_account_id=self.aws_account_id, instance_ids=[ec2_instance_id],
+            aws_account_id=self.aws_account_id,
+            instance_ids=[ec2_instance_id],
         )
         s3_content = {"Records": [trail_record]}
         mock_receive.return_value = [sqs_message]

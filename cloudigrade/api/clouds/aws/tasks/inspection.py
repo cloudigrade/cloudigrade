@@ -331,7 +331,10 @@ def run_inspection_cluster(messages, cloud="aws"):  # noqa: C901
         # Configure volumes to delete when instance is scaled down
         ec2_instance.modify_attribute(
             BlockDeviceMappings=[
-                {"DeviceName": mount_point, "Ebs": {"DeleteOnTermination": True},}
+                {
+                    "DeviceName": mount_point,
+                    "Ebs": {"DeleteOnTermination": True},
+                }
             ]
         )
 

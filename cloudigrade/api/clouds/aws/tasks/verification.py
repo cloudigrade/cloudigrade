@@ -31,7 +31,8 @@ def verify_account_permissions(account_arn):
         valid = verify_permissions(account_arn)
     except ValidationError as e:
         logger.info(
-            _("ARN %s failed validation. Disabling the cloud account."), account_arn,
+            _("ARN %s failed validation. Disabling the cloud account."),
+            account_arn,
         )
         # Disable the cloud account.
         aws_cloud_account = AwsCloudAccount.objects.get(account_arn=account_arn)
@@ -39,7 +40,10 @@ def verify_account_permissions(account_arn):
 
     logger.debug(
         _("ARN %(account_arn)s is valid: %(valid)s."),
-        {"account_arn": account_arn, "valid": valid,},
+        {
+            "account_arn": account_arn,
+            "valid": valid,
+        },
     )
 
     return valid
@@ -68,7 +72,9 @@ def verify_verify_tasks():
                 "Cloud Account ID %(cloud_account_id)s is enabled, "
                 "but missing verification task. Creating."
             ),
-            {"cloud_account_id": cloud_account.id,},
+            {
+                "cloud_account_id": cloud_account.id,
+            },
         )
         aws_cloud_account = cloud_account.content_object
         aws_cloud_account._enable_verify_task()
@@ -83,6 +89,8 @@ def verify_verify_tasks():
     for verify_task in verify_tasks:
         logger.error(
             _("Found orphaned verify task '%(verify_task)s', deleting."),
-            {"verify_task": verify_task,},
+            {
+                "verify_task": verify_task,
+            },
         )
         verify_task.delete()

@@ -11,6 +11,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RenameModel(
-            old_name="AwsEC2InstanceDefinition", new_name="InstanceDefinition",
+            old_name="AwsEC2InstanceDefinition",
+            new_name="InstanceDefinition",
         ),
     ]

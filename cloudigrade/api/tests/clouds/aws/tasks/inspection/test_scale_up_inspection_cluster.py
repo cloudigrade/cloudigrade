@@ -36,7 +36,8 @@ class ScaleUpInspectionClusterTest(TestCase):
             settings.HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME
         )
         mock_aws.read_messages_from_queue.assert_called_once_with(
-            self.ready_volumes_queue_name, settings.HOUNDIGRADE_AWS_VOLUME_BATCH_SIZE,
+            self.ready_volumes_queue_name,
+            settings.HOUNDIGRADE_AWS_VOLUME_BATCH_SIZE,
         )
         mock_aws.scale_up.assert_called_once_with(
             settings.HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME
@@ -93,7 +94,8 @@ class ScaleUpInspectionClusterTest(TestCase):
         )
         mock_aws.scale_up.assert_not_called()
         mock_aws.read_messages_from_queue.assert_called_once_with(
-            self.ready_volumes_queue_name, settings.HOUNDIGRADE_AWS_VOLUME_BATCH_SIZE,
+            self.ready_volumes_queue_name,
+            settings.HOUNDIGRADE_AWS_VOLUME_BATCH_SIZE,
         )
         mock_run_inspection_cluster.delay.assert_not_called()
         mock_aws.add_messages_to_queue.assert_not_called()

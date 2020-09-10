@@ -289,7 +289,10 @@ def generate_dummy_describe_instance(
         "InstanceType": instance_type,
         "LaunchTime": launch_time,
         "Platform": platform,
-        "State": {"Code": state.value, "Name": state.name,},
+        "State": {
+            "Code": state.value,
+            "Name": state.name,
+        },
         "SubnetId": subnet_id,
     }
     return mock_instance
@@ -332,7 +335,10 @@ def generate_dummy_describe_image(
     tags = []
     if openshift:
         tags.append(
-            {"Key": aws.OPENSHIFT_TAG, "Value": aws.OPENSHIFT_TAG,}
+            {
+                "Key": aws.OPENSHIFT_TAG,
+                "Value": aws.OPENSHIFT_TAG,
+            }
         )
 
     mock_image = {
@@ -527,7 +533,9 @@ def generate_test_user(account_number=None, password=None, is_superuser=False):
     if not account_number:
         account_number = _faker.random_int(min=100000, max=999999)
     user = User.objects.create_user(
-        username=account_number, password=password, is_superuser=is_superuser,
+        username=account_number,
+        password=password,
+        is_superuser=is_superuser,
     )
     return user
 

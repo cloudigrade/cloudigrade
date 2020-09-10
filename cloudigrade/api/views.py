@@ -183,7 +183,9 @@ class SysconfigViewSet(viewsets.ViewSet):
         """Get cloud account ids currently used by this installation."""
         response = {
             "aws_account_id": _get_primary_account_id(),
-            "aws_policies": {"traditional_inspection": cloudigrade_policy,},
+            "aws_policies": {
+                "traditional_inspection": cloudigrade_policy,
+            },
             "version": settings.CLOUDIGRADE_VERSION,
         }
         return Response(response)

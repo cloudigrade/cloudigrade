@@ -54,26 +54,36 @@ LOGGING = {
     },
     "loggers": {
         "": {
-            "handlers": ["console",],
+            "handlers": [
+                "console",
+            ],
             "level": env("DJANGO_ALL_LOG_LEVEL", default="INFO"),
         },
         "api": {
-            "handlers": ["console",],
+            "handlers": [
+                "console",
+            ],
             "level": env("CLOUDIGRADE_LOG_LEVEL", default="INFO"),
             "propagate": False,
         },
         "config": {
-            "handlers": ["console",],
+            "handlers": [
+                "console",
+            ],
             "level": env("CLOUDIGRADE_LOG_LEVEL", default="INFO"),
             "propagate": False,
         },
         "util": {
-            "handlers": ["console",],
+            "handlers": [
+                "console",
+            ],
             "level": env("CLOUDIGRADE_LOG_LEVEL", default="INFO"),
             "propagate": False,
         },
         "django": {
-            "handlers": ["console",],
+            "handlers": [
+                "console",
+            ],
             "level": env("DJANGO_LOG_LEVEL", default="INFO"),
             "propagate": False,
         },
@@ -201,9 +211,15 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",},
-    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",},
-    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",},
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+    },
 ]
 
 
@@ -429,11 +445,13 @@ KAFKA_SESSION_TIMEOUT_MS = env.int("KAFKA_SESSION_TIMEOUT_MS", default=20000)
 LISTENER_PID_PATH = env("LISTENER_PID_PATH", default="/var/run/cloudigrade")
 
 ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES = env.bool(
-    "ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES", default=True,
+    "ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES",
+    default=True,
 )
 
 SOURCES_API_BASE_URL = env(
-    "SOURCES_API_BASE_URL", default="http://sources-api.sources-ci.svc:8080",
+    "SOURCES_API_BASE_URL",
+    default="http://sources-api.sources-ci.svc:8080",
 )
 
 SOURCE_API_INTERNAL_URI = "/internal/v1.0/"
