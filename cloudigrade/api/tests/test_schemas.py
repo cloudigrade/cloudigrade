@@ -116,6 +116,10 @@ class SchemaTestCase(TestCase):
                                                             "arch": {"type": "string"},
                                                             "sla": {"type": "string"},
                                                             "role": {"type": "string"},
+                                                            "usage": {"type": "string"},
+                                                            "service_type": {
+                                                                "type": "string"
+                                                            },
                                                             "instance_count": {
                                                                 "type": "integer"
                                                             },
