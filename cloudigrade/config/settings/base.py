@@ -104,8 +104,8 @@ if env.bool("CLOUDIGRADE_ENABLE_CLOUDWATCH", default=False):
             "level": env("CLOUDIGRADE_CW_LEVEL", default="INFO"),
             "class": "watchtower.CloudWatchLogHandler",
             "boto3_session": cw_boto3_session,
-            "log_group": env("CLOUDIGRADE_CW_LOG_GROUP", default="MyLogGroupName"),
-            "stream_name": env("CLOUDIGRADE_CW_STREAM_NAME", default="MyStreamName"),
+            "log_group": env("CLOUDIGRADE_CW_LOG_GROUP"),
+            "stream_name": env("CLOUDIGRADE_CW_STREAM_NAME"),
             "formatter": "verbose",
         },
     )
