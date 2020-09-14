@@ -5,7 +5,7 @@ from urllib.parse import quote
 import environ
 import logging.config
 
-from boto3 import Session
+from boto3.session import Session
 
 ROOT_DIR = environ.Path(__file__) - 3
 APPS_DIR = ROOT_DIR.path("cloudigrade")
@@ -99,16 +99,14 @@ if env.bool("CLOUDIGRADE_ENABLE_CLOUDWATCH", default=False):
         aws_secret_access_key=env("CW_AWS_SECRET_ACCESS_KEY"),
         region_name=env("CW_AWS_REGION_NAME"),
     )
-    LOGGING["handlers"]["watchtower"] = (
-        {
-            "level": env("CLOUDIGRADE_CW_LEVEL", default="INFO"),
-            "class": "watchtower.CloudWatchLogHandler",
-            "boto3_session": cw_boto3_session,
-            "log_group": env("CLOUDIGRADE_CW_LOG_GROUP"),
-            "stream_name": env("CLOUDIGRADE_CW_STREAM_NAME"),
-            "formatter": "verbose",
-        },
-    )
+    LOGGING["handlers"]["watchtower"] = {
+        "level": env("CLOUDIGRADE_CW_LEVEL", default="INFO"),
+        "class": "watchtower.CloudWatchLogHandler",
+        "boto3_session": cw_boto3_session,
+        "log_group": env("CLOUDIGRADE_CW_LOG_GROUP"),
+        "stream_name": env("CLOUDIGRADE_CW_STREAM_NAME"),
+        "formatter": "verbose",
+    }
     for __, logger in LOGGING["loggers"].items():
         logger["handlers"].append("watchtower")
     print("Configured CloudWatch.")
