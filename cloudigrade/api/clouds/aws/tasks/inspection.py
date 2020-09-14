@@ -222,7 +222,9 @@ def run_inspection_cluster(messages, cloud="aws"):  # noqa: C901
 
     ecs = boto3.client("ecs")
     # get ecs container instance id
-    result = ecs.list_container_instances(cluster=settings.HOUNDIGRADE_ECS_CLUSTER_NAME)
+    result = ecs.list_container_instances(
+        cluster=settings.HOUNDIGRADE_ECS_CLUSTER_NAME, status="ACTIVE"
+    )
 
     # verify we have our single container instance
     num_instances = len(result["containerInstanceArns"])

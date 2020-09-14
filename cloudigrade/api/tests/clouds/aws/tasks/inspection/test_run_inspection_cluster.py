@@ -53,7 +53,7 @@ class RunInspectionClusterTest(TestCase):
         self.assertEqual(image.status, MachineImage.INSPECTING)
 
         mock_ecs.list_container_instances.assert_called_once_with(
-            cluster=settings.HOUNDIGRADE_ECS_CLUSTER_NAME
+            cluster=settings.HOUNDIGRADE_ECS_CLUSTER_NAME, status="ACTIVE"
         )
         mock_ecs.describe_container_instances.assert_called_once_with(
             containerInstances=[
@@ -204,7 +204,7 @@ class RunInspectionClusterTest(TestCase):
         self.assertEqual(image.status, MachineImage.INSPECTED)
 
         mock_ecs.list_container_instances.assert_called_once_with(
-            cluster=settings.HOUNDIGRADE_ECS_CLUSTER_NAME
+            cluster=settings.HOUNDIGRADE_ECS_CLUSTER_NAME, status="ACTIVE"
         )
         mock_ecs.describe_container_instances.assert_called_once_with(
             containerInstances=[
@@ -261,7 +261,7 @@ class RunInspectionClusterTest(TestCase):
         self.assertEqual(image.status, MachineImage.ERROR)
 
         mock_ecs.list_container_instances.assert_called_once_with(
-            cluster=settings.HOUNDIGRADE_ECS_CLUSTER_NAME
+            cluster=settings.HOUNDIGRADE_ECS_CLUSTER_NAME, status="ACTIVE"
         )
         mock_ecs.describe_container_instances.assert_called_once_with(
             containerInstances=[
