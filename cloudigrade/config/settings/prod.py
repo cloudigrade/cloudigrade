@@ -4,10 +4,7 @@ from sentry_sdk.integrations.django import DjangoIntegration
 
 from .base import *
 
-# TODO Change this when we start using real versions in our deployments.
-# Currently this works because our deployment configs use static tokens like
-# "ci" and "prod" for the version.
-IS_PRODUCTION = CLOUDIGRADE_VERSION == "prod"
+IS_PRODUCTION = CLOUDIGRADE_ENVIRONMENT == "prod"
 
 # FIXME: After our OpenShift setup is finalized we should force debug to False.
 DEBUG = env.bool("DJANGO_DEBUG", default=False)
@@ -24,7 +21,11 @@ AWS_SQS_REGION = env("AWS_SQS_REGION")
 AWS_SQS_ACCESS_KEY_ID = env("AWS_SQS_ACCESS_KEY_ID")
 AWS_SQS_SECRET_ACCESS_KEY = env("AWS_SQS_SECRET_ACCESS_KEY")
 
-AWS_NAME_PREFIX = env("AWS_NAME_PREFIX", default="cloudigrade-prod-")
+# Require these HOUNDIGRADE_ variables to be set explicitly. No defaults.
+HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME = env("HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME")
+HOUNDIGRADE_ECS_CLUSTER_NAME = env("HOUNDIGRADE_ECS_CLUSTER_NAME")
+
+AWS_NAME_PREFIX = env("AWS_NAME_PREFIX")
 CELERY_BROKER_TRANSPORT_OPTIONS["queue_name_prefix"] = AWS_NAME_PREFIX
 CLOUDTRAIL_NAME_PREFIX = AWS_NAME_PREFIX
 QUEUE_EXCHANGE_NAME = None
