@@ -121,37 +121,6 @@ Try the aforementioned import commands again, and all should be good. If not, ki
 After finishing the installation of dependencies you can grab a shell that uses the virtual environment by calling ``poetry shell``.
 
 
-Optional boto3-stubs
-~~~~~~~~~~~~~~~~~~~~
-
-For local development, if your IDE supports autocompletion via type annotations, you may
-want to generate the optional boto3 annotations via ``boto3-stubs``. See
-`boto3-stubs <https://pypi.org/project/boto3-stubs/>`_ for more information and detail.
-To enable this ability, simply run the following command for your poetry virtual
-environment after installing the typical dev dependencies.
-
-.. code-block:: sh
-
-    poetry run python -m mypy_boto3
-
-That command should produce output similar to the following (many output lines
-truncated here for brevity):
-
-.. code-block::
-
-    mypy_boto3: INFO     Discovered AutoScaling service stubs in mypy-boto3-autoscaling
-    mypy_boto3: INFO     Discovered CloudTrail service stubs in mypy-boto3-cloudtrail
-    ...
-    mypy_boto3: INFO     Generated annotations for boto3.client and boto3.resource functions
-    mypy_boto3: INFO     Generated annotations for boto3.Session.client and boto3.Session.resource functions
-    ...
-    mypy_boto3: INFO     You can now use AutoScaling, CloudTrail, EC2, ECS, IAM, Pricing, S3, SQS and STS type annotations.
-
-After PyCharm or your editor of choice updates to recognize the new data, you should be
-able to autocomplete various boto3 service objects. For example, see this
-`screenshot of ec2 object autocompletion in PyCharm <https://i.imgur.com/nuZBgjM.png>`_.
-
-
 Configure AWS account credentials
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
