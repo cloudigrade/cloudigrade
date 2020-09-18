@@ -216,10 +216,6 @@ def run_inspection_cluster(messages, cloud="aws"):  # noqa: C901
         scale_down_cluster.delay()
         return
 
-    task_command = ["-c", cloud]
-    if settings.HOUNDIGRADE_DEBUG:
-        task_command.extend(["--debug"])
-
     ecs = boto3.client("ecs")
     # get ecs container instance id
     result = ecs.list_container_instances(
@@ -258,6 +254,8 @@ def run_inspection_cluster(messages, cloud="aws"):  # noqa: C901
         raise AwsECSInstanceNotReady
 
     logger.info(_("%s attaching volumes"), "run_inspection_cluster")
+
+    task_command = ["-c", cloud]
     # attach volumes
     for index, message in enumerate(relevant_messages):
         ec2_ami_id = message["ami_id"]
