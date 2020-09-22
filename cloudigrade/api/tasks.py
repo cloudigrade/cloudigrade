@@ -537,7 +537,7 @@ def inspect_pending_images():
 
 @shared_task(
     bind=True,
-    default_retry_delay=settings.CONCURRENT_USAGE_CALCULATION_DELAY,
+    default_retry_delay=settings.SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY,
     name="api.tasks.calculate_max_concurrent_usage_task",
 )
 def calculate_max_concurrent_usage_task(self, date, user_id):

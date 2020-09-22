@@ -28,7 +28,7 @@ class DeleteAccountsTest(TransactionTestCase):
         self.assertEqual(models.CloudAccount.objects.filter(is_enabled=True).count(), 0)
 
     @patch("api.clouds.aws.util.delete_cloudtrail")
-    @override_settings(ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES=False)
+    @override_settings(SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA=False)
     def test_handle(self, mock_delete_cloudtrail):
         """Test calling disable_accounts with confirm arg."""
         self.assertPresent()
@@ -38,7 +38,7 @@ class DeleteAccountsTest(TransactionTestCase):
 
     @patch("api.models.notify_sources_application_availability")
     @patch("api.clouds.aws.util.delete_cloudtrail")
-    @override_settings(ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES=True)
+    @override_settings(SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA=True)
     def test_handle_when_kafka_errors(self, mock_delete_cloudtrail, mock_notify):
         """Test disable_accounts works despite sources-api errors."""
         self.assertPresent()
@@ -55,7 +55,7 @@ class DeleteAccountsTest(TransactionTestCase):
         call_command("disable_accounts")
         self.assertPresent()
 
-    @override_settings(ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES=False)
+    @override_settings(SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA=False)
     @patch("api.clouds.aws.util.delete_cloudtrail")
     @patch("builtins.input", return_value="Y")
     def test_handle_yes(self, mock_input, mock_delete_cloudtrail):
@@ -66,7 +66,7 @@ class DeleteAccountsTest(TransactionTestCase):
         mock_delete_cloudtrail.assert_called()
 
     @override_settings(IS_PRODUCTION=True)
-    @override_settings(ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES=True)
+    @override_settings(SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA=True)
     @patch("api.models.notify_sources_application_availability")
     @patch("api.clouds.aws.util.delete_cloudtrail")
     @patch("builtins.input", return_value="Y")

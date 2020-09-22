@@ -91,7 +91,7 @@ def create_cloudtrail(cloudtrail, name):
     try:
         response = cloudtrail.create_trail(
             Name=name,
-            S3BucketName=settings.S3_BUCKET_NAME,
+            S3BucketName=settings.AWS_S3_BUCKET_NAME,
             IncludeGlobalServiceEvents=True,
             IsMultiRegionTrail=True,
         )
@@ -113,7 +113,7 @@ def update_cloudtrail(cloudtrail, name):
     logger.debug(_("Updating the cloudtrail %s"), name)
     response = cloudtrail.update_trail(
         Name=name,
-        S3BucketName=settings.S3_BUCKET_NAME,
+        S3BucketName=settings.AWS_S3_BUCKET_NAME,
         IncludeGlobalServiceEvents=True,
         IsMultiRegionTrail=True,
     )

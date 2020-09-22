@@ -10,7 +10,7 @@ class Command(BaseCommand):
 
     help = _("Ensures S3 bucket lifecycle settings are up to date.")
 
-    bucket_name = settings.S3_BUCKET_NAME
+    bucket_name = settings.AWS_S3_BUCKET_NAME
 
     def handle(self, *args, **options):
         """Handle the command execution."""
@@ -22,19 +22,19 @@ class Command(BaseCommand):
             LifecycleConfiguration={
                 "Rules": [
                     {
-                        "Expiration": {"Days": settings.S3_BUCKET_LC_MAX_AGE},
-                        "ID": settings.S3_BUCKET_LC_NAME,
+                        "Expiration": {"Days": settings.AWS_S3_BUCKET_LC_MAX_AGE},
+                        "ID": settings.AWS_S3_BUCKET_LC_NAME,
                         "Status": "Enabled",
                         # This looks weird, empty prefix and filter and all
                         # but without it, AWS throws an equivalent of a 400
                         "Filter": {"Prefix": ""},
                         "Transitions": [
                             {
-                                "Days": settings.S3_BUCKET_LC_IA_TRANSITION,
+                                "Days": settings.AWS_S3_BUCKET_LC_IA_TRANSITION,
                                 "StorageClass": "STANDARD_IA",
                             },
                             {
-                                "Days": settings.S3_BUCKET_LC_GLACIER_TRANSITION,
+                                "Days": settings.AWS_S3_BUCKET_LC_GLACIER_TRANSITION,
                                 "StorageClass": "GLACIER",
                             },
                         ],

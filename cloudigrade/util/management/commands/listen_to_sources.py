@@ -102,7 +102,7 @@ class Command(BaseCommand):
                 ),
                 {"message_value": message_value, "message_headers": message_headers},
             )
-            if settings.ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES:
+            if settings.SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA:
                 tasks.create_from_sources_kafka_message.delay(
                     message_value, message_headers
                 )
@@ -115,7 +115,7 @@ class Command(BaseCommand):
                 ),
                 {"message_value": message_value, "message_headers": message_headers},
             )
-            if settings.ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES:
+            if settings.SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA:
                 tasks.delete_from_sources_kafka_message.delay(
                     message_value, message_headers, event_type
                 )
@@ -128,7 +128,7 @@ class Command(BaseCommand):
                 ),
                 {"message_value": message_value, "message_headers": message_headers},
             )
-            if settings.ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES:
+            if settings.SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA:
                 tasks.update_from_source_kafka_message.delay(
                     message_value, message_headers
                 )

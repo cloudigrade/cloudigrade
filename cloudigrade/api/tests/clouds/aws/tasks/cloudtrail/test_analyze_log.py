@@ -156,7 +156,7 @@ class AnalyzeLogTest(TestCase):
         self.assertEqual(len(failures), 0)
 
         # Assert that we deleted the message upon processing it.
-        mock_del.assert_called_with(settings.CLOUDTRAIL_EVENT_URL, [sqs_message])
+        mock_del.assert_called_with(settings.AWS_CLOUDTRAIL_EVENT_URL, [sqs_message])
 
         # We should *not* have described the instance because the CloudTrail
         # messages should have enough information to proceed.
@@ -293,7 +293,7 @@ class AnalyzeLogTest(TestCase):
         self.assertEqual(len(failures), 0)
 
         # Assert that we deleted the message upon processing it.
-        mock_del.assert_called_with(settings.CLOUDTRAIL_EVENT_URL, [sqs_message])
+        mock_del.assert_called_with(settings.AWS_CLOUDTRAIL_EVENT_URL, [sqs_message])
 
         # We should *not* have described the instance because the CloudTrail
         # messages should have enough information to proceed.
@@ -393,7 +393,7 @@ class AnalyzeLogTest(TestCase):
         self.assertEqual(len(failures), 0)
 
         # Assert that we deleted the message upon processing it.
-        mock_del.assert_called_with(settings.CLOUDTRAIL_EVENT_URL, [sqs_message])
+        mock_del.assert_called_with(settings.AWS_CLOUDTRAIL_EVENT_URL, [sqs_message])
 
         # We should *not* have described the instance because the CloudTrail
         # messages should have enough information to proceed.
@@ -505,7 +505,7 @@ class AnalyzeLogTest(TestCase):
         self.assertEqual(len(failures), 0)
 
         # Assert that we deleted the message upon processing it.
-        mock_del.assert_called_with(settings.CLOUDTRAIL_EVENT_URL, [sqs_message])
+        mock_del.assert_called_with(settings.AWS_CLOUDTRAIL_EVENT_URL, [sqs_message])
 
         # We *should* have described the instance because the CloudTrail record
         # should *not* have enough information to proceed.
@@ -603,7 +603,7 @@ class AnalyzeLogTest(TestCase):
         self.assertEqual(len(failures), 0)
 
         # Assert that we deleted the message upon processing it.
-        mock_del.assert_called_with(settings.CLOUDTRAIL_EVENT_URL, [sqs_message])
+        mock_del.assert_called_with(settings.AWS_CLOUDTRAIL_EVENT_URL, [sqs_message])
 
         # We should *not* have described the instance because the CloudTrail
         # record should have enough information to proceed.
@@ -689,8 +689,8 @@ class AnalyzeLogTest(TestCase):
         delete_message_calls = mock_del.call_args_list
         # Only the first and third message should be deleted.
         self.assertEqual(len(delete_message_calls), 2)
-        delete_1_call = call(settings.CLOUDTRAIL_EVENT_URL, [sqs_messages[0]])
-        delete_3_call = call(settings.CLOUDTRAIL_EVENT_URL, [sqs_messages[2]])
+        delete_1_call = call(settings.AWS_CLOUDTRAIL_EVENT_URL, [sqs_messages[0]])
+        delete_3_call = call(settings.AWS_CLOUDTRAIL_EVENT_URL, [sqs_messages[2]])
         self.assertIn(delete_1_call, delete_message_calls)
         self.assertIn(delete_3_call, delete_message_calls)
 
@@ -727,7 +727,7 @@ class AnalyzeLogTest(TestCase):
         self.assertEqual(len(successes), 1)
         self.assertEqual(len(failures), 0)
         mock_inspection.assert_not_called()
-        mock_del.assert_called_with(settings.CLOUDTRAIL_EVENT_URL, [sqs_message])
+        mock_del.assert_called_with(settings.AWS_CLOUDTRAIL_EVENT_URL, [sqs_message])
 
         instances = list(AwsInstance.objects.all())
         self.assertEqual(len(instances), 1)
@@ -796,7 +796,7 @@ class AnalyzeLogTest(TestCase):
         self.assertEqual(len(successes), 1)
         self.assertEqual(len(failures), 0)
         mock_inspection.assert_not_called()
-        mock_del.assert_called_with(settings.CLOUDTRAIL_EVENT_URL, [sqs_message])
+        mock_del.assert_called_with(settings.AWS_CLOUDTRAIL_EVENT_URL, [sqs_message])
 
         instances = list(AwsInstance.objects.all())
         self.assertEqual(len(instances), 1)

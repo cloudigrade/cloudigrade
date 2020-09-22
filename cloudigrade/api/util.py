@@ -500,7 +500,7 @@ def calculate_max_concurrent_usage_from_runs(runs):
         # If the task is scheduled (but has not started running) and it has been
         # in the queue for too long, then we revoke it and schedule a new task.
         elif last_calculate_task.created_at < datetime.now(tz=tz.tzutc()) - timedelta(
-            seconds=settings.CONCURRENT_USAGE_CALCULATION_DELAY
+            seconds=settings.SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY
         ):
             logger.info(
                 "Previous scheduled task to calculate concurrent usage for "
@@ -540,7 +540,7 @@ def schedule_concurrent_calculation_task(date, user_id):
     )
     calculate_max_concurrent_usage_task.apply_async(
         kwargs={"date": date, "user_id": user_id},
-        countdown=settings.CONCURRENT_USAGE_CALCULATION_DELAY,
+        countdown=settings.SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY,
         task_id=task_id,
     )
 

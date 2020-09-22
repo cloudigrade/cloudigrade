@@ -39,7 +39,7 @@ logger = logging.getLogger(__name__)
 @rewrap_aws_errors
 def analyze_log():
     """Read SQS Queue for log location, and parse log for events."""
-    queue_url = settings.CLOUDTRAIL_EVENT_URL
+    queue_url = settings.AWS_CLOUDTRAIL_EVENT_URL
     successes, failures = [], []
     for message in aws.yield_messages_from_queue(queue_url):
         success = False

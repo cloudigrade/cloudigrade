@@ -212,7 +212,7 @@ class InsightsTest(TestCase):
         application_id = _faker.pyint()
         availability_status = "available"
 
-        with override_settings(ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES=False):
+        with override_settings(SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA=False):
             insights.notify_sources_application_availability(
                 self.account_number,
                 application_id,

@@ -146,14 +146,20 @@ class DocsApiHandler(object):
             self.events.extend(
                 api_helper.generate_instance_events(
                     instance,
-                    [(self.last_week, self.three_days_ago), (self.yesterday, None),],
+                    [
+                        (self.last_week, self.three_days_ago),
+                        (self.yesterday, None),
+                    ],
                 )
             )
         for instance in self.customer_instances[3:6]:
             self.events.extend(
                 api_helper.generate_instance_events(
                     instance,
-                    [(self.last_week, self.three_days_ago), (self.yesterday, None),],
+                    [
+                        (self.last_week, self.three_days_ago),
+                        (self.yesterday, None),
+                    ],
                     cloud_type="azure",
                 )
             )
@@ -287,7 +293,8 @@ class DocsApiHandler(object):
             {"name": "name updated using PUT"}
         )
         response = self.customer_client.put_accounts(
-            customer_account.id, data=aws_cloud_account_put_different_name_data,
+            customer_account.id,
+            data=aws_cloud_account_put_different_name_data,
         )
         assert_status(response, 200)
         responses["v2_account_put"] = response
@@ -433,7 +440,7 @@ if __name__ == "__main__":
     faker.Faker.seed(0)
     docs_date = util_helper.utc_dt(2020, 5, 18, 13, 51, 59, 722367)
     with transaction.atomic(), override_settings(
-        ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES=False
+        SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA=False
     ), patch.object(uuid, "uuid4") as mock_uuid4, util_helper.clouditardis(docs_date):
         mock_uuid4.side_effect = seeded_uuid4
         api_hander = DocsApiHandler()

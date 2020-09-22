@@ -8,7 +8,7 @@ def reset_verify_tasks(apps, schema_editor):
     PeriodicTask = apps.get_model("django_celery_beat", "PeriodicTask")
 
     schedule, _ = IntervalSchedule.objects.get_or_create(
-        every=settings.VERIFY_VERIFY_TASKS_SCHEDULE_INTERVAL,
+        every=settings.SCHEDULE_VERIFY_VERIFY_TASKS_INTERVAL,
         period="seconds",
     )
 

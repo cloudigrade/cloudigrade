@@ -245,7 +245,7 @@ def generate_cloud_account(  # noqa: C901
 
         if verify_task is None and generate_verify_task:
             schedule, _ = IntervalSchedule.objects.get_or_create(
-                every=settings.VERIFY_VERIFY_TASKS_SCHEDULE_INTERVAL,
+                every=settings.SCHEDULE_VERIFY_VERIFY_TASKS_INTERVAL,
                 period=IntervalSchedule.SECONDS,
             )
             verify_task, _ = PeriodicTask.objects.get_or_create(

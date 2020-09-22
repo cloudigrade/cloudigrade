@@ -327,17 +327,20 @@ if env.bool("HOUNDIGRADE_ENABLE_SENTRY", default=False):
 else:
     HOUNDIGRADE_ENABLE_SENTRY = False
 
-CLOUDTRAIL_EVENT_URL = env(
-    "CLOUDTRAIL_EVENT_URL",
+AWS_CLOUDTRAIL_EVENT_URL = env(
+    "AWS_CLOUDTRAIL_EVENT_URL",
     default="https://sqs.us-east-1.amazonaws.com/123456789/cloudigrade-s3",
 )
 
-S3_BUCKET_NAME = env("S3_BUCKET_NAME", default="{0}cloudigrade".format(AWS_NAME_PREFIX))
-
-S3_BUCKET_LC_NAME = env("S3_BUCKET_LC_NAME", default="s3_lifecycle_policy")
-S3_BUCKET_LC_IA_TRANSITION = env.int("S3_BUCKET_LC_IA_TRANSITION", default=30)
-S3_BUCKET_LC_GLACIER_TRANSITION = env.int("S3_BUCKET_LC_GLACIER_TRANSITION", default=60)
-S3_BUCKET_LC_MAX_AGE = env.int("S3_BUCKET_LC_MAX_AGE", default=1460)
+AWS_S3_BUCKET_NAME = env(
+    "AWS_S3_BUCKET_NAME", default="{0}cloudigrade".format(AWS_NAME_PREFIX)
+)
+AWS_S3_BUCKET_LC_NAME = env("AWS_S3_BUCKET_LC_NAME", default="s3_lifecycle_policy")
+AWS_S3_BUCKET_LC_IA_TRANSITION = env.int("AWS_S3_BUCKET_LC_IA_TRANSITION", default=30)
+AWS_S3_BUCKET_LC_GLACIER_TRANSITION = env.int(
+    "AWS_S3_BUCKET_LC_GLACIER_TRANSITION", default=60
+)
+AWS_S3_BUCKET_LC_MAX_AGE = env.int("AWS_S3_BUCKET_LC_MAX_AGE", default=1460)
 
 CLOUDTRAIL_NAME_PREFIX = "cloudigrade-"
 
@@ -348,8 +351,8 @@ CELERY_BROKER_TRANSPORT_OPTIONS = {
 CELERY_BROKER_URL = AWS_SQS_URL
 QUEUE_EXCHANGE_NAME = None
 
-VERIFY_VERIFY_TASKS_SCHEDULE_INTERVAL = env.int(
-    "VERIFY_VERIFY_TASKS_SCHEDULE_INTERVAL", default=60 * 60 * 24
+SCHEDULE_VERIFY_VERIFY_TASKS_INTERVAL = env.int(
+    "SCHEDULE_VERIFY_VERIFY_TASKS_INTERVAL", default=60 * 60 * 24
 )  # 24 Hours)
 
 MAX_ALLOWED_INSPECTION_ATTEMPTS = env.int("MAX_ALLOWED_INSPECTION_ATTEMPTS", default=5)
@@ -407,7 +410,7 @@ CELERY_BEAT_SCHEDULE = {
     "persist_inspection_cluster_results": {
         "task": "api.tasks.persist_inspection_cluster_results_task",
         "schedule": env.int(
-            "PERSIST_INSPECTION_CLUSTER_RESULTS_SCHEDULE", default=5 * 60
+            "HOUNDIGRADE_ECS_PERSIST_INSPECTION_RESULTS_SCHEDULE", default=5 * 60
         ),
     },
     "inspect_pending_images": {
@@ -417,7 +420,9 @@ CELERY_BEAT_SCHEDULE = {
     # api.clouds.aws.tasks
     "scale_up_inspection_cluster_every_60_min": {
         "task": "api.clouds.aws.tasks.scale_up_inspection_cluster",
-        "schedule": env.int("SCALE_UP_INSPECTION_CLUSTER_SCHEDULE", default=60 * 60),
+        "schedule": env.int(
+            "HOUNDIGRADE_ECS_SCALE_UP_CLUSTER_SCHEDULE", default=60 * 60
+        ),
     },
     "analyze_log_every_2_mins": {
         "task": "api.clouds.aws.tasks.analyze_log",
@@ -426,7 +431,7 @@ CELERY_BEAT_SCHEDULE = {
     "repopulate_ec2_instance_mapping_every_week": {
         "task": "api.clouds.aws.tasks.repopulate_ec2_instance_mapping",
         "schedule": env.int(
-            "REPOPULATE_EC2_INSTANCE_MAPPING_SCHEDULE",
+            "AWS_REPOPULATE_EC2_INSTANCE_MAPPING_SCHEDULE",
             default=60 * 60 * 24 * 7,  # 1 week in seconds
         ),
     },
@@ -438,8 +443,8 @@ INSPECTION_CLUSTER_INSTANCE_AGE_LIMIT = env.int(
 )
 
 # Delay in seconds for concurrent usage calculation
-CONCURRENT_USAGE_CALCULATION_DELAY = env.int(
-    "CONCURRENT_USAGE_CALCULATION_DELAY", default=30 * 60
+SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY = env.int(
+    "SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY", default=30 * 60
 )
 
 # Misc Config Values
@@ -464,8 +469,8 @@ KAFKA_SESSION_TIMEOUT_MS = env.int("KAFKA_SESSION_TIMEOUT_MS", default=20000)
 
 LISTENER_PID_PATH = env("LISTENER_PID_PATH", default="/var/run/cloudigrade")
 
-ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES = env.bool(
-    "ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES",
+SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA = env.bool(
+    "SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA",
     default=True,
 )
 

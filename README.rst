@@ -146,7 +146,7 @@ AWS access for running **cloudigrade** inside a local OpenShift cluster must be 
 
 The values for ``AWS_`` keys and region may be reused for the ``AWS_SQS_`` variables. ``AWS_NAME_PREFIX`` should be set to something unique to your environment like ``${USER}-``.
 
-You'll also need to set the SQS URL for the log analyzer for the variable ``CLOUDTRAIL_EVENT_URL``. This URL can be found in the queue details pane and will look something like ``https://sqs.us-east-1.amazonaws.com/977153484089/iwhite-cloudigrade-sqs-s3``
+You'll also need to set the SQS URL for the log analyzer for the variable ``AWS_CLOUDTRAIL_EVENT_URL``. This URL can be found in the queue details pane and will look something like ``https://sqs.us-east-1.amazonaws.com/977153484089/iwhite-cloudigrade-sqs-s3``
 
 
 Configure Django settings module
@@ -424,7 +424,7 @@ Several environment variables may override defaults from ``config.settings`` to 
 - ``LISTENER_AUTO_COMMIT`` - Whether the messages being received should be marked as so
 - ``LISTENER_TIMEOUT`` - Timeout of the listener
 - ``LISTENER_PID_PATH`` - The path of the pid file
-- ``ENABLE_DATA_MANAGEMENT_FROM_KAFKA_SOURCES`` - bool to feature-flag creation and deletion of users and cloud accounts driven by Kafka messages. When disabled, cloudigrade will only log a message when it reads from the Kafka topic.
+- ``SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA`` - bool to feature-flag creation and deletion of users and cloud accounts driven by Kafka messages. When disabled, cloudigrade will only log a message when it reads from the Kafka topic.
 
 The listener will be automatically deployed to all OSD environments, including review. If you'd like to run it locally you don't need to do anything special, simply be in your virtual environment, set your environment variables, and call ``python cloudigrade/manage.py listen_to_sources``.
 

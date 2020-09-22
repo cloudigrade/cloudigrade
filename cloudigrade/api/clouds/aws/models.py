@@ -122,7 +122,7 @@ class AwsCloudAccount(BaseModel):
     def _enable_verify_task(self):
         """Enable the given AwsCloudAccount's Verify Task."""
         schedule, _ = IntervalSchedule.objects.get_or_create(
-            every=settings.VERIFY_VERIFY_TASKS_SCHEDULE_INTERVAL,
+            every=settings.SCHEDULE_VERIFY_VERIFY_TASKS_INTERVAL,
             period=IntervalSchedule.SECONDS,
         )
         verify_task, created = PeriodicTask.objects.get_or_create(

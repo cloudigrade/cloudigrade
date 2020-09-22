@@ -20,7 +20,7 @@ class Command(BaseCommand):
         settings.HOUNDIGRADE_RESULTS_QUEUE_NAME,
     ]
     queue_urls = [
-        settings.CLOUDTRAIL_EVENT_URL,
+        settings.AWS_CLOUDTRAIL_EVENT_URL,
     ]
 
     def handle(self, *args, **options):
