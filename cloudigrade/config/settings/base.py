@@ -121,14 +121,13 @@ HOUNDIGRADE_AWS_AVAILABILITY_ZONE = env(
 )
 HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME = env(
     "HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME",
-    default="EC2ContainerService-inspectigrade-test-bws-us-east-1b-"
-    "EcsInstanceAsg-JG9NX9WHX6NU",
+    default="EC2ContainerService-inspectigrade-EcsInstanceAsg",
 )
 HOUNDIGRADE_AWS_VOLUME_BATCH_SIZE = env.int(
     "HOUNDIGRADE_AWS_VOLUME_BATCH_SIZE", default=32
 )
 HOUNDIGRADE_ECS_CLUSTER_NAME = env(
-    "HOUNDIGRADE_ECS_CLUSTER_NAME", default="inspectigrade-test-bws-us-east-1b"
+    "HOUNDIGRADE_ECS_CLUSTER_NAME", default="inspectigrade-us-east-1b"
 )
 HOUNDIGRADE_ECS_FAMILY_NAME = env("HOUNDIGRADE_ECS_FAMILY_NAME", default="Houndigrade")
 HOUNDIGRADE_ECS_IMAGE_NAME = env(
@@ -330,7 +329,7 @@ else:
 
 CLOUDTRAIL_EVENT_URL = env(
     "CLOUDTRAIL_EVENT_URL",
-    default="https://sqs.us-east-1.amazonaws.com/123456789/test-cloudigrade-s3",
+    default="https://sqs.us-east-1.amazonaws.com/123456789/cloudigrade-s3",
 )
 
 S3_BUCKET_NAME = env("S3_BUCKET_NAME", default="{0}cloudigrade".format(AWS_NAME_PREFIX))
