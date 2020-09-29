@@ -25,7 +25,6 @@ class AvailabilityCheckViewTest(TestCase):
             user=self.user,
             platform_authentication_id=_faker.pyint(),
             platform_application_id=_faker.pyint(),
-            platform_endpoint_id=_faker.pyint(),
             platform_source_id=source_id,
             is_enabled=False,
         )
@@ -33,7 +32,6 @@ class AvailabilityCheckViewTest(TestCase):
             user=self.user,
             platform_authentication_id=_faker.pyint(),
             platform_application_id=_faker.pyint(),
-            platform_endpoint_id=_faker.pyint(),
             platform_source_id=source_id,
             is_enabled=False,
         )

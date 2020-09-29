@@ -30,7 +30,6 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
         session_account_id = util_helper.generate_dummy_aws_account_id()
         auth_id = _faker.pyint()
         application_id = _faker.pyint()
-        endpoint_id = _faker.pyint()
         source_id = _faker.pyint()
 
         customer_secret_access_key = util_helper.generate_dummy_arn(
@@ -58,7 +57,6 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
             customer_secret_access_key,
             auth_id,
             application_id,
-            endpoint_id,
             source_id,
         )
 
@@ -71,7 +69,6 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
             cloud_account_name,
             auth_id,
             application_id,
-            endpoint_id,
             source_id,
         )
 
@@ -87,7 +84,6 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
         customer_secret_access_key = util_helper.generate_dummy_arn()
         auth_id = _faker.pyint()
         application_id = _faker.pyint()
-        endpoint_id = _faker.pyint()
         source_id = _faker.pyint()
 
         tasks.configure_customer_aws_and_create_cloud_account(
@@ -95,7 +91,6 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
             customer_secret_access_key,
             auth_id,
             application_id,
-            endpoint_id,
             source_id,
         )
 
@@ -121,7 +116,6 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
         customer_secret_access_key = util_helper.generate_dummy_arn()
         auth_id = _faker.pyint()
         application_id = _faker.pyint()
-        endpoint_id = _faker.pyint()
         source_id = _faker.pyint()
 
         validation_error = ValidationError({"account_arn": "uh oh"})
@@ -132,7 +126,6 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
             customer_secret_access_key,
             auth_id,
             application_id,
-            endpoint_id,
             source_id,
         )
 
@@ -144,7 +137,6 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
         user = User.objects.create()
         auth_id = _faker.pyint()
         application_id = _faker.pyint()
-        endpoint_id = _faker.pyint()
         source_id = _faker.pyint()
         arn = "Badly formatted arn"
         with self.assertLogs("api.clouds.aws.tasks", level="INFO") as cm:
@@ -153,7 +145,6 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
                 arn,
                 auth_id,
                 application_id,
-                endpoint_id,
                 source_id,
             )
         self.assertIn("Invalid ARN.", cm.output[1])

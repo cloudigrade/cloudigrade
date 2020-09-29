@@ -117,12 +117,12 @@ class DocsApiHandler(object):
             created_at=self.two_weeks_ago,
         )
         self.azure_customer_account = api_helper.generate_cloud_account(
-            azure_subscription_id=uuid.uuid4(),
-            azure_tenant_id=uuid.uuid4(),
             user=self.customer_user,
             name="meh account",
             created_at=self.two_weeks_ago,
             cloud_type="azure",
+            azure_subscription_id=uuid.uuid4(),
+            azure_tenant_id=uuid.uuid4(),
         )
         self.customer_instances = [
             api_helper.generate_instance(self.aws_customer_account),

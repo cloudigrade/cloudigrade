@@ -167,7 +167,6 @@ def generate_cloud_account(  # noqa: C901
     created_at=None,
     platform_authentication_id=None,
     platform_application_id=None,
-    platform_endpoint_id=None,
     platform_source_id=None,
     is_enabled=True,
     enabled_at=None,
@@ -190,7 +189,6 @@ def generate_cloud_account(  # noqa: C901
         created_at (datetime): Optional creation datetime for this account.
         platform_authentication_id (int): Optional platform source authentication ID.
         platform_application_id (int): Optional platform source application ID.
-        platform_endpoint_id (int): Optional platform source endpoint ID.
         platform_source_id (int): Optional platform source source ID.
         is_enabled (bool): Optional should the account be enabled.
         enabled_at (datetime): Optional enabled datetime for this account.
@@ -221,9 +219,6 @@ def generate_cloud_account(  # noqa: C901
 
     if platform_application_id is None:
         platform_application_id = _faker.pyint()
-
-    if platform_endpoint_id is None:
-        platform_endpoint_id = _faker.pyint()
 
     if platform_source_id is None:
         platform_source_id = _faker.pyint()
@@ -275,7 +270,6 @@ def generate_cloud_account(  # noqa: C901
         content_object=cloud_provider_account,
         platform_authentication_id=platform_authentication_id,
         platform_application_id=platform_application_id,
-        platform_endpoint_id=platform_endpoint_id,
         platform_source_id=platform_source_id,
         is_enabled=is_enabled,
     )

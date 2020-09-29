@@ -810,7 +810,6 @@ def create_aws_cloud_account(
     cloud_account_name,
     platform_authentication_id,
     platform_application_id,
-    platform_endpoint_id,
     platform_source_id,
 ):
     """
@@ -828,7 +827,6 @@ def create_aws_cloud_account(
         cloud_account_name (str): the name to use for our CloudAccount
         platform_authentication_id (str): Platform Sources' Authentication object id
         platform_application_id (str): Platform Sources' Application object id
-        platform_endpoint_id (str): Platform Sources' Endpoint object id
         platform_source_id (str): Platform Sources' Source object id
 
     Returns:
@@ -843,7 +841,6 @@ def create_aws_cloud_account(
             "cloud_account_name=%(cloud_account_name)s, "
             "platform_authentication_id=%(platform_authentication_id)s, "
             "platform_application_id=%(platform_application_id)s, "
-            "platform_endpoint_id=%(platform_endpoint_id)s, "
             "platform_source_id=%(platform_source_id)s"
         ),
         {
@@ -852,7 +849,6 @@ def create_aws_cloud_account(
             "cloud_account_name": cloud_account_name,
             "platform_authentication_id": platform_authentication_id,
             "platform_application_id": platform_application_id,
-            "platform_endpoint_id": platform_endpoint_id,
             "platform_source_id": platform_source_id,
         },
     )
@@ -941,7 +937,6 @@ def create_aws_cloud_account(
             content_object=aws_cloud_account,
             platform_application_id=platform_application_id,
             platform_authentication_id=platform_authentication_id,
-            platform_endpoint_id=platform_endpoint_id,
             platform_source_id=platform_source_id,
         )
 
@@ -995,7 +990,6 @@ def update_aws_cloud_account(
     customer_arn,
     account_number,
     authentication_id,
-    endpoint_id,
     source_id,
 ):
     """
@@ -1006,7 +1000,6 @@ def update_aws_cloud_account(
         customer_arn (str): customer's ARN
         account_number (str): customer's account number
         authentication_id (str): Platform Sources' Authentication object id
-        endpoint_id (str): Platform Sources' Endpoint object id
         source_id (str): Platform Sources' Source object id
     """
     logger.info(
@@ -1016,7 +1009,6 @@ def update_aws_cloud_account(
             "customer_arn=%(customer_arn)s, "
             "account_number=%(account_number)s, "
             "authentication_id=%(authentication_id)s, "
-            "endpoint_id=%(endpoint_id)s, "
             "source_id=%(source_id)s"
         ),
         {
@@ -1024,7 +1016,6 @@ def update_aws_cloud_account(
             "customer_arn": customer_arn,
             "account_number": account_number,
             "authentication_id": authentication_id,
-            "endpoint_id": endpoint_id,
             "source_id": source_id,
         },
     )
@@ -1060,7 +1051,6 @@ def update_aws_cloud_account(
             customer_arn,
             authentication_id,
             application_id,
-            endpoint_id,
             source_id,
         )
 

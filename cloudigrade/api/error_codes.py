@@ -127,12 +127,12 @@ CG2001 = CloudigradeError(
 CG2002 = CloudigradeError(
     "CG2002",
     _(
-        "Resource ID %(endpoint_id)s for account number %(account_number)s "
-        "is not of type Endpoint; aborting cloud account creation."
+        "Resource ID %(resource_id)s for account number %(account_number)s "
+        "is not of type Application; aborting cloud account creation."
     ),
     _(
         GENERIC_ACCOUNT_SETUP_ERROR_MESSAGE_WITH_ERROR_CODE
-        + " Associated resource is not of type Endpoint."
+        + " Associated resource is not of type Application."
     ),
 )
 

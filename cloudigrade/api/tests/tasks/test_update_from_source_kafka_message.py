@@ -3,7 +3,6 @@ from unittest.mock import patch
 
 import faker
 from django.conf import settings
-from django.contrib.auth.models import User
 from django.test import TestCase
 from rest_framework.serializers import ValidationError
 
@@ -29,32 +28,39 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
         self.clount = api_helper.generate_cloud_account(
             arn=self.arn, platform_authentication_id=self.authentication_id
         )
+
+        self.username = _faker.user_name()
+        self.application_id = _faker.pyint()
+        self.source_id = _faker.pyint()
+
         self.account_number = str(_faker.pyint())
-        self.user = User.objects.create(username=self.account_number)
+        # self.user = User.objects.create(username=self.account_number)
 
-    @patch("util.insights.get_sources_endpoint")
-    @patch("util.insights.get_sources_authentication")
-    @patch("api.tasks.update_aws_cloud_account")
-    def test_update_from_sources_kafka_message_success(
-        self, mock_update_account, mock_get_auth, mock_get_endpoint
-    ):
-        """Assert update_from_source_kafka_message happy path success."""
-        username = _faker.user_name()
-        endpoint_id = _faker.pyint()
-        source_id = _faker.pyint()
-
-        message, headers = util_helper.generate_authentication_create_message_value(
-            self.account_number, username, self.authentication_id
-        )
-        mock_get_auth.return_value = {
+        self.auth_return_value = {
             "password": self.arn,
-            "username": username,
-            "resource_type": "Endpoint",
-            "resource_id": endpoint_id,
+            "username": self.username,
+            "resource_type": settings.SOURCES_RESOURCE_TYPE,
+            "resource_id": self.application_id,
             "id": self.authentication_id,
             "authtype": settings.SOURCES_CLOUDMETER_ARN_AUTHTYPE,
         }
-        mock_get_endpoint.return_value = {"id": endpoint_id, "source_id": source_id}
+        self.app_return_value = {
+            "source_id": self.source_id,
+            "id": self.application_id,
+        }
+
+    @patch("util.insights.get_sources_application")
+    @patch("util.insights.get_sources_authentication")
+    @patch("api.tasks.update_aws_cloud_account")
+    def test_update_from_sources_kafka_message_success(
+        self, mock_update_account, mock_get_auth, mock_get_app
+    ):
+        """Assert update_from_source_kafka_message happy path success."""
+        message, headers = util_helper.generate_authentication_create_message_value(
+            self.account_number, self.username, self.authentication_id
+        )
+        mock_get_auth.return_value = self.auth_return_value
+        mock_get_app.return_value = self.app_return_value
 
         tasks.update_from_source_kafka_message(message, headers)
 
@@ -63,34 +69,23 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
             self.arn,
             self.account_number,
             self.authentication_id,
-            endpoint_id,
-            source_id,
+            self.source_id,
         )
 
+    @patch("util.insights.get_sources_application")
     @patch("api.models.notify_sources_application_availability")
-    @patch("util.insights.get_sources_endpoint")
     @patch("util.insights.get_sources_authentication")
     def test_update_from_sources_kafka_message_updates_arn(
-        self, mock_get_auth, mock_get_endpoint, mock_notify_sources
+        self, mock_get_auth, mock_notify_sources, mock_get_app
     ):
         """Assert update_from_source_kafka_message updates the arn on the clount."""
-        username = _faker.user_name()
-        endpoint_id = _faker.pyint()
-        source_id = _faker.pyint()
-
         message, headers = util_helper.generate_authentication_create_message_value(
-            self.account_number, username, self.authentication_id
+            self.account_number, self.username, self.authentication_id
         )
         new_arn = util_helper.generate_dummy_arn(account_id=self.account_id)
-        mock_get_auth.return_value = {
-            "password": new_arn,
-            "username": username,
-            "resource_type": "Endpoint",
-            "resource_id": endpoint_id,
-            "id": self.authentication_id,
-            "authtype": settings.SOURCES_CLOUDMETER_ARN_AUTHTYPE,
-        }
-        mock_get_endpoint.return_value = {"id": endpoint_id, "source_id": source_id}
+        self.auth_return_value["password"] = new_arn
+        mock_get_auth.return_value = self.auth_return_value
+        mock_get_app.return_value = self.app_return_value
 
         with patch("api.clouds.aws.util.verify_permissions") as mock_verify_permissions:
             mock_verify_permissions.return_value = True
@@ -102,11 +97,11 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
         self.assertTrue(self.clount.is_enabled)
         mock_notify_sources.assert_called()
 
+    @patch("util.insights.get_sources_application")
     @patch("api.models.notify_sources_application_availability")
-    @patch("util.insights.get_sources_endpoint")
     @patch("util.insights.get_sources_authentication")
     def test_update_from_sources_kafka_message_updates_arn_but_disables_cloud_account(
-        self, mock_get_auth, mock_get_endpoint, mock_notify_sources
+        self, mock_get_auth, mock_notify_sources, mock_get_app
     ):
         """
         Assert update_from_source_kafka_message updates the arn and disables clount.
@@ -116,23 +111,14 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
         want to save the updated ARN, but we need to disable the Cloud Account until it
         can verify its permissions (at a later date).
         """
-        username = _faker.user_name()
-        endpoint_id = _faker.pyint()
-        source_id = _faker.pyint()
-
         message, headers = util_helper.generate_authentication_create_message_value(
-            self.account_number, username, self.authentication_id
+            self.account_number, self.username, self.authentication_id
         )
         new_arn = util_helper.generate_dummy_arn(account_id=self.account_id)
-        mock_get_auth.return_value = {
-            "password": new_arn,
-            "username": username,
-            "resource_type": "Endpoint",
-            "resource_id": endpoint_id,
-            "id": self.authentication_id,
-            "authtype": settings.SOURCES_CLOUDMETER_ARN_AUTHTYPE,
-        }
-        mock_get_endpoint.return_value = {"id": endpoint_id, "source_id": source_id}
+        self.auth_return_value["password"] = new_arn
+
+        mock_get_auth.return_value = self.auth_return_value
+        mock_get_app.return_value = self.app_return_value
 
         validation_error = ValidationError(detail={_faker.slug(): _faker.slug()})
         with patch("api.clouds.aws.util.verify_permissions") as mock_verify_permissions:
@@ -155,41 +141,32 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
 
         mock_update_account.assert_not_called()
 
-    @patch("util.insights.get_sources_endpoint")
+    @patch("util.insights.get_sources_application")
     @patch("util.insights.get_sources_authentication")
     @patch("api.tasks.update_aws_cloud_account")
     def test_update_from_sources_kafka_message_fail_bad_authtype(
-        self, mock_update_account, mock_get_auth, mock_get_endpoint
+        self, mock_update_account, mock_get_auth, mock_get_app
     ):
         """Assert update_from_source_kafka_message not called for invalid authtype."""
-        username = _faker.user_name()
-        endpoint_id = _faker.pyint()
-        source_id = _faker.pyint()
-
         message, headers = util_helper.generate_authentication_create_message_value(
-            self.account_number, username, self.authentication_id
+            self.account_number, self.username, self.authentication_id
         )
         new_arn = util_helper.generate_dummy_arn(account_id=self.account_id)
-        mock_get_auth.return_value = {
-            "password": new_arn,
-            "username": username,
-            "resource_type": "Endpoint",
-            "resource_id": endpoint_id,
-            "id": self.authentication_id,
-            "authtype": "INVALID",
-        }
-        mock_get_endpoint.return_value = {"id": endpoint_id, "source_id": source_id}
+
+        self.auth_return_value["password"] = new_arn
+        self.auth_return_value["authtype"] = "INVALID"
+        mock_get_auth.return_value = self.auth_return_value
+        mock_get_app.return_value = self.app_return_value
 
         tasks.update_from_source_kafka_message(message, headers)
-
         mock_update_account.assert_not_called()
 
+    @patch("util.insights.get_sources_application")
     @patch("api.models.notify_sources_application_availability")
     @patch("api.clouds.aws.tasks.configure_customer_aws_and_create_cloud_account")
-    @patch("util.insights.get_sources_endpoint")
     @patch("util.insights.get_sources_authentication")
     def test_update_from_sources_kafka_message_new_aws_account_id(
-        self, mock_get_auth, mock_get_endpoint, mock_create_clount, mock_notify_sources
+        self, mock_get_auth, mock_create_clount, mock_notify_sources, mock_get_app
     ):
         """
         Assert the new cloud account created for new aws_account_id.
@@ -197,25 +174,15 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
         A new CloudAccount will get created with the new arn. And the old
         CloudAccount will be removed.
         """
-        username = _faker.user_name()
-        endpoint_id = _faker.pyint()
-        source_id = _faker.pyint()
-
         message, headers = util_helper.generate_authentication_create_message_value(
-            self.account_number, username, self.authentication_id
+            self.account_number, self.username, self.authentication_id
         )
         new_account_id = util_helper.generate_dummy_aws_account_id()
         new_arn = util_helper.generate_dummy_arn(account_id=new_account_id)
 
-        mock_get_auth.return_value = {
-            "password": new_arn,
-            "username": username,
-            "resource_type": "Endpoint",
-            "resource_id": endpoint_id,
-            "id": self.authentication_id,
-            "authtype": settings.SOURCES_CLOUDMETER_ARN_AUTHTYPE,
-        }
-        mock_get_endpoint.return_value = {"id": endpoint_id, "source_id": source_id}
+        self.auth_return_value["password"] = new_arn
+        mock_get_auth.return_value = self.auth_return_value
+        mock_get_app.return_value = self.app_return_value
 
         with patch.object(sts, "boto3") as mock_boto3, patch.object(
             aws_models, "_delete_cloudtrail"
@@ -234,7 +201,6 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
         self, mock_update_account, mock_list_sources_app_auths
     ):
         """Assert that nothing happens if update is called on an unknown authid."""
-        username = _faker.user_name()
         new_authentication_id = _faker.pyint()
         mock_list_sources_app_auths.return_value = {
             "data": [],
@@ -244,7 +210,7 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
         }
 
         message, headers = util_helper.generate_authentication_create_message_value(
-            self.account_number, username, new_authentication_id
+            self.account_number, self.username, new_authentication_id
         )
         tasks.update_from_source_kafka_message(message, headers)
         mock_update_account.assert_not_called()
@@ -256,7 +222,6 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
         self, mock_update_account, mock_create_account, mock_list_sources_app_auths
     ):
         """Assert that updating an unknown Auth obj meant for us creates account."""
-        username = _faker.user_name()
         new_authentication_id = _faker.pyint()
         app_auth_data = {
             "application_id": "1001",
@@ -276,7 +241,7 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
         }
 
         message, headers = util_helper.generate_authentication_create_message_value(
-            self.account_number, username, new_authentication_id
+            self.account_number, self.username, new_authentication_id
         )
         tasks.update_from_source_kafka_message(message, headers)
         mock_create_account.delay.assert_called_once_with(app_auth_data, headers)
@@ -303,36 +268,9 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
         mock_update_account.delay.assert_not_called()
 
     @patch("util.insights.get_sources_authentication")
-    @patch("util.insights.get_sources_endpoint")
-    @patch("api.tasks.update_aws_cloud_account")
-    def test_update_from_sources_kafka_message_returns_early_when_endpoint_404(
-        self, mock_update_account, mock_get_endpoint, mock_get_auth
-    ):
-        """
-        Assert update_from_sources_kafka_message returns if sources endpoint 404s.
-
-        This could happen if the endpoint has been deleted from the
-        sources API by the time this task runs.
-        """
-        message, headers = util_helper.generate_authentication_create_message_value(
-            account_number=self.account_number, platform_id=self.authentication_id
-        )
-        mock_get_auth.return_value = {
-            "resource_id": _faker.pyint(),
-            "resource_type": settings.SOURCES_ENDPOINT_TYPE,
-        }
-        mock_get_endpoint.return_value = None
-
-        tasks.update_from_source_kafka_message(message, headers)
-
-        mock_get_endpoint.assert_called()
-        mock_update_account.delay.assert_not_called()
-
-    @patch("util.insights.get_sources_authentication")
-    @patch("util.insights.get_sources_endpoint")
     @patch("api.tasks.update_aws_cloud_account")
     def test_create_returns_early_when_resource_type_invalid(
-        self, mock_update_account, mock_get_endpoint, mock_get_auth
+        self, mock_update_account, mock_get_auth
     ):
         """Assert task returns if resource_type is invalid."""
         message, headers = util_helper.generate_authentication_create_message_value(
@@ -345,5 +283,4 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
 
         tasks.update_from_source_kafka_message(message, headers)
 
-        mock_get_endpoint.assert_not_called()
         mock_update_account.delay.assert_not_called()

@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 )
 @rewrap_aws_errors
 def configure_customer_aws_and_create_cloud_account(
-    username, customer_arn, authentication_id, application_id, endpoint_id, source_id
+    username, customer_arn, authentication_id, application_id, source_id
 ):
     """
     Configure the customer's AWS account and create our CloudAccount.
@@ -45,7 +45,6 @@ def configure_customer_aws_and_create_cloud_account(
         customer_arn (str): customer's ARN
         authentication_id (str): Platform Sources' Authentication object id
         application_id (str): Platform Sources' Application object id
-        endpoint_id (str): Platform Sources' Endpoint object id
         source_id (str): Platform Sources' Source object id
     """
     try:
@@ -73,7 +72,6 @@ def configure_customer_aws_and_create_cloud_account(
             cloud_account_name,
             authentication_id,
             application_id,
-            endpoint_id,
             source_id,
         )
     except ValidationError as e:

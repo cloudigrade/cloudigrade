@@ -83,7 +83,6 @@ class CloudAccountSerializer(ModelSerializer):
             "is_enabled",
             "platform_authentication_id",
             "platform_application_id",
-            "platform_endpoint_id",
             "platform_source_id",
         )
         read_only_fields = (
@@ -186,7 +185,6 @@ class CloudAccountSerializer(ModelSerializer):
         name = validated_data.get("name")
         platform_authentication_id = validated_data.get("platform_authentication_id")
         platform_application_id = validated_data.get("platform_application_id")
-        platform_endpoint_id = validated_data.get("platform_endpoint_id")
         platform_source_id = validated_data.get("platform_source_id")
         cloud_account = create_aws_cloud_account(
             user,
@@ -194,7 +192,6 @@ class CloudAccountSerializer(ModelSerializer):
             name,
             platform_authentication_id,
             platform_application_id,
-            platform_endpoint_id,
             platform_source_id,
         )
         return cloud_account
@@ -208,7 +205,6 @@ class CloudAccountSerializer(ModelSerializer):
 
         platform_authentication_id = validated_data.get("platform_authentication_id")
         platform_application_id = validated_data.get("platform_application_id")
-        platform_endpoint_id = validated_data.get("platform_endpoint_id")
         platform_source_id = validated_data.get("platform_source_id")
         cloud_account = create_azure_cloud_account(
             user,
@@ -217,7 +213,6 @@ class CloudAccountSerializer(ModelSerializer):
             tenant_id,
             platform_authentication_id,
             platform_application_id,
-            platform_endpoint_id,
             platform_source_id,
         )
         return cloud_account

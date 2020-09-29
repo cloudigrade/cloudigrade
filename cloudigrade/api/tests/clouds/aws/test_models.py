@@ -55,8 +55,8 @@ class AwsCloudAccountModelTest(TransactionTestCase, ModelStrTestMixin):
         arn = util_helper.generate_dummy_arn(account_id=aws_account_id)
         self.role = util_helper.generate_dummy_role()
         self.account = helper.generate_cloud_account(
-            aws_account_id=aws_account_id,
             arn=arn,
+            aws_account_id=aws_account_id,
             name="test",
             created_at=self.created_at,
             generate_verify_task=False,

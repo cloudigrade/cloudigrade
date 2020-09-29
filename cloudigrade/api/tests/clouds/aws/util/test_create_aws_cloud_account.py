@@ -23,20 +23,13 @@ class CreateAWSClountTest(TestCase):
         self.name = _faker.word()
         self.auth_id = _faker.pyint()
         self.app_id = _faker.pyint()
-        self.endpoint_id = _faker.pyint()
         self.source_id = _faker.pyint()
 
     @patch.object(CloudAccount, "enable")
     def test_create_aws_clount_success(self, mock_enable):
         """Test create_aws_cloud_account success."""
         util.create_aws_cloud_account(
-            self.user,
-            self.arn,
-            self.name,
-            self.auth_id,
-            self.app_id,
-            self.endpoint_id,
-            self.source_id,
+            self.user, self.arn, self.name, self.auth_id, self.app_id, self.source_id
         )
 
         mock_enable.assert_called()
@@ -53,13 +46,7 @@ class CreateAWSClountTest(TestCase):
         this test and its underlying logic must be rewritten.
         """
         util.create_aws_cloud_account(
-            self.user,
-            self.arn,
-            self.name,
-            self.auth_id,
-            self.app_id,
-            self.endpoint_id,
-            self.source_id,
+            self.user, self.arn, self.name, self.auth_id, self.app_id, self.source_id
         )
 
         other_name = self.name = _faker.word()
@@ -75,7 +62,6 @@ class CreateAWSClountTest(TestCase):
                 other_name,
                 self.auth_id,
                 self.app_id,
-                self.endpoint_id,
                 self.source_id,
             )
         exception_detail = raise_context.exception.detail
@@ -92,13 +78,7 @@ class CreateAWSClountTest(TestCase):
     ):
         """Test create_aws_cloud_account fails with same ARN and a different user."""
         util.create_aws_cloud_account(
-            self.user,
-            self.arn,
-            self.name,
-            self.auth_id,
-            self.app_id,
-            self.endpoint_id,
-            self.source_id,
+            self.user, self.arn, self.name, self.auth_id, self.app_id, self.source_id
         )
 
         other_user = util_helper.generate_test_user()
@@ -111,7 +91,6 @@ class CreateAWSClountTest(TestCase):
                 other_name,
                 self.auth_id,
                 self.app_id,
-                self.endpoint_id,
                 self.source_id,
             )
         exception_detail = raise_context.exception.detail
@@ -129,19 +108,12 @@ class CreateAWSClountTest(TestCase):
         """Test create_aws_cloud_account fails with same name different platform IDs."""
         # The first call just creates the existing objects.
         util.create_aws_cloud_account(
-            self.user,
-            self.arn,
-            self.name,
-            self.auth_id,
-            self.app_id,
-            self.endpoint_id,
-            self.source_id,
+            self.user, self.arn, self.name, self.auth_id, self.app_id, self.source_id
         )
 
         other_arn = util_helper.generate_dummy_arn()
         other_auth_id = _faker.pyint()
         other_app_id = _faker.pyint()
-        other_endpoint_id = _faker.pyint()
         other_source_id = _faker.pyint()
 
         with self.assertRaises(ValidationError) as raise_context:
@@ -151,7 +123,6 @@ class CreateAWSClountTest(TestCase):
                 self.name,
                 other_auth_id,
                 other_app_id,
-                other_endpoint_id,
                 other_source_id,
             )
         exception_detail = raise_context.exception.detail
@@ -166,13 +137,7 @@ class CreateAWSClountTest(TestCase):
     ):
         """Test create_aws_cloud_account failure message for same user."""
         util.create_aws_cloud_account(
-            self.user,
-            self.arn,
-            self.name,
-            self.auth_id,
-            self.app_id,
-            self.endpoint_id,
-            self.source_id,
+            self.user, self.arn, self.name, self.auth_id, self.app_id, self.source_id
         )
 
         other_name = self.name = _faker.word()
@@ -183,7 +148,6 @@ class CreateAWSClountTest(TestCase):
                 other_name,
                 self.auth_id,
                 self.app_id,
-                self.endpoint_id,
                 self.source_id,
             )
         exception_detail = raise_context.exception.detail
@@ -201,13 +165,7 @@ class CreateAWSClountTest(TestCase):
         """Test create_aws_cloud_account failure message for different user."""
         # The first call just creates the existing objects.
         util.create_aws_cloud_account(
-            self.user,
-            self.arn,
-            self.name,
-            self.auth_id,
-            self.app_id,
-            self.endpoint_id,
-            self.source_id,
+            self.user, self.arn, self.name, self.auth_id, self.app_id, self.source_id
         )
 
         other_arn = util_helper.generate_dummy_arn(
@@ -215,7 +173,6 @@ class CreateAWSClountTest(TestCase):
         )
         other_auth_id = _faker.pyint()
         other_app_id = _faker.pyint()
-        other_endpoint_id = _faker.pyint()
         other_source_id = _faker.pyint()
         other_user = util_helper.generate_test_user()
 
@@ -226,7 +183,6 @@ class CreateAWSClountTest(TestCase):
                 self.name,
                 other_auth_id,
                 other_app_id,
-                other_endpoint_id,
                 other_source_id,
             )
         exception_detail = raise_context.exception.detail

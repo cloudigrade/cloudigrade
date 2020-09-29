@@ -67,29 +67,6 @@ def get_sources_authentication(account_number, authentication_id):
     return make_sources_call(account_number, url, headers, params)
 
 
-def get_sources_endpoint(account_number, endpoint_id):
-    """
-    Get an Endpoint object from the Sources API.
-
-    If the `requests.get` itself fails unexpectedly, let the exception bubble
-    up to be handled by a higher level in the stack.
-
-    Args:
-        account_number (str): account number identifier for Insights auth
-        endpoint_id (int): the requested endpoint's id
-
-    Returns:
-        dict response payload from the sources api.
-    """
-    sources_api_base_url = settings.SOURCES_API_BASE_URL
-    sources_api_external_uri = settings.SOURCES_API_EXTERNAL_URI
-
-    url = f"{sources_api_base_url}/{sources_api_external_uri}endpoints/{endpoint_id}/"
-
-    headers = generate_http_identity_headers(account_number, is_org_admin=True)
-    return make_sources_call(account_number, url, headers)
-
-
 def get_sources_application(account_number, application_id):
     """
     Get an Application object from the Sources API.

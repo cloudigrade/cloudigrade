@@ -181,7 +181,6 @@ def generate_dummy_aws_cloud_account_post_data():
         "name": _faker.bs()[:256],
         "platform_authentication_id": _faker.pyint(),
         "platform_application_id": _faker.pyint(),
-        "platform_endpoint_id": _faker.pyint(),
         "platform_source_id": _faker.pyint(),
     }
     return data
@@ -201,7 +200,6 @@ def generate_dummy_azure_cloud_account_post_data():
         "name": _faker.bs()[:256],
         "platform_authentication_id": _faker.pyint(),
         "platform_application_id": _faker.pyint(),
-        "platform_endpoint_id": _faker.pyint(),
         "platform_source_id": _faker.pyint(),
     }
     return data

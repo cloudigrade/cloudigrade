@@ -22,13 +22,11 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         """Set up common variables for tests."""
         self.authentication_id = _faker.pyint()
         self.application_id = _faker.pyint()
-        self.endpoint_id = _faker.pyint()
         self.source_id = _faker.pyint()
 
         self.account = api_helper.generate_cloud_account(
             platform_authentication_id=self.authentication_id,
             platform_application_id=self.application_id,
-            platform_endpoint_id=self.endpoint_id,
             platform_source_id=self.source_id,
         )
         self.user = self.account.user
@@ -128,7 +126,7 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         account_number = str(self.user.username)
         username = _faker.user_name()
         message, headers = util_helper.generate_authentication_create_message_value(
-            account_number, username, platform_id=self.endpoint_id
+            account_number, username, platform_id=self.application_id
         )
 
         with patch.object(sts, "boto3") as mock_boto3, patch.object(
@@ -137,9 +135,8 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
             role = util_helper.generate_dummy_role()
             mock_assume_role = mock_boto3.client.return_value.assume_role
             mock_assume_role.return_value = role
-
             tasks.delete_from_sources_kafka_message(
-                message, headers, settings.ENDPOINT_DESTROY_EVENT
+                message, headers, settings.APPLICATION_DESTROY_EVENT
             )
         self.assertEqual(CloudAccount.objects.count(), 0)
         self.assertEqual(aws_models.AwsCloudAccount.objects.count(), 0)

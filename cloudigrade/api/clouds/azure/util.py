@@ -19,7 +19,6 @@ def create_azure_cloud_account(
     tenant_id,
     platform_authentication_id,
     platform_application_id,
-    platform_endpoint_id,
     platform_source_id,
 ):
     """
@@ -37,7 +36,6 @@ def create_azure_cloud_account(
         tenant_id (str): UUID of the customer tenant
         platform_authentication_id (str): Platform Sources' Authentication object id
         platform_application_id (str): Platform Sources' Application object id
-        platform_endpoint_id (str): Platform Sources' Endpoint object id
         platform_source_id (str): Platform Sources' Source object id
 
     Returns:
@@ -52,7 +50,6 @@ def create_azure_cloud_account(
             "tenant_id=%(tenant_id)s, "
             "platform_authentication_id=%(platform_authentication_id)s, "
             "platform_application_id=%(platform_application_id)s, "
-            "platform_endpoint_id=%(platform_endpoint_id)s, "
             "platform_source_id=%(platform_source_id)s"
         ),
         {
@@ -61,7 +58,6 @@ def create_azure_cloud_account(
             "tenant_id": tenant_id,
             "platform_authentication_id": platform_authentication_id,
             "platform_application_id": platform_application_id,
-            "platform_endpoint_id": platform_endpoint_id,
             "platform_source_id": platform_source_id,
         },
     )
@@ -76,7 +72,6 @@ def create_azure_cloud_account(
             content_object=azure_cloud_account,
             platform_application_id=platform_application_id,
             platform_authentication_id=platform_authentication_id,
-            platform_endpoint_id=platform_endpoint_id,
             platform_source_id=platform_source_id,
         )
 

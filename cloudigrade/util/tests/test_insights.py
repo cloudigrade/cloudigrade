@@ -20,7 +20,6 @@ class InsightsTest(TestCase):
         """Set up test data."""
         self.account_number = str(_faker.pyint())
         self.authentication_id = _faker.user_name()
-        self.endpoint_id = _faker.pyint()
         self.application_id = _faker.pyint()
 
     def test_generate_http_identity_headers(self):
@@ -86,17 +85,6 @@ class InsightsTest(TestCase):
         mock_get.assert_called()
 
     @patch("requests.get")
-    def test_get_sources_endpoint_success(self, mock_get):
-        """Assert get_sources_endpoint returns response content."""
-        expected = {"hello": "world"}
-        mock_get.return_value.status_code = http.HTTPStatus.OK
-        mock_get.return_value.json.return_value = expected
-
-        endpoint = insights.get_sources_endpoint(self.account_number, self.endpoint_id)
-        self.assertEqual(endpoint, expected)
-        mock_get.assert_called()
-
-    @patch("requests.get")
     def test_get_sources_authentication_fail_500(self, mock_get):
         """Assert get_sources_authentication fails when response is not-200/404."""
         mock_get.return_value.status_code = http.HTTPStatus.INTERNAL_SERVER_ERROR
@@ -105,15 +93,6 @@ class InsightsTest(TestCase):
                 self.account_number, self.authentication_id
             )
 
-        mock_get.assert_called()
-
-    @patch("requests.get")
-    def test_get_sources_endpoint_not_found(self, mock_get):
-        """Assert get_sources_endpoint returns None if not found."""
-        mock_get.return_value.status_code = http.HTTPStatus.NOT_FOUND
-
-        endpoint = insights.get_sources_endpoint(self.account_number, self.endpoint_id)
-        self.assertIsNone(endpoint)
         mock_get.assert_called()
 
     def test_get_x_rh_identity_header_success(self):
