@@ -98,10 +98,41 @@ class SchemaTestCase(TestCase):
                             "schema": {
                                 "type": "object",
                                 "properties": {
-                                    "count": {"type": "integer", "example": 123},
-                                    "next": {"type": "string", "nullable": True},
-                                    "previous": {"type": "string", "nullable": True},
-                                    "results": {
+                                    "meta": {
+                                        "type": "object",
+                                        "properties": {
+                                            "count": {
+                                                "type": "integer",
+                                                "example": 123,
+                                            }
+                                        },
+                                    },
+                                    "links": {
+                                        "type": "object",
+                                        "properties": {
+                                            "first": {
+                                                "type": "string",
+                                                "nullable": True,
+                                                "format": "uri",
+                                            },
+                                            "last": {
+                                                "type": "string",
+                                                "nullable": True,
+                                                "format": "uri",
+                                            },
+                                            "next": {
+                                                "type": "string",
+                                                "nullable": True,
+                                                "format": "uri",
+                                            },
+                                            "previous": {
+                                                "type": "string",
+                                                "nullable": True,
+                                                "format": "uri",
+                                            },
+                                        },
+                                    },
+                                    "data": {
                                         "type": "array",
                                         "items": {
                                             "properties": {
