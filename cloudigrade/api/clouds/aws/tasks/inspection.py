@@ -184,31 +184,7 @@ def run_inspection_cluster(messages, cloud="aws"):  # noqa: C901
         None: Run as an asynchronous Celery task.
 
     """
-    relevant_messages = []
-    for message in messages:
-        try:
-            ec2_ami_id = message.get("ami_id")
-            aws_machine_image = AwsMachineImage.objects.get(ec2_ami_id=ec2_ami_id)
-            machine_image = aws_machine_image.machine_image.get()
-            machine_image.status = MachineImage.INSPECTING
-            machine_image.save()
-            relevant_messages.append(message)
-        except AwsMachineImage.DoesNotExist:
-            logger.warning(
-                _(
-                    "Skipping inspection because we do not have an "
-                    "AwsMachineImage for %(ec2_ami_id)s (%(message)s)"
-                ),
-                {"ec2_ami_id": ec2_ami_id, "message": message},
-            )
-        except MachineImage.DoesNotExist:
-            logger.warning(
-                _(
-                    "Skipping inspection because we do not have a "
-                    "MachineImage for %(ec2_ami_id)s (%(message)s)"
-                ),
-                {"ec2_ami_id": ec2_ami_id, "message": message},
-            )
+    relevant_messages = _filter_messages_for_inspection(messages)
 
     if not relevant_messages:
         # Early return if nothing actually needs inspection.
@@ -363,6 +339,51 @@ def run_inspection_cluster(messages, cloud="aws"):  # noqa: C901
         cluster=settings.HOUNDIGRADE_ECS_CLUSTER_NAME,
         taskDefinition=task_definition_arn,
     )
+
+
+def _filter_messages_for_inspection(messages):
+    """
+    Filter messages to only images that exist for inspection.
+
+    Important note: This also has the side effect of *updating* our saved models to
+    indicate that the relevant images now have the "inspecting" status.
+
+    Args:
+        messages (list): list of dicts describing images to inspect. items look like
+            {"ami_id": "ami-1234567890", "volume_id": "vol-1234567890"}
+
+    Returns:
+        list of dicts describing images to inspect. items look like
+        {"ami_id": "ami-1234567890", "volume_id": "vol-1234567890"}
+
+    """
+    relevant_messages = []
+    for message in messages:
+        try:
+            ec2_ami_id = message.get("ami_id")
+            aws_machine_image = AwsMachineImage.objects.get(ec2_ami_id=ec2_ami_id)
+            machine_image = aws_machine_image.machine_image.get()
+            machine_image.status = MachineImage.INSPECTING
+            machine_image.save()
+            relevant_messages.append(message)
+        except AwsMachineImage.DoesNotExist:
+            logger.warning(
+                _(
+                    "Skipping inspection because we do not have an "
+                    "AwsMachineImage for %(ec2_ami_id)s (%(message)s)"
+                ),
+                {"ec2_ami_id": ec2_ami_id, "message": message},
+            )
+        except MachineImage.DoesNotExist:
+            logger.warning(
+                _(
+                    "Skipping inspection because we do not have a "
+                    "MachineImage for %(ec2_ami_id)s (%(message)s)"
+                    "MachineImage for %(ec2_ami_id)s (%(message)s)"
+                ),
+                {"ec2_ami_id": ec2_ami_id, "message": message},
+            )
+    return relevant_messages
 
 
 def _build_container_definition(task_command):
