@@ -35,6 +35,7 @@ from api.clouds.aws.tasks.imageprep import (
     remove_snapshot_ownership,
 )
 from api.clouds.aws.tasks.inspection import (
+    attach_volumes_to_cluster,
     run_inspection_cluster,
     scale_down_cluster,
     scale_up_inspection_cluster,

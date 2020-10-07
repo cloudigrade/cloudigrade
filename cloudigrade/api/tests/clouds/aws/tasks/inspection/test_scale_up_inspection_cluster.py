@@ -18,11 +18,11 @@ class ScaleUpInspectionClusterTest(TestCase):
             settings.AWS_NAME_PREFIX
         )
 
-    @patch("api.clouds.aws.tasks.inspection.run_inspection_cluster")
+    @patch("api.clouds.aws.tasks.inspection.attach_volumes_to_cluster")
     @patch("api.clouds.aws.tasks.inspection.check_cluster_instances_age")
     @patch("api.clouds.aws.tasks.inspection.aws")
     def test_scale_up_inspection_cluster_success(
-        self, mock_aws, mock_check, mock_run_inspection_cluster
+        self, mock_aws, mock_check, mock_attach_cluster_volumes
     ):
         """Assert successful scaling with empty cluster and queued messages."""
         messages = [Mock()]
@@ -42,14 +42,14 @@ class ScaleUpInspectionClusterTest(TestCase):
         mock_aws.scale_up.assert_called_once_with(
             settings.HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME
         )
-        mock_run_inspection_cluster.delay.assert_called_once_with(messages)
+        mock_attach_cluster_volumes.delay.assert_called_once_with(messages)
         mock_aws.add_messages_to_queue.assert_not_called()
 
-    @patch("api.clouds.aws.tasks.inspection.run_inspection_cluster")
+    @patch("api.clouds.aws.tasks.inspection.attach_volumes_to_cluster")
     @patch("api.clouds.aws.tasks.inspection.check_cluster_instances_age")
     @patch("api.clouds.aws.tasks.inspection.aws")
     def test_scale_up_inspection_cluster_aborts_when_not_scaled_down(
-        self, mock_aws, mock_check, mock_run_inspection_cluster
+        self, mock_aws, mock_check, mock_attach_cluster_volumes
     ):
         """Assert scale up aborts when not scaled down."""
         instance_ids = [
@@ -73,14 +73,14 @@ class ScaleUpInspectionClusterTest(TestCase):
         )
         mock_aws.scale_up.assert_not_called()
         mock_aws.read_messages_from_queue.assert_not_called()
-        mock_run_inspection_cluster.delay.assert_not_called()
+        mock_attach_cluster_volumes.delay.assert_not_called()
         mock_aws.add_messages_to_queue.assert_not_called()
 
-    @patch("api.clouds.aws.tasks.inspection.run_inspection_cluster")
+    @patch("api.clouds.aws.tasks.inspection.attach_volumes_to_cluster")
     @patch("api.clouds.aws.tasks.inspection.check_cluster_instances_age")
     @patch("api.clouds.aws.tasks.inspection.aws")
     def test_scale_up_inspection_cluster_aborts_when_no_messages(
-        self, mock_aws, mock_check, mock_run_inspection_cluster
+        self, mock_aws, mock_check, mock_attach_cluster_volumes
     ):
         """Assert scale up aborts when not scaled down."""
         mock_aws.is_scaled_down.return_value = True, dict()
@@ -97,14 +97,14 @@ class ScaleUpInspectionClusterTest(TestCase):
             self.ready_volumes_queue_name,
             settings.HOUNDIGRADE_AWS_VOLUME_BATCH_SIZE,
         )
-        mock_run_inspection_cluster.delay.assert_not_called()
+        mock_attach_cluster_volumes.delay.assert_not_called()
         mock_aws.add_messages_to_queue.assert_not_called()
 
-    @patch("api.clouds.aws.tasks.inspection.run_inspection_cluster")
+    @patch("api.clouds.aws.tasks.inspection.attach_volumes_to_cluster")
     @patch("api.clouds.aws.tasks.inspection.check_cluster_instances_age")
     @patch("api.clouds.aws.tasks.inspection.aws")
     def test_scale_up_inspection_cluster_requeues_on_aws_error(
-        self, mock_aws, mock_check, mock_run_inspection_cluster
+        self, mock_aws, mock_check, mock_attach_cluster_volumes
     ):
         """Assert messages requeue when scale_up encounters AWS exception."""
         messages = [Mock()]
@@ -125,4 +125,4 @@ class ScaleUpInspectionClusterTest(TestCase):
         mock_aws.add_messages_to_queue.assert_called_once_with(
             self.ready_volumes_queue_name, messages
         )
-        mock_run_inspection_cluster.delay.assert_not_called()
+        mock_attach_cluster_volumes.delay.assert_not_called()

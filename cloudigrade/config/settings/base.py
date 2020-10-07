@@ -397,6 +397,9 @@ CELERY_TASK_ROUTES = {
     "api.clouds.aws.tasks.scale_up_inspection_cluster": {
         "queue": "scale_up_inspection_cluster"
     },
+    "api.clouds.aws.tasks.attach_volumes_to_cluster": {
+        "queue": "attach_volumes_to_cluster"
+    },
     "api.clouds.aws.tasks.run_inspection_cluster": {"queue": "run_inspection_cluster"},
     "api.clouds.aws.tasks.scale_down_cluster": {"queue": "scale_down_cluster"},
     "api.clouds.aws.tasks.analyze_log": {"queue": "analyze_log"},

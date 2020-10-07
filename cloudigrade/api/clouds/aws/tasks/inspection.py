@@ -93,7 +93,7 @@ def scale_up_inspection_cluster():
         aws.add_messages_to_queue(queue_name, messages)
         raise
 
-    run_inspection_cluster.delay(messages)
+    attach_volumes_to_cluster.delay(messages)
 
 
 def check_cluster_instances_age(instance_ids):
@@ -169,11 +169,11 @@ def check_cluster_instances_age(instance_ids):
             )
 
 
-@retriable_shared_task(name="api.clouds.aws.tasks.run_inspection_cluster")  # noqa: C901
+@shared_task(name="api.clouds.aws.tasks.attach_volumes_to_cluster")
 @aws.rewrap_aws_errors
-def run_inspection_cluster(messages):  # noqa: C901
+def attach_volumes_to_cluster(messages):  # noqa: C901
     """
-    Run task definition for "houndigrade" on the cluster.
+    Ensure houndigrade cluster instance is ready and attach volumes for inspection.
 
     Args:
         messages (list): list of dicts describing images to inspect. items look like
@@ -228,7 +228,7 @@ def run_inspection_cluster(messages):  # noqa: C901
         )
         raise AwsECSInstanceNotReady
 
-    logger.info(_("%s attaching volumes"), "run_inspection_cluster")
+    logger.info(_("%s attaching volumes"), "attach_volumes_to_cluster")
 
     # attach volumes and track which AMI is used at which mount point
     ami_mountpoints = []
@@ -319,26 +319,7 @@ def run_inspection_cluster(messages):  # noqa: C901
         logger.warning(_("No targets left to inspect, exiting early."))
         return
 
-    task_command = _build_task_command("aws", ami_mountpoints)
-    result = ecs.register_task_definition(
-        family=f"{settings.HOUNDIGRADE_ECS_FAMILY_NAME}",
-        containerDefinitions=[_build_container_definition(task_command)],
-        requiresCompatibilities=["EC2"],
-    )
-    task_definition_arn = result["taskDefinition"]["taskDefinitionArn"]
-
-    # release the hounds
-    logger.info(
-        _("Running task %(task_definition)s in cluster %(cluster)s"),
-        {
-            "task_definition": task_definition_arn,
-            "cluster": settings.HOUNDIGRADE_ECS_CLUSTER_NAME,
-        },
-    )
-    ecs.run_task(
-        cluster=settings.HOUNDIGRADE_ECS_CLUSTER_NAME,
-        taskDefinition=task_definition_arn,
-    )
+    run_inspection_cluster.delay(ec2_instance_id, ami_mountpoints)
 
 
 def _filter_messages_for_inspection(messages):
@@ -379,7 +360,6 @@ def _filter_messages_for_inspection(messages):
                 _(
                     "Skipping inspection because we do not have a "
                     "MachineImage for %(ec2_ami_id)s (%(message)s)"
-                    "MachineImage for %(ec2_ami_id)s (%(message)s)"
                 ),
                 {"ec2_ami_id": ec2_ami_id, "message": message},
             )
@@ -407,6 +387,45 @@ def _build_task_command(cloud, ami_mountpoints):
     for ami_id, mount_point in ami_mountpoints:
         task_command.extend(["-t", ami_id, mount_point])
     return task_command
+
+
+@retriable_shared_task(name="api.clouds.aws.tasks.run_inspection_cluster")
+@aws.rewrap_aws_errors
+def run_inspection_cluster(ec2_instance_id, ami_mountpoints):
+    """
+    Run task definition for houndigrade on the cluster.
+
+    Args:
+        ec2_instance_id (str): EC2 instance ID of the running houndigrade instance
+        ami_mountpoints (list): list of tuples each having (ami_id, mount_point)
+
+    Returns:
+        None: Run as an asynchronous Celery task.
+
+    """
+    task_command = _build_task_command("aws", ami_mountpoints)
+    container_definition = _build_container_definition(task_command)
+
+    ecs = boto3.client("ecs")
+    result = ecs.register_task_definition(
+        family=f"{settings.HOUNDIGRADE_ECS_FAMILY_NAME}",
+        containerDefinitions=[container_definition],
+        requiresCompatibilities=["EC2"],
+    )
+    task_definition_arn = result["taskDefinition"]["taskDefinitionArn"]
+
+    # release the hounds
+    logger.info(
+        _("Running task %(task_definition)s in cluster %(cluster)s"),
+        {
+            "task_definition": task_definition_arn,
+            "cluster": settings.HOUNDIGRADE_ECS_CLUSTER_NAME,
+        },
+    )
+    ecs.run_task(
+        cluster=settings.HOUNDIGRADE_ECS_CLUSTER_NAME,
+        taskDefinition=task_definition_arn,
+    )
 
 
 def _build_container_definition(task_command):
