@@ -171,14 +171,13 @@ def check_cluster_instances_age(instance_ids):
 
 @retriable_shared_task(name="api.clouds.aws.tasks.run_inspection_cluster")  # noqa: C901
 @aws.rewrap_aws_errors
-def run_inspection_cluster(messages, cloud="aws"):  # noqa: C901
+def run_inspection_cluster(messages):  # noqa: C901
     """
     Run task definition for "houndigrade" on the cluster.
 
     Args:
-        messages (list): A list of dictionary items containing
-            meta-data (ami_id, volume_id)
-        cloud (str): String key representing what cloud we're inspecting.
+        messages (list): list of dicts describing images to inspect. items look like
+            {"ami_id": "ami-1234567890", "volume_id": "vol-1234567890"}
 
     Returns:
         None: Run as an asynchronous Celery task.
@@ -231,8 +230,8 @@ def run_inspection_cluster(messages, cloud="aws"):  # noqa: C901
 
     logger.info(_("%s attaching volumes"), "run_inspection_cluster")
 
-    task_command = ["-c", cloud]
-    # attach volumes
+    # attach volumes and track which AMI is used at which mount point
+    ami_mountpoints = []
     for index, message in enumerate(relevant_messages):
         ec2_ami_id = message["ami_id"]
         ec2_volume_id = message["volume_id"]
@@ -314,12 +313,13 @@ def run_inspection_cluster(messages, cloud="aws"):  # noqa: C901
             ]
         )
 
-        task_command.extend(["-t", message["ami_id"], mount_point])
+        ami_mountpoints.append((message["ami_id"], mount_point))
 
-    if "-t" not in task_command:
+    if not ami_mountpoints:
         logger.warning(_("No targets left to inspect, exiting early."))
         return
 
+    task_command = _build_task_command("aws", ami_mountpoints)
     result = ecs.register_task_definition(
         family=f"{settings.HOUNDIGRADE_ECS_FAMILY_NAME}",
         containerDefinitions=[_build_container_definition(task_command)],
@@ -384,6 +384,29 @@ def _filter_messages_for_inspection(messages):
                 {"ec2_ami_id": ec2_ami_id, "message": message},
             )
     return relevant_messages
+
+
+def _build_task_command(cloud, ami_mountpoints):
+    """
+    Build the command arguments for the houndigrade task.
+
+    Todo:
+        When we add support for additional cloud providers like Azure, this function
+        should be moved and generally repurposed if we continue using houndigrade the
+        same way for those other clouds.
+
+    Args:
+        cloud (str): identifier token for the cloud provider type (e.g. "aws")
+        ami_mountpoints (list): list of tuples each having (ami_id, mount_point)
+
+    Returns:
+        list of strings that make up the command arguments for the houndigrade task
+
+    """
+    task_command = ["-c", cloud]
+    for ami_id, mount_point in ami_mountpoints:
+        task_command.extend(["-t", ami_id, mount_point])
+    return task_command
 
 
 def _build_container_definition(task_command):
