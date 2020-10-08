@@ -406,6 +406,72 @@ def _build_task_command(cloud, ami_mountpoints):
     return task_command
 
 
+def _check_cluster_volume_mounts(ec2_instance_id, ami_mountpoints):
+    """
+    Check that the cluster instance has devices attached at the expected mount points.
+
+    Args:
+        ec2_instance_id (str): EC2 instance ID of the running houndigrade instance
+        ami_mountpoints (list): list of tuples each having (ami_id, mount_point)
+
+    Returns:
+        bool true if the cluster has devices attached at the expected mount points
+
+    """
+    instance = describe_cluster_instances([ec2_instance_id])[ec2_instance_id]
+    device_mappings = dict(
+        (mapping["DeviceName"], mapping) for mapping in instance["BlockDeviceMappings"]
+    )
+    incomplete_mounts = False
+    for ami_id, mount_point in ami_mountpoints:
+        device_mapping = device_mappings.get(mount_point, {})
+        status = device_mapping.get("Ebs", {}).get("Status")
+        if not device_mapping:
+            logger.error(
+                _(
+                    "Expected device %(mount_point)s for %(ami_id)s not found in "
+                    "described instance %(ec2_instance_id)s"
+                ),
+                {
+                    "mount_point": mount_point,
+                    "ami_id": ami_id,
+                    "ec2_instance_id": ec2_instance_id,
+                },
+            )
+            incomplete_mounts = True
+        elif status == "attaching":
+            logger.info(
+                _(
+                    "Device %(mount_point)s for %(ami_id)s is still attaching to "
+                    "instance %(ec2_instance_id)s"
+                ),
+                {
+                    "mount_point": mount_point,
+                    "ami_id": ami_id,
+                    "ec2_instance_id": ec2_instance_id,
+                },
+            )
+            incomplete_mounts = True
+        elif status != "attached":
+            logger.error(
+                _(
+                    "Expected device %(mount_point)s for %(ami_id)s has unexpected "
+                    "status %(status)s for instance %(ec2_instance_id)s; "
+                    "current described block device mapping is %(detail)s"
+                ),
+                {
+                    "mount_point": mount_point,
+                    "ami_id": ami_id,
+                    "ec2_instance_id": ec2_instance_id,
+                    "status": status,
+                    "detail": device_mapping,
+                },
+            )
+            incomplete_mounts = True
+
+    return not incomplete_mounts
+
+
 @retriable_shared_task(name="api.clouds.aws.tasks.run_inspection_cluster")
 @aws.rewrap_aws_errors
 def run_inspection_cluster(ec2_instance_id, ami_mountpoints):
@@ -420,6 +486,10 @@ def run_inspection_cluster(ec2_instance_id, ami_mountpoints):
         None: Run as an asynchronous Celery task.
 
     """
+    volumes_mounted = _check_cluster_volume_mounts(ec2_instance_id, ami_mountpoints)
+    if not volumes_mounted:
+        raise AwsECSInstanceNotReady
+
     task_command = _build_task_command("aws", ami_mountpoints)
     container_definition = _build_container_definition(task_command)
 
