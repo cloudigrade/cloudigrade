@@ -43,6 +43,44 @@ class UtilHelperTest(TestCase):
         arn = helper.generate_dummy_arn(resource=resource)
         self.assertTrue(arn.endswith(resource))
 
+    @helper.clouditardis(helper.utc_dt(2020, 1, 2, 3, 4, 5))
+    def test_generate_dummy_block_device_mapping_default(self):
+        """Assert generated block device mapping has values where expected."""
+        device_mapping = helper.generate_dummy_block_device_mapping()
+        self.assertIsNotNone(device_mapping["DeviceName"])
+        self.assertTrue(device_mapping["DeviceName"].startswith("/dev/"))
+        self.assertIsNotNone(device_mapping["Ebs"])
+        self.assertEqual(
+            device_mapping["Ebs"]["AttachTime"], "2020-01-02T03:04:05+00:00"
+        )
+        self.assertTrue(device_mapping["Ebs"]["DeleteOnTermination"])
+        self.assertEqual(device_mapping["Ebs"]["Status"], "attached")
+        self.assertIsNotNone(device_mapping["Ebs"]["VolumeId"])
+        self.assertTrue(device_mapping["Ebs"]["VolumeId"].startswith("vol-"))
+
+    def test_generate_dummy_block_device_mapping_with_values(self):
+        """Assert generated block device mapping contains given values."""
+        device_name = "/dev/potato"
+        device_type = "gem"
+        attach_time = "2020-10-08T16:16:16+00:00"
+        delete_on_termination = False
+        status = "delicious"
+        volume_id = "vol-taters"
+        device_mapping = helper.generate_dummy_block_device_mapping(
+            device_name=device_name,
+            device_type=device_type,
+            attach_time=attach_time,
+            delete_on_termination=delete_on_termination,
+            status=status,
+            volume_id=volume_id,
+        )
+        self.assertEqual(device_mapping["DeviceName"], device_name)
+        self.assertIn(device_type, device_mapping)
+        self.assertEqual(device_mapping[device_type]["AttachTime"], attach_time)
+        self.assertFalse(device_mapping[device_type]["DeleteOnTermination"])
+        self.assertEqual(device_mapping[device_type]["Status"], status)
+        self.assertEqual(device_mapping[device_type]["VolumeId"], volume_id)
+
     def test_generate_dummy_describe_instance_default(self):
         """Assert generated instance has values where expected."""
         instance = helper.generate_dummy_describe_instance()
@@ -53,6 +91,7 @@ class UtilHelperTest(TestCase):
         self.assertIsNotNone(instance["State"])
         self.assertIsNotNone(instance["State"]["Code"])
         self.assertIsNotNone(instance["State"]["Name"])
+        self.assertEqual(len(instance["BlockDeviceMappings"]), 2)
 
     def test_generate_dummy_describe_instance_with_values(self):
         """Assert generated instance contains given values."""
@@ -61,8 +100,14 @@ class UtilHelperTest(TestCase):
         subnet_id = helper.generate_dummy_subnet_id()
         state = aws.InstanceState.shutting_down
         instance_type = helper.get_random_instance_type()
+        device_mapping = helper.generate_dummy_block_device_mapping()
         instance = helper.generate_dummy_describe_instance(
-            instance_id, image_id, subnet_id, state, instance_type
+            instance_id=instance_id,
+            image_id=image_id,
+            subnet_id=subnet_id,
+            state=state,
+            instance_type=instance_type,
+            device_mappings=[device_mapping],
         )
         self.assertEqual(instance["ImageId"], image_id)
         self.assertEqual(instance["InstanceId"], instance_id)
@@ -70,6 +115,8 @@ class UtilHelperTest(TestCase):
         self.assertEqual(instance["SubnetId"], subnet_id)
         self.assertEqual(instance["State"]["Code"], state.value)
         self.assertEqual(instance["State"]["Name"], state.name)
+        self.assertEqual(instance["State"]["Name"], state.name)
+        self.assertEqual(instance["BlockDeviceMappings"], [device_mapping])
 
     def test_generate_mock_image(self):
         """Assert generated image contains given value."""

@@ -16,7 +16,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 
 from api import AWS_PROVIDER_STRING, AZURE_PROVIDER_STRING
-from util import aws
+from util import aws, misc
 
 _faker = faker.Faker()
 
@@ -239,6 +239,65 @@ def get_random_region(cloud_type=AWS_PROVIDER_STRING):
         return random.choice(SOME_AWS_REGIONS)
 
 
+def generate_dummy_block_device_mapping(
+    device_name=None,
+    device_type="Ebs",
+    attach_time=None,
+    delete_on_termination=True,
+    status="attached",
+    volume_id=None,
+):
+    """
+    Generate block device mapping to imitate part of 'describe instances' API response.
+
+    All arguments are optional, and any not given will be randomly generated.
+
+    Args:
+        device_name (str): Optional known DeviceName value.
+        device_type (str): Optional known device type key for nested status details.
+        attach_time (str): Optional known AttachTime value.
+        delete_on_termination (bool): Optional known DeleteOnTermination value.
+        status (str): Optional known Status.
+        volume_id (str): Optional known VolumeId value.
+
+    Returns:
+        dict: Well-formed BlockDeviceMapping data structure. Example:
+        {
+          "DeviceName": "/dev/xvda",
+          "Ebs": {
+            "AttachTime": "2020-10-08T19:07:23+00:00",
+            "DeleteOnTermination": true,
+            "Status": "attached",
+            "VolumeId": "vol-06c61265cb97c1e1e"
+          }
+        }
+
+    """
+    if device_name is None:
+        device_index = random.randint(0, 100)
+        device_name = misc.generate_device_name(device_index)
+
+    if attach_time is None:
+        attach_time = misc.get_now().isoformat()
+
+    if status is None:
+        status = random.choice(["attaching", "attached", "detaching"])
+
+    if volume_id is None:
+        volume_id = generate_dummy_volume_id()
+
+    mapping = {
+        "DeviceName": device_name,
+        device_type: {
+            "AttachTime": attach_time,
+            "DeleteOnTermination": delete_on_termination,
+            "Status": status,
+            "VolumeId": volume_id,
+        },
+    }
+    return mapping
+
+
 def generate_dummy_describe_instance(
     instance_id=None,
     image_id=None,
@@ -247,6 +306,7 @@ def generate_dummy_describe_instance(
     instance_type=None,
     platform="",
     launch_time="",
+    device_mappings=None,
 ):
     """
     Generate dummy instance to imitate 'describe instances' API response.
@@ -261,6 +321,7 @@ def generate_dummy_describe_instance(
         instance_type (str): Optional known EC2 type of AwsInstance.
         platform (str): Optional known Platform value.
         launch_time (str): Optional known LaunchTime value.
+        device_mappings (list): Optional known BlockDeviceMappings value
 
     Returns:
         dict: Well-formed instance data structure.
@@ -281,7 +342,14 @@ def generate_dummy_describe_instance(
     if instance_type is None:
         instance_type = get_random_instance_type()
 
+    if device_mappings is None:
+        device_mappings = [
+            generate_dummy_block_device_mapping(),
+            generate_dummy_block_device_mapping(),
+        ]
+
     mock_instance = {
+        "BlockDeviceMappings": device_mappings,
         "ImageId": image_id,
         "InstanceId": instance_id,
         "InstanceType": instance_type,
