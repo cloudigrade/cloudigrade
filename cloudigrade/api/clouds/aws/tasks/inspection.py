@@ -96,6 +96,25 @@ def scale_up_inspection_cluster():
     attach_volumes_to_cluster.delay(messages)
 
 
+def describe_cluster_instances(instance_ids):
+    """
+    Describe multiple AWS EC2 Instances.
+
+    This is simply a convenience wrapper for util.aws.describe_instances since the
+    inspection process always uses our default session and cluster region.
+
+    Args:
+        instance_ids (list[str]): The EC2 instance IDs
+
+    Returns:
+        list(dict): List of dicts that describe the requested instances
+
+    """
+    session = boto3.Session()
+    region = aws.ECS_CLUSTER_REGION
+    return aws.describe_instances(session, instance_ids, region)
+
+
 def check_cluster_instances_age(instance_ids):
     """
     Check the age of the given ECS cluster EC2 instance IDs.
@@ -112,9 +131,7 @@ def check_cluster_instances_age(instance_ids):
     for instance_id in instance_ids:
         logger.info(_("Inspection cluster instance exists: %s"), instance_id)
 
-    instances = aws.describe_instances(
-        boto3.Session(), instance_ids, aws.ECS_CLUSTER_REGION
-    )
+    instances = describe_cluster_instances(instance_ids)
 
     age_limit = settings.INSPECTION_CLUSTER_INSTANCE_AGE_LIMIT
     now = get_now()
