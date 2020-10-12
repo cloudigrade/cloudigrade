@@ -186,7 +186,7 @@ def check_cluster_instances_age(instance_ids):
             )
 
 
-@shared_task(name="api.clouds.aws.tasks.attach_volumes_to_cluster")
+@retriable_shared_task(name="api.clouds.aws.tasks.attach_volumes_to_cluster")
 @aws.rewrap_aws_errors
 def attach_volumes_to_cluster(messages):  # noqa: C901
     """
