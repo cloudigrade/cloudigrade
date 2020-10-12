@@ -200,6 +200,7 @@ def attach_volumes_to_cluster(messages):  # noqa: C901
         None: Run as an asynchronous Celery task.
 
     """
+    log_prefix = "attach_volumes_to_cluster"
     relevant_messages = _filter_messages_for_inspection(messages)
 
     if not relevant_messages:
@@ -245,7 +246,7 @@ def attach_volumes_to_cluster(messages):  # noqa: C901
         )
         raise AwsECSInstanceNotReady
 
-    logger.info(_("%s attaching volumes"), "attach_volumes_to_cluster")
+    logger.info(_("%s attaching volumes"), log_prefix)
 
     # attach volumes and track which AMI is used at which mount point
     ami_mountpoints = []
@@ -260,7 +261,7 @@ def attach_volumes_to_cluster(messages):  # noqa: C901
                 "%(ami_id)s to instance %(instance)s at %(mount_point)s"
             ),
             {
-                "label": "run_inspection_cluster",
+                "label": log_prefix,
                 "volume_id": ec2_volume_id,
                 "ami_id": ec2_ami_id,
                 "instance": ec2_instance_id,
@@ -318,7 +319,7 @@ def attach_volumes_to_cluster(messages):  # noqa: C901
 
         logger.info(
             _("%(label)s modify volume %(volume_id)s to auto-delete"),
-            {"label": "run_inspection_cluster", "volume_id": ec2_volume_id},
+            {"label": log_prefix, "volume_id": ec2_volume_id},
         )
         # Configure volumes to delete when instance is scaled down
         ec2_instance.modify_attribute(
