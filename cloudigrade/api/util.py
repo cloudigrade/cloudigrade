@@ -509,10 +509,14 @@ def calculate_max_concurrent_usage_from_runs(runs):
             )
             last_calculate_task.cancel()
             schedule_concurrent_calculation_task(date, user_id)
-        logger.info(
-            "Task to calculate concurrent usage for user_id: %(user_id)s and "
-            "date: %(date)s already exists." % {"user_id": user_id, "date": date}
-        )
+
+        # If the task already exists and is scheduled and it reasonably recent,
+        # simply log this message for visibility.
+        else:
+            logger.info(
+                "Task to calculate concurrent usage for user_id: %(user_id)s and "
+                "date: %(date)s already exists." % {"user_id": user_id, "date": date}
+            )
 
 
 def schedule_concurrent_calculation_task(date, user_id):
