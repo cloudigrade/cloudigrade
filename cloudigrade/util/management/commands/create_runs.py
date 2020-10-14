@@ -6,7 +6,7 @@ from django.db import transaction
 from tqdm import tqdm
 
 from api.models import ConcurrentUsage, Instance, InstanceEvent, Run
-from api.util import normalize_runs
+from api.util import calculate_max_concurrent_usage_from_runs, normalize_runs
 
 logger = logging.getLogger(__name__)
 
@@ -55,14 +55,13 @@ class Command(BaseCommand):
             all_concurrent_usage.delete()
             logger.info("Deleted all ConcurrentUsage objects.")
 
-        runs_created = 0
+        runs = []
         for instance in tqdm(Instance.objects.all(), desc="Runs for instances"):
             events = InstanceEvent.objects.filter(instance=instance)
 
             normalized_runs = normalize_runs(events)
 
             for normalized_run in normalized_runs:
-                runs_created += 1
                 run = Run(
                     start_time=normalized_run.start_time,
                     end_time=normalized_run.end_time,
@@ -73,5 +72,10 @@ class Command(BaseCommand):
                     vcpu=normalized_run.instance_vcpu,
                 )
                 run.save()
+                runs.append(run)
 
-        logger.info("Created {} runs.".format(runs_created))
+        logger.info("Created {} runs.".format(len(runs)))
+        logger.info("Generating concurrent usage calculation tasks.")
+        calculate_max_concurrent_usage_from_runs(runs)
+        logger.info("Finished generating concurrent usage calculation tasks.")
+        logger.info("Reminder: run the Celery worker to calculate concurrent usages!")

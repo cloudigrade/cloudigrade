@@ -6,7 +6,7 @@ from django.core.management import call_command
 from django.test import TestCase
 from rest_framework.test import APIRequestFactory
 
-from api.models import ConcurrentUsage, Run
+from api.models import ConcurrentUsage, ConcurrentUsageCalculationTask, Run
 from api.tests import helper as api_helper
 from util.tests import helper as util_helper
 
@@ -36,22 +36,31 @@ class CreateRunsTest(TestCase):
             instance_type=self.instance_type,
         )
 
-    def test_handle(self):
+    @patch("api.tasks.calculate_max_concurrent_usage_task")
+    def test_handle(self, mock_calculate_task):
         """Test calling create_runs with confirm arg."""
         call_command("create_runs", "--confirm")
         self.assertEqual(Run.objects.all().count(), 1)
+        self.assertEqual(ConcurrentUsageCalculationTask.objects.all().count(), 1)
         self.assertEqual(ConcurrentUsage.objects.all().count(), 0)
+        mock_calculate_task.apply_async.assert_called()
 
+    @patch("api.tasks.calculate_max_concurrent_usage_task")
     @patch("builtins.input", return_value="N")
-    def test_handle_no(self, mock_input):
+    def test_handle_no(self, mock_input, mock_calculate_task):
         """Test calling create_runs with no input."""
         call_command("create_runs")
         self.assertEqual(Run.objects.all().count(), 1)
+        self.assertEqual(ConcurrentUsageCalculationTask.objects.all().count(), 0)
         self.assertEqual(ConcurrentUsage.objects.all().count(), 1)
+        mock_calculate_task.apply_async.assert_not_called()
 
+    @patch("api.tasks.calculate_max_concurrent_usage_task")
     @patch("builtins.input", return_value="Y")
-    def test_handle_yes(self, mock_input):
+    def test_handle_yes(self, mock_input, mock_calculate_task):
         """Test calling create_runs with yes input."""
         call_command("create_runs")
         self.assertEqual(Run.objects.all().count(), 1)
+        self.assertEqual(ConcurrentUsageCalculationTask.objects.all().count(), 1)
         self.assertEqual(ConcurrentUsage.objects.all().count(), 0)
+        mock_calculate_task.apply_async.assert_called()
