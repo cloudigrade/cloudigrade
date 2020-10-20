@@ -20,6 +20,7 @@ from util import aws
 from util.aws import rewrap_aws_errors
 from util.celery import retriable_shared_task
 from util.exceptions import InvalidArn
+from util.misc import lock_task_for_user_ids
 
 logger = logging.getLogger(__name__)
 
@@ -111,7 +112,9 @@ def initial_aws_describe_instances(account_id):
 
     session = aws.get_session(arn)
     instances_data = aws.describe_instances_everywhere(session)
-    with transaction.atomic():
+
+    # Lock the task at a user level. A user can only run one task at a time.
+    with transaction.atomic(), lock_task_for_user_ids([account.user.id]):
         try:
             AwsCloudAccount.objects.get(pk=account_id)
             new_ami_ids = create_new_machine_images(session, instances_data)

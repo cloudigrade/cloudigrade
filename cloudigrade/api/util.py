@@ -352,15 +352,12 @@ def calculate_max_concurrent_usage(date, user_id):
             }
         )
 
-    with transaction.atomic():
-        ConcurrentUsage.objects.select_for_update().filter(
-            date=date, user_id=user_id
-        ).delete()
-        concurrent_usage = ConcurrentUsage.objects.create(
-            date=date, user_id=user_id, maximum_counts=simplified_maximum_counts
-        )
-        concurrent_usage.potentially_related_runs.add(*runs)
-        concurrent_usage.save()
+    ConcurrentUsage.objects.filter(date=date, user_id=user_id).delete()
+    concurrent_usage = ConcurrentUsage.objects.create(
+        date=date, user_id=user_id, maximum_counts=simplified_maximum_counts
+    )
+    concurrent_usage.potentially_related_runs.add(*runs)
+    concurrent_usage.save()
 
     return concurrent_usage
 

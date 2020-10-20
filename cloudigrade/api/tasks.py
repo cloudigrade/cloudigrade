@@ -61,7 +61,7 @@ from api.util import (
 )
 from util import aws, insights
 from util.celery import retriable_shared_task
-from util.misc import get_now
+from util.misc import get_now, lock_task_for_user_ids
 
 logger = logging.getLogger(__name__)
 
@@ -221,53 +221,73 @@ def delete_from_sources_kafka_message(message, headers, event_type):  # noqa: C9
         logger.error(_("Aborting deletion. Incorrect message details."))
         return
 
-    filter = None
+    query_filter = None
     if event_type == settings.SOURCE_DESTROY_EVENT:
-        filter = Q(platform_source_id=platform_id)
+        query_filter = Q(platform_source_id=platform_id)
     elif event_type == settings.AUTHENTICATION_DESTROY_EVENT:
-        filter = Q(platform_authentication_id=platform_id)
+        query_filter = Q(platform_authentication_id=platform_id)
     elif event_type == settings.APPLICATION_DESTROY_EVENT:
-        filter = Q(platform_application_id=platform_id)
+        query_filter = Q(platform_application_id=platform_id)
     elif event_type == settings.APPLICATION_AUTHENTICATION_DESTROY_EVENT:
         authentication_id = message["authentication_id"]
         application_id = message["application_id"]
-        filter = Q(
+        query_filter = Q(
             platform_application_id=application_id,
             platform_authentication_id=authentication_id,
         )
 
-    if not filter:
+    if not query_filter:
         logger.error(
             _("Not enough details to delete a CloudAccount from message: %s"), message
         )
         return
 
-    with transaction.atomic():
-        logger.info(_("Deleting CloudAccounts using filter %s"), filter)
-        # IMPORTANT NOTES FOR FUTURE DEVELOPERS:
+    logger.info(_("Deleting CloudAccounts using filter %s"), query_filter)
+    # IMPORTANT NOTES FOR FUTURE DEVELOPERS:
+    #
+    # This for loop and select_for_update may seem unnecessary, but they actually
+    # serve a very important purpose. We use pre_delete Django signals with
+    # CloudAccount, but that has the unfortunate side effect of Django *not* getting
+    # a row-level lock in the DB for each CloudAccount we want to delete until
+    # *after* all of the pre_delete logic completes. Why is that bad? If we receive
+    # two requests in quick succession to delete the same CloudAccount but we don't
+    # have it locked, the second request can get the CloudAccount and expect it to
+    # be available while the first request is processing that CloudAccount's
+    # pre_delete signal, and they can collide when making changes related to the
+    # deletion.
+    #
+    # Using a for loop and select_for_update here means that we *immediately*
+    # acquire each row-level lock *before* any signals fire, and that better
+    # guarantees no two requests can attempt to delete the same CloudAccount
+    # instance.
+    #
+    # Since select_for_update is a rather heavy-handed solution to this problem and
+    # DB row-level locks can cause other in-transaction requests to hang waiting,
+    # eventually we should consider refactoring away the pre_delete logic to avoid
+    # possible resource contention issues and slowdowns.
+
+    for cloud_account in CloudAccount.objects.filter(query_filter):
+        # Lock on the user level, so that a single user can only have one task
+        # running at a time.
         #
-        # This for loop and select_for_update may seem unnecessary, but they actually
-        # serve a very important purpose. We use pre_delete Django signals with
-        # CloudAccount, but that has the unfortunate side effect of Django *not* getting
-        # a row-level lock in the DB for each CloudAccount we want to delete until
-        # *after* all of the pre_delete logic completes. Why is that bad? If we receive
-        # two requests in quick succession to delete the same CloudAccount but we don't
-        # have it locked, the second request can get the CloudAccount and expect it to
-        # be available while the first request is processing that CloudAccount's
-        # pre_delete signal, and they can collide when making changes related to the
-        # deletion.
+        # The select_for_update() lock has been moved from the CloudAccount to the
+        # UserTaskLock. As a result we must now re-validate that the cloud_account
+        # exists before calling delete, since it could be the case that we receive
+        # two requests in quick succession to delete the same cloud account,
+        # the second one would fail, since the cloud account no longer
+        # exist when the second task acquires the UserTaskLock.
         #
-        # Using a for loop and select_for_update here means that we *immediately*
-        # acquire each row-level lock *before* any signals fire, and that better
-        # guarantees no two requests can attempt to delete the same CloudAccount
-        # instance.
+        # We should release the UserTaskLock with each cloud_account.delete action.
         #
-        # Since select_for_update is a rather heavy-handed solution to this problem and
-        # DB row-level locks can cause other in-transaction requests to hang waiting,
-        # eventually we should consider refactoring away the pre_delete logic to avoid
-        # possible resource contention issues and slowdowns.
-        for cloud_account in CloudAccount.objects.select_for_update().filter(filter):
-            cloud_account.delete()
+        # Using the UserTaskLock *should* fix the issue of Django not getting a
+        # row-level lock in the DB for each CloudAccount we want to delete until
+        # after all of the pre_delete logic completes
+        with transaction.atomic(), lock_task_for_user_ids([cloud_account.user.id]):
+            try:
+                cloud_account.refresh_from_db()
+                cloud_account.delete()
+            except CloudAccount.DoesNotExist:
+                logger.info("CloudAccount has already been removed.")
 
 
 @retriable_shared_task(
@@ -520,6 +540,7 @@ def calculate_max_concurrent_usage_task(self, date, user_id):
     Schedule a task to calculate maximum concurrent usage of RHEL instances.
 
     Args:
+        self (celery.Task): The bound task. With this we can retry if necessary.
         date (str): the day during which we are measuring usage.
             Celery serializes the date as a string in the format "%Y-%B-%dT%H:%M:%S.
         user_id (int): required filter on user
@@ -553,6 +574,7 @@ def calculate_max_concurrent_usage_task(self, date, user_id):
         "and date %(date)s.",
         {"user_id": user_id, "date": date},
     )
+
     # Set task to running
     task_id = self.request.id
     calculation_task = ConcurrentUsageCalculationTask.objects.get(task_id=task_id)
@@ -560,7 +582,11 @@ def calculate_max_concurrent_usage_task(self, date, user_id):
     calculation_task.save()
 
     try:
-        calculate_max_concurrent_usage(date, user_id)
+        # Lock the task at a user level. A user can only run one task at a time.
+        # If another user task is already running, then don't start the
+        # concurrent usage calculation task
+        with transaction.atomic(), lock_task_for_user_ids([user_id]):
+            calculate_max_concurrent_usage(date, user_id)
     except Exception:
         calculation_task.status = ConcurrentUsageCalculationTask.ERROR
         calculation_task.save()

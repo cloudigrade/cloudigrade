@@ -1,5 +1,10 @@
 """Miscellaneous utility functions."""
 import datetime
+import logging
+from contextlib import contextmanager
+
+
+logger = logging.getLogger(__name__)
 
 
 def generate_device_name(index, prefix="/dev/xvd"):
@@ -59,3 +64,33 @@ def get_now():
 
     """
     return datetime.datetime.now(datetime.timezone.utc)
+
+
+@contextmanager
+def lock_task_for_user_ids(user_ids):
+    """
+    Create and hold open a UserTaskLock for the duration of a transaction.
+
+    For many of our tasks, we only want run one for a user at a time.
+    This context manager is a way for us to "lock" tasks for a user_id for
+    an atomic transaction.
+
+    Args:
+        user_ids (list[str]): A list of user_ids to lock
+
+    """
+    from api.models import UserTaskLock
+
+    logger.info(
+        "Locking user_ids %(user_ids)s until transaction is commited.",
+        {"user_ids": user_ids},
+    )
+    for user_id in user_ids:
+        UserTaskLock.objects.get_or_create(user_id=user_id)
+    locks = UserTaskLock.objects.select_for_update().filter(user__id__in=user_ids)
+    locks.update(locked=True)
+    try:
+        yield locks
+    finally:
+        locks.update(locked=False)
+        logger.info("Unlocking user_ids %(user_ids)s.", {"user_ids": user_ids})

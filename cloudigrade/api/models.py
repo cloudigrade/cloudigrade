@@ -11,10 +11,22 @@ from django.utils.translation import gettext as _
 
 from api import AWS_PROVIDER_STRING, AZURE_PROVIDER_STRING
 from util.insights import notify_sources_application_availability
-from util.misc import get_now
+from util.misc import get_now, lock_task_for_user_ids
 from util.models import BaseGenericModel, BaseModel
 
 logger = logging.getLogger(__name__)
+
+
+class UserTaskLock(BaseModel):
+    """Model used to lock running tasks for a user."""
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        db_index=True,
+        null=False,
+    )
+    locked = models.BooleanField(default=False, null=False)
 
 
 class CloudAccount(BaseGenericModel):
@@ -407,7 +419,16 @@ class MachineImage(BaseGenericModel):
         concurrent_usages = ConcurrentUsage.objects.filter(
             potentially_related_runs__in=Run.objects.filter(machineimage=self)
         )
-        concurrent_usages.delete()
+        if concurrent_usages.exists():
+            # Lock all users that depend on this machineimage
+            cloud_accounts = (
+                Instance.objects.filter(machine_image=self)
+                .values_list("cloud_account__id")
+                .distinct()
+            )
+            user_ids = [cloud_account.user.id for cloud_account in cloud_accounts]
+            with lock_task_for_user_ids(user_ids):
+                concurrent_usages.delete()
         return super().save(*args, **kwargs)
 
 

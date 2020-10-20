@@ -31,6 +31,7 @@ from api.models import (
 )
 from util import aws
 from util.aws import OPENSHIFT_TAG, RHEL_TAG, is_windows, rewrap_aws_errors
+from util.misc import lock_task_for_user_ids
 
 logger = logging.getLogger(__name__)
 
@@ -386,195 +387,215 @@ def _save_cloudtrail_activity(
     """
     # Log some basic information about what we're saving.
     log_prefix = "analyzer"
-    all_ec2_instance_ids = set(
-        [
-            instance_event.ec2_instance_id
-            for instance_event in instance_events
-            if instance_event.ec2_instance_id is not None
-        ]
-    )
-    logger.info(
-        _("%(prefix)s: EC2 Instance IDs found: %(all_ec2_instance_ids)s"),
-        {"prefix": log_prefix, "all_ec2_instance_ids": all_ec2_instance_ids},
-    )
 
-    all_ami_ids = set(
+    # Lock all user accounts related to the instance events being processed.
+    # A user can only run one task at a time.
+    all_user_ids = set(
         [
-            instance_event.ec2_ami_id
+            AwsCloudAccount.objects.get(aws_account_id=instance_event.aws_account_id)
+            .cloud_account.get()
+            .user.id
             for instance_event in instance_events
-            if instance_event.ec2_ami_id is not None
         ]
         + [
-            ami_tag_event.ec2_ami_id
+            AwsCloudAccount.objects.get(aws_account_id=ami_tag_event.aws_account_id)
+            .cloud_account.get()
+            .user.id
             for ami_tag_event in ami_tag_events
-            if ami_tag_event.ec2_ami_id is not None
         ]
-        + [ec2_ami_id for ec2_ami_id in described_images.keys()]
     )
-    logger.info(
-        _("%(prefix)s: EC2 AMI IDs found: %(all_ami_ids)s"),
-        {"prefix": log_prefix, "all_ami_ids": all_ami_ids},
-    )
+    with lock_task_for_user_ids(all_user_ids):
 
-    # Which images have the Windows platform?
-    windows_ami_ids = {
-        ami_id
-        for ami_id, described_ami in described_images.items()
-        if is_windows(described_ami)
-    }
-    logger.info(
-        _("%(prefix)s: Windows AMI IDs found: %(windows_ami_ids)s"),
-        {"prefix": log_prefix, "windows_ami_ids": windows_ami_ids},
-    )
-
-    # Which images need tag state changes?
-    ocp_tagged_ami_ids, ocp_untagged_ami_ids = _extract_ami_ids_by_tag_change(
-        ami_tag_events, OPENSHIFT_TAG
-    )
-    logger.info(
-        _("%(prefix)s: AMIs found tagged for OCP: %(ocp_tagged_ami_ids)s"),
-        {"prefix": log_prefix, "ocp_tagged_ami_ids": ocp_tagged_ami_ids},
-    )
-    logger.info(
-        _("%(prefix)s: AMIs found untagged for OCP: %(ocp_untagged_ami_ids)s"),
-        {"prefix": log_prefix, "ocp_untagged_ami_ids": ocp_untagged_ami_ids},
-    )
-
-    rhel_tagged_ami_ids, rhel_untagged_ami_ids = _extract_ami_ids_by_tag_change(
-        ami_tag_events, RHEL_TAG
-    )
-    logger.info(
-        _("%(prefix)s: AMIs found tagged for RHEL: %(rhel_tagged_ami_ids)s"),
-        {"prefix": log_prefix, "rhel_tagged_ami_ids": rhel_tagged_ami_ids},
-    )
-    logger.info(
-        _("%(prefix)s: AMIs found untagged for RHEL: %(rhel_untagged_ami_ids)s"),
-        {"prefix": log_prefix, "rhel_untagged_ami_ids": rhel_untagged_ami_ids},
-    )
-
-    # Create only the new images.
-    new_images = {}
-    for ami_id, described_image in described_images.items():
-        owner_id = Decimal(described_image["OwnerId"])
-        name = described_image["Name"]
-        architecture = described_image.get("Architecture")
-        windows = ami_id in windows_ami_ids
-        rhel_detected_by_tag = ami_id in rhel_tagged_ami_ids
-        openshift_detected = ami_id in ocp_tagged_ami_ids
-        region = described_image["found_in_region"]
-
+        # Save instances and their events.
+        all_ec2_instance_ids = set(
+            [
+                instance_event.ec2_instance_id
+                for instance_event in instance_events
+                if instance_event.ec2_instance_id is not None
+            ]
+        )
         logger.info(
-            _("%(prefix)s: Saving new AMI ID %(ami_id)s in region %(region)s"),
-            {"prefix": log_prefix, "ami_id": ami_id, "region": region},
-        )
-        awsimage, new = save_new_aws_machine_image(
-            ami_id,
-            name,
-            owner_id,
-            rhel_detected_by_tag,
-            openshift_detected,
-            windows,
-            region,
-            architecture,
+            _("%(prefix)s: EC2 Instance IDs found: %(all_ec2_instance_ids)s"),
+            {"prefix": log_prefix, "all_ec2_instance_ids": all_ec2_instance_ids},
         )
 
-        image = awsimage.machine_image.get()
-        if new and image.status is not image.INSPECTED:
-            new_images[ami_id] = awsimage
-
-    # Create "unavailable" images for AMIs we saw referenced but that we either
-    # don't have in our models or could not describe from AWS.
-    seen_ami_ids = set(
-        [
-            described_instance["ImageId"]
-            for described_instance in described_instances.values()
-            if described_instance.get("ImageId") is not None
-        ]
-        + [
-            ami_tag_event.ec2_ami_id
-            for ami_tag_event in ami_tag_events
-            if ami_tag_event.ec2_ami_id is not None
-        ]
-        + [
-            instance_event.ec2_ami_id
-            for instance_event in instance_events
-            if instance_event.ec2_ami_id is not None
-        ]
-    )
-    described_ami_ids = set(described_images.keys())
-    known_ami_ids = set(
-        image.ec2_ami_id
-        for image in AwsMachineImage.objects.filter(
-            ec2_ami_id__in=list(seen_ami_ids - described_ami_ids)
+        all_ami_ids = set(
+            [
+                instance_event.ec2_ami_id
+                for instance_event in instance_events
+                if instance_event.ec2_ami_id is not None
+            ]
+            + [
+                ami_tag_event.ec2_ami_id
+                for ami_tag_event in ami_tag_events
+                if ami_tag_event.ec2_ami_id is not None
+            ]
+            + [ec2_ami_id for ec2_ami_id in described_images.keys()]
         )
-    )
-    unavailable_ami_ids = seen_ami_ids - described_ami_ids - known_ami_ids
-    for ami_id in unavailable_ami_ids:
         logger.info(
-            _("Missing image data for %s; creating UNAVAILABLE stub image."), ami_id
+            _("%(prefix)s: EC2 AMI IDs found: %(all_ami_ids)s"),
+            {"prefix": log_prefix, "all_ami_ids": all_ami_ids},
         )
-        with transaction.atomic():
-            awsmachineimage = AwsMachineImage.objects.create(ec2_ami_id=ami_id)
-            MachineImage.objects.create(
-                status=MachineImage.UNAVAILABLE, content_object=awsmachineimage
+
+        # Which images have the Windows platform?
+        windows_ami_ids = {
+            ami_id
+            for ami_id, described_ami in described_images.items()
+            if is_windows(described_ami)
+        }
+        logger.info(
+            _("%(prefix)s: Windows AMI IDs found: %(windows_ami_ids)s"),
+            {"prefix": log_prefix, "windows_ami_ids": windows_ami_ids},
+        )
+
+        # Which images need tag state changes?
+        ocp_tagged_ami_ids, ocp_untagged_ami_ids = _extract_ami_ids_by_tag_change(
+            ami_tag_events, OPENSHIFT_TAG
+        )
+        logger.info(
+            _("%(prefix)s: AMIs found tagged for OCP: %(ocp_tagged_ami_ids)s"),
+            {"prefix": log_prefix, "ocp_tagged_ami_ids": ocp_tagged_ami_ids},
+        )
+        logger.info(
+            _("%(prefix)s: AMIs found untagged for OCP: %(ocp_untagged_ami_ids)s"),
+            {"prefix": log_prefix, "ocp_untagged_ami_ids": ocp_untagged_ami_ids},
+        )
+
+        rhel_tagged_ami_ids, rhel_untagged_ami_ids = _extract_ami_ids_by_tag_change(
+            ami_tag_events, RHEL_TAG
+        )
+        logger.info(
+            _("%(prefix)s: AMIs found tagged for RHEL: %(rhel_tagged_ami_ids)s"),
+            {"prefix": log_prefix, "rhel_tagged_ami_ids": rhel_tagged_ami_ids},
+        )
+        logger.info(
+            _("%(prefix)s: AMIs found untagged for RHEL: %(rhel_untagged_ami_ids)s"),
+            {"prefix": log_prefix, "rhel_untagged_ami_ids": rhel_untagged_ami_ids},
+        )
+
+        # Create only the new images.
+        new_images = {}
+        for ami_id, described_image in described_images.items():
+            owner_id = Decimal(described_image["OwnerId"])
+            name = described_image["Name"]
+            architecture = described_image.get("Architecture")
+            windows = ami_id in windows_ami_ids
+            rhel_detected_by_tag = ami_id in rhel_tagged_ami_ids
+            openshift_detected = ami_id in ocp_tagged_ami_ids
+            region = described_image["found_in_region"]
+
+            logger.info(
+                _("%(prefix)s: Saving new AMI ID %(ami_id)s in region %(region)s"),
+                {"prefix": log_prefix, "ami_id": ami_id, "region": region},
             )
-            awsmachineimage.machine_image.get()
+            awsimage, new = save_new_aws_machine_image(
+                ami_id,
+                name,
+                owner_id,
+                rhel_detected_by_tag,
+                openshift_detected,
+                windows,
+                region,
+                architecture,
+            )
 
-    # Update images with openshift tag changes.
-    if ocp_tagged_ami_ids:
-        MachineImage.objects.filter(
-            aws_machine_image__ec2_ami_id__in=ocp_tagged_ami_ids
-        ).update(openshift_detected=True)
-    if ocp_untagged_ami_ids:
-        MachineImage.objects.filter(
-            aws_machine_image__ec2_ami_id__in=ocp_untagged_ami_ids
-        ).update(openshift_detected=False)
+            image = awsimage.machine_image.get()
+            if new and image.status is not image.INSPECTED:
+                new_images[ami_id] = awsimage
 
-    # Update images with RHEL tag changes.
-    if rhel_tagged_ami_ids:
-        MachineImage.objects.filter(
-            aws_machine_image__ec2_ami_id__in=rhel_tagged_ami_ids
-        ).update(rhel_detected_by_tag=True)
-    if rhel_untagged_ami_ids:
-        MachineImage.objects.filter(
-            aws_machine_image__ec2_ami_id__in=rhel_untagged_ami_ids
-        ).update(rhel_detected_by_tag=False)
-
-    # Save instances and their events.
-    for ((ec2_instance_id, region, aws_account_id), events) in itertools.groupby(
-        instance_events,
-        key=lambda e: (e.ec2_instance_id, e.region, e.aws_account_id),
-    ):
-        events = list(events)
-
-        if ec2_instance_id in described_instances:
-            instance_data = described_instances[ec2_instance_id]
-        else:
-            instance_data = {
-                "InstanceId": ec2_instance_id,
-                "ImageId": events[0].ec2_ami_id,
-                "SubnetId": events[0].subnet_id,
-            }
-        logger.info(
-            _(
-                "%(prefix)s: Saving new EC2 instance ID %(ec2_instance_id)s "
-                "for AWS account ID %(aws_account_id)s in region %(region)s"
-            ),
-            {
-                "prefix": log_prefix,
-                "ec2_instance_id": ec2_instance_id,
-                "aws_account_id": aws_account_id,
-                "region": region,
-            },
+        # Create "unavailable" images for AMIs we saw referenced but that we either
+        # don't have in our models or could not describe from AWS.
+        seen_ami_ids = set(
+            [
+                described_instance["ImageId"]
+                for described_instance in described_instances.values()
+                if described_instance.get("ImageId") is not None
+            ]
+            + [
+                ami_tag_event.ec2_ami_id
+                for ami_tag_event in ami_tag_events
+                if ami_tag_event.ec2_ami_id is not None
+            ]
+            + [
+                instance_event.ec2_ami_id
+                for instance_event in instance_events
+                if instance_event.ec2_ami_id is not None
+            ]
         )
+        described_ami_ids = set(described_images.keys())
+        known_ami_ids = set(
+            image.ec2_ami_id
+            for image in AwsMachineImage.objects.filter(
+                ec2_ami_id__in=list(seen_ami_ids - described_ami_ids)
+            )
+        )
+        unavailable_ami_ids = seen_ami_ids - described_ami_ids - known_ami_ids
+        for ami_id in unavailable_ami_ids:
+            logger.info(
+                _("Missing image data for %s; creating UNAVAILABLE stub image."), ami_id
+            )
+            with transaction.atomic():
+                awsmachineimage = AwsMachineImage.objects.create(ec2_ami_id=ami_id)
+                MachineImage.objects.create(
+                    status=MachineImage.UNAVAILABLE, content_object=awsmachineimage
+                )
+                awsmachineimage.machine_image.get()
 
-        awsaccount = AwsCloudAccount.objects.get(aws_account_id=aws_account_id)
-        account = awsaccount.cloud_account.get()
-        instance = save_instance(account, instance_data, region)
+        # Update images with openshift tag changes.
+        if ocp_tagged_ami_ids:
+            MachineImage.objects.filter(
+                aws_machine_image__ec2_ami_id__in=ocp_tagged_ami_ids
+            ).update(openshift_detected=True)
+        if ocp_untagged_ami_ids:
+            MachineImage.objects.filter(
+                aws_machine_image__ec2_ami_id__in=ocp_untagged_ami_ids
+            ).update(openshift_detected=False)
 
-        # Build a list of event data
-        events_info = _build_events_info_for_saving(account, instance, events)
-        save_instance_events(instance, instance_data, events_info)
+        # Update images with RHEL tag changes.
+        if rhel_tagged_ami_ids:
+            MachineImage.objects.filter(
+                aws_machine_image__ec2_ami_id__in=rhel_tagged_ami_ids
+            ).update(rhel_detected_by_tag=True)
+        if rhel_untagged_ami_ids:
+            MachineImage.objects.filter(
+                aws_machine_image__ec2_ami_id__in=rhel_untagged_ami_ids
+            ).update(rhel_detected_by_tag=False)
+
+        # Save instances and their events.
+        for ((ec2_instance_id, region, aws_account_id), events) in itertools.groupby(
+            instance_events,
+            key=lambda e: (e.ec2_instance_id, e.region, e.aws_account_id),
+        ):
+            events = list(events)
+
+            if ec2_instance_id in described_instances:
+                instance_data = described_instances[ec2_instance_id]
+            else:
+                instance_data = {
+                    "InstanceId": ec2_instance_id,
+                    "ImageId": events[0].ec2_ami_id,
+                    "SubnetId": events[0].subnet_id,
+                }
+            logger.info(
+                _(
+                    "%(prefix)s: Saving new EC2 instance ID %(ec2_instance_id)s "
+                    "for AWS account ID %(aws_account_id)s in region %(region)s"
+                ),
+                {
+                    "prefix": log_prefix,
+                    "ec2_instance_id": ec2_instance_id,
+                    "aws_account_id": aws_account_id,
+                    "region": region,
+                },
+            )
+
+            awsaccount = AwsCloudAccount.objects.get(aws_account_id=aws_account_id)
+            account = awsaccount.cloud_account.get()
+            instance = save_instance(account, instance_data, region)
+
+            # Build a list of event data
+            events_info = _build_events_info_for_saving(account, instance, events)
+            save_instance_events(instance, instance_data, events_info)
 
     return new_images
 
