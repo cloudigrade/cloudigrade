@@ -249,23 +249,20 @@ def delete_from_sources_kafka_message(message, headers, event_type):  # noqa: C9
         # running at a time.
         #
         # The select_for_update() lock has been moved from the CloudAccount to the
-        # UserTaskLock. As a result we must now re-validate that the cloud_account
-        # exists before calling delete, since it could be the case that we receive
-        # two requests in quick succession to delete the same cloud account,
-        # the second one would fail, since the cloud account no longer
-        # exist when the second task acquires the UserTaskLock.
-        #
-        # We should release the UserTaskLock with each cloud_account.delete action.
+        # UserTaskLock. We should release the UserTaskLock with each
+        # cloud_account.delete action.
         #
         # Using the UserTaskLock *should* fix the issue of Django not getting a
         # row-level lock in the DB for each CloudAccount we want to delete until
         # after all of the pre_delete logic completes
-        try:
-            with transaction.atomic(), lock_task_for_user_ids([cloud_account.user.id]):
-                cloud_account.refresh_from_db()
-                cloud_account.delete()
-        except CloudAccount.DoesNotExist:
-            logger.info("CloudAccount has already been removed.")
+        with transaction.atomic(), lock_task_for_user_ids([cloud_account.user.id]):
+            # Call delete on the CloudAccount queryset instead of the specific
+            # cloud_account. Why? A queryset delete does not raise DoesNotExist
+            # exceptions if the cloud_account has already been deleted.
+            # If we call delete on a nonexistent cloud_account, we run into trouble
+            # with Django rollback and our task lock.
+            # See https://gitlab.com/cloudigrade/cloudigrade/-/merge_requests/811
+            CloudAccount.objects.filter(id=cloud_account.id).delete()
 
 
 @retriable_shared_task(
