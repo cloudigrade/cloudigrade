@@ -421,12 +421,12 @@ class MachineImage(BaseGenericModel):
         )
         if concurrent_usages.exists():
             # Lock all users that depend on this machineimage
-            cloud_accounts = (
-                Instance.objects.filter(machine_image=self)
-                .values_list("cloud_account__id")
-                .distinct()
+            user_ids = set(
+                Instance.objects.filter(machine_image=self).values_list(
+                    "cloud_account__user__id", flat=True
+                )
             )
-            user_ids = [cloud_account.user.id for cloud_account in cloud_accounts]
+
             with lock_task_for_user_ids(user_ids):
                 concurrent_usages.delete()
         return super().save(*args, **kwargs)

@@ -89,8 +89,6 @@ def lock_task_for_user_ids(user_ids):
         UserTaskLock.objects.get_or_create(user_id=user_id)
     locks = UserTaskLock.objects.select_for_update().filter(user__id__in=user_ids)
     locks.update(locked=True)
-    try:
-        yield locks
-    finally:
-        locks.update(locked=False)
-        logger.info("Unlocking user_ids %(user_ids)s.", {"user_ids": user_ids})
+    yield locks
+    locks.update(locked=False)
+    logger.info("Unlocking user_ids %(user_ids)s.", {"user_ids": user_ids})

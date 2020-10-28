@@ -6,7 +6,10 @@ from uuid import uuid4
 import faker
 from django.test import TestCase
 
-from api.models import ConcurrentUsage, ConcurrentUsageCalculationTask
+from api.models import (
+    ConcurrentUsage,
+    ConcurrentUsageCalculationTask,
+)
 from api.tests import helper as api_helper
 from api.util import calculate_max_concurrent_usage
 from util.tests import helper as util_helper
@@ -68,5 +71,6 @@ class MachineImageTest(TestCase):
         calculate_max_concurrent_usage(request_date, user_id=user.id)
 
         self.assertEquals(1, ConcurrentUsage.objects.count())
-        image.delete()
+        image.rhel_detected_by_tag = True
+        image.save()
         self.assertEquals(0, ConcurrentUsage.objects.count())

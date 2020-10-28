@@ -3,11 +3,17 @@ from datetime import datetime, timedelta
 from unittest.mock import patch
 
 from dateutil import tz
-from django.test import TestCase
+from django.db import transaction
+from django.test import TestCase, TransactionTestCase
 
-from api.models import UserTaskLock
+from api.models import (
+    CloudAccount,
+    UserTaskLock,
+)
+from api.tests import helper as api_helper
 from util import misc
-from util.misc import generate_device_name, lock_task_for_user_ids
+from util.misc import generate_device_name
+from util.misc import lock_task_for_user_ids
 from util.tests import helper as util_helper
 
 
@@ -34,6 +40,10 @@ class UtilMiscTest(TestCase):
             output = misc.truncate_date(tomorrow)
         self.assertEqual(output, now)
 
+
+class LockUserTaskTest(TransactionTestCase):
+    """Test Cases for the UserTaskLock context manager."""
+
     def test_lock_task_for_user_ids_create_usertasklock(self):
         """Assert UserTaskLock is created by context manager."""
         user1 = util_helper.generate_test_user()
@@ -56,3 +66,42 @@ class UtilMiscTest(TestCase):
                 self.assertEqual(lock.locked, True)
         lock = UserTaskLock.objects.get(user=user)
         self.assertEqual(lock.locked, False)
+
+    @patch("api.clouds.aws.util.delete_cloudtrail")
+    @patch("api.models.notify_sources_application_availability")
+    def test_delete_clount_lock(self, mock_notify_sources, mock_delete_cloudtrail):
+        """Test that deleting an clount inside a lock is successful."""
+        aws_account_id = util_helper.generate_dummy_aws_account_id()
+        arn = util_helper.generate_dummy_arn(account_id=aws_account_id)
+        account = api_helper.generate_cloud_account(
+            arn=arn,
+            aws_account_id=aws_account_id,
+            name="test",
+            generate_verify_task=False,
+        )
+
+        with transaction.atomic(), lock_task_for_user_ids([account.user.id]):
+            CloudAccount.objects.filter(id=account.id).delete()
+
+        self.assertEqual(CloudAccount.objects.all().count(), 0)
+        self.assertFalse(UserTaskLock.objects.get(user=account.user).locked)
+
+    @patch("api.models.notify_sources_application_availability")
+    def test_delete_clount_lock_exception(self, mock_notify_sources):
+        """Test that an exception when deleting a clount inside a lock rolls back."""
+        aws_account_id = util_helper.generate_dummy_aws_account_id()
+        arn = util_helper.generate_dummy_arn(account_id=aws_account_id)
+        account = api_helper.generate_cloud_account(
+            arn=arn,
+            aws_account_id=aws_account_id,
+            name="test",
+            generate_verify_task=False,
+        )
+        UserTaskLock.objects.create(user=account.user)
+        with self.assertRaises(transaction.TransactionManagementError):
+            with transaction.atomic(), lock_task_for_user_ids([account.user.id]):
+                CloudAccount.objects.filter(id=account.id).delete()
+                raise transaction.TransactionManagementError
+
+        self.assertEqual(CloudAccount.objects.all().count(), 1)
+        self.assertFalse(UserTaskLock.objects.get(user=account.user).locked)
