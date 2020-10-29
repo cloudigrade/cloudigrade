@@ -42,6 +42,7 @@ LOGGING = {
     "formatters": {
         "verbose": {
             "format": "%(asctime)s | %(levelname)s | "
+            "%(process)s | "
             "%(filename)s:%(funcName)s:%(lineno)d | "
             "requestid:%(request_id)s | %(message)s"
         },
