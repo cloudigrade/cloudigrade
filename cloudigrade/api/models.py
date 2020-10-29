@@ -613,8 +613,39 @@ class Run(BaseModel):
         concurrent_usages = ConcurrentUsage.objects.filter(
             potentially_related_runs=self
         )
+        logger.debug(
+            "Removing %(num_usages)d related ConcurrentUsage objects "
+            "related to Run %(run)s."
+            % {"num_usages": concurrent_usages.count(), "run": str(self)}
+        )
         concurrent_usages.delete()
         return super().save(*args, **kwargs)
+
+    def __str__(self):
+        """Get the string representation."""
+        return repr(self)
+
+    def __repr__(self):
+        """Get an unambiguous string representation."""
+        start_time = (
+            repr(self.start_time.isoformat()) if self.start_time is not None else None
+        )
+        end_time = (
+            repr(self.end_time.isoformat()) if self.end_time is not None else None
+        )
+
+        return (
+            f"{self.__class__.__name__}("
+            f"id={self.id}, "
+            f"machineimage={self.machineimage_id}, "
+            f"instance={self.instance_id}, "
+            f"instance_type={self.instance_type}, "
+            f"memory={self.memory}, "
+            f"vcpu={self.vcpu}, "
+            f"start_time=parse({start_time}), "
+            f"end_time=parse({end_time})"
+            f")"
+        )
 
 
 @receiver(pre_delete, sender=Run)
@@ -629,7 +660,6 @@ def run_pre_delete_callback(*args, **kwargs):
     Note: Signal receivers must accept keyword arguments (**kwargs).
     """
     run = kwargs["instance"]
-    ConcurrentUsage.objects.filter()
     concurrent_usages = ConcurrentUsage.objects.filter(potentially_related_runs=run)
     concurrent_usages.delete()
 
