@@ -610,6 +610,7 @@ class Run(BaseModel):
     @transaction.atomic
     def save(self, *args, **kwargs):
         """Save this run and delete any related ConcurrentUsage objects."""
+        super().save(*args, **kwargs)
         concurrent_usages = ConcurrentUsage.objects.filter(
             potentially_related_runs=self
         )
@@ -619,7 +620,6 @@ class Run(BaseModel):
             % {"num_usages": concurrent_usages.count(), "run": str(self)}
         )
         concurrent_usages.delete()
-        return super().save(*args, **kwargs)
 
     def __str__(self):
         """Get the string representation."""
