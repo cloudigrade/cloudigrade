@@ -362,6 +362,10 @@ INSPECT_PENDING_IMAGES_MIN_AGE = env.int(
     "INSPECT_PENDING_IMAGES_MIN_AGE", default=60 * 60 * 12  # 12 hours
 )
 
+DELETE_INACTIVE_USERS_MIN_AGE = env.int(
+    "DELETE_INACTIVE_USERS_MIN_AGE", default=60 * 60 * 24
+)
+
 CELERY_TASK_ROUTES = {
     # api.tasks
     "api.tasks.create_from_sources_kafka_message": {
@@ -370,6 +374,7 @@ CELERY_TASK_ROUTES = {
     "api.tasks.delete_from_sources_kafka_message": {
         "queue": "delete_from_sources_kafka_message"
     },
+    "api.tasks.delete_inactive_users": {"queue": "delete_inactive_users"},
     "api.tasks.inspect_pending_images": {"queue": "inspect_pending_images"},
     "api.tasks.persist_inspection_cluster_results_task": {
         "queue": "persist_inspection_cluster_results_task"
@@ -411,6 +416,10 @@ CELERY_TASK_ROUTES = {
 # Remember: the "schedule" values are integer numbers of seconds.
 CELERY_BEAT_SCHEDULE = {
     # api.tasks
+    "delete_inactive_users": {
+        "task": "api.tasks.delete_inactive_users",
+        "schedule": env.int("DELETE_INACTIVE_USERS_SCHEDULE", default=24 * 60 * 60),
+    },
     "persist_inspection_cluster_results": {
         "task": "api.tasks.persist_inspection_cluster_results_task",
         "schedule": env.int(

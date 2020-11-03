@@ -574,3 +574,50 @@ def calculate_max_concurrent_usage_task(self, date, user_id):
         "and date %(date)s.",
         {"user_id": user_id, "date": date},
     )
+
+
+@transaction.atomic()
+def _delete_user(user):
+    """Delete given User if it has no related CloudAccount objects."""
+    if CloudAccount.objects.filter(user_id=user.id).exists():
+        return False
+
+    count, __ = user.delete()
+    return count > 0
+
+
+@shared_task(name="api.tasks.delete_inactive_users")
+def delete_inactive_users():
+    """
+    Delete all inactive User objects.
+
+    A User is considered to be inactive if all of the following are true:
+    - the User has no related CloudAccount objects
+    - the User is not a superuser
+    - the User's date joined is more than MINIMUM_USER_AGE_SECONDS old
+    """
+    oldest_allowed_date_joined = get_now() - timedelta(
+        seconds=settings.DELETE_INACTIVE_USERS_MIN_AGE
+    )
+    users = User.objects.filter(
+        is_superuser=False, date_joined__lt=oldest_allowed_date_joined
+    )
+    total_user_count = users.count()
+    deleted_user_count = 0
+    logger.info(
+        _("Found {total_user_count} not-superuser Users joined before {date_joined}."),
+        {
+            "total_user_count": total_user_count,
+            "date_joined": oldest_allowed_date_joined,
+        },
+    )
+    for user in users:
+        if _delete_user(user):
+            deleted_user_count += 1
+    logger.info(
+        _("Successfully deleted {deleted_user_count} of {total_user_count} users."),
+        {
+            "deleted_user_count": deleted_user_count,
+            "total_user_count": total_user_count,
+        },
+    )
