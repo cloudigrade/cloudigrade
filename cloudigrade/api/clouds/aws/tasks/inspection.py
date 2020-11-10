@@ -428,7 +428,7 @@ def _check_cluster_volume_mounts(ec2_instance_id, ami_mountpoints):
         device_mapping = device_mappings.get(mount_point, {})
         status = device_mapping.get("Ebs", {}).get("Status")
         if not device_mapping:
-            logger.error(
+            logger.warning(
                 _(
                     "Expected device %(mount_point)s for %(ami_id)s not found in "
                     "described instance %(ec2_instance_id)s"

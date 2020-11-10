@@ -115,5 +115,5 @@ class RunInspectionClusterTest(TestCase):
         self.assertIn("is still attaching", logging_watcher.output[0])
         self.assertIn("ERROR", logging_watcher.output[1])
         self.assertIn("has unexpected status", logging_watcher.output[1])
-        self.assertIn("ERROR", logging_watcher.output[2])
+        self.assertIn("WARNING", logging_watcher.output[2])
         self.assertIn("not found in", logging_watcher.output[2])
