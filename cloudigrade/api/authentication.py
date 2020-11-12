@@ -64,7 +64,14 @@ def parse_requests_header(request):
         )
 
     is_org_admin = auth["identity"].get("user", {}).get("is_org_admin")
-
+    logger.info(
+        _(
+            "3scale header has identity "
+            "account_number '%(account_number)s' "
+            "is_org_admin '%(is_org_admin)s'"
+        ),
+        {"account_number": account_number, "is_org_admin": is_org_admin},
+    )
     return auth_header, account_number, is_org_admin
 
 
