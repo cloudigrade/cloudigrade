@@ -613,7 +613,10 @@ def delete_inactive_users():
     total_user_count = users.count()
     deleted_user_count = 0
     logger.info(
-        _("Found {total_user_count} not-superuser Users joined before {date_joined}."),
+        _(
+            "Found %(total_user_count)s not-superuser Users joined before "
+            "%(date_joined)s."
+        ),
         {
             "total_user_count": total_user_count,
             "date_joined": oldest_allowed_date_joined,
@@ -623,7 +626,10 @@ def delete_inactive_users():
         if _delete_user(user):
             deleted_user_count += 1
     logger.info(
-        _("Successfully deleted {deleted_user_count} of {total_user_count} users."),
+        _(
+            "Successfully deleted %(deleted_user_count)s of %(total_user_count)s "
+            "users."
+        ),
         {
             "deleted_user_count": deleted_user_count,
             "total_user_count": total_user_count,
