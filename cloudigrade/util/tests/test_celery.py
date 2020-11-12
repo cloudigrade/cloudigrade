@@ -5,7 +5,7 @@ from django.test import TestCase
 
 from util import celery
 from util.celery import calculate_max_retries
-from util.exceptions import NotReadyException
+from util.exceptions import AwsThrottlingException, NotReadyException
 
 
 class UtilCeleryTest(TestCase):
@@ -32,7 +32,7 @@ class UtilCeleryTest(TestCase):
         args, kwargs = mock_shared_task.call_args_list[0]
         self.assertEqual(my_func, args[0])
         expected_kwargs = {
-            "autoretry_for": (NotReadyException,),
+            "autoretry_for": (NotReadyException, AwsThrottlingException),
             "max_retries": 35,
             "retry_backoff": True,
             "retry_jitter": True,
@@ -61,7 +61,7 @@ class UtilCeleryTest(TestCase):
         args, kwargs = mock_shared_task.call_args_list[0]
         self.assertEqual(my_func, args[0])
         expected_kwargs = {
-            "autoretry_for": (NotReadyException,),
+            "autoretry_for": (NotReadyException, AwsThrottlingException),
             "max_retries": 10,
             "retry_backoff": True,
             "retry_jitter": True,
@@ -97,7 +97,7 @@ class UtilCeleryTest(TestCase):
         args, kwargs = mock_shared_task.call_args_list[0]
         self.assertEqual(my_func, args[0])
         expected_kwargs = {
-            "autoretry_for": (NotReadyException,),
+            "autoretry_for": (NotReadyException, AwsThrottlingException),
             "max_retries": 8,
             "retry_backoff": True,
             "retry_jitter": True,

@@ -93,6 +93,19 @@ class InvalidHoundigradeJsonFormat(Exception):
     """Raise when houndigrade returns json that does not have images."""
 
 
+class AwsPolicyCreationException(Exception):
+    """Raise when AWS Policy fails creation unexpectedly."""
+
+
+class AwsRoleCreationException(Exception):
+    """Raise when AWS Role fails creation unexpectedly."""
+
+
+class AwsThrottlingException(Exception):
+    """Raise when AWS call fails because of throttling."""
+
+
+# API Exceptions
 class NormalizeRunException(APIException):
     """Raise when something unexpected happens in building NormalizeRuns."""
 
@@ -105,26 +118,6 @@ class NotImplementedAPIException(APIException):
     status_code = http.HTTPStatus.NOT_IMPLEMENTED
 
 
-class AwsPolicyCreationException(Exception):
-    """Raise when AWS Policy fails creation unexpectedly."""
-
-
-class AwsRoleCreationException(Exception):
-    """Raise when AWS Role fails creation unexpectedly."""
-
-
-class SourcesAPIException(Exception):
-    """Raise when Insights Sources API behaves unexpectedly."""
-
-
-class SourcesAPINotOkStatus(SourcesAPIException):
-    """Raise when Sources API returns a not-200 status."""
-
-
-class SourcesAPINotJsonContent(SourcesAPIException):
-    """Raise when Sources API returns not-JSON content."""
-
-
 class ResultsUnavailable(APIException):
     """
     Raise when results are temporarily unavailable.
@@ -135,6 +128,19 @@ class ResultsUnavailable(APIException):
     status_code = 425
     default_detail = "Results are currently unavailable, try again later."
     default_code = "result_unavailable"
+
+
+# Sources Exceptions:
+class SourcesAPIException(Exception):
+    """Raise when Insights Sources API behaves unexpectedly."""
+
+
+class SourcesAPINotOkStatus(SourcesAPIException):
+    """Raise when Sources API returns a not-200 status."""
+
+
+class SourcesAPINotJsonContent(SourcesAPIException):
+    """Raise when Sources API returns not-JSON content."""
 
 
 def api_exception_handler(exc, context):

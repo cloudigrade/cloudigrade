@@ -61,15 +61,17 @@ from api.util import (
 )
 from util import aws, insights
 from util.celery import retriable_shared_task
+from util.exceptions import AwsThrottlingException
 from util.misc import get_now, lock_task_for_user_ids
 
 logger = logging.getLogger(__name__)
 
 
 @retriable_shared_task(
-    autoretry_for=(RequestException, BaseHTTPError),
+    autoretry_for=(RequestException, BaseHTTPError, AwsThrottlingException),
     name="api.tasks.create_from_sources_kafka_message",
 )
+@aws.rewrap_aws_errors
 def create_from_sources_kafka_message(message, headers):  # noqa: C901
     """
     Create our model objects from the Sources Kafka message.
@@ -180,7 +182,8 @@ def create_from_sources_kafka_message(message, headers):  # noqa: C901
 
 
 @retriable_shared_task(
-    autoretry_for=(RuntimeError,), name="api.tasks.delete_from_sources_kafka_message"
+    autoretry_for=(RuntimeError, AwsThrottlingException),
+    name="api.tasks.delete_from_sources_kafka_message",
 )  # noqa: C901
 @aws.rewrap_aws_errors
 def delete_from_sources_kafka_message(message, headers, event_type):  # noqa: C901
@@ -266,7 +269,12 @@ def delete_from_sources_kafka_message(message, headers, event_type):  # noqa: C9
 
 
 @retriable_shared_task(
-    autoretry_for=(RequestException, BaseHTTPError, RuntimeError),
+    autoretry_for=(
+        RequestException,
+        BaseHTTPError,
+        RuntimeError,
+        AwsThrottlingException,
+    ),
     name="api.tasks.update_from_source_kafka_message",
 )
 @aws.rewrap_aws_errors

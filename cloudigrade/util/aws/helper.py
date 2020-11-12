@@ -8,6 +8,7 @@ from botocore.exceptions import ClientError
 from django.utils.translation import gettext as _
 
 from util.aws.sts import cloudigrade_policy
+from util.exceptions import AwsThrottlingException
 
 logger = logging.getLogger(__name__)
 
@@ -213,6 +214,12 @@ def rewrap_aws_errors(original_function):
                 message = _("Unexpected AWS {0}: {1}").format(error_code, error_message)
                 logger.warning(message)
                 return None
+            elif error_code == "ThrottlingException":
+                logger.info(
+                    "AWS Throttling error %s detected, raising AwsThrottlingException.",
+                    e,
+                )
+                raise AwsThrottlingException
             else:
                 message = _("Unexpected AWS error {0} ({1}): {2}").format(
                     type(e), error_code, e

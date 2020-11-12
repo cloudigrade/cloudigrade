@@ -2,13 +2,13 @@
 from celery import shared_task
 from celery.utils.time import get_exponential_backoff_interval
 
-from util.exceptions import NotReadyException
+from util.exceptions import AwsThrottlingException, NotReadyException
 
 
 def retriable_shared_task(
     original_function=None,
     retry_max_elapsed_backoff=None,
-    autoretry_for=(NotReadyException,),
+    autoretry_for=(NotReadyException, AwsThrottlingException),
     max_retries=35,
     retry_backoff=True,
     retry_jitter=True,

@@ -6,6 +6,7 @@ from botocore.exceptions import ClientError
 from django.test import TestCase
 
 from util.aws import helper
+from util.exceptions import AwsThrottlingException
 from util.tests import helper as test_helper
 
 
@@ -63,6 +64,22 @@ class UtilAwsHelperTest(TestCase):
             self.assertIn("Something bad happened.", logging_watcher.output[0])
 
         self.assertIsNone(actual_result)
+
+    def test_rewrap_aws_throttling(self):
+        """Assert rewrap_aws_errors raises AwsThrottlingException."""
+        mock_error = {
+            "Error": {
+                "Code": "ThrottlingException",
+                "Message": "AWS is throttling your request.",
+            }
+        }
+
+        @helper.rewrap_aws_errors
+        def dummy_adder():
+            raise ClientError(mock_error, "SomeRandomAction")
+
+        with self.assertRaises(AwsThrottlingException):
+            dummy_adder()
 
     def test_get_regions_with_no_args(self):
         """Assert get_regions with no args returns expected regions."""
