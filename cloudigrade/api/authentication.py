@@ -44,6 +44,12 @@ def parse_requests_header(request):
             _("Authentication Failed: invalid 3scale header- {error}").format(error=e)
         )
 
+    if settings.VERBOSE_INSIGHTS_IDENTITY_HEADER_LOGGING:
+        # Important note: this setting defaults to False and generally should remain
+        # as False except for very special and *temporary* circumstances when we need
+        # to investigate unusual request handling.
+        logger.info(_("Decoded 3scale header: %s"), str(auth))
+
     # If account_number is not in header, authentication fails
     try:
         account_number = auth["identity"]["account_number"]
