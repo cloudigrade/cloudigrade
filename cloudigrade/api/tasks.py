@@ -227,10 +227,6 @@ def delete_from_sources_kafka_message(message, headers, event_type):  # noqa: C9
     query_filter = None
     if event_type == settings.SOURCE_DESTROY_EVENT:
         query_filter = Q(platform_source_id=platform_id)
-    elif event_type == settings.AUTHENTICATION_DESTROY_EVENT:
-        query_filter = Q(platform_authentication_id=platform_id)
-    elif event_type == settings.APPLICATION_DESTROY_EVENT:
-        query_filter = Q(platform_application_id=platform_id)
     elif event_type == settings.APPLICATION_AUTHENTICATION_DESTROY_EVENT:
         authentication_id = message["authentication_id"]
         application_id = message["application_id"]

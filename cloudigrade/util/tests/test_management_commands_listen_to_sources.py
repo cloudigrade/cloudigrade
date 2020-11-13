@@ -50,7 +50,7 @@ class SourcesListenerTest(TestCase):
 
         message2.value.return_value = b'{"value": "test message 2"}'
         message2.headers.return_value = [
-            ("event_type", b"Authentication.destroy"),
+            ("event_type", b"ApplicationAuthentication.destroy"),
             ("encoding", b"json"),
         ]
 

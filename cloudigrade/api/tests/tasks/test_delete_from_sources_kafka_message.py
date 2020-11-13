@@ -20,8 +20,9 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
 
     def setUp(self):
         """Set up common variables for tests."""
-        self.authentication_id = _faker.pyint()
         self.application_id = _faker.pyint()
+        self.application_authentication_id = _faker.pyint()
+        self.authentication_id = _faker.pyint()
         self.source_id = _faker.pyint()
 
         self.account = api_helper.generate_cloud_account(
@@ -32,23 +33,31 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         self.user = self.account.user
 
     @patch("api.models.notify_sources_application_availability")
-    def test_delete_from_sources_kafka_message_success(self, mock_notify_sources):
-        """Assert delete_from_sources_kafka_message happy path success."""
+    def test_delete_from_sources_kafka_message_application_authentication_success(
+        self, mock_notify_sources
+    ):
+        """Assert removing CloudAccount via APPLICATION_AUTHENTICATION_DESTROY_EVENT."""
         self.assertEqual(CloudAccount.objects.count(), 1)
         self.assertEqual(aws_models.AwsCloudAccount.objects.count(), 1)
 
         account_number = str(self.user.username)
-        username = _faker.user_name()
-        message, headers = util_helper.generate_authentication_create_message_value(
-            account_number, username, platform_id=self.authentication_id
+        (
+            message,
+            headers,
+        ) = util_helper.generate_applicationauthentication_create_message_value(
+            account_number,
+            platform_id=self.application_authentication_id,
+            application_id=self.application_id,
+            authentication_id=self.authentication_id,
         )
 
         expected_logger_infos = [
             "INFO:api.tasks:delete_from_sources_kafka_message for account_number "
-            f"{account_number}, platform_id {self.authentication_id}, and event_type "
-            "Authentication.destroy",
+            f"{account_number}, platform_id {self.application_authentication_id}, and "
+            "event_type ApplicationAuthentication.destroy",
             "INFO:api.tasks:Deleting CloudAccounts using filter "
-            f"(AND: ('platform_authentication_id', {self.authentication_id}))",
+            f"(AND: ('platform_application_id', {self.application_id}), "
+            f"('platform_authentication_id', {self.authentication_id}))",
         ]
 
         with patch.object(sts, "boto3") as mock_boto3, patch.object(
@@ -59,7 +68,45 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
             mock_assume_role.return_value = role
 
             tasks.delete_from_sources_kafka_message(
-                message, headers, settings.AUTHENTICATION_DESTROY_EVENT
+                message, headers, settings.APPLICATION_AUTHENTICATION_DESTROY_EVENT
+            )
+            for index, expected_logger_info in enumerate(expected_logger_infos):
+                self.assertEqual(expected_logger_info, logging_watcher.output[index])
+        self.assertEqual(CloudAccount.objects.count(), 0)
+        self.assertEqual(aws_models.AwsCloudAccount.objects.count(), 0)
+        mock_notify_sources.assert_called()
+
+    @patch("api.models.notify_sources_application_availability")
+    def test_delete_from_sources_kafka_message_source_success(
+        self, mock_notify_sources
+    ):
+        """Assert removing CloudAccount via SOURCE_DESTROY_EVENT."""
+        self.assertEqual(CloudAccount.objects.count(), 1)
+        self.assertEqual(aws_models.AwsCloudAccount.objects.count(), 1)
+
+        account_number = str(self.user.username)
+        username = _faker.user_name()
+        message, headers = util_helper.generate_authentication_create_message_value(
+            account_number, username, platform_id=self.source_id
+        )
+
+        expected_logger_infos = [
+            "INFO:api.tasks:delete_from_sources_kafka_message for account_number "
+            f"{account_number}, platform_id {self.source_id}, and "
+            "event_type Source.destroy",
+            "INFO:api.tasks:Deleting CloudAccounts using filter "
+            f"(AND: ('platform_source_id', {self.source_id}))",
+        ]
+
+        with patch.object(sts, "boto3") as mock_boto3, patch.object(
+            aws_models, "_delete_cloudtrail"
+        ), self.assertLogs("api.tasks", level="INFO") as logging_watcher:
+            role = util_helper.generate_dummy_role()
+            mock_assume_role = mock_boto3.client.return_value.assume_role
+            mock_assume_role.return_value = role
+
+            tasks.delete_from_sources_kafka_message(
+                message, headers, settings.SOURCE_DESTROY_EVENT
             )
             for index, expected_logger_info in enumerate(expected_logger_infos):
                 self.assertEqual(expected_logger_info, logging_watcher.output[index])
@@ -74,7 +121,7 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         message = {}
         headers = []
         tasks.delete_from_sources_kafka_message(
-            message, headers, settings.AUTHENTICATION_DESTROY_EVENT
+            message, headers, settings.APPLICATION_AUTHENTICATION_DESTROY_EVENT
         )
 
         # Delete should not have been called.
@@ -84,14 +131,21 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         """Assert delete fails from mismatched data."""
         self.assertEqual(CloudAccount.objects.count(), 1)
         account_number = _faker.user_name()
-        username = _faker.user_name()
+        application_id = _faker.pyint()
         authentication_id = _faker.pyint()
-        message, headers = util_helper.generate_authentication_create_message_value(
-            account_number, username, authentication_id
+        application_authentication_id = _faker.pyint()
+        (
+            message,
+            headers,
+        ) = util_helper.generate_applicationauthentication_create_message_value(
+            account_number,
+            platform_id=application_authentication_id,
+            application_id=application_id,
+            authentication_id=authentication_id,
         )
 
         tasks.delete_from_sources_kafka_message(
-            message, headers, settings.AUTHENTICATION_DESTROY_EVENT
+            message, headers, settings.APPLICATION_AUTHENTICATION_DESTROY_EVENT
         )
 
         # Delete should not have been called.
@@ -102,71 +156,25 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         self.assertEqual(CloudAccount.objects.count(), 1)
 
         account_number = str(self.user.username)
-        username = _faker.user_name()
+        application_id = _faker.pyint()
         authentication_id = _faker.pyint()
-        message, headers = util_helper.generate_authentication_create_message_value(
-            account_number, username, authentication_id
+        application_authentication_id = _faker.pyint()
+        (
+            message,
+            headers,
+        ) = util_helper.generate_applicationauthentication_create_message_value(
+            account_number,
+            platform_id=application_authentication_id,
+            application_id=application_id,
+            authentication_id=authentication_id,
         )
 
         tasks.delete_from_sources_kafka_message(
-            message, headers, settings.AUTHENTICATION_DESTROY_EVENT
+            message, headers, settings.APPLICATION_AUTHENTICATION_DESTROY_EVENT
         )
 
         # Delete should not have been called.
         self.assertEqual(CloudAccount.objects.count(), 1)
-
-    @patch("api.models.notify_sources_application_availability")
-    def test_delete_endpoint_from_sources_kafka_message_success(
-        self, mock_notify_sources
-    ):
-        """Assert delete_from_sources_kafka_message with endpoint delete success."""
-        self.assertEqual(CloudAccount.objects.count(), 1)
-        self.assertEqual(aws_models.AwsCloudAccount.objects.count(), 1)
-
-        account_number = str(self.user.username)
-        username = _faker.user_name()
-        message, headers = util_helper.generate_authentication_create_message_value(
-            account_number, username, platform_id=self.application_id
-        )
-
-        with patch.object(sts, "boto3") as mock_boto3, patch.object(
-            aws_models, "_delete_cloudtrail"
-        ):
-            role = util_helper.generate_dummy_role()
-            mock_assume_role = mock_boto3.client.return_value.assume_role
-            mock_assume_role.return_value = role
-            tasks.delete_from_sources_kafka_message(
-                message, headers, settings.APPLICATION_DESTROY_EVENT
-            )
-        self.assertEqual(CloudAccount.objects.count(), 0)
-        self.assertEqual(aws_models.AwsCloudAccount.objects.count(), 0)
-
-    @patch("api.models.notify_sources_application_availability")
-    def test_delete_source_from_sources_kafka_message_success(
-        self, mock_notify_sources
-    ):
-        """Assert delete_from_sources_kafka_message with source delete success."""
-        self.assertEqual(CloudAccount.objects.count(), 1)
-        self.assertEqual(aws_models.AwsCloudAccount.objects.count(), 1)
-
-        account_number = str(self.user.username)
-        username = _faker.user_name()
-        message, headers = util_helper.generate_authentication_create_message_value(
-            account_number, username, platform_id=self.source_id
-        )
-
-        with patch.object(sts, "boto3") as mock_boto3, patch.object(
-            aws_models, "_delete_cloudtrail"
-        ):
-            role = util_helper.generate_dummy_role()
-            mock_assume_role = mock_boto3.client.return_value.assume_role
-            mock_assume_role.return_value = role
-
-            tasks.delete_from_sources_kafka_message(
-                message, headers, settings.SOURCE_DESTROY_EVENT
-            )
-        self.assertEqual(CloudAccount.objects.count(), 0)
-        self.assertEqual(aws_models.AwsCloudAccount.objects.count(), 0)
 
     def test_delete_fails_unsupported_event_type(self):
         """Assert delete_from_sources_kafka_message fails for bad event type."""
@@ -189,62 +197,3 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
             tasks.delete_from_sources_kafka_message(message, headers, "BAD EVENT")
         self.assertEqual(CloudAccount.objects.count(), 1)
         self.assertEqual(aws_models.AwsCloudAccount.objects.count(), 1)
-
-    @patch("api.models.notify_sources_application_availability")
-    def test_delete_application_from_sources_kafka_message_success(
-        self, mock_notify_sources
-    ):
-        """Assert application delete remove clount."""
-        self.assertEqual(CloudAccount.objects.count(), 1)
-        self.assertEqual(aws_models.AwsCloudAccount.objects.count(), 1)
-
-        account_number = str(self.user.username)
-        username = _faker.user_name()
-        message, headers = util_helper.generate_authentication_create_message_value(
-            account_number, username, platform_id=self.application_id
-        )
-
-        with patch.object(sts, "boto3") as mock_boto3, patch.object(
-            aws_models, "_delete_cloudtrail"
-        ):
-            role = util_helper.generate_dummy_role()
-            mock_assume_role = mock_boto3.client.return_value.assume_role
-            mock_assume_role.return_value = role
-
-            tasks.delete_from_sources_kafka_message(
-                message, headers, settings.APPLICATION_DESTROY_EVENT
-            )
-        self.assertEqual(CloudAccount.objects.count(), 0)
-        self.assertEqual(aws_models.AwsCloudAccount.objects.count(), 0)
-
-    @patch("api.models.notify_sources_application_availability")
-    def test_delete_application_authentication_from_sources_kafka_message_success(
-        self, mock_notify_sources
-    ):
-        """Assert application_authentication delete remove clount."""
-        self.assertEqual(CloudAccount.objects.count(), 1)
-        self.assertEqual(aws_models.AwsCloudAccount.objects.count(), 1)
-
-        account_number = str(self.user.username)
-        (
-            message,
-            headers,
-        ) = util_helper.generate_applicationauthentication_create_message_value(
-            account_number,
-            application_id=self.application_id,
-            authentication_id=self.authentication_id,
-        )
-
-        with patch.object(sts, "boto3") as mock_boto3, patch.object(
-            aws_models, "_delete_cloudtrail"
-        ):
-            role = util_helper.generate_dummy_role()
-            mock_assume_role = mock_boto3.client.return_value.assume_role
-            mock_assume_role.return_value = role
-
-            tasks.delete_from_sources_kafka_message(
-                message, headers, settings.APPLICATION_AUTHENTICATION_DESTROY_EVENT
-            )
-        self.assertEqual(CloudAccount.objects.count(), 0)
-        self.assertEqual(aws_models.AwsCloudAccount.objects.count(), 0)
-        mock_notify_sources.assert_called()
