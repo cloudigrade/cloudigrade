@@ -163,24 +163,24 @@ Deploy Review:
         -e bucket_name="${AWS_S3_BUCKET_NAME}" \
         ansible/provision-aws-resources.yaml
     - >
-      if ! oc rollout status dc/${DEPLOYMENT_PREFIX}-db; then
+      if ! oc rollout status deploymentconfig/${DEPLOYMENT_PREFIX}-db; then
         oc process openshift//postgresql-ephemeral \
           -p DATABASE_SERVICE_NAME=${DEPLOYMENT_PREFIX}-db \
           -p POSTGRESQL_DATABASE=postgres \
           -p POSTGRESQL_VERSION=9.6 \
           -l app=${CI_COMMIT_REF_SLUG} \
         | oc apply -f - && \
-        oc rollout status dc/${DEPLOYMENT_PREFIX}-db;
+        oc rollout status deploymentconfig/${DEPLOYMENT_PREFIX}-db;
       else
         echo "${DEPLOYMENT_PREFIX}-db already exists, keeping."
       fi
     - kontemplate template ocp/review.yaml -i cloudigrade | oc apply -f -
     - oc start-build -F c-${DEPLOYMENT_PREFIX}-api
     - oc start-build -F c-${DEPLOYMENT_PREFIX}-nginx
-    - if ! oc rollout status dc/c-${DEPLOYMENT_PREFIX}-a; then oc rollout latest dc/c-${DEPLOYMENT_PREFIX}-a && oc rollout status dc/c-${DEPLOYMENT_PREFIX}-a; fi;
-    - if ! oc rollout status dc/c-${DEPLOYMENT_PREFIX}-b; then oc rollout latest dc/c-${DEPLOYMENT_PREFIX}-b && oc rollout status dc/c-${DEPLOYMENT_PREFIX}-b; fi;
-    - if ! oc rollout status dc/c-${DEPLOYMENT_PREFIX}-w; then oc rollout latest dc/c-${DEPLOYMENT_PREFIX}-w && oc rollout status dc/c-${DEPLOYMENT_PREFIX}-w; fi;
-    - if ! oc rollout status dc/c-${DEPLOYMENT_PREFIX}-l; then oc rollout latest dc/c-${DEPLOYMENT_PREFIX}-l && oc rollout status dc/c-${DEPLOYMENT_PREFIX}-l; fi;
+    - if ! oc rollout status deploymentconfig/c-${DEPLOYMENT_PREFIX}-a; then oc rollout latest deploymentconfig/c-${DEPLOYMENT_PREFIX}-a && oc rollout status deploymentconfig/c-${DEPLOYMENT_PREFIX}-a; fi;
+    - if ! oc rollout status deploymentconfig/c-${DEPLOYMENT_PREFIX}-b; then oc rollout latest deploymentconfig/c-${DEPLOYMENT_PREFIX}-b && oc rollout status deploymentconfig/c-${DEPLOYMENT_PREFIX}-b; fi;
+    - if ! oc rollout status deploymentconfig/c-${DEPLOYMENT_PREFIX}-w; then oc rollout latest deploymentconfig/c-${DEPLOYMENT_PREFIX}-w && oc rollout status deploymentconfig/c-${DEPLOYMENT_PREFIX}-w; fi;
+    - if ! oc rollout status deploymentconfig/c-${DEPLOYMENT_PREFIX}-l; then oc rollout latest deploymentconfig/c-${DEPLOYMENT_PREFIX}-l && oc rollout status deploymentconfig/c-${DEPLOYMENT_PREFIX}-l; fi;
   environment:
     name: review/${CI_COMMIT_REF_NAME}
     url: https://qa.cloud.paas.psi.redhat.com/api/cloudigrade/v2/
