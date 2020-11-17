@@ -108,9 +108,11 @@ if env.bool("CLOUDIGRADE_ENABLE_CLOUDWATCH", default=False):
         "stream_name": env("CLOUDIGRADE_CW_STREAM_NAME"),
         "formatter": "verbose",
     }
-    for __, logger in LOGGING["loggers"].items():
+    for logger_name, logger in LOGGING["loggers"].items():
+        print(f"Appending watchtower to handlers for '{logger_name}'")
         logger["handlers"].append("watchtower")
     print("Configured CloudWatch.")
+    print(f"LOGGING with CloudWatch is {LOGGING}")
 
 logging.config.dictConfig(LOGGING)
 
