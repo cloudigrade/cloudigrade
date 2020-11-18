@@ -107,8 +107,7 @@ if env.bool("CLOUDIGRADE_ENABLE_CLOUDWATCH", default=False):
         "log_group": env("CLOUDIGRADE_CW_LOG_GROUP"),
         "stream_name": env("CLOUDIGRADE_CW_STREAM_NAME"),
         "formatter": "verbose",
-        "send_interval": 1,
-        "max_batch_count": 1,
+        "use_queues": False,
     }
     for logger_name, logger in LOGGING["loggers"].items():
         print(f"Appending watchtower to handlers for '{logger_name}'")
