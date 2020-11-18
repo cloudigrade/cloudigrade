@@ -1,11 +1,13 @@
 """Collection of tests for AccountViewSet."""
 import datetime
+from unittest.mock import patch
 
 import faker
 from django.test import TransactionTestCase
 from django.utils.translation import gettext as _
 from rest_framework.test import APIClient, APIRequestFactory
 
+from api.models import ConcurrentUsageCalculationTask
 from api.tests import helper as api_helper
 from util.misc import get_today
 from util.tests import helper as util_helper
@@ -80,7 +82,14 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
             instance_type=self.instance_type1,
         )
 
-        data = {"start_date": "2019-03-15", "end_date": "2019-04-15"}
+        start_date = datetime.date(2019, 3, 15)
+        end_date = datetime.date(2019, 4, 15)
+
+        api_helper.calculate_concurrent(start_date, end_date, self.user1.id)
+        data = {
+            "start_date": start_date.strftime("%Y-%m-%d"),
+            "end_date": end_date.strftime("%Y-%m-%d"),
+        }
         client = APIClient()
         client.force_authenticate(user=self.user1)
         response = client.get(
@@ -163,7 +172,14 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
 
     def test_start_date_is_inclusive_and_end_date_is_exclusive(self):
         """Test that start_date is inclusive and end_date is exclusive."""
-        data = {"start_date": "2019-01-01", "end_date": "2019-01-04"}
+        start_date = datetime.date(2019, 1, 1)
+        end_date = datetime.date(2019, 1, 4)
+        data = {
+            "start_date": start_date.strftime("%Y-%m-%d"),
+            "end_date": end_date.strftime("%Y-%m-%d"),
+        }
+        api_helper.calculate_concurrent(start_date, end_date, self.user1.id)
+
         client = APIClient()
         client.force_authenticate(user=self.user1)
         response = client.get(
@@ -186,6 +202,10 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
         """
         today = get_today()
         data = {}
+        api_helper.calculate_concurrent(
+            today, today + datetime.timedelta(days=1), self.user1.id
+        )
+
         client = APIClient()
         client.force_authenticate(user=self.user1)
         response = client.get(
@@ -207,6 +227,8 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
         today = get_today()
         future = today + datetime.timedelta(days=100)
         data = {"end_date": str(future)}
+        api_helper.calculate_concurrent(today, future, self.user1.id)
+
         client = APIClient()
         client.force_authenticate(user=self.user1)
         response = client.get(
@@ -237,3 +259,23 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
         body = response.json()
         self.assertEqual(body["meta"]["count"], 0)
         self.assertEqual(len(body["data"]), 0)
+
+    @patch("api.tasks.calculate_max_concurrent_usage_task")
+    def test_425_if_no_concurrent_usage(self, mock_calculate_task):
+        """Test if no concurrent usage is present, an 425 error code is returned."""
+        start_date = datetime.date(2019, 1, 1)
+        end_date = datetime.date(2019, 1, 4)
+        data = {
+            "start_date": start_date.strftime("%Y-%m-%d"),
+            "end_date": end_date.strftime("%Y-%m-%d"),
+        }
+
+        client = APIClient()
+        client.force_authenticate(user=self.user1)
+        self.assertEqual(0, ConcurrentUsageCalculationTask.objects.count())
+
+        response = client.get(
+            "/api/cloudigrade/v2/concurrent/", data=data, format="json"
+        )
+        self.assertEqual(3, ConcurrentUsageCalculationTask.objects.count())
+        self.assertEqual(response.status_code, 425)

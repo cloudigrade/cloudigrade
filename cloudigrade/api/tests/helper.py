@@ -4,6 +4,7 @@ import json
 import logging
 import random
 import uuid
+from datetime import timedelta
 from unittest.mock import patch
 
 import faker
@@ -1080,3 +1081,11 @@ def create_messages_for_sqs(count=1):
         }
         messages_received.append(received)
     return payloads, messages_sent, messages_received
+
+
+def calculate_concurrent(start_date, end_date, user_id):
+    """Calculate the concurrent usage between two dates."""
+    delta = end_date - start_date
+    for i in range(delta.days + 1):
+        day = start_date + timedelta(days=i)
+        calculate_max_concurrent_usage(date=day, user_id=user_id)

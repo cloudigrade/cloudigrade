@@ -35,7 +35,7 @@ from api.models import (
 )
 from api.util import get_max_concurrent_usage
 from util import aws
-from util.exceptions import InvalidArn
+from util.exceptions import InvalidArn, ResultsUnavailable
 from util.misc import get_today
 
 
@@ -360,10 +360,19 @@ class DailyConcurrentUsageDummyQueryset(object):
         """Get a specific day."""
         days = self.days[index]
         concurrent_usages = []
-        for date in days:
-            concurrent_usage = get_max_concurrent_usage(date, self.user_id)
-            concurrent_usages.append(concurrent_usage)
 
+        # If multiple days are requested, we want to queue up the concurrent usage
+        # calculation for every single day. raise ResultsUnavailable if one of the
+        # days requested is not available.
+        results_available = True
+        for date in days:
+            try:
+                concurrent_usage = get_max_concurrent_usage(date, self.user_id)
+                concurrent_usages.append(concurrent_usage)
+            except ResultsUnavailable:
+                results_available = False
+        if not results_available:
+            raise ResultsUnavailable
         return concurrent_usages
 
 

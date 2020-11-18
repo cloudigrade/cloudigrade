@@ -218,6 +218,11 @@ def get_max_concurrent_usage(date, user_id):
         ConcurrentUsage for the give date and user_id.
 
     """
+    logger.debug(
+        "Getting Concurrent usage for user_id: %(user_id)s, date: %(date)s"
+        % {"user_id": user_id, "date": date}
+    )
+
     today = get_today()
     if date > today:
         # Early return stub values; we never project future calculations.
@@ -246,13 +251,14 @@ def get_max_concurrent_usage(date, user_id):
         {"last_calculation_task": last_calculation_task},
     )
     if last_calculation_task is not None:
-        if last_calculation_task.status == ConcurrentUsageCalculationTask.SCHEDULED:
-            last_calculation_task.cancel()
-        elif last_calculation_task.status == ConcurrentUsageCalculationTask.RUNNING:
-            raise ResultsUnavailable()
+        if last_calculation_task.status in (
+            ConcurrentUsageCalculationTask.SCHEDULED,
+            ConcurrentUsageCalculationTask.RUNNING,
+        ):
+            raise ResultsUnavailable
 
-    concurrent_usage_data = calculate_max_concurrent_usage(date=date, user_id=user_id)
-    return concurrent_usage_data
+    schedule_concurrent_calculation_task(date, user_id)
+    raise ResultsUnavailable
 
 
 def calculate_max_concurrent_usage(date, user_id):
