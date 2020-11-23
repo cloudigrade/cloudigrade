@@ -31,6 +31,7 @@ uritemplate = "~=3.0.0"
 rest-framework-generic-relations = "~=2.0.0"
 pycurl = "~=7.43.0"
 watchtower = "~=0.8.0"
+sh = "^1.14.1"
 
 [tool.poetry.dev-dependencies]
 seqdiag = "*"
