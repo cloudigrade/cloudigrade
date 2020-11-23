@@ -6,7 +6,6 @@ import signal
 import sys
 
 import daemon
-import sh
 from django.conf import settings
 from django.core.management import BaseCommand
 from django.utils.translation import gettext as _
@@ -70,52 +69,6 @@ class Command(BaseCommand):
         enable_auto_commit = settings.LISTENER_AUTO_COMMIT
         consumer_timeout_ms = settings.LISTENER_TIMEOUT
         session_timeout_ms = settings.KAFKA_SESSION_TIMEOUT_MS
-
-        # Listen, no one wanted it to come to this, but here we are
-        if settings.CLOUDIGRADE_VERSION == "stage":
-            logger.info(
-                sh.dig(
-                    "platform-mq-kafka-bootstrap.platform-mq-stage.svc.cluster.local"
-                )
-            )
-            logger.info(
-                sh.dig(
-                    "platform-mq-kafka-0.platform-"
-                    "mq-kafka-brokers.platform-mq-stage.svc"
-                )
-            )
-
-            KafkaConsumer(
-                "platform.sources.event-stream",
-                group_id="cloudmeter_stage",
-                bootstrap_servers=[
-                    "platform-mq-kafka-bootstrap.platform-"
-                    "mq-stage.svc.cluster.local:9092"
-                ],
-            )
-
-            KafkaConsumer(
-                topic,
-                group_id=group_id,
-                bootstrap_servers=[f"{bootstrap_server}:{bootstrap_server_port}"],
-            )
-
-            KafkaConsumer(
-                "platform.sources.event-stream",
-                group_id="cloudmeter_stage",
-                bootstrap_servers=[
-                    "platform-mq-kafka-bootstrap.platform-"
-                    "mq-stage.svc.cluster.local:9092"
-                ],
-                value_deserializer=lambda x: json.loads(x.decode("utf-8")),
-            )
-
-            KafkaConsumer(
-                topic,
-                group_id=group_id,
-                bootstrap_servers=[f"{bootstrap_server}:{bootstrap_server_port}"],
-                value_deserializer=lambda x: json.loads(x.decode("utf-8")),
-            )
 
         consumer = KafkaConsumer(
             topic,
