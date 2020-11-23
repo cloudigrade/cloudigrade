@@ -1,6 +1,7 @@
 """Listens to the platform kafka instance."""
 import json
 import logging
+import os
 import signal
 import sys
 
@@ -16,6 +17,8 @@ from api import tasks
 
 logger = logging.getLogger(__name__)
 
+PID_FILE = f"{settings.LISTENER_PID_PATH}/cloudilistener.pid"
+
 
 class Command(BaseCommand):
     """Listen to sources data on platform kafka topic."""
@@ -27,9 +30,22 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """Launch the listener."""
+        if os.path.exists(PID_FILE):
+            pid = int(open(PID_FILE).read())
+            logger.warning(_("Found existing pid file with pid: {}"))
+            if os.getpid() != pid:
+                logger.error(
+                    _(
+                        "Listener attempted to start with an existing stale pidfile."
+                        "There should never be two instances of the listener running."
+                        "Removing pid file before continuing..."
+                    )
+                )
+                os.remove(PID_FILE)
+                logger.debug(_("Stale PID file unlinked."))
         try:
             with daemon.DaemonContext(
-                pidfile=PIDLockFile(f"{settings.LISTENER_PID_PATH}/cloudilistener.pid"),
+                pidfile=PIDLockFile(PID_FILE),
                 detach_process=False,
                 signal_map={signal.SIGTERM: self.listener_cleanup},
                 stdout=sys.stdout,
@@ -39,8 +55,8 @@ class Command(BaseCommand):
         except AlreadyLocked:
             logger.exception(
                 _(
-                    "Listener attempted to start with an existing pidfile. "
-                    "There should never be two instances of the listener running. "
+                    "Listener attempted to start with an existing pidfile, again??? "
+                    "This should _really_ not be possible. "
                 )
             )
 
