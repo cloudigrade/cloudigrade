@@ -66,19 +66,12 @@ class Command(BaseCommand):
         group_id = settings.LISTENER_GROUP_ID
         bootstrap_server = settings.LISTENER_SERVER
         bootstrap_server_port = settings.LISTENER_PORT
-        enable_auto_commit = settings.LISTENER_AUTO_COMMIT
-        consumer_timeout_ms = settings.LISTENER_TIMEOUT
-        session_timeout_ms = settings.KAFKA_SESSION_TIMEOUT_MS
 
         consumer = KafkaConsumer(
             topic,
             group_id=group_id,
             bootstrap_servers=[f"{bootstrap_server}:{bootstrap_server_port}"],
-            auto_offset_reset="earliest",
-            enable_auto_commit=enable_auto_commit,
-            consumer_timeout_ms=consumer_timeout_ms,
             value_deserializer=lambda x: json.loads(x.decode("utf-8")),
-            session_timeout_ms=session_timeout_ms,
         )
 
         self.run = True
