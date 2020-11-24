@@ -690,6 +690,8 @@ def convert_param_to_int(name, value):
         ValidationError if value not convertable to an int
 
     """
+    if value is None:
+        return None
     try:
         return int(value)
     except ValueError:

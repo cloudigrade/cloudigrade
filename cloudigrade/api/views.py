@@ -5,18 +5,16 @@ from dateutil import tz
 from dateutil.parser import parse
 from django.conf import settings
 from django.db import transaction
-from django.db.models import Max
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
 from rest_framework import exceptions, mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from api import serializers
+from api import filters, models, serializers
 from api.authentication import (
     ThreeScaleAuthentication,
 )
-from api.models import CloudAccount, Instance, MachineImage
 from api.schemas import ConcurrentSchema, SysconfigSchema
 from api.serializers import DailyConcurrentUsageDummyQueryset
 from api.util import convert_param_to_int
@@ -40,18 +38,14 @@ class AccountViewSet(
 
     authentication_classes = (ThreeScaleAuthentication,)
     serializer_class = serializers.CloudAccountSerializer
-    queryset = CloudAccount.objects.all()
+    queryset = models.CloudAccount.objects.all()
 
     def get_queryset(self):
-        """Get the queryset filtered to appropriate user."""
+        """Get the Account queryset with filters applied."""
         user = self.request.user
-        if not user.is_superuser:
-            return self.queryset.filter(user=user)
-        user_id = self.request.query_params.get("user_id", None)
-        if user_id is not None:
-            user_id = convert_param_to_int("user_id", user_id)
-            return self.queryset.filter(user__id=user_id)
-        return self.queryset
+        query_params = self.request.query_params
+        user_id = convert_param_to_int("user_id", query_params.get("user_id", None))
+        return filters.cloudaccounts(self.queryset, user_id, user)
 
 
 class InstanceViewSet(viewsets.ReadOnlyModelViewSet):
@@ -65,34 +59,22 @@ class InstanceViewSet(viewsets.ReadOnlyModelViewSet):
 
     authentication_classes = (ThreeScaleAuthentication,)
     serializer_class = serializers.InstanceSerializer
-    queryset = Instance.objects.all()
+    queryset = models.Instance.objects.all()
 
     def get_queryset(self):
-        """Filter the queryset."""
-        # Filter to the appropriate user
+        """Get the Instance queryset with filters applied."""
         user = self.request.user
-        if not user.is_superuser:
-            self.queryset = self.queryset.filter(cloud_account__user__id=user.id)
-        user_id = self.request.query_params.get("user_id", None)
-        if user_id is not None:
-            user_id = convert_param_to_int("user_id", user_id)
-            self.queryset = self.queryset.filter(cloud_account__user__id=user_id)
+        query_params = self.request.query_params
 
-        # Filter based on the instance running
-        running_since = self.request.query_params.get("running_since", None)
+        user_id = convert_param_to_int("user_id", query_params.get("user_id", None))
+
+        running_since = query_params.get("running_since", None)
         if running_since is not None:
             running_since = parse(running_since)
-            if not running_since.tzinfo:
-                running_since = running_since.replace(tzinfo=tz.tzutc())
+        if running_since and not running_since.tzinfo:
+            running_since = running_since.replace(tzinfo=tz.tzutc())
 
-            self.queryset = (
-                self.queryset.prefetch_related("run_set")
-                .filter(run__start_time__isnull=False, run__end_time__isnull=True)
-                .annotate(Max("run__start_time"))
-                .filter(run__start_time__max__lte=running_since)
-            )
-
-        return self.queryset
+        return filters.instances(self.queryset, user_id, running_since, user)
 
 
 class MachineImageViewSet(viewsets.ReadOnlyModelViewSet):
@@ -106,11 +88,11 @@ class MachineImageViewSet(viewsets.ReadOnlyModelViewSet):
 
     authentication_classes = (ThreeScaleAuthentication,)
     serializer_class = serializers.MachineImageSerializer
-    queryset = MachineImage.objects.all()
+    queryset = models.MachineImage.objects.all()
 
     def get_queryset(self):
         """
-        Get the queryset of MachineImages filtered to appropriate user.
+        Get the MachineImage queryset filtered to appropriate user.
 
         Superusers by default see *all* objects unfiltered, but a superuser may
         optionally provide a `user_id` argument in order to see what that user
@@ -124,32 +106,12 @@ class MachineImageViewSet(viewsets.ReadOnlyModelViewSet):
         instances, we will need to expand the conditions on this filter to
         exclude images used by archived instances (via archived accounts).
         """
-        queryset = self.queryset
-
-        architecture = self.request.query_params.get("architecture", None)
-        if architecture is not None:
-            queryset = queryset.filter(architecture=architecture)
-
-        status = self.request.query_params.get("status", None)
-        if status is not None:
-            queryset = queryset.filter(status=status)
-
         user = self.request.user
-        if not user.is_superuser:
-            return (
-                queryset.filter(instance__cloud_account__user_id=user.id)
-                .order_by("id")
-                .distinct()
-            )
-        user_id = self.request.query_params.get("user_id", None)
-        if user_id is not None:
-            user_id = convert_param_to_int("user_id", user_id)
-            return (
-                queryset.filter(instance__cloud_account__user_id=user_id)
-                .order_by("id")
-                .distinct()
-            )
-        return queryset.order_by("id")
+        query_params = self.request.query_params
+        architecture = query_params.get("architecture", None)
+        status = query_params.get("status", None)
+        user_id = convert_param_to_int("user_id", query_params.get("user_id", None))
+        return filters.machineimages(self.queryset, architecture, status, user_id, user)
 
     @action(detail=True, methods=["post"])
     def reinspect(self, request, pk=None):
@@ -160,7 +122,7 @@ class MachineImageViewSet(viewsets.ReadOnlyModelViewSet):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         machine_image = self.get_object()
-        machine_image.status = MachineImage.PENDING
+        machine_image.status = models.MachineImage.PENDING
         machine_image.save()
 
         serializer = serializers.MachineImageSerializer(
@@ -228,10 +190,10 @@ class DailyConcurrentUsageViewSet(viewsets.GenericViewSet, mixins.ListModelMixin
         if not user.is_superuser:
             user_id = user.id
         else:
-            user_id = self.request.query_params.get("user_id", None)
-        if user_id is not None:
             try:
-                user_id = convert_param_to_int("user_id", user_id)
+                user_id = convert_param_to_int(
+                    "user_id", self.request.query_params.get("user_id", None)
+                )
             except exceptions.ValidationError as e:
                 errors.update(e.detail)
 
