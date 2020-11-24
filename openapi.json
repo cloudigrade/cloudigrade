@@ -8,6 +8,7 @@
     "/api/cloudigrade/v2/accounts/": {
       "get": {
         "operationId": "listCloudAccounts",
+        "description": "Create, retrieve, update, delete, or list customer accounts.\n\nAuthenticate via 3scale.",
         "parameters": [
           {
             "name": "limit",
@@ -76,71 +77,7 @@
                     "data": {
                       "type": "array",
                       "items": {
-                        "properties": {
-                          "account_id": {
-                            "type": "integer",
-                            "readOnly": true
-                          },
-                          "created_at": {
-                            "type": "string",
-                            "format": "date-time",
-                            "readOnly": true
-                          },
-                          "name": {
-                            "type": "string",
-                            "maxLength": 256
-                          },
-                          "updated_at": {
-                            "type": "string",
-                            "format": "date-time",
-                            "readOnly": true
-                          },
-                          "user_id": {
-                            "type": "string",
-                            "readOnly": true
-                          },
-                          "content_object": {
-                            "type": "string"
-                          },
-                          "cloud_type": {
-                            "enum": [
-                              "aws",
-                              "azure"
-                            ]
-                          },
-                          "account_arn": {
-                            "type": "string"
-                          },
-                          "aws_account_id": {
-                            "type": "string"
-                          },
-                          "subscription_id": {
-                            "type": "string"
-                          },
-                          "tenant_id": {
-                            "type": "string"
-                          },
-                          "is_enabled": {
-                            "type": "boolean",
-                            "readOnly": true
-                          },
-                          "platform_authentication_id": {
-                            "type": "integer"
-                          },
-                          "platform_application_id": {
-                            "type": "integer"
-                          },
-                          "platform_source_id": {
-                            "type": "integer"
-                          }
-                        },
-                        "required": [
-                          "name",
-                          "cloud_type",
-                          "platform_authentication_id",
-                          "platform_application_id",
-                          "platform_source_id"
-                        ]
+                        "$ref": "#/components/schemas/CloudAccount"
                       }
                     }
                   }
@@ -149,143 +86,55 @@
             },
             "description": ""
           }
-        }
+        },
+        "tags": [
+          "api"
+        ]
       },
       "post": {
         "operationId": "createCloudAccount",
+        "description": "Create, retrieve, update, delete, or list customer accounts.\n\nAuthenticate via 3scale.",
         "parameters": [],
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "properties": {
-                  "name": {
-                    "type": "string",
-                    "maxLength": 256
-                  },
-                  "content_object": {
-                    "type": "string"
-                  },
-                  "cloud_type": {
-                    "enum": [
-                      "aws",
-                      "azure"
-                    ]
-                  },
-                  "account_arn": {
-                    "type": "string"
-                  },
-                  "aws_account_id": {
-                    "type": "string"
-                  },
-                  "subscription_id": {
-                    "type": "string"
-                  },
-                  "tenant_id": {
-                    "type": "string"
-                  },
-                  "platform_authentication_id": {
-                    "type": "integer"
-                  },
-                  "platform_application_id": {
-                    "type": "integer"
-                  },
-                  "platform_source_id": {
-                    "type": "integer"
-                  }
-                },
-                "required": [
-                  "name",
-                  "cloud_type",
-                  "platform_authentication_id",
-                  "platform_application_id",
-                  "platform_source_id"
-                ]
+                "$ref": "#/components/schemas/CloudAccount"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/CloudAccount"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/CloudAccount"
               }
             }
           }
         },
         "responses": {
-          "200": {
+          "201": {
             "content": {
               "application/json": {
                 "schema": {
-                  "properties": {
-                    "account_id": {
-                      "type": "integer",
-                      "readOnly": true
-                    },
-                    "created_at": {
-                      "type": "string",
-                      "format": "date-time",
-                      "readOnly": true
-                    },
-                    "name": {
-                      "type": "string",
-                      "maxLength": 256
-                    },
-                    "updated_at": {
-                      "type": "string",
-                      "format": "date-time",
-                      "readOnly": true
-                    },
-                    "user_id": {
-                      "type": "string",
-                      "readOnly": true
-                    },
-                    "content_object": {
-                      "type": "string"
-                    },
-                    "cloud_type": {
-                      "enum": [
-                        "aws",
-                        "azure"
-                      ]
-                    },
-                    "account_arn": {
-                      "type": "string"
-                    },
-                    "aws_account_id": {
-                      "type": "string"
-                    },
-                    "subscription_id": {
-                      "type": "string"
-                    },
-                    "tenant_id": {
-                      "type": "string"
-                    },
-                    "is_enabled": {
-                      "type": "boolean",
-                      "readOnly": true
-                    },
-                    "platform_authentication_id": {
-                      "type": "integer"
-                    },
-                    "platform_application_id": {
-                      "type": "integer"
-                    },
-                    "platform_source_id": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "name",
-                    "cloud_type",
-                    "platform_authentication_id",
-                    "platform_application_id",
-                    "platform_source_id"
-                  ]
+                  "$ref": "#/components/schemas/CloudAccount"
                 }
               }
             },
             "description": ""
           }
-        }
+        },
+        "tags": [
+          "api"
+        ]
       }
     },
     "/api/cloudigrade/v2/accounts/{id}/": {
       "get": {
         "operationId": "retrieveCloudAccount",
+        "description": "Create, retrieve, update, delete, or list customer accounts.\n\nAuthenticate via 3scale.",
         "parameters": [
           {
             "name": "id",
@@ -302,80 +151,20 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "properties": {
-                    "account_id": {
-                      "type": "integer",
-                      "readOnly": true
-                    },
-                    "created_at": {
-                      "type": "string",
-                      "format": "date-time",
-                      "readOnly": true
-                    },
-                    "name": {
-                      "type": "string",
-                      "maxLength": 256
-                    },
-                    "updated_at": {
-                      "type": "string",
-                      "format": "date-time",
-                      "readOnly": true
-                    },
-                    "user_id": {
-                      "type": "string",
-                      "readOnly": true
-                    },
-                    "content_object": {
-                      "type": "string"
-                    },
-                    "cloud_type": {
-                      "enum": [
-                        "aws",
-                        "azure"
-                      ]
-                    },
-                    "account_arn": {
-                      "type": "string"
-                    },
-                    "aws_account_id": {
-                      "type": "string"
-                    },
-                    "subscription_id": {
-                      "type": "string"
-                    },
-                    "tenant_id": {
-                      "type": "string"
-                    },
-                    "is_enabled": {
-                      "type": "boolean",
-                      "readOnly": true
-                    },
-                    "platform_authentication_id": {
-                      "type": "integer"
-                    },
-                    "platform_application_id": {
-                      "type": "integer"
-                    },
-                    "platform_source_id": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "name",
-                    "cloud_type",
-                    "platform_authentication_id",
-                    "platform_application_id",
-                    "platform_source_id"
-                  ]
+                  "$ref": "#/components/schemas/CloudAccount"
                 }
               }
             },
             "description": ""
           }
-        }
+        },
+        "tags": [
+          "api"
+        ]
       },
       "put": {
         "operationId": "updateCloudAccount",
+        "description": "Create, retrieve, update, delete, or list customer accounts.\n\nAuthenticate via 3scale.",
         "parameters": [
           {
             "name": "id",
@@ -391,49 +180,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "properties": {
-                  "name": {
-                    "type": "string",
-                    "maxLength": 256
-                  },
-                  "content_object": {
-                    "type": "string"
-                  },
-                  "cloud_type": {
-                    "enum": [
-                      "aws",
-                      "azure"
-                    ]
-                  },
-                  "account_arn": {
-                    "type": "string"
-                  },
-                  "aws_account_id": {
-                    "type": "string"
-                  },
-                  "subscription_id": {
-                    "type": "string"
-                  },
-                  "tenant_id": {
-                    "type": "string"
-                  },
-                  "platform_authentication_id": {
-                    "type": "integer"
-                  },
-                  "platform_application_id": {
-                    "type": "integer"
-                  },
-                  "platform_source_id": {
-                    "type": "integer"
-                  }
-                },
-                "required": [
-                  "name",
-                  "cloud_type",
-                  "platform_authentication_id",
-                  "platform_application_id",
-                  "platform_source_id"
-                ]
+                "$ref": "#/components/schemas/CloudAccount"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/CloudAccount"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/CloudAccount"
               }
             }
           }
@@ -443,80 +200,20 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "properties": {
-                    "account_id": {
-                      "type": "integer",
-                      "readOnly": true
-                    },
-                    "created_at": {
-                      "type": "string",
-                      "format": "date-time",
-                      "readOnly": true
-                    },
-                    "name": {
-                      "type": "string",
-                      "maxLength": 256
-                    },
-                    "updated_at": {
-                      "type": "string",
-                      "format": "date-time",
-                      "readOnly": true
-                    },
-                    "user_id": {
-                      "type": "string",
-                      "readOnly": true
-                    },
-                    "content_object": {
-                      "type": "string"
-                    },
-                    "cloud_type": {
-                      "enum": [
-                        "aws",
-                        "azure"
-                      ]
-                    },
-                    "account_arn": {
-                      "type": "string"
-                    },
-                    "aws_account_id": {
-                      "type": "string"
-                    },
-                    "subscription_id": {
-                      "type": "string"
-                    },
-                    "tenant_id": {
-                      "type": "string"
-                    },
-                    "is_enabled": {
-                      "type": "boolean",
-                      "readOnly": true
-                    },
-                    "platform_authentication_id": {
-                      "type": "integer"
-                    },
-                    "platform_application_id": {
-                      "type": "integer"
-                    },
-                    "platform_source_id": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "name",
-                    "cloud_type",
-                    "platform_authentication_id",
-                    "platform_application_id",
-                    "platform_source_id"
-                  ]
+                  "$ref": "#/components/schemas/CloudAccount"
                 }
               }
             },
             "description": ""
           }
-        }
+        },
+        "tags": [
+          "api"
+        ]
       },
       "patch": {
-        "operationId": "partial_updateCloudAccount",
+        "operationId": "partialUpdateCloudAccount",
+        "description": "Create, retrieve, update, delete, or list customer accounts.\n\nAuthenticate via 3scale.",
         "parameters": [
           {
             "name": "id",
@@ -532,42 +229,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "properties": {
-                  "name": {
-                    "type": "string",
-                    "maxLength": 256
-                  },
-                  "content_object": {
-                    "type": "string"
-                  },
-                  "cloud_type": {
-                    "enum": [
-                      "aws",
-                      "azure"
-                    ]
-                  },
-                  "account_arn": {
-                    "type": "string"
-                  },
-                  "aws_account_id": {
-                    "type": "string"
-                  },
-                  "subscription_id": {
-                    "type": "string"
-                  },
-                  "tenant_id": {
-                    "type": "string"
-                  },
-                  "platform_authentication_id": {
-                    "type": "integer"
-                  },
-                  "platform_application_id": {
-                    "type": "integer"
-                  },
-                  "platform_source_id": {
-                    "type": "integer"
-                  }
-                }
+                "$ref": "#/components/schemas/CloudAccount"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/CloudAccount"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/CloudAccount"
               }
             }
           }
@@ -577,80 +249,20 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "properties": {
-                    "account_id": {
-                      "type": "integer",
-                      "readOnly": true
-                    },
-                    "created_at": {
-                      "type": "string",
-                      "format": "date-time",
-                      "readOnly": true
-                    },
-                    "name": {
-                      "type": "string",
-                      "maxLength": 256
-                    },
-                    "updated_at": {
-                      "type": "string",
-                      "format": "date-time",
-                      "readOnly": true
-                    },
-                    "user_id": {
-                      "type": "string",
-                      "readOnly": true
-                    },
-                    "content_object": {
-                      "type": "string"
-                    },
-                    "cloud_type": {
-                      "enum": [
-                        "aws",
-                        "azure"
-                      ]
-                    },
-                    "account_arn": {
-                      "type": "string"
-                    },
-                    "aws_account_id": {
-                      "type": "string"
-                    },
-                    "subscription_id": {
-                      "type": "string"
-                    },
-                    "tenant_id": {
-                      "type": "string"
-                    },
-                    "is_enabled": {
-                      "type": "boolean",
-                      "readOnly": true
-                    },
-                    "platform_authentication_id": {
-                      "type": "integer"
-                    },
-                    "platform_application_id": {
-                      "type": "integer"
-                    },
-                    "platform_source_id": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "name",
-                    "cloud_type",
-                    "platform_authentication_id",
-                    "platform_application_id",
-                    "platform_source_id"
-                  ]
+                  "$ref": "#/components/schemas/CloudAccount"
                 }
               }
             },
             "description": ""
           }
-        }
+        },
+        "tags": [
+          "api"
+        ]
       },
       "delete": {
         "operationId": "destroyCloudAccount",
+        "description": "Create, retrieve, update, delete, or list customer accounts.\n\nAuthenticate via 3scale.",
         "parameters": [
           {
             "name": "id",
@@ -666,12 +278,16 @@
           "204": {
             "description": ""
           }
-        }
+        },
+        "tags": [
+          "api"
+        ]
       }
     },
     "/api/cloudigrade/v2/instances/": {
       "get": {
         "operationId": "listInstances",
+        "description": "List all or retrieve a single instance.\n\nAuthenticate via 3scale.\nDo not allow to create, update, replace, or delete an instance at\nthis view because we currently **only** allow instances to be retrieved.",
         "parameters": [
           {
             "name": "limit",
@@ -740,39 +356,7 @@
                     "data": {
                       "type": "array",
                       "items": {
-                        "properties": {
-                          "cloud_account_id": {
-                            "type": "string",
-                            "readOnly": true
-                          },
-                          "created_at": {
-                            "type": "string",
-                            "format": "date-time",
-                            "readOnly": true
-                          },
-                          "instance_id": {
-                            "type": "integer",
-                            "readOnly": true
-                          },
-                          "machine_image_id": {
-                            "type": "string",
-                            "readOnly": true
-                          },
-                          "updated_at": {
-                            "type": "string",
-                            "format": "date-time",
-                            "readOnly": true
-                          },
-                          "cloud_type": {
-                            "enum": [
-                              "aws",
-                              "azure"
-                            ]
-                          },
-                          "content_object": {
-                            "type": "string"
-                          }
-                        }
+                        "$ref": "#/components/schemas/Instance"
                       }
                     }
                   }
@@ -781,12 +365,16 @@
             },
             "description": ""
           }
-        }
+        },
+        "tags": [
+          "api"
+        ]
       }
     },
     "/api/cloudigrade/v2/instances/{id}/": {
       "get": {
         "operationId": "retrieveInstance",
+        "description": "List all or retrieve a single instance.\n\nAuthenticate via 3scale.\nDo not allow to create, update, replace, or delete an instance at\nthis view because we currently **only** allow instances to be retrieved.",
         "parameters": [
           {
             "name": "id",
@@ -803,50 +391,22 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "properties": {
-                    "cloud_account_id": {
-                      "type": "string",
-                      "readOnly": true
-                    },
-                    "created_at": {
-                      "type": "string",
-                      "format": "date-time",
-                      "readOnly": true
-                    },
-                    "instance_id": {
-                      "type": "integer",
-                      "readOnly": true
-                    },
-                    "machine_image_id": {
-                      "type": "string",
-                      "readOnly": true
-                    },
-                    "updated_at": {
-                      "type": "string",
-                      "format": "date-time",
-                      "readOnly": true
-                    },
-                    "cloud_type": {
-                      "enum": [
-                        "aws",
-                        "azure"
-                      ]
-                    },
-                    "content_object": {
-                      "type": "string"
-                    }
-                  }
+                  "$ref": "#/components/schemas/Instance"
                 }
               }
             },
             "description": ""
           }
-        }
+        },
+        "tags": [
+          "api"
+        ]
       }
     },
     "/api/cloudigrade/v2/images/": {
       "get": {
         "operationId": "listMachineImages",
+        "description": "List all, or retrieve a single machine image.\n\nAuthenticate via 3scale.\nDo not allow to create, update, replace, or delete an machine image at\nthis view.",
         "parameters": [
           {
             "name": "limit",
@@ -915,102 +475,7 @@
                     "data": {
                       "type": "array",
                       "items": {
-                        "properties": {
-                          "architecture": {
-                            "type": "string",
-                            "readOnly": true
-                          },
-                          "created_at": {
-                            "type": "string",
-                            "format": "date-time",
-                            "readOnly": true
-                          },
-                          "image_id": {
-                            "type": "integer",
-                            "readOnly": true
-                          },
-                          "inspection_json": {
-                            "type": "string",
-                            "readOnly": true
-                          },
-                          "is_encrypted": {
-                            "type": "boolean",
-                            "readOnly": true
-                          },
-                          "name": {
-                            "type": "string",
-                            "readOnly": true
-                          },
-                          "openshift": {
-                            "type": "string",
-                            "readOnly": true
-                          },
-                          "openshift_detected": {
-                            "type": "boolean",
-                            "readOnly": true
-                          },
-                          "rhel": {
-                            "type": "string",
-                            "readOnly": true
-                          },
-                          "rhel_detected": {
-                            "type": "string",
-                            "readOnly": true
-                          },
-                          "rhel_detected_by_tag": {
-                            "type": "boolean",
-                            "readOnly": true
-                          },
-                          "rhel_enabled_repos_found": {
-                            "type": "string",
-                            "readOnly": true
-                          },
-                          "rhel_product_certs_found": {
-                            "type": "string",
-                            "readOnly": true
-                          },
-                          "rhel_release_files_found": {
-                            "type": "string",
-                            "readOnly": true
-                          },
-                          "rhel_signed_packages_found": {
-                            "type": "string",
-                            "readOnly": true
-                          },
-                          "rhel_version": {
-                            "type": "string",
-                            "readOnly": true
-                          },
-                          "status": {
-                            "enum": [
-                              "pending",
-                              "preparing",
-                              "inspecting",
-                              "inspected",
-                              "error",
-                              "unavailable"
-                            ],
-                            "readOnly": true
-                          },
-                          "syspurpose": {
-                            "type": "string",
-                            "readOnly": true
-                          },
-                          "updated_at": {
-                            "type": "string",
-                            "format": "date-time",
-                            "readOnly": true
-                          },
-                          "cloud_type": {
-                            "enum": [
-                              "aws",
-                              "azure"
-                            ]
-                          },
-                          "content_object": {
-                            "type": "string"
-                          }
-                        }
+                        "$ref": "#/components/schemas/MachineImage"
                       }
                     }
                   }
@@ -1019,12 +484,16 @@
             },
             "description": ""
           }
-        }
+        },
+        "tags": [
+          "api"
+        ]
       }
     },
     "/api/cloudigrade/v2/images/{id}/": {
       "get": {
         "operationId": "retrieveMachineImage",
+        "description": "List all, or retrieve a single machine image.\n\nAuthenticate via 3scale.\nDo not allow to create, update, replace, or delete an machine image at\nthis view.",
         "parameters": [
           {
             "name": "id",
@@ -1041,108 +510,16 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "properties": {
-                    "architecture": {
-                      "type": "string",
-                      "readOnly": true
-                    },
-                    "created_at": {
-                      "type": "string",
-                      "format": "date-time",
-                      "readOnly": true
-                    },
-                    "image_id": {
-                      "type": "integer",
-                      "readOnly": true
-                    },
-                    "inspection_json": {
-                      "type": "string",
-                      "readOnly": true
-                    },
-                    "is_encrypted": {
-                      "type": "boolean",
-                      "readOnly": true
-                    },
-                    "name": {
-                      "type": "string",
-                      "readOnly": true
-                    },
-                    "openshift": {
-                      "type": "string",
-                      "readOnly": true
-                    },
-                    "openshift_detected": {
-                      "type": "boolean",
-                      "readOnly": true
-                    },
-                    "rhel": {
-                      "type": "string",
-                      "readOnly": true
-                    },
-                    "rhel_detected": {
-                      "type": "string",
-                      "readOnly": true
-                    },
-                    "rhel_detected_by_tag": {
-                      "type": "boolean",
-                      "readOnly": true
-                    },
-                    "rhel_enabled_repos_found": {
-                      "type": "string",
-                      "readOnly": true
-                    },
-                    "rhel_product_certs_found": {
-                      "type": "string",
-                      "readOnly": true
-                    },
-                    "rhel_release_files_found": {
-                      "type": "string",
-                      "readOnly": true
-                    },
-                    "rhel_signed_packages_found": {
-                      "type": "string",
-                      "readOnly": true
-                    },
-                    "rhel_version": {
-                      "type": "string",
-                      "readOnly": true
-                    },
-                    "status": {
-                      "enum": [
-                        "pending",
-                        "preparing",
-                        "inspecting",
-                        "inspected",
-                        "error",
-                        "unavailable"
-                      ],
-                      "readOnly": true
-                    },
-                    "syspurpose": {
-                      "type": "string",
-                      "readOnly": true
-                    },
-                    "updated_at": {
-                      "type": "string",
-                      "format": "date-time",
-                      "readOnly": true
-                    },
-                    "cloud_type": {
-                      "enum": [
-                        "aws",
-                        "azure"
-                      ]
-                    },
-                    "content_object": {
-                      "type": "string"
-                    }
-                  }
+                  "$ref": "#/components/schemas/MachineImage"
                 }
               }
             },
             "description": ""
           }
-        }
+        },
+        "tags": [
+          "api"
+        ]
       }
     },
     "/api/cloudigrade/v2/sysconfig/": {
@@ -1315,6 +692,7 @@
     "/api/cloudigrade/v2/images/{id}/reinspect/": {
       "post": {
         "operationId": "reinspectMachineImage",
+        "description": "Set the machine image status to pending, so it gets reinspected.",
         "parameters": [
           {
             "name": "id",
@@ -1330,128 +708,263 @@
           "content": {
             "application/json": {
               "schema": {
-                "properties": {
-                  "cloud_type": {
-                    "enum": [
-                      "aws",
-                      "azure"
-                    ]
-                  },
-                  "content_object": {
-                    "type": "string"
-                  }
-                }
+                "$ref": "#/components/schemas/MachineImage"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/MachineImage"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/MachineImage"
               }
             }
           }
         },
         "responses": {
-          "200": {
+          "201": {
             "content": {
               "application/json": {
                 "schema": {
-                  "properties": {
-                    "architecture": {
-                      "type": "string",
-                      "readOnly": true
-                    },
-                    "created_at": {
-                      "type": "string",
-                      "format": "date-time",
-                      "readOnly": true
-                    },
-                    "image_id": {
-                      "type": "integer",
-                      "readOnly": true
-                    },
-                    "inspection_json": {
-                      "type": "string",
-                      "readOnly": true
-                    },
-                    "is_encrypted": {
-                      "type": "boolean",
-                      "readOnly": true
-                    },
-                    "name": {
-                      "type": "string",
-                      "readOnly": true
-                    },
-                    "openshift": {
-                      "type": "string",
-                      "readOnly": true
-                    },
-                    "openshift_detected": {
-                      "type": "boolean",
-                      "readOnly": true
-                    },
-                    "rhel": {
-                      "type": "string",
-                      "readOnly": true
-                    },
-                    "rhel_detected": {
-                      "type": "string",
-                      "readOnly": true
-                    },
-                    "rhel_detected_by_tag": {
-                      "type": "boolean",
-                      "readOnly": true
-                    },
-                    "rhel_enabled_repos_found": {
-                      "type": "string",
-                      "readOnly": true
-                    },
-                    "rhel_product_certs_found": {
-                      "type": "string",
-                      "readOnly": true
-                    },
-                    "rhel_release_files_found": {
-                      "type": "string",
-                      "readOnly": true
-                    },
-                    "rhel_signed_packages_found": {
-                      "type": "string",
-                      "readOnly": true
-                    },
-                    "rhel_version": {
-                      "type": "string",
-                      "readOnly": true
-                    },
-                    "status": {
-                      "enum": [
-                        "pending",
-                        "preparing",
-                        "inspecting",
-                        "inspected",
-                        "error",
-                        "unavailable"
-                      ],
-                      "readOnly": true
-                    },
-                    "syspurpose": {
-                      "type": "string",
-                      "readOnly": true
-                    },
-                    "updated_at": {
-                      "type": "string",
-                      "format": "date-time",
-                      "readOnly": true
-                    },
-                    "cloud_type": {
-                      "enum": [
-                        "aws",
-                        "azure"
-                      ]
-                    },
-                    "content_object": {
-                      "type": "string"
-                    }
-                  }
+                  "$ref": "#/components/schemas/MachineImage"
                 }
               }
             },
             "description": ""
           }
+        },
+        "tags": [
+          "api"
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CloudAccount": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "user_id": {
+            "type": "string",
+            "readOnly": true
+          },
+          "content_object": {
+            "type": "string"
+          },
+          "cloud_type": {
+            "enum": [
+              "aws",
+              "azure"
+            ],
+            "type": "string"
+          },
+          "account_arn": {
+            "type": "string"
+          },
+          "aws_account_id": {
+            "type": "string"
+          },
+          "subscription_id": {
+            "type": "string"
+          },
+          "tenant_id": {
+            "type": "string"
+          },
+          "is_enabled": {
+            "type": "boolean",
+            "readOnly": true
+          },
+          "platform_authentication_id": {
+            "type": "integer"
+          },
+          "platform_application_id": {
+            "type": "integer"
+          },
+          "platform_source_id": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name",
+          "cloud_type",
+          "platform_authentication_id",
+          "platform_application_id",
+          "platform_source_id"
+        ]
+      },
+      "Instance": {
+        "type": "object",
+        "properties": {
+          "cloud_account_id": {
+            "type": "string",
+            "readOnly": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "instance_id": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "machine_image_id": {
+            "type": "string",
+            "readOnly": true
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "cloud_type": {
+            "enum": [
+              "aws",
+              "azure"
+            ],
+            "type": "string"
+          },
+          "content_object": {
+            "type": "string"
+          }
         }
+      },
+      "MachineImage": {
+        "type": "object",
+        "properties": {
+          "architecture": {
+            "type": "string",
+            "readOnly": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "image_id": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "inspection_json": {
+            "type": "string",
+            "readOnly": true
+          },
+          "is_encrypted": {
+            "type": "boolean",
+            "readOnly": true
+          },
+          "name": {
+            "type": "string",
+            "readOnly": true
+          },
+          "openshift": {
+            "type": "string",
+            "readOnly": true
+          },
+          "openshift_detected": {
+            "type": "boolean",
+            "readOnly": true
+          },
+          "rhel": {
+            "type": "string",
+            "readOnly": true
+          },
+          "rhel_detected": {
+            "type": "string",
+            "readOnly": true
+          },
+          "rhel_detected_by_tag": {
+            "type": "boolean",
+            "readOnly": true
+          },
+          "rhel_enabled_repos_found": {
+            "type": "string",
+            "readOnly": true
+          },
+          "rhel_product_certs_found": {
+            "type": "string",
+            "readOnly": true
+          },
+          "rhel_release_files_found": {
+            "type": "string",
+            "readOnly": true
+          },
+          "rhel_signed_packages_found": {
+            "type": "string",
+            "readOnly": true
+          },
+          "rhel_version": {
+            "type": "string",
+            "readOnly": true
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "preparing",
+              "inspecting",
+              "inspected",
+              "error",
+              "unavailable"
+            ],
+            "type": "string",
+            "readOnly": true
+          },
+          "syspurpose": {
+            "type": "string",
+            "readOnly": true
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "cloud_type": {
+            "enum": [
+              "aws",
+              "azure"
+            ],
+            "type": "string"
+          },
+          "content_object": {
+            "type": "string"
+          }
+        }
+      },
+      "DailyConcurrentUsage": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "maximum_counts": {
+            "type": "string",
+            "readOnly": true
+          }
+        },
+        "required": [
+          "date"
+        ]
       }
     }
   }

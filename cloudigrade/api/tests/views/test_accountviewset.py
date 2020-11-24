@@ -6,7 +6,7 @@ import faker
 from django.test import TransactionTestCase
 from rest_framework.test import APIRequestFactory, force_authenticate
 
-from api import serializers, views
+from api import serializers
 from api.clouds.aws import util
 from api.models import CloudAccount
 from api.tests import helper as api_helper
@@ -227,7 +227,7 @@ class AccountViewSetTest(TransactionTestCase):
         request = self.factory.post("/accounts/", data=data)
         force_authenticate(request, user=self.user2)
 
-        view = views.AccountViewSet.as_view(actions={"post": "create"})
+        view = AccountViewSet.as_view(actions={"post": "create"})
 
         response = view(request)
         self.assertEqual(response.status_code, 201)
@@ -247,7 +247,7 @@ class AccountViewSetTest(TransactionTestCase):
         request = self.factory.post("/accounts/", data=data)
         force_authenticate(request, user=self.user2)
 
-        view = views.AccountViewSet.as_view(actions={"post": "create"})
+        view = AccountViewSet.as_view(actions={"post": "create"})
 
         response = view(request)
         self.assertEqual(response.status_code, 201)
@@ -271,7 +271,7 @@ class AccountViewSetTest(TransactionTestCase):
         request = self.factory.post("/accounts/", data=data)
         force_authenticate(request, user=self.user2)
 
-        view = views.AccountViewSet.as_view(actions={"post": "create"})
+        view = AccountViewSet.as_view(actions={"post": "create"})
         response = view(request)
 
         self.assertEqual(response.status_code, 400)
@@ -286,7 +286,7 @@ class AccountViewSetTest(TransactionTestCase):
         request = self.factory.post("/accounts/", data=data)
         force_authenticate(request, user=self.user2)
 
-        view = views.AccountViewSet.as_view(actions={"post": "create"})
+        view = AccountViewSet.as_view(actions={"post": "create"})
         response = view(request)
 
         self.assertEqual(response.status_code, 400)
@@ -303,7 +303,7 @@ class AccountViewSetTest(TransactionTestCase):
         request = self.factory.patch("/accounts/", data=data)
         force_authenticate(request, user=self.user2)
 
-        view = views.AccountViewSet.as_view(actions={"patch": "partial_update"})
+        view = AccountViewSet.as_view(actions={"patch": "partial_update"})
         response = view(request, pk=account_id)
 
         self.assertEqual(response.status_code, 200)
@@ -320,7 +320,7 @@ class AccountViewSetTest(TransactionTestCase):
         request = self.factory.patch("/accounts/", data=data)
         force_authenticate(request, user=self.user2)
 
-        view = views.AccountViewSet.as_view(actions={"patch": "partial_update"})
+        view = AccountViewSet.as_view(actions={"patch": "partial_update"})
         response = view(request, pk=account_id)
 
         self.assertEqual(response.status_code, 400)
@@ -337,7 +337,7 @@ class AccountViewSetTest(TransactionTestCase):
         request = self.factory.patch("/accounts/", data=data)
         force_authenticate(request, user=self.user2)
 
-        view = views.AccountViewSet.as_view(actions={"patch": "partial_update"})
+        view = AccountViewSet.as_view(actions={"patch": "partial_update"})
         response = view(request, pk=account_id)
 
         self.assertEqual(response.status_code, 400)
@@ -350,7 +350,7 @@ class AccountViewSetTest(TransactionTestCase):
         request = self.factory.post("/accounts/", data=data)
         force_authenticate(request, user=self.user2)
 
-        view = views.AccountViewSet.as_view(actions={"post": "create"})
+        view = AccountViewSet.as_view(actions={"post": "create"})
         response = view(request)
 
         self.assertEqual(response.status_code, 400)
@@ -377,7 +377,7 @@ class AccountViewSetTest(TransactionTestCase):
             request = self.factory.patch("/accounts/", data=data)
             force_authenticate(request, user=self.user2)
 
-            view = views.AccountViewSet.as_view(actions={"patch": "partial_update"})
+            view = AccountViewSet.as_view(actions={"patch": "partial_update"})
 
             response = view(request, pk=account_id)
             expected_error = "You cannot update field cloud_type."
