@@ -1,4 +1,5 @@
 """Listens to the platform kafka instance."""
+import json
 import logging
 import os
 import signal
@@ -108,20 +109,19 @@ class Command(BaseCommand):
         # So we've established the headers are a list of tuples, but wait,
         # there's more! It is a tuple with a string key, and a bytestring
         # value because... reasons..? Let's clean that up.
-        message_headers = message.headers()
         message_headers = [
             (
                 key,
                 value.decode("utf-8"),
             )
-            for key, value in message_headers
+            for key, value in message.headers()
         ]
         for header in message_headers:
             if header[0] == "event_type":
                 event_type = header[1]
                 break
 
-        message_value = message.value().decode("utf-8")
+        message_value = json.loads(message.value().decode("utf-8"))
 
         logger.info(
             _("Processing Message: %(message_value)s. Headers: %(message_headers)s"),
