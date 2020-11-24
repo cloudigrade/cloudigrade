@@ -1,15 +1,14 @@
 """Listens to the platform kafka instance."""
-import json
 import logging
 import os
 import signal
 import sys
 
 import daemon
+from confluent_kafka import Consumer
 from django.conf import settings
 from django.core.management import BaseCommand
 from django.utils.translation import gettext as _
-from kafka import KafkaConsumer
 from lockfile import AlreadyLocked
 from lockfile.pidlockfile import PIDLockFile
 
@@ -66,42 +65,68 @@ class Command(BaseCommand):
         group_id = settings.LISTENER_GROUP_ID
         bootstrap_server = settings.LISTENER_SERVER
         bootstrap_server_port = settings.LISTENER_PORT
+        bootstrap_servers = f"{bootstrap_server}:{bootstrap_server_port}"
 
-        consumer = KafkaConsumer(
-            topic,
-            group_id=group_id,
-            bootstrap_servers=[f"{bootstrap_server}:{bootstrap_server_port}"],
-            value_deserializer=lambda x: json.loads(x.decode("utf-8")),
+        consumer_conf = {
+            "bootstrap.servers": bootstrap_servers,
+            "group.id": group_id,
+        }
+
+        logger.info(
+            _("Attempting to connect with following configuration: %(consumer_conf)s"),
+            {"consumer_conf": consumer_conf},
         )
 
-        self.run = True
+        consumer = Consumer(consumer_conf)
 
-        while self.run:
-            message_bundle = consumer.poll()
-            for topic_partition, messages in message_bundle.items():
-                for message in messages:
-                    self._process_message(message)
+        try:
+            logger.info(
+                _("Listener ready to run, subscribing to %(topic)s"), {"topic": topic}
+            )
+            self.run = True
+            consumer.subscribe([topic])
+
+            while self.run:
+                msg = consumer.poll()
+
+                if msg is None:
+                    continue
+                if msg.error():
+                    logger.warning(_("Consumer error: {error}"), {"error": msg.error()})
+                    continue
+
+                self._process_message(msg)
+        finally:
+            logger.info(_("Listener closing."))
+            consumer.close()
 
     def _process_message(self, message):
         """Process a single Kafka message."""
         event_type = None
-        message_value = getattr(message, "value", {})
+
         # The headers are a list of... tuples.
         # So we've established the headers are a list of tuples, but wait,
         # there's more! It is a tuple with a string key, and a bytestring
         # value because... reasons..? Let's clean that up.
+        message_headers = message.headers()
         message_headers = [
             (
                 key,
                 value.decode("utf-8"),
             )
-            for key, value in message.headers
+            for key, value in message_headers
         ]
-
         for header in message_headers:
             if header[0] == "event_type":
                 event_type = header[1]
                 break
+
+        message_value = message.value().decode("utf-8")
+
+        logger.info(
+            _("Processing Message: %(message_value)s. Headers: %(message_headers)s"),
+            {"message_value": message_value, "message_headers": message_headers},
+        )
 
         if event_type == "ApplicationAuthentication.create":
             logger.info(
