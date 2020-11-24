@@ -1,6 +1,5 @@
 """Collection of tests for the Sources Listener."""
 import signal
-from unittest import skip
 from unittest.mock import Mock, patch
 
 from django.core.management import call_command
@@ -10,13 +9,12 @@ from lockfile import AlreadyLocked
 from util.management.commands.listen_to_sources import Command
 
 
-@skip("TODO: fix asap, heckin borked atm")
 class SourcesListenerTest(TestCase):
     """Add App Configuration Test Case."""
 
     @patch("util.management.commands.listen_to_sources.PIDLockFile")
     @patch("util.management.commands.listen_to_sources.logger")
-    @patch("util.management.commands.listen_to_sources.KafkaConsumer")
+    @patch("util.management.commands.listen_to_sources.Consumer")
     @patch("api.tasks.update_from_source_kafka_message")
     @patch("api.tasks.delete_from_sources_kafka_message")
     @patch("api.tasks.create_from_sources_kafka_message")
@@ -38,26 +36,32 @@ class SourcesListenerTest(TestCase):
         message4 = Mock()
         message5 = Mock()
 
-        message1.value = {"application_id": Mock(), "authentication_id": Mock()}
-        message1.headers = [
+        message1.error.return_value = None
+        message2.error.return_value = None
+        message3.error.return_value = None
+        message4.error.return_value = None
+        message5.error.return_value = {"Borked."}
+
+        message1.value.return_value = b'{"application_id": 42, "authentication_id": 7}'
+        message1.headers.return_value = [
             ("event_type", b"ApplicationAuthentication.create"),
             ("encoding", b"json"),
         ]
 
-        message2.value = "test message 2"
-        message2.headers = [
+        message2.value.return_value = b'{"value": "test message 2"}'
+        message2.headers.return_value = [
             ("event_type", b"Authentication.destroy"),
             ("encoding", b"json"),
         ]
 
-        message3.value = "test message 3"
-        message3.headers = [
+        message3.value.return_value = b'{"value": "test message 3"}'
+        message3.headers.return_value = [
             ("event_type", b"Authentication.update"),
             ("encoding", b"json"),
         ]
 
-        message4.value = {"authtype": "INVALID"}
-        message4.headers = [
+        message4.value.return_value = b'{"authtype": "INVALID"}'
+        message4.headers.return_value = [
             ("event_type", b"Authentication.create"),
             ("encoding", b"json"),
         ]
@@ -67,22 +71,22 @@ class SourcesListenerTest(TestCase):
         message5.value = "bad message"
         message5.headers = [Mock(), Mock()]
 
-        mock_message_bundle_items = {
-            "Partition 1": [message1, message2, message3, message4, message5]
-        }
+        mock_message_bundle_items = [message1, message2, message3, message4, message5]
 
         mock_consumer_poll = mock_consumer.return_value.poll
-        mock_consumer_poll.return_value = mock_message_bundle_items
+        mock_consumer_poll.side_effect = mock_message_bundle_items
 
-        with self.assertRaises(TypeError):
+        # Let the script hit the end of the message list
+        with self.assertRaises(StopIteration):
             call_command("listen_to_sources")
 
         mock_create_task.delay.assert_called_once()
         mock_delete_task.delay.assert_called_once()
         mock_update_task.delay.assert_called_once()
         mock_consumer.assert_called_once()
-        mock_consumer_poll.assert_called_once()
-        self.assertEqual(3, mock_logger.info.call_count)
+        mock_consumer_poll.assert_called()
+        self.assertEqual(10, mock_logger.info.call_count)
+        self.assertEqual(1, mock_logger.warning.call_count)
 
     @patch("util.management.commands.listen_to_sources.logger")
     def test_listener_cleanup(self, mock_logger):
@@ -92,7 +96,7 @@ class SourcesListenerTest(TestCase):
 
     @patch("util.management.commands.listen_to_sources.PIDLockFile")
     @patch("util.management.commands.listen_to_sources.logger")
-    @patch("util.management.commands.listen_to_sources.KafkaConsumer")
+    @patch("util.management.commands.listen_to_sources.Consumer")
     @patch("daemon.DaemonContext")
     def test_listener_does_not_start_when_pidfile_exists(
         self, mock_daemon_context, mock_consumer, mock_logger, mock_pid
