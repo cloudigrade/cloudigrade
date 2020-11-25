@@ -143,6 +143,11 @@ def make_sources_call(account_number, url, headers, params=None):
         message = _(
             "unexpected status {status} using account {account_number} at {url}"
         ).format(status=response.status_code, account_number=account_number, url=url)
+        logger.info(message)
+        logger.info(
+            _("sources-api response content: %(response_text)s"),
+            {"response_text": response.text},
+        )
         raise SourcesAPINotOkStatus(message)
 
     try:
@@ -151,6 +156,11 @@ def make_sources_call(account_number, url, headers, params=None):
         message = _(
             "unexpected non-json response using account {account_number} at {url}"
         ).format(account_number=account_number, url=url)
+        logger.info(message)
+        logger.info(
+            _("sources-api response content: %(response_text)s"),
+            {"response_text": response.text},
+        )
         raise SourcesAPINotJsonContent(message)
 
     return response_json
