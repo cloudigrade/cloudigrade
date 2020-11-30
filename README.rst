@@ -59,7 +59,7 @@ We recommend developing on the latest version of Fedora. Follow the following co
 
 .. code-block:: bash
 
-    sudo dnf install awscli gettext postgresql-devel -y
+    sudo dnf install awscli gettext postgresql-devel librdkafka-devel -y
 
 
 Python virtual environment
