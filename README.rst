@@ -48,8 +48,7 @@ The following commands should install everything you need:
 .. code-block:: bash
 
     brew update
-    brew install python@3.8 gettext awscli postgresql openssl curl-openssl
-    brew link gettext --force
+    brew install python@3.8 gettext awscli postgresql openssl curl librdkafka tox poetry
 
 
 Linux dependencies
@@ -96,10 +95,8 @@ If you see no output, everything is okay! Otherwise (e.g. "libcurl link-time ssl
     poetry run pip uninstall pycurl -y
 
     BREW_PATH=$(brew --prefix)
-    export LDFLAGS="-L${BREW_PATH}/opt/openssl/lib/ -L${BREW_PATH}/opt/curl-openssl/lib -L${BREW_PATH}/opt/expat/lib/ -L${BREW_PATH}/lib -L/usr/lib/"
-    export CFLAGS="-I${BREW_PATH}/opt/openssl/include/ -I${BREW_PATH}/opt/expat/include/ -I${BREW_PATH}/include/"
-    export CPPFLAGS="-I${BREW_PATH}/opt/openssl/include/ -I${BREW_PATH}/opt/curl-openssl/include -I${BREW_PATH}/opt/expat/include/  -I${BREW_PATH}/include/"
-    export PYCURL_CURL_CONFIG="${BREW_PATH}/opt/curl-openssl/bin/curl-config"
+    export LDFLAGS="-L${BREW_PATH}/opt/curl/lib"
+    export CPPFLAGS="-I${BREW_PATH}/opt/curl/include"
     export PYCURL_SSL_LIBRARY="openssl"
 
     poetry install
