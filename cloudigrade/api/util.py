@@ -307,7 +307,7 @@ def calculate_max_concurrent_usage(date, user_id):
         {"user_id": user_id, "date": date},
     )
     for number, run in enumerate(runs):
-        if number % 100:
+        if number % 100 == 0:
             # This is temporary to diagnose possible issues with large data sets.
             logger.info(
                 _(
