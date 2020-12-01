@@ -224,14 +224,26 @@ def get_max_concurrent_usage(date, user_id):
         return ConcurrentUsage(date=date, user_id=user_id)
 
     try:
+        logger.info(
+            _("Fetching ConcurrentUsage(date=%(date)s, user_id=%(user_id)s)"),
+            {"date": date, "user_id": user_id},
+        )
         concurrent_usage = ConcurrentUsage.objects.get(date=date, user_id=user_id)
         return concurrent_usage
     except ConcurrentUsage.DoesNotExist:
+        logger.info(
+            _("Could not find ConcurrentUsage(date=%(date)s, user_id=%(user_id)s)"),
+            {"date": date, "user_id": user_id},
+        )
         # If it does not exist, we will create it after this exception handler.
         pass
 
     last_calculation_task = get_last_scheduled_concurrent_usage_calculation_task(
         user_id, date
+    )
+    logger.info(
+        _("last_calculation_task is %(last_calculation_task)s"),
+        {"last_calculation_task": last_calculation_task},
     )
     if last_calculation_task is not None:
         if last_calculation_task.status == ConcurrentUsageCalculationTask.SCHEDULED:
@@ -264,6 +276,14 @@ def calculate_max_concurrent_usage(date, user_id):
         # TODO Is this even possible to reach via the API?
         return ConcurrentUsage(date=date, user_id=user_id)
 
+    logger.info(
+        _(
+            "Starting calculate_max_concurrent_usage "
+            "for user_id %(user_id)s and %(date)s"
+        ),
+        {"user_id": user_id, "date": date},
+    )
+
     queryset = Run.objects.filter(instance__cloud_account__user__id=user_id)
 
     start = datetime(date.year, date.month, date.day, 0, 0, 0, tzinfo=tz.tzutc())
@@ -282,7 +302,20 @@ def calculate_max_concurrent_usage(date, user_id):
     # ever want to know about concurrency for things other than RHEL, we would
     # repeat the following pattern for each other filter/condition.
     rhel_on_offs = []
-    for run in runs:
+    logger.info(
+        _("Iterating through runs for user_id %(user_id)s and %(date)s"),
+        {"user_id": user_id, "date": date},
+    )
+    for number, run in enumerate(runs):
+        if number % 100:
+            # This is temporary to diagnose possible issues with large data sets.
+            logger.info(
+                _(
+                    "iterating at step %(number)s of runs "
+                    "for user_id %(user_id)s and %(date)s"
+                ),
+                {"number": number, "user_id": user_id, "date": date},
+            )
         if not run.machineimage.rhel:
             continue
         rhel_on_offs.append(
@@ -352,6 +385,10 @@ def calculate_max_concurrent_usage(date, user_id):
             }
         )
 
+    logger.info(
+        _("Saving calculated ConcurrentUsage for user_id %(user_id)s and %(date)s"),
+        {"user_id": user_id, "date": date},
+    )
     ConcurrentUsage.objects.filter(date=date, user_id=user_id).delete()
     concurrent_usage = ConcurrentUsage.objects.create(
         date=date, user_id=user_id, maximum_counts=simplified_maximum_counts
@@ -359,6 +396,13 @@ def calculate_max_concurrent_usage(date, user_id):
     concurrent_usage.potentially_related_runs.add(*runs)
     concurrent_usage.save()
 
+    logger.info(
+        _(
+            "Finished calculate_max_concurrent_usage"
+            " for user_id %(user_id)s and %(date)s"
+        ),
+        {"user_id": user_id, "date": date},
+    )
     return concurrent_usage
 
 
