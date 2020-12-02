@@ -19,7 +19,6 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
     def setUp(self):
         """Set up a bunch of test data."""
         self.user1 = util_helper.generate_test_user()
-        self.superuser = util_helper.generate_test_user(is_superuser=True)
         self.account1 = api_helper.generate_cloud_account(user=self.user1)
         self.account2 = api_helper.generate_cloud_account(user=self.user1)
         self.image1_rhel = api_helper.generate_image(
@@ -155,20 +154,6 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
             body["start_date"], [_("start_date must be a date (YYYY-MM-DD).")]
         )
         self.assertEqual(body["end_date"], [_("end_date must be a date (YYYY-MM-DD).")])
-
-    def test_bad_user_id_and_cloud_account_id_arguments(self):
-        """Test with bad user_id argument."""
-        data = {"user_id": "potato", "cloud_account_id": "gems"}
-        client = APIClient()
-        client.force_authenticate(user=self.superuser)
-        response = client.get(
-            "/api/cloudigrade/v2/concurrent/", data=data, format="json"
-        )
-        self.assertEqual(response.status_code, 400)
-        body = response.json()
-        self.assertEqual(
-            body["user_id"], [_("{} must be an integer.").format("user_id")]
-        )
 
     def test_start_date_is_inclusive_and_end_date_is_exclusive(self):
         """Test that start_date is inclusive and end_date is exclusive."""

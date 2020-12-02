@@ -21,7 +21,6 @@ class AccountViewSetTest(TransactionTestCase):
         """Set up a bunch of test data."""
         self.user1 = util_helper.generate_test_user()
         self.user2 = util_helper.generate_test_user()
-        self.superuser = util_helper.generate_test_user(is_superuser=True)
         self.account1 = api_helper.generate_cloud_account(user=self.user1)
         self.account2 = api_helper.generate_cloud_account(user=self.user1)
         self.account3 = api_helper.generate_cloud_account(user=self.user2)
@@ -150,40 +149,6 @@ class AccountViewSetTest(TransactionTestCase):
         actual_accounts = self.get_account_ids_from_list_response(response)
         self.assertEqual(expected_accounts, actual_accounts)
 
-    def test_list_accounts_as_superuser(self):
-        """Assert that the superuser sees all accounts regardless of owner."""
-        expected_accounts = {
-            str(self.account1.content_object.aws_account_id),
-            str(self.account2.content_object.aws_account_id),
-            str(self.account3.content_object.aws_account_id),
-            str(self.account4.content_object.aws_account_id),
-            str(self.account5.content_object.aws_account_id),
-            str(self.azure_account1.content_object.tenant_id),
-            str(self.azure_account2.content_object.tenant_id),
-        }
-        response = self.get_account_list_response(self.superuser)
-        actual_accounts = self.get_account_ids_from_list_response(response)
-        self.assertEqual(expected_accounts, actual_accounts)
-
-    def test_list_accounts_as_superuser_with_filter(self):
-        """Assert that the superuser sees accounts filtered by user_id."""
-        expected_accounts = {
-            str(self.account3.content_object.aws_account_id),
-            str(self.account4.content_object.aws_account_id),
-            str(self.account5.content_object.aws_account_id),
-            str(self.azure_account2.content_object.tenant_id),
-        }
-        params = {"user_id": self.user2.id}
-        response = self.get_account_list_response(self.superuser, params)
-        actual_accounts = self.get_account_ids_from_list_response(response)
-        self.assertEqual(expected_accounts, actual_accounts)
-
-    def test_list_accounts_as_superuser_with_bad_filter(self):
-        """Assert that the list accounts returns 400 with bad user_id."""
-        params = {"user_id": "not_an_int"}
-        response = self.get_account_list_response(self.superuser, params)
-        self.assertEqual(response.status_code, 400)
-
     def test_get_user1s_account_as_user1_returns_ok(self):
         """Assert that user1 can get one of its own accounts."""
         user = self.user1
@@ -209,15 +174,6 @@ class AccountViewSetTest(TransactionTestCase):
 
         response = self.get_account_get_response(user, account.id)
         self.assertEqual(response.status_code, 404)
-
-    def test_get_user1s_account_as_superuser_returns_ok(self):
-        """Assert that superuser can get another user's accounts."""
-        user = self.superuser
-        account = self.account2  # Account belongs to user1, NOT superuser.
-
-        response = self.get_account_get_response(user, account.id)
-        self.assertEqual(response.status_code, 200)
-        self.assertResponseHasAccountData(response, account)
 
     @patch.object(CloudAccount, "enable")
     def test_create_account_with_name_success(self, mock_enable):

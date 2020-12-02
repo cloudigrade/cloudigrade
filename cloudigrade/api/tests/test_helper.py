@@ -7,6 +7,7 @@ import json
 import re
 import uuid
 from decimal import Decimal
+from unittest import skip
 from unittest.mock import patch
 
 import faker
@@ -90,6 +91,7 @@ class SandboxedRestClientTest(TestCase):
         with self.assertRaises(AttributeError):
             client.foo_bar()
 
+    @skip("skipping until we reimplement the ability to trigger image reinspection")
     def test_action_noun_verb_detail(self):
         """Assert "detail" requests work."""
         client = helper.SandboxedRestClient()

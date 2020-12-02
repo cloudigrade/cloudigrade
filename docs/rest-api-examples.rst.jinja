@@ -203,18 +203,6 @@ Response:
 Filtering instances
 ~~~~~~~~~~~~~~~~~~~
 
-You may include an optional "user_id" query string argument to filter results
-down to a specific user.
-
-Request:
-
-{{ v2_instance_filter.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
-
-Response:
-
-{{ v2_instance_filter | stringify_http_response | rst_codeblock }}
-
-
 You may also include an optional "running_since" query string argument to filter for only
 instances that have been running uninterrupted since the given time.
 
@@ -243,19 +231,6 @@ Response:
 
 {{ v2_list_images | stringify_http_response | rst_codeblock }}
 
-When authenticating as a superuser, this will return all images used by instances in all accounts.
-
-A superuser can also filter the images down to a those used by instances for accounts belonging to a specific user by using the optional
-``user_id`` query string argument.
-
-Request:
-
-{{ v2_list_images_filter.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
-
-Response:
-
-{{ v2_list_images_filter | stringify_http_response | rst_codeblock }}
-
 
 Retrieve a specific image
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -267,22 +242,6 @@ Request:
 Response:
 
 {{ v2_get_image | stringify_http_response | rst_codeblock }}
-
-
-Reinspect a specific image
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-cloudigrade/account/v2/serializers.py
-Restart image inspection to deal with failed inspections or repeat inspection for the sake of testing.
-
-Note that this command is only accessible by superusers.
-
-Request:
-
-{{ v2_reinspect_image.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
-
-Response:
-
-{{ v2_reinspect_image | stringify_http_response | rst_codeblock }}
 
 
 Report Commands

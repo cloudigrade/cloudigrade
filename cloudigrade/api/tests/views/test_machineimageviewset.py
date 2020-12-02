@@ -1,6 +1,7 @@
 """Collection of tests for MachineImageViewSet."""
 import http
 from decimal import Decimal
+from unittest import skip
 
 from django.test import TestCase
 from rest_framework.test import APIRequestFactory, force_authenticate
@@ -26,14 +27,12 @@ class MachineImageViewSetTest(TestCase):
         # Users
         self.user1 = util_helper.generate_test_user()
         self.user2 = util_helper.generate_test_user()
-        self.superuser = util_helper.generate_test_user(is_superuser=True)
 
         # Accounts for the users
         self.account_u1_1 = api_helper.generate_cloud_account(user=self.user1)
         self.account_u1_2 = api_helper.generate_cloud_account(user=self.user1)
         self.account_u2_1 = api_helper.generate_cloud_account(user=self.user2)
         self.account_u2_2 = api_helper.generate_cloud_account(user=self.user2)
-        self.account_su = api_helper.generate_cloud_account(user=self.superuser)
 
         # Images with various contents
         self.image_plain = api_helper.generate_image()
@@ -60,9 +59,6 @@ class MachineImageViewSetTest(TestCase):
         self.instance_u2_2 = api_helper.generate_instance(
             cloud_account=self.account_u2_2, image=self.image_rhel_ocp
         )
-        self.instance_su = api_helper.generate_instance(
-            cloud_account=self.account_su, image=self.image_windows
-        )
 
         # Some initial event activity spread across the accounts
         powered_times = (
@@ -76,7 +72,6 @@ class MachineImageViewSetTest(TestCase):
             (self.instance_u1_2, self.image_rhel),
             (self.instance_u2_1, self.image_ocp),
             (self.instance_u2_2, self.image_rhel_ocp),
-            (self.instance_su, self.image_windows),
         )
         for instance, image in instance_images:
             self.generate_events(powered_times, instance, image)
@@ -264,28 +259,6 @@ class MachineImageViewSetTest(TestCase):
         actual_images = self.get_image_ids_from_list_response(response)
         self.assertEqual(expected_images, actual_images)
 
-    def test_list_images_as_superuser(self):
-        """Assert that the superuser sees all images regardless of owner."""
-        expected_images = {
-            self.image_plain.id,
-            self.image_windows.id,
-            self.image_rhel.id,
-            self.image_ocp.id,
-            self.image_rhel_ocp.id,
-            self.inspected_image.id,
-        }
-        response = self.get_image_list_response(self.superuser)
-        actual_images = self.get_image_ids_from_list_response(response)
-        self.assertEqual(expected_images, actual_images)
-
-    def test_list_images_as_superuser_with_user_filter(self):
-        """Assert that the superuser sees images filtered by user_id."""
-        expected_images = {self.image_ocp.id, self.image_rhel_ocp.id}
-        params = {"user_id": self.user2.id}
-        response = self.get_image_list_response(self.superuser, params)
-        actual_images = self.get_image_ids_from_list_response(response)
-        self.assertEqual(expected_images, actual_images)
-
     def test_get_image_used_by_user_returns_ok(self):
         """Assert that user1 can get one of its own images."""
         user = self.user1
@@ -304,27 +277,12 @@ class MachineImageViewSetTest(TestCase):
         response = self.get_image_get_response(user, image.id)
         self.assertEqual(response.status_code, 404)
 
-    def test_get_image_used_by_user_as_superuser_returns_ok(self):
-        """Assert that superuser can get an image used by another user."""
-        user = self.superuser
-        # Image used by user1, NOT superuser.
-        image = self.image_plain
-
-        response = self.get_image_get_response(user, image.id)
-        self.assertEqual(response.status_code, 200)
-        self.assertResponseHasImageData(response, image)
-
-    def test_list_images_as_superuser_with_bad_filter(self):
-        """Assert that the list images returns 400 with bad user_id."""
-        params = {"user_id": "not_an_int"}
-        response = self.get_image_list_response(self.superuser, params)
-        self.assertEqual(response.status_code, 400)
-
     def test_marking_images_as_windows_tags_them_as_windows(self):
         """Assert that a windows image has an appropriate property."""
         image = self.image_windows
         self.assertEqual(image.content_object.platform, image.content_object.WINDOWS)
 
+    @skip("skipping until we reimplement the ability to trigger image reinspection")
     def test_reinspect_superuser(self):
         """Assert that a superuser can reinspect an image."""
         response = self.get_image_reinspect_response(

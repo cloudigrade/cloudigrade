@@ -88,26 +88,6 @@ class DocsApiHandler(object):
         self.tomorrow = self.this_morning + timedelta(days=1)
         self.next_week = self.this_morning + timedelta(weeks=1)
 
-        ##################################
-        # Generate data for the superuser.
-        self.superuser_account = api_helper.generate_cloud_account(
-            arn=util_helper.generate_dummy_arn(),
-            user=self.superuser,
-            name="super duper account",
-            created_at=self.two_weeks_ago,
-        )
-        self.superuser_instances = [
-            api_helper.generate_instance(self.superuser_account)
-        ]
-
-        self.events = []
-        # This event represents one instance starting yesterday.
-        self.events.extend(
-            api_helper.generate_instance_events(
-                self.superuser_instances[0], [(self.yesterday, None)]
-            )
-        )
-
         ######################################
         # Generate AWS data for the customer user.
         self.aws_customer_account = api_helper.generate_cloud_account(
@@ -142,6 +122,7 @@ class DocsApiHandler(object):
         # Generate events so we can see customer activity in the responses.
         # These events represent all customer instances starting one week ago,
         # stopping two days ago, and starting again yesterday.
+        self.events = []
         for instance in self.customer_instances[:2]:
             self.events.extend(
                 api_helper.generate_instance_events(
@@ -320,17 +301,8 @@ class DocsApiHandler(object):
         assert_status(response, 200)
         responses["v2_instance_get"] = response
 
-        # Filtering instances on user
-        response = self.superuser_client.list_instances(
-            data={"v2_user_id": self.superuser.id}
-        )
-        assert_status(response, 200)
-        responses["v2_instance_filter"] = response
-
         # Filtering instances on running
-        response = self.superuser_client.list_instances(
-            data={"running_since": self.now}
-        )
+        response = self.customer_client.list_instances(data={"running_since": self.now})
         assert_status(response, 200)
         responses["v2_instance_filter_running"] = response
 
@@ -342,23 +314,10 @@ class DocsApiHandler(object):
         assert_status(response, 200)
         responses["v2_list_images"] = response
 
-        response = self.superuser_client.list_images(
-            data={"user_id": self.superuser.id}
-        )
-        assert_status(response, 200)
-        responses["v2_list_images_filter"] = response
-
         # Retrieve a specific image
-        response = self.superuser_client.get_images(self.images[0].id)
+        response = self.customer_client.get_images(self.images[0].id)
         assert_status(response, 200)
         responses["v2_get_image"] = response
-
-        # Reinspect a specific image
-        response = self.superuser_client.post_images(
-            noun_id=self.images[0].id, detail="reinspect"
-        )
-        assert_status(response, 200)
-        responses["v2_reinspect_image"] = response
 
         #######################
         # Report Commands
@@ -396,7 +355,7 @@ class DocsApiHandler(object):
         )
 
         with override_settings(CLOUDIGRADE_VERSION=cloudigrade_version):
-            response = self.superuser_client.get_sysconfig()
+            response = self.customer_client.get_sysconfig()
         assert_status(response, 200)
         responses["v2_get_sysconfig"] = response
 

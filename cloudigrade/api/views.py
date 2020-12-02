@@ -17,7 +17,6 @@ from api.authentication import (
 )
 from api.schemas import ConcurrentSchema, SysconfigSchema
 from api.serializers import DailyConcurrentUsageDummyQueryset
-from api.util import convert_param_to_int
 from util.aws.sts import _get_primary_account_id, cloudigrade_policy
 from util.misc import get_today
 
@@ -43,9 +42,7 @@ class AccountViewSet(
     def get_queryset(self):
         """Get the Account queryset with filters applied."""
         user = self.request.user
-        query_params = self.request.query_params
-        user_id = convert_param_to_int("user_id", query_params.get("user_id", None))
-        return filters.cloudaccounts(self.queryset, user_id, user)
+        return filters.cloudaccounts(self.queryset, user)
 
 
 class InstanceViewSet(viewsets.ReadOnlyModelViewSet):
@@ -65,16 +62,13 @@ class InstanceViewSet(viewsets.ReadOnlyModelViewSet):
         """Get the Instance queryset with filters applied."""
         user = self.request.user
         query_params = self.request.query_params
-
-        user_id = convert_param_to_int("user_id", query_params.get("user_id", None))
-
         running_since = query_params.get("running_since", None)
         if running_since is not None:
             running_since = parse(running_since)
         if running_since and not running_since.tzinfo:
             running_since = running_since.replace(tzinfo=tz.tzutc())
 
-        return filters.instances(self.queryset, user_id, running_since, user)
+        return filters.instances(self.queryset, user, running_since)
 
 
 class MachineImageViewSet(viewsets.ReadOnlyModelViewSet):
@@ -110,8 +104,7 @@ class MachineImageViewSet(viewsets.ReadOnlyModelViewSet):
         query_params = self.request.query_params
         architecture = query_params.get("architecture", None)
         status = query_params.get("status", None)
-        user_id = convert_param_to_int("user_id", query_params.get("user_id", None))
-        return filters.machineimages(self.queryset, architecture, status, user_id, user)
+        return filters.machineimages(self.queryset, user, architecture, status)
 
     @action(detail=True, methods=["post"])
     def reinspect(self, request, pk=None):
@@ -186,19 +179,9 @@ class DailyConcurrentUsageViewSet(viewsets.GenericViewSet, mixins.ListModelMixin
         except ValueError:
             errors["end_date"] = [_("end_date must be a date (YYYY-MM-DD).")]
 
-        user = self.request.user
-        if not user.is_superuser:
-            user_id = user.id
-        else:
-            try:
-                user_id = convert_param_to_int(
-                    "user_id", self.request.query_params.get("user_id", None)
-                )
-            except exceptions.ValidationError as e:
-                errors.update(e.detail)
-
         if errors:
             raise exceptions.ValidationError(errors)
 
+        user_id = self.request.user.id
         queryset = DailyConcurrentUsageDummyQueryset(start_date, end_date, user_id)
         return queryset
