@@ -287,7 +287,7 @@
     "/api/cloudigrade/v2/instances/": {
       "get": {
         "operationId": "listInstances",
-        "description": "List all or retrieve a single instance.\n\nAuthenticate via 3scale.\nDo not allow to create, update, replace, or delete an instance at\nthis view because we currently **only** allow instances to be retrieved.",
+        "description": "List all or retrieve a single instance.\n\nAuthenticate via 3scale.",
         "parameters": [
           {
             "name": "limit",
@@ -305,6 +305,15 @@
             "description": "The initial index from which to return the results.",
             "schema": {
               "type": "integer"
+            }
+          },
+          {
+            "name": "running_since",
+            "required": false,
+            "in": "query",
+            "description": "running_since",
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -374,13 +383,22 @@
     "/api/cloudigrade/v2/instances/{id}/": {
       "get": {
         "operationId": "retrieveInstance",
-        "description": "List all or retrieve a single instance.\n\nAuthenticate via 3scale.\nDo not allow to create, update, replace, or delete an instance at\nthis view because we currently **only** allow instances to be retrieved.",
+        "description": "List all or retrieve a single instance.\n\nAuthenticate via 3scale.",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
             "description": "A unique integer value identifying this instance.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "running_since",
+            "required": false,
+            "in": "query",
+            "description": "running_since",
             "schema": {
               "type": "string"
             }
@@ -406,7 +424,7 @@
     "/api/cloudigrade/v2/images/": {
       "get": {
         "operationId": "listMachineImages",
-        "description": "List all, or retrieve a single machine image.\n\nAuthenticate via 3scale.\nDo not allow to create, update, replace, or delete an machine image at\nthis view.",
+        "description": "List all or retrieve a single machine image.\n\nAuthenticate via 3scale.",
         "parameters": [
           {
             "name": "limit",
@@ -424,6 +442,32 @@
             "description": "The initial index from which to return the results.",
             "schema": {
               "type": "integer"
+            }
+          },
+          {
+            "name": "architecture",
+            "required": false,
+            "in": "query",
+            "description": "architecture",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "status",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "preparing",
+                "inspecting",
+                "inspected",
+                "error",
+                "unavailable"
+              ]
             }
           }
         ],
@@ -493,7 +537,7 @@
     "/api/cloudigrade/v2/images/{id}/": {
       "get": {
         "operationId": "retrieveMachineImage",
-        "description": "List all, or retrieve a single machine image.\n\nAuthenticate via 3scale.\nDo not allow to create, update, replace, or delete an machine image at\nthis view.",
+        "description": "List all or retrieve a single machine image.\n\nAuthenticate via 3scale.",
         "parameters": [
           {
             "name": "id",
@@ -502,6 +546,32 @@
             "description": "A unique integer value identifying this machine image.",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "architecture",
+            "required": false,
+            "in": "query",
+            "description": "architecture",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "status",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "preparing",
+                "inspecting",
+                "inspected",
+                "error",
+                "unavailable"
+              ]
             }
           }
         ],

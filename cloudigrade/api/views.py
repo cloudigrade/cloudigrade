@@ -1,12 +1,12 @@
 """Public views for cloudigrade API."""
 from datetime import timedelta
 
-from dateutil import tz
 from dateutil.parser import parse
 from django.conf import settings
 from django.db import transaction
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
+from django_filters import rest_framework as django_filters
 from rest_framework import exceptions, mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -38,11 +38,7 @@ class AccountViewSet(
     authentication_classes = (ThreeScaleAuthentication,)
     serializer_class = serializers.CloudAccountSerializer
     queryset = models.CloudAccount.objects.all()
-
-    def get_queryset(self):
-        """Get the Account queryset with filters applied."""
-        user = self.request.user
-        return filters.cloudaccounts(self.queryset, user)
+    filter_backends = (filters.CloudAccountRequestIsUserFilterBackend,)
 
 
 class InstanceViewSet(viewsets.ReadOnlyModelViewSet):
@@ -50,61 +46,33 @@ class InstanceViewSet(viewsets.ReadOnlyModelViewSet):
     List all or retrieve a single instance.
 
     Authenticate via 3scale.
-    Do not allow to create, update, replace, or delete an instance at
-    this view because we currently **only** allow instances to be retrieved.
     """
 
     authentication_classes = (ThreeScaleAuthentication,)
     serializer_class = serializers.InstanceSerializer
     queryset = models.Instance.objects.all()
-
-    def get_queryset(self):
-        """Get the Instance queryset with filters applied."""
-        user = self.request.user
-        query_params = self.request.query_params
-        running_since = query_params.get("running_since", None)
-        if running_since is not None:
-            running_since = parse(running_since)
-        if running_since and not running_since.tzinfo:
-            running_since = running_since.replace(tzinfo=tz.tzutc())
-
-        return filters.instances(self.queryset, user, running_since)
+    filter_backends = (
+        filters.InstanceRequestIsUserFilterBackend,
+        django_filters.DjangoFilterBackend,
+    )
+    filterset_class = filters.InstanceFilterSet
 
 
 class MachineImageViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    List all, or retrieve a single machine image.
+    List all or retrieve a single machine image.
 
     Authenticate via 3scale.
-    Do not allow to create, update, replace, or delete an machine image at
-    this view.
     """
 
     authentication_classes = (ThreeScaleAuthentication,)
     serializer_class = serializers.MachineImageSerializer
     queryset = models.MachineImage.objects.all()
-
-    def get_queryset(self):
-        """
-        Get the MachineImage queryset filtered to appropriate user.
-
-        Superusers by default see *all* objects unfiltered, but a superuser may
-        optionally provide a `user_id` argument in order to see what that user
-        would normally see. This argument is ignored for normal users.
-
-        Because users don't necessarily own the images they have been using, we
-        have the filter join across instanceevent to instance to account so
-        that we return the set of images that any of their instances have used.
-
-        If we ever support archiving activity from specific accounts or
-        instances, we will need to expand the conditions on this filter to
-        exclude images used by archived instances (via archived accounts).
-        """
-        user = self.request.user
-        query_params = self.request.query_params
-        architecture = query_params.get("architecture", None)
-        status = query_params.get("status", None)
-        return filters.machineimages(self.queryset, user, architecture, status)
+    filter_backends = (
+        django_filters.DjangoFilterBackend,
+        filters.MachineImageRequestIsUserFilterBackend,
+    )
+    filterset_fields = ("architecture", "status")
 
     @action(detail=True, methods=["post"])
     def reinspect(self, request, pk=None):
@@ -126,11 +94,7 @@ class MachineImageViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class SysconfigViewSet(viewsets.ViewSet):
-    """
-    View to display our cloud account ids.
-
-    Authenticate via 3scale.
-    """
+    """Retrieve dynamic sysconfig data including cloud-specific IDs and policies."""
 
     authentication_classes = (ThreeScaleAuthentication,)
     schema = SysconfigSchema()

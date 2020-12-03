@@ -161,6 +161,7 @@ THIRD_PARTY_APPS = [
     "django_celery_beat",
     "rest_framework",
     "rest_framework.authtoken",
+    "django_filters",
     "generic_relations",
     "health_check",
     "health_check.db",
