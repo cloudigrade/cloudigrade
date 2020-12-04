@@ -12,9 +12,6 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from api import filters, models, serializers
-from api.authentication import (
-    ThreeScaleAuthentication,
-)
 from api.schemas import ConcurrentSchema, SysconfigSchema
 from api.serializers import DailyConcurrentUsageDummyQueryset
 from util.aws.sts import _get_primary_account_id, cloudigrade_policy
@@ -29,26 +26,16 @@ class AccountViewSet(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
-    """
-    Create, retrieve, update, delete, or list customer accounts.
+    """Create, retrieve, update, delete, or list customer accounts."""
 
-    Authenticate via 3scale.
-    """
-
-    authentication_classes = (ThreeScaleAuthentication,)
     serializer_class = serializers.CloudAccountSerializer
     queryset = models.CloudAccount.objects.all()
     filter_backends = (filters.CloudAccountRequestIsUserFilterBackend,)
 
 
 class InstanceViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    List all or retrieve a single instance.
+    """List all or retrieve a single instance."""
 
-    Authenticate via 3scale.
-    """
-
-    authentication_classes = (ThreeScaleAuthentication,)
     serializer_class = serializers.InstanceSerializer
     queryset = models.Instance.objects.all()
     filter_backends = (
@@ -59,13 +46,8 @@ class InstanceViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class MachineImageViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    List all or retrieve a single machine image.
+    """List all or retrieve a single machine image."""
 
-    Authenticate via 3scale.
-    """
-
-    authentication_classes = (ThreeScaleAuthentication,)
     serializer_class = serializers.MachineImageSerializer
     queryset = models.MachineImage.objects.all()
     filter_backends = (
@@ -96,7 +78,6 @@ class MachineImageViewSet(viewsets.ReadOnlyModelViewSet):
 class SysconfigViewSet(viewsets.ViewSet):
     """Retrieve dynamic sysconfig data including cloud-specific IDs and policies."""
 
-    authentication_classes = (ThreeScaleAuthentication,)
     schema = SysconfigSchema()
 
     def list(self, *args, **kwargs):
@@ -122,7 +103,6 @@ class DailyConcurrentUsageViewSet(viewsets.GenericViewSet, mixins.ListModelMixin
     ResultsUnavailable 425 exception.
     """
 
-    authentication_classes = (ThreeScaleAuthentication,)
     serializer_class = serializers.DailyConcurrentUsageSerializer
     schema = ConcurrentSchema()
 
