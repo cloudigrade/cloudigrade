@@ -26,7 +26,7 @@ class AccountViewSet(
 ):
     """Create, retrieve, update, delete, or list customer accounts."""
 
-    schema = schemas.DescriptiveAutoSchema("cloud account")
+    schema = schemas.DescriptiveAutoSchema("cloud account", tags=["api-v2"])
     serializer_class = serializers.CloudAccountSerializer
     queryset = models.CloudAccount.objects.all()
     filter_backends = (filters.CloudAccountRequestIsUserFilterBackend,)
@@ -35,7 +35,7 @@ class AccountViewSet(
 class InstanceViewSet(viewsets.ReadOnlyModelViewSet):
     """List all or retrieve a single instance."""
 
-    schema = schemas.DescriptiveAutoSchema("instance")
+    schema = schemas.DescriptiveAutoSchema("instance", tags=["api-v2"])
     serializer_class = serializers.InstanceSerializer
     queryset = models.Instance.objects.all()
     filter_backends = (
@@ -48,7 +48,7 @@ class InstanceViewSet(viewsets.ReadOnlyModelViewSet):
 class MachineImageViewSet(viewsets.ReadOnlyModelViewSet):
     """List all or retrieve a single machine image."""
 
-    schema = schemas.DescriptiveAutoSchema("image")
+    schema = schemas.DescriptiveAutoSchema("image", tags=["api-v2"])
     serializer_class = serializers.MachineImageSerializer
     queryset = models.MachineImage.objects.all()
     filter_backends = (
@@ -61,7 +61,7 @@ class MachineImageViewSet(viewsets.ReadOnlyModelViewSet):
 class SysconfigViewSet(viewsets.ViewSet):
     """Retrieve dynamic sysconfig data including cloud-specific IDs and policies."""
 
-    schema = schemas.SysconfigSchema()
+    schema = schemas.SysconfigSchema(tags=["api-v2"])
 
     def list(self, *args, **kwargs):
         """Get cloud account ids currently used by this installation."""
@@ -86,8 +86,8 @@ class DailyConcurrentUsageViewSet(viewsets.GenericViewSet, mixins.ListModelMixin
     ResultsUnavailable 425 exception.
     """
 
+    schema = schemas.ConcurrentSchema(tags=["api-v2"])
     serializer_class = serializers.DailyConcurrentUsageSerializer
-    schema = schemas.ConcurrentSchema()
 
     def get_queryset(self):  # noqa: C901
         """Get the queryset of dates filtered to the appropriate inputs."""
