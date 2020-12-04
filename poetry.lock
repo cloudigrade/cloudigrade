@@ -314,11 +314,14 @@ rest_framework = ["djangorestframework (>=3.0.0)"]
 
 [[package]]
 name = "djangorestframework"
-version = "3.10.3"
+version = "3.12.2"
 description = "Web APIs for Django, made easy."
 category = "main"
 optional = false
 python-versions = ">=3.5"
+
+[package.dependencies]
+django = ">=2.2"
 
 [[package]]
 name = "docutils"
@@ -920,7 +923,7 @@ python-versions = ">=3.5,"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "107d92b945bc8feb61f7b24be288b172aa82a87e11af0a352586c2f24698ff54"
+content-hash = "065b04148e897661231832875259b8fd4778795d5d0ce306ad5402fefce60df7"
 
 [metadata.files]
 amqp = [
@@ -1071,8 +1074,7 @@ django-timezone-field = [
     {file = "django_timezone_field-4.1.1-py3-none-any.whl", hash = "sha256:068dc2c9b11c2230e126f511a515609d46f8cc49278b293e7536be07997fe892"},
 ]
 djangorestframework = [
-    {file = "djangorestframework-3.10.3-py3-none-any.whl", hash = "sha256:5488aed8f8df5ec1d70f04b2114abc52ae6729748a176c453313834a9ee179c8"},
-    {file = "djangorestframework-3.10.3.tar.gz", hash = "sha256:dc81cbf9775c6898a580f6f1f387c4777d12bd87abf0f5406018d32ccae71090"},
+    {file = "djangorestframework-3.12.2-py3-none-any.whl", hash = "sha256:0209bafcb7b5010fdfec784034f059d512256424de2a0f084cb82b096d6dd6a7"},
 ]
 docutils = [
     {file = "docutils-0.15.2-py2-none-any.whl", hash = "sha256:9e4d7ecfc600058e07ba661411a2b7de2fd0fafa17d1a7f7361cd47b1175c827"},
