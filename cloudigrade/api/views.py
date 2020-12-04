@@ -10,8 +10,7 @@ from django_filters import rest_framework as django_filters
 from rest_framework import exceptions, mixins, viewsets
 from rest_framework.response import Response
 
-from api import filters, models, serializers
-from api.schemas import ConcurrentSchema, SysconfigSchema
+from api import filters, models, schemas, serializers
 from api.serializers import DailyConcurrentUsageDummyQueryset
 from util.aws.sts import _get_primary_account_id, cloudigrade_policy
 from util.misc import get_today
@@ -27,6 +26,7 @@ class AccountViewSet(
 ):
     """Create, retrieve, update, delete, or list customer accounts."""
 
+    schema = schemas.DescriptiveAutoSchema("cloud account")
     serializer_class = serializers.CloudAccountSerializer
     queryset = models.CloudAccount.objects.all()
     filter_backends = (filters.CloudAccountRequestIsUserFilterBackend,)
@@ -35,6 +35,7 @@ class AccountViewSet(
 class InstanceViewSet(viewsets.ReadOnlyModelViewSet):
     """List all or retrieve a single instance."""
 
+    schema = schemas.DescriptiveAutoSchema("instance")
     serializer_class = serializers.InstanceSerializer
     queryset = models.Instance.objects.all()
     filter_backends = (
@@ -47,6 +48,7 @@ class InstanceViewSet(viewsets.ReadOnlyModelViewSet):
 class MachineImageViewSet(viewsets.ReadOnlyModelViewSet):
     """List all or retrieve a single machine image."""
 
+    schema = schemas.DescriptiveAutoSchema("image")
     serializer_class = serializers.MachineImageSerializer
     queryset = models.MachineImage.objects.all()
     filter_backends = (
@@ -59,7 +61,7 @@ class MachineImageViewSet(viewsets.ReadOnlyModelViewSet):
 class SysconfigViewSet(viewsets.ViewSet):
     """Retrieve dynamic sysconfig data including cloud-specific IDs and policies."""
 
-    schema = SysconfigSchema()
+    schema = schemas.SysconfigSchema()
 
     def list(self, *args, **kwargs):
         """Get cloud account ids currently used by this installation."""
@@ -85,7 +87,7 @@ class DailyConcurrentUsageViewSet(viewsets.GenericViewSet, mixins.ListModelMixin
     """
 
     serializer_class = serializers.DailyConcurrentUsageSerializer
-    schema = ConcurrentSchema()
+    schema = schemas.ConcurrentSchema()
 
     def get_queryset(self):  # noqa: C901
         """Get the queryset of dates filtered to the appropriate inputs."""

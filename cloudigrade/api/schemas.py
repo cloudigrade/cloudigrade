@@ -2,6 +2,34 @@
 from rest_framework.schemas.openapi import AutoSchema
 
 
+class DescriptiveAutoSchema(AutoSchema):
+    """Improved AutoSchema that generates method-specific descriptions."""
+
+    description_map = {
+        "create": "Create {an} {type}.",
+        "retrieve": "Retrieve {an} {type}.",
+        "list": "List {type}s.",
+        "update": "Update {an} {type}.",
+        "partial_update": "Partially update {an} {type}.",
+        "destroy": "Delete {an} {type}.",
+    }
+
+    def __init__(self, descriptive_name, *args, **kwargs):
+        """Initialize instance variables."""
+        super(DescriptiveAutoSchema, self).__init__(*args, **kwargs)
+        self.descriptive_name = descriptive_name
+        self.an = "an" if descriptive_name.lower()[:1] in "aeiou" else "a"
+
+    def get_description(self, path, method):
+        """Construct a custom description string."""
+        method_name = getattr(self.view, "action", method.lower())
+        description = self.description_map.get(method_name, None)
+        if description:
+            return description.format(an=self.an, type=self.descriptive_name)
+        else:
+            return super(DescriptiveAutoSchema, self).get_description(path, method)
+
+
 class SysconfigSchema(AutoSchema):
     """Schema for the sysconfig viewset."""
 

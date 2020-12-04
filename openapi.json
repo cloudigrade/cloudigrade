@@ -8,7 +8,7 @@
     "/api/cloudigrade/v2/accounts/": {
       "get": {
         "operationId": "listCloudAccounts",
-        "description": "Create, retrieve, update, delete, or list customer accounts.",
+        "description": "List cloud accounts.",
         "parameters": [
           {
             "name": "limit",
@@ -93,7 +93,7 @@
       },
       "post": {
         "operationId": "createCloudAccount",
-        "description": "Create, retrieve, update, delete, or list customer accounts.",
+        "description": "Create a cloud account.",
         "parameters": [],
         "requestBody": {
           "content": {
@@ -134,7 +134,7 @@
     "/api/cloudigrade/v2/accounts/{id}/": {
       "get": {
         "operationId": "retrieveCloudAccount",
-        "description": "Create, retrieve, update, delete, or list customer accounts.",
+        "description": "Retrieve a cloud account.",
         "parameters": [
           {
             "name": "id",
@@ -164,7 +164,7 @@
       },
       "put": {
         "operationId": "updateCloudAccount",
-        "description": "Create, retrieve, update, delete, or list customer accounts.",
+        "description": "Update a cloud account.",
         "parameters": [
           {
             "name": "id",
@@ -213,7 +213,7 @@
       },
       "patch": {
         "operationId": "partialUpdateCloudAccount",
-        "description": "Create, retrieve, update, delete, or list customer accounts.",
+        "description": "Partially update a cloud account.",
         "parameters": [
           {
             "name": "id",
@@ -262,7 +262,7 @@
       },
       "delete": {
         "operationId": "destroyCloudAccount",
-        "description": "Create, retrieve, update, delete, or list customer accounts.",
+        "description": "Delete a cloud account.",
         "parameters": [
           {
             "name": "id",
@@ -287,7 +287,7 @@
     "/api/cloudigrade/v2/instances/": {
       "get": {
         "operationId": "listInstances",
-        "description": "List all or retrieve a single instance.",
+        "description": "List instances.",
         "parameters": [
           {
             "name": "limit",
@@ -383,7 +383,7 @@
     "/api/cloudigrade/v2/instances/{id}/": {
       "get": {
         "operationId": "retrieveInstance",
-        "description": "List all or retrieve a single instance.",
+        "description": "Retrieve an instance.",
         "parameters": [
           {
             "name": "id",
@@ -424,7 +424,7 @@
     "/api/cloudigrade/v2/images/": {
       "get": {
         "operationId": "listMachineImages",
-        "description": "List all or retrieve a single machine image.",
+        "description": "List images.",
         "parameters": [
           {
             "name": "limit",
@@ -537,7 +537,7 @@
     "/api/cloudigrade/v2/images/{id}/": {
       "get": {
         "operationId": "retrieveMachineImage",
-        "description": "List all or retrieve a single machine image.",
+        "description": "Retrieve an image.",
         "parameters": [
           {
             "name": "id",
