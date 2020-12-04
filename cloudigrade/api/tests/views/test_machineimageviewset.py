@@ -1,12 +1,12 @@
 """Collection of tests for MachineImageViewSet."""
 import http
 from decimal import Decimal
-from unittest import skip
 
 from django.test import TestCase
 from rest_framework.test import APIRequestFactory, force_authenticate
 
 from api.clouds.aws.models import AwsMachineImage
+from api.internal.views import InternalMachineImageViewSet
 from api.models import MachineImage
 from api.tests import helper as api_helper
 from api.views import MachineImageViewSet
@@ -191,9 +191,9 @@ class MachineImageViewSetTest(TestCase):
             Response: the generated response for this request
 
         """
-        request = self.factory.post("/images/")
+        request = self.factory.post("/machineimages/")
         force_authenticate(request, user=user)
-        view = MachineImageViewSet.as_view(actions={"post": "reinspect"})
+        view = InternalMachineImageViewSet.as_view(actions={"post": "reinspect"})
         response = view(request, pk=image_id)
         return response
 
@@ -282,20 +282,12 @@ class MachineImageViewSetTest(TestCase):
         image = self.image_windows
         self.assertEqual(image.content_object.platform, image.content_object.WINDOWS)
 
-    @skip("skipping until we reimplement the ability to trigger image reinspection")
-    def test_reinspect_superuser(self):
-        """Assert that a superuser can reinspect an image."""
+    def test_reinspect(self):
+        """Assert that any internal user can reinspect an image."""
         response = self.get_image_reinspect_response(
-            self.superuser, self.inspected_image.id
+            self.user2, self.inspected_image.id
         )
         self.assertEqual(http.HTTPStatus.OK, response.status_code)
         updated_image = MachineImage.objects.get(pk=response.data["image_id"])
         self.assertEqual(MachineImage.PENDING, response.data["status"])
         self.assertEqual(MachineImage.PENDING, updated_image.status)
-
-    def test_reinspect_normal_user(self):
-        """Assert that a user cannot reinspect an image."""
-        response = self.get_image_reinspect_response(
-            self.user1, self.inspected_image.id
-        )
-        self.assertEqual(http.HTTPStatus.FORBIDDEN, response.status_code)

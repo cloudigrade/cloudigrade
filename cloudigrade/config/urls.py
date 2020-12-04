@@ -17,7 +17,7 @@ router.register(
     r"concurrent", public_views.DailyConcurrentUsageViewSet, basename="v2-concurrent"
 )
 
-urlpatterns = [
+public_urlpatterns = [
     url(r"^api/cloudigrade/v2/", include(router.urls)),
     path(
         "api/cloudigrade/v2/openapi.json",
@@ -32,9 +32,25 @@ urlpatterns = [
         ),
         name="openapi-schema",
     ),
-    url(r"^internal/api/cloudigrade/v1/", internal_views.availability_check),
+]
+
+internal_urlpatterns = [
     url(r"^internal/api-auth/", include("rest_framework.urls")),
     url(r"^internal/healthz/", include("health_check.urls")),
     path("internal/admin/", admin.site.urls),
     url(r"^internal/", include("django_prometheus.urls")),
 ]
+
+internal_router = routers.DefaultRouter()
+internal_router.register(
+    r"images",
+    internal_views.InternalMachineImageViewSet,
+    basename="internal-machineimage",
+)
+
+internal_api_urlpatterns = [
+    url(r"^internal/api/cloudigrade/v1/", include(internal_router.urls)),
+    url(r"^internal/api/cloudigrade/v1/", internal_views.availability_check),
+]
+
+urlpatterns = public_urlpatterns + internal_urlpatterns + internal_api_urlpatterns

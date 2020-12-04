@@ -7,8 +7,7 @@ from django.db import transaction
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
 from django_filters import rest_framework as django_filters
-from rest_framework import exceptions, mixins, status, viewsets
-from rest_framework.decorators import action
+from rest_framework import exceptions, mixins, viewsets
 from rest_framework.response import Response
 
 from api import filters, models, serializers
@@ -55,24 +54,6 @@ class MachineImageViewSet(viewsets.ReadOnlyModelViewSet):
         filters.MachineImageRequestIsUserFilterBackend,
     )
     filterset_fields = ("architecture", "status")
-
-    @action(detail=True, methods=["post"])
-    def reinspect(self, request, pk=None):
-        """Set the machine image status to pending, so it gets reinspected."""
-        user = self.request.user
-
-        if not user.is_superuser:
-            return Response(status=status.HTTP_403_FORBIDDEN)
-
-        machine_image = self.get_object()
-        machine_image.status = models.MachineImage.PENDING
-        machine_image.save()
-
-        serializer = serializers.MachineImageSerializer(
-            machine_image, context={"request": request}
-        )
-
-        return Response(serializer.data)
 
 
 class SysconfigViewSet(viewsets.ViewSet):

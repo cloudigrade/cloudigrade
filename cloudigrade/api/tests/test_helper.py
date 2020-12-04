@@ -7,7 +7,6 @@ import json
 import re
 import uuid
 from decimal import Decimal
-from unittest import skip
 from unittest.mock import patch
 
 import faker
@@ -40,7 +39,6 @@ class SandboxedRestClientTest(TestCase):
         self.username = _faker.random_int(min=100000, max=999999)
         self.password = _faker.slug()
         self.user = util_helper.generate_test_user(self.username, self.password)
-        self.superuser = util_helper.generate_test_user(is_superuser=True)
 
     def test_list_noun(self):
         """Assert "list" requests work."""
@@ -91,14 +89,20 @@ class SandboxedRestClientTest(TestCase):
         with self.assertRaises(AttributeError):
             client.foo_bar()
 
-    @skip("skipping until we reimplement the ability to trigger image reinspection")
     def test_action_noun_verb_detail(self):
         """Assert "detail" requests work."""
         client = helper.SandboxedRestClient()
-        client._force_authenticate(self.superuser)
+        client._force_authenticate(self.user)
 
+        account = helper.generate_cloud_account(user=self.user)
         image = helper.generate_image(status=MachineImage.INSPECTED)
-        response = client.post_images(noun_id=image.id, detail="reinspect")
+        helper.generate_instance(account, image=image)
+
+        response = client.post_images(
+            noun_id=image.id,
+            detail="reinspect",
+            api_root="/internal/api/cloudigrade/v1",
+        )
         self.assertEqual(response.status_code, http.HTTPStatus.OK)
         self.assertEqual(MachineImage.PENDING, response.data["status"])
 

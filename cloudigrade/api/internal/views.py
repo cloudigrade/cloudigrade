@@ -1,8 +1,10 @@
 """Internal views for cloudigrade API."""
-from rest_framework import exceptions, status
-from rest_framework.decorators import api_view, authentication_classes, schema
+from django_filters import rest_framework as django_filters
+from rest_framework import exceptions, status, viewsets
+from rest_framework.decorators import action, api_view, authentication_classes, schema
 from rest_framework.response import Response
 
+from api import models, serializers
 from api.authentication import ThreeScaleAuthenticationNoOrgAdmin
 from api.models import CloudAccount
 
@@ -26,3 +28,25 @@ def availability_check(request):
         cloudaccount.enable()
 
     return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class InternalMachineImageViewSet(viewsets.ReadOnlyModelViewSet):
+    """Retrieve, reinspect, or list MachineImages."""
+
+    schema = None
+    serializer_class = serializers.MachineImageSerializer
+    queryset = models.MachineImage.objects.all()
+    filter_backends = [django_filters.DjangoFilterBackend]
+
+    @action(detail=True, methods=["post"])
+    def reinspect(self, request, pk=None):
+        """Set the machine image status to pending, so it gets reinspected."""
+        machine_image = self.get_object()
+        machine_image.status = models.MachineImage.PENDING
+        machine_image.save()
+
+        serializer = serializers.MachineImageSerializer(
+            machine_image, context={"request": request}
+        )
+
+        return Response(serializer.data)
