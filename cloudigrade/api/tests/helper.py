@@ -65,13 +65,14 @@ class SandboxedRestClient(object):
     the real public clouds.
     """
 
-    def __init__(self):
+    def __init__(self, api_root="/api/cloudigrade/v2"):
         """Initialize the client."""
         self.client = APIClient()
         self.authenticated_user = None
         self.bypass_aws_calls = True
         self.aws_account_verified = True
         self.aws_primary_account_id = int(helper.generate_dummy_aws_account_id())
+        self.api_root = api_root
 
     def _call_api(self, verb, path, data=None):
         """
@@ -145,9 +146,11 @@ class SandboxedRestClient(object):
         noun_id=None,
         detail=None,
         data=None,
-        api_root="/api/cloudigrade/v2",
+        api_root=None,
     ):
         """Make a simulated REST API call for the given inputs."""
+        if api_root is None:
+            api_root = self.api_root
         if detail:
             path = f"{api_root}/{noun}/{noun_id}/{detail}/"
         elif noun_id:
