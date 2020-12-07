@@ -98,7 +98,7 @@ class SandboxedRestClientTest(TestCase):
         image = helper.generate_image(status=MachineImage.INSPECTED)
         helper.generate_instance(account, image=image)
 
-        response = client.post_images(
+        response = client.post_machineimages(
             noun_id=image.id,
             detail="reinspect",
             api_root="/internal/api/cloudigrade/v1",

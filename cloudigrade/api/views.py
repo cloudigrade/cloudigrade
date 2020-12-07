@@ -10,7 +10,8 @@ from django_filters import rest_framework as django_filters
 from rest_framework import exceptions, mixins, viewsets
 from rest_framework.response import Response
 
-from api import filters, models, schemas, serializers
+from api import filters, models, serializers
+from api import schemas
 from api.serializers import DailyConcurrentUsageDummyQueryset
 from util.aws.sts import _get_primary_account_id, cloudigrade_policy
 from util.misc import get_today
@@ -29,7 +30,10 @@ class AccountViewSet(
     schema = schemas.DescriptiveAutoSchema("cloud account", tags=["api-v2"])
     serializer_class = serializers.CloudAccountSerializer
     queryset = models.CloudAccount.objects.all()
-    filter_backends = (filters.CloudAccountRequestIsUserFilterBackend,)
+    filter_backends = (
+        django_filters.DjangoFilterBackend,
+        filters.CloudAccountRequestIsUserFilterBackend,
+    )
 
 
 class InstanceViewSet(viewsets.ReadOnlyModelViewSet):
@@ -39,8 +43,8 @@ class InstanceViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = serializers.InstanceSerializer
     queryset = models.Instance.objects.all()
     filter_backends = (
-        filters.InstanceRequestIsUserFilterBackend,
         django_filters.DjangoFilterBackend,
+        filters.InstanceRequestIsUserFilterBackend,
     )
     filterset_class = filters.InstanceFilterSet
 

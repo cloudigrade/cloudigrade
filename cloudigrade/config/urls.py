@@ -43,9 +43,65 @@ internal_urlpatterns = [
 
 internal_router = routers.DefaultRouter()
 internal_router.register(
-    r"images",
+    r"users", internal_views.InternalUserViewSet, basename="internal-user"
+)
+internal_router.register(
+    r"cloudaccounts",
+    internal_views.InternalCloudAccountViewSet,
+    basename="internal-cloudaccount",
+)
+internal_router.register(
+    r"instances",
+    internal_views.InternalInstanceViewSet,
+    basename="internal-instance",
+)
+internal_router.register(
+    r"instanceevents",
+    internal_views.InternalInstanceEventViewSet,
+    basename="internal-instanceevent",
+)
+internal_router.register(
+    r"machineimages",
     internal_views.InternalMachineImageViewSet,
     basename="internal-machineimage",
+)
+internal_router.register(
+    r"runs", internal_views.InternalRunViewSet, basename="internal-run"
+)
+internal_router.register(
+    r"machineimageinspecitonstarts",
+    internal_views.InternalMachineImageInspectionStartViewSet,
+    basename="internal-machineimageinspecitonstart",
+)
+internal_router.register(
+    r"concurrentusages",
+    internal_views.InternalConcurrentUsageViewSet,
+    basename="internal-concurrentusage",
+)
+internal_router.register(
+    r"awscloudaccounts",
+    internal_views.InternalAwsCloudAccountViewSet,
+    basename="internal-awscloudaccount",
+)
+internal_router.register(
+    r"awsinstances",
+    internal_views.InternalAwsInstanceViewSet,
+    basename="internal-awsinstance",
+)
+internal_router.register(
+    r"awsmachineimages",
+    internal_views.InternalAwsMachineImageViewSet,
+    basename="internal-awsmachineimage",
+)
+internal_router.register(
+    r"awsmachineimagecopies",
+    internal_views.InternalAwsMachineImageCopyViewSet,
+    basename="internal-awsmachineimagecopy",
+)
+internal_router.register(
+    r"awsinstanceevents",
+    internal_views.InternalAwsInstanceEventViewSet,
+    basename="internal-awsinstanceevent",
 )
 
 internal_api_urlpatterns = [

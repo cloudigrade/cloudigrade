@@ -1,4 +1,4 @@
-"""DRF API serializers for the account app v2."""
+"""DRF serializers for the cloudigrade public API."""
 from datetime import timedelta
 
 from django.utils.translation import gettext as _

@@ -1,12 +1,10 @@
 """Collection of tests for MachineImageViewSet."""
-import http
 from decimal import Decimal
 
 from django.test import TestCase
 from rest_framework.test import APIRequestFactory, force_authenticate
 
 from api.clouds.aws.models import AwsMachineImage
-from api.internal.views import InternalMachineImageViewSet
 from api.models import MachineImage
 from api.tests import helper as api_helper
 from api.views import MachineImageViewSet
@@ -179,24 +177,6 @@ class MachineImageViewSetTest(TestCase):
         response = view(request, pk=image_id)
         return response
 
-    def get_image_reinspect_response(self, user, image_id):
-        """
-        Generate a response for a post-reinspect on the MachineImageViewSet.
-
-        Args:
-            user (User): Django auth user performing the request.
-            image_id (int): ID of the image to reinspect.
-
-        Returns:
-            Response: the generated response for this request
-
-        """
-        request = self.factory.post("/machineimages/")
-        force_authenticate(request, user=user)
-        view = InternalMachineImageViewSet.as_view(actions={"post": "reinspect"})
-        response = view(request, pk=image_id)
-        return response
-
     def get_image_list_response(self, user, data=None):
         """
         Generate a response for a get-list on the MachineImageViewSet.
@@ -281,13 +261,3 @@ class MachineImageViewSetTest(TestCase):
         """Assert that a windows image has an appropriate property."""
         image = self.image_windows
         self.assertEqual(image.content_object.platform, image.content_object.WINDOWS)
-
-    def test_reinspect(self):
-        """Assert that any internal user can reinspect an image."""
-        response = self.get_image_reinspect_response(
-            self.user2, self.inspected_image.id
-        )
-        self.assertEqual(http.HTTPStatus.OK, response.status_code)
-        updated_image = MachineImage.objects.get(pk=response.data["image_id"])
-        self.assertEqual(MachineImage.PENDING, response.data["status"])
-        self.assertEqual(MachineImage.PENDING, updated_image.status)
