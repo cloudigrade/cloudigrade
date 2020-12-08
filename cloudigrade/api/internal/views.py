@@ -39,7 +39,10 @@ class InternalUserViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = User.objects.all()
     serializer_class = serializers.InternalUserSerializer
     filter_backends = [django_filters.DjangoFilterBackend]
-    filterset_fields = ("username",)
+    filterset_fields = {
+        "username": ["exact"],
+        "date_joined": ["lt", "exact", "gt"],
+    }
     schema = None
 
 
@@ -69,7 +72,12 @@ class InternalInstanceEventViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.InstanceEvent.objects.all()
     serializer_class = serializers.InternalInstanceEventSerializer
     filter_backends = [django_filters.DjangoFilterBackend]
-    filterset_class = filters.InternalInstanceEventFilterSet
+    filterset_fields = {
+        "event_type": ["exact"],
+        "instance": ["exact"],
+        "created_at": ["lt", "exact", "gt"],
+        "updated_at": ["lt", "exact", "gt"],
+    }
     schema = None
 
 
@@ -79,6 +87,13 @@ class InternalMachineImageViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.MachineImage.objects.all()
     serializer_class = serializers.InternalMachineImageSerializer
     filter_backends = [django_filters.DjangoFilterBackend]
+    filterset_fields = {
+        "architecture": ["exact"],
+        "name": ["exact"],
+        "status": ["exact"],
+        "created_at": ["lt", "exact", "gt"],
+        "updated_at": ["lt", "exact", "gt"],
+    }
     schema = None
 
     @action(detail=True, methods=["post"])
@@ -111,7 +126,11 @@ class InternalMachineImageInspectionStartViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.MachineImageInspectionStart.objects.all()
     serializer_class = serializers.InternalMachineImageInspectionStartSerializer
     filter_backends = [django_filters.DjangoFilterBackend]
-    filterset_class = filters.InternalMachineImageInspectionStartFilterSet
+    filterset_fields = {
+        "machineimage": ["exact"],
+        "created_at": ["lt", "exact", "gt"],
+        "updated_at": ["lt", "exact", "gt"],
+    }
     schema = None
 
 
@@ -141,7 +160,12 @@ class InternalAwsInstanceViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = aws_models.AwsInstance.objects.all()
     serializer_class = serializers.InternalAwsInstanceSerializer
     filter_backends = [django_filters.DjangoFilterBackend]
-    filterset_class = filters.InternalAwsInstanceFilterSet
+    filterset_fields = {
+        "ec2_instance_id": ["exact"],
+        "region": ["exact"],
+        "created_at": ["lt", "exact", "gt"],
+        "updated_at": ["lt", "exact", "gt"],
+    }
     schema = None
 
 
@@ -151,7 +175,12 @@ class InternalAwsInstanceEventViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = aws_models.AwsInstanceEvent.objects.all()
     serializer_class = serializers.InternalAwsInstanceEventSerializer
     filter_backends = [django_filters.DjangoFilterBackend]
-    filterset_class = filters.InternalAwsInstanceEventFilterSet
+    filterset_fields = {
+        "subnet": ["exact"],
+        "instance_type": ["exact"],
+        "created_at": ["lt", "exact", "gt"],
+        "updated_at": ["lt", "exact", "gt"],
+    }
     schema = None
 
 
@@ -161,7 +190,15 @@ class InternalAwsMachineImageViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = aws_models.AwsMachineImage.objects.all()
     serializer_class = serializers.InternalAwsMachineImageSerializer
     filter_backends = [django_filters.DjangoFilterBackend]
-    filterset_class = filters.InternalAwsMachineImageFilterSet
+    filterset_fields = {
+        "ec2_ami_id": ["exact"],
+        "platform": ["exact"],
+        "owner_aws_account_id": ["exact"],
+        "region": ["exact"],
+        "aws_marketplace_image": ["exact"],
+        "created_at": ["lt", "exact", "gt"],
+        "updated_at": ["lt", "exact", "gt"],
+    }
     schema = None
 
 
@@ -171,5 +208,14 @@ class InternalAwsMachineImageCopyViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = aws_models.AwsMachineImageCopy.objects.all()
     serializer_class = serializers.InternalAwsMachineImageCopySerializer
     filter_backends = [django_filters.DjangoFilterBackend]
-    filterset_class = filters.InternalAwsMachineImageCopyFilterSet
+    filterset_fields = {
+        "reference_awsmachineimage": ["exact"],
+        "ec2_ami_id": ["exact"],
+        "platform": ["exact"],
+        "owner_aws_account_id": ["exact"],
+        "region": ["exact"],
+        "aws_marketplace_image": ["exact"],
+        "created_at": ["lt", "exact", "gt"],
+        "updated_at": ["lt", "exact", "gt"],
+    }
     schema = None
