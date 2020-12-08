@@ -164,6 +164,7 @@ THIRD_PARTY_APPS = [
     "generic_relations",
     "health_check",
     "health_check.db",
+    "django_prometheus",
 ]
 
 # Apps specific to this project go here
@@ -178,6 +179,7 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 # Middleware
 
 MIDDLEWARE = [
+    "django_prometheus.middleware.PrometheusBeforeMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -186,6 +188,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "util.middleware.RequestIDLoggingMiddleware",
+    "django_prometheus.middleware.PrometheusAfterMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -216,7 +219,8 @@ DATABASES = {
     "default": {
         "ATOMIC_REQUESTS": env("DJANGO_ATOMIC_REQUESTS", default=True),
         "ENGINE": env(
-            "DJANGO_DATABASE_ENGINE", default="django.db.backends.postgresql_psycopg2"
+            "DJANGO_DATABASE_ENGINE",
+            default="django_prometheus.db.backends.postgresql",
         ),
         "NAME": env("DJANGO_DATABASE_NAME", default="postgres"),
         "HOST": env("DJANGO_DATABASE_HOST", default="localhost"),

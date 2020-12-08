@@ -8,6 +8,7 @@ from django.db import models, transaction
 from django.db.models.signals import post_delete, pre_delete
 from django.dispatch import receiver
 from django.utils.translation import gettext as _
+from django_prometheus.models import ExportModelOperationsMixin
 
 from api import AWS_PROVIDER_STRING, AZURE_PROVIDER_STRING
 from util.insights import notify_sources_application_availability
@@ -29,7 +30,7 @@ class UserTaskLock(BaseModel):
     locked = models.BooleanField(default=False, null=False)
 
 
-class CloudAccount(BaseGenericModel):
+class CloudAccount(BaseGenericModel, ExportModelOperationsMixin("CloudAccount")):
     """Base Customer Cloud Account Model."""
 
     user = models.ForeignKey(
@@ -215,7 +216,7 @@ def cloud_account_pre_delete_callback(*args, **kwargs):
     instance.disable(power_off_instances=False)
 
 
-class MachineImage(BaseGenericModel):
+class MachineImage(BaseGenericModel, ExportModelOperationsMixin("MachineImage")):
     """Base model for a cloud VM image."""
 
     PENDING = "pending"
@@ -432,7 +433,7 @@ class MachineImage(BaseGenericModel):
         return super().save(*args, **kwargs)
 
 
-class Instance(BaseGenericModel):
+class Instance(BaseGenericModel, ExportModelOperationsMixin("Instance")):
     """Base model for a compute/VM instance in a cloud."""
 
     cloud_account = models.ForeignKey(
@@ -675,7 +676,7 @@ class MachineImageInspectionStart(BaseModel):
     )
 
 
-class ConcurrentUsage(BaseModel):
+class ConcurrentUsage(BaseModel, ExportModelOperationsMixin("ConcurrentUsage")):
     """Saved calculation of max concurrent usage for a date+user."""
 
     date = models.DateField()
@@ -721,7 +722,9 @@ class ConcurrentUsage(BaseModel):
         )
 
 
-class ConcurrentUsageCalculationTask(BaseModel):
+class ConcurrentUsageCalculationTask(
+    BaseModel, ExportModelOperationsMixin("ConcurrentUsageTask")
+):
     """Model for tracking concurrent usage tasks."""
 
     SCHEDULED = "SCHEDULED"

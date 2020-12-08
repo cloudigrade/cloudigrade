@@ -31,6 +31,7 @@ rest-framework-generic-relations = "~=2.0.0"
 pycurl = "~=7.43.0"
 watchtower = "~=0.8.0"
 confluent-kafka = "^1.5.0"
+django-prometheus = "^2.1.0"
 
 [tool.poetry.dev-dependencies]
 seqdiag = "*"

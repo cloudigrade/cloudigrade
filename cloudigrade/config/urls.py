@@ -21,6 +21,7 @@ urlpatterns = [
     url(r"^internal/api/cloudigrade/v1/", views.availability_check),
     url(r"^internal/api-auth/", include("rest_framework.urls")),
     url(r"^internal/healthz/", include("health_check.urls")),
+    url(r"^internal/", include("django_prometheus.urls")),
     path(
         "api/cloudigrade/v2/openapi.json",
         get_schema_view(

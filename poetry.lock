@@ -281,6 +281,17 @@ Django = ">=2.0.1"
 
 [[package]]
 category = "main"
+description = "Django middlewares to monitor your application with Prometheus.io."
+name = "django-prometheus"
+optional = false
+python-versions = "*"
+version = "2.1.0"
+
+[package.dependencies]
+prometheus-client = ">=0.7"
+
+[[package]]
+category = "main"
 description = "A Django app providing database and form fields for pytz timezone objects."
 name = "django-timezone-field"
 optional = false
@@ -571,6 +582,17 @@ name = "pillow"
 optional = false
 python-versions = ">=3.6"
 version = "8.0.1"
+
+[[package]]
+category = "main"
+description = "Python client for the Prometheus monitoring system."
+name = "prometheus-client"
+optional = false
+python-versions = "*"
+version = "0.9.0"
+
+[package.extras]
+twisted = ["twisted"]
 
 [[package]]
 category = "main"
@@ -895,8 +917,7 @@ python-versions = ">=3.5,"
 version = "1.11.1"
 
 [metadata]
-content-hash = "6195d9e6459487e99af9fd4285b82132994372115ad7b0c752855cf471c0cb13"
-lock-version = "1.0"
+content-hash = "637789397900d4b33aeacc4e066a45079496cd06ae3bc4dca104d6559fb9ef1d"
 python-versions = "^3.8"
 
 [metadata.files]
@@ -921,6 +942,7 @@ billiard = [
     {file = "billiard-3.6.3.0.tar.gz", hash = "sha256:d91725ce6425f33a97dfa72fb6bfef0e47d4652acd98a032bd1a7fbf06d5fa6a"},
 ]
 black = [
+    {file = "black-20.8b1-py3-none-any.whl", hash = "sha256:70b62ef1527c950db59062cda342ea224d772abdf6adc58b86a45421bab20a6b"},
     {file = "black-20.8b1.tar.gz", hash = "sha256:1c02557aa099101b9d21496f8a914e9ed2222ef70336404eeeac8edba836fbea"},
 ]
 blockdiag = [
@@ -1034,6 +1056,10 @@ django-health-check = [
 django-model-utils = [
     {file = "django-model-utils-4.0.0.tar.gz", hash = "sha256:adf09e5be15122a7f4e372cb5a6dd512bbf8d78a23a90770ad0983ee9d909061"},
     {file = "django_model_utils-4.0.0-py2.py3-none-any.whl", hash = "sha256:9cf882e5b604421b62dbe57ad2b18464dc9c8f963fc3f9831badccae66c1139c"},
+]
+django-prometheus = [
+    {file = "django-prometheus-2.1.0.tar.gz", hash = "sha256:dd3f8da1399140fbef5c00d1526a23d1ade286b144281c325f8e409a781643f2"},
+    {file = "django_prometheus-2.1.0-py2.py3-none-any.whl", hash = "sha256:c338d6efde1ca336e90c540b5e87afe9287d7bcc82d651a778f302b0be17a933"},
 ]
 django-timezone-field = [
     {file = "django-timezone-field-4.1.1.tar.gz", hash = "sha256:b5b587aabed8db66eb3453691522164915c1aa1b326d8ddeadc8832a8580faeb"},
@@ -1191,6 +1217,10 @@ pillow = [
     {file = "Pillow-8.0.1-pp36-pypy36_pp73-manylinux2010_x86_64.whl", hash = "sha256:4b0ef2470c4979e345e4e0cc1bbac65fda11d0d7b789dbac035e4c6ce3f98adb"},
     {file = "Pillow-8.0.1-pp37-pypy37_pp73-win32.whl", hash = "sha256:8de332053707c80963b589b22f8e0229f1be1f3ca862a932c1bcd48dafb18dd8"},
     {file = "Pillow-8.0.1.tar.gz", hash = "sha256:11c5c6e9b02c9dac08af04f093eb5a2f84857df70a7d4a6a6ad461aca803fb9e"},
+]
+prometheus-client = [
+    {file = "prometheus_client-0.9.0-py2.py3-none-any.whl", hash = "sha256:b08c34c328e1bf5961f0b4352668e6c8f145b4a087e09b7296ef62cbe4693d35"},
+    {file = "prometheus_client-0.9.0.tar.gz", hash = "sha256:9da7b32f02439d8c04f7777021c304ed51d9ec180604700c1ba72a4d44dceb03"},
 ]
 psycopg2-binary = [
     {file = "psycopg2-binary-2.8.6.tar.gz", hash = "sha256:11b9c0ebce097180129e422379b824ae21c8f2a6596b159c7659e2e5a00e1aa0"},
