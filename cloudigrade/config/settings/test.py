@@ -6,9 +6,9 @@ SECRET_KEY = env("DJANGO_SECRET_KEY", default="test")
 TEST_RUNNER = "django.test.runner.DiscoverRunner"
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': str(ROOT_DIR.path("db.sqlite3")),
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": str(ROOT_DIR.path("db.sqlite3")),
     }
 }
 AWS_NAME_PREFIX = env("AWS_NAME_PREFIX", default="cloudigrade-")
