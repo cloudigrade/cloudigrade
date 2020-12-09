@@ -3,6 +3,7 @@ from django_filters import rest_framework as django_filters
 
 from api import models
 from api.clouds.aws import models as aws_models
+from api.clouds.azure import models as azure_models
 from api.filters import InstanceRunningSinceFilter
 
 
@@ -89,6 +90,21 @@ class InternalAwsCloudAccountFilterSet(django_filters.FilterSet):
             "aws_account_id": ["exact"],
             "account_arn": ["exact"],
             "verify_task": ["exact"],
+            "created_at": ["lt", "exact", "gt"],
+            "updated_at": ["lt", "exact", "gt"],
+        }
+
+
+class InternalAzureCloudAccountFilterSet(django_filters.FilterSet):
+    """FilterSet for limiting AzureCloudAccounts for the internal API."""
+
+    username = django_filters.CharFilter(field_name="cloud_account__user__username")
+
+    class Meta:
+        model = azure_models.AzureCloudAccount
+        fields = {
+            "subscription_id": ["exact"],
+            "tenant_id": ["exact"],
             "created_at": ["lt", "exact", "gt"],
             "updated_at": ["lt", "exact", "gt"],
         }

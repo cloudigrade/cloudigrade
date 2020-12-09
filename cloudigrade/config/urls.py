@@ -42,6 +42,7 @@ internal_urlpatterns = [
 ]
 
 internal_router = routers.DefaultRouter()
+# URLs for common models
 internal_router.register(
     r"users", internal_views.InternalUserViewSet, basename="internal-user"
 )
@@ -93,6 +94,7 @@ internal_router.register(
     internal_views.InternalInstanceDefinitionViewSet,
     basename="internal-instancedefinitions",
 )
+# URLs for AWS models
 internal_router.register(
     r"awscloudaccounts",
     internal_views.InternalAwsCloudAccountViewSet,
@@ -117,6 +119,27 @@ internal_router.register(
     r"awsinstanceevents",
     internal_views.InternalAwsInstanceEventViewSet,
     basename="internal-awsinstanceevent",
+)
+# URLs for Azure models
+internal_router.register(
+    r"azurecloudaccounts",
+    internal_views.InternalAzureCloudAccountViewSet,
+    basename="internal-azurecloudaccount",
+)
+internal_router.register(
+    r"azureinstances",
+    internal_views.InternalAzureInstanceViewSet,
+    basename="internal-azureinstance",
+)
+internal_router.register(
+    r"azuremachineimages",
+    internal_views.InternalAzureMachineImageViewSet,
+    basename="internal-azuremachineimage",
+)
+internal_router.register(
+    r"azureinstanceevents",
+    internal_views.InternalAzureInstanceEventViewSet,
+    basename="internal-azureinstanceevent",
 )
 
 internal_api_urlpatterns = [

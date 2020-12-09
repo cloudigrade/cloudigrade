@@ -4,6 +4,7 @@ from rest_framework.serializers import ModelSerializer
 
 from api import models
 from api.clouds.aws import models as aws_models
+from api.clouds.azure import models as azure_models
 
 
 class InternalUserSerializer(ModelSerializer):
@@ -170,3 +171,46 @@ class InternalAwsInstanceEventSerializer(ModelSerializer):
     class Meta:
         model = aws_models.AwsInstanceEvent
         fields = "__all__"
+
+
+class InternalAzureCloudAccountSerializer(ModelSerializer):
+    """Serialize AzureCloudAccount for the internal API."""
+
+    class Meta:
+        model = azure_models.AzureCloudAccount
+        fields = "__all__"
+
+
+class InternalAzureInstanceSerializer(ModelSerializer):
+    """Serialize AzureInstance for the internal API."""
+
+    class Meta:
+        model = azure_models.AzureInstance
+        fields = "__all__"
+
+
+class InternalAzureInstanceEventSerializer(ModelSerializer):
+    """Serialize AzureInstanceEvent for the internal API."""
+
+    class Meta:
+        model = azure_models.AzureInstanceEvent
+        fields = "__all__"
+
+
+class InternalAzureMachineImageSerializer(ModelSerializer):
+    """Serialize AzureMachineImage for the internal API."""
+
+    class Meta:
+        model = azure_models.AzureMachineImage
+        fields = (
+            # from the model:
+            "id",
+            "created_at",
+            "updated_at",
+            "resource_id",
+            "region",
+            "azure_marketplace_image",
+            # from property functions:
+            "is_cloud_access",
+            "is_marketplace",
+        )

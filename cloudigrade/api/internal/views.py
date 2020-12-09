@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from api import models
 from api.authentication import ThreeScaleAuthenticationNoOrgAdmin
 from api.clouds.aws import models as aws_models
+from api.clouds.azure import models as azure_models
 from api.internal import filters, serializers
 
 
@@ -264,6 +265,61 @@ class InternalAwsMachineImageCopyViewSet(viewsets.ReadOnlyModelViewSet):
         "owner_aws_account_id": ["exact"],
         "region": ["exact"],
         "aws_marketplace_image": ["exact"],
+        "created_at": ["lt", "exact", "gt"],
+        "updated_at": ["lt", "exact", "gt"],
+    }
+    schema = None
+
+
+class InternalAzureCloudAccountViewSet(viewsets.ReadOnlyModelViewSet):
+    """Retrieve or list AzureMachineImages for internal use."""
+
+    queryset = azure_models.AzureCloudAccount.objects.all()
+    serializer_class = serializers.InternalAzureCloudAccountSerializer
+    filter_backends = [django_filters.DjangoFilterBackend]
+    filterset_class = filters.InternalAzureCloudAccountFilterSet
+    schema = None
+
+
+class InternalAzureInstanceViewSet(viewsets.ReadOnlyModelViewSet):
+    """Retrieve or list AzureInstanceEvents for internal use."""
+
+    queryset = azure_models.AzureInstance.objects.all()
+    serializer_class = serializers.InternalAzureInstanceSerializer
+    filter_backends = [django_filters.DjangoFilterBackend]
+    filterset_fields = {
+        "region": ["exact"],
+        "resource_id": ["exact"],
+        "created_at": ["lt", "exact", "gt"],
+        "updated_at": ["lt", "exact", "gt"],
+    }
+    schema = None
+
+
+class InternalAzureInstanceEventViewSet(viewsets.ReadOnlyModelViewSet):
+    """Retrieve or list AzureInstanceEvents for internal use."""
+
+    queryset = azure_models.AzureInstanceEvent.objects.all()
+    serializer_class = serializers.InternalAzureInstanceEventSerializer
+    filter_backends = [django_filters.DjangoFilterBackend]
+    filterset_fields = {
+        "instance_type": ["exact"],
+        "created_at": ["lt", "exact", "gt"],
+        "updated_at": ["lt", "exact", "gt"],
+    }
+    schema = None
+
+
+class InternalAzureMachineImageViewSet(viewsets.ReadOnlyModelViewSet):
+    """Retrieve or list AzureMachineImages for internal use."""
+
+    queryset = azure_models.AzureMachineImage.objects.all()
+    serializer_class = serializers.InternalAzureMachineImageSerializer
+    filter_backends = [django_filters.DjangoFilterBackend]
+    filterset_fields = {
+        "azure_marketplace_image": ["exact"],
+        "region": ["exact"],
+        "resource_id": ["exact"],
         "created_at": ["lt", "exact", "gt"],
         "updated_at": ["lt", "exact", "gt"],
     }
