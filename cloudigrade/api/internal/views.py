@@ -46,6 +46,21 @@ class InternalUserViewSet(viewsets.ReadOnlyModelViewSet):
     schema = None
 
 
+class InternalUserTaskLockViewSet(viewsets.ReadOnlyModelViewSet):
+    """Retrieve or list UserTaskLocks for internal use."""
+
+    queryset = models.UserTaskLock.objects.all()
+    serializer_class = serializers.InternalUserTaskLockSerializer
+    filter_backends = [django_filters.DjangoFilterBackend]
+    filterset_fields = {
+        "user": ["exact"],
+        "locked": ["exact"],
+        "created_at": ["lt", "exact", "gt"],
+        "updated_at": ["lt", "exact", "gt"],
+    }
+    schema = None
+
+
 class InternalCloudAccountViewSet(viewsets.ReadOnlyModelViewSet):
     """Retrieve or list CloudAccounts for internal use."""
 
@@ -141,6 +156,40 @@ class InternalConcurrentUsageViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = serializers.InternalConcurrentUsageSerializer
     filter_backends = [django_filters.DjangoFilterBackend]
     filterset_class = filters.InternalConcurrentUsageFilterSet
+    schema = None
+
+
+class InternalConcurrentUsageCalculationTaskViewSet(viewsets.ReadOnlyModelViewSet):
+    """Retrieve or list ConcurrentUsageCalculationTasks for internal use."""
+
+    queryset = models.ConcurrentUsageCalculationTask.objects.all()
+    serializer_class = serializers.InternalConcurrentUsageCalculationTaskSerializer
+    filter_backends = [django_filters.DjangoFilterBackend]
+    filterset_fields = {
+        "status": ["exact"],
+        "user": ["exact"],
+        "task_id": ["exact"],
+        "date": ["exact"],
+        "created_at": ["lt", "exact", "gt"],
+        "updated_at": ["lt", "exact", "gt"],
+    }
+    schema = None
+
+
+class InternalInstanceDefinitionViewSet(viewsets.ReadOnlyModelViewSet):
+    """Retrieve or list ConcurrentUsages for internal use."""
+
+    queryset = models.InstanceDefinition.objects.all()
+    serializer_class = serializers.InternalInstanceDefinitionSerializer
+    filter_backends = [django_filters.DjangoFilterBackend]
+    filterset_fields = {
+        "cloud_type": ["exact"],
+        "instance_type": ["exact"],
+        "memory": ["exact"],
+        "vcpu": ["exact"],
+        "created_at": ["lt", "exact", "gt"],
+        "updated_at": ["lt", "exact", "gt"],
+    }
     schema = None
 
 

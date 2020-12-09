@@ -46,6 +46,11 @@ internal_router.register(
     r"users", internal_views.InternalUserViewSet, basename="internal-user"
 )
 internal_router.register(
+    r"usertasklocks",
+    internal_views.InternalUserTaskLockViewSet,
+    basename="internal-usertasklock",
+)
+internal_router.register(
     r"cloudaccounts",
     internal_views.InternalCloudAccountViewSet,
     basename="internal-cloudaccount",
@@ -77,6 +82,16 @@ internal_router.register(
     r"concurrentusages",
     internal_views.InternalConcurrentUsageViewSet,
     basename="internal-concurrentusage",
+)
+internal_router.register(
+    r"concurrentusagecalculationtasks",
+    internal_views.InternalConcurrentUsageCalculationTaskViewSet,
+    basename="internal-concurrentusagecalculationtask",
+)
+internal_router.register(
+    r"instancedefinitions",
+    internal_views.InternalInstanceDefinitionViewSet,
+    basename="internal-instancedefinitions",
 )
 internal_router.register(
     r"awscloudaccounts",

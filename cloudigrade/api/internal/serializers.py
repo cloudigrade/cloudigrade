@@ -18,6 +18,14 @@ class InternalUserSerializer(ModelSerializer):
         )
 
 
+class InternalUserTaskLockSerializer(ModelSerializer):
+    """Serialize UserTaskLock for the internal API."""
+
+    class Meta:
+        model = models.UserTaskLock
+        fields = "__all__"
+
+
 class InternalCloudAccountSerializer(ModelSerializer):
     """Serialize CloudAccount for the internal API."""
 
