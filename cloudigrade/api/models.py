@@ -12,7 +12,7 @@ from django_prometheus.models import ExportModelOperationsMixin
 
 from api import AWS_PROVIDER_STRING, AZURE_PROVIDER_STRING
 from util.insights import notify_sources_application_availability
-from util.misc import get_now, lock_task_for_user_ids
+from util.misc import get_now, get_today, lock_task_for_user_ids
 from util.models import BaseGenericModel, BaseModel
 
 logger = logging.getLogger(__name__)
@@ -125,6 +125,8 @@ class CloudAccount(BaseGenericModel, ExportModelOperationsMixin("CloudAccount"))
             self.save()
         try:
             self.content_object.enable()
+            # delete stale ConcurrentUsage when an clount is enabled
+            ConcurrentUsage.objects.filter(user=self.user, date=get_today()).delete()
         except Exception as e:
             # All failure notifications should happen during the failure
             logger.info(e)
@@ -214,6 +216,37 @@ def cloud_account_pre_delete_callback(*args, **kwargs):
     """
     instance = kwargs["instance"]
     instance.disable(power_off_instances=False)
+
+
+@receiver(post_delete, sender=CloudAccount)
+def cloud_account_post_delete_callback(*args, **kwargs):
+    """
+    Delete the User, if this is the last cloudaccount owned by the User.
+
+    Note: Signal receivers must accept keyword arguments (**kwargs).
+    """
+    instance = kwargs["instance"]
+
+    # When multiple clounts are deleted at the same time django will
+    # attempt to delete the user multiple times.
+    # Catch and log the raised DoesNotExist error from the additional
+    # attempts.
+    try:
+        if (
+            not CloudAccount.objects.filter(user=instance.user)
+            .exclude(id=instance.id)
+            .exists()
+        ):
+            logger.info(
+                _("%s no longer has any more cloud accounts and will be deleted"),
+                instance.user,
+            )
+            instance.user.delete()
+    except User.DoesNotExist:
+        logger.info(
+            _("User %s has already been deleted."),
+            instance.user,
+        )
 
 
 class MachineImage(BaseGenericModel, ExportModelOperationsMixin("MachineImage")):

@@ -84,7 +84,7 @@ class LockUserTaskTest(TransactionTestCase):
             CloudAccount.objects.filter(id=account.id).delete()
 
         self.assertEqual(CloudAccount.objects.all().count(), 0)
-        self.assertFalse(UserTaskLock.objects.get(user=account.user).locked)
+        self.assertFalse(UserTaskLock.objects.filter(user=account.user).exists())
 
     @patch("api.models.notify_sources_application_availability")
     def test_delete_clount_lock_exception(self, mock_notify_sources):

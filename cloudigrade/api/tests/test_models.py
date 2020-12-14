@@ -4,11 +4,13 @@ from unittest.mock import patch
 from uuid import uuid4
 
 import faker
+from django.contrib.auth.models import User
 from django.test import TestCase
 
 from api.models import ConcurrentUsage, ConcurrentUsageCalculationTask, Run
 from api.tests import helper as api_helper
 from api.util import calculate_max_concurrent_usage
+from util.misc import get_today
 from util.tests import helper as util_helper
 
 
@@ -133,3 +135,63 @@ class RunTest(TestCase):
         # Re-saving the run should remove the related the concurrent usage.
         run.save()
         self.assertEqual(0, ConcurrentUsage.objects.all().count())
+
+
+class CloudAccountTest(TestCase):
+    """Test cases for api.models.CloudAccount."""
+
+    @patch("api.models.notify_sources_application_availability")
+    def test_delete_clount_deletes_user(self, mock_notify_sources):
+        """Test User is deleted if last clount is deleted."""
+        user = util_helper.generate_test_user()
+        username = user.username
+        aws_account_id = util_helper.generate_dummy_aws_account_id()
+        account = api_helper.generate_cloud_account(
+            aws_account_id=aws_account_id,
+            user=user,
+        )
+
+        account.delete()
+        self.assertFalse(User.objects.filter(username=username).exists())
+
+    @patch("api.models.notify_sources_application_availability")
+    def test_delete_clount_doesnt_delete_user_for_two_clounts(self, mock_notify_source):
+        """Test User is not deleted if it has more clounts left."""
+        user = util_helper.generate_test_user()
+        username = user.username
+        aws_account_id = util_helper.generate_dummy_aws_account_id()
+        account = api_helper.generate_cloud_account(
+            aws_account_id=aws_account_id,
+            user=user,
+        )
+        aws_account_id2 = util_helper.generate_dummy_aws_account_id()
+        api_helper.generate_cloud_account(
+            aws_account_id=aws_account_id2,
+            user=user,
+        )
+        account.delete()
+        self.assertTrue(User.objects.filter(username=username).exists())
+
+    @patch("api.models.notify_sources_application_availability")
+    @patch("api.clouds.aws.util.verify_permissions")
+    @patch("api.clouds.aws.tasks.initial_aws_describe_instances")
+    def test_concurrent_usage_deleted_when_clount_enables(
+        self,
+        mock_initial_aws_describe_instances,
+        mock_verify_permissions,
+        mock_notify_sources,
+    ):
+        """Test stale ConcurrentUsage is deleted when clount is enabled."""
+        user = util_helper.generate_test_user()
+
+        concurrent_usage = ConcurrentUsage(user=user, date=get_today())
+        concurrent_usage.save()
+
+        self.assertEqual(1, ConcurrentUsage.objects.filter(user=user).count())
+        aws_account_id = util_helper.generate_dummy_aws_account_id()
+        account = api_helper.generate_cloud_account(
+            aws_account_id=aws_account_id,
+            user=user,
+        )
+        account.enable()
+        self.assertEqual(0, ConcurrentUsage.objects.filter(user=user).count())
