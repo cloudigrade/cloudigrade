@@ -75,9 +75,9 @@ internal_router.register(
     r"runs", internal_views.InternalRunViewSet, basename="internal-run"
 )
 internal_router.register(
-    r"machineimageinspecitonstarts",
+    r"machineimageinspectionstarts",
     internal_views.InternalMachineImageInspectionStartViewSet,
-    basename="internal-machineimageinspecitonstart",
+    basename="internal-machineimageinspectionstart",
 )
 internal_router.register(
     r"concurrentusages",
@@ -92,7 +92,7 @@ internal_router.register(
 internal_router.register(
     r"instancedefinitions",
     internal_views.InternalInstanceDefinitionViewSet,
-    basename="internal-instancedefinitions",
+    basename="internal-instancedefinition",
 )
 # URLs for AWS models
 internal_router.register(
