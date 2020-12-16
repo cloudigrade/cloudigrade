@@ -1,23 +1,28 @@
 """Listens to the platform kafka instance."""
 import json
 import logging
-import os
 import signal
-import sys
 
-import daemon
 from confluent_kafka import Consumer
 from django.conf import settings
 from django.core.management import BaseCommand
 from django.utils.translation import gettext as _
-from lockfile import AlreadyLocked
-from lockfile.pidlockfile import PIDLockFile
 
 from api import tasks
 
 logger = logging.getLogger(__name__)
+run_listener = False
 
-PID_FILE = f"{settings.LISTENER_PID_PATH}/cloudilistener.pid"
+
+def _listener_cleanup(signum, frame):
+    """Stop listening when system signal is received."""
+    logger.info(_("Received signal %s. Stopping."), signum)
+    global run_listener
+    run_listener = False
+
+
+signal.signal(signal.SIGTERM, _listener_cleanup)
+signal.signal(signal.SIGINT, _listener_cleanup)
 
 
 class Command(BaseCommand):
@@ -26,39 +31,12 @@ class Command(BaseCommand):
     def __init__(self, *args, **kwargs):
         """Init the class."""
         super().__init__(*args, **kwargs)
+
         self.run = False
 
     def handle(self, *args, **options):
         """Launch the listener."""
-        if os.path.exists(PID_FILE):
-            pid = int(open(PID_FILE).read())
-            logger.warning(_("Found existing pid file with pid: {}"))
-            if os.getpid() != pid:
-                logger.error(
-                    _(
-                        "Listener attempted to start with an existing stale pidfile."
-                        "There should never be two instances of the listener running."
-                        "Removing pid file before continuing..."
-                    )
-                )
-                os.remove(PID_FILE)
-                logger.debug(_("Stale PID file unlinked."))
-        try:
-            with daemon.DaemonContext(
-                pidfile=PIDLockFile(PID_FILE),
-                detach_process=False,
-                signal_map={signal.SIGTERM: self.listener_cleanup},
-                stdout=sys.stdout,
-                stderr=sys.stderr,
-            ):
-                self.listen()
-        except AlreadyLocked:
-            logger.exception(
-                _(
-                    "Listener attempted to start with an existing pidfile, again??? "
-                    "This should _really_ not be possible. "
-                )
-            )
+        self.listen()
 
     def listen(self):
         """Listen to the configured topic."""
@@ -84,12 +62,12 @@ class Command(BaseCommand):
             logger.info(
                 _("Listener ready to run, subscribing to %(topic)s"), {"topic": topic}
             )
-            self.run = True
+            global run_listener
+            run_listener = True
             consumer.subscribe([topic])
 
-            while self.run:
+            while run_listener:
                 msg = consumer.poll()
-
                 if msg is None:
                     continue
                 if msg.error():
@@ -166,8 +144,3 @@ class Command(BaseCommand):
                 tasks.update_from_source_kafka_message.delay(
                     message_value, message_headers
                 )
-
-    def listener_cleanup(self, signum, frame):
-        """Stop listening when system signal is received."""
-        logger.info(_("Received %s. Stopping."), signum)
-        self.run = False

@@ -4,7 +4,6 @@ from unittest.mock import Mock, patch
 
 from django.core.management import call_command
 from django.test import TestCase
-from lockfile import AlreadyLocked
 
 from util.management.commands.listen_to_sources import Command
 
@@ -12,22 +11,18 @@ from util.management.commands.listen_to_sources import Command
 class SourcesListenerTest(TestCase):
     """Add App Configuration Test Case."""
 
-    @patch("util.management.commands.listen_to_sources.PIDLockFile")
     @patch("util.management.commands.listen_to_sources.logger")
     @patch("util.management.commands.listen_to_sources.Consumer")
     @patch("api.tasks.update_from_source_kafka_message")
     @patch("api.tasks.delete_from_sources_kafka_message")
     @patch("api.tasks.create_from_sources_kafka_message")
-    @patch("daemon.DaemonContext")
     def test_listen(
         self,
-        mock_daemon_context,
         mock_create_task,
         mock_delete_task,
         mock_update_task,
         mock_consumer,
         mock_logger,
-        mock_pid,
     ):
         """Assert listener processes messages."""
         message1 = Mock()
@@ -93,16 +88,3 @@ class SourcesListenerTest(TestCase):
         """Assert listener SIGTERM is logged."""
         Command.listener_cleanup(Mock(), signal.SIGTERM, Mock())
         mock_logger.info.assert_called_once()
-
-    @patch("util.management.commands.listen_to_sources.PIDLockFile")
-    @patch("util.management.commands.listen_to_sources.logger")
-    @patch("util.management.commands.listen_to_sources.Consumer")
-    @patch("daemon.DaemonContext")
-    def test_listener_does_not_start_when_pidfile_exists(
-        self, mock_daemon_context, mock_consumer, mock_logger, mock_pid
-    ):
-        """Assert errors are logged if pidfile is already locked."""
-        mock_pid.side_effect = AlreadyLocked()
-        call_command("listen_to_sources")
-        mock_logger.exception.assert_called_once()
-        mock_consumer.assert_not_called()
