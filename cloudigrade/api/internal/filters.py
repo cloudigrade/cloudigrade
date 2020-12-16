@@ -8,7 +8,7 @@ from api.filters import InstanceRunningSinceFilter
 
 
 class InternalCloudAccountFilterSet(django_filters.FilterSet):
-    """FilterSet for limiting Instances for the internal API."""
+    """FilterSet for limiting CloudAccounts for the internal API."""
 
     username = django_filters.CharFilter(field_name="user__username")
 
