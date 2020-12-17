@@ -7,14 +7,14 @@ from rest_framework.decorators import action, api_view, authentication_classes, 
 from rest_framework.response import Response
 
 from api import models
-from api.authentication import ThreeScaleAuthenticationNoOrgAdmin
+from api.authentication import ThreeScaleAuthenticationInternal
 from api.clouds.aws import models as aws_models
 from api.clouds.azure import models as azure_models
 from api.internal import filters, serializers
 
 
 @api_view(["POST"])
-@authentication_classes([ThreeScaleAuthenticationNoOrgAdmin])
+@authentication_classes([ThreeScaleAuthenticationInternal])
 @schema(None)
 def availability_check(request):
     """
@@ -37,7 +37,7 @@ def availability_check(request):
 class InternalViewSetMixin:
     """Mixin of common attributes for our internal ViewSet classes."""
 
-    authentication_classes = []
+    authentication_classes = [ThreeScaleAuthenticationInternal]
     permission_classes = [permissions.AllowAny]
     filter_backends = [django_filters.DjangoFilterBackend]
     schema = None

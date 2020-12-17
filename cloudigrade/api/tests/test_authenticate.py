@@ -10,7 +10,7 @@ from rest_framework.authentication import exceptions
 
 from api.authentication import (
     ThreeScaleAuthentication,
-    ThreeScaleAuthenticationNoOrgAdmin,
+    ThreeScaleAuthenticationInternal,
 )
 from util.tests import helper as util_helper
 
@@ -104,7 +104,7 @@ class ThreeScaleAuthenticateTestCase(TestCase):
         self.assertEqual(1, len(users))
 
 
-class ThreeScaleAuthenticationNoOrgAdminTestCase(TestCase):
+class ThreeScaleAuthenticationInternalTestCase(TestCase):
     """
     Test that 3scale authentication no org admin works as expected.
 
@@ -124,7 +124,7 @@ class ThreeScaleAuthenticationNoOrgAdminTestCase(TestCase):
         self.rh_header_not_admin = util_helper.get_3scale_auth_header(
             account_number=self.user_email, is_org_admin=False
         )
-        self.three_scale_auth = ThreeScaleAuthenticationNoOrgAdmin()
+        self.three_scale_auth = ThreeScaleAuthenticationInternal()
         User.objects.get_or_create(username=self.user_email)
 
         self.user_2_rh_header_as_admin = util_helper.get_3scale_auth_header(
