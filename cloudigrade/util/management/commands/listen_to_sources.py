@@ -7,22 +7,13 @@ from confluent_kafka import Consumer
 from django.conf import settings
 from django.core.management import BaseCommand
 from django.utils.translation import gettext as _
+from prometheus_client import Counter
 
 from api import tasks
 
 logger = logging.getLogger(__name__)
+
 run_listener = False
-
-
-def _listener_cleanup(signum, frame):
-    """Stop listening when system signal is received."""
-    logger.info(_("Received signal %s. Stopping."), signum)
-    global run_listener
-    run_listener = False
-
-
-signal.signal(signal.SIGTERM, _listener_cleanup)
-signal.signal(signal.SIGINT, _listener_cleanup)
 
 
 class Command(BaseCommand):
@@ -105,6 +96,7 @@ class Command(BaseCommand):
             _("Processing Message: %(message_value)s. Headers: %(message_headers)s"),
             {"message_value": message_value, "message_headers": message_headers},
         )
+        total_events.inc()
 
         if event_type == "ApplicationAuthentication.create":
             logger.info(
@@ -114,6 +106,7 @@ class Command(BaseCommand):
                 ),
                 {"message_value": message_value, "message_headers": message_headers},
             )
+            create_events.inc()
             if settings.SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA:
                 tasks.create_from_sources_kafka_message.delay(
                     message_value, message_headers
@@ -127,6 +120,7 @@ class Command(BaseCommand):
                 ),
                 {"message_value": message_value, "message_headers": message_headers},
             )
+            destroy_events.inc()
             if settings.SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA:
                 tasks.delete_from_sources_kafka_message.delay(
                     message_value, message_headers, event_type
@@ -140,7 +134,28 @@ class Command(BaseCommand):
                 ),
                 {"message_value": message_value, "message_headers": message_headers},
             )
+            update_events.inc()
             if settings.SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA:
                 tasks.update_from_source_kafka_message.delay(
                     message_value, message_headers
                 )
+
+
+# Metrics
+total_events_metric = Counter('listener_processed_events_total', 'Total number of processed events.', ('event_type',))
+create_events = total_events_metric.labels('create')
+update_events = total_events_metric.labels('update')
+destroy_events = total_events_metric.labels('destroy')
+total_events = total_events_metric.labels('total')
+
+
+# Signal handling
+def _listener_cleanup(signum, frame):
+    """Stop listening when system signal is received."""
+    logger.info(_("Received signal %s. Stopping."), signum)
+    global run_listener
+    run_listener = False
+
+
+signal.signal(signal.SIGTERM, _listener_cleanup)
+signal.signal(signal.SIGINT, _listener_cleanup)
