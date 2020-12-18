@@ -10,17 +10,13 @@ This document summarizes some examples of the cloudigrade REST API.
 
     make docs-api-examples
 
-    Please note that this is a destructive operation because building the data
-    for the document requires creating, updating, and deleting many objects.
-
 Examples here use the ``http`` command from
 `httpie <https://httpie.org/>`_. If you want to follow along with these
 exact commands, you may need to ``brew install httpie`` or
 ``pip install httpie`` first.
 
 These examples also assume you are running cloudigrade on
-``localhost:8080`` either via ``docker-compose`` or Django’s built-in
-``runserver`` command and that you have correctly configured
+``localhost:8080`` and that you have correctly configured
 cloudigrade’s environment with appropriate variables to allow it to talk
 to the various clouds (e.g. ``AWS_ACCESS_KEY_ID``).
 
@@ -62,154 +58,7 @@ User Setup
 ------------------
 
 When accessing any endpoint with the HTTP_X_RH_IDENTITY header,
-if the user found in the header does not exist, it will be created.
-Users can also be created using Django Admin.
-
-
-Customer Account Setup
-----------------------
-
-Create an AWS account
-~~~~~~~~~~~~~~~~~~~~~
-
-This request may take a few seconds because of multiple round-trip calls
-to the AWS APIs for each region. The "name" attribute is required and has a
-maximum supported length of 256 characters. The "platform_authentication_id",
-"platform_application_id", "platform_endpoint_id", and "platform_source_id"
-attributes are all required and should be integers.
-
-Request:
-
-.. code:: bash
-
-    http post localhost:8080/api/cloudigrade/v2/accounts/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
-        cloud_type="aws" \
-        account_arn="arn:aws:iam::813829573416:role/role-for-cloudigrade" \
-        name="yet another account" \
-        platform_authentication_id="5081" \
-        platform_application_id="1618" \
-        platform_source_id="1208"
-
-Response:
-
-::
-
-    HTTP/1.1 201 Created
-    Allow: GET, POST, HEAD, OPTIONS
-    Content-Length: 501
-    Content-Type: application/json
-    Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: ca726eaf-6a07-4feb-9df6-53b840145a12
-    X-Content-Type-Options: nosniff
-    X-Frame-Options: DENY
-
-    {
-        "account_id": 3,
-        "cloud_type": "aws",
-        "content_object": {
-            "account_arn": "arn:aws:iam::813829573416:role/role-for-cloudigrade",
-            "aws_account_id": "813829573416",
-            "aws_cloud_account_id": 2,
-            "created_at": "2020-05-18T13:51:59.722367Z",
-            "updated_at": "2020-05-18T13:51:59.722367Z"
-        },
-        "created_at": "2020-05-18T13:51:59.722367Z",
-        "is_enabled": true,
-        "name": "yet another account",
-        "platform_application_id": 1618,
-        "platform_authentication_id": 5081,
-        "platform_source_id": 1208,
-        "updated_at": "2020-05-18T13:51:59.722367Z",
-        "user_id": 2
-    }
-
-If you attempt to create an AWS account for an ARN that is already in
-the system, you should get a 400 error.
-
-Request:
-
-.. code:: bash
-
-    http post localhost:8080/api/cloudigrade/v2/accounts/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
-        cloud_type="aws" \
-        account_arn="arn:aws:iam::813829573416:role/role-for-cloudigrade" \
-        name="but this account already exists" \
-        platform_authentication_id="1649" \
-        platform_application_id="5796" \
-        platform_source_id="7113"
-
-Response:
-
-::
-
-    HTTP/1.1 400 Bad Request
-    Allow: GET, POST, HEAD, OPTIONS
-    Content-Length: 93
-    Content-Type: application/json
-    Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: b1075859-2d02-44f9-bbd1-5d1298e42435
-    X-Content-Type-Options: nosniff
-    X-Frame-Options: DENY
-
-    {
-        "account_arn": "Could not set up cloud metering. Please contact support. Error code CG1001."
-    }
-
-
-
-
-Create an Azure account
-~~~~~~~~~~~~~~~~~~~~~
-The "name" attribute is required and has a maximum supported length of 256 characters.
-The "platform_authentication_id", "platform_application_id", "platform_endpoint_id",
-and "platform_source_id" attributes are all required and should be integers.
-
-Request:
-
-.. code:: bash
-
-    http post localhost:8080/api/cloudigrade/v2/accounts/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
-        cloud_type="azure" \
-        subscription_id="3bdb242f-741c-4a58-b5f5-422107f7355c" \
-        tenant_id="0034a8ac-bbf0-461f-bf01-4b5eb006ee9a" \
-        name="it's an azure account" \
-        platform_authentication_id="9052" \
-        platform_application_id="7815" \
-        platform_source_id="7253"
-
-Response:
-
-::
-
-    HTTP/1.1 201 Created
-    Allow: GET, POST, HEAD, OPTIONS
-    Content-Length: 515
-    Content-Type: application/json
-    Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: 88944e28-60e5-45f2-a0cd-3950823e3cc1
-    X-Content-Type-Options: nosniff
-    X-Frame-Options: DENY
-
-    {
-        "account_id": 4,
-        "cloud_type": "azure",
-        "content_object": {
-            "azure_cloud_account_id": 2,
-            "created_at": "2020-05-18T13:51:59.722367Z",
-            "subscription_id": "3bdb242f-741c-4a58-b5f5-422107f7355c",
-            "tenant_id": "0034a8ac-bbf0-461f-bf01-4b5eb006ee9a",
-            "updated_at": "2020-05-18T13:51:59.722367Z"
-        },
-        "created_at": "2020-05-18T13:51:59.722367Z",
-        "is_enabled": true,
-        "name": "it's an azure account",
-        "platform_application_id": 7815,
-        "platform_authentication_id": 9052,
-        "platform_source_id": 7253,
-        "updated_at": "2020-05-18T13:51:59.722367Z",
-        "user_id": 2
-    }
-
+if the user found in the header does not exist, it will not be created.
 
 
 Customer Account Info
@@ -229,11 +78,11 @@ Response:
 ::
 
     HTTP/1.1 200 OK
-    Allow: GET, POST, HEAD, OPTIONS
-    Content-Length: 2213
+    Allow: GET, HEAD, OPTIONS
+    Content-Length: 1195
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: 2f4a5f6b-a90b-4c21-9905-6413b312216b
+    X-CLOUDIGRADE-REQUEST-ID: 27bbf407-ca72-4eaf-aa07-7febddf653b8
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -256,7 +105,7 @@ Response:
                 "platform_authentication_id": 6311,
                 "platform_source_id": 663,
                 "updated_at": "2020-05-18T13:51:59.722367Z",
-                "user_id": 2
+                "user_id": 1
             },
             {
                 "account_id": 2,
@@ -275,45 +124,7 @@ Response:
                 "platform_authentication_id": 4242,
                 "platform_source_id": 7961,
                 "updated_at": "2020-05-18T13:51:59.722367Z",
-                "user_id": 2
-            },
-            {
-                "account_id": 3,
-                "cloud_type": "aws",
-                "content_object": {
-                    "account_arn": "arn:aws:iam::813829573416:role/role-for-cloudigrade",
-                    "aws_account_id": "813829573416",
-                    "aws_cloud_account_id": 2,
-                    "created_at": "2020-05-18T13:51:59.722367Z",
-                    "updated_at": "2020-05-18T13:51:59.722367Z"
-                },
-                "created_at": "2020-05-18T13:51:59.722367Z",
-                "is_enabled": true,
-                "name": "yet another account",
-                "platform_application_id": 1618,
-                "platform_authentication_id": 5081,
-                "platform_source_id": 1208,
-                "updated_at": "2020-05-18T13:51:59.722367Z",
-                "user_id": 2
-            },
-            {
-                "account_id": 4,
-                "cloud_type": "azure",
-                "content_object": {
-                    "azure_cloud_account_id": 2,
-                    "created_at": "2020-05-18T13:51:59.722367Z",
-                    "subscription_id": "3bdb242f-741c-4a58-b5f5-422107f7355c",
-                    "tenant_id": "0034a8ac-bbf0-461f-bf01-4b5eb006ee9a",
-                    "updated_at": "2020-05-18T13:51:59.722367Z"
-                },
-                "created_at": "2020-05-18T13:51:59.722367Z",
-                "is_enabled": true,
-                "name": "it's an azure account",
-                "platform_application_id": 7815,
-                "platform_authentication_id": 9052,
-                "platform_source_id": 7253,
-                "updated_at": "2020-05-18T13:51:59.722367Z",
-                "user_id": 2
+                "user_id": 1
             }
         ],
         "links": {
@@ -323,7 +134,7 @@ Response:
             "previous": null
         },
         "meta": {
-            "count": 4
+            "count": 2
         }
     }
 
@@ -335,166 +146,39 @@ Request:
 
 .. code:: bash
 
-    http localhost:8080/api/cloudigrade/v2/accounts/3/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}"
+    http localhost:8080/api/cloudigrade/v2/accounts/1/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}"
 
 Response:
 
 ::
 
     HTTP/1.1 200 OK
-    Allow: GET, PUT, PATCH, DELETE, HEAD, OPTIONS
-    Content-Length: 501
+    Allow: GET, HEAD, OPTIONS
+    Content-Length: 488
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: 4c8c6abd-ed24-476c-8ca3-5a153f71a15e
+    X-CLOUDIGRADE-REQUEST-ID: 40145a12-1f5b-4107-9859-2d02d4f93bd1
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
     {
-        "account_id": 3,
+        "account_id": 1,
         "cloud_type": "aws",
         "content_object": {
-            "account_arn": "arn:aws:iam::813829573416:role/role-for-cloudigrade",
-            "aws_account_id": "813829573416",
-            "aws_cloud_account_id": 2,
-            "created_at": "2020-05-18T13:51:59.722367Z",
+            "account_arn": "arn:aws:iam::544771852898:role/role-for-cloudigrade",
+            "aws_account_id": "544771852898",
+            "aws_cloud_account_id": 1,
+            "created_at": "2020-05-04T00:00:00Z",
             "updated_at": "2020-05-18T13:51:59.722367Z"
         },
-        "created_at": "2020-05-18T13:51:59.722367Z",
+        "created_at": "2020-05-04T00:00:00Z",
         "is_enabled": true,
-        "name": "yet another account",
-        "platform_application_id": 1618,
-        "platform_authentication_id": 5081,
-        "platform_source_id": 1208,
+        "name": "greatest account ever",
+        "platform_application_id": 6890,
+        "platform_authentication_id": 6311,
+        "platform_source_id": 663,
         "updated_at": "2020-05-18T13:51:59.722367Z",
-        "user_id": 2
-    }
-
-
-Update a specific account
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-You can update the account object via either HTTP PATCH or HTTP PUT. All
-updates require you to specify the "resourcetype".
-
-At the time of this writing, only the "name" property can be changed on the
-account object.
-
-Request:
-
-.. code:: bash
-
-    http patch localhost:8080/api/cloudigrade/v2/accounts/3/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
-        name="name updated using PATCH"
-
-Response:
-
-::
-
-    HTTP/1.1 200 OK
-    Allow: GET, PUT, PATCH, DELETE, HEAD, OPTIONS
-    Content-Length: 506
-    Content-Type: application/json
-    Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: a3f2870e-6068-426a-b6ba-e65270345f4b
-    X-Content-Type-Options: nosniff
-    X-Frame-Options: DENY
-
-    {
-        "account_id": 3,
-        "cloud_type": "aws",
-        "content_object": {
-            "account_arn": "arn:aws:iam::813829573416:role/role-for-cloudigrade",
-            "aws_account_id": "813829573416",
-            "aws_cloud_account_id": 2,
-            "created_at": "2020-05-18T13:51:59.722367Z",
-            "updated_at": "2020-05-18T13:51:59.722367Z"
-        },
-        "created_at": "2020-05-18T13:51:59.722367Z",
-        "is_enabled": true,
-        "name": "name updated using PATCH",
-        "platform_application_id": 1618,
-        "platform_authentication_id": 5081,
-        "platform_source_id": 1208,
-        "updated_at": "2020-05-18T13:51:59.722367Z",
-        "user_id": 2
-    }
-
-Because PUT is intended to replace objects, it must include all potentially
-writable fields, which includes "name" and "account_arn".
-
-Request:
-
-.. code:: bash
-
-    http put localhost:8080/api/cloudigrade/v2/accounts/3/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
-        cloud_type="aws" \
-        account_arn="arn:aws:iam::813829573416:role/role-for-cloudigrade" \
-        name="name updated using PUT" \
-        platform_authentication_id="5081" \
-        platform_application_id="1618" \
-        platform_source_id="1208"
-
-Response:
-
-::
-
-    HTTP/1.1 200 OK
-    Allow: GET, PUT, PATCH, DELETE, HEAD, OPTIONS
-    Content-Length: 572
-    Content-Type: application/json
-    Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: f37817f3-2fcb-4b46-9c8e-9bb027cbb372
-    X-Content-Type-Options: nosniff
-    X-Frame-Options: DENY
-
-    {
-        "account_arn": "arn:aws:iam::813829573416:role/role-for-cloudigrade",
-        "account_id": 3,
-        "cloud_type": "aws",
-        "content_object": {
-            "account_arn": "arn:aws:iam::813829573416:role/role-for-cloudigrade",
-            "aws_account_id": "813829573416",
-            "aws_cloud_account_id": 2,
-            "created_at": "2020-05-18T13:51:59.722367Z",
-            "updated_at": "2020-05-18T13:51:59.722367Z"
-        },
-        "created_at": "2020-05-18T13:51:59.722367Z",
-        "is_enabled": true,
-        "name": "name updated using PUT",
-        "platform_application_id": 1618,
-        "platform_authentication_id": 5081,
-        "platform_source_id": 1208,
-        "updated_at": "2020-05-18T13:51:59.722367Z",
-        "user_id": 2
-    }
-
-You cannot change the ARN via PUT or PATCH.
-
-Request:
-
-.. code:: bash
-
-    http patch localhost:8080/api/cloudigrade/v2/accounts/3/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
-        account_arn="arn:aws:iam::999999999999:role/role-for-cloudigrade"
-
-Response:
-
-::
-
-    HTTP/1.1 400 Bad Request
-    Allow: GET, PUT, PATCH, DELETE, HEAD, OPTIONS
-    Content-Length: 50
-    Content-Type: application/json
-    Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: ed662fc4-6b6e-4c3f-b574-57ef85245a76
-    X-Content-Type-Options: nosniff
-    X-Frame-Options: DENY
-
-    {
-        "account_arn": [
-            "You cannot update account_arn."
-        ]
+        "user_id": 1
     }
 
 
@@ -519,7 +203,7 @@ Response:
     Content-Length: 2646
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: a1a3167b-c134-4b00-94b2-729e7601374c
+    X-CLOUDIGRADE-REQUEST-ID: 5d1298e4-2435-4034-a8ac-bbf0e61fbf01
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -646,7 +330,7 @@ Response:
     Content-Length: 355
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: 1dc4faa1-4d8b-4b27-acb4-c07817ad7fc2
+    X-CLOUDIGRADE-REQUEST-ID: 4b5eb006-ee9a-4bdb-a42f-741c7a58b5f5
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -689,7 +373,7 @@ Response:
     Content-Length: 2402
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: f53b8bc3-6747-41fb-851e-45e2ab0a0041
+    X-CLOUDIGRADE-REQUEST-ID: 422107f7-355c-4579-b54a-4befe0f58da2
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -806,7 +490,7 @@ Response:
     Content-Length: 6750
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: 6586e394-b565-411a-bf40-5a48dfc1ace8
+    X-CLOUDIGRADE-REQUEST-ID: 532f97fe-141a-4894-8e28-60e525f220cd
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -1062,7 +746,7 @@ Response:
     Content-Length: 1075
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: 32981509-12ca-434e-8857-1e87dc3fe4eb
+    X-CLOUDIGRADE-REQUEST-ID: 3950823e-3cc1-4f4a-9f6b-a90bdc219905
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -2868,12 +2552,12 @@ Response:
     Content-Length: 608
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: c329116a-dc4a-4885-a292-85a035881a69
+    X-CLOUDIGRADE-REQUEST-ID: 6413b312-216b-4c8c-aabd-ed24976c4ca3
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
     {
-        "aws_account_id": 988212965548,
+        "aws_account_id": 434533559245,
         "aws_policies": {
             "traditional_inspection": {
                 "Statement": [
@@ -2903,4 +2587,151 @@ Response:
             }
         },
         "version": "489-cloudigrade-version - d2b30c637ce3788e22990b21434bac2edcfb7ede"
+    }
+
+
+Internal APIs
+-------------
+
+The following APIs are only available internally and are not fully supported.
+Caveat emptor. Hic sunt dracones.
+
+
+Create an AWS account
+~~~~~~~~~~~~~~~~~~~~~
+
+This request may take a few seconds because of multiple round-trip calls
+to the AWS APIs for each region. The "name" attribute is required and has a
+maximum supported length of 256 characters. The "platform_authentication_id",
+"platform_application_id", "platform_endpoint_id", and "platform_source_id"
+attributes are all required and should be integers.
+
+Request:
+
+.. code:: bash
+
+    http post localhost:8080/internal/api/cloudigrade/v1/accounts/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
+        cloud_type="aws" \
+        account_arn="arn:aws:iam::101717154503:role/role-for-cloudigrade" \
+        name="yet another account" \
+        platform_authentication_id="5081" \
+        platform_application_id="1618" \
+        platform_source_id="1208"
+
+Response:
+
+::
+
+    HTTP/1.1 201 Created
+    Allow: GET, POST, HEAD, OPTIONS
+    Content-Length: 501
+    Content-Type: application/json
+    Vary: Accept
+    X-CLOUDIGRADE-REQUEST-ID: a15ea3f2-870e-4068-826a-f6bae6527034
+    X-Content-Type-Options: nosniff
+    X-Frame-Options: DENY
+
+    {
+        "account_id": 3,
+        "cloud_type": "aws",
+        "content_object": {
+            "account_arn": "arn:aws:iam::101717154503:role/role-for-cloudigrade",
+            "aws_account_id": "101717154503",
+            "aws_cloud_account_id": 2,
+            "created_at": "2020-05-18T13:51:59.722367Z",
+            "updated_at": "2020-05-18T13:51:59.722367Z"
+        },
+        "created_at": "2020-05-18T13:51:59.722367Z",
+        "is_enabled": true,
+        "name": "yet another account",
+        "platform_application_id": 1618,
+        "platform_authentication_id": 5081,
+        "platform_source_id": 1208,
+        "updated_at": "2020-05-18T13:51:59.722367Z",
+        "user_id": 1
+    }
+
+If you attempt to create an AWS account for an ARN that is already in
+the system, you should get a 400 error.
+
+Request:
+
+.. code:: bash
+
+    http post localhost:8080/internal/api/cloudigrade/v1/accounts/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
+        cloud_type="aws" \
+        account_arn="arn:aws:iam::101717154503:role/role-for-cloudigrade" \
+        name="but this account already exists" \
+        platform_authentication_id="1649" \
+        platform_application_id="5796" \
+        platform_source_id="7113"
+
+Response:
+
+::
+
+    HTTP/1.1 400 Bad Request
+    Allow: GET, POST, HEAD, OPTIONS
+    Content-Length: 93
+    Content-Type: application/json
+    Vary: Accept
+    X-CLOUDIGRADE-REQUEST-ID: f37817f3-2fcb-4b46-9c8e-9bb027cbb372
+    X-Content-Type-Options: nosniff
+    X-Frame-Options: DENY
+
+    {
+        "account_arn": "Could not set up cloud metering. Please contact support. Error code CG1001."
+    }
+
+
+Create an Azure account
+~~~~~~~~~~~~~~~~~~~~~
+The "name" attribute is required and has a maximum supported length of 256 characters.
+The "platform_authentication_id", "platform_application_id", "platform_endpoint_id",
+and "platform_source_id" attributes are all required and should be integers.
+
+Request:
+
+.. code:: bash
+
+    http post localhost:8080/internal/api/cloudigrade/v1/accounts/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
+        cloud_type="azure" \
+        subscription_id="a1a3167b-c134-4b00-94b2-729e7601374c" \
+        tenant_id="ed662fc4-6b6e-4c3f-b574-57ef85245a76" \
+        name="it's an azure account" \
+        platform_authentication_id="9052" \
+        platform_application_id="7815" \
+        platform_source_id="7253"
+
+Response:
+
+::
+
+    HTTP/1.1 201 Created
+    Allow: GET, POST, HEAD, OPTIONS
+    Content-Length: 515
+    Content-Type: application/json
+    Vary: Accept
+    X-CLOUDIGRADE-REQUEST-ID: f53b8bc3-6747-41fb-851e-45e2ab0a0041
+    X-Content-Type-Options: nosniff
+    X-Frame-Options: DENY
+
+    {
+        "account_id": 4,
+        "cloud_type": "azure",
+        "content_object": {
+            "azure_cloud_account_id": 2,
+            "created_at": "2020-05-18T13:51:59.722367Z",
+            "subscription_id": "a1a3167b-c134-4b00-94b2-729e7601374c",
+            "tenant_id": "ed662fc4-6b6e-4c3f-b574-57ef85245a76",
+            "updated_at": "2020-05-18T13:51:59.722367Z"
+        },
+        "created_at": "2020-05-18T13:51:59.722367Z",
+        "is_enabled": true,
+        "name": "it's an azure account",
+        "platform_application_id": 7815,
+        "platform_authentication_id": 9052,
+        "platform_source_id": 7253,
+        "updated_at": "2020-05-18T13:51:59.722367Z",
+        "user_id": 1
     }

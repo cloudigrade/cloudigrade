@@ -42,6 +42,10 @@ internal_urlpatterns = [
 ]
 
 internal_router = routers.DefaultRouter()
+# URLs for slightly different internal versions of public viewset routes.
+internal_router.register(
+    r"accounts", internal_views.InternalAccountViewSet, basename="internal-account"
+)
 # URLs for common models
 internal_router.register(
     r"users", internal_views.InternalUserViewSet, basename="internal-user"

@@ -17,15 +17,8 @@ from util.aws.sts import _get_primary_account_id, cloudigrade_policy
 from util.misc import get_today
 
 
-class AccountViewSet(
-    mixins.CreateModelMixin,
-    mixins.RetrieveModelMixin,
-    mixins.UpdateModelMixin,
-    mixins.ListModelMixin,
-    mixins.DestroyModelMixin,
-    viewsets.GenericViewSet,
-):
-    """Create, retrieve, update, delete, or list customer accounts."""
+class AccountViewSet(viewsets.ReadOnlyModelViewSet):
+    """List all or retrieve a single cloud account."""
 
     schema = schemas.DescriptiveAutoSchema("cloud account", tags=["api-v2"])
     serializer_class = serializers.CloudAccountSerializer

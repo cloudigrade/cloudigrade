@@ -60,7 +60,7 @@ class SandboxedRestClientTest(TestCase):
     @patch("api.models.notify_sources_application_availability")
     def test_create_noun(self, mock_notify_sources):
         """Assert "create" requests work."""
-        client = helper.SandboxedRestClient()
+        client = helper.SandboxedRestClient(api_root="/internal/api/cloudigrade/v1")
         client._force_authenticate(self.user)
         arn = util_helper.generate_dummy_arn()
         name = _faker.sentence()

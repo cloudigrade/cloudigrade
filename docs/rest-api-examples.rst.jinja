@@ -10,17 +10,13 @@ This document summarizes some examples of the cloudigrade REST API.
 
     make docs-api-examples
 
-    Please note that this is a destructive operation because building the data
-    for the document requires creating, updating, and deleting many objects.
-
 Examples here use the ``http`` command from
 `httpie <https://httpie.org/>`_. If you want to follow along with these
 exact commands, you may need to ``brew install httpie`` or
 ``pip install httpie`` first.
 
 These examples also assume you are running cloudigrade on
-``localhost:8080`` either via ``docker-compose`` or Django’s built-in
-``runserver`` command and that you have correctly configured
+``localhost:8080`` and that you have correctly configured
 cloudigrade’s environment with appropriate variables to allow it to talk
 to the various clouds (e.g. ``AWS_ACCESS_KEY_ID``).
 
@@ -53,58 +49,7 @@ User Setup
 ------------------
 
 When accessing any endpoint with the HTTP_X_RH_IDENTITY header,
-if the user found in the header does not exist, it will be created.
-Users can also be created using Django Admin.
-
-
-Customer Account Setup
-----------------------
-
-Create an AWS account
-~~~~~~~~~~~~~~~~~~~~~
-
-This request may take a few seconds because of multiple round-trip calls
-to the AWS APIs for each region. The "name" attribute is required and has a
-maximum supported length of 256 characters. The "platform_authentication_id",
-"platform_application_id", "platform_endpoint_id", and "platform_source_id"
-attributes are all required and should be integers.
-
-Request:
-
-{{ v2_account_create.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
-
-Response:
-
-{{ v2_account_create | stringify_http_response | rst_codeblock }}
-
-If you attempt to create an AWS account for an ARN that is already in
-the system, you should get a 400 error.
-
-Request:
-
-{{ v2_account_create_duplicate_arn.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
-
-Response:
-
-{{ v2_account_create_duplicate_arn | stringify_http_response | rst_codeblock }}
-
-
-
-
-Create an Azure account
-~~~~~~~~~~~~~~~~~~~~~
-The "name" attribute is required and has a maximum supported length of 256 characters.
-The "platform_authentication_id", "platform_application_id", "platform_endpoint_id",
-and "platform_source_id" attributes are all required and should be integers.
-
-Request:
-
-{{ v2_account_create_azure.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
-
-Response:
-
-{{ v2_account_create_azure | stringify_http_response | rst_codeblock }}
-
+if the user found in the header does not exist, it will not be created.
 
 
 Customer Account Info
@@ -132,45 +77,6 @@ Request:
 Response:
 
 {{ v2_account_get | stringify_http_response | rst_codeblock }}
-
-
-Update a specific account
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-You can update the account object via either HTTP PATCH or HTTP PUT. All
-updates require you to specify the "resourcetype".
-
-At the time of this writing, only the "name" property can be changed on the
-account object.
-
-Request:
-
-{{ v2_account_patch.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
-
-Response:
-
-{{ v2_account_patch | stringify_http_response | rst_codeblock }}
-
-Because PUT is intended to replace objects, it must include all potentially
-writable fields, which includes "name" and "account_arn".
-
-Request:
-
-{{ v2_account_put.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
-
-Response:
-
-{{ v2_account_put | stringify_http_response | rst_codeblock }}
-
-You cannot change the ARN via PUT or PATCH.
-
-Request:
-
-{{ v2_account_patch_arn_fail.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
-
-Response:
-
-{{ v2_account_patch_arn_fail | stringify_http_response | rst_codeblock }}
 
 
 Instance Info
@@ -323,3 +229,54 @@ Request:
 Response:
 
 {{ v2_get_sysconfig | stringify_http_response | rst_codeblock }}
+
+
+Internal APIs
+-------------
+
+The following APIs are only available internally and are not fully supported.
+Caveat emptor. Hic sunt dracones.
+
+
+Create an AWS account
+~~~~~~~~~~~~~~~~~~~~~
+
+This request may take a few seconds because of multiple round-trip calls
+to the AWS APIs for each region. The "name" attribute is required and has a
+maximum supported length of 256 characters. The "platform_authentication_id",
+"platform_application_id", "platform_endpoint_id", and "platform_source_id"
+attributes are all required and should be integers.
+
+Request:
+
+{{ internal_account_create_aws.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
+
+Response:
+
+{{ internal_account_create_aws | stringify_http_response | rst_codeblock }}
+
+If you attempt to create an AWS account for an ARN that is already in
+the system, you should get a 400 error.
+
+Request:
+
+{{ internal_account_create_aws_duplicate_arn.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
+
+Response:
+
+{{ internal_account_create_aws_duplicate_arn | stringify_http_response | rst_codeblock }}
+
+
+Create an Azure account
+~~~~~~~~~~~~~~~~~~~~~
+The "name" attribute is required and has a maximum supported length of 256 characters.
+The "platform_authentication_id", "platform_application_id", "platform_endpoint_id",
+and "platform_source_id" attributes are all required and should be integers.
+
+Request:
+
+{{ internal_account_create_azure.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
+
+Response:
+
+{{ internal_account_create_azure | stringify_http_response | rst_codeblock }}

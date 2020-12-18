@@ -2,15 +2,20 @@
 
 from django.contrib.auth.models import User
 from django_filters import rest_framework as django_filters
-from rest_framework import exceptions, permissions, status, viewsets
+from rest_framework import exceptions, mixins, permissions, status, viewsets
 from rest_framework.decorators import action, api_view, authentication_classes, schema
 from rest_framework.response import Response
 
 from api import models
-from api.authentication import ThreeScaleAuthenticationInternal
+from api.authentication import (
+    ThreeScaleAuthenticationInternal,
+    ThreeScaleAuthenticationInternalCreateUser,
+)
 from api.clouds.aws import models as aws_models
 from api.clouds.azure import models as azure_models
 from api.internal import filters, serializers
+from api.serializers import CloudAccountSerializer
+from api.views import AccountViewSet
 
 
 @api_view(["POST"])
@@ -41,6 +46,47 @@ class InternalViewSetMixin:
     permission_classes = [permissions.AllowAny]
     filter_backends = [django_filters.DjangoFilterBackend]
     schema = None
+
+
+class InternalAccountViewSet(
+    InternalViewSetMixin,
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
+    AccountViewSet,
+):
+    """
+    Create, retrieve, update, delete, or list AwsCloudAccounts for internal use.
+
+    Unlike most of our other internal ViewSets, this one extends our existing public
+    AccountViewSet in order to move our "legacy" writable API for accounts out of the
+    public space and into the internal space.
+
+    This ViewSet uses custom permission and authentication handling to force only the
+    "create" action (from HTTP POST) to have a proper User from the 3scale header. We
+    need that authenticated User in order to create the CloudAccount object.
+    """
+
+    queryset = models.CloudAccount.objects.all()
+    serializer_class = CloudAccountSerializer
+
+    def get_permissions(self):
+        """Instantiate and return the list of permissions that this view requires."""
+        if self.action == "create":
+            permission_classes = [permissions.IsAuthenticated]
+        else:
+            permission_classes = self.permission_classes
+        return [permission() for permission in permission_classes]
+
+    def get_authenticators(self):
+        """Instantiate and return the list of authenticators that this view can use."""
+        # Note: We can't use .action like get_permissions because get_authenticators is
+        # called from initialize_request *before* .action is set on the request object.
+        if self.request.method.lower() == "post":
+            authentication_classes = [ThreeScaleAuthenticationInternalCreateUser]
+        else:
+            authentication_classes = self.authentication_classes
+        return [auth() for auth in authentication_classes]
 
 
 class InternalUserViewSet(InternalViewSetMixin, viewsets.ReadOnlyModelViewSet):

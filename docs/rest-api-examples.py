@@ -34,7 +34,6 @@ from django.contrib.auth.models import User
 from django.conf import settings
 
 from api import models
-from api.clouds.aws.models import AwsCloudAccount
 from api.tests import helper as api_helper
 from api.util import calculate_max_concurrent_usage, normalize_runs
 from util import filters
@@ -67,26 +66,18 @@ class DocsApiHandler(object):
         api_helper.generate_instance_type_definitions(cloud_type="aws")
         api_helper.generate_instance_type_definitions(cloud_type="azure")
 
-        self.superuser_account_number = "100000"
-        self.superuser = util_helper.get_test_user(
-            self.superuser_account_number, is_superuser=True
-        )
-        self.superuser_client = api_helper.SandboxedRestClient()
-        self.superuser_client._force_authenticate(self.superuser)
-
-        self.customer_account_number = f"100001"
-        self.customer_password = "very-secure-password"
+        self.customer_account_number = "100001"
         self.customer_user = util_helper.get_test_user(
-            self.customer_account_number, self.customer_password, is_superuser=False
+            self.customer_account_number, is_superuser=False
         )
         self.customer_client = api_helper.SandboxedRestClient()
         self.customer_client._force_authenticate(self.customer_user)
+        self.internal_client = api_helper.SandboxedRestClient(
+            api_root="/internal/api/cloudigrade/v1"
+        )
+        self.internal_client._force_authenticate(self.customer_user)
 
         self.customer_arn = util_helper.generate_dummy_arn()
-
-        # Make sure an account doesn't already exist with that ARN.
-        for account in AwsCloudAccount.objects.filter(account_arn=self.customer_arn):
-            self.superuser_client.delete_account(account.id)
 
         # Times to use for various account and event activity.
         self.now = get_now()
@@ -271,53 +262,6 @@ class DocsApiHandler(object):
         assert_status(response, 200)
         responses["v2_list_concurrent_all_future"] = response
 
-        ############################
-        # Customer Account Setup AWS
-
-        # Create an AWS account (success)
-        another_arn = util_helper.generate_dummy_arn()
-        aws_cloud_account_data = (
-            util_helper.generate_dummy_aws_cloud_account_post_data()
-        )
-        aws_cloud_account_data.update(
-            {"account_arn": another_arn, "name": "yet another account"}
-        )
-        response = self.customer_client.create_accounts(data=aws_cloud_account_data)
-        assert_status(response, 201)
-        responses["v2_account_create"] = response
-
-        customer_account = models.CloudAccount.objects.get(
-            id=response.data["account_id"]
-        )
-
-        # Create an AWS account (fail: duplicate ARN)
-        aws_cloud_account_duplicate_arn_data = (
-            util_helper.generate_dummy_aws_cloud_account_post_data()
-        )
-        aws_cloud_account_duplicate_arn_data.update(
-            {"account_arn": another_arn, "name": "but this account already exists"}
-        )
-        response = self.customer_client.create_accounts(
-            data=aws_cloud_account_duplicate_arn_data
-        )
-        assert_status(response, 400)
-        responses["v2_account_create_duplicate_arn"] = response
-
-        ##############################
-        # Customer Account Setup Azure
-
-        # Create an Azure account (success)
-        tenant_id = uuid.uuid4()
-        azure_cloud_account_data = (
-            util_helper.generate_dummy_azure_cloud_account_post_data()
-        )
-        azure_cloud_account_data.update(
-            {"tenant_id": tenant_id, "name": "it's an azure account"}
-        )
-        response = self.customer_client.create_accounts(data=azure_cloud_account_data)
-        assert_status(response, 201)
-        responses["v2_account_create_azure"] = response
-
         ##########################
         # v2 Customer Account Info
 
@@ -327,35 +271,9 @@ class DocsApiHandler(object):
         responses["v2_account_list"] = response
 
         # Retrieve a specific account
-        response = self.customer_client.get_accounts(customer_account.id)
+        response = self.customer_client.get_accounts(self.aws_customer_account.id)
         assert_status(response, 200)
         responses["v2_account_get"] = response
-
-        # Update a specific account
-        response = self.customer_client.patch_accounts(
-            customer_account.id, data={"name": "name updated using PATCH"}
-        )
-        assert_status(response, 200)
-        responses["v2_account_patch"] = response
-
-        aws_cloud_account_put_different_name_data = aws_cloud_account_data.copy()
-        aws_cloud_account_put_different_name_data.update(
-            {"name": "name updated using PUT"}
-        )
-        response = self.customer_client.put_accounts(
-            customer_account.id,
-            data=aws_cloud_account_put_different_name_data,
-        )
-        assert_status(response, 200)
-        responses["v2_account_put"] = response
-
-        # You cannot change the ARN via PUT or PATCH.
-        response = self.customer_client.patch_accounts(
-            customer_account.id,
-            data={"account_arn": "arn:aws:iam::999999999999:role/role-for-cloudigrade"},
-        )
-        assert_status(response, 400)
-        responses["v2_account_patch_arn_fail"] = response
 
         ##################
         # V2 Instance Info
@@ -402,6 +320,62 @@ class DocsApiHandler(object):
 
         return responses
 
+    def gather_internal_api_responses(self):
+        """
+        Call the internal API and collect all the responses to be output.
+
+        Returns:
+            dict: All of the internal API responses.
+
+        """
+        responses = dict()
+
+        ############################
+        # Internal Customer Account Setup AWS
+
+        # Create an AWS account (success)
+        another_arn = util_helper.generate_dummy_arn()
+        aws_cloud_account_data = (
+            util_helper.generate_dummy_aws_cloud_account_post_data()
+        )
+        aws_cloud_account_data.update(
+            {"account_arn": another_arn, "name": "yet another account"}
+        )
+        response = self.internal_client.create_accounts(data=aws_cloud_account_data)
+        assert_status(response, 201)
+        responses["internal_account_create_aws"] = response
+
+        customer_account = models.CloudAccount.objects.get(
+            id=response.data["account_id"]
+        )
+
+        # Create an AWS account (fail: duplicate ARN)
+        aws_cloud_account_duplicate_arn_data = (
+            util_helper.generate_dummy_aws_cloud_account_post_data()
+        )
+        aws_cloud_account_duplicate_arn_data.update(
+            {"account_arn": another_arn, "name": "but this account already exists"}
+        )
+        response = self.internal_client.create_accounts(
+            data=aws_cloud_account_duplicate_arn_data
+        )
+        assert_status(response, 400)
+        responses["internal_account_create_aws_duplicate_arn"] = response
+
+        # Create an Azure account (success)
+        tenant_id = str(seeded_uuid4())
+        azure_cloud_account_data = (
+            util_helper.generate_dummy_azure_cloud_account_post_data()
+        )
+        azure_cloud_account_data.update(
+            {"tenant_id": tenant_id, "name": "it's an azure account"}
+        )
+        response = self.internal_client.create_accounts(data=azure_cloud_account_data)
+        assert_status(response, 201)
+        responses["internal_account_create_azure"] = response
+
+        return responses
+
 
 def render(data):
     """
@@ -444,8 +418,12 @@ if __name__ == "__main__":
     ), patch.object(uuid, "uuid4") as mock_uuid4, util_helper.clouditardis(docs_date):
         mock_uuid4.side_effect = seeded_uuid4
         api_hander = DocsApiHandler()
-        responses = api_hander.gather_api_responses()
+        public_responses = api_hander.gather_api_responses()
+        internal_responses = api_hander.gather_internal_api_responses()
         transaction.set_rollback(True)
+    responses = {}
+    responses.update(public_responses)
+    responses.update(internal_responses)
     output = render(responses)
     output = "\n".join((line.rstrip() for line in output.split("\n")))
     print(output)
