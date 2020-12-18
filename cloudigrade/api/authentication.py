@@ -92,6 +92,7 @@ class ThreeScaleAuthentication(BaseAuthentication):
 
     require_org_admin = True
     require_user = True
+    create_user = False
 
     def assert_org_admin(self, account_number, is_org_admin):
         """
@@ -114,8 +115,21 @@ class ThreeScaleAuthentication(BaseAuthentication):
 
     def get_user(self, account_number):
         """Get the Django User for the account number."""
-        if User.objects.filter(username=account_number).exists():
-            return User.objects.get(username=account_number)
+        user = None
+        if self.create_user:
+            user, created = User.objects.get_or_create(username=account_number)
+            if created:
+                user.set_unusable_password()
+                logger.info(
+                    _("Username %s was not found and has been created."),
+                    account_number,
+                )
+        elif User.objects.filter(username=account_number).exists():
+            user = User.objects.get(username=account_number)
+            logger.info(
+                _("Authentication found user with username %(account_number)s"),
+                {"account_number": account_number},
+            )
         elif self.require_user:
             message = _(
                 "Authentication Failed: user with account number {username} "
@@ -123,7 +137,16 @@ class ThreeScaleAuthentication(BaseAuthentication):
             ).format(username=account_number)
             logger.info(message)
             raise exceptions.AuthenticationFailed(message)
-        return None
+        else:
+            logger.info(
+                _("Username %s was not found but is not required."),
+                account_number,
+            )
+        logger.debug(
+            _("Authenticated user for username %(account_number)s is %(user)s"),
+            {"account_number": account_number, "user": user},
+        )
+        return user
 
     def authenticate(self, request):
         """Authenticate the request using the 3scale identity."""
@@ -148,10 +171,25 @@ class ThreeScaleAuthenticationInternal(ThreeScaleAuthentication):
     identity, then authentication fails and returns None. We expect the downstream view
     to determine if access should be allowed if no authentication exists.
 
-    Why is this "optional" variation necessary? Internal Red Hat Cloud services do not
+    This "optional" variant exists because Internal Red Hat Cloud services do not
     consistently set the org_admin value, and we want to grant generally broad access to
     our internal APIs.
     """
 
     require_org_admin = False
     require_user = False
+    create_user = False
+
+
+class ThreeScaleAuthenticationInternalCreateUser(ThreeScaleAuthentication):
+    """
+    Authentication class that uses 3scale headers to creates Users.
+
+    This authentication checks for the 3scale header but does not require the identity
+    to have org_admin enabled. If we cannot find a User matching the 3scale identity,
+    then we create a new User from the 3scale identity.
+    """
+
+    require_org_admin = False
+    require_user = False
+    create_user = True
