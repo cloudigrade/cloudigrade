@@ -5,7 +5,7 @@ from unittest.mock import Mock, patch
 from django.core.management import call_command
 from django.test import TestCase
 
-from util.management.commands.listen_to_sources import Command
+from util.management.commands.listen_to_sources import _listener_cleanup
 
 
 class SourcesListenerTest(TestCase):
@@ -86,5 +86,5 @@ class SourcesListenerTest(TestCase):
     @patch("util.management.commands.listen_to_sources.logger")
     def test_listener_cleanup(self, mock_logger):
         """Assert listener SIGTERM is logged."""
-        Command.listener_cleanup(Mock(), signal.SIGTERM, Mock())
+        _listener_cleanup(signal.SIGTERM, Mock())
         mock_logger.info.assert_called_once()

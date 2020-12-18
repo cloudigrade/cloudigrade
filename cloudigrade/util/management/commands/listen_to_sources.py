@@ -7,7 +7,7 @@ from confluent_kafka import Consumer
 from django.conf import settings
 from django.core.management import BaseCommand
 from django.utils.translation import gettext as _
-from prometheus_client import Counter
+from prometheus_client import Counter, start_http_server
 
 from api import tasks
 
@@ -27,6 +27,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """Launch the listener."""
+        start_http_server(
+            settings.LISTENER_METRICS_PORT
+        )  # Start the metrics export server
         self.listen()
 
     def listen(self):
@@ -142,11 +145,15 @@ class Command(BaseCommand):
 
 
 # Metrics
-total_events_metric = Counter('listener_processed_events_total', 'Total number of processed events.', ('event_type',))
-create_events = total_events_metric.labels('create')
-update_events = total_events_metric.labels('update')
-destroy_events = total_events_metric.labels('destroy')
-total_events = total_events_metric.labels('total')
+total_events_metric = Counter(
+    "listener_processed_events_total",
+    "Total number of processed events.",
+    ("event_type",),
+)
+create_events = total_events_metric.labels("create")
+update_events = total_events_metric.labels("update")
+destroy_events = total_events_metric.labels("destroy")
+total_events = total_events_metric.labels("total")
 
 
 # Signal handling
