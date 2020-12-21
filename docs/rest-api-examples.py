@@ -8,10 +8,18 @@ from unittest.mock import patch
 import django
 import faker
 import jinja2
+from django.core.management import call_command
+from django.core.management.commands import migrate
 from django.db import transaction
 from django.test import override_settings
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.local")
+# Force this script to always use the test settings.
+# This has the benefit of using the sqlite DB which should always be empty.
+os.environ["DJANGO_SETTINGS_MODULE"] = "config.settings.test"
+# However, this means we also need to apply migrations for that DB.
+migrate_cmd = migrate.Command()
+call_command(migrate_cmd, verbosity=0, interactive=False)
+# Run setup only *after* applying migrations.
 django.setup()
 
 # All other app-related imports must come *after* Django setup since this is
