@@ -101,8 +101,8 @@ class DocsApiHandler(object):
             name="meh account",
             created_at=self.two_weeks_ago,
             cloud_type="azure",
-            azure_subscription_id=uuid.uuid4(),
-            azure_tenant_id=uuid.uuid4(),
+            azure_subscription_id=str(seeded_uuid4()),
+            azure_tenant_id=str(seeded_uuid4()),
         )
         self.customer_instances = [
             api_helper.generate_instance(self.aws_customer_account),
