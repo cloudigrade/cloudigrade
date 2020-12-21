@@ -22,7 +22,8 @@ help:
 	@echo "  clean                         to clean the project directory of any scratch files, bytecode, logs, etc."
 	@echo "  unittest                      to run unittests."
 	@echo "  docs                          to build all documentation."
-	@echo "  docs-api-examples             to regenerate docs API examples .rst file."
+	@echo "  docs-api-examples             to regenerate API examples .rst file."
+	@echo "  docs-api-examples-test        to verify the API examples .rst file is current."
 	@echo "  docs-seqdiag                  to regenerate docs .svg files from .diag files."
 	@echo "  spec                          to regenerate the spec file at the root of the repo."
 	@echo "  spec-test                     to verify that the spec file at root of the repo is current."
@@ -62,6 +63,9 @@ docs-seqdiag:
 
 docs-api-examples:
 	PYTHONPATH=cloudigrade $(PYTHON) ./docs/rest-api-examples.py > ./docs/rest-api-examples.rst
+
+docs-api-examples-test:
+	PYTHONPATH=cloudigrade $(PYTHON) ./docs/rest-api-examples.py | diff ./docs/rest-api-examples.rst -
 
 docs: docs-api-examples docs-seqdiag
 

@@ -13,6 +13,12 @@ from django.core.management.commands import migrate
 from django.db import transaction
 from django.test import override_settings
 
+# Force bogus values into required environment variables.
+os.environ["AWS_ACCESS_KEY_ID"] = "nope"
+os.environ["AWS_SECRET_ACCESS_KEY"] = "nope"
+os.environ["AWS_DEFAULT_REGION"] = "nope"
+os.environ["AWS_SQS_ACCESS_KEY_ID"] = "nope"
+os.environ["AWS_SQS_SECRET_ACCESS_KEY"] = "nope"
 # Force this script to always use the test settings.
 # This has the benefit of using the sqlite DB which should always be empty.
 os.environ["DJANGO_SETTINGS_MODULE"] = "config.settings.test"

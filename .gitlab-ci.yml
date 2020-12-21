@@ -106,7 +106,7 @@ NGINX S2i:
   script:
     - s2i build --context-dir=${CONTEXT_DIR} --ref ${CI_COMMIT_REF_NAME} ${CI_PROJECT_URL} ${NGINX_S2I_IMAGE} ${IMAGE_NAME}:latest
 
-Spec File:
+Verify docs and openapi.json:
   stage: test
   image: registry.gitlab.com/cloudigrade/images/build-container:latest
   rules:
@@ -117,6 +117,7 @@ Spec File:
     - pip install poetry
     - poetry install
   script:
+    - poetry run make docs-api-examples-test
     - AWS_SQS_ACCESS_KEY_ID=foo AWS_SQS_SECRET_ACCESS_KEY=bar poetry run make spec-test
     - poetry run openapi-spec-validator openapi.json
 
