@@ -84,7 +84,7 @@ Request:
 
     http post localhost:8080/api/cloudigrade/v2/accounts/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
         cloud_type="aws" \
-        account_arn="arn:aws:iam::779912517120:role/role-for-cloudigrade" \
+        account_arn="arn:aws:iam::813829573416:role/role-for-cloudigrade" \
         name="yet another account" \
         platform_authentication_id="5081" \
         platform_application_id="1618" \
@@ -99,7 +99,7 @@ Response:
     Content-Length: 501
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: 87e27ce8-8f9a-4100-a209-7e534fd6770c
+    X-CLOUDIGRADE-REQUEST-ID: ca726eaf-6a07-4feb-9df6-53b840145a12
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -107,8 +107,8 @@ Response:
         "account_id": 3,
         "cloud_type": "aws",
         "content_object": {
-            "account_arn": "arn:aws:iam::779912517120:role/role-for-cloudigrade",
-            "aws_account_id": "779912517120",
+            "account_arn": "arn:aws:iam::813829573416:role/role-for-cloudigrade",
+            "aws_account_id": "813829573416",
             "aws_cloud_account_id": 2,
             "created_at": "2020-05-18T13:51:59.722367Z",
             "updated_at": "2020-05-18T13:51:59.722367Z"
@@ -132,7 +132,7 @@ Request:
 
     http post localhost:8080/api/cloudigrade/v2/accounts/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
         cloud_type="aws" \
-        account_arn="arn:aws:iam::779912517120:role/role-for-cloudigrade" \
+        account_arn="arn:aws:iam::813829573416:role/role-for-cloudigrade" \
         name="but this account already exists" \
         platform_authentication_id="1649" \
         platform_application_id="5796" \
@@ -147,7 +147,7 @@ Response:
     Content-Length: 93
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: 1a327560-5c8b-4326-9afd-98fb7c259067
+    X-CLOUDIGRADE-REQUEST-ID: b1075859-2d02-44f9-bbd1-5d1298e42435
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -170,8 +170,8 @@ Request:
 
     http post localhost:8080/api/cloudigrade/v2/accounts/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
         cloud_type="azure" \
-        subscription_id="df338a9c-ee38-4257-b4f6-bfe651d15209" \
-        tenant_id="a3ae6ce0-857e-4dea-a352-d57fff7fa2ab" \
+        subscription_id="3bdb242f-741c-4a58-b5f5-422107f7355c" \
+        tenant_id="0034a8ac-bbf0-461f-bf01-4b5eb006ee9a" \
         name="it's an azure account" \
         platform_authentication_id="9052" \
         platform_application_id="7815" \
@@ -186,7 +186,7 @@ Response:
     Content-Length: 515
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: cc1584de-ea0a-4039-a10a-4c03c2d87254
+    X-CLOUDIGRADE-REQUEST-ID: 88944e28-60e5-45f2-a0cd-3950823e3cc1
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -196,8 +196,8 @@ Response:
         "content_object": {
             "azure_cloud_account_id": 2,
             "created_at": "2020-05-18T13:51:59.722367Z",
-            "subscription_id": "df338a9c-ee38-4257-b4f6-bfe651d15209",
-            "tenant_id": "a3ae6ce0-857e-4dea-a352-d57fff7fa2ab",
+            "subscription_id": "3bdb242f-741c-4a58-b5f5-422107f7355c",
+            "tenant_id": "0034a8ac-bbf0-461f-bf01-4b5eb006ee9a",
             "updated_at": "2020-05-18T13:51:59.722367Z"
         },
         "created_at": "2020-05-18T13:51:59.722367Z",
@@ -233,7 +233,7 @@ Response:
     Content-Length: 2213
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: dc29cc26-dea7-45f7-9f81-61e687800892
+    X-CLOUDIGRADE-REQUEST-ID: 2f4a5f6b-a90b-4c21-9905-6413b312216b
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -281,8 +281,8 @@ Response:
                 "account_id": 3,
                 "cloud_type": "aws",
                 "content_object": {
-                    "account_arn": "arn:aws:iam::779912517120:role/role-for-cloudigrade",
-                    "aws_account_id": "779912517120",
+                    "account_arn": "arn:aws:iam::813829573416:role/role-for-cloudigrade",
+                    "aws_account_id": "813829573416",
                     "aws_cloud_account_id": 2,
                     "created_at": "2020-05-18T13:51:59.722367Z",
                     "updated_at": "2020-05-18T13:51:59.722367Z"
@@ -302,8 +302,8 @@ Response:
                 "content_object": {
                     "azure_cloud_account_id": 2,
                     "created_at": "2020-05-18T13:51:59.722367Z",
-                    "subscription_id": "df338a9c-ee38-4257-b4f6-bfe651d15209",
-                    "tenant_id": "a3ae6ce0-857e-4dea-a352-d57fff7fa2ab",
+                    "subscription_id": "3bdb242f-741c-4a58-b5f5-422107f7355c",
+                    "tenant_id": "0034a8ac-bbf0-461f-bf01-4b5eb006ee9a",
                     "updated_at": "2020-05-18T13:51:59.722367Z"
                 },
                 "created_at": "2020-05-18T13:51:59.722367Z",
@@ -346,7 +346,7 @@ Response:
     Content-Length: 501
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: 17adcbce-84c2-49fd-93bf-6de7c1344a89
+    X-CLOUDIGRADE-REQUEST-ID: 4c8c6abd-ed24-476c-8ca3-5a153f71a15e
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -354,8 +354,8 @@ Response:
         "account_id": 3,
         "cloud_type": "aws",
         "content_object": {
-            "account_arn": "arn:aws:iam::779912517120:role/role-for-cloudigrade",
-            "aws_account_id": "779912517120",
+            "account_arn": "arn:aws:iam::813829573416:role/role-for-cloudigrade",
+            "aws_account_id": "813829573416",
             "aws_cloud_account_id": 2,
             "created_at": "2020-05-18T13:51:59.722367Z",
             "updated_at": "2020-05-18T13:51:59.722367Z"
@@ -396,7 +396,7 @@ Response:
     Content-Length: 506
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: e6996ad3-f87b-48ca-b863-9b963bd9ddcc
+    X-CLOUDIGRADE-REQUEST-ID: a3f2870e-6068-426a-b6ba-e65270345f4b
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -404,8 +404,8 @@ Response:
         "account_id": 3,
         "cloud_type": "aws",
         "content_object": {
-            "account_arn": "arn:aws:iam::779912517120:role/role-for-cloudigrade",
-            "aws_account_id": "779912517120",
+            "account_arn": "arn:aws:iam::813829573416:role/role-for-cloudigrade",
+            "aws_account_id": "813829573416",
             "aws_cloud_account_id": 2,
             "created_at": "2020-05-18T13:51:59.722367Z",
             "updated_at": "2020-05-18T13:51:59.722367Z"
@@ -429,7 +429,7 @@ Request:
 
     http put localhost:8080/api/cloudigrade/v2/accounts/3/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
         cloud_type="aws" \
-        account_arn="arn:aws:iam::779912517120:role/role-for-cloudigrade" \
+        account_arn="arn:aws:iam::813829573416:role/role-for-cloudigrade" \
         name="name updated using PUT" \
         platform_authentication_id="5081" \
         platform_application_id="1618" \
@@ -444,17 +444,17 @@ Response:
     Content-Length: 572
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: 05a8e200-bd2e-4d81-9141-55107edc43f1
+    X-CLOUDIGRADE-REQUEST-ID: f37817f3-2fcb-4b46-9c8e-9bb027cbb372
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
     {
-        "account_arn": "arn:aws:iam::779912517120:role/role-for-cloudigrade",
+        "account_arn": "arn:aws:iam::813829573416:role/role-for-cloudigrade",
         "account_id": 3,
         "cloud_type": "aws",
         "content_object": {
-            "account_arn": "arn:aws:iam::779912517120:role/role-for-cloudigrade",
-            "aws_account_id": "779912517120",
+            "account_arn": "arn:aws:iam::813829573416:role/role-for-cloudigrade",
+            "aws_account_id": "813829573416",
             "aws_cloud_account_id": 2,
             "created_at": "2020-05-18T13:51:59.722367Z",
             "updated_at": "2020-05-18T13:51:59.722367Z"
@@ -487,7 +487,7 @@ Response:
     Content-Length: 50
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: d34dc568-62cf-420f-a9a4-ef203d49bad4
+    X-CLOUDIGRADE-REQUEST-ID: ed662fc4-6b6e-4c3f-b574-57ef85245a76
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -519,7 +519,7 @@ Response:
     Content-Length: 2646
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: 550ef109-7b6a-447d-a3dd-9ab714acb226
+    X-CLOUDIGRADE-REQUEST-ID: a1a3167b-c134-4b00-94b2-729e7601374c
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -646,7 +646,7 @@ Response:
     Content-Length: 355
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: cffc5a69-099c-4762-b50c-1978c7260508
+    X-CLOUDIGRADE-REQUEST-ID: 1dc4faa1-4d8b-4b27-acb4-c07817ad7fc2
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -689,7 +689,7 @@ Response:
     Content-Length: 2402
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: 999e21a1-521a-438c-a658-3162c8c6c77d
+    X-CLOUDIGRADE-REQUEST-ID: f53b8bc3-6747-41fb-851e-45e2ab0a0041
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -806,7 +806,7 @@ Response:
     Content-Length: 6750
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: 1ce10f9c-b377-4da1-af56-a61ff8aeb69f
+    X-CLOUDIGRADE-REQUEST-ID: 6586e394-b565-411a-bf40-5a48dfc1ace8
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -1062,7 +1062,7 @@ Response:
     Content-Length: 1075
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: 4bc9d920-f5e9-43cc-8bea-bedff5aefbcf
+    X-CLOUDIGRADE-REQUEST-ID: 32981509-12ca-434e-8857-1e87dc3fe4eb
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -1140,7 +1140,7 @@ Response:
     Content-Length: 19939
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: 1f84dcc9-fe30-49c8-a471-5fc130745bca
+    X-CLOUDIGRADE-REQUEST-ID: c62a6e31-5b1d-40d2-9dda-b307e78673c0
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -2542,6 +2542,33 @@ Response:
     }
 
 If your requested ``start_date`` and ``end_date`` values would result in some
+dates that not completed their calculations, the server will return ``425 Too Early``.
+
+Request:
+
+.. code:: bash
+
+    http localhost:8080/api/cloudigrade/v2/concurrent/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
+        start_date=="2020-04-17"
+
+Response:
+
+::
+
+    HTTP/1.1 425
+    Allow: GET, HEAD, OPTIONS
+    Content-Length: 64
+    Content-Type: application/json
+    Vary: Accept
+    X-CLOUDIGRADE-REQUEST-ID: e0373a17-c6d1-42e3-a0c7-80b2866b814e
+    X-Content-Type-Options: nosniff
+    X-Frame-Options: DENY
+
+    {
+        "detail": "Results are currently unavailable, try again later."
+    }
+
+If your requested ``start_date`` and ``end_date`` values would result in some
 future dates beyond "today", those future dates will not be included. Daily
 max concurrency results will end "today" at the latest. In the following
 example, the request is for dates "today" through "one week from today".
@@ -2801,7 +2828,7 @@ Response:
     Content-Length: 303
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: e0373a17-c6d1-42e3-a0c7-80b2866b814e
+    X-CLOUDIGRADE-REQUEST-ID: f21d256d-e490-4cec-95ef-1a6a10196ac6
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -2841,7 +2868,7 @@ Response:
     Content-Length: 608
     Content-Type: application/json
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: f21d256d-e490-4cec-95ef-1a6a10196ac6
+    X-CLOUDIGRADE-REQUEST-ID: c329116a-dc4a-4885-a292-85a035881a69
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 

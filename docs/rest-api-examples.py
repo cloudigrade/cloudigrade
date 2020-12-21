@@ -1,7 +1,7 @@
 import json
-import uuid
 import os
 import random
+import uuid
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -11,8 +11,6 @@ import jinja2
 from django.db import transaction
 from django.test import override_settings
 
-from util.misc import get_now
-
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.local")
 django.setup()
 
@@ -21,15 +19,12 @@ django.setup()
 from django.contrib.auth.models import User
 from django.conf import settings
 
-from util.tests.helper import get_test_user
-from util import filters
-
 from api import models
 from api.clouds.aws.models import AwsCloudAccount
-from api.clouds.azure.models import AzureCloudAccount
 from api.tests import helper as api_helper
-
-from api.util import normalize_runs
+from api.util import calculate_max_concurrent_usage, normalize_runs
+from util import filters
+from util.misc import get_now
 from util.tests import helper as util_helper
 
 
@@ -59,13 +54,15 @@ class DocsApiHandler(object):
         api_helper.generate_instance_type_definitions(cloud_type="azure")
 
         self.superuser_account_number = "100000"
-        self.superuser = get_test_user(self.superuser_account_number, is_superuser=True)
+        self.superuser = util_helper.get_test_user(
+            self.superuser_account_number, is_superuser=True
+        )
         self.superuser_client = api_helper.SandboxedRestClient()
         self.superuser_client._force_authenticate(self.superuser)
 
         self.customer_account_number = f"100001"
         self.customer_password = "very-secure-password"
-        self.customer_user = get_test_user(
+        self.customer_user = util_helper.get_test_user(
             self.customer_account_number, self.customer_password, is_superuser=False
         )
         self.customer_client = api_helper.SandboxedRestClient()
@@ -81,6 +78,7 @@ class DocsApiHandler(object):
         self.now = get_now()
         self.this_morning = self.now.replace(hour=0, minute=0, second=0, microsecond=0)
         self.yesterday = self.this_morning - timedelta(days=1)
+        self.last_month = self.this_morning - timedelta(days=31)
         self.last_week = self.this_morning - timedelta(days=7)
         self.three_days_ago = self.this_morning - timedelta(days=3)
         self.two_days_ago = self.this_morning - timedelta(days=2)
@@ -186,6 +184,22 @@ class DocsApiHandler(object):
             image.region = "us-east-1"
             image.save()
 
+        # Pre-calculate concurrent usage data for upcoming requests.
+        # Calculate each day since "last week" (oldest date we use in example requests).
+        the_date = self.last_week.date()
+        one_day_delta = timedelta(days=1)
+        # while the_date <= self.this_morning.date():
+        while the_date <= self.next_week.date():
+            task_id = f"calculate-concurrent-usage-{seeded_uuid4()}"
+            models.ConcurrentUsageCalculationTask.objects.create(
+                user_id=self.customer_user.id,
+                date=the_date.isoformat(),
+                task_id=task_id,
+                status=models.ConcurrentUsageCalculationTask.COMPLETE,
+            )
+            calculate_max_concurrent_usage(the_date, self.customer_user.id)
+            the_date = the_date + one_day_delta
+
     def gather_api_responses(self):
         """
         Call the API and collect all the responses to be output.
@@ -201,6 +215,47 @@ class DocsApiHandler(object):
         responses["v2_rh_identity"] = util_helper.RH_IDENTITY_ORG_ADMIN
         # convert from binary string to string.
         responses["v2_header"] = util_helper.get_3scale_auth_header().decode("utf-8")
+
+        #######################
+        # Report Commands
+        # IMPORTANT NOTE!
+        # These requests must come FIRST since they rely on calculated concurrent usage
+        # data that might be clobbered by other subsequent operations.
+
+        # Daily Max Concurrency
+        response = self.customer_client.list_concurrent(
+            data={"start_date": self.last_week.date()}
+        )
+        assert_status(response, 200)
+        responses["v2_list_concurrent"] = response
+
+        response = self.customer_client.list_concurrent(
+            data={
+                "start_date": self.this_morning.date(),
+                "end_date": self.next_week.date(),
+            }
+        )
+        assert_status(response, 200)
+        responses["v2_list_concurrent_partial_future"] = response
+
+        response = self.customer_client.list_concurrent(
+            data={"start_date": self.last_month.date()}
+        )
+        assert_status(response, 425)
+        responses["v2_list_concurrent_too_early"] = response
+        # IMPORTANT NOTE FOR THIS SCRIPT!
+        # Because that request raised a 425 and would *normally* trigger a rollback,
+        # we need to squash that rollback here and let the transaction continue.
+        transaction.set_rollback(False)
+
+        response = self.customer_client.list_concurrent(
+            data={
+                "start_date": self.tomorrow.date(),
+                "end_date": self.next_week.date(),
+            }
+        )
+        assert_status(response, 200)
+        responses["v2_list_concurrent_all_future"] = response
 
         ############################
         # Customer Account Setup AWS
@@ -318,34 +373,6 @@ class DocsApiHandler(object):
         response = self.customer_client.get_images(self.images[0].id)
         assert_status(response, 200)
         responses["v2_get_image"] = response
-
-        #######################
-        # Report Commands
-
-        # Daily Max Concurrency
-        response = self.customer_client.list_concurrent(
-            data={"start_date": self.last_week.date()}
-        )
-        assert_status(response, 200)
-        responses["v2_list_concurrent"] = response
-
-        response = self.customer_client.list_concurrent(
-            data={
-                "start_date": self.this_morning.date(),
-                "end_date": self.next_week.date(),
-            }
-        )
-        assert_status(response, 200)
-        responses["v2_list_concurrent_partial_future"] = response
-
-        response = self.customer_client.list_concurrent(
-            data={
-                "start_date": self.tomorrow.date(),
-                "end_date": self.next_week.date(),
-            }
-        )
-        assert_status(response, 200)
-        responses["v2_list_concurrent_all_future"] = response
 
         ########################
         # V2 Miscellaneous Commands

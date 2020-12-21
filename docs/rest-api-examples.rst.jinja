@@ -271,6 +271,17 @@ Response:
 {{ v2_list_concurrent | stringify_http_response | rst_codeblock }}
 
 If your requested ``start_date`` and ``end_date`` values would result in some
+dates that not completed their calculations, the server will return ``425 Too Early``.
+
+Request:
+
+{{ v2_list_concurrent_too_early.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
+
+Response:
+
+{{ v2_list_concurrent_too_early | stringify_http_response | rst_codeblock }}
+
+If your requested ``start_date`` and ``end_date`` values would result in some
 future dates beyond "today", those future dates will not be included. Daily
 max concurrency results will end "today" at the latest. In the following
 example, the request is for dates "today" through "one week from today".
