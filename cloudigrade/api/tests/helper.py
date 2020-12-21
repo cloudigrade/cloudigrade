@@ -69,7 +69,6 @@ class SandboxedRestClient(object):
         """Initialize the client."""
         self.client = APIClient()
         self.authenticated_user = None
-        self.bypass_aws_calls = True
         self.aws_account_verified = True
         self.aws_primary_account_id = int(helper.generate_dummy_aws_account_id())
         self.api_root = api_root
@@ -78,8 +77,8 @@ class SandboxedRestClient(object):
         """
         Make the simulated API call, optionally patching cloud interactions.
 
-        If `self.bypass_aws_calls` is True, the following objects are patched
-        so we remain more truly "sandboxed" for the call:
+        The following objects are *always* patched to remove potential external calls
+        so we remain more truly "sandboxed" for the duration of this request:
 
         - aws.verify_account_access is used in account creation
         - aws.sts.boto3 is used in account creation
@@ -88,27 +87,27 @@ class SandboxedRestClient(object):
         - aws.get_session is used in account deletion
         - aws.sts._get_primary_account_id is used in sysconfig
         - tasks.initial_aws_describe_instances is used in account creation
+        - api.util.schedule_concurrent_calculation_task used in getting concurrent usage
 
         Returns:
             rest_framework.response.Response
         """
-        if self.bypass_aws_calls:
-            with patch.object(aws, "verify_account_access") as mock_verify, patch(
-                "api.clouds.aws.util.verify_permissions"
-            ) as mock_verify_permissions, patch.object(aws.sts, "boto3"), patch.object(
-                aws, "delete_cloudtrail"
-            ), patch.object(
-                aws, "get_session"
-            ), patch.object(
-                aws.sts, "_get_primary_account_id"
-            ) as mock_get_primary_account_id, patch.object(
-                tasks, "initial_aws_describe_instances"
-            ):
-                mock_verify.return_value = self.aws_account_verified, []
-                mock_verify_permissions.return_value = True
-                mock_get_primary_account_id.return_value = self.aws_primary_account_id
-                response = getattr(self.client, verb)(path, data=data)
-        else:
+        with patch.object(aws, "verify_account_access") as mock_verify, patch(
+            "api.clouds.aws.util.verify_permissions"
+        ) as mock_verify_permissions, patch.object(aws.sts, "boto3"), patch.object(
+            aws, "delete_cloudtrail"
+        ), patch.object(
+            aws, "get_session"
+        ), patch.object(
+            aws.sts, "_get_primary_account_id"
+        ) as mock_get_primary_account_id, patch.object(
+            tasks, "initial_aws_describe_instances"
+        ), patch(
+            "api.util.schedule_concurrent_calculation_task"
+        ):
+            mock_verify.return_value = self.aws_account_verified, []
+            mock_verify_permissions.return_value = True
+            mock_get_primary_account_id.return_value = self.aws_primary_account_id
             response = getattr(self.client, verb)(path, data=data)
         return response
 
