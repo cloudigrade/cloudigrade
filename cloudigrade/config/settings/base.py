@@ -278,7 +278,9 @@ STATIC_ROOT = env("DJANGO_STATIC_ROOT", default=str(ROOT_DIR.path("static")))
 REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "drf_insights_pagination.pagination.InsightsPagination",
     "PAGE_SIZE": 10,
-    "DEFAULT_AUTHENTICATION_CLASSES": ("api.authentication.ThreeScaleAuthentication",),
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "api.authentication.IdentityHeaderAuthentication",
+    ),
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "EXCEPTION_HANDLER": "util.exceptions.api_exception_handler",
 }

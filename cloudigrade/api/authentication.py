@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 def parse_requests_header(request):
     """
-    Given a request, process it to get relevant header fields.
+    Get relevant information from the given request's identity header.
 
     Returns:
         (str, str, bool): the tuple of auth_header, account_number, is_org_admin
@@ -39,16 +39,16 @@ def parse_requests_header(request):
         auth = json.loads(base64.b64decode(auth_header).decode(HTTP_HEADER_ENCODING))
 
     except (TypeError, UnicodeDecodeError, json.JSONDecodeError) as e:
-        logger.info(_("Authentication Failed: 3scale header parsing error %s"), e)
+        logger.info(_("Authentication Failed: identity header parsing error %s"), e)
         raise exceptions.AuthenticationFailed(
-            _("Authentication Failed: invalid 3scale header- {error}").format(error=e)
+            _("Authentication Failed: invalid identity header- {error}").format(error=e)
         )
 
     if settings.VERBOSE_INSIGHTS_IDENTITY_HEADER_LOGGING:
         # Important note: this setting defaults to False and generally should remain
         # as False except for very special and *temporary* circumstances when we need
         # to investigate unusual request handling.
-        logger.info(_("Decoded 3scale header: %s"), str(auth))
+        logger.info(_("Decoded identity header: %s"), str(auth))
 
     # If account_number is not in header, authentication fails
     try:
@@ -58,13 +58,13 @@ def parse_requests_header(request):
             _(
                 "Authentication Failed: "
                 "account_number not contained "
-                "in 3scale header %s."
+                "in identity header %s."
             ),
             auth_header,
         )
         raise exceptions.AuthenticationFailed(
             _(
-                "Authentication Failed: invalid 3scale header- "
+                "Authentication Failed: invalid identity header- "
                 "missing user account_number field"
             )
         )
@@ -72,8 +72,7 @@ def parse_requests_header(request):
     is_org_admin = auth["identity"].get("user", {}).get("is_org_admin")
     logger.info(
         _(
-            "3scale header has identity "
-            "account_number '%(account_number)s' "
+            "identity header has account_number '%(account_number)s' "
             "is_org_admin '%(is_org_admin)s'"
         ),
         {"account_number": account_number, "is_org_admin": is_org_admin},
@@ -81,12 +80,12 @@ def parse_requests_header(request):
     return auth_header, account_number, is_org_admin
 
 
-class ThreeScaleAuthentication(BaseAuthentication):
+class IdentityHeaderAuthentication(BaseAuthentication):
     """
-    Authentication class that uses 3scale headers to find Django Users.
+    Authentication class that uses identity headers to find Django Users.
 
-    This authentication requires the 3scale header to exist with an identity having
-    org_admin enabled. If we cannot find a User matching the 3scale identity, then
+    This authentication requires the identity header to exist with an identity having
+    org_admin enabled. If we cannot find a User matching the identity, then
     authentication fails and returns None.
     """
 
@@ -100,14 +99,14 @@ class ThreeScaleAuthentication(BaseAuthentication):
 
         This functionality arguably belongs in a Permission class, not an Authentication
         class, but it's simply convenient to include here because this assertion
-        requires parsing the 3scale header, and we've already done that here to get the
-        3scale identity account number.
+        requires parsing the identity header, and we've already done that here to get
+        the identity account number.
         """
         if self.require_org_admin and not is_org_admin:
             logger.info(
                 _(
-                    "Authentication Failed: Identity user %(account_number)s"
-                    "is not org admin in 3scale header."
+                    "Authentication Failed: identity account number %(account_number)s"
+                    "is not org admin in identity header."
                 ),
                 {"account_number": account_number},
             )
@@ -149,7 +148,7 @@ class ThreeScaleAuthentication(BaseAuthentication):
         return user
 
     def authenticate(self, request):
-        """Authenticate the request using the 3scale identity."""
+        """Authenticate the request using the identity header."""
         auth_header, account_number, is_org_admin = parse_requests_header(request)
 
         # Can't authenticate if there isn't a header
@@ -162,16 +161,16 @@ class ThreeScaleAuthentication(BaseAuthentication):
         return None
 
 
-class ThreeScaleAuthenticationInternal(ThreeScaleAuthentication):
+class IdentityHeaderAuthenticationInternal(IdentityHeaderAuthentication):
     """
-    Authentication class that only optionally uses 3scale headers.
+    Authentication class that only optionally uses the identity header.
 
-    This authentication checks for the 3scale header but does not require the identity
-    to exist or to have org_admin enabled. If we cannot find a User matching the 3scale
+    This authentication checks for the identity header but does not require the identity
+    to exist or to have org_admin enabled. If we cannot find a User matching the header
     identity, then authentication fails and returns None. We expect the downstream view
     to determine if access should be allowed if no authentication exists.
 
-    This "optional" variant exists because Internal Red Hat Cloud services do not
+    This "optional" variant exists because internal Red Hat Cloud services do not
     consistently set the org_admin value, and we want to grant generally broad access to
     our internal APIs.
     """
@@ -181,13 +180,13 @@ class ThreeScaleAuthenticationInternal(ThreeScaleAuthentication):
     create_user = False
 
 
-class ThreeScaleAuthenticationInternalCreateUser(ThreeScaleAuthentication):
+class IdentityHeaderAuthenticationInternalCreateUser(IdentityHeaderAuthentication):
     """
-    Authentication class that uses 3scale headers to creates Users.
+    Authentication class that uses identity header to creates Users.
 
-    This authentication checks for the 3scale header but does not require the identity
-    to have org_admin enabled. If we cannot find a User matching the 3scale identity,
-    then we create a new User from the 3scale identity.
+    This authentication checks for the identity header but does not require the identity
+    to have org_admin enabled. If we cannot find a User matching the header's identity,
+    then we create a new User from the identity header.
     """
 
     require_org_admin = False

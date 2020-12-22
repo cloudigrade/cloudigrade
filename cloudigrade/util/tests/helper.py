@@ -630,17 +630,17 @@ def get_test_user(account_number=None, password=None, is_superuser=False):
     return user
 
 
-def get_3scale_auth_header(account_number="1337", is_org_admin=True):
+def get_identity_auth_header(account_number="1337", is_org_admin=True):
     """
-    Get an example 3scale auth header.
+    Get an example identity auth header.
 
     Args:
-        account_number (str): account number associated w/the 3scale account.
-            defaults to 1337
-        is_org_admin (bool): should the user be an org admin. defaults to True.
+        account_number (str): account number for the identity/insights account.
+            defaults to "1337".
+        is_org_admin (bool): should the identity be an org admin. defaults to True.
 
     Returns:
-        str: base64 encoded 3scale header
+        str: base64 encoded identity header
 
     """
     header = copy.deepcopy(

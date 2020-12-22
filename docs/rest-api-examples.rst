@@ -23,7 +23,8 @@ to the various clouds (e.g. ``AWS_ACCESS_KEY_ID``).
 Authorization
 -------------
 
-The v2 API is authenticated with 3scale. In order to authenticate a `HTTP_X_RH_IDENTITY` header must be included in the request.
+The v2 API is authenticated with a custom HTTP header. In order to authenticate,
+a `HTTP_X_RH_IDENTITY` header must be included in the request.
 This header must be the base64 encoded version of:
 
 

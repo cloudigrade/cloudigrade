@@ -379,8 +379,8 @@ Otherwise, if you'd simply like to verify that the spec is current, you can run 
 Authentication
 ==============
 
-3Scale authentication is used to authenticate
-users, for a local deployment, this means including a ``HTTP_X_RH_IDENTITY``
+Custom HTTP header authentication is used to authenticate users.
+For a local deployment, this means including a ``HTTP_X_RH_IDENTITY``
 header in all requests.
 
 API access is restricted to authenticated users.

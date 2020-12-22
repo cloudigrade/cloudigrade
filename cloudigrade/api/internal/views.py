@@ -8,8 +8,8 @@ from rest_framework.response import Response
 
 from api import models
 from api.authentication import (
-    ThreeScaleAuthenticationInternal,
-    ThreeScaleAuthenticationInternalCreateUser,
+    IdentityHeaderAuthenticationInternal,
+    IdentityHeaderAuthenticationInternalCreateUser,
 )
 from api.clouds.aws import models as aws_models
 from api.clouds.azure import models as azure_models
@@ -19,7 +19,7 @@ from api.views import AccountViewSet
 
 
 @api_view(["POST"])
-@authentication_classes([ThreeScaleAuthenticationInternal])
+@authentication_classes([IdentityHeaderAuthenticationInternal])
 @schema(None)
 def availability_check(request):
     """
@@ -42,7 +42,7 @@ def availability_check(request):
 class InternalViewSetMixin:
     """Mixin of common attributes for our internal ViewSet classes."""
 
-    authentication_classes = [ThreeScaleAuthenticationInternal]
+    authentication_classes = [IdentityHeaderAuthenticationInternal]
     permission_classes = [permissions.AllowAny]
     filter_backends = [django_filters.DjangoFilterBackend]
     schema = None
@@ -63,7 +63,7 @@ class InternalAccountViewSet(
     public space and into the internal space.
 
     This ViewSet uses custom permission and authentication handling to force only the
-    "create" action (from HTTP POST) to have a proper User from the 3scale header. We
+    "create" action (from HTTP POST) to have a proper User from the identity header. We
     need that authenticated User in order to create the CloudAccount object.
     """
 
@@ -83,7 +83,7 @@ class InternalAccountViewSet(
         # Note: We can't use .action like get_permissions because get_authenticators is
         # called from initialize_request *before* .action is set on the request object.
         if self.request.method.lower() == "post":
-            authentication_classes = [ThreeScaleAuthenticationInternalCreateUser]
+            authentication_classes = [IdentityHeaderAuthenticationInternalCreateUser]
         else:
             authentication_classes = self.authentication_classes
         return [auth() for auth in authentication_classes]

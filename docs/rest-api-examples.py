@@ -219,7 +219,7 @@ class DocsApiHandler(object):
         # V2 endpoints
         responses["v2_rh_identity"] = util_helper.RH_IDENTITY_ORG_ADMIN
         # convert from binary string to string.
-        responses["v2_header"] = util_helper.get_3scale_auth_header().decode("utf-8")
+        responses["v2_header"] = util_helper.get_identity_auth_header().decode("utf-8")
 
         #######################
         # Report Commands
