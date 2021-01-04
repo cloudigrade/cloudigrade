@@ -3,7 +3,13 @@
 from django.contrib.auth.models import User
 from django_filters import rest_framework as django_filters
 from rest_framework import exceptions, mixins, permissions, status, viewsets
-from rest_framework.decorators import action, api_view, authentication_classes, schema
+from rest_framework.decorators import (
+    action,
+    api_view,
+    authentication_classes,
+    permission_classes,
+    schema,
+)
 from rest_framework.response import Response
 
 from api import models
@@ -20,6 +26,7 @@ from api.views import AccountViewSet
 
 @api_view(["POST"])
 @authentication_classes([IdentityHeaderAuthenticationInternal])
+@permission_classes([permissions.AllowAny])
 @schema(None)
 def availability_check(request):
     """
