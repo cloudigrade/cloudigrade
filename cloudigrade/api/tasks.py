@@ -261,7 +261,13 @@ def delete_from_sources_kafka_message(message, headers, event_type):  # noqa: C9
             # If we call delete on a nonexistent cloud_account, we run into trouble
             # with Django rollback and our task lock.
             # See https://gitlab.com/cloudigrade/cloudigrade/-/merge_requests/811
-            CloudAccount.objects.filter(id=cloud_account.id).delete()
+            try:
+                cloud_account.refresh_from_db()
+                CloudAccount.objects.filter(id=cloud_account.id).delete()
+            except CloudAccount.DoesNotExist:
+                logger.info(
+                    _("Cloud Account %s has already been deleted"), cloud_account
+                )
 
 
 @retriable_shared_task(
