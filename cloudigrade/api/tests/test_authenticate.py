@@ -103,9 +103,8 @@ class IdentityHeaderAuthenticateTestCase(TestCase):
             settings.INSIGHTS_IDENTITY_HEADER: self.rh_header_as_admin_not_found
         }
 
-        with self.assertRaises(exceptions.AuthenticationFailed) as e:
+        with self.assertRaises(exceptions.AuthenticationFailed):
             self.auth_class.authenticate(request)
-        self.assertIn("Authentication Failed", e.exception.args[0])
 
         users = User.objects.all()
         self.assertEqual(1, len(users))

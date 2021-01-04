@@ -135,7 +135,7 @@ class IdentityHeaderAuthentication(BaseAuthentication):
                 "does not exist."
             ).format(username=account_number)
             logger.info(message)
-            raise exceptions.AuthenticationFailed(message)
+            raise exceptions.AuthenticationFailed()
         else:
             logger.info(
                 _("Username %s was not found but is not required."),
