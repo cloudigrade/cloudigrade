@@ -215,7 +215,17 @@ def cloud_account_pre_delete_callback(*args, **kwargs):
     and bad things could happen. See also api.tasks.delete_from_sources_kafka_message.
     """
     instance = kwargs["instance"]
-    instance.disable(power_off_instances=False)
+    try:
+        instance.refresh_from_db()
+        instance.disable(power_off_instances=False)
+    except CloudAccount.DoesNotExist:
+        logger.info(
+            _(
+                "Cloud Account %s is already deleted inside pre_delete signal. "
+                "This should not happen."
+            ),
+            instance,
+        )
 
 
 @receiver(post_delete, sender=CloudAccount)
