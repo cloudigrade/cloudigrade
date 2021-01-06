@@ -107,7 +107,7 @@ class IdentityHeaderAuthenticateTestCase(TestCase):
             settings.INSIGHTS_IDENTITY_HEADER: self.rh_header_no_account_number
         }
 
-        with self.assertRaises(exceptions.PermissionDenied):
+        with self.assertRaises(exceptions.AuthenticationFailed):
             self.auth_class.authenticate(request)
 
     def test_authenticate_no_user_fails(self):
@@ -167,7 +167,7 @@ class IdentityHeaderAuthenticationUserNotRequiredTestCase(TestCase):
             settings.INSIGHTS_IDENTITY_HEADER: self.rh_header_no_account_number
         }
 
-        with self.assertRaises(exceptions.PermissionDenied):
+        with self.assertRaises(exceptions.AuthenticationFailed):
             self.auth_class.authenticate(request)
 
 

@@ -40,6 +40,7 @@ def parse_requests_header(request):
 
     except (TypeError, UnicodeDecodeError, json.JSONDecodeError) as e:
         logger.info(_("Authentication Failed: identity header parsing error %s"), e)
+        logger.info(_("Raw header was: %s"), auth_header)
         raise exceptions.AuthenticationFailed(
             _("Authentication Failed: invalid identity header- {error}").format(error=e)
         )
@@ -50,26 +51,17 @@ def parse_requests_header(request):
         # to investigate unusual request handling.
         logger.info(_("Decoded identity header: %s"), str(auth))
 
+    identity = auth.get("identity", {})
+
     # If account_number is not in header, authentication fails
-    try:
-        account_number = auth["identity"]["account_number"]
-    except KeyError:
+    account_number = identity.get("account_number")
+    if not account_number:
         logger.info(
-            _(
-                "Authentication Failed: "
-                "account_number not contained "
-                "in identity header %s."
-            ),
+            _("account_number not contained in identity header %s."),
             auth_header,
         )
-        raise exceptions.AuthenticationFailed(
-            _(
-                "Authentication Failed: invalid identity header- "
-                "missing user account_number field"
-            )
-        )
 
-    is_org_admin = auth["identity"].get("user", {}).get("is_org_admin")
+    is_org_admin = identity.get("user", {}).get("is_org_admin")
     logger.info(
         _(
             "identity header has account_number '%(account_number)s' "
@@ -94,6 +86,16 @@ class IdentityHeaderAuthentication(BaseAuthentication):
     require_user = True
     create_user = False
 
+    def assert_account_number(self, account_number):
+        """Assert account_number is set if required."""
+        if not account_number and self.require_account_number:
+            raise exceptions.AuthenticationFailed(
+                _(
+                    "Authentication Failed: identity account number is required "
+                    "but was not present in request."
+                )
+            )
+
     def assert_org_admin(self, account_number, is_org_admin):
         """
         Assert org_admin is set if required.
@@ -116,15 +118,7 @@ class IdentityHeaderAuthentication(BaseAuthentication):
     def get_user(self, account_number):
         """Get the Django User for the account number."""
         if not account_number:
-            if self.require_account_number:
-                raise exceptions.PermissionDenied(
-                    _(
-                        "Authentication Failed: identity account number is required "
-                        "but was not present in request."
-                    )
-                )
-            else:
-                return None
+            return None
 
         user = None
         if self.create_user:
@@ -170,6 +164,7 @@ class IdentityHeaderAuthentication(BaseAuthentication):
             else:
                 raise exceptions.AuthenticationFailed
 
+        self.assert_account_number(account_number)
         self.assert_org_admin(account_number, is_org_admin)
         if user := self.get_user(account_number):
             return user, True
