@@ -13,6 +13,7 @@ from api.authentication import (
     IdentityHeaderAuthentication,
     IdentityHeaderAuthenticationInternal,
     IdentityHeaderAuthenticationInternalCreateUser,
+    IdentityHeaderAuthenticationUserNotRequired,
 )
 from util.tests import helper as util_helper
 
@@ -36,6 +37,9 @@ class IdentityHeaderAuthenticateTestCase(TestCase):
         self.user = util_helper.generate_test_user(self.account_number)
         self.rh_header_as_admin = util_helper.get_identity_auth_header(
             account_number=self.account_number
+        )
+        self.rh_header_no_account_number = util_helper.get_identity_auth_header(
+            account_number=None
         )
         self.rh_header_not_admin = util_helper.get_identity_auth_header(
             account_number=self.account_number, is_org_admin=False
@@ -92,9 +96,19 @@ class IdentityHeaderAuthenticateTestCase(TestCase):
         """Test that authentication fails when given no headers."""
         request = Mock()
         request.META = {}
-        auth = self.auth_class.authenticate(request)
 
-        self.assertIsNone(auth)
+        with self.assertRaises(exceptions.AuthenticationFailed):
+            self.auth_class.authenticate(request)
+
+    def test_authenticate_no_account_number_fails(self):
+        """Test that permission is denied when identity has no account number."""
+        request = Mock()
+        request.META = {
+            settings.INSIGHTS_IDENTITY_HEADER: self.rh_header_no_account_number
+        }
+
+        with self.assertRaises(exceptions.PermissionDenied):
+            self.auth_class.authenticate(request)
 
     def test_authenticate_no_user_fails(self):
         """Test that authentication fails when a matching User cannot be found."""
@@ -109,6 +123,52 @@ class IdentityHeaderAuthenticateTestCase(TestCase):
         users = User.objects.all()
         self.assertEqual(1, len(users))
         self.assertEqual(self.user, users[0])
+
+
+class IdentityHeaderAuthenticationUserNotRequiredTestCase(TestCase):
+    """
+    Test that identity header authentication works as expected.
+
+    Unlike IdentityHeaderAuthentication, presence of a matching User is not hard
+    requirement for this authentication class.
+    """
+
+    def setUp(self):
+        """Set up data for tests."""
+        self.account_number_no_user = str(_faker.pyint())
+        self.rh_header_as_admin_no_user = util_helper.get_identity_auth_header(
+            account_number=self.account_number_no_user
+        )
+        self.rh_header_no_account_number = util_helper.get_identity_auth_header(
+            account_number=None
+        )
+        self.auth_class = IdentityHeaderAuthenticationUserNotRequired()
+
+    def test_authenticate_account_number_but_no_user(self):
+        """
+        Test that authentication with account number but no user proceeds normally.
+
+        Note that this does not mean that there is a real successful authentication
+        because that would mean returning a User. This just means that we quietly
+        proceed without blowing up an authentication-related error to user user.
+        """
+        request = Mock()
+        request.META = {
+            settings.INSIGHTS_IDENTITY_HEADER: self.rh_header_as_admin_no_user
+        }
+
+        result = self.auth_class.authenticate(request)
+        self.assertIsNone(result)
+
+    def test_authenticate_no_account_number(self):
+        """Test that authentication fails when header has no account number."""
+        request = Mock()
+        request.META = {
+            settings.INSIGHTS_IDENTITY_HEADER: self.rh_header_no_account_number
+        }
+
+        with self.assertRaises(exceptions.PermissionDenied):
+            self.auth_class.authenticate(request)
 
 
 class IdentityHeaderAuthenticationInternalTestCase(TestCase):

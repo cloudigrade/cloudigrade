@@ -7,11 +7,12 @@ from django.db import transaction
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
 from django_filters import rest_framework as django_filters
-from rest_framework import exceptions, mixins, viewsets
+from rest_framework import exceptions, mixins, permissions, viewsets
 from rest_framework.response import Response
 
 from api import filters, models, serializers
 from api import schemas
+from api.authentication import IdentityHeaderAuthenticationUserNotRequired
 from api.serializers import DailyConcurrentUsageDummyQueryset
 from util.aws.sts import _get_primary_account_id, cloudigrade_policy
 from util.misc import get_today
@@ -58,6 +59,8 @@ class MachineImageViewSet(viewsets.ReadOnlyModelViewSet):
 class SysconfigViewSet(viewsets.ViewSet):
     """Retrieve dynamic sysconfig data including cloud-specific IDs and policies."""
 
+    authentication_classes = [IdentityHeaderAuthenticationUserNotRequired]
+    permission_classes = [permissions.AllowAny]
     schema = schemas.SysconfigSchema(tags=["api-v2"])
 
     def list(self, *args, **kwargs):

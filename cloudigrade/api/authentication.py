@@ -90,6 +90,7 @@ class IdentityHeaderAuthentication(BaseAuthentication):
     """
 
     require_org_admin = True
+    require_account_number = True
     require_user = True
     create_user = False
 
@@ -114,6 +115,17 @@ class IdentityHeaderAuthentication(BaseAuthentication):
 
     def get_user(self, account_number):
         """Get the Django User for the account number."""
+        if not account_number:
+            if self.require_account_number:
+                raise exceptions.PermissionDenied(
+                    _(
+                        "Authentication Failed: identity account number is required "
+                        "but was not present in request."
+                    )
+                )
+            else:
+                return None
+
         user = None
         if self.create_user:
             user, created = User.objects.get_or_create(username=account_number)
@@ -152,13 +164,35 @@ class IdentityHeaderAuthentication(BaseAuthentication):
         auth_header, account_number, is_org_admin = parse_requests_header(request)
 
         # Can't authenticate if there isn't a header
-        if not auth_header or not account_number:
-            return None
+        if not auth_header:
+            if not self.require_account_number and not self.require_org_admin:
+                return None
+            else:
+                raise exceptions.AuthenticationFailed
 
         self.assert_org_admin(account_number, is_org_admin)
         if user := self.get_user(account_number):
             return user, True
         return None
+
+
+class IdentityHeaderAuthenticationUserNotRequired(IdentityHeaderAuthentication):
+    """
+    Authentication class that does not require a User to exist for the account number.
+
+    This authentication checks for the identity header and requires the identity to
+    exist with an account number and with org_admin enabled. However, this does not
+    require that a User matching the identity's account number exists.
+
+    This variant exists because at least one public API (sysconfig) needs to have access
+    restricted to an authenticated Red Hat identity before a corresponding User may have
+    been created within our system.
+    """
+
+    require_org_admin = True
+    require_account_number = True
+    require_user = False
+    create_user = False
 
 
 class IdentityHeaderAuthenticationInternal(IdentityHeaderAuthentication):
@@ -176,6 +210,7 @@ class IdentityHeaderAuthenticationInternal(IdentityHeaderAuthentication):
     """
 
     require_org_admin = False
+    require_account_number = False
     require_user = False
     create_user = False
 
@@ -186,9 +221,10 @@ class IdentityHeaderAuthenticationInternalCreateUser(IdentityHeaderAuthenticatio
 
     This authentication checks for the identity header but does not require the identity
     to have org_admin enabled. If we cannot find a User matching the header's identity,
-    then we create a new User from the identity header.
+    then we create a new User from the identity header's account number.
     """
 
     require_org_admin = False
+    require_account_number = True
     require_user = False
     create_user = True
