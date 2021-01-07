@@ -113,8 +113,23 @@ def initial_aws_describe_instances(account_id):
     session = aws.get_session(arn)
     instances_data = aws.describe_instances_everywhere(session)
 
+    try:
+        user_id = account.user.id
+    except User.DoesNotExist:
+        logger.info(
+            _(
+                "User for account id %s has already been deleted; "
+                "skipping initial describe."
+            ),
+            account_id,
+        )
+        # This can happen if a customer creates and then quickly deletes their
+        # cloud account before this async task has started to run. If the user has
+        # no other cloud accounts the user will also be deleted. Early exit!
+        return
+
     # Lock the task at a user level. A user can only run one task at a time.
-    with transaction.atomic(), lock_task_for_user_ids([account.user.id]):
+    with transaction.atomic(), lock_task_for_user_ids([user_id]):
         try:
             AwsCloudAccount.objects.get(pk=account_id)
             new_ami_ids = create_new_machine_images(session, instances_data)
