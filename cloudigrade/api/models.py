@@ -30,7 +30,7 @@ class UserTaskLock(BaseModel):
     locked = models.BooleanField(default=False, null=False)
 
 
-class CloudAccount(BaseGenericModel, ExportModelOperationsMixin("CloudAccount")):
+class CloudAccount(ExportModelOperationsMixin("CloudAccount"), BaseGenericModel):
     """Base Customer Cloud Account Model."""
 
     user = models.ForeignKey(
@@ -259,7 +259,7 @@ def cloud_account_post_delete_callback(*args, **kwargs):
         )
 
 
-class MachineImage(BaseGenericModel, ExportModelOperationsMixin("MachineImage")):
+class MachineImage(ExportModelOperationsMixin("MachineImage"), BaseGenericModel):
     """Base model for a cloud VM image."""
 
     PENDING = "pending"
@@ -476,7 +476,7 @@ class MachineImage(BaseGenericModel, ExportModelOperationsMixin("MachineImage"))
         return super().save(*args, **kwargs)
 
 
-class Instance(BaseGenericModel, ExportModelOperationsMixin("Instance")):
+class Instance(ExportModelOperationsMixin("Instance"), BaseGenericModel):
     """Base model for a compute/VM instance in a cloud."""
 
     cloud_account = models.ForeignKey(
@@ -719,7 +719,7 @@ class MachineImageInspectionStart(BaseModel):
     )
 
 
-class ConcurrentUsage(BaseModel, ExportModelOperationsMixin("ConcurrentUsage")):
+class ConcurrentUsage(ExportModelOperationsMixin("ConcurrentUsage"), BaseModel):
     """Saved calculation of max concurrent usage for a date+user."""
 
     date = models.DateField()
@@ -766,7 +766,7 @@ class ConcurrentUsage(BaseModel, ExportModelOperationsMixin("ConcurrentUsage")):
 
 
 class ConcurrentUsageCalculationTask(
-    BaseModel, ExportModelOperationsMixin("ConcurrentUsageTask")
+    ExportModelOperationsMixin("ConcurrentUsageTask"), BaseModel
 ):
     """Model for tracking concurrent usage tasks."""
 
