@@ -26,11 +26,11 @@ data:
       "editable": true,
       "gnetId": 9528,
       "graphTooltip": 0,
-      "id": 73,
-      "iteration": 1609874599449,
+      "iteration": 1610714961281,
       "links": [],
       "panels": [
         {
+          "datasource": null,
           "gridPos": {
             "h": 1,
             "w": 24,
@@ -51,6 +51,12 @@ data:
             "#d44a3a"
           ],
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
           "format": "none",
           "gauge": {
             "maxValue": 100,
@@ -102,9 +108,10 @@ data:
           "tableColumn": "",
           "targets": [
             {
-              "expr": "sum(python_info{kubernetes_namespace=\"$kubernetes_namespace\",app=~\"^$app$\"}) by (version)",
+              "expr": "sum(python_info{namespace=\"$namespace\"}) by (version)",
               "format": "time_series",
               "instant": true,
+              "interval": "",
               "intervalFactor": 1,
               "legendFormat": "{{version}}",
               "refId": "A"
@@ -133,6 +140,12 @@ data:
             "#d44a3a"
           ],
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
           "format": "none",
           "gauge": {
             "maxValue": 100,
@@ -184,9 +197,10 @@ data:
           "tableColumn": "",
           "targets": [
             {
-              "expr": "sum(irate(django_http_responses_total_by_status_total{status=~\"2.+\",kubernetes_namespace=~\"$kubernetes_namespace\", app=~\"^$app$\"}[1m]))",
+              "expr": "sum(irate(django_http_responses_total_by_status_total{status=~\"2.+\",namespace=~\"$namespace\"}[1m]))",
               "format": "time_series",
               "hide": false,
+              "interval": "",
               "intervalFactor": 1,
               "legendFormat": "",
               "refId": "A"
@@ -215,6 +229,12 @@ data:
             "#d44a3a"
           ],
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
           "format": "none",
           "gauge": {
             "maxValue": 100,
@@ -266,9 +286,10 @@ data:
           "tableColumn": "",
           "targets": [
             {
-              "expr": "sum(irate(django_http_responses_total_by_status_total{status=~\"4.+\",kubernetes_namespace=~\"$kubernetes_namespace\", app=~\"^$app$\"}[1m]))",
+              "expr": "sum(irate(django_http_responses_total_by_status_total{status=~\"4.+\",namespace=~\"$namespace\"}[1m]))",
               "format": "time_series",
               "hide": false,
+              "interval": "",
               "intervalFactor": 1,
               "legendFormat": "",
               "refId": "A"
@@ -297,6 +318,12 @@ data:
             "#d44a3a"
           ],
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
           "format": "none",
           "gauge": {
             "maxValue": 100,
@@ -348,8 +375,9 @@ data:
           "tableColumn": "",
           "targets": [
             {
-              "expr": "sum(irate(django_http_responses_total_by_status_total{status=~\"5.+\",kubernetes_namespace=~\"$kubernetes_namespace\", app=~\"^$app$\"}[1m]))",
+              "expr": "sum(irate(django_http_responses_total_by_status_total{status=~\"5.+\",namespace=~\"$namespace\"}[1m]))",
               "format": "time_series",
+              "interval": "",
               "intervalFactor": 1,
               "legendFormat": "",
               "refId": "A"
@@ -378,6 +406,12 @@ data:
             "#d44a3a"
           ],
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
           "format": "none",
           "gauge": {
             "maxValue": 100,
@@ -429,9 +463,11 @@ data:
           "tableColumn": "",
           "targets": [
             {
-              "expr": "listener_processed_events_total{event_type=\"create\",kubernetes_namespace=~\"$kubernetes_namespace\"}",
+              "expr": "listener_processed_events_total{event_type=\"create\",namespace=~\"$namespace\"}",
               "format": "time_series",
+              "interval": "",
               "intervalFactor": 1,
+              "legendFormat": "",
               "refId": "A"
             }
           ],
@@ -458,6 +494,12 @@ data:
             "#d44a3a"
           ],
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
           "format": "none",
           "gauge": {
             "maxValue": 100,
@@ -509,9 +551,11 @@ data:
           "tableColumn": "",
           "targets": [
             {
-              "expr": "listener_processed_events_total{event_type=\"update\",kubernetes_namespace=~\"$kubernetes_namespace\"}",
+              "expr": "listener_processed_events_total{event_type=\"update\",namespace=~\"$namespace\"}",
               "format": "time_series",
+              "interval": "",
               "intervalFactor": 1,
+              "legendFormat": "",
               "refId": "A"
             }
           ],
@@ -538,6 +582,12 @@ data:
             "#d44a3a"
           ],
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
           "format": "none",
           "gauge": {
             "maxValue": 100,
@@ -589,9 +639,11 @@ data:
           "tableColumn": "",
           "targets": [
             {
-              "expr": "listener_processed_events_total{event_type=\"destroy\",kubernetes_namespace=~\"$kubernetes_namespace\"}",
+              "expr": "listener_processed_events_total{event_type=\"destroy\",namespace=~\"$namespace\"}",
               "format": "time_series",
+              "interval": "",
               "intervalFactor": 1,
+              "legendFormat": "",
               "refId": "A"
             }
           ],
@@ -618,6 +670,12 @@ data:
             "#d44a3a"
           ],
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
           "format": "none",
           "gauge": {
             "maxValue": 100,
@@ -669,9 +727,10 @@ data:
           "tableColumn": "",
           "targets": [
             {
-              "expr": "sum(django_migrations_unapplied_total{kubernetes_namespace=\"$kubernetes_namespace\",app=~\"^$app$\",template=\"cloudigrade\"}) by (template)",
+              "expr": "sum(django_migrations_unapplied_total{namespace=\"$namespace\"}) by (template)",
               "format": "time_series",
               "instant": true,
+              "interval": "",
               "intervalFactor": 1,
               "legendFormat": "",
               "refId": "A"
@@ -701,6 +760,12 @@ data:
           ],
           "datasource": "$datasource",
           "description": "increase(v range-vector) calculates the increase in the time series in the range vector. Breaks in monotonicity (such as counter resets due to target restarts) are automatically adjusted for. The increase is extrapolated to cover the full time range as specified in the range vector selector, so that it is possible to get a non-integer result even if a counter increases only by integer increments.",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
           "format": "none",
           "gauge": {
             "maxValue": 100,
@@ -752,10 +817,12 @@ data:
           "tableColumn": "",
           "targets": [
             {
-              "expr": "sum(irate(django_http_requests_total_by_transport_total{kubernetes_namespace=~\"$kubernetes_namespace\", app=~\"^$app$\"}[1m]))",
+              "expr": "sum(irate(django_http_requests_total_by_transport_total{namespace=~\"$namespace\"}[1m]))",
               "format": "time_series",
               "instant": false,
+              "interval": "",
               "intervalFactor": 1,
+              "legendFormat": "",
               "refId": "A"
             }
           ],
@@ -782,6 +849,12 @@ data:
             "#d44a3a"
           ],
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
           "format": "none",
           "gauge": {
             "maxValue": 100,
@@ -833,9 +906,11 @@ data:
           "tableColumn": "",
           "targets": [
             {
-              "expr": "listener_processed_events_total{event_type=\"total\",kubernetes_namespace=~\"$kubernetes_namespace\"}",
+              "expr": "listener_processed_events_total{event_type=\"total\",namespace=~\"$namespace\"}",
               "format": "time_series",
+              "interval": "",
               "intervalFactor": 1,
+              "legendFormat": "",
               "refId": "A"
             }
           ],
@@ -862,6 +937,12 @@ data:
             "#d44a3a"
           ],
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
           "format": "none",
           "gauge": {
             "maxValue": 100,
@@ -913,9 +994,11 @@ data:
           "tableColumn": "",
           "targets": [
             {
-              "expr": "avg(django_migrations_applied_total{kubernetes_namespace=\"$kubernetes_namespace\",app=~\"^$app$\",template=\"cloudigrade\"}) by (template)",
+              "expr": "avg(django_migrations_applied_total{namespace=\"$namespace\"}) by (template)",
               "format": "time_series",
+              "hide": false,
               "instant": true,
+              "interval": "",
               "intervalFactor": 1,
               "legendFormat": "",
               "refId": "A"
@@ -935,6 +1018,7 @@ data:
           "valueName": "current"
         },
         {
+          "datasource": null,
           "gridPos": {
             "h": 1,
             "w": 24,
@@ -951,13 +1035,21 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
           "fill": 1,
+          "fillGradient": 0,
           "gridPos": {
             "h": 9,
             "w": 12,
             "x": 0,
             "y": 6
           },
+          "hiddenSeries": false,
           "id": 2,
           "legend": {
             "avg": false,
@@ -976,7 +1068,11 @@ data:
           "linewidth": 1,
           "links": [],
           "nullPointMode": "null as zero",
+          "options": {
+            "alertThreshold": true
+          },
           "percentage": false,
+          "pluginVersion": "7.2.1",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -986,9 +1082,10 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(irate(django_http_requests_total_by_view_transport_method_total{kubernetes_namespace=\"$kubernetes_namespace\",app=~\"^$app$\",view!~\"prometheus-django-metrics|health_check:health_check_home\"}[1m])) by(view, method)",
+              "expr": "sum(irate(django_http_requests_total_by_view_transport_method_total{namespace=\"$namespace\",view!~\"prometheus-django-metrics|health_check:health_check_home\"}[1m])) by(view, method)",
               "format": "time_series",
               "hide": false,
+              "interval": "",
               "intervalFactor": 10,
               "legendFormat": "{{method}} {{view}}",
               "refId": "A"
@@ -1043,13 +1140,21 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
           "fill": 1,
+          "fillGradient": 0,
           "gridPos": {
             "h": 9,
             "w": 12,
             "x": 12,
             "y": 6
           },
+          "hiddenSeries": false,
           "id": 7,
           "legend": {
             "avg": false,
@@ -1064,7 +1169,11 @@ data:
           "linewidth": 1,
           "links": [],
           "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
           "percentage": false,
+          "pluginVersion": "7.2.1",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -1076,7 +1185,7 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(irate(django_http_responses_before_middlewares_total{kubernetes_namespace=~\"$kubernetes_namespace\", app=~\"^$app$\", view!~\"prometheus-django-metrics|health_check:health_check_home\"}[1m])) by (job)",
+              "expr": "sum(irate(django_http_responses_before_middlewares_total{namespace=~\"$namespace\", view!~\"prometheus-django-metrics|health_check:health_check_home\"}[1m])) by (job)",
               "format": "time_series",
               "interval": "",
               "intervalFactor": 1,
@@ -1131,13 +1240,21 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
           "fill": 1,
+          "fillGradient": 0,
           "gridPos": {
             "h": 9,
             "w": 24,
             "x": 0,
             "y": 15
           },
+          "hiddenSeries": false,
           "id": 4,
           "legend": {
             "avg": false,
@@ -1152,7 +1269,11 @@ data:
           "linewidth": 1,
           "links": [],
           "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
           "percentage": false,
+          "pluginVersion": "7.2.1",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -1162,7 +1283,7 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "histogram_quantile(0.50, sum(rate(django_http_requests_latency_seconds_by_view_method_bucket{kubernetes_namespace=~\"$kubernetes_namespace\", app=~\"^$app$\",view!~\"prometheus-django-metrics|health_check:health_check_home|api.internal.+\"}[5m])) by (view, le))",
+              "expr": "histogram_quantile(0.50, sum(rate(django_http_requests_latency_seconds_by_view_method_bucket{namespace=~\"$namespace\",view!~\"prometheus-django-metrics|health_check:health_check_home|api.internal.+\"}[5m])) by (view, le))",
               "format": "time_series",
               "hide": false,
               "instant": false,
@@ -1172,7 +1293,7 @@ data:
               "refId": "A"
             },
             {
-              "expr": "histogram_quantile(0.95, sum(rate(django_http_requests_latency_seconds_by_view_method_bucket{kubernetes_namespace=~\"$kubernetes_namespace\", app=~\"^$app$\",view!~\"prometheus-django-metrics|health_check:health_check_home|api.internal.+\"}[5m])) by (view, le))",
+              "expr": "histogram_quantile(0.95, sum(rate(django_http_requests_latency_seconds_by_view_method_bucket{namespace=~\"$namespace\",view!~\"prometheus-django-metrics|health_check:health_check_home|api.internal.+\"}[5m])) by (view, le))",
               "format": "time_series",
               "hide": false,
               "interval": "",
@@ -1181,7 +1302,7 @@ data:
               "refId": "B"
             },
             {
-              "expr": "histogram_quantile(0.99, sum(rate(django_http_requests_latency_seconds_by_view_method_bucket{kubernetes_namespace=~\"$kubernetes_namespace\", app=~\"^$app$\",view!~\"prometheus-django-metrics|health_check:health_check_home|api.internal.+\"}[5m])) by (view, le))",
+              "expr": "histogram_quantile(0.99, sum(rate(django_http_requests_latency_seconds_by_view_method_bucket{namespace=~\"$namespace\",view!~\"prometheus-django-metrics|health_check:health_check_home|api.internal.+\"}[5m])) by (view, le))",
               "format": "time_series",
               "hide": false,
               "interval": "",
@@ -1190,7 +1311,7 @@ data:
               "refId": "C"
             },
             {
-              "expr": "histogram_quantile(0.999, sum(rate(django_http_requests_latency_seconds_by_view_method_bucket{kubernetes_namespace=~\"$kubernetes_namespace\", app=~\"^$app$\",view!~\"prometheus-django-metrics|health_check:health_check_home|api.internal.+\"}[5m])) by (view, le))",
+              "expr": "histogram_quantile(0.999, sum(rate(django_http_requests_latency_seconds_by_view_method_bucket{namespace=~\"$namespace\",view!~\"prometheus-django-metrics|health_check:health_check_home|api.internal.+\"}[5m])) by (view, le))",
               "format": "time_series",
               "hide": false,
               "interval": "",
@@ -1246,13 +1367,21 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
           "fill": 1,
+          "fillGradient": 0,
           "gridPos": {
             "h": 9,
             "w": 24,
             "x": 0,
             "y": 24
           },
+          "hiddenSeries": false,
           "id": 40,
           "legend": {
             "avg": false,
@@ -1267,7 +1396,11 @@ data:
           "linewidth": 1,
           "links": [],
           "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
           "percentage": false,
+          "pluginVersion": "7.2.1",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -1277,7 +1410,7 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "histogram_quantile(0.50, sum(rate(django_http_requests_latency_seconds_by_view_method_bucket{kubernetes_namespace=~\"$kubernetes_namespace\", app=~\"^$app$\",view!~\"prometheus-django-metrics|health_check:health_check_home|v2.+\"}[5m])) by (view, le))",
+              "expr": "histogram_quantile(0.50, sum(rate(django_http_requests_latency_seconds_by_view_method_bucket{namespace=~\"$namespace\",view!~\"prometheus-django-metrics|health_check:health_check_home|v2.+\"}[5m])) by (view, le))",
               "format": "time_series",
               "hide": false,
               "instant": false,
@@ -1287,7 +1420,7 @@ data:
               "refId": "A"
             },
             {
-              "expr": "histogram_quantile(0.95, sum(rate(django_http_requests_latency_seconds_by_view_method_bucket{kubernetes_namespace=~\"$kubernetes_namespace\", app=~\"^$app$\",view!~\"prometheus-django-metrics|health_check:health_check_home|v2.+\"}[5m])) by (view, le))",
+              "expr": "histogram_quantile(0.95, sum(rate(django_http_requests_latency_seconds_by_view_method_bucket{namespace=~\"$namespace\",view!~\"prometheus-django-metrics|health_check:health_check_home|v2.+\"}[5m])) by (view, le))",
               "format": "time_series",
               "hide": false,
               "interval": "",
@@ -1296,7 +1429,7 @@ data:
               "refId": "B"
             },
             {
-              "expr": "histogram_quantile(0.99, sum(rate(django_http_requests_latency_seconds_by_view_method_bucket{kubernetes_namespace=~\"$kubernetes_namespace\", app=~\"^$app$\",view!~\"prometheus-django-metrics|health_check:health_check_home|v2.+\"}[5m])) by (view, le))",
+              "expr": "histogram_quantile(0.99, sum(rate(django_http_requests_latency_seconds_by_view_method_bucket{namespace=~\"$namespace\",view!~\"prometheus-django-metrics|health_check:health_check_home|v2.+\"}[5m])) by (view, le))",
               "format": "time_series",
               "hide": false,
               "interval": "",
@@ -1305,7 +1438,7 @@ data:
               "refId": "C"
             },
             {
-              "expr": "histogram_quantile(0.999, sum(rate(django_http_requests_latency_seconds_by_view_method_bucket{kubernetes_namespace=~\"$kubernetes_namespace\", app=~\"^$app$\",view!~\"prometheus-django-metrics|health_check:health_check_home|v2.+\"}[5m])) by (view, le))",
+              "expr": "histogram_quantile(0.999, sum(rate(django_http_requests_latency_seconds_by_view_method_bucket{namespace=~\"$namespace\",view!~\"prometheus-django-metrics|health_check:health_check_home|v2.+\"}[5m])) by (view, le))",
               "format": "time_series",
               "hide": false,
               "interval": "",
@@ -1361,13 +1494,21 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
           "fill": 1,
+          "fillGradient": 0,
           "gridPos": {
             "h": 9,
             "w": 24,
             "x": 0,
             "y": 33
           },
+          "hiddenSeries": false,
           "id": 11,
           "legend": {
             "avg": false,
@@ -1382,19 +1523,24 @@ data:
           "linewidth": 1,
           "links": [],
           "nullPointMode": "null as zero",
+          "options": {
+            "alertThreshold": true
+          },
           "percentage": false,
+          "pluginVersion": "7.2.1",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
           "seriesOverrides": [],
           "spaceLength": 10,
-          "stack": true,
+          "stack": false,
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(irate(django_http_responses_total_by_status_total{kubernetes_namespace=~\"$kubernetes_namespace\", app=~\"^$app$\", view!~\"prometheus-django-metrics|health_check:health_check_home\"}[1m])) by(status)",
+              "expr": "sum(irate(django_http_responses_total_by_status_total{namespace=~\"$namespace\", view!~\"prometheus-django-metrics|health_check:health_check_home\"}[1m])) by(status)",
               "format": "time_series",
               "hide": false,
+              "interval": "",
               "intervalFactor": 1,
               "legendFormat": "{{status}}",
               "refId": "A"
@@ -1443,6 +1589,7 @@ data:
         },
         {
           "collapsed": false,
+          "datasource": null,
           "gridPos": {
             "h": 1,
             "w": 24,
@@ -1464,13 +1611,21 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
           "fill": 1,
+          "fillGradient": 0,
           "gridPos": {
             "h": 5,
             "w": 24,
             "x": 0,
             "y": 43
           },
+          "hiddenSeries": false,
           "id": 9,
           "legend": {
             "avg": false,
@@ -1485,7 +1640,11 @@ data:
           "linewidth": 1,
           "links": [],
           "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
           "percentage": false,
+          "pluginVersion": "7.2.1",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -1495,8 +1654,9 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(irate(django_db_execute_total{kubernetes_namespace=~\"$kubernetes_namespace\", app=~\"^$app$\"}[1m])) by (vendor)",
+              "expr": "sum(irate(django_db_execute_total{namespace=~\"$namespace\"}[1m])) by (vendor)",
               "format": "time_series",
+              "interval": "",
               "intervalFactor": 1,
               "legendFormat": "{{vendor}}",
               "refId": "A"
@@ -1549,13 +1709,21 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
           "fill": 1,
+          "fillGradient": 0,
           "gridPos": {
             "h": 6,
             "w": 24,
             "x": 0,
             "y": 48
           },
+          "hiddenSeries": false,
           "id": 34,
           "legend": {
             "avg": false,
@@ -1570,7 +1738,11 @@ data:
           "linewidth": 1,
           "links": [],
           "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
           "percentage": false,
+          "pluginVersion": "7.2.1",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -1580,7 +1752,7 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(irate(django_model_inserts_total{model=\"CloudAccount\",kubernetes_namespace=\"$kubernetes_namespace\"}[1m])) by (model)",
+              "expr": "sum(irate(django_model_inserts_total{model=\"CloudAccount\",namespace=\"$namespace\"}[1m])) by (model)",
               "format": "time_series",
               "interval": "",
               "intervalFactor": 1,
@@ -1588,15 +1760,17 @@ data:
               "refId": "A"
             },
             {
-              "expr": "sum(irate(django_model_updates_total{model=\"CloudAccount\",kubernetes_namespace=\"$kubernetes_namespace\"}[1m])) by (model)",
+              "expr": "sum(irate(django_model_updates_total{model=\"CloudAccount\",namespace=\"$namespace\"}[1m])) by (model)",
               "format": "time_series",
+              "interval": "",
               "intervalFactor": 1,
               "legendFormat": "Updates",
               "refId": "B"
             },
             {
-              "expr": "sum(irate(django_model_deletes_total{model=\"CloudAccount\",kubernetes_namespace=\"$kubernetes_namespace\"}[1m])) by (model)",
+              "expr": "sum(irate(django_model_deletes_total{model=\"CloudAccount\",namespace=\"$namespace\"}[1m])) by (model)",
               "format": "time_series",
+              "interval": "",
               "intervalFactor": 1,
               "legendFormat": "Deletes",
               "refId": "C"
@@ -1649,13 +1823,21 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
           "fill": 1,
+          "fillGradient": 0,
           "gridPos": {
             "h": 6,
             "w": 24,
             "x": 0,
             "y": 54
           },
+          "hiddenSeries": false,
           "id": 47,
           "legend": {
             "avg": false,
@@ -1670,7 +1852,11 @@ data:
           "linewidth": 1,
           "links": [],
           "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
           "percentage": false,
+          "pluginVersion": "7.2.1",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -1680,7 +1866,7 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(irate(django_model_inserts_total{model=\"MachineImage\",kubernetes_namespace=\"$kubernetes_namespace\"}[1m])) by (model)",
+              "expr": "sum(irate(django_model_inserts_total{model=\"MachineImage\",namespace=\"$namespace\"}[1m])) by (model)",
               "format": "time_series",
               "interval": "",
               "intervalFactor": 1,
@@ -1688,15 +1874,17 @@ data:
               "refId": "A"
             },
             {
-              "expr": "sum(irate(django_model_updates_total{model=\"MachineImage\",kubernetes_namespace=\"$kubernetes_namespace\"}[1m])) by (model)",
+              "expr": "sum(irate(django_model_updates_total{model=\"MachineImage\",namespace=\"$namespace\"}[1m])) by (model)",
               "format": "time_series",
+              "interval": "",
               "intervalFactor": 1,
               "legendFormat": "Updates",
               "refId": "B"
             },
             {
-              "expr": "sum(irate(django_model_deletes_total{model=\"MachineImage\",kubernetes_namespace=\"$kubernetes_namespace\"}[1m])) by (model)",
+              "expr": "sum(irate(django_model_deletes_total{model=\"MachineImage\",namespace=\"$namespace\"}[1m])) by (model)",
               "format": "time_series",
+              "interval": "",
               "intervalFactor": 1,
               "legendFormat": "Deletes",
               "refId": "C"
@@ -1749,13 +1937,21 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
           "fill": 1,
+          "fillGradient": 0,
           "gridPos": {
             "h": 6,
             "w": 24,
             "x": 0,
             "y": 60
           },
+          "hiddenSeries": false,
           "id": 46,
           "legend": {
             "avg": false,
@@ -1770,7 +1966,11 @@ data:
           "linewidth": 1,
           "links": [],
           "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
           "percentage": false,
+          "pluginVersion": "7.2.1",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -1780,7 +1980,7 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(irate(django_model_inserts_total{model=\"Instance\",kubernetes_namespace=\"$kubernetes_namespace\"}[1m])) by (model)",
+              "expr": "sum(irate(django_model_inserts_total{model=\"Instance\",namespace=\"$namespace\"}[1m])) by (model)",
               "format": "time_series",
               "interval": "",
               "intervalFactor": 1,
@@ -1788,15 +1988,17 @@ data:
               "refId": "A"
             },
             {
-              "expr": "sum(irate(django_model_updates_total{model=\"Instance\",kubernetes_namespace=\"$kubernetes_namespace\"}[1m])) by (model)",
+              "expr": "sum(irate(django_model_updates_total{model=\"Instance\",namespace=\"$namespace\"}[1m])) by (model)",
               "format": "time_series",
+              "interval": "",
               "intervalFactor": 1,
               "legendFormat": "Updates",
               "refId": "B"
             },
             {
-              "expr": "sum(irate(django_model_deletes_total{model=\"Instance\",kubernetes_namespace=\"$kubernetes_namespace\"}[1m])) by (model)",
+              "expr": "sum(irate(django_model_deletes_total{model=\"Instance\",namespace=\"$namespace\"}[1m])) by (model)",
               "format": "time_series",
+              "interval": "",
               "intervalFactor": 1,
               "legendFormat": "Deletes",
               "refId": "C"
@@ -1849,13 +2051,21 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
           "fill": 1,
+          "fillGradient": 0,
           "gridPos": {
             "h": 6,
             "w": 24,
             "x": 0,
             "y": 66
           },
+          "hiddenSeries": false,
           "id": 45,
           "legend": {
             "avg": false,
@@ -1870,7 +2080,11 @@ data:
           "linewidth": 1,
           "links": [],
           "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
           "percentage": false,
+          "pluginVersion": "7.2.1",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -1880,7 +2094,7 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(irate(django_model_inserts_total{model=\"ConcurrentUsage\",kubernetes_namespace=\"$kubernetes_namespace\"}[1m])) by (model)",
+              "expr": "sum(irate(django_model_inserts_total{model=\"ConcurrentUsage\",namespace=\"$namespace\"}[1m])) by (model)",
               "format": "time_series",
               "interval": "",
               "intervalFactor": 1,
@@ -1888,15 +2102,17 @@ data:
               "refId": "A"
             },
             {
-              "expr": "sum(irate(django_model_updates_total{model=\"ConcurrentUsage\",kubernetes_namespace=\"$kubernetes_namespace\"}[1m])) by (model)",
+              "expr": "sum(irate(django_model_updates_total{model=\"ConcurrentUsage\",namespace=\"$namespace\"}[1m])) by (model)",
               "format": "time_series",
+              "interval": "",
               "intervalFactor": 1,
               "legendFormat": "Updates",
               "refId": "B"
             },
             {
-              "expr": "sum(irate(django_model_deletes_total{model=\"ConcurrentUsage\",kubernetes_namespace=\"$kubernetes_namespace\"}[1m])) by (model)",
+              "expr": "sum(irate(django_model_deletes_total{model=\"ConcurrentUsage\",namespace=\"$namespace\"}[1m])) by (model)",
               "format": "time_series",
+              "interval": "",
               "intervalFactor": 1,
               "legendFormat": "Deletes",
               "refId": "C"
@@ -1949,13 +2165,21 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
           "fill": 1,
+          "fillGradient": 0,
           "gridPos": {
             "h": 6,
             "w": 24,
             "x": 0,
             "y": 72
           },
+          "hiddenSeries": false,
           "id": 44,
           "legend": {
             "avg": false,
@@ -1970,7 +2194,11 @@ data:
           "linewidth": 1,
           "links": [],
           "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
           "percentage": false,
+          "pluginVersion": "7.2.1",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -1980,7 +2208,7 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(irate(django_model_inserts_total{model=\"ConcurrentUsageTask\",kubernetes_namespace=\"$kubernetes_namespace\"}[1m])) by (model)",
+              "expr": "sum(irate(django_model_inserts_total{model=\"ConcurrentUsageTask\",namespace=\"$namespace\"}[1m])) by (model)",
               "format": "time_series",
               "interval": "",
               "intervalFactor": 1,
@@ -1988,15 +2216,17 @@ data:
               "refId": "A"
             },
             {
-              "expr": "sum(irate(django_model_updates_total{model=\"ConcurrentUsageTask\",kubernetes_namespace=\"$kubernetes_namespace\"}[1m])) by (model)",
+              "expr": "sum(irate(django_model_updates_total{model=\"ConcurrentUsageTask\",namespace=\"$namespace\"}[1m])) by (model)",
               "format": "time_series",
+              "interval": "",
               "intervalFactor": 1,
               "legendFormat": "Updates",
               "refId": "B"
             },
             {
-              "expr": "sum(irate(django_model_deletes_total{model=\"ConcurrentUsageTask\",kubernetes_namespace=\"$kubernetes_namespace\"}[1m])) by (model)",
+              "expr": "sum(irate(django_model_deletes_total{model=\"ConcurrentUsageTask\",namespace=\"$namespace\"}[1m])) by (model)",
               "format": "time_series",
+              "interval": "",
               "intervalFactor": 1,
               "legendFormat": "Deletes",
               "refId": "C"
@@ -2045,7 +2275,7 @@ data:
         }
       ],
       "refresh": "10s",
-      "schemaVersion": 16,
+      "schemaVersion": 26,
       "style": "dark",
       "tags": [],
       "templating": {
@@ -2053,65 +2283,42 @@ data:
           {
             "current": {
               "selected": true,
-              "text": "Insights-Prometheus",
-              "value": "Insights-Prometheus"
+              "text": "crcs02ue1-prometheus",
+              "value": "crcs02ue1-prometheus"
             },
             "hide": 0,
+            "includeAll": false,
             "label": null,
+            "multi": false,
             "name": "datasource",
             "options": [],
             "query": "prometheus",
+            "queryValue": "",
             "refresh": 1,
-            "regex": "",
+            "regex": "((crcs02)|(crcp01))ue1-prometheus",
             "skipUrlSync": false,
             "type": "datasource"
           },
           {
             "allValue": ".*",
             "current": {
-              "selected": true,
-              "text": "cloudigrade-qa",
-              "value": "cloudigrade-qa"
+              "selected": false,
+              "text": "cloudigrade-stage",
+              "value": "cloudigrade-stage"
             },
             "datasource": "$datasource",
-            "definition": "label_values(django_db_new_connections_total, kubernetes_namespace)",
+            "definition": "label_values(django_db_new_connections_total, namespace)",
             "hide": 0,
             "includeAll": false,
             "label": "",
             "multi": false,
-            "name": "kubernetes_namespace",
+            "name": "namespace",
             "options": [],
-            "query": "label_values(django_db_new_connections_total, kubernetes_namespace)",
+            "query": "label_values(django_db_new_connections_total, namespace)",
             "refresh": 1,
             "regex": "cloudigrade-.+",
             "skipUrlSync": false,
             "sort": 1,
-            "tagValuesQuery": "",
-            "tags": [],
-            "tagsQuery": "",
-            "type": "query",
-            "useTags": false
-          },
-          {
-            "allValue": null,
-            "current": {
-              "selected": true,
-              "text": "cloudigrade",
-              "value": "cloudigrade"
-            },
-            "datasource": "$datasource",
-            "definition": "label_values(django_db_new_connections_total{kubernetes_namespace=~\"$kubernetes_namespace\"}, app)",
-            "hide": 0,
-            "includeAll": false,
-            "label": "app",
-            "multi": false,
-            "name": "app",
-            "options": [],
-            "query": "label_values(django_db_new_connections_total{kubernetes_namespace=~\"$kubernetes_namespace\"}, app)",
-            "refresh": 1,
-            "regex": "",
-            "skipUrlSync": false,
-            "sort": 0,
             "tagValuesQuery": "",
             "tags": [],
             "tagsQuery": "",
@@ -2152,5 +2359,5 @@ data:
       "timezone": "",
       "title": "Cloudigrade",
       "uid": "O6v4rMpizda",
-      "version": 24
+      "version": 1
     }
