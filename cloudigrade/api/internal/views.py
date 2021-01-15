@@ -120,8 +120,10 @@ class InternalUserTaskLockViewSet(InternalViewSetMixin, viewsets.ReadOnlyModelVi
     }
 
 
-class InternalCloudAccountViewSet(InternalViewSetMixin, viewsets.ReadOnlyModelViewSet):
-    """Retrieve or list CloudAccounts for internal use."""
+class InternalCloudAccountViewSet(
+    InternalViewSetMixin, mixins.DestroyModelMixin, viewsets.ReadOnlyModelViewSet
+):
+    """Retrieve, delete, or list CloudAccounts for internal use."""
 
     queryset = models.CloudAccount.objects.all()
     serializer_class = serializers.InternalCloudAccountSerializer
