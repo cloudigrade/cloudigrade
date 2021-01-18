@@ -70,9 +70,11 @@ docs-api-examples-test:
 docs: docs-api-examples docs-seqdiag
 
 openapi:
-	$(PYTHON) $(PYDIR)/manage.py generateschema --title Cloudigrade --format openapi-json --settings=config.settings.test > ./openapi.json
+	$(PYTHON) $(PYDIR)/manage.py generateschema --title "Cloudigrade public API v2" --format openapi-json --settings=config.settings.test --urlconf api.urls > ./openapi.json
+	$(PYTHON) $(PYDIR)/manage.py generateschema --title "Cloudigrade internal API" --format openapi-json --settings=config.settings.test --urlconf internal.urls > ./openapi-internal.json
 
 openapi-test:
-	$(PYTHON) $(PYDIR)/manage.py generateschema --title Cloudigrade --format openapi-json --settings=config.settings.test | diff ./openapi.json -
+	$(PYTHON) $(PYDIR)/manage.py generateschema --title "Cloudigrade public API v2" --format openapi-json --settings=config.settings.test --urlconf api.urls | diff ./openapi.json -
+	$(PYTHON) $(PYDIR)/manage.py generateschema --title "Cloudigrade internal API" --format openapi-json --settings=config.settings.test --urlconf internal.urls | diff ./openapi-internal.json -
 
 .PHONY: docs

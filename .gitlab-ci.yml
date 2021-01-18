@@ -120,6 +120,7 @@ Verify docs and openapi.json:
     - poetry run make docs-api-examples-test
     - AWS_SQS_ACCESS_KEY_ID=foo AWS_SQS_SECRET_ACCESS_KEY=bar poetry run make openapi-test
     - poetry run openapi-spec-validator openapi.json
+    - poetry run openapi-spec-validator openapi-internal.json
 
 ### REVIEW STAGE ###
 Deploy Review:
