@@ -6,7 +6,7 @@ from rest_framework import permissions, renderers, routers
 from rest_framework.schemas import get_schema_view
 
 from api import views as public_views
-from api.internal import views as internal_views
+from internal import views as internal_views
 
 router = routers.DefaultRouter()
 router.register(r"accounts", public_views.AccountViewSet, basename="v2-account")

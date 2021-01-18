@@ -13,15 +13,15 @@ from rest_framework.decorators import (
 from rest_framework.response import Response
 
 from api import models
-from api.authentication import (
+from api.clouds.aws import models as aws_models
+from api.clouds.azure import models as azure_models
+from api.serializers import CloudAccountSerializer
+from api.views import AccountViewSet
+from internal import filters, serializers
+from internal.authentication import (
     IdentityHeaderAuthenticationInternal,
     IdentityHeaderAuthenticationInternalCreateUser,
 )
-from api.clouds.aws import models as aws_models
-from api.clouds.azure import models as azure_models
-from api.internal import filters, serializers
-from api.serializers import CloudAccountSerializer
-from api.views import AccountViewSet
 
 
 @api_view(["POST"])

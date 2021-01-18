@@ -5,8 +5,8 @@ import faker
 from django.test import TestCase
 from rest_framework.test import APIRequestFactory, force_authenticate
 
-from api.internal.views import availability_check
 from api.tests import helper as api_helper
+from internal.views import availability_check
 from util.tests import helper as util_helper
 
 _faker = faker.Faker()

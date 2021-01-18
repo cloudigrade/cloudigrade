@@ -76,6 +76,13 @@ LOGGING = {
             "level": env("CLOUDIGRADE_LOG_LEVEL", default="INFO"),
             "propagate": False,
         },
+        "internal": {
+            "handlers": [
+                "console",
+            ],
+            "level": env("CLOUDIGRADE_LOG_LEVEL", default="INFO"),
+            "propagate": False,
+        },
         "util": {
             "handlers": [
                 "console",
@@ -172,6 +179,7 @@ THIRD_PARTY_APPS = [
 LOCAL_APPS = [
     "util.apps.UtilConfig",
     "api.apps.ApiConfig",
+    "internal.apps.InternalConfig",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
