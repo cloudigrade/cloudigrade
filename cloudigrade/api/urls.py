@@ -3,16 +3,14 @@ from django.urls import include, path
 from rest_framework import permissions, renderers, routers
 from rest_framework.schemas import get_schema_view
 
-from api import views as public_views
+from api import views
 
 router = routers.DefaultRouter()
-router.register(r"accounts", public_views.AccountViewSet, basename="v2-account")
-router.register(r"instances", public_views.InstanceViewSet, basename="v2-instance")
-router.register(r"images", public_views.MachineImageViewSet, basename="v2-machineimage")
-router.register(r"sysconfig", public_views.SysconfigViewSet, basename="v2-sysconfig")
-router.register(
-    r"concurrent", public_views.DailyConcurrentUsageViewSet, basename="v2-concurrent"
-)
+router.register("accounts", views.AccountViewSet, "v2-account")
+router.register("instances", views.InstanceViewSet, "v2-instance")
+router.register("images", views.MachineImageViewSet, "v2-machineimage")
+router.register("sysconfig", views.SysconfigViewSet, "v2-sysconfig")
+router.register("concurrent", views.DailyConcurrentUsageViewSet, "v2-concurrent")
 
 urlpatterns = [
     path("", include(router.urls)),

@@ -3,113 +3,85 @@ from django.contrib import admin
 from django.urls import include, path
 from rest_framework import routers
 
-from internal import views as internal_views
+from internal import views
 
-internal_router = routers.DefaultRouter()
+router = routers.DefaultRouter()
 
 # URLs for slightly different internal versions of public viewset routes.
-internal_router.register(
-    r"accounts", internal_views.InternalAccountViewSet, basename="internal-account"
-)
+router.register("accounts", views.InternalAccountViewSet, "internal-account")
 
 # URLs for common models
-internal_router.register(
-    r"users", internal_views.InternalUserViewSet, basename="internal-user"
+router.register("users", views.InternalUserViewSet, "internal-user")
+router.register(
+    "usertasklocks", views.InternalUserTaskLockViewSet, "internal-usertasklock"
 )
-internal_router.register(
-    r"usertasklocks",
-    internal_views.InternalUserTaskLockViewSet,
-    basename="internal-usertasklock",
+router.register(
+    "cloudaccounts", views.InternalCloudAccountViewSet, "internal-cloudaccount"
 )
-internal_router.register(
-    r"cloudaccounts",
-    internal_views.InternalCloudAccountViewSet,
-    basename="internal-cloudaccount",
+router.register("instances", views.InternalInstanceViewSet, "internal-instance")
+router.register(
+    "instanceevents", views.InternalInstanceEventViewSet, "internal-instanceevent"
 )
-internal_router.register(
-    r"instances",
-    internal_views.InternalInstanceViewSet,
-    basename="internal-instance",
+router.register(
+    "machineimages", views.InternalMachineImageViewSet, "internal-machineimage"
 )
-internal_router.register(
-    r"instanceevents",
-    internal_views.InternalInstanceEventViewSet,
-    basename="internal-instanceevent",
+router.register(r"runs", views.InternalRunViewSet, "internal-run")
+router.register(
+    "machineimageinspectionstarts",
+    views.InternalMachineImageInspectionStartViewSet,
+    "internal-machineimageinspectionstart",
 )
-internal_router.register(
-    r"machineimages",
-    internal_views.InternalMachineImageViewSet,
-    basename="internal-machineimage",
+router.register(
+    "concurrentusages", views.InternalConcurrentUsageViewSet, "internal-concurrentusage"
 )
-internal_router.register(
-    r"runs", internal_views.InternalRunViewSet, basename="internal-run"
+router.register(
+    "concurrentusagecalculationtasks",
+    views.InternalConcurrentUsageCalculationTaskViewSet,
+    "internal-concurrentusagecalculationtask",
 )
-internal_router.register(
-    r"machineimageinspectionstarts",
-    internal_views.InternalMachineImageInspectionStartViewSet,
-    basename="internal-machineimageinspectionstart",
-)
-internal_router.register(
-    r"concurrentusages",
-    internal_views.InternalConcurrentUsageViewSet,
-    basename="internal-concurrentusage",
-)
-internal_router.register(
-    r"concurrentusagecalculationtasks",
-    internal_views.InternalConcurrentUsageCalculationTaskViewSet,
-    basename="internal-concurrentusagecalculationtask",
-)
-internal_router.register(
-    r"instancedefinitions",
-    internal_views.InternalInstanceDefinitionViewSet,
-    basename="internal-instancedefinition",
+router.register(
+    "instancedefinitions",
+    views.InternalInstanceDefinitionViewSet,
+    "internal-instancedefinition",
 )
 # URLs for AWS models
-internal_router.register(
-    r"awscloudaccounts",
-    internal_views.InternalAwsCloudAccountViewSet,
-    basename="internal-awscloudaccount",
+router.register(
+    "awscloudaccounts", views.InternalAwsCloudAccountViewSet, "internal-awscloudaccount"
 )
-internal_router.register(
-    r"awsinstances",
-    internal_views.InternalAwsInstanceViewSet,
-    basename="internal-awsinstance",
+router.register(
+    "awsinstances", views.InternalAwsInstanceViewSet, "internal-awsinstance"
 )
-internal_router.register(
-    r"awsmachineimages",
-    internal_views.InternalAwsMachineImageViewSet,
-    basename="internal-awsmachineimage",
+router.register(
+    "awsmachineimages", views.InternalAwsMachineImageViewSet, "internal-awsmachineimage"
 )
-internal_router.register(
-    r"awsmachineimagecopies",
-    internal_views.InternalAwsMachineImageCopyViewSet,
-    basename="internal-awsmachineimagecopy",
+router.register(
+    "awsmachineimagecopies",
+    views.InternalAwsMachineImageCopyViewSet,
+    "internal-awsmachineimagecopy",
 )
-internal_router.register(
-    r"awsinstanceevents",
-    internal_views.InternalAwsInstanceEventViewSet,
-    basename="internal-awsinstanceevent",
+router.register(
+    "awsinstanceevents",
+    views.InternalAwsInstanceEventViewSet,
+    "internal-awsinstanceevent",
 )
 # URLs for Azure models
-internal_router.register(
-    r"azurecloudaccounts",
-    internal_views.InternalAzureCloudAccountViewSet,
-    basename="internal-azurecloudaccount",
+router.register(
+    "azurecloudaccounts",
+    views.InternalAzureCloudAccountViewSet,
+    "internal-azurecloudaccount",
 )
-internal_router.register(
-    r"azureinstances",
-    internal_views.InternalAzureInstanceViewSet,
-    basename="internal-azureinstance",
+router.register(
+    "azureinstances", views.InternalAzureInstanceViewSet, "internal-azureinstance"
 )
-internal_router.register(
-    r"azuremachineimages",
-    internal_views.InternalAzureMachineImageViewSet,
-    basename="internal-azuremachineimage",
+router.register(
+    "azuremachineimages",
+    views.InternalAzureMachineImageViewSet,
+    "internal-azuremachineimage",
 )
-internal_router.register(
-    r"azureinstanceevents",
-    internal_views.InternalAzureInstanceEventViewSet,
-    basename="internal-azureinstanceevent",
+router.register(
+    "azureinstanceevents",
+    views.InternalAzureInstanceEventViewSet,
+    "internal-azureinstanceevent",
 )
 
 urlpatterns = [
@@ -117,6 +89,6 @@ urlpatterns = [
     path("healthz/", include("health_check.urls")),
     path("admin/", admin.site.urls),
     path("", include("django_prometheus.urls")),
-    path("api/cloudigrade/v1/", include(internal_router.urls)),
-    path("api/cloudigrade/v1/", internal_views.availability_check),
+    path("api/cloudigrade/v1/", include(router.urls)),
+    path("api/cloudigrade/v1/", views.availability_check),
 ]
