@@ -25,8 +25,8 @@ help:
 	@echo "  docs-api-examples             to regenerate API examples .rst file."
 	@echo "  docs-api-examples-test        to verify the API examples .rst file is current."
 	@echo "  docs-seqdiag                  to regenerate docs .svg files from .diag files."
-	@echo "  spec                          to regenerate the spec file at the root of the repo."
-	@echo "  spec-test                     to verify that the spec file at root of the repo is current."
+	@echo "  openapi                       to regenerate the openapi.json file at the root of the repo."
+	@echo "  openapi-test                  to verify that the openapi.json file at root of the repo is current."
 	@echo "  user                          to create a Django super user."
 	@echo "==[OpenShift/Dev Shortcuts]=========================================="
 	@echo "  oc-run-dev                    to start the local dev server allowing it to connect to supporting services running in the cluster."
@@ -69,10 +69,10 @@ docs-api-examples-test:
 
 docs: docs-api-examples docs-seqdiag
 
-spec:
+openapi:
 	$(PYTHON) $(PYDIR)/manage.py generateschema --title Cloudigrade --format openapi-json --settings=config.settings.test > ./openapi.json
 
-spec-test:
+openapi-test:
 	$(PYTHON) $(PYDIR)/manage.py generateschema --title Cloudigrade --format openapi-json --settings=config.settings.test | diff ./openapi.json -
 
 .PHONY: docs
