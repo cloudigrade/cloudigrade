@@ -1,5 +1,7 @@
 """URL configuration for cloudigrade."""
-from api.urls import urlpatterns as public_urlpatterns
-from internal.urls import urlpatterns as internal_urlpatterns
+from django.urls import include, path
 
-urlpatterns = public_urlpatterns + internal_urlpatterns
+urlpatterns = [
+    path("api/cloudigrade/v2/", include("api.urls")),
+    path("internal/", include("internal.urls")),
+]

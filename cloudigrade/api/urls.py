@@ -1,5 +1,4 @@
 """API URL configuration for cloudigrade."""
-from django.conf.urls import url
 from django.urls import include, path
 from rest_framework import permissions, renderers, routers
 from rest_framework.schemas import get_schema_view
@@ -16,9 +15,9 @@ router.register(
 )
 
 urlpatterns = [
-    url(r"^api/cloudigrade/v2/", include(router.urls)),
+    path("", include(router.urls)),
     path(
-        "api/cloudigrade/v2/openapi.json",
+        "openapi.json",
         get_schema_view(
             title="Cloudigrade",
             renderer_classes=[renderers.JSONOpenAPIRenderer],

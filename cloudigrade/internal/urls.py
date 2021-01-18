@@ -1,17 +1,10 @@
 """Internal API URL configuration for cloudigrade."""
-from django.conf.urls import url
 from django.contrib import admin
 from django.urls import include, path
 from rest_framework import routers
 
 from internal import views as internal_views
 
-internal_urlpatterns = [
-    url(r"^internal/api-auth/", include("rest_framework.urls")),
-    url(r"^internal/healthz/", include("health_check.urls")),
-    path("internal/admin/", admin.site.urls),
-    url(r"^internal/", include("django_prometheus.urls")),
-]
 internal_router = routers.DefaultRouter()
 
 # URLs for slightly different internal versions of public viewset routes.
@@ -119,9 +112,11 @@ internal_router.register(
     basename="internal-azureinstanceevent",
 )
 
-internal_api_urlpatterns = [
-    url(r"^internal/api/cloudigrade/v1/", include(internal_router.urls)),
-    url(r"^internal/api/cloudigrade/v1/", internal_views.availability_check),
+urlpatterns = [
+    path("api-auth/", include("rest_framework.urls")),
+    path("healthz/", include("health_check.urls")),
+    path("admin/", admin.site.urls),
+    path("", include("django_prometheus.urls")),
+    path("api/cloudigrade/v1/", include(internal_router.urls)),
+    path("api/cloudigrade/v1/", internal_views.availability_check),
 ]
-
-urlpatterns = internal_urlpatterns + internal_api_urlpatterns
