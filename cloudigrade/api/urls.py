@@ -5,12 +5,20 @@ from rest_framework.schemas import get_schema_view
 
 from api import views
 
+# Prepare a list of DRF ViewSet routes.
+routes = [
+    ("accounts", views.AccountViewSet, "account"),
+    ("instances", views.InstanceViewSet, "instance"),
+    ("images", views.MachineImageViewSet, "machineimage"),
+    ("sysconfig", views.SysconfigViewSet, "sysconfig"),
+    ("concurrent", views.DailyConcurrentUsageViewSet, "concurrent"),
+]
+
+# Register all the DRF ViewSet routes with a common "v2-" basename prefix.
 router = routers.DefaultRouter()
-router.register("accounts", views.AccountViewSet, "v2-account")
-router.register("instances", views.InstanceViewSet, "v2-instance")
-router.register("images", views.MachineImageViewSet, "v2-machineimage")
-router.register("sysconfig", views.SysconfigViewSet, "v2-sysconfig")
-router.register("concurrent", views.DailyConcurrentUsageViewSet, "v2-concurrent")
+for (prefix, viewset, basename) in routes:
+    basename = f"v2-{basename}"
+    router.register(prefix, viewset, basename)
 
 urlpatterns = [
     path("", include(router.urls)),

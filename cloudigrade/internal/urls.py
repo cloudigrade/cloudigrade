@@ -5,84 +5,62 @@ from rest_framework import routers
 
 from internal import views
 
-router = routers.DefaultRouter()
+# Prepare a list of DRF ViewSet routes.
+routes = []
 
 # URLs for slightly different internal versions of public viewset routes.
-router.register("accounts", views.InternalAccountViewSet, "internal-account")
+routes += [
+    ("accounts", views.InternalAccountViewSet, "account"),
+]
 
 # URLs for common models
-router.register("users", views.InternalUserViewSet, "internal-user")
-router.register(
-    "usertasklocks", views.InternalUserTaskLockViewSet, "internal-usertasklock"
-)
-router.register(
-    "cloudaccounts", views.InternalCloudAccountViewSet, "internal-cloudaccount"
-)
-router.register("instances", views.InternalInstanceViewSet, "internal-instance")
-router.register(
-    "instanceevents", views.InternalInstanceEventViewSet, "internal-instanceevent"
-)
-router.register(
-    "machineimages", views.InternalMachineImageViewSet, "internal-machineimage"
-)
-router.register(r"runs", views.InternalRunViewSet, "internal-run")
-router.register(
-    "machineimageinspectionstarts",
-    views.InternalMachineImageInspectionStartViewSet,
-    "internal-machineimageinspectionstart",
-)
-router.register(
-    "concurrentusages", views.InternalConcurrentUsageViewSet, "internal-concurrentusage"
-)
-router.register(
-    "concurrentusagecalculationtasks",
-    views.InternalConcurrentUsageCalculationTaskViewSet,
-    "internal-concurrentusagecalculationtask",
-)
-router.register(
-    "instancedefinitions",
-    views.InternalInstanceDefinitionViewSet,
-    "internal-instancedefinition",
-)
+# "None" for the third tuple value means to use the model's name.
+routes += [
+    ("users", views.InternalUserViewSet, "user"),
+    ("usertasklocks", views.InternalUserTaskLockViewSet, None),
+    ("cloudaccounts", views.InternalCloudAccountViewSet, None),
+    ("instances", views.InternalInstanceViewSet, None),
+    ("instanceevents", views.InternalInstanceEventViewSet, None),
+    ("machineimages", views.InternalMachineImageViewSet, None),
+    (r"runs", views.InternalRunViewSet, None),
+    (
+        "machineimageinspectionstarts",
+        views.InternalMachineImageInspectionStartViewSet,
+        None,
+    ),
+    ("concurrentusages", views.InternalConcurrentUsageViewSet, None),
+    (
+        "concurrentusagecalculationtasks",
+        views.InternalConcurrentUsageCalculationTaskViewSet,
+        None,
+    ),
+    ("instancedefinitions", views.InternalInstanceDefinitionViewSet, None),
+]
+
 # URLs for AWS models
-router.register(
-    "awscloudaccounts", views.InternalAwsCloudAccountViewSet, "internal-awscloudaccount"
-)
-router.register(
-    "awsinstances", views.InternalAwsInstanceViewSet, "internal-awsinstance"
-)
-router.register(
-    "awsmachineimages", views.InternalAwsMachineImageViewSet, "internal-awsmachineimage"
-)
-router.register(
-    "awsmachineimagecopies",
-    views.InternalAwsMachineImageCopyViewSet,
-    "internal-awsmachineimagecopy",
-)
-router.register(
-    "awsinstanceevents",
-    views.InternalAwsInstanceEventViewSet,
-    "internal-awsinstanceevent",
-)
+routes += [
+    ("awscloudaccounts", views.InternalAwsCloudAccountViewSet, None),
+    ("awsinstances", views.InternalAwsInstanceViewSet, None),
+    ("awsmachineimages", views.InternalAwsMachineImageViewSet, None),
+    ("awsmachineimagecopies", views.InternalAwsMachineImageCopyViewSet, None),
+    ("awsinstanceevents", views.InternalAwsInstanceEventViewSet, None),
+]
+
 # URLs for Azure models
-router.register(
-    "azurecloudaccounts",
-    views.InternalAzureCloudAccountViewSet,
-    "internal-azurecloudaccount",
-)
-router.register(
-    "azureinstances", views.InternalAzureInstanceViewSet, "internal-azureinstance"
-)
-router.register(
-    "azuremachineimages",
-    views.InternalAzureMachineImageViewSet,
-    "internal-azuremachineimage",
-)
-router.register(
-    "azureinstanceevents",
-    views.InternalAzureInstanceEventViewSet,
-    "internal-azureinstanceevent",
-)
+routes += [
+    ("azurecloudaccounts", views.InternalAzureCloudAccountViewSet, None),
+    ("azureinstances", views.InternalAzureInstanceViewSet, None),
+    ("azuremachineimages", views.InternalAzureMachineImageViewSet, None),
+    ("azureinstanceevents", views.InternalAzureInstanceEventViewSet, None),
+]
+
+# Register all the DRF ViewSet routes with a common "internal-" basename prefix.
+router = routers.DefaultRouter()
+for (prefix, viewset, basename) in routes:
+    if not basename:
+        basename = router.get_default_basename(viewset)
+    basename = f"internal-{basename}"
+    router.register(prefix, viewset, basename=basename)
 
 urlpatterns = [
     path("api-auth/", include("rest_framework.urls")),
