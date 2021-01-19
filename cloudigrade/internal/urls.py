@@ -55,8 +55,26 @@ routes += [
     ("azureinstanceevents", views.InternalAzureInstanceEventViewSet, None),
 ]
 
-# Register all the DRF ViewSet routes with a common "internal-" basename prefix.
+
+class PermissiveAPIRootView(routers.APIRootView):
+    """
+    Override default permissions of APIRootView.
+
+    Because DefaultRouter does not provide functionality to pass arguments to define the
+    authentication and permission classes for its APIRootView, and our current Django
+    configs for cloudigrade have restrictive defaults for authentication and permission,
+    we have to force more relaxed settings into a custom class here to allow requests
+    to the internal API to access the root view without authentication.
+    """
+
+    authentication_classes = []
+    permission_classes = [permissions.AllowAny]
+
+
 router = routers.DefaultRouter()
+router.APIRootView = PermissiveAPIRootView
+
+# Register all the DRF ViewSet routes with a common "internal-" basename prefix.
 for (prefix, viewset, basename) in routes:
     if not basename:
         basename = router.get_default_basename(viewset)
