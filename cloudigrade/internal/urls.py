@@ -1,7 +1,8 @@
 """Internal API URL configuration for cloudigrade."""
 from django.contrib import admin
 from django.urls import include, path
-from rest_framework import routers
+from rest_framework import permissions, renderers, routers
+from rest_framework.schemas import get_schema_view
 
 from internal import views
 
@@ -69,4 +70,16 @@ urlpatterns = [
     path("", include("django_prometheus.urls")),
     path("api/cloudigrade/v1/", include(router.urls)),
     path("api/cloudigrade/v1/", views.availability_check),
+    path(
+        "openapi.json",
+        get_schema_view(
+            title="Cloudigrade Internal API",
+            renderer_classes=[renderers.JSONOpenAPIRenderer],
+            permission_classes=[permissions.AllowAny],
+            authentication_classes=[],
+            public=True,
+            urlconf="internal.urls",
+        ),
+        name="openapi-schema-internal",
+    ),
 ]
