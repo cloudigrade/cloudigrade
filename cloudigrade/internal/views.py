@@ -12,7 +12,7 @@ from rest_framework.decorators import (
 )
 from rest_framework.response import Response
 
-from api import models
+from api import models, schemas
 from api.clouds.aws import models as aws_models
 from api.clouds.azure import models as azure_models
 from api.serializers import CloudAccountSerializer
@@ -52,7 +52,6 @@ class InternalViewSetMixin:
     authentication_classes = [IdentityHeaderAuthenticationInternal]
     permission_classes = [permissions.AllowAny]
     filter_backends = [django_filters.DjangoFilterBackend]
-    schema = None
 
 
 class InternalAccountViewSet(
@@ -75,6 +74,7 @@ class InternalAccountViewSet(
     """
 
     queryset = models.CloudAccount.objects.all()
+    schema = schemas.DescriptiveAutoSchema("cloud account", operation_id_base="Account")
     serializer_class = CloudAccountSerializer
 
     def get_permissions(self):
