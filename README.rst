@@ -50,6 +50,8 @@ The following commands should install everything you need:
     brew update
     brew install python@3.8 gettext awscli postgresql openssl curl librdkafka tox poetry
 
+Consider installing python via pyenv instead of using brew.
+
 
 Linux dependencies
 ~~~~~~~~~~~~~~~~~~
@@ -116,6 +118,25 @@ If using a system that has dnf, try the following commands:
 Try the aforementioned import commands again, and all should be good. If not, kindly reach out to another cloudigrade developer to seek assistance!
 
 After finishing the installation of dependencies you can grab a shell that uses the virtual environment by calling ``poetry shell``.
+
+Big Sur Troubleshooting
+***********************
+
+If you're working with MacOS Big Sur you may run into issues around the system version number, in which case set ``SYSTEM_VERSION_COMPAT=1`` which will make macOS report back ``10.16`` instead of ``11.X``. For example,
+
+.. code-block:: sh
+
+    SYSTEM_VERSION_COMPAT=1 poetry install
+
+You'll likely also run into more issues with installing pycurl. Follow the following steps to get back on track.
+
+.. code-block:: sh
+
+    poetry shell
+    pip uninstall pycurl -y
+    export LDFLAGS="-L${BREW_PATH}/opt/curl/lib"
+    export CPPFLAGS="-I${BREW_PATH}/opt/curl/include"
+    pip install --no-cache-dir --compile --ignore-installed --install-option="--with-openssl" --install-option="--openssl-dir=/usr/local/opt/openssl@1.1" pycurl
 
 
 Configure AWS account credentials
