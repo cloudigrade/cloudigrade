@@ -1,0 +1,116 @@
+name: Cloudigrade CI/CD flow
+
+env:
+  IMAGE_NAME: docker.pkg.github.com/${{ github.repository }}/cloudigrade
+
+on: [pull_request, push]
+
+jobs:
+  test-py38:
+    name: py38
+    runs-on: ubuntu-latest
+    container:
+      image: docker.pkg.github.com/cloudigrade/build-container/build-container:latest
+      credentials:
+         username: ${{ github.actor }}
+         password: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v2
+      - run: pip install tox codecov poetry
+      - run: tox -e py38
+      - run: codecov
+
+  test-flake8:
+    name: flake8
+    runs-on: ubuntu-latest
+    container:
+      image: docker.pkg.github.com/cloudigrade/build-container/build-container:latest
+      credentials:
+         username: ${{ github.actor }}
+         password: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v2
+      - run: pip install tox codecov poetry
+      - run: tox -e flake8
+
+  test-vulnerability:
+    name: Vulnerability
+    runs-on: ubuntu-latest
+    container:
+      image: docker.pkg.github.com/cloudigrade/build-container/build-container:latest
+      credentials:
+         username: ${{ github.actor }}
+         password: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v2
+      - run: pip install poetry safety
+      - run: poetry install
+      - run: safety check
+
+  test-docker:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    container:
+      image: docker:latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: docker pull $IMAGE_NAME:latest || true
+      - run: docker build --cache-from $IMAGE_NAME:latest .
+
+  test-s2i:
+    name: s2i Build
+    runs-on: ubuntu-latest
+    container:
+      image: docker:latest
+    env:
+      CONTEXT_DIR: deployment/nginx/
+      NGINX_S2I_IMAGE: registry.redhat.io/rhel8/nginx-116:latest
+      S2I_VERSION: v1.3.0
+      S2I_RELEASE: source-to-image-v1.3.0-eed2850f-linux-amd64
+    steps:
+      - uses: actions/checkout@v2
+      - run: apk --no-cache add git
+      - run: mkdir -p /opt && cd /opt
+      - run: wget https://github.com/openshift/source-to-image/releases/download/${S2I_VERSION}/${S2I_RELEASE}.tar.gz -O /opt/s2i.tar.gz
+      - run: tar --strip-components=1 -xzvf /opt/s2i.tar.gz -C /opt/
+      - run: mv /opt/s2i /usr/bin/
+      - env:
+          REDHAT_REGISTRY_LOGIN: ${{ secrets.REDHAT_REGISTRY_LOGIN }}
+        run: ${REDHAT_REGISTRY_LOGIN}
+      - run: s2i build --context-dir=${CONTEXT_DIR} --ref ${CI_COMMIT_REF_NAME} ${CI_PROJECT_URL} ${NGINX_S2I_IMAGE} ${IMAGE_NAME}:latest
+
+  test-docs:
+    name: Verify docs and openapi.json
+    runs-on: ubuntu-latest
+    container:
+      image: docker.pkg.github.com/cloudigrade/build-container/build-container:latest
+      credentials:
+         username: ${{ github.actor }}
+         password: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v2
+      - run: pip install poetry
+      - run: poetry install
+      - run: poetry run make docs-api-examples-test
+      - run: poetry run make openapi-test
+        env:
+          AWS_SQS_ACCESS_KEY_ID: "foo"
+          AWS_SQS_SECRET_ACCESS_KEY: "bar"
+      - run: poetry run openapi-spec-validator openapi.json
+      - run: poetry run openapi-spec-validator openapi-internal.json
+
+  deploy-trigger-osd-builds:
+    name: Trigger OSD Builds
+    if: github.ref == 'refs/heads/main'
+    env:
+      WEBHOOK_SECRET: ${{ secrets.WEBHOOK_SECRET }}
+    needs: [test-py38, test-flake8, test-vulnerability, test-docker, test-s2i, test-docs]
+    runs-on: ubuntu-latest
+    container:
+      image: docker.pkg.github.com/cloudigrade/build-container/build-container:latest
+      credentials:
+         username: ${{ github.actor }}
+         password: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - run: curl -X POST -k https://api.insights-dev.openshift.com/apis/build.openshift.io/v1/namespaces/buildfactory/buildconfigs/cloudigrade/webhooks/${WEBHOOK_SECRET}/generic
+      - run: curl -X POST -k https://api.insights-dev.openshift.com/apis/build.openshift.io/v1/namespaces/buildfactory/buildconfigs/cloudinginx/webhooks/${WEBHOOK_SECRET}/generic
