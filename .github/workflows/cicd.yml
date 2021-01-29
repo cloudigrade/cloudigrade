@@ -101,7 +101,7 @@ jobs:
 
   deploy-trigger-osd-builds:
     name: Trigger OSD Builds
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/master'
     env:
       WEBHOOK_SECRET: ${{ secrets.WEBHOOK_SECRET }}
     needs: [test-py38, test-flake8, test-vulnerability, test-docker, test-s2i, test-docs]
