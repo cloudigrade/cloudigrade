@@ -33,6 +33,16 @@ class CreateFromSourcesKafkaMessageTest(TestCase):
             authentication_id=self.authentication_id,
         )
 
+        self.arn = util_helper.generate_dummy_arn()
+
+        self.auth_return_value = {
+            "username": self.arn,
+            "resource_type": settings.SOURCES_RESOURCE_TYPE,
+            "resource_id": self.application_id,
+            "id": self.authentication_id,
+            "authtype": settings.SOURCES_CLOUDMETER_ARN_AUTHTYPE,
+        }
+
     @patch("util.insights.get_sources_authentication")
     @patch("util.insights.get_sources_cloudigrade_application_type_id")
     @patch("util.insights.get_sources_application")
@@ -51,23 +61,16 @@ class CreateFromSourcesKafkaMessageTest(TestCase):
         }
         mock_get_app_type_id.return_value = self.cloudigrade_sources_app_id
 
-        password = util_helper.generate_dummy_arn()
+        arn = util_helper.generate_dummy_arn()
 
-        mock_get_auth.return_value = {
-            "password": password,
-            "username": self.username,
-            "resource_type": settings.SOURCES_RESOURCE_TYPE,
-            "resource_id": self.application_id,
-            "id": self.authentication_id,
-            "authtype": settings.SOURCES_CLOUDMETER_ARN_AUTHTYPE,
-        }
-
+        self.auth_return_value["username"] = arn
+        mock_get_auth.return_value = self.auth_return_value
         tasks.create_from_sources_kafka_message(self.message, self.headers)
 
         user = User.objects.get(username=self.account_number)
         mock_task.delay.assert_called_with(
             user.username,
-            password,
+            arn,
             self.authentication_id,
             self.application_id,
             self.source_id,
@@ -115,17 +118,8 @@ class CreateFromSourcesKafkaMessageTest(TestCase):
             "application_type_id": self.cloudigrade_sources_app_id
         }
         mock_get_app_type_id.return_value = self.cloudigrade_sources_app_id
-
-        password = util_helper.generate_dummy_arn()
-
-        mock_get_auth.return_value = {
-            "password": password,
-            "username": self.username,
-            "resource_type": settings.SOURCES_RESOURCE_TYPE,
-            "resource_id": self.application_id,
-            "id": self.authentication_id,
-            "authtype": "INVALID",
-        }
+        self.auth_return_value["authtype"] = "INVALID"
+        mock_get_auth.return_value = self.auth_return_value
         tasks.create_from_sources_kafka_message(self.message, self.headers)
         mock_task.delay.assert_not_called()
 
@@ -216,16 +210,8 @@ class CreateFromSourcesKafkaMessageTest(TestCase):
         }
         mock_get_app_type_id.return_value = self.cloudigrade_sources_app_id
 
-        password = util_helper.generate_dummy_arn()
-
-        mock_get_auth.return_value = {
-            "password": password,
-            "username": self.username,
-            "resource_id": _faker.pyint(),
-            "resource_type": "INVALID",
-            "id": self.authentication_id,
-            "authtype": settings.SOURCES_CLOUDMETER_ARN_AUTHTYPE,
-        }
+        self.auth_return_value["resource_type"] = "INVALID"
+        mock_get_auth.return_value = self.auth_return_value
 
         tasks.create_from_sources_kafka_message(self.message, self.headers)
         # User should not have been created.
@@ -237,7 +223,7 @@ class CreateFromSourcesKafkaMessageTest(TestCase):
     @patch("util.insights.get_sources_cloudigrade_application_type_id")
     @patch("util.insights.get_sources_application")
     @patch("api.tasks.configure_customer_aws_and_create_cloud_account")
-    def test_create_fails_if_no_password(
+    def test_create_fails_if_no_password_or_username(
         self,
         mock_task,
         mock_get_app,
@@ -251,14 +237,9 @@ class CreateFromSourcesKafkaMessageTest(TestCase):
         }
         mock_get_app_type_id.return_value = self.cloudigrade_sources_app_id
 
-        mock_get_auth.return_value = {
-            "username": self.username,
-            "resource_type": settings.SOURCES_RESOURCE_TYPE,
-            "resource_id": self.application_id,
-            "id": self.authentication_id,
-            "authtype": settings.SOURCES_CLOUDMETER_ARN_AUTHTYPE,
-        }
-
+        self.auth_return_value.pop("username", None)
+        self.auth_return_value.pop("password", None)
+        mock_get_auth.return_value = self.auth_return_value
         tasks.create_from_sources_kafka_message(self.message, self.headers)
 
         mock_task.delay.assert_not_called()
@@ -278,3 +259,37 @@ class CreateFromSourcesKafkaMessageTest(TestCase):
         mock_get_auth.assert_not_called()
 
         mock_task.delay.assert_not_called()
+
+    @patch("util.insights.get_sources_authentication")
+    @patch("util.insights.get_sources_cloudigrade_application_type_id")
+    @patch("util.insights.get_sources_application")
+    @patch("api.tasks.configure_customer_aws_and_create_cloud_account")
+    def test_create_uses_arn_from_password_if_no_username(
+        self,
+        mock_task,
+        mock_get_app,
+        mock_get_app_type_id,
+        mock_get_auth,
+    ):
+        """Assert create_from_sources_kafka_message happy path success."""
+        mock_get_app.return_value = {
+            "application_type_id": self.cloudigrade_sources_app_id,
+            "source_id": self.source_id,
+        }
+        mock_get_app_type_id.return_value = self.cloudigrade_sources_app_id
+
+        arn = util_helper.generate_dummy_arn()
+        self.auth_return_value.pop("username", None)
+        self.auth_return_value["password"] = arn
+
+        mock_get_auth.return_value = self.auth_return_value
+        tasks.create_from_sources_kafka_message(self.message, self.headers)
+
+        user = User.objects.get(username=self.account_number)
+        mock_task.delay.assert_called_with(
+            user.username,
+            arn,
+            self.authentication_id,
+            self.application_id,
+            self.source_id,
+        )

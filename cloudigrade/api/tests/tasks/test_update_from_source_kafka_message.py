@@ -34,11 +34,9 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
         self.source_id = _faker.pyint()
 
         self.account_number = str(_faker.pyint())
-        # self.user = User.objects.create(username=self.account_number)
 
         self.auth_return_value = {
-            "password": self.arn,
-            "username": self.username,
+            "username": self.arn,
             "resource_type": settings.SOURCES_RESOURCE_TYPE,
             "resource_id": self.application_id,
             "id": self.authentication_id,
@@ -83,7 +81,7 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
             self.account_number, self.username, self.authentication_id
         )
         new_arn = util_helper.generate_dummy_arn(account_id=self.account_id)
-        self.auth_return_value["password"] = new_arn
+        self.auth_return_value["username"] = new_arn
         mock_get_auth.return_value = self.auth_return_value
         mock_get_app.return_value = self.app_return_value
 
@@ -115,7 +113,7 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
             self.account_number, self.username, self.authentication_id
         )
         new_arn = util_helper.generate_dummy_arn(account_id=self.account_id)
-        self.auth_return_value["password"] = new_arn
+        self.auth_return_value["username"] = new_arn
 
         mock_get_auth.return_value = self.auth_return_value
         mock_get_app.return_value = self.app_return_value
@@ -153,7 +151,7 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
         )
         new_arn = util_helper.generate_dummy_arn(account_id=self.account_id)
 
-        self.auth_return_value["password"] = new_arn
+        self.auth_return_value["username"] = new_arn
         self.auth_return_value["authtype"] = "INVALID"
         mock_get_auth.return_value = self.auth_return_value
         mock_get_app.return_value = self.app_return_value
@@ -180,7 +178,7 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
         new_account_id = util_helper.generate_dummy_aws_account_id()
         new_arn = util_helper.generate_dummy_arn(account_id=new_account_id)
 
-        self.auth_return_value["password"] = new_arn
+        self.auth_return_value["username"] = new_arn
         mock_get_auth.return_value = self.auth_return_value
         mock_get_app.return_value = self.app_return_value
 
@@ -284,3 +282,31 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
         tasks.update_from_source_kafka_message(message, headers)
 
         mock_update_account.delay.assert_not_called()
+
+    @patch("util.insights.get_sources_application")
+    @patch("api.models.notify_sources_application_availability")
+    @patch("util.insights.get_sources_authentication")
+    def test_arn_from_password_if_no_username(
+        self, mock_get_auth, mock_notify_sources, mock_get_app
+    ):
+        """Assert update gets the arn from the password field if username DNE."""
+        message, headers = util_helper.generate_authentication_create_message_value(
+            self.account_number, self.username, self.authentication_id
+        )
+        new_arn = util_helper.generate_dummy_arn(account_id=self.account_id)
+
+        self.auth_return_value.pop("username", None)
+        self.auth_return_value["password"] = new_arn
+
+        mock_get_auth.return_value = self.auth_return_value
+        mock_get_app.return_value = self.app_return_value
+
+        with patch("api.clouds.aws.util.verify_permissions") as mock_verify_permissions:
+            mock_verify_permissions.return_value = True
+            tasks.update_from_source_kafka_message(message, headers)
+            mock_verify_permissions.assert_called()
+
+        self.clount.refresh_from_db()
+        self.assertEqual(self.clount.content_object.account_arn, new_arn)
+        self.assertTrue(self.clount.is_enabled)
+        mock_notify_sources.assert_called()
