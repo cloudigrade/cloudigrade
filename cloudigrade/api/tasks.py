@@ -123,11 +123,6 @@ def create_from_sources_kafka_message(message, headers):  # noqa: C901
         account_number, authentication_id
     )
 
-    # TODO: This line has been added for temporarily debugging sources in stage
-    #  We should not be logging the authentication object.
-    #  Remove after debugging
-    logger.info(_("Sources authentication object is: %s"), authentication)
-
     if not authentication:
         error_code = error_codes.CG2000
         error_code.log_internal_message(
