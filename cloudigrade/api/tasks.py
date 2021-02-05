@@ -346,6 +346,15 @@ def update_from_source_kafka_message(message, headers):
         source_id = application.get("source_id")
 
         arn = authentication.get("username") or authentication.get("password")
+        if not arn:
+            logger.info(_("Could not update CloudAccount with no ARN provided."))
+            error_code = error_codes.CG2004
+            error_code.log_internal_message(
+                logger, {"authentication_id": authentication_id}
+            )
+            error_code.notify(account_number, application_id)
+            return
+
         # If the Authentication being updated is arn, do arn things.
         # The kafka message does not always include authtype, so we get this from
         # the sources API call

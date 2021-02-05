@@ -26,6 +26,7 @@ from api.models import (
 )
 from util import aws
 from util.exceptions import (
+    InvalidArn,
     InvalidHoundigradeJsonFormat,
     MaximumNumberOfTrailsExceededException,
 )
@@ -1019,9 +1020,15 @@ def update_aws_cloud_account(
             "source_id": source_id,
         },
     )
-
-    customer_aws_account_id = aws.AwsArn(customer_arn).account_id
     application_id = cloud_account.platform_application_id
+
+    try:
+        customer_aws_account_id = aws.AwsArn(customer_arn).account_id
+    except InvalidArn:
+        error = error_codes.CG1004
+        error.log_internal_message(logger, {"application_id": application_id})
+        error.notify(account_number, application_id)
+        return
 
     # If the aws_account_id is different, then we delete and recreate the CloudAccount
     # Otherwise just update the account_arn.

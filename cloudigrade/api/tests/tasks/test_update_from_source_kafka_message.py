@@ -310,3 +310,23 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
         self.assertEqual(self.clount.content_object.account_arn, new_arn)
         self.assertTrue(self.clount.is_enabled)
         mock_notify_sources.assert_called()
+
+    @patch("api.error_codes.notify_sources_application_availability")
+    @patch("util.insights.get_sources_application")
+    @patch("util.insights.get_sources_authentication")
+    @patch("api.tasks.update_aws_cloud_account")
+    def test_update_from_sources_kafka_message_blank_arn_notifies_sources(
+        self, mock_update_account, mock_get_auth, mock_get_app, mock_notify_sources
+    ):
+        """Assert that sources is notified if ARN is blank."""
+        message, headers = util_helper.generate_authentication_create_message_value(
+            self.account_number, self.username, self.authentication_id
+        )
+        self.auth_return_value["username"] = ""
+        mock_get_auth.return_value = self.auth_return_value
+        mock_get_app.return_value = self.app_return_value
+
+        tasks.update_from_source_kafka_message(message, headers)
+
+        mock_update_account.assert_not_called()
+        mock_notify_sources.assert_called()
