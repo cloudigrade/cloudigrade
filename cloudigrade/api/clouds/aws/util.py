@@ -5,6 +5,7 @@ from decimal import Decimal
 
 from botocore.exceptions import ClientError
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.db import IntegrityError, transaction
 from django.utils.translation import gettext as _
 from rest_framework.serializers import ValidationError
@@ -1051,6 +1052,14 @@ def update_aws_cloud_account(
         )
         cloud_account.delete()
 
+        with transaction.atomic():
+            user, created = User.objects.get_or_create(username=account_number)
+            if created:
+                user.set_unusable_password()
+                logger.info(
+                    _("User %s was not found and has been created."),
+                    account_number,
+                )
         from api.clouds.aws.tasks import configure_customer_aws_and_create_cloud_account
 
         configure_customer_aws_and_create_cloud_account.delay(
