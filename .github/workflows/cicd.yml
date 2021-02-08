@@ -16,7 +16,7 @@ jobs:
          password: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v2
-      - run: pip install tox codecov poetry-core==1.0.0 poetry
+      - run: pip install tox codecov poetry
       - run: tox -e py38
       - run: codecov
 
@@ -30,7 +30,7 @@ jobs:
          password: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v2
-      - run: pip install tox codecov poetry-core==1.0.0 poetry
+      - run: pip install tox codecov poetry
       - run: tox -e flake8
 
   test-vulnerability:
@@ -43,7 +43,7 @@ jobs:
          password: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v2
-      - run: pip install poetry-core==1.0.0 poetry safety
+      - run: pip install poetry safety
       - run: poetry install
       - run: safety check
 
@@ -89,7 +89,7 @@ jobs:
          password: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v2
-      - run: pip install poetry-core==1.0.0 poetry
+      - run: pip install poetry
       - run: poetry install
       - run: poetry run make docs-api-examples-test
       - run: poetry run make openapi-test
