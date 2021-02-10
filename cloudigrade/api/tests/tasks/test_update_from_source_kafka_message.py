@@ -161,10 +161,10 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
 
     @patch("util.insights.get_sources_application")
     @patch("api.models.notify_sources_application_availability")
-    @patch("api.clouds.aws.tasks.configure_customer_aws_and_create_cloud_account")
     @patch("util.insights.get_sources_authentication")
+    @patch.object(CloudAccount, "enable")
     def test_update_from_sources_kafka_message_new_aws_account_id(
-        self, mock_get_auth, mock_create_clount, mock_notify_sources, mock_get_app
+        self, mock_enable, mock_get_auth, mock_notify_sources, mock_get_app
     ):
         """
         Assert the new cloud account created for new aws_account_id.
@@ -189,9 +189,7 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
             mock_assume_role.return_value = util_helper.generate_dummy_role()
             tasks.update_from_source_kafka_message(message, headers)
 
-        self.assertFalse(CloudAccount.objects.filter(id=self.clount.id).exists())
-
-        mock_create_clount.delay.assert_called()
+        mock_enable.assert_called()
 
     @patch("api.tasks.insights.list_sources_application_authentications")
     @patch("api.tasks.update_aws_cloud_account")

@@ -5,7 +5,6 @@ from decimal import Decimal
 
 from botocore.exceptions import ClientError
 from django.conf import settings
-from django.contrib.auth.models import User
 from django.db import IntegrityError, transaction
 from django.utils.translation import gettext as _
 from rest_framework.serializers import ValidationError
@@ -1031,7 +1030,8 @@ def update_aws_cloud_account(
         error.notify(account_number, application_id)
         return
 
-    # If the aws_account_id is different, then we delete and recreate the CloudAccount
+    # If the aws_account_id is different, then we disable the account,
+    # delete all related instances, and then enable the account.
     # Otherwise just update the account_arn.
     if cloud_account.content_object.aws_account_id != customer_aws_account_id:
         logger.info(
@@ -1050,25 +1050,62 @@ def update_aws_cloud_account(
                 "new_arn": customer_arn,
             },
         )
-        cloud_account.delete()
 
-        with transaction.atomic():
-            user, created = User.objects.get_or_create(username=account_number)
-            if created:
-                user.set_unusable_password()
-                logger.info(
-                    _("User %s was not found and has been created."),
-                    account_number,
-                )
-        from api.clouds.aws.tasks import configure_customer_aws_and_create_cloud_account
+        cloud_account.disable(power_off_instances=False)
 
-        configure_customer_aws_and_create_cloud_account.delay(
-            account_number,
-            customer_arn,
-            authentication_id,
-            application_id,
-            source_id,
-        )
+        # Remove instances associated with the clount
+        Instance.objects.filter(cloud_account=cloud_account).delete()
+
+        try:
+            customer_aws_account_id = aws.AwsArn(customer_arn).account_id
+        except InvalidArn:
+            error = error_codes.CG1004
+            error.log_internal_message(logger, {"application_id": application_id})
+            error.notify(account_number, application_id)
+            return
+
+        # Verify that no AwsCloudAccount already exists with the same ARN.
+        if AwsCloudAccount.objects.filter(account_arn=customer_arn).exists():
+            error_code = error_codes.CG1001
+            existing_user_id = (
+                AwsCloudAccount.objects.get(account_arn=customer_arn)
+                .cloud_account.get()
+                .user.id
+            )
+            # If the CloudAccount with the duplicate ARN belongs to the same user,
+            # we want to give the error code in addition to the generic message
+            _notify_error_with_generic_message_for_different_user(
+                error_code,
+                existing_user_id,
+                account_number,
+                application_id,
+                customer_arn,
+            )
+            return
+
+        # Verify that no AwsCloudAccount already exists with the same AWS Account ID.
+        if AwsCloudAccount.objects.filter(
+            aws_account_id=customer_aws_account_id
+        ).exists():
+            error_code = error_codes.CG1002
+            existing_user_id = (
+                AwsCloudAccount.objects.get(aws_account_id=customer_aws_account_id)
+                .cloud_account.get()
+                .user.id
+            )
+            _notify_error_with_generic_message_for_different_user(
+                error_code,
+                existing_user_id,
+                account_number,
+                application_id,
+                customer_arn,
+            )
+            return
+        cloud_account.content_object.account_arn = customer_arn
+        cloud_account.content_object.aws_account_id = customer_aws_account_id
+        cloud_account.content_object.save()
+
+        cloud_account.enable()
 
     else:
         try:
