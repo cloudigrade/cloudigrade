@@ -87,7 +87,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("", include("django_prometheus.urls")),
     path("api/cloudigrade/v1/", include(router.urls)),
-    path("api/cloudigrade/v1/availability_status/", views.availability_check),
+    path("api/cloudigrade/v1/availability_status", views.availability_check),
     path(
         "openapi.json",
         get_schema_view(
