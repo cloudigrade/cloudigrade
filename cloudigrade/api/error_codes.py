@@ -150,13 +150,16 @@ CG2003 = CloudigradeError(
     ),
 )
 
-# No Authentication Password provided
+# No Authentication Username/Password provided
 CG2004 = CloudigradeError(
     "CG2004",
-    _("Missing expected password from authentication for id %(authentication_id)s"),
+    _(
+        "Missing expected username/password from authentication for "
+        "id %(authentication_id)s"
+    ),
     _(
         GENERIC_ACCOUNT_SETUP_ERROR_MESSAGE_WITH_ERROR_CODE
-        + " Attached Authentication missing password field."
+        + " Attached Authentication missing ARN in username (or password) field."
     ),
 )
 
