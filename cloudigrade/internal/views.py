@@ -1,6 +1,6 @@
 """Internal views for cloudigrade API."""
-
 from django.contrib.auth.models import User
+from django.http import JsonResponse
 from django_filters import rest_framework as django_filters
 from rest_framework import exceptions, mixins, permissions, status, viewsets
 from rest_framework.decorators import (
@@ -12,7 +12,7 @@ from rest_framework.decorators import (
 )
 from rest_framework.response import Response
 
-from api import models, schemas
+from api import models, schemas, tasks
 from api.clouds.aws import models as aws_models
 from api.clouds.azure import models as azure_models
 from api.serializers import CloudAccountSerializer
@@ -44,6 +44,53 @@ def availability_check(request):
         cloudaccount.enable()
 
     return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(["POST"])
+@authentication_classes([IdentityHeaderAuthenticationInternal])
+@permission_classes([permissions.AllowAny])
+@schema(None)
+def sources_kafka(request):
+    """
+    Handle an HTTP POST as if it was a Kafka message from sources-api.
+
+    The POST data should have three attributes that represent the would-be extracted
+    data from a Kafka message: value (dict), headers (list), and event_type (string).
+    The value and headers attributes should be sent as JSON. For example, using httpie:
+
+        http post :8000/internal/api/cloudigrade/v1/sources_kafka/ \
+            event_type="ApplicationAuthentication.destroy" \
+            value:='{"application_id": 100, "authentication_id":200, "id": 300}' \
+            headers:='[["x-rh-identity","'"$(echo -n \
+            '{"identity":{"account_number":"1701","user":{"is_org_admin":true}}}' \
+            | base64)"'"]]'
+    """
+    data = request.data
+    event_type = data.get("event_type")
+    value = data.get("value")
+    headers = data.get("headers")
+
+    func = None
+    if event_type == "ApplicationAuthentication.create":
+        func = tasks.create_from_sources_kafka_message
+    elif event_type == "ApplicationAuthentication.destroy":
+        func = tasks.delete_from_sources_kafka_message
+    elif event_type == "Authentication.update":
+        func = tasks.update_from_source_kafka_message
+
+    if func:
+        func(value, headers)
+
+    response = {
+        "request": {
+            "event_type": event_type,
+            "value": value,
+            "headers": headers,
+        },
+        "function": func.__name__ if func is not None else None,
+    }
+
+    return JsonResponse(data=response)
 
 
 class InternalViewSetMixin:
