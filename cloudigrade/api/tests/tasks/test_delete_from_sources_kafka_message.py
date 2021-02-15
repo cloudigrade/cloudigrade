@@ -32,7 +32,7 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         )
         self.user = self.account.user
 
-    @patch("api.models.notify_sources_application_availability")
+    @patch("api.models.sources.notify_application_availability")
     def test_delete_from_sources_kafka_message_application_authentication_success(
         self, mock_notify_sources
     ):
@@ -76,7 +76,7 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         self.assertEqual(aws_models.AwsCloudAccount.objects.count(), 0)
         mock_notify_sources.assert_called()
 
-    @patch("api.models.notify_sources_application_availability")
+    @patch("api.models.sources.notify_sources_application_availability")
     def test_delete_from_sources_kafka_message_source_ignored(
         self, mock_notify_sources
     ):

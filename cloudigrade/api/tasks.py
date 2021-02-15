@@ -60,10 +60,11 @@ from api.util import (
     normalize_runs,
     recalculate_runs,
 )
-from util import aws, insights
+from util import aws
 from util.celery import retriable_shared_task
 from util.exceptions import AwsThrottlingException
 from util.misc import get_now, lock_task_for_user_ids
+from util.redhatcloud import sources
 
 logger = logging.getLogger(__name__)
 
@@ -94,15 +95,16 @@ def create_from_sources_kafka_message(message, headers):  # noqa: C901
     """
     authentication_id = message.get("authentication_id", None)
     application_id = message.get("application_id", None)
-    account_number, platform_id = insights.extract_ids_from_kafka_message(
-        message, headers
-    )
+    (
+        account_number,
+        platform_id,
+    ) = sources.extract_ids_from_kafka_message(message, headers)
 
     if account_number is None or authentication_id is None or application_id is None:
         logger.error(_("Aborting creation. Incorrect message details."))
         return
 
-    application = insights.get_sources_application(account_number, application_id)
+    application = sources.get_application(account_number, application_id)
     if not application:
         logger.info(
             _(
@@ -114,15 +116,13 @@ def create_from_sources_kafka_message(message, headers):  # noqa: C901
         return
 
     application_type = application["application_type_id"]
-    if application_type is not insights.get_sources_cloudigrade_application_type_id(
+    if application_type is not sources.get_cloudigrade_application_type_id(
         account_number
     ):
         logger.info(_("Aborting creation. Application Type is not cloudmeter."))
         return
 
-    authentication = insights.get_sources_authentication(
-        account_number, authentication_id
-    )
+    authentication = sources.get_authentication(account_number, authentication_id)
 
     if not authentication:
         error_code = error_codes.CG2000
@@ -207,9 +207,10 @@ def delete_from_sources_kafka_message(message, headers, event_type):  # noqa: C9
         event_type (str): A string describing the type of destroy event.
 
     """
-    account_number, platform_id = insights.extract_ids_from_kafka_message(
-        message, headers
-    )
+    (
+        account_number,
+        platform_id,
+    ) = sources.extract_ids_from_kafka_message(message, headers)
 
     logger.info(
         _(
@@ -301,9 +302,10 @@ def update_from_source_kafka_message(message, headers):
             "Authentication.update"
 
     """
-    account_number, authentication_id = insights.extract_ids_from_kafka_message(
-        message, headers
-    )
+    (
+        account_number,
+        authentication_id,
+    ) = sources.extract_ids_from_kafka_message(message, headers)
 
     if account_number is None or authentication_id is None:
         logger.error(_("Aborting update. Incorrect message details."))
@@ -312,9 +314,7 @@ def update_from_source_kafka_message(message, headers):
     try:
         clount = CloudAccount.objects.get(platform_authentication_id=authentication_id)
 
-        authentication = insights.get_sources_authentication(
-            account_number, authentication_id
-        )
+        authentication = sources.get_authentication(account_number, authentication_id)
 
         if not authentication:
             logger.info(
@@ -341,7 +341,7 @@ def update_from_source_kafka_message(message, headers):
             )
             return
 
-        application = insights.get_sources_application(account_number, application_id)
+        application = sources.get_application(account_number, application_id)
         source_id = application.get("source_id")
 
         arn = authentication.get("username") or authentication.get("password")
@@ -368,7 +368,7 @@ def update_from_source_kafka_message(message, headers):
     except CloudAccount.DoesNotExist:
         # Is this authentication meant to be for us? We should check.
         # Get list of all app-auth objects and filter by our authentication
-        response_json = insights.list_sources_application_authentications(
+        response_json = sources.list_application_authentications(
             account_number, authentication_id
         )
 

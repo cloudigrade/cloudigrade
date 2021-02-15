@@ -37,7 +37,7 @@ class UpdateAWSClountTest(TestCase):
             platform_source_id=self.source_id,
         )
 
-    @patch("api.error_codes.notify_sources_application_availability")
+    @patch("api.error_codes.sources.notify_application_availability")
     def test_update_aws_clount_notifies_sources_invalid_arn(self, mock_notify_sources):
         """Test update_aws_cloud_account notifies sources if ARN is invalid."""
         util.update_aws_cloud_account(
@@ -45,7 +45,7 @@ class UpdateAWSClountTest(TestCase):
         )
         mock_notify_sources.assert_called()
 
-    @patch("api.error_codes.notify_sources_application_availability")
+    @patch("api.error_codes.sources.notify_application_availability")
     @patch.object(CloudAccount, "disable")
     @patch.object(CloudAccount, "enable")
     def test_update_aws_clount_different_aws_account_id_success(
@@ -67,7 +67,7 @@ class UpdateAWSClountTest(TestCase):
         self.assertEqual(0, Instance.objects.all().count())
 
     @patch("api.clouds.aws.util._notify_error_with_generic_message_for_different_user")
-    @patch("api.error_codes.notify_sources_application_availability")
+    @patch("api.error_codes.sources.notify_application_availability")
     @patch.object(CloudAccount, "disable")
     @patch.object(CloudAccount, "enable")
     def test_update_aws_clount_different_aws_account_id_fails_arn_already_exists(
@@ -93,7 +93,7 @@ class UpdateAWSClountTest(TestCase):
         mock_notify_error.assert_called()
 
     @patch("api.clouds.aws.util._notify_error_with_generic_message_for_different_user")
-    @patch("api.error_codes.notify_sources_application_availability")
+    @patch("api.error_codes.sources.notify_application_availability")
     @patch.object(CloudAccount, "disable")
     @patch.object(CloudAccount, "enable")
     def test_update_aws_clount_different_aws_account_id_fails_account_id_already_exists(

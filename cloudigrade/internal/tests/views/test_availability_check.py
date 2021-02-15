@@ -36,7 +36,7 @@ class AvailabilityCheckViewTest(TestCase):
         )
         self.factory = APIRequestFactory()
 
-    @patch("api.models.notify_sources_application_availability")
+    @patch("api.models.sources.notify_application_availability")
     def test_availability_check_success(self, mock_sources_notify):
         """Test happy path success for availability_check."""
         request = self.factory.post(

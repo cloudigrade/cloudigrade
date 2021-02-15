@@ -47,8 +47,8 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
             "id": self.application_id,
         }
 
-    @patch("util.insights.get_sources_application")
-    @patch("util.insights.get_sources_authentication")
+    @patch("util.redhatcloud.sources.get_application")
+    @patch("util.redhatcloud.sources.get_authentication")
     @patch("api.tasks.update_aws_cloud_account")
     def test_update_from_sources_kafka_message_success(
         self, mock_update_account, mock_get_auth, mock_get_app
@@ -70,9 +70,9 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
             self.source_id,
         )
 
-    @patch("util.insights.get_sources_application")
-    @patch("api.models.notify_sources_application_availability")
-    @patch("util.insights.get_sources_authentication")
+    @patch("util.redhatcloud.sources.get_application")
+    @patch("api.models.sources.notify_application_availability")
+    @patch("util.redhatcloud.sources.get_authentication")
     def test_update_from_sources_kafka_message_updates_arn(
         self, mock_get_auth, mock_notify_sources, mock_get_app
     ):
@@ -95,9 +95,9 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
         self.assertTrue(self.clount.is_enabled)
         mock_notify_sources.assert_called()
 
-    @patch("util.insights.get_sources_application")
-    @patch("api.models.notify_sources_application_availability")
-    @patch("util.insights.get_sources_authentication")
+    @patch("util.redhatcloud.sources.get_application")
+    @patch("api.models.sources.notify_application_availability")
+    @patch("util.redhatcloud.sources.get_authentication")
     def test_update_from_sources_kafka_message_updates_arn_but_disables_cloud_account(
         self, mock_get_auth, mock_notify_sources, mock_get_app
     ):
@@ -139,8 +139,8 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
 
         mock_update_account.assert_not_called()
 
-    @patch("util.insights.get_sources_application")
-    @patch("util.insights.get_sources_authentication")
+    @patch("util.redhatcloud.sources.get_application")
+    @patch("util.redhatcloud.sources.get_authentication")
     @patch("api.tasks.update_aws_cloud_account")
     def test_update_from_sources_kafka_message_fail_bad_authtype(
         self, mock_update_account, mock_get_auth, mock_get_app
@@ -159,9 +159,9 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
         tasks.update_from_source_kafka_message(message, headers)
         mock_update_account.assert_not_called()
 
-    @patch("util.insights.get_sources_application")
-    @patch("api.models.notify_sources_application_availability")
-    @patch("util.insights.get_sources_authentication")
+    @patch("util.redhatcloud.sources.get_application")
+    @patch("api.models.sources.notify_application_availability")
+    @patch("util.redhatcloud.sources.get_authentication")
     @patch.object(CloudAccount, "enable")
     def test_update_from_sources_kafka_message_new_aws_account_id(
         self, mock_enable, mock_get_auth, mock_notify_sources, mock_get_app
@@ -191,7 +191,7 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
 
         mock_enable.assert_called()
 
-    @patch("api.tasks.insights.list_sources_application_authentications")
+    @patch("api.tasks.sources.list_application_authentications")
     @patch("api.tasks.update_aws_cloud_account")
     def test_update_non_cloudmeter_authid_does_nothing(
         self, mock_update_account, mock_list_sources_app_auths
@@ -211,7 +211,7 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
         tasks.update_from_source_kafka_message(message, headers)
         mock_update_account.assert_not_called()
 
-    @patch("api.tasks.insights.list_sources_application_authentications")
+    @patch("api.tasks.sources.list_application_authentications")
     @patch("api.tasks.create_from_sources_kafka_message")
     @patch("api.tasks.update_aws_cloud_account")
     def test_update_fixed_cloudmeter_authid_succeeds(
@@ -243,7 +243,7 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
         mock_create_account.delay.assert_called_once_with(app_auth_data, headers)
         mock_update_account.assert_not_called()
 
-    @patch("util.insights.get_sources_authentication")
+    @patch("util.redhatcloud.sources.get_authentication")
     @patch("api.tasks.update_aws_cloud_account")
     def test_update_from_sources_kafka_message_returns_early_when_authentication_404(
         self, mock_update_account, mock_get_auth
@@ -263,7 +263,7 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
         mock_get_auth.assert_called()
         mock_update_account.delay.assert_not_called()
 
-    @patch("util.insights.get_sources_authentication")
+    @patch("util.redhatcloud.sources.get_authentication")
     @patch("api.tasks.update_aws_cloud_account")
     def test_create_returns_early_when_resource_type_invalid(
         self, mock_update_account, mock_get_auth
@@ -281,9 +281,9 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
 
         mock_update_account.delay.assert_not_called()
 
-    @patch("util.insights.get_sources_application")
-    @patch("api.models.notify_sources_application_availability")
-    @patch("util.insights.get_sources_authentication")
+    @patch("util.redhatcloud.sources.get_application")
+    @patch("api.models.sources.notify_application_availability")
+    @patch("util.redhatcloud.sources.get_authentication")
     def test_arn_from_password_if_no_username(
         self, mock_get_auth, mock_notify_sources, mock_get_app
     ):
@@ -309,9 +309,9 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
         self.assertTrue(self.clount.is_enabled)
         mock_notify_sources.assert_called()
 
-    @patch("api.error_codes.notify_sources_application_availability")
-    @patch("util.insights.get_sources_application")
-    @patch("util.insights.get_sources_authentication")
+    @patch("api.error_codes.sources.notify_application_availability")
+    @patch("util.redhatcloud.sources.get_application")
+    @patch("util.redhatcloud.sources.get_authentication")
     @patch("api.tasks.update_aws_cloud_account")
     def test_update_from_sources_kafka_message_blank_arn_notifies_sources(
         self, mock_update_account, mock_get_auth, mock_get_app, mock_notify_sources
