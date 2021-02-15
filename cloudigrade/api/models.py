@@ -11,9 +11,9 @@ from django.utils.translation import gettext as _
 from django_prometheus.models import ExportModelOperationsMixin
 
 from api import AWS_PROVIDER_STRING, AZURE_PROVIDER_STRING
-from util.insights import notify_sources_application_availability
 from util.misc import get_now, get_today, lock_task_for_user_ids
 from util.models import BaseGenericModel, BaseModel
+from util.redhatcloud import sources
 
 logger = logging.getLogger(__name__)
 
@@ -130,7 +130,7 @@ class CloudAccount(ExportModelOperationsMixin("CloudAccount"), BaseGenericModel)
             transaction.set_rollback(True)
             return False
 
-        notify_sources_application_availability(
+        sources.notify_application_availability(
             self.user.username, self.platform_application_id, "available"
         )
 
@@ -162,7 +162,7 @@ class CloudAccount(ExportModelOperationsMixin("CloudAccount"), BaseGenericModel)
             self._power_off_instances(power_off_time=get_now())
         self.content_object.disable()
         if notify_sources:
-            notify_sources_application_availability(
+            sources.notify_application_availability(
                 self.user.username, self.platform_application_id, "unavailable", message
             )
         logger.info(_("Finished disabling %(account)s"), {"account": self})

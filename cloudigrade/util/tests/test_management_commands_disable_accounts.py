@@ -36,7 +36,7 @@ class DeleteAccountsTest(TransactionTestCase):
         mock_delete_cloudtrail.assert_called()
         self.assertDisabled()
 
-    @patch("api.models.notify_sources_application_availability")
+    @patch("api.models.sources.notify_application_availability")
     @patch("api.clouds.aws.util.delete_cloudtrail")
     @override_settings(SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA=True)
     def test_handle_when_kafka_errors(self, mock_delete_cloudtrail, mock_notify):
@@ -67,7 +67,7 @@ class DeleteAccountsTest(TransactionTestCase):
 
     @override_settings(IS_PRODUCTION=True)
     @override_settings(SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA=True)
-    @patch("api.models.notify_sources_application_availability")
+    @patch("api.models.sources.notify_application_availability")
     @patch("api.clouds.aws.util.delete_cloudtrail")
     @patch("builtins.input", return_value="Y")
     def test_handle_in_production_aborts(

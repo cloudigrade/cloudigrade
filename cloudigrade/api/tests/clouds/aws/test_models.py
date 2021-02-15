@@ -71,7 +71,7 @@ class AwsCloudAccountModelTest(TransactionTestCase, ModelStrTestMixin):
         """Test that the AwsCloudAccount str (and repr) is valid."""
         self.assertTypicalStrOutput(self.account.content_object)
 
-    @patch("api.models.notify_sources_application_availability")
+    @patch("api.models.sources.notify_application_availability")
     def test_enable_succeeds(self, mock_sources_notify):
         """
         Test that enabling an account does all the relevant verification and setup.
@@ -139,7 +139,7 @@ class AwsCloudAccountModelTest(TransactionTestCase, ModelStrTestMixin):
         self.assertFalse(self.account.is_enabled)
         self.assertEqual(self.account.enabled_at, self.account.created_at)
 
-    @patch("api.error_codes.notify_sources_application_availability")
+    @patch("api.error_codes.sources.notify_application_availability")
     def test_enable_failure_too_many_trails(self, mock_sources_notify):
         """Test that enabling an account rolls back if too many trails present."""
         # Normally you shouldn't directly manipulate the is_enabled value,
@@ -174,7 +174,7 @@ class AwsCloudAccountModelTest(TransactionTestCase, ModelStrTestMixin):
         self.assertFalse(self.account.is_enabled)
         self.assertEqual(self.account.enabled_at, self.account.created_at)
 
-    @patch("api.models.notify_sources_application_availability")
+    @patch("api.models.sources.notify_application_availability")
     def test_disable_succeeds(self, mock_sources_notify):
         """
         Test that disabling an account does all the relevant cleanup.
@@ -223,7 +223,7 @@ class AwsCloudAccountModelTest(TransactionTestCase, ModelStrTestMixin):
         )
         self.assertEqual(last_event.event_type, models.InstanceEvent.TYPE.power_off)
 
-    @patch("api.models.notify_sources_application_availability")
+    @patch("api.models.sources.notify_application_availability")
     def test_disable_with_notify_sources_false_succeeds(self, mock_sources_notify):
         """
         Test that disabling an account does not notify sources when specified not to.
@@ -240,7 +240,7 @@ class AwsCloudAccountModelTest(TransactionTestCase, ModelStrTestMixin):
         self.account.refresh_from_db()
         self.assertFalse(self.account.is_enabled)
 
-    @patch("api.models.notify_sources_application_availability")
+    @patch("api.models.sources.notify_application_availability")
     def test_disable_succeeds_if_no_instance_events(self, mock_sources_notify):
         """Test that disabling an account works despite having no instance events."""
         self.assertTrue(self.account.is_enabled)
@@ -265,7 +265,7 @@ class AwsCloudAccountModelTest(TransactionTestCase, ModelStrTestMixin):
             self.account.content_object.disable()
             mock_delete_cloudtrail.assert_not_called()
 
-    @patch("api.models.notify_sources_application_availability")
+    @patch("api.models.sources.notify_application_availability")
     def test_delete_succeeds(self, mock_sources_notify):
         """Test that an account is deleted if there are no errors."""
         with patch("api.clouds.aws.util.delete_cloudtrail") as mock_delete_cloudtrail:
@@ -273,7 +273,7 @@ class AwsCloudAccountModelTest(TransactionTestCase, ModelStrTestMixin):
             self.account.delete()
         self.assertEqual(0, aws_models.AwsCloudAccount.objects.count())
 
-    @patch("api.models.notify_sources_application_availability")
+    @patch("api.models.sources.notify_application_availability")
     def test_delete_succeeds_if_delete_cloudtrail_fails(self, mock_notify_sources):
         """Test that the account is deleted even if the CloudTrail is not disabled."""
         with patch("api.clouds.aws.util.delete_cloudtrail") as mock_delete_cloudtrail:
@@ -281,7 +281,7 @@ class AwsCloudAccountModelTest(TransactionTestCase, ModelStrTestMixin):
             self.account.delete()
         self.assertEqual(0, aws_models.AwsCloudAccount.objects.count())
 
-    @patch("api.models.notify_sources_application_availability")
+    @patch("api.models.sources.notify_application_availability")
     @patch("api.clouds.aws.util.verify_permissions")
     @patch("api.clouds.aws.tasks.initial_aws_describe_instances")
     def test_delete_cleans_up_related_objects(
@@ -324,7 +324,7 @@ class AwsCloudAccountModelTest(TransactionTestCase, ModelStrTestMixin):
         self.assertEqual(0, models.Instance.objects.count())
         self.assertEqual(0, PeriodicTask.objects.count())
 
-    @patch("api.models.notify_sources_application_availability")
+    @patch("api.models.sources.notify_application_availability")
     def test_delete_via_queryset_succeeds_if_delete_cloudtrail_fails(
         self, mock_notify_sources
     ):
@@ -334,7 +334,7 @@ class AwsCloudAccountModelTest(TransactionTestCase, ModelStrTestMixin):
             aws_models.AwsCloudAccount.objects.all().delete()
         self.assertEqual(0, aws_models.AwsCloudAccount.objects.count())
 
-    @patch("api.models.notify_sources_application_availability")
+    @patch("api.models.sources.notify_application_availability")
     def test_delete_via_queryset_cleans_up_instance_events_run(
         self, mock_notify_sources
     ):
@@ -367,7 +367,7 @@ class AwsCloudAccountModelTest(TransactionTestCase, ModelStrTestMixin):
         self.assertTrue(aws_clount.verify_task.enabled)
         self.assertEqual(aws_clount.verify_task.start_time, aws_clount.created_at)
 
-    @patch("api.models.notify_sources_application_availability")
+    @patch("api.models.sources.notify_application_availability")
     @patch("api.clouds.aws.util.verify_permissions")
     @patch("api.clouds.aws.tasks.initial_aws_describe_instances")
     def test_enable_verify_task_existing(self, mock_describe, mock_verify, mock_notify):
@@ -400,7 +400,7 @@ class AwsCloudAccountModelTest(TransactionTestCase, ModelStrTestMixin):
 
         self.assertIsNotNone(aws_clount.verify_task)
 
-    @patch("api.models.notify_sources_application_availability")
+    @patch("api.models.sources.notify_application_availability")
     def test_disable_verify_task_existing(self, mock_sources_notify):
         """Verify Task is disabled."""
         aws_clount = self.account.content_object
@@ -422,7 +422,7 @@ class AwsCloudAccountModelTest(TransactionTestCase, ModelStrTestMixin):
             self.account.content_object._disable_verify_task()
             self.assertIn("ERROR", cm.output[0])
 
-    @patch("api.models.notify_sources_application_availability")
+    @patch("api.models.sources.notify_application_availability")
     def test_delete_account_with_instance_event_succeeds(self, mock_notify_sources):
         """
         Test that the account deleted succeeds when account has power_on instance event.
@@ -444,7 +444,7 @@ class AwsCloudAccountModelTest(TransactionTestCase, ModelStrTestMixin):
             self.account.delete()
         self.assertEqual(0, aws_models.AwsCloudAccount.objects.count())
 
-    @patch("api.models.notify_sources_application_availability")
+    @patch("api.models.sources.notify_application_availability")
     def test_delete_account_when_aws_access_denied(self, mock_notify_sources):
         """
         Test that account deleted succeeds when AWS access is denied.

@@ -57,7 +57,7 @@ class SandboxedRestClientTest(TestCase):
         self.assertIn("first", response_json["links"])
         self.assertIn("last", response_json["links"])
 
-    @patch("api.models.notify_sources_application_availability")
+    @patch("api.models.sources.notify_application_availability")
     def test_create_noun(self, mock_notify_sources):
         """Assert "create" requests work."""
         client = helper.SandboxedRestClient(api_root="/internal/api/cloudigrade/v1")
