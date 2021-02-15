@@ -97,8 +97,8 @@ If you see no output, everything is okay! Otherwise (e.g. "libcurl link-time ssl
     poetry run pip uninstall pycurl -y
 
     BREW_PATH=$(brew --prefix)
-    export LDFLAGS="-L${BREW_PATH}/opt/curl/lib"
-    export CPPFLAGS="-I${BREW_PATH}/opt/curl/include"
+    export LDFLAGS="-L${BREW_PATH}/opt/curl/lib -L${BREW_PATH}/opt/openssl/lib"
+    export CPPFLAGS="-I${BREW_PATH}/opt/curl/include -I${BREW_PATH}/opt/openssl/include"
     export PYCURL_SSL_LIBRARY="openssl"
 
     poetry install
