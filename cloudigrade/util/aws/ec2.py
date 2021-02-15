@@ -402,7 +402,7 @@ def copy_snapshot(snapshot_id, source_region):
     """
     Copy a machine image snapshot to a primary AWS account.
 
-    Note: This operation is done from the primarmy account.
+    Note: This operation is done from the primary account.
 
     Args:
         snapshot_id (str): The id of the snapshot to modify

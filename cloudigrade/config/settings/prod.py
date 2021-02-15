@@ -6,7 +6,6 @@ from .base import *
 
 IS_PRODUCTION = CLOUDIGRADE_ENVIRONMENT == "prod"
 
-# FIXME: After our OpenShift setup is finalized we should force debug to False.
 DEBUG = env.bool("DJANGO_DEBUG", default=False)
 SECRET_KEY = env("DJANGO_SECRET_KEY")
 ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS")
