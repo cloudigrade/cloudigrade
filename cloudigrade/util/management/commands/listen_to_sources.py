@@ -68,80 +68,108 @@ class Command(BaseCommand):
                     logger.warning(_("Consumer error: {error}"), {"error": msg.error()})
                     continue
 
-                self._process_message(msg)
+                process_message(msg)
         finally:
             logger.info(_("Listener closing."))
             consumer.close()
 
-    def _process_message(self, message):
-        """Process a single Kafka message."""
-        event_type = None
 
-        # The headers are a list of... tuples.
-        # So we've established the headers are a list of tuples, but wait,
-        # there's more! It is a tuple with a string key, and a bytestring
-        # value because... reasons..? Let's clean that up.
-        message_headers = [
-            (
-                key,
-                value.decode("utf-8"),
-            )
-            for key, value in message.headers()
-        ]
-        for header in message_headers:
-            if header[0] == "event_type":
-                event_type = header[1]
-                break
+def process_message(message):
+    """
+    Process a single Kafka message object.
 
-        message_value = json.loads(message.value().decode("utf-8"))
+    Args:
+        message(confluent_kafka.Message): message object from the Kafka listener
+    """
+    event_type, headers, value = extract_raw_sources_kafka_message(message)
 
-        logger.info(
-            _("Processing Message: %(message_value)s. Headers: %(message_headers)s"),
-            {"message_value": message_value, "message_headers": message_headers},
+    logger.info(
+        _("Processing Message: %(value)s. Headers: %(headers)s"),
+        {"value": value, "headers": headers},
+    )
+    total_events.inc()
+
+    if event_type == "ApplicationAuthentication.create":
+        create_events.inc()
+        process_sources_create_event(value, headers)
+    elif event_type in settings.KAFKA_DESTROY_EVENTS:
+        destroy_events.inc()
+        process_sources_destroy_event(value, headers, event_type)
+    elif event_type == "Authentication.update":
+        update_events.inc()
+        process_sources_update_event(value, headers)
+
+
+def extract_raw_sources_kafka_message(message):
+    """
+    Extract the useful bits from a Kafka message originating from sources-api.
+
+    Args:
+        message(confluent_kafka.Message): message object from the Kafka listener
+
+    Returns:
+        tuple(string, list, dict) of the event_type, headers, and value.
+    """
+    event_type = None
+
+    # The headers are a list of... tuples.
+    # So we've established the headers are a list of tuples, but wait,
+    # there's more! It is a tuple with a string key, and a bytestring
+    # value because... reasons..? Let's clean that up.
+    message_headers = [
+        (
+            key,
+            value.decode("utf-8"),
         )
-        total_events.inc()
+        for key, value in message.headers()
+    ]
+    for header in message_headers:
+        if header[0] == "event_type":
+            event_type = header[1]
+            break
 
-        if event_type == "ApplicationAuthentication.create":
-            logger.info(
-                _(
-                    "An ApplicationAuthentication object was created. "
-                    "Message: %(message_value)s. Headers: %(message_headers)s"
-                ),
-                {"message_value": message_value, "message_headers": message_headers},
-            )
-            create_events.inc()
-            if settings.SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA:
-                tasks.create_from_sources_kafka_message.delay(
-                    message_value, message_headers
-                )
+    message_value = json.loads(message.value().decode("utf-8"))
 
-        elif event_type in settings.KAFKA_DESTROY_EVENTS:
-            logger.info(
-                _(
-                    "A Sources object was destroyed. "
-                    "Message: %(message_value)s. Headers: %(message_headers)s"
-                ),
-                {"message_value": message_value, "message_headers": message_headers},
-            )
-            destroy_events.inc()
-            if settings.SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA:
-                tasks.delete_from_sources_kafka_message.delay(
-                    message_value, message_headers, event_type
-                )
+    return event_type, message_headers, message_value
 
-        elif event_type == "Authentication.update":
-            logger.info(
-                _(
-                    "An authentication object was updated. "
-                    "Message: %(message_value)s. Headers: %(message_headers)s"
-                ),
-                {"message_value": message_value, "message_headers": message_headers},
-            )
-            update_events.inc()
-            if settings.SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA:
-                tasks.update_from_source_kafka_message.delay(
-                    message_value, message_headers
-                )
+
+def process_sources_create_event(value, headers):
+    """Process the given sources-api create event message."""
+    logger.info(
+        _(
+            "An ApplicationAuthentication object was created. "
+            "Message: %(value)s. Headers: %(headers)s"
+        ),
+        {"value": value, "headers": headers},
+    )
+    if settings.SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA:
+        tasks.create_from_sources_kafka_message.delay(value, headers)
+
+
+def process_sources_destroy_event(value, headers, event_type):
+    """Process the given sources-api destroy event message."""
+    logger.info(
+        _(
+            "A Sources object was destroyed. "
+            "Message: %(value)s. Headers: %(headers)s"
+        ),
+        {"message_value": value, "message_headers": headers},
+    )
+    if settings.SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA:
+        tasks.delete_from_sources_kafka_message.delay(value, headers, event_type)
+
+
+def process_sources_update_event(value, headers):
+    """Process the given sources-api update event message."""
+    logger.info(
+        _(
+            "An authentication object was updated. "
+            "Message: %(value)s. Headers: %(headers)s"
+        ),
+        {"value": value, "headers": headers},
+    )
+    if settings.SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA:
+        tasks.update_from_source_kafka_message.delay(value, headers)
 
 
 # Metrics
