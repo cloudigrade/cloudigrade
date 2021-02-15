@@ -74,7 +74,7 @@ logger = logging.getLogger(__name__)
     name="api.tasks.create_from_sources_kafka_message",
 )
 @aws.rewrap_aws_errors
-def create_from_sources_kafka_message(message, headers):  # noqa: C901
+def create_from_sources_kafka_message(message, headers):
     """
     Create our model objects from the Sources Kafka message.
 
@@ -187,9 +187,9 @@ def create_from_sources_kafka_message(message, headers):  # noqa: C901
 @retriable_shared_task(
     autoretry_for=(RuntimeError, AwsThrottlingException),
     name="api.tasks.delete_from_sources_kafka_message",
-)  # noqa: C901
+)
 @aws.rewrap_aws_errors
-def delete_from_sources_kafka_message(message, headers):  # noqa: C901
+def delete_from_sources_kafka_message(message, headers):
     """
     Delete our cloud account as per the Sources Kafka message.
 
