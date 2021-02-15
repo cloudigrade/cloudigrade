@@ -225,22 +225,19 @@ def delete_from_sources_kafka_message(message, headers, event_type):  # noqa: C9
         logger.error(_("Aborting deletion. Incorrect message details."))
         return
 
-    query_filter = None
-    if event_type == settings.SOURCE_DESTROY_EVENT:
-        query_filter = Q(platform_source_id=platform_id)
-    elif event_type == settings.APPLICATION_AUTHENTICATION_DESTROY_EVENT:
-        authentication_id = message["authentication_id"]
-        application_id = message["application_id"]
-        query_filter = Q(
-            platform_application_id=application_id,
-            platform_authentication_id=authentication_id,
-        )
-
-    if not query_filter:
+    if event_type != settings.APPLICATION_AUTHENTICATION_DESTROY_EVENT:
         logger.error(
-            _("Not enough details to delete a CloudAccount from message: %s"), message
+            _("Wrong event type; cannot delete a CloudAccount from message: %s"),
+            message,
         )
         return
+
+    authentication_id = message["authentication_id"]
+    application_id = message["application_id"]
+    query_filter = Q(
+        platform_application_id=application_id,
+        platform_authentication_id=authentication_id,
+    )
 
     logger.info(_("Deleting CloudAccounts using filter %s"), query_filter)
 
