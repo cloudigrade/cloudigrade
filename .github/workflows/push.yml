@@ -102,7 +102,7 @@ jobs:
 
   deploy-build-and-push-image:
     name: Build and Push Image
-    if: github.ref == 'refs/heads/738-aws'
+    if: github.ref == 'refs/heads/master'
     needs: [test-py38, test-flake8, test-vulnerability, test-docker, test-s2i, test-docs]
     runs-on: ubuntu-latest
     container:
@@ -120,7 +120,7 @@ jobs:
 
   deploy-build-and-push-nginx-image:
     name: Build and Push NGINX Image
-    if: github.ref == 'refs/heads/738-aws'
+    if: github.ref == 'refs/heads/master'
     needs: [test-py38, test-flake8, test-vulnerability, test-docker, test-s2i, test-docs]
     runs-on: ubuntu-latest
     container:
@@ -150,7 +150,7 @@ jobs:
 
   deploy-trigger-quay-copy:
     name: Trigger ghcr to quay copy
-    if: github.ref == 'refs/heads/738-aws'
+    if: github.ref == 'refs/heads/master'
     env:
       WEBHOOK_SECRET: ${{ secrets.WEBHOOK_SECRET }}
     needs: [deploy-build-and-push-image, deploy-build-and-push-nginx-image]
@@ -161,11 +161,10 @@ jobs:
          username: ${{ github.actor }}
          password: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - run: echo "Beep boop"
-      # - name: Webhook
-      #   uses: distributhor/workflow-webhook@v1.0.5
-      #   env:
-      #     webhook_type: "json-extended"
-      #     webhook_url: "https://ci.ext.devshift.net/github-webhook/"
-      #     webhook_secret: ${{ secrets.WEBHOOK_SECRET }}  # Does not matter, but provided because it is required.
+      - name: Webhook
+        uses: distributhor/workflow-webhook@v1.0.5
+        env:
+          webhook_type: "json-extended"
+          webhook_url: "https://ci.ext.devshift.net/github-webhook/"
+          webhook_secret: ${{ secrets.WEBHOOK_SECRET }}  # Does not matter, but provided because it is required.
 
