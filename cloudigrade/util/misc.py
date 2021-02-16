@@ -86,7 +86,7 @@ def lock_task_for_user_ids(user_ids):
         {"user_ids": user_ids},
     )
     for user_id in user_ids:
-        UserTaskLock.objects.select_for_update().get_or_create(user_id=user_id)
+        UserTaskLock.objects.get_or_create(user_id=user_id)
     locks = UserTaskLock.objects.select_for_update().filter(user__id__in=user_ids)
     locks.update(locked=True)
     yield locks
