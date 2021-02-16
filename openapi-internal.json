@@ -478,7 +478,7 @@
     "/api/cloudigrade/v1/usertasklocks/": {
       "get": {
         "operationId": "listUserTaskLocks",
-        "description": "Retrieve or list UserTaskLocks for internal use.",
+        "description": "Retrieve, delete, or list UserTaskLocks for internal use.",
         "parameters": [
           {
             "name": "limit",
@@ -637,7 +637,7 @@
     "/api/cloudigrade/v1/usertasklocks/{id}/": {
       "get": {
         "operationId": "retrieveUserTaskLock",
-        "description": "Retrieve or list UserTaskLocks for internal use.",
+        "description": "Retrieve, delete, or list UserTaskLocks for internal use.",
         "parameters": [
           {
             "name": "id",
@@ -730,6 +730,101 @@
                 }
               }
             },
+            "description": ""
+          }
+        },
+        "tags": [
+          "api"
+        ]
+      },
+      "delete": {
+        "operationId": "destroyUserTaskLock",
+        "description": "Retrieve, delete, or list UserTaskLocks for internal use.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "A unique integer value identifying this user task lock.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "user",
+            "required": false,
+            "in": "query",
+            "description": "user",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "locked",
+            "required": false,
+            "in": "query",
+            "description": "locked",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "created_at__lt",
+            "required": false,
+            "in": "query",
+            "description": "created_at__lt",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "created_at",
+            "required": false,
+            "in": "query",
+            "description": "created_at",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "created_at__gt",
+            "required": false,
+            "in": "query",
+            "description": "created_at__gt",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "updated_at__lt",
+            "required": false,
+            "in": "query",
+            "description": "updated_at__lt",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "updated_at",
+            "required": false,
+            "in": "query",
+            "description": "updated_at",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "updated_at__gt",
+            "required": false,
+            "in": "query",
+            "description": "updated_at__gt",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
             "description": ""
           }
         },
