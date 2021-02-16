@@ -1,10 +1,10 @@
-name: Cloudigrade CI/CD flow
+name: Push
 
 env:
   IMAGE_NAME: docker.pkg.github.com/${{ github.repository }}/cloudigrade
   NGINX_IMAGE_NAME: docker.pkg.github.com/${{ github.repository }}/cloudinginx
 
-on: [pull_request, push]
+on: [push]
 
 jobs:
   test-py38:
