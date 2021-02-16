@@ -21,11 +21,8 @@ logger = logging.getLogger(__name__)
 class UserTaskLock(BaseModel):
     """Model used to lock running tasks for a user."""
 
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        db_index=True,
-        null=False,
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, db_index=True, null=False
     )
     locked = models.BooleanField(default=False, null=False)
 

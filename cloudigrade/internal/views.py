@@ -107,8 +107,12 @@ class InternalUserViewSet(InternalViewSetMixin, viewsets.ReadOnlyModelViewSet):
     }
 
 
-class InternalUserTaskLockViewSet(InternalViewSetMixin, viewsets.ReadOnlyModelViewSet):
-    """Retrieve or list UserTaskLocks for internal use."""
+class InternalUserTaskLockViewSet(
+    InternalViewSetMixin,
+    mixins.DestroyModelMixin,
+    viewsets.ReadOnlyModelViewSet,
+):
+    """Retrieve, delete, or list UserTaskLocks for internal use."""
 
     queryset = models.UserTaskLock.objects.all()
     serializer_class = serializers.InternalUserTaskLockSerializer
