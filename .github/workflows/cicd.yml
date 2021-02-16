@@ -2,6 +2,7 @@ name: Cloudigrade CI/CD flow
 
 env:
   IMAGE_NAME: docker.pkg.github.com/${{ github.repository }}/cloudigrade
+  NGINX_IMAGE_NAME: docker.pkg.github.com/${{ github.repository }}/cloudinginx
 
 on: [pull_request, push]
 
@@ -99,12 +100,93 @@ jobs:
       - run: poetry run openapi-spec-validator openapi.json
       - run: poetry run openapi-spec-validator openapi-internal.json
 
-  deploy-trigger-osd-builds:
+  deploy-build-and-push-image:
+    name: Build and Push Image
+    if: github.ref == 'refs/heads/master'
+    needs: [test-py38, test-flake8, test-vulnerability, test-docker, test-s2i, test-docs]
+    runs-on: ubuntu-latest
+    container:
+      image: docker:latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+      - run: docker pull $IMAGE_NAME:latest || true
+      - run: docker build --cache-from ${IMAGE_NAME}:latest --tag ${IMAGE_NAME}:${{ github.sha }} --tag ${IMAGE_NAME}:latest .
+      - run: docker push ${IMAGE_NAME}:${{ github.sha }}
+      - run: docker push ${IMAGE_NAME}:latest
+
+  deploy-build-and-push-tagged-image:
+    name: Build and Push Tagged Image
+    env:
+      COMMIT_TAG: ${{ github.event.release.tag_name }}
+    if: github.event_name == 'release' && github.event.action == 'created'
+    needs: [test-py38, test-flake8, test-vulnerability, test-docker, test-s2i, test-docs]
+    runs-on: ubuntu-latest
+    container:
+      image: docker:latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+      - run: docker pull $IMAGE_NAME:latest || true
+      - run: docker build --cache-from ${IMAGE_NAME}:latest --tag ${IMAGE_NAME}:${COMMIT_TAG} .
+      - run: docker push ${IMAGE_NAME}:${COMMIT_TAG}
+
+  deploy-build-and-push-nginx-image:
+    name: Build and Push NGINX Image
+    if: github.ref == 'refs/heads/master'
+    needs: [test-py38, test-flake8, test-vulnerability, test-docker, test-s2i, test-docs]
+    runs-on: ubuntu-latest
+    container:
+      image: docker:latest
+    env:
+      CONTEXT_DIR: deployment/nginx/
+      NGINX_S2I_IMAGE: registry.redhat.io/rhel8/nginx-116:latest
+      S2I_VERSION: v1.3.0
+      S2I_RELEASE: source-to-image-v1.3.0-eed2850f-linux-amd64
+    steps:
+      - uses: actions/checkout@v2
+      - run: apk --no-cache add git
+      - run: mkdir -p /opt && cd /opt
+      - run: wget https://github.com/openshift/source-to-image/releases/download/${S2I_VERSION}/${S2I_RELEASE}.tar.gz -O /opt/s2i.tar.gz
+      - run: tar --strip-components=1 -xzvf /opt/s2i.tar.gz -C /opt/
+      - run: mv /opt/s2i /usr/bin/
+      - env:
+          REDHAT_REGISTRY_LOGIN: ${{ secrets.REDHAT_REGISTRY_LOGIN }}
+        run: ${REDHAT_REGISTRY_LOGIN}
+      - run: s2i build --context-dir=${CONTEXT_DIR} --ref ${CI_COMMIT_REF_NAME} ${CI_PROJECT_URL} ${NGINX_S2I_IMAGE} ${NGINX_IMAGE_NAME}:${{ github.sha }}
+      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+      - run: docker push ${NGINX_IMAGE_NAME}:${{ github.sha }}
+      - run: docker push ${NGINX_IMAGE_NAME}:latest
+
+  deploy-build-and-push-tagged-nginx-image:
+    name: Build and Push Tagged NGINX Image
+    env:
+      COMMIT_TAG: ${{ github.event.release.tag_name }}
+    if: github.event_name == 'release' && github.event.action == 'created'
+    needs: [test-py38, test-flake8, test-vulnerability, test-docker, test-s2i, test-docs]
+    runs-on: ubuntu-latest
+    container:
+      image: docker:latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: apk --no-cache add git
+      - run: mkdir -p /opt && cd /opt
+      - run: wget https://github.com/openshift/source-to-image/releases/download/${S2I_VERSION}/${S2I_RELEASE}.tar.gz -O /opt/s2i.tar.gz
+      - run: tar --strip-components=1 -xzvf /opt/s2i.tar.gz -C /opt/
+      - run: mv /opt/s2i /usr/bin/
+      - env:
+          REDHAT_REGISTRY_LOGIN: ${{ secrets.REDHAT_REGISTRY_LOGIN }}
+        run: ${REDHAT_REGISTRY_LOGIN}
+      - run: s2i build --context-dir=${CONTEXT_DIR} --ref ${CI_COMMIT_REF_NAME} ${CI_PROJECT_URL} ${NGINX_S2I_IMAGE} ${NGINX_IMAGE_NAME}:${COMMIT_TAG}
+      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+      - run: docker push ${NGINX_IMAGE_NAME}:${COMMIT_TAG}
+
+  deploy-trigger-quay-copy:
     name: Trigger AppSRE Builds
-    if: github.ref == 'refs/heads/738-aws'
+    if: github.ref == 'refs/heads/master'
     env:
       WEBHOOK_SECRET: ${{ secrets.WEBHOOK_SECRET }}
-    needs: [test-py38, test-flake8, test-vulnerability, test-docker, test-s2i, test-docs]
+    needs: [deploy-build-and-push-image, deploy-build-and-push-nginx-image]
     runs-on: ubuntu-latest
     container:
       image: docker.pkg.github.com/cloudigrade/build-container/build-container:latest
@@ -112,10 +194,11 @@ jobs:
          username: ${{ github.actor }}
          password: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - name: Webhook
-        uses: distributhor/workflow-webhook@v1.0.5
-        env:
-          webhook_type: "json-extended"
-          webhook_url: "https://ci.ext.devshift.net/github-webhook/"
-          webhook_secret: ${{ secrets.WEBHOOK_SECRET }}  # Does not matter, but provided because it is required.
+      - run: echo "Trigger Copy Job"
+      # - name: Webhook
+      #   uses: distributhor/workflow-webhook@v1.0.5
+      #   env:
+      #     webhook_type: "json-extended"
+      #     webhook_url: "https://ci.ext.devshift.net/github-webhook/"
+      #     webhook_secret: ${{ secrets.WEBHOOK_SECRET }}  # Does not matter, but provided because it is required.
 
