@@ -52,6 +52,7 @@ from api.models import (
     InstanceEvent,
     MachineImage,
     Run,
+    UserTaskLock,
 )
 from api.util import (
     calculate_max_concurrent_usage,
@@ -170,6 +171,7 @@ def create_from_sources_kafka_message(message, headers):  # noqa: C901
                 _("User %s was not found and has been created."),
                 account_number,
             )
+            UserTaskLock.objects.get_or_create(user=user)
 
     # Conditionalize the logic for different cloud providers
     if authtype == settings.SOURCES_CLOUDMETER_ARN_AUTHTYPE:
