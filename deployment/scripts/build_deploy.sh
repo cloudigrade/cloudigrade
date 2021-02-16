@@ -2,6 +2,8 @@
 
 set -exv
 
+QA_TAG=qa
+
 GIT_TAG=$(git tag --contains | head -1)
 GIT_TAG=${GIT_TAG:-latest}
 
@@ -27,11 +29,13 @@ docker --config="$DOCKER_CONF" pull "${GITHUB_IMAGE_NAME}:${IMAGE_TAG}"
 docker --config="$DOCKER_CONF" pull "${GITHUB_NGINX_IMAGE_NAME}:${IMAGE_TAG}"
 docker --config="$DOCKER_CONF" tag "${GITHUB_IMAGE_NAME}:${IMAGE_TAG}" "${IMAGE_NAME}:${GIT_TAG}"
 docker --config="$DOCKER_CONF" tag "${GITHUB_IMAGE_NAME}:${IMAGE_TAG}" "${IMAGE_NAME}:${SHORT_IMAGE_TAG}"
+docker --config="$DOCKER_CONF" tag "${GITHUB_IMAGE_NAME}:${IMAGE_TAG}" "${IMAGE_NAME}:${QA_TAG}"
 docker --config="$DOCKER_CONF" tag "${GITHUB_NGINX_IMAGE_NAME}:${IMAGE_TAG}" "${NGINX_IMAGE_NAME}:${GIT_TAG}"
 docker --config="$DOCKER_CONF" tag "${GITHUB_NGINX_IMAGE_NAME}:${IMAGE_TAG}" "${NGINX_IMAGE_NAME}:${SHORT_IMAGE_TAG}"
+docker --config="$DOCKER_CONF" tag "${GITHUB_NGINX_IMAGE_NAME}:${IMAGE_TAG}" "${NGINX_IMAGE_NAME}:${QA_TAG}"
 docker --config="$DOCKER_CONF" push "${IMAGE_NAME}:${GIT_TAG}"
 docker --config="$DOCKER_CONF" push "${IMAGE_NAME}:${SHORT_IMAGE_TAG}"
+docker --config="$DOCKER_CONF" push "${IMAGE_NAME}:${QA_TAG}"
 docker --config="$DOCKER_CONF" push "${NGINX_IMAGE_NAME}:${GIT_TAG}"
 docker --config="$DOCKER_CONF" push "${NGINX_IMAGE_NAME}:${SHORT_IMAGE_TAG}"
-# docker --config="$DOCKER_CONF" tag "${IMAGE}:${IMAGE_TAG}" "${IMAGE}:qa"
-# docker --config="$DOCKER_CONF" push "${IMAGE}:qa"
+docker --config="$DOCKER_CONF" push "${NGINX_IMAGE_NAME}:${QA_TAG}"
