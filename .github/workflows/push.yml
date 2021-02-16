@@ -196,8 +196,8 @@ jobs:
       - run: docker push ${NGINX_IMAGE_NAME}:${COMMIT_TAG}
 
   deploy-trigger-quay-copy:
-    name: Trigger AppSRE Builds
-    if: github.ref == 'refs/heads/master'
+    name: Trigger ghcr to quay copy
+    if: github.ref == 'refs/heads/738-aws'
     env:
       WEBHOOK_SECRET: ${{ secrets.WEBHOOK_SECRET }}
     needs: [deploy-build-and-push-image, deploy-build-and-push-nginx-image]
@@ -208,11 +208,10 @@ jobs:
          username: ${{ github.actor }}
          password: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - run: echo "Trigger Copy Job"
-      # - name: Webhook
-      #   uses: distributhor/workflow-webhook@v1.0.5
-      #   env:
-      #     webhook_type: "json-extended"
-      #     webhook_url: "https://ci.ext.devshift.net/github-webhook/"
-      #     webhook_secret: ${{ secrets.WEBHOOK_SECRET }}  # Does not matter, but provided because it is required.
+      - name: Webhook
+        uses: distributhor/workflow-webhook@v1.0.5
+        env:
+          webhook_type: "json-extended"
+          webhook_url: "https://ci.ext.devshift.net/github-webhook/"
+          webhook_secret: ${{ secrets.WEBHOOK_SECRET }}  # Does not matter, but provided because it is required.
 
