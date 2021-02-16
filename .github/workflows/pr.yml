@@ -1,8 +1,8 @@
 name: PR
 
 env:
-  IMAGE_NAME: docker.pkg.github.com/${{ github.repository }}/cloudigrade
-  NGINX_IMAGE_NAME: docker.pkg.github.com/${{ github.repository }}/cloudinginx
+  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/cloudigrade
+  NGINX_IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/cloudinginx
 
 on: [pull_request]
 
