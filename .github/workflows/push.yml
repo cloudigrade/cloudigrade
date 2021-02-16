@@ -107,9 +107,12 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: docker:latest
+    env:
+      GHCR_BOT_USERNAME: ${{ secrets.GHCR_BOT_USERNAME }}
+      GHCR_BOT_TOKEN: ${{ secrets.GHCR_BOT_TOKEN }}
     steps:
       - uses: actions/checkout@v2
-      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+      - run: echo "${GHCR_BOT_TOKEN}" | docker login ghcr.io -u ${GHCR_BOT_USERNAME} --password-stdin
       - run: docker pull $IMAGE_NAME:latest || true
       - run: docker build --cache-from ${IMAGE_NAME}:latest --tag ${IMAGE_NAME}:${{ github.sha }} --tag ${IMAGE_NAME}:latest .
       - run: docker push ${IMAGE_NAME}:${{ github.sha }}
@@ -119,6 +122,8 @@ jobs:
     name: Build and Push Tagged Image
     env:
       COMMIT_TAG: ${{ github.event.release.tag_name }}
+      GHCR_BOT_USERNAME: ${{ secrets.GHCR_BOT_USERNAME }}
+      GHCR_BOT_TOKEN: ${{ secrets.GHCR_BOT_TOKEN }}
     if: github.event_name == 'release' && github.event.action == 'created'
     needs: [test-py38, test-flake8, test-vulnerability, test-docker, test-s2i, test-docs]
     runs-on: ubuntu-latest
@@ -126,7 +131,7 @@ jobs:
       image: docker:latest
     steps:
       - uses: actions/checkout@v2
-      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+      - run: echo "${GHCR_BOT_TOKEN}" | docker login ghcr.io -u ${GHCR_BOT_USERNAME} --password-stdin
       - run: docker pull $IMAGE_NAME:latest || true
       - run: docker build --cache-from ${IMAGE_NAME}:latest --tag ${IMAGE_NAME}:${COMMIT_TAG} .
       - run: docker push ${IMAGE_NAME}:${COMMIT_TAG}
@@ -140,6 +145,8 @@ jobs:
       image: docker:latest
     env:
       CONTEXT_DIR: deployment/nginx/
+      GHCR_BOT_USERNAME: ${{ secrets.GHCR_BOT_USERNAME }}
+      GHCR_BOT_TOKEN: ${{ secrets.GHCR_BOT_TOKEN }}
       NGINX_S2I_IMAGE: registry.redhat.io/rhel8/nginx-116:latest
       S2I_VERSION: v1.3.1
       S2I_RELEASE: source-to-image-v1.3.1-a5a77147-linux-amd64
@@ -154,7 +161,7 @@ jobs:
           REDHAT_REGISTRY_LOGIN: ${{ secrets.REDHAT_REGISTRY_LOGIN }}
         run: ${REDHAT_REGISTRY_LOGIN}
       - run: s2i build --context-dir=${CONTEXT_DIR} --ref ${GITHUB_REF##*/} ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY} ${NGINX_S2I_IMAGE} ${NGINX_IMAGE_NAME}:${{ github.sha }}
-      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+      - run: echo "${GHCR_BOT_TOKEN}" | docker login ghcr.io -u ${GHCR_BOT_USERNAME} --password-stdin
       - run: docker push ${NGINX_IMAGE_NAME}:${{ github.sha }}
       - run: docker tag ${NGINX_IMAGE_NAME}:${{ github.sha }} ${NGINX_IMAGE_NAME}:latest
       - run: docker push ${NGINX_IMAGE_NAME}:latest
@@ -168,6 +175,8 @@ jobs:
       image: docker:latest
     env:
       COMMIT_TAG: ${{ github.event.release.tag_name }}
+      GHCR_BOT_USERNAME: ${{ secrets.GHCR_BOT_USERNAME }}
+      GHCR_BOT_TOKEN: ${{ secrets.GHCR_BOT_TOKEN }}
       CONTEXT_DIR: deployment/nginx/
       NGINX_S2I_IMAGE: registry.redhat.io/rhel8/nginx-116:latest
       S2I_VERSION: v1.3.1
@@ -183,7 +192,7 @@ jobs:
           REDHAT_REGISTRY_LOGIN: ${{ secrets.REDHAT_REGISTRY_LOGIN }}
         run: ${REDHAT_REGISTRY_LOGIN}
       - run: s2i build --context-dir=${CONTEXT_DIR} --ref ${GITHUB_REF##*/} ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY} ${NGINX_S2I_IMAGE} ${NGINX_IMAGE_NAME}:${COMMIT_TAG}
-      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+      - run: echo "${GHCR_BOT_TOKEN}" | docker login ghcr.io -u ${GHCR_BOT_USERNAME} --password-stdin
       - run: docker push ${NGINX_IMAGE_NAME}:${COMMIT_TAG}
 
   deploy-trigger-quay-copy:
