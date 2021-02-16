@@ -4,7 +4,6 @@ set -exv
 
 GIT_TAG=$(git tag --contains | head -1)
 GIT_TAG=${GIT_TAG:-latest}
-echo GIT_TAG
 
 IMAGE_TAG=$(git rev-parse HEAD)
 SHORT_IMAGE_TAG=$(git rev-parse --short=7 HEAD)
