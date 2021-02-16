@@ -5,6 +5,7 @@ import logging
 
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.db import transaction
 from django.utils.translation import gettext as _
 from rest_framework import HTTP_HEADER_ENCODING
 from rest_framework.authentication import BaseAuthentication, exceptions
@@ -122,13 +123,21 @@ class IdentityHeaderAuthentication(BaseAuthentication):
 
         user = None
         if self.create_user:
-            user, created = User.objects.get_or_create(username=account_number)
-            if created:
-                user.set_unusable_password()
-                logger.info(
-                    _("Username %s was not found and has been created."),
-                    account_number,
-                )
+            # Note: Declaring this transaction might not be necessary since we have
+            # ATOMIC_REQUESTS default to True, but since it's *possible* to disable that
+            # setting, this bit of paranoia ensures the User and UserTaskLock are always
+            # created together in a shared transaction.
+            with transaction.atomic():
+                user, created = User.objects.get_or_create(username=account_number)
+                if created:
+                    user.set_unusable_password()
+                    logger.info(
+                        _("Username %s was not found and has been created."),
+                        account_number,
+                    )
+                    from api.models import UserTaskLock  # local import to avoid loop
+
+                    UserTaskLock.objects.get_or_create(user=user)
         elif User.objects.filter(username=account_number).exists():
             user = User.objects.get(username=account_number)
             logger.info(
