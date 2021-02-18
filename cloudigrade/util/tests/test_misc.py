@@ -80,7 +80,7 @@ class LockUserTaskTest(TransactionTestCase):
             generate_verify_task=False,
         )
 
-        with transaction.atomic(), lock_task_for_user_ids([account.user.id]):
+        with lock_task_for_user_ids([account.user.id]):
             CloudAccount.objects.filter(id=account.id).delete()
 
         self.assertEqual(CloudAccount.objects.all().count(), 0)
@@ -99,7 +99,7 @@ class LockUserTaskTest(TransactionTestCase):
         )
         UserTaskLock.objects.create(user=account.user)
         with self.assertRaises(transaction.TransactionManagementError):
-            with transaction.atomic(), lock_task_for_user_ids([account.user.id]):
+            with lock_task_for_user_ids([account.user.id]):
                 CloudAccount.objects.filter(id=account.id).delete()
                 raise transaction.TransactionManagementError
 
