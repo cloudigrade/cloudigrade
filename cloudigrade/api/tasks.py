@@ -254,7 +254,7 @@ def delete_from_sources_kafka_message(message, headers, event_type):  # noqa: C9
         # Using the UserTaskLock *should* fix the issue of Django not getting a
         # row-level lock in the DB for each CloudAccount we want to delete until
         # after all of the pre_delete logic completes
-        with transaction.atomic(), lock_task_for_user_ids([cloud_account.user.id]):
+        with lock_task_for_user_ids([cloud_account.user.id]):
             # Call delete on the CloudAccount queryset instead of the specific
             # cloud_account. Why? A queryset delete does not raise DoesNotExist
             # exceptions if the cloud_account has already been deleted.
@@ -580,7 +580,7 @@ def calculate_max_concurrent_usage_task(self, date, user_id):
         # Lock the task at a user level. A user can only run one task at a time.
         # If another user task is already running, then don't start the
         # concurrent usage calculation task
-        with transaction.atomic(), lock_task_for_user_ids([user_id]):
+        with lock_task_for_user_ids([user_id]):
             calculate_max_concurrent_usage(date, user_id)
     except Exception:
         calculation_task.status = ConcurrentUsageCalculationTask.ERROR

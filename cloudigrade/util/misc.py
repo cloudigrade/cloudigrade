@@ -3,6 +3,7 @@ import datetime
 import logging
 from contextlib import contextmanager
 
+from django.db import transaction
 
 logger = logging.getLogger(__name__)
 
@@ -82,13 +83,14 @@ def lock_task_for_user_ids(user_ids):
     from api.models import UserTaskLock
 
     logger.info(
-        "Locking user_ids %(user_ids)s until transaction is commited.",
+        "Locking user_ids %(user_ids)s until transaction is committed.",
         {"user_ids": user_ids},
     )
-    for user_id in user_ids:
-        UserTaskLock.objects.get_or_create(user_id=user_id)
-    locks = UserTaskLock.objects.select_for_update().filter(user__id__in=user_ids)
-    locks.update(locked=True)
-    yield locks
-    locks.update(locked=False)
-    logger.info("Unlocking user_ids %(user_ids)s.", {"user_ids": user_ids})
+    with transaction.atomic():
+        for user_id in user_ids:
+            UserTaskLock.objects.get_or_create(user_id=user_id)
+        locks = UserTaskLock.objects.select_for_update().filter(user__id__in=user_ids)
+        locks.update(locked=True)
+        yield locks
+        locks.update(locked=False)
+        logger.info("Unlocking user_ids %(user_ids)s.", {"user_ids": user_ids})

@@ -2,7 +2,6 @@
 import logging
 
 from django.contrib.auth.models import User
-from django.db import transaction
 from django.utils.translation import gettext as _
 from rest_framework.serializers import ValidationError
 
@@ -129,7 +128,7 @@ def initial_aws_describe_instances(account_id):
         return
 
     # Lock the task at a user level. A user can only run one task at a time.
-    with transaction.atomic(), lock_task_for_user_ids([user_id]):
+    with lock_task_for_user_ids([user_id]):
         try:
             AwsCloudAccount.objects.get(pk=account_id)
             new_ami_ids = create_new_machine_images(session, instances_data)
