@@ -1,0 +1,5 @@
+---
+- import_playbook: manage-aws.yml
+  when:
+    - aws_state is defined
+    - aws_state == "present"

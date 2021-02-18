@@ -1,0 +1,56 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": [
+                "autoscaling:UpdateAutoScalingGroup",
+                "ec2:CopySnapshot",
+                "ec2:CreateVolume",
+                "ec2:DeleteSnapshot",
+                "ec2:DeleteVolume",
+                "ecs:DescribeContainerInstances",
+                "ecs:ListContainerInstances",
+                "ecs:RunTask",
+                "sqs:CreateQueue",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:ListDeadLetterSourceQueues",
+                "sqs:ReceiveMessage",
+                "sqs:SendMessage",
+                "sqs:SendMessageBatch",
+                "sqs:SetQueueAttributes"
+            ],
+            "Resource": [
+                "{{ ec2_autoscaling_group.auto_scaling_group_arn }}",
+                "{{ ecs_cluster.cluster.clusterArn }}",
+                "arn:aws:ecs:*:{{ aws_caller_info.account }}:container-instance/*",
+                "arn:aws:ecs:*:{{ aws_caller_info.account }}:task-definition/*:*",
+                "arn:aws:ec2:*:{{ aws_caller_info.account }}:volume/*",
+                "arn:aws:ec2:*::snapshot/*",
+                "arn:aws:sqs:*:{{ aws_caller_info.account }}:*"
+            ]
+        },
+        {
+            "Sid": "VisualEditor1",
+            "Effect": "Allow",
+            "Action": [
+                "autoscaling:DescribeAutoScalingGroups",
+                "ec2:DescribeSnapshots",
+                "ec2:DescribeVolumes",
+                "ecs:RegisterTaskDefinition",
+                "pricing:*",
+                "sts:AssumeRole",
+                "sts:GetAccessKeyInfo",
+                "sts:GetCallerIdentity",
+                "sts:GetFederationToken",
+                "sts:GetServiceBearerToken",
+                "sts:GetSessionToken",
+                "sqs:ListQueues"
+            ],
+            "Resource": "*"
+        }
+    ]
+}

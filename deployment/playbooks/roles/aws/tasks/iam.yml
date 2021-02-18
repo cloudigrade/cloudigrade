@@ -1,0 +1,51 @@
+- block:
+  - name: create / get aws info
+    amazon.aws.aws_caller_info:
+    register: aws_caller_info
+
+  - name: create / user
+    community.aws.iam:
+      iam_type: user
+      name: "{{ iam_user_name }}"
+      access_key_state: remove
+      key_count: 0
+      state: present
+
+  - name: create / user api key
+    community.aws.iam:
+      iam_type: user
+      name: "{{ iam_user_name }}"
+      access_key_state: create
+      key_count: 1
+      state: update
+    register: iam_user
+
+  - name: create / user s3 polocy
+    community.aws.iam_policy:
+      iam_type: user
+      iam_name: "{{ iam_user_name }}"
+      policy_name: "{{ iam_policy_name }}"
+      policy_json: "{{ lookup( 'template', 'cloudigrade-deployment-policy.json.j2') | to_json }}"
+      state: present
+
+  - name: create / write deploy env vars
+    template:
+      src: env.j2
+      dest: .env
+
+  when:
+    - ecs_state == "present"
+    - s3_state == "present"
+    - iam_state == "present"
+
+
+- block:
+  - name: destroy / user
+    iam:
+      iam_type: user
+      name: "{{ iam_user_name }}"
+      state: absent
+
+  when:
+    - iam_state == "absent"
+

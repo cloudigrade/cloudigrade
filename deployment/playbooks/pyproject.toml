@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "shiftigrade"
+version = "0.1.0"
+description = ""
+authors = ["Cloudigrade Dev Team <doppler-dev@redhat.com>"]
+license = "GNU GPLv3"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+ansible = "^2.10.5"
+boto = "^2.49.0"
+botocore = "^1.19.59"
+boto3 = "^1.16.59"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
