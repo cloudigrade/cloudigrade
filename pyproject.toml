@@ -33,6 +33,8 @@ confluent-kafka = "^1.5.0"
 django-prometheus = "~=2.1.0"
 django-filter = "~=2.4.0"
 prometheus_client = "~=0.9.0"
+ansible = "^2.10.5"
+boto = "^2.49.0"
 
 [tool.poetry.dev-dependencies]
 seqdiag = "*"
