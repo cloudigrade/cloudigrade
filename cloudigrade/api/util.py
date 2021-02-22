@@ -322,7 +322,7 @@ def calculate_max_concurrent_usage(date, user_id):
                 ),
                 {"number": number, "user_id": user_id, "date": date},
             )
-        if not run.machineimage.rhel:
+        if not run.machineimage or not run.machineimage.rhel:
             continue
         rhel_on_offs.append(
             (
