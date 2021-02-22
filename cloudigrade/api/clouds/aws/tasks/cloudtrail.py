@@ -89,7 +89,7 @@ def _process_cloudtrail_message(message):
         raw_content = aws.get_object_content_from_s3(bucket, key)
         content = json.loads(raw_content)
         logs.append((content, bucket, key))
-        logger.debug(
+        logger.info(
             _("Read CloudTrail log file from bucket %(bucket)s object key %(key)s"),
             {"bucket": bucket, "key": key},
         )
