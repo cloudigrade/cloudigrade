@@ -154,6 +154,28 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         usage = calculate_max_concurrent_usage(request_date, user_id=self.user1.id)
         self.assertMaxConcurrentUsage(usage, expected_date, 0)
 
+    def test_single_no_image_run_within_day(self):
+        """Test with a single no-image instance run within the day."""
+        mystery_instance = api_helper.generate_instance(
+            self.user1account1, image=None, no_image=True
+        )
+        api_helper.generate_single_run(
+            mystery_instance,
+            (
+                util_helper.utc_dt(2019, 5, 1, 1, 0, 0),
+                util_helper.utc_dt(2019, 5, 1, 2, 0, 0),
+            ),
+            image=None,
+            no_image=True,
+        )
+        request_date = datetime.date(2019, 5, 1)
+        expected_date = request_date
+        expected_instances = 0
+
+        usage = calculate_max_concurrent_usage(request_date, user_id=self.user1.id)
+        self.assertEqual(len(usage.maximum_counts), 0)
+        self.assertMaxConcurrentUsage(usage, expected_date, expected_instances)
+
     def test_single_run_overlapping_day_start(self):
         """Test with a RHEL instance run overlapping the start of the day."""
         rhel_instance = api_helper.generate_instance(
