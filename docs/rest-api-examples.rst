@@ -2254,10 +2254,8 @@ Response:
     }
 
 If your requested ``start_date`` and ``end_date`` values would result in some
-future dates beyond "today", those future dates will not be included. Daily
-max concurrency results will end "today" at the latest. In the following
-example, the request is for dates "today" through "one week from today".
-This means only one day ("today") is included in the response data.
+future dates beyond "today", the API will return a 400 with the relevant errors.
+Daily max concurrency results will end "today" at the latest.
 
 Request:
 
@@ -2271,9 +2269,9 @@ Response:
 
 ::
 
-    HTTP/1.1 200 OK
+    HTTP/1.1 400 Bad Request
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 3107
+    Content-Length: 50
     Content-Type: application/json
     Vary: Accept
     X-CLOUDIGRADE-REQUEST-ID: c780b286-6b81-4ef2-9d25-6de4906cec15
@@ -2281,220 +2279,14 @@ Response:
     X-Frame-Options: DENY
 
     {
-        "data": [
-            {
-                "date": "2020-05-18",
-                "maximum_counts": [
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    }
-                ]
-            }
-        ],
-        "links": {
-            "first": "/api/cloudigrade/api/cloudigrade/v2/concurrent/?end_date=2020-05-25&limit=10&offset=0&start_date=2020-05-18",
-            "last": "/api/cloudigrade/api/cloudigrade/v2/concurrent/?end_date=2020-05-25&limit=10&offset=0&start_date=2020-05-18",
-            "next": null,
-            "previous": null
-        },
-        "meta": {
-            "count": 1
-        }
+        "end_date": [
+            "end_date cannot be in the future."
+        ]
     }
 
 If your requested ``start_date`` and ``end_date`` values would result in exclusively
-future dates beyond "today", since those future dates will not be included, zero days
-will be included in the response data. In the following example, the request is for
-dates "tomorrow" through "one week from today".
+future dates beyond "today", the API will also return a 400 with the relevant errors.
+ In the following example, the request is for dates "tomorrow" through "one week from today".
 
 Request:
 
@@ -2508,9 +2300,9 @@ Response:
 
 ::
 
-    HTTP/1.1 200 OK
+    HTTP/1.1 400 Bad Request
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 303
+    Content-Length: 103
     Content-Type: application/json
     Vary: Accept
     X-CLOUDIGRADE-REQUEST-ID: 077febdd-f653-4840-945a-121f5bb10758
@@ -2518,16 +2310,12 @@ Response:
     X-Frame-Options: DENY
 
     {
-        "data": [],
-        "links": {
-            "first": "/api/cloudigrade/api/cloudigrade/v2/concurrent/?end_date=2020-05-25&limit=10&offset=0&start_date=2020-05-19",
-            "last": "/api/cloudigrade/api/cloudigrade/v2/concurrent/?end_date=2020-05-25&limit=10&offset=0&start_date=2020-05-19",
-            "next": null,
-            "previous": null
-        },
-        "meta": {
-            "count": 0
-        }
+        "end_date": [
+            "end_date cannot be in the future."
+        ],
+        "start_date": [
+            "start_date cannot be in the future."
+        ]
     }
 
 Miscellaneous Commands
