@@ -189,10 +189,8 @@ Response:
 {{ v2_list_concurrent_too_early | stringify_http_response | rst_codeblock }}
 
 If your requested ``start_date`` and ``end_date`` values would result in some
-future dates beyond "today", those future dates will not be included. Daily
-max concurrency results will end "today" at the latest. In the following
-example, the request is for dates "today" through "one week from today".
-This means only one day ("today") is included in the response data.
+future dates beyond "today", the API will return a 400 with the relevant errors.
+Daily max concurrency results will end "today" at the latest.
 
 Request:
 
@@ -203,9 +201,8 @@ Response:
 {{ v2_list_concurrent_partial_future | stringify_http_response | rst_codeblock }}
 
 If your requested ``start_date`` and ``end_date`` values would result in exclusively
-future dates beyond "today", since those future dates will not be included, zero days
-will be included in the response data. In the following example, the request is for
-dates "tomorrow" through "one week from today".
+future dates beyond "today", the API will also return a 400 with the relevant errors.
+ In the following example, the request is for dates "tomorrow" through "one week from today".
 
 Request:
 

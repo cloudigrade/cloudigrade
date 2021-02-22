@@ -201,13 +201,12 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
         self.assertEqual(len(body["data"]), 1)
         self.assertEqual(body["data"][0]["date"], str(today))
 
-    def test_future_end_date_acts_like_tomorrow(self):
+    def test_future_end_date_returns_400(self):
         """
-        Test with far-future end_date, expecting it to act like tomorrow.
+        Test with far-future end_date, expecting it to return 400.
 
-        When an end_date is given that is later than tomorrow, we actually use
-        tomorrow as the exclusive end date because we do not want to project
-        calculations into the future.
+        When an end_date is given that is later than tomorrow, we return
+        a 400 response, because we cannot predict the future.
         """
         today = get_today()
         future = today + datetime.timedelta(days=100)
@@ -219,17 +218,39 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
         response = client.get(
             "/api/cloudigrade/v2/concurrent/", data=data, format="json"
         )
-        body = response.json()
-        self.assertEqual(body["meta"]["count"], 1)
-        self.assertEqual(len(body["data"]), 1)
-        self.assertEqual(body["data"][0]["date"], str(today))
+        self.assertEqual(response.status_code, 400)
 
-    def test_future_start_and_end_date_no_results(self):
+        body = response.json()
+        self.assertEqual(body["end_date"], [_("end_date cannot be in the future.")])
+
+    def test_future_start_date_returns_400(self):
+        """
+        Test with far-future start_date, expecting it to return 400.
+
+        When an start_date is given that is tomorrow or later, we return
+        a 400 response, because we cannot predict the future.
+        """
+        today = get_today()
+        future = today + datetime.timedelta(days=1)
+        data = {"start_date": str(future)}
+        api_helper.calculate_concurrent(today, future, self.user1.id)
+
+        client = APIClient()
+        client.force_authenticate(user=self.user1)
+        response = client.get(
+            "/api/cloudigrade/v2/concurrent/", data=data, format="json"
+        )
+        self.assertEqual(response.status_code, 400)
+
+        body = response.json()
+        self.assertEqual(body["start_date"], [_("start_date cannot be in the future.")])
+
+    def test_future_start_and_end_date_returns_400(self):
         """
         Test with far-future start_date and end_date, expecting no results.
 
         If the request filters result in dates that are only in the future, we must
-        always expect zero days in the response data because we cannot possibly know
+        always expect a 400 response because we cannot possibly know
         anything beyond today.
         """
         today = get_today()
@@ -241,9 +262,11 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
         response = client.get(
             "/api/cloudigrade/v2/concurrent/", data=data, format="json"
         )
+        self.assertEqual(response.status_code, 400)
+
         body = response.json()
-        self.assertEqual(body["meta"]["count"], 0)
-        self.assertEqual(len(body["data"]), 0)
+        self.assertEqual(body["start_date"], [_("start_date cannot be in the future.")])
+        self.assertEqual(body["end_date"], [_("end_date cannot be in the future.")])
 
     @patch("api.tasks.calculate_max_concurrent_usage_task")
     def test_425_if_no_concurrent_usage(self, mock_calculate_task):
