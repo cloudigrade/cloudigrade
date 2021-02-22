@@ -153,7 +153,7 @@ def process_sources_destroy_event(value, headers):
             "An ApplicationAuthentication object was destroyed. "
             "Message: %(value)s. Headers: %(headers)s"
         ),
-        {"message_value": value, "message_headers": headers},
+        {"value": value, "headers": headers},
     )
     if settings.SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA:
         tasks.delete_from_sources_kafka_message.delay(value, headers)
