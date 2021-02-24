@@ -13,6 +13,8 @@
                 "ecs:DescribeContainerInstances",
                 "ecs:ListContainerInstances",
                 "ecs:RunTask",
+                "s3:GetLifecycleConfiguration",
+                "s3:PutLifecycleConfiguration",
                 "sqs:CreateQueue",
                 "sqs:GetQueueAttributes",
                 "sqs:GetQueueUrl",
@@ -30,6 +32,7 @@
                 "arn:aws:ecs:*:{{ aws_caller_info.account }}:task-definition/*:*",
                 "arn:aws:ec2:*:{{ aws_caller_info.account }}:volume/*",
                 "arn:aws:ec2:*::snapshot/*",
+                "arn:aws:s3:::{{ s3_bucket_name }}",
                 "arn:aws:sqs:*:{{ aws_caller_info.account }}:*"
             ]
         },
