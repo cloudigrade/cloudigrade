@@ -1,5 +1,8 @@
 FROM registry.access.redhat.com/ubi8/ubi-minimal:8.3
 
+# Make Ansible happy with arbitrary UID/GID in OpenShift.
+RUN chmod g=u /etc/passwd /etc/group
+
 WORKDIR /opt/cloudigrade
 RUN microdnf install shadow-utils \
 	&& useradd -r cloudigrade \
