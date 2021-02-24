@@ -17,7 +17,8 @@
       access_key_ids: "{{ item.access_key_id }}"
       access_key_state: remove
       state: update
-    loop: "{{ initial_iam_user.user_meta.access_keys }}"
+    with_items: "{{ initial_iam_user.user_meta.access_keys }}"
+    when: initial_iam_user.user_meta.access_keys | d(False)
 
   - name: create / user api key
     community.aws.iam:
