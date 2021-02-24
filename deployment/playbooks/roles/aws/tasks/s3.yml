@@ -22,6 +22,8 @@
 
   - name: create / sqs notification for s3 bucket
     script: "create-notification.py --bucket {{ s3_bucket_name }} --queue {{ sqs_queue.queue_arn }}"
+    args:
+      executable: python3
 
   when: s3_state == "present"
 
