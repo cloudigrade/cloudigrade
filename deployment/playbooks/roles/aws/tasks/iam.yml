@@ -42,9 +42,7 @@
       dest: /mnt/secret_store/.env
 
   when:
-    - ecs_state == "present"
-    - s3_state == "present"
-    - iam_state == "present"
+    - aws_state == "present"
 
 
 - block:
@@ -55,5 +53,5 @@
       state: absent
 
   when:
-    - iam_state == "absent"
+    - aws_state == "absent"
 

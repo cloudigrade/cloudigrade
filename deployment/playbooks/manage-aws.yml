@@ -5,6 +5,4 @@
   roles:
     - aws
   vars:
-    ecs_state: present
-    s3_state: present
-    iam_state: present
+    aws_state: present

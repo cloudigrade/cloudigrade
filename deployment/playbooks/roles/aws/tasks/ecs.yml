@@ -70,7 +70,7 @@
       state: present
     register: ec2_autoscaling_group
 
-  when: ecs_state == "present"
+  when: aws_state == "present"
 
 # Destroy Block
 - block:
@@ -120,5 +120,5 @@
       purge_policies: true
       state: absent
 
-  when: ecs_state == "absent"
+  when: aws_state == "absent"
 
