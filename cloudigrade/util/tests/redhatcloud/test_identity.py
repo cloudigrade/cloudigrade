@@ -59,3 +59,11 @@ class IdentityTest(TestCase):
 
         extracted_value = identity.get_x_rh_identity_header(headers)
         self.assertEqual(extracted_value, {})
+
+    def test_get_x_rh_identity_header_invalid_header(self):
+        """Assert invalid HTTP identity header returns None."""
+        encoded_value = base64.b64encode(_faker.slug().encode("utf-8"))
+        headers = ((_faker.slug(), _faker.slug()), ("x-rh-identity", encoded_value))
+
+        extracted_value = identity.get_x_rh_identity_header(headers)
+        self.assertEqual(extracted_value, None)

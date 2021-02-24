@@ -1,6 +1,7 @@
 """Internal views for cloudigrade API."""
 from django.contrib.auth.models import User
 from django.http import JsonResponse
+from django.utils.translation import gettext as _
 from django_filters import rest_framework as django_filters
 from rest_framework import exceptions, mixins, permissions, status, viewsets
 from rest_framework.decorators import (
@@ -22,6 +23,7 @@ from internal.authentication import (
     IdentityHeaderAuthenticationInternal,
     IdentityHeaderAuthenticationInternalCreateUser,
 )
+from util.redhatcloud import identity
 
 
 @api_view(["POST"])
@@ -69,6 +71,11 @@ def sources_kafka(request):
     event_type = data.get("event_type")
     value = data.get("value")
     headers = data.get("headers")
+
+    if not identity.get_x_rh_identity_header(headers):
+        raise exceptions.ValidationError(
+            {"headers": _("headers is not valid base64 encoded json")}
+        )
 
     func = None
     if event_type == "ApplicationAuthentication.create":

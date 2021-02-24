@@ -162,6 +162,8 @@ def extract_ids_from_kafka_message(message, headers):
             message,
             headers,
         )
+        # Early exit if auth_header does not exist
+        return None, None
 
     account_number = auth_header.get("identity", {}).get("account_number")
     if not account_number:

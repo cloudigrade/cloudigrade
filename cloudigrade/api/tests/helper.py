@@ -120,7 +120,7 @@ class SandboxedRestClient(object):
         example, "create_account" would handle POSTs to the account API.
         """
         try:
-            verb, noun = item.split("_")
+            verb, noun = item.split("_", 1)
             if verb == "list":
                 verb = "get"
             elif verb == "create":
