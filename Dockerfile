@@ -28,6 +28,7 @@ RUN microdnf update \
     && microdnf clean all
 
 COPY deployment/playbooks/ ./playbooks
+COPY deployment/scripts/mid_hook.sh ./scripts/mid_hook.sh
 COPY cloudigrade .
 USER cloudigrade
 
