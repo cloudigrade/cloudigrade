@@ -7,9 +7,17 @@
     community.aws.iam:
       iam_type: user
       name: "{{ iam_user_name }}"
-      access_key_state: remove
-      key_count: 0
       state: present
+    register: initial_iam_user
+
+  - name: update / user - key rotation - destroy
+    community.aws.iam:
+      iam_type: user
+      name: "{{ iam_user_name }}"
+      access_key_ids: "{{ item.access_key_id }}"
+      access_key_state: remove
+      state: update
+    loop: "{{ initial_iam_user.user_meta.access_keys }}"
 
   - name: create / user api key
     community.aws.iam:
@@ -31,7 +39,7 @@
   - name: create / write deploy env vars
     template:
       src: env.j2
-      dest: .env
+      dest: /mnt/secret_store/.env
 
   when:
     - ecs_state == "present"
