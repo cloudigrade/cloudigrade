@@ -90,7 +90,8 @@ jobs:
 
   deploy-build-and-push-image:
     name: Build and Push Image
-    if: github.ref == 'refs/heads/master'
+    # if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/738-ensure-aws'
     needs: [test-py38, test-flake8, test-vulnerability, test-docker, test-s2i, test-docs]
     runs-on: ubuntu-latest
     container:
@@ -104,7 +105,7 @@ jobs:
       - run: docker pull $IMAGE_NAME:latest || true
       - run: docker build --cache-from ${IMAGE_NAME}:latest --tag ${IMAGE_NAME}:${{ github.sha }} --tag ${IMAGE_NAME}:latest .
       - run: docker push ${IMAGE_NAME}:${{ github.sha }}
-      - run: docker push ${IMAGE_NAME}:latest
+      # - run: docker push ${IMAGE_NAME}:latest
 
   deploy-build-and-push-nginx-image:
     name: Build and Push NGINX Image
