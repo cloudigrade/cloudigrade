@@ -1,6 +1,12 @@
 """Functions for interacting with and handling platform identity headers."""
 import base64
 import json
+import logging
+
+from django.utils.translation import gettext as _
+
+
+logger = logging.getLogger(__name__)
 
 
 def generate_http_identity_headers(account_number, is_org_admin=False):
@@ -43,7 +49,11 @@ def get_x_rh_identity_header(headers):
     # The headers are a list of... tuples.
     for header in headers:
         if header[0] == "x-rh-identity":
-            auth_header = json.loads(base64.b64decode(header[1]).decode("utf-8"))
-            break
-
+            try:
+                auth_header = json.loads(base64.b64decode(header[1]).decode("utf-8"))
+                break
+            except (UnicodeDecodeError, json.JSONDecodeError) as e:
+                logger.info(_("x-rh-identity header parsing error %s"), e)
+                logger.info(_("Raw headers are: %s"), headers)
+                return
     return auth_header
