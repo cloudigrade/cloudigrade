@@ -25,7 +25,7 @@
     args:
       executable: python3
 
-  when: s3_state == "present"
+  when: aws_state == "present"
 
 
 - block:
@@ -40,4 +40,4 @@
       name: "{{ sqs_name }}"
       state: absent
 
-  when: s3_state == "absent"
+  when: aws_state == "absent"
