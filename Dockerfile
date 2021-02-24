@@ -24,6 +24,7 @@ RUN microdnf update \
     && microdnf remove libcurl-devel gcc python3-devel openssl-devel annobin -y \
     && microdnf clean all
 
+COPY deployment/playbooks/ ./playbooks
 COPY cloudigrade .
 USER cloudigrade
 
