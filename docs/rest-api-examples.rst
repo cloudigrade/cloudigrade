@@ -82,6 +82,7 @@ Response:
     Allow: GET, HEAD, OPTIONS
     Content-Length: 1195
     Content-Type: application/json
+    Referrer-Policy: same-origin
     Vary: Accept
     X-CLOUDIGRADE-REQUEST-ID: 592d02d4-f93b-415d-9298-e424350034a8
     X-Content-Type-Options: nosniff
@@ -157,6 +158,7 @@ Response:
     Allow: GET, HEAD, OPTIONS
     Content-Length: 488
     Content-Type: application/json
+    Referrer-Policy: same-origin
     Vary: Accept
     X-CLOUDIGRADE-REQUEST-ID: acbbf0e6-1fbf-414b-9eb0-06ee9a3bdb24
     X-Content-Type-Options: nosniff
@@ -203,6 +205,7 @@ Response:
     Allow: GET, HEAD, OPTIONS
     Content-Length: 2646
     Content-Type: application/json
+    Referrer-Policy: same-origin
     Vary: Accept
     X-CLOUDIGRADE-REQUEST-ID: 2f741c7a-58b5-4542-a107-f7355c5579f5
     X-Content-Type-Options: nosniff
@@ -330,6 +333,7 @@ Response:
     Allow: GET, HEAD, OPTIONS
     Content-Length: 355
     Content-Type: application/json
+    Referrer-Policy: same-origin
     Vary: Accept
     X-CLOUDIGRADE-REQUEST-ID: 4a4befe0-f58d-4253-af97-fe141a88944e
     X-Content-Type-Options: nosniff
@@ -373,6 +377,7 @@ Response:
     Allow: GET, HEAD, OPTIONS
     Content-Length: 2402
     Content-Type: application/json
+    Referrer-Policy: same-origin
     Vary: Accept
     X-CLOUDIGRADE-REQUEST-ID: 2860e525-f220-4d39-9082-3e3cc12f4a5f
     X-Content-Type-Options: nosniff
@@ -490,6 +495,7 @@ Response:
     Allow: GET, HEAD, OPTIONS
     Content-Length: 6750
     Content-Type: application/json
+    Referrer-Policy: same-origin
     Vary: Accept
     X-CLOUDIGRADE-REQUEST-ID: 6ba90bdc-2199-4564-93b3-12216b4c8c6a
     X-Content-Type-Options: nosniff
@@ -746,6 +752,7 @@ Response:
     Allow: GET, HEAD, OPTIONS
     Content-Length: 1075
     Content-Type: application/json
+    Referrer-Policy: same-origin
     Vary: Accept
     X-CLOUDIGRADE-REQUEST-ID: bded2497-6c4c-435a-953f-71a15ea3f287
     X-Content-Type-Options: nosniff
@@ -824,6 +831,7 @@ Response:
     Allow: GET, HEAD, OPTIONS
     Content-Length: 19939
     Content-Type: application/json
+    Referrer-Policy: same-origin
     Vary: Accept
     X-CLOUDIGRADE-REQUEST-ID: c62a6e31-5b1d-40d2-9dda-b307e78673c0
     X-Content-Type-Options: nosniff
@@ -2244,6 +2252,7 @@ Response:
     Allow: GET, HEAD, OPTIONS
     Content-Length: 64
     Content-Type: application/json
+    Referrer-Policy: same-origin
     Vary: Accept
     X-CLOUDIGRADE-REQUEST-ID: ef1a6a10-196a-4627-bbf4-07ca726eaf6a
     X-Content-Type-Options: nosniff
@@ -2273,6 +2282,7 @@ Response:
     Allow: GET, HEAD, OPTIONS
     Content-Length: 50
     Content-Type: application/json
+    Referrer-Policy: same-origin
     Vary: Accept
     X-CLOUDIGRADE-REQUEST-ID: c780b286-6b81-4ef2-9d25-6de4906cec15
     X-Content-Type-Options: nosniff
@@ -2304,6 +2314,7 @@ Response:
     Allow: GET, HEAD, OPTIONS
     Content-Length: 103
     Content-Type: application/json
+    Referrer-Policy: same-origin
     Vary: Accept
     X-CLOUDIGRADE-REQUEST-ID: 077febdd-f653-4840-945a-121f5bb10758
     X-Content-Type-Options: nosniff
@@ -2340,6 +2351,7 @@ Response:
     Allow: GET, HEAD, OPTIONS
     Content-Length: 608
     Content-Type: application/json
+    Referrer-Policy: same-origin
     Vary: Accept
     X-CLOUDIGRADE-REQUEST-ID: 0e606802-6af6-4ae6-9270-345f4bf37817
     X-Content-Type-Options: nosniff
@@ -2415,6 +2427,7 @@ Response:
     Allow: GET, POST, HEAD, OPTIONS
     Content-Length: 501
     Content-Type: application/json
+    Referrer-Policy: same-origin
     Vary: Accept
     X-CLOUDIGRADE-REQUEST-ID: 461c8e9b-b027-4bb3-b2ed-662fc46b6e2c
     X-Content-Type-Options: nosniff
@@ -2463,6 +2476,7 @@ Response:
     Allow: GET, POST, HEAD, OPTIONS
     Content-Length: 93
     Content-Type: application/json
+    Referrer-Policy: same-origin
     Vary: Accept
     X-CLOUDIGRADE-REQUEST-ID: ef85245a-76a1-4316-bbc1-344b00d4b272
     X-Content-Type-Options: nosniff
@@ -2500,6 +2514,7 @@ Response:
     Allow: GET, POST, HEAD, OPTIONS
     Content-Length: 515
     Content-Type: application/json
+    Referrer-Policy: same-origin
     Vary: Accept
     X-CLOUDIGRADE-REQUEST-ID: 48dfc1ac-e832-4815-8912-ca434e88571e
     X-Content-Type-Options: nosniff
