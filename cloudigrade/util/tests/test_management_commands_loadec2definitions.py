@@ -18,6 +18,7 @@ class LoadEc2DefinitionsTest(TestCase):
             instance_type=helper.get_random_instance_type(),
             memory=random.randrange(4),
             vcpu=random.randrange(4),
+            json_definition='{"test": "data"}',
             cloud_type="aws",
         )
 

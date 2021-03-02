@@ -6938,14 +6938,13 @@
             "maxLength": 256
           },
           "memory": {
-            "type": "string",
-            "format": "decimal",
-            "multipleOf": 0.01,
-            "maximum": 100000000000000,
-            "minimum": -100000000000000
+            "type": "integer"
           },
           "vcpu": {
             "type": "integer"
+          },
+          "json_definition": {
+            "type": "object"
           },
           "cloud_type": {
             "enum": [
@@ -6957,6 +6956,7 @@
         },
         "required": [
           "instance_type",
+          "json_definition",
           "cloud_type"
         ]
       },
