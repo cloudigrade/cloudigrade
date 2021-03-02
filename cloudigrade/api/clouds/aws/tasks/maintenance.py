@@ -99,7 +99,7 @@ def _save_ec2_instance_type_definitions(definitions):
                 instance_type=name,
                 cloud_type=AWS_PROVIDER_STRING,
                 defaults={
-                    "memory": attributes["memory"],
+                    "memory": int(attributes["memory"]),
                     "vcpu": attributes["vcpu"],
                     "json_definition": attributes["json_definition"],
                 },
