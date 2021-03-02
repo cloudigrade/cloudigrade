@@ -40,49 +40,40 @@ def _fetch_ec2_instance_type_definitions():
 
     Returns:
         dict: definitions dict of dicts where the outer key is the instance
-        type name and the inner dict has keys memory and vcpu. For example:
-        {'r5.large': {'memory': 24.0, 'vcpu': 1}}
+        type name and the inner dict has keys memory, vcpu and json_definition.
+        For example: {'r5.large': {'memory': 24.0, 'vcpu': 1, 'json_definition': {...}}}
 
     """
-    client = boto3.client("pricing")
-    paginator = client.get_paginator("get_products")
-    page_iterator = paginator.paginate(
-        ServiceCode="AmazonEC2",
-        Filters=[
-            {
-                "Type": "TERM_MATCH",
-                "Field": "productFamily",
-                "Value": "Compute Instance",
-            },
-        ],
-    )
-    logger.info(_("Getting AWS EC2 instance type information."))
+    client = boto3.client("ec2")
+    regions = [region["RegionName"] for region in client.describe_regions()["Regions"]]
+
     instances = {}
-    for page in page_iterator:
-        for instance in page["PriceList"]:
-            try:
-                instance_attr = json.loads(instance)["product"]["attributes"]
+    for region in regions:
+        client = boto3.client("ec2", region_name=region)
+        paginator = client.get_paginator("describe_instance_types")
+        page_iterator = paginator.paginate()
+        logger.info(_("Getting AWS EC2 instance type information."))
+        for page in page_iterator:
+            for instance in page["InstanceTypes"]:
+                try:
+                    instances[instance["InstanceType"]] = {
+                        "memory": instance.get("MemoryInfo").get("SizeInMiB", 0),
+                        "vcpu": instance.get("VCpuInfo").get("DefaultVCpus", 0),
+                        "json_definition": json.dumps(instance),
+                    }
+                except ValueError:
+                    logger.error(
+                        _(
+                            "Could not fetch EC2 definition for instance-type "
+                            "%(instance_type)s, memory %(memory)s, vcpu %(vcpu)s."
+                        ),
+                        {
+                            "instance_type": instance["InstanceType"],
+                            "memory": instance.get("MemoryInfo").get("SizeInMiB", 0),
+                            "vcpu": instance.get("VCpuInfo").get("DefaultVCpus", 0),
+                        },
+                    )
 
-                # memory comes in formatted like: 1,952.00 GiB
-                memory = float(instance_attr.get("memory", 0)[:-4].replace(",", ""))
-                vcpu = int(instance_attr.get("vcpu", 0))
-
-                instances[instance_attr["instanceType"]] = {
-                    "memory": memory,
-                    "vcpu": vcpu,
-                }
-            except ValueError:
-                logger.error(
-                    _(
-                        "Could not fetch EC2 definition for instance-type "
-                        "%(instance_type)s, memory %(memory)s, vcpu %(vcpu)s."
-                    ),
-                    {
-                        "instance_type": instance_attr["instanceType"],
-                        "memory": instance_attr.get("memory", 0),
-                        "vcpu": instance_attr.get("vcpu", 0),
-                    },
-                )
     return instances
 
 
@@ -95,8 +86,8 @@ def _save_ec2_instance_type_definitions(definitions):
 
     Args:
         definitions (dict): dict of dicts where the outer key is the instance
-            type name and the inner dict has keys memory and vcpu. For example:
-            {'r5.large': {'memory': 24.0, 'vcpu': 1}}
+        type name and the inner dict has keys memory, vcpu and json_definition.
+        For example: {'r5.large': {'memory': 24.0, 'vcpu': 1, 'json_definition': {...}}}
 
     Returns:
         None
@@ -107,7 +98,11 @@ def _save_ec2_instance_type_definitions(definitions):
             obj, created = InstanceDefinition.objects.get_or_create(
                 instance_type=name,
                 cloud_type=AWS_PROVIDER_STRING,
-                defaults={"memory": attributes["memory"], "vcpu": attributes["vcpu"]},
+                defaults={
+                    "memory": attributes["memory"],
+                    "vcpu": attributes["vcpu"],
+                    "json_definition": attributes["json_definition"],
+                },
             )
             if created:
                 logger.info(_("Saving new instance type %s"), obj.instance_type)

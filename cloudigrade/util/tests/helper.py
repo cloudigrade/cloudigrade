@@ -29,16 +29,237 @@ SOME_AWS_REGIONS = (
 )
 
 SOME_EC2_INSTANCE_TYPES = {
-    "c5.xlarge": {"memory": 8, "vcpu": 4},
-    "m5.24xlarge": {"memory": 384, "vcpu": 96},
-    "r4.large": {"memory": 15.25, "vcpu": 2},
-    "t2.large": {"memory": 16, "vcpu": 4},
-    "t2.medium": {"memory": 8, "vcpu": 2},
-    "t2.micro": {"memory": 1, "vcpu": 1},
-    "t2.nano": {"memory": 0.5, "vcpu": 1},
-    "t2.small": {"memory": 2, "vcpu": 1},
-    "t2.xlarge": {"memory": 16, "vcpu": 4},
-    "x1e.32xlarge": {"memory": 3904, "vcpu": 128},
+    "c5.xlarge": {
+        "memory": 8192,
+        "vcpu": 4,
+        "json_definition": {
+            "InstanceType": "c5.xlarge",
+            "MemoryInfo": {"SizeInMiB": 8192},
+            "ProcessorInfo": {
+                "SupportedArchitectures": ["x86_64"],
+                "SustainedClockSpeedInGhz": 3.4,
+            },
+            "VCpuInfo": {
+                "DefaultCores": 2,
+                "DefaultThreadsPerCore": 2,
+                "DefaultVCpus": 4,
+                "ValidCores": [2],
+                "ValidThreadsPerCore": [1, 2],
+            },
+        },
+    },
+    "m5.24xlarge": {
+        "memory": 393216,
+        "vcpu": 96,
+        "json_definition": {
+            "InstanceType": "m5.24xlarge",
+            "ProcessorInfo": {
+                "SupportedArchitectures": ["x86_64"],
+                "SustainedClockSpeedInGhz": 3.1,
+            },
+            "VCpuInfo": {
+                "DefaultVCpus": 96,
+                "DefaultCores": 48,
+                "DefaultThreadsPerCore": 2,
+                "ValidCores": [
+                    4,
+                    6,
+                    8,
+                    10,
+                    12,
+                    14,
+                    16,
+                    18,
+                    20,
+                    22,
+                    24,
+                    26,
+                    28,
+                    30,
+                    32,
+                    34,
+                    36,
+                    38,
+                    40,
+                    42,
+                    44,
+                    46,
+                    48,
+                ],
+                "ValidThreadsPerCore": [1, 2],
+            },
+            "MemoryInfo": {"SizeInMiB": 393216},
+        },
+    },
+    "r4.large": {
+        "memory": 15616,
+        "vcpu": 2,
+        "json_definition": {
+            "InstanceType": "r4.large",
+            "ProcessorInfo": {
+                "SupportedArchitectures": ["x86_64"],
+                "SustainedClockSpeedInGhz": 2.3,
+            },
+            "VCpuInfo": {
+                "DefaultVCpus": 2,
+                "DefaultCores": 1,
+                "DefaultThreadsPerCore": 2,
+                "ValidCores": [1],
+                "ValidThreadsPerCore": [1, 2],
+            },
+            "MemoryInfo": {"SizeInMiB": 15616},
+        },
+    },
+    "t2.large": {
+        "memory": 8192,
+        "vcpu": 2,
+        "json_definition": {
+            "InstanceType": "t2.large",
+            "ProcessorInfo": {
+                "SupportedArchitectures": ["x86_64"],
+                "SustainedClockSpeedInGhz": 2.3,
+            },
+            "VCpuInfo": {
+                "DefaultVCpus": 2,
+                "DefaultCores": 2,
+                "DefaultThreadsPerCore": 1,
+                "ValidCores": [1, 2],
+                "ValidThreadsPerCore": [1],
+            },
+            "MemoryInfo": {"SizeInMiB": 8192},
+        },
+    },
+    "t2.medium": {
+        "memory": 4096,
+        "vcpu": 2,
+        "json_definition": {
+            "InstanceType": "t2.medium",
+            "ProcessorInfo": {
+                "SupportedArchitectures": ["i386", "x86_64"],
+                "SustainedClockSpeedInGhz": 2.3,
+            },
+            "VCpuInfo": {
+                "DefaultVCpus": 2,
+                "DefaultCores": 2,
+                "DefaultThreadsPerCore": 1,
+                "ValidCores": [1, 2],
+                "ValidThreadsPerCore": [1],
+            },
+            "MemoryInfo": {"SizeInMiB": 4096},
+        },
+    },
+    "t2.micro": {
+        "memory": 1024,
+        "vcpu": 1,
+        "json_definition": {
+            "InstanceType": "t2.micro",
+            "ProcessorInfo": {
+                "SupportedArchitectures": ["i386", "x86_64"],
+                "SustainedClockSpeedInGhz": 2.5,
+            },
+            "VCpuInfo": {
+                "DefaultVCpus": 1,
+                "DefaultCores": 1,
+                "DefaultThreadsPerCore": 1,
+                "ValidCores": [1],
+                "ValidThreadsPerCore": [1],
+            },
+            "MemoryInfo": {"SizeInMiB": 1024},
+        },
+    },
+    "t2.nano": {
+        "memory": 512,
+        "vcpu": 1,
+        "json_definition": {
+            "InstanceType": "t2.nano",
+            "ProcessorInfo": {
+                "SupportedArchitectures": ["i386", "x86_64"],
+                "SustainedClockSpeedInGhz": 2.4,
+            },
+            "VCpuInfo": {
+                "DefaultVCpus": 1,
+                "DefaultCores": 1,
+                "DefaultThreadsPerCore": 1,
+                "ValidCores": [1],
+                "ValidThreadsPerCore": [1],
+            },
+            "MemoryInfo": {"SizeInMiB": 512},
+        },
+    },
+    "t2.small": {
+        "memory": 2048,
+        "vcpu": 1,
+        "json_definition": {
+            "InstanceType": "t2.small",
+            "ProcessorInfo": {
+                "SupportedArchitectures": ["i386", "x86_64"],
+                "SustainedClockSpeedInGhz": 2.5,
+            },
+            "VCpuInfo": {
+                "DefaultVCpus": 1,
+                "DefaultCores": 1,
+                "DefaultThreadsPerCore": 1,
+                "ValidCores": [1],
+                "ValidThreadsPerCore": [1],
+            },
+            "MemoryInfo": {"SizeInMiB": 2048},
+        },
+    },
+    "t2.xlarge": {
+        "memory": 16384,
+        "vcpu": 4,
+        "json_definition": {
+            "InstanceType": "t2.xlarge",
+            "ProcessorInfo": {
+                "SupportedArchitectures": ["x86_64"],
+                "SustainedClockSpeedInGhz": 2.3,
+            },
+            "VCpuInfo": {
+                "DefaultVCpus": 4,
+                "DefaultCores": 4,
+                "DefaultThreadsPerCore": 1,
+                "ValidCores": [1, 2, 3, 4],
+                "ValidThreadsPerCore": [1],
+            },
+            "MemoryInfo": {"SizeInMiB": 16384},
+        },
+    },
+    "x1e.32xlarge": {
+        "memory": 3997696,
+        "vcpu": 128,
+        "json_definition": {
+            "InstanceType": "x1e.32xlarge",
+            "ProcessorInfo": {
+                "SupportedArchitectures": ["x86_64"],
+                "SustainedClockSpeedInGhz": 2.3,
+            },
+            "VCpuInfo": {
+                "DefaultVCpus": 128,
+                "DefaultCores": 64,
+                "DefaultThreadsPerCore": 2,
+                "ValidCores": [
+                    4,
+                    8,
+                    12,
+                    16,
+                    20,
+                    24,
+                    28,
+                    32,
+                    36,
+                    40,
+                    44,
+                    48,
+                    52,
+                    56,
+                    60,
+                    64,
+                ],
+                "ValidThreadsPerCore": [1, 2],
+            },
+            "MemoryInfo": {"SizeInMiB": 3997696},
+        },
+    },
 }
 
 SOME_AZURE_REGIONS = (

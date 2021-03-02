@@ -805,7 +805,11 @@ def generate_instance_type_definitions(cloud_type="aws"):
         __, created = InstanceDefinition.objects.get_or_create(
             instance_type=name,
             cloud_type=cloud_type,
-            defaults={"memory": instance["memory"], "vcpu": instance["vcpu"]},
+            defaults={
+                "memory": instance["memory"],
+                "vcpu": instance["vcpu"],
+                "json_definition": instance["json_definition"],
+            },
         )
         if not created:
             logger.warning('"%s" EC2 definition already exists', name)
