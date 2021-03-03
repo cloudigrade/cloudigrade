@@ -508,6 +508,26 @@
             "schema": {
               "type": "integer"
             }
+          },
+          {
+            "name": "start_date",
+            "in": "query",
+            "required": false,
+            "description": "Start Date (inclusive) of the concurrent usage in the form (YYYY-MM-DD).",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "required": false,
+            "description": "End Date (exclusive) of the concurrent usage in the form (YYYY-MM-DD).",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
           }
         ],
         "responses": {
