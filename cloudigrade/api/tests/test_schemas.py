@@ -90,6 +90,22 @@ class SchemaTestCase(TestCase):
                     "which to return the results.",
                     "schema": {"type": "integer"},
                 },
+                {
+                    "name": "start_date",
+                    "in": "query",
+                    "required": False,
+                    "description": "Start Date (inclusive) of the concurrent "
+                    "usage in the form (YYYY-MM-DD).",
+                    "schema": {"type": "string", "format": "date"},
+                },
+                {
+                    "name": "end_date",
+                    "in": "query",
+                    "required": False,
+                    "description": "End Date (exclusive) of the concurrent "
+                    "usage in the form (YYYY-MM-DD).",
+                    "schema": {"type": "string", "format": "date"},
+                },
             ],
             "responses": {
                 "200": {
