@@ -62,7 +62,7 @@ def get_last_known_instance_type(instance, before_date):
         .first()
     )
     if event is None:
-        logger.error(
+        logger.warning(
             _("Could not find any type for %(instance)s by %(before_date)s"),
             {"instance": instance, "before_date": before_date},
         )
