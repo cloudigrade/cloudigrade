@@ -195,9 +195,10 @@ class AwsAccountSerializerTest(TransactionTestCase):
                 ValidationError
             ):
                 serializer.create(self.validated_data)
+            log_record = cm.records[1]
             self.assertIn(
                 expected_error["account_arn"][0],
-                cm.records[0].msg.detail["account_arn"][0],
+                log_record.msg.detail["account_arn"][0],
             )
 
     @patch("api.error_codes.sources.notify_application_availability")
@@ -220,9 +221,10 @@ class AwsAccountSerializerTest(TransactionTestCase):
                 ValidationError
             ):
                 serializer.create(self.validated_data)
+            log_record = cm.records[1]
             self.assertIn(
                 expected_error["account_arn"][0],
-                cm.records[0].msg.detail["account_arn"][0],
+                log_record.msg.detail["account_arn"][0],
             )
 
     @patch("api.error_codes.sources.notify_application_availability")
@@ -256,7 +258,8 @@ class AwsAccountSerializerTest(TransactionTestCase):
                 ValidationError
             ):
                 serializer.create(self.validated_data)
+            log_record = cm.records[1]
             self.assertIn(
                 expected_error["account_arn"][0],
-                cm.records[0].msg.detail["account_arn"][0],
+                log_record.msg.detail["account_arn"][0],
             )

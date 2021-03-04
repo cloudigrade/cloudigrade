@@ -116,6 +116,10 @@ class CloudAccount(ExportModelOperationsMixin("CloudAccount"), BaseGenericModel)
         function fails, we rollback our state change and re-raise the exception for the
         caller to handle further.
         """
+        logger.info(
+            _("'is_enabled' is %(is_enabled)s before enabling %(cloudaccount)s"),
+            {"is_enabled": self.is_enabled, "cloudaccount": self},
+        )
         if not self.is_enabled:
             self.is_enabled = True
             self.enabled_at = get_now()
