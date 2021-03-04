@@ -62,13 +62,22 @@ def parse_requests_header(request):
             auth_header,
         )
 
-    is_org_admin = identity.get("user", {}).get("is_org_admin")
+    user = identity.get("user", {})
+    is_org_admin = user.get("is_org_admin")
+    username = user.get("username")
+    email = user.get("email")
     logger.info(
         _(
-            "identity header has account_number '%(account_number)s' "
-            "is_org_admin '%(is_org_admin)s'"
+            "identity header has account_number '%(account_number)s', "
+            "is_org_admin '%(is_org_admin)s', username '%(username)s', "
+            "email '%(email)s'"
         ),
-        {"account_number": account_number, "is_org_admin": is_org_admin},
+        {
+            "account_number": account_number,
+            "is_org_admin": is_org_admin,
+            "username": username,
+            "email": email,
+        },
     )
     return auth_header, account_number, is_org_admin
 
