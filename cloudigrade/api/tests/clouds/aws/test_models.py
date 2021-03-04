@@ -129,8 +129,9 @@ class AwsCloudAccountModelTest(TransactionTestCase, ModelStrTestMixin):
             mock_verify_permissions.side_effect = Exception("Something broke.")
             with self.assertLogs("api.models", level="INFO") as cm:
                 self.account.enable()
+            log_record = cm.records[1]
             self.assertEqual(
-                str(mock_verify_permissions.side_effect), cm.records[0].message
+                str(mock_verify_permissions.side_effect), log_record.message
             )
             mock_verify_permissions.assert_called()
             mock_initial_aws_describe_instances.delay.assert_not_called()
