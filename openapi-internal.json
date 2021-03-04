@@ -875,6 +875,15 @@
             }
           },
           {
+            "name": "object_id",
+            "required": false,
+            "in": "query",
+            "description": "object_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "platform_application_id",
             "required": false,
             "in": "query",
@@ -1070,6 +1079,15 @@
             }
           },
           {
+            "name": "object_id",
+            "required": false,
+            "in": "query",
+            "description": "object_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "platform_application_id",
             "required": false,
             "in": "query",
@@ -1212,6 +1230,15 @@
             "required": false,
             "in": "query",
             "description": "name",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "object_id",
+            "required": false,
+            "in": "query",
+            "description": "object_id",
             "schema": {
               "type": "string"
             }
@@ -1363,6 +1390,15 @@
             "required": false,
             "in": "query",
             "description": "machine_image",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "object_id",
+            "required": false,
+            "in": "query",
+            "description": "object_id",
             "schema": {
               "type": "string"
             }
@@ -1536,6 +1572,15 @@
             }
           },
           {
+            "name": "object_id",
+            "required": false,
+            "in": "query",
+            "description": "object_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "created_at__lt",
             "required": false,
             "in": "query",
@@ -1667,6 +1712,15 @@
             "required": false,
             "in": "query",
             "description": "instance",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "object_id",
+            "required": false,
+            "in": "query",
+            "description": "object_id",
             "schema": {
               "type": "string"
             }
@@ -1827,6 +1881,15 @@
             }
           },
           {
+            "name": "object_id",
+            "required": false,
+            "in": "query",
+            "description": "object_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "created_at__lt",
             "required": false,
             "in": "query",
@@ -1926,6 +1989,15 @@
             "required": false,
             "in": "query",
             "description": "architecture",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "object_id",
+            "required": false,
+            "in": "query",
+            "description": "object_id",
             "schema": {
               "type": "string"
             }
@@ -2093,6 +2165,15 @@
             "required": false,
             "in": "query",
             "description": "architecture",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "object_id",
+            "required": false,
+            "in": "query",
+            "description": "object_id",
             "schema": {
               "type": "string"
             }

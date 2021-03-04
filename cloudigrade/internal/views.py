@@ -215,6 +215,7 @@ class InternalInstanceEventViewSet(InternalViewSetMixin, viewsets.ReadOnlyModelV
     filterset_fields = {
         "event_type": ["exact"],
         "instance": ["exact"],
+        "object_id": ["exact"],
         "created_at": ["lt", "exact", "gt"],
         "updated_at": ["lt", "exact", "gt"],
     }
@@ -227,6 +228,7 @@ class InternalMachineImageViewSet(InternalViewSetMixin, viewsets.ReadOnlyModelVi
     serializer_class = serializers.InternalMachineImageSerializer
     filterset_fields = {
         "architecture": ["exact"],
+        "object_id": ["exact"],
         "name": ["exact"],
         "status": ["exact"],
         "created_at": ["lt", "exact", "gt"],

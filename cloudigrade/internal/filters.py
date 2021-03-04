@@ -17,6 +17,7 @@ class InternalCloudAccountFilterSet(django_filters.FilterSet):
         fields = {
             "is_enabled": ["exact"],
             "name": ["exact"],
+            "object_id": ["exact"],
             "platform_application_id": ["exact"],
             "platform_authentication_id": ["exact"],
             "platform_source_id": ["exact"],
@@ -37,6 +38,7 @@ class InternalInstanceFilterSet(django_filters.FilterSet):
         fields = {
             "cloud_account": ["exact"],
             "machine_image": ["exact"],
+            "object_id": ["exact"],
             "created_at": ["lt", "exact", "gt"],
             "updated_at": ["lt", "exact", "gt"],
         }
