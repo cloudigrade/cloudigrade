@@ -1,4 +1,6 @@
 """Internal views for cloudigrade API."""
+import logging
+
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.utils.translation import gettext as _
@@ -25,6 +27,8 @@ from internal.authentication import (
 )
 from util.redhatcloud import identity
 
+logger = logging.getLogger(__name__)
+
 
 @api_view(["POST"])
 @authentication_classes([IdentityHeaderAuthenticationInternal])
@@ -43,6 +47,13 @@ def availability_check(request):
 
     cloudaccounts = models.CloudAccount.objects.filter(platform_source_id=source_id)
     for cloudaccount in cloudaccounts:
+        logger.info(
+            _(
+                "Availability check for source ID %(source_id)s attempting to enable "
+                "cloud account %(cloudaccount)s"
+            ),
+            {"source_id": source_id, "cloudaccount": cloudaccount},
+        )
         cloudaccount.enable()
 
     return Response(status=status.HTTP_204_NO_CONTENT)
