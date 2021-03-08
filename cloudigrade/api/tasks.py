@@ -234,8 +234,41 @@ def delete_from_sources_kafka_message(message, headers):
     )
 
     logger.info(_("Deleting CloudAccounts using filter %s"), query_filter)
+    cloud_accounts = CloudAccount.objects.filter(query_filter)
+    _delete_cloud_accounts(cloud_accounts)
 
-    for cloud_account in CloudAccount.objects.filter(query_filter):
+
+@retriable_shared_task(
+    autoretry_for=(RuntimeError, AwsThrottlingException),
+    name="api.tasks.delete_cloud_account",
+)
+@aws.rewrap_aws_errors
+def delete_cloud_account(cloud_account_id):
+    """
+    Delete the CloudAccount with the given ID.
+
+    This task function exists to support an internal API for deleting a CloudAccount.
+    Unfortunately, deletion may be a time-consuming operation and needs to be done
+    asynchronously to avoid http request handling timeouts.
+
+    Args:
+        cloud_account_id (int): the cloud account ID
+
+    """
+    logger.info(_("Deleting CloudAccount with ID %s"), cloud_account_id)
+    cloud_accounts = CloudAccount.objects.filter(id=cloud_account_id)
+    _delete_cloud_accounts(cloud_accounts)
+
+
+def _delete_cloud_accounts(cloud_accounts):
+    """
+    Delete the given list of CloudAccount objects.
+
+    Args:
+        cloud_accounts (list[CloudAccount]): cloud accounts to delete
+
+    """
+    for cloud_account in cloud_accounts:
         # Lock on the user level, so that a single user can only have one task
         # running at a time.
         #

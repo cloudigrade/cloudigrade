@@ -137,6 +137,24 @@ class InternalAccountViewSetTest(TransactionTestCase):
         response = view(request)
         return response
 
+    def get_account_delete_response(self, user, account_id):
+        """
+        Generate a response for a delete-destroy on the InternalAccountViewSet.
+
+        Args:
+            user (User): Django auth user performing the request
+            account_id (int): the id of the account to retrieve
+
+        Returns:
+            Response: the generated response for this request
+
+        """
+        request = self.factory.delete(self.path)
+        force_authenticate(request, user=user)
+        view = InternalAccountViewSet.as_view(actions={"delete": "destroy"})
+        response = view(request, pk=account_id)
+        return response
+
     def test_list_accounts(self):
         """Assert that unauthenticated request sees all accounts."""
         expected_accounts = {
@@ -158,6 +176,16 @@ class InternalAccountViewSetTest(TransactionTestCase):
         response = self.get_account_get_response(None, account.id)
         self.assertEqual(response.status_code, 200)
         self.assertResponseHasAccountData(response, account)
+
+    @patch("internal.views.tasks.delete_cloud_account")
+    def test_delete_account(self, mock_delete):
+        """Assert that http deleting an account delays an async task to do it."""
+        account = self.account2  # just any account
+        response = self.get_account_delete_response(None, account.id)
+        self.assertEqual(response.status_code, 204)
+        mock_delete.delay.assert_called_with(account.id)
+        self.account2.refresh_from_db()
+        self.assertIsNotNone(self.account2)
 
     @patch.object(CloudAccount, "enable")
     def test_create_account_with_name_success(self, mock_enable):

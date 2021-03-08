@@ -389,6 +389,7 @@ CELERY_TASK_ROUTES = {
     "api.tasks.create_from_sources_kafka_message": {
         "queue": "create_from_sources_kafka_message"
     },
+    "api.tasks.delete_cloud_account": {"queue": "delete_cloud_account"},
     "api.tasks.delete_from_sources_kafka_message": {
         "queue": "delete_from_sources_kafka_message"
     },
