@@ -160,6 +160,10 @@ class InternalAccountViewSet(
             authentication_classes = self.authentication_classes
         return [auth() for auth in authentication_classes]
 
+    def perform_destroy(self, instance):
+        """Delay an async task to destroy the instance."""
+        tasks.delete_cloud_account.delay(instance.id)
+
 
 class InternalUserViewSet(InternalViewSetMixin, viewsets.ReadOnlyModelViewSet):
     """Retrieve or list Users for internal use."""
