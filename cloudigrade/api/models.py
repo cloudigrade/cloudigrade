@@ -254,10 +254,7 @@ def cloud_account_post_delete_callback(*args, **kwargs):
             )
             instance.user.delete()
     except User.DoesNotExist:
-        logger.info(
-            _("User %s has already been deleted."),
-            instance.user,
-        )
+        logger.info(_("User for clount id %s has already been deleted."), instance.id)
 
 
 class MachineImage(ExportModelOperationsMixin("MachineImage"), BaseGenericModel):
