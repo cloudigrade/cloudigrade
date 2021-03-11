@@ -70,6 +70,9 @@ class DocsApiHandler(object):
         self.customer_user = util_helper.get_test_user(
             self.customer_account_number, is_superuser=False
         )
+        self.customer_user.date_joined = util_helper.utc_dt(2019, 1, 1, 0, 0, 0)
+        self.customer_user.save()
+
         self.customer_client = api_helper.SandboxedRestClient()
         self.customer_client._force_authenticate(self.customer_user)
         self.internal_client = api_helper.SandboxedRestClient(
@@ -261,6 +264,15 @@ class DocsApiHandler(object):
         )
         assert_status(response, 400)
         responses["v2_list_concurrent_all_future"] = response
+
+        response = self.customer_client.list_concurrent(
+            data={
+                "start_date": self.customer_user.date_joined - timedelta(days=14),
+                "end_date": self.customer_user.date_joined - timedelta(days=7),
+            }
+        )
+        assert_status(response, 400)
+        responses["v2_list_concurrent_past_end_date"] = response
 
         ##########################
         # v2 Customer Account Info

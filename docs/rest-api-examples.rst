@@ -84,7 +84,7 @@ Response:
     Content-Type: application/json
     Referrer-Policy: same-origin
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: 592d02d4-f93b-415d-9298-e424350034a8
+    X-CLOUDIGRADE-REQUEST-ID: acbbf0e6-1fbf-414b-9eb0-06ee9a3bdb24
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -160,7 +160,7 @@ Response:
     Content-Type: application/json
     Referrer-Policy: same-origin
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: acbbf0e6-1fbf-414b-9eb0-06ee9a3bdb24
+    X-CLOUDIGRADE-REQUEST-ID: 2f741c7a-58b5-4542-a107-f7355c5579f5
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -207,7 +207,7 @@ Response:
     Content-Type: application/json
     Referrer-Policy: same-origin
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: 2f741c7a-58b5-4542-a107-f7355c5579f5
+    X-CLOUDIGRADE-REQUEST-ID: 4a4befe0-f58d-4253-af97-fe141a88944e
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -335,7 +335,7 @@ Response:
     Content-Type: application/json
     Referrer-Policy: same-origin
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: 4a4befe0-f58d-4253-af97-fe141a88944e
+    X-CLOUDIGRADE-REQUEST-ID: 2860e525-f220-4d39-9082-3e3cc12f4a5f
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -379,7 +379,7 @@ Response:
     Content-Type: application/json
     Referrer-Policy: same-origin
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: 2860e525-f220-4d39-9082-3e3cc12f4a5f
+    X-CLOUDIGRADE-REQUEST-ID: 6ba90bdc-2199-4564-93b3-12216b4c8c6a
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -497,7 +497,7 @@ Response:
     Content-Type: application/json
     Referrer-Policy: same-origin
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: 6ba90bdc-2199-4564-93b3-12216b4c8c6a
+    X-CLOUDIGRADE-REQUEST-ID: bded2497-6c4c-435a-953f-71a15ea3f287
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -754,7 +754,7 @@ Response:
     Content-Type: application/json
     Referrer-Policy: same-origin
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: bded2497-6c4c-435a-953f-71a15ea3f287
+    X-CLOUDIGRADE-REQUEST-ID: 0e606802-6af6-4ae6-9270-345f4bf37817
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -2329,6 +2329,37 @@ Response:
         ]
     }
 
+If your requested ``end_date`` value is not greater then that of the user
+``date_joined``, the api will return a 400 with the relevant error.
+
+Request:
+
+.. code:: bash
+
+    http localhost:8080/api/cloudigrade/v2/concurrent/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
+        start_date=="2018-12-18 00:00:00+00:00" \
+        end_date=="2018-12-25 00:00:00+00:00"
+
+Response:
+
+::
+
+    HTTP/1.1 400 Bad Request
+    Allow: GET, HEAD, OPTIONS
+    Content-Length: 59
+    Content-Type: application/json
+    Referrer-Policy: same-origin
+    Vary: Accept
+    X-CLOUDIGRADE-REQUEST-ID: 592d02d4-f93b-415d-9298-e424350034a8
+    X-Content-Type-Options: nosniff
+    X-Frame-Options: DENY
+
+    {
+        "end_date": [
+            "end_date must be after user creation date."
+        ]
+    }
+
 Miscellaneous Commands
 ----------------------
 
@@ -2353,7 +2384,7 @@ Response:
     Content-Type: application/json
     Referrer-Policy: same-origin
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: 0e606802-6af6-4ae6-9270-345f4bf37817
+    X-CLOUDIGRADE-REQUEST-ID: f32fcb1b-461c-4e9b-b027-cbb372ed662f
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -2413,7 +2444,7 @@ Request:
 
     http post localhost:8080/internal/api/cloudigrade/v1/accounts/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
         cloud_type="aws" \
-        account_arn="arn:aws:iam::215944834321:role/role-for-cloudigrade" \
+        account_arn="arn:aws:iam::472858492557:role/role-for-cloudigrade" \
         name="yet another account" \
         platform_authentication_id="5081" \
         platform_application_id="1618" \
@@ -2429,7 +2460,7 @@ Response:
     Content-Type: application/json
     Referrer-Policy: same-origin
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: 461c8e9b-b027-4bb3-b2ed-662fc46b6e2c
+    X-CLOUDIGRADE-REQUEST-ID: 3ff57457-ef85-445a-b6a1-a3167bc1344b
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -2437,8 +2468,8 @@ Response:
         "account_id": 3,
         "cloud_type": "aws",
         "content_object": {
-            "account_arn": "arn:aws:iam::215944834321:role/role-for-cloudigrade",
-            "aws_account_id": "215944834321",
+            "account_arn": "arn:aws:iam::472858492557:role/role-for-cloudigrade",
+            "aws_account_id": "472858492557",
             "aws_cloud_account_id": 2,
             "created_at": "2020-05-18T13:51:59.722367Z",
             "updated_at": "2020-05-18T13:51:59.722367Z"
@@ -2462,7 +2493,7 @@ Request:
 
     http post localhost:8080/internal/api/cloudigrade/v1/accounts/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
         cloud_type="aws" \
-        account_arn="arn:aws:iam::215944834321:role/role-for-cloudigrade" \
+        account_arn="arn:aws:iam::472858492557:role/role-for-cloudigrade" \
         name="but this account already exists" \
         platform_authentication_id="1649" \
         platform_application_id="5796" \
@@ -2478,7 +2509,7 @@ Response:
     Content-Type: application/json
     Referrer-Policy: same-origin
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: ef85245a-76a1-4316-bbc1-344b00d4b272
+    X-CLOUDIGRADE-REQUEST-ID: b2729e76-0137-4c1d-84fa-a14d8b9b276c
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -2499,8 +2530,8 @@ Request:
 
     http post localhost:8080/internal/api/cloudigrade/v1/accounts/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
         cloud_type="azure" \
-        subscription_id="7817ad7f-c2f5-4b8b-8367-47a1fb051e45" \
-        tenant_id="9e760137-4c1d-44fa-a14d-8b9b276cb4c0" \
+        subscription_id="1e45e2ab-0a00-4165-86e3-94b565711abf" \
+        tenant_id="b4c07817-ad7f-42f5-bb8b-c36747a1fb05" \
         name="it's an azure account" \
         platform_authentication_id="9052" \
         platform_application_id="7815" \
@@ -2516,7 +2547,7 @@ Response:
     Content-Type: application/json
     Referrer-Policy: same-origin
     Vary: Accept
-    X-CLOUDIGRADE-REQUEST-ID: 48dfc1ac-e832-4815-8912-ca434e88571e
+    X-CLOUDIGRADE-REQUEST-ID: 571e87dc-3fe4-4bc3-a911-6adc4a488522
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -2526,8 +2557,8 @@ Response:
         "content_object": {
             "azure_cloud_account_id": 2,
             "created_at": "2020-05-18T13:51:59.722367Z",
-            "subscription_id": "7817ad7f-c2f5-4b8b-8367-47a1fb051e45",
-            "tenant_id": "9e760137-4c1d-44fa-a14d-8b9b276cb4c0",
+            "subscription_id": "1e45e2ab-0a00-4165-86e3-94b565711abf",
+            "tenant_id": "b4c07817-ad7f-42f5-bb8b-c36747a1fb05",
             "updated_at": "2020-05-18T13:51:59.722367Z"
         },
         "created_at": "2020-05-18T13:51:59.722367Z",
