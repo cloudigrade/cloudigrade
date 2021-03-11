@@ -14,11 +14,12 @@ class DescriptiveAutoSchema(AutoSchema):
         "destroy": "Delete {an} {type}.",
     }
 
-    def __init__(self, descriptive_name, *args, **kwargs):
+    def __init__(self, descriptive_name, custom_responses=None, *args, **kwargs):
         """Initialize instance variables."""
         super(DescriptiveAutoSchema, self).__init__(*args, **kwargs)
         self.descriptive_name = descriptive_name
         self.an = "an" if descriptive_name.lower()[:1] in "aeiou" else "a"
+        self.custom_responses = custom_responses
 
     def get_description(self, path, method):
         """Construct a custom description string."""
@@ -28,6 +29,12 @@ class DescriptiveAutoSchema(AutoSchema):
             return description.format(an=self.an, type=self.descriptive_name)
         else:
             return super(DescriptiveAutoSchema, self).get_description(path, method)
+
+    def get_responses(self, path, method):
+        """Return a custom responses object if given, else use super implementation."""
+        if self.custom_responses and method in self.custom_responses:
+            return self.custom_responses[method]
+        return super(DescriptiveAutoSchema, self).get_responses(path, method)
 
 
 class SysconfigSchema(AutoSchema):
