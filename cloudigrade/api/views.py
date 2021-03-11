@@ -91,8 +91,8 @@ class DailyConcurrentUsageViewSet(viewsets.GenericViewSet, mixins.ListModelMixin
 
     def get_queryset(self):  # noqa: C901
         """Get the queryset of dates filtered to the appropriate inputs."""
+        user = self.request.user
         errors = {}
-
         tomorrow = get_today() + timedelta(days=1)
         try:
             start_date = self.request.query_params.get("start_date", None)
@@ -111,12 +111,13 @@ class DailyConcurrentUsageViewSet(viewsets.GenericViewSet, mixins.ListModelMixin
             # If end date is after tomorrow, we do not return anything
             if end_date > tomorrow:
                 errors["end_date"] = [_("end_date cannot be in the future.")]
+            if end_date <= user.date_joined.date():
+                errors["end_date"] = [_("end_date must be after user creation date.")]
         except ValueError:
             errors["end_date"] = [_("end_date must be a date (YYYY-MM-DD).")]
 
         if errors:
             raise exceptions.ValidationError(errors)
 
-        user_id = self.request.user.id
-        queryset = DailyConcurrentUsageDummyQueryset(start_date, end_date, user_id)
+        queryset = DailyConcurrentUsageDummyQueryset(start_date, end_date, user.id)
         return queryset

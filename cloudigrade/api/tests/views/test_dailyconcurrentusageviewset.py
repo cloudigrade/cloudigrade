@@ -19,6 +19,8 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
     def setUp(self):
         """Set up a bunch of test data."""
         self.user1 = util_helper.generate_test_user()
+        self.user1.date_joined = util_helper.utc_dt(2019, 1, 1, 0, 0, 0)
+        self.user1.save()
         self.account1 = api_helper.generate_cloud_account(user=self.user1)
         self.account2 = api_helper.generate_cloud_account(user=self.user1)
         self.image1_rhel = api_helper.generate_image(
@@ -267,6 +269,28 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
         body = response.json()
         self.assertEqual(body["start_date"], [_("start_date cannot be in the future.")])
         self.assertEqual(body["end_date"], [_("end_date cannot be in the future.")])
+
+    def test_end_date_before_user_create_date_returns_400(self):
+        """
+        Test with end_date preceding the user creation date, expecting no results.
+
+        When we give an end_date that is before the user creation date, we return
+        a 400 because we do not know anything before the user creation date.
+        """
+        past_start = datetime.date(2018, 12, 1)
+        past_end = datetime.date(2018, 12, 31)
+        data = {"start_date": str(past_start), "end_date": str(past_end)}
+        client = APIClient()
+        client.force_authenticate(user=self.user1)
+        response = client.get(
+            "/api/cloudigrade/v2/concurrent/", data=data, format="json"
+        )
+        self.assertEqual(response.status_code, 400)
+
+        body = response.json()
+        self.assertEqual(
+            body["end_date"], [_("end_date must be after user creation date.")]
+        )
 
     @patch("api.tasks.calculate_max_concurrent_usage_task")
     def test_425_if_no_concurrent_usage(self, mock_calculate_task):
