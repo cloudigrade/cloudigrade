@@ -139,7 +139,11 @@ class InternalAccountViewSet(
     """
 
     queryset = models.CloudAccount.objects.all()
-    schema = schemas.DescriptiveAutoSchema("cloud account", operation_id_base="Account")
+    schema = schemas.DescriptiveAutoSchema(
+        "cloud account",
+        custom_responses={"DELETE": {"202": {"description": ""}}},
+        operation_id_base="Account",
+    )
     serializer_class = CloudAccountSerializer
 
     def get_permissions(self):
@@ -159,6 +163,18 @@ class InternalAccountViewSet(
         else:
             authentication_classes = self.authentication_classes
         return [auth() for auth in authentication_classes]
+
+    def destroy(self, request, *args, **kwargs):
+        """Destroy the CloudAccount but return 202 instead of 204."""
+        response = super(InternalAccountViewSet, self).destroy(request, *args, **kwargs)
+        if response.status_code == status.HTTP_204_NO_CONTENT:
+            response = Response(
+                data=response.data,
+                status=status.HTTP_202_ACCEPTED,
+                template_name=response.template_name,
+                content_type=response.content_type,
+            )
+        return response
 
     def perform_destroy(self, instance):
         """Delay an async task to destroy the instance."""

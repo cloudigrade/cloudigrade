@@ -179,10 +179,18 @@ class InternalAccountViewSetTest(TransactionTestCase):
 
     @patch("internal.views.tasks.delete_cloud_account")
     def test_delete_account(self, mock_delete):
-        """Assert that http deleting an account delays an async task to do it."""
+        """
+        Assert that http deleting an account delays an async task to do it.
+
+        Note that we assert HTTP status code 202 in the response, not 204. Although 204
+        is the typical status code for a delete, since the result of this action spawns
+        an async task to do the delete but the CloudAccount still exists until then, the
+        "202 Accepted" status is more accurate. See also the definition at:
+        https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/202
+        """
         account = self.account2  # just any account
         response = self.get_account_delete_response(None, account.id)
-        self.assertEqual(response.status_code, 204)
+        self.assertEqual(response.status_code, 202)
         mock_delete.delay.assert_called_with(account.id)
         self.account2.refresh_from_db()
         self.assertIsNotNone(self.account2)
