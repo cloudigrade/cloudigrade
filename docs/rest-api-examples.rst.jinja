@@ -212,6 +212,17 @@ Response:
 
 {{ v2_list_concurrent_all_future | stringify_http_response | rst_codeblock }}
 
+If your requested ``end_date`` value is not greater then that of the user
+``date_joined``, the api will return a 400 with the relevant error.
+
+Request:
+
+{{ v2_list_concurrent_past_end_date.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
+
+Response:
+
+{{ v2_list_concurrent_past_end_date | stringify_http_response | rst_codeblock }}
+
 Miscellaneous Commands
 ----------------------
 
