@@ -498,10 +498,6 @@ LISTENER_SERVER = env(
     "LISTENER_SERVER", default="platform-mq-ci-kafka-bootstrap.platform-mq-ci.svc"
 )
 LISTENER_PORT = env.int("LISTENER_PORT", default=9092)
-LISTENER_AUTO_COMMIT = env.bool("LISTENER_AUTO_COMMIT", default=True)
-LISTENER_TIMEOUT = env.int("LISTENER_TIMEOUT", default=1000)
-KAFKA_SESSION_TIMEOUT_MS = env.int("KAFKA_SESSION_TIMEOUT_MS", default=20000)
-
 LISTENER_METRICS_PORT = env.int("LISTENER_METRICS_PORT", default=8080)
 
 SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA = env.bool(
