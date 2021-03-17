@@ -206,8 +206,16 @@ def rewrap_aws_errors(original_function):
             response_error = getattr(e, "response", {}).get("Error", {})
             error_code = response_error.get("Code")
 
-            if error_code in ("UnauthorizedOperation", "AuthFailure"):
+            if error_code in (
+                "AccessDenied",
+                "AccessDeniedException",
+                "AuthFailure",
+                "UnauthorizedOperation",
+            ):
                 # If we failed due to missing AWS permissions, return quietly for now.
+                # This only typically happens if a user has changed their Role or Policy
+                # after initial setup in a way that is incompatible with our needs, but
+                # we have not yet run our routine verify_account_permissions task.
                 # We rely on the verify_account_permissions task to periodically check
                 # the account and disable it if necessary.
                 error_message = response_error.get("Message")
