@@ -6,6 +6,7 @@ import django
 import environ
 import sentry_sdk
 from celery import Celery, current_task, signals
+from django.conf import settings
 from sentry_sdk.integrations.celery import CeleryIntegration
 
 from util.middleware import local
@@ -26,6 +27,11 @@ logger.info("Celery setup.")
 
 if env("CELERY_ENABLE_SENTRY", default=False):
     logger.info("Enabling sentry.")
+    CELERY_SENTRY_ENVIRONMENT = (
+        settings.CLOUDIGRADE_VERSION
+        if settings.CLOUDIGRADE_VERSION
+        else env("CELERY_SENTRY_RELEASE")
+    )
     sentry_sdk.init(
         dsn=env("CELERY_SENTRY_DSN"),
         environment=env("CELERY_SENTRY_ENVIRONMENT"),

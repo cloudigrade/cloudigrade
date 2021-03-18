@@ -32,10 +32,14 @@ QUEUE_EXCHANGE_NAME = None
 STATIC_ROOT = env("DJANGO_STATIC_ROOT", default="/srv/cloudigrade/static/")
 
 if env.bool("API_ENABLE_SENTRY", default=False):
+    DJANGO_SENTRY_RELEASE = (
+        CLOUDIGRADE_VERSION if CLOUDIGRADE_VERSION else env("DJANGO_SENTRY_RELEASE")
+    )
+
     sentry_sdk.init(
         dsn=env("DJANGO_SENTRY_DSN"),
         environment=env("DJANGO_SENTRY_ENVIRONMENT"),
-        release=env("DJANGO_SENTRY_RELEASE"),
+        release=DJANGO_SENTRY_RELEASE,
         traces_sample_rate=env.float("SENTRY_TRACES_SAMPLE_RATE", default=0.0),
         integrations=[DjangoIntegration()],
         send_default_pii=True,
