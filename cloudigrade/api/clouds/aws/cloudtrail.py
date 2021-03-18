@@ -98,39 +98,7 @@ def extract_ec2_instance_events(record):
 
     occurred_at, aws_account_id, region = extract_time_account_region(record)
 
-    cloud_account = _get_cloud_account_for_aws_account_id(aws_account_id)
-    if not cloud_account:
-        logger.info(
-            _(
-                "Skipping CloudTrail record EC2 event extraction for AWS account ID "
-                "%(aws_account_id)s because a matching CloudAccount does not exist."
-            ),
-            {"aws_account_id": aws_account_id},
-        )
-        return []
-    if not cloud_account.is_enabled:
-        logger.info(
-            _(
-                "Skipping CloudTrail record EC2 event extraction for AWS account ID "
-                "%(aws_account_id)s because CloudAccount %(cloud_account_id)s is not "
-                "enabled."
-            ),
-            {"aws_account_id": aws_account_id, "cloud_account_id": cloud_account.id},
-        )
-        return []
-    if cloud_account.enabled_at > parse(occurred_at):
-        logger.info(
-            _(
-                "Skipping CloudTrail record EC2 event extraction for AWS account ID "
-                "%(aws_account_id)s because the event occurred (%(occurred_at)s) "
-                "before the CloudAccount was enabled %(enabled_at)s)."
-            ),
-            {
-                "aws_account_id": aws_account_id,
-                "occurred_at": occurred_at,
-                "enabled_at": cloud_account.enabled_at,
-            },
-        )
+    if not _is_relevant_event(occurred_at, aws_account_id, "EC2"):
         return []
 
     event_name = record["eventName"]
@@ -210,39 +178,7 @@ def extract_ami_tag_events(record):
 
     occurred_at, aws_account_id, region = extract_time_account_region(record)
 
-    cloud_account = _get_cloud_account_for_aws_account_id(aws_account_id)
-    if not cloud_account:
-        logger.info(
-            _(
-                "Skipping CloudTrail record AMI event extraction for AWS account ID "
-                "%(aws_account_id)s because a matching CloudAccount does not exist."
-            ),
-            {"aws_account_id": aws_account_id},
-        )
-        return []
-    if not cloud_account.is_enabled:
-        logger.info(
-            _(
-                "Skipping CloudTrail record AMI event extraction for AWS account ID "
-                "%(aws_account_id)s because CloudAccount %(cloud_account_id)s is not "
-                "enabled."
-            ),
-            {"aws_account_id": aws_account_id, "cloud_account_id": cloud_account.id},
-        )
-        return []
-    if cloud_account.enabled_at > parse(occurred_at):
-        logger.info(
-            _(
-                "Skipping CloudTrail record AMI event extraction for AWS account ID "
-                "%(aws_account_id)s because the event occurred (%(occurred_at)s) "
-                "before the CloudAccount was enabled %(enabled_at)s)."
-            ),
-            {
-                "aws_account_id": aws_account_id,
-                "occurred_at": occurred_at,
-                "enabled_at": cloud_account.enabled_at,
-            },
-        )
+    if not _is_relevant_event(occurred_at, aws_account_id, "AMI"):
         return []
 
     exists = record.get("eventName") == CREATE_TAG
@@ -278,14 +214,14 @@ def extract_ami_tag_events(record):
 
 def _is_valid_event(record, valid_events):
     """
-    Determine if a log event is valid and relevant for our analysis.
+    Determine if a log event is valid for our analysis.
 
     Args:
         record (dict): The log record record.
         valid_events (list): Event types we may analyze.
 
     Returns:
-        bool: Whether the record is valid and relevant for our analysis.
+        bool: Whether the record is valid for our analysis.
 
     """
     if record.get("eventSource") != "ec2.amazonaws.com":
@@ -297,6 +233,62 @@ def _is_valid_event(record, valid_events):
         return False
     else:
         return True
+
+
+def _is_relevant_event(occurred_at, aws_account_id, event_type):
+    """
+    Determine if a log event is relevant for our analysis.
+
+    Args:
+        occurred_at (str): the time the event occurred, ISO-8601 formatted
+        aws_account_id (str): the AWS account ID from the event
+        event_type (str): general description of event type for logging purposes
+
+    Returns:
+        bool: Whether the record is relevant for our analysis.
+
+    """
+    cloud_account = _get_cloud_account_for_aws_account_id(aws_account_id)
+    if not cloud_account:
+        logger.info(
+            _(
+                "Skipping CloudTrail record %(event_type)s event extraction for AWS "
+                "account ID %(aws_account_id)s because a matching CloudAccount does "
+                "not exist."
+            ),
+            {"event_type": event_type, "aws_account_id": aws_account_id},
+        )
+        return False
+    if not cloud_account.is_enabled:
+        logger.info(
+            _(
+                "Skipping CloudTrail record %(event_type)s event extraction for AWS "
+                "account ID %(aws_account_id)s because CloudAccount "
+                "%(cloud_account_id)s is not enabled."
+            ),
+            {
+                "event_type": event_type,
+                "aws_account_id": aws_account_id,
+                "cloud_account_id": cloud_account.id,
+            },
+        )
+        return False
+    if cloud_account.enabled_at > parse(occurred_at):
+        logger.info(
+            _(
+                "Skipping CloudTrail record %(event_type)s event extraction for AWS "
+                "account ID %(aws_account_id)s because the event occurred "
+                "(%(occurred_at)s) before the CloudAccount was enabled %(enabled_at)s)."
+            ),
+            {
+                "event_type": event_type,
+                "aws_account_id": aws_account_id,
+                "occurred_at": occurred_at,
+                "enabled_at": cloud_account.enabled_at,
+            },
+        )
+        return False
+    return True
 
 
 def _get_cloud_account_for_aws_account_id(aws_account_id):
