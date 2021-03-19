@@ -25,6 +25,7 @@ from internal.authentication import (
     IdentityHeaderAuthenticationInternal,
     IdentityHeaderAuthenticationInternalCreateUser,
 )
+from util import exceptions as util_exceptions
 from util.redhatcloud import identity
 
 logger = logging.getLogger(__name__)
@@ -57,6 +58,51 @@ def availability_check(request):
         cloudaccount.enable()
 
     return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(["POST"])
+@authentication_classes([IdentityHeaderAuthenticationInternal])
+@permission_classes([permissions.AllowAny])
+@schema(None)
+def fake_error(request):
+    """
+    Cause an error for internal testing purposes.
+
+    This view function allows us to exercise our log and exception handlers and to
+    verify that the Sentry integration works as expected.
+
+    request.data may contain "name" which should be the string name of an exception
+    class in util.exceptions and "kwargs" which should be the keyword arguments for that
+    named class. Raise that exception if inputs are valid, else raise ValidationError.
+
+    Example request using httpie:
+
+        http :8000/internal/error/ \
+            name='ValidationError' kwargs:='{"detail":{"potato": "is precious"}}'
+
+    And the response for that example:
+
+        HTTP/1.1 400 Bad Request
+
+        {
+            "potato": "is precious"
+        }
+    """
+    data = request.data
+    name = data.get("name")
+    kwargs = data.get("kwargs") or {}
+    cls = None
+    if name and hasattr(util_exceptions, name):
+        cls = getattr(util_exceptions, name)
+    if cls and Exception in cls.mro():
+        logger.warning("Fake %(name)s(**%(kwargs)s)", {"name": name, "kwargs": kwargs})
+        try:
+            raise cls(**kwargs)
+        except TypeError as e:
+            logger.info(e)
+    else:
+        logger.warning("%(name)s is not an exception.", {"name": name})
+    raise exceptions.ValidationError()
 
 
 @api_view(["POST"])
