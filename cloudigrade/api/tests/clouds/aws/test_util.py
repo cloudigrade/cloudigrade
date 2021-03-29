@@ -212,6 +212,20 @@ class CloudsAwsUtilVerifyPermissionsTest(TestCase):
             aws_account_id=self.aws_account_id, user=self.user
         )
 
+    def test_handle_access_denied_from_get_session(self):
+        """Test handling AccessDenied error from AWS when trying to get a session."""
+        arn = util_helper.generate_dummy_arn()
+        client_error = ClientError(
+            error_response={"Error": {"Code": "AccessDenied"}},
+            operation_name=Mock(),
+        )
+        with patch.object(
+            util.aws, "get_session"
+        ) as mock_get_session, self.assertRaises(ValidationError) as e:
+            mock_get_session.side_effect = client_error
+            util.verify_permissions(arn)
+        self.assertIn(arn, str(e.exception.detail["account_arn"]))
+
     def test_handle_access_denied_from_configure_cloudtrail(self):
         """Test handling AccessDenied error from AWS when configuring cloudtrail."""
         arn = util_helper.generate_dummy_arn(account_id=self.aws_account_id)

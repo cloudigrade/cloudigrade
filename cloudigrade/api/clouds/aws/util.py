@@ -740,7 +740,11 @@ def verify_permissions(customer_role_arn):
     try:
         session = aws.get_session(arn_str)
     except ClientError as error:
-        if error.response.get("Error", {}).get("Code") == "AccessDenied":
+        if error.response.get("Error", {}).get("Code") in (
+            "AccessDenied",
+            "AccessDeniedException",
+            "UnrecognizedClientException",
+        ):
             raise ValidationError(
                 detail={
                     "account_arn": [
