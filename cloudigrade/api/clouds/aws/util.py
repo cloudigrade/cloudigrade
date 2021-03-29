@@ -754,7 +754,11 @@ def verify_permissions(customer_role_arn):
         try:
             aws.configure_cloudtrail(session, aws_account_id)
         except ClientError as error:
-            if error.response.get("Error", {}).get("Code") == "AccessDeniedException":
+            if error.response.get("Error", {}).get("Code") in (
+                "AccessDenied",
+                "AccessDeniedException",
+                "UnrecognizedClientException",
+            ):
                 logger.debug(_("Trying to throw a CG3000."))
                 cloud_account = CloudAccount.objects.get(
                     aws_cloud_account__aws_account_id=aws_account_id

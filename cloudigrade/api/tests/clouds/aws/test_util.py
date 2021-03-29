@@ -4,6 +4,7 @@ from unittest.mock import Mock, patch
 
 from botocore.exceptions import ClientError
 from django.test import TestCase
+from rest_framework.serializers import ValidationError
 
 from api import AWS_PROVIDER_STRING
 from api.clouds.aws import util
@@ -198,3 +199,37 @@ class CloudsAwsUtilCloudTrailTest(TestCase):
             for expected_error in expected_errors:
                 self.assertIn(expected_error, logger.output[1])  # from logger.error
         self.assertFalse(success)
+
+
+class CloudsAwsUtilVerifyPermissionsTest(TestCase):
+    """Test cases for api.clouds.aws.util.verify_permissions."""
+
+    def setUp(self):
+        """Set up common variables for tests."""
+        self.user = util_helper.generate_test_user()
+        self.aws_account_id = util_helper.generate_dummy_aws_account_id()
+        self.account = api_helper.generate_cloud_account(
+            aws_account_id=self.aws_account_id, user=self.user
+        )
+
+    def test_handle_access_denied_from_configure_cloudtrail(self):
+        """Test handling AccessDenied error from AWS when configuring cloudtrail."""
+        arn = util_helper.generate_dummy_arn(account_id=self.aws_account_id)
+        client_error = ClientError(
+            error_response={"Error": {"Code": "AccessDenied"}},
+            operation_name=Mock(),
+        )
+        with patch.object(util.aws, "get_session"), patch.object(
+            util.aws, "verify_account_access"
+        ) as mock_verify_access, patch.object(
+            util.aws, "configure_cloudtrail"
+        ) as mock_configure_cloudtrail, patch(
+            "api.error_codes.sources.notify_application_availability"
+        ) as mock_notify, self.assertRaises(
+            ValidationError
+        ) as e:
+            mock_verify_access.return_value = True, []
+            mock_configure_cloudtrail.side_effect = client_error
+            util.verify_permissions(arn)
+        mock_notify.assert_called()
+        self.assertIn(arn, str(e.exception.detail["account_arn"]))
