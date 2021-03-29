@@ -739,6 +739,7 @@ def verify_permissions(customer_role_arn):
 
     try:
         session = aws.get_session(arn_str)
+        account_verified, failed_actions = aws.verify_account_access(session)
     except ClientError as error:
         if error.response.get("Error", {}).get("Code") in (
             "AccessDenied",
@@ -753,7 +754,6 @@ def verify_permissions(customer_role_arn):
                 }
             )
         raise
-    account_verified, failed_actions = aws.verify_account_access(session)
     if account_verified:
         try:
             aws.configure_cloudtrail(session, aws_account_id)
