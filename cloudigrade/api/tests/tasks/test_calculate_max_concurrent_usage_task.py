@@ -63,6 +63,21 @@ class CalculateMaxConcurrentUsageTaskTest(TestCase):
         with self.assertRaises(Retry):
             calculate_max_concurrent_usage_task(str(request_date), self.user.id)
 
+    @patch("api.tasks.schedule_concurrent_calculation_task")
+    def test_new_task_if_existing_task_is_missing(self, mock_schedule_task):
+        """Test that task spawns a new task with same user and date if missing."""
+        task_id = uuid4()
+        request_date = datetime.date(2019, 5, 1)
+        calculate_max_concurrent_usage_task.push_request(id=task_id)
+
+        with self.assertLogs("api.tasks", level="ERROR") as logging_watcher:
+            calculate_max_concurrent_usage_task.run(str(request_date), self.user.id)
+            mock_schedule_task.assert_called_with(request_date, self.user.id)
+        self.assertIn(
+            f'ConcurrentUsageCalculationTask not found for task ID "{task_id}"',
+            logging_watcher.output[0],
+        )
+
     @patch("api.tasks.calculate_max_concurrent_usage")
     def test_invalid_user(self, mock_calculate_max_concurrent_usage):
         """Test that task exits early if user does not exist."""
