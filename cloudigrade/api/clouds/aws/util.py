@@ -1163,7 +1163,11 @@ def delete_cloudtrail(aws_cloud_account):
         if error_code == "TrailNotFoundException":
             # If a cloudtrail does not exist, then we have nothing to do here!
             return True
-        elif error_code in ("AccessDenied", "AccessDeniedException"):
+        elif error_code in (
+            "AccessDenied",
+            "AccessDeniedException",
+            "UnrecognizedClientException",
+        ):
             # We may get AccessDenied if the user deletes the AWS account or role.
             # We may get AccessDeniedException if the role or policy is broken.
             # These could result in an orphaned cloudtrail writing to our s3 bucket.
