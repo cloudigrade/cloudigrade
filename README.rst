@@ -8,24 +8,17 @@ cloudigrade
 What is cloudigrade?
 ====================
 
-**cloudigrade** is an open-source suite of tools for tracking Linux distribution use (although chiefly targeting RHEL) in public cloud platforms. **cloudigrade** actively checks a user's account in a particular cloud for running instances, tracks when instances are powered on, determines what Linux distributions are installed on them, and provides the ability to generate reports to see how many cloud compute resources have been used in a given time period.
+**cloudigrade** is an open-source suite of tools for tracking RHEL use in public cloud platforms. **cloudigrade** actively checks a user's account in a particular cloud for running instances, tracks when instances are powered on, determines if RHEL is installed on them, and provides the ability to generate reports to see how many cloud compute resources have been used in a given time period.
 
 
-What is this "Doppler" I see referenced in various places?
-----------------------------------------------------------
+What are "Doppler" and "Cloud Meter"?
+-------------------------------------
 
-Doppler is another code name for **cloudigrade**.
-
-Or is **cloudigrade** a code name for Doppler?
-
-``cloudigrade == Doppler`` for all intents and purposes. 😉
+Doppler was an early code name for **cloudigrade**. Cloud Meter is a product-ized Red Hat name for its running **cloudigrade** service. ``cloudigrade == Doppler == Cloud Meter`` for all intents and purposes. 😉
 
 
 Running cloudigrade
 ===================
-
-Please refer to the `shiftigrade repo <https://gitlab.com/cloudigrade/shiftigrade>`_ for up to date instructions on how to run cloudigrade. These instructions are prerequisite for setting up your developer environemnt.
-
 
 Developer Environment
 ---------------------
@@ -33,11 +26,13 @@ Developer Environment
 Because **cloudigrade** is actually a suite of interacting services, setting up a development environment may require installing some or all of the following dependencies:
 
 -  Python 3.8
--  `Docker <https://www.docker.com/community-edition#/download>`_
+-  `poetry <https://python-poetry.org/docs/>`_
 -  `tox <https://tox.readthedocs.io/>`_
+-  `Docker Desktop <https://docs.docker.com/get-docker/>`_
 -  `gettext <https://www.gnu.org/software/gettext/>`_
 -  `PostgreSQL <https://www.postgresql.org/download/>`_
 -  `AWS Command Line Interface <https://aws.amazon.com/cli/>`_
+-  `Azure Command-Line Interface <https://docs.microsoft.com/en-us/cli/azure/>`_
 
 
 macOS dependencies
@@ -48,9 +43,9 @@ The following commands should install everything you need:
 .. code-block:: bash
 
     brew update
-    brew install python@3.8 gettext awscli postgresql openssl curl librdkafka tox poetry
+    brew install python@3.8 gettext awscli azure-cli postgresql openssl curl librdkafka tox poetry
 
-Consider installing python via pyenv instead of using brew.
+If you intend to interact with an OpenShift cluster from your local command line, you should also ``brew install oc`` because the official Red Hat binaries are not signed and may not run on modern versions of macOS.
 
 
 Linux dependencies
@@ -63,30 +58,36 @@ We recommend developing on the latest version of Fedora. Follow the following co
     sudo dnf install awscli gettext postgresql-devel librdkafka-devel -y
 
 
-Python virtual environment
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+Python 3.8.x
+~~~~~~~~~~~~
 
-We strongly encourage all developers to use a virtual environment to isolate **cloudigrade**\ 's Python package dependencies. You may use whatever tooling you feel comfortable with, but here are some initial notes for setting up with `poetry <https://python-poetry.org/docs/>`_:
+This step is optional, but we recommend you install a local Python version via `pyenv <https://github.com/pyenv/pyenv#installation>`_ instead of using the brew or dnf version. This will ensure you keep a *specific* stable version when you are working on **cloudigrade**. For example:
 
 .. code-block:: bash
 
-    # install poetry
-    pip install poetry
+    pyenv install 3.8.7
+    pyenv local
 
-Once you have poetry installed, install our Python package requirements:
+
+Virtual Environment (via Poetry)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+All Python developers should use a virtual environments to isolate their package dependencies. **cloudigrade** developers use `poetry <https://python-poetry.org/docs/>`_ and maintain its ``pyproject.toml`` and ``poetry.lock`` files with appropriate up-to-date requirements.
+
+Once you have poetry installed, use it to install our Python package requirements:
 
 .. code-block:: sh
 
     poetry env remove
     poetry install
 
-If you plan to run cloudigrade or Celery locally on macOS, the required ``pycurl`` package may fail to install or may install improperly despite ``poetry install`` appearing to complete successfully. You can verify that ``pycurl`` is installed correctly by simply importing it in a Python shell like this:
+If you plan to run **cloudigrade** or Celery locally on macOS, the required ``pycurl`` package may fail to install or may install improperly despite ``poetry install`` appearing to complete successfully. You should verify that ``pycurl`` is installed correctly by simply importing it in a Python shell like this:
 
 .. code-block:: sh
 
     poetry run python -c 'import pycurl'
 
-If you see no output, everything is okay! Otherwise (e.g. "libcurl link-time ssl backend (openssl) is different from compile-time ssl backend (none/other)"), it may not have installed correctly. Try the following commands force it to rebuild and install with the openssl backend:
+If you see no output, everything is okay! Otherwise (e.g. "libcurl link-time ssl backend (openssl) is different from compile-time ssl backend (none/other)"), it may not have installed correctly. Try the following commands (macOS users only) to force reinstalling with the openssl backend:
 
 .. code-block:: sh
 
@@ -104,7 +105,7 @@ If you see no output, everything is okay! Otherwise (e.g. "libcurl link-time ssl
     poetry install
     poetry run python -c 'import pycurl'
 
-If this resolves the import error, then you may also need to export all of those variables any time you have `tox` recreate its own virtual environments.
+If this resolves the import error, you may also need to export all of those variables any time you have `tox` recreate its own virtual environments.
 
 If using a system that has dnf, try the following commands:
 
@@ -115,14 +116,15 @@ If using a system that has dnf, try the following commands:
     export PYCURL_SSL_LIBRARY=openssl
     poetry install
 
-Try the aforementioned import commands again, and all should be good. If not, kindly reach out to another cloudigrade developer to seek assistance!
+Try the aforementioned import commands again, and all should be good. If not, kindly reach out to another **cloudigrade** developer to seek assistance!
 
-After finishing the installation of dependencies you can grab a shell that uses the virtual environment by calling ``poetry shell``.
+After finishing the installation of dependencies, you can instantiate a shell uses the virtual environment by running ``poetry shell``.
 
-Big Sur Troubleshooting
-***********************
 
-If you're working with MacOS Big Sur you may run into issues around the system version number, in which case set ``SYSTEM_VERSION_COMPAT=1`` which will make macOS report back ``10.16`` instead of ``11.X``. For example,
+macOS Big Sur Troubleshooting
+*****************************
+
+If you're working with macOS Big Sur you may run into issues around the system version number, in which case set ``SYSTEM_VERSION_COMPAT=1`` which will make macOS report back ``10.16`` instead of ``11.X``. For example,
 
 .. code-block:: sh
 
@@ -139,10 +141,10 @@ You'll likely also run into more issues with installing pycurl. Follow the follo
     pip install --no-cache-dir --compile --ignore-installed --install-option="--with-openssl" --install-option="--openssl-dir=/usr/local/opt/openssl@1.1" pycurl
 
 
-Configure AWS account credentials
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Configure AWS account
+~~~~~~~~~~~~~~~~~~~~~
 
-If you haven't already, create an `Amazon Web Services <https://aws.amazon.com/>`_ account for **cloudigrade** to use for its AWS API calls. You will need the AWS access key ID, AWS secret access key, and region name where the account operates.
+If you haven't already, create an `Amazon Web Services <https://aws.amazon.com/>`_ account for **cloudigrade** to use for its AWS API calls. You will need the AWS Access Key ID, AWS Secret Access Key, and region name where the account operates.
 
 Use the AWS CLI to save that configuration to your local system:
 
@@ -152,22 +154,26 @@ Use the AWS CLI to save that configuration to your local system:
 
 You can verify that settings were stored correctly by checking the files it created in your ``~/.aws/`` directory.
 
-AWS access for running **cloudigrade** inside a local OpenShift cluster must be enabled via environment variables. Set the following variables in your local environment *before* you start running in OpenShift. Values for these variables can be found in the files in your ``~/.aws/`` directory.
+**cloudigrade** requires several environment variables to talk with AWS. Ensure you have *at least* the following variables set in your local environment *before* you start running **cloudigrade**. Even if you don't intend to work with AWS at first, these must not be empty or else app startup will fail.
 
 -  ``AWS_ACCESS_KEY_ID``
 -  ``AWS_SECRET_ACCESS_KEY``
--  ``AWS_DEFAULT_REGION``
--  ``AWS_SQS_ACCESS_KEY_ID``
--  ``AWS_SQS_SECRET_ACCESS_KEY``
--  ``AWS_SQS_REGION``
--  ``AWS_NAME_PREFIX``
 
-The values for ``AWS_`` keys and region may be reused for the ``AWS_SQS_`` variables. ``AWS_NAME_PREFIX`` should be set to something unique to your environment like ``${USER}-``.
+Many other optional AWS-specific variables are read at startup that may be useful for configuring your local environment and distinguishing yours from other developers. Here is a short list of *some* environment variables you probably want to set. See ``config/settings/*.py`` for more.
 
-You'll also need to set the SQS URL for the log analyzer for the variable ``AWS_CLOUDTRAIL_EVENT_URL``. This URL can be found in the queue details pane and will look something like ``https://sqs.us-east-1.amazonaws.com/977153484089/iwhite-cloudigrade-sqs-s3``
+-  ``AWS_DEFAULT_REGION``: default AWS region
+-  ``AWS_SQS_ACCESS_KEY_ID``: AWS Access Key ID for SQS
+-  ``AWS_SQS_SECRET_ACCESS_KEY``: AWS Secret Access Key for SQS
+-  ``AWS_SQS_REGION``: default region for SQS
+-  ``AWS_NAME_PREFIX``: prefix for various AWS objects (S3 buckets, SQS queues); best practice is to set this to your name like ``${USER}-``
+-  ``AWS_S3_BUCKET_NAME``: name of S3 bucket that receives CloudTrail logs
+-  ``AWS_CLOUDTRAIL_EVENT_URL``: URL of SQS queue that receives S3 notifications
+-  ``HOUNDIGRADE_ECS_CLUSTER_NAME``: name of ECS cluster for houndigrade
+-  ``HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME``: name of EC2 AutoScaling group for ECS
+-  ``HOUNDIGRADE_AWS_AVAILABILITY_ZONE``: availability zone for ECS EC2 instances
 
 
-Configure Django settings module
+Specify Django settings module
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 For convenience, you may want to set the following environment variable:
