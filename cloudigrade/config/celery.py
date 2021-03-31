@@ -27,7 +27,7 @@ logger.info("Celery setup.")
 
 if env("CELERY_ENABLE_SENTRY", default=False):
     logger.info("Enabling sentry.")
-    CELERY_SENTRY_ENVIRONMENT = (
+    CELERY_SENTRY_RELEASE = (
         settings.CLOUDIGRADE_VERSION
         if settings.CLOUDIGRADE_VERSION
         else env("CELERY_SENTRY_RELEASE")
@@ -35,7 +35,7 @@ if env("CELERY_ENABLE_SENTRY", default=False):
     sentry_sdk.init(
         dsn=env("CELERY_SENTRY_DSN"),
         environment=env("CELERY_SENTRY_ENVIRONMENT"),
-        release=env("CELERY_SENTRY_RELEASE"),
+        release=CELERY_SENTRY_RELEASE,
         traces_sample_rate=env.float("SENTRY_TRACES_SAMPLE_RATE", default=0.0),
         integrations=[CeleryIntegration()],
     )
