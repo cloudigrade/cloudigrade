@@ -570,6 +570,17 @@ def calculate_max_concurrent_usage_task(self, date, user_id):
         ConcurrentUsage for the given date and user ID.
 
     """
+    # Temporary logger.info to help diagnose retry issues.
+    logger.info(
+        "retries is %(retries)s for id %(id)s user_id %(user_id)s date %(date)s.",
+        {
+            "retries": self.request.retries,
+            "id": self.request.id,
+            "user_id": user_id,
+            "date": date,
+        },
+    )
+
     # If the user does not exist, all the related ConcurrentUsage
     # objects should also have been removed, so we can exit early.
     if not User.objects.filter(id=user_id).exists():
