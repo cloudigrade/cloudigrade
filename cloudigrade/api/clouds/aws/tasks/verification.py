@@ -27,6 +27,7 @@ def verify_account_permissions(account_arn):
 
     """
     valid = False
+    failed_reason = None
     try:
         valid = verify_permissions(account_arn)
     except ValidationError as e:
@@ -34,9 +35,7 @@ def verify_account_permissions(account_arn):
             _("ARN %s failed validation. Disabling the cloud account."),
             account_arn,
         )
-        # Disable the cloud account.
-        aws_cloud_account = AwsCloudAccount.objects.get(account_arn=account_arn)
-        aws_cloud_account.cloud_account.get().disable(message=str(e.detail))
+        failed_reason = e.detail
 
     logger.debug(
         _("ARN %(account_arn)s is valid: %(valid)s."),
@@ -45,6 +44,18 @@ def verify_account_permissions(account_arn):
             "valid": valid,
         },
     )
+
+    if not valid:
+        # Disable the cloud account.
+        try:
+            aws_cloud_account = AwsCloudAccount.objects.get(account_arn=account_arn)
+            aws_cloud_account.cloud_account.get().disable(message=str(failed_reason))
+        except (AwsCloudAccount.DoesNotExist, CloudAccount.DoesNotExist):
+            # If the account was deleted before or during our check, pass quietly.
+            logger.info(
+                "Tried to disable, but AwsCloudAccount does not exist for ARN %(arn)s",
+                {"arn": account_arn},
+            )
 
     return valid
 
