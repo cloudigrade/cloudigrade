@@ -31,12 +31,26 @@ class VerifyAccountPermissionsTest(TestCase):
         with self.assertLogs("api.clouds.aws.tasks", level="INFO") as cm:
             valid = tasks.verify_account_permissions(arn)
 
-            mock_verify_permissions.assert_called()
-            self.assertFalse(valid)
-            self.assertIn(
-                "failed validation. Disabling the cloud account.", cm.output[0]
-            )
-            aws_clount = mock_aws_cloud_account.objects.get
-            aws_clount.assert_called_once()
-            clount = aws_clount.return_value.cloud_account.get.return_value
-            clount.disable.assert_called_once()
+        mock_verify_permissions.assert_called()
+        self.assertFalse(valid)
+        self.assertIn("failed validation. Disabling the cloud account.", cm.output[0])
+        aws_clount = mock_aws_cloud_account.objects.get
+        aws_clount.assert_called_once()
+        clount = aws_clount.return_value.cloud_account.get.return_value
+        clount.disable.assert_called_once()
+
+    @patch("api.clouds.aws.tasks.verification.verify_permissions")
+    def test_missing_account(self, mock_verify_permissions):
+        """Account is missing during verification."""
+        arn = util_helper.generate_dummy_arn
+        mock_verify_permissions.side_effect = ValidationError()
+
+        with self.assertLogs("api.clouds.aws.tasks", level="INFO") as cm:
+            valid = tasks.verify_account_permissions(arn)
+
+        mock_verify_permissions.assert_called()
+        self.assertFalse(valid)
+        self.assertIn("failed validation. Disabling the cloud account.", cm.output[0])
+        self.assertIn(
+            "Tried to disable, but AwsCloudAccount does not exist for ARN", cm.output[1]
+        )
