@@ -141,6 +141,7 @@ See the ``.github/workflows/*.yml`` files for more details.
 
 Pull requests may be merged and closed by maintainers of the **cloudigrade** org in GitHub. Generally, the same contributor who authored the change will also merge their request shortly after it has been approved by other team members.
 
+The **cloudigrade** maintainers work *directly* on the `main cloudigrade repo <https://github.com/cloudigrade/cloudigrade>`_ and *do not use forks*. If you use a fork and attempt to create a pull request, you will see the "s2i Build" job fail because it needs to connect to the Red Hat registry via the repo secret ``REDHAT_REGISTRY_LOGIN``. This secret contains the login command for our Red Hat `Registry Service Account <https://access.redhat.com/terms-based-registry/#/accounts>`_. Unfortunately, `GitHub does not pass secrets into runners for workflows that are triggered by a pull request from a fork <https://docs.github.com/en/actions/reference/encrypted-secrets#using-encrypted-secrets-in-a-workflow>`_. Until we find a workaround or alternate solution, **cloudigrade** maintainers will continue working directly from the main repo.
 
 Test coverage
 -------------
