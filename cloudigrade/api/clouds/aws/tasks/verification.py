@@ -2,6 +2,8 @@
 import logging
 
 from celery.task import task
+from django.core.exceptions import ObjectDoesNotExist
+from django.db import transaction
 from django.utils.translation import gettext as _
 from django_celery_beat.models import PeriodicTask
 from rest_framework.exceptions import ValidationError
@@ -47,15 +49,26 @@ def verify_account_permissions(account_arn):
 
     if not valid:
         # Disable the cloud account.
-        try:
-            aws_cloud_account = AwsCloudAccount.objects.get(account_arn=account_arn)
-            aws_cloud_account.cloud_account.get().disable(message=str(failed_reason))
-        except (AwsCloudAccount.DoesNotExist, CloudAccount.DoesNotExist):
-            # If the account was deleted before or during our check, pass quietly.
-            logger.info(
-                "Tried to disable, but AwsCloudAccount does not exist for ARN %(arn)s",
-                {"arn": account_arn},
-            )
+        with transaction.atomic():
+            try:
+                aws_cloud_account = AwsCloudAccount.objects.get(account_arn=account_arn)
+                cloud_account = aws_cloud_account.cloud_account.get()
+                if cloud_account:
+                    cloud_account.disable(message=str(failed_reason))
+                else:
+                    raise CloudAccount.DoesNotExist
+
+            except (
+                AwsCloudAccount.DoesNotExist,
+                CloudAccount.DoesNotExist,
+                ObjectDoesNotExist,
+            ) as exception:
+                # If the account was deleted before or during our check, log and return.
+                logger.info(
+                    "Cannot disable: cloud account object does not exist for "
+                    "ARN %(arn)s (%(exception)s)",
+                    {"arn": account_arn, "exception": exception},
+                )
 
     return valid
 
