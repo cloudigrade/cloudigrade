@@ -52,5 +52,5 @@ class VerifyAccountPermissionsTest(TestCase):
         self.assertFalse(valid)
         self.assertIn("failed validation. Disabling the cloud account.", cm.output[0])
         self.assertIn(
-            "Tried to disable, but AwsCloudAccount does not exist for ARN", cm.output[1]
+            "Cannot disable: cloud account object does not exist", cm.output[1]
         )
