@@ -63,7 +63,7 @@ class CalculateMaxConcurrentUsageTaskTest(TestCase):
         with self.assertRaises(Retry):
             calculate_max_concurrent_usage_task(str(request_date), self.user.id)
 
-    def test_task_retry_if_newer_task_is_scheduled(self):
+    def test_task_cancel_if_newer_task_is_scheduled(self):
         """Test cancel if newer scheduled task is scheduled with same user and date."""
         calculate_max_concurrent_usage_task.cancel = MagicMock()
 
@@ -80,10 +80,18 @@ class CalculateMaxConcurrentUsageTaskTest(TestCase):
         newer_task.created_at = concurrent_task.created_at + datetime.timedelta(days=1)
         newer_task.save()
 
+        concurrent_task.save = MagicMock()
+
         calculate_max_concurrent_usage_task.push_request(id=task_id)
         calculate_max_concurrent_usage_task.run(str(request_date), self.user.id)
 
         calculate_max_concurrent_usage_task.cancel.assert_called()
+
+        newer_task.refresh_from_db()
+        self.assertEqual(
+            concurrent_task.status, ConcurrentUsageCalculationTask.SCHEDULED
+        )
+        concurrent_task.save.assert_not_called()
 
     @patch("api.tasks.schedule_concurrent_calculation_task")
     def test_new_task_if_existing_task_is_missing(self, mock_schedule_task):
