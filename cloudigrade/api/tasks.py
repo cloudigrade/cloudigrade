@@ -639,6 +639,7 @@ def calculate_max_concurrent_usage_task(self, date, user_id):
         for task in newer_tasks:
             logger.info("newer task %(task)s", {"task": task})
         self.cancel()
+        return
 
     logger.info(
         "Running calculate_max_concurrent_usage_task for user_id %(user_id)s "
