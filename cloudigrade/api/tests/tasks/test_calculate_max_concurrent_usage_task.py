@@ -99,7 +99,7 @@ class CalculateMaxConcurrentUsageTaskTest(TestCase):
         request_date = datetime.date(2019, 5, 1)
         calculate_max_concurrent_usage_task.push_request(id=task_id)
 
-        with self.assertLogs("api.tasks", level="ERROR") as logging_watcher:
+        with self.assertLogs("api.tasks", level="WARNING") as logging_watcher:
             calculate_max_concurrent_usage_task.run(str(request_date), self.user.id)
             mock_schedule_task.assert_called_with(request_date, self.user.id)
         self.assertIn(
