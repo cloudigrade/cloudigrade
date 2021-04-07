@@ -590,15 +590,18 @@ def calculate_max_concurrent_usage_task(self, date, user_id):
 
     # If there is already an calculate_max_concurrent_usage running for given
     # user and date, then retry this task later.
-    if ConcurrentUsageCalculationTask.objects.filter(
+    running_tasks = ConcurrentUsageCalculationTask.objects.filter(
         date=date, user__id=user_id, status=ConcurrentUsageCalculationTask.RUNNING
-    ).exists():
+    )
+    if running_tasks:
         logger.info(
             "calculate_max_concurrent_usage_task for user_id %(user_id)s "
             "and date %(date)s is already running. The current task will "
             "be retried later.",
             {"user_id": user_id, "date": date},
         )
+        for task in running_tasks:
+            logger.info("already running task %(task)s", {"task": task})
         self.retry()
 
     logger.info(
