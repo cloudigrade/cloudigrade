@@ -572,7 +572,7 @@ def calculate_max_concurrent_usage_task(self, date, user_id):
     """
     # Temporary logger.info to help diagnose retry issues.
     logger.info(
-        "retries is %(retries)s for id %(id)s user_id %(user_id)s date %(date)s.",
+        "retries is %(retries)s for id %(id)s user_id %(user_id)s and date %(date)s.",
         {
             "retries": self.request.retries,
             "id": self.request.id,
@@ -621,7 +621,7 @@ def calculate_max_concurrent_usage_task(self, date, user_id):
         # error here with details and schedule a new calculation task.
         logger.error(
             'ConcurrentUsageCalculationTask not found for task ID "%(task_id)s"! '
-            'Scheduling a new task for user_id "%(user_id)s" date "%(date)s".',
+            "Scheduling a new task for user_id %(user_id)s and date %(date)s.",
             {"task_id": task_id, "user_id": user_id, "date": date},
         )
         schedule_concurrent_calculation_task(date, user_id)
