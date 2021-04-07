@@ -604,12 +604,6 @@ def calculate_max_concurrent_usage_task(self, date, user_id):
             logger.info("already running task %(task)s", {"task": task})
         self.retry()
 
-    logger.info(
-        "Running calculate_max_concurrent_usage_task for user_id %(user_id)s "
-        "and date %(date)s.",
-        {"user_id": user_id, "date": date},
-    )
-
     # Set task to running
     task_id = self.request.id
     try:
@@ -626,6 +620,31 @@ def calculate_max_concurrent_usage_task(self, date, user_id):
         )
         schedule_concurrent_calculation_task(date, user_id)
         return
+
+    # If there are newer tasks scheduled for the same user and date, cancel the current
+    # task and let the newer task perform the calculation.
+    newer_tasks = ConcurrentUsageCalculationTask.objects.filter(
+        date=date,
+        user__id=user_id,
+        status=ConcurrentUsageCalculationTask.SCHEDULED,
+        created_at__gt=calculation_task.created_at,
+    )
+    if newer_tasks:
+        logger.info(
+            "calculate_max_concurrent_usage_task for user_id %(user_id)s "
+            "and date %(date)s has newer tasks already scheduled. The current task "
+            "%(task_id)s will be cancelled.",
+            {"user_id": user_id, "date": date, "task_id": calculation_task.task_id},
+        )
+        for task in newer_tasks:
+            logger.info("newer task %(task)s", {"task": task})
+        self.cancel()
+
+    logger.info(
+        "Running calculate_max_concurrent_usage_task for user_id %(user_id)s "
+        "and date %(date)s.",
+        {"user_id": user_id, "date": date},
+    )
 
     calculation_task.status = ConcurrentUsageCalculationTask.RUNNING
     calculation_task.save()
