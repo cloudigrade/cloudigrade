@@ -613,7 +613,7 @@ def calculate_max_concurrent_usage_task(self, date, user_id):
         # https://sentry.io/organizations/cloudigrade/issues/2299804963/
         # Until we can figure out the root cause of tasks going missing, let's log an
         # error here with details and schedule a new calculation task.
-        logger.error(
+        logger.warning(
             'ConcurrentUsageCalculationTask not found for task ID "%(task_id)s"! '
             "Scheduling a new task for user_id %(user_id)s and date %(date)s.",
             {"task_id": task_id, "user_id": user_id, "date": date},
