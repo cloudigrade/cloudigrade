@@ -656,18 +656,17 @@ def calculate_max_concurrent_usage_task(self, date, user_id):
         # concurrent usage calculation task
         with lock_task_for_user_ids([user_id]):
             calculate_max_concurrent_usage(date, user_id)
+            calculation_task.status = ConcurrentUsageCalculationTask.COMPLETE
+            calculation_task.save()
+            logger.info(
+                "Completed calculate_max_concurrent_usage_task for user_id %(user_id)s "
+                "and date %(date)s (task_id %(task_id)s).",
+                {"user_id": user_id, "date": date, "task_id": task_id},
+            )
     except Exception:
         calculation_task.status = ConcurrentUsageCalculationTask.ERROR
         calculation_task.save()
         raise
-
-    calculation_task.status = ConcurrentUsageCalculationTask.COMPLETE
-    calculation_task.save()
-    logger.info(
-        "Completed calculate_max_concurrent_usage_task for user_id %(user_id)s "
-        "and date %(date)s (task_id %(task_id)s).",
-        {"user_id": user_id, "date": date, "task_id": task_id},
-    )
 
 
 @transaction.atomic()
