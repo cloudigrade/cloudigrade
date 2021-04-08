@@ -1,5 +1,6 @@
 """Collection of tests for tasks.delete_inactive_users."""
 from datetime import timedelta
+from unittest.mock import patch
 
 import faker
 from django.conf import settings
@@ -33,7 +34,9 @@ class DeleteInactiveUsersTest(TestCase):
         self.assertEqual(User.objects.count(), USERS_COUNT)
         self.assertEqual(ConcurrentUsage.objects.count(), USERS_COUNT)
         self.assertEqual(ConcurrentUsageCalculationTask.objects.count(), USERS_COUNT)
-        tasks.delete_inactive_users()
+        with patch.object(ConcurrentUsageCalculationTask, "_revoke") as mock_revoke:
+            tasks.delete_inactive_users()
+        mock_revoke.assert_called()
         self.assertEqual(User.objects.count(), 0)
         self.assertEqual(ConcurrentUsage.objects.count(), 0)
         self.assertEqual(ConcurrentUsageCalculationTask.objects.count(), 0)

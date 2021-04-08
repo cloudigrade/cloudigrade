@@ -787,8 +787,15 @@ class ConcurrentUsageCalculationTask(
     user = models.ForeignKey(User, on_delete=models.CASCADE, db_index=True)
     date = models.DateField(db_index=True)
 
-    def cancel(self):
-        """Revokes the task if it is not currently running."""
+    def _revoke(self):
+        """
+        Revoke the Celery task.
+
+        Generally, you should use cancel instead of this function. This isolated
+        function exists only to support the delete callback because the task object
+        itself may not actually exist and the save call in the cancel function would
+        fail.
+        """
         logger.info(
             "Revoking task to calculate concurrent usage for user_id: "
             "%(user_id)s and date: %(date)s. This task will be marked as canceled."
@@ -797,6 +804,10 @@ class ConcurrentUsageCalculationTask(
         from celery import current_app
 
         current_app.control.revoke(self.task_id)
+
+    def cancel(self):
+        """Revokes the task if it is not currently running."""
+        self._revoke()
         self.status = self.CANCELED
         self.save()
 
@@ -825,6 +836,17 @@ class ConcurrentUsageCalculationTask(
             f"updated_at={updated_at}"
             f")"
         )
+
+
+@receiver(post_delete, sender=ConcurrentUsageCalculationTask)
+def concurrentusagecalculationtask_post_delete_callback(*args, **kwargs):
+    """
+    Revoke the Celery task upon deleting ConcurrentUsageCalculationTask.
+
+    Note: Signal receivers must accept keyword arguments (**kwargs).
+    """
+    calculation_task = kwargs["instance"]
+    calculation_task._revoke()
 
 
 class InstanceDefinition(BaseModel):
