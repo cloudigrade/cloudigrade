@@ -80,7 +80,7 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 1195
+    Content-Length: 1163
     Content-Type: application/json
     Referrer-Policy: same-origin
     Vary: Accept
@@ -130,8 +130,8 @@ Response:
             }
         ],
         "links": {
-            "first": "/api/cloudigrade/api/cloudigrade/v2/accounts/?limit=10&offset=0",
-            "last": "/api/cloudigrade/api/cloudigrade/v2/accounts/?limit=10&offset=0",
+            "first": "/api/cloudigrade/v2/accounts/?limit=10&offset=0",
+            "last": "/api/cloudigrade/v2/accounts/?limit=10&offset=0",
             "next": null,
             "previous": null
         },
@@ -203,7 +203,7 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 2646
+    Content-Length: 2614
     Content-Type: application/json
     Referrer-Policy: same-origin
     Vary: Accept
@@ -305,8 +305,8 @@ Response:
             }
         ],
         "links": {
-            "first": "/api/cloudigrade/api/cloudigrade/v2/instances/?limit=10&offset=0",
-            "last": "/api/cloudigrade/api/cloudigrade/v2/instances/?limit=10&offset=0",
+            "first": "/api/cloudigrade/v2/instances/?limit=10&offset=0",
+            "last": "/api/cloudigrade/v2/instances/?limit=10&offset=0",
             "next": null,
             "previous": null
         },
@@ -375,7 +375,7 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 2402
+    Content-Length: 2370
     Content-Type: application/json
     Referrer-Policy: same-origin
     Vary: Accept
@@ -462,8 +462,8 @@ Response:
             }
         ],
         "links": {
-            "first": "/api/cloudigrade/api/cloudigrade/v2/instances/?limit=10&offset=0&running_since=2020-05-18+13%3A51%3A59.722367%2B00%3A00",
-            "last": "/api/cloudigrade/api/cloudigrade/v2/instances/?limit=10&offset=0&running_since=2020-05-18+13%3A51%3A59.722367%2B00%3A00",
+            "first": "/api/cloudigrade/v2/instances/?limit=10&offset=0&running_since=2020-05-18+13%3A51%3A59.722367%2B00%3A00",
+            "last": "/api/cloudigrade/v2/instances/?limit=10&offset=0&running_since=2020-05-18+13%3A51%3A59.722367%2B00%3A00",
             "next": null,
             "previous": null
         },
@@ -493,7 +493,7 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 6750
+    Content-Length: 6718
     Content-Type: application/json
     Referrer-Policy: same-origin
     Vary: Accept
@@ -724,8 +724,8 @@ Response:
             }
         ],
         "links": {
-            "first": "/api/cloudigrade/api/cloudigrade/v2/images/?limit=10&offset=0",
-            "last": "/api/cloudigrade/api/cloudigrade/v2/images/?limit=10&offset=0",
+            "first": "/api/cloudigrade/v2/images/?limit=10&offset=0",
+            "last": "/api/cloudigrade/v2/images/?limit=10&offset=0",
             "next": null,
             "previous": null
         },
@@ -829,7 +829,7 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 19939
+    Content-Length: 19907
     Content-Type: application/json
     Referrer-Policy: same-origin
     Vary: Accept
@@ -2224,8 +2224,8 @@ Response:
             }
         ],
         "links": {
-            "first": "/api/cloudigrade/api/cloudigrade/v2/concurrent/?limit=10&offset=0&start_date=2020-05-11",
-            "last": "/api/cloudigrade/api/cloudigrade/v2/concurrent/?limit=10&offset=0&start_date=2020-05-11",
+            "first": "/api/cloudigrade/v2/concurrent/?limit=10&offset=0&start_date=2020-05-11",
+            "last": "/api/cloudigrade/v2/concurrent/?limit=10&offset=0&start_date=2020-05-11",
             "next": null,
             "previous": null
         },

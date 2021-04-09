@@ -293,8 +293,6 @@ REST_FRAMEWORK = {
     "EXCEPTION_HANDLER": "util.exceptions.api_exception_handler",
 }
 
-INSIGHTS_PAGINATION_APP_PATH = "/api/cloudigrade"
-
 # Message and Task Queues
 
 # For convenience in development environments, find defaults gracefully here.
