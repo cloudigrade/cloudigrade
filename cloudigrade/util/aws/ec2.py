@@ -176,7 +176,6 @@ def get_ami(session, image_id, source_region):
         image = session.resource("ec2", region_name=source_region).Image(image_id)
         check_image_state(image)
     except AwsImageError as e:
-        logger.exception(e)
         logger.info(
             _(
                 "Failed to get AMI %(image_id)s in %(source_region)s. %(message)s",
