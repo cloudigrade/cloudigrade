@@ -570,12 +570,13 @@ def calculate_max_concurrent_usage_task(self, date, user_id):  # noqa: C901
         ConcurrentUsage for the given date and user ID.
 
     """
+    task_id = self.request.id
     # Temporary logger.info to help diagnose retry issues.
     logger.info(
         "retries is %(retries)s for id %(id)s user_id %(user_id)s and date %(date)s.",
         {
             "retries": self.request.retries,
-            "id": self.request.id,
+            "id": task_id,
             "user_id": user_id,
             "date": date,
         },
@@ -592,7 +593,7 @@ def calculate_max_concurrent_usage_task(self, date, user_id):  # noqa: C901
     # user and date, then retry this task later.
     running_tasks = ConcurrentUsageCalculationTask.objects.filter(
         date=date, user__id=user_id, status=ConcurrentUsageCalculationTask.RUNNING
-    ).exclude(task_id=self.request.id)
+    ).exclude(task_id=task_id)
     if running_tasks:
         logger.info(
             "calculate_max_concurrent_usage_task for user_id %(user_id)s "
@@ -605,7 +606,6 @@ def calculate_max_concurrent_usage_task(self, date, user_id):  # noqa: C901
         self.retry()
 
     # Set task to running
-    task_id = self.request.id
     try:
         calculation_task = ConcurrentUsageCalculationTask.objects.get(task_id=task_id)
     except ConcurrentUsageCalculationTask.DoesNotExist:
