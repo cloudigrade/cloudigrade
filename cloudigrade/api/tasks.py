@@ -589,7 +589,7 @@ def calculate_max_concurrent_usage_task(self, date, user_id):  # noqa: C901
 
     date = date_parser.parse(date).date()
 
-    # If there is already an calculate_max_concurrent_usage running for given
+    # If there is already another calculate_max_concurrent_usage running for given
     # user and date, then retry this task later.
     running_tasks = ConcurrentUsageCalculationTask.objects.filter(
         date=date, user__id=user_id, status=ConcurrentUsageCalculationTask.RUNNING
@@ -605,7 +605,6 @@ def calculate_max_concurrent_usage_task(self, date, user_id):  # noqa: C901
             logger.info("already running task %(task)s", {"task": task})
         self.retry()
 
-    # Set task to running
     try:
         calculation_task = ConcurrentUsageCalculationTask.objects.get(task_id=task_id)
     except ConcurrentUsageCalculationTask.DoesNotExist:
@@ -641,12 +640,12 @@ def calculate_max_concurrent_usage_task(self, date, user_id):  # noqa: C901
         calculation_task.cancel()
         return
 
+    # Set task to running
     logger.info(
         "Running calculate_max_concurrent_usage_task for user_id %(user_id)s "
         "and date %(date)s (task_id %(task_id)s)",
         {"user_id": user_id, "date": date, "task_id": task_id},
     )
-
     calculation_task.status = ConcurrentUsageCalculationTask.RUNNING
     calculation_task.save()
 
