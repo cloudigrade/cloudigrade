@@ -571,6 +571,8 @@ def calculate_max_concurrent_usage_task(self, date, user_id):  # noqa: C901
 
     """
     task_id = self.request.id
+    date = date_parser.parse(date).date()
+
     # Temporary logger.info to help diagnose retry issues.
     logger.info(
         "retries is %(retries)s for id %(id)s user_id %(user_id)s and date %(date)s.",
@@ -587,74 +589,45 @@ def calculate_max_concurrent_usage_task(self, date, user_id):  # noqa: C901
     if not User.objects.filter(id=user_id).exists():
         return
 
-    date = date_parser.parse(date).date()
-
-    # If there is already another calculate_max_concurrent_usage running for given
-    # user and date, then retry this task later.
-    running_tasks = ConcurrentUsageCalculationTask.objects.filter(
-        date=date, user__id=user_id, status=ConcurrentUsageCalculationTask.RUNNING
-    ).exclude(task_id=task_id)
-    if running_tasks:
-        logger.info(
-            "calculate_max_concurrent_usage_task for user_id %(user_id)s "
-            "and date %(date)s is already running. The current task will "
-            "be retried later.",
-            {"user_id": user_id, "date": date},
-        )
-        for task in running_tasks:
-            logger.info("already running task %(task)s", {"task": task})
-        self.retry()
-
-    try:
-        calculation_task = ConcurrentUsageCalculationTask.objects.get(task_id=task_id)
-    except ConcurrentUsageCalculationTask.DoesNotExist:
-        # This probably shouldn't happen, but this error that suggest it does:
-        # https://sentry.io/organizations/cloudigrade/issues/2299804963/
-        # Until we can figure out the root cause of tasks going missing, let's log an
-        # error here with details and schedule a new calculation task.
-        logger.warning(
-            'ConcurrentUsageCalculationTask not found for task ID "%(task_id)s"! '
-            "Scheduling a new task for user_id %(user_id)s and date %(date)s.",
-            {"task_id": task_id, "user_id": user_id, "date": date},
-        )
-        schedule_concurrent_calculation_task(date, user_id)
-        return
-
-    # If there are newer tasks scheduled for the same user and date, cancel the current
-    # task and let the newer task perform the calculation.
-    newer_tasks = ConcurrentUsageCalculationTask.objects.filter(
-        date=date,
-        user__id=user_id,
-        status=ConcurrentUsageCalculationTask.SCHEDULED,
-        created_at__gt=calculation_task.created_at,
-    )
-    if newer_tasks:
-        logger.info(
-            "calculate_max_concurrent_usage_task for user_id %(user_id)s "
-            "and date %(date)s has newer tasks already scheduled. The current task "
-            "%(task_id)s will be cancelled.",
-            {"user_id": user_id, "date": date, "task_id": calculation_task.task_id},
-        )
-        for task in newer_tasks:
-            logger.info("newer task %(task)s", {"task": task})
-        calculation_task.cancel()
-        return
-
-    # Set task to running
-    logger.info(
-        "Running calculate_max_concurrent_usage_task for user_id %(user_id)s "
-        "and date %(date)s (task_id %(task_id)s)",
-        {"user_id": user_id, "date": date, "task_id": task_id},
-    )
-    calculation_task.status = ConcurrentUsageCalculationTask.RUNNING
-    calculation_task.save()
-
     try:
         # Lock the task at a user level. A user can only run one task at a time.
-        # If another user task is already running, then don't start the
-        # concurrent usage calculation task
+        # Since this both starts a transaction and blocks any others from starting, we
+        # can be reasonably confident that there are no other tasks processing for the
+        # same user and date at the same time.
         with lock_task_for_user_ids([user_id]):
+            try:
+                calculation_task = ConcurrentUsageCalculationTask.objects.get(
+                    task_id=task_id
+                )
+            except ConcurrentUsageCalculationTask.DoesNotExist:
+                # It's possible but unlikely this task was deleted since its task was
+                # delayed. Since the same user still exists, try scheduling a new task.
+                logger.warning(
+                    "ConcurrentUsageCalculationTask not found for task ID %(task_id)s! "
+                    "Scheduling a new task for user_id %(user_id)s and date %(date)s.",
+                    {"task_id": task_id, "user_id": user_id, "date": date},
+                )
+                schedule_concurrent_calculation_task(date, user_id)
+                return
+
+            if calculation_task.status != ConcurrentUsageCalculationTask.SCHEDULED:
+                # It's possible but unlikely that something else has changed the status
+                # of this task. If it's not currently SCHEDULED, log and return early.
+                logger.info(
+                    "ConcurrentUsageCalculationTask for task ID %(task_id)s for "
+                    "user_id %(user_id)s and date %(date)s has status "
+                    "%(status)s which is not SCHEDULED.",
+                    {
+                        "user_id": user_id,
+                        "date": date,
+                        "task_id": task_id,
+                        "status": calculation_task.status,
+                    },
+                )
+                return
+
             calculate_max_concurrent_usage(date, user_id)
+
             calculation_task.status = ConcurrentUsageCalculationTask.COMPLETE
             calculation_task.save()
             logger.info(
@@ -662,6 +635,18 @@ def calculate_max_concurrent_usage_task(self, date, user_id):  # noqa: C901
                 "and date %(date)s (task_id %(task_id)s).",
                 {"user_id": user_id, "date": date, "task_id": task_id},
             )
+            return
+    except ConcurrentUsageCalculationTask.DoesNotExist:
+        # This probably shouldn't happen, but this error that suggest it does:
+        # https://sentry.io/organizations/cloudigrade/issues/2299804963/
+        # Until we can figure out the root cause of tasks going missing, let's log
+        # an error here with details and schedule a new calculation task.
+        logger.warning(
+            'ConcurrentUsageCalculationTask not found for task ID "%(task_id)s"! '
+            "Scheduling a new task for user_id %(user_id)s and date %(date)s.",
+            {"task_id": task_id, "user_id": user_id, "date": date},
+        )
+        schedule_concurrent_calculation_task(date, user_id)
         return
     except Exception as unknown_exception:
         # capture the exception, but don't do anything with it just yet...
