@@ -592,7 +592,7 @@ def calculate_max_concurrent_usage_task(self, date, user_id):  # noqa: C901
     # user and date, then retry this task later.
     running_tasks = ConcurrentUsageCalculationTask.objects.filter(
         date=date, user__id=user_id, status=ConcurrentUsageCalculationTask.RUNNING
-    )
+    ).exclude(task_id=self.request.id)
     if running_tasks:
         logger.info(
             "calculate_max_concurrent_usage_task for user_id %(user_id)s "
