@@ -636,18 +636,6 @@ def calculate_max_concurrent_usage_task(self, date, user_id):  # noqa: C901
                 {"user_id": user_id, "date": date, "task_id": task_id},
             )
             return
-    except ConcurrentUsageCalculationTask.DoesNotExist:
-        # This probably shouldn't happen, but this error that suggest it does:
-        # https://sentry.io/organizations/cloudigrade/issues/2299804963/
-        # Until we can figure out the root cause of tasks going missing, let's log
-        # an error here with details and schedule a new calculation task.
-        logger.warning(
-            'ConcurrentUsageCalculationTask not found for task ID "%(task_id)s"! '
-            "Scheduling a new task for user_id %(user_id)s and date %(date)s.",
-            {"task_id": task_id, "user_id": user_id, "date": date},
-        )
-        schedule_concurrent_calculation_task(date, user_id)
-        return
     except Exception as unknown_exception:
         # It's unclear exactly what other exceptions might arise, but just to be safe,
         # let's log the trace, set the task's status to ERROR, and re-raise it.
