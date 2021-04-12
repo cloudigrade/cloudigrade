@@ -28,7 +28,7 @@ from celery import shared_task
 from dateutil import parser as date_parser
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.db import IntegrityError, transaction
+from django.db import transaction
 from django.db.models import Q
 from django.utils.translation import gettext as _
 from requests.exceptions import BaseHTTPError, RequestException
@@ -649,14 +649,14 @@ def calculate_max_concurrent_usage_task(self, date, user_id):  # noqa: C901
         schedule_concurrent_calculation_task(date, user_id)
         return
     except Exception as unknown_exception:
-        # capture the exception, but don't do anything with it just yet...
-        logger.exception(unknown_exception)
-        try:
-            calculation_task.status = ConcurrentUsageCalculationTask.ERROR
-            calculation_task.save()
-        except IntegrityError as integrity_error:
-            logger.warning(integrity_error)
-        # raise the exception we caught earlier
+        # It's unclear exactly what other exceptions might arise, but just to be safe,
+        # let's log the trace, set the task's status to ERROR, and re-raise it.
+        logger.warning(unknown_exception, exc_info=True)
+        # Use this objects.filter().update() pattern so that we don't risk raising an
+        # IntegrityError in case the object has somehow been deleted.
+        ConcurrentUsageCalculationTask.objects.filter(task_id=task_id).update(
+            status=ConcurrentUsageCalculationTask.ERROR
+        )
         raise unknown_exception
 
 
