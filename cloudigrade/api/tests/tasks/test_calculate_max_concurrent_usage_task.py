@@ -122,8 +122,10 @@ class CalculateMaxConcurrentUsageTaskTest(TestCase):
         Test that task is marked as ERROR if calculate_max_concurrent_usage fails.
 
         The calculate function is called here, but we force it to raise an exception.
+        Also verify that we logged the underlying exception.
         """
-        mock_calculate_max_concurrent_usage.side_effect = Exception()
+        error_message = "it is a mystery"
+        mock_calculate_max_concurrent_usage.side_effect = Exception(error_message)
 
         task_id = uuid4()
         user_id = self.user.id
@@ -135,9 +137,12 @@ class CalculateMaxConcurrentUsageTaskTest(TestCase):
 
         calculate_max_concurrent_usage_task.push_request(id=task_id)
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(Exception), self.assertLogs(
+            "api.tasks", level="WARNING"
+        ) as logging_watcher:
             calculate_max_concurrent_usage_task.run(str(request_date), user_id)
 
+        self.assertIn(error_message, logging_watcher.output[0])
         self.assertEqual(
             ConcurrentUsageCalculationTask.objects.get(task_id=task_id).status,
             ConcurrentUsageCalculationTask.ERROR,
