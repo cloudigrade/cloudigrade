@@ -1,4 +1,6 @@
 ---
 - include_tasks: ecs.yml
 - include_tasks: s3.yml
-- include_tasks: iam.yml
+# Following is omitted until we
+# have shared storage.
+#- include_tasks: iam.yml
