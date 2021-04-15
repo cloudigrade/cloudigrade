@@ -472,8 +472,8 @@ class MachineImage(ExportModelOperationsMixin("MachineImage"), BaseGenericModel)
             with lock_task_for_user_ids(user_ids):
                 logger.info(
                     "Removing %(num_usages)d related ConcurrentUsage objects "
-                    "related to Run %(run)s."
-                    % {"num_usages": concurrent_usages.count(), "run": str(self)}
+                    "related to Run %(run)s.",
+                    {"num_usages": concurrent_usages.count(), "run": str(self)},
                 )
                 concurrent_usages.delete()
         return super().save(*args, **kwargs)
@@ -663,8 +663,8 @@ class Run(BaseModel):
         )
         logger.info(
             "Removing %(num_usages)d related ConcurrentUsage objects "
-            "related to Run %(run)s."
-            % {"num_usages": concurrent_usages.count(), "run": str(self)}
+            "related to Run %(run)s.",
+            {"num_usages": concurrent_usages.count(), "run": str(self)},
         )
         concurrent_usages.delete()
 
