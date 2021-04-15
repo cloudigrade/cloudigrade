@@ -656,7 +656,7 @@ class Run(BaseModel):
         concurrent_usages = ConcurrentUsage.objects.filter(
             potentially_related_runs=self
         )
-        logger.debug(
+        logger.info(
             "Removing %(num_usages)d related ConcurrentUsage objects "
             "related to Run %(run)s."
             % {"num_usages": concurrent_usages.count(), "run": str(self)}
