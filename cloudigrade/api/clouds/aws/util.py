@@ -365,13 +365,28 @@ def save_instance_events(awsinstance, instance_data, events=None):
 
     if events is None:
         with transaction.atomic():
+            occurred_at = get_now()
+            instance = awsinstance.instance.get()
+
+            latest_event = (
+                InstanceEvent.objects.filter(
+                    instance=instance, occurred_at__lte=occurred_at
+                )
+                .order_by("-occurred_at")
+                .first()
+            )
+            # If the most recently occurred event was power_on, then adding another
+            # power_on event here is redundant and can be skipped.
+            if latest_event and latest_event.event_type == InstanceEvent.TYPE.power_on:
+                return
+
             awsevent = AwsInstanceEvent.objects.create(
                 subnet=instance_data["SubnetId"],
                 instance_type=instance_data["InstanceType"],
             )
             InstanceEvent.objects.create(
                 event_type=InstanceEvent.TYPE.power_on,
-                occurred_at=get_now(),
+                occurred_at=occurred_at,
                 instance=awsinstance.instance.get(),
                 content_object=awsevent,
             )

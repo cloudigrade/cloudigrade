@@ -173,6 +173,108 @@ class InitialAwsDescribeInstancesTransactionTest(TransactionTestCase):
     @patch("api.clouds.aws.tasks.onboarding.start_image_inspection")
     @patch("api.clouds.aws.tasks.onboarding.aws")
     @patch("api.clouds.aws.util.aws")
+    def test_initial_aws_describe_instances_twice(
+        self,
+        mock_util_aws,
+        mock_aws,
+        mock_start,
+        mock_sources_notify,
+        mock_schedule_concurrent_calculation_task,
+    ):
+        """
+        Test calling initial_aws_describe_instances twice with no data changes.
+
+        This test asserts appropriate behavior if we call account.enable after
+        performing the initial AWS account describe once but without generating any new
+        activity after the initial describe. This is likely to happen for AWS accounts
+        with any long-running instances that have not changed state since the last time
+        account.enable was called. Since our account availability checks routinely call
+        account.enable to verify permissions, we need to test handling this use case.
+
+        Why is this a concern? We used to naively *always* insert a new InstanceEvent
+        for a running instance seen within initial_aws_describe_instances. That's not a
+        problem in isolation; the new event would result in the runs being recreated and
+        concurrent usage being recalculated. However, this becomes a problem if the
+        instance's run spans many days (meaning many more recalculations) or if the
+        account.enable function (which also calls initial_aws_describe_instances) is
+        being called frequently, which may be the case since we cannot control when
+        external callers hit an account's availability_check endpoint.
+
+        A resolution to this concern is to perform an existence check before allowing
+        initial_aws_describe_instances to insert a new InstanceEvent. If the most recent
+        event is power_on, then we don't need to store another power_on, and we don't
+        need to rebuild the run and recalculate concurrent usages. The updated expected
+        behavior of calling account.enable shortly after initial_aws_describe_instances
+        is that no new InstantEvent objects will be created by account.enable if a
+        running described instance's most recent event is power_on.
+        """
+        account = account_helper.generate_cloud_account()
+
+        # Set up mocked data in AWS API responses.
+        region = util_helper.get_random_region()
+        described_ami = util_helper.generate_dummy_describe_image()
+        ec2_ami_id = described_ami["ImageId"]
+        described_instance = util_helper.generate_dummy_describe_instance(
+            image_id=ec2_ami_id, state=aws.InstanceState.running
+        )
+        ec2_instance_id = described_instance["InstanceId"]
+        described_instances = {region: [described_instance]}
+        mock_aws.describe_instances_everywhere.return_value = described_instances
+        mock_util_aws.describe_images.return_value = [described_ami]
+        mock_util_aws.is_windows.side_effect = aws.is_windows
+        mock_util_aws.InstanceState.is_running = aws.InstanceState.is_running
+        mock_util_aws.AwsArn = aws.AwsArn
+        mock_util_aws.verify_account_access.return_value = True, []
+
+        date_of_initial_describe = util_helper.utc_dt(2020, 3, 1, 0, 0, 0)
+        date_of_redundant_enable = util_helper.utc_dt(2020, 3, 2, 0, 0, 0)
+
+        with util_helper.clouditardis(date_of_initial_describe):
+            tasks.initial_aws_describe_instances(account.id)
+            mock_start.assert_called_with(
+                account.content_object.account_arn, ec2_ami_id, region
+            )
+            mock_schedule_concurrent_calculation_task.assert_called()
+
+        # Reset because we need to check these mocks again later.
+        mock_schedule_concurrent_calculation_task.reset_mock()
+        mock_start.reset_mock()
+
+        with patch.object(
+            tasks, "initial_aws_describe_instances"
+        ) as mock_initial, util_helper.clouditardis(date_of_redundant_enable):
+            # Even though we want to test initial_aws_describe_instances, we need to
+            # mock this particular call because we need to short-circuit Celery.
+            account.enable()
+            mock_initial.delay.assert_called()
+            mock_sources_notify.assert_called()
+
+        with util_helper.clouditardis(date_of_redundant_enable):
+            tasks.initial_aws_describe_instances(account.id)
+            # start_image_inspection should not be called because we already know
+            # about the image from the earlier initial_aws_describe_instances call.
+            mock_start.assert_not_called()
+            # schedule_concurrent_calculation_task should not be called because we
+            # should not have generated any new events here that would require it.
+            mock_schedule_concurrent_calculation_task.assert_not_called()
+
+        # The relevant describe and account.enable processing is now done.
+        # Now we just need to assert that we did not create redundant power_on events.
+        instance_events = (
+            AwsInstance.objects.get(ec2_instance_id=ec2_instance_id)
+            .instance.get()
+            .instanceevent_set.order_by("occurred_at")
+        )
+        self.assertEqual(instance_events.count(), 1)
+        instance_event = instance_events.first()
+        self.assertEqual(instance_event.occurred_at, date_of_initial_describe)
+        self.assertEqual(instance_event.event_type, InstanceEvent.TYPE.power_on)
+
+    @patch("api.util.schedule_concurrent_calculation_task")
+    @patch("api.models.sources.notify_application_availability")
+    @patch("api.clouds.aws.tasks.onboarding.start_image_inspection")
+    @patch("api.clouds.aws.tasks.onboarding.aws")
+    @patch("api.clouds.aws.util.aws")
     def test_initial_aws_describe_instances_after_disable_enable(
         self,
         mock_util_aws,
