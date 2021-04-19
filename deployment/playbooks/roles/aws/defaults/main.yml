@@ -4,7 +4,6 @@ env: dev
 # Default component state
 ecs_state: "present"
 s3_state: "present"
-iam_state: "present"
 
 ### ecs.yml
 # ECS Resource Names
@@ -50,9 +49,3 @@ ec2_asg_replace_all_instances: yes
 s3_bucket_name: "cloudigrade-{{env}}"
 sqs_name: "cloudigrade-cloudtrail-s3-{{env}}"
 s3_bucket_arn: "arn:aws:s3:::{{ s3_bucket_name }}"
-
-### iam.yml
-# Names
-iam_user_name: "cloudigrade-user-{{env}}"
-iam_policy_name: "cloudigrade-deploy-policy-{{env}}"
-
