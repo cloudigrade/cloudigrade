@@ -302,13 +302,12 @@ class InitialAwsDescribeInstancesTransactionTest(TransactionTestCase):
         region = util_helper.get_random_region()
 
         described_ami = util_helper.generate_dummy_describe_image()
-        ami_id = described_ami["ImageId"]
-        all_instances = [
-            util_helper.generate_dummy_describe_instance(
-                image_id=ami_id, state=aws.InstanceState.running
-            ),
-        ]
-        described_instances = {region: all_instances}
+        ec2_ami_id = described_ami["ImageId"]
+        described_instance = util_helper.generate_dummy_describe_instance(
+            image_id=ec2_ami_id, state=aws.InstanceState.running
+        )
+        ec2_instance_id = described_instance["InstanceId"]
+        described_instances = {region: [described_instance]}
         mock_aws.describe_instances_everywhere.return_value = described_instances
         mock_util_aws.describe_images.return_value = [described_ami]
         mock_util_aws.is_windows.side_effect = aws.is_windows
@@ -316,19 +315,20 @@ class InitialAwsDescribeInstancesTransactionTest(TransactionTestCase):
         mock_util_aws.AwsArn = aws.AwsArn
         mock_util_aws.verify_account_access.return_value = True, []
 
-        inspection_call = call(
-            account.content_object.account_arn,
-            described_ami["ImageId"],
-            region,
-        )
-
         date_of_initial_describe = util_helper.utc_dt(2020, 3, 1, 0, 0, 0)
         date_of_disable = util_helper.utc_dt(2020, 3, 2, 0, 0, 0)
         date_of_reenable = util_helper.utc_dt(2020, 3, 3, 0, 0, 0)
 
         with util_helper.clouditardis(date_of_initial_describe):
             tasks.initial_aws_describe_instances(account.id)
-            mock_start.assert_has_calls([inspection_call])
+            mock_start.assert_called_with(
+                account.content_object.account_arn, ec2_ami_id, region
+            )
+            mock_schedule_concurrent_calculation_task.assert_called()
+
+        # Reset because we need to check these mocks again later.
+        mock_schedule_concurrent_calculation_task.reset_mock()
+        mock_start.reset_mock()
 
         with util_helper.clouditardis(date_of_disable):
             account.disable()
@@ -340,21 +340,14 @@ class InitialAwsDescribeInstancesTransactionTest(TransactionTestCase):
         # Only the new instance + ami should be fully described.
 
         described_ami_2 = util_helper.generate_dummy_describe_image()
-        ami_id_2 = described_ami_2["ImageId"]
-        all_instances.append(
-            util_helper.generate_dummy_describe_instance(
-                image_id=ami_id_2, state=aws.InstanceState.running
-            )
+        ec2_ami_id_2 = described_ami_2["ImageId"]
+        described_instance_2 = util_helper.generate_dummy_describe_instance(
+            image_id=ec2_ami_id_2, state=aws.InstanceState.running
         )
-        described_instances = {region: all_instances}
+        ec2_instance_id_2 = described_instance_2["InstanceId"]
+        described_instances = {region: [described_instance, described_instance_2]}
         mock_aws.describe_instances_everywhere.return_value = described_instances
         mock_util_aws.describe_images.return_value = [described_ami, described_ami_2]
-
-        inspection_call_2 = call(
-            account.content_object.account_arn,
-            described_ami_2["ImageId"],
-            region,
-        )
 
         with patch.object(
             tasks, "initial_aws_describe_instances"
@@ -362,40 +355,42 @@ class InitialAwsDescribeInstancesTransactionTest(TransactionTestCase):
             # Even though we want to test initial_aws_describe_instances, we need to
             # mock this particular call because we need to short-circuit Celery.
             account.enable()
+            mock_sources_notify.assert_called()
             mock_initial.delay.assert_called()
 
         with util_helper.clouditardis(date_of_reenable):
             tasks.initial_aws_describe_instances(account.id)
-            mock_start.assert_has_calls([inspection_call_2])
+            mock_start.assert_called_with(
+                account.content_object.account_arn, ec2_ami_id_2, region
+            )
+            mock_schedule_concurrent_calculation_task.assert_called()
 
         # Now that the dust has settled, let's check that the two instances have events
         # in the right configuration. The first instance is on, off, and on; the second
         # instance is on.
 
-        aws_instance_1_events = (
-            AwsInstance.objects.get(ec2_instance_id=all_instances[0]["InstanceId"])
+        instance_1_events = (
+            AwsInstance.objects.get(ec2_instance_id=ec2_instance_id)
             .instance.get()
             .instanceevent_set.order_by("occurred_at")
-            .all()
         )
-        self.assertEqual(len(aws_instance_1_events), 3)
-        instance_1_event_1 = aws_instance_1_events[0]
+        self.assertEqual(instance_1_events.count(), 3)
+        instance_1_event_1 = instance_1_events[0]
         self.assertEqual(instance_1_event_1.occurred_at, date_of_initial_describe)
         self.assertEqual(instance_1_event_1.event_type, InstanceEvent.TYPE.power_on)
-        instance_1_event_2 = aws_instance_1_events[1]
+        instance_1_event_2 = instance_1_events[1]
         self.assertEqual(instance_1_event_2.occurred_at, date_of_disable)
         self.assertEqual(instance_1_event_2.event_type, InstanceEvent.TYPE.power_off)
-        instance_1_event_3 = aws_instance_1_events[2]
+        instance_1_event_3 = instance_1_events[2]
         self.assertEqual(instance_1_event_3.occurred_at, date_of_reenable)
         self.assertEqual(instance_1_event_3.event_type, InstanceEvent.TYPE.power_on)
 
-        aws_instance_2_events = (
-            AwsInstance.objects.get(ec2_instance_id=all_instances[1]["InstanceId"])
+        instance_2_events = (
+            AwsInstance.objects.get(ec2_instance_id=ec2_instance_id_2)
             .instance.get()
             .instanceevent_set.order_by("occurred_at")
-            .all()
         )
-        self.assertEqual(len(aws_instance_2_events), 1)
-        instance_2_event_1 = aws_instance_2_events[0]
+        self.assertEqual(instance_2_events.count(), 1)
+        instance_2_event_1 = instance_2_events[0]
         self.assertEqual(instance_2_event_1.occurred_at, date_of_reenable)
         self.assertEqual(instance_2_event_1.event_type, InstanceEvent.TYPE.power_on)
