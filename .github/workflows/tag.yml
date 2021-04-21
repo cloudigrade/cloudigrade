@@ -1,8 +1,8 @@
 name: Tag
 
 env:
-  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/cloudigrade
-  NGINX_IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/cloudinginx
+  IMAGE_NAME: quay.io/cloudservices/cloudigrade
+  NGINX_IMAGE_NAME: quay.io/cloudservices/cloudinginx
 
 on:
   release:
@@ -95,15 +95,15 @@ jobs:
     name: Build and Push Tagged Image
     env:
       COMMIT_TAG: ${{ github.event.release.tag_name }}
-      GHCR_BOT_USERNAME: ${{ secrets.GHCR_BOT_USERNAME }}
-      GHCR_BOT_TOKEN: ${{ secrets.GHCR_BOT_TOKEN }}
+      QUAY_BOT_USERNAME: ${{ secrets.QUAY_BOT_USERNAME }}
+      QUAY_BOT_TOKEN: ${{ secrets.QUAY_BOT_TOKEN}}
     needs: [test-py38, test-flake8, test-vulnerability, test-docker, test-s2i, test-docs]
     runs-on: ubuntu-latest
     container:
       image: docker:latest
     steps:
       - uses: actions/checkout@v2
-      - run: echo "${GHCR_BOT_TOKEN}" | docker login ghcr.io -u ${GHCR_BOT_USERNAME} --password-stdin
+      - run: echo "${QUAY_BOT_TOKEN}" | docker login quay.io -u ${QUAY_BOT_USERNAME} --password-stdin
       - run: docker pull $IMAGE_NAME:latest || true
       - run: docker build --cache-from ${IMAGE_NAME}:latest --tag ${IMAGE_NAME}:${COMMIT_TAG} .
       - run: docker push ${IMAGE_NAME}:${COMMIT_TAG}
@@ -116,8 +116,8 @@ jobs:
       image: docker:latest
     env:
       COMMIT_TAG: ${{ github.event.release.tag_name }}
-      GHCR_BOT_USERNAME: ${{ secrets.GHCR_BOT_USERNAME }}
-      GHCR_BOT_TOKEN: ${{ secrets.GHCR_BOT_TOKEN }}
+      QUAY_BOT_USERNAME: ${{ secrets.QUAY_BOT_USERNAME }}
+      QUAY_BOT_TOKEN: ${{ secrets.QUAY_BOT_TOKEN}}
       CONTEXT_DIR: deployment/nginx/
       NGINX_S2I_IMAGE: registry.redhat.io/rhel8/nginx-116:latest
       S2I_VERSION: v1.3.1
@@ -133,22 +133,5 @@ jobs:
           REDHAT_REGISTRY_LOGIN: ${{ secrets.REDHAT_REGISTRY_LOGIN }}
         run: ${REDHAT_REGISTRY_LOGIN}
       - run: s2i build --context-dir=${CONTEXT_DIR} --ref ${GITHUB_REF##*/} ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY} ${NGINX_S2I_IMAGE} ${NGINX_IMAGE_NAME}:${COMMIT_TAG}
-      - run: echo "${GHCR_BOT_TOKEN}" | docker login ghcr.io -u ${GHCR_BOT_USERNAME} --password-stdin
+      - run: echo "${QUAY_BOT_TOKEN}" | docker login quay.io -u ${QUAY_BOT_USERNAME} --password-stdin
       - run: docker push ${NGINX_IMAGE_NAME}:${COMMIT_TAG}
-
-  deploy-trigger-quay-copy:
-    name: Trigger ghcr to quay copy
-    env:
-      WEBHOOK_SECRET: ${{ secrets.WEBHOOK_SECRET }}
-    needs: [deploy-build-and-push-tagged-image, deploy-build-and-push-tagged-nginx-image]
-    runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/cloudigrade/build-container:latest
-    steps:
-      - name: Webhook
-        uses: distributhor/workflow-webhook@v1.0.5
-        env:
-          webhook_type: "json-extended"
-          webhook_url: "https://ci.ext.devshift.net/github-webhook/"
-          webhook_secret: ${{ secrets.WEBHOOK_SECRET }}  # Does not matter, but provided because it is required.
-
