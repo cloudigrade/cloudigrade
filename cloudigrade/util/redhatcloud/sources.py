@@ -4,6 +4,7 @@ import json
 import logging
 
 import requests
+from confluent_kafka import KafkaException, Producer as KafkaProducer
 from django.conf import settings
 from django.utils.translation import gettext as _
 
@@ -199,13 +200,16 @@ def get_cloudigrade_application_type_id(account_number):
 
 
 def notify_application_availability(
-    account_number, application_id, availability_status, availability_status_error=""
+    _account_number, application_id, availability_status, availability_status_error=""
 ):
     """
     Update Sources application's availability status.
 
+    The update request is done by sending Sources the availability_status
+    Kafka message with the passed in parameters.
+
     Args:
-        account_number (str): account number identifier for Insights auth
+        _account_number (str): account number identifier for Insights auth
         application_id (int): Platform insights application id
         availability_status (string): Availability status to set
         availability_status_error (string): Optional status error
@@ -217,46 +221,34 @@ def notify_application_availability(
         )
         return
 
-    sources_api_base_url = settings.SOURCES_API_BASE_URL
-    sources_api_external_uri = settings.SOURCES_API_EXTERNAL_URI
-
-    url = (
-        f"{sources_api_base_url}/{sources_api_external_uri}"
-        f"applications/{application_id}/"
-    )
+    sources_kafka_config = {
+        "bootstrap.servers": f"{settings.LISTENER_SERVER}:{settings.LISTENER_PORT}"
+    }
 
     payload = {
-        "availability_status": availability_status,
-        "availability_status_error": availability_status_error,
+        "resource_type": settings.SOURCES_RESOURCE_TYPE,
+        "resource_id": application_id,
+        "status": availability_status,
+        "error": availability_status_error,
     }
 
     logger.info(
         _(
-            "Setting the availability status for application "
+            "Requesting the update of the availability status for application "
             "%(application_id)s as %(status)s"
         ),
         {"application_id": application_id, "status": availability_status},
     )
 
-    headers = identity.generate_http_identity_headers(account_number, is_org_admin=True)
-    response = requests.patch(url, headers=headers, data=json.dumps(payload))
+    try:
+        kafka_producer = KafkaProducer(sources_kafka_config)
 
-    logger.debug(
-        _("Notify sources response: %(code)s - %(response)s"),
-        {"code": response.status_code, "response": response.content},
-    )
-
-    if response.status_code == http.HTTPStatus.NOT_FOUND:
-        logger.info(
-            _(
-                "Cannot update availability status, application id "
-                "%(application_id)s not found."
-            ),
-            {"application_id": application_id},
+        kafka_producer.poll(0)
+        kafka_producer.produce(
+            topic=settings.SOURCES_STATUS_TOPIC,
+            value=json.dumps(payload),
+            headers={"event_type": settings.SOURCES_AVAILABILITY_EVENT_TYPE},
         )
-    elif response.status_code != http.HTTPStatus.NO_CONTENT:
-        message = _(
-            "Unexpected status {status} updating application "
-            "{application_id} status at {url}"
-        ).format(status=response.status_code, application_id=application_id, url=url)
-        raise SourcesAPINotOkStatus(message)
+        kafka_producer.flush()
+    except KafkaException:
+        raise
