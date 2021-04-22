@@ -5,9 +5,9 @@ echo "ansible:x:$(id -u):$(id -g):,,,:${HOME}:/bin/bash" >> /etc/passwd
 echo "ansible:x:$(id -G | cut -d' ' -f 2)" >> /etc/group
 id
 
-ANSIBLE_CONFIG=/home/cloudigrade/playbooks/ansible.cfg ansible-playbook -e env=${CLOUDIGRADE_ENVIRONMENT} playbooks/manage-cloudigrade.yml | tee slack-payload
+ANSIBLE_CONFIG=/opt/cloudigrade/playbooks/ansible.cfg ansible-playbook -e env=${CLOUDIGRADE_ENVIRONMENT} playbooks/manage-cloudigrade.yml | tee /tmp/slack-payload
 
-slack_payload=`cat slack-payload | tail -n 3`
+slack_payload=`cat /tmp/slack-payload | tail -n 3`
 curl -X POST --data-urlencode "payload={\"channel\": \"#cloudmeter-deployments-dev\", \"text\": \"$slack_payload\"}" ${SLACK_TOKEN}
 
 python3 ./manage.py configurequeues
