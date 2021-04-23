@@ -5,7 +5,7 @@ echo "ansible:x:$(id -u):$(id -g):,,,:${HOME}:/bin/bash" >> /etc/passwd
 echo "ansible:x:$(id -G | cut -d' ' -f 2)" >> /etc/group
 id
 
-ANSIBLE_CONFIG=/opt/cloudigrade/playbooks/ansible.cfg ansible-playbook -e env=${CLOUDIGRADE_ENVIRONMENT} playbooks/manage-cloudigrade.yml | tee -a /tmp/slack-payload
+ANSIBLE_CONFIG=/opt/cloudigrade/playbooks/ansible.cfg ansible-playbook -e env=${CLOUDIGRADE_ENVIRONMENT} playbooks/manage-cloudigrade.yml | tee /tmp/slack-payload
 
 slack_payload=`cat /tmp/slack-payload | tail -n 3`
 slack_payload="${CLOUDIGRADE_ENVIRONMENT} -- $slack_payload"
