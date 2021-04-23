@@ -23,7 +23,7 @@ AWS_NAME_PREFIX = f"{CLOUDIGRADE_ENVIRONMENT}-"
 account_id = client("sts").get_caller_identity().get("Account")
 AWS_CLOUDTRAIL_EVENT_URL = f"https://sqs.us-east-1.amazonaws.com/{account_id}/cloudigrade-cloudtrail-s3-{CLOUDIGRADE_ENVIRONMENT}"
 
-AWS_S3_BUCKET_NAME = f"cloudigrade-{CLOUDIGRADE_ENVIRONMENT}"
+AWS_S3_BUCKET_NAME = f"{CLOUDIGRADE_ENVIRONMENT}-cloudigrade-trails"
 
 SECRET_KEY = env("DJANGO_SECRET_KEY")
 ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS")
