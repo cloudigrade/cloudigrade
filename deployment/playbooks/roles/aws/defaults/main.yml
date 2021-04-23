@@ -46,6 +46,6 @@ ec2_asg_replace_all_instances: yes
 
 ### s3.yml
 # Names
-s3_bucket_name: "cloudigrade-{{env}}"
+s3_bucket_name: "{{env}}-cloudigrade-trails"
 sqs_name: "cloudigrade-cloudtrail-s3-{{env}}"
 s3_bucket_arn: "arn:aws:s3:::{{ s3_bucket_name }}"
