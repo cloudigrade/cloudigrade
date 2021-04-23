@@ -1,5 +1,6 @@
 """Settings file meant for production like environments."""
 import sentry_sdk
+from boto3 import client
 from sentry_sdk.integrations.django import DjangoIntegration
 
 from .base import *
@@ -18,15 +19,10 @@ HOUNDIGRADE_ECS_CLUSTER_NAME = f"cloudigrade-ecs-{CLOUDIGRADE_ENVIRONMENT}"
 
 AWS_NAME_PREFIX = f"{CLOUDIGRADE_ENVIRONMENT}-"
 
-# This specific import must come *after* base because of a fragile import chain.
-# Also, if we're not careful about what we import within util.aws.sts or anything it
-# imports, we might explode or get stuck in an import loop.
-# TODO revisit this later.
-# Maybe instead of calling _get_primary_account_id we should invoke boto here directly?
-# Or maybe we should read another (redundant) environment variable for the account ID?
-from util.aws.sts import _get_primary_account_id
+# Instead of calling _get_primary_account_id we are calling boto here directly
+account_id = client("sts").get_caller_identity().get("Account")
+AWS_CLOUDTRAIL_EVENT_URL = f"https://sqs.us-east-1.amazonaws.com/{account_id}/cloudigrade-cloudtrail-s3-{CLOUDIGRADE_ENVIRONMENT}"
 
-AWS_CLOUDTRAIL_EVENT_URL = f"https://sqs.us-east-1.amazonaws.com/{_get_primary_account_id()}/cloudigrade-cloudtrail-s3-{CLOUDIGRADE_ENVIRONMENT}"
 AWS_S3_BUCKET_NAME = f"cloudigrade-{CLOUDIGRADE_ENVIRONMENT}"
 
 SECRET_KEY = env("DJANGO_SECRET_KEY")

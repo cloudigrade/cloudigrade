@@ -8,7 +8,7 @@ id
 ANSIBLE_CONFIG=/opt/cloudigrade/playbooks/ansible.cfg ansible-playbook -e env=${CLOUDIGRADE_ENVIRONMENT} playbooks/manage-cloudigrade.yml | tee /tmp/slack-payload
 
 slack_payload=`cat /tmp/slack-payload | tail -n 3`
-curl -X POST --data-urlencode "payload={\"channel\": \"#cloudmeter-deployments-dev\", \"text\": \"$slack_payload\"}" ${SLACK_TOKEN}
+curl -X POST --data-urlencode "payload={\"channel\": \"#cloudmeter-deployments\", \"text\": \"$slack_payload\"}" ${SLACK_TOKEN}
 
 python3 ./manage.py configurequeues
 python3 ./manage.py syncbucketlifecycle
