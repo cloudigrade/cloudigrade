@@ -22,6 +22,10 @@ def add_notification(bucket_name, sqs_arn):
                 'Key': {
                     'FilterRules': [
                         {
+                            'Name': 'prefix',
+                            'Value': 'AWSLogs/'
+                            },
+                        {
                             'Name': 'suffix',
                             'Value': '.json.gz'
                             },
