@@ -9,13 +9,11 @@ from boto3.session import Session
 
 ROOT_DIR = environ.Path(__file__) - 3
 APPS_DIR = ROOT_DIR.path("cloudigrade")
-SECRETS_DIR = environ.Path("/mnt/secret_store")
 
 env = environ.Env()
-
-if environ.os.path.isfile(SECRETS_DIR.path(".env")):
-    env_file = str(SECRETS_DIR.path(".env"))
-    env.read_env(env_file)
+ENV_FILE_PATH = env("ENV_FILE_PATH", default="/mnt/secret_store/.env")
+if environ.os.path.isfile(ENV_FILE_PATH):
+    env.read_env(ENV_FILE_PATH)
     print("The .env file has been loaded. See base.py for more information")
 
 # Important Security Settings
