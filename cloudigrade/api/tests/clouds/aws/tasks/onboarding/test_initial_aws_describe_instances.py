@@ -164,6 +164,38 @@ class InitialAwsDescribeInstancesTest(TestCase):
         tasks.initial_aws_describe_instances(account.id)
         mock_aws.get_session.assert_not_called()
 
+    @patch("api.clouds.aws.tasks.onboarding.aws")
+    def test_initial_aws_describe_instances_stop_already_running(self, mock_aws):
+        """
+        Test creating power-off events for running instances not in the describe.
+
+        This asserts expected behavior when we actually already have some instance for
+        the given cloud account and that instance's most recent power-related event
+        indicates it was powered on. When we perform the "describe" operation, if that
+        instance is absent or not running, we immediately generate a power-off event
+        since it's likely that we failed to process the relevant CloudTrail log.
+        """
+        account = account_helper.generate_cloud_account()
+        instance = account_helper.generate_instance(account)
+        power_on_time = util_helper.utc_dt(2018, 1, 1, 0, 0, 0)
+        account_helper.generate_single_instance_event(
+            instance, power_on_time, event_type=InstanceEvent.TYPE.power_on
+        )
+
+        described_instances = {}  # empty response because there may be no instances.
+
+        mock_aws.describe_instances_everywhere.return_value = described_instances
+        tasks.initial_aws_describe_instances(account.id)
+
+        # Verify we still have the one instance.
+        self.assertEqual(AwsInstance.objects.count(), 1)
+        # Verify that we now have two instance events.
+        events = InstanceEvent.objects.all().order_by("occurred_at")
+        self.assertEqual(events.count(), 2)
+        # Verify the first was the old power-on and the second is the new power-off.
+        self.assertEqual(events[0].event_type, InstanceEvent.TYPE.power_on)
+        self.assertEqual(events[1].event_type, InstanceEvent.TYPE.power_off)
+
 
 class InitialAwsDescribeInstancesTransactionTest(TransactionTestCase):
     """Test cases for 'initial_aws_describe_instances', but with transactions."""

@@ -10,6 +10,7 @@ from api.clouds.aws.models import AwsCloudAccount
 from api.clouds.aws.util import (
     create_aws_cloud_account,
     create_initial_aws_instance_events,
+    create_missing_power_off_aws_instance_events,
     create_new_machine_images,
     generate_aws_ami_messages,
     start_image_inspection,
@@ -131,6 +132,8 @@ def initial_aws_describe_instances(account_id):
     with lock_task_for_user_ids([user_id]):
         try:
             AwsCloudAccount.objects.get(pk=account_id)
+
+            create_missing_power_off_aws_instance_events(account, instances_data)
             new_ami_ids = create_new_machine_images(session, instances_data)
             logger.info(
                 _("Created new machine images include: %(new_ami_ids)s"),
