@@ -456,6 +456,81 @@ def save_instance_events(awsinstance, instance_data, events=None):
     return awsinstance
 
 
+def create_missing_power_off_aws_instance_events(account, instances_data):
+    """
+    Create missing power_off for instances that are not currently running.
+
+    If our CloudTrail log processing is working normally and isn't terribly behind
+    schedule, then this function usually should have no material effect. However, since
+    it's *possible* to lose messages in case of an unexpected error, this function gives
+    us the ability to "fix" our runs with a new power_off that occurs "now". Without
+    this, we risk letting dead instances with never-ending runs contribute erroneously
+    to concurrent usage calculations for new days.
+    """
+    # Build a list of currently-running instance IDs according to the described data.
+    running_ec2_instance_ids = set()
+    for region, instances in instances_data.items():
+        for instance_data in instances:
+            instance_id = instance_data.get("InstanceId")
+            if not instance_id:
+                continue
+            state_code = instance_data.get("State", {}).get("Code")
+            if state_code and aws.InstanceState.is_running(state_code):
+                running_ec2_instance_ids.add(instance_id)
+
+    # Get AWS instances that we already have saved but that are *not*
+    # in the set of instances running according to the described data.
+    known_aws_instances = AwsInstance.objects.filter(
+        instance__cloud_account=account
+    ).exclude(ec2_instance_id__in=running_ec2_instance_ids)
+
+    # Filter down that set of instances to ones whose most recent power-related event
+    # is *not* power_off. This means we erroneously think they are still running.
+    # Note that we're not simply looking at the last event because it might not be
+    # power-related, and we only care about the power state here.
+    still_running_instances = {}  # {ec2_instance_id: (Instance, AwsInstance)}
+    for aws_instance in known_aws_instances:
+        instance = aws_instance.instance.get()
+        last_occurred_power_event = (
+            InstanceEvent.objects.filter(
+                instance=instance,
+                event_type__in=(
+                    InstanceEvent.TYPE.power_on,
+                    InstanceEvent.TYPE.power_off,
+                ),
+            )
+            .order_by("-occurred_at")
+            .last()
+        )
+        if (
+            last_occurred_power_event
+            and last_occurred_power_event.event_type == InstanceEvent.TYPE.power_on
+        ):
+            still_running_instances[aws_instance.ec2_instance_id] = (
+                instance,
+                aws_instance,
+            )
+
+    occurred_at = get_now()
+    event_type = InstanceEvent.TYPE.power_off
+    for instance, aws_instance in still_running_instances.values():
+        # Let's log this at error level for now because we should be made aware of how
+        # frequently this is happening. If we are regularly creating events here, that
+        # means we probably have something broken in our CloudTrail processing that is
+        # losing messages!
+        logger.error(
+            "Adding missing InstanceEvent power_off for %(instance)s %(aws_instance)s",
+            {"instance": instance, "aws_instance": aws_instance},
+        )
+        aws_instance_event = AwsInstanceEvent.objects.create()
+        InstanceEvent.objects.create(
+            instance=instance,
+            event_type=event_type,
+            occurred_at=occurred_at,
+            content_object=aws_instance_event,
+        )
+
+
 def generate_aws_ami_messages(instances_data, ami_id_list):
     """
     Format information about the machine image for messaging.
