@@ -131,6 +131,10 @@ def initial_aws_describe_instances(account_id):
     # Lock the task at a user level. A user can only run one task at a time.
     with lock_task_for_user_ids([user_id]):
         try:
+            # Explicitly "get" the related AwsCloudAccount before proceeding.
+            # We do this at the start of this transaction in case the account has been
+            # deleted during the potentially slow describe_instances_everywhere above.
+            # If this fails, we'll jump to the except block to log an important warning.
             AwsCloudAccount.objects.get(pk=account_id)
 
             create_missing_power_off_aws_instance_events(account, instances_data)
