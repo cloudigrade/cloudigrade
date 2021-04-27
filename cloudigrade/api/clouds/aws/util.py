@@ -472,8 +472,6 @@ def create_missing_power_off_aws_instance_events(account, instances_data):
     for region, instances in instances_data.items():
         for instance_data in instances:
             instance_id = instance_data.get("InstanceId")
-            if not instance_id:
-                continue
             state_code = instance_data.get("State", {}).get("Code")
             if state_code and aws.InstanceState.is_running(state_code):
                 running_ec2_instance_ids.add(instance_id)
