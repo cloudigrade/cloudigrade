@@ -63,7 +63,7 @@ from api.util import (
 )
 from util import aws
 from util.celery import retriable_shared_task
-from util.exceptions import AwsThrottlingException
+from util.exceptions import AwsThrottlingException, KafkaProducerException
 from util.misc import get_now, lock_task_for_user_ids
 from util.redhatcloud import sources
 
@@ -712,3 +712,29 @@ def enable_account(cloud_account_id):
     """
     cloud_account = CloudAccount.objects.get(id=cloud_account_id)
     cloud_account.enable()
+
+
+@retriable_shared_task(
+    autoretry_for=(KafkaProducerException),
+    name="api.tasks.notify_application_availability_task",
+)
+def notify_application_availability_task(
+    application_id, availability_status, availability_status_error=""
+):
+    """
+    Update Sources application's availability status.
+
+    This is a task wrapper to the sources.notify_application_availability
+    method which sends the availability_status Kafka message to Sources.
+
+    Args:
+        application_id (int): Platform insights application id
+        availability_status (string): Availability status to set
+        availability_status_error (string): Optional status error
+    """
+    try:
+        sources.notify_application_availability(
+            application_id, availability_status, availability_status_error
+        )
+    except KafkaProducerException:
+        raise

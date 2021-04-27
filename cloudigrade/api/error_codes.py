@@ -2,7 +2,6 @@
 from dataclasses import dataclass
 from gettext import gettext as _
 
-from util.redhatcloud import sources
 
 GENERIC_ACCOUNT_SETUP_ERROR_MESSAGE = (
     "Could not set up cloud metering. Please contact support."
@@ -32,10 +31,11 @@ class CloudigradeError:
 
     def notify(self, account_number, application_id, error_message=None):
         """Tell sources an application is not available because of error."""
+        from cloudigrade.api.tasks import notify_application_availability_task
+
         if not error_message:
             error_message = self.get_message()
-        sources.notify_application_availability(
-            account_number,
+        notify_application_availability_task(
             application_id,
             availability_status="unavailable",
             availability_status_error=error_message,

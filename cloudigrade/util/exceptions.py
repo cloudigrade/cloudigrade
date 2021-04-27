@@ -143,6 +143,10 @@ class SourcesAPINotJsonContent(SourcesAPIException):
     """Raise when Sources API returns not-JSON content."""
 
 
+class KafkaProducerException(Exception):
+    """Raise when we get an error while trying to send a Kafka message."""
+
+
 def api_exception_handler(exc, context):
     """
     Log exception and return an appropriately formatted response.

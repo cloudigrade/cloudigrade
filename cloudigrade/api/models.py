@@ -13,7 +13,6 @@ from django_prometheus.models import ExportModelOperationsMixin
 from api import AWS_PROVIDER_STRING, AZURE_PROVIDER_STRING
 from util.misc import get_now, get_today, lock_task_for_user_ids
 from util.models import BaseGenericModel, BaseModel
-from util.redhatcloud import sources
 
 logger = logging.getLogger(__name__)
 
@@ -134,9 +133,9 @@ class CloudAccount(ExportModelOperationsMixin("CloudAccount"), BaseGenericModel)
             transaction.set_rollback(True)
             return False
 
-        sources.notify_application_availability(
-            self.user.username, self.platform_application_id, "available"
-        )
+        from cloudigrade.api.tasks import notify_application_availability_task
+
+        notify_application_availability_task(self.platform_application_id, "available")
 
     @transaction.atomic
     def disable(self, message="", power_off_instances=True, notify_sources=True):
@@ -166,8 +165,10 @@ class CloudAccount(ExportModelOperationsMixin("CloudAccount"), BaseGenericModel)
             self._power_off_instances(power_off_time=get_now())
         self.content_object.disable()
         if notify_sources:
-            sources.notify_application_availability(
-                self.user.username, self.platform_application_id, "unavailable", message
+            from cloudigrade.api.tasks import notify_application_availability_task
+
+            notify_application_availability_task(
+                self.platform_application_id, "unavailable", message
             )
         logger.info(_("Finished disabling %(account)s"), {"account": self})
 
