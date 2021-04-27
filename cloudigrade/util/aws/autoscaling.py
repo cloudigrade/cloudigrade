@@ -85,6 +85,9 @@ def set_scale(name, min_size, max_size, desired_capacity):
         MaxSize=max_size,
         DesiredCapacity=desired_capacity,
     )
+    logger.info(
+        "update_auto_scaling_group response: %(response)s", {"response": response}
+    )
     return response
 
 
