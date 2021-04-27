@@ -164,37 +164,61 @@ class InitialAwsDescribeInstancesTest(TestCase):
         tasks.initial_aws_describe_instances(account.id)
         mock_aws.get_session.assert_not_called()
 
-    @patch("api.clouds.aws.tasks.onboarding.aws")
-    def test_initial_aws_describe_instances_stop_already_running(self, mock_aws):
-        """
-        Test creating power-off events for running instances not in the describe.
 
-        This asserts expected behavior when we actually already have some instance for
-        the given cloud account and that instance's most recent power-related event
-        indicates it was powered on. When we perform the "describe" operation, if that
-        instance is absent or not running, we immediately generate a power-off event
-        since it's likely that we failed to process the relevant CloudTrail log.
-        """
-        account = account_helper.generate_cloud_account()
-        instance = account_helper.generate_instance(account)
+class InitialAwsDescribeInstancesPowerOffNotRunningTest(TestCase):
+    """
+    Test cases for 'initial_aws_describe_instances' creating power_off events.
+
+    This asserts expected behavior when we actually already have some instance for
+    the given cloud account and that instance's most recent power-related event
+    indicates it was powered on. When we perform the "describe" operation, if that
+    instance is absent or not running, we immediately generate a power-off event
+    since it's likely that we failed to process the relevant CloudTrail log.
+    """
+
+    def setUp(self):
+        """Set up data for an account with a running instance."""
+        self.account = account_helper.generate_cloud_account()
+        self.instance = account_helper.generate_instance(self.account)
+        self.aws_instance = self.instance.content_object
+        self.region = self.aws_instance.region
         power_on_time = util_helper.utc_dt(2018, 1, 1, 0, 0, 0)
         account_helper.generate_single_instance_event(
-            instance, power_on_time, event_type=InstanceEvent.TYPE.power_on
+            self.instance, power_on_time, event_type=InstanceEvent.TYPE.power_on
         )
 
-        described_instances = {}  # empty response because there may be no instances.
-
-        mock_aws.describe_instances_everywhere.return_value = described_instances
-        tasks.initial_aws_describe_instances(account.id)
-
-        # Verify we still have the one instance.
-        self.assertEqual(AwsInstance.objects.count(), 1)
-        # Verify that we now have two instance events.
-        events = InstanceEvent.objects.all().order_by("occurred_at")
+    def assertExactlyOnePowerOnPowerOff(self):
+        """Assert known instance has exactly one power_on and one power_off event."""
+        events = InstanceEvent.objects.filter(instance=self.instance).order_by(
+            "occurred_at"
+        )
         self.assertEqual(events.count(), 2)
-        # Verify the first was the old power-on and the second is the new power-off.
+        # The first was the old power_on, and the second is the new power_off.
         self.assertEqual(events[0].event_type, InstanceEvent.TYPE.power_on)
         self.assertEqual(events[1].event_type, InstanceEvent.TYPE.power_off)
+
+    @patch("api.clouds.aws.tasks.onboarding.aws")
+    def test_power_off_not_present(self, mock_aws):
+        """Create power_off event for running instance not present in the describe."""
+        described_instances = {}  # empty means no instances found.
+        mock_aws.describe_instances_everywhere.return_value = described_instances
+        tasks.initial_aws_describe_instances(self.account.id)
+        self.assertExactlyOnePowerOnPowerOff()
+
+    @patch("api.clouds.aws.tasks.onboarding.aws")
+    def test_instance_found_not_running(self, mock_aws):
+        """Create power_off event for instance found stopped in the describe."""
+        described_instances = {
+            self.region: [
+                util_helper.generate_dummy_describe_instance(
+                    instance_id=self.aws_instance.ec2_instance_id,
+                    state=aws.InstanceState.stopped,
+                )
+            ]
+        }
+        mock_aws.describe_instances_everywhere.return_value = described_instances
+        tasks.initial_aws_describe_instances(self.account.id)
+        self.assertExactlyOnePowerOnPowerOff()
 
 
 class InitialAwsDescribeInstancesTransactionTest(TransactionTestCase):
