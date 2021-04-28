@@ -500,7 +500,7 @@ def create_missing_power_off_aws_instance_events(account, instances_data):
                 ),
             )
             .order_by("-occurred_at")
-            .last()
+            .first()
         )
         if (
             last_occurred_power_event
