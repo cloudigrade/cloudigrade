@@ -1,4 +1,5 @@
 """Collection of tests for aws.tasks.cloudtrail.initial_aws_describe_instances."""
+import datetime
 from unittest.mock import call, patch
 
 from django.test import TestCase, TransactionTestCase
@@ -189,11 +190,16 @@ class InitialAwsDescribeInstancesPowerOffNotRunningTest(TestCase):
         event = account_helper.generate_single_instance_event(
             self.instance, self.power_on_time, event_type=InstanceEvent.TYPE.power_on
         )
+        self.process_event(event)
+
+    def process_event(self, event):
+        """Process the event but skip the async calculate max concurrent function."""
         with patch(
             "api.tasks.calculate_max_concurrent_usage_from_runs"
         ) as mock_calculate_max_concurrent:
             process_instance_event(event)
-            mock_calculate_max_concurrent.assert_called()
+            if event.event_type == InstanceEvent.TYPE.power_on:
+                mock_calculate_max_concurrent.assert_called()
 
     def assertExpectedEventsAndRun(self):
         """Assert known instance has exactly one run and two power_on/off events."""
@@ -242,6 +248,33 @@ class InitialAwsDescribeInstancesPowerOffNotRunningTest(TestCase):
             tasks.initial_aws_describe_instances(self.account.id)
 
         mock_calculate_max_concurrent.assert_called()
+        self.assertExpectedEventsAndRun()
+
+    @patch("api.util.calculate_max_concurrent_usage_from_runs")
+    @patch("api.clouds.aws.tasks.onboarding.aws")
+    def test_instance_already_power_off(self, mock_aws, mock_calculate_max_concurrent):
+        """Don't create power_off for instance that already has recent power_off."""
+        event = account_helper.generate_single_instance_event(
+            self.instance, self.power_off_time, event_type=InstanceEvent.TYPE.power_off
+        )
+        self.process_event(event)
+        mock_calculate_max_concurrent.reset_mock()
+
+        described_instances = {
+            self.region: [
+                util_helper.generate_dummy_describe_instance(
+                    instance_id=self.aws_instance.ec2_instance_id,
+                    state=aws.InstanceState.stopped,
+                )
+            ]
+        }
+        mock_aws.describe_instances_everywhere.return_value = described_instances
+
+        describe_time = self.power_off_time + datetime.timedelta(days=1)
+        with util_helper.clouditardis(describe_time):
+            tasks.initial_aws_describe_instances(self.account.id)
+
+        mock_calculate_max_concurrent.assert_not_called()
         self.assertExpectedEventsAndRun()
 
 
