@@ -10,7 +10,9 @@ from api.models import (
     Instance,
     InstanceEvent,
     MachineImage,
+    Run,
 )
+from api.tasks import process_instance_event
 from api.tests import helper as account_helper
 from util.tests import helper as util_helper
 
@@ -182,13 +184,19 @@ class InitialAwsDescribeInstancesPowerOffNotRunningTest(TestCase):
         self.instance = account_helper.generate_instance(self.account)
         self.aws_instance = self.instance.content_object
         self.region = self.aws_instance.region
-        power_on_time = util_helper.utc_dt(2018, 1, 1, 0, 0, 0)
-        account_helper.generate_single_instance_event(
-            self.instance, power_on_time, event_type=InstanceEvent.TYPE.power_on
+        self.power_on_time = util_helper.utc_dt(2018, 1, 1, 0, 0, 0)
+        self.power_off_time = util_helper.utc_dt(2019, 1, 1, 0, 0, 0)
+        event = account_helper.generate_single_instance_event(
+            self.instance, self.power_on_time, event_type=InstanceEvent.TYPE.power_on
         )
+        with patch(
+            "api.tasks.calculate_max_concurrent_usage_from_runs"
+        ) as mock_calculate_max_concurrent:
+            process_instance_event(event)
+            mock_calculate_max_concurrent.assert_called()
 
-    def assertExactlyOnePowerOnPowerOff(self):
-        """Assert known instance has exactly one power_on and one power_off event."""
+    def assertExpectedEventsAndRun(self):
+        """Assert known instance has exactly one run and two power_on/off events."""
         events = InstanceEvent.objects.filter(instance=self.instance).order_by(
             "occurred_at"
         )
@@ -197,16 +205,28 @@ class InitialAwsDescribeInstancesPowerOffNotRunningTest(TestCase):
         self.assertEqual(events[0].event_type, InstanceEvent.TYPE.power_on)
         self.assertEqual(events[1].event_type, InstanceEvent.TYPE.power_off)
 
+        runs = Run.objects.filter(instance=self.instance)
+        self.assertEqual(runs.count(), 1)
+        run = runs.first()
+        self.assertEqual(run.start_time, self.power_on_time)
+        self.assertIsNotNone(run.end_time, self.power_off_time)
+
+    @patch("api.util.calculate_max_concurrent_usage_from_runs")
     @patch("api.clouds.aws.tasks.onboarding.aws")
-    def test_power_off_not_present(self, mock_aws):
+    def test_power_off_not_present(self, mock_aws, mock_calculate_max_concurrent):
         """Create power_off event for running instance not present in the describe."""
         described_instances = {}  # empty means no instances found.
         mock_aws.describe_instances_everywhere.return_value = described_instances
-        tasks.initial_aws_describe_instances(self.account.id)
-        self.assertExactlyOnePowerOnPowerOff()
 
+        with util_helper.clouditardis(self.power_off_time):
+            tasks.initial_aws_describe_instances(self.account.id)
+
+        mock_calculate_max_concurrent.assert_called()
+        self.assertExpectedEventsAndRun()
+
+    @patch("api.util.calculate_max_concurrent_usage_from_runs")
     @patch("api.clouds.aws.tasks.onboarding.aws")
-    def test_instance_found_not_running(self, mock_aws):
+    def test_instance_found_not_running(self, mock_aws, mock_calculate_max_concurrent):
         """Create power_off event for instance found stopped in the describe."""
         described_instances = {
             self.region: [
@@ -217,8 +237,12 @@ class InitialAwsDescribeInstancesPowerOffNotRunningTest(TestCase):
             ]
         }
         mock_aws.describe_instances_everywhere.return_value = described_instances
-        tasks.initial_aws_describe_instances(self.account.id)
-        self.assertExactlyOnePowerOnPowerOff()
+
+        with util_helper.clouditardis(self.power_off_time):
+            tasks.initial_aws_describe_instances(self.account.id)
+
+        mock_calculate_max_concurrent.assert_called()
+        self.assertExpectedEventsAndRun()
 
 
 class InitialAwsDescribeInstancesTransactionTest(TransactionTestCase):
