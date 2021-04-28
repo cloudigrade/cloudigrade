@@ -428,6 +428,9 @@ CELERY_TASK_ROUTES = {
     "api.tasks.enable_account": {
         "queue": "enable_account"
     },
+    "api.tasks.notify_application_availability_task": {
+        "queue": "notify_application_availability_task"
+    },
 }
 # Remember: the "schedule" values are integer numbers of seconds.
 CELERY_BEAT_SCHEDULE = {
