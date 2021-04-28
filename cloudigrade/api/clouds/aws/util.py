@@ -361,7 +361,7 @@ def save_instance_events(awsinstance, instance_data, events=None):
         AwsInstance: Object representing the saved instance.
 
     """
-    from api.tasks import process_instance_event
+    from api.tasks import process_instance_event  # local import to avoid loop
 
     if events is None:
         with transaction.atomic():
@@ -467,6 +467,8 @@ def create_missing_power_off_aws_instance_events(account, instances_data):
     this, we risk letting dead instances with never-ending runs contribute erroneously
     to concurrent usage calculations for new days.
     """
+    from api.tasks import process_instance_event  # local import to avoid loop
+
     # Build a list of currently-running instance IDs according to the described data.
     running_ec2_instance_ids = set()
     for region, instances in instances_data.items():
@@ -521,12 +523,13 @@ def create_missing_power_off_aws_instance_events(account, instances_data):
             {"instance": instance, "aws_instance": aws_instance},
         )
         aws_instance_event = AwsInstanceEvent.objects.create()
-        InstanceEvent.objects.create(
+        event = InstanceEvent.objects.create(
             instance=instance,
             event_type=event_type,
             occurred_at=occurred_at,
             content_object=aws_instance_event,
         )
+        process_instance_event(event)
 
 
 def generate_aws_ami_messages(instances_data, ami_id_list):
