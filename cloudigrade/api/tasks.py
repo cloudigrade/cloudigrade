@@ -715,7 +715,7 @@ def enable_account(cloud_account_id):
 
 
 @retriable_shared_task(
-    autoretry_for=(KafkaProducerException),
+    autoretry_for=(KafkaProducerException,),
     name="api.tasks.notify_application_availability_task",
 )
 def notify_application_availability_task(

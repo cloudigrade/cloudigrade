@@ -135,7 +135,9 @@ class CloudAccount(ExportModelOperationsMixin("CloudAccount"), BaseGenericModel)
 
         from cloudigrade.api.tasks import notify_application_availability_task
 
-        notify_application_availability_task(self.platform_application_id, "available")
+        notify_application_availability_task.delay(
+            self.platform_application_id, "available"
+        )
 
     @transaction.atomic
     def disable(self, message="", power_off_instances=True, notify_sources=True):
@@ -167,7 +169,7 @@ class CloudAccount(ExportModelOperationsMixin("CloudAccount"), BaseGenericModel)
         if notify_sources:
             from cloudigrade.api.tasks import notify_application_availability_task
 
-            notify_application_availability_task(
+            notify_application_availability_task.delay(
                 self.platform_application_id, "unavailable", message
             )
         logger.info(_("Finished disabling %(account)s"), {"account": self})

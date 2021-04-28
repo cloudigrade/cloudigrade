@@ -35,7 +35,7 @@ class CloudigradeError:
 
         if not error_message:
             error_message = self.get_message()
-        notify_application_availability_task(
+        notify_application_availability_task.delay(
             application_id,
             availability_status="unavailable",
             availability_status_error=error_message,
