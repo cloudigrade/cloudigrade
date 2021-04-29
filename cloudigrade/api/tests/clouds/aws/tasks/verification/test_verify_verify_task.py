@@ -1,7 +1,7 @@
 """Collection of tests for aws.tasks.cloudtrail.verify_verify_tasks."""
 
 from django.test import TestCase
-from django_celery_beat.models import PeriodicTask
+from django_celery_beat.models import IntervalSchedule, PeriodicTask
 
 from api.clouds.aws.models import AwsCloudAccount
 from api.clouds.aws.tasks import verify_verify_tasks
@@ -37,8 +37,10 @@ class VerifyVerifyAccountPeriodicTaskTest(TestCase):
 
     def test_orphaned_tasks(self):
         """Orphaned verify tasks get cleaned up."""
+        schedule, _ = IntervalSchedule.objects.get_or_create(every=1, period="days")
         PeriodicTask.objects.create(
-            task="api.clouds.aws.tasks.verify_account_permissions"
+            task="api.clouds.aws.tasks.verify_account_permissions",
+            interval=schedule,
         )
 
         self.assertEqual(AwsCloudAccount.objects.all().count(), 0)
