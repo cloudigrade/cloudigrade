@@ -232,6 +232,13 @@ DATABASES = {
     }
 }
 
+# New in Django 3.2:
+# 3.1 and older default is 32-bit AutoField. 3.2 now recommends 64-bit BigAutoField.
+# See "Customizing type of auto-created primary keys" in the 3.2 release notes:
+# https://docs.djangoproject.com/en/3.2/releases/3.2/
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
 # Password validation
 # https://docs.djangoproject.com/en/2.0/ref/settings/#auth-password-validators
 
