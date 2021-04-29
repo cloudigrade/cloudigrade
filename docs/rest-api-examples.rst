@@ -203,7 +203,7 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 2614
+    Content-Length: 2617
     Content-Type: application/json
     Referrer-Policy: same-origin
     Vary: Accept
@@ -265,7 +265,7 @@ Response:
                     "azure_instance_id": 1,
                     "created_at": "2020-05-18T13:51:59.722367Z",
                     "region": "North Europe",
-                    "resource_id": "/subscriptions/d00f19c8-25da-4238-8bd1-92a2e8ef889a/resourceGroups/if/providers/Microsoft.Compute/virtualMachines/six",
+                    "resource_id": "/subscriptions/d00f19c8-25da-4238-8bd1-92a2e8ef889a/resourceGroups/interview/providers/Microsoft.Compute/virtualMachines/why",
                     "updated_at": "2020-05-18T13:51:59.722367Z"
                 },
                 "created_at": "2020-05-18T13:51:59.722367Z",
@@ -280,7 +280,7 @@ Response:
                     "azure_instance_id": 2,
                     "created_at": "2020-05-18T13:51:59.722367Z",
                     "region": "East US",
-                    "resource_id": "/subscriptions/9b0531f6-f82f-471f-ba35-bacc0fefad05/resourceGroups/on/providers/Microsoft.Compute/virtualMachines/traditional",
+                    "resource_id": "/subscriptions/9b0531f6-f82f-471f-ba35-bacc0fefad05/resourceGroups/floor/providers/Microsoft.Compute/virtualMachines/me",
                     "updated_at": "2020-05-18T13:51:59.722367Z"
                 },
                 "created_at": "2020-05-18T13:51:59.722367Z",
@@ -295,7 +295,7 @@ Response:
                     "azure_instance_id": 3,
                     "created_at": "2020-05-18T13:51:59.722367Z",
                     "region": "North Europe",
-                    "resource_id": "/subscriptions/0a9819b3-fc64-4342-9be7-bb78d6e6eb91/resourceGroups/sense/providers/Microsoft.Compute/virtualMachines/peace",
+                    "resource_id": "/subscriptions/0a9819b3-fc64-4342-9be7-bb78d6e6eb91/resourceGroups/wait/providers/Microsoft.Compute/virtualMachines/whatever",
                     "updated_at": "2020-05-18T13:51:59.722367Z"
                 },
                 "created_at": "2020-05-18T13:51:59.722367Z",
@@ -375,7 +375,7 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 2370
+    Content-Length: 2373
     Content-Type: application/json
     Referrer-Policy: same-origin
     Vary: Accept
@@ -422,7 +422,7 @@ Response:
                     "azure_instance_id": 1,
                     "created_at": "2020-05-18T13:51:59.722367Z",
                     "region": "North Europe",
-                    "resource_id": "/subscriptions/d00f19c8-25da-4238-8bd1-92a2e8ef889a/resourceGroups/if/providers/Microsoft.Compute/virtualMachines/six",
+                    "resource_id": "/subscriptions/d00f19c8-25da-4238-8bd1-92a2e8ef889a/resourceGroups/interview/providers/Microsoft.Compute/virtualMachines/why",
                     "updated_at": "2020-05-18T13:51:59.722367Z"
                 },
                 "created_at": "2020-05-18T13:51:59.722367Z",
@@ -437,7 +437,7 @@ Response:
                     "azure_instance_id": 2,
                     "created_at": "2020-05-18T13:51:59.722367Z",
                     "region": "East US",
-                    "resource_id": "/subscriptions/9b0531f6-f82f-471f-ba35-bacc0fefad05/resourceGroups/on/providers/Microsoft.Compute/virtualMachines/traditional",
+                    "resource_id": "/subscriptions/9b0531f6-f82f-471f-ba35-bacc0fefad05/resourceGroups/floor/providers/Microsoft.Compute/virtualMachines/me",
                     "updated_at": "2020-05-18T13:51:59.722367Z"
                 },
                 "created_at": "2020-05-18T13:51:59.722367Z",
@@ -452,7 +452,7 @@ Response:
                     "azure_instance_id": 3,
                     "created_at": "2020-05-18T13:51:59.722367Z",
                     "region": "North Europe",
-                    "resource_id": "/subscriptions/0a9819b3-fc64-4342-9be7-bb78d6e6eb91/resourceGroups/sense/providers/Microsoft.Compute/virtualMachines/peace",
+                    "resource_id": "/subscriptions/0a9819b3-fc64-4342-9be7-bb78d6e6eb91/resourceGroups/wait/providers/Microsoft.Compute/virtualMachines/whatever",
                     "updated_at": "2020-05-18T13:51:59.722367Z"
                 },
                 "created_at": "2020-05-18T13:51:59.722367Z",
@@ -626,7 +626,7 @@ Response:
                     "id": 1,
                     "is_marketplace": false,
                     "region": null,
-                    "resource_id": "/subscriptions/ae12061f-a230-4bd4-931e-64175ed5fb1d/resourceGroups/field/providers/Microsoft.Compute/images/live",
+                    "resource_id": "/subscriptions/ae12061f-a230-4bd4-931e-64175ed5fb1d/resourceGroups/step/providers/Microsoft.Compute/images/themselves",
                     "updated_at": "2020-05-18T13:51:59.722367Z"
                 },
                 "created_at": "2020-05-18T13:51:59.722367Z",
@@ -661,7 +661,7 @@ Response:
                     "id": 2,
                     "is_marketplace": false,
                     "region": null,
-                    "resource_id": "/subscriptions/8b6c9e19-d542-4138-92a5-4d596f2e0f80/resourceGroups/measure/providers/Microsoft.Compute/images/example",
+                    "resource_id": "/subscriptions/8b6c9e19-d542-4138-92a5-4d596f2e0f80/resourceGroups/help/providers/Microsoft.Compute/images/past",
                     "updated_at": "2020-05-18T13:51:59.722367Z"
                 },
                 "created_at": "2020-05-18T13:51:59.722367Z",
@@ -696,7 +696,7 @@ Response:
                     "id": 3,
                     "is_marketplace": false,
                     "region": null,
-                    "resource_id": "/subscriptions/2bb2ac34-f7c4-4ec9-ad28-d8295787401e/resourceGroups/economy/providers/Microsoft.Compute/images/travel",
+                    "resource_id": "/subscriptions/2bb2ac34-f7c4-4ec9-ad28-d8295787401e/resourceGroups/discover/providers/Microsoft.Compute/images/mother",
                     "updated_at": "2020-05-18T13:51:59.722367Z"
                 },
                 "created_at": "2020-05-18T13:51:59.722367Z",
@@ -2446,9 +2446,9 @@ Request:
         cloud_type="aws" \
         account_arn="arn:aws:iam::472858492557:role/role-for-cloudigrade" \
         name="yet another account" \
-        platform_authentication_id="5081" \
-        platform_application_id="1618" \
-        platform_source_id="1208"
+        platform_authentication_id="1553" \
+        platform_application_id="4104" \
+        platform_source_id="8725"
 
 Response:
 
@@ -2477,9 +2477,9 @@ Response:
         "created_at": "2020-05-18T13:51:59.722367Z",
         "is_enabled": true,
         "name": "yet another account",
-        "platform_application_id": 1618,
-        "platform_authentication_id": 5081,
-        "platform_source_id": 1208,
+        "platform_application_id": 4104,
+        "platform_authentication_id": 1553,
+        "platform_source_id": 8725,
         "updated_at": "2020-05-18T13:51:59.722367Z",
         "user_id": 1
     }
@@ -2495,9 +2495,9 @@ Request:
         cloud_type="aws" \
         account_arn="arn:aws:iam::472858492557:role/role-for-cloudigrade" \
         name="but this account already exists" \
-        platform_authentication_id="1649" \
-        platform_application_id="5796" \
-        platform_source_id="7113"
+        platform_authentication_id="1618" \
+        platform_application_id="1208" \
+        platform_source_id="5409"
 
 Response:
 
@@ -2533,9 +2533,9 @@ Request:
         subscription_id="1e45e2ab-0a00-4165-86e3-94b565711abf" \
         tenant_id="b4c07817-ad7f-42f5-bb8b-c36747a1fb05" \
         name="it's an azure account" \
-        platform_authentication_id="9052" \
-        platform_application_id="7815" \
-        platform_source_id="7253"
+        platform_authentication_id="7113" \
+        platform_application_id="5180" \
+        platform_source_id="3350"
 
 Response:
 
@@ -2564,9 +2564,9 @@ Response:
         "created_at": "2020-05-18T13:51:59.722367Z",
         "is_enabled": true,
         "name": "it's an azure account",
-        "platform_application_id": 7815,
-        "platform_authentication_id": 9052,
-        "platform_source_id": 7253,
+        "platform_application_id": 5180,
+        "platform_authentication_id": 7113,
+        "platform_source_id": 3350,
         "updated_at": "2020-05-18T13:51:59.722367Z",
         "user_id": 1
     }
