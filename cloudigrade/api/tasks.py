@@ -131,7 +131,7 @@ def create_from_sources_kafka_message(message, headers):
             logger,
             {"authentication_id": authentication_id, "account_number": account_number},
         )
-        error_code.notify(account_number, application_id)
+        error_code.notify(application_id)
         return
 
     authtype = authentication.get("authtype")
@@ -140,7 +140,7 @@ def create_from_sources_kafka_message(message, headers):
         error_code.log_internal_message(
             logger, {"authentication_id": authentication_id, "authtype": authtype}
         )
-        error_code.notify(account_number, application_id)
+        error_code.notify(application_id)
         return
 
     resource_type = authentication.get("resource_type")
@@ -150,7 +150,7 @@ def create_from_sources_kafka_message(message, headers):
         error_code.log_internal_message(
             logger, {"resource_id": resource_id, "account_number": account_number}
         )
-        error_code.notify(account_number, application_id)
+        error_code.notify(application_id)
         return
 
     source_id = application.get("source_id")
@@ -161,7 +161,7 @@ def create_from_sources_kafka_message(message, headers):
         error_code.log_internal_message(
             logger, {"authentication_id": authentication_id}
         )
-        error_code.notify(account_number, application_id)
+        error_code.notify(application_id)
         return
 
     with transaction.atomic():
@@ -376,7 +376,7 @@ def update_from_source_kafka_message(message, headers):
             error_code.log_internal_message(
                 logger, {"authentication_id": authentication_id}
             )
-            error_code.notify(account_number, application_id)
+            error_code.notify(application_id)
             return
 
         # If the Authentication being updated is arn, do arn things.

@@ -863,9 +863,7 @@ def verify_permissions(customer_role_arn):
                 error_code.log_internal_message(
                     logger, {"cloud_account_id": aws_account_id, "exception": error}
                 )
-                error_code.notify(
-                    cloud_account.user.username, cloud_account.platform_application_id
-                )
+                error_code.notify(cloud_account.platform_application_id)
                 logger.debug(_("CG3000 notify called, raising ValidationError."))
 
                 raise ValidationError(
@@ -888,9 +886,7 @@ def verify_permissions(customer_role_arn):
             error_code.log_internal_message(
                 logger, {"cloud_account_id": cloud_account.id, "exception": error}
             )
-            error_code.notify(
-                cloud_account.user.username, cloud_account.platform_application_id
-            )
+            error_code.notify(cloud_account.platform_application_id)
             logger.debug(_("CG3001 notify called, raising ValidationError."))
             raise ValidationError(detail={"account_arn": error_code.get_message()})
 
@@ -994,7 +990,7 @@ def create_aws_cloud_account(
                     "name": cloud_account_name,
                 },
             )
-            error_code.notify(user.username, platform_application_id)
+            error_code.notify(platform_application_id)
             raise ValidationError({"name": error_code.get_message()})
 
         try:
@@ -1081,7 +1077,7 @@ def _notify_error_with_generic_message_for_different_user(
     else:
         error_message = error_codes.GENERIC_ACCOUNT_SETUP_ERROR_MESSAGE
 
-    error_code.notify(user.username, platform_application_id, error_message)
+    error_code.notify(platform_application_id, error_message)
     return error_message
 
 
@@ -1126,7 +1122,7 @@ def update_aws_cloud_account(
     except InvalidArn:
         error = error_codes.CG1004
         error.log_internal_message(logger, {"application_id": application_id})
-        error.notify(account_number, application_id)
+        error.notify(application_id)
         return
 
     # If the aws_account_id is different, then we disable the account,
@@ -1160,7 +1156,7 @@ def update_aws_cloud_account(
         except InvalidArn:
             error = error_codes.CG1004
             error.log_internal_message(logger, {"application_id": application_id})
-            error.notify(account_number, application_id)
+            error.notify(application_id)
             return
 
         # Verify that no AwsCloudAccount already exists with the same ARN.

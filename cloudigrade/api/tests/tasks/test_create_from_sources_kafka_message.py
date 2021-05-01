@@ -100,7 +100,7 @@ class CreateFromSourcesKafkaMessageTest(TestCase):
         mock_task.delay.assert_not_called()
         mock_get_application.assert_not_called()
 
-    @patch("api.error_codes.sources.notify_application_availability")
+    @patch("cloudigrade.api.tasks.notify_application_availability_task")
     @patch("util.redhatcloud.sources.get_authentication")
     @patch("util.redhatcloud.sources.get_cloudigrade_application_type_id")
     @patch("util.redhatcloud.sources.get_application")
@@ -161,7 +161,7 @@ class CreateFromSourcesKafkaMessageTest(TestCase):
         self.assertEqual(User.objects.all().count(), 0)
         mock_task.delay.assert_not_called()
 
-    @patch("api.error_codes.sources.notify_application_availability")
+    @patch("cloudigrade.api.tasks.notify_application_availability_task")
     @patch("util.redhatcloud.sources.get_authentication")
     @patch("util.redhatcloud.sources.get_cloudigrade_application_type_id")
     @patch("util.redhatcloud.sources.get_application")
@@ -191,7 +191,7 @@ class CreateFromSourcesKafkaMessageTest(TestCase):
         self.assertEqual(User.objects.all().count(), 0)
         mock_task.delay.assert_not_called()
 
-    @patch("api.error_codes.sources.notify_application_availability")
+    @patch("cloudigrade.api.tasks.notify_application_availability_task")
     @patch("util.redhatcloud.sources.get_authentication")
     @patch("util.redhatcloud.sources.get_cloudigrade_application_type_id")
     @patch("util.redhatcloud.sources.get_application")
@@ -218,7 +218,7 @@ class CreateFromSourcesKafkaMessageTest(TestCase):
         self.assertEqual(User.objects.all().count(), 0)
         mock_task.delay.assert_not_called()
 
-    @patch("api.error_codes.sources.notify_application_availability")
+    @patch("cloudigrade.api.tasks.notify_application_availability_task")
     @patch("util.redhatcloud.sources.get_authentication")
     @patch("util.redhatcloud.sources.get_cloudigrade_application_type_id")
     @patch("util.redhatcloud.sources.get_application")

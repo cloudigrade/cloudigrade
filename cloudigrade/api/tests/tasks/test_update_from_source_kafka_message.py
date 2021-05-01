@@ -71,7 +71,7 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
         )
 
     @patch("util.redhatcloud.sources.get_application")
-    @patch("api.models.sources.notify_application_availability")
+    @patch("cloudigrade.api.tasks.notify_application_availability_task")
     @patch("util.redhatcloud.sources.get_authentication")
     def test_update_from_sources_kafka_message_updates_arn(
         self, mock_get_auth, mock_notify_sources, mock_get_app
@@ -93,10 +93,10 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
         self.clount.refresh_from_db()
         self.assertEqual(self.clount.content_object.account_arn, new_arn)
         self.assertTrue(self.clount.is_enabled)
-        mock_notify_sources.assert_called()
+        mock_notify_sources.delay.assert_called()
 
     @patch("util.redhatcloud.sources.get_application")
-    @patch("api.models.sources.notify_application_availability")
+    @patch("cloudigrade.api.tasks.notify_application_availability_task")
     @patch("util.redhatcloud.sources.get_authentication")
     def test_update_from_sources_kafka_message_updates_arn_but_disables_cloud_account(
         self, mock_get_auth, mock_notify_sources, mock_get_app
@@ -160,7 +160,7 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
         mock_update_account.assert_not_called()
 
     @patch("util.redhatcloud.sources.get_application")
-    @patch("api.models.sources.notify_application_availability")
+    @patch("cloudigrade.api.tasks.notify_application_availability_task")
     @patch("util.redhatcloud.sources.get_authentication")
     @patch.object(CloudAccount, "enable")
     def test_update_from_sources_kafka_message_new_aws_account_id(
@@ -282,7 +282,7 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
         mock_update_account.delay.assert_not_called()
 
     @patch("util.redhatcloud.sources.get_application")
-    @patch("api.models.sources.notify_application_availability")
+    @patch("cloudigrade.api.tasks.notify_application_availability_task")
     @patch("util.redhatcloud.sources.get_authentication")
     def test_arn_from_password_if_no_username(
         self, mock_get_auth, mock_notify_sources, mock_get_app
@@ -307,9 +307,9 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
         self.clount.refresh_from_db()
         self.assertEqual(self.clount.content_object.account_arn, new_arn)
         self.assertTrue(self.clount.is_enabled)
-        mock_notify_sources.assert_called()
+        mock_notify_sources.delay.assert_called()
 
-    @patch("api.error_codes.sources.notify_application_availability")
+    @patch("api.error_codes.CG2004")
     @patch("util.redhatcloud.sources.get_application")
     @patch("util.redhatcloud.sources.get_authentication")
     @patch("api.tasks.update_aws_cloud_account")
@@ -327,4 +327,4 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
         tasks.update_from_source_kafka_message(message, headers)
 
         mock_update_account.assert_not_called()
-        mock_notify_sources.assert_called()
+        mock_notify_sources.notify.assert_called()

@@ -168,7 +168,7 @@ class AwsAccountSerializerTest(TransactionTestCase):
         amis = AwsMachineImage.objects.all()
         self.assertEqual(len(amis), 0)
 
-    @patch("api.error_codes.sources.notify_application_availability")
+    @patch("cloudigrade.api.tasks.notify_application_availability_task")
     def test_create_fails_access_denied(self, mock_notify_sources):
         """Test that an exception is raised if access is denied to the arn."""
         client_error = ClientError(
@@ -201,7 +201,7 @@ class AwsAccountSerializerTest(TransactionTestCase):
                 log_record.msg.detail["account_arn"][0],
             )
 
-    @patch("api.error_codes.sources.notify_application_availability")
+    @patch("cloudigrade.api.tasks.notify_application_availability_task")
     def test_create_fails_when_aws_verify_fails(self, mock_notify_sources):
         """Test that an exception is raised if verify_account_access fails."""
         mock_request = Mock()
@@ -227,7 +227,7 @@ class AwsAccountSerializerTest(TransactionTestCase):
                 log_record.msg.detail["account_arn"][0],
             )
 
-    @patch("api.error_codes.sources.notify_application_availability")
+    @patch("cloudigrade.api.tasks.notify_application_availability_task")
     def test_create_fails_cloudtrail_configuration_error(self, mock_notify_sources):
         """Test that an exception occurs if cloudtrail configuration fails."""
         mock_request = Mock()

@@ -23,7 +23,7 @@ class BaseGenericModelTest(TestCase):
             arn=arn, aws_account_id=aws_account_id, name="test"
         )
 
-    @patch("api.models.sources.notify_application_availability")
+    @patch("cloudigrade.api.tasks.notify_application_availability_task")
     def test_delete_base_model_removes_platform_specific_model(
         self, mock_notify_sources
     ):

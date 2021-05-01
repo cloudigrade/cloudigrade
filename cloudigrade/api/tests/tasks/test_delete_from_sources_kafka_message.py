@@ -31,7 +31,7 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         )
         self.user = self.account.user
 
-    @patch("api.models.sources.notify_application_availability")
+    @patch("cloudigrade.api.tasks.notify_application_availability_task")
     def test_delete_from_sources_kafka_message_application_authentication_success(
         self, mock_notify_sources
     ):
@@ -70,7 +70,7 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
                 self.assertEqual(expected_logger_info, logging_watcher.output[index])
         self.assertEqual(CloudAccount.objects.count(), 0)
         self.assertEqual(aws_models.AwsCloudAccount.objects.count(), 0)
-        mock_notify_sources.assert_called()
+        mock_notify_sources.delay.assert_called()
 
     def test_delete_from_sources_kafka_message_fail_missing_message_data(self):
         """Assert delete_from_sources_kafka_message fails from missing data."""
