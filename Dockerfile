@@ -21,6 +21,7 @@ RUN microdnf update \
     && microdnf install git which procps-ng nmap-ncat libcurl-devel gcc openssl-devel python38-devel python38-pip redhat-rpm-config -y \
     && if [ ! -e /usr/bin/pip ]; then ln -s /usr/bin/pip3.8 /usr/bin/pip ; fi \
     && if [[ ! -e /usr/bin/python ]]; then ln -sf /usr/bin/python3.8 /usr/bin/python; fi \
+    && pip install -U pip \
     && pip install poetry \
     && poetry config virtualenvs.create false \
     && PYCURL_SSL_LIBRARY=openssl poetry install -n --no-dev \
