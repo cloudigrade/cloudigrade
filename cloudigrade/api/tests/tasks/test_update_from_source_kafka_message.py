@@ -309,7 +309,7 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
         self.assertTrue(self.clount.is_enabled)
         mock_notify_sources.delay.assert_called()
 
-    @patch("api.error_codes.CG2004")
+    @patch("cloudigrade.api.tasks.notify_application_availability_task")
     @patch("util.redhatcloud.sources.get_application")
     @patch("util.redhatcloud.sources.get_authentication")
     @patch("api.tasks.update_aws_cloud_account")
@@ -327,4 +327,4 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
         tasks.update_from_source_kafka_message(message, headers)
 
         mock_update_account.assert_not_called()
-        mock_notify_sources.notify.assert_called()
+        mock_notify_sources.delay.assert_called()
