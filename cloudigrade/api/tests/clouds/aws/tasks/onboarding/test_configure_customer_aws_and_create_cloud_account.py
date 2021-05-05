@@ -72,7 +72,7 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
             source_id,
         )
 
-    @patch("cloudigrade.api.tasks.notify_application_availability_task")
+    @patch("api.tasks.notify_application_availability_task")
     @patch("api.clouds.aws.tasks.onboarding.create_aws_cloud_account")
     @patch("api.clouds.aws.tasks.onboarding.aws")
     def test_fails_if_user_not_found(
@@ -99,7 +99,7 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
         mock_tasks_aws.ensure_cloudigrade_role.assert_not_called()
         mock_create.assert_not_called()
 
-    @patch("cloudigrade.api.tasks.notify_application_availability_task")
+    @patch("api.tasks.notify_application_availability_task")
     @patch.object(AwsCloudAccount, "enable")
     def test_account_not_created_if_enable_fails(
         self, mock_enable, mock_notify_sources
@@ -131,7 +131,7 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
 
         self.assertFalse(CloudAccount.objects.filter(user=user).exists())
 
-    @patch("cloudigrade.api.tasks.notify_application_availability_task")
+    @patch("api.tasks.notify_application_availability_task")
     def test_account_not_created_if_arn_invalid(self, mock_notify_sources):
         """Test that error is logged if arn is invalid."""
         user = User.objects.create()

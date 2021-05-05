@@ -238,7 +238,7 @@ class CloudsAwsUtilVerifyPermissionsTest(TestCase):
         ) as mock_verify_access, patch.object(
             util.aws, "configure_cloudtrail"
         ) as mock_configure_cloudtrail, patch(
-            "cloudigrade.api.tasks.notify_application_availability_task"
+            "api.tasks.notify_application_availability_task"
         ) as mock_notify_sources, self.assertRaises(
             ValidationError
         ) as e:

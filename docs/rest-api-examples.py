@@ -428,7 +428,7 @@ if __name__ == "__main__":
     with transaction.atomic(), override_settings(
         SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA=False
     ), patch.object(uuid, "uuid4") as mock_uuid4, \
-       patch("cloudigrade.api.tasks.notify_application_availability_task") as mock_notify_sources, \
+       patch("api.tasks.notify_application_availability_task") as mock_notify_sources, \
        util_helper.clouditardis(docs_date):
         mock_uuid4.side_effect = seeded_uuid4
         api_hander = DocsApiHandler()

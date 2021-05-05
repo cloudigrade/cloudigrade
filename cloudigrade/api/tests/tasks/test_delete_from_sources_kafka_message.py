@@ -31,7 +31,7 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         )
         self.user = self.account.user
 
-    @patch("cloudigrade.api.tasks.notify_application_availability_task")
+    @patch("api.tasks.notify_application_availability_task")
     def test_delete_from_sources_kafka_message_application_authentication_success(
         self, mock_notify_sources
     ):

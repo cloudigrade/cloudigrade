@@ -27,7 +27,7 @@ class DeleteAccountsTest(TransactionTestCase):
         """Assert that all accounts are disabled."""
         self.assertEqual(models.CloudAccount.objects.filter(is_enabled=True).count(), 0)
 
-    @patch("cloudigrade.api.tasks.notify_application_availability_task")
+    @patch("api.tasks.notify_application_availability_task")
     @patch("api.clouds.aws.util.delete_cloudtrail")
     @override_settings(SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA=False)
     def test_handle(self, mock_delete_cloudtrail, mock_notify_sources):
@@ -38,7 +38,7 @@ class DeleteAccountsTest(TransactionTestCase):
         mock_delete_cloudtrail.assert_called()
         self.assertDisabled()
 
-    @patch("cloudigrade.api.tasks.notify_application_availability_task")
+    @patch("api.tasks.notify_application_availability_task")
     @patch("api.clouds.aws.util.delete_cloudtrail")
     @override_settings(SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA=True)
     def test_handle_when_kafka_errors(
@@ -60,7 +60,7 @@ class DeleteAccountsTest(TransactionTestCase):
         self.assertPresent()
 
     @override_settings(SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA=False)
-    @patch("cloudigrade.api.tasks.notify_application_availability_task")
+    @patch("api.tasks.notify_application_availability_task")
     @patch("api.clouds.aws.util.delete_cloudtrail")
     @patch("builtins.input", return_value="Y")
     def test_handle_yes(self, mock_input, mock_delete_cloudtrail, mock_notify_sources):

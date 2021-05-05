@@ -133,7 +133,7 @@ class CloudAccount(ExportModelOperationsMixin("CloudAccount"), BaseGenericModel)
             transaction.set_rollback(True)
             return False
 
-        from cloudigrade.api.tasks import notify_application_availability_task
+        from api.tasks import notify_application_availability_task
 
         notify_application_availability_task.delay(
             self.platform_application_id, "available"
@@ -167,7 +167,7 @@ class CloudAccount(ExportModelOperationsMixin("CloudAccount"), BaseGenericModel)
             self._power_off_instances(power_off_time=get_now())
         self.content_object.disable()
         if notify_sources:
-            from cloudigrade.api.tasks import notify_application_availability_task
+            from api.tasks import notify_application_availability_task
 
             notify_application_availability_task.delay(
                 self.platform_application_id, "unavailable", message
