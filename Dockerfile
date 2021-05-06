@@ -37,5 +37,5 @@ COPY deployment/scripts/mid_hook.sh ./scripts/mid_hook.sh
 COPY cloudigrade .
 USER cloudigrade
 
-ENTRYPOINT ["gunicorn"]
-CMD ["-c","config/gunicorn.py","config.wsgi"]
+ENTRYPOINT ["/usr/bin/haberdasher"]
+CMD ["gunicorn","-c","config/gunicorn.py","config.wsgi"]
