@@ -25,11 +25,21 @@ class SourcesTest(TestCase):
         self.account_number = str(_faker.pyint())
         self.authentication_id = _faker.user_name()
         self.application_id = _faker.pyint()
-        self.listener_server = "test_kafka_server"
-        self.listener_port = "19092"
-        self.sources_resource_type = "test_application"
-        self.sources_kafka_topic = "test_availability_status_topic"
-        self.sources_availability_event_type = "test_availability_status"
+        self.listener_server = _faker.hostname()
+        self.listener_port = str(_faker.pyint())
+        self.sources_resource_type = _faker.slug()
+        self.sources_kafka_topic = _faker.slug()
+        self.sources_availability_event_type = _faker.slug()
+        self.available_status = "available"
+        self.sources_kafka_config = {
+            "bootstrap.servers": f"{self.listener_server}:{self.listener_port}"
+        }
+        self.kafka_payload = {
+            "resource_type": self.sources_resource_type,
+            "resource_id": self.application_id,
+            "status": self.available_status,
+            "error": "",
+        }
 
     @patch("requests.get")
     def test_get_sources_authentication_success(self, mock_get):
@@ -139,14 +149,7 @@ class SourcesTest(TestCase):
         mock_kafka_producer,
     ):
         """Test notify sources happy path success."""
-        application_id = _faker.pyint()
-        availability_status = "available"
-
-        sources_kafka_config = {
-            "bootstrap.servers": f"{self.listener_server}:{self.listener_port}"
-        }
-
-        kafka_producer = mock_kafka_producer(sources_kafka_config)
+        kafka_producer = mock_kafka_producer(self.sources_kafka_config)
 
         with override_settings(
             LISTENER_SERVER=self.listener_server,
@@ -157,21 +160,13 @@ class SourcesTest(TestCase):
             SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA=True,
         ):
             sources.notify_application_availability(
-                application_id,
-                availability_status=availability_status,
+                self.application_id,
+                availability_status=self.available_status,
             )
 
-        payload = {
-            "resource_type": self.sources_resource_type,
-            "resource_id": application_id,
-            "status": availability_status,
-            "error": "",
-        }
-
-        kafka_producer.poll.assert_called_once_with(0)
         kafka_producer.produce.assert_called_with(
             topic=self.sources_kafka_topic,
-            value=json.dumps(payload),
+            value=json.dumps(self.kafka_payload),
             headers={"event_type": self.sources_availability_event_type},
         )
         kafka_producer.flush.assert_called()
@@ -182,13 +177,10 @@ class SourcesTest(TestCase):
         mock_kafka_producer,
     ):
         """Test notify source application availability skips if not enabled."""
-        application_id = _faker.pyint()
-        availability_status = "available"
-
         with override_settings(SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA=False):
             sources.notify_application_availability(
-                application_id,
-                availability_status=availability_status,
+                self.application_id,
+                availability_status=self.available_status,
             )
         mock_kafka_producer.assert_not_called()
 
@@ -198,22 +190,8 @@ class SourcesTest(TestCase):
         mock_kafka_producer,
     ):
         """Test notify source application availability handling BufferError."""
-        application_id = _faker.pyint()
-        availability_status = "available"
-
-        sources_kafka_config = {
-            "bootstrap.servers": f"{self.listener_server}:{self.listener_port}"
-        }
-
-        kafka_producer = mock_kafka_producer(sources_kafka_config)
+        kafka_producer = mock_kafka_producer(self.sources_kafka_config)
         kafka_producer.produce.side_effect = BufferError("bad error")
-
-        payload = {
-            "resource_type": self.sources_resource_type,
-            "resource_id": application_id,
-            "status": availability_status,
-            "error": "",
-        }
 
         with override_settings(
             LISTENER_SERVER=self.listener_server,
@@ -225,14 +203,13 @@ class SourcesTest(TestCase):
         ):
             with self.assertRaises(KafkaProducerException):
                 sources.notify_application_availability(
-                    application_id,
-                    availability_status=availability_status,
+                    self.application_id,
+                    availability_status=self.available_status,
                 )
 
-            kafka_producer.poll.assert_called_once_with(0)
             kafka_producer.produce.assert_called_with(
                 topic=self.sources_kafka_topic,
-                value=json.dumps(payload),
+                value=json.dumps(self.kafka_payload),
                 headers={"event_type": self.sources_availability_event_type},
             )
             kafka_producer.flush.assert_not_called()
@@ -243,22 +220,8 @@ class SourcesTest(TestCase):
         mock_kafka_producer,
     ):
         """Test notify source application availability handling KafkaException."""
-        application_id = _faker.pyint()
-        availability_status = "available"
-
-        sources_kafka_config = {
-            "bootstrap.servers": f"{self.listener_server}:{self.listener_port}"
-        }
-
-        kafka_producer = mock_kafka_producer(sources_kafka_config)
+        kafka_producer = mock_kafka_producer(self.sources_kafka_config)
         kafka_producer.produce.side_effect = KafkaException(KafkaError(5))
-
-        payload = {
-            "resource_type": self.sources_resource_type,
-            "resource_id": application_id,
-            "status": availability_status,
-            "error": "",
-        }
 
         with override_settings(
             LISTENER_SERVER=self.listener_server,
@@ -270,14 +233,13 @@ class SourcesTest(TestCase):
         ):
             with self.assertRaises(KafkaProducerException):
                 sources.notify_application_availability(
-                    application_id,
-                    availability_status=availability_status,
+                    self.application_id,
+                    availability_status=self.available_status,
                 )
 
-            kafka_producer.poll.assert_called_once_with(0)
             kafka_producer.produce.assert_called_with(
                 topic=self.sources_kafka_topic,
-                value=json.dumps(payload),
+                value=json.dumps(self.kafka_payload),
                 headers={"event_type": self.sources_availability_event_type},
             )
             kafka_producer.flush.assert_not_called()

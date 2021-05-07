@@ -246,7 +246,6 @@ def notify_application_availability(
     try:
         kafka_producer = KafkaProducer(sources_kafka_config)
 
-        kafka_producer.poll(0)
         kafka_producer.produce(
             topic=settings.SOURCES_STATUS_TOPIC,
             value=json.dumps(payload),
