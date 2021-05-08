@@ -1,11 +1,11 @@
 """Disable all currently-enabled CloudAccount objects."""
 import logging
 
-import requests
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
 from api import models
+from util.exceptions import KafkaProducerException
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ class Command(BaseCommand):
         try:
             account.disable(power_off_instances=False)
             return True
-        except requests.exceptions.ConnectionError as e:
+        except KafkaProducerException as e:
             logger.error(
                 f"Error when disabling {account} likely due to sources-api problem. "
                 f"Will retry without sources-api integration. {e}",

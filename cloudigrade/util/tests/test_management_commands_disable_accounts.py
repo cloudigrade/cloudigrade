@@ -46,7 +46,7 @@ class DeleteAccountsTest(TransactionTestCase):
     ):
         """Test disable_accounts works despite sources-api errors."""
         self.assertPresent()
-        mock_notify_sources.delay.side_effects = KafkaProducerException("bad error")
+        mock_notify_sources.delay.side_effect = KafkaProducerException("bad error")
         call_command("disable_accounts", "--confirm")
         mock_notify_sources.delay.assert_called()
         mock_delete_cloudtrail.assert_called()
