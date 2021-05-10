@@ -254,9 +254,9 @@ def notify_application_availability(
         kafka_producer.flush()
     except BufferError as error:
         message = f"BufferError: {str(error)}"
-        logger.info(message)
+        logger.exception(error)
         raise KafkaProducerException(message)
     except KafkaException as exception:
         message = f"KafkaException: {exception.args[0].str()}"
-        logger.info(message)
+        logger.exception(exception)
         raise KafkaProducerException(message)

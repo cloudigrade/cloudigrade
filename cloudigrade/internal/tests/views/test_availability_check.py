@@ -50,8 +50,8 @@ class AvailabilityCheckViewTest(TestCase):
 
         mock_enable.delay.assert_called()
 
-    @patch("api.models.sources.notify_application_availability")
-    def test_availability_check_task(self, mock_sources_notify):
+    @patch("api.tasks.notify_application_availability_task")
+    def test_availability_check_task(self, mock_notify_sources):
         """Test the task that is called by the availability_check_api."""
         with patch("api.clouds.aws.util.verify_permissions") as mock_verify_permissions:
             mock_verify_permissions.return_value = True
