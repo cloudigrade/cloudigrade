@@ -1,6 +1,8 @@
 """Internal views for cloudigrade API."""
 import logging
+from datetime import timedelta
 
+from dateutil.parser import parse
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.utils.translation import gettext as _
@@ -18,7 +20,7 @@ from rest_framework.response import Response
 from api import models, schemas, tasks
 from api.clouds.aws import models as aws_models
 from api.clouds.azure import models as azure_models
-from api.serializers import CloudAccountSerializer
+from api.serializers import CloudAccountSerializer, DailyConcurrentUsageDummyQueryset
 from api.tasks import enable_account
 from api.views import AccountViewSet
 from internal import filters, serializers
@@ -27,6 +29,7 @@ from internal.authentication import (
     IdentityHeaderAuthenticationInternalCreateUser,
 )
 from util import exceptions as util_exceptions
+from util.misc import get_today
 from util.redhatcloud import identity
 
 logger = logging.getLogger(__name__)
@@ -508,3 +511,52 @@ class InternalAzureMachineImageViewSet(
         "created_at": ["lt", "exact", "gt"],
         "updated_at": ["lt", "exact", "gt"],
     }
+
+
+class InternalDailyConcurrentUsageViewSet(
+    viewsets.GenericViewSet, mixins.ListModelMixin
+):
+    """
+    Generate report of concurrent usage within a time frame.
+
+    This viewset has to be wrapped in a non_atomic_requests decorator. DRF by default
+    runs viewset methods inside of an atomic transaction. But in this case we have to
+    create ConcurrentUsageCalculationTask to schedule jobs even when we raise a
+    ResultsUnavailable 425 exception.
+    """
+
+    schema = schemas.ConcurrentSchema(tags=["api-v2"])
+    serializer_class = serializers.InternalDailyConcurrentUsageSerializer
+
+    def get_queryset(self):  # noqa: C901
+        """Get the queryset of dates filtered to the appropriate inputs."""
+        user = self.request.user
+        errors = {}
+        tomorrow = get_today() + timedelta(days=1)
+        try:
+            start_date = self.request.query_params.get("start_date", None)
+            start_date = parse(start_date).date() if start_date else get_today()
+            # Start date is inclusive, if start date is tomorrow or after,
+            # we do not return anything
+            if start_date >= tomorrow:
+                errors["start_date"] = [_("start_date cannot be in the future.")]
+        except ValueError:
+            errors["start_date"] = [_("start_date must be a date (YYYY-MM-DD).")]
+
+        try:
+            end_date = self.request.query_params.get("end_date", None)
+            # End date is noninclusive, set it to tomorrow if one is not provided
+            end_date = parse(end_date).date() if end_date else tomorrow
+            # If end date is after tomorrow, we do not return anything
+            if end_date > tomorrow:
+                errors["end_date"] = [_("end_date cannot be in the future.")]
+            if end_date <= user.date_joined.date():
+                errors["end_date"] = [_("end_date must be after user creation date.")]
+        except ValueError:
+            errors["end_date"] = [_("end_date must be a date (YYYY-MM-DD).")]
+
+        if errors:
+            raise exceptions.ValidationError(errors)
+
+        queryset = DailyConcurrentUsageDummyQueryset(start_date, end_date, user.id)
+        return queryset

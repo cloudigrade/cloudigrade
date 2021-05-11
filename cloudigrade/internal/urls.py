@@ -12,6 +12,7 @@ routes = []
 # URLs for slightly different internal versions of public viewset routes.
 routes += [
     ("accounts", views.InternalAccountViewSet, "account"),
+    ("concurrent", views.InternalDailyConcurrentUsageViewSet, "concurrent"),
 ]
 
 # URLs for common models

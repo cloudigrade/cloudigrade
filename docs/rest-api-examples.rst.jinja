@@ -164,10 +164,10 @@ maximum concurrent number of instances, grouped by various combinations of role,
 sla, and architecture seen concurrently in use during that day.
 
 Optional ``start_date`` is an ISO-8601 date that is the inclusive start of the
-reporting period. If not defined, default is "today".
+reporting period. If not defined, default is "yesterday".
 
 Optional ``end_date`` is an ISO-8601 date that is the exclusive end of the
-reporting period. If not defined, default is "tomorrow".
+reporting period. If not defined, default is "today".
 
 Request:
 
@@ -189,8 +189,8 @@ Response:
 {{ v2_list_concurrent_too_early | stringify_http_response | rst_codeblock }}
 
 If your requested ``start_date`` and ``end_date`` values would result in some
-future dates beyond "today", the API will return a 400 with the relevant errors.
-Daily max concurrency results will end "today" at the latest.
+future dates beyond "yesterday", the API will return a 400 with the relevant errors.
+Daily max concurrency results will end "yesterday" at the latest.
 
 Request:
 
@@ -201,7 +201,7 @@ Response:
 {{ v2_list_concurrent_partial_future | stringify_http_response | rst_codeblock }}
 
 If your requested ``start_date`` and ``end_date`` values would result in exclusively
-future dates beyond "today", the API will also return a 400 with the relevant errors.
+future dates beyond "yesterday", the API will also return a 400 with the relevant errors.
  In the following example, the request is for dates "tomorrow" through "one week from today".
 
 Request:

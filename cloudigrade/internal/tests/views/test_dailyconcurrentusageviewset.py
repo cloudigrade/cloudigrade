@@ -9,12 +9,12 @@ from rest_framework.test import APIClient, APIRequestFactory
 
 from api.models import ConcurrentUsageCalculationTask
 from api.tests import helper as api_helper
-from util.misc import get_today, get_yesterday
+from util.misc import get_today
 from util.tests import helper as util_helper
 
 
-class DailyConcurrentUsageViewSetTest(TransactionTestCase):
-    """DailyConcurrentUsageViewSet test case."""
+class InternalDailyConcurrentUsageViewSetTest(TransactionTestCase):
+    """InternalDailyConcurrentUsageViewSet test case."""
 
     def setUp(self):
         """Set up a bunch of test data."""
@@ -94,7 +94,7 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
         client = APIClient()
         client.force_authenticate(user=self.user1)
         response = client.get(
-            "/api/cloudigrade/v2/concurrent/", data=data, format="json"
+            "/internal/api/cloudigrade/v1/concurrent/", data=data, format="json"
         )
         body = response.json()
 
@@ -148,7 +148,7 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
         client = APIClient()
         client.force_authenticate(user=self.user1)
         response = client.get(
-            "/api/cloudigrade/v2/concurrent/", data=data, format="json"
+            "/internal/api/cloudigrade/v1/concurrent/", data=data, format="json"
         )
         self.assertEqual(response.status_code, 400)
         body = response.json()
@@ -170,7 +170,7 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
         client = APIClient()
         client.force_authenticate(user=self.user1)
         response = client.get(
-            "/api/cloudigrade/v2/concurrent/", data=data, format="json"
+            "/internal/api/cloudigrade/v1/concurrent/", data=data, format="json"
         )
         body = response.json()
         self.assertEqual(body["meta"]["count"], 3)
@@ -183,41 +183,42 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
         """
         Test with no start_date and no end_date set.
 
-        Default start_date is "yesterday" and default end_date is "today", and
+        Default start_date is "today" and default end_date is "tomorrow", and
         since start_date is inclusive and end_date is exclusive, the resulting
-        output should be data for one day: yesterday.
+        output should be data for one day: today.
         """
-        yesterday = get_yesterday()
         today = get_today()
         data = {}
-        api_helper.calculate_concurrent(yesterday, today, self.user1.id)
+        api_helper.calculate_concurrent(
+            today, today + datetime.timedelta(days=1), self.user1.id
+        )
 
         client = APIClient()
         client.force_authenticate(user=self.user1)
         response = client.get(
-            "/api/cloudigrade/v2/concurrent/", data=data, format="json"
+            "/internal/api/cloudigrade/v1/concurrent/", data=data, format="json"
         )
         body = response.json()
         self.assertEqual(body["meta"]["count"], 1)
         self.assertEqual(len(body["data"]), 1)
-        self.assertEqual(body["data"][0]["date"], str(yesterday))
+        self.assertEqual(body["data"][0]["date"], str(today))
 
     def test_future_end_date_returns_400(self):
         """
         Test with far-future end_date, expecting it to return 400.
 
-        When an end_date is given that is later than today, we return
+        When an end_date is given that is later than tomorrow, we return
         a 400 response, because we cannot predict the future.
         """
-        yesterday = get_yesterday()
-        future = yesterday + datetime.timedelta(days=100)
+        today = get_today()
+        future = today + datetime.timedelta(days=100)
         data = {"end_date": str(future)}
-        api_helper.calculate_concurrent(yesterday, future, self.user1.id)
+        api_helper.calculate_concurrent(today, future, self.user1.id)
 
         client = APIClient()
         client.force_authenticate(user=self.user1)
         response = client.get(
-            "/api/cloudigrade/v2/concurrent/", data=data, format="json"
+            "/internal/api/cloudigrade/v1/concurrent/", data=data, format="json"
         )
         self.assertEqual(response.status_code, 400)
 
@@ -239,14 +240,12 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
         client = APIClient()
         client.force_authenticate(user=self.user1)
         response = client.get(
-            "/api/cloudigrade/v2/concurrent/", data=data, format="json"
+            "/internal/api/cloudigrade/v1/concurrent/", data=data, format="json"
         )
         self.assertEqual(response.status_code, 400)
 
         body = response.json()
-        self.assertEqual(
-            body["start_date"], [_("start_date cannot be today or in the future.")]
-        )
+        self.assertEqual(body["start_date"], [_("start_date cannot be in the future.")])
 
     def test_future_start_and_end_date_returns_400(self):
         """
@@ -263,14 +262,12 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
         client = APIClient()
         client.force_authenticate(user=self.user1)
         response = client.get(
-            "/api/cloudigrade/v2/concurrent/", data=data, format="json"
+            "/internal/api/cloudigrade/v1/concurrent/", data=data, format="json"
         )
         self.assertEqual(response.status_code, 400)
 
         body = response.json()
-        self.assertEqual(
-            body["start_date"], [_("start_date cannot be today or in the future.")]
-        )
+        self.assertEqual(body["start_date"], [_("start_date cannot be in the future.")])
         self.assertEqual(body["end_date"], [_("end_date cannot be in the future.")])
 
     def test_end_date_before_user_create_date_returns_400(self):
@@ -286,7 +283,7 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
         client = APIClient()
         client.force_authenticate(user=self.user1)
         response = client.get(
-            "/api/cloudigrade/v2/concurrent/", data=data, format="json"
+            "/internal/api/cloudigrade/v1/concurrent/", data=data, format="json"
         )
         self.assertEqual(response.status_code, 400)
 
@@ -310,7 +307,7 @@ class DailyConcurrentUsageViewSetTest(TransactionTestCase):
         self.assertEqual(0, ConcurrentUsageCalculationTask.objects.count())
 
         response = client.get(
-            "/api/cloudigrade/v2/concurrent/", data=data, format="json"
+            "/internal/api/cloudigrade/v1/concurrent/", data=data, format="json"
         )
         self.assertEqual(3, ConcurrentUsageCalculationTask.objects.count())
         self.assertEqual(response.status_code, 425)

@@ -811,10 +811,10 @@ maximum concurrent number of instances, grouped by various combinations of role,
 sla, and architecture seen concurrently in use during that day.
 
 Optional ``start_date`` is an ISO-8601 date that is the inclusive start of the
-reporting period. If not defined, default is "today".
+reporting period. If not defined, default is "yesterday".
 
 Optional ``end_date`` is an ISO-8601 date that is the exclusive end of the
-reporting period. If not defined, default is "tomorrow".
+reporting period. If not defined, default is "today".
 
 Request:
 
@@ -829,7 +829,7 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 19907
+    Content-Length: 17102
     Content-Type: application/json
     Referrer-Policy: same-origin
     Vary: Accept
@@ -2024,203 +2024,6 @@ Response:
                         "usage": "Development/Test"
                     }
                 ]
-            },
-            {
-                "date": "2020-05-18",
-                "maximum_counts": [
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    }
-                ]
             }
         ],
         "links": {
@@ -2230,7 +2033,7 @@ Response:
             "previous": null
         },
         "meta": {
-            "count": 8
+            "count": 7
         }
     }
 
@@ -2263,15 +2066,15 @@ Response:
     }
 
 If your requested ``start_date`` and ``end_date`` values would result in some
-future dates beyond "today", the API will return a 400 with the relevant errors.
-Daily max concurrency results will end "today" at the latest.
+future dates beyond "yesterday", the API will return a 400 with the relevant errors.
+Daily max concurrency results will end "yesterday" at the latest.
 
 Request:
 
 .. code:: bash
 
     http localhost:8080/api/cloudigrade/v2/concurrent/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
-        start_date=="2020-05-18" \
+        start_date=="2020-05-17" \
         end_date=="2020-05-25"
 
 Response:
@@ -2295,7 +2098,7 @@ Response:
     }
 
 If your requested ``start_date`` and ``end_date`` values would result in exclusively
-future dates beyond "today", the API will also return a 400 with the relevant errors.
+future dates beyond "yesterday", the API will also return a 400 with the relevant errors.
  In the following example, the request is for dates "tomorrow" through "one week from today".
 
 Request:
@@ -2312,7 +2115,7 @@ Response:
 
     HTTP/1.1 400 Bad Request
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 103
+    Content-Length: 112
     Content-Type: application/json
     Referrer-Policy: same-origin
     Vary: Accept
@@ -2325,7 +2128,7 @@ Response:
             "end_date cannot be in the future."
         ],
         "start_date": [
-            "start_date cannot be in the future."
+            "start_date cannot be today or in the future."
         ]
     }
 
