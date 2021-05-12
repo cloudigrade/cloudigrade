@@ -1,4 +1,5 @@
 """Gunicorn configuration file."""
-timeout = 600
-bind = "unix:/var/run/cloudigrade/gunicorn.sock"
+timeout = 30
+bind = "0.0.0.0:8080"
+forwarded_allow_ips = "*"
 workers = 2

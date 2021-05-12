@@ -49,28 +49,6 @@ jobs:
       - run: docker pull $IMAGE_NAME:latest || true
       - run: docker build --cache-from $IMAGE_NAME:latest .
 
-  test-s2i:
-    name: s2i Build
-    runs-on: ubuntu-latest
-    container:
-      image: docker:latest
-    env:
-      CONTEXT_DIR: deployment/nginx/
-      NGINX_S2I_IMAGE: registry.redhat.io/rhel8/nginx-116:latest
-      S2I_VERSION: v1.3.1
-      S2I_RELEASE: source-to-image-v1.3.1-a5a77147-linux-amd64
-    steps:
-      - uses: actions/checkout@v2
-      - run: apk --no-cache add git
-      - run: mkdir -p /opt && cd /opt
-      - run: wget https://github.com/openshift/source-to-image/releases/download/${S2I_VERSION}/${S2I_RELEASE}.tar.gz -O /opt/s2i.tar.gz
-      - run: tar --strip-components=1 -xzvf /opt/s2i.tar.gz -C /opt/
-      - run: mv /opt/s2i /usr/bin/
-      - env:
-          REDHAT_REGISTRY_LOGIN: ${{ secrets.REDHAT_REGISTRY_LOGIN }}
-        run: ${REDHAT_REGISTRY_LOGIN}
-      - run: s2i build --context-dir=${CONTEXT_DIR} --ref ${GITHUB_REF##*/} ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY} ${NGINX_S2I_IMAGE} ${NGINX_IMAGE_NAME}:latest
-
   test-docs:
     name: Verify docs and openapi.json
     runs-on: ubuntu-latest
@@ -91,7 +69,7 @@ jobs:
   deploy-build-and-push-image:
     name: Build and Push Image
     if: github.ref == 'refs/heads/master'
-    needs: [test-py38, test-flake8, test-vulnerability, test-docker, test-s2i, test-docs]
+    needs: [test-py38, test-flake8, test-vulnerability, test-docker, test-docs]
     runs-on: ubuntu-latest
     container:
       image: docker:latest
@@ -105,33 +83,3 @@ jobs:
       - run: docker build --cache-from ${IMAGE_NAME}:latest --tag ${IMAGE_NAME}:${{ github.sha }} --tag ${IMAGE_NAME}:latest .
       - run: docker push ${IMAGE_NAME}:${{ github.sha }}
       - run: docker push ${IMAGE_NAME}:latest
-
-  deploy-build-and-push-nginx-image:
-    name: Build and Push NGINX Image
-    if: github.ref == 'refs/heads/master'
-    needs: [test-py38, test-flake8, test-vulnerability, test-docker, test-s2i, test-docs]
-    runs-on: ubuntu-latest
-    container:
-      image: docker:latest
-    env:
-      CONTEXT_DIR: deployment/nginx/
-      QUAY_BOT_USERNAME: ${{ secrets.QUAY_BOT_USERNAME }}
-      QUAY_BOT_TOKEN: ${{ secrets.QUAY_BOT_TOKEN}}
-      NGINX_S2I_IMAGE: registry.redhat.io/rhel8/nginx-116:latest
-      S2I_VERSION: v1.3.1
-      S2I_RELEASE: source-to-image-v1.3.1-a5a77147-linux-amd64
-    steps:
-      - uses: actions/checkout@v2
-      - run: apk --no-cache add git
-      - run: mkdir -p /opt && cd /opt
-      - run: wget https://github.com/openshift/source-to-image/releases/download/${S2I_VERSION}/${S2I_RELEASE}.tar.gz -O /opt/s2i.tar.gz
-      - run: tar --strip-components=1 -xzvf /opt/s2i.tar.gz -C /opt/
-      - run: mv /opt/s2i /usr/bin/
-      - env:
-          REDHAT_REGISTRY_LOGIN: ${{ secrets.REDHAT_REGISTRY_LOGIN }}
-        run: ${REDHAT_REGISTRY_LOGIN}
-      - run: s2i build --context-dir=${CONTEXT_DIR} --ref ${GITHUB_REF##*/} ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY} ${NGINX_S2I_IMAGE} ${NGINX_IMAGE_NAME}:${{ github.sha }}
-      - run: echo "${QUAY_BOT_TOKEN}" | docker login quay.io -u ${QUAY_BOT_USERNAME} --password-stdin
-      - run: docker push ${NGINX_IMAGE_NAME}:${{ github.sha }}
-      - run: docker tag ${NGINX_IMAGE_NAME}:${{ github.sha }} ${NGINX_IMAGE_NAME}:latest
-      - run: docker push ${NGINX_IMAGE_NAME}:latest
