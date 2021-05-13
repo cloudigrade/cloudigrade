@@ -28,10 +28,6 @@ RUN microdnf update \
     && microdnf remove libcurl-devel gcc python3-devel openssl-devel annobin -y \
     && microdnf clean all
 
-RUN curl -L -o /usr/bin/haberdasher \
-    https://github.com/RedHatInsights/haberdasher/releases/latest/download/haberdasher_linux_amd64 && \
-    chmod 755 /usr/bin/haberdasher
-
 COPY deployment/playbooks/ ./playbooks
 COPY deployment/scripts/mid_hook.sh ./scripts/mid_hook.sh
 COPY cloudigrade .
