@@ -9,7 +9,7 @@ from rest_framework.test import APIClient, APIRequestFactory
 
 from api.models import ConcurrentUsageCalculationTask
 from api.tests import helper as api_helper
-from util.misc import get_today
+from util.misc import get_today, get_yesterday
 from util.tests import helper as util_helper
 
 
@@ -187,11 +187,10 @@ class InternalDailyConcurrentUsageViewSetTest(TransactionTestCase):
         since start_date is inclusive and end_date is exclusive, the resulting
         output should be data for one day: today.
         """
+        yesterday = get_yesterday()
         today = get_today()
         data = {}
-        api_helper.calculate_concurrent(
-            today, today + datetime.timedelta(days=1), self.user1.id
-        )
+        api_helper.calculate_concurrent(yesterday, today, self.user1.id)
 
         client = APIClient()
         client.force_authenticate(user=self.user1)
@@ -201,7 +200,7 @@ class InternalDailyConcurrentUsageViewSetTest(TransactionTestCase):
         body = response.json()
         self.assertEqual(body["meta"]["count"], 1)
         self.assertEqual(len(body["data"]), 1)
-        self.assertEqual(body["data"][0]["date"], str(today))
+        self.assertEqual(body["data"][0]["date"], str(yesterday))
 
     def test_future_end_date_returns_400(self):
         """

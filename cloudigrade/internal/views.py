@@ -29,7 +29,7 @@ from internal.authentication import (
     IdentityHeaderAuthenticationInternalCreateUser,
 )
 from util import exceptions as util_exceptions
-from util.misc import get_today
+from util.misc import get_today, get_yesterday
 from util.redhatcloud import identity
 
 logger = logging.getLogger(__name__)
@@ -535,7 +535,7 @@ class InternalDailyConcurrentUsageViewSet(
         tomorrow = get_today() + timedelta(days=1)
         try:
             start_date = self.request.query_params.get("start_date", None)
-            start_date = parse(start_date).date() if start_date else get_today()
+            start_date = parse(start_date).date() if start_date else get_yesterday()
             # Start date is inclusive, if start date is tomorrow or after,
             # we do not return anything
             if start_date >= tomorrow:
@@ -545,8 +545,8 @@ class InternalDailyConcurrentUsageViewSet(
 
         try:
             end_date = self.request.query_params.get("end_date", None)
-            # End date is noninclusive, set it to tomorrow if one is not provided
-            end_date = parse(end_date).date() if end_date else tomorrow
+            # End date is noninclusive, set it to today if one is not provided
+            end_date = parse(end_date).date() if end_date else get_today()
             # If end date is after tomorrow, we do not return anything
             if end_date > tomorrow:
                 errors["end_date"] = [_("end_date cannot be in the future.")]
