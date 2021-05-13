@@ -699,3 +699,16 @@ def delete_inactive_users():
             "total_user_count": total_user_count,
         },
     )
+
+
+@shared_task(name="api.tasks.enable_account")
+def enable_account(cloud_account_id):
+    """
+    Task to enable a cloud account.
+
+    Returns:
+        None: Run as an asynchronous Celery task.
+
+    """
+    cloud_account = CloudAccount.objects.get(id=cloud_account_id)
+    cloud_account.enable()
