@@ -425,6 +425,9 @@ CELERY_TASK_ROUTES = {
     "api.tasks.calculate_max_concurrent_usage": {
         "queue": "calculate_max_concurrent_usage"
     },
+    "api.tasks.enable_account": {
+        "queue": "enable_account"
+    },
 }
 # Remember: the "schedule" values are integer numbers of seconds.
 CELERY_BEAT_SCHEDULE = {

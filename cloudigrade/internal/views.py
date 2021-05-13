@@ -19,6 +19,7 @@ from api import models, schemas, tasks
 from api.clouds.aws import models as aws_models
 from api.clouds.azure import models as azure_models
 from api.serializers import CloudAccountSerializer
+from api.tasks import enable_account
 from api.views import AccountViewSet
 from internal import filters, serializers
 from internal.authentication import (
@@ -50,12 +51,12 @@ def availability_check(request):
     for cloudaccount in cloudaccounts:
         logger.info(
             _(
-                "Availability check for source ID %(source_id)s attempting to enable "
-                "cloud account %(cloudaccount)s"
+                "Availability check for source ID %(source_id)s triggering task "
+                "to enable cloud account %(cloudaccount)s"
             ),
             {"source_id": source_id, "cloudaccount": cloudaccount},
         )
-        cloudaccount.enable()
+        enable_account.delay(cloudaccount.id)
 
     return Response(status=status.HTTP_204_NO_CONTENT)
 

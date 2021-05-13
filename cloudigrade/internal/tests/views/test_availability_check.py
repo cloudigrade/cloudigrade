@@ -5,6 +5,7 @@ import faker
 from django.test import TestCase
 from rest_framework.test import APIRequestFactory, force_authenticate
 
+from api.tasks import enable_account
 from api.tests import helper as api_helper
 from internal.views import availability_check
 from util.tests import helper as util_helper
@@ -36,18 +37,26 @@ class AvailabilityCheckViewTest(TestCase):
         )
         self.factory = APIRequestFactory()
 
-    @patch("api.models.sources.notify_application_availability")
-    def test_availability_check_success(self, mock_sources_notify):
+    @patch("internal.views.enable_account")
+    def test_availability_check_success(self, mock_enable):
         """Test happy path success for availability_check."""
         request = self.factory.post(
             "/availability_check/", data={"source_id": self.account.platform_source_id}
         )
         force_authenticate(request, user=self.user)
 
+        response = availability_check(request)
+        self.assertEqual(response.status_code, 204)
+
+        mock_enable.delay.assert_called()
+
+    @patch("api.models.sources.notify_application_availability")
+    def test_availability_check_task(self, mock_sources_notify):
+        """Test the task that is called by the availability_check_api."""
         with patch("api.clouds.aws.util.verify_permissions") as mock_verify_permissions:
             mock_verify_permissions.return_value = True
-            response = availability_check(request)
-            self.assertEqual(response.status_code, 204)
+            enable_account(self.account.id)
+            enable_account(self.account2.id)
 
         self.account.refresh_from_db()
         self.assertTrue(self.account.is_enabled)
