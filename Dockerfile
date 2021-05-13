@@ -29,7 +29,7 @@ RUN microdnf update \
     && microdnf clean all
 
 RUN curl -L -o /usr/bin/haberdasher \
-    https://github.com/RedHatInsights/haberdasher/releases/download/v0.1.5/haberdasher_linux_amd64 && \
+    https://github.com/RedHatInsights/haberdasher/releases/latest/download/haberdasher_linux_amd64 && \
     chmod 755 /usr/bin/haberdasher
 
 COPY deployment/playbooks/ ./playbooks
