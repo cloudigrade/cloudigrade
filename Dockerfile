@@ -39,5 +39,5 @@ USER cloudigrade
 
 EXPOSE 8080
 
-ENTRYPOINT ["/usr/bin/haberdasher"]
-CMD ["gunicorn","-c","config/gunicorn.py","config.wsgi"]
+ENTRYPOINT ["gunicorn"]
+CMD ["-c","config/gunicorn.py","config.wsgi"]
