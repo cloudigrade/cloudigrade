@@ -821,83 +821,81 @@ def verify_permissions(customer_role_arn):
         operations. Callers should be aware of the risk that we may configure CloudTrail
         but somewhere else rollback our transaction, leaving that Trail orphaned.
 
+        This function also has the side-effect of notifying sources and updating the
+        application status to unavailable if we cannot complete processing normally.
+
     Returns:
-        boolean indicating if the arn being verified is good.
+        boolean indicating if the verification and CloudTrail setup succeeded.
 
     """
     aws_account_id = aws.AwsArn(customer_role_arn).account_id
     arn_str = str(customer_role_arn)
 
+    access_verified = False
+    cloudtrail_setup_complete = False
+
     try:
+        cloud_account = CloudAccount.objects.get(
+            aws_cloud_account__aws_account_id=aws_account_id
+        )
         session = aws.get_session(arn_str)
-        account_verified, failed_actions = aws.verify_account_access(session)
+        access_verified, failed_actions = aws.verify_account_access(session)
+        if access_verified:
+            aws.configure_cloudtrail(session, aws_account_id)
+            cloudtrail_setup_complete = True
+        else:
+            for action in failed_actions:
+                logger.info(
+                    "Policy action %(action)s failed in verification for via %(arn)s",
+                    {"action": action, "arn": arn_str},
+                )
+            error_code = error_codes.CG3000  # TODO Consider a new error code?
+            error_code.notify(cloud_account.platform_application_id)
+    except CloudAccount.DoesNotExist:
+        # Failure to get CloudAccount means it was removed before this function started.
+        logger.error(
+            "Cannot verify permissions because CloudAccount does not exist for %(arn)s",
+            {"arn": customer_role_arn},
+        )
+        # Alas, we can't notify sources here since we don't have the CloudAccount which
+        # is what has the required platform_application_id.
     except ClientError as error:
-        if error.response.get("Error", {}).get("Code") in (
+        # Generally only raised when we don't have access to the AWS account.
+        client_error_code = error.response.get("Error", {}).get("Code")
+        if client_error_code not in (
             "AccessDenied",
             "AccessDeniedException",
             "UnrecognizedClientException",
         ):
-            raise ValidationError(
-                detail={
-                    "account_arn": [
-                        _('Permission denied for ARN "{0}"').format(arn_str)
-                    ]
-                }
+            # We only expect to get those three types of errors, all of which basically
+            # mean the permissions were removed by the time we made a call the AWS.
+            # If we get any *other* kind of error, we need to alert ourselves about it!
+            logger.error(
+                "Unexpected AWS ClientError '%(code)s' in verify_permissions.",
+                {"code": client_error_code},
             )
-        raise
-    if account_verified:
-        try:
-            aws.configure_cloudtrail(session, aws_account_id)
-        except ClientError as error:
-            if error.response.get("Error", {}).get("Code") in (
-                "AccessDenied",
-                "AccessDeniedException",
-                "UnrecognizedClientException",
-            ):
-                logger.debug(_("Trying to throw a CG3000."))
-                cloud_account = CloudAccount.objects.get(
-                    aws_cloud_account__aws_account_id=aws_account_id
-                )
+        # Irrespective of error code, log and notify sources about the access error.
+        error_code = error_codes.CG3000
+        error_code.log_internal_message(
+            logger, {"cloud_account_id": cloud_account.id, "exception": error}
+        )
+        error_code.notify(cloud_account.platform_application_id)
+    except MaximumNumberOfTrailsExceededException as error:
+        error_code = error_codes.CG3001
+        error_code.log_internal_message(
+            logger, {"cloud_account_id": cloud_account.id, "exception": error}
+        )
+        error_code.notify(cloud_account.platform_application_id)
+    except Exception as error:
+        # It's unclear what could cause any other kind of exception to be raised here,
+        # but we must handle anything, log/alert ourselves, and notify sources.
+        logger.exception(
+            "Unexpected exception in verify_permissions: %(error)s", {"error": error}
+        )
+        error_code = error_codes.CG3000  # TODO Consider a new error code?
+        error_code.notify(cloud_account.platform_application_id)
 
-                error_code = error_codes.CG3000
-                error_code.log_internal_message(
-                    logger, {"cloud_account_id": aws_account_id, "exception": error}
-                )
-                error_code.notify(cloud_account.platform_application_id)
-                logger.debug(_("CG3000 notify called, raising ValidationError."))
-
-                raise ValidationError(
-                    detail={
-                        "account_arn": [
-                            _(
-                                "Access denied to create CloudTrail for " 'ARN "{0}"'
-                            ).format(arn_str)
-                        ]
-                    }
-                )
-            raise
-        except MaximumNumberOfTrailsExceededException as error:
-            logger.debug(_("Trying to throw a CG3001."))
-            cloud_account = CloudAccount.objects.get(
-                aws_cloud_account__account_arn=arn_str
-            )
-
-            error_code = error_codes.CG3001
-            error_code.log_internal_message(
-                logger, {"cloud_account_id": cloud_account.id, "exception": error}
-            )
-            error_code.notify(cloud_account.platform_application_id)
-            logger.debug(_("CG3001 notify called, raising ValidationError."))
-            raise ValidationError(detail={"account_arn": error_code.get_message()})
-
-    else:
-        failure_details = [_("Account verification failed.")]
-        failure_details += [
-            _('Access denied for policy action "{0}".').format(action)
-            for action in failed_actions
-        ]
-        raise ValidationError(detail={"account_arn": failure_details})
-    return account_verified
+    return access_verified and cloudtrail_setup_complete
 
 
 def create_aws_cloud_account(

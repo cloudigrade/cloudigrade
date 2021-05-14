@@ -2,16 +2,19 @@
 import uuid
 from unittest.mock import Mock, patch
 
+import faker
 from botocore.exceptions import ClientError
 from django.test import TestCase
-from rest_framework.serializers import ValidationError
 
 from api import AWS_PROVIDER_STRING
 from api.clouds.aws import util
 from api.clouds.aws.util import generate_aws_ami_messages
 from api.tests import helper as api_helper
 from util.aws.sqs import _sqs_unwrap_message, _sqs_wrap_message, add_messages_to_queue
+from util.exceptions import MaximumNumberOfTrailsExceededException
 from util.tests import helper as util_helper
+
+_faker = faker.Faker()
 
 
 class CloudsAwsUtilTest(TestCase):
@@ -211,39 +214,93 @@ class CloudsAwsUtilVerifyPermissionsTest(TestCase):
         self.account = api_helper.generate_cloud_account(
             aws_account_id=self.aws_account_id, user=self.user
         )
+        self.arn = util_helper.generate_dummy_arn(account_id=self.aws_account_id)
 
-    def test_handle_access_denied_from_get_session(self):
-        """Test handling AccessDenied error from AWS when trying to get a session."""
+    def test_verify_permissions_success(self):
+        """Test happy path for verify_permissions."""
+        with patch.object(util.aws, "get_session"), patch.object(
+            util.aws, "verify_account_access"
+        ) as mock_aws_verify_account_access, patch.object(
+            util.aws, "configure_cloudtrail"
+        ), patch(
+            "api.tasks.notify_application_availability_task"
+        ) as mock_notify_sources:
+            mock_aws_verify_account_access.return_value = True, []
+            verified = util.verify_permissions(self.arn)
+
+        self.assertTrue(verified)
+        mock_notify_sources.delay.assert_not_called()
+
+    def test_verify_permissions_fails_if_cloud_account_does_not_exist(self):
+        """Test handling when the CloudAccount is missing."""
         arn = util_helper.generate_dummy_arn()
-        client_error = ClientError(
-            error_response={"Error": {"Code": "AccessDenied"}},
-            operation_name=Mock(),
-        )
-        with patch.object(
-            util.aws, "get_session"
-        ) as mock_get_session, self.assertRaises(ValidationError) as e:
-            mock_get_session.side_effect = client_error
-            util.verify_permissions(arn)
-        self.assertIn(arn, str(e.exception.detail["account_arn"]))
+        with patch(
+            "api.tasks.notify_application_availability_task"
+        ) as mock_notify_sources:
+            verified = util.verify_permissions(arn)
 
-    def test_handle_access_denied_from_configure_cloudtrail(self):
-        """Test handling AccessDenied error from AWS when configuring cloudtrail."""
-        arn = util_helper.generate_dummy_arn(account_id=self.aws_account_id)
+        self.assertFalse(verified)
+        # We do not notify sources because we do not have the CloudAccount which has
+        # the application_id needed to notify sources!
+        mock_notify_sources.delay.assert_not_called()
+
+    def test_verify_permissions_fails_if_session_access_denied(self):
+        """Test handling AccessDenied error from AWS when trying to get a session."""
         client_error = ClientError(
             error_response={"Error": {"Code": "AccessDenied"}},
             operation_name=Mock(),
         )
+        with patch.object(util.aws, "get_session") as mock_get_session, patch(
+            "api.tasks.notify_application_availability_task"
+        ) as mock_notify_sources:
+            mock_get_session.side_effect = client_error
+            verified = util.verify_permissions(self.arn)
+
+        self.assertFalse(verified)
+        mock_notify_sources.delay.assert_called()
+
+    def test_verify_permissions_fails_if_verify_account_access_fails(self):
+        """Test handling when aws.verify_account_access does not succeed."""
+        with patch.object(util.aws, "get_session"), patch.object(
+            util.aws, "verify_account_access"
+        ) as mock_aws_verify_account_access, patch.object(
+            util.aws, "configure_cloudtrail"
+        ), patch(
+            "api.tasks.notify_application_availability_task"
+        ) as mock_notify_sources:
+            mock_aws_verify_account_access.return_value = False, [_faker.slug()]
+            verified = util.verify_permissions(self.arn)
+
+        self.assertFalse(verified)
+        mock_notify_sources.delay.assert_called()
+
+    def test_verify_permissions_fails_if_too_many_trails(self):
+        """Test handling too many trails error when configuring cloudtrail."""
         with patch.object(util.aws, "get_session"), patch.object(
             util.aws, "verify_account_access"
         ) as mock_verify_access, patch.object(
             util.aws, "configure_cloudtrail"
         ) as mock_configure_cloudtrail, patch(
             "api.tasks.notify_application_availability_task"
-        ) as mock_notify_sources, self.assertRaises(
-            ValidationError
-        ) as e:
+        ) as mock_notify_sources:
             mock_verify_access.return_value = True, []
-            mock_configure_cloudtrail.side_effect = client_error
-            util.verify_permissions(arn)
+            mock_configure_cloudtrail.side_effect = (
+                MaximumNumberOfTrailsExceededException
+            )
+            verified = util.verify_permissions(self.arn)
+
+        self.assertFalse(verified)
         mock_notify_sources.delay.assert_called()
-        self.assertIn(arn, str(e.exception.detail["account_arn"]))
+
+    def test_verify_permissions_fails_if_mystery_exception(self):
+        """Test handling a completely unexpected exception type."""
+        with patch.object(util.aws, "get_session"), patch.object(
+            util.aws, "verify_account_access"
+        ) as mock_verify_access, patch(
+            "api.tasks.notify_application_availability_task"
+        ) as mock_notify_sources:
+            mock_verify_access.side_effect = Exception
+            verified = util.verify_permissions(self.arn)
+
+        self.assertFalse(verified)
+        mock_notify_sources.delay.assert_called()

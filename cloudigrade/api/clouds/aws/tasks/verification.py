@@ -6,7 +6,6 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.utils.translation import gettext as _
 from django_celery_beat.models import PeriodicTask
-from rest_framework.exceptions import ValidationError
 
 from api.clouds.aws.models import AwsCloudAccount
 from api.clouds.aws.util import verify_permissions
@@ -28,33 +27,25 @@ def verify_account_permissions(account_arn):
         bool: True if the ARN is still valid.
 
     """
-    valid = False
-    failed_reason = None
-    try:
-        valid = verify_permissions(account_arn)
-    except ValidationError as e:
-        logger.info(
-            _("ARN %s failed validation. Disabling the cloud account."),
-            account_arn,
-        )
-        failed_reason = e.detail
-
+    valid = verify_permissions(account_arn)
     logger.debug(
-        _("ARN %(account_arn)s is valid: %(valid)s."),
-        {
-            "account_arn": account_arn,
-            "valid": valid,
-        },
+        _("%(account_arn)s verified permissions? %(valid)s"),
+        {"account_arn": account_arn, "valid": valid},
     )
 
     if not valid:
         # Disable the cloud account.
+        logger.info(
+            _("ARN %s failed validation. Disabling the cloud account."), account_arn
+        )
         with transaction.atomic():
             try:
                 aws_cloud_account = AwsCloudAccount.objects.get(account_arn=account_arn)
                 cloud_account = aws_cloud_account.cloud_account.get()
                 if cloud_account:
-                    cloud_account.disable(message=str(failed_reason))
+                    # We do *not* need to notify sources here because verify_permissions
+                    # should have just done that with a more specific error message.
+                    cloud_account.disable(notify_sources=False)
                 else:
                     raise CloudAccount.DoesNotExist
 
