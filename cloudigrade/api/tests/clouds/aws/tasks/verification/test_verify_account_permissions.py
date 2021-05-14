@@ -2,7 +2,6 @@
 from unittest.mock import patch
 
 from django.test import TestCase
-from rest_framework.exceptions import ValidationError
 
 from api.clouds.aws import tasks
 from util.tests import helper as util_helper
@@ -11,12 +10,14 @@ from util.tests import helper as util_helper
 class VerifyAccountPermissionsTest(TestCase):
     """Task 'configure_customer_aws_and_create_cloud_account' test cases."""
 
+    def setUp(self):
+        """Set up common variables for tests."""
+        self.arn = util_helper.generate_dummy_arn()
+
     @patch("api.clouds.aws.tasks.verification.verify_permissions")
     def test_success(self, mock_verify_permissions):
         """Account permissions are verified successfully."""
-        arn = util_helper.generate_dummy_arn
-
-        valid = tasks.verify_account_permissions(arn)
+        valid = tasks.verify_account_permissions(self.arn)
 
         mock_verify_permissions.assert_called()
         self.assertTrue(valid)
@@ -25,11 +26,10 @@ class VerifyAccountPermissionsTest(TestCase):
     @patch("api.clouds.aws.tasks.verification.verify_permissions")
     def test_failure(self, mock_verify_permissions, mock_aws_cloud_account):
         """Account permission verification fails."""
-        arn = util_helper.generate_dummy_arn
-        mock_verify_permissions.side_effect = ValidationError()
+        mock_verify_permissions.return_value = False
 
         with self.assertLogs("api.clouds.aws.tasks", level="INFO") as cm:
-            valid = tasks.verify_account_permissions(arn)
+            valid = tasks.verify_account_permissions(self.arn)
 
         mock_verify_permissions.assert_called()
         self.assertFalse(valid)
@@ -42,11 +42,10 @@ class VerifyAccountPermissionsTest(TestCase):
     @patch("api.clouds.aws.tasks.verification.verify_permissions")
     def test_missing_account(self, mock_verify_permissions):
         """Account is missing during verification."""
-        arn = util_helper.generate_dummy_arn
-        mock_verify_permissions.side_effect = ValidationError()
+        mock_verify_permissions.return_value = False
 
         with self.assertLogs("api.clouds.aws.tasks", level="INFO") as cm:
-            valid = tasks.verify_account_permissions(arn)
+            valid = tasks.verify_account_permissions(self.arn)
 
         mock_verify_permissions.assert_called()
         self.assertFalse(valid)

@@ -86,17 +86,11 @@ class AwsCloudAccount(BaseModel):
         """
         from api.clouds.aws import tasks, util  # Avoid circular import.
 
-        try:
-            util.verify_permissions(self.account_arn)
-        except ValidationError as e:
-            logger.info(
-                _(
-                    "Could not enable %(aws_cloud_account)s, the ARN "
-                    "did not pass validation. Exception: %(e)s"
-                ),
-                {"aws_cloud_account": repr(self), "e": repr(e)},
-            )
-            raise e
+        verified = util.verify_permissions(self.account_arn)
+        if not verified:
+            message = f"Could not enable {repr(self)}; verify_permissions failed"
+            logger.info(message)
+            raise ValidationError({"account_arn": message})
 
         self._enable_verify_task()
         transaction.on_commit(

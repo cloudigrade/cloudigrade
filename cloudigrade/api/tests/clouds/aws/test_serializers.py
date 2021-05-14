@@ -188,18 +188,13 @@ class AwsAccountSerializerTest(TransactionTestCase):
             mock_assume_role.side_effect = client_error
             mock_verify.return_value = True, []
 
-            expected_error = {
-                "account_arn": ['Permission denied for ARN "{0}"'.format(self.arn)]
-            }
+            expected_error = "Could not enable"
             with self.assertLogs("api.models", level="INFO") as cm, self.assertRaises(
                 ValidationError
             ):
                 serializer.create(self.validated_data)
             log_record = cm.records[1]
-            self.assertIn(
-                expected_error["account_arn"][0],
-                log_record.msg.detail["account_arn"][0],
-            )
+            self.assertIn(expected_error, log_record.msg.detail["account_arn"])
 
     @patch("api.tasks.notify_application_availability_task")
     def test_create_fails_when_aws_verify_fails(self, mock_notify_sources):
@@ -216,16 +211,13 @@ class AwsAccountSerializerTest(TransactionTestCase):
             mock_assume_role.return_value = self.role
             mock_verify.return_value = False, []
 
-            expected_error = {"account_arn": ["Account verification failed."]}
+            expected_error = "Could not enable"
             with self.assertLogs("api.models", level="INFO") as cm, self.assertRaises(
                 ValidationError
             ):
                 serializer.create(self.validated_data)
             log_record = cm.records[1]
-            self.assertIn(
-                expected_error["account_arn"][0],
-                log_record.msg.detail["account_arn"][0],
-            )
+            self.assertIn(expected_error, log_record.msg.detail["account_arn"])
 
     @patch("api.tasks.notify_application_availability_task")
     def test_create_fails_cloudtrail_configuration_error(self, mock_notify_sources):
@@ -248,18 +240,10 @@ class AwsAccountSerializerTest(TransactionTestCase):
             mock_verify.return_value = True, []
             mock_cloudtrail.side_effect = client_error
 
-            expected_error = {
-                "account_arn": [
-                    "Access denied to create CloudTrail for "
-                    'ARN "{0}"'.format(self.arn)
-                ]
-            }
+            expected_error = "Could not enable"
             with self.assertLogs("api.models", level="INFO") as cm, self.assertRaises(
                 ValidationError
             ):
                 serializer.create(self.validated_data)
             log_record = cm.records[1]
-            self.assertIn(
-                expected_error["account_arn"][0],
-                log_record.msg.detail["account_arn"][0],
-            )
+            self.assertIn(expected_error, log_record.msg.detail["account_arn"])
