@@ -118,6 +118,11 @@ class UtilHelperTest(TestCase):
         self.assertEqual(instance["State"]["Name"], state.name)
         self.assertEqual(instance["BlockDeviceMappings"], [device_mapping])
 
+    def test_generate_dummy_describe_instance_no_subnet(self):
+        """Assert generated instance has no SubnetId key if no_subnet is True."""
+        instance = helper.generate_dummy_describe_instance(no_subnet=True)
+        self.assertNotIn("SubnetId", instance)
+
     def test_generate_mock_image(self):
         """Assert generated image contains given value."""
         image_id = helper.generate_dummy_image_id()

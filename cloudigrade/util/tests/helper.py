@@ -528,6 +528,7 @@ def generate_dummy_describe_instance(
     platform="",
     launch_time="",
     device_mappings=None,
+    no_subnet=False,
 ):
     """
     Generate dummy instance to imitate 'describe instances' API response.
@@ -543,6 +544,7 @@ def generate_dummy_describe_instance(
         platform (str): Optional known Platform value.
         launch_time (str): Optional known LaunchTime value.
         device_mappings (list): Optional known BlockDeviceMappings value
+        no_subnet (bool): Optional bool to allow missing subnet value.
 
     Returns:
         dict: Well-formed instance data structure.
@@ -557,7 +559,7 @@ def generate_dummy_describe_instance(
     if instance_id is None:
         instance_id = generate_dummy_instance_id()
 
-    if subnet_id is None:
+    if subnet_id is None and not no_subnet:
         subnet_id = generate_dummy_subnet_id()
 
     if instance_type is None:
@@ -580,8 +582,9 @@ def generate_dummy_describe_instance(
             "Code": state.value,
             "Name": state.name,
         },
-        "SubnetId": subnet_id,
     }
+    if not no_subnet:
+        mock_instance["SubnetId"] = subnet_id
     return mock_instance
 
 
