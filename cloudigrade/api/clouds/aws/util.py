@@ -381,7 +381,7 @@ def save_instance_events(awsinstance, instance_data, events=None):
                 return
 
             awsevent = AwsInstanceEvent.objects.create(
-                subnet=instance_data["SubnetId"],
+                subnet=instance_data.get("SubnetId"),
                 instance_type=instance_data["InstanceType"],
             )
             InstanceEvent.objects.create(
