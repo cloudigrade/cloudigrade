@@ -133,6 +133,30 @@ class SourcesTest(TestCase):
         mock_get.assert_called()
 
     @patch("requests.get")
+    def test_get_sources_cloudigrade_application_type_is_cached(self, mock_get):
+        """Assert get_cloudigrade_application_type_id returns cached id."""
+        cloudigrade_app_type_id = _faker.pyint()
+        expected = {"data": [{"id": cloudigrade_app_type_id}]}
+        mock_get.return_value.status_code = http.HTTPStatus.OK
+        mock_get.return_value.json.return_value = expected
+
+        response_app_type_id = sources.get_cloudigrade_application_type_id(
+            self.account_number
+        )
+        self.assertEqual(response_app_type_id, cloudigrade_app_type_id)
+
+        """Call it again and make sure the original, cached value is returened"""
+        not_cloudigrade_app_type_id = _faker.pyint()
+        not_expected = {"data": [{"id": not_cloudigrade_app_type_id}]}
+        mock_get.return_value.json.return_value = not_expected
+
+        response_app_type_id = sources.get_cloudigrade_application_type_id(
+            self.account_number
+        )
+        self.assertEqual(response_app_type_id, cloudigrade_app_type_id)
+        mock_get.assert_called_once()
+
+    @patch("requests.get")
     def test_get_sources_cloudigrade_application_type_fail(self, mock_get):
         """Assert get_cloudigrade_application_type_id returns None."""
         mock_get.return_value.status_code = http.HTTPStatus.NOT_FOUND
