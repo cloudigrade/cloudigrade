@@ -56,9 +56,12 @@ class InitialAwsDescribeInstancesTest(TestCase):
         ami_id_unavailable = util_helper.generate_dummy_image_id()
         ami_id_gone = util_helper.generate_dummy_image_id()
 
-        all_instances = [
+        running_instances = [
             util_helper.generate_dummy_describe_instance(
                 image_id=ami_id_unknown, state=aws.InstanceState.running
+            ),
+            util_helper.generate_dummy_describe_instance(
+                image_id=ami_id_unknown, state=aws.InstanceState.running, no_subnet=True
             ),
             util_helper.generate_dummy_describe_instance(
                 image_id=ami_id_openshift, state=aws.InstanceState.running
@@ -71,10 +74,16 @@ class InitialAwsDescribeInstancesTest(TestCase):
             util_helper.generate_dummy_describe_instance(
                 image_id=ami_id_unavailable, state=aws.InstanceState.running
             ),
+        ]
+
+        not_running_instances = [
             util_helper.generate_dummy_describe_instance(
                 image_id=ami_id_gone, state=aws.InstanceState.terminated
             ),
         ]
+
+        all_instances = running_instances + not_running_instances
+
         described_instances = {region: all_instances}
 
         mock_aws.describe_instances_everywhere.return_value = described_instances
@@ -100,10 +109,10 @@ class InitialAwsDescribeInstancesTest(TestCase):
 
         # Verify that we created all five instances.
         instances_count = Instance.objects.filter(cloud_account=account).count()
-        self.assertEqual(instances_count, 5)
+        self.assertEqual(instances_count, len(all_instances))
 
         # Verify that the running instances exist with power-on events.
-        for described_instance in all_instances[:4]:
+        for described_instance in running_instances:
             instance_id = described_instance["InstanceId"]
             aws_instance = AwsInstance.objects.get(ec2_instance_id=instance_id)
             self.assertIsInstance(aws_instance, AwsInstance)
@@ -113,7 +122,7 @@ class InitialAwsDescribeInstancesTest(TestCase):
             self.assertEqual(InstanceEvent.TYPE.power_on, event.event_type)
 
         # Verify that the not-running instances exist with no events.
-        for described_instance in all_instances[4:]:
+        for described_instance in not_running_instances:
             instance_id = described_instance["InstanceId"]
             aws_instance = AwsInstance.objects.get(ec2_instance_id=instance_id)
             self.assertIsInstance(aws_instance, AwsInstance)
