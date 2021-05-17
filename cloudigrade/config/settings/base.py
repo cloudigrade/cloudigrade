@@ -428,6 +428,9 @@ CELERY_TASK_ROUTES = {
     "api.tasks.enable_account": {
         "queue": "enable_account"
     },
+    "api.tasks.notify_application_availability_task": {
+        "queue": "notify_application_availability_task"
+    },
 }
 # Remember: the "schedule" values are integer numbers of seconds.
 CELERY_BEAT_SCHEDULE = {
@@ -513,3 +516,10 @@ SOURCES_API_EXTERNAL_URI = "/api/sources/v3.0/"
 SOURCES_CLOUDMETER_ARN_AUTHTYPE = "cloud-meter-arn"
 SOURCES_CLOUDMETER_AUTHTYPES = (SOURCES_CLOUDMETER_ARN_AUTHTYPE,)
 SOURCES_RESOURCE_TYPE = "Application"
+
+# Sources Availability Check Values
+SOURCES_STATUS_TOPIC = env("SOURCES_STATUS_TOPIC", default="platform.sources.status")
+SOURCES_AVAILABILITY_EVENT_TYPE = env(
+    "SOURCES_AVAILABILITY_EVENT_TYPE",
+    default="availability_status",
+)

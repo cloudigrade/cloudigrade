@@ -34,7 +34,7 @@ class CreateAWSClountTest(TestCase):
 
         mock_enable.assert_called()
 
-    @patch("api.error_codes.sources.notify_application_availability")
+    @patch("api.tasks.notify_application_availability_task")
     @patch.object(CloudAccount, "enable")
     def test_create_aws_clount_fails_same_aws_account_different_arn(
         self, mock_enable, mock_notify_sources
@@ -71,7 +71,7 @@ class CreateAWSClountTest(TestCase):
         )
         self.assertIn("CG1002", exception_detail["account_arn"])
 
-    @patch("api.error_codes.sources.notify_application_availability")
+    @patch("api.tasks.notify_application_availability_task")
     @patch.object(CloudAccount, "enable")
     def test_create_aws_clount_fails_with_same_arn_different_user(
         self, mock_enable, mock_notify_sources
@@ -100,7 +100,7 @@ class CreateAWSClountTest(TestCase):
         )
         self.assertNotIn("CG1002", exception_detail["account_arn"])
 
-    @patch("api.error_codes.sources.notify_application_availability")
+    @patch("api.tasks.notify_application_availability_task")
     @patch.object(CloudAccount, "enable")
     def test_create_aws_clount_fails_with_same_user_same_name(
         self, mock_enable, mock_notify_sources
@@ -130,7 +130,7 @@ class CreateAWSClountTest(TestCase):
         self.assertIn("Could not set up cloud metering.", exception_detail["name"])
         self.assertIn("CG1003", exception_detail["name"])
 
-    @patch("api.error_codes.sources.notify_application_availability")
+    @patch("api.tasks.notify_application_availability_task")
     @patch.object(CloudAccount, "enable")
     def test_create_aws_clount_fails_with_same_arn_same_user(
         self, mock_enable, mock_notify_sources
@@ -157,7 +157,7 @@ class CreateAWSClountTest(TestCase):
         )
         self.assertIn("CG1001", exception_detail["account_arn"])
 
-    @patch("api.error_codes.sources.notify_application_availability")
+    @patch("api.tasks.notify_application_availability_task")
     @patch.object(CloudAccount, "enable")
     def test_create_aws_clount_fails_with_different_user_same_account_id(
         self, mock_enable, mock_notify_sources

@@ -140,7 +140,7 @@ class RunTest(TestCase):
 class CloudAccountTest(TestCase):
     """Test cases for api.models.CloudAccount."""
 
-    @patch("api.models.sources.notify_application_availability")
+    @patch("api.tasks.notify_application_availability_task")
     def test_delete_clount_deletes_user(self, mock_notify_sources):
         """Test User is deleted if last clount is deleted."""
         user = util_helper.generate_test_user()
@@ -154,8 +154,10 @@ class CloudAccountTest(TestCase):
         account.delete()
         self.assertFalse(User.objects.filter(username=username).exists())
 
-    @patch("api.models.sources.notify_application_availability")
-    def test_delete_clount_doesnt_delete_user_for_two_clounts(self, mock_notify_source):
+    @patch("api.tasks.notify_application_availability_task")
+    def test_delete_clount_doesnt_delete_user_for_two_clounts(
+        self, mock_notify_sources
+    ):
         """Test User is not deleted if it has more clounts left."""
         user = util_helper.generate_test_user()
         username = user.username
@@ -172,7 +174,7 @@ class CloudAccountTest(TestCase):
         account.delete()
         self.assertTrue(User.objects.filter(username=username).exists())
 
-    @patch("api.models.sources.notify_application_availability")
+    @patch("api.tasks.notify_application_availability_task")
     @patch("api.clouds.aws.util.verify_permissions")
     @patch("api.clouds.aws.tasks.initial_aws_describe_instances")
     def test_concurrent_usage_deleted_when_clount_enables(

@@ -4,9 +4,14 @@ import json
 from unittest.mock import MagicMock, Mock, patch
 
 import faker
+from confluent_kafka import KafkaError, KafkaException
 from django.test import TestCase, override_settings
 
-from util.exceptions import SourcesAPINotJsonContent, SourcesAPINotOkStatus
+from util.exceptions import (
+    KafkaProducerException,
+    SourcesAPINotJsonContent,
+    SourcesAPINotOkStatus,
+)
 from util.redhatcloud import sources
 
 _faker = faker.Faker()
@@ -20,6 +25,21 @@ class SourcesTest(TestCase):
         self.account_number = str(_faker.pyint())
         self.authentication_id = _faker.user_name()
         self.application_id = _faker.pyint()
+        self.listener_server = _faker.hostname()
+        self.listener_port = str(_faker.pyint())
+        self.sources_resource_type = _faker.slug()
+        self.sources_kafka_topic = _faker.slug()
+        self.sources_availability_event_type = _faker.slug()
+        self.available_status = "available"
+        self.sources_kafka_config = {
+            "bootstrap.servers": f"{self.listener_server}:{self.listener_port}"
+        }
+        self.kafka_payload = {
+            "resource_type": self.sources_resource_type,
+            "resource_id": self.application_id,
+            "status": self.available_status,
+            "error": "",
+        }
 
     @patch("requests.get")
     def test_get_sources_authentication_success(self, mock_get):
@@ -123,63 +143,103 @@ class SourcesTest(TestCase):
         self.assertIsNone(response_app_type_id)
         mock_get.assert_called()
 
-    @patch("requests.patch")
-    def test_notify_sources_application_availability_success(self, mock_patch):
+    @patch("util.redhatcloud.sources.KafkaProducer")
+    def test_notify_sources_application_availability_success(
+        self,
+        mock_kafka_producer,
+    ):
         """Test notify sources happy path success."""
-        application_id = _faker.pyint()
-        availability_status = "available"
-        mock_patch.return_value.status_code = http.HTTPStatus.NO_CONTENT
+        kafka_producer = mock_kafka_producer(self.sources_kafka_config)
 
-        sources.notify_application_availability(
-            self.account_number, application_id, availability_status=availability_status
+        with override_settings(
+            LISTENER_SERVER=self.listener_server,
+            LISTENER_PORT=self.listener_port,
+            SOURCES_STATUS_TOPIC=self.sources_kafka_topic,
+            SOURCES_RESOURCE_TYPE=self.sources_resource_type,
+            SOURCES_AVAILABILITY_EVENT_TYPE=self.sources_availability_event_type,
+            SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA=True,
+        ):
+            sources.notify_application_availability(
+                self.application_id,
+                availability_status=self.available_status,
+            )
+
+        kafka_producer.produce.assert_called_with(
+            topic=self.sources_kafka_topic,
+            value=json.dumps(self.kafka_payload),
+            headers={"event_type": self.sources_availability_event_type},
         )
-        mock_patch.assert_called()
+        kafka_producer.flush.assert_called()
 
-    @patch("requests.patch")
-    def test_notify_sources_application_availability_skip(self, mock_patch):
-        """Test notify sources skips if not enabled."""
-        application_id = _faker.pyint()
-        availability_status = "available"
-
+    @patch("util.redhatcloud.sources.KafkaProducer")
+    def test_notify_sources_application_availability_skip(
+        self,
+        mock_kafka_producer,
+    ):
+        """Test notify source application availability skips if not enabled."""
         with override_settings(SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA=False):
             sources.notify_application_availability(
-                self.account_number,
-                application_id,
-                availability_status=availability_status,
+                self.application_id,
+                availability_status=self.available_status,
             )
-        mock_patch.assert_not_called()
+        mock_kafka_producer.assert_not_called()
 
-    @patch("requests.patch")
-    def test_notify_sources_application_availability_not_found(self, mock_patch):
-        """Test 404 status for patching sources."""
-        application_id = _faker.pyint()
-        availability_status = "available"
+    @patch("util.redhatcloud.sources.KafkaProducer")
+    def test_notify_sources_application_availability_buffer_error(
+        self,
+        mock_kafka_producer,
+    ):
+        """Test notify source application availability handling BufferError."""
+        kafka_producer = mock_kafka_producer(self.sources_kafka_config)
+        kafka_producer.produce.side_effect = BufferError("bad error")
 
-        mock_patch.return_value.status_code = http.HTTPStatus.NOT_FOUND
+        with override_settings(
+            LISTENER_SERVER=self.listener_server,
+            LISTENER_PORT=self.listener_port,
+            SOURCES_STATUS_TOPIC=self.sources_kafka_topic,
+            SOURCES_RESOURCE_TYPE=self.sources_resource_type,
+            SOURCES_AVAILABILITY_EVENT_TYPE=self.sources_availability_event_type,
+            SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA=True,
+        ):
+            with self.assertRaises(KafkaProducerException):
+                sources.notify_application_availability(
+                    self.application_id,
+                    availability_status=self.available_status,
+                )
 
-        with self.assertLogs("util.redhatcloud.sources", level="INFO") as logger:
-            sources.notify_application_availability(
-                self.account_number,
-                application_id,
-                availability_status=availability_status,
+            kafka_producer.produce.assert_called_with(
+                topic=self.sources_kafka_topic,
+                value=json.dumps(self.kafka_payload),
+                headers={"event_type": self.sources_availability_event_type},
             )
-            self.assertIn("Cannot update availability", logger.output[1])
+            kafka_producer.flush.assert_not_called()
 
-        mock_patch.assert_called()
+    @patch("util.redhatcloud.sources.KafkaProducer")
+    def test_notify_sources_application_availability_kafka_exception(
+        self,
+        mock_kafka_producer,
+    ):
+        """Test notify source application availability handling KafkaException."""
+        kafka_producer = mock_kafka_producer(self.sources_kafka_config)
+        kafka_producer.produce.side_effect = KafkaException(KafkaError(5))
 
-    @patch("requests.patch")
-    def test_notify_sources_application_availability_other_status(self, mock_patch):
-        """Test unknown status for patching sources."""
-        application_id = _faker.pyint()
-        availability_status = "available"
+        with override_settings(
+            LISTENER_SERVER=self.listener_server,
+            LISTENER_PORT=self.listener_port,
+            SOURCES_STATUS_TOPIC=self.sources_kafka_topic,
+            SOURCES_RESOURCE_TYPE=self.sources_resource_type,
+            SOURCES_AVAILABILITY_EVENT_TYPE=self.sources_availability_event_type,
+            SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA=True,
+        ):
+            with self.assertRaises(KafkaProducerException):
+                sources.notify_application_availability(
+                    self.application_id,
+                    availability_status=self.available_status,
+                )
 
-        mock_patch.return_value.status_code = http.HTTPStatus.INTERNAL_SERVER_ERROR
-
-        with self.assertRaises(SourcesAPINotOkStatus):
-            sources.notify_application_availability(
-                self.account_number,
-                application_id,
-                availability_status=availability_status,
+            kafka_producer.produce.assert_called_with(
+                topic=self.sources_kafka_topic,
+                value=json.dumps(self.kafka_payload),
+                headers={"event_type": self.sources_availability_event_type},
             )
-
-        mock_patch.assert_called()
+            kafka_producer.flush.assert_not_called()

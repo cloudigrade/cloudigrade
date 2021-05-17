@@ -238,12 +238,12 @@ class CloudsAwsUtilVerifyPermissionsTest(TestCase):
         ) as mock_verify_access, patch.object(
             util.aws, "configure_cloudtrail"
         ) as mock_configure_cloudtrail, patch(
-            "api.error_codes.sources.notify_application_availability"
-        ) as mock_notify, self.assertRaises(
+            "api.tasks.notify_application_availability_task"
+        ) as mock_notify_sources, self.assertRaises(
             ValidationError
         ) as e:
             mock_verify_access.return_value = True, []
             mock_configure_cloudtrail.side_effect = client_error
             util.verify_permissions(arn)
-        mock_notify.assert_called()
+        mock_notify_sources.delay.assert_called()
         self.assertIn(arn, str(e.exception.detail["account_arn"]))
