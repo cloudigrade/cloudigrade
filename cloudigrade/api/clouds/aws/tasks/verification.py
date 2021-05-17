@@ -1,7 +1,7 @@
 """Celery tasks related to verifying data and customer accounts for AWS."""
 import logging
 
-from celery.task import task
+from celery import shared_task
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.utils.translation import gettext as _
@@ -16,7 +16,7 @@ from util.celery import retriable_shared_task
 logger = logging.getLogger(__name__)
 
 
-@task(name="api.clouds.aws.tasks.verify_account_permissions")
+@shared_task(name="api.clouds.aws.tasks.verify_account_permissions")
 def verify_account_permissions(account_arn):
     """
     Periodic task that verifies the account arn is still valid.
