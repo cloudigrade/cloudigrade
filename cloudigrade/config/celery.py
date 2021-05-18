@@ -22,6 +22,40 @@ logger.info("Django setup.")
 
 app = Celery("config")
 app.config_from_object("django.conf:settings", namespace="CELERY")
+# Remember: the "schedule" values are integer numbers of seconds.
+app.conf.beat_schedule = {
+    "delete_inactive_users": {
+        "task": "api.tasks.delete_inactive_users",
+        "schedule": env.int("DELETE_INACTIVE_USERS_SCHEDULE", default=24 * 60 * 60),
+    },
+    "persist_inspection_cluster_results": {
+        "task": "api.tasks.persist_inspection_cluster_results_task",
+        "schedule": env.int(
+            "HOUNDIGRADE_ECS_PERSIST_INSPECTION_RESULTS_SCHEDULE", default=5 * 60
+        ),
+    },
+    "inspect_pending_images": {
+        "task": "api.tasks.inspect_pending_images",
+        "schedule": env.int("INSPECT_PENDING_IMAGES_SCHEDULE", default=15 * 60),
+    },
+    "scale_up_inspection_cluster_every_60_min": {
+        "task": "api.clouds.aws.tasks.scale_up_inspection_cluster",
+        "schedule": env.int(
+            "HOUNDIGRADE_ECS_SCALE_UP_CLUSTER_SCHEDULE", default=60 * 60
+        ),
+    },
+    "analyze_log_every_2_mins": {
+        "task": "api.clouds.aws.tasks.analyze_log",
+        "schedule": env.int("ANALYZE_LOG_SCHEDULE", default=2 * 60),
+    },
+    "repopulate_ec2_instance_mapping_every_week": {
+        "task": "api.clouds.aws.tasks.repopulate_ec2_instance_mapping",
+        "schedule": env.int(
+            "AWS_REPOPULATE_EC2_INSTANCE_MAPPING_SCHEDULE",
+            default=60 * 60 * 24 * 7,  # 1 week in seconds
+        ),
+    },
+}
 app.autodiscover_tasks()
 logger.info("Celery setup.")
 
