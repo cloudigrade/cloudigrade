@@ -326,8 +326,7 @@ AWS_SQS_URL = env(
 )
 AWS_SQS_MAX_RECEIVE_COUNT = env.int("AWS_SQS_MAX_RECEIVE_COUNT", default=5)
 
-# We appear to be receiving ~300 messages an hour currently,
-AWS_SQS_MAX_YIELD_COUNT = env.int("AWS_SQS_MAX_YIELD_COUNT", default=100)
+AWS_SQS_MAX_YIELD_COUNT = env.int("AWS_SQS_MAX_YIELD_COUNT", default=25)
 AWS_SQS_MAX_HOUNDI_YIELD_COUNT = env.int("AWS_SQS_MAX_HOUNDI_YIELD_COUNT", default=10)
 AWS_NAME_PREFIX = env("AWS_NAME_PREFIX", default=env("USER", default="anonymous") + "-")
 
