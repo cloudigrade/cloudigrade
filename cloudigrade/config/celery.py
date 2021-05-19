@@ -46,7 +46,7 @@ app.conf.beat_schedule = {
     },
     "analyze_log_every_2_mins": {
         "task": "api.clouds.aws.tasks.analyze_log",
-        "schedule": env.int("ANALYZE_LOG_SCHEDULE", default=2 * 60),
+        "schedule": env.int("ANALYZE_LOG_SCHEDULE", default=30),
     },
     "repopulate_ec2_instance_mapping_every_week": {
         "task": "api.clouds.aws.tasks.repopulate_ec2_instance_mapping",
