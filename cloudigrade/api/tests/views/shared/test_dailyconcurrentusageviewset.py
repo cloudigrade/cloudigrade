@@ -9,7 +9,7 @@ from rest_framework.test import APIClient, APIRequestFactory
 
 from api.models import ConcurrentUsageCalculationTask
 from api.tests import helper as api_helper
-from util.misc import get_today, get_yesterday
+from util.misc import get_today
 from util.tests import helper as util_helper
 
 
@@ -182,7 +182,7 @@ class SharedDailyConcurrentUsageViewSetTest(TransactionTestCase):
         since start_date is inclusive and end_date is exclusive, the resulting
         output should be data for one day: yesterday.
         """
-        yesterday = get_yesterday()
+        yesterday = get_today() - datetime.timedelta(days=1)
         today = get_today()
         data = {}
         api_helper.calculate_concurrent(yesterday, today, self.user1.id)
@@ -202,7 +202,7 @@ class SharedDailyConcurrentUsageViewSetTest(TransactionTestCase):
         When an end_date is given that is later than today, we return
         a 400 response, because we cannot predict the future.
         """
-        yesterday = get_yesterday()
+        yesterday = get_today() - datetime.timedelta(days=1)
         future = yesterday + datetime.timedelta(days=100)
         data = {"end_date": str(future)}
         api_helper.calculate_concurrent(yesterday, future, self.user1.id)

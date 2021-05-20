@@ -1,7 +1,6 @@
 """DRF serializers for the cloudigrade internal API."""
 from django.contrib.auth.models import User
-from rest_framework import serializers
-from rest_framework.serializers import ModelSerializer, Serializer
+from rest_framework.serializers import ModelSerializer
 
 
 from api import models
@@ -216,10 +215,3 @@ class InternalAzureMachineImageSerializer(ModelSerializer):
             "is_cloud_access",
             "is_marketplace",
         )
-
-
-class InternalDailyConcurrentUsageSerializer(Serializer):
-    """Serialize a report of daily RHEL concurrency over time for the API."""
-
-    date = serializers.DateField(required=True)
-    maximum_counts = serializers.ReadOnlyField()

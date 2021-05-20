@@ -1,4 +1,6 @@
 """Public views for cloudigrade API."""
+from datetime import timedelta
+
 from dateutil.parser import parse
 from django.conf import settings
 from django.db import transaction
@@ -13,7 +15,7 @@ from api import schemas
 from api.authentication import IdentityHeaderAuthenticationUserNotRequired
 from api.serializers import DailyConcurrentUsageDummyQueryset
 from util.aws.sts import _get_primary_account_id, cloudigrade_policy
-from util.misc import get_today, get_yesterday
+from util.misc import get_today
 
 
 class AccountViewSet(viewsets.ReadOnlyModelViewSet):
@@ -73,45 +75,45 @@ class SysconfigViewSet(viewsets.ViewSet):
         return Response(response)
 
 
-@method_decorator(transaction.non_atomic_requests, name="dispatch")
-class DailyConcurrentUsageViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
-    """
-    Generate report of concurrent usage within a time frame.
-
-    This viewset has to be wrapped in a non_atomic_requests decorator. DRF by default
-    runs viewset methods inside of an atomic transaction. But in this case we have to
-    create ConcurrentUsageCalculationTask to schedule jobs even when we raise a
-    ResultsUnavailable 425 exception.
-    """
+class SharedDailyConcurrentUsageViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
+    """Generate report of concurrent usage within a time frame."""
 
     schema = schemas.ConcurrentSchema(tags=["api-v2"])
     serializer_class = serializers.DailyConcurrentUsageSerializer
 
-    def get_queryset(self):  # noqa: C901
+    def get_queryset(
+        self,
+        default_start_date=None,
+        default_end_date=None,
+        latest_start_date=None,
+        latest_end_date=None,
+        invalid_start_date_error=_("start_date cannot be today or in the future."),
+        invalid_end_date_error=_("end_date cannot be in the future."),
+    ):  # noqa: C901
         """Get the queryset of dates filtered to the appropriate inputs."""
         user = self.request.user
+        default_start_date = default_start_date or get_today() - timedelta(days=1)
+        latest_start_date = latest_start_date or get_today() - timedelta(days=1)
+        default_end_date = default_end_date or get_today()
+        latest_end_date = latest_end_date or get_today()
         errors = {}
-        today = get_today()
-        yesterday = get_yesterday()
         try:
             start_date = self.request.query_params.get("start_date", None)
-            start_date = parse(start_date).date() if start_date else yesterday
-            # Start date is inclusive, if start date is tomorrow or after,
+            start_date = parse(start_date).date() if start_date else default_start_date
+            # Start date is inclusive, if start date is today or after,
             # we do not return anything
-            if start_date >= today:
-                errors["start_date"] = [
-                    _("start_date cannot be today or in the future.")
-                ]
+            if start_date > latest_start_date:
+                errors["start_date"] = [invalid_start_date_error]
         except ValueError:
             errors["start_date"] = [_("start_date must be a date (YYYY-MM-DD).")]
 
         try:
             end_date = self.request.query_params.get("end_date", None)
             # End date is noninclusive, set it to today if one is not provided
-            end_date = parse(end_date).date() if end_date else today
+            end_date = parse(end_date).date() if end_date else default_end_date
             # If end date is after tomorrow, we do not return anything
-            if end_date > today:
-                errors["end_date"] = [_("end_date cannot be in the future.")]
+            if end_date > latest_end_date:
+                errors["end_date"] = [invalid_end_date_error]
             if end_date <= user.date_joined.date():
                 errors["end_date"] = [_("end_date must be after user creation date.")]
         except ValueError:
@@ -122,3 +124,15 @@ class DailyConcurrentUsageViewSet(viewsets.GenericViewSet, mixins.ListModelMixin
 
         queryset = DailyConcurrentUsageDummyQueryset(start_date, end_date, user.id)
         return queryset
+
+
+@method_decorator(transaction.non_atomic_requests, name="dispatch")
+class DailyConcurrentUsageViewSet(SharedDailyConcurrentUsageViewSet):
+    """
+    Generate report of concurrent usage within a time frame.
+
+    This viewset has to be wrapped in a non_atomic_requests decorator. DRF by default
+    runs viewset methods inside of an atomic transaction. But in this case we have to
+    create ConcurrentUsageCalculationTask to schedule jobs even when we raise a
+    ResultsUnavailable 425 exception.
+    """

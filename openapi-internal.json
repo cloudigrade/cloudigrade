@@ -6719,7 +6719,7 @@
           "platform_source_id"
         ]
       },
-      "InternalDailyConcurrentUsage": {
+      "DailyConcurrentUsage": {
         "type": "object",
         "properties": {
           "date": {

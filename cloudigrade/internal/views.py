@@ -2,9 +2,10 @@
 import logging
 from datetime import timedelta
 
-from dateutil.parser import parse
 from django.contrib.auth.models import User
+from django.db import transaction
 from django.http import JsonResponse
+from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
 from django_filters import rest_framework as django_filters
 from rest_framework import exceptions, mixins, permissions, status, viewsets
@@ -20,16 +21,16 @@ from rest_framework.response import Response
 from api import models, schemas, tasks
 from api.clouds.aws import models as aws_models
 from api.clouds.azure import models as azure_models
-from api.serializers import CloudAccountSerializer, DailyConcurrentUsageDummyQueryset
+from api.serializers import CloudAccountSerializer
 from api.tasks import enable_account
-from api.views import AccountViewSet
+from api.views import AccountViewSet, SharedDailyConcurrentUsageViewSet
 from internal import filters, serializers
 from internal.authentication import (
     IdentityHeaderAuthenticationInternal,
     IdentityHeaderAuthenticationInternalCreateUser,
 )
 from util import exceptions as util_exceptions
-from util.misc import get_today, get_yesterday
+from util.misc import get_today
 from util.redhatcloud import identity
 
 logger = logging.getLogger(__name__)
@@ -513,9 +514,8 @@ class InternalAzureMachineImageViewSet(
     }
 
 
-class InternalDailyConcurrentUsageViewSet(
-    viewsets.GenericViewSet, mixins.ListModelMixin
-):
+@method_decorator(transaction.non_atomic_requests, name="dispatch")
+class InternalDailyConcurrentUsageViewSet(SharedDailyConcurrentUsageViewSet):
     """
     Generate report of concurrent usage within a time frame.
 
@@ -525,38 +525,11 @@ class InternalDailyConcurrentUsageViewSet(
     ResultsUnavailable 425 exception.
     """
 
-    schema = schemas.ConcurrentSchema(tags=["api-v2"])
-    serializer_class = serializers.InternalDailyConcurrentUsageSerializer
-
     def get_queryset(self):  # noqa: C901
         """Get the queryset of dates filtered to the appropriate inputs."""
-        user = self.request.user
-        errors = {}
-        tomorrow = get_today() + timedelta(days=1)
-        try:
-            start_date = self.request.query_params.get("start_date", None)
-            start_date = parse(start_date).date() if start_date else get_yesterday()
-            # Start date is inclusive, if start date is tomorrow or after,
-            # we do not return anything
-            if start_date >= tomorrow:
-                errors["start_date"] = [_("start_date cannot be in the future.")]
-        except ValueError:
-            errors["start_date"] = [_("start_date must be a date (YYYY-MM-DD).")]
-
-        try:
-            end_date = self.request.query_params.get("end_date", None)
-            # End date is noninclusive, set it to today if one is not provided
-            end_date = parse(end_date).date() if end_date else get_today()
-            # If end date is after tomorrow, we do not return anything
-            if end_date > tomorrow:
-                errors["end_date"] = [_("end_date cannot be in the future.")]
-            if end_date <= user.date_joined.date():
-                errors["end_date"] = [_("end_date must be after user creation date.")]
-        except ValueError:
-            errors["end_date"] = [_("end_date must be a date (YYYY-MM-DD).")]
-
-        if errors:
-            raise exceptions.ValidationError(errors)
-
-        queryset = DailyConcurrentUsageDummyQueryset(start_date, end_date, user.id)
-        return queryset
+        return SharedDailyConcurrentUsageViewSet.get_queryset(
+            self,
+            latest_start_date=get_today(),
+            latest_end_date=get_today() + timedelta(days=1),
+            invalid_start_date_error=_("start_date cannot be in the future."),
+        )

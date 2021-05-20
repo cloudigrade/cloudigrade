@@ -52,17 +52,6 @@ def get_today():
     return get_now().date()
 
 
-def get_yesterday():
-    """
-    Get the date from the current time in UTC.
-
-    Returns:
-        datetime.date yesterday's date in UTC.
-
-    """
-    return (get_now() - datetime.timedelta(days=1)).date()
-
-
 def get_now():
     """
     Get the current time in UTC.
