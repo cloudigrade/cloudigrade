@@ -87,11 +87,18 @@ class SharedDailyConcurrentUsageViewSet(viewsets.GenericViewSet, mixins.ListMode
         default_end_date=None,
         latest_start_date=None,
         latest_end_date=None,
-        invalid_start_date_error=_("start_date cannot be today or in the future."),
-        invalid_end_date_error=_("end_date cannot be in the future."),
+        **kwargs
     ):  # noqa: C901
         """Get the queryset of dates filtered to the appropriate inputs."""
         user = self.request.user
+        error_msgs = {
+            "late_start_date_error": _("start_date cannot be today or in the future."),
+            "invalid_start_date_error": _("start_date must be a date (YYYY-MM-DD)."),
+            "early_end_date_error": _("end_date must be after user creation date."),
+            "late_end_date_error": _("end_date cannot be in the future."),
+            "invalid_end_date_error": _("end_date must be a date (YYYY-MM-DD)."),
+            **kwargs,
+        }
         default_start_date = default_start_date or get_today() - timedelta(days=1)
         latest_start_date = latest_start_date or get_today() - timedelta(days=1)
         default_end_date = default_end_date or get_today()
@@ -103,9 +110,9 @@ class SharedDailyConcurrentUsageViewSet(viewsets.GenericViewSet, mixins.ListMode
             # Start date is inclusive, if start date is today or after,
             # we do not return anything
             if start_date > latest_start_date:
-                errors["start_date"] = [invalid_start_date_error]
+                errors["start_date"] = [error_msgs["late_start_date_error"]]
         except ValueError:
-            errors["start_date"] = [_("start_date must be a date (YYYY-MM-DD).")]
+            errors["start_date"] = [error_msgs["invalid_start_date_error"]]
 
         try:
             end_date = self.request.query_params.get("end_date", None)
@@ -113,11 +120,11 @@ class SharedDailyConcurrentUsageViewSet(viewsets.GenericViewSet, mixins.ListMode
             end_date = parse(end_date).date() if end_date else default_end_date
             # If end date is after tomorrow, we do not return anything
             if end_date > latest_end_date:
-                errors["end_date"] = [invalid_end_date_error]
+                errors["end_date"] = [error_msgs["late_end_date_error"]]
             if end_date <= user.date_joined.date():
-                errors["end_date"] = [_("end_date must be after user creation date.")]
+                errors["end_date"] = [error_msgs["early_end_date_error"]]
         except ValueError:
-            errors["end_date"] = [_("end_date must be a date (YYYY-MM-DD).")]
+            errors["end_date"] = [error_msgs["invalid_end_date_error"]]
 
         if errors:
             raise exceptions.ValidationError(errors)

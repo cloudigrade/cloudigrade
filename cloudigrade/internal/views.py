@@ -531,5 +531,5 @@ class InternalDailyConcurrentUsageViewSet(SharedDailyConcurrentUsageViewSet):
             self,
             latest_start_date=get_today(),
             latest_end_date=get_today() + timedelta(days=1),
-            invalid_start_date_error=_("start_date cannot be in the future."),
+            late_start_date_error=_("start_date cannot be in the future."),
         )
