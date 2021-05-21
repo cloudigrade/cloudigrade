@@ -710,7 +710,16 @@ def enable_account(cloud_account_id):
         None: Run as an asynchronous Celery task.
 
     """
-    cloud_account = CloudAccount.objects.get(id=cloud_account_id)
+    try:
+        cloud_account = CloudAccount.objects.get(id=cloud_account_id)
+    except CloudAccount.DoesNotExist:
+        logger.warning(
+            "Cloud Account with ID %(cloud_account_id)s does not exist. "
+            "No cloud account to enable, exiting.",
+            {"cloud_account_id": cloud_account_id},
+        )
+        return
+
     cloud_account.enable()
 
 

@@ -64,6 +64,17 @@ class AvailabilityCheckViewTest(TestCase):
         self.assertTrue(self.account2.is_enabled)
         mock_notify_sources.delay.assert_called()
 
+    def test_availability_check_task_bad_clount_id(self):
+        """Test that task properly handles deleted accounts."""
+        with self.assertLogs("api.tasks", level="WARNING") as logs:
+            enable_account(123456)
+
+        self.assertIn(
+            "Cloud Account with ID 123456 does not exist. "
+            "No cloud account to enable, exiting.",
+            logs.output[0],
+        )
+
     def test_availability_fails_no_source_id(self):
         """Test that availability_check returns 400 if no source_id is passed."""
         request = self.factory.post("/availability_check/")
