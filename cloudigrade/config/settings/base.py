@@ -106,7 +106,9 @@ if env.bool("CLOUDIGRADE_ENABLE_CLOUDWATCH", default=False):
         "log_group": env("CLOUDIGRADE_CW_LOG_GROUP"),
         "stream_name": env("CLOUDIGRADE_CW_STREAM_NAME"),
         "formatter": "verbose",
-        "use_queues": False,
+        "use_queues": env.bool("WATCHTOWER_USE_QUEUES", default=True),
+        "send_interval": env.float("WATCHTOWER_SEND_INTERVAL", default=1.0),
+        "max_batch_count": env.float("WATCHTOWER_MAX_BATCH_COUNT", default=1000),
     }
     for logger_name, logger in LOGGING["loggers"].items():
         print(f"Appending watchtower to handlers for '{logger_name}'")
