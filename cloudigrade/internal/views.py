@@ -23,7 +23,7 @@ from api.clouds.aws import models as aws_models
 from api.clouds.azure import models as azure_models
 from api.serializers import CloudAccountSerializer
 from api.tasks import enable_account
-from api.views import AccountViewSet, SharedDailyConcurrentUsageViewSet
+from api.views import AccountViewSet, DailyConcurrentUsageViewSet
 from internal import filters, serializers
 from internal.authentication import (
     IdentityHeaderAuthenticationInternal,
@@ -515,7 +515,7 @@ class InternalAzureMachineImageViewSet(
 
 
 @method_decorator(transaction.non_atomic_requests, name="dispatch")
-class InternalDailyConcurrentUsageViewSet(SharedDailyConcurrentUsageViewSet):
+class InternalDailyConcurrentUsageViewSet(DailyConcurrentUsageViewSet):
     """
     Generate report of concurrent usage within a time frame.
 
@@ -525,11 +525,14 @@ class InternalDailyConcurrentUsageViewSet(SharedDailyConcurrentUsageViewSet):
     ResultsUnavailable 425 exception.
     """
 
-    def get_queryset(self):  # noqa: C901
-        """Get the queryset of dates filtered to the appropriate inputs."""
-        return SharedDailyConcurrentUsageViewSet.get_queryset(
-            self,
-            latest_start_date=get_today(),
-            latest_end_date=get_today() + timedelta(days=1),
-            late_start_date_error=_("start_date cannot be in the future."),
-        )
+    def latest_start_date(self):
+        """Return the latest allowed start_date."""
+        return get_today()
+
+    def latest_end_date(self):
+        """Return the latest allowed end_date."""
+        return get_today() + timedelta(days=1)
+
+    def late_start_date_error(self):
+        """Return the error message for specifying a late start_date."""
+        return _("start_date cannot be in the future.")

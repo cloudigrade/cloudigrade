@@ -1,7 +1,6 @@
 """Collection of tests for AccountViewSet."""
 import datetime
 
-from django.test import TransactionTestCase
 from django.utils.translation import gettext as _
 from rest_framework.test import APIClient
 
@@ -12,16 +11,12 @@ from api.tests.views.shared.test_dailyconcurrentusageviewset import (
 from util.misc import get_today
 
 
-class InternalDailyConcurrentUsageViewSetTest(
-    SharedDailyConcurrentUsageViewSetTest, TransactionTestCase
-):
+class InternalDailyConcurrentUsageViewSetTest(SharedDailyConcurrentUsageViewSetTest):
     """InternalDailyConcurrentUsageViewSet test case."""
 
     def setUp(self):
         """Set up a bunch of test data."""
-        SharedDailyConcurrentUsageViewSetTest.setUp(
-            self, concurrent_api_url="/internal/api/cloudigrade/v1/concurrent/"
-        )
+        super().setUp(concurrent_api_url="/internal/api/cloudigrade/v1/concurrent/")
 
     def test_future_start_date_returns_400(self):
         """
