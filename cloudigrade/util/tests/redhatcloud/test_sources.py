@@ -158,6 +158,7 @@ class SourcesTest(TestCase):
             SOURCES_RESOURCE_TYPE=self.sources_resource_type,
             SOURCES_AVAILABILITY_EVENT_TYPE=self.sources_availability_event_type,
             SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA=True,
+            VERBOSE_SOURCES_NOTIFICATION_LOGGING=True,
         ):
             sources.notify_application_availability(
                 self.application_id,
