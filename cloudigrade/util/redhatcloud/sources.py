@@ -244,14 +244,41 @@ def notify_application_availability(
     )
 
     try:
+        if settings.VERBOSE_SOURCES_NOTIFICATION_LOGGING:
+            logger.info(
+                _("Instantiating KafkaProducer with %(sources_kafka_config)s"),
+                {"sources_kafka_config": sources_kafka_config},
+            )
         kafka_producer = KafkaProducer(sources_kafka_config)
 
+        message_topic = settings.SOURCES_STATUS_TOPIC
+        message_value = json.dumps(payload)
+        message_headers = {"event_type": settings.SOURCES_AVAILABILITY_EVENT_TYPE}
+
+        if settings.VERBOSE_SOURCES_NOTIFICATION_LOGGING:
+            logger.info(
+                _(
+                    "KafkaProducer will produce with "
+                    "topic='%(topic)s' value='%(value)s' headers='%(headers)s'"
+                ),
+                {
+                    "topic": message_topic,
+                    "value": message_value,
+                    "headers": message_headers,
+                },
+            )
         kafka_producer.produce(
-            topic=settings.SOURCES_STATUS_TOPIC,
-            value=json.dumps(payload),
-            headers={"event_type": settings.SOURCES_AVAILABILITY_EVENT_TYPE},
+            topic=message_topic,
+            value=message_value,
+            headers=message_headers,
         )
+        if settings.VERBOSE_SOURCES_NOTIFICATION_LOGGING:
+            logger.info(_("KafkaProducer produced!"))
+
         kafka_producer.flush()
+        if settings.VERBOSE_SOURCES_NOTIFICATION_LOGGING:
+            logger.info(_("KafkaProducer flushed!"))
+
     except BufferError as error:
         message = f"BufferError: {str(error)}"
         logger.exception(error)
