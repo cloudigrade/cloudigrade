@@ -188,7 +188,7 @@ def extract_ids_from_kafka_message(message, headers):
     return account_number, platform_id
 
 
-@cache_memoize(60)
+@cache_memoize(settings.CACHE_TTL_SOURCES_APPLICATION_TYPE_ID)
 def get_cloudigrade_application_type_id(account_number):
     """Get the cloudigrade application type id from sources."""
     sources_api_base_url = settings.SOURCES_API_BASE_URL

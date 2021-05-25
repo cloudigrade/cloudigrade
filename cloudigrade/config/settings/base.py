@@ -496,3 +496,12 @@ SOURCES_AVAILABILITY_EVENT_TYPE = env(
     "SOURCES_AVAILABILITY_EVENT_TYPE",
     default="availability_status",
 )
+
+# Cache ttl settings
+CACHE_TTL_DEFAULT = env.int(
+    "CACHE_TTL_DEFAULT", default=60
+)
+
+CACHE_TTL_SOURCES_APPLICATION_TYPE_ID = env.int(
+    "CACHE_TTL_SOURCES_APPLICATION_TYPE_ID", default=CACHE_TTL_DEFAULT
+)
