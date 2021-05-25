@@ -239,7 +239,7 @@ class DocsApiHandler(object):
 
         response = self.customer_client.list_concurrent(
             data={
-                "start_date": self.this_morning.date(),
+                "start_date": self.yesterday.date(),
                 "end_date": self.next_week.date(),
             }
         )

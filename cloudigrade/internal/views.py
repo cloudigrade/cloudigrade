@@ -1,8 +1,11 @@
 """Internal views for cloudigrade API."""
 import logging
+from datetime import timedelta
 
 from django.contrib.auth.models import User
+from django.db import transaction
 from django.http import JsonResponse
+from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
 from django_filters import rest_framework as django_filters
 from rest_framework import exceptions, mixins, permissions, status, viewsets
@@ -20,13 +23,14 @@ from api.clouds.aws import models as aws_models
 from api.clouds.azure import models as azure_models
 from api.serializers import CloudAccountSerializer
 from api.tasks import enable_account
-from api.views import AccountViewSet
+from api.views import AccountViewSet, DailyConcurrentUsageViewSet
 from internal import filters, serializers
 from internal.authentication import (
     IdentityHeaderAuthenticationInternal,
     IdentityHeaderAuthenticationInternalCreateUser,
 )
 from util import exceptions as util_exceptions
+from util.misc import get_today
 from util.redhatcloud import identity
 
 logger = logging.getLogger(__name__)
@@ -508,3 +512,27 @@ class InternalAzureMachineImageViewSet(
         "created_at": ["lt", "exact", "gt"],
         "updated_at": ["lt", "exact", "gt"],
     }
+
+
+@method_decorator(transaction.non_atomic_requests, name="dispatch")
+class InternalDailyConcurrentUsageViewSet(DailyConcurrentUsageViewSet):
+    """
+    Generate report of concurrent usage within a time frame.
+
+    This viewset has to be wrapped in a non_atomic_requests decorator. DRF by default
+    runs viewset methods inside of an atomic transaction. But in this case we have to
+    create ConcurrentUsageCalculationTask to schedule jobs even when we raise a
+    ResultsUnavailable 425 exception.
+    """
+
+    def latest_start_date(self):
+        """Return the latest allowed start_date."""
+        return get_today()
+
+    def latest_end_date(self):
+        """Return the latest allowed end_date."""
+        return get_today() + timedelta(days=1)
+
+    def late_start_date_error(self):
+        """Return the error message for specifying a late start_date."""
+        return _("start_date cannot be in the future.")

@@ -89,32 +89,69 @@ class DailyConcurrentUsageViewSet(viewsets.GenericViewSet, mixins.ListModelMixin
     schema = schemas.ConcurrentSchema(tags=["api-v2"])
     serializer_class = serializers.DailyConcurrentUsageSerializer
 
+    def default_start_date(self):
+        """Return the default start_date."""
+        return get_today() - timedelta(days=1)
+
+    def latest_start_date(self):
+        """Return the latest allowed start_date."""
+        return get_today() - timedelta(days=1)
+
+    def late_start_date_error(self):
+        """Return the error message for specifying a late start_date."""
+        return _("start_date cannot be today or in the future.")
+
+    def invalid_start_date_error(self):
+        """Return the error message for specifying an invalid start_date."""
+        return _("start_date must be a date (YYYY-MM-DD).")
+
+    def default_end_date(self):
+        """Return the default end_date."""
+        return get_today()
+
+    def latest_end_date(self):
+        """Return the latest allowed end_date."""
+        return get_today()
+
+    def early_end_date_error(self):
+        """Return the error message for specifying an early end_date."""
+        return _("end_date must be after user creation date.")
+
+    def late_end_date_error(self):
+        """Return the error message for specifying a late end_date."""
+        return _("end_date cannot be in the future.")
+
+    def invalid_end_date_error(selfs):
+        """Return the error message for specifying an invalid end_date."""
+        return _("end_date must be a date (YYYY-MM-DD).")
+
     def get_queryset(self):  # noqa: C901
         """Get the queryset of dates filtered to the appropriate inputs."""
         user = self.request.user
         errors = {}
-        tomorrow = get_today() + timedelta(days=1)
         try:
             start_date = self.request.query_params.get("start_date", None)
-            start_date = parse(start_date).date() if start_date else get_today()
-            # Start date is inclusive, if start date is tomorrow or after,
+            start_date = (
+                parse(start_date).date() if start_date else self.default_start_date()
+            )
+            # Start date is inclusive, if start date is today or after,
             # we do not return anything
-            if start_date >= tomorrow:
-                errors["start_date"] = [_("start_date cannot be in the future.")]
+            if start_date > self.latest_start_date():
+                errors["start_date"] = [self.late_start_date_error()]
         except ValueError:
-            errors["start_date"] = [_("start_date must be a date (YYYY-MM-DD).")]
+            errors["start_date"] = [self.invalid_start_date_error()]
 
         try:
             end_date = self.request.query_params.get("end_date", None)
-            # End date is noninclusive, set it to tomorrow if one is not provided
-            end_date = parse(end_date).date() if end_date else tomorrow
+            # End date is noninclusive, set it to today if one is not provided
+            end_date = parse(end_date).date() if end_date else self.default_end_date()
             # If end date is after tomorrow, we do not return anything
-            if end_date > tomorrow:
-                errors["end_date"] = [_("end_date cannot be in the future.")]
+            if end_date > self.latest_end_date():
+                errors["end_date"] = [self.late_end_date_error()]
             if end_date <= user.date_joined.date():
-                errors["end_date"] = [_("end_date must be after user creation date.")]
+                errors["end_date"] = [self.early_end_date_error()]
         except ValueError:
-            errors["end_date"] = [_("end_date must be a date (YYYY-MM-DD).")]
+            errors["end_date"] = [self.invalid_end_date_error()]
 
         if errors:
             raise exceptions.ValidationError(errors)

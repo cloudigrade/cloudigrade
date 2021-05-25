@@ -284,6 +284,138 @@
         ]
       }
     },
+    "/api/cloudigrade/v1/concurrent/": {
+      "get": {
+        "operationId": "listDailyConcurrentUsages",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "The initial index from which to return the results.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "start_date",
+            "in": "query",
+            "required": false,
+            "description": "Start Date (inclusive) of the concurrent usage in the form (YYYY-MM-DD).",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "required": false,
+            "description": "End Date (exclusive) of the concurrent usage in the form (YYYY-MM-DD).",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "count": {
+                          "type": "integer",
+                          "example": 123
+                        }
+                      }
+                    },
+                    "links": {
+                      "type": "object",
+                      "properties": {
+                        "first": {
+                          "type": "string",
+                          "nullable": true,
+                          "format": "uri"
+                        },
+                        "last": {
+                          "type": "string",
+                          "nullable": true,
+                          "format": "uri"
+                        },
+                        "next": {
+                          "type": "string",
+                          "nullable": true,
+                          "format": "uri"
+                        },
+                        "previous": {
+                          "type": "string",
+                          "nullable": true,
+                          "format": "uri"
+                        }
+                      }
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "properties": {
+                          "date": {
+                            "type": "string",
+                            "format": "date"
+                          },
+                          "maximum_counts": {
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "arch": {
+                                  "type": "string"
+                                },
+                                "sla": {
+                                  "type": "string"
+                                },
+                                "role": {
+                                  "type": "string"
+                                },
+                                "usage": {
+                                  "type": "string"
+                                },
+                                "service_type": {
+                                  "type": "string"
+                                },
+                                "instance_count": {
+                                  "type": "integer"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "required": [
+                        "date"
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            "description": "Generate report of concurrent usage within a time frame."
+          }
+        }
+      }
+    },
     "/api/cloudigrade/v1/users/": {
       "get": {
         "operationId": "listUsers",
@@ -6585,6 +6717,22 @@
           "platform_authentication_id",
           "platform_application_id",
           "platform_source_id"
+        ]
+      },
+      "DailyConcurrentUsage": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "maximum_counts": {
+            "type": "string",
+            "readOnly": true
+          }
+        },
+        "required": [
+          "date"
         ]
       },
       "InternalUser": {

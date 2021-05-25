@@ -11,8 +11,12 @@ from api.tests.views.shared.test_dailyconcurrentusageviewset import (
 from util.misc import get_today
 
 
-class DailyConcurrentUsageViewSetTest(SharedDailyConcurrentUsageViewSetTest):
-    """DailyConcurrentUsageViewSet test case."""
+class InternalDailyConcurrentUsageViewSetTest(SharedDailyConcurrentUsageViewSetTest):
+    """InternalDailyConcurrentUsageViewSet test case."""
+
+    def setUp(self):
+        """Set up a bunch of test data."""
+        super().setUp(concurrent_api_url="/internal/api/cloudigrade/v1/concurrent/")
 
     def test_future_start_date_returns_400(self):
         """
@@ -32,9 +36,7 @@ class DailyConcurrentUsageViewSetTest(SharedDailyConcurrentUsageViewSetTest):
         self.assertEqual(response.status_code, 400)
 
         body = response.json()
-        self.assertEqual(
-            body["start_date"], [_("start_date cannot be today or in the future.")]
-        )
+        self.assertEqual(body["start_date"], [_("start_date cannot be in the future.")])
 
     def test_future_start_and_end_date_returns_400(self):
         """
@@ -54,7 +56,5 @@ class DailyConcurrentUsageViewSetTest(SharedDailyConcurrentUsageViewSetTest):
         self.assertEqual(response.status_code, 400)
 
         body = response.json()
-        self.assertEqual(
-            body["start_date"], [_("start_date cannot be today or in the future.")]
-        )
+        self.assertEqual(body["start_date"], [_("start_date cannot be in the future.")])
         self.assertEqual(body["end_date"], [_("end_date cannot be in the future.")])
