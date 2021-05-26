@@ -853,7 +853,7 @@ def verify_permissions(customer_role_arn):
             error_code.notify(cloud_account.platform_application_id)
     except CloudAccount.DoesNotExist:
         # Failure to get CloudAccount means it was removed before this function started.
-        logger.error(
+        logger.warning(
             "Cannot verify permissions because CloudAccount does not exist for %(arn)s",
             {"arn": customer_role_arn},
         )
