@@ -136,7 +136,7 @@ class CloudAccount(ExportModelOperationsMixin("CloudAccount"), BaseGenericModel)
         from api.tasks import notify_application_availability_task
 
         notify_application_availability_task.delay(
-            self.platform_application_id, "available"
+            self.user.username, self.platform_application_id, "available"
         )
 
     @transaction.atomic
@@ -170,7 +170,7 @@ class CloudAccount(ExportModelOperationsMixin("CloudAccount"), BaseGenericModel)
             from api.tasks import notify_application_availability_task
 
             notify_application_availability_task.delay(
-                self.platform_application_id, "unavailable", message
+                self.user.username, self.platform_application_id, "unavailable", message
             )
         logger.info(_("Finished disabling %(account)s"), {"account": self})
 
