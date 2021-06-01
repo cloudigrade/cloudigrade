@@ -8,6 +8,8 @@ logger = logging.getLogger(__name__)
 
 # A list of application settings that we want logged on app startup
 APPLICATION_SETTINGS_TO_LOG = [
+    "CACHE_TTL_DEFAULT",
+    "CACHE_TTL_SOURCES_APPLICATION_TYPE_ID",
     "CLOUDIGRADE_ENVIRONMENT",
     "CLOUDIGRADE_VERSION",
     "DEBUG",
