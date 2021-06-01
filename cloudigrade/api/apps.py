@@ -66,6 +66,17 @@ KAFKA_SETTINGS_TO_LOG = [
     "SOURCES_STATUS_TOPIC",
 ]
 
+# A list of Watchtower/CloudWatch settings that we want logged on app startup
+WATCHTOWER_SETTINGS_TO_LOG = [
+    "CLOUDIGRADE_ENABLE_CLOUDWATCH",
+    "CLOUDIGRADE_CW_LEVEL",
+    "CLOUDIGRADE_CW_LOG_GROUP",
+    "CLOUDIGRADE_CW_STREAM_NAME",
+    "WATCHTOWER_USE_QUEUES",
+    "WATCHTOWER_SEND_INTERVAL",
+    "WATCHTOWER_MAX_BATCH_COUNT",
+]
+
 
 class ApiConfig(AppConfig):
     name = "api"
@@ -90,3 +101,10 @@ class ApiConfig(AppConfig):
         logger.info("Kafka/Sources Settings:")
         for setting in KAFKA_SETTINGS_TO_LOG:
             logger.info(f"{setting}: {getattr(settings, setting, None)}")
+
+        logger.info("Watchtower/CloudWatch Settings:")
+        for setting in WATCHTOWER_SETTINGS_TO_LOG:
+            logger.info(f"{setting}: {getattr(settings, setting, None)}")
+
+        logger.info('LOGGING["handlers"]:')
+        logger.info(settings.LOGGING["handlers"])
