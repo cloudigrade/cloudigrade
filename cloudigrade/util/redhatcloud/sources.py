@@ -206,7 +206,7 @@ def get_cloudigrade_application_type_id(account_number):
 
 
 def notify_application_availability(
-    application_id, availability_status, availability_status_error=""
+    account_number, application_id, availability_status, availability_status_error=""
 ):
     """
     Update Sources application's availability status.
@@ -215,6 +215,7 @@ def notify_application_availability(
     receiving the availability_status update request Kafka message.
 
     Args:
+        account_number (str): Account number identifier
         application_id (int): Platform insights application id
         availability_status (string): Availability status to set
         availability_status_error (string): Optional status error
@@ -253,9 +254,15 @@ def notify_application_availability(
             )
         kafka_producer = KafkaProducer(sources_kafka_config)
 
+        headers = identity.generate_http_identity_headers(
+            account_number, is_org_admin=True
+        )
         message_topic = settings.SOURCES_STATUS_TOPIC
         message_value = json.dumps(payload)
-        message_headers = {"event_type": settings.SOURCES_AVAILABILITY_EVENT_TYPE}
+        message_headers = {
+            "x-rh-identity": headers["X-RH-IDENTITY"],
+            "event_type": settings.SOURCES_AVAILABILITY_EVENT_TYPE,
+        }
 
         if settings.VERBOSE_SOURCES_NOTIFICATION_LOGGING:
             logger.info(

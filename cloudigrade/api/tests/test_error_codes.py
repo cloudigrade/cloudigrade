@@ -44,9 +44,11 @@ class ErrorCodeTestCase(TestCase):
     @patch("api.tasks.notify_application_availability_task")
     def test_notify_sources(self, mock_notify_sources):
         """Test that notify calls notify_application_availability."""
+        account_number = str(_faker.pyint())
         app_id = _faker.pyint()
-        self.custom_error.notify(app_id)
+        self.custom_error.notify(account_number, app_id)
         mock_notify_sources.delay.assert_called_once_with(
+            account_number,
             app_id,
             availability_status="unavailable",
             availability_status_error="Message including {}".format(self.error_code),

@@ -15,13 +15,18 @@ class NotifyApplicationAvailabilityTaskTest(TestCase):
 
     def setUp(self):
         """Set up shared variables."""
+        self.account_number = str(_faker.pyint())
         self.application_id = _faker.pyint()
 
     @patch("util.redhatcloud.sources.notify_application_availability")
     def test_notify_application_availability_task_success(self, mock_notify_sources):
         """Assert notify_application_availability with available message success."""
-        notify_application_availability_task(self.application_id, "available", "")
-        mock_notify_sources.assert_called_with(self.application_id, "available", "")
+        notify_application_availability_task(
+            self.account_number, self.application_id, "available", ""
+        )
+        mock_notify_sources.assert_called_with(
+            self.account_number, self.application_id, "available", ""
+        )
 
     @patch("util.redhatcloud.sources.notify_application_availability")
     def test_notify_application_availability_task_with_error_success(
@@ -29,10 +34,10 @@ class NotifyApplicationAvailabilityTaskTest(TestCase):
     ):
         """Assert notify_application_availability with unavailable message success."""
         notify_application_availability_task(
-            self.application_id, "unavailable", "bad_error"
+            self.account_number, self.application_id, "unavailable", "bad_error"
         )
         mock_notify_sources.assert_called_with(
-            self.application_id, "unavailable", "bad_error"
+            self.account_number, self.application_id, "unavailable", "bad_error"
         )
 
     @patch("util.redhatcloud.sources.notify_application_availability")
@@ -42,5 +47,9 @@ class NotifyApplicationAvailabilityTaskTest(TestCase):
         """Assert notify_application_availability with available message exception."""
         mock_notify_sources.side_effect = KafkaProducerException("network error")
         with self.assertRaises(KafkaProducerException):
-            notify_application_availability_task(self.application_id, "available", "")
-        mock_notify_sources.assert_called_with(self.application_id, "available", "")
+            notify_application_availability_task(
+                self.account_number, self.application_id, "available", ""
+            )
+        mock_notify_sources.assert_called_with(
+            self.account_number, self.application_id, "available", ""
+        )

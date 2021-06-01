@@ -12,7 +12,7 @@ from util.exceptions import (
     SourcesAPINotJsonContent,
     SourcesAPINotOkStatus,
 )
-from util.redhatcloud import sources
+from util.redhatcloud import identity, sources
 
 _faker = faker.Faker()
 
@@ -31,6 +31,9 @@ class SourcesTest(TestCase):
         self.sources_kafka_topic = _faker.slug()
         self.sources_availability_event_type = _faker.slug()
         self.available_status = "available"
+        self.headers = identity.generate_http_identity_headers(
+            self.account_number, is_org_admin=True
+        )
         self.sources_kafka_config = {
             "bootstrap.servers": f"{self.listener_server}:{self.listener_port}"
         }
@@ -185,6 +188,7 @@ class SourcesTest(TestCase):
             VERBOSE_SOURCES_NOTIFICATION_LOGGING=True,
         ):
             sources.notify_application_availability(
+                self.account_number,
                 self.application_id,
                 availability_status=self.available_status,
             )
@@ -192,7 +196,10 @@ class SourcesTest(TestCase):
         kafka_producer.produce.assert_called_with(
             topic=self.sources_kafka_topic,
             value=json.dumps(self.kafka_payload),
-            headers={"event_type": self.sources_availability_event_type},
+            headers={
+                "x-rh-identity": self.headers["X-RH-IDENTITY"],
+                "event_type": self.sources_availability_event_type,
+            },
         )
         kafka_producer.flush.assert_called()
 
@@ -204,6 +211,7 @@ class SourcesTest(TestCase):
         """Test notify source application availability skips if not enabled."""
         with override_settings(SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA=False):
             sources.notify_application_availability(
+                self.account_number,
                 self.application_id,
                 availability_status=self.available_status,
             )
@@ -228,6 +236,7 @@ class SourcesTest(TestCase):
         ):
             with self.assertRaises(KafkaProducerException):
                 sources.notify_application_availability(
+                    self.account_number,
                     self.application_id,
                     availability_status=self.available_status,
                 )
@@ -235,7 +244,10 @@ class SourcesTest(TestCase):
             kafka_producer.produce.assert_called_with(
                 topic=self.sources_kafka_topic,
                 value=json.dumps(self.kafka_payload),
-                headers={"event_type": self.sources_availability_event_type},
+                headers={
+                    "x-rh-identity": self.headers["X-RH-IDENTITY"],
+                    "event_type": self.sources_availability_event_type,
+                },
             )
             kafka_producer.flush.assert_not_called()
 
@@ -258,6 +270,7 @@ class SourcesTest(TestCase):
         ):
             with self.assertRaises(KafkaProducerException):
                 sources.notify_application_availability(
+                    self.account_number,
                     self.application_id,
                     availability_status=self.available_status,
                 )
@@ -265,6 +278,9 @@ class SourcesTest(TestCase):
             kafka_producer.produce.assert_called_with(
                 topic=self.sources_kafka_topic,
                 value=json.dumps(self.kafka_payload),
-                headers={"event_type": self.sources_availability_event_type},
+                headers={
+                    "x-rh-identity": self.headers["X-RH-IDENTITY"],
+                    "event_type": self.sources_availability_event_type,
+                },
             )
             kafka_producer.flush.assert_not_called()
