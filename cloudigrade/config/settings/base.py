@@ -1,11 +1,28 @@
 """Base settings file."""
+import logging.config
+import sys
 from decimal import Decimal
 from urllib.parse import quote
 
 import environ
-import logging.config
-
 from boto3.session import Session
+
+
+def __print(*args, **kwargs):
+    """
+    Print to *both* stdout *and* stderr.
+
+    This is a horrible kludge because different OpenShift environments inconsistently
+    show and preserve stdout in the pod consoles. I hope that this is only temporary,
+    but I have no real expectation that OpenShift will resolve this inconsistency.
+
+    USE THIS FUNCTION ONLY IN THIS MODULE. DO NOT LET THIS CANCER SPREAD.
+    """
+    stdout_args = (f"stdout: {args[0] if args else ''}",) + args[1:]
+    print(*stdout_args, **kwargs)
+    stderr_args = (f"stderr: {args[0] if args else ''}",) + args[1:]
+    print(*stderr_args, file=sys.stderr, **kwargs)
+
 
 ROOT_DIR = environ.Path(__file__) - 3
 APPS_DIR = ROOT_DIR.path("cloudigrade")
@@ -14,7 +31,7 @@ env = environ.Env()
 ENV_FILE_PATH = env("ENV_FILE_PATH", default="/mnt/secret_store/.env")
 if environ.os.path.isfile(ENV_FILE_PATH):
     env.read_env(ENV_FILE_PATH)
-    print("The .env file has been loaded. See base.py for more information")
+    __print("The .env file has been loaded. See base.py for more information")
 
 # Important Security Settings
 IS_PRODUCTION = False
@@ -101,7 +118,7 @@ WATCHTOWER_SEND_INTERVAL = env.float("WATCHTOWER_SEND_INTERVAL", default=1.0)
 WATCHTOWER_MAX_BATCH_COUNT = env.int("WATCHTOWER_MAX_BATCH_COUNT", default=1000)
 
 if CLOUDIGRADE_ENABLE_CLOUDWATCH:
-    print("Configuring CloudWatch...")
+    __print("Configuring CloudWatch...")
     cw_boto3_session = Session(
         aws_access_key_id=env("CW_AWS_ACCESS_KEY_ID"),
         aws_secret_access_key=env("CW_AWS_SECRET_ACCESS_KEY"),
@@ -119,10 +136,10 @@ if CLOUDIGRADE_ENABLE_CLOUDWATCH:
         "max_batch_count": WATCHTOWER_MAX_BATCH_COUNT,
     }
     for logger_name, logger in LOGGING["loggers"].items():
-        print(f"Appending watchtower to handlers for '{logger_name}'")
+        __print(f"Appending watchtower to handlers for '{logger_name}'")
         logger["handlers"].append("watchtower")
-    print("Configured CloudWatch.")
-    print(f"LOGGING with CloudWatch is {LOGGING}")
+    __print("Configured CloudWatch.")
+    __print(f"LOGGING with CloudWatch is {LOGGING}")
 
 logging.config.dictConfig(LOGGING)
 
@@ -506,9 +523,7 @@ SOURCES_AVAILABILITY_EVENT_TYPE = env(
 )
 
 # Cache ttl settings
-CACHE_TTL_DEFAULT = env.int(
-    "CACHE_TTL_DEFAULT", default=60
-)
+CACHE_TTL_DEFAULT = env.int("CACHE_TTL_DEFAULT", default=60)
 
 CACHE_TTL_SOURCES_APPLICATION_TYPE_ID = env.int(
     "CACHE_TTL_SOURCES_APPLICATION_TYPE_ID", default=CACHE_TTL_DEFAULT
