@@ -27,6 +27,7 @@ from api.views import AccountViewSet, DailyConcurrentUsageViewSet
 from internal import filters, serializers
 from internal.authentication import (
     IdentityHeaderAuthenticationInternal,
+    IdentityHeaderAuthenticationInternalConcurrent,
     IdentityHeaderAuthenticationInternalCreateUser,
 )
 from util import exceptions as util_exceptions
@@ -524,6 +525,11 @@ class InternalDailyConcurrentUsageViewSet(DailyConcurrentUsageViewSet):
     create ConcurrentUsageCalculationTask to schedule jobs even when we raise a
     ResultsUnavailable 425 exception.
     """
+
+    def get_authenticators(self):
+        """Instantiate and return the list of authenticators that this view can use."""
+        authentication_classes = [IdentityHeaderAuthenticationInternalConcurrent]
+        return [auth() for auth in authentication_classes]
 
     def latest_start_date(self):
         """Return the latest allowed start_date."""
