@@ -92,7 +92,15 @@ LOGGING = {
     },
 }
 
-if env.bool("CLOUDIGRADE_ENABLE_CLOUDWATCH", default=False):
+CLOUDIGRADE_ENABLE_CLOUDWATCH = env.bool("CLOUDIGRADE_ENABLE_CLOUDWATCH", default=False)
+CLOUDIGRADE_CW_LEVEL = env("CLOUDIGRADE_CW_LEVEL", default="INFO")
+CLOUDIGRADE_CW_LOG_GROUP = env("CLOUDIGRADE_CW_LOG_GROUP", default=None)
+CLOUDIGRADE_CW_STREAM_NAME = env("CLOUDIGRADE_CW_STREAM_NAME", default=None)
+WATCHTOWER_USE_QUEUES = env.bool("WATCHTOWER_USE_QUEUES", default=True)
+WATCHTOWER_SEND_INTERVAL = env.float("WATCHTOWER_SEND_INTERVAL", default=1.0)
+WATCHTOWER_MAX_BATCH_COUNT = env.int("WATCHTOWER_MAX_BATCH_COUNT", default=1000)
+
+if CLOUDIGRADE_ENABLE_CLOUDWATCH:
     print("Configuring CloudWatch...")
     cw_boto3_session = Session(
         aws_access_key_id=env("CW_AWS_ACCESS_KEY_ID"),
@@ -100,15 +108,15 @@ if env.bool("CLOUDIGRADE_ENABLE_CLOUDWATCH", default=False):
         region_name=env("CW_AWS_REGION_NAME"),
     )
     LOGGING["handlers"]["watchtower"] = {
-        "level": env("CLOUDIGRADE_CW_LEVEL", default="INFO"),
+        "level": CLOUDIGRADE_CW_LEVEL,
         "class": "watchtower.CloudWatchLogHandler",
         "boto3_session": cw_boto3_session,
-        "log_group": env("CLOUDIGRADE_CW_LOG_GROUP"),
-        "stream_name": env("CLOUDIGRADE_CW_STREAM_NAME"),
+        "log_group": CLOUDIGRADE_CW_LOG_GROUP,
+        "stream_name": CLOUDIGRADE_CW_STREAM_NAME,
         "formatter": "verbose",
-        "use_queues": env.bool("WATCHTOWER_USE_QUEUES", default=True),
-        "send_interval": env.float("WATCHTOWER_SEND_INTERVAL", default=1.0),
-        "max_batch_count": env.float("WATCHTOWER_MAX_BATCH_COUNT", default=1000),
+        "use_queues": WATCHTOWER_USE_QUEUES,
+        "send_interval": WATCHTOWER_SEND_INTERVAL,
+        "max_batch_count": WATCHTOWER_MAX_BATCH_COUNT,
     }
     for logger_name, logger in LOGGING["loggers"].items():
         print(f"Appending watchtower to handlers for '{logger_name}'")
