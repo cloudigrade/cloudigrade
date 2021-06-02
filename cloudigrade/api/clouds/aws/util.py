@@ -838,6 +838,11 @@ def verify_permissions(customer_role_arn):
         cloud_account = CloudAccount.objects.get(
             aws_cloud_account__aws_account_id=aws_account_id
         )
+        # Get the username immediately from the related user in case the user is deleted
+        # while we are verifying access and configuring cloudtrail; we'll need it later
+        # in order to notify sources of our error.
+        username = cloud_account.user.username
+
         session = aws.get_session(arn_str)
         access_verified, failed_actions = aws.verify_account_access(session)
         if access_verified:
@@ -850,9 +855,7 @@ def verify_permissions(customer_role_arn):
                     {"action": action, "arn": arn_str},
                 )
             error_code = error_codes.CG3000  # TODO Consider a new error code?
-            error_code.notify(
-                cloud_account.user.username, cloud_account.platform_application_id
-            )
+            error_code.notify(username, cloud_account.platform_application_id)
     except CloudAccount.DoesNotExist:
         # Failure to get CloudAccount means it was removed before this function started.
         logger.warning(
@@ -881,17 +884,13 @@ def verify_permissions(customer_role_arn):
         error_code.log_internal_message(
             logger, {"cloud_account_id": cloud_account.id, "exception": error}
         )
-        error_code.notify(
-            cloud_account.user.username, cloud_account.platform_application_id
-        )
+        error_code.notify(username, cloud_account.platform_application_id)
     except MaximumNumberOfTrailsExceededException as error:
         error_code = error_codes.CG3001
         error_code.log_internal_message(
             logger, {"cloud_account_id": cloud_account.id, "exception": error}
         )
-        error_code.notify(
-            cloud_account.user.username, cloud_account.platform_application_id
-        )
+        error_code.notify(username, cloud_account.platform_application_id)
     except Exception as error:
         # It's unclear what could cause any other kind of exception to be raised here,
         # but we must handle anything, log/alert ourselves, and notify sources.
@@ -899,9 +898,7 @@ def verify_permissions(customer_role_arn):
             "Unexpected exception in verify_permissions: %(error)s", {"error": error}
         )
         error_code = error_codes.CG3000  # TODO Consider a new error code?
-        error_code.notify(
-            cloud_account.user.username, cloud_account.platform_application_id
-        )
+        error_code.notify(username, cloud_account.platform_application_id)
 
     return access_verified and cloudtrail_setup_complete
 
