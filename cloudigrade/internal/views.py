@@ -27,7 +27,7 @@ from api.views import AccountViewSet, DailyConcurrentUsageViewSet
 from internal import filters, serializers
 from internal.authentication import (
     IdentityHeaderAuthenticationInternal,
-    IdentityHeaderAuthenticationInternalConcurrent,
+    IdentityHeaderAuthenticationInternalAllowFakeIdentityHeader,
     IdentityHeaderAuthenticationInternalCreateUser,
 )
 from util import exceptions as util_exceptions
@@ -528,7 +528,9 @@ class InternalDailyConcurrentUsageViewSet(DailyConcurrentUsageViewSet):
 
     def get_authenticators(self):
         """Instantiate and return the list of authenticators that this view can use."""
-        authentication_classes = [IdentityHeaderAuthenticationInternalConcurrent]
+        authentication_classes = [
+            IdentityHeaderAuthenticationInternalAllowFakeIdentityHeader
+        ]
         return [auth() for auth in authentication_classes]
 
     def latest_start_date(self):

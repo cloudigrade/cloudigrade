@@ -6,7 +6,6 @@ import logging
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import transaction
-from django.forms import BooleanField
 from django.utils.translation import gettext as _
 from rest_framework import HTTP_HEADER_ENCODING
 from rest_framework.authentication import BaseAuthentication, exceptions
@@ -14,7 +13,7 @@ from rest_framework.authentication import BaseAuthentication, exceptions
 logger = logging.getLogger(__name__)
 
 
-def parse_requests_header(request):
+def parse_requests_header(self, request):
     """
     Get relevant information from the given request's identity header.
 
@@ -33,6 +32,10 @@ def parse_requests_header(request):
     )
 
     auth_header = request.META.get(settings.INSIGHTS_IDENTITY_HEADER, None)
+    if self.allow_internal_fake_identity_header:
+        auth_header = request.META.get(
+            settings.INSIGHTS_INTERNAL_FAKE_IDENTITY_HEADER, auth_header
+        )
 
     # Can't authenticate if there isn't a header
     if not auth_header:
@@ -96,8 +99,7 @@ class IdentityHeaderAuthentication(BaseAuthentication):
     require_account_number = True
     require_user = True
     create_user = False
-    support_account_number_header = False
-    support_org_admin_header = False
+    allow_internal_fake_identity_header = False
 
     def assert_account_number(self, account_number):
         """Assert account_number is set if required."""
@@ -176,23 +178,7 @@ class IdentityHeaderAuthentication(BaseAuthentication):
 
     def authenticate(self, request):
         """Authenticate the request using the identity header."""
-        auth_header, account_number, is_org_admin = parse_requests_header(request)
-
-        if self.support_account_number_header:
-            account_number_header = request.META.get(
-                settings.INSIGHTS_IDENTITY_ACCOUNT_HEADER, None
-            )
-            if account_number_header:
-                account_number = account_number_header
-                logger.info(_("Using account_number '%s' from header"), account_number)
-
-        if self.support_org_admin_header:
-            org_admin_header = request.META.get(
-                settings.INSIGHTS_IDENTITY_ORG_ADMIN_HEADER, None
-            )
-            if org_admin_header:
-                is_org_admin = BooleanField().to_python(org_admin_header)
-                logger.info(_("Using is_org_admin '%s' from header"), is_org_admin)
+        auth_header, account_number, is_org_admin = parse_requests_header(self, request)
 
         # Can't authenticate if there isn't a header
         if not auth_header:

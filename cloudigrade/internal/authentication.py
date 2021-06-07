@@ -37,7 +37,9 @@ class IdentityHeaderAuthenticationInternalCreateUser(IdentityHeaderAuthenticatio
     create_user = True
 
 
-class IdentityHeaderAuthenticationInternalConcurrent(IdentityHeaderAuthentication):
+class IdentityHeaderAuthenticationInternalAllowFakeIdentityHeader(
+    IdentityHeaderAuthentication
+):
     """
     Authentication class that uses identity header to query/trigger concurrent reports.
 
@@ -49,5 +51,4 @@ class IdentityHeaderAuthenticationInternalConcurrent(IdentityHeaderAuthenticatio
     require_account_number = True
     require_user = True
     create_user = False
-    support_account_number_header = True
-    support_org_admin_header = True
+    allow_internal_fake_identity_header = True
