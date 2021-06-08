@@ -13,6 +13,7 @@ from util.exceptions import (
     SourcesAPINotOkStatus,
 )
 from util.redhatcloud import identity, sources
+from util.redhatcloud.sources import _check_response
 
 _faker = faker.Faker()
 
@@ -200,6 +201,7 @@ class SourcesTest(TestCase):
                 "x-rh-identity": self.headers["X-RH-IDENTITY"],
                 "event_type": self.sources_availability_event_type,
             },
+            callback=_check_response,
         )
         kafka_producer.flush.assert_called()
 
@@ -248,6 +250,7 @@ class SourcesTest(TestCase):
                     "x-rh-identity": self.headers["X-RH-IDENTITY"],
                     "event_type": self.sources_availability_event_type,
                 },
+                callback=_check_response,
             )
             kafka_producer.flush.assert_not_called()
 
@@ -282,5 +285,39 @@ class SourcesTest(TestCase):
                     "x-rh-identity": self.headers["X-RH-IDENTITY"],
                     "event_type": self.sources_availability_event_type,
                 },
+                callback=_check_response,
             )
             kafka_producer.flush.assert_not_called()
+
+    def test_check_response_success(self):
+        """Assert _check_response logs a debug message on success."""
+        with self.assertLogs("util.redhatcloud.sources", level="DEBUG") as logs:
+            error = None
+            message = "Successful message."
+            _check_response(error, message)
+
+        self.assertIn("DEBUG", logs.output[0])
+        self.assertIn(message, logs.output[0])
+
+    def test_check_response_success_verbose(self):
+        """Assert _check_response logs an info message on success when verbose."""
+        with self.settings(VERBOSE_SOURCES_NOTIFICATION_LOGGING=True):
+            with self.assertLogs("util.redhatcloud.sources", level="INFO") as logs:
+                error = None
+                message = "Successful message."
+                _check_response(error, message)
+
+        self.assertIn("INFO", logs.output[0])
+        self.assertIn(message, logs.output[0])
+
+    def test_check_response_error(self):
+        """Assert _check_response logs an error message when encountering one."""
+        with self.assertLogs("util.redhatcloud.sources", level="ERROR") as logs:
+            error = "An error."
+            message = "A message."
+            fail_message = "Failed to deliver message"
+            _check_response(error, message)
+
+        self.assertIn("ERROR", logs.output[0])
+        self.assertIn(error, logs.output[0])
+        self.assertIn(fail_message, logs.output[0])

@@ -280,6 +280,7 @@ def notify_application_availability(
             topic=message_topic,
             value=message_value,
             headers=message_headers,
+            callback=_check_response,
         )
         if settings.VERBOSE_SOURCES_NOTIFICATION_LOGGING:
             logger.info(_("KafkaProducer produced!"))
@@ -296,3 +297,19 @@ def notify_application_availability(
         message = f"KafkaException: {exception.args[0].str()}"
         logger.exception(exception)
         raise KafkaProducerException(message)
+
+
+def _check_response(error, message):
+    """Verify that the message was delivered without an error."""
+    if error is not None:
+        logger.error(
+            _("Failed to deliver message: %(message)s due to: %(error)s"),
+            {"message": message, "error": error},
+        )
+    else:
+        log_msg = _("Successfully delivered message: %(message)s"), {"message": message}
+
+        if settings.VERBOSE_SOURCES_NOTIFICATION_LOGGING:
+            logger.info(*log_msg)
+        else:
+            logger.debug(*log_msg)
