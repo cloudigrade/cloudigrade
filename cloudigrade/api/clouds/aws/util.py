@@ -870,6 +870,7 @@ def verify_permissions(customer_role_arn):
         if client_error_code not in (
             "AccessDenied",
             "AccessDeniedException",
+            "AuthFailure",
             "UnrecognizedClientException",
         ):
             # We only expect to get those three types of errors, all of which basically
@@ -1264,6 +1265,7 @@ def delete_cloudtrail(aws_cloud_account):
         elif error_code in (
             "AccessDenied",
             "AccessDeniedException",
+            "AuthFailure",
             "UnrecognizedClientException",
         ):
             # We may get AccessDenied if the user deletes the AWS account or role.
