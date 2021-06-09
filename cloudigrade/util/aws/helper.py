@@ -21,6 +21,13 @@ DRYRUN_SNAPSHOT_ID = "snap-0f423c31dd96866b2"
 DRYRUN_IMAGE_ID = "ami-0f94fa2a144c74cf1"
 DRYRUN_IMAGE_REGION = "us-east-1"
 
+COMMON_AWS_ACCESS_DENIED_ERROR_CODES = (
+    "AccessDenied",
+    "AccessDeniedException",
+    "AuthFailure",
+    "UnauthorizedOperation",
+)
+
 
 def get_regions(session, service_name="ec2"):
     """
@@ -206,12 +213,7 @@ def rewrap_aws_errors(original_function):
             response_error = getattr(e, "response", {}).get("Error", {})
             error_code = response_error.get("Code")
 
-            if error_code in (
-                "AccessDenied",
-                "AccessDeniedException",
-                "AuthFailure",
-                "UnauthorizedOperation",
-            ):
+            if error_code in COMMON_AWS_ACCESS_DENIED_ERROR_CODES:
                 # If we failed due to missing AWS permissions, return quietly for now.
                 # This only typically happens if a user has changed their Role or Policy
                 # after initial setup in a way that is incompatible with our needs, but
