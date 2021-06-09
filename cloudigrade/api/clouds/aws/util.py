@@ -867,13 +867,8 @@ def verify_permissions(customer_role_arn):
     except ClientError as error:
         # Generally only raised when we don't have access to the AWS account.
         client_error_code = error.response.get("Error", {}).get("Code")
-        if client_error_code not in (
-            "AccessDenied",
-            "AccessDeniedException",
-            "AuthFailure",
-            "UnrecognizedClientException",
-        ):
-            # We only expect to get those three types of errors, all of which basically
+        if client_error_code not in aws.COMMON_AWS_ACCESS_DENIED_ERROR_CODES:
+            # We only expect to get those types of access errors, all of which basically
             # mean the permissions were removed by the time we made a call the AWS.
             # If we get any *other* kind of error, we need to alert ourselves about it!
             logger.error(
@@ -1262,12 +1257,7 @@ def delete_cloudtrail(aws_cloud_account):
         if error_code == "TrailNotFoundException":
             # If a cloudtrail does not exist, then we have nothing to do here!
             return True
-        elif error_code in (
-            "AccessDenied",
-            "AccessDeniedException",
-            "AuthFailure",
-            "UnrecognizedClientException",
-        ):
+        elif error_code in aws.COMMON_AWS_ACCESS_DENIED_ERROR_CODES:
             # We may get AccessDenied if the user deletes the AWS account or role.
             # We may get AccessDeniedException if the role or policy is broken.
             # These could result in an orphaned cloudtrail writing to our s3 bucket.
