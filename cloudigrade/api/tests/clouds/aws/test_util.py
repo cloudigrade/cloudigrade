@@ -259,6 +259,32 @@ class CloudsAwsUtilVerifyPermissionsTest(TestCase):
         self.assertFalse(verified)
         mock_notify_sources.delay.assert_called()
 
+    def test_verify_permissions_fails_if_mystery_aws_error(self):
+        """Test handling some other error from AWS when trying to get a session."""
+        error_code = _faker.slug()
+        client_error = ClientError(
+            error_response={"Error": {"Code": error_code}},
+            operation_name=Mock(),
+        )
+        with self.assertLogs(
+            "api.clouds.aws.util", level="ERROR"
+        ) as logger, patch.object(util.aws, "get_session") as mock_get_session, patch(
+            "api.tasks.notify_application_availability_task"
+        ) as mock_notify_sources:
+            mock_get_session.side_effect = client_error
+            verified = util.verify_permissions(self.arn)
+
+        self.assertFalse(verified)
+        mock_notify_sources.delay.assert_called()
+
+        expected_logger_error = (
+            f"Unexpected AWS ClientError '{error_code}' in verify_permissions."
+        )
+        found_logger_output = [
+            output for output in logger.output if expected_logger_error in output
+        ]
+        self.assertTrue(found_logger_output)
+
     def test_verify_permissions_fails_if_verify_account_access_fails(self):
         """Test handling when aws.verify_account_access does not succeed."""
         with patch.object(util.aws, "get_session"), patch.object(
