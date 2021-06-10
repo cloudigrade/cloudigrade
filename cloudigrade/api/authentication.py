@@ -13,7 +13,7 @@ from rest_framework.authentication import BaseAuthentication, exceptions
 logger = logging.getLogger(__name__)
 
 
-def parse_requests_header(request):
+def parse_requests_header(request, allow_internal_fake_identity_header=False):
     """
     Get relevant information from the given request's identity header.
 
@@ -32,6 +32,10 @@ def parse_requests_header(request):
     )
 
     auth_header = request.META.get(settings.INSIGHTS_IDENTITY_HEADER, None)
+    if allow_internal_fake_identity_header:
+        auth_header = request.META.get(
+            settings.INSIGHTS_INTERNAL_FAKE_IDENTITY_HEADER, auth_header
+        )
 
     # Can't authenticate if there isn't a header
     if not auth_header:
@@ -95,6 +99,7 @@ class IdentityHeaderAuthentication(BaseAuthentication):
     require_account_number = True
     require_user = True
     create_user = False
+    allow_internal_fake_identity_header = False
 
     def assert_account_number(self, account_number):
         """Assert account_number is set if required."""
@@ -173,7 +178,9 @@ class IdentityHeaderAuthentication(BaseAuthentication):
 
     def authenticate(self, request):
         """Authenticate the request using the identity header."""
-        auth_header, account_number, is_org_admin = parse_requests_header(request)
+        auth_header, account_number, is_org_admin = parse_requests_header(
+            request, self.allow_internal_fake_identity_header
+        )
 
         # Can't authenticate if there isn't a header
         if not auth_header:

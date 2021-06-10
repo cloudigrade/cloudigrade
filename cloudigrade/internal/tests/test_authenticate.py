@@ -5,9 +5,11 @@ import faker
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.test import TestCase
+from rest_framework.authentication import exceptions
 
 from internal.authentication import (
     IdentityHeaderAuthenticationInternal,
+    IdentityHeaderAuthenticationInternalAllowFakeIdentityHeader,
     IdentityHeaderAuthenticationInternalCreateUser,
 )
 from util.tests import helper as util_helper
@@ -95,3 +97,98 @@ class IdentityHeaderAuthenticationInternalCreateUserTestCase(TestCase):
         user, auth = self.auth_class.authenticate(request)
         self.assertEqual(user.username, self.account_number_not_found)
         self.assertEqual(user, User.objects.get(username=self.account_number_not_found))
+
+
+class IdentityHeaderAuthenticationInternalConcurrentCase(TestCase):
+    """
+    Test that an associate Internal header authentication works as expected.
+
+    When a request for a v2 endpoint comes in, internal API calls may come in
+    with an HTTP_X_RH_IDENTITY representing an associate that would not include
+    the account number or is_org_admin flag. These tests verify the expected
+    behaviors as well as handling the optional HTTP_X_RH_IDENTITY_ACCOUNT
+    and HTTP_X_RH_IDENTITY_ORG_ADMIN headers.
+    """
+
+    def setUp(self):
+        """Set up data for tests."""
+        self.account_number = str(_faker.pyint())
+        self.account_number_not_found = str(_faker.pyint())
+        self.user = util_helper.generate_test_user(self.account_number)
+        self.internal_rh_header = util_helper.get_internal_identity_auth_header()
+        self.auth_class = IdentityHeaderAuthenticationInternalAllowFakeIdentityHeader()
+
+    def test_authenticate(self):
+        """Test that authentication with just the default internal header fails."""
+        request = Mock()
+        request.META = {settings.INSIGHTS_IDENTITY_HEADER: self.internal_rh_header}
+        with self.assertRaises(exceptions.AuthenticationFailed) as e:
+            self.auth_class.authenticate(request)
+        self.assertIn(
+            "identity account number is required but was not present in request.",
+            str(e.exception),
+        )
+
+    def test_authenticate_with_valid_account_number_and_not_org_admin_fake_header(self):
+        """Test authentication with valid account_number and without org admin fails."""
+        request = Mock()
+        fake_header = util_helper.get_identity_auth_header(
+            account_number=self.account_number,
+            is_org_admin=False,
+        )
+        request.META = {
+            settings.INSIGHTS_IDENTITY_HEADER: self.internal_rh_header,
+            settings.INSIGHTS_INTERNAL_FAKE_IDENTITY_HEADER: fake_header,
+        }
+        with self.assertRaises(exceptions.PermissionDenied) as e:
+            self.auth_class.authenticate(request)
+        self.assertIn("User must be an org admin.", str(e.exception))
+
+    def test_authenticate_with_invalid_account_number_and_org_admin_fake_header(self):
+        """Test authentication with invalid account_number and org admin fails."""
+        request = Mock()
+        fake_header = util_helper.get_identity_auth_header(
+            account_number=str(_faker.pyint()),
+            is_org_admin=True,
+        )
+        request.META = {
+            settings.INSIGHTS_IDENTITY_HEADER: self.internal_rh_header,
+            settings.INSIGHTS_INTERNAL_FAKE_IDENTITY_HEADER: fake_header,
+        }
+        with self.assertRaises(exceptions.AuthenticationFailed) as e:
+            self.auth_class.authenticate(request)
+        self.assertIn("Incorrect authentication credentials.", str(e.exception))
+
+    def test_authenticate_with_invalid_account_number_and_not_org_admin_fake_header(
+        self,
+    ):
+        """Test authentication with invalid account_number and org admin fails."""
+        request = Mock()
+        fake_header = util_helper.get_identity_auth_header(
+            account_number=str(_faker.pyint()),
+            is_org_admin=False,
+        )
+        request.META = {
+            settings.INSIGHTS_IDENTITY_HEADER: self.internal_rh_header,
+            settings.INSIGHTS_INTERNAL_FAKE_IDENTITY_HEADER: fake_header,
+        }
+        with self.assertRaises(exceptions.PermissionDenied) as e:
+            self.auth_class.authenticate(request)
+        self.assertIn("User must be an org admin.", str(e.exception))
+
+    def test_authenticate_with_valid_account_number_and_org_admin_headers(self):
+        """Test authentication with valid account_number and org admin succeeds."""
+        request = Mock()
+        fake_header = util_helper.get_identity_auth_header(
+            account_number=self.account_number,
+            is_org_admin=True,
+        )
+        request.META = {
+            settings.INSIGHTS_IDENTITY_HEADER: self.internal_rh_header,
+            settings.INSIGHTS_INTERNAL_FAKE_IDENTITY_HEADER: fake_header,
+        }
+
+        user, auth = self.auth_class.authenticate(request)
+
+        self.assertTrue(auth)
+        self.assertEqual(self.account_number, user.username)

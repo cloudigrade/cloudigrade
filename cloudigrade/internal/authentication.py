@@ -35,3 +35,20 @@ class IdentityHeaderAuthenticationInternalCreateUser(IdentityHeaderAuthenticatio
     require_account_number = True
     require_user = False
     create_user = True
+
+
+class IdentityHeaderAuthenticationInternalAllowFakeIdentityHeader(
+    IdentityHeaderAuthentication
+):
+    """
+    Authentication class that uses identity header to query/trigger concurrent reports.
+
+    This authentication checks for the identity header and requires the identity
+    to have org_admin enabled.
+    """
+
+    require_org_admin = True
+    require_account_number = True
+    require_user = True
+    create_user = False
+    allow_internal_fake_identity_header = True

@@ -287,6 +287,14 @@ RH_IDENTITY_ORG_ADMIN = {
 }
 RH_IDENTITY_NOT_ORG_ADMIN = {"identity": {"account_number": "1337"}}
 
+INTERNAL_RH_IDENTITY = {
+    "identity": {
+        "type": "Associate",
+        "auth_type": "saml-auth",
+        "associate": {"givenName": "John", "surname": "Doe"},
+    }
+}
+
 
 def generate_dummy_aws_account_id():
     """Generate a dummy AWS AwsAccount ID for testing purposes."""
@@ -871,6 +879,18 @@ def get_identity_auth_header(account_number="1337", is_org_admin=True):
         RH_IDENTITY_ORG_ADMIN if is_org_admin else RH_IDENTITY_NOT_ORG_ADMIN
     )
     header["identity"]["account_number"] = account_number
+    return base64.b64encode(json.dumps(header).encode("utf-8"))
+
+
+def get_internal_identity_auth_header():
+    """
+    Get an example internal SSO associate identity auth header.
+
+    Returns:
+        str: base64 encoded identity header
+
+    """
+    header = copy.deepcopy(INTERNAL_RH_IDENTITY)
     return base64.b64encode(json.dumps(header).encode("utf-8"))
 
 
