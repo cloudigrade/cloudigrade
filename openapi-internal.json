@@ -7112,11 +7112,18 @@
           "maximum_counts": {
             "type": "string",
             "readOnly": true
+          },
+          "potentially_related_runs": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
           }
         },
         "required": [
           "date",
-          "user"
+          "user",
+          "potentially_related_runs"
         ]
       },
       "InternalConcurrentUsageCalculationTask": {
