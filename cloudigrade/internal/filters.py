@@ -44,6 +44,24 @@ class InternalInstanceFilterSet(django_filters.FilterSet):
         }
 
 
+class InternalInstanceEventFilterSet(django_filters.FilterSet):
+    """FilterSet for limiting InstanceEvents for the internal API."""
+
+    username = django_filters.CharFilter(
+        field_name="instance__cloud_account__user__username"
+    )
+
+    class Meta:
+        model = models.InstanceEvent
+        fields = {
+            "event_type": ["exact"],
+            "instance": ["exact"],
+            "object_id": ["exact"],
+            "created_at": ["lt", "exact", "gt"],
+            "updated_at": ["lt", "exact", "gt"],
+        }
+
+
 class InternalRunFilterSet(django_filters.FilterSet):
     """FilterSet for limiting Runs for the internal API."""
 

@@ -1910,6 +1910,15 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "username",
+            "required": false,
+            "in": "query",
+            "description": "username",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -2071,6 +2080,15 @@
             "required": false,
             "in": "query",
             "description": "updated_at__gt",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "username",
+            "required": false,
+            "in": "query",
+            "description": "username",
             "schema": {
               "type": "string"
             }
