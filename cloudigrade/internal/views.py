@@ -284,13 +284,7 @@ class InternalInstanceEventViewSet(InternalViewSetMixin, viewsets.ReadOnlyModelV
 
     queryset = models.InstanceEvent.objects.all()
     serializer_class = serializers.InternalInstanceEventSerializer
-    filterset_fields = {
-        "event_type": ["exact"],
-        "instance": ["exact"],
-        "object_id": ["exact"],
-        "created_at": ["lt", "exact", "gt"],
-        "updated_at": ["lt", "exact", "gt"],
-    }
+    filterset_class = filters.InternalInstanceEventFilterSet
 
 
 class InternalMachineImageViewSet(InternalViewSetMixin, viewsets.ReadOnlyModelViewSet):
