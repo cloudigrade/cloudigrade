@@ -1,5 +1,6 @@
 """DRF serializers for the cloudigrade internal API."""
 from django.contrib.auth.models import User
+from rest_framework.fields import BooleanField
 from rest_framework.serializers import ModelSerializer
 
 
@@ -88,7 +89,33 @@ class InternalConcurrentUsageSerializer(ModelSerializer):
             "date",
             "user",
             "maximum_counts",
+            "potentially_related_runs",
         )
+
+    def __init__(self, *args, **kwargs):
+        """
+        Initialize the serializer with extra field filtering logic.
+
+        If the incoming request is a GET with a True-like value in "include_runs",
+        then include the detailed "potentially_related_runs" field. Else, drop it.
+        """
+        super().__init__(*args, **kwargs)
+
+        try:
+            request = self.context["request"]
+            method = request.method
+        except (AttributeError, TypeError, KeyError):
+            # The serializer was not initialized with request context.
+            return
+
+        if method != "GET":
+            return
+
+        query_params = request.query_params
+        include_runs = query_params.get("include_runs", default=False)
+        include_runs = BooleanField().to_internal_value(include_runs)
+        if not include_runs:
+            self.fields.pop("potentially_related_runs")
 
 
 class InternalConcurrentUsageCalculationTaskSerializer(ModelSerializer):
