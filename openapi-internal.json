@@ -1919,6 +1919,15 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "cloud_account",
+            "required": false,
+            "in": "query",
+            "description": "cloud_account",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -2089,6 +2098,15 @@
             "required": false,
             "in": "query",
             "description": "username",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cloud_account",
+            "required": false,
+            "in": "query",
+            "description": "cloud_account",
             "schema": {
               "type": "string"
             }
@@ -2610,6 +2628,15 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "cloud_account",
+            "required": false,
+            "in": "query",
+            "description": "cloud_account",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -2847,6 +2874,15 @@
             "required": false,
             "in": "query",
             "description": "username",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cloud_account",
+            "required": false,
+            "in": "query",
+            "description": "cloud_account",
             "schema": {
               "type": "string"
             }

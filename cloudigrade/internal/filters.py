@@ -50,6 +50,7 @@ class InternalInstanceEventFilterSet(django_filters.FilterSet):
     username = django_filters.CharFilter(
         field_name="instance__cloud_account__user__username"
     )
+    cloud_account = django_filters.NumberFilter(field_name="instance__cloud_account")
 
     class Meta:
         model = models.InstanceEvent
@@ -68,6 +69,7 @@ class InternalRunFilterSet(django_filters.FilterSet):
     username = django_filters.CharFilter(
         field_name="instance__cloud_account__user__username"
     )
+    cloud_account = django_filters.NumberFilter(field_name="instance__cloud_account")
 
     class Meta:
         model = models.Run
