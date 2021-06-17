@@ -1,9 +1,10 @@
 """Collection of tests for aws.tasks.cloudtrail.analyze_log."""
 import json
 from datetime import timedelta
-from unittest.mock import call, patch
+from unittest.mock import MagicMock, Mock, call, patch
 
 import faker
+from botocore.exceptions import ClientError
 from django.conf import settings
 from django.test import TestCase
 
@@ -930,6 +931,72 @@ class AnalyzeLogTest(TestCase):
         self.assertEqual(len(failures), 1)
 
         mock_del.assert_not_called()
+
+    @patch("api.clouds.aws.tasks.cloudtrail.aws.delete_messages_from_queue")
+    @patch("api.clouds.aws.tasks.cloudtrail._process_cloudtrail_message")
+    @patch("api.clouds.aws.tasks.cloudtrail.aws.yield_messages_from_queue")
+    def test_analyze_log_client_error_access_denied_logs_warning(
+        self, mock_yield, mock_process, mock_del
+    ):
+        """Test that access denied ClientError is logged appropriately as WARNING."""
+        client_error = ClientError(
+            error_response={"Error": {"Code": "AccessDenied"}},
+            operation_name=Mock(),
+        )
+        messages = [MagicMock()]
+        mock_yield.return_value = messages
+        mock_process.side_effect = client_error
+
+        with self.assertLogs(
+            "api.clouds.aws.tasks.cloudtrail", level="WARNING"
+        ) as logging_watcher:
+            successes, failures = tasks.analyze_log()
+        self.assertEqual(len(successes), 0)
+        self.assertEqual(failures, messages)
+        mock_del.assert_not_called()
+
+        self.assertIn(
+            "Unexpected AWS AccessDenied in analyze_log",
+            logging_watcher.records[0].message,
+        )
+        self.assertEqual(logging_watcher.records[0].levelname, "WARNING")
+        self.assertIn(
+            "Failed to process message id", logging_watcher.records[1].message
+        )
+        self.assertEqual(logging_watcher.records[1].levelname, "WARNING")
+
+    @patch("api.clouds.aws.tasks.cloudtrail.aws.delete_messages_from_queue")
+    @patch("api.clouds.aws.tasks.cloudtrail._process_cloudtrail_message")
+    @patch("api.clouds.aws.tasks.cloudtrail.aws.yield_messages_from_queue")
+    def test_analyze_log_client_error_not_access_denied_logs_error(
+        self, mock_yield, mock_process, mock_del
+    ):
+        """Test that other ClientError is logged appropriately as ERROR."""
+        client_error = ClientError(
+            error_response={"Error": {"Code": "SomethingOtherThanAccessDenied"}},
+            operation_name=Mock(),
+        )
+        messages = [MagicMock()]
+        mock_yield.return_value = messages
+        mock_process.side_effect = client_error
+
+        with self.assertLogs(
+            "api.clouds.aws.tasks.cloudtrail", level="WARNING"
+        ) as logging_watcher:
+            successes, failures = tasks.analyze_log()
+        self.assertEqual(len(successes), 0)
+        self.assertEqual(failures, messages)
+        mock_del.assert_not_called()
+
+        self.assertIn(
+            "Unexpected AWS SomethingOtherThanAccessDenied in analyze_log",
+            logging_watcher.records[0].message,
+        )
+        self.assertEqual(logging_watcher.records[0].levelname, "ERROR")
+        self.assertIn(
+            "Failed to process message id", logging_watcher.records[1].message
+        )
+        self.assertEqual(logging_watcher.records[1].levelname, "ERROR")
 
     @patch("api.clouds.aws.tasks.cloudtrail.aws.delete_messages_from_queue")
     @patch("api.clouds.aws.tasks.cloudtrail.aws.get_object_content_from_s3")

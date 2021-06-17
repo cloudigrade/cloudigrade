@@ -4,6 +4,7 @@ import json
 import logging
 from decimal import Decimal
 
+from botocore.exceptions import ClientError
 from celery import shared_task
 from dateutil.parser import parse
 from django.conf import settings
@@ -44,8 +45,32 @@ def analyze_log():
     successes, failures = [], []
     for message in aws.yield_messages_from_queue(queue_url):
         success = False
+        log_failure_as_warning = False
         try:
             success = _process_cloudtrail_message(message)
+        except ClientError as e:
+            # Log the full original exception to help us diagnose problems later.
+            logger.info(e, exc_info=True)
+
+            # Carefully dissect the object to avoid AttributeError and KeyError.
+            response_error = getattr(e, "response", {}).get("Error", {})
+            error_code = response_error.get("Code")
+            error_message = response_error.get("Message")
+            log_message, log_args = _(
+                "Unexpected AWS %(code)s in analyze_log: %(message)s"
+            ), {
+                "code": error_code,
+                "message": error_message,
+            }
+
+            if error_code in aws.COMMON_AWS_ACCESS_DENIED_ERROR_CODES:
+                # If we failed due to missing AWS permissions, skip it for now.
+                # Future jobs will reprocess the message, and if permissions remain
+                # missing, AWS SQS should eventually move it to the DLQ.
+                log_failure_as_warning = True
+                logger.warning(log_message, log_args)
+            else:
+                logger.error(log_message, log_args)
         except Exception as e:
             logger.exception(_("Unexpected error in log processing: %s"), e)
         if success:
@@ -56,10 +81,13 @@ def analyze_log():
             aws.delete_messages_from_queue(queue_url, [message])
             successes.append(message)
         else:
-            logger.error(
-                _("Failed to process message id %s; leaving on queue."),
-                message.message_id,
-            )
+            log_message, log_args = _(
+                "Failed to process message id %(message_id)s; leaving on queue."
+            ), {"message_id": message.message_id}
+            if log_failure_as_warning:
+                logger.warning(log_message, log_args)
+            else:
+                logger.error(log_message, log_args)
             logger.debug(_("Failed message body is: %s"), message.body)
             failures.append(message)
     return successes, failures
