@@ -55,6 +55,12 @@ SECRET_KEY = env("DJANGO_SECRET_KEY", default="base")
 DEBUG = env.bool("DJANGO_DEBUG", default=False)
 ALLOWED_HOSTS = env("DJANGO_ALLOWED_HOSTS", default=["*"])
 
+# Azure Settings
+AZURE_CLIENT_ID = env("AZURE_CLIENT_ID", default="azure-client-id")
+AZURE_CLIENT_SECRET = env("AZURE_CLIENT_SECRET", default="very-secret-much-secure")
+AZURE_SUBSCRIPTION_ID = env("AZURE_SUBSCRIPTION_ID", default="azure-subscription-id")
+AZURE_TENANT_ID = env("AZURE_TENANT_ID", default="azure-tenant-id")
+
 # Default apps go here
 DJANGO_APPS = [
     "django.contrib.admin",
