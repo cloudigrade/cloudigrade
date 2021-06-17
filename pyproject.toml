@@ -36,6 +36,8 @@ django-prometheus = "~=2.1.0"
 django-filter = "~=2.4.0"
 prometheus_client = "~=0.10.1"
 django-cache-memoize = "~=0.1.9"
+azure-mgmt-compute = "^21.0.0"
+azure-identity = "^1.6.0"
 
 [tool.poetry.dev-dependencies]
 seqdiag = "*"
