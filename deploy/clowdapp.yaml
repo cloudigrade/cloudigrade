@@ -1,0 +1,114 @@
+---
+apiVersion: v1
+kind: Template
+metadata:
+  name: cloudigrade
+objects:
+- apiVersion: v1
+  kind: Secret # For ephemeral/local environment
+  metadata:
+    name: cloudigrade-secrets
+    labels:
+      app: cloudigrade
+  stringData:
+    encryption-key: "${ENCRYPTION_KEY}"
+    secret-key: "${SECRET_KEY}"
+- apiVersion: cloud.redhat.com/v1alpha1
+  kind: ClowdApp
+  metadata:
+    name: cloudigrade
+  spec:
+    envName: ${ENV_NAME}
+    deployments:
+    - name: api
+      minReplicas: ${{MIN_REPLICAS}}
+      webServices:
+        public:
+          enabled: true # port 8000 is the default in CloudEnvironment
+      podSpec:
+        image: ${IMAGE}:${IMAGE_TAG}
+        env:
+        - name: APP_NAME
+          value: ${APP_NAME}
+        - name: ENCRYPTION_KEY
+          valueFrom:
+            secretKeyRef:
+              name: cloudigrade-secrets
+              key: encryption-key
+        - name: SECRET_KEY_BASE
+          valueFrom:
+            secretKeyRef:
+              name: cloudigrade-secrets
+              key: secret-key
+        livenessProbe:
+          exec:
+            command:
+              - /bin/sh
+              - -c
+              - 'ps axo command | grep -v grep | grep gunicorn'
+          failureThreshold: 3
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /internal/healthz/
+            port: 8000
+            scheme: HTTP
+            httpHeaders:
+              - name: Host
+                value: ${HEALTH_CHECK_HOST_HEADER}
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        resources:
+          limits:
+            cpu: 200m
+            memory: 1Gi
+          requests:
+            cpu: 100m
+            memory: 500Mi
+    kafkaTopics:
+    - topicName: platform.sources.event-stream
+    - topicName: platform.sources.status
+    database:
+      name: cloudigrade 
+parameters:
+- name: APP_NAME
+  displayName: Application Name
+  description: Application name to be used in request paths. Only used when PATH_PREFIX is also specified.
+  value: cloudigrade
+- name: CLOWDER_ENABLED
+  description: Determines Clowder deployment
+  value: "True"
+- name: ENCRYPTION_KEY
+  displayName: Encryption Key (Ephemeral)
+  required: true
+  description: Encryption Key for Passwords
+  from: "[a-zA-Z0-9]{43}"
+  generate: expression
+- name: ENV_NAME
+  description: ClowdEnv Name
+  required: true
+- displayName: Health Check Host Header
+  name: HEALTH_CHECK_HOST_HEADER
+  required: true
+  value: health.cloudigrade.insights.openshiftapps.com
+- name: IMAGE
+  displayName: Image
+  description: Image name
+  value: quay.io/cloudservices/cloudigrade
+- name: IMAGE_TAG
+  value: latest
+- name: MIN_REPLICAS
+  description: The number of replicas to use in the deployment
+  value: "1"
+- name: SECRET_KEY
+  displayName: Secret Key (Ephemeral)
+  required: true
+  description: SECRET_KEY_BASE
+  from: "[a-f0-9]{128}"
+  generate: expression
