@@ -277,20 +277,20 @@ You may run the following Make target to generate the API examples documentation
 
 This will create many use-case-specific records in the database, simulate API calls through cloudigrade, and generate an updated document with the API calls. You should review any changes made by this command before adding and committing them to source control.
 
-Generate a Spec File
---------------------
+Generate openapi.json Files
+---------------------------
 
-Generation of the spec file is handled by the same mechanism that serves our spec file via api, to ensure that they are the same. If you've recently made changes to the api and need to update the spec file, run the following command:
-
-.. code-block:: sh
-
-    make spec
-
-Otherwise, if you'd simply like to verify that the spec is current, you can run the following:
+Generation of the ``openapi.json`` and ``openapi-internal.json`` files uses the same mechanism that dynamically serves the specifications via the API, and the static files' contents should always match what the API serves dynamically. If you've recently made changes to the API and need to update the static files, run the following command:
 
 .. code-block:: sh
 
-    make spec-test
+    make openapi
+
+Otherwise, if you'd simply like to verify that the current static files match the API, you can run the following command:
+
+.. code-block:: sh
+
+    make openapi-test
 
 
 Authentication
