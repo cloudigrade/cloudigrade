@@ -269,13 +269,7 @@ If you wish to run a higher-level suite of integration tests, see `integrade <ht
 Updating API Example Docs
 -------------------------
 
-To automatically update the API examples documentation, you need a database with current migrations applied but with no customer data in it.
-
-.. code-block:: sh
-
-    make oc-forward-ports
-
-Once the database is available, you may run the following Make target to generate the API examples documentation:
+You may run the following Make target to generate the API examples documentation:
 
 .. code-block:: sh
 
