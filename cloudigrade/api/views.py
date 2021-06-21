@@ -115,7 +115,7 @@ class DailyConcurrentUsageViewSet(viewsets.GenericViewSet, mixins.ListModelMixin
 
     def early_end_date_error(self):
         """Return the error message for specifying an early end_date."""
-        return _("end_date must be after user creation date.")
+        return _("end_date must be same as or after the user creation date.")
 
     def late_end_date_error(self):
         """Return the error message for specifying a late end_date."""
@@ -148,7 +148,7 @@ class DailyConcurrentUsageViewSet(viewsets.GenericViewSet, mixins.ListModelMixin
             # If end date is after tomorrow, we do not return anything
             if end_date > self.latest_end_date():
                 errors["end_date"] = [self.late_end_date_error()]
-            if end_date <= user.date_joined.date():
+            if end_date < user.date_joined.date():
                 errors["end_date"] = [self.early_end_date_error()]
         except ValueError:
             errors["end_date"] = [self.invalid_end_date_error()]

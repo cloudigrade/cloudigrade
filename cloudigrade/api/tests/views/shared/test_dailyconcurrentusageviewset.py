@@ -232,8 +232,27 @@ class SharedDailyConcurrentUsageViewSetTest(TransactionTestCase):
 
         body = response.json()
         self.assertEqual(
-            body["end_date"], [_("end_date must be after user creation date.")]
+            body["end_date"],
+            [_("end_date must be same as or after the user creation date.")],
         )
+
+    @patch("api.tasks.calculate_max_concurrent_usage_task")
+    def test_end_date_same_as_user_create_date_expect_425(self, mock_calculate_task):
+        """
+        Test with end_date exactly as the user creation date, expecting 425.
+
+        When we give an end_date that is the same as the user creation date,
+        and no concurrent data, we expect a 425.
+        """
+        end_date = self.user1.date_joined.date()
+        start_date = end_date - datetime.timedelta(days=1)
+        data = {"start_date": str(start_date), "end_date": str(end_date)}
+        client = APIClient()
+        client.force_authenticate(user=self.user1)
+        response = client.get(self.concurrent_api_url, data=data, format="json")
+
+        self.assertEqual(1, ConcurrentUsageCalculationTask.objects.count())
+        self.assertEqual(response.status_code, 425)
 
     @patch("api.tasks.calculate_max_concurrent_usage_task")
     def test_425_if_no_concurrent_usage(self, mock_calculate_task):
