@@ -50,6 +50,9 @@ pydocstyle = "*"
 flake8-black = "*"
 black = {version = "*", allow-prereleases = true}
 openapi-spec-validator = "^0.2.8"
+jupyter = "^1.0.0"
+ipython = "^7.24.1"
+django-extensions = "^3.1.3"
 
 [build-system]
 requires = ["poetry>=0.12"]
