@@ -9,8 +9,8 @@ Celery tasks will go to a queue named "celery". If you wish to separate a task
 onto a different queue (which may make it easier to see the volume of specific
 waiting tasks), please be sure to update all the relevant configurations to
 use that custom queue. This includes CELERY_TASK_ROUTES in config and the
-Celery worker's --queues argument (see deployment-configs.yaml in shiftigrade
-and related configs in e2e-deploy and saas-templates).
+Celery worker's --queues argument (see related openshift deployment config files
+elsewhere and in related repos like e2e-deploy and saas-templates).
 
 Please also include a specific name in each task decorator. If a task function
 is ever moved in the future, but it was previously using automatic names, that

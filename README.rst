@@ -45,8 +45,6 @@ The following commands should install everything you need:
     brew update
     brew install python@3.8 gettext awscli azure-cli postgresql openssl curl librdkafka tox poetry
 
-If you intend to interact with an OpenShift cluster from your local command line, you should also ``brew install oc`` because the official Red Hat binaries are not signed and may not run on modern versions of macOS.
-
 
 Linux dependencies
 ~~~~~~~~~~~~~~~~~~
@@ -243,92 +241,6 @@ You'll be able to view CloudWatch Logs `here <https://console.aws.amazon.com/clo
 Common commands
 ===============
 
-
-Running Locally in OpenShift
-----------------------------
-
-All OC make commands are located in the `shiftigrade repository <https://gitlab.com/cloudigrade/shiftigrade>`_. Please clone and run all oc related make commands from there.
-To start the local cluster run the following:
-
-.. code-block:: bash
-
-    cd <shiftigrade-repo>
-    make oc-up
-
-That will start a barebones OpenShift cluster that will persist configuration between restarts.
-
-If you'd like to start the cluster, and deploy Cloudigrade along with supporting services run the following:
-
-.. code-block:: bash
-
-    # When deploying cloudigrade make sure you have AWS_ACCESS_KEY_ID and
-    # AWS_SECRET_ACCESS_KEY set in your environment or the deployment will
-    # not be able to talk to your AWS account
-    cd <shiftigrade-repo>
-    make oc-up-all
-
-This will create the **ImageStream** to track **PostgreSQL:9.6**, template the objects for **cloudigrade**, and apply them to deploy **cloudigrade** and the supporting services. There is a chance that the deployment for **cloudigrade** will fail due to the db not being ready before the mid-deployment hook pod is being run. Simply run the following command to trigger a redemployment for **cloudigrade**:
-
-.. code-block:: bash
-
-    oc rollout latest cloudigrade
-
-To stop the local cluster run the following:
-
-.. code-block:: bash
-
-    cd <shiftigrade-repo>
-    make oc-down
-
-Since all cluster information is preserved, you are then able to start the cluster back up with ``make oc-up`` and resume right where you have left off.
-
-If you'd like to remove all your saved settings for your cluster, you can run the following:
-
-.. code-block:: bash
-
-    cd <shifitigrade-repo>
-    make oc-clean
-
-There are also other make targets available to deploy just the db or the project by itself, along with installing the templates and the ImageStream object.
-
-Deploying in-progress code to OpenShift
----------------------------------------
-
-If you'd like to deploy your in progress work to the local openshift cluster you can do so by pushing your code to your branch and deploying it with the following commands:
-
-.. code-block:: bash
-
-    # Specify the branch where your code is running as API_REPO_REF
-    # and execute the following command
-    export API_REPO_REF=1337-my-special-branch
-    kontemplate template ocp/local.yaml | oc apply -f -
-
-    # Then simply kick off a new build for cloudigrade
-    oc start-build c-api
-
-Now everytime you want your code redeployed you can push your code and trigger a new build using ``oc start-build <build-name>``.
-
-Developing Locally with OpenShift
----------------------------------
-
-By far the best way to develop **cloudigrade** is with it running locally, allowing you to benefit from quick code reloads and easy debugging while offloading running supporting services to OpenShift. There are multiple make targets available to make this process easy. For example to start a cluster and deploy the supporting services all you'd need to run is:
-
-.. code-block:: bash
-
-    cd <shiftigrade-repo>
-    make oc-up-dev
-
-This will start OpenShift and create deployments for the database. To then run the Django dev server run:
-
-.. code-block:: bash
-
-    make oc-run-dev
-
-This will also forward ports for the database pod, making them accessible to the development server.
-
-There are other commands available such as ``make oc-run-migrations`` which will run migrations for you against the database in the OpenShift cluster. ``make oc-forward-ports`` which will just forward the ports without starting the development server, allowing you to start it however you wish, and ``make oc-stop-forwarding-ports`` which will clean up the port forwards after you're done.
-
-
 Testing
 -------
 
@@ -354,26 +266,10 @@ If you wish to run *only* the tests:
 
 If you wish to run a higher-level suite of integration tests, see `integrade <https://github.com/cloudigrade/integrade>`_.
 
-Troubleshooting the local OpenShift Cluster
--------------------------------------------
-
-Occasionally when first deploying a cluster the PostgreSQL deployment will fail and crash loop, an easy way to resolve that is to kick off a new deployment of PostgreSQL with the following command:
-
-.. code-block:: bash
-
-    oc rollout latest dc/postgresql
-
-If the cloudigrade deployment also failed because the database was not available when the migration midhook ran, you can retry that deployment with the following command:
-
-.. code-block:: bash
-
-    oc rollout retry dc/cloudigrade
-
-
 Updating API Example Docs
 -------------------------
 
-To automatically update the API examples documentation, you need a database with current migrations applied but with no customer data in it. If you have deployed to a local OpenShift cluster, you should forward the database port so it can be accessed locally.
+To automatically update the API examples documentation, you need a database with current migrations applied but with no customer data in it.
 
 .. code-block:: sh
 
@@ -423,9 +319,6 @@ for instance for testing. To create a user this way, use:
 .. code-block:: sh
 
     make user
-    # or the below command if you're running against cloudigrade in a local OpenShift cluster
-    cd <shiftigrade-repo>
-    make oc-user
 
 
 Message Broker
