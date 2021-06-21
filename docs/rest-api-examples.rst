@@ -2149,7 +2149,7 @@ Response:
 
     HTTP/1.1 400 Bad Request
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 59
+    Content-Length: 74
     Content-Type: application/json
     Referrer-Policy: same-origin
     Vary: Accept
@@ -2159,7 +2159,7 @@ Response:
 
     {
         "end_date": [
-            "end_date must be after user creation date."
+            "end_date must be same as or after the user creation date."
         ]
     }
 
