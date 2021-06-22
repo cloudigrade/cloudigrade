@@ -60,9 +60,6 @@ jobs:
       - run: poetry install
       - run: poetry run make docs-api-examples-test
       - run: poetry run make openapi-test
-        env:
-          AWS_SQS_ACCESS_KEY_ID: "foo"
-          AWS_SQS_SECRET_ACCESS_KEY: "bar"
       - run: poetry run openapi-spec-validator openapi.json
       - run: poetry run openapi-spec-validator openapi-internal.json
 

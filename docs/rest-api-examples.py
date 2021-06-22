@@ -14,6 +14,7 @@ from django.db import transaction
 from django.test import override_settings
 
 # Force bogus values into required environment variables.
+os.environ["CLOUDIGRADE_ENVIRONMENT"] = "rest-api-examples"
 os.environ["AWS_ACCESS_KEY_ID"] = "nope"
 os.environ["AWS_SECRET_ACCESS_KEY"] = "nope"
 os.environ["AWS_DEFAULT_REGION"] = "nope"
@@ -427,9 +428,11 @@ if __name__ == "__main__":
     docs_date = util_helper.utc_dt(2020, 5, 18, 13, 51, 59, 722367)
     with transaction.atomic(), override_settings(
         SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA=False
-    ), patch.object(uuid, "uuid4") as mock_uuid4, \
-       patch("api.tasks.notify_application_availability_task") as mock_notify_sources, \
-       util_helper.clouditardis(docs_date):
+    ), patch.object(uuid, "uuid4") as mock_uuid4, patch(
+        "api.tasks.notify_application_availability_task"
+    ) as mock_notify_sources, util_helper.clouditardis(
+        docs_date
+    ):
         mock_uuid4.side_effect = seeded_uuid4
         api_hander = DocsApiHandler()
         public_responses = api_hander.gather_api_responses()

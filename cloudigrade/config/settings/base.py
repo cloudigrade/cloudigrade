@@ -24,6 +24,9 @@ def __print(*args, **kwargs):
     print(*stderr_args, file=sys.stderr, **kwargs)
 
 
+#####################################################################
+# Important settings that *must* be loaded and defined first.
+
 ROOT_DIR = environ.Path(__file__) - 3
 APPS_DIR = ROOT_DIR.path("cloudigrade")
 
@@ -33,15 +36,168 @@ if environ.os.path.isfile(ENV_FILE_PATH):
     env.read_env(ENV_FILE_PATH)
     __print("The .env file has been loaded. See base.py for more information")
 
+# Used to derive several other configs' default values later.
+CLOUDIGRADE_ENVIRONMENT = env("CLOUDIGRADE_ENVIRONMENT")
+
+
+# TODO refactor our app to use exclusively only one of these configs
+# CLOUDIGRADE_ENVIRONMENT, AWS_NAME_PREFIX, and CLOUDTRAIL_NAME_PREFIX don't all need to
+# exist since they're all basically the same; these are artifacts from older code.
+AWS_NAME_PREFIX = f"{CLOUDIGRADE_ENVIRONMENT}-"
+CLOUDTRAIL_NAME_PREFIX = AWS_NAME_PREFIX
+
+
+#####################################################################
+# Standard Django project configs
+
 # Important Security Settings
-IS_PRODUCTION = False
 SECRET_KEY = env("DJANGO_SECRET_KEY", default="base")
 DEBUG = env.bool("DJANGO_DEBUG", default=False)
 ALLOWED_HOSTS = env("DJANGO_ALLOWED_HOSTS", default=["*"])
 
+# Default apps go here
+DJANGO_APPS = [
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+]
+
+# Any pip installed apps will go here
+THIRD_PARTY_APPS = [
+    "django_celery_beat",
+    "rest_framework",
+    "rest_framework.authtoken",
+    "django_filters",
+    "generic_relations",
+    "health_check",
+    "health_check.db",
+    "django_prometheus",
+]
+
+# Apps specific to this project go here
+LOCAL_APPS = [
+    "util.apps.UtilConfig",
+    "api.apps.ApiConfig",
+    "internal.apps.InternalConfig",
+]
+
+INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
+
+MIDDLEWARE = [
+    "django_prometheus.middleware.PrometheusBeforeMiddleware",
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "util.middleware.RequestIDLoggingMiddleware",
+    "django_prometheus.middleware.PrometheusAfterMiddleware",
+]
+
+ROOT_URLCONF = "config.urls"
+
+TEMPLATES = [
+    {
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+            ],
+        },
+    },
+]
+
+WSGI_APPLICATION = "config.wsgi.application"
+
+# Database
+# https://docs.djangoproject.com/en/3.2/ref/settings/#databases
+DATABASES = {
+    "default": {
+        "ATOMIC_REQUESTS": env("DJANGO_ATOMIC_REQUESTS", default=True),
+        "ENGINE": env(
+            "DJANGO_DATABASE_ENGINE",
+            default="django_prometheus.db.backends.postgresql",
+        ),
+        "NAME": env("DJANGO_DATABASE_NAME", default="postgres"),
+        "HOST": env("DJANGO_DATABASE_HOST", default="localhost"),
+        "USER": env("DJANGO_DATABASE_USER", default="postgres"),
+        "PASSWORD": env("DJANGO_DATABASE_PASSWORD", default="postgres"),
+        "PORT": env.int("DJANGO_DATABASE_PORT", default=5432),
+        "CONN_MAX_AGE": env.int("DJANGO_DATABASE_CONN_MAX_AGE", default=0),
+    }
+}
+
+# New in Django 3.2:
+# 3.1 and older default is 32-bit AutoField. 3.2 now recommends 64-bit BigAutoField.
+# See "Customizing type of auto-created primary keys" in the 3.2 release notes:
+# https://docs.djangoproject.com/en/3.2/releases/3.2/
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Password validation
+# https://docs.djangoproject.com/en/2.0/ref/settings/#auth-password-validators
+
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+    },
+]
+
+# Internationalization
+# https://docs.djangoproject.com/en/3.2/topics/i18n/
+
+LANGUAGE_CODE = "en-us"
+
+TIME_ZONE = "UTC"
+
+USE_I18N = True
+
+USE_L10N = True
+
+USE_TZ = True
+
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/3.2/howto/static-files/
+
+STATIC_URL = env("DJANGO_STATIC_URL", default="/static/")
+STATIC_ROOT = env("DJANGO_STATIC_ROOT", default=str(ROOT_DIR.path("static")))
+
+# Django Rest Framework
+# http://www.django-rest-framework.org/api-guide/settings/
+
+REST_FRAMEWORK = {
+    "DEFAULT_PAGINATION_CLASS": "drf_insights_pagination.pagination.InsightsPagination",
+    "PAGE_SIZE": 10,
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "api.authentication.IdentityHeaderAuthentication",
+    ),
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
+    "EXCEPTION_HANDLER": "util.exceptions.api_exception_handler",
+}
+
+
+#####################################################################
 # Logging
-# https://docs.djangoproject.com/en/dev/topics/logging/
-# https://docs.python.org/3.6/library/logging.html
+# https://docs.djangoproject.com/en/3.2/topics/logging/
+# https://docs.python.org/3.8/library/logging.html
 # https://www.caktusgroup.com/blog/2015/01/27/Django-Logging-Configuration-logging_config-default-settings-logger/
 LOGGING_CONFIG = None
 LOGGING = {
@@ -109,6 +265,7 @@ LOGGING = {
     },
 }
 
+# Extra configs for logging with Watchtower/AWS CloudWatch
 CLOUDIGRADE_ENABLE_CLOUDWATCH = env.bool("CLOUDIGRADE_ENABLE_CLOUDWATCH", default=False)
 CLOUDIGRADE_CW_LEVEL = env("CLOUDIGRADE_CW_LEVEL", default="INFO")
 CLOUDIGRADE_CW_LOG_GROUP = env("CLOUDIGRADE_CW_LOG_GROUP", default=None)
@@ -141,191 +298,37 @@ if CLOUDIGRADE_ENABLE_CLOUDWATCH:
     __print("Configured CloudWatch.")
     __print(f"LOGGING with CloudWatch is {LOGGING}")
 
+# Important note: dictConfig must happen *after* adding the Watchtower handlers above.
 logging.config.dictConfig(LOGGING)
 
-# AWS Defaults
+
+#####################################################################
+# AWS S3 (file buckets)
+
 S3_DEFAULT_REGION = env("S3_DEFAULT_REGION", default="us-east-1")
+
+# S3 configs for buckets that handle customer CloudTrail logs
+AWS_S3_BUCKET_NAME = f"{AWS_NAME_PREFIX}cloudigrade-trails"
+AWS_S3_BUCKET_LC_NAME = env("AWS_S3_BUCKET_LC_NAME", default="s3_lifecycle_policy")
+AWS_S3_BUCKET_LC_IA_TRANSITION = env.int("AWS_S3_BUCKET_LC_IA_TRANSITION", default=30)
+AWS_S3_BUCKET_LC_GLACIER_TRANSITION = env.int(
+    "AWS_S3_BUCKET_LC_GLACIER_TRANSITION", default=60
+)
+AWS_S3_BUCKET_LC_MAX_AGE = env.int("AWS_S3_BUCKET_LC_MAX_AGE", default=1460)
+
+
+#####################################################################
+# AWS SQS (message queues)
+
+# SQS configs for general queue use like reading CloudTrail/S3 notifications
 SQS_DEFAULT_REGION = env("SQS_DEFAULT_REGION", default="us-east-1")
-HOUNDIGRADE_AWS_AVAILABILITY_ZONE = env(
-    "HOUNDIGRADE_AWS_AVAILABILITY_ZONE", default="us-east-1b"
-)
-HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME = env(
-    "HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME",
-    default="EC2ContainerService-inspectigrade-EcsInstanceAsg",
-)
-HOUNDIGRADE_AWS_VOLUME_BATCH_SIZE = env.int(
-    "HOUNDIGRADE_AWS_VOLUME_BATCH_SIZE", default=32
-)
-HOUNDIGRADE_ECS_CLUSTER_NAME = env(
-    "HOUNDIGRADE_ECS_CLUSTER_NAME", default="inspectigrade-us-east-1b"
-)
-HOUNDIGRADE_ECS_FAMILY_NAME = env("HOUNDIGRADE_ECS_FAMILY_NAME", default="Houndigrade")
-HOUNDIGRADE_ECS_IMAGE_NAME = env(
-    "HOUNDIGRADE_ECS_IMAGE_NAME", default="cloudigrade/houndigrade"
-)
-HOUNDIGRADE_ECS_IMAGE_TAG = env("HOUNDIGRADE_ECS_IMAGE_TAG", default="latest")
-HOUNDIGRADE_EXCHANGE_NAME = env("HOUNDIGRADE_EXCHANGE_NAME", default="")
+AWS_SQS_MAX_RECEIVE_COUNT = env.int("AWS_SQS_MAX_RECEIVE_COUNT", default=5)
+AWS_SQS_MAX_YIELD_COUNT = env.int("AWS_SQS_MAX_YIELD_COUNT", default=25)
 
-RHEL_IMAGES_AWS_ACCOUNTS = [
-    Decimal("841258680906"),  # china
-    Decimal("219670896067"),  # govcloud
-    Decimal("309956199498"),  # all others
-]
-
-# Default apps go here
-DJANGO_APPS = [
-    "django.contrib.admin",
-    "django.contrib.auth",
-    "django.contrib.contenttypes",
-    "django.contrib.sessions",
-    "django.contrib.messages",
-    "django.contrib.staticfiles",
-]
-
-# Any pip installed apps will go here
-THIRD_PARTY_APPS = [
-    "django_celery_beat",
-    "rest_framework",
-    "rest_framework.authtoken",
-    "django_filters",
-    "generic_relations",
-    "health_check",
-    "health_check.db",
-    "django_prometheus",
-]
-
-# Apps specific to this project go here
-LOCAL_APPS = [
-    "util.apps.UtilConfig",
-    "api.apps.ApiConfig",
-    "internal.apps.InternalConfig",
-]
-
-INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
-
-
-# Middleware
-
-MIDDLEWARE = [
-    "django_prometheus.middleware.PrometheusBeforeMiddleware",
-    "django.middleware.security.SecurityMiddleware",
-    "django.contrib.sessions.middleware.SessionMiddleware",
-    "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",
-    "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "django.contrib.messages.middleware.MessageMiddleware",
-    "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "util.middleware.RequestIDLoggingMiddleware",
-    "django_prometheus.middleware.PrometheusAfterMiddleware",
-]
-
-ROOT_URLCONF = "config.urls"
-
-TEMPLATES = [
-    {
-        "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
-        "APP_DIRS": True,
-        "OPTIONS": {
-            "context_processors": [
-                "django.template.context_processors.debug",
-                "django.template.context_processors.request",
-                "django.contrib.auth.context_processors.auth",
-                "django.contrib.messages.context_processors.messages",
-            ],
-        },
-    },
-]
-
-WSGI_APPLICATION = "config.wsgi.application"
-
-
-# Database
-# https://docs.djangoproject.com/en/2.0/ref/settings/#databases
-
-DATABASES = {
-    "default": {
-        "ATOMIC_REQUESTS": env("DJANGO_ATOMIC_REQUESTS", default=True),
-        "ENGINE": env(
-            "DJANGO_DATABASE_ENGINE",
-            default="django_prometheus.db.backends.postgresql",
-        ),
-        "NAME": env("DJANGO_DATABASE_NAME", default="postgres"),
-        "HOST": env("DJANGO_DATABASE_HOST", default="localhost"),
-        "USER": env("DJANGO_DATABASE_USER", default="postgres"),
-        "PASSWORD": env("DJANGO_DATABASE_PASSWORD", default="postgres"),
-        "PORT": env.int("DJANGO_DATABASE_PORT", default=5432),
-        "CONN_MAX_AGE": env.int("DJANGO_DATABASE_CONN_MAX_AGE", default=0),
-    }
-}
-
-# New in Django 3.2:
-# 3.1 and older default is 32-bit AutoField. 3.2 now recommends 64-bit BigAutoField.
-# See "Customizing type of auto-created primary keys" in the 3.2 release notes:
-# https://docs.djangoproject.com/en/3.2/releases/3.2/
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
-
-# Password validation
-# https://docs.djangoproject.com/en/2.0/ref/settings/#auth-password-validators
-
-AUTH_PASSWORD_VALIDATORS = [
-    {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
-    },
-]
-
-
-# Internationalization
-# https://docs.djangoproject.com/en/2.0/topics/i18n/
-
-LANGUAGE_CODE = "en-us"
-
-TIME_ZONE = "UTC"
-
-USE_I18N = True
-
-USE_L10N = True
-
-USE_TZ = True
-
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/2.0/howto/static-files/
-
-STATIC_URL = env("DJANGO_STATIC_URL", default="/static/")
-STATIC_ROOT = env("DJANGO_STATIC_ROOT", default=str(ROOT_DIR.path("static")))
-
-
-# Django Rest Framework
-# http://www.django-rest-framework.org/api-guide/settings/
-
-REST_FRAMEWORK = {
-    "DEFAULT_PAGINATION_CLASS": "drf_insights_pagination.pagination.InsightsPagination",
-    "PAGE_SIZE": 10,
-    "DEFAULT_AUTHENTICATION_CLASSES": (
-        "api.authentication.IdentityHeaderAuthentication",
-    ),
-    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
-    "EXCEPTION_HANDLER": "util.exceptions.api_exception_handler",
-}
-
-# Message and Task Queues
-
-# For convenience in development environments, find defaults gracefully here.
+# SQS configs for houndigrade's message queue
 AWS_SQS_REGION = env(
     "AWS_SQS_REGION", default=env("AWS_DEFAULT_REGION", default="us-east-1")
 )
-
 AWS_SQS_ACCESS_KEY_ID = env(
     "AWS_SQS_ACCESS_KEY_ID", default=env("AWS_ACCESS_KEY_ID", default="")
 )
@@ -351,15 +354,35 @@ AWS_SQS_URL = env(
         quote(AWS_SQS_ACCESS_KEY_ID, safe=""), quote(AWS_SQS_SECRET_ACCESS_KEY, safe="")
     ),
 )
-AWS_SQS_MAX_RECEIVE_COUNT = env.int("AWS_SQS_MAX_RECEIVE_COUNT", default=5)
-
-AWS_SQS_MAX_YIELD_COUNT = env.int("AWS_SQS_MAX_YIELD_COUNT", default=25)
 AWS_SQS_MAX_HOUNDI_YIELD_COUNT = env.int("AWS_SQS_MAX_HOUNDI_YIELD_COUNT", default=10)
-AWS_NAME_PREFIX = env("AWS_NAME_PREFIX", default=env("USER", default="anonymous") + "-")
 
-HOUNDIGRADE_RESULTS_QUEUE_NAME = env(
-    "HOUNDIGRADE_RESULTS_QUEUE_NAME", default=AWS_NAME_PREFIX + "inspection_results"
+# AWS CloudTrail configs
+# This AWS_CLOUDTRAIL_EVENT_URL has a placeholder where an AWS Account ID should be.
+# That placeholder "000000000000" value is okay for tests but *must* be overridden when
+# actually running cloudigrade, such as in local.py and prod.py.
+AWS_CLOUDTRAIL_EVENT_URL = f"https://sqs.us-east-1.amazonaws.com/000000000000/cloudigrade-cloudtrail-s3-{CLOUDIGRADE_ENVIRONMENT}"
+
+
+#####################################################################
+# Configs used for running houndigrade and accessing its results
+
+HOUNDIGRADE_AWS_AVAILABILITY_ZONE = env(
+    "HOUNDIGRADE_AWS_AVAILABILITY_ZONE", default="us-east-1b"
 )
+HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME = (
+    f"cloudigrade-ecs-asg-{CLOUDIGRADE_ENVIRONMENT}"
+)
+HOUNDIGRADE_AWS_VOLUME_BATCH_SIZE = env.int(
+    "HOUNDIGRADE_AWS_VOLUME_BATCH_SIZE", default=32
+)
+HOUNDIGRADE_ECS_CLUSTER_NAME = f"cloudigrade-ecs-{CLOUDIGRADE_ENVIRONMENT}"
+HOUNDIGRADE_ECS_FAMILY_NAME = env("HOUNDIGRADE_ECS_FAMILY_NAME", default="Houndigrade")
+HOUNDIGRADE_ECS_IMAGE_NAME = env(
+    "HOUNDIGRADE_ECS_IMAGE_NAME", default="cloudigrade/houndigrade"
+)
+HOUNDIGRADE_ECS_IMAGE_TAG = env("HOUNDIGRADE_ECS_IMAGE_TAG", default="latest")
+HOUNDIGRADE_EXCHANGE_NAME = env("HOUNDIGRADE_EXCHANGE_NAME", default="")
+HOUNDIGRADE_RESULTS_QUEUE_NAME = f"{AWS_NAME_PREFIX}inspection_results"
 
 if env.bool("HOUNDIGRADE_ENABLE_SENTRY", default=False):
     HOUNDIGRADE_ENABLE_SENTRY = True
@@ -373,43 +396,24 @@ if env.bool("HOUNDIGRADE_ENABLE_SENTRY", default=False):
 else:
     HOUNDIGRADE_ENABLE_SENTRY = False
 
-AWS_CLOUDTRAIL_EVENT_URL = env(
-    "AWS_CLOUDTRAIL_EVENT_URL",
-    default="https://sqs.us-east-1.amazonaws.com/123456789/cloudigrade-s3",
-)
 
-AWS_S3_BUCKET_NAME = env(
-    "AWS_S3_BUCKET_NAME", default="{0}cloudigrade".format(AWS_NAME_PREFIX)
-)
-AWS_S3_BUCKET_LC_NAME = env("AWS_S3_BUCKET_LC_NAME", default="s3_lifecycle_policy")
-AWS_S3_BUCKET_LC_IA_TRANSITION = env.int("AWS_S3_BUCKET_LC_IA_TRANSITION", default=30)
-AWS_S3_BUCKET_LC_GLACIER_TRANSITION = env.int(
-    "AWS_S3_BUCKET_LC_GLACIER_TRANSITION", default=60
-)
-AWS_S3_BUCKET_LC_MAX_AGE = env.int("AWS_S3_BUCKET_LC_MAX_AGE", default=1460)
-
-CLOUDTRAIL_NAME_PREFIX = "cloudigrade-"
+#####################################################################
+# Celery broker
 
 CELERY_BROKER_TRANSPORT_OPTIONS = {
     "queue_name_prefix": AWS_NAME_PREFIX,
     "region": AWS_SQS_REGION,
 }
 CELERY_BROKER_URL = AWS_SQS_URL
-QUEUE_EXCHANGE_NAME = None
+QUEUE_EXCHANGE_NAME = None  # TODO Does anything still use this? Please comment.
+
+
+#####################################################################
+# Celery tasks
 
 SCHEDULE_VERIFY_VERIFY_TASKS_INTERVAL = env.int(
     "SCHEDULE_VERIFY_VERIFY_TASKS_INTERVAL", default=60 * 60 * 24
 )  # 24 Hours)
-
-MAX_ALLOWED_INSPECTION_ATTEMPTS = env.int("MAX_ALLOWED_INSPECTION_ATTEMPTS", default=5)
-
-INSPECT_PENDING_IMAGES_MIN_AGE = env.int(
-    "INSPECT_PENDING_IMAGES_MIN_AGE", default=60 * 60 * 12  # 12 hours
-)
-
-DELETE_INACTIVE_USERS_MIN_AGE = env.int(
-    "DELETE_INACTIVE_USERS_MIN_AGE", default=60 * 60 * 24
-)
 
 CELERY_TASK_ROUTES = {
     # api.tasks
@@ -464,9 +468,34 @@ CELERY_TASK_ROUTES = {
     },
 }
 
+
+#####################################################################
+# cloudigrade various configs
+
+IS_PRODUCTION = False
+
+CLOUDIGRADE_VERSION = env("IMAGE_TAG", default=env("CLOUDIGRADE_VERSION", default=None))
+
+# TODO Should this really be in settings? Consider moving to an AWS-specific module.
+RHEL_IMAGES_AWS_ACCOUNTS = [
+    Decimal("841258680906"),  # china
+    Decimal("219670896067"),  # govcloud
+    Decimal("309956199498"),  # all others
+]
+
+MAX_ALLOWED_INSPECTION_ATTEMPTS = env.int("MAX_ALLOWED_INSPECTION_ATTEMPTS", default=5)
+
+INSPECT_PENDING_IMAGES_MIN_AGE = env.int(
+    "INSPECT_PENDING_IMAGES_MIN_AGE", default=60 * 60 * 12  # 12 hours
+)
+
 # Limit in seconds for how long we expect the inspection cluster instance to exist.
 INSPECTION_CLUSTER_INSTANCE_AGE_LIMIT = env.int(
     "INSPECTION_CLUSTER_INSTANCE_AGE_LIMIT", default=10 * 60  # 10 minutes
+)
+
+DELETE_INACTIVE_USERS_MIN_AGE = env.int(
+    "DELETE_INACTIVE_USERS_MIN_AGE", default=60 * 60 * 24
 )
 
 # Delay in seconds for concurrent usage calculation
@@ -474,9 +503,16 @@ SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY = env.int(
     "SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY", default=30 * 60
 )
 
-# Misc Config Values
-CLOUDIGRADE_VERSION = env("IMAGE_TAG", default=env("CLOUDIGRADE_VERSION", default=None))
-CLOUDIGRADE_ENVIRONMENT = env("CLOUDIGRADE_ENVIRONMENT", default=None)
+# Cache ttl settings
+CACHE_TTL_DEFAULT = env.int("CACHE_TTL_DEFAULT", default=60)
+
+CACHE_TTL_SOURCES_APPLICATION_TYPE_ID = env.int(
+    "CACHE_TTL_SOURCES_APPLICATION_TYPE_ID", default=CACHE_TTL_DEFAULT
+)
+
+#####################################################################
+# cloudigrade authentication-related configs
+
 VERBOSE_INSIGHTS_IDENTITY_HEADER_LOGGING = env.bool(
     "VERBOSE_INSIGHTS_IDENTITY_HEADER_LOGGING", default=False
 )
@@ -490,6 +526,14 @@ INSIGHTS_REQUEST_ID_HEADER = "HTTP_X_RH_INSIGHTS_REQUEST_ID"
 INSIGHTS_IDENTITY_HEADER = "HTTP_X_RH_IDENTITY"
 INSIGHTS_INTERNAL_FAKE_IDENTITY_HEADER = "HTTP_X_RH_INTERNAL_FAKE_IDENTITY"
 
+
+#####################################################################
+# Kafka
+
+# TODO: Rename "LISTENER" variables with more general-purpose names.
+# Originally, cloudigrade only read messages from Kafka, but now it also produces them,
+# and the "LISTENER" nomenclature is leftover from an older version of its code.
+
 # Sources/Kafka Listener Values
 LISTENER_TOPIC = env("LISTENER_TOPIC", default="platform.sources.event-stream")
 LISTENER_GROUP_ID = env("LISTENER_GROUP_ID", default="cloudmeter_ci")
@@ -499,14 +543,16 @@ LISTENER_SERVER = env(
 LISTENER_PORT = env.int("LISTENER_PORT", default=9092)
 LISTENER_METRICS_PORT = env.int("LISTENER_METRICS_PORT", default=8080)
 
+
+#####################################################################
+# Sources API integration
+
 SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA = env.bool(
-    "SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA",
-    default=True,
+    "SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA", default=True
 )
 
 SOURCES_API_BASE_URL = env(
-    "SOURCES_API_BASE_URL",
-    default="http://sources-api.sources-ci.svc:8080",
+    "SOURCES_API_BASE_URL", default="http://sources-api.sources-ci.svc:8080"
 )
 
 SOURCE_API_INTERNAL_URI = "/internal/v1.0/"
@@ -519,13 +565,8 @@ SOURCES_RESOURCE_TYPE = "Application"
 # Sources Availability Check Values
 SOURCES_STATUS_TOPIC = env("SOURCES_STATUS_TOPIC", default="platform.sources.status")
 SOURCES_AVAILABILITY_EVENT_TYPE = env(
-    "SOURCES_AVAILABILITY_EVENT_TYPE",
-    default="availability_status",
+    "SOURCES_AVAILABILITY_EVENT_TYPE", default="availability_status"
 )
 
-# Cache ttl settings
-CACHE_TTL_DEFAULT = env.int("CACHE_TTL_DEFAULT", default=60)
 
-CACHE_TTL_SOURCES_APPLICATION_TYPE_ID = env.int(
-    "CACHE_TTL_SOURCES_APPLICATION_TYPE_ID", default=CACHE_TTL_DEFAULT
-)
+#####################################################################
