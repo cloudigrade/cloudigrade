@@ -70,11 +70,11 @@ docs-api-examples-test:
 docs: docs-api-examples docs-seqdiag
 
 openapi:
-	$(PYTHON) $(PYDIR)/manage.py generateschema --title "Cloudigrade public API v2" --format openapi-json --settings=config.settings.test --urlconf api.urls > ./openapi.json
-	$(PYTHON) $(PYDIR)/manage.py generateschema --title "Cloudigrade internal API" --format openapi-json --settings=config.settings.test --urlconf internal.urls > ./openapi-internal.json
+	CLOUDIGRADE_ENVIRONMENT="make-openapi" AWS_ACCESS_KEY_ID="fake" AWS_SECRET_ACCESS_KEY="fake" $(PYTHON) $(PYDIR)/manage.py generateschema --title "Cloudigrade public API v2" --format openapi-json --settings=config.settings.test --urlconf api.urls > ./openapi.json
+	CLOUDIGRADE_ENVIRONMENT="make-openapi" AWS_ACCESS_KEY_ID="fake" AWS_SECRET_ACCESS_KEY="fake" $(PYTHON) $(PYDIR)/manage.py generateschema --title "Cloudigrade internal API" --format openapi-json --settings=config.settings.test --urlconf internal.urls > ./openapi-internal.json
 
 openapi-test:
-	$(PYTHON) $(PYDIR)/manage.py generateschema --title "Cloudigrade public API v2" --format openapi-json --settings=config.settings.test --urlconf api.urls | diff ./openapi.json -
-	$(PYTHON) $(PYDIR)/manage.py generateschema --title "Cloudigrade internal API" --format openapi-json --settings=config.settings.test --urlconf internal.urls | diff ./openapi-internal.json -
+	CLOUDIGRADE_ENVIRONMENT="make-openapi-test" AWS_ACCESS_KEY_ID="fake" AWS_SECRET_ACCESS_KEY="fake" $(PYTHON) $(PYDIR)/manage.py generateschema --title "Cloudigrade public API v2" --format openapi-json --settings=config.settings.test --urlconf api.urls | diff ./openapi.json -
+	CLOUDIGRADE_ENVIRONMENT="make-openapi-test" AWS_ACCESS_KEY_ID="fake" AWS_SECRET_ACCESS_KEY="fake" $(PYTHON) $(PYDIR)/manage.py generateschema --title "Cloudigrade internal API" --format openapi-json --settings=config.settings.test --urlconf internal.urls | diff ./openapi-internal.json -
 
 .PHONY: docs
