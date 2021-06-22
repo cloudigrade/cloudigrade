@@ -190,37 +190,58 @@ If you want to undo that operation and effectively *remove* everything the playb
         -e aws_state=absent \
         deployment/playbooks/manage-cloudigrade.yml
 
-**cloudigrade** requires several environment variables to talk with AWS. Ensure you have *at least* the following variables set in your local environment *before* you start running **cloudigrade**. Even if you don't intend to work with AWS at first, these must not be empty or else app startup will fail.
 
--  ``AWS_ACCESS_KEY_ID``
--  ``AWS_SECRET_ACCESS_KEY``
+Configure local environment for cloudigrade
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Many other optional AWS-specific variables are read at startup that may be useful for configuring your local environment and distinguishing yours from other developers. Here is a short list of *some* environment variables you probably want to set. See ``config/settings/*.py`` for more.
+Define environment variables
+****************************
 
--  ``AWS_DEFAULT_REGION``: default AWS region
--  ``AWS_SQS_ACCESS_KEY_ID``: AWS Access Key ID for SQS
--  ``AWS_SQS_SECRET_ACCESS_KEY``: AWS Secret Access Key for SQS
--  ``AWS_SQS_REGION``: default region for SQS
--  ``AWS_NAME_PREFIX``: prefix for various AWS objects (S3 buckets, SQS queues); best practice is to set this to your name like ``${USER}-``
--  ``AWS_S3_BUCKET_NAME``: name of S3 bucket that receives CloudTrail logs
--  ``AWS_CLOUDTRAIL_EVENT_URL``: URL of SQS queue that receives S3 notifications
--  ``HOUNDIGRADE_ECS_CLUSTER_NAME``: name of ECS cluster for houndigrade
--  ``HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME``: name of EC2 AutoScaling group for ECS
--  ``HOUNDIGRADE_AWS_AVAILABILITY_ZONE``: availability zone for ECS EC2 instances
+TL;DR: to get started, set at least the following environment variables before trying to run **cloudigrade** locally:
 
+- ``DJANGO_SETTINGS_MODULE=config.settings.local``
+- ``CLOUDIGRADE_ENVIRONMENT="${USER}"``
+- ``AWS_ACCESS_KEY_ID="your cloudigrade aws access key id"``
+- ``AWS_SECRET_ACCESS_KEY="your cloudigrade aws secret access key"``
 
-Specify Django settings module
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+If you do not set ``DJANGO_SETTINGS_MODULE``, you may need to include the ``--settings=config.settings.local`` argument with any Django admin or management commands you run.
 
-For convenience, you may want to set the following environment variable:
+**cloudigrade** derives several other important configs using the value of ``CLOUDIGRADE_ENVIRONMENT``. In deployed stage and production environments, for example, this variable may have the values "stage" and "prod" respectively. You should define ``CLOUDIGRADE_ENVIRONMENT`` with a value that is *reasonably unique to your own development environment*. We recommend setting it with your username like ``${USER}`` to minimize potential collisions with other nearby developers.
 
-.. code-block:: sh
+Credentials for **cloudigrade**'s AWS account must be set in your local environment using ``AWS_ACCESS_KEY_ID`` and ``AWS_SECRET_ACCESS_KEY``. Even if you don't intend to work with AWS at first, these must not be empty or else app startup will fail. If you need to start the app without interacting with AWS, you may set dummy values in these variables for partial functionality.
 
-    DJANGO_SETTINGS_MODULE=config.settings.local
+The local config assumes you are running PostgreSQL on ``localhost:5432`` with the default ``postgres`` database and ``postgres`` user with no password set. You may want to change those default values with:
 
-If you do not set that variable, you may need to include the ``--settings=config.settings.local`` argument with any Django admin or management commands you run.
+- ``DJANGO_DATABASE_HOST``
+- ``DJANGO_DATABASE_PORT``
+- ``DJANGO_DATABASE_NAME``
+- ``DJANGO_DATABASE_USER``
+- ``DJANGO_DATABASE_PASSWORD``
 
-You'll be able to view CloudWatch Logs `here <https://console.aws.amazon.com/cloudwatch/home?region=us-east-1#logs:>`_, there will be a log group created for your ecs cluster.
+Many other optional variables are read at startup that may be useful for configuring your local environment, but most of the interesting ones should have reasonable defaults or be derived automatically from ``CLOUDIGRADE_ENVIRONMENT``. See ``cloudigrade/config/settings/*.py`` for more details.
+
+Optional .env file
+******************
+
+If you would like to set fewer environment variables, you may put most of your local variables in an optional ``.env`` file that **cloudigrade** will attempt to read at startup. At a minimum, you may want to keep at least these two environment variables:
+
+- ``DJANGO_SETTINGS_MODULE=config.settings.local``
+- ``ENV_FILE_PATH=/path/to/your/env/file``
+
+If not specified, the default value for ``ENV_FILE_PATH`` looks for a file at ``/mnt/secret_store/.env``. The file at that path should have contents like a typical ``.env`` file. For example:
+
+.. code-block::
+
+    CLOUDIGRADE_ENVIRONMENT="brasmith-local"
+    DJANGO_DEBUG="True"
+    DJANGO_SECRET_KEY="my great secret"
+    DJANGO_DATABASE_NAME="cloudigrade"
+    DJANGO_DATABASE_USER="cloudigrade"
+    AWS_ACCESS_KEY_ID="my aws access key id"
+    AWS_SECRET_ACCESS_KEY="my secret access key"
+    SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA="False"
+
+If a file is not readable at that path, its loading will be skipped at startup, and **cloudigrade** will rely on environment variables to be set.
 
 
 Common commands
