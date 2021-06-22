@@ -139,10 +139,12 @@ You'll likely also run into more issues with installing pycurl. Follow the follo
     pip install --no-cache-dir --compile --ignore-installed --install-option="--with-openssl" --install-option="--openssl-dir=/usr/local/opt/openssl@1.1" pycurl
 
 
-Configure AWS account
-~~~~~~~~~~~~~~~~~~~~~
+Configure AWS account for cloudigrade
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you haven't already, create an `Amazon Web Services <https://aws.amazon.com/>`_ account for **cloudigrade** to use for its AWS API calls. You will need the AWS Access Key ID, AWS Secret Access Key, and region name where the account operates.
+
+**IMPORTANT NOTE**: This should *not* be the same AWS account that you use to simulate customer activity for tracking and inspection. **cloudigrade** *itself* requires a dedicated AWS account to perform various actions. We also strongly recommend creating a new AWS IAM user with its own credentials for use here instead of using your personal AWS account credentials.
 
 Use the AWS CLI to save that configuration to your local system:
 
@@ -150,7 +152,43 @@ Use the AWS CLI to save that configuration to your local system:
 
     aws configure
 
-You can verify that settings were stored correctly by checking the files it created in your ``~/.aws/`` directory.
+You can verify that settings were stored correctly by checking the files at ``~/.aws/{config,credentials}``. We *strongly* recommend using separate profiles for **cloudigrade** and any other personal or testing AWS accounts.
+
+**cloudigrade** requires several entities to exist in its AWS account to track data and perform inspection of images that originated from other customer AWS accounts. Use commands like the following to run our included Ansible playbook to ensure the required AWS entities exist in **cloudigrade**'s AWS account:
+
+.. code-block:: sh
+
+    # start from the top level of the project repo
+    cd ~/projects/cloudigrade
+
+    # clear any existing AWS credentials to ensure you use the correct ones
+    unset AWS_PROFILE AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY
+
+    # set the AWS_PROFILE you defined earlier for cloudigrade,
+    # or set the AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY directly
+    export AWS_PROFILE="my-aws-cloudigrade-profile"
+
+    # used to template various AWS entity names
+    export CLOUDIGRADE_ENVIRONMENT="${USER}"
+
+    # required in some macOS versions. YMMV.
+    export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
+
+    # run the playbook to configure everything!
+    ANSIBLE_CONFIG=./deployment/playbooks/ansible.cfg poetry run ansible-playbook \
+        -e env=${CLOUDIGRADE_ENVIRONMENT}\
+        deployment/playbooks/manage-cloudigrade.yml
+
+Running the Ansible playbook should be an idempotent operation. It should always try to put the entities in the AWS account in the same desired state, and it should be safe to run repeatedly.
+
+If you want to undo that operation and effectively *remove* everything the playbook created and configured for you, set the same environment variables but add the ``-e aws_state=absent`` argument to the ``ansible-playbook`` command like the following:
+
+.. code-block:: sh
+
+    ANSIBLE_CONFIG=./deployment/playbooks/ansible.cfg poetry run ansible-playbook \
+        -e env=${CLOUDIGRADE_ENVIRONMENT} \
+        -e aws_state=absent \
+        deployment/playbooks/manage-cloudigrade.yml
 
 **cloudigrade** requires several environment variables to talk with AWS. Ensure you have *at least* the following variables set in your local environment *before* you start running **cloudigrade**. Even if you don't intend to work with AWS at first, these must not be empty or else app startup will fail.
 
@@ -181,59 +219,6 @@ For convenience, you may want to set the following environment variable:
     DJANGO_SETTINGS_MODULE=config.settings.local
 
 If you do not set that variable, you may need to include the ``--settings=config.settings.local`` argument with any Django admin or management commands you run.
-
-
-Configure AWS Policy for Capturing ECS Logs
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-For ECS to be able to write logs to CloudWatch, we'll need to create and assign it the ecs role.
-
-First we'll create the policy.
-
-- Open the IAM console at https://console.aws.amazon.com/iam/.
-- In the navigation pane, choose Policies.
-- Choose Create policy, JSON.
-- Enter the following policy:
-.. code-block:: json
-
-    {
-        "Version": "2012-10-17",
-        "Statement": [
-            {
-                "Sid": "CloudigradePolicy",
-                "Effect": "Allow",
-                "Action": [
-                    "ec2:DescribeImages",
-                    "ec2:DescribeInstances",
-                    "ec2:ModifySnapshotAttribute",
-                    "ec2:DescribeSnapshotAttribute",
-                    "ec2:DescribeSnapshots",
-                    "ec2:CopyImage",
-                    "ec2:CreateTags",
-                    "ec2:DescribeRegions",
-                    "cloudtrail:CreateTrail",
-                    "cloudtrail:UpdateTrail",
-                    "cloudtrail:PutEventSelectors",
-                    "cloudtrail:DescribeTrails",
-                    "cloudtrail:StartLogging",
-                    "cloudtrail:StopLogging",
-                ],
-                "Resource": "*",
-            }
-        ],
-    }
-
-- Choose Review policy.
-- On the Review policy page, enter ECS-CloudWatchLogs for the Name and choose Create policy.
-
-Next, we will attach the policy.
-
-- Open the IAM console at https://console.aws.amazon.com/iam/.
-- In the navigation pane, choose Roles.
-- Choose ecsInstanceRole.
-- Choose Permissions, Attach policy.
-- To narrow the available policies to attach, for Filter, type ECS-CloudWatchLogs.
-- Check the box to the left of the ECS-CloudWatchLogs policy and choose Attach policy.
 
 You'll be able to view CloudWatch Logs `here <https://console.aws.amazon.com/cloudwatch/home?region=us-east-1#logs:>`_, there will be a log group created for your ecs cluster.
 
