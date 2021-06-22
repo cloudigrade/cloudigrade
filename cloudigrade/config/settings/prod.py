@@ -9,23 +9,20 @@ IS_PRODUCTION = CLOUDIGRADE_ENVIRONMENT == "prod"
 
 DJANGO_DEBUG = "False"
 
+# CLOUDIGRADE_ENVIRONMENT may have been loaded in base.py, but if not present, it would
+# have fallen back to generic defaults. However, in prod, we *require* that it be set
+# explicitly. By reloading here *without* a default, we halt app startup if not present.
 CLOUDIGRADE_ENVIRONMENT = env("CLOUDIGRADE_ENVIRONMENT")
 
+# Note: Why is HOUNDIGRADE_AWS_AVAILABILITY_ZONE special here?
+# Originally, we manually configured houndigrade to always use this AZ, and we preserved
+# that decision when we built its related Ansible playbook role. This could be made
+# configurable in both places, but we're leaving it static for now because this should
+# change when we (eventually) replace houndigrade's use of ECS with cloud-init.
 HOUNDIGRADE_AWS_AVAILABILITY_ZONE = "us-east-1a"
-HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME = (
-    f"cloudigrade-ecs-asg-{CLOUDIGRADE_ENVIRONMENT}"
-)
-HOUNDIGRADE_ECS_CLUSTER_NAME = f"cloudigrade-ecs-{CLOUDIGRADE_ENVIRONMENT}"
 
-# NAME PREFIX AND DERIVED VALUES NEED TO BE UPDATED
-AWS_NAME_PREFIX = f"{CLOUDIGRADE_ENVIRONMENT}-"
-HOUNDIGRADE_RESULTS_QUEUE_NAME = f"{AWS_NAME_PREFIX}inspection_results"
-AWS_S3_BUCKET_NAME = f"{AWS_NAME_PREFIX}cloudigrade-trails"
-CELERY_BROKER_TRANSPORT_OPTIONS["queue_name_prefix"] = AWS_NAME_PREFIX
-CLOUDTRAIL_NAME_PREFIX = AWS_NAME_PREFIX
-QUEUE_EXCHANGE_NAME = None
-
-# Instead of calling _get_primary_account_id we are calling boto here directly
+# Instead of calling util.aws.sts._get_primary_account_id,
+# we use boto here directly to avoid a potential import loop.
 account_id = client("sts").get_caller_identity().get("Account")
 AWS_CLOUDTRAIL_EVENT_URL = f"https://sqs.us-east-1.amazonaws.com/{account_id}/cloudigrade-cloudtrail-s3-{CLOUDIGRADE_ENVIRONMENT}"
 
