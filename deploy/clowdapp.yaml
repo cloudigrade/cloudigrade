@@ -71,9 +71,6 @@ objects:
           requests:
             cpu: 100m
             memory: 500Mi
-    kafkaTopics:
-    - topicName: platform.sources.event-stream
-    - topicName: platform.sources.status
     database:
       name: cloudigrade 
 parameters:
