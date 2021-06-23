@@ -266,8 +266,6 @@ If you wish to run *only* the tests:
 
     make unittest
 
-If you wish to run a higher-level suite of integration tests, see `integrade <https://github.com/cloudigrade/integrade>`_.
-
 Updating API Example Docs
 -------------------------
 
