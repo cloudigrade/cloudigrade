@@ -341,7 +341,7 @@ The listener will be automatically deployed to all OSD environments, including r
 
 .. |license| image:: https://img.shields.io/github/license/cloudigrade/cloudigrade.svg
    :target: https://github.com/cloudigrade/cloudigrade/blob/master/LICENSE
-.. |Build Status| image:: https://travis-ci.org/cloudigrade/cloudigrade.svg?branch=master
-   :target: https://travis-ci.org/cloudigrade/cloudigrade
+.. |Build Status| image:: https://github.com/cloudigrade/cloudigrade/actions/workflows/push.yml/badge.svg?branch=master
+   :target: https://github.com/cloudigrade/cloudigrade/actions?query=branch%3Amaster
 .. |codecov| image:: https://codecov.io/gh/cloudigrade/cloudigrade/branch/master/graph/badge.svg
    :target: https://codecov.io/gh/cloudigrade/cloudigrade
