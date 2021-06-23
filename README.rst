@@ -2,7 +2,7 @@
 cloudigrade
 ***********
 
-|license| |Build Status| |codecov| |Updates| |Python 3|
+|license| |Build Status| |codecov|
 
 
 What is cloudigrade?
@@ -351,7 +351,3 @@ The listener will be automatically deployed to all OSD environments, including r
    :target: https://travis-ci.org/cloudigrade/cloudigrade
 .. |codecov| image:: https://codecov.io/gh/cloudigrade/cloudigrade/branch/master/graph/badge.svg
    :target: https://codecov.io/gh/cloudigrade/cloudigrade
-.. |Updates| image:: https://pyup.io/repos/github/cloudigrade/cloudigrade/shield.svg
-   :target: https://pyup.io/repos/github/cloudigrade/cloudigrade/
-.. |Python 3| image:: https://pyup.io/repos/github/cloudigrade/cloudigrade/python-3-shield.svg
-   :target: https://pyup.io/repos/github/cloudigrade/cloudigrade/
