@@ -4,6 +4,7 @@ cloudigrade
 
 |license| |Build Status| |codecov|
 
+.. contents:: :depth: 2
 
 What is cloudigrade?
 ====================
@@ -17,13 +18,10 @@ What are "Doppler" and "Cloud Meter"?
 Doppler was an early code name for **cloudigrade**. Cloud Meter is a product-ized Red Hat name for its running **cloudigrade** service. ``cloudigrade == Doppler == Cloud Meter`` for all intents and purposes. 😉
 
 
-Running cloudigrade
-===================
+Development Setup
+=================
 
-Developer Environment
----------------------
-
-Because **cloudigrade** is actually a suite of interacting services, setting up a development environment may require installing some or all of the following dependencies:
+Running **cloudigrade** locally may require installing some or all of the following dependencies:
 
 -  Python 3.8
 -  `poetry <https://python-poetry.org/docs/>`_
@@ -36,7 +34,7 @@ Because **cloudigrade** is actually a suite of interacting services, setting up 
 
 
 macOS dependencies
-~~~~~~~~~~~~~~~~~~
+------------------
 
 The following commands should install everything you need:
 
@@ -47,7 +45,7 @@ The following commands should install everything you need:
 
 
 Linux dependencies
-~~~~~~~~~~~~~~~~~~
+------------------
 
 We recommend developing on the latest version of Fedora. Follow the following commands to install the dependencies:
 
@@ -57,7 +55,7 @@ We recommend developing on the latest version of Fedora. Follow the following co
 
 
 Python 3.8.x
-~~~~~~~~~~~~
+------------
 
 This step is optional, but we recommend you install a local Python version via `pyenv <https://github.com/pyenv/pyenv#installation>`_ instead of using the brew or dnf version. This will ensure you keep a *specific* stable version when you are working on **cloudigrade**. For example:
 
@@ -68,7 +66,7 @@ This step is optional, but we recommend you install a local Python version via `
 
 
 Virtual Environment (via Poetry)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------------
 
 All Python developers should use a virtual environments to isolate their package dependencies. **cloudigrade** developers use `poetry <https://python-poetry.org/docs/>`_ and maintain its ``pyproject.toml`` and ``poetry.lock`` files with appropriate up-to-date requirements.
 
@@ -120,7 +118,7 @@ After finishing the installation of dependencies, you can instantiate a shell us
 
 
 macOS Big Sur Troubleshooting
-*****************************
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you're working with macOS Big Sur you may run into issues around the system version number, in which case set ``SYSTEM_VERSION_COMPAT=1`` which will make macOS report back ``10.16`` instead of ``11.X``. For example,
 
@@ -139,8 +137,8 @@ You'll likely also run into more issues with installing pycurl. Follow the follo
     pip install --no-cache-dir --compile --ignore-installed --install-option="--with-openssl" --install-option="--openssl-dir=/usr/local/opt/openssl@1.1" pycurl
 
 
-Configure AWS account for cloudigrade
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+AWS account setup
+-----------------
 
 If you haven't already, create an `Amazon Web Services <https://aws.amazon.com/>`_ account for **cloudigrade** to use for its AWS API calls. You will need the AWS Access Key ID, AWS Secret Access Key, and region name where the account operates.
 
@@ -191,11 +189,8 @@ If you want to undo that operation and effectively *remove* everything the playb
         deployment/playbooks/manage-cloudigrade.yml
 
 
-Configure local environment for cloudigrade
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Define environment variables
-****************************
+Environment variables
+---------------------
 
 TL;DR: to get started, set at least the following environment variables before trying to run **cloudigrade** locally:
 
@@ -220,8 +215,9 @@ The local config assumes you are running PostgreSQL on ``localhost:5432`` with t
 
 Many other optional variables are read at startup that may be useful for configuring your local environment, but most of the interesting ones should have reasonable defaults or be derived automatically from ``CLOUDIGRADE_ENVIRONMENT``. See ``cloudigrade/config/settings/*.py`` for more details.
 
+
 Optional .env file
-******************
+~~~~~~~~~~~~~~~~~~
 
 If you would like to set fewer environment variables, you may put most of your local variables in an optional ``.env`` file that **cloudigrade** will attempt to read at startup. At a minimum, you may want to keep at least these two environment variables:
 
@@ -244,8 +240,8 @@ If not specified, the default value for ``ENV_FILE_PATH`` looks for a file at ``
 If a file is not readable at that path, its loading will be skipped at startup, and **cloudigrade** will rely on environment variables to be set.
 
 
-Common commands
-===============
+Common developer commands
+=========================
 
 Testing
 -------
