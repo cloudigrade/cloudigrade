@@ -405,7 +405,6 @@ CELERY_BROKER_TRANSPORT_OPTIONS = {
     "region": AWS_SQS_REGION,
 }
 CELERY_BROKER_URL = AWS_SQS_URL
-QUEUE_EXCHANGE_NAME = None  # TODO Does anything still use this? Please comment.
 
 
 #####################################################################
