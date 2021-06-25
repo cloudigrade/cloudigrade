@@ -11,9 +11,6 @@ DATABASES = {
         "NAME": str(ROOT_DIR.path("db.sqlite3")),
     }
 }
-AWS_NAME_PREFIX = env("AWS_NAME_PREFIX", default="cloudigrade-")
-CELERY_BROKER_TRANSPORT_OPTIONS["queue_name_prefix"] = AWS_NAME_PREFIX
-CLOUDTRAIL_NAME_PREFIX = AWS_NAME_PREFIX
 
 LOGGING["handlers"]["console"]["level"] = "CRITICAL"
 logging.config.dictConfig(LOGGING)
