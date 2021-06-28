@@ -48,11 +48,14 @@ from api.clouds.aws.util import (
 from api.models import (
     CloudAccount,
     ConcurrentUsageCalculationTask,
+    InstanceEvent,
     MachineImage,
+    Run,
     UserTaskLock,
 )
 from api.util import (
     calculate_max_concurrent_usage,
+    recalculate_runs,
     schedule_concurrent_calculation_task,
 )
 from util import aws
@@ -698,3 +701,63 @@ def notify_application_availability_task(
         )
     except KafkaProducerException:
         raise
+
+
+@transaction.atomic()
+def _fix_problematic_run(run_id):
+    """
+    Try to fix a problematic Run that should have an end_date but doesn't.
+
+    This is the "fix it" half corresponding to find_problematic_runs.
+    """
+    try:
+        run = Run.objects.get(id=run_id)
+    except Run.DoesNotExist:
+        # The run was already deleted or updated before we got to it. Moving on...
+        logger.info(
+            _("Run %(run_id)s does not exist and cannot be fixed"), {"run_id": run_id}
+        )
+        return
+
+    oldest_power_off_event_since_run_start = (
+        InstanceEvent.objects.filter(
+            instance_id=run.instance_id,
+            occurred_at__gte=run.start_time,
+            event_type=InstanceEvent.TYPE.power_off,
+        )
+        .order_by("occurred_at")
+        .first()
+    )
+    if not oldest_power_off_event_since_run_start:
+        # There is no power_off event. Why are you even here? Moving on...
+        logger.info(_("No relevant InstanceEvent exists for %(run)s"), {"run": run})
+        return
+
+    if run.end_time == oldest_power_off_event_since_run_start.occurred_at:
+        # This run actually appears to be okay. Moving on...
+        logger.info(
+            _(
+                "%(run)s does not appear to require fixing; "
+                "oldest related power_off event is %(event)s"
+            ),
+            {"run": run, "event": oldest_power_off_event_since_run_start},
+        )
+        return
+
+    # Note: recalculate_runs should fix the identified run above *and* (re)create any
+    # subsequent runs that would exist for any events *after* this event occurred.
+    logger.warning(
+        _(
+            "Attempting to fix problematic runs starting with "
+            "%(run)s which should end with %(event)s"
+        ),
+        {"event": oldest_power_off_event_since_run_start, "run": run},
+    )
+    recalculate_runs(oldest_power_off_event_since_run_start)
+
+
+@shared_task(name="api.tasks.fix_problematic_runs")
+def fix_problematic_runs(run_ids):
+    """Fix list of problematic runs in an async task."""
+    for run_id in run_ids:
+        _fix_problematic_run(run_id)

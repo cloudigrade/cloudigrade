@@ -17,12 +17,14 @@ from rest_framework.decorators import (
     schema,
 )
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from api import models, schemas, tasks
 from api.clouds.aws import models as aws_models
 from api.clouds.azure import models as azure_models
 from api.serializers import CloudAccountSerializer
 from api.tasks import enable_account
+from api.util import find_problematic_runs
 from api.views import AccountViewSet, DailyConcurrentUsageViewSet
 from internal import filters, serializers
 from internal.authentication import (
@@ -161,6 +163,29 @@ def sources_kafka(request):
     }
 
     return JsonResponse(data=response)
+
+
+class ProblematicRunList(APIView):
+    """List all problematic unending Runs or try to fix them."""
+
+    authentication_classes = [IdentityHeaderAuthenticationInternal]
+    permission_classes = [permissions.AllowAny]
+    schema = None
+
+    def get(self, request):
+        """List all problematic unending Runs."""
+        user_id = request.query_params.get("user_id")
+        runs = find_problematic_runs(user_id)
+        serializer = serializers.InternalRunSerializer(runs, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        """Attempt to fix all problematic unending Runs."""
+        user_id = request.data.get("user_id")
+        runs = find_problematic_runs(user_id)
+        run_ids = [run.id for run in runs]
+        tasks.fix_problematic_runs.delay(run_ids)
+        return Response(status=status.HTTP_202_ACCEPTED)
 
 
 class InternalViewSetMixin:

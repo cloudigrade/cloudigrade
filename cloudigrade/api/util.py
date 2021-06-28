@@ -771,3 +771,33 @@ def process_instance_event(event):
             run.save()
             runs.append(run)
         calculate_max_concurrent_usage_from_runs(runs)
+
+
+def find_problematic_runs(user_id=None):
+    """
+    Find any problematic Run objects that should have an end_time but don't.
+
+    It's unclear how this can happen, but we have observed some cases where a Run was
+    created, and a power_off InstanceEvent exists, but the Run's end_time was not set.
+
+    Returns:
+        list of Run objects that should have an end_time but don't
+    """
+    # Find all runs with no end date, optionally filtering on the user.
+    user_filter = Q(instance__cloud_account__user__id=user_id) if user_id else Q()
+    runs = Run.objects.filter(user_filter, end_time=None).order_by("id")
+
+    # Find if any power_off event exists after each run's start.
+    # Note: there's probably a more efficient way of doing this without O(N) queries.
+    # In raw SQL, you could query the related events with an exists sub-select, but
+    # I'm not sure how to coerce Django's ORM in that way here. Maybe try attaching an
+    # annotation to the initial Run queryset that uses aggregation of InstanceEvent?
+    problematic_runs = []
+    for run in runs:
+        if InstanceEvent.objects.filter(
+            instance_id=run.instance_id,
+            occurred_at__gte=run.start_time,
+            event_type=InstanceEvent.TYPE.power_off,
+        ).exists():
+            problematic_runs.append(run)
+    return problematic_runs
