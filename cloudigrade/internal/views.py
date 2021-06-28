@@ -407,7 +407,7 @@ class InternalInstanceDefinitionViewSet(
     filterset_fields = {
         "cloud_type": ["exact"],
         "instance_type": ["exact"],
-        "memory": ["exact"],
+        "memory_mib": ["exact"],
         "vcpu": ["exact"],
         "created_at": ["lt", "exact", "gt"],
         "updated_at": ["lt", "exact", "gt"],

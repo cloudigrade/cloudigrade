@@ -3,11 +3,11 @@ import json
 import logging
 
 import boto3
-from django.db import IntegrityError, transaction
+from django.db import transaction
 from django.utils.translation import gettext as _
 
 from api import AWS_PROVIDER_STRING
-from api.models import InstanceDefinition
+from api.util import save_instance_type_definitions
 from util.celery import retriable_shared_task
 
 logger = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ def repopulate_ec2_instance_mapping():
     definitions = _fetch_ec2_instance_type_definitions()
     with transaction.atomic():
         try:
-            _save_ec2_instance_type_definitions(definitions)
+            save_instance_type_definitions(definitions, AWS_PROVIDER_STRING)
         except Exception as e:
             logger.exception(
                 _("Failed to save EC2 instance definitions; rolling back.")
@@ -75,50 +75,3 @@ def _fetch_ec2_instance_type_definitions():
                     )
 
     return instances
-
-
-def _save_ec2_instance_type_definitions(definitions):
-    """
-    Save AWS EC2 instance type definitions to our database.
-
-    Note:
-        If an instance type name already exists in the DB, do NOT overwrite it.
-
-    Args:
-        definitions (dict): dict of dicts where the outer key is the instance
-        type name and the inner dict has keys memory, vcpu and json_definition.
-        For example: {'r5.large': {'memory': 24.0, 'vcpu': 1, 'json_definition': {...}}}
-
-    Returns:
-        None
-
-    """
-    for name, attributes in definitions.items():
-        try:
-            obj, created = InstanceDefinition.objects.get_or_create(
-                instance_type=name,
-                cloud_type=AWS_PROVIDER_STRING,
-                defaults={
-                    "memory": attributes["memory"],
-                    "vcpu": attributes["vcpu"],
-                    "json_definition": attributes["json_definition"],
-                },
-            )
-            if created:
-                logger.info(_("Saving new instance type %s"), obj.instance_type)
-            else:
-                logger.info(_("Instance type %s already exists."), obj.instance_type)
-        except IntegrityError as e:
-            logger.exception(
-                _(
-                    "Failed to get_or_create an InstanceDefinition("
-                    'name="%(name)s", memory=%(memory)s, vcpu=%(vcpu)s'
-                    "); this should never happen."
-                ),
-                {
-                    "name": name,
-                    "memory": attributes["memory"],
-                    "vcpu": attributes["vcpu"],
-                },
-            )
-            raise e
