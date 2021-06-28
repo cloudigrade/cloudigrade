@@ -8,8 +8,9 @@ Note:
 from django.core.management.base import BaseCommand
 from django.utils.translation import gettext as _
 
-from api import AWS_PROVIDER_STRING
-from api.clouds.aws import tasks
+from api import AWS_PROVIDER_STRING, AZURE_PROVIDER_STRING
+from api.clouds.aws import tasks as aws_tasks
+from api.clouds.azure import tasks as azure_tasks
 from api.models import InstanceDefinition
 
 
@@ -33,11 +34,14 @@ class Command(BaseCommand):
             and InstanceDefinition.objects.filter(
                 cloud_type=AWS_PROVIDER_STRING
             ).exists()
+            and InstanceDefinition.objects.filter(
+                cloud_type=AZURE_PROVIDER_STRING
+            ).exists()
         ):
-            self.stdout.write(
-                _("Nothing to do. EC2 instance definitions already exist.")
-            )
+            self.stdout.write(_("Nothing to do. Instance definitions already exist."))
             return
-        # TODO: launch task to populate azure instance definitions
-        tasks.repopulate_ec2_instance_mapping.delay()
-        self.stdout.write(_("Async task launched to load EC2 instance definitions."))
+
+        aws_tasks.repopulate_ec2_instance_mapping.delay()
+        self.stdout.write(_("Async task launched to load AWS instance definitions."))
+        azure_tasks.repopulate_azure_instance_mapping.delay()
+        self.stdout.write(_("Async task launched to load Azure instance definitions."))

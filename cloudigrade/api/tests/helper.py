@@ -806,7 +806,7 @@ def generate_instance_type_definitions(cloud_type="aws"):
             instance_type=name,
             cloud_type=cloud_type,
             defaults={
-                "memory": instance["memory"],
+                "memory_mib": instance["memory"],
                 "vcpu": instance["vcpu"],
                 "json_definition": instance["json_definition"],
             },

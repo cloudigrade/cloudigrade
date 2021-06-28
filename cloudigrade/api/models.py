@@ -875,8 +875,8 @@ class InstanceDefinition(BaseModel):
     instance_type = models.CharField(
         max_length=256, null=False, blank=False, db_index=True
     )
-    memory = models.IntegerField(default=0)
-    vcpu = models.IntegerField(default=0)
+    memory_mib = models.IntegerField(default=0)  # MiB to be precise.
+    vcpu = models.DecimalField(max_digits=32, decimal_places=2, default=0.00)
     json_definition = models.JSONField()
     cloud_type = models.CharField(
         max_length=32, choices=CLOUD_TYPE_CHOICES, null=False, blank=False

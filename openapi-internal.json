@@ -3826,10 +3826,10 @@
             }
           },
           {
-            "name": "memory",
+            "name": "memory_mib",
             "required": false,
             "in": "query",
-            "description": "memory",
+            "description": "memory_mib",
             "schema": {
               "type": "string"
             }
@@ -3998,10 +3998,10 @@
             }
           },
           {
-            "name": "memory",
+            "name": "memory_mib",
             "required": false,
             "in": "query",
-            "description": "memory",
+            "description": "memory_mib",
             "schema": {
               "type": "string"
             }
@@ -7227,11 +7227,15 @@
             "type": "string",
             "maxLength": 256
           },
-          "memory": {
+          "memory_mib": {
             "type": "integer"
           },
           "vcpu": {
-            "type": "integer"
+            "type": "string",
+            "format": "decimal",
+            "multipleOf": 0.01,
+            "maximum": 1000000000000000000000000000000,
+            "minimum": -1000000000000000000000000000000
           },
           "json_definition": {
             "type": "object"
