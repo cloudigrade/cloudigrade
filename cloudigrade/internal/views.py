@@ -17,6 +17,7 @@ from rest_framework.decorators import (
     schema,
 )
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from api import models, schemas, tasks
 from api.clouds.aws import models as aws_models
@@ -30,6 +31,7 @@ from internal.authentication import (
     IdentityHeaderAuthenticationInternalAllowFakeIdentityHeader,
     IdentityHeaderAuthenticationInternalCreateUser,
 )
+from internal.util import find_unending_runs_power_off_events
 from util import exceptions as util_exceptions
 from util.misc import get_today
 from util.redhatcloud import identity
@@ -161,6 +163,37 @@ def sources_kafka(request):
     }
 
     return JsonResponse(data=response)
+
+
+class ProblematicUnendingRunList(APIView):
+    """List all problematic unending Runs or try to fix them."""
+
+    authentication_classes = [IdentityHeaderAuthenticationInternal]
+    permission_classes = [permissions.AllowAny]
+    schema = None
+
+    def get(self, request):
+        """List all problematic unending Runs."""
+        user_id = request.query_params.get("user_id")
+        run_events = find_unending_runs_power_off_events(user_id)
+        runs = [run for run, event in run_events]
+        serializer = serializers.InternalRunSerializer(runs, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        """Attempt to fix all problematic unending Runs."""
+        user_id = request.data.get("user_id")
+        run_events = find_unending_runs_power_off_events(user_id)
+        for run, event in run_events:
+            task_result = tasks.process_instance_event.delay(event)
+            logger.warning(
+                _(
+                    "Attempting to fix problematic %(run)s with %(event)s "
+                    "in task %(task_result)s"
+                ),
+                {"run": run, "event": event, "task_result": task_result},
+            )
+        return Response(status=status.HTTP_202_ACCEPTED)
 
 
 class InternalViewSetMixin:
