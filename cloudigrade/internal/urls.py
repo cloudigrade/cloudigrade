@@ -90,6 +90,10 @@ urlpatterns = [
     path("", include("django_prometheus.urls")),
     path("api/cloudigrade/v1/", include(router.urls)),
     path("api/cloudigrade/v1/availability_status", views.availability_check),
+    path(
+        "api/cloudigrade/v1/problematic_runs/",
+        views.ProblematicRunList.as_view(),
+    ),
     path("api/cloudigrade/v1/sources_kafka/", views.sources_kafka),
     path(
         "openapi.json",
