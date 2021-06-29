@@ -1,4 +1,4 @@
-"""Collection of tests for api.util.normalize_runs."""
+"""Collection of tests for api.util.denormalize_runs."""
 import random
 
 import faker
@@ -11,8 +11,8 @@ from util.tests import helper as util_helper
 _faker = faker.Faker()
 
 
-class NormalizeRunsTest(TestCase):
-    """Test cases for api.util.normalize_runs."""
+class DenormalizeRunsTest(TestCase):
+    """Test cases for api.util.denormalize_runs."""
 
     def setUp(self):
         """Set up commonly used data for each test."""
@@ -47,8 +47,8 @@ class NormalizeRunsTest(TestCase):
 
         api_helper.generate_instance_type_definitions()
 
-    def test_normalize_instance_on_off(self):
-        """Test normalize_runs for one plain instance."""
+    def test_denormalize_instance_on_off(self):
+        """Test denormalize_runs for one plain instance."""
         powered_times = (
             (
                 util_helper.utc_dt(2019, 1, 9, 0, 0, 0),
@@ -56,7 +56,7 @@ class NormalizeRunsTest(TestCase):
             ),
         )
         events = api_helper.generate_instance_events(self.instance_plain, powered_times)
-        runs = util.normalize_runs(events)
+        runs = util.denormalize_runs(events)
         self.assertEquals(len(runs), 1)
         run = runs[0]
         self.assertEquals(run.start_time, powered_times[0][0])
@@ -77,11 +77,11 @@ class NormalizeRunsTest(TestCase):
         self.assertFalse(run.openshift)
         self.assertFalse(run.openshift_detected)
 
-    def test_normalize_instance_on_never_off(self):
-        """Test normalize_runs for an instance that starts but never stops."""
+    def test_denormalize_instance_on_never_off(self):
+        """Test denormalize_runs for an instance that starts but never stops."""
         powered_times = ((util_helper.utc_dt(2019, 1, 9, 0, 0, 0), None),)
         events = api_helper.generate_instance_events(self.instance_plain, powered_times)
-        runs = util.normalize_runs(events)
+        runs = util.denormalize_runs(events)
         self.assertEquals(len(runs), 1)
         run = runs[0]
         self.assertEquals(run.start_time, powered_times[0][0])
@@ -89,8 +89,8 @@ class NormalizeRunsTest(TestCase):
         self.assertEquals(run.instance_id, self.instance_plain.id)
         self.assertEquals(run.image_id, self.image_plain.id)
 
-    def test_normalize_multiple_instances_on_off(self):
-        """Test normalize_runs for events for multiple instances and images."""
+    def test_denormalize_multiple_instances_on_off(self):
+        """Test denormalize_runs for events for multiple instances and images."""
         rhel_powered_times = (
             (
                 util_helper.utc_dt(2019, 1, 9, 0, 0, 0),
@@ -114,7 +114,7 @@ class NormalizeRunsTest(TestCase):
         events = rhel_events[:-1] + ocp_events[::-1] + rhel_events[-1:]
         random.shuffle(events)
 
-        runs = util.normalize_runs(events)
+        runs = util.denormalize_runs(events)
         self.assertEquals(len(runs), 2)
 
         rhel_run = runs[0] if runs[0].rhel else runs[1]
@@ -134,8 +134,8 @@ class NormalizeRunsTest(TestCase):
         self.assertEquals(ocp_run.instance_id, self.instance_ocp.id)
         self.assertEquals(ocp_run.image_id, self.image_ocp.id)
 
-    def test_normalize_one_instance_multiple_on_off(self):
-        """Test normalize_runs one instance having multiple on-off cycles."""
+    def test_denormalize_one_instance_multiple_on_off(self):
+        """Test denormalize_runs one instance having multiple on-off cycles."""
         powered_times = (
             (
                 util_helper.utc_dt(2019, 1, 9, 0, 0, 0),
@@ -150,7 +150,7 @@ class NormalizeRunsTest(TestCase):
         events = api_helper.generate_instance_events(self.instance_plain, powered_times)
         random.shuffle(events)
 
-        runs = util.normalize_runs(events)
+        runs = util.denormalize_runs(events)
         self.assertEquals(len(runs), len(powered_times))
         sorted_runs = sorted(runs, key=lambda r: r.start_time)
         for index, run in enumerate(sorted_runs):
@@ -159,9 +159,9 @@ class NormalizeRunsTest(TestCase):
             self.assertEquals(run.instance_id, self.instance_plain.id)
             self.assertEquals(run.image_id, self.image_plain.id)
 
-    def test_normalize_one_instance_on_on_on_off(self):
+    def test_denormalize_one_instance_on_on_on_off(self):
         """
-        Test normalize_runs one instance with multiple on and one off.
+        Test denormalize_runs one instance with multiple on and one off.
 
         In this special case, only one run should be created. The first on
         event is the only one relevant to that run.
@@ -177,7 +177,7 @@ class NormalizeRunsTest(TestCase):
         events = api_helper.generate_instance_events(self.instance_plain, powered_times)
         random.shuffle(events)
 
-        runs = util.normalize_runs(events)
+        runs = util.denormalize_runs(events)
         self.assertEquals(len(runs), 1)
         run = runs[0]
         self.assertEquals(run.start_time, powered_times[0][0])
@@ -185,9 +185,9 @@ class NormalizeRunsTest(TestCase):
         self.assertEquals(run.instance_id, self.instance_plain.id)
         self.assertEquals(run.image_id, self.image_plain.id)
 
-    def test_normalize_one_instance_on_off_off_off(self):
+    def test_denormalize_one_instance_on_off_off_off(self):
         """
-        Test normalize_runs one instance with multiple on and one off.
+        Test denormalize_runs one instance with multiple on and one off.
 
         In this special case, only one run should be created. The first off
         event is the only one relevant to that run.
@@ -203,7 +203,7 @@ class NormalizeRunsTest(TestCase):
         events = api_helper.generate_instance_events(self.instance_plain, powered_times)
         random.shuffle(events)
 
-        runs = util.normalize_runs(events)
+        runs = util.denormalize_runs(events)
         self.assertEquals(len(runs), 1)
         run = runs[0]
         self.assertEquals(run.start_time, powered_times[0][0])
@@ -211,9 +211,9 @@ class NormalizeRunsTest(TestCase):
         self.assertEquals(run.instance_id, self.instance_plain.id)
         self.assertEquals(run.image_id, self.image_plain.id)
 
-    def test_normalize_one_instance_on_on_off_off(self):
+    def test_denormalize_one_instance_on_on_off_off(self):
         """
-        Test normalize_runs one instance with "overlapping" ons and offs.
+        Test denormalize_runs one instance with "overlapping" ons and offs.
 
         In this special case, the mock data simulates receiving information
         that would indicate two potentially overlapping runs. However, since
@@ -232,7 +232,7 @@ class NormalizeRunsTest(TestCase):
         events = api_helper.generate_instance_events(self.instance_plain, powered_times)
         random.shuffle(events)
 
-        runs = util.normalize_runs(events)
+        runs = util.denormalize_runs(events)
         self.assertEquals(len(runs), 1)
         run = runs[0]
         self.assertEquals(run.start_time, powered_times[0][0])

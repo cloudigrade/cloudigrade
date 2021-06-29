@@ -36,7 +36,7 @@ from django.conf import settings
 
 from api import models
 from api.tests import helper as api_helper
-from api.util import calculate_max_concurrent_usage, normalize_runs
+from api.util import calculate_max_concurrent_usage, denormalize_runs
 from util import filters
 from util.misc import get_now
 from util.tests import helper as util_helper
@@ -156,16 +156,16 @@ class DocsApiHandler(object):
         # Note: this crude and *direct* implementation of Run-saving should be
         # replaced as we continue porting pilot functionality and (eventually)
         # better general-purpose Run-handling functions materialize.
-        normalized_runs = normalize_runs(models.InstanceEvent.objects.all())
-        for normalized_run in normalized_runs:
+        denormalized_runs = denormalize_runs(models.InstanceEvent.objects.all())
+        for denormalized_run in denormalized_runs:
             run = models.Run(
-                start_time=normalized_run.start_time,
-                end_time=normalized_run.end_time,
-                machineimage_id=normalized_run.image_id,
-                instance_id=normalized_run.instance_id,
-                instance_type=normalized_run.instance_type,
-                memory=normalized_run.instance_memory,
-                vcpu=normalized_run.instance_vcpu,
+                start_time=denormalized_run.start_time,
+                end_time=denormalized_run.end_time,
+                machineimage_id=denormalized_run.image_id,
+                instance_id=denormalized_run.instance_id,
+                instance_type=denormalized_run.instance_type,
+                memory=denormalized_run.instance_memory,
+                vcpu=denormalized_run.instance_vcpu,
             )
             run.save()
 

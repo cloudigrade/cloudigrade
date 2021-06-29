@@ -106,8 +106,8 @@ class AwsThrottlingException(Exception):
 
 
 # API Exceptions
-class NormalizeRunException(APIException):
-    """Raise when something unexpected happens in building NormalizeRuns."""
+class DemormalizedRunException(APIException):
+    """Raise when something unexpected happens in building DenormalizedRuns."""
 
     status_code = http.HTTPStatus.INTERNAL_SERVER_ERROR
 

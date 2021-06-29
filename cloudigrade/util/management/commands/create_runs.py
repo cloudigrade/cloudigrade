@@ -6,7 +6,7 @@ from django.db import transaction
 from tqdm import tqdm
 
 from api.models import ConcurrentUsage, Instance, InstanceEvent, Run
-from api.util import calculate_max_concurrent_usage_from_runs, normalize_runs
+from api.util import calculate_max_concurrent_usage_from_runs, denormalize_runs
 
 logger = logging.getLogger(__name__)
 
@@ -59,17 +59,17 @@ class Command(BaseCommand):
         for instance in tqdm(Instance.objects.all(), desc="Runs for instances"):
             events = InstanceEvent.objects.filter(instance=instance)
 
-            normalized_runs = normalize_runs(events)
+            denormalized_runs = denormalize_runs(events)
 
-            for normalized_run in normalized_runs:
+            for denormalized_run in denormalized_runs:
                 run = Run(
-                    start_time=normalized_run.start_time,
-                    end_time=normalized_run.end_time,
-                    machineimage_id=normalized_run.image_id,
-                    instance_id=normalized_run.instance_id,
-                    instance_type=normalized_run.instance_type,
-                    memory=normalized_run.instance_memory,
-                    vcpu=normalized_run.instance_vcpu,
+                    start_time=denormalized_run.start_time,
+                    end_time=denormalized_run.end_time,
+                    machineimage_id=denormalized_run.image_id,
+                    instance_id=denormalized_run.instance_id,
+                    instance_type=denormalized_run.instance_type,
+                    memory=denormalized_run.instance_memory,
+                    vcpu=denormalized_run.instance_vcpu,
                 )
                 run.save()
                 runs.append(run)
