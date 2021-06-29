@@ -70,8 +70,8 @@ def get_last_known_instance_type(instance, before_date):
     return event.content_object.instance_type
 
 
-NormalizedRun = collections.namedtuple(
-    "NormalizedRun",
+DenormalizedRun = collections.namedtuple(
+    "DenormalizedRun",
     [
         "start_time",
         "end_time",
@@ -106,9 +106,9 @@ def get_instance_type_definition(instance_type, cloud_type):
     return type_definition
 
 
-def normalize_runs(events):  # noqa: C901
+def denormalize_runs(events):  # noqa: C901
     """
-    Create list of "runs" with normalized event information.
+    Create list of "runs" with denormalized event information.
 
     These runs should have all the relevant reporting information about when
     an instance ran for a period of time so we don't have to keep going back
@@ -118,7 +118,7 @@ def normalize_runs(events):  # noqa: C901
         events (list[InstanceEvent]): list of relevant events
 
     Returns:
-        list(NormalizedRun).
+        list(DenormalizedRun).
 
     """
     sorted_events_by_instance = itertools.groupby(
@@ -126,7 +126,7 @@ def normalize_runs(events):  # noqa: C901
         key=lambda e: e.instance_id,
     )
 
-    normalized_runs = []
+    denormalized_runs = []
     for instance_id, events in sorted_events_by_instance:
         events = list(events)  # events is not subscriptable from the groupby.
         instance_type = events[
@@ -159,7 +159,7 @@ def normalize_runs(events):  # noqa: C901
 
             if start_run and end_run:
                 # The instance completed a start-stop cycle.
-                run = NormalizedRun(
+                run = DenormalizedRun(
                     start_time=start_run,
                     end_time=end_run,
                     image_id=image.id if image else None,
@@ -175,13 +175,13 @@ def normalize_runs(events):  # noqa: C901
                     rhel=image.rhel if image else False,
                     rhel_detected=image.rhel_detected if image else False,
                 )
-                normalized_runs.append(run)
+                denormalized_runs.append(run)
                 start_run = None
                 end_run = None
 
         if start_run and not end_run:
             # When the instance was started but never stopped.
-            run = NormalizedRun(
+            run = DenormalizedRun(
                 start_time=start_run,
                 end_time=None,
                 image_id=image.id if image else None,
@@ -197,9 +197,9 @@ def normalize_runs(events):  # noqa: C901
                 rhel=image.rhel if image else False,
                 rhel_detected=image.rhel_detected if image else False,
             )
-            normalized_runs.append(run)
+            denormalized_runs.append(run)
 
-    return normalized_runs
+    return denormalized_runs
 
 
 def get_max_concurrent_usage(date, user_id):
@@ -625,21 +625,21 @@ def recalculate_runs(event):
         )
     except Run.DoesNotExist:
         if event.event_type == event.TYPE.power_on:
-            normalized_runs = normalize_runs([event])
+            denormalized_runs = denormalize_runs([event])
             saved_runs = []
-            for index, normalized_run in enumerate(normalized_runs):
+            for index, denormalized_run in enumerate(denormalized_runs):
                 logger.info(
                     "Processing run %(index)s of %(runs)s",
-                    {"index": index + 1, "runs": len(normalized_runs)},
+                    {"index": index + 1, "runs": len(denormalized_runs)},
                 )
                 run = Run(
-                    start_time=normalized_run.start_time,
-                    end_time=normalized_run.end_time,
-                    machineimage_id=normalized_run.image_id,
-                    instance_id=normalized_run.instance_id,
-                    instance_type=normalized_run.instance_type,
-                    memory=normalized_run.instance_memory,
-                    vcpu=normalized_run.instance_vcpu,
+                    start_time=denormalized_run.start_time,
+                    end_time=denormalized_run.end_time,
+                    machineimage_id=denormalized_run.image_id,
+                    instance_id=denormalized_run.instance_id,
+                    instance_type=denormalized_run.instance_type,
+                    memory=denormalized_run.instance_memory,
+                    vcpu=denormalized_run.instance_vcpu,
                 )
                 run.save()
                 saved_runs.append(run)
@@ -654,23 +654,23 @@ def recalculate_runs(event):
         .order_by("occurred_at")
     )
 
-    normalized_runs = normalize_runs(events)
+    denormalized_runs = denormalize_runs(events)
     with transaction.atomic():
         runs.delete()
         saved_runs = []
-        for index, normalized_run in enumerate(normalized_runs):
+        for index, denormalized_run in enumerate(denormalized_runs):
             logger.info(
                 "Processing run %(index)s of %(runs)s",
-                {"index": index + 1, "runs": len(normalized_runs)},
+                {"index": index + 1, "runs": len(denormalized_runs)},
             )
             run = Run(
-                start_time=normalized_run.start_time,
-                end_time=normalized_run.end_time,
-                machineimage_id=normalized_run.image_id,
-                instance_id=normalized_run.instance_id,
-                instance_type=normalized_run.instance_type,
-                memory=normalized_run.instance_memory,
-                vcpu=normalized_run.instance_vcpu,
+                start_time=denormalized_run.start_time,
+                end_time=denormalized_run.end_time,
+                machineimage_id=denormalized_run.image_id,
+                instance_id=denormalized_run.instance_id,
+                instance_type=denormalized_run.instance_type,
+                memory=denormalized_run.instance_memory,
+                vcpu=denormalized_run.instance_vcpu,
             )
             run.save()
             saved_runs.append(run)
@@ -753,20 +753,20 @@ def process_instance_event(event):
     if Run.objects.filter(filters, instance=instance).exists():
         recalculate_runs(event)
     elif event.event_type == InstanceEvent.TYPE.power_on:
-        normalized_runs = normalize_runs([event])
+        denormalized_runs = denormalize_runs([event])
         runs = []
-        for index, normalized_run in enumerate(normalized_runs):
+        for index, denormalized_run in enumerate(denormalized_runs):
             logger.info(
-                "Processing run {} of {}".format(index + 1, len(normalized_runs))
+                "Processing run {} of {}".format(index + 1, len(denormalized_runs))
             )
             run = Run(
-                start_time=normalized_run.start_time,
-                end_time=normalized_run.end_time,
-                machineimage_id=normalized_run.image_id,
-                instance_id=normalized_run.instance_id,
-                instance_type=normalized_run.instance_type,
-                memory=normalized_run.instance_memory,
-                vcpu=normalized_run.instance_vcpu,
+                start_time=denormalized_run.start_time,
+                end_time=denormalized_run.end_time,
+                machineimage_id=denormalized_run.image_id,
+                instance_id=denormalized_run.instance_id,
+                instance_type=denormalized_run.instance_type,
+                memory=denormalized_run.instance_memory,
+                vcpu=denormalized_run.instance_vcpu,
             )
             run.save()
             runs.append(run)
