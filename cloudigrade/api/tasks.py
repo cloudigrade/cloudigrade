@@ -413,8 +413,6 @@ def update_from_source_kafka_message(message, headers):
             )
 
 
-@shared_task(name="api.tasks.process_instance_event")
-@transaction.atomic
 def process_instance_event(event):
     """
     Process instance events that have been saved during log analysis.
