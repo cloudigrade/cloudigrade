@@ -48,17 +48,11 @@ from api.clouds.aws.util import (
 from api.models import (
     CloudAccount,
     ConcurrentUsageCalculationTask,
-    Instance,
-    InstanceEvent,
     MachineImage,
-    Run,
     UserTaskLock,
 )
 from api.util import (
     calculate_max_concurrent_usage,
-    calculate_max_concurrent_usage_from_runs,
-    normalize_runs,
-    recalculate_runs,
     schedule_concurrent_calculation_task,
 )
 from util import aws
@@ -411,51 +405,6 @@ def update_from_source_kafka_message(message, headers):
                 authentication_id,
                 account_number,
             )
-
-
-def process_instance_event(event):
-    """
-    Process instance events that have been saved during log analysis.
-
-    Note:
-        When processing power_on type events, this triggers a recalculation of
-        ConcurrentUsage objects. If the event is at some point in the
-        not-too-recent past, this may take a while as every day since the event
-        will get recalculated and saved. We do not anticipate this being a real
-        problem in practice, but this has the potential to slow down unit test
-        execution over time since their occurred_at values are often static and
-        will recede father into the past from "today", resulting in more days
-        needing to recalculate. This effect could be mitigated in tests by
-        patching parts of the datetime module that are used to find "today".
-    """
-    after_run = Q(start_time__gt=event.occurred_at)
-    during_run = Q(start_time__lte=event.occurred_at, end_time__gt=event.occurred_at)
-    during_run_no_end = Q(start_time__lte=event.occurred_at, end_time=None)
-
-    filters = after_run | during_run | during_run_no_end
-    instance = Instance.objects.get(id=event.instance_id)
-
-    if Run.objects.filter(filters, instance=instance).exists():
-        recalculate_runs(event)
-    elif event.event_type == InstanceEvent.TYPE.power_on:
-        normalized_runs = normalize_runs([event])
-        runs = []
-        for index, normalized_run in enumerate(normalized_runs):
-            logger.info(
-                "Processing run {} of {}".format(index + 1, len(normalized_runs))
-            )
-            run = Run(
-                start_time=normalized_run.start_time,
-                end_time=normalized_run.end_time,
-                machineimage_id=normalized_run.image_id,
-                instance_id=normalized_run.instance_id,
-                instance_type=normalized_run.instance_type,
-                memory=normalized_run.instance_memory,
-                vcpu=normalized_run.instance_vcpu,
-            )
-            run.save()
-            runs.append(run)
-        calculate_max_concurrent_usage_from_runs(runs)
 
 
 @shared_task(name="api.tasks.persist_inspection_cluster_results_task")

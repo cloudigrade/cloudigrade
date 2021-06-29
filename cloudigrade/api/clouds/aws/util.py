@@ -24,6 +24,7 @@ from api.models import (
     MachineImage,
     MachineImageInspectionStart,
 )
+from api.util import process_instance_event
 from util import aws
 from util.exceptions import (
     InvalidArn,
@@ -361,8 +362,6 @@ def save_instance_events(awsinstance, instance_data, events=None):
         AwsInstance: Object representing the saved instance.
 
     """
-    from api.tasks import process_instance_event  # local import to avoid loop
-
     if events is None:
         with transaction.atomic():
             occurred_at = get_now()
@@ -467,8 +466,6 @@ def create_missing_power_off_aws_instance_events(account, instances_data):
     this, we risk letting dead instances with never-ending runs contribute erroneously
     to concurrent usage calculations for new days.
     """
-    from api.tasks import process_instance_event  # local import to avoid loop
-
     # Build a list of currently-running instance IDs according to the described data.
     running_ec2_instance_ids = set()
     for region, instances in instances_data.items():

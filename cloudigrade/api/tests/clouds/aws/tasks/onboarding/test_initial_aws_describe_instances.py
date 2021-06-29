@@ -13,8 +13,8 @@ from api.models import (
     MachineImage,
     Run,
 )
-from api.tasks import process_instance_event
 from api.tests import helper as account_helper
+from api.util import process_instance_event
 from util.tests import helper as util_helper
 
 
@@ -204,7 +204,7 @@ class InitialAwsDescribeInstancesPowerOffNotRunningTest(TestCase):
     def process_event(self, event):
         """Process the event but skip the async calculate max concurrent function."""
         with patch(
-            "api.tasks.calculate_max_concurrent_usage_from_runs"
+            "api.util.calculate_max_concurrent_usage_from_runs"
         ) as mock_calculate_max_concurrent:
             process_instance_event(event)
             if event.event_type == InstanceEvent.TYPE.power_on:

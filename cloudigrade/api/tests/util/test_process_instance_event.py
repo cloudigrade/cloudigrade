@@ -1,20 +1,19 @@
-"""Collection of tests for tasks.process_instance_event."""
+"""Collection of tests for util.process_instance_event."""
 from unittest.mock import patch
 
 import faker
 from django.test import TestCase
 
-from api import tasks
 from api.models import InstanceEvent, Run
 from api.tests import helper as api_helper
-from api.util import calculate_max_concurrent_usage
+from api.util import calculate_max_concurrent_usage, process_instance_event
 from util.tests import helper as util_helper
 
 _faker = faker.Faker()
 
 
 class ProcessInstanceEventTest(TestCase):
-    """Celery task 'process_instance_event' test cases."""
+    """Utility function 'process_instance_event' test cases."""
 
     def setUp(self):
         """Set up common variables for tests."""
@@ -55,7 +54,7 @@ class ProcessInstanceEventTest(TestCase):
             event_type=InstanceEvent.TYPE.power_on,
             no_instance_type=True,
         )
-        tasks.process_instance_event(start_event)
+        process_instance_event(start_event)
 
         occurred_at = util_helper.utc_dt(2018, 1, 13, 0, 0, 0)
 
@@ -65,7 +64,7 @@ class ProcessInstanceEventTest(TestCase):
             event_type=InstanceEvent.TYPE.power_off,
             no_instance_type=True,
         )
-        tasks.process_instance_event(instance_event)
+        process_instance_event(instance_event)
 
         runs = list(Run.objects.all())
         self.assertEqual(1, len(runs))
@@ -73,7 +72,7 @@ class ProcessInstanceEventTest(TestCase):
         self.assertEqual(occurred_at, runs[0].end_time)
 
     @patch("api.util.schedule_concurrent_calculation_task")
-    @patch("api.tasks.recalculate_runs")
+    @patch("api.util.recalculate_runs")
     @util_helper.clouditardis(util_helper.utc_dt(2018, 1, 12, 0, 0, 0))
     def test_process_instance_event_new_run(
         self, mock_recalculate_runs, mock_schedule_concurrent_task
@@ -109,7 +108,7 @@ class ProcessInstanceEventTest(TestCase):
             event_type=InstanceEvent.TYPE.power_on,
             instance_type=None,
         )
-        tasks.process_instance_event(instance_event)
+        process_instance_event(instance_event)
 
         runs = list(Run.objects.all())
         self.assertEqual(2, len(runs))
@@ -163,7 +162,7 @@ class ProcessInstanceEventTest(TestCase):
             instance_type=instance_type,
         )
 
-        tasks.process_instance_event(instance_event)
+        process_instance_event(instance_event)
 
         runs = list(Run.objects.all())
         self.assertEqual(1, len(runs))
@@ -179,14 +178,14 @@ class ProcessInstanceEventTest(TestCase):
             instance_type=instance_type,
         )
 
-        tasks.process_instance_event(duplicate_start_event)
+        process_instance_event(duplicate_start_event)
 
         runs = list(Run.objects.all())
         self.assertEqual(1, len(runs))
         self.assertEqual(run_time[0][1], runs[0].end_time)
         self.assertEqual(first_start, runs[0].start_time)
 
-    @patch("api.tasks.recalculate_runs")
+    @patch("api.util.recalculate_runs")
     @util_helper.clouditardis(util_helper.utc_dt(2018, 1, 12, 0, 0, 0))
     def test_process_instance_event_power_off(self, mock_recalculate_runs):
         """
@@ -218,7 +217,7 @@ class ProcessInstanceEventTest(TestCase):
             event_type=InstanceEvent.TYPE.power_off,
             instance_type=None,
         )
-        tasks.process_instance_event(instance_event)
+        process_instance_event(instance_event)
 
         runs = list(Run.objects.all())
         self.assertEqual(1, len(runs))
