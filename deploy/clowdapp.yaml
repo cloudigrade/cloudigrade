@@ -30,6 +30,8 @@ objects:
         env:
         - name: APP_NAME
           value: ${APP_NAME}
+        - name: ENV_NAME
+          value: ${ENV_NAME}
         - name: ENCRYPTION_KEY
           valueFrom:
             secretKeyRef:
