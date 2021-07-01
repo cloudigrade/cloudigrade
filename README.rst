@@ -189,6 +189,64 @@ If you want to undo that operation and effectively *remove* everything the playb
         deployment/playbooks/manage-cloudigrade.yml
 
 
+Azure Account Setup
+-------------------
+
+Next you'll need an Azure account. You can sign up for one, or login `here <https://portal.azure.com/>`_. You will need to get the tenant id, client id, subscription id, and the client secret.
+
+The tenant id is your Azure directory id, the subscription id is as it says. To get the client id and secret follow these steps:
+
+#. Log into the `Azure Portal <https://portal.azure.com/>`_
+#. Navigate to the Azure Active Directory Blade.
+#. In the left column, under `Manage`, select `App Registrations`.
+#. Select `New Registration`
+#. Name your app e.g. `cloudigrade-dev-kb`
+#. Click Register. You should now be taken to your new App Registration.
+#. Note your `Application (client) ID` on the Overview page, this is your `Client ID`.
+#. In the left column, under `Manage`, select `Certificates & secrets`.
+#. Select `New client secret`
+#. Add a helpful description and expiration date.
+#. Click Add. Your `Client Secret` is under the `Value` column.
+
+After you've acquired those values, set the environment variables:
+
+- ``AZURE_CLIENT_ID="your client id from above"``
+- ``AZURE_CLIENT_SECRET="your client secret from above"``
+- ``AZURE_SUBSCRIPTION_ID="your azure subscription id"``
+- ``AZURE_TENANT_ID="your azure directory id"``
+
+Finally, before your deployment is able to talk to Azure, you'll need to create a role with all the necessary permissions.
+
+#. Log into the `Azure Portal <https://portal.azure.com/>`_
+#. Navigate to the Azure Subscription that you'll be using.
+#. In the left column, select `Access control (IAM)`.
+#. Select `Add -> Custom Role`
+#. Name the role, click `Next`.
+#. Select the `JSON` tab.
+#. Paste the following JSON block replacing the permissions array only:
+
+    .. code-block:: json
+
+            "permissions": [
+                {
+                    "actions": [
+                        "Microsoft.Compute/skus/read"
+                    ],
+                    "notActions": [],
+                    "dataActions": [],
+                    "notDataActions": []
+                }
+            ]
+
+#. Click `Review + create` -> `Create`.
+#. Select `Add -> Add a Role Assignment`
+#. Role -> Select your newly created Role
+#. Select -> Type your app registration name here and hit enter.
+#. Select your app that mysteriously appeared.
+#. Click `Save`.
+
+You should now be ready to use Azure with cloudigrade.
+
 Environment variables
 ---------------------
 
@@ -198,12 +256,18 @@ TL;DR: to get started, set at least the following environment variables before t
 - ``CLOUDIGRADE_ENVIRONMENT="${USER}"``
 - ``AWS_ACCESS_KEY_ID="your cloudigrade aws access key id"``
 - ``AWS_SECRET_ACCESS_KEY="your cloudigrade aws secret access key"``
+- ``AZURE_CLIENT_ID="your azure client id"``
+- ``AZURE_CLIENT_SECRET="your azure client secret"``
+- ``AZURE_SUBSCRIPTION_ID="your azure subscription id"``
+- ``AZURE_TENANT_ID="your azure directory id"``
 
 If you do not set ``DJANGO_SETTINGS_MODULE``, you may need to include the ``--settings=config.settings.local`` argument with any Django admin or management commands you run.
 
 **cloudigrade** derives several other important configs using the value of ``CLOUDIGRADE_ENVIRONMENT``. In deployed stage and production environments, for example, this variable may have the values "stage" and "prod" respectively. You should define ``CLOUDIGRADE_ENVIRONMENT`` with a value that is *reasonably unique to your own development environment*. We recommend setting it with your username like ``${USER}`` to minimize potential collisions with other nearby developers.
 
 Credentials for **cloudigrade**'s AWS account must be set in your local environment using ``AWS_ACCESS_KEY_ID`` and ``AWS_SECRET_ACCESS_KEY``. Even if you don't intend to work with AWS at first, these must not be empty or else app startup will fail. If you need to start the app without interacting with AWS, you may set dummy values in these variables for partial functionality.
+
+Similar caveat applies for **cloudigrade**'s Azure account, it must be set in your local environment using ``AZURE_CLIENT_ID``,  ``AZURE_CLIENT_SECRET``, ``AZURE_SUBSCRIPTION_ID``, and ``AZURE_TENANT_ID``. Even if you don't intend to work with Azure at first, these must not be empty or else app startup will fail. If you need to start the app without interacting with Azure, you may set dummy values in these variables for partial functionality.
 
 The local config assumes you are running PostgreSQL on ``localhost:5432`` with the default ``postgres`` database and ``postgres`` user with no password set. You may want to change those default values with:
 
