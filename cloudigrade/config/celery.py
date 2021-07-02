@@ -63,7 +63,8 @@ app.conf.beat_schedule = {
         ),
     },
 }
-app.autodiscover_tasks()
+task_packages = ["api.clouds.aws.tasks", "api.clouds.azure.tasks", "api.tasks"]
+app.autodiscover_tasks(task_packages)
 logger.info("Celery setup.")
 
 if env("CELERY_ENABLE_SENTRY", default=False):
