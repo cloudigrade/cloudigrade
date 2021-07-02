@@ -184,7 +184,15 @@ class ProblematicRunList(APIView):
         user_id = request.data.get("user_id")
         runs = find_problematic_runs(user_id)
         run_ids = [run.id for run in runs]
-        tasks.fix_problematic_runs.delay(run_ids)
+        if run_ids:
+            logger.info(
+                _("Preparing to fix problematic runs: %(run_ids)s"),
+                {"run_ids": run_ids},
+            )
+            task_result = tasks.fix_problematic_runs.delay(run_ids)
+            logger.info(
+                _("fix_problematic_runs task is %(task)s"), {"task": task_result}
+            )
         return Response(status=status.HTTP_202_ACCEPTED)
 
 
