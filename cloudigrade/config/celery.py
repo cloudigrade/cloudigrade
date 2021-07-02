@@ -55,6 +55,13 @@ app.conf.beat_schedule = {
             default=60 * 60 * 24 * 7,  # 1 week in seconds
         ),
     },
+    "repopulate_azure_instance_mapping_every_week": {
+        "task": "api.clouds.azure.tasks.repopulate_azure_instance_mapping",
+        "schedule": env.int(
+            "REPOPULATE_AZURE_INSTANCE_MAPPING_SCHEDULE",
+            default=60 * 60 * 24 * 7,  # 1 week in seconds
+        ),
+    },
 }
 app.autodiscover_tasks()
 logger.info("Celery setup.")
