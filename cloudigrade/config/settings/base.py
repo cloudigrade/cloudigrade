@@ -434,6 +434,10 @@ CELERY_TASK_ROUTES = {
     "api.tasks.persist_inspection_cluster_results_task": {
         "queue": "persist_inspection_cluster_results_task"
     },
+    # api.clouds.azure.tasks
+    "api.clouds.azure.tasks.repopulate_azure_instance_mapping": {
+        "queue": "repopulate_azure_instance_mapping"
+    },
     # api.clouds.aws.tasks
     "api.clouds.aws.tasks.repopulate_ec2_instance_mapping": {
         "queue": "repopulate_ec2_instance_mapping"
