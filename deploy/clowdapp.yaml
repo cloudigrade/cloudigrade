@@ -21,6 +21,9 @@ objects:
     envName: ${ENV_NAME}
     deployments:
     - name: api
+      #
+      # Component cloudigrade-api deployment:
+      #
       minReplicas: ${{MIN_REPLICAS}}
       webServices:
         public:
@@ -42,6 +45,347 @@ objects:
             secretKeyRef:
               name: cloudigrade-secrets
               key: secret-key
+        - name: ANALYZE_LOG_SCHEDULE
+          valueFrom:
+            configMapKeyRef:
+              key: analyze-log-schedule
+              name: cloudigrade
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              key: aws-access-key-id
+              name: cloudigrade
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              key: aws-secret-access-key
+              name: cloudigrade
+        - name: AWS_DEFAULT_REGION
+          valueFrom:
+            configMapKeyRef:
+              key: aws-default-region
+              name: cloudigrade
+        - name: AWS_SQS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              key: aws-sqs-access-key-id
+              name: cloudigrade
+        - name: AWS_SQS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              key: aws-sqs-secret-access-key
+              name: cloudigrade
+        - name: AWS_SQS_REGION
+          valueFrom:
+            configMapKeyRef:
+              key: aws-sqs-region
+              name: cloudigrade
+        - name: AWS_SQS_MAX_RECEIVE_COUNT
+          valueFrom:
+            configMapKeyRef:
+              key: aws-sqs-max-receive-count
+              name: cloudigrade
+        - name: AWS_SQS_MAX_YIELD_COUNT
+          valueFrom:
+            configMapKeyRef:
+              key: aws-sqs-max-yield-count
+              name: cloudigrade
+        - name: AWS_SQS_MAX_HOUNDI_YIELD_COUNT
+          valueFrom:
+            configMapKeyRef:
+              key: aws-sqs-max-houndi-yield-count
+              name: cloudigrade
+        - name: S3_BUCKET_LC_NAME
+          valueFrom:
+            configMapKeyRef:
+              key: aws-s3-bucket-lc-name
+              name: cloudigrade
+        - name: S3_BUCKET_LC_IA_TRANSITION
+          valueFrom:
+            configMapKeyRef:
+              key: aws-s3-bucket-lc-ia-transition
+              name: cloudigrade
+        - name: S3_BUCKET_LC_GLACIER_TRANSITION
+          valueFrom:
+            configMapKeyRef:
+              key: aws-s3-bucket-lc-ia-glacier-transition
+              name: cloudigrade
+        - name: S3_BUCKET_LC_MAX_AGE
+          valueFrom:
+            configMapKeyRef:
+              key: aws-s3-bucket-lc-max-age
+              name: cloudigrade
+        - name: DJANGO_SETTINGS_MODULE
+          valueFrom:
+            configMapKeyRef:
+              key: django-settings-module
+              name: cloudigrade
+        - name: DJANGO_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              key: django-secret-key
+              name: cloudigrade
+        - name: DJANGO_ALLOWED_HOSTS
+          valueFrom:
+            configMapKeyRef:
+              key: django-allowed-hosts
+              name: cloudigrade
+        - name: DJANGO_DATABASE_CONN_MAX_AGE
+          valueFrom:
+            configMapKeyRef:
+              key: django-database-conn-max-age
+              name: cloudigrade
+        - name: DJANGO_DATABASE_NAME
+          valueFrom:
+            secretKeyRef:
+              key: db.name
+              name: cloudigrade-rds
+        - name: DJANGO_DATABASE_PORT
+          valueFrom:
+            configMapKeyRef:
+              key: postigrade-port
+              name: cloudigrade
+        - name: DJANGO_DATABASE_HOST
+          valueFrom:
+            configMapKeyRef:
+              key: postigrade-host
+              name: cloudigrade
+        - name: DJANGO_DATABASE_USER
+          valueFrom:
+            secretKeyRef:
+              key: db.user
+              name: cloudigrade-rds
+        - name: DJANGO_DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: db.password
+              name: cloudigrade-rds
+        - name: DJANGO_DEBUG
+          valueFrom:
+            configMapKeyRef:
+              key: django-debug
+              name: cloudigrade
+        - name: DJANGO_LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              key: django-log-level
+              name: cloudigrade
+        - name: DJANGO_ALL_LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              key: django-all-log-level
+              name: cloudigrade
+        - name: DJANGO_CONSOLE_LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              key: django-console-log-level
+              name: cloudigrade
+        - name: CLOUDIGRADE_LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              key: cloudigrade-log-level
+              name: cloudigrade
+        - name: SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY
+          valueFrom:
+            configMapKeyRef:
+              key: schedule-concurrent-usage-calculation-delay
+              name: cloudigrade
+        - name: SCHEDULE_VERIFY_VERIFY_TASKS_INTERVAL
+          valueFrom:
+            configMapKeyRef:
+              key: schedule-verify-task-interval
+              name: cloudigrade
+        - name: HOUNDIGRADE_ECS_IMAGE_NAME
+          valueFrom:
+            configMapKeyRef:
+              key: houndigrade-ecs-image-name
+              name: cloudigrade
+        - name: HOUNDIGRADE_ECS_IMAGE_TAG
+          valueFrom:
+            configMapKeyRef:
+              key: houndigrade-ecs-image-tag
+              name: cloudigrade
+        - name: HOUNDIGRADE_ECS_FAMILY_NAME
+          valueFrom:
+            configMapKeyRef:
+              key: houndigrade-ecs-family-name
+              name: cloudigrade
+        - name: INSPECTION_CLUSTER_INSTANCE_AGE_LIMIT
+          valueFrom:
+            configMapKeyRef:
+              key: inspection-cluster-instance-age-limit
+              name: cloudigrade
+        - name: CLOUDIGRADE_VERSION
+          valueFrom:
+            configMapKeyRef:
+              key: cloudigrade-version
+              name: cloudigrade
+        - name: CLOUDIGRADE_ENVIRONMENT
+          valueFrom:
+            configMapKeyRef:
+              key: cloudigrade-environment
+              name: cloudigrade
+        - name: SENTRY_TRACES_SAMPLE_RATE
+          valueFrom:
+            configMapKeyRef:
+              key: sentry-traces-sample-rate
+              name: cloudigrade
+        - name: API_ENABLE_SENTRY
+          valueFrom:
+            configMapKeyRef:
+              key: api-sentry-enabled
+              name: cloudigrade
+        - name: DJANGO_SENTRY_DSN
+          valueFrom:
+            secretKeyRef:
+              key: api-sentry-dsn
+              name: cloudigrade
+        - name: DJANGO_SENTRY_ENVIRONMENT
+          valueFrom:
+            configMapKeyRef:
+              key: api-sentry-environment
+              name: cloudigrade
+        - name: HOUNDIGRADE_ENABLE_SENTRY
+          valueFrom:
+            configMapKeyRef:
+              key: houndigrade-sentry-enabled
+              name: cloudigrade
+        - name: HOUNDIGRADE_SENTRY_DSN
+          valueFrom:
+            secretKeyRef:
+              key: houndigrade-sentry-dsn
+              name: cloudigrade
+        - name: HOUNDIGRADE_SENTRY_RELEASE
+          valueFrom:
+            configMapKeyRef:
+              key: houndigrade-ecs-image-tag
+              name: cloudigrade
+        - name: HOUNDIGRADE_SENTRY_ENVIRONMENT
+          valueFrom:
+            configMapKeyRef:
+              key: houndigrade-sentry-environment
+              name: cloudigrade
+        - name: SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA
+          valueFrom:
+            configMapKeyRef:
+              key: sources-enable-data-management-from-kafka
+              name: cloudigrade
+        - name: SOURCES_API_BASE_URL
+          valueFrom:
+            configMapKeyRef:
+              key: sources-api-base-url
+              name: cloudigrade
+        - name: CLOUDIGRADE_ENABLE_CLOUDWATCH
+          valueFrom:
+            configMapKeyRef:
+              key: cloudigrade-enable-cloudwatch
+              name: cloudigrade
+        - name: CW_AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              key: aws_access_key_id
+              name: cloudwatch
+        - name: CW_AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              key: aws_secret_access_key
+              name: cloudwatch
+        - name: CW_AWS_REGION_NAME
+          valueFrom:
+            secretKeyRef:
+              key: aws_region
+              name: cloudwatch
+        - name: CLOUDIGRADE_CW_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              key: cloudigrade-cw-level
+              name: cloudigrade
+        - name: CLOUDIGRADE_CW_LOG_GROUP
+          valueFrom:
+            secretKeyRef:
+              key: log_group_name
+              name: cloudwatch
+        - name: CLOUDIGRADE_CW_STREAM_NAME
+          valueFrom:
+            configMapKeyRef:
+              key: cloudigrade-cw-stream-name
+              name: cloudigrade
+        - name: LISTENER_LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              key: listener-log-level
+              name: cloudigrade
+        - name: LISTENER_TOPIC
+          valueFrom:
+            configMapKeyRef:
+              key: listener-topic
+              name: cloudigrade
+        - name: LISTENER_GROUP_ID
+          valueFrom:
+            configMapKeyRef:
+              key: listener-group-id
+              name: cloudigrade
+        - name: LISTENER_SERVER
+          valueFrom:
+            configMapKeyRef:
+              key: listener-server
+              name: cloudigrade
+        - name: LISTENER_PORT
+          valueFrom:
+            configMapKeyRef:
+              key: listener-port
+              name: cloudigrade
+        - name: VERBOSE_INSIGHTS_IDENTITY_HEADER_LOGGING
+          valueFrom:
+            configMapKeyRef:
+              key: verbose-insights-identity-header-logging
+              name: cloudigrade
+        - name: VERBOSE_SOURCES_NOTIFICATION_LOGGING
+          valueFrom:
+            configMapKeyRef:
+              key: verbose-sources-notification-logging
+              name: cloudigrade
+        - name: CACHE_TTL_DEFAULT
+          valueFrom:
+            configMapKeyRef:
+              key: cache-ttl-default
+              name: cloudigrade
+        - name: CACHE_TTL_SOURCES_APPLICATION_TYPE_ID
+          valueFrom:
+            configMapKeyRef:
+              key: cache-ttl-sources-application-type-id
+              name: cloudigrade
+        - name: OSD_REDEPLOY_TRIGGER
+          valueFrom:
+            configMapKeyRef:
+              key: osd-redeploy-trigger
+              name: cloudigrade
+        - name: IMAGE_TAG
+          valueFrom:
+            configMapKeyRef:
+              key: image-tag
+              name: cloudigrade
+        - name: SLACK_TOKEN
+          valueFrom:
+            secretKeyRef:
+              key: slack-token
+              name: cloudigrade
+        - name: HABERDASHER_EMITTER
+          value: ${HABERDASHER_EMITTER}
+        - name: HABERDASHER_KAFKA_BOOTSTRAP
+          value: ${HABERDASHER_KAFKA_BOOTSTRAP}
+        - name: HABERDASHER_KAFKA_TOPIC
+          value: ${HABERDASHER_KAFKA_TOPIC}
+        - name: HABERDASHER_LABELS
+          value: ${HABERDASHER_LABELS}
+        - name: HABERDASHER_TAGS
+          value: ${HABERDASHER_TAGS}
+        - name: WATCHTOWER_USE_QUEUES
+          value: ${WATCHTOWER_USE_QUEUES}
+        - name: WATCHTOWER_SEND_INTERVAL
+          value: ${WATCHTOWER_SEND_INTERVAL}
+        - name: WATCHTOWER_MAX_BATCH_COUNT
+          value: ${WATCHTOWER_MAX_BATCH_COUNT}
         livenessProbe:
           exec:
             command:
@@ -73,6 +417,1126 @@ objects:
           requests:
             cpu: 100m
             memory: 500Mi
+    - name: beat
+      #
+      # Component cloudigrade-beat deployment:
+      #
+      replicas: ${{CELERY_BEAT_REPLICA_COUNT}}
+      webServices:
+        public:
+          enabled: false
+      podSpec:
+        image: ${IMAGE}:${IMAGE_TAG}
+        env:
+        - name: ANALYZE_LOG_SCHEDULE
+          valueFrom:
+            configMapKeyRef:
+              key: analyze-log-schedule
+              name: cloudigrade
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              key: aws-access-key-id
+              name: cloudigrade
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              key: aws-secret-access-key
+              name: cloudigrade
+        - name: AWS_DEFAULT_REGION
+          valueFrom:
+            configMapKeyRef:
+              key: aws-default-region
+              name: cloudigrade
+        - name: AWS_SQS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              key: aws-sqs-access-key-id
+              name: cloudigrade
+        - name: AWS_SQS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              key: aws-sqs-secret-access-key
+              name: cloudigrade
+        - name: AWS_SQS_REGION
+          valueFrom:
+            configMapKeyRef:
+              key: aws-sqs-region
+              name: cloudigrade
+        - name: AWS_SQS_MAX_RECEIVE_COUNT
+          valueFrom:
+            configMapKeyRef:
+              key: aws-sqs-max-receive-count
+              name: cloudigrade
+        - name: AWS_SQS_MAX_YIELD_COUNT
+          valueFrom:
+            configMapKeyRef:
+              key: aws-sqs-max-yield-count
+              name: cloudigrade
+        - name: AWS_SQS_MAX_HOUNDI_YIELD_COUNT
+          valueFrom:
+            configMapKeyRef:
+              key: aws-sqs-max-houndi-yield-count
+              name: cloudigrade
+        - name: S3_BUCKET_LC_NAME
+          valueFrom:
+            configMapKeyRef:
+              key: aws-s3-bucket-lc-name
+              name: cloudigrade
+        - name: S3_BUCKET_LC_IA_TRANSITION
+          valueFrom:
+            configMapKeyRef:
+              key: aws-s3-bucket-lc-ia-transition
+              name: cloudigrade
+        - name: S3_BUCKET_LC_GLACIER_TRANSITION
+          valueFrom:
+            configMapKeyRef:
+              key: aws-s3-bucket-lc-ia-glacier-transition
+              name: cloudigrade
+        - name: S3_BUCKET_LC_MAX_AGE
+          valueFrom:
+            configMapKeyRef:
+              key: aws-s3-bucket-lc-max-age
+              name: cloudigrade
+        - name: DJANGO_SETTINGS_MODULE
+          valueFrom:
+            configMapKeyRef:
+              key: django-settings-module
+              name: cloudigrade
+        - name: DJANGO_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              key: django-secret-key
+              name: cloudigrade
+        - name: DJANGO_ALLOWED_HOSTS
+          valueFrom:
+            configMapKeyRef:
+              key: django-allowed-hosts
+              name: cloudigrade
+        - name: DJANGO_DATABASE_CONN_MAX_AGE
+          valueFrom:
+            configMapKeyRef:
+              key: django-database-conn-max-age
+              name: cloudigrade
+        - name: DJANGO_DATABASE_NAME
+          valueFrom:
+            secretKeyRef:
+              key: db.name
+              name: cloudigrade-rds
+        - name: DJANGO_DATABASE_PORT
+          valueFrom:
+            configMapKeyRef:
+              key: postigrade-port
+              name: cloudigrade
+        - name: DJANGO_DATABASE_HOST
+          valueFrom:
+            configMapKeyRef:
+              key: postigrade-host
+              name: cloudigrade
+        - name: DJANGO_DATABASE_USER
+          valueFrom:
+            secretKeyRef:
+              key: db.user
+              name: cloudigrade-rds
+        - name: DJANGO_DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: db.password
+              name: cloudigrade-rds
+        - name: DJANGO_DEBUG
+          valueFrom:
+            configMapKeyRef:
+              key: django-debug
+              name: cloudigrade
+        - name: DJANGO_LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              key: django-log-level
+              name: cloudigrade
+        - name: DJANGO_ALL_LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              key: django-all-log-level
+              name: cloudigrade
+        - name: CLOUDIGRADE_LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              key: cloudigrade-log-level
+              name: cloudigrade
+        - name: SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY
+          valueFrom:
+            configMapKeyRef:
+              key: schedule-concurrent-usage-calculation-delay
+              name: cloudigrade
+        - name: DJANGO_CONSOLE_LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              key: django-console-log-level
+              name: cloudigrade
+        - name: SCHEDULE_VERIFY_VERIFY_TASKS_INTERVAL
+          valueFrom:
+            configMapKeyRef:
+              key: schedule-verify-task-interval
+              name: cloudigrade
+        - name: HOUNDIGRADE_ECS_IMAGE_NAME
+          valueFrom:
+            configMapKeyRef:
+              key: houndigrade-ecs-image-name
+              name: cloudigrade
+        - name: HOUNDIGRADE_ECS_IMAGE_TAG
+          valueFrom:
+            configMapKeyRef:
+              key: houndigrade-ecs-image-tag
+              name: cloudigrade
+        - name: HOUNDIGRADE_ECS_FAMILY_NAME
+          valueFrom:
+            configMapKeyRef:
+              key: houndigrade-ecs-family-name
+              name: cloudigrade
+        - name: INSPECT_PENDING_IMAGES_MIN_AGE
+          valueFrom:
+            configMapKeyRef:
+              key: inspect-pending-images-min-age
+              name: cloudigrade
+        - name: INSPECT_PENDING_IMAGES_SCHEDULE
+          valueFrom:
+            configMapKeyRef:
+              key: inspect-pending-images-schedule
+              name: cloudigrade
+        - name: INSPECTION_CLUSTER_INSTANCE_AGE_LIMIT
+          valueFrom:
+            configMapKeyRef:
+              key: inspection-cluster-instance-age-limit
+              name: cloudigrade
+        - name: HOUNDIGRADE_ECS_SCALE_UP_CLUSTER_SCHEDULE
+          valueFrom:
+            configMapKeyRef:
+              key: houndigrade-scale-up-cluster-schedule
+              name: cloudigrade
+        - name: HOUNDIGRADE_ECS_PERSIST_INSPECTION_RESULTS_SCHEDULE
+          valueFrom:
+            configMapKeyRef:
+              key: houndigrade-persist-inspection-results-schedule
+              name: cloudigrade
+        - name: AWS_REPOPULATE_EC2_INSTANCE_MAPPING_SCHEDULE
+          valueFrom:
+            configMapKeyRef:
+              key: aws-repopulate-ec2-instance-mapping-schedule
+              name: cloudigrade
+        - name: CLOUDIGRADE_VERSION
+          valueFrom:
+            configMapKeyRef:
+              key: cloudigrade-version
+              name: cloudigrade
+        - name: CLOUDIGRADE_ENVIRONMENT
+          valueFrom:
+            configMapKeyRef:
+              key: cloudigrade-environment
+              name: cloudigrade
+        - name: SENTRY_TRACES_SAMPLE_RATE
+          valueFrom:
+            configMapKeyRef:
+              key: sentry-traces-sample-rate
+              name: cloudigrade
+        - name: CELERY_ENABLE_SENTRY
+          valueFrom:
+            configMapKeyRef:
+              key: celery-sentry-enabled
+              name: cloudigrade
+        - name: CELERY_SENTRY_DSN
+          valueFrom:
+            secretKeyRef:
+              key: celery-sentry-dsn
+              name: cloudigrade
+        - name: CELERY_SENTRY_RELEASE
+          valueFrom:
+            configMapKeyRef:
+              key: celery-sentry-release
+              name: cloudigrade
+        - name: CELERY_SENTRY_ENVIRONMENT
+          valueFrom:
+            configMapKeyRef:
+              key: celery-sentry-environment
+              name: cloudigrade
+        - name: SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA
+          valueFrom:
+            configMapKeyRef:
+              key: sources-enable-data-management-from-kafka
+              name: cloudigrade
+        - name: SOURCES_API_BASE_URL
+          valueFrom:
+            configMapKeyRef:
+              key: sources-api-base-url
+              name: cloudigrade
+        - name: CLOUDIGRADE_ENABLE_CLOUDWATCH
+          valueFrom:
+            configMapKeyRef:
+              key: cloudigrade-enable-cloudwatch
+              name: cloudigrade
+        - name: CW_AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              key: aws_access_key_id
+              name: cloudwatch
+        - name: CW_AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              key: aws_secret_access_key
+              name: cloudwatch
+        - name: CW_AWS_REGION_NAME
+          valueFrom:
+            secretKeyRef:
+              key: aws_region
+              name: cloudwatch
+        - name: CLOUDIGRADE_CW_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              key: cloudigrade-cw-level
+              name: cloudigrade
+        - name: CLOUDIGRADE_CW_LOG_GROUP
+          valueFrom:
+            secretKeyRef:
+              key: log_group_name
+              name: cloudwatch
+        - name: CLOUDIGRADE_CW_STREAM_NAME
+          valueFrom:
+            configMapKeyRef:
+              key: cloudigrade-cw-stream-name
+              name: cloudigrade
+        - name: OSD_REDEPLOY_TRIGGER
+          valueFrom:
+            configMapKeyRef:
+              key: osd-redeploy-trigger
+              name: cloudigrade
+        - name: IMAGE_TAG
+          valueFrom:
+            configMapKeyRef:
+              key: image-tag
+              name: cloudigrade
+        - name: HABERDASHER_EMITTER
+          value: ${HABERDASHER_EMITTER}
+        - name: HABERDASHER_KAFKA_BOOTSTRAP
+          value: ${HABERDASHER_KAFKA_BOOTSTRAP}
+        - name: HABERDASHER_KAFKA_TOPIC
+          value: ${HABERDASHER_KAFKA_TOPIC}
+        - name: HABERDASHER_LABELS
+          value: ${HABERDASHER_LABELS}
+        - name: HABERDASHER_TAGS
+          value: ${HABERDASHER_TAGS}
+        - name: VERBOSE_SOURCES_NOTIFICATION_LOGGING
+          valueFrom:
+            configMapKeyRef:
+              key: verbose-sources-notification-logging
+              name: cloudigrade
+        - name: CACHE_TTL_DEFAULT
+          valueFrom:
+            configMapKeyRef:
+              key: cache-ttl-default
+              name: cloudigrade
+        - name: CACHE_TTL_SOURCES_APPLICATION_TYPE_ID
+          valueFrom:
+            configMapKeyRef:
+              key: cache-ttl-sources-application-type-id
+              name: cloudigrade
+        - name: WATCHTOWER_USE_QUEUES
+          value: ${WATCHTOWER_USE_QUEUES}
+        - name: WATCHTOWER_SEND_INTERVAL
+          value: ${WATCHTOWER_SEND_INTERVAL}
+        - name: WATCHTOWER_MAX_BATCH_COUNT
+          value: ${WATCHTOWER_MAX_BATCH_COUNT}
+        command:
+          - /bin/sh
+          - -c
+          - >
+            celery
+            --app config
+            beat
+            --loglevel info
+            --pidfile=
+            --scheduler django_celery_beat.schedulers:DatabaseScheduler
+        resources:
+          requests:
+            cpu: ${CELERY_BEAT_LIMITS_CONTAINER_CPU_REQUEST}
+            memory: ${CELERY_BEAT_LIMITS_CONTAINER_MEM_REQUEST}
+          limits:
+            cpu: ${CELERY_BEAT_LIMITS_CONTAINER_CPU_LIMIT}
+            memory: ${CELERY_BEAT_LIMITS_CONTAINER_MEM_LIMIT}
+        livenessProbe:
+          exec:
+            command:
+              - /bin/sh
+              - -c
+              - 'ps axo command | grep -v grep | grep python'
+          failureThreshold: 3
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        readinessProbe:
+          exec:
+            command:
+              - /bin/sh
+              - -c
+              - '[[ $(ps axo command | grep "[p]ython" | grep celery | grep -c beat) -eq 1 ]]'
+          failureThreshold: 3
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+    - name: listener
+      #
+      # Component cloudigrade-listener deployment:
+      #
+      replicas: ${{LISTENER_WORKER_REPLICA_COUNT}}
+      webServices:
+        public:
+          enabled: false
+      podSpec:
+        image: ${IMAGE}:${IMAGE_TAG}
+        env:
+        - name: LISTENER_LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              key: listener-log-level
+              name: cloudigrade
+        - name: LISTENER_TOPIC
+          valueFrom:
+            configMapKeyRef:
+              key: listener-topic
+              name: cloudigrade
+        - name: LISTENER_GROUP_ID
+          valueFrom:
+            configMapKeyRef:
+              key: listener-group-id
+              name: cloudigrade
+        - name: LISTENER_SERVER
+          valueFrom:
+            configMapKeyRef:
+              key: listener-server
+              name: cloudigrade
+        - name: LISTENER_PORT
+          valueFrom:
+            configMapKeyRef:
+              key: listener-port
+              name: cloudigrade
+        - name: SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA
+          valueFrom:
+            configMapKeyRef:
+              key: sources-enable-data-management-from-kafka
+              name: cloudigrade
+        - name: SOURCES_API_BASE_URL
+          valueFrom:
+            configMapKeyRef:
+              key: sources-api-base-url
+              name: cloudigrade
+        - name: SENTRY_TRACES_SAMPLE_RATE
+          valueFrom:
+            configMapKeyRef:
+              key: sentry-traces-sample-rate
+              name: cloudigrade
+        - name: CELERY_ENABLE_SENTRY
+          valueFrom:
+            configMapKeyRef:
+              key: listener-sentry-enabled
+              name: cloudigrade
+        - name: CELERY_SENTRY_DSN
+          valueFrom:
+            secretKeyRef:
+              key: listener-sentry-dsn
+              name: cloudigrade
+        - name: CELERY_SENTRY_ENVIRONMENT
+          valueFrom:
+            configMapKeyRef:
+              key: listener-sentry-environment
+              name: cloudigrade
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              key: aws-access-key-id
+              name: cloudigrade
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              key: aws-secret-access-key
+              name: cloudigrade
+        - name: AWS_DEFAULT_REGION
+          valueFrom:
+            configMapKeyRef:
+              key: aws-default-region
+              name: cloudigrade
+        - name: AWS_SQS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              key: aws-sqs-access-key-id
+              name: cloudigrade
+        - name: AWS_SQS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              key: aws-sqs-secret-access-key
+              name: cloudigrade
+        - name: AWS_SQS_REGION
+          valueFrom:
+            configMapKeyRef:
+              key: aws-sqs-region
+              name: cloudigrade
+        - name: AWS_SQS_MAX_RECEIVE_COUNT
+          valueFrom:
+            configMapKeyRef:
+              key: aws-sqs-max-receive-count
+              name: cloudigrade
+        - name: AWS_SQS_MAX_YIELD_COUNT
+          valueFrom:
+            configMapKeyRef:
+              key: aws-sqs-max-yield-count
+              name: cloudigrade
+        - name: AWS_SQS_MAX_HOUNDI_YIELD_COUNT
+          valueFrom:
+            configMapKeyRef:
+              key: aws-sqs-max-houndi-yield-count
+              name: cloudigrade
+        - name: S3_BUCKET_LC_NAME
+          valueFrom:
+            configMapKeyRef:
+              key: aws-s3-bucket-lc-name
+              name: cloudigrade
+        - name: S3_BUCKET_LC_IA_TRANSITION
+          valueFrom:
+            configMapKeyRef:
+              key: aws-s3-bucket-lc-ia-transition
+              name: cloudigrade
+        - name: S3_BUCKET_LC_GLACIER_TRANSITION
+          valueFrom:
+            configMapKeyRef:
+              key: aws-s3-bucket-lc-ia-glacier-transition
+              name: cloudigrade
+        - name: S3_BUCKET_LC_MAX_AGE
+          valueFrom:
+            configMapKeyRef:
+              key: aws-s3-bucket-lc-max-age
+              name: cloudigrade
+        - name: DJANGO_SETTINGS_MODULE
+          valueFrom:
+            configMapKeyRef:
+              key: django-settings-module
+              name: cloudigrade
+        - name: DJANGO_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              key: django-secret-key
+              name: cloudigrade
+        - name: DJANGO_ALLOWED_HOSTS
+          valueFrom:
+            configMapKeyRef:
+              key: django-allowed-hosts
+              name: cloudigrade
+        - name: DJANGO_DATABASE_CONN_MAX_AGE
+          valueFrom:
+            configMapKeyRef:
+              key: django-database-conn-max-age
+              name: cloudigrade
+        - name: DJANGO_DATABASE_NAME
+          valueFrom:
+            secretKeyRef:
+              key: db.name
+              name: cloudigrade-rds
+        - name: DJANGO_DATABASE_PORT
+          valueFrom:
+            configMapKeyRef:
+              key: postigrade-port
+              name: cloudigrade
+        - name: DJANGO_DATABASE_HOST
+          valueFrom:
+            configMapKeyRef:
+              key: postigrade-host
+              name: cloudigrade
+        - name: DJANGO_DATABASE_USER
+          valueFrom:
+            secretKeyRef:
+              key: db.user
+              name: cloudigrade-rds
+        - name: DJANGO_DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: db.password
+              name: cloudigrade-rds
+        - name: DJANGO_DEBUG
+          valueFrom:
+            configMapKeyRef:
+              key: django-debug
+              name: cloudigrade
+        - name: DJANGO_LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              key: django-log-level
+              name: cloudigrade
+        - name: DJANGO_ALL_LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              key: django-all-log-level
+              name: cloudigrade
+        - name: DJANGO_CONSOLE_LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              key: django-console-log-level
+              name: cloudigrade
+        - name: CLOUDIGRADE_LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              key: cloudigrade-log-level
+              name: cloudigrade
+        - name: SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY
+          valueFrom:
+            configMapKeyRef:
+              key: schedule-concurrent-usage-calculation-delay
+              name: cloudigrade
+        - name: SCHEDULE_VERIFY_VERIFY_TASKS_INTERVAL
+          valueFrom:
+            configMapKeyRef:
+              key: schedule-verify-task-interval
+              name: cloudigrade
+        - name: HOUNDIGRADE_ECS_IMAGE_NAME
+          valueFrom:
+            configMapKeyRef:
+              key: houndigrade-ecs-image-name
+              name: cloudigrade
+        - name: HOUNDIGRADE_ECS_IMAGE_TAG
+          valueFrom:
+            configMapKeyRef:
+              key: houndigrade-ecs-image-tag
+              name: cloudigrade
+        - name: HOUNDIGRADE_ECS_FAMILY_NAME
+          valueFrom:
+            configMapKeyRef:
+              key: houndigrade-ecs-family-name
+              name: cloudigrade
+        - name: INSPECT_PENDING_IMAGES_MIN_AGE
+          valueFrom:
+            configMapKeyRef:
+              key: inspect-pending-images-min-age
+              name: cloudigrade
+        - name: INSPECT_PENDING_IMAGES_SCHEDULE
+          valueFrom:
+            configMapKeyRef:
+              key: inspect-pending-images-schedule
+              name: cloudigrade
+        - name: INSPECTION_CLUSTER_INSTANCE_AGE_LIMIT
+          valueFrom:
+            configMapKeyRef:
+              key: inspection-cluster-instance-age-limit
+              name: cloudigrade
+        - name: HOUNDIGRADE_ECS_SCALE_UP_CLUSTER_SCHEDULE
+          valueFrom:
+            configMapKeyRef:
+              key: houndigrade-scale-up-cluster-schedule
+              name: cloudigrade
+        - name: HOUNDIGRADE_ECS_PERSIST_INSPECTION_RESULTS_SCHEDULE
+          valueFrom:
+            configMapKeyRef:
+              key: houndigrade-persist-inspection-results-schedule
+              name: cloudigrade
+        - name: AWS_REPOPULATE_EC2_INSTANCE_MAPPING_SCHEDULE
+          valueFrom:
+            configMapKeyRef:
+              key: aws-repopulate-ec2-instance-mapping-schedule
+              name: cloudigrade
+        - name: CLOUDIGRADE_VERSION
+          valueFrom:
+            configMapKeyRef:
+              key: cloudigrade-version
+              name: cloudigrade
+        - name: CLOUDIGRADE_ENVIRONMENT
+          valueFrom:
+            configMapKeyRef:
+              key: cloudigrade-environment
+              name: cloudigrade
+        - name: CLOUDIGRADE_ENABLE_CLOUDWATCH
+          valueFrom:
+            configMapKeyRef:
+              key: cloudigrade-enable-cloudwatch
+              name: cloudigrade
+        - name: CW_AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              key: aws_access_key_id
+              name: cloudwatch
+        - name: CW_AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              key: aws_secret_access_key
+              name: cloudwatch
+        - name: CW_AWS_REGION_NAME
+          valueFrom:
+            secretKeyRef:
+              key: aws_region
+              name: cloudwatch
+        - name: CLOUDIGRADE_CW_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              key: cloudigrade-cw-level
+              name: cloudigrade
+        - name: CLOUDIGRADE_CW_LOG_GROUP
+          valueFrom:
+            secretKeyRef:
+              key: log_group_name
+              name: cloudwatch
+        - name: CLOUDIGRADE_CW_STREAM_NAME
+          valueFrom:
+            configMapKeyRef:
+              key: cloudigrade-cw-stream-name
+              name: cloudigrade
+        - name: OSD_REDEPLOY_TRIGGER
+          valueFrom:
+            configMapKeyRef:
+              key: osd-redeploy-trigger
+              name: cloudigrade
+        - name: IMAGE_TAG
+          valueFrom:
+            configMapKeyRef:
+              key: image-tag
+              name: cloudigrade
+        - name: HABERDASHER_EMITTER
+          value: ${HABERDASHER_EMITTER}
+        - name: HABERDASHER_KAFKA_BOOTSTRAP
+          value: ${HABERDASHER_KAFKA_BOOTSTRAP}
+        - name: HABERDASHER_KAFKA_TOPIC
+          value: ${HABERDASHER_KAFKA_TOPIC}
+        - name: HABERDASHER_LABELS
+          value: ${HABERDASHER_LABELS}
+        - name: HABERDASHER_TAGS
+          value: ${HABERDASHER_TAGS}
+        - name: VERBOSE_SOURCES_NOTIFICATION_LOGGING
+          valueFrom:
+            configMapKeyRef:
+              key: verbose-sources-notification-logging
+              name: cloudigrade
+        - name: CACHE_TTL_DEFAULT
+          valueFrom:
+            configMapKeyRef:
+              key: cache-ttl-default
+              name: cloudigrade
+        - name: CACHE_TTL_SOURCES_APPLICATION_TYPE_ID
+          valueFrom:
+            configMapKeyRef:
+              key: cache-ttl-sources-application-type-id
+              name: cloudigrade
+        - name: WATCHTOWER_USE_QUEUES
+          value: ${WATCHTOWER_USE_QUEUES}
+        - name: WATCHTOWER_SEND_INTERVAL
+          value: ${WATCHTOWER_SEND_INTERVAL}
+        - name: WATCHTOWER_MAX_BATCH_COUNT
+          value: ${WATCHTOWER_MAX_BATCH_COUNT}
+        livenessProbe:
+          exec:
+            command:
+              - /bin/sh
+              - -c
+              - '[[ $(ps axo command | grep "^python" | grep "./manage.py" | grep -c "listen_to_sources") -eq 1 ]]'
+          failureThreshold: 3
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        readinessProbe:
+          exec:
+            command:
+              - /bin/sh
+              - -c
+              - '[[ $(ps axo command | grep "^python" | grep "./manage.py" | grep -c "listen_to_sources") -eq 1 ]]'
+          failureThreshold: 3
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        volumeMounts:
+        - mountPath: /var/run/cloudigrade
+          name: cloudigrade-socket
+      volumes:
+      - name: cloudigrade-socket
+        emptyDir: {}
+    - name: worker
+      #
+      # Component cloudigrade-worker deployment:
+      #
+      replicas: ${{CELERY_WORKER_REPLICA_COUNT}}
+      webServices:
+        public:
+          enabled: false
+      podSpec:
+        image: ${IMAGE}:${IMAGE_TAG}
+        env:
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              key: aws-access-key-id
+              name: cloudigrade
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              key: aws-secret-access-key
+              name: cloudigrade
+        - name: AWS_DEFAULT_REGION
+          valueFrom:
+            configMapKeyRef:
+              key: aws-default-region
+              name: cloudigrade
+        - name: AWS_SQS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              key: aws-sqs-access-key-id
+              name: cloudigrade
+        - name: AWS_SQS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              key: aws-sqs-secret-access-key
+              name: cloudigrade
+        - name: AWS_SQS_REGION
+          valueFrom:
+            configMapKeyRef:
+              key: aws-sqs-region
+              name: cloudigrade
+        - name: AWS_SQS_MAX_RECEIVE_COUNT
+          valueFrom:
+            configMapKeyRef:
+              key: aws-sqs-max-receive-count
+              name: cloudigrade
+        - name: AWS_SQS_MAX_YIELD_COUNT
+          valueFrom:
+            configMapKeyRef:
+              key: aws-sqs-max-yield-count
+              name: cloudigrade
+        - name: AWS_SQS_MAX_HOUNDI_YIELD_COUNT
+          valueFrom:
+            configMapKeyRef:
+              key: aws-sqs-max-houndi-yield-count
+              name: cloudigrade
+        - name: S3_BUCKET_LC_NAME
+          valueFrom:
+            configMapKeyRef:
+              key: aws-s3-bucket-lc-name
+              name: cloudigrade
+        - name: S3_BUCKET_LC_IA_TRANSITION
+          valueFrom:
+            configMapKeyRef:
+              key: aws-s3-bucket-lc-ia-transition
+              name: cloudigrade
+        - name: S3_BUCKET_LC_GLACIER_TRANSITION
+          valueFrom:
+            configMapKeyRef:
+              key: aws-s3-bucket-lc-ia-glacier-transition
+              name: cloudigrade
+        - name: S3_BUCKET_LC_MAX_AGE
+          valueFrom:
+            configMapKeyRef:
+              key: aws-s3-bucket-lc-max-age
+              name: cloudigrade
+        - name: DJANGO_SETTINGS_MODULE
+          valueFrom:
+            configMapKeyRef:
+              key: django-settings-module
+              name: cloudigrade
+        - name: DJANGO_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              key: django-secret-key
+              name: cloudigrade
+        - name: DJANGO_ALLOWED_HOSTS
+          valueFrom:
+            configMapKeyRef:
+              key: django-allowed-hosts
+              name: cloudigrade
+        - name: DJANGO_DATABASE_CONN_MAX_AGE
+          valueFrom:
+            configMapKeyRef:
+              key: django-database-conn-max-age
+              name: cloudigrade
+        - name: DJANGO_DATABASE_NAME
+          valueFrom:
+            secretKeyRef:
+              key: db.name
+              name: cloudigrade-rds
+        - name: DJANGO_DATABASE_PORT
+          valueFrom:
+            configMapKeyRef:
+              key: postigrade-port
+              name: cloudigrade
+        - name: DJANGO_DATABASE_HOST
+          valueFrom:
+            configMapKeyRef:
+              key: postigrade-host
+              name: cloudigrade
+        - name: DJANGO_DATABASE_USER
+          valueFrom:
+            secretKeyRef:
+              key: db.user
+              name: cloudigrade-rds
+        - name: DJANGO_DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: db.password
+              name: cloudigrade-rds
+        - name: DJANGO_DEBUG
+          valueFrom:
+            configMapKeyRef:
+              key: django-debug
+              name: cloudigrade
+        - name: DJANGO_LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              key: django-log-level
+              name: cloudigrade
+        - name: DJANGO_ALL_LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              key: django-all-log-level
+              name: cloudigrade
+        - name: DJANGO_CONSOLE_LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              key: django-console-log-level
+              name: cloudigrade
+        - name: CLOUDIGRADE_LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              key: cloudigrade-log-level
+              name: cloudigrade
+        - name: SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY
+          valueFrom:
+            configMapKeyRef:
+              key: schedule-concurrent-usage-calculation-delay
+              name: cloudigrade
+        - name: SCHEDULE_VERIFY_VERIFY_TASKS_INTERVAL
+          valueFrom:
+            configMapKeyRef:
+              key: schedule-verify-task-interval
+              name: cloudigrade
+        - name: HOUNDIGRADE_ECS_IMAGE_NAME
+          valueFrom:
+            configMapKeyRef:
+              key: houndigrade-ecs-image-name
+              name: cloudigrade
+        - name: HOUNDIGRADE_ECS_IMAGE_TAG
+          valueFrom:
+            configMapKeyRef:
+              key: houndigrade-ecs-image-tag
+              name: cloudigrade
+        - name: HOUNDIGRADE_ECS_FAMILY_NAME
+          valueFrom:
+            configMapKeyRef:
+              key: houndigrade-ecs-family-name
+              name: cloudigrade
+        - name: INSPECT_PENDING_IMAGES_MIN_AGE
+          valueFrom:
+            configMapKeyRef:
+              key: inspect-pending-images-min-age
+              name: cloudigrade
+        - name: INSPECT_PENDING_IMAGES_SCHEDULE
+          valueFrom:
+            configMapKeyRef:
+              key: inspect-pending-images-schedule
+              name: cloudigrade
+        - name: INSPECTION_CLUSTER_INSTANCE_AGE_LIMIT
+          valueFrom:
+            configMapKeyRef:
+              key: inspection-cluster-instance-age-limit
+              name: cloudigrade
+        - name: HOUNDIGRADE_ECS_SCALE_UP_CLUSTER_SCHEDULE
+          valueFrom:
+            configMapKeyRef:
+              key: houndigrade-scale-up-cluster-schedule
+              name: cloudigrade
+        - name: HOUNDIGRADE_ECS_PERSIST_INSPECTION_RESULTS_SCHEDULE
+          valueFrom:
+            configMapKeyRef:
+              key: houndigrade-persist-inspection-results-schedule
+              name: cloudigrade
+        - name: AWS_REPOPULATE_EC2_INSTANCE_MAPPING_SCHEDULE
+          valueFrom:
+            configMapKeyRef:
+              key: aws-repopulate-ec2-instance-mapping-schedule
+              name: cloudigrade
+        - name: CLOUDIGRADE_VERSION
+          valueFrom:
+            configMapKeyRef:
+              key: cloudigrade-version
+              name: cloudigrade
+        - name: CLOUDIGRADE_ENVIRONMENT
+          valueFrom:
+            configMapKeyRef:
+              key: cloudigrade-environment
+              name: cloudigrade
+        - name: SENTRY_TRACES_SAMPLE_RATE
+          valueFrom:
+            configMapKeyRef:
+              key: sentry-traces-sample-rate
+              name: cloudigrade
+        - name: CELERY_ENABLE_SENTRY
+          valueFrom:
+            configMapKeyRef:
+              key: celery-sentry-enabled
+              name: cloudigrade
+        - name: CELERY_SENTRY_DSN
+          valueFrom:
+            secretKeyRef:
+              key: celery-sentry-dsn
+              name: cloudigrade
+        - name: CELERY_SENTRY_RELEASE
+          valueFrom:
+            configMapKeyRef:
+              key: celery-sentry-release
+              name: cloudigrade
+        - name: CELERY_SENTRY_ENVIRONMENT
+          valueFrom:
+            configMapKeyRef:
+              key: celery-sentry-environment
+              name: cloudigrade
+        - name: LISTENER_TOPIC
+          valueFrom:
+            configMapKeyRef:
+              key: listener-topic
+              name: cloudigrade
+        - name: LISTENER_GROUP_ID
+          valueFrom:
+            configMapKeyRef:
+              key: listener-group-id
+              name: cloudigrade
+        - name: LISTENER_SERVER
+          valueFrom:
+            configMapKeyRef:
+              key: listener-server
+              name: cloudigrade
+        - name: LISTENER_PORT
+          valueFrom:
+            configMapKeyRef:
+              key: listener-port
+              name: cloudigrade
+        - name: SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA
+          valueFrom:
+            configMapKeyRef:
+              key: sources-enable-data-management-from-kafka
+              name: cloudigrade
+        - name: SOURCES_API_BASE_URL
+          valueFrom:
+            configMapKeyRef:
+              key: sources-api-base-url
+              name: cloudigrade
+        - name: CLOUDIGRADE_ENABLE_CLOUDWATCH
+          valueFrom:
+            configMapKeyRef:
+              key: cloudigrade-enable-cloudwatch
+              name: cloudigrade
+        - name: CW_AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              key: aws_access_key_id
+              name: cloudwatch
+        - name: CW_AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              key: aws_secret_access_key
+              name: cloudwatch
+        - name: CW_AWS_REGION_NAME
+          valueFrom:
+            secretKeyRef:
+              key: aws_region
+              name: cloudwatch
+        - name: CLOUDIGRADE_CW_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              key: cloudigrade-cw-level
+              name: cloudigrade
+        - name: CLOUDIGRADE_CW_LOG_GROUP
+          valueFrom:
+            secretKeyRef:
+              key: log_group_name
+              name: cloudwatch
+        - name: CLOUDIGRADE_CW_STREAM_NAME
+          valueFrom:
+            configMapKeyRef:
+              key: cloudigrade-cw-stream-name
+              name: cloudigrade
+        - name: OSD_REDEPLOY_TRIGGER
+          valueFrom:
+            configMapKeyRef:
+              key: osd-redeploy-trigger
+              name: cloudigrade
+        - name: IMAGE_TAG
+          valueFrom:
+            configMapKeyRef:
+              key: image-tag
+              name: cloudigrade
+        - name: HABERDASHER_EMITTER
+          value: ${HABERDASHER_EMITTER}
+        - name: HABERDASHER_KAFKA_BOOTSTRAP
+          value: ${HABERDASHER_KAFKA_BOOTSTRAP}
+        - name: HABERDASHER_KAFKA_TOPIC
+          value: ${HABERDASHER_KAFKA_TOPIC}
+        - name: HABERDASHER_LABELS
+          value: ${HABERDASHER_LABELS}
+        - name: HABERDASHER_TAGS
+          value: ${HABERDASHER_TAGS}
+        - name: VERBOSE_SOURCES_NOTIFICATION_LOGGING
+          valueFrom:
+            configMapKeyRef:
+              key: verbose-sources-notification-logging
+              name: cloudigrade
+        - name: CACHE_TTL_DEFAULT
+          valueFrom:
+            configMapKeyRef:
+              key: cache-ttl-default
+              name: cloudigrade
+        - name: CACHE_TTL_SOURCES_APPLICATION_TYPE_ID
+          valueFrom:
+            configMapKeyRef:
+              key: cache-ttl-sources-application-type-id
+              name: cloudigrade
+        - name: WATCHTOWER_USE_QUEUES
+          value: ${WATCHTOWER_USE_QUEUES}
+        - name: WATCHTOWER_SEND_INTERVAL
+          value: ${WATCHTOWER_SEND_INTERVAL}
+        - name: WATCHTOWER_MAX_BATCH_COUNT
+          value: ${WATCHTOWER_MAX_BATCH_COUNT}
+        image: ' '
+        imagePullPolicy: Always
+        command:
+          - /bin/sh
+          - -c
+          - >
+            celery
+            --app config
+            worker
+            --loglevel info
+            --concurrency 1
+            --task-events
+            --queues celery,initial_aws_describe_instances,copy_ami_snapshot,copy_ami_to_customer_account,remove_snapshot_ownership,create_volume,enqueue_ready_volumes,delete_snapshot,inspect_pending_images,scale_up_inspection_cluster,attach_volumes_to_cluster,run_inspection_cluster,persist_inspection_cluster_results_task,scale_down_cluster,analyze_log,repopulate_ec2_instance_mapping,create_from_sources_kafka_message,configure_customer_aws_and_create_cloud_account,delete_from_sources_kafka_message,delete_inactive_users,delete_cloud_account,calculate_max_concurrent_usage,notify_application_availability_task,enable_account
+        resources:
+          requests:
+            cpu: ${CELERY_WORKER_LIMITS_CONTAINER_CPU_REQUEST}
+            memory: ${CELERY_WORKER_LIMITS_CONTAINER_MEM_REQUEST}
+          limits:
+            cpu: ${CELERY_WORKER_LIMITS_CONTAINER_CPU_LIMIT}
+            memory: ${CELERY_WORKER_LIMITS_CONTAINER_MEM_LIMIT}
+        livenessProbe:
+          exec:
+            command:
+              - /bin/sh
+              - -c
+              - 'ps axo command | grep -v grep | grep python'
+          failureThreshold: 3
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        readinessProbe:
+          exec:
+            command:
+              - /bin/sh
+              - -c
+              - '[[ $(ps axo command | grep "[p]ython" | grep celery | grep -c worker) -eq 2 ]]'
+          failureThreshold: 3
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
     database:
       name: cloudigrade 
 parameters:
@@ -111,3 +1575,499 @@ parameters:
   description: SECRET_KEY_BASE
   from: "[a-f0-9]{128}"
   generate: expression
+#
+# Component cloudigrade-api parameters:
+#
+- displayName: AWS Default Region
+  name: AWS_DEFAULT_REGION
+  required: true
+  value: us-east-1
+- displayName: AWS Houndigrade ECS Image Name
+  name: HOUNDIGRADE_ECS_IMAGE_NAME
+  required: true
+  value: quay.io/cloudservices/houndigrade
+- displayName: AWS Houndigrade ECS Image Tag
+  name: HOUNDIGRADE_ECS_IMAGE_TAG
+  required: true
+  value: '0.6.3'
+- displayName: AWS Houndigrade ECS Image Tag
+  name: HOUNDIGRADE_ECS_FAMILY_NAME
+  required: true
+  value: Houndigrade
+- displayName: AWS Houndigrade ECS Scale Up Cluster Schedule
+  name: HOUNDIGRADE_ECS_SCALE_UP_CLUSTER_SCHEDULE
+  required: true
+  value: '300'
+- displayName: AWS Houndigrade ECS Persist Inspection Results Schedule
+  name: HOUNDIGRADE_ECS_PERSIST_INSPECTION_RESULTS_SCHEDULE
+  required: true
+  value: '120'
+- displayName: AWS Repopulate EC2 Instance Mapping Schedule
+  name: AWS_REPOPULATE_EC2_INSTANCE_MAPPING_SCHEDULE
+  required: true
+  value: '604800'
+- displayName: AWS SQS Default Region
+  name: AWS_SQS_REGION
+  required: true
+  value: us-east-1
+- displayName: AWS SQS Max Receive Count
+  name: AWS_SQS_MAX_RECEIVE_COUNT
+  required: true
+  value: '5'
+- displayName: AWS SQS Max Yield Count
+  name: AWS_SQS_MAX_YIELD_COUNT
+  required: true
+  value: '25'
+- displayName: AWS SQS Max Houndigrade Yield Count
+  name: AWS_SQS_MAX_HOUNDI_YIELD_COUNT
+  required: true
+  value: '10'
+- displayName: AWS S3 Bucket Lifecycle Name
+  name: AWS_S3_BUCKET_LC_NAME
+  required: true
+  value: s3_lifecycle_policy
+- displayName: AWS S3 Bucket Lifecycle IA Transition
+  name: AWS_S3_BUCKET_LC_IA_TRANSITION
+  required: true
+  value: '30'
+- displayName: AWS S3 Bucket Lifecycle Glacier Transition
+  name: AWS_S3_BUCKET_LC_GLACIER_TRANSITION
+  required: true
+  value: '60'
+- displayName: AWS S3 Bucket Lifecycle Max Age
+  name: AWS_S3_BUCKET_LC_MAX_AGE
+  required: true
+  value: '1460'
+- displayName: ANALYZE_LOG Schedule
+  name: ANALYZE_LOG_SCHEDULE
+  required: true
+  value: '30'
+- displayName: Django Allowed Hosts
+  name: DJANGO_ALLOWED_HOSTS
+  required: true
+  value: '*'
+- displayName: Django Debug
+  name: DJANGO_DEBUG
+  required: true
+  value: 'false'
+- displayName: Django Log Level
+  name: DJANGO_LOG_LEVEL
+  required: true
+  value: 'INFO'
+- displayName: Django All Log Level
+  name: DJANGO_ALL_LOG_LEVEL
+  required: true
+  value: 'INFO'
+- displayName: Django Console Log Level
+  name: DJANGO_CONSOLE_LOG_LEVEL
+  required: true
+  value: 'INFO'
+- displayName: Cloudigrade Log Level
+  name: CLOUDIGRADE_LOG_LEVEL
+  required: true
+  value: 'INFO'
+- displayName: Django Settings Module
+  name: DJANGO_SETTINGS_MODULE
+  required: true
+  value: config.settings.prod
+- displayName: Sentry Performance Sample Rate
+  name: SENTRY_TRACES_SAMPLE_RATE
+  required: true
+  value: '0.0'
+- displayName: API Sentry Enabled (Str)
+  name: API_SENTRY_ENABLED_STR
+  required: true
+  value: 'true'
+- displayName: Celery Sentry Enabled (Str)
+  name: CELERY_SENTRY_ENABLED_STR
+  required: true
+  value: 'true'
+- displayName: Houndigrade Sentry Enabled (Str)
+  name: HOUNDIGRADE_SENTRY_ENABLED_STR
+  required: true
+  value: 'true'
+- displayName: Minimum age of images to inspect
+  name: INSPECT_PENDING_IMAGES_MIN_AGE
+  required: true
+  value: '43200'
+- displayName: Schedule to inspect pending images
+  name: INSPECT_PENDING_IMAGES_SCHEDULE
+  required: true
+  value: '900'
+- displayName: Inspection cluster instance age limit
+  name: INSPECTION_CLUSTER_INSTANCE_AGE_LIMIT
+  requires: true
+  value: '600'
+- displayName: Listener Log Level
+  name: LISTENER_LOG_LEVEL
+  required: true
+  value: INFO
+- displayName: Listener Topic
+  name: LISTENER_TOPIC
+  required: true
+  value: platform.sources.event-stream
+- displayName: Listerner Kafka Server Port
+  name: LISTENER_PORT
+  required: true
+  value: '9092'
+- displayName: Listener Enable Sentry
+  name: LISTENER_ENABLE_SENTRY
+  required: true
+  value: 'true'
+- displayName: Postigrade Port
+  name: POSTIGRADE_PORT
+  required: true
+  value: '5432'
+- displayName: Enable Data Management From Sources Kafka
+  name: SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA
+  required: true
+  value: 'true'
+- displayName: Cloudigrade Replica Count
+  name: API_REPLICA_COUNT
+  required: true
+  value: '4'
+- displayName: Cloudigrade Max Replica Count
+  name: API_REPLICA_COUNT_MAX
+  required: true
+  value: '8'
+- displayName: Cloudigrade Target Average CPU Utilization
+  name: API_TARGET_AVERAGE_CPU_UTILIZATION
+  required: true
+  value: '80'
+- displayName: Cloudigrade Container CPU Request
+  name: API_LIMITS_CONTAINER_CPU_REQUEST
+  required: true
+  value: 100m
+- displayName: Cloudigrade Container Memory Request
+  name: API_LIMITS_CONTAINER_MEM_REQUEST
+  required: true
+  value: 256Mi
+- displayName: Cloudigrade Container CPU Limit
+  name: API_LIMITS_CONTAINER_CPU_LIMIT
+  required: true
+  value: 200m
+- displayName: Cloudigrade Container Memory Limit
+  name: API_LIMITS_CONTAINER_MEM_LIMIT
+  required: true
+  value: 512Mi
+- displayName: Health Check Host Header
+  name: HEALTH_CHECK_HOST_HEADER
+  required: true
+  value: health.cloudigrade.insights.openshiftapps.com
+- displayName: Cloudigrade Image tag
+  name: IMAGE_TAG
+  required: true
+  value: latest
+- displayName: SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY
+  name: SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY
+  required: true
+  value: '1800'
+- displayName: Verify Task Interval (seconds)
+  name: SCHEDULE_VERIFY_VERIFY_TASKS_INTERVAL
+  required: true
+  value: '86400'
+- name: HABERDASHER_EMITTER
+  description: Emitter for haberdasher logs [stderr|kafka]
+  value: kafka
+- name: HABERDASHER_KAFKA_BOOTSTRAP
+  description: Bootstrap server for haberdasher kafka emitter
+  value: ''
+- name: HABERDASHER_KAFKA_TOPIC
+  description: Kafka topic for haberdasher kafka emitter
+  value: 'platform.logging.logs'
+- name: HABERDASHER_TAGS
+  description: Haberdasher tags for unstrutured logs
+  value: '["cloudigrade"]'
+- name: HABERDASHER_LABELS
+  description: Haberdasher labels for unstructured logs
+  value: '{"app": "cloudigrade"}'
+- name: CACHE_TTL_DEFAULT
+  description: Default time to live in seconds for caches where specific ttl is not specified
+  value: '60'
+- name: CACHE_TTL_SOURCES_APPLICATION_TYPE_ID
+  description: Time to live in seconds for sources application type id cache (overrides CACHE_TTL_DEFAULT)
+  value: '60'
+# The following parameters *generally* have different values in stage and prod.
+# The default values provided here are correct for our stage environment.
+- displayName: API Sentry Environment
+  name: API_SENTRY_ENVIRONMENT
+  required: true
+  value: stage
+- displayName: Celery Sentry Environment
+  name: CELERY_SENTRY_ENVIRONMENT
+  required: true
+  value: stage
+- displayName: Celery Sentry Release
+  name: CELERY_SENTRY_RELEASE
+  required: true
+  value: stage
+- displayName: Houndigrade Sentry Environment
+  name: HOUNDIGRADE_SENTRY_ENVIRONMENT
+  required: true
+  value: stage
+- displayName: Cloudigrade Commit Ref
+  name: COMMIT_REF
+  required: true
+  value: stage
+- displayName: Cloudigrade Environment
+  name: CLOUDIGRADE_ENVIRONMENT
+  required: true
+  value: stage
+- displayName: Listener Group ID
+  name: LISTENER_GROUP_ID
+  required: true
+  value: cloudmeter_stage
+- displayName: Listerner Kafka Server Address
+  name: LISTENER_SERVER
+  required: true
+  value: platform-mq-stage-kafka-bootstrap.platform-mq-stage.svc
+- displayName: Listener Sentry Environment
+  name: LISTENER_SENTRY_ENVIRONMENT
+  required: true
+  value: stage
+- displayName: Postigrade Host
+  name: POSTIGRADE_HOST
+  required: true
+  value: postigrade.cloudigrade-stage.svc.cluster.local
+- displayName: Sources API Base URL
+  name: SOURCES_API_BASE_URL
+  required: true
+  value: http://sources-api.sources-stage.svc:8080
+- displayName: Image namespace
+  name: IMAGE_NAMESPACE
+  required: true
+  value: cloudigrade-stage
+- displayName: Enable Cloudwatch
+  name: CLOUDIGRADE_ENABLE_CLOUDWATCH
+  required: true
+  value: 'true'
+- displayName: Cloudwatch Log Level
+  name: CLOUDIGRADE_CW_LEVEL
+  required: true
+  value: 'INFO'
+- displayName: Cloudwatch Stream Name.
+  name: CLOUDIGRADE_CW_STREAM_NAME
+  required: true
+  value: cloudigrade-stage
+- displayName: Enable verbose Insights identity header logging
+  name: VERBOSE_INSIGHTS_IDENTITY_HEADER_LOGGING
+  required: true
+  value: 'false'
+- displayName: Enable verbose sources notification logging
+  name: VERBOSE_SOURCES_NOTIFICATION_LOGGING
+  required: true
+  value: 'false'
+- displayName: Change this value to trigger OSD to redeploy
+  name: OSD_REDEPLOY_TRIGGER
+  required: true
+  value: '1'
+- displayName: The lifetime of a database connection, as an integer of seconds.
+  name: DJANGO_DATABASE_CONN_MAX_AGE
+  required: true
+  value: '0'
+- displayName: Watchtower use queues
+  name: WATCHTOWER_USE_QUEUES
+  required: true
+  value: 'true'
+- displayName: Watchtower send interval (seconds)
+  name: WATCHTOWER_SEND_INTERVAL
+  required: true
+  value: '1.0'
+- displayName: Watchtower max batch count
+  name: WATCHTOWER_MAX_BATCH_COUNT
+  required: true
+  value: '1000'
+#
+# Component cloudigrade-beat parameters:
+#
+# The following parameters *generally* have the same values in stage and prod.
+# The default values provided here are correct for our stage environment.
+- displayName: Cloudigrade Replica Count
+  name: CELERY_BEAT_REPLICA_COUNT
+  required: true
+  value: '1'
+- displayName: Cloudigrade Celery Beat Container CPU Request
+  name: CELERY_BEAT_LIMITS_CONTAINER_CPU_REQUEST
+  required: true
+  value: 100m
+- displayName: Cloudigrade Celery Beat Container Memory Request
+  name: CELERY_BEAT_LIMITS_CONTAINER_MEM_REQUEST
+  required: true
+  value: 100Mi
+- displayName: Cloudigrade Celery Beat Container CPU Limit
+  name: CELERY_BEAT_LIMITS_CONTAINER_CPU_LIMIT
+  required: true
+  value: 100m
+- displayName: Cloudigrade Celery Beat Container Memory Limit
+  name: CELERY_BEAT_LIMITS_CONTAINER_MEM_LIMIT
+  required: true
+  value: 128Mi
+- displayName: Cloudigrade Image tag
+  name: IMAGE_TAG
+  required: true
+  value: latest
+- name: HABERDASHER_EMITTER
+  description: Emitter for haberdasher logs [stderr|kafka]
+  value: kafka
+- name: HABERDASHER_KAFKA_BOOTSTRAP
+  description: Bootstrap server for haberdasher kafka emitter
+  value: ''
+- name: HABERDASHER_KAFKA_TOPIC
+  description: Kafka topic for haberdasher kafka emitter
+  value: 'platform.logging.logs'
+- name: HABERDASHER_TAGS
+  description: Haberdasher tags for unstrutured logs
+  value: '["cloudigrade"]'
+- name: HABERDASHER_LABELS
+  description: Haberdasher labels for unstructured logs
+  value: '{"app": "cloudigrade"}'
+- displayName: Watchtower use queues
+  name: WATCHTOWER_USE_QUEUES
+  required: true
+  value: 'false'
+- displayName: Watchtower send interval (seconds)
+  name: WATCHTOWER_SEND_INTERVAL
+  required: true
+  value: '0.0'
+- displayName: Watchtower max batch count
+  name: WATCHTOWER_MAX_BATCH_COUNT
+  required: true
+  value: '1'
+# The following parameters *generally* have different values in stage and prod.
+# The default values provided here are correct for our stage environment.
+- displayName: Image namespace
+  name: IMAGE_NAMESPACE
+  required: true
+  value: cloudigrade-stage
+#
+# Component cloudigrade-listener parameters:
+#
+# The following parameters *generally* have the same values in stage and prod.
+# The default values provided here are correct for our stage environment.
+- displayName: Cloudigrade Listener Replica Count
+  name: LISTENER_WORKER_REPLICA_COUNT
+  required: true
+  value: '1'
+- displayName: Cloudigrade Listener Container CPU Request
+  name: LISTENER_LIMITS_CONTAINER_CPU_REQUEST
+  required: true
+  value: 100m
+- displayName: Cloudigrade Listener Container Memory Request
+  name: LISTENER_LIMITS_CONTAINER_MEM_REQUEST
+  required: true
+  value: 128Mi
+- displayName: Cloudigrade Listener Container CPU Limit
+  name: LISTENER_LIMITS_CONTAINER_CPU_LIMIT
+  required: true
+  value: 200m
+- displayName: Cloudigrade Listener Container Memory Limit
+  name: LISTENER_LIMITS_CONTAINER_MEM_LIMIT
+  required: true
+  value: 256Mi
+- displayName: Cloudigrade Listener Image tag
+  name: IMAGE_TAG
+  required: true
+  value: latest
+- name: HABERDASHER_EMITTER
+  description: Emitter for haberdasher logs [stderr|kafka]
+  value: kafka
+- name: HABERDASHER_KAFKA_BOOTSTRAP
+  description: Bootstrap server for haberdasher kafka emitter
+  value: ''
+- name: HABERDASHER_KAFKA_TOPIC
+  description: Kafka topic for haberdasher kafka emitter
+  value: 'platform.logging.logs'
+- name: HABERDASHER_TAGS
+  description: Haberdasher tags for unstrutured logs
+  value: '["cloudigrade"]'
+- name: HABERDASHER_LABELS
+  description: Haberdasher labels for unstructured logs
+  value: '{"app": "cloudigrade"}'
+- displayName: Watchtower use queues
+  name: WATCHTOWER_USE_QUEUES
+  required: true
+  value: 'false'
+- displayName: Watchtower send interval (seconds)
+  name: WATCHTOWER_SEND_INTERVAL
+  required: true
+  value: '0.0'
+- displayName: Watchtower max batch count
+  name: WATCHTOWER_MAX_BATCH_COUNT
+  required: true
+  value: '1'
+# The following parameters *generally* have different values in stage and prod.
+# The default values provided here are correct for our stage environment.
+- displayName: Image namespace
+  name: IMAGE_NAMESPACE
+  required: true
+  value: cloudigrade-stage
+#
+# Component cloudigrade-worker parameters:
+#
+# The following parameters *generally* have the same values in stage and prod.
+# The default values provided here are correct for our stage environment.
+- displayName: Cloudigrade Replica Count
+  name: CELERY_WORKER_REPLICA_COUNT
+  required: true
+  value: '4'
+- displayName: Cloudigrade Worker Replica Count Max
+  name: CELERY_WORKER_REPLICA_COUNT_MAX
+  required: true
+  value: '8'
+- displayName: Cloudigrade Worker Target Average CPU Utilization
+  name: CELERY_TARGET_AVERAGE_CPU_UTILIZATION
+  required: true
+  value: '60'
+- displayName: Cloudigrade Celery Worker Container CPU Request
+  name: CELERY_WORKER_LIMITS_CONTAINER_CPU_REQUEST
+  required: true
+  value: 100m
+- displayName: Cloudigrade Celery Worker Container Memory Request
+  name: CELERY_WORKER_LIMITS_CONTAINER_MEM_REQUEST
+  required: true
+  value: 256Mi
+- displayName: Cloudigrade Celery Worker Container CPU Limit
+  name: CELERY_WORKER_LIMITS_CONTAINER_CPU_LIMIT
+  required: true
+  value: 200m
+- displayName: Cloudigrade Celery Worker Container Memory Limit
+  name: CELERY_WORKER_LIMITS_CONTAINER_MEM_LIMIT
+  required: true
+  value: 512Mi
+- displayName: Cloudigrade Celery Image tag
+  name: IMAGE_TAG
+  required: true
+  value: latest
+- name: HABERDASHER_EMITTER
+  description: Emitter for haberdasher logs [stderr|kafka]
+  value: kafka
+- name: HABERDASHER_KAFKA_BOOTSTRAP
+  description: Bootstrap server for haberdasher kafka emitter
+  value: ''
+- name: HABERDASHER_KAFKA_TOPIC
+  description: Kafka topic for haberdasher kafka emitter
+  value: 'platform.logging.logs'
+- name: HABERDASHER_TAGS
+  description: Haberdasher tags for unstrutured logs
+  value: '["cloudigrade"]'
+- name: HABERDASHER_LABELS
+  description: Haberdasher labels for unstructured logs
+  value: '{"app": "cloudigrade"}'
+- displayName: Watchtower use queues
+  name: WATCHTOWER_USE_QUEUES
+  required: true
+  value: 'false'
+- displayName: Watchtower send interval (seconds)
+  name: WATCHTOWER_SEND_INTERVAL
+  required: true
+  value: '0.0'
+- displayName: Watchtower max batch count
+  name: WATCHTOWER_MAX_BATCH_COUNT
+  required: true
+  value: '1'
+# The following parameters *generally* have different values in stage and prod.
+# The default values provided here are correct for our stage environment.
+- displayName: Image namespace
+  name: IMAGE_NAMESPACE
+  required: true
+  value: cloudigrade-stage
