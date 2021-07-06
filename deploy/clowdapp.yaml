@@ -42,15 +42,27 @@ objects:
         - name: ANALYZE_LOG_SCHEDULE
           value: ${ANALYZE_LOG_SCHEDULE}
         - name: AWS_ACCESS_KEY_ID
-          value: ${AWS_ACCESS_KEY_ID}
+          valueFrom:
+            secretKeyRef:
+              key: aws-access-key-id
+              name: cloudigrade
         - name: AWS_SECRET_ACCESS_KEY
-          value: ${AWS_SECRET_ACCESS_KEY}
+          valueFrom:
+            secretKeyRef:
+              key: aws-secret-access-key
+              name: cloudigrade
         - name: AWS_DEFAULT_REGION
           value: ${AWS_DEFAULT_REGION}
         - name: AWS_SQS_ACCESS_KEY_ID
-          value: ${AWS_SQS_ACCESS_KEY_ID}
+          valueFrom:
+            secretKeyRef:
+              key: aws-sqs-access-key-id
+              name: cloudigrade
         - name: AWS_SQS_SECRET_ACCESS_KEY
-          value: ${AWS_SQS_SECRET_ACCESS_KEY}
+          valueFrom:
+            secretKeyRef:
+              key: aws-sqs-secret-access-key
+              name: cloudigrade
         - name: AWS_SQS_REGION
           value: ${AWS_SQS_REGION}
         - name: AWS_SQS_MAX_RECEIVE_COUNT
@@ -70,7 +82,10 @@ objects:
         - name: DJANGO_SETTINGS_MODULE
           value: ${DJANGO_SETTINGS_MODULE}
         - name: DJANGO_SECRET_KEY
-          value: ${DJANGO_SECRET_KEY}
+          valueFrom:
+            secretKeyRef:
+              key: django-secret-key
+              name: cloudigrade
         - name: DJANGO_ALLOWED_HOSTS
           value: ${DJANGO_ALLOWED_HOSTS}
         - name: DJANGO_DATABASE_CONN_MAX_AGE
@@ -116,13 +131,19 @@ objects:
         - name: API_ENABLE_SENTRY
           value: ${API_ENABLE_SENTRY}
         - name: DJANGO_SENTRY_DSN
-          value: ${DJANGO_SENTRY_DSN}
+          valueFrom:
+            secretKeyRef:
+              key: api-sentry-dsn
+              name: cloudigrade
         - name: DJANGO_SENTRY_ENVIRONMENT
           value: ${DJANGO_SENTRY_ENVIRONMENT}
         - name: HOUNDIGRADE_ENABLE_SENTRY
           value: ${HOUNDIGRADE_ENABLE_SENTRY}
         - name: HOUNDIGRADE_SENTRY_DSN
-          value: ${HOUNDIGRADE_SENTRY_DSN}
+          valueFrom:
+            secretKeyRef:
+              key: houndigrade-sentry-dsn
+              name: cloudigrade
         - name: HOUNDIGRADE_SENTRY_RELEASE
           value: ${HOUNDIGRADE_SENTRY_RELEASE}
         - name: HOUNDIGRADE_SENTRY_ENVIRONMENT
@@ -134,15 +155,27 @@ objects:
         - name: CLOUDIGRADE_ENABLE_CLOUDWATCH
           value: ${CLOUDIGRADE_ENABLE_CLOUDWATCH}
         - name: CW_AWS_ACCESS_KEY_ID
-          value: ${CW_AWS_ACCESS_KEY_ID}
+          valueFrom:
+            secretKeyRef:
+              key: aws_access_key_id
+              name: cloudwatch
         - name: CW_AWS_SECRET_ACCESS_KEY
-          value: ${CW_AWS_SECRET_ACCESS_KEY}
+          valueFrom:
+            secretKeyRef:
+              key: aws_secret_access_key
+              name: cloudwatch
         - name: CW_AWS_REGION_NAME
-          value: ${CW_AWS_REGION_NAME}
+          valueFrom:
+            secretKeyRef:
+              key: aws_region
+              name: cloudwatch
         - name: CLOUDIGRADE_CW_LEVEL
           value: ${CLOUDIGRADE_CW_LEVEL}
         - name: CLOUDIGRADE_CW_LOG_GROUP
-          value: ${CLOUDIGRADE_CW_LOG_GROUP}
+          valueFrom:
+            secretKeyRef:
+              key: log_group_name
+              name: cloudwatch
         - name: CLOUDIGRADE_CW_STREAM_NAME
           value: ${CLOUDIGRADE_CW_STREAM_NAME}
         - name: LISTENER_LOG_LEVEL
@@ -168,7 +201,10 @@ objects:
         - name: IMAGE_TAG
           value: ${IMAGE_TAG}
         - name: SLACK_TOKEN
-          value: ${SLACK_TOKEN}
+          valueFrom:
+            secretKeyRef:
+              key: slack-token
+              name: cloudigrade
         - name: HABERDASHER_EMITTER
           value: ${HABERDASHER_EMITTER}
         - name: HABERDASHER_KAFKA_BOOTSTRAP
@@ -230,15 +266,27 @@ objects:
         - name: ANALYZE_LOG_SCHEDULE
           value: ${ANALYZE_LOG_SCHEDULE}
         - name: AWS_ACCESS_KEY_ID
-          value: ${AWS_ACCESS_KEY_ID}
+          valueFrom:
+            secretKeyRef:
+              key: aws-access-key-id
+              name: cloudigrade
         - name: AWS_SECRET_ACCESS_KEY
-          value: ${AWS_SECRET_ACCESS_KEY}
+          valueFrom:
+            secretKeyRef:
+              key: aws-secret-access-key
+              name: cloudigrade
         - name: AWS_DEFAULT_REGION
           value: ${AWS_DEFAULT_REGION}
         - name: AWS_SQS_ACCESS_KEY_ID
-          value: ${AWS_SQS_ACCESS_KEY_ID}
+          valueFrom:
+            secretKeyRef:
+              key: aws-sqs-access-key-id
+              name: cloudigrade
         - name: AWS_SQS_SECRET_ACCESS_KEY
-          value: ${AWS_SQS_SECRET_ACCESS_KEY}
+          valueFrom:
+            secretKeyRef:
+              key: aws-sqs-secret-access-key
+              name: cloudigrade
         - name: AWS_SQS_REGION
           value: ${AWS_SQS_REGION}
         - name: AWS_SQS_MAX_RECEIVE_COUNT
@@ -258,7 +306,10 @@ objects:
         - name: DJANGO_SETTINGS_MODULE
           value: ${DJANGO_SETTINGS_MODULE}
         - name: DJANGO_SECRET_KEY
-          value: ${DJANGO_SECRET_KEY}
+          valueFrom:
+            secretKeyRef:
+              key: django-secret-key
+              name: cloudigrade
         - name: DJANGO_ALLOWED_HOSTS
           value: ${DJANGO_ALLOWED_HOSTS}
         - name: DJANGO_DATABASE_CONN_MAX_AGE
@@ -326,15 +377,27 @@ objects:
         - name: CLOUDIGRADE_ENABLE_CLOUDWATCH
           value: ${CLOUDIGRADE_ENABLE_CLOUDWATCH}
         - name: CW_AWS_ACCESS_KEY_ID
-          value: ${CW_AWS_ACCESS_KEY_ID}
+          valueFrom:
+            secretKeyRef:
+              key: aws_access_key_id
+              name: cloudwatch
         - name: CW_AWS_SECRET_ACCESS_KEY
-          value: ${CW_AWS_SECRET_ACCESS_KEY}
+          valueFrom:
+            secretKeyRef:
+              key: aws_secret_access_key
+              name: cloudwatch
         - name: CW_AWS_REGION_NAME
-          value: ${CW_AWS_REGION_NAME}
+          valueFrom:
+            secretKeyRef:
+              key: aws_region
+              name: cloudwatch
         - name: CLOUDIGRADE_CW_LEVEL
           value: ${CLOUDIGRADE_CW_LEVEL}
         - name: CLOUDIGRADE_CW_LOG_GROUP
-          value: ${CLOUDIGRADE_CW_LOG_GROUP}
+          valueFrom:
+            secretKeyRef:
+              key: log_group_name
+              name: cloudwatch
         - name: CLOUDIGRADE_CW_STREAM_NAME
           value: ${CLOUDIGRADE_CW_STREAM_NAME}
         - name: OSD_REDEPLOY_TRIGGER
@@ -436,15 +499,27 @@ objects:
         - name: CELERY_SENTRY_ENVIRONMENT
           value: ${CELERY_SENTRY_ENVIRONMENT}
         - name: AWS_ACCESS_KEY_ID
-          value: ${AWS_ACCESS_KEY_ID}
+          valueFrom:
+            secretKeyRef:
+              key: aws-access-key-id
+              name: cloudigrade
         - name: AWS_SECRET_ACCESS_KEY
-          value: ${AWS_SECRET_ACCESS_KEY}
+          valueFrom:
+            secretKeyRef:
+              key: aws-secret-access-key
+              name: cloudigrade
         - name: AWS_DEFAULT_REGION
           value: ${AWS_DEFAULT_REGION}
         - name: AWS_SQS_ACCESS_KEY_ID
-          value: ${AWS_SQS_ACCESS_KEY_ID}
+          valueFrom:
+            secretKeyRef:
+              key: aws-sqs-access-key-id
+              name: cloudigrade
         - name: AWS_SQS_SECRET_ACCESS_KEY
-          value: ${AWS_SQS_SECRET_ACCESS_KEY}
+          valueFrom:
+            secretKeyRef:
+              key: aws-sqs-secret-access-key
+              name: cloudigrade
         - name: AWS_SQS_REGION
           value: ${AWS_SQS_REGION}
         - name: AWS_SQS_MAX_RECEIVE_COUNT
@@ -464,7 +539,10 @@ objects:
         - name: DJANGO_SETTINGS_MODULE
           value: ${DJANGO_SETTINGS_MODULE}
         - name: DJANGO_SECRET_KEY
-          value: ${DJANGO_SECRET_KEY}
+          valueFrom:
+            secretKeyRef:
+              key: django-secret-key
+              name: cloudigrade
         - name: DJANGO_ALLOWED_HOSTS
           value: ${DJANGO_ALLOWED_HOSTS}
         - name: DJANGO_DATABASE_CONN_MAX_AGE
@@ -518,15 +596,27 @@ objects:
         - name: CLOUDIGRADE_ENABLE_CLOUDWATCH
           value: ${CLOUDIGRADE_ENABLE_CLOUDWATCH}
         - name: CW_AWS_ACCESS_KEY_ID
-          value: ${CW_AWS_ACCESS_KEY_ID}
+          valueFrom:
+            secretKeyRef:
+              key: aws_access_key_id
+              name: cloudwatch
         - name: CW_AWS_SECRET_ACCESS_KEY
-          value: ${CW_AWS_SECRET_ACCESS_KEY}
+          valueFrom:
+            secretKeyRef:
+              key: aws_secret_access_key
+              name: cloudwatch
         - name: CW_AWS_REGION_NAME
-          value: ${CW_AWS_REGION_NAME}
+          valueFrom:
+            secretKeyRef:
+              key: aws_region
+              name: cloudwatch
         - name: CLOUDIGRADE_CW_LEVEL
           value: ${CLOUDIGRADE_CW_LEVEL}
         - name: CLOUDIGRADE_CW_LOG_GROUP
-          value: ${CLOUDIGRADE_CW_LOG_GROUP}
+          valueFrom:
+            secretKeyRef:
+              key: log_group_name
+              name: cloudwatch
         - name: CLOUDIGRADE_CW_STREAM_NAME
           value: ${CLOUDIGRADE_CW_STREAM_NAME}
         - name: OSD_REDEPLOY_TRIGGER
@@ -595,15 +685,27 @@ objects:
         image: ${IMAGE}:${IMAGE_TAG}
         env:
         - name: AWS_ACCESS_KEY_ID
-          value: ${AWS_ACCESS_KEY_ID}
+          valueFrom:
+            secretKeyRef:
+              key: aws-access-key-id
+              name: cloudigrade
         - name: AWS_SECRET_ACCESS_KEY
-          value: ${AWS_SECRET_ACCESS_KEY}
+          valueFrom:
+            secretKeyRef:
+              key: aws-secret-access-key
+              name: cloudigrade
         - name: AWS_DEFAULT_REGION
           value: ${AWS_DEFAULT_REGION}
         - name: AWS_SQS_ACCESS_KEY_ID
-          value: ${AWS_SQS_ACCESS_KEY_ID}
+          valueFrom:
+            secretKeyRef:
+              key: aws-sqs-access-key-id
+              name: cloudigrade
         - name: AWS_SQS_SECRET_ACCESS_KEY
-          value: ${AWS_SQS_SECRET_ACCESS_KEY}
+          valueFrom:
+            secretKeyRef:
+              key: aws-sqs-secret-access-key
+              name: cloudigrade
         - name: AWS_SQS_REGION
           value: ${AWS_SQS_REGION}
         - name: AWS_SQS_MAX_RECEIVE_COUNT
@@ -623,7 +725,10 @@ objects:
         - name: DJANGO_SETTINGS_MODULE
           value: ${DJANGO_SETTINGS_MODULE}
         - name: DJANGO_SECRET_KEY
-          value: ${DJANGO_SECRET_KEY}
+          valueFrom:
+            secretKeyRef:
+              key: django-secret-key
+              name: cloudigrade
         - name: DJANGO_ALLOWED_HOSTS
           value: ${DJANGO_ALLOWED_HOSTS}
         - name: DJANGO_DATABASE_CONN_MAX_AGE
@@ -699,15 +804,27 @@ objects:
         - name: CLOUDIGRADE_ENABLE_CLOUDWATCH
           value: ${CLOUDIGRADE_ENABLE_CLOUDWATCH}
         - name: CW_AWS_ACCESS_KEY_ID
-          value: ${CW_AWS_ACCESS_KEY_ID}
+          valueFrom:
+            secretKeyRef:
+              key: aws_access_key_id
+              name: cloudwatch
         - name: CW_AWS_SECRET_ACCESS_KEY
-          value: ${CW_AWS_SECRET_ACCESS_KEY}
+          valueFrom:
+            secretKeyRef:
+              key: aws_secret_access_key
+              name: cloudwatch
         - name: CW_AWS_REGION_NAME
-          value: ${CW_AWS_REGION_NAME}
+          valueFrom:
+            secretKeyRef:
+              key: aws_region
+              name: cloudwatch
         - name: CLOUDIGRADE_CW_LEVEL
           value: ${CLOUDIGRADE_CW_LEVEL}
         - name: CLOUDIGRADE_CW_LOG_GROUP
-          value: ${CLOUDIGRADE_CW_LOG_GROUP}
+          valueFrom:
+            secretKeyRef:
+              key: log_group_name
+              name: cloudwatch
         - name: CLOUDIGRADE_CW_STREAM_NAME
           value: ${CLOUDIGRADE_CW_STREAM_NAME}
         - name: OSD_REDEPLOY_TRIGGER
