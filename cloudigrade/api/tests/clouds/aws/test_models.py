@@ -207,10 +207,13 @@ class AwsCloudAccountModelTest(TransactionTestCase, ModelStrTestMixin):
             self.assertEqual(3, aws_models.AwsInstanceEvent.objects.count())
             with patch(
                 "api.clouds.aws.util.delete_cloudtrail"
-            ) as mock_delete_cloudtrail:
+            ) as mock_delete_cloudtrail, patch(
+                "api.util.calculate_max_concurrent_usage_from_runs"
+            ) as mock_concurrent:
                 mock_delete_cloudtrail.return_value = True
                 self.account.disable()
                 mock_delete_cloudtrail.assert_called()
+                mock_concurrent.assert_called()
 
         self.account.refresh_from_db()
         self.assertFalse(self.account.is_enabled)
