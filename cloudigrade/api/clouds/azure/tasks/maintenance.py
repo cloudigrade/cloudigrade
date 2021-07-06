@@ -65,7 +65,7 @@ def _fetch_azure_instance_type_definitions():
                 # Azure reports memory in GB, here we convert
                 # GB values to MiB values to keep our instance
                 # definitions consistent across clouds
-                memory = bitmath.GB(capability.value).to_MiB()
+                memory = bitmath.GB(float(capability.value)).to_MiB()
 
         instances[resource_sku.name] = {
             "memory": memory,
