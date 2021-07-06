@@ -646,7 +646,7 @@ def recalculate_runs(event):
                 )
                 run.save()
                 saved_runs.append(run)
-            calculate_max_concurrent_usage_from_runs(runs)
+            calculate_max_concurrent_usage_from_runs(saved_runs)
         return
 
     events = (
@@ -677,7 +677,7 @@ def recalculate_runs(event):
             )
             run.save()
             saved_runs.append(run)
-        calculate_max_concurrent_usage_from_runs(runs)
+        calculate_max_concurrent_usage_from_runs(saved_runs)
 
 
 def convert_param_to_int(name, value):
