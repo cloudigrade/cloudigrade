@@ -919,10 +919,12 @@ parameters:
   required: true
   value: health.cloudigrade.insights.openshiftapps.com
 - name: IMAGE
-  displayName: Image
-  description: Image name
+  displayName: Cloudigrade Image
+  required: true
   value: quay.io/cloudservices/cloudigrade
 - name: IMAGE_TAG
+  displayName: Cloudigrade Image tag
+  required: true
   value: latest
 - name: MIN_REPLICAS
   description: The number of replicas to use in the deployment
@@ -1112,10 +1114,6 @@ parameters:
   name: HEALTH_CHECK_HOST_HEADER
   required: true
   value: health.cloudigrade.insights.openshiftapps.com
-- displayName: Cloudigrade Image tag
-  name: IMAGE_TAG
-  required: true
-  value: latest
 - displayName: SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY
   name: SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY
   required: true
@@ -1256,10 +1254,6 @@ parameters:
   name: CELERY_BEAT_LIMITS_CONTAINER_MEM_LIMIT
   required: true
   value: 128Mi
-- displayName: Cloudigrade Image tag
-  name: IMAGE_TAG
-  required: true
-  value: latest
 - displayName: Watchtower use queues
   name: WATCHTOWER_USE_QUEUES
   required: true
@@ -1295,10 +1289,6 @@ parameters:
   name: LISTENER_LIMITS_CONTAINER_MEM_LIMIT
   required: true
   value: 256Mi
-- displayName: Cloudigrade Listener Image tag
-  name: IMAGE_TAG
-  required: true
-  value: latest
 - name: HABERDASHER_EMITTER
   description: Emitter for haberdasher logs [stderr|kafka]
   value: kafka
@@ -1357,10 +1347,6 @@ parameters:
   name: CELERY_WORKER_LIMITS_CONTAINER_MEM_LIMIT
   required: true
   value: 512Mi
-- displayName: Cloudigrade Celery Image tag
-  name: IMAGE_TAG
-  required: true
-  value: latest
 - name: HABERDASHER_EMITTER
   description: Emitter for haberdasher logs [stderr|kafka]
   value: kafka
