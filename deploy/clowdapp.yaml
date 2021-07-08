@@ -921,7 +921,7 @@ parameters:
 - name: IMAGE
   displayName: Image
   description: Image name
-  value: quay.io/abellott/cloudigrade
+  value: quay.io/cloudservices/cloudigrade
 - name: IMAGE_TAG
   value: latest
 - name: MIN_REPLICAS
