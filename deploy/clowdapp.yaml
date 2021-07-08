@@ -1011,7 +1011,7 @@ parameters:
 - displayName: Django Log Level
   name: DJANGO_LOG_LEVEL
   required: true
-  value: 'INFO'
+  value: 'DEBUG'
 - displayName: Django All Log Level
   name: DJANGO_ALL_LOG_LEVEL
   required: true
@@ -1019,7 +1019,7 @@ parameters:
 - displayName: Django Console Log Level
   name: DJANGO_CONSOLE_LOG_LEVEL
   required: true
-  value: 'INFO'
+  value: 'DEBUG'
 - displayName: Cloudigrade Log Level
   name: CLOUDIGRADE_LOG_LEVEL
   required: true
@@ -1145,60 +1145,58 @@ parameters:
 - name: CACHE_TTL_SOURCES_APPLICATION_TYPE_ID
   description: Time to live in seconds for sources application type id cache (overrides CACHE_TTL_DEFAULT)
   value: '60'
-# The following parameters *generally* have different values in stage and prod.
-# The default values provided here are correct for our stage environment.
 - displayName: API Sentry Environment
   name: API_SENTRY_ENVIRONMENT
   required: true
-  value: stage
+  value: ephemeral
 - displayName: Celery Sentry Environment
   name: CELERY_SENTRY_ENVIRONMENT
   required: true
-  value: stage
+  value: ephemeral
 - displayName: Celery Sentry Release
   name: CELERY_SENTRY_RELEASE
   required: true
-  value: stage
+  value: ephemeral
 - displayName: Houndigrade Sentry Environment
   name: HOUNDIGRADE_SENTRY_ENVIRONMENT
   required: true
-  value: stage
+  value: ephemeral
 - displayName: Cloudigrade Commit Ref
   name: COMMIT_REF
   required: true
-  value: stage
+  value: latest
 - displayName: Cloudigrade Environment
   name: CLOUDIGRADE_ENVIRONMENT
   required: true
-  value: stage
+  value: ephemeral
 - displayName: Listener Group ID
   name: LISTENER_GROUP_ID
   required: true
-  value: cloudmeter_stage
+  value: cloudmeter_ephemeral
 - displayName: Listerner Kafka Server Address
   name: LISTENER_SERVER
   required: true
-  value: platform-mq-stage-kafka-bootstrap.platform-mq-stage.svc
+  value: platform-mq-ephemeral-kafka-bootstrap.platform-mq-ephemeral.svc
 - displayName: Listener Sentry Environment
   name: LISTENER_SENTRY_ENVIRONMENT
   required: true
-  value: stage
+  value: ephemeral
 - displayName: Postigrade Host
   name: POSTIGRADE_HOST
   required: true
-  value: postigrade.cloudigrade-stage.svc.cluster.local
+  value: postigrade.cloudigrade-ephemeral.svc.cluster.local
 - displayName: Sources API Base URL
   name: SOURCES_API_BASE_URL
   required: true
-  value: http://sources-api.sources-stage.svc:8080
+  value: http://sources-api.sources-ephemeral.svc:8080
 - displayName: Image namespace
   name: IMAGE_NAMESPACE
   required: true
-  value: cloudigrade-stage
+  value: cloudigrade-ephemeral
 - displayName: Enable Cloudwatch
   name: CLOUDIGRADE_ENABLE_CLOUDWATCH
   required: true
-  value: 'true'
+  value: 'false'
 - displayName: Cloudwatch Log Level
   name: CLOUDIGRADE_CW_LEVEL
   required: true
@@ -1206,7 +1204,7 @@ parameters:
 - displayName: Cloudwatch Stream Name.
   name: CLOUDIGRADE_CW_STREAM_NAME
   required: true
-  value: cloudigrade-stage
+  value: cloudigrade-ephemeral
 - displayName: Enable verbose Insights identity header logging
   name: VERBOSE_INSIGHTS_IDENTITY_HEADER_LOGGING
   required: true
@@ -1238,8 +1236,6 @@ parameters:
 #
 # Component cloudigrade-beat parameters:
 #
-# The following parameters *generally* have the same values in stage and prod.
-# The default values provided here are correct for our stage environment.
 - displayName: Cloudigrade Replica Count
   name: CELERY_BEAT_REPLICA_COUNT
   required: true
@@ -1264,21 +1260,6 @@ parameters:
   name: IMAGE_TAG
   required: true
   value: latest
-- name: HABERDASHER_EMITTER
-  description: Emitter for haberdasher logs [stderr|kafka]
-  value: kafka
-- name: HABERDASHER_KAFKA_BOOTSTRAP
-  description: Bootstrap server for haberdasher kafka emitter
-  value: ''
-- name: HABERDASHER_KAFKA_TOPIC
-  description: Kafka topic for haberdasher kafka emitter
-  value: 'platform.logging.logs'
-- name: HABERDASHER_TAGS
-  description: Haberdasher tags for unstrutured logs
-  value: '["cloudigrade"]'
-- name: HABERDASHER_LABELS
-  description: Haberdasher labels for unstructured logs
-  value: '{"app": "cloudigrade"}'
 - displayName: Watchtower use queues
   name: WATCHTOWER_USE_QUEUES
   required: true
@@ -1291,17 +1272,9 @@ parameters:
   name: WATCHTOWER_MAX_BATCH_COUNT
   required: true
   value: '1'
-# The following parameters *generally* have different values in stage and prod.
-# The default values provided here are correct for our stage environment.
-- displayName: Image namespace
-  name: IMAGE_NAMESPACE
-  required: true
-  value: cloudigrade-stage
 #
 # Component cloudigrade-listener parameters:
 #
-# The following parameters *generally* have the same values in stage and prod.
-# The default values provided here are correct for our stage environment.
 - displayName: Cloudigrade Listener Replica Count
   name: LISTENER_WORKER_REPLICA_COUNT
   required: true
@@ -1353,17 +1326,9 @@ parameters:
   name: WATCHTOWER_MAX_BATCH_COUNT
   required: true
   value: '1'
-# The following parameters *generally* have different values in stage and prod.
-# The default values provided here are correct for our stage environment.
-- displayName: Image namespace
-  name: IMAGE_NAMESPACE
-  required: true
-  value: cloudigrade-stage
 #
 # Component cloudigrade-worker parameters:
 #
-# The following parameters *generally* have the same values in stage and prod.
-# The default values provided here are correct for our stage environment.
 - displayName: Cloudigrade Replica Count
   name: CELERY_WORKER_REPLICA_COUNT
   required: true
@@ -1423,9 +1388,3 @@ parameters:
   name: WATCHTOWER_MAX_BATCH_COUNT
   required: true
   value: '1'
-# The following parameters *generally* have different values in stage and prod.
-# The default values provided here are correct for our stage environment.
-- displayName: Image namespace
-  name: IMAGE_NAMESPACE
-  required: true
-  value: cloudigrade-stage
