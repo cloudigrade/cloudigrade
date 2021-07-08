@@ -45,24 +45,24 @@ objects:
           valueFrom:
             secretKeyRef:
               key: aws-access-key-id
-              name: cloudigrade
+              name: cloudigrade-app-secret
         - name: AWS_SECRET_ACCESS_KEY
           valueFrom:
             secretKeyRef:
               key: aws-secret-access-key
-              name: cloudigrade
+              name: cloudigrade-app-secret
         - name: AWS_DEFAULT_REGION
           value: ${AWS_DEFAULT_REGION}
         - name: AWS_SQS_ACCESS_KEY_ID
           valueFrom:
             secretKeyRef:
               key: aws-sqs-access-key-id
-              name: cloudigrade
+              name: cloudigrade-app-secret
         - name: AWS_SQS_SECRET_ACCESS_KEY
           valueFrom:
             secretKeyRef:
               key: aws-sqs-secret-access-key
-              name: cloudigrade
+              name: cloudigrade-app-secret
         - name: AWS_SQS_REGION
           value: ${AWS_SQS_REGION}
         - name: AWS_SQS_MAX_RECEIVE_COUNT
@@ -85,7 +85,7 @@ objects:
           valueFrom:
             secretKeyRef:
               key: django-secret-key
-              name: cloudigrade
+              name: cloudigrade-app-secret
         - name: DJANGO_ALLOWED_HOSTS
           value: ${DJANGO_ALLOWED_HOSTS}
         - name: DJANGO_DATABASE_CONN_MAX_AGE
@@ -134,7 +134,7 @@ objects:
           valueFrom:
             secretKeyRef:
               key: api-sentry-dsn
-              name: cloudigrade
+              name: cloudigrade-app-secret
         - name: DJANGO_SENTRY_ENVIRONMENT
           value: ${DJANGO_SENTRY_ENVIRONMENT}
         - name: HOUNDIGRADE_ENABLE_SENTRY
@@ -143,7 +143,7 @@ objects:
           valueFrom:
             secretKeyRef:
               key: houndigrade-sentry-dsn
-              name: cloudigrade
+              name: cloudigrade-app-secret
         - name: HOUNDIGRADE_SENTRY_RELEASE
           value: ${HOUNDIGRADE_SENTRY_RELEASE}
         - name: HOUNDIGRADE_SENTRY_ENVIRONMENT
@@ -204,7 +204,7 @@ objects:
           valueFrom:
             secretKeyRef:
               key: slack-token
-              name: cloudigrade
+              name: cloudigrade-app-secret
         - name: HABERDASHER_EMITTER
           value: ${HABERDASHER_EMITTER}
         - name: HABERDASHER_KAFKA_BOOTSTRAP
@@ -269,24 +269,24 @@ objects:
           valueFrom:
             secretKeyRef:
               key: aws-access-key-id
-              name: cloudigrade
+              name: cloudigrade-app-secret
         - name: AWS_SECRET_ACCESS_KEY
           valueFrom:
             secretKeyRef:
               key: aws-secret-access-key
-              name: cloudigrade
+              name: cloudigrade-app-secret
         - name: AWS_DEFAULT_REGION
           value: ${AWS_DEFAULT_REGION}
         - name: AWS_SQS_ACCESS_KEY_ID
           valueFrom:
             secretKeyRef:
               key: aws-sqs-access-key-id
-              name: cloudigrade
+              name: cloudigrade-app-secret
         - name: AWS_SQS_SECRET_ACCESS_KEY
           valueFrom:
             secretKeyRef:
               key: aws-sqs-secret-access-key
-              name: cloudigrade
+              name: cloudigrade-app-secret
         - name: AWS_SQS_REGION
           value: ${AWS_SQS_REGION}
         - name: AWS_SQS_MAX_RECEIVE_COUNT
@@ -309,7 +309,7 @@ objects:
           valueFrom:
             secretKeyRef:
               key: django-secret-key
-              name: cloudigrade
+              name: cloudigrade-app-secret
         - name: DJANGO_ALLOWED_HOSTS
           value: ${DJANGO_ALLOWED_HOSTS}
         - name: DJANGO_DATABASE_CONN_MAX_AGE
@@ -502,24 +502,24 @@ objects:
           valueFrom:
             secretKeyRef:
               key: aws-access-key-id
-              name: cloudigrade
+              name: cloudigrade-app-secret
         - name: AWS_SECRET_ACCESS_KEY
           valueFrom:
             secretKeyRef:
               key: aws-secret-access-key
-              name: cloudigrade
+              name: cloudigrade-app-secret
         - name: AWS_DEFAULT_REGION
           value: ${AWS_DEFAULT_REGION}
         - name: AWS_SQS_ACCESS_KEY_ID
           valueFrom:
             secretKeyRef:
               key: aws-sqs-access-key-id
-              name: cloudigrade
+              name: cloudigrade-app-secret
         - name: AWS_SQS_SECRET_ACCESS_KEY
           valueFrom:
             secretKeyRef:
               key: aws-sqs-secret-access-key
-              name: cloudigrade
+              name: cloudigrade-app-secret
         - name: AWS_SQS_REGION
           value: ${AWS_SQS_REGION}
         - name: AWS_SQS_MAX_RECEIVE_COUNT
@@ -542,7 +542,7 @@ objects:
           valueFrom:
             secretKeyRef:
               key: django-secret-key
-              name: cloudigrade
+              name: cloudigrade-app-secret
         - name: DJANGO_ALLOWED_HOSTS
           value: ${DJANGO_ALLOWED_HOSTS}
         - name: DJANGO_DATABASE_CONN_MAX_AGE
@@ -688,24 +688,24 @@ objects:
           valueFrom:
             secretKeyRef:
               key: aws-access-key-id
-              name: cloudigrade
+              name: cloudigrade-app-secret
         - name: AWS_SECRET_ACCESS_KEY
           valueFrom:
             secretKeyRef:
               key: aws-secret-access-key
-              name: cloudigrade
+              name: cloudigrade-app-secret
         - name: AWS_DEFAULT_REGION
           value: ${AWS_DEFAULT_REGION}
         - name: AWS_SQS_ACCESS_KEY_ID
           valueFrom:
             secretKeyRef:
               key: aws-sqs-access-key-id
-              name: cloudigrade
+              name: cloudigrade-app-secret
         - name: AWS_SQS_SECRET_ACCESS_KEY
           valueFrom:
             secretKeyRef:
               key: aws-sqs-secret-access-key
-              name: cloudigrade
+              name: cloudigrade-app-secret
         - name: AWS_SQS_REGION
           value: ${AWS_SQS_REGION}
         - name: AWS_SQS_MAX_RECEIVE_COUNT
@@ -728,7 +728,7 @@ objects:
           valueFrom:
             secretKeyRef:
               key: django-secret-key
-              name: cloudigrade
+              name: cloudigrade-app-secret
         - name: DJANGO_ALLOWED_HOSTS
           value: ${DJANGO_ALLOWED_HOSTS}
         - name: DJANGO_DATABASE_CONN_MAX_AGE
