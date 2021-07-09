@@ -3,6 +3,9 @@ import sentry_sdk
 from boto3 import client
 from sentry_sdk.integrations.django import DjangoIntegration
 
+from app_common_python import isClowderEnabled
+from app_common_python import LoadedConfig as clowder_cfg
+
 from .base import *
 
 IS_PRODUCTION = CLOUDIGRADE_ENVIRONMENT == "prod"
@@ -29,10 +32,16 @@ AWS_CLOUDTRAIL_EVENT_URL = f"https://sqs.us-east-1.amazonaws.com/{account_id}/cl
 SECRET_KEY = env("DJANGO_SECRET_KEY")
 ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS")
 
-DATABASES["default"]["NAME"] = env("DJANGO_DATABASE_NAME")
-DATABASES["default"]["HOST"] = env("DJANGO_DATABASE_HOST")
-DATABASES["default"]["USER"] = env("DJANGO_DATABASE_USER")
-DATABASES["default"]["PASSWORD"] = env("DJANGO_DATABASE_PASSWORD")
+if isClowderEnabled():
+    DATABASES["default"]["NAME"] = clowder_cfg.database.name
+    DATABASES["default"]["HOST"] = clowder_cfg.database.hostname
+    DATABASES["default"]["USER"] = clowder_cfg.database.username
+    DATABASES["default"]["PASSWORD"] = clowder_cfg.database.password
+else:
+    DATABASES["default"]["NAME"] = env("DJANGO_DATABASE_NAME")
+    DATABASES["default"]["HOST"] = env("DJANGO_DATABASE_HOST")
+    DATABASES["default"]["USER"] = env("DJANGO_DATABASE_USER")
+    DATABASES["default"]["PASSWORD"] = env("DJANGO_DATABASE_PASSWORD")
 
 # Require these AWS_SQS_ variables to be set explicitly. No defaults.
 AWS_SQS_REGION = env("AWS_SQS_REGION")
