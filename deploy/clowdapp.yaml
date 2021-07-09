@@ -888,6 +888,7 @@ objects:
           timeoutSeconds: 1
     database:
       name: cloudigrade 
+      version: 10
     kafkaTopics:
     - topicName: platform.sources.event-stream
       partitions: 3
@@ -1072,7 +1073,7 @@ parameters:
 - displayName: Cloudigrade Replica Count
   name: API_REPLICA_COUNT
   required: true
-  value: '4'
+  value: '2'
 - displayName: Cloudigrade Max Replica Count
   name: API_REPLICA_COUNT_MAX
   required: true
@@ -1309,7 +1310,7 @@ parameters:
 - displayName: Cloudigrade Replica Count
   name: CELERY_WORKER_REPLICA_COUNT
   required: true
-  value: '4'
+  value: '2'
 - displayName: Cloudigrade Worker Replica Count Max
   name: CELERY_WORKER_REPLICA_COUNT_MAX
   required: true
