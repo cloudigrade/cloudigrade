@@ -884,6 +884,14 @@ objects:
           timeoutSeconds: 1
     database:
       name: cloudigrade 
+    kafkaTopics:
+    - topicName: platform.sources.event-stream
+      partitions: 3
+      replicas: 3
+    - topicName: platform.sources.status
+      partitions: 3
+      replicas: 3
+
 parameters:
 - name: APP_NAME
   displayName: Application Name
