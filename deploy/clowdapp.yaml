@@ -4,15 +4,6 @@ kind: Template
 metadata:
   name: cloudigrade
 objects:
-- apiVersion: v1
-  kind: Secret # For ephemeral/local environment
-  metadata:
-    name: cloudigrade-secrets
-    labels:
-      app: cloudigrade
-  stringData:
-    encryption-key: "${ENCRYPTION_KEY}"
-    secret-key: "${SECRET_KEY}"
 - apiVersion: cloud.redhat.com/v1alpha1
   kind: ClowdApp
   metadata:
@@ -35,10 +26,6 @@ objects:
           value: ${APP_NAME}
         - name: ENV_NAME
           value: ${ENV_NAME}
-        - name: ENCRYPTION_KEY
-          value: ${ENCRYPTION_KEY}
-        - name: SECRET_KEY_BASE
-          value: ${SECRET_KEY_BASE}
         - name: ANALYZE_LOG_SCHEDULE
           value: ${ANALYZE_LOG_SCHEDULE}
         - name: AWS_ACCESS_KEY_ID
@@ -905,12 +892,6 @@ parameters:
 - name: CLOWDER_ENABLED
   description: Determines Clowder deployment
   value: "True"
-- name: ENCRYPTION_KEY
-  displayName: Encryption Key (Ephemeral)
-  required: true
-  description: Encryption Key for Passwords
-  from: "[a-zA-Z0-9]{43}"
-  generate: expression
 - name: ENV_NAME
   description: ClowdEnv Name
   required: true
@@ -929,12 +910,6 @@ parameters:
 - name: MIN_REPLICAS
   description: The number of replicas to use in the deployment
   value: "1"
-- name: SECRET_KEY
-  displayName: Secret Key (Ephemeral)
-  required: true
-  description: SECRET_KEY_BASE
-  from: "[a-f0-9]{128}"
-  generate: expression
 #
 # Component cloudigrade-api parameters:
 #
