@@ -21,6 +21,7 @@ objects:
           enabled: true # port 8000 is the default in CloudEnvironment
       podSpec:
         image: ${IMAGE}:${IMAGE_TAG}
+        imagePullPolicy: Always
         env:
         - name: APP_NAME
           value: ${APP_NAME}
@@ -249,6 +250,7 @@ objects:
           enabled: false
       podSpec:
         image: ${IMAGE}:${IMAGE_TAG}
+        imagePullPolicy: Always
         env:
         - name: ANALYZE_LOG_SCHEDULE
           value: ${ANALYZE_LOG_SCHEDULE}
@@ -462,6 +464,7 @@ objects:
           enabled: false
       podSpec:
         image: ${IMAGE}:${IMAGE_TAG}
+        imagePullPolicy: Always
         env:
         - name: LISTENER_LOG_LEVEL
           value: ${LISTENER_LOG_LEVEL}
@@ -670,6 +673,7 @@ objects:
           enabled: false
       podSpec:
         image: ${IMAGE}:${IMAGE_TAG}
+        imagePullPolicy: Always
         env:
         - name: AWS_ACCESS_KEY_ID
           valueFrom:
@@ -840,7 +844,7 @@ objects:
           value: ${WATCHTOWER_SEND_INTERVAL}
         - name: WATCHTOWER_MAX_BATCH_COUNT
           value: ${WATCHTOWER_MAX_BATCH_COUNT}
-        image: ' '
+        image: ${IMAGE}:${IMAGE_TAG}
         imagePullPolicy: Always
         command:
           - /bin/sh
