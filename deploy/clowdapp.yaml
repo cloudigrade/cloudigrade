@@ -889,13 +889,11 @@ objects:
     database:
       name: cloudigrade 
       version: 10
+    dependencies:
+    - sources-api
     kafkaTopics:
     - topicName: platform.sources.event-stream
-      partitions: 3
-      replicas: 3
     - topicName: platform.sources.status
-      partitions: 3
-      replicas: 3
 
 parameters:
 - name: APP_NAME
@@ -1174,7 +1172,7 @@ parameters:
 - displayName: Sources API Base URL
   name: SOURCES_API_BASE_URL
   required: true
-  value: http://sources-api.sources-ephemeral.svc:8080
+  value: http://sources-api-svc.sources-ephemeral.svc:8000
 - displayName: Image namespace
   name: IMAGE_NAMESPACE
   required: true

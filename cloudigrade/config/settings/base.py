@@ -39,9 +39,11 @@ if environ.os.path.isfile(ENV_FILE_PATH):
     env.read_env(ENV_FILE_PATH)
     __print("The .env file has been loaded. See base.py for more information")
 
+if isClowderEnabled():
+  __print("Clowder: Enabled")
+
 # Used to derive several other configs' default values later.
 CLOUDIGRADE_ENVIRONMENT = env("CLOUDIGRADE_ENVIRONMENT")
-
 
 # TODO refactor our app to use exclusively only one of these configs
 # CLOUDIGRADE_ENVIRONMENT, AWS_NAME_PREFIX, and CLOUDTRAIL_NAME_PREFIX don't all need to
@@ -140,6 +142,7 @@ DATABASES = {
         "CONN_MAX_AGE": env.int("DJANGO_DATABASE_CONN_MAX_AGE", default=0),
     }
 }
+
 if isClowderEnabled():
     DATABASES["default"] = {**DATABASES["default"], **{
             "NAME": clowder_cfg.database.name,
@@ -148,6 +151,7 @@ if isClowderEnabled():
             "PASSWORD": clowder_cfg.database.password,
             "PORT": clowder_cfg.database.port,
         }}
+    __print(f"Clowder: Database {clowder_cfg.database.name} {clowder_cfg.database.hostname}:{clowder_cfg.database.port}")
 else:
     DATABASES["default"] = {**DATABASES["default"], **{
             "NAME": env("DJANGO_DATABASE_NAME", default="postgres"),
@@ -295,7 +299,6 @@ WATCHTOWER_SEND_INTERVAL = env.float("WATCHTOWER_SEND_INTERVAL", default=1.0)
 WATCHTOWER_MAX_BATCH_COUNT = env.int("WATCHTOWER_MAX_BATCH_COUNT", default=1000)
 
 if CLOUDIGRADE_ENABLE_CLOUDWATCH:
-    __print("Configuring CloudWatch...")
     cw_boto3_session = Session(
         aws_access_key_id=env("CW_AWS_ACCESS_KEY_ID"),
         aws_secret_access_key=env("CW_AWS_SECRET_ACCESS_KEY"),
@@ -567,16 +570,15 @@ if isClowderEnabled():
     kafka_broker = clowder_cfg.kafka.brokers[0]
     LISTENER_SERVER = kafka_broker.hostname
     LISTENER_PORT = kafka_broker.port
-    # AAB: following may be incorrect, didn't see one in the kafka endpoint
-    # in the app-common-python, maybe it's in the config json.
     LISTENER_METRICS_PORT = clowder_cfg.metricsPort
+    __print(f"Clowder: Lister Server:Port {LISTENER_SERVER}:{LISTENER_PORT}")
+    __print(f"Clowder: Lister Metrics Port {LISTENER_METRICS_PORT}")
 else:
     LISTENER_SERVER = env(
         "LISTENER_SERVER", default="platform-mq-ci-kafka-bootstrap.platform-mq-ci.svc"
     )
     LISTENER_PORT = env.int("LISTENER_PORT", default=9092)
     LISTENER_METRICS_PORT = env.int("LISTENER_METRICS_PORT", default=8080)
-
 
 #####################################################################
 # Sources API integration
@@ -587,13 +589,18 @@ SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA = env.bool(
 
 
 if isClowderEnabled():
-    SOURCES_API_BASE_URL = ""
+    CLOWDER_SOURCES_API_BASE_URL = ""
     for endpoint in clowder_cfg.endpoints:
         if endpoint.app == "sources-api":
-            SOURCES_API_BASE_URL=f"http://{endpoint.hostname}:{endpoint.port}"
+            CLOWDER_SOURCES_API_BASE_URL=f"http://{endpoint.hostname}:{endpoint.port}"
+    if CLOWDER_SOURCES_API_BASE_URL == "":
+      __print(f"Clowder: Sources api service was not found, using default of {SOURCES_API_BASE_URL}")
+    else:
+      SOURCES_API_BASE_URL = CLOWDER_SOURCES_API_BASE_URL
+      __print(f"Clowder: SOURCES_API_BASE_URL: {SOURCES_API_BASE_URL}")
 else:
     SOURCES_API_BASE_URL = env(
-        "SOURCES_API_BASE_URL", default="http://sources-api.sources-ci.svc:8080"
+        "SOURCES_API_BASE_URL", default="http://sources-api-svc.sources-ephemeral.svc:8000"
     )
 
 SOURCE_API_INTERNAL_URI = "/internal/v1.0/"
