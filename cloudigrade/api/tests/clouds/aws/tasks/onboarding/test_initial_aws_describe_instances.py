@@ -11,23 +11,18 @@ from api.models import (
     Instance,
     InstanceEvent,
     MachineImage,
-    Run,
 )
 from api.tests import helper as account_helper
-from api.util import process_instance_event
 from util.tests import helper as util_helper
 
 
 class InitialAwsDescribeInstancesTest(TestCase):
     """Celery task 'initial_aws_describe_instances' test cases."""
 
-    @patch("api.tasks.calculate_max_concurrent_usage_task")
     @patch("api.clouds.aws.tasks.onboarding.start_image_inspection")
     @patch("api.clouds.aws.tasks.onboarding.aws")
     @patch("api.clouds.aws.util.aws")
-    def test_initial_aws_describe_instances(
-        self, mock_util_aws, mock_aws, mock_start, mock_calculate_concurrent_usage_task
-    ):
+    def test_initial_aws_describe_instances(self, mock_util_aws, mock_aws, mock_start):
         """
         Test happy-path behaviors of initial_aws_describe_instances.
 
@@ -196,22 +191,12 @@ class InitialAwsDescribeInstancesPowerOffNotRunningTest(TestCase):
         self.region = self.aws_instance.region
         self.power_on_time = util_helper.utc_dt(2018, 1, 1, 0, 0, 0)
         self.power_off_time = util_helper.utc_dt(2019, 1, 1, 0, 0, 0)
-        event = account_helper.generate_single_instance_event(
+        account_helper.generate_single_instance_event(
             self.instance, self.power_on_time, event_type=InstanceEvent.TYPE.power_on
         )
-        self.process_event(event)
 
-    def process_event(self, event):
-        """Process the event but skip the async calculate max concurrent function."""
-        with patch(
-            "api.util.calculate_max_concurrent_usage_from_runs"
-        ) as mock_calculate_max_concurrent:
-            process_instance_event(event)
-            if event.event_type == InstanceEvent.TYPE.power_on:
-                mock_calculate_max_concurrent.assert_called()
-
-    def assertExpectedEventsAndRun(self):
-        """Assert known instance has exactly one run and two power_on/off events."""
+    def assertExpectedEvents(self):
+        """Assert known instance has exactly two power_on/off events."""
         events = InstanceEvent.objects.filter(instance=self.instance).order_by(
             "occurred_at"
         )
@@ -220,15 +205,8 @@ class InitialAwsDescribeInstancesPowerOffNotRunningTest(TestCase):
         self.assertEqual(events[0].event_type, InstanceEvent.TYPE.power_on)
         self.assertEqual(events[1].event_type, InstanceEvent.TYPE.power_off)
 
-        runs = Run.objects.filter(instance=self.instance)
-        self.assertEqual(runs.count(), 1)
-        run = runs.first()
-        self.assertEqual(run.start_time, self.power_on_time)
-        self.assertIsNotNone(run.end_time, self.power_off_time)
-
-    @patch("api.util.calculate_max_concurrent_usage_from_runs")
     @patch("api.clouds.aws.tasks.onboarding.aws")
-    def test_power_off_not_present(self, mock_aws, mock_calculate_max_concurrent):
+    def test_power_off_not_present(self, mock_aws):
         """Create power_off event for running instance not present in the describe."""
         described_instances = {}  # empty means no instances found.
         mock_aws.describe_instances_everywhere.return_value = described_instances
@@ -236,12 +214,10 @@ class InitialAwsDescribeInstancesPowerOffNotRunningTest(TestCase):
         with util_helper.clouditardis(self.power_off_time):
             tasks.initial_aws_describe_instances(self.account.id)
 
-        mock_calculate_max_concurrent.assert_called()
-        self.assertExpectedEventsAndRun()
+        self.assertExpectedEvents()
 
-    @patch("api.util.calculate_max_concurrent_usage_from_runs")
     @patch("api.clouds.aws.tasks.onboarding.aws")
-    def test_instance_found_not_running(self, mock_aws, mock_calculate_max_concurrent):
+    def test_instance_found_not_running(self, mock_aws):
         """Create power_off event for instance found stopped in the describe."""
         described_instances = {
             self.region: [
@@ -256,19 +232,14 @@ class InitialAwsDescribeInstancesPowerOffNotRunningTest(TestCase):
         with util_helper.clouditardis(self.power_off_time):
             tasks.initial_aws_describe_instances(self.account.id)
 
-        mock_calculate_max_concurrent.assert_called()
-        self.assertExpectedEventsAndRun()
+        self.assertExpectedEvents()
 
-    @patch("api.util.calculate_max_concurrent_usage_from_runs")
     @patch("api.clouds.aws.tasks.onboarding.aws")
-    def test_instance_already_power_off(self, mock_aws, mock_calculate_max_concurrent):
+    def test_instance_already_power_off(self, mock_aws):
         """Don't create power_off for instance that already has recent power_off."""
-        event = account_helper.generate_single_instance_event(
+        account_helper.generate_single_instance_event(
             self.instance, self.power_off_time, event_type=InstanceEvent.TYPE.power_off
         )
-        self.process_event(event)
-        mock_calculate_max_concurrent.reset_mock()
-
         described_instances = {
             self.region: [
                 util_helper.generate_dummy_describe_instance(
@@ -283,14 +254,12 @@ class InitialAwsDescribeInstancesPowerOffNotRunningTest(TestCase):
         with util_helper.clouditardis(describe_time):
             tasks.initial_aws_describe_instances(self.account.id)
 
-        mock_calculate_max_concurrent.assert_not_called()
-        self.assertExpectedEventsAndRun()
+        self.assertExpectedEvents()
 
 
 class InitialAwsDescribeInstancesTransactionTest(TransactionTestCase):
     """Test cases for 'initial_aws_describe_instances', but with transactions."""
 
-    @patch("api.util.schedule_concurrent_calculation_task")
     @patch("api.tasks.notify_application_availability_task")
     @patch("api.clouds.aws.tasks.onboarding.start_image_inspection")
     @patch("api.clouds.aws.tasks.onboarding.aws")
@@ -301,7 +270,6 @@ class InitialAwsDescribeInstancesTransactionTest(TransactionTestCase):
         mock_aws,
         mock_start,
         mock_notify_sources,
-        mock_schedule_concurrent_calculation_task,
     ):
         """
         Test calling initial_aws_describe_instances twice with no data changes.
@@ -356,10 +324,8 @@ class InitialAwsDescribeInstancesTransactionTest(TransactionTestCase):
             mock_start.assert_called_with(
                 account.content_object.account_arn, ec2_ami_id, region
             )
-            mock_schedule_concurrent_calculation_task.assert_called()
 
-        # Reset because we need to check these mocks again later.
-        mock_schedule_concurrent_calculation_task.reset_mock()
+        # Reset because we need to check this mock's use again later.
         mock_start.reset_mock()
 
         with patch.object(
@@ -376,9 +342,6 @@ class InitialAwsDescribeInstancesTransactionTest(TransactionTestCase):
             # start_image_inspection should not be called because we already know
             # about the image from the earlier initial_aws_describe_instances call.
             mock_start.assert_not_called()
-            # schedule_concurrent_calculation_task should not be called because we
-            # should not have generated any new events here that would require it.
-            mock_schedule_concurrent_calculation_task.assert_not_called()
 
         # The relevant describe and account.enable processing is now done.
         # Now we just need to assert that we did not create redundant power_on events.
@@ -392,7 +355,6 @@ class InitialAwsDescribeInstancesTransactionTest(TransactionTestCase):
         self.assertEqual(instance_event.occurred_at, date_of_initial_describe)
         self.assertEqual(instance_event.event_type, InstanceEvent.TYPE.power_on)
 
-    @patch("api.util.schedule_concurrent_calculation_task")
     @patch("api.tasks.notify_application_availability_task")
     @patch("api.clouds.aws.tasks.onboarding.start_image_inspection")
     @patch("api.clouds.aws.tasks.onboarding.aws")
@@ -403,7 +365,6 @@ class InitialAwsDescribeInstancesTransactionTest(TransactionTestCase):
         mock_aws,
         mock_start,
         mock_notify_sources,
-        mock_schedule_concurrent_calculation_task,
     ):
         """
         Test calling initial_aws_describe_instances multiple times.
@@ -446,11 +407,6 @@ class InitialAwsDescribeInstancesTransactionTest(TransactionTestCase):
             mock_start.assert_called_with(
                 account.content_object.account_arn, ec2_ami_id, region
             )
-            mock_schedule_concurrent_calculation_task.assert_called()
-
-        # Reset because we need to check these mocks again later.
-        mock_schedule_concurrent_calculation_task.reset_mock()
-        mock_start.reset_mock()
 
         with util_helper.clouditardis(date_of_disable):
             account.disable()
@@ -486,7 +442,6 @@ class InitialAwsDescribeInstancesTransactionTest(TransactionTestCase):
             mock_start.assert_called_with(
                 account.content_object.account_arn, ec2_ami_id_2, region
             )
-            mock_schedule_concurrent_calculation_task.assert_called()
 
         # Now that the dust has settled, let's check that the two instances have events
         # in the right configuration. The first instance is on, off, and on; the second

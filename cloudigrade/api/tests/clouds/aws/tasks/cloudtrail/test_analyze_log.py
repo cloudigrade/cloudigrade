@@ -14,7 +14,6 @@ from api.models import (
     Instance,
     InstanceEvent,
     MachineImage,
-    Run,
 )
 from api.tests import helper as helper
 from util import aws
@@ -39,7 +38,6 @@ class AnalyzeLogTest(TestCase):
         helper.generate_instance_type_definitions()
 
     @util_helper.clouditardis(util_helper.utc_dt(2018, 1, 5, 0, 0, 0))
-    @patch("api.util.schedule_concurrent_calculation_task")
     @patch("api.clouds.aws.tasks.cloudtrail.start_image_inspection")
     @patch("api.clouds.aws.tasks.cloudtrail.aws.get_session")
     @patch("api.clouds.aws.tasks.cloudtrail.aws.delete_messages_from_queue")
@@ -56,7 +54,6 @@ class AnalyzeLogTest(TestCase):
         mock_del,
         mock_session,
         mock_inspection,
-        mock_schedule_concurrent_calculation_task,
     ):
         """
         Analyze CloudTrail records for one instance doing various things.
@@ -73,8 +70,8 @@ class AnalyzeLogTest(TestCase):
         We verify that we DO NOT describe_instances because the CloudTrail
         message for running a new instance should have enough data to define
         our model. We verify that we DO describe_images for the new image. We
-        verify that the appropriate events and runs are created and that the
-        instance type change correctly affects its following event and run.
+        verify that the appropriate events are created and that the instance type
+        change correctly affects its following event.
         """
         sqs_message = helper.generate_mock_cloudtrail_sqs_message()
         mock_receive.return_value = [sqs_message]
@@ -209,16 +206,6 @@ class AnalyzeLogTest(TestCase):
         )
         self.assertEqual(instanceevents[3].content_object.instance_type, None)
 
-        # Assert that as a side-effect two runs were created.
-        runs = Run.objects.filter(instance=instance).order_by("start_time")
-        self.assertEqual(len(runs), 2)
-        self.assertEqual(runs[0].instance_type, instance_type)
-        self.assertEqual(runs[0].start_time, occurred_at_run)
-        self.assertEqual(runs[0].end_time, occurred_at_stop)
-        self.assertEqual(runs[1].instance_type, new_instance_type)
-        self.assertEqual(runs[1].start_time, occurred_at_start)
-        self.assertIsNone(runs[1].end_time)
-
         # Assert that the correct image was saved.
         image = AwsMachineImage.objects.get(ec2_ami_id=ec2_ami_id)
         self.assertEqual(image.region, region)
@@ -226,7 +213,6 @@ class AnalyzeLogTest(TestCase):
         self.assertEqual(image.machine_image.get().status, MachineImage.PENDING)
 
     @util_helper.clouditardis(util_helper.utc_dt(2018, 1, 3, 0, 0, 0))
-    @patch("api.tasks.calculate_max_concurrent_usage_task")
     @patch("api.clouds.aws.tasks.cloudtrail.start_image_inspection")
     @patch("api.clouds.aws.tasks.cloudtrail.aws.get_session")
     @patch("api.clouds.aws.tasks.cloudtrail.aws.delete_messages_from_queue")
@@ -243,7 +229,6 @@ class AnalyzeLogTest(TestCase):
         mock_del,
         mock_session,
         mock_inspection,
-        mock_calculate_concurrent_usage_task,
     ):
         """
         Analyze CloudTrail records for a Windows instance.
@@ -322,13 +307,6 @@ class AnalyzeLogTest(TestCase):
         self.assertEqual(instanceevents[0].event_type, "power_on")
         self.assertEqual(instanceevents[0].content_object.instance_type, instance_type)
 
-        # Assert that as a side-effect one run was created.
-        runs = Run.objects.filter(instance=instance).order_by("start_time")
-        self.assertEqual(len(runs), 1)
-        self.assertEqual(runs[0].instance_type, instance_type)
-        self.assertEqual(runs[0].start_time, occurred_at_run)
-        self.assertIsNone(runs[0].end_time)
-
         # Assert that the correct image was saved.
         image = AwsMachineImage.objects.get(ec2_ami_id=ec2_ami_id)
         self.assertEqual(image.region, region)
@@ -337,7 +315,6 @@ class AnalyzeLogTest(TestCase):
         self.assertEqual(image.platform, image.WINDOWS)
 
     @util_helper.clouditardis(util_helper.utc_dt(2018, 1, 3, 0, 0, 0))
-    @patch("api.tasks.calculate_max_concurrent_usage_task")
     @patch("api.clouds.aws.tasks.cloudtrail.start_image_inspection")
     @patch("api.clouds.aws.tasks.cloudtrail.aws.get_session")
     @patch("api.clouds.aws.tasks.cloudtrail.aws.delete_messages_from_queue")
@@ -354,7 +331,6 @@ class AnalyzeLogTest(TestCase):
         mock_del,
         mock_session,
         mock_inspection,
-        mock_calculate_max_concurrent_usage_task,
     ):
         """
         Analyze CloudTrail records for a new instance with an image we know.
@@ -422,15 +398,7 @@ class AnalyzeLogTest(TestCase):
         self.assertEqual(instanceevents[0].event_type, "power_on")
         self.assertEqual(instanceevents[0].content_object.instance_type, instance_type)
 
-        # Assert that as a side-effect one run was created.
-        runs = Run.objects.filter(instance=instance).order_by("start_time")
-        self.assertEqual(len(runs), 1)
-        self.assertEqual(runs[0].instance_type, instance_type)
-        self.assertEqual(runs[0].start_time, occurred_at_run)
-        self.assertIsNone(runs[0].end_time)
-
     @util_helper.clouditardis(util_helper.utc_dt(2018, 1, 3, 0, 0, 0))
-    @patch("api.tasks.calculate_max_concurrent_usage_task")
     @patch("api.clouds.aws.tasks.cloudtrail.start_image_inspection")
     @patch("api.clouds.aws.tasks.cloudtrail.aws.get_session")
     @patch("api.clouds.aws.tasks.cloudtrail.aws.delete_messages_from_queue")
@@ -447,7 +415,6 @@ class AnalyzeLogTest(TestCase):
         mock_del,
         mock_session,
         mock_inspection,
-        mock_calculate_concurrent_usage_task,
     ):
         """
         Analyze CloudTrail records to start an instance with a known image.
@@ -535,15 +502,7 @@ class AnalyzeLogTest(TestCase):
         self.assertEqual(instanceevents[0].event_type, "power_on")
         self.assertEqual(instanceevents[0].content_object.instance_type, instance_type)
 
-        # Assert that as a side-effect one run was created.
-        runs = Run.objects.filter(instance=instance).order_by("start_time")
-        self.assertEqual(len(runs), 1)
-        self.assertEqual(runs[0].instance_type, instance_type)
-        self.assertEqual(runs[0].start_time, occurred_at_start)
-        self.assertIsNone(runs[0].end_time)
-
     @util_helper.clouditardis(util_helper.utc_dt(2018, 1, 3, 0, 0, 0))
-    @patch("api.tasks.calculate_max_concurrent_usage_task")
     @patch("api.clouds.aws.tasks.cloudtrail.start_image_inspection")
     @patch("api.clouds.aws.tasks.cloudtrail.aws.get_session")
     @patch("api.clouds.aws.tasks.cloudtrail.aws.delete_messages_from_queue")
@@ -560,7 +519,6 @@ class AnalyzeLogTest(TestCase):
         mock_del,
         mock_session,
         mock_inspection,
-        mock_calculate_concurrent_usage_task,
     ):
         """
         Analyze CloudTrail records for an instance with an unavailable image.
@@ -634,13 +592,6 @@ class AnalyzeLogTest(TestCase):
         self.assertEqual(instanceevents[0].occurred_at, occurred_at_run)
         self.assertEqual(instanceevents[0].event_type, "power_on")
         self.assertEqual(instanceevents[0].content_object.instance_type, instance_type)
-
-        # Assert that as a side-effect two runs were created.
-        runs = Run.objects.filter(instance=instance).order_by("start_time")
-        self.assertEqual(len(runs), 1)
-        self.assertEqual(runs[0].instance_type, instance_type)
-        self.assertEqual(runs[0].start_time, occurred_at_run)
-        self.assertEqual(runs[0].end_time, None)
 
         # Assert that the correct image was saved.
         awsimage = AwsMachineImage.objects.get(ec2_ami_id=ec2_ami_id)

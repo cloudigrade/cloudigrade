@@ -24,7 +24,6 @@ from api.models import (
     MachineImage,
     MachineImageInspectionStart,
 )
-from api.util import process_instance_event
 from util import aws
 from util.exceptions import (
     InvalidArn,
@@ -389,11 +388,7 @@ def save_instance_events(awsinstance, instance_data, events=None):
                 instance=awsinstance.instance.get(),
                 content_object=awsevent,
             )
-            # This get is separate from the create to ensure the relationship
-            # exists correctly even though it shouldn't strictly be necessary.
-            event = awsevent.instance_event.get()
 
-        process_instance_event(event)
     else:
         logger.info(
             _("Saving %(count)s new event(s) for %(instance)s"),
@@ -446,11 +441,6 @@ def save_instance_events(awsinstance, instance_data, events=None):
                 content_object=awsevent,
             )
             event.save()
-
-            # Need to reload event from DB, otherwise occurred_at is passed
-            # as a string instead of a datetime object.
-            event.refresh_from_db()
-            process_instance_event(event)
 
     return awsinstance
 
@@ -520,13 +510,12 @@ def create_missing_power_off_aws_instance_events(account, instances_data):
             {"instance": instance, "aws_instance": aws_instance},
         )
         aws_instance_event = AwsInstanceEvent.objects.create()
-        event = InstanceEvent.objects.create(
+        InstanceEvent.objects.create(
             instance=instance,
             event_type=event_type,
             occurred_at=occurred_at,
             content_object=aws_instance_event,
         )
-        process_instance_event(event)
 
 
 def generate_aws_ami_messages(instances_data, ami_id_list):
