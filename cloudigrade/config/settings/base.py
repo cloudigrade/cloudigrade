@@ -151,7 +151,7 @@ if isClowderEnabled():
             "PASSWORD": clowder_cfg.database.password,
             "PORT": clowder_cfg.database.port,
         }}
-    __print(f"Clowder: Database {clowder_cfg.database.name} {clowder_cfg.database.hostname}:{clowder_cfg.database.port}")
+    __print(f"Clowder: Database name: {clowder_cfg.database.name} host: {clowder_cfg.database.hostname}:{clowder_cfg.database.port}")
 else:
     DATABASES["default"] = {**DATABASES["default"], **{
             "NAME": env("DJANGO_DATABASE_NAME", default="postgres"),
@@ -571,8 +571,8 @@ if isClowderEnabled():
     LISTENER_SERVER = kafka_broker.hostname
     LISTENER_PORT = kafka_broker.port
     LISTENER_METRICS_PORT = clowder_cfg.metricsPort
-    __print(f"Clowder: Lister Server:Port {LISTENER_SERVER}:{LISTENER_PORT}")
-    __print(f"Clowder: Lister Metrics Port {LISTENER_METRICS_PORT}")
+    __print(f"Clowder: Listener server: {LISTENER_SERVER}:{LISTENER_PORT}")
+    __print(f"Clowder: Listener metrics port: {LISTENER_METRICS_PORT}")
 else:
     LISTENER_SERVER = env(
         "LISTENER_SERVER", default="platform-mq-ci-kafka-bootstrap.platform-mq-ci.svc"
@@ -594,10 +594,10 @@ if isClowderEnabled():
         if endpoint.app == "sources-api":
             CLOWDER_SOURCES_API_BASE_URL=f"http://{endpoint.hostname}:{endpoint.port}"
     if CLOWDER_SOURCES_API_BASE_URL == "":
-      __print(f"Clowder: Sources api service was not found, using default of {SOURCES_API_BASE_URL}")
+      __print(f"Clowder: Sources api service was not found, using default url: {SOURCES_API_BASE_URL}")
     else:
       SOURCES_API_BASE_URL = CLOWDER_SOURCES_API_BASE_URL
-      __print(f"Clowder: SOURCES_API_BASE_URL: {SOURCES_API_BASE_URL}")
+      __print(f"Clowder: Sources api service url: {SOURCES_API_BASE_URL}")
 else:
     SOURCES_API_BASE_URL = env(
         "SOURCES_API_BASE_URL", default="http://sources-api-svc.sources-ephemeral.svc:8000"
