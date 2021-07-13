@@ -181,8 +181,6 @@ class CloudAccount(ExportModelOperationsMixin("CloudAccount"), BaseGenericModel)
         Args:
             power_off_time (datetime.datetime): time to set when stopping the instances
         """
-        from api.util import recalculate_runs  # Avoid circular import.
-
         instances = self.instance_set.all()
         for instance in instances:
             last_event = (
@@ -193,13 +191,12 @@ class CloudAccount(ExportModelOperationsMixin("CloudAccount"), BaseGenericModel)
             if last_event and last_event.event_type != InstanceEvent.TYPE.power_off:
                 content_object_class = last_event.content_object.__class__
                 cloud_specific_event = content_object_class.objects.create()
-                event = InstanceEvent.objects.create(
+                InstanceEvent.objects.create(
                     event_type=InstanceEvent.TYPE.power_off,
                     occurred_at=power_off_time,
                     instance=instance,
                     content_object=cloud_specific_event,
                 )
-                recalculate_runs(event)
 
 
 @receiver(pre_delete, sender=CloudAccount)
