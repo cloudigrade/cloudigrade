@@ -708,51 +708,6 @@ def get_last_scheduled_concurrent_usage_calculation_task(user_id, date):
     return None
 
 
-def process_instance_event(event):
-    """
-    Process instance events that have been saved during log analysis.
-
-    Note:
-        When processing power_on type events, this triggers a recalculation of
-        ConcurrentUsage objects. If the event is at some point in the
-        not-too-recent past, this may take a while as every day since the event
-        will get recalculated and saved. We do not anticipate this being a real
-        problem in practice, but this has the potential to slow down unit test
-        execution over time since their occurred_at values are often static and
-        will recede father into the past from "today", resulting in more days
-        needing to recalculate. This effect could be mitigated in tests by
-        patching parts of the datetime module that are used to find "today".
-    """
-    after_run = Q(start_time__gt=event.occurred_at)
-    during_run = Q(start_time__lte=event.occurred_at, end_time__gt=event.occurred_at)
-    during_run_no_end = Q(start_time__lte=event.occurred_at, end_time=None)
-
-    filters = after_run | during_run | during_run_no_end
-    instance = Instance.objects.get(id=event.instance_id)
-
-    if Run.objects.filter(filters, instance=instance).exists():
-        recalculate_runs(event)
-    elif event.event_type == InstanceEvent.TYPE.power_on:
-        denormalized_runs = denormalize_runs([event])
-        runs = []
-        for index, denormalized_run in enumerate(denormalized_runs):
-            logger.info(
-                "Processing run {} of {}".format(index + 1, len(denormalized_runs))
-            )
-            run = Run(
-                start_time=denormalized_run.start_time,
-                end_time=denormalized_run.end_time,
-                machineimage_id=denormalized_run.image_id,
-                instance_id=denormalized_run.instance_id,
-                instance_type=denormalized_run.instance_type,
-                memory=denormalized_run.instance_memory,
-                vcpu=denormalized_run.instance_vcpu,
-            )
-            run.save()
-            runs.append(run)
-        calculate_max_concurrent_usage_from_runs(runs)
-
-
 def find_problematic_runs(user_id=None):
     """
     Find any problematic Run objects that should have an end_time but don't.
