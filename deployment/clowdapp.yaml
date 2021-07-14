@@ -215,13 +215,6 @@ objects:
           value: ${WATCHTOWER_SEND_INTERVAL}
         - name: WATCHTOWER_MAX_BATCH_COUNT
           value: ${WATCHTOWER_MAX_BATCH_COUNT}
-        lifecycle:
-          postStart:
-            exec:
-              command:
-                - /bin/sh
-                - -c
-                - "/opt/cloudigrade/scripts/clowder_post_start.sh"
         livenessProbe:
           exec:
             command:
@@ -478,6 +471,10 @@ objects:
       podSpec:
         image: ${IMAGE}:${IMAGE_TAG}
         imagePullPolicy: Always
+        command:
+        - /bin/sh
+        - -c
+        - python ./manage.py listen_to_sources
         env:
         - name: LISTENER_LOG_LEVEL
           value: ${LISTENER_LOG_LEVEL}
@@ -670,12 +667,13 @@ objects:
           periodSeconds: 10
           successThreshold: 1
           timeoutSeconds: 1
-        volumeMounts:
-        - mountPath: /var/run/cloudigrade
-          name: cloudigrade-socket
-      volumes:
-      - name: cloudigrade-socket
-        emptyDir: {}
+        resources:
+          limits:
+            cpu: ${LISTENER_LIMITS_CONTAINER_CPU_LIMIT}
+            memory: ${LISTENER_LIMITS_CONTAINER_MEM_LIMIT}
+          requests:
+            cpu: ${LISTENER_LIMITS_CONTAINER_CPU_REQUEST}
+            memory: ${LISTENER_LIMITS_CONTAINER_MEM_REQUEST}
     - name: worker
       #
       # Component cloudigrade-worker deployment:
