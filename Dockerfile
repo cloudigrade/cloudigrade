@@ -30,6 +30,7 @@ RUN microdnf update \
 
 COPY deployment/playbooks/ ./playbooks
 COPY deployment/scripts/mid_hook.sh ./scripts/mid_hook.sh
+COPY deployment/scripts/cloudigrade_init.sh ./scripts/cloudigrade_init.sh
 COPY cloudigrade .
 USER cloudigrade
 
