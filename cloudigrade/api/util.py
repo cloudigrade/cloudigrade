@@ -12,7 +12,6 @@ from django.contrib.auth.models import User
 from django.db import IntegrityError, transaction
 from django.db.models import Q
 from django.utils.translation import gettext as _
-from rest_framework.serializers import ValidationError
 
 from api.models import (
     ConcurrentUsage,
@@ -678,28 +677,6 @@ def recalculate_runs(event):
             run.save()
             saved_runs.append(run)
         calculate_max_concurrent_usage_from_runs(saved_runs)
-
-
-def convert_param_to_int(name, value):
-    """Check if a value is convertible to int.
-
-    Args:
-        name (str): The field name being validated
-        value: The value to convert to int
-
-    Returns:
-        int: The int value
-    Raises:
-        ValidationError if value not convertable to an int
-
-    """
-    if value is None:
-        return None
-    try:
-        return int(value)
-    except ValueError:
-        error = {name: [_("{} must be an integer.".format(name))]}
-        raise ValidationError(error)
 
 
 def get_standard_cloud_account_name(cloud_name, external_cloud_account_id):
