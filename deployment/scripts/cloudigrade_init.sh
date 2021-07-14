@@ -6,11 +6,6 @@
 export LOGPREFIX="Clowder Init:"
 echo "${LOGPREFIX}"
 
-if [[ -z "${ACG_CONFIG}" ]]; then
-  echo "${LOGPREFIX} Not running in a clowder environment, exiting initialization"
-  exit 1
-fi
-
 function check_svc_status() {
   local SVC_NAME=$1 SVC_PORT=$2
 
@@ -24,13 +19,18 @@ function check_svc_status() {
   echo "${LOGPREFIX} ${SVC_NAME}:${SVC_PORT} - accepting connections"
 }
 
-export DATABASE_HOST="`cat $ACG_CONFIG | jq -r '.database.hostname'`"
-export DATABASE_PORT="`cat $ACG_CONFIG | jq -r '.database.port'`"
+if [[ -z "${ACG_CONFIG}" ]]; then
+  echo "${LOGPREFIX} Not running in a clowder environment"
+else
+  echo "${LOGPREFIX} Running in a clowder environment"
 
-# Wait for the database to be ready
-echo "${LOGPREFIX} Waiting for database readiness ..."
-check_svc_status $DATABASE_HOST $DATABASE_PORT
+  export DATABASE_HOST="`cat $ACG_CONFIG | jq -r '.database.hostname'`"
+  export DATABASE_PORT="`cat $ACG_CONFIG | jq -r '.database.port'`"
 
-echo "${LOGPREFIX} Migrating the database ..."
-python3 ./manage.py migrate
+  # Wait for the database to be ready
+  echo "${LOGPREFIX} Waiting for database readiness ..."
+  check_svc_status $DATABASE_HOST $DATABASE_PORT
+fi
 
+# Configure cloud provider entities and migrate the Cloudigrade database
+./scripts/mid_hook.sh
