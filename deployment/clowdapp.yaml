@@ -22,6 +22,12 @@ objects:
       podSpec:
         image: ${IMAGE}:${IMAGE_TAG}
         imagePullPolicy: Always
+        initContainers:
+        - command:
+          - /bin/sh
+          - -c
+          - "/opt/cloudigrade/scripts/cloudigrade_init.sh"
+          inheritEnv: true
         env:
         - name: APP_NAME
           value: ${APP_NAME}

@@ -28,13 +28,20 @@ RUN microdnf update \
     && microdnf remove libcurl-devel gcc python3-devel openssl-devel annobin -y \
     && microdnf clean all
 
+# Need jq for parsing the clowder configuration json in shell scripts
+RUN curl -L https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 -o jq \
+    && chmod +x ./jq \
+    && cp jq /usr/bin \
+    && rm -f ./jq
+
 COPY deployment/playbooks/ ./playbooks
 COPY deployment/scripts/mid_hook.sh ./scripts/mid_hook.sh
 COPY deployment/scripts/cloudigrade_init.sh ./scripts/cloudigrade_init.sh
 COPY cloudigrade .
 USER cloudigrade
 
-EXPOSE 8080
+# Default is 8080, For clowder it is 8000
+EXPOSE 8080 8000
 
 ENTRYPOINT ["gunicorn"]
 CMD ["-c","config/gunicorn.py","config.wsgi"]
