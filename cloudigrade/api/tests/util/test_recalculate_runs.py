@@ -1,6 +1,5 @@
 """Collection of tests for util.recalculate_runs."""
 import datetime
-from unittest.mock import patch
 
 from django.test import TestCase
 
@@ -32,24 +31,12 @@ class RecalculateRunsTest(TestCase):
             event_type=models.InstanceEvent.TYPE.power_on,
         )
 
-        with patch(
-            "api.util.calculate_max_concurrent_usage_from_runs"
-        ) as mock_concurrent:
-            util.recalculate_runs(event)
+        util.recalculate_runs(event)
 
         # Expect the run's start time to match but to have no end time.
         run = models.Run.objects.get()
         self.assertEqual(run.start_time, start_time)
         self.assertIsNone(run.end_time)
-
-        # Since we created a run, concurrent usage should recalculate.
-        mock_concurrent.assert_called_once()
-
-        # The concurrent usage call args should include exactly and only the new run.
-        concurrent_call = mock_concurrent.call_args_list[0]
-        actual_runs_arg = concurrent_call[0][0]
-        self.assertEqual(len(actual_runs_arg), 1)
-        self.assertEqual(run, actual_runs_arg[0])
 
     def test_power_off_recreates_existing_run(self):
         """Test case with power_on event after run exists."""
@@ -59,10 +46,8 @@ class RecalculateRunsTest(TestCase):
             self.instance, [(start_time, end_time)]
         )
         run = models.Run.objects.create(start_time=start_time, instance=self.instance)
-        with patch(
-            "api.util.calculate_max_concurrent_usage_from_runs"
-        ) as mock_concurrent:
-            util.recalculate_runs(event_off)
+
+        util.recalculate_runs(event_off)
 
         with self.assertRaises(models.Run.DoesNotExist):
             # Expect the original run was destroyed to be recreated.
@@ -74,14 +59,6 @@ class RecalculateRunsTest(TestCase):
         run = models.Run.objects.get()
         self.assertEqual(run.start_time, start_time)
         self.assertEqual(run.end_time, end_time)
-        # Since we created a run, concurrent usage should recalculate.
-        mock_concurrent.assert_called_once()
-
-        # The concurrent usage call args should include exactly and only the new run.
-        concurrent_call = mock_concurrent.call_args_list[0]
-        actual_runs_arg = concurrent_call[0][0]
-        self.assertEqual(len(actual_runs_arg), 1)
-        self.assertEqual(run, actual_runs_arg[0])
 
     def test_backdated_power_off_recreates_runs(self):
         """
@@ -111,10 +88,7 @@ class RecalculateRunsTest(TestCase):
             instance=self.instance,
         )
 
-        with patch(
-            "api.util.calculate_max_concurrent_usage_from_runs"
-        ) as mock_concurrent:
-            util.recalculate_runs(first_off)
+        util.recalculate_runs(first_off)
 
         with self.assertRaises(models.Run.DoesNotExist):
             # Expect the original run was destroyed to be recreated.
@@ -126,13 +100,3 @@ class RecalculateRunsTest(TestCase):
         self.assertEqual(first_run.end_time, first_end_time)
         self.assertEqual(second_run.start_time, second_start_time)
         self.assertEqual(second_run.end_time, second_end_time)
-
-        # Since we created runs, concurrent usage should recalculate.
-        mock_concurrent.assert_called_once()
-
-        # The concurrent usage call args should include exactly the two new runs.
-        concurrent_call = mock_concurrent.call_args_list[0]
-        actual_runs_arg = concurrent_call[0][0]
-        self.assertEqual(len(actual_runs_arg), 2)
-        self.assertEqual(first_run, actual_runs_arg[0])
-        self.assertEqual(second_run, actual_runs_arg[1])

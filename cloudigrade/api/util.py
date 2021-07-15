@@ -658,7 +658,6 @@ def recalculate_runs(event):
         run.save()
         saved_runs.append(run)
 
-    calculate_max_concurrent_usage_from_runs(saved_runs)
     return saved_runs
 
 
