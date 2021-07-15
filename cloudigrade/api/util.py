@@ -499,12 +499,16 @@ def _record_concurrency_count(results, key, is_start):
     return results
 
 
-def calculate_max_concurrent_usage_from_runs(runs):
+def get_users_dates_from_runs(runs):
     """
-    Calculate maximum concurrent usage of RHEL instances from given Runs.
+    Build a list of user IDs and dates affected by the given list of Runs.
 
-    We try to find the common intersection of the given runs across the dates,
-    users, and cloud accounts referenced in the given Runs.
+    Args:
+        runs: list(models.Run)
+
+    Returns:
+        set(tuple[datetime.date, int])
+
     """
     date_user_cloud_accounts = set()
 
@@ -529,6 +533,17 @@ def calculate_max_concurrent_usage_from_runs(runs):
             date_user_no_cloud_account = (date, user_id)
             date_user_cloud_accounts.add(date_user_no_cloud_account)
 
+    return date_user_cloud_accounts
+
+
+def calculate_max_concurrent_usage_from_runs(runs):
+    """
+    Calculate maximum concurrent usage of RHEL instances from given Runs.
+
+    We try to find the common intersection of the given runs across the dates,
+    users, and cloud accounts referenced in the given Runs.
+    """
+    date_user_cloud_accounts = get_users_dates_from_runs(runs)
     for date, user_id in date_user_cloud_accounts:
 
         # If we already have a concurrent usage calculation task with the same userid
