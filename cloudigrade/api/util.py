@@ -91,21 +91,6 @@ DenormalizedRun = collections.namedtuple(
 )
 
 
-def get_instance_type_definition(instance_type, cloud_type):
-    """Gracefully get the definition for the instance type."""
-    try:
-        type_definition = (
-            InstanceDefinition.objects.get(
-                instance_type=instance_type, cloud_type=cloud_type
-            )
-            if instance_type
-            else None
-        )
-    except InstanceDefinition.DoesNotExist:
-        type_definition = None
-    return type_definition
-
-
 def denormalize_runs(events):  # noqa: C901
     """
     Create list of "runs" with denormalized event information.
@@ -135,7 +120,12 @@ def denormalize_runs(events):  # noqa: C901
             events[0].instance, events[0].occurred_at
         )
         cloud_type = events[0].cloud_type
-        type_definition = get_instance_type_definition(instance_type, cloud_type)
+        try:
+            type_definition = InstanceDefinition.objects.get(
+                instance_type=instance_type, cloud_type=cloud_type
+            )
+        except InstanceDefinition.DoesNotExist:
+            type_definition = None
         start_run = None
         end_run = None
         image = Instance.objects.get(id=instance_id).machine_image
