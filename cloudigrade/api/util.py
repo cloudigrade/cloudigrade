@@ -640,10 +640,11 @@ def recalculate_runs(event):
     denormalized_runs = denormalize_runs(events)
     runs.delete()
     saved_runs = []
+    denormalized_runs_count = len(denormalized_runs)
     for index, denormalized_run in enumerate(denormalized_runs):
-        logger.info(
+        logger.debug(
             "Processing run %(index)s of %(runs)s",
-            {"index": index + 1, "runs": len(denormalized_runs)},
+            {"index": index + 1, "runs": denormalized_runs_count},
         )
         run = Run(
             start_time=denormalized_run.start_time,
