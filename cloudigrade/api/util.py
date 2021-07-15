@@ -598,6 +598,7 @@ def schedule_concurrent_calculation_task(date, user_id):
     )
 
 
+@transaction.atomic()
 def recalculate_runs(event):
     """
     Take in an event and (re)calculate runs based on it.
@@ -606,77 +607,53 @@ def recalculate_runs(event):
     means a new run may be created. The more complex use case is if the event
     occurred during or before existing runs, and that means any overlapping or
     future runs must be deleted and recreated.
+
+    Returns:
+        list(Run): the newly saved Runs
     """
-    # Get all runs that occurred after event or occurred during event.
+    # Get all runs that occurred after or overlap with the event.
     after_run = Q(start_time__gt=event.occurred_at)
     during_run = Q(start_time__lte=event.occurred_at, end_time__gt=event.occurred_at)
     during_run_no_end = Q(start_time__lte=event.occurred_at, end_time=None)
     filters = after_run | during_run | during_run_no_end
     runs = Run.objects.filter(filters, instance_id=event.instance_id)
 
-    # Get the earliest time of relevant runs.
-    # We can use this as a baseline to fetch all relevant events.
-    # All of these runs get torched, since we recalculate them based
-    # on the newest event.
-    # If no runs exist in this query, this event is the start of a new run
-    try:
-        earliest_run = (
-            runs.earliest("start_time").start_time
-            if runs.earliest("start_time").start_time < event.occurred_at
-            else event.occurred_at
-        )
-    except Run.DoesNotExist:
-        if event.event_type == event.TYPE.power_on:
-            denormalized_runs = denormalize_runs([event])
-            saved_runs = []
-            for index, denormalized_run in enumerate(denormalized_runs):
-                logger.info(
-                    "Processing run %(index)s of %(runs)s",
-                    {"index": index + 1, "runs": len(denormalized_runs)},
-                )
-                run = Run(
-                    start_time=denormalized_run.start_time,
-                    end_time=denormalized_run.end_time,
-                    machineimage_id=denormalized_run.image_id,
-                    instance_id=denormalized_run.instance_id,
-                    instance_type=denormalized_run.instance_type,
-                    memory=denormalized_run.instance_memory,
-                    vcpu=denormalized_run.instance_vcpu,
-                )
-                run.save()
-                saved_runs.append(run)
-            calculate_max_concurrent_usage_from_runs(saved_runs)
-        return
+    # Determine the earliest time from which we should start recalculating runs.
+    # We can use the earliest run as a baseline to fetch all relevant events.
+    # If no runs exist, simply use the event's own occurred_at as the starting event.
+    earliest_run = runs.order_by("start_time").first()
+    earliest_time = earliest_run.start_time if earliest_run else event.occurred_at
 
     events = (
         InstanceEvent.objects.filter(
-            instance_id=event.instance_id, occurred_at__gte=earliest_run
+            instance_id=event.instance_id, occurred_at__gte=earliest_time
         )
         .select_related("instance")
         .order_by("occurred_at")
     )
 
     denormalized_runs = denormalize_runs(events)
-    with transaction.atomic():
-        runs.delete()
-        saved_runs = []
-        for index, denormalized_run in enumerate(denormalized_runs):
-            logger.info(
-                "Processing run %(index)s of %(runs)s",
-                {"index": index + 1, "runs": len(denormalized_runs)},
-            )
-            run = Run(
-                start_time=denormalized_run.start_time,
-                end_time=denormalized_run.end_time,
-                machineimage_id=denormalized_run.image_id,
-                instance_id=denormalized_run.instance_id,
-                instance_type=denormalized_run.instance_type,
-                memory=denormalized_run.instance_memory,
-                vcpu=denormalized_run.instance_vcpu,
-            )
-            run.save()
-            saved_runs.append(run)
-        calculate_max_concurrent_usage_from_runs(saved_runs)
+    runs.delete()
+    saved_runs = []
+    for index, denormalized_run in enumerate(denormalized_runs):
+        logger.info(
+            "Processing run %(index)s of %(runs)s",
+            {"index": index + 1, "runs": len(denormalized_runs)},
+        )
+        run = Run(
+            start_time=denormalized_run.start_time,
+            end_time=denormalized_run.end_time,
+            machineimage_id=denormalized_run.image_id,
+            instance_id=denormalized_run.instance_id,
+            instance_type=denormalized_run.instance_type,
+            memory=denormalized_run.instance_memory,
+            vcpu=denormalized_run.instance_vcpu,
+        )
+        run.save()
+        saved_runs.append(run)
+
+    calculate_max_concurrent_usage_from_runs(saved_runs)
+    return saved_runs
 
 
 def get_standard_cloud_account_name(cloud_name, external_cloud_account_id):

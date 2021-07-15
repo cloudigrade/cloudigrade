@@ -8,6 +8,7 @@ from rest_framework.test import APIRequestFactory
 
 from api import models
 from api.tests import helper as api_helper
+from api.util import recalculate_runs
 from internal import views
 from util.tests import helper as util_helper
 
@@ -41,9 +42,16 @@ class ProblematicRunListTest(TestCase):
 
     def generate_runs(self, problematic=False):
         """Generate the run for the test, optionally problematic."""
-        events = self.events[:1] if problematic else self.events
         with patch("api.util.schedule_concurrent_calculation_task"):
-            api_helper.recalculate_runs_from_events(events)
+            runs = recalculate_runs(self.events[0])
+        if problematic:
+            # Forget the stop_time for the first run to make it problematic,
+            # and delete the other runs.
+            first_run = runs[0]
+            first_run.end_time = None
+            first_run.save()
+            for run in runs[1:]:
+                run.delete()
         expected_count = 1 if problematic else 2
         self.assertEqual(models.Run.objects.count(), expected_count)
 
