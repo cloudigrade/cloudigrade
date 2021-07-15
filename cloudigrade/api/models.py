@@ -661,12 +661,13 @@ class Run(BaseModel):
         concurrent_usages = ConcurrentUsage.objects.filter(
             potentially_related_runs=self
         )
-        logger.info(
-            "Removing %(num_usages)d related ConcurrentUsage objects "
-            "related to Run %(run)s.",
-            {"num_usages": concurrent_usages.count(), "run": str(self)},
-        )
-        concurrent_usages.delete()
+        if concurrent_usages_count := concurrent_usages.count():
+            logger.info(
+                "Removing %(num_usages)d related ConcurrentUsage objects "
+                "related to Run %(run)s.",
+                {"num_usages": concurrent_usages_count, "run": str(self)},
+            )
+            concurrent_usages.delete()
 
     def __str__(self):
         """Get the string representation."""
