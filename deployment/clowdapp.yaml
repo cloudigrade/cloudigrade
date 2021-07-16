@@ -15,7 +15,7 @@ objects:
       #
       # Component cloudigrade-api deployment:
       #
-      replicas: ${{API_REPLICA_COUNT}}
+      replicas: ${{MIN_REPLICAS}}
       minReplicas: ${{API_REPLICA_COUNT}}
       maxReplicas: ${{API_REPLICA_COUNT_MAX}}
       revisionHistoryLimit: 10
@@ -683,7 +683,7 @@ objects:
       #
       # Component cloudigrade-worker deployment:
       #
-      replicas: ${{CELERY_WORKER_REPLICA_COUNT}}
+      replicas: ${{MIN_REPLICAS}}
       minReplicas: ${{CELERY_WORKER_REPLICA_COUNT}}
       maxReplicas: ${{CELERY_WORKER_REPLICA_COUNT_MAX}}
       webServices:
@@ -910,6 +910,38 @@ objects:
     kafkaTopics:
     - topicName: platform.sources.event-stream
     - topicName: platform.sources.status
+- apiVersion: autoscaling/v2beta1
+  kind: HorizontalPodAutoscaler
+  metadata:
+    name: cloudigrade-api-cpu
+  spec:
+    scaleTargetRef:
+      apiVersion: apps/v1
+      kind: Deployment
+      name: cloudigrade-api
+    minReplicas: ${{API_REPLICA_COUNT}}
+    maxReplicas: ${{API_REPLICA_COUNT_MAX}}
+    metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        targetAverageUtilization: ${{API_TARGET_AVERAGE_CPU_UTILIZATION}}
+- apiVersion: autoscaling/v2beta1
+  kind: HorizontalPodAutoscaler
+  metadata:
+    name: cloudigrade-worker-cpu
+  spec:
+    scaleTargetRef:
+      apiVersion: apps/v1
+      kind: Deployment
+      name: cloudigrade-worker
+    minReplicas: ${{CELERY_WORKER_REPLICA_COUNT}}
+    maxReplicas: ${{CELERY_WORKER_REPLICA_COUNT_MAX}}
+    metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        targetAverageUtilization: ${{CELERY_TARGET_AVERAGE_CPU_UTILIZATION}}
 
 parameters:
 - name: APP_NAME

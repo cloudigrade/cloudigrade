@@ -299,6 +299,7 @@ WATCHTOWER_SEND_INTERVAL = env.float("WATCHTOWER_SEND_INTERVAL", default=1.0)
 WATCHTOWER_MAX_BATCH_COUNT = env.int("WATCHTOWER_MAX_BATCH_COUNT", default=1000)
 
 if CLOUDIGRADE_ENABLE_CLOUDWATCH:
+    __print("Configuring CloudWatch...")
     cw_boto3_session = Session(
         aws_access_key_id=env("CW_AWS_ACCESS_KEY_ID"),
         aws_secret_access_key=env("CW_AWS_SECRET_ACCESS_KEY"),
@@ -600,7 +601,7 @@ if isClowderEnabled():
       __print(f"Clowder: Sources api service url: {SOURCES_API_BASE_URL}")
 else:
     SOURCES_API_BASE_URL = env(
-        "SOURCES_API_BASE_URL", default="http://sources-api-svc.sources-ephemeral.svc:8000"
+        "SOURCES_API_BASE_URL", default="http://sources-api.sources-ci.svc:8080"
     )
 
 SOURCE_API_INTERNAL_URI = "/internal/v1.0/"
