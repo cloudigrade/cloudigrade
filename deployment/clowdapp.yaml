@@ -15,7 +15,10 @@ objects:
       #
       # Component cloudigrade-api deployment:
       #
-      minReplicas: ${{MIN_REPLICAS}}
+      replicas: ${{API_REPLICA_COUNT}}
+      minReplicas: ${{API_REPLICA_COUNT}}
+      maxReplicas: ${{API_REPLICA_COUNT_MAX}}
+      revisionHistoryLimit: 10
       webServices:
         public:
           enabled: true # port 8000 is the default in CloudEnvironment
@@ -28,6 +31,37 @@ objects:
           - -c
           - "/opt/cloudigrade/scripts/cloudigrade_init.sh"
           inheritEnv: true
+        livenessProbe:
+          exec:
+            command:
+              - /bin/sh
+              - -c
+              - 'ps axo command | grep -v grep | grep gunicorn'
+          failureThreshold: 3
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /internal/healthz/
+            port: 8000
+            scheme: HTTP
+            httpHeaders:
+              - name: Host
+                value: ${HEALTH_CHECK_HOST_HEADER}
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        resources:
+          requests:
+            cpu: ${API_LIMITS_CONTAINER_CPU_REQUEST}
+            memory: ${API_LIMITS_CONTAINER_MEM_REQUEST}
+          limits:
+            cpu: ${API_LIMITS_CONTAINER_CPU_LIMIT}
+            memory: ${API_LIMITS_CONTAINER_MEM_LIMIT}
         env:
         - name: APP_NAME
           value: ${APP_NAME}
@@ -215,48 +249,57 @@ objects:
           value: ${WATCHTOWER_SEND_INTERVAL}
         - name: WATCHTOWER_MAX_BATCH_COUNT
           value: ${WATCHTOWER_MAX_BATCH_COUNT}
-        livenessProbe:
-          exec:
-            command:
-              - /bin/sh
-              - -c
-              - 'ps axo command | grep -v grep | grep gunicorn'
-          failureThreshold: 3
-          initialDelaySeconds: 5
-          periodSeconds: 10
-          successThreshold: 1
-          timeoutSeconds: 1
-        readinessProbe:
-          failureThreshold: 3
-          httpGet:
-            path: /internal/healthz/
-            port: 8000
-            scheme: HTTP
-            httpHeaders:
-              - name: Host
-                value: ${HEALTH_CHECK_HOST_HEADER}
-          initialDelaySeconds: 5
-          periodSeconds: 10
-          successThreshold: 1
-          timeoutSeconds: 1
-        resources:
-          limits:
-            cpu: 200m
-            memory: 1Gi
-          requests:
-            cpu: 100m
-            memory: 500Mi
     - name: beat
       #
       # Component cloudigrade-beat deployment:
       #
       replicas: ${{CELERY_BEAT_REPLICA_COUNT}}
+      revisionHistoryLimit: 10
       webServices:
         public:
           enabled: false
       podSpec:
         image: ${IMAGE}:${IMAGE_TAG}
         imagePullPolicy: Always
+        command:
+          - /bin/sh
+          - -c
+          - >
+            celery
+            --app config
+            beat
+            --loglevel info
+            --pidfile=
+            --scheduler django_celery_beat.schedulers:DatabaseScheduler
+        livenessProbe:
+          exec:
+            command:
+              - /bin/sh
+              - -c
+              - 'ps axo command | grep -v grep | grep python'
+          failureThreshold: 3
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        readinessProbe:
+          exec:
+            command:
+              - /bin/sh
+              - -c
+              - '[[ $(ps axo command | grep "[p]ython" | grep celery | grep -c beat) -eq 1 ]]'
+          failureThreshold: 3
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        resources:
+          requests:
+            cpu: ${CELERY_BEAT_LIMITS_CONTAINER_CPU_REQUEST}
+            memory: ${CELERY_BEAT_LIMITS_CONTAINER_MEM_REQUEST}
+          limits:
+            cpu: ${CELERY_BEAT_LIMITS_CONTAINER_CPU_LIMIT}
+            memory: ${CELERY_BEAT_LIMITS_CONTAINER_MEM_LIMIT}
         env:
         - name: ANALYZE_LOG_SCHEDULE
           value: ${ANALYZE_LOG_SCHEDULE}
@@ -421,50 +464,12 @@ objects:
           value: ${WATCHTOWER_SEND_INTERVAL}
         - name: WATCHTOWER_MAX_BATCH_COUNT
           value: ${WATCHTOWER_MAX_BATCH_COUNT}
-        command:
-          - /bin/sh
-          - -c
-          - >
-            celery
-            --app config
-            beat
-            --loglevel info
-            --pidfile=
-            --scheduler django_celery_beat.schedulers:DatabaseScheduler
-        resources:
-          requests:
-            cpu: ${CELERY_BEAT_LIMITS_CONTAINER_CPU_REQUEST}
-            memory: ${CELERY_BEAT_LIMITS_CONTAINER_MEM_REQUEST}
-          limits:
-            cpu: ${CELERY_BEAT_LIMITS_CONTAINER_CPU_LIMIT}
-            memory: ${CELERY_BEAT_LIMITS_CONTAINER_MEM_LIMIT}
-        livenessProbe:
-          exec:
-            command:
-              - /bin/sh
-              - -c
-              - 'ps axo command | grep -v grep | grep python'
-          failureThreshold: 3
-          initialDelaySeconds: 5
-          periodSeconds: 10
-          successThreshold: 1
-          timeoutSeconds: 1
-        readinessProbe:
-          exec:
-            command:
-              - /bin/sh
-              - -c
-              - '[[ $(ps axo command | grep "[p]ython" | grep celery | grep -c beat) -eq 1 ]]'
-          failureThreshold: 3
-          initialDelaySeconds: 5
-          periodSeconds: 10
-          successThreshold: 1
-          timeoutSeconds: 1
     - name: listener
       #
       # Component cloudigrade-listener deployment:
       #
       replicas: ${{LISTENER_WORKER_REPLICA_COUNT}}
+      revisionHistoryLimit: 10
       webServices:
         public:
           enabled: false
@@ -475,6 +480,35 @@ objects:
         - /bin/sh
         - -c
         - python ./manage.py listen_to_sources
+        livenessProbe:
+          exec:
+            command:
+              - /bin/sh
+              - -c
+              - '[[ $(ps axo command | grep "^python" | grep "./manage.py" | grep -c "listen_to_sources") -eq 1 ]]'
+          failureThreshold: 3
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        readinessProbe:
+          exec:
+            command:
+              - /bin/sh
+              - -c
+              - '[[ $(ps axo command | grep "^python" | grep "./manage.py" | grep -c "listen_to_sources") -eq 1 ]]'
+          failureThreshold: 3
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        resources:
+          limits:
+            cpu: ${LISTENER_LIMITS_CONTAINER_CPU_LIMIT}
+            memory: ${LISTENER_LIMITS_CONTAINER_MEM_LIMIT}
+          requests:
+            cpu: ${LISTENER_LIMITS_CONTAINER_CPU_REQUEST}
+            memory: ${LISTENER_LIMITS_CONTAINER_MEM_REQUEST}
         env:
         - name: LISTENER_LOG_LEVEL
           value: ${LISTENER_LOG_LEVEL}
@@ -645,12 +679,36 @@ objects:
           value: ${WATCHTOWER_SEND_INTERVAL}
         - name: WATCHTOWER_MAX_BATCH_COUNT
           value: ${WATCHTOWER_MAX_BATCH_COUNT}
+    - name: worker
+      #
+      # Component cloudigrade-worker deployment:
+      #
+      replicas: ${{CELERY_WORKER_REPLICA_COUNT}}
+      minReplicas: ${{CELERY_WORKER_REPLICA_COUNT}}
+      maxReplicas: ${{CELERY_WORKER_REPLICA_COUNT_MAX}}
+      webServices:
+        public:
+          enabled: false
+      podSpec:
+        image: ${IMAGE}:${IMAGE_TAG}
+        imagePullPolicy: Always
+        command:
+          - /bin/sh
+          - -c
+          - >
+            celery
+            --app config
+            worker
+            --loglevel info
+            --concurrency 1
+            --task-events
+            --queues celery,initial_aws_describe_instances,copy_ami_snapshot,copy_ami_to_customer_account,remove_snapshot_ownership,create_volume,enqueue_ready_volumes,delete_snapshot,inspect_pending_images,scale_up_inspection_cluster,attach_volumes_to_cluster,run_inspection_cluster,persist_inspection_cluster_results_task,scale_down_cluster,analyze_log,repopulate_ec2_instance_mapping,create_from_sources_kafka_message,configure_customer_aws_and_create_cloud_account,delete_from_sources_kafka_message,delete_inactive_users,delete_cloud_account,calculate_max_concurrent_usage,notify_application_availability_task,enable_account
         livenessProbe:
           exec:
             command:
               - /bin/sh
               - -c
-              - '[[ $(ps axo command | grep "^python" | grep "./manage.py" | grep -c "listen_to_sources") -eq 1 ]]'
+              - 'ps axo command | grep -v grep | grep python'
           failureThreshold: 3
           initialDelaySeconds: 5
           periodSeconds: 10
@@ -661,30 +719,19 @@ objects:
             command:
               - /bin/sh
               - -c
-              - '[[ $(ps axo command | grep "^python" | grep "./manage.py" | grep -c "listen_to_sources") -eq 1 ]]'
+              - '[[ $(ps axo command | grep "[p]ython" | grep celery | grep -c worker) -eq 2 ]]'
           failureThreshold: 3
           initialDelaySeconds: 5
           periodSeconds: 10
           successThreshold: 1
           timeoutSeconds: 1
         resources:
-          limits:
-            cpu: ${LISTENER_LIMITS_CONTAINER_CPU_LIMIT}
-            memory: ${LISTENER_LIMITS_CONTAINER_MEM_LIMIT}
           requests:
-            cpu: ${LISTENER_LIMITS_CONTAINER_CPU_REQUEST}
-            memory: ${LISTENER_LIMITS_CONTAINER_MEM_REQUEST}
-    - name: worker
-      #
-      # Component cloudigrade-worker deployment:
-      #
-      replicas: ${{CELERY_WORKER_REPLICA_COUNT}}
-      webServices:
-        public:
-          enabled: false
-      podSpec:
-        image: ${IMAGE}:${IMAGE_TAG}
-        imagePullPolicy: Always
+            cpu: ${CELERY_WORKER_LIMITS_CONTAINER_CPU_REQUEST}
+            memory: ${CELERY_WORKER_LIMITS_CONTAINER_MEM_REQUEST}
+          limits:
+            cpu: ${CELERY_WORKER_LIMITS_CONTAINER_CPU_LIMIT}
+            memory: ${CELERY_WORKER_LIMITS_CONTAINER_MEM_LIMIT}
         env:
         - name: AWS_ACCESS_KEY_ID
           valueFrom:
@@ -855,48 +902,6 @@ objects:
           value: ${WATCHTOWER_SEND_INTERVAL}
         - name: WATCHTOWER_MAX_BATCH_COUNT
           value: ${WATCHTOWER_MAX_BATCH_COUNT}
-        image: ${IMAGE}:${IMAGE_TAG}
-        imagePullPolicy: Always
-        command:
-          - /bin/sh
-          - -c
-          - >
-            celery
-            --app config
-            worker
-            --loglevel info
-            --concurrency 1
-            --task-events
-            --queues celery,initial_aws_describe_instances,copy_ami_snapshot,copy_ami_to_customer_account,remove_snapshot_ownership,create_volume,enqueue_ready_volumes,delete_snapshot,inspect_pending_images,scale_up_inspection_cluster,attach_volumes_to_cluster,run_inspection_cluster,persist_inspection_cluster_results_task,scale_down_cluster,analyze_log,repopulate_ec2_instance_mapping,create_from_sources_kafka_message,configure_customer_aws_and_create_cloud_account,delete_from_sources_kafka_message,delete_inactive_users,delete_cloud_account,calculate_max_concurrent_usage,notify_application_availability_task,enable_account
-        resources:
-          requests:
-            cpu: ${CELERY_WORKER_LIMITS_CONTAINER_CPU_REQUEST}
-            memory: ${CELERY_WORKER_LIMITS_CONTAINER_MEM_REQUEST}
-          limits:
-            cpu: ${CELERY_WORKER_LIMITS_CONTAINER_CPU_LIMIT}
-            memory: ${CELERY_WORKER_LIMITS_CONTAINER_MEM_LIMIT}
-        livenessProbe:
-          exec:
-            command:
-              - /bin/sh
-              - -c
-              - 'ps axo command | grep -v grep | grep python'
-          failureThreshold: 3
-          initialDelaySeconds: 5
-          periodSeconds: 10
-          successThreshold: 1
-          timeoutSeconds: 1
-        readinessProbe:
-          exec:
-            command:
-              - /bin/sh
-              - -c
-              - '[[ $(ps axo command | grep "[p]ython" | grep celery | grep -c worker) -eq 2 ]]'
-          failureThreshold: 3
-          initialDelaySeconds: 5
-          periodSeconds: 10
-          successThreshold: 1
-          timeoutSeconds: 1
     database:
       name: cloudigrade 
       version: 10
