@@ -29,10 +29,8 @@ RUN microdnf update \
     && microdnf clean all
 
 # Need jq for parsing the clowder configuration json in shell scripts
-RUN curl -L https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 -o jq \
-    && chmod +x ./jq \
-    && cp jq /usr/bin \
-    && rm -f ./jq
+RUN microdnf install jq -y \
+    && microdnf clean all
 
 COPY deployment/playbooks/ ./playbooks
 COPY deployment/scripts/mid_hook.sh ./scripts/mid_hook.sh
