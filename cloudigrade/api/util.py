@@ -18,7 +18,7 @@ from api.models import (
     InstanceEvent,
     Run,
 )
-from util.misc import get_today
+from util.misc import get_now, get_today
 
 logger = logging.getLogger(__name__)
 
@@ -575,8 +575,13 @@ def recalculate_runs(event):
     earliest_time = earliest_run.start_time if earliest_run else event.occurred_at
 
     events = (
+        # Note: If we ever start persisting data into the Run objects from events that
+        # indicate instance type changes, we will need to include that event type here
+        # or simply stop filtering on event type.
         InstanceEvent.objects.filter(
-            instance_id=event.instance_id, occurred_at__gte=earliest_time
+            instance_id=event.instance_id,
+            occurred_at__gte=earliest_time,
+            event_type__in=[InstanceEvent.TYPE.power_on, InstanceEvent.TYPE.power_off],
         )
         .select_related("instance")
         .order_by("occurred_at")
@@ -610,6 +615,114 @@ def recalculate_runs(event):
         saved_runs.append(run)
 
     return saved_runs
+
+
+def recalculate_runs_for_instance_id(instance_id):
+    """
+    Ensure Run objects are up-to-date for the given instance id's recent events.
+
+    If no Run exists, we just look for the oldest related InstanceEvent to process.
+    If a Run does exist, find the most recent one, and look for the oldest related
+    InstanceEvent that was recorded since that Run was created.
+    """
+    # Filter events to the given instance that are power-related.
+    # Note: If we ever start persisting data into the Run objects from events that
+    # indicate instance type changes, we will need to include that event type here or
+    # simply stop filtering on event type.
+    event_filters = Q(instance_id=instance_id) & Q(
+        event_type__in=[InstanceEvent.TYPE.power_on, InstanceEvent.TYPE.power_off]
+    )
+
+    # If any Run exists, limit to InstanceEvents since the most recent Run was created.
+    # Look for events created, updated, or occurred since then. This means if there are
+    # any *past* runs that failed to calculate using some *older* events, they will not
+    # be fixed here. This should be to safe use *going forward*. If we find past runs
+    # that have missed past events, we may need to use some other process to recreate
+    # the entire history of runs.
+    if (
+        latest_run := Run.objects.filter(instance_id=instance_id)
+        .order_by("-created_at")
+        .first()
+    ):
+        run_created_at = latest_run.created_at
+        event_filters = event_filters & (
+            Q(created_at__gte=run_created_at)
+            | Q(updated_at__gte=run_created_at)
+            | Q(occurred_at__gte=run_created_at)
+        )
+    recalculated_runs = []
+    if oldest_relevant_event := (
+        InstanceEvent.objects.filter(event_filters).order_by("created_at").first()
+    ):
+        recalculated_runs = recalculate_runs(oldest_relevant_event)
+    if count := len(recalculated_runs):
+        logger.debug(
+            _("recalculated %(count)s runs for instance %(instance_id)s"),
+            {"count": count, "instance_id": instance_id},
+        )
+    return recalculated_runs
+
+
+def recalculate_runs_for_cloud_account_id(cloud_account_id, since=None):
+    """
+    Recalculate recent Runs for the given cloud account id.
+
+    This searches for recently created, updated, or occurred events and finds the set
+    of distinct instances referenced by those events. That list is a superset of
+    instances that actually need recalculating; this simply gets all instances that have
+    recent activity that *may* need recalculation. For each of those instances, we call
+    recalculate_runs_for_instance_id which further determines if actual changes need to
+    be made and then recalculates them accordingly.
+
+    Args:
+        cloud_account_id (int): CloudAccount id
+        since (datetime.datetime): optional starting time to search for events
+    """
+    if not since:
+        since = get_now() - timedelta(days=1)  # TODO make the timedelta configurable
+    logger.debug(
+        _(
+            "starting to recalculate runs "
+            "for cloud account %(cloud_account_id)s since %(since)s"
+        ),
+        {"cloud_account_id": cloud_account_id, "since": since},
+    )
+    # Note: If we ever start persisting data into the Run objects from events that
+    # indicate instance type changes, we will need to include that event type here
+    # or simply stop filtering on event type.
+    event_filters = (
+        Q(instance__cloud_account_id=cloud_account_id)
+        & Q(event_type__in=[InstanceEvent.TYPE.power_on, InstanceEvent.TYPE.power_off])
+        & (
+            Q(created_at__gte=since)
+            | Q(updated_at__gte=since)
+            | Q(occurred_at__gte=since)
+        )
+    )
+    # Note: this query returns a list like [{'instance_id': 2288}, ...].
+    relevant_instance_ids = (
+        InstanceEvent.objects.filter(event_filters)
+        .values("instance_id")
+        .order_by("instance_id")
+        .distinct()
+    )
+    instance_ids = (record["instance_id"] for record in relevant_instance_ids)
+    instance_count = 0
+    run_count = 0
+    for instance_count, instance_id in enumerate(instance_ids):
+        recalculated_runs = recalculate_runs_for_instance_id(instance_id)
+        run_count += len(recalculated_runs)
+    logger.debug(
+        _(
+            "recalculated %(run_count)s runs for %(instance_count)s instances "
+            "for cloud account %(cloud_account_id)s"
+        ),
+        {
+            "run_count": run_count,
+            "instance_count": instance_count,
+            "cloud_account_id": cloud_account_id,
+        },
+    )
 
 
 def get_standard_cloud_account_name(cloud_name, external_cloud_account_id):

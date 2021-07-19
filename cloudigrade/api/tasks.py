@@ -51,7 +51,10 @@ from api.models import (
     Run,
     UserTaskLock,
 )
-from api.util import recalculate_runs
+from api.util import (
+    recalculate_runs,
+    recalculate_runs_for_cloud_account_id as _recalculate_runs_for_cloud_account_id,
+)
 from util import aws
 from util.celery import retriable_shared_task
 from util.exceptions import AwsThrottlingException, KafkaProducerException
@@ -667,3 +670,21 @@ def fix_problematic_runs(run_ids):
     """Fix list of problematic runs in an async task."""
     for run_id in run_ids:
         _fix_problematic_run(run_id)
+
+
+@shared_task(name="api.tasks.recalculate_runs_for_cloud_account_id")
+def recalculate_runs_for_cloud_account_id(cloud_account_id):
+    """
+    Recalculate recent Runs for the given cloud account id.
+
+    This is simply a Celery task wrapper for recalculate_runs_for_cloud_account_id.
+    """
+    _recalculate_runs_for_cloud_account_id(cloud_account_id)
+
+
+@shared_task(name="api.tasks.recalculate_runs_for_all_users")
+def recalculate_runs_for_all_cloud_accounts():
+    """Recalculate recent runs for all cloud accounts."""
+    cloud_accounts = CloudAccount.objects.all()
+    for cloud_account in cloud_accounts:
+        recalculate_runs_for_cloud_account_id.delay(cloud_account.id)
