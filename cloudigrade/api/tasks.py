@@ -25,7 +25,6 @@ import logging
 from datetime import timedelta
 
 from celery import shared_task
-from dateutil import parser as date_parser
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import transaction
@@ -47,17 +46,12 @@ from api.clouds.aws.util import (
 )
 from api.models import (
     CloudAccount,
-    ConcurrentUsageCalculationTask,
     InstanceEvent,
     MachineImage,
     Run,
     UserTaskLock,
 )
-from api.util import (
-    calculate_max_concurrent_usage,
-    recalculate_runs,
-    schedule_concurrent_calculation_task,
-)
+from api.util import recalculate_runs
 from util import aws
 from util.celery import retriable_shared_task
 from util.exceptions import AwsThrottlingException, KafkaProducerException
@@ -502,100 +496,12 @@ def inspect_pending_images():
 
 @shared_task(
     bind=True,
-    default_retry_delay=settings.SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY,
     name="api.tasks.calculate_max_concurrent_usage_task",
     track_started=True,
 )
-def calculate_max_concurrent_usage_task(self, date, user_id):  # noqa: C901
-    """
-    Schedule a task to calculate maximum concurrent usage of RHEL instances.
-
-    Args:
-        self (celery.Task): The bound task. With this we can retry if necessary.
-        date (str): the day during which we are measuring usage.
-            Celery serializes the date as a string in the format "%Y-%B-%dT%H:%M:%S.
-        user_id (int): required filter on user
-
-    Returns:
-        ConcurrentUsage for the given date and user ID.
-
-    """
-    task_id = self.request.id
-    date = date_parser.parse(date).date()
-
-    # Temporary logger.info to help diagnose retry issues.
-    logger.info(
-        "retries is %(retries)s for id %(id)s user_id %(user_id)s and date %(date)s.",
-        {
-            "retries": self.request.retries,
-            "id": task_id,
-            "user_id": user_id,
-            "date": date,
-        },
-    )
-
-    # If the user does not exist, all the related ConcurrentUsage
-    # objects should also have been removed, so we can exit early.
-    if not User.objects.filter(id=user_id).exists():
-        return
-
-    try:
-        # Lock the task at a user level. A user can only run one task at a time.
-        # Since this both starts a transaction and blocks any others from starting, we
-        # can be reasonably confident that there are no other tasks processing for the
-        # same user and date at the same time.
-        with lock_task_for_user_ids([user_id]):
-            try:
-                calculation_task = ConcurrentUsageCalculationTask.objects.get(
-                    task_id=task_id
-                )
-            except ConcurrentUsageCalculationTask.DoesNotExist:
-                # It's possible but unlikely this task was deleted since its task was
-                # delayed. Since the same user still exists, try scheduling a new task.
-                logger.warning(
-                    "ConcurrentUsageCalculationTask not found for task ID %(task_id)s! "
-                    "Scheduling a new task for user_id %(user_id)s and date %(date)s.",
-                    {"task_id": task_id, "user_id": user_id, "date": date},
-                )
-                schedule_concurrent_calculation_task(date, user_id)
-                return
-
-            if calculation_task.status != ConcurrentUsageCalculationTask.SCHEDULED:
-                # It's possible but unlikely that something else has changed the status
-                # of this task. If it's not currently SCHEDULED, log and return early.
-                logger.info(
-                    "ConcurrentUsageCalculationTask for task ID %(task_id)s for "
-                    "user_id %(user_id)s and date %(date)s has status "
-                    "%(status)s which is not SCHEDULED.",
-                    {
-                        "user_id": user_id,
-                        "date": date,
-                        "task_id": task_id,
-                        "status": calculation_task.status,
-                    },
-                )
-                return
-
-            calculate_max_concurrent_usage(date, user_id)
-
-            calculation_task.status = ConcurrentUsageCalculationTask.COMPLETE
-            calculation_task.save()
-            logger.info(
-                "Completed calculate_max_concurrent_usage_task for user_id %(user_id)s "
-                "and date %(date)s (task_id %(task_id)s).",
-                {"user_id": user_id, "date": date, "task_id": task_id},
-            )
-            return
-    except Exception as unknown_exception:
-        # It's unclear exactly what other exceptions might arise, but just to be safe,
-        # let's log the trace, set the task's status to ERROR, and re-raise it.
-        logger.warning(unknown_exception, exc_info=True)
-        # Use this objects.filter().update() pattern so that we don't risk raising an
-        # IntegrityError in case the object has somehow been deleted.
-        ConcurrentUsageCalculationTask.objects.filter(task_id=task_id).update(
-            status=ConcurrentUsageCalculationTask.ERROR
-        )
-        raise unknown_exception
+def calculate_max_concurrent_usage_task(self, date, user_id):
+    """Raise NotImplementedError for any old in-flight tasks."""
+    raise NotImplementedError
 
 
 @transaction.atomic()
