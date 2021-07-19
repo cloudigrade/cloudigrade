@@ -1,6 +1,5 @@
 """Collection of tests for tasks.delete_inactive_users."""
 from datetime import timedelta
-from unittest.mock import patch
 
 import faker
 from django.conf import settings
@@ -8,7 +7,7 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 
 from api import tasks
-from api.models import CloudAccount, ConcurrentUsage, ConcurrentUsageCalculationTask
+from api.models import CloudAccount, ConcurrentUsage
 from api.tests import helper as api_helper
 from util import misc
 
@@ -28,18 +27,11 @@ class DeleteInactiveUsersTest(TestCase):
             ConcurrentUsage.objects.create(
                 date=old_date, user_id=user.id, maximum_counts=[]
             )
-            ConcurrentUsageCalculationTask.objects.create(
-                user_id=user.id, date=old_date, task_id=f"{_faker.uuid4()}"
-            )
         self.assertEqual(User.objects.count(), USERS_COUNT)
         self.assertEqual(ConcurrentUsage.objects.count(), USERS_COUNT)
-        self.assertEqual(ConcurrentUsageCalculationTask.objects.count(), USERS_COUNT)
-        with patch.object(ConcurrentUsageCalculationTask, "_revoke") as mock_revoke:
-            tasks.delete_inactive_users()
-        mock_revoke.assert_called()
+        tasks.delete_inactive_users()
         self.assertEqual(User.objects.count(), 0)
         self.assertEqual(ConcurrentUsage.objects.count(), 0)
-        self.assertEqual(ConcurrentUsageCalculationTask.objects.count(), 0)
 
     def test_delete_inactive_users_ignores_users_with_cloudaccount(self):
         """Test delete_inactive_users ignores Users having any CloudAccount."""
