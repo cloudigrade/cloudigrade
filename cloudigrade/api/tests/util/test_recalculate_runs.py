@@ -100,3 +100,23 @@ class RecalculateRunsTest(TestCase):
         self.assertEqual(first_run.end_time, first_end_time)
         self.assertEqual(second_run.start_time, second_start_time)
         self.assertEqual(second_run.end_time, second_end_time)
+
+    def test_early_return_when_no_change_needed(self):
+        """Test recalculate_runs returns early when no changes are needed."""
+        first_start_time = self.account_setup_time + self.one_hour
+        first_end_time = first_start_time + self.one_hour
+        second_start_time = first_end_time + self.one_hour
+        second_end_time = second_start_time + self.one_hour
+        events = api_helper.generate_instance_events(
+            self.instance,
+            [(first_start_time, first_end_time), (second_start_time, second_end_time)],
+        )
+        first_on = events[0]
+
+        # calculate once to set the data up.
+        first_created_runs = util.recalculate_runs(first_on)
+        self.assertEqual(len(first_created_runs), 2)
+
+        # calculate a second time for this test case.
+        second_created_runs = util.recalculate_runs(first_on)
+        self.assertEqual(len(second_created_runs), 0)
