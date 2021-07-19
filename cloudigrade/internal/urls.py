@@ -31,11 +31,6 @@ routes += [
         None,
     ),
     ("concurrentusages", views.InternalConcurrentUsageViewSet, None),
-    (
-        "concurrentusagecalculationtasks",
-        views.InternalConcurrentUsageCalculationTaskViewSet,
-        None,
-    ),
     ("instancedefinitions", views.InternalInstanceDefinitionViewSet, None),
 ]
 

@@ -378,23 +378,6 @@ class InternalConcurrentUsageViewSet(
     filterset_class = filters.InternalConcurrentUsageFilterSet
 
 
-class InternalConcurrentUsageCalculationTaskViewSet(
-    InternalViewSetMixin, viewsets.ReadOnlyModelViewSet
-):
-    """Retrieve or list ConcurrentUsageCalculationTasks for internal use."""
-
-    queryset = models.ConcurrentUsageCalculationTask.objects.all()
-    serializer_class = serializers.InternalConcurrentUsageCalculationTaskSerializer
-    filterset_fields = {
-        "status": ["exact"],
-        "user": ["exact"],
-        "task_id": ["exact"],
-        "date": ["exact"],
-        "created_at": ["lt", "exact", "gt"],
-        "updated_at": ["lt", "exact", "gt"],
-    }
-
-
 class InternalInstanceDefinitionViewSet(
     InternalViewSetMixin, viewsets.ReadOnlyModelViewSet
 ):

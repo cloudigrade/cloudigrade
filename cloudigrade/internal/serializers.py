@@ -118,14 +118,6 @@ class InternalConcurrentUsageSerializer(ModelSerializer):
             self.fields.pop("potentially_related_runs")
 
 
-class InternalConcurrentUsageCalculationTaskSerializer(ModelSerializer):
-    """Serialize ConcurrentUsageCalculationTask for the internal API."""
-
-    class Meta:
-        model = models.ConcurrentUsageCalculationTask
-        fields = "__all__"
-
-
 class InternalInstanceDefinitionSerializer(ModelSerializer):
     """Serialize InstanceDefinition for the internal API."""
 

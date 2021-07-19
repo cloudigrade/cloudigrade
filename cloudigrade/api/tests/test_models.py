@@ -1,45 +1,18 @@
 """Collection of tests for the api.models module."""
 import datetime
 from unittest.mock import patch
-from uuid import uuid4
 
 import faker
 from django.contrib.auth.models import User
 from django.test import TestCase
 
-from api.models import ConcurrentUsage, ConcurrentUsageCalculationTask, Run
+from api.models import ConcurrentUsage, Run
 from api.tests import helper as api_helper
 from api.util import calculate_max_concurrent_usage
 from util.misc import get_today
 from util.tests import helper as util_helper
 
-
 _faker = faker.Faker()
-
-
-class ConcurrentUsageCalculationTaskTest(TestCase):
-    """Test cases for api.models.ConcurrentUsageCalculationTask."""
-
-    def test_cancel(self):
-        """Test that cancel sets status to CANCELED."""
-        user = util_helper.generate_test_user()
-
-        task_id = uuid4()
-        concurrent_task = ConcurrentUsageCalculationTask(
-            user_id=user.id, date=_faker.date(), task_id=task_id
-        )
-        concurrent_task.save()
-
-        self.assertEqual(
-            concurrent_task.status, ConcurrentUsageCalculationTask.SCHEDULED
-        )
-        with patch("celery.current_app") as mock_celery:
-            concurrent_task.cancel()
-            mock_celery.control.revoke.assert_called_with(task_id)
-        self.assertEqual(
-            ConcurrentUsageCalculationTask.objects.get(task_id=task_id).status,
-            ConcurrentUsageCalculationTask.CANCELED,
-        )
 
 
 class MachineImageTest(TestCase):

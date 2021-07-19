@@ -199,13 +199,6 @@ class DocsApiHandler(object):
         one_day_delta = timedelta(days=1)
         # while the_date <= self.this_morning.date():
         while the_date <= self.next_week.date():
-            task_id = f"calculate-concurrent-usage-{seeded_uuid4()}"
-            models.ConcurrentUsageCalculationTask.objects.create(
-                user_id=self.customer_user.id,
-                date=the_date.isoformat(),
-                task_id=task_id,
-                status=models.ConcurrentUsageCalculationTask.COMPLETE,
-            )
             calculate_max_concurrent_usage(the_date, self.customer_user.id)
             the_date = the_date + one_day_delta
 
