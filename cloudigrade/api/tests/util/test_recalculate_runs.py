@@ -1,6 +1,9 @@
 """Collection of tests for util.recalculate_runs."""
 import datetime
+from unittest.mock import patch
 
+from django.db.models import F
+from django.db.models.functions import Coalesce
 from django.test import TestCase
 
 from api import models, util
@@ -9,8 +12,8 @@ from util.misc import get_today
 from util.tests import helper as util_helper
 
 
-class RecalculateRunsTest(TestCase):
-    """Utility function 'recalculate_runs' test cases."""
+class RecalculateRunsDataSetUpMixin:
+    """Data helper mixin for related test classes."""
 
     def setUp(self):
         """Set up common variables for tests."""
@@ -25,7 +28,7 @@ class RecalculateRunsTest(TestCase):
 
     def preload_data(self, event_powered_times, run_times):
         """
-        Create various events and runs to exist before running recalculate_runs.
+        Create various events and runs to exist before recalculating runs.
 
         Args:
             event_powered_times (iterable): iterable of tuples each containing the
@@ -41,6 +44,7 @@ class RecalculateRunsTest(TestCase):
             event_powered_times,
             self.machine_image.content_object.ec2_ami_id,
         )
+
         runs = []
         for run_time in run_times:
             start_time, end_time = run_time
@@ -51,7 +55,32 @@ class RecalculateRunsTest(TestCase):
                 machineimage=self.machine_image,
             )
             runs.append(run)
+
+        # Important note: We want to backdate the created_at and modified_at values for
+        # the InstanceEvents and Runs because they were set to the real "now" upon their
+        # creation. This is necessary because we look at these datetimes when we
+        # determine if a particular InstanceEvent requires a Run to be recalculated.
+        models.InstanceEvent.objects.update(
+            created_at=F("occurred_at"), updated_at=F("occurred_at")
+        )
+        # Nudge the times for the Runs slightly forward, though, so that when comparing
+        # datetimes it's clear that the Runs were created slightly more recently.
+        models.Run.objects.update(
+            created_at=Coalesce(F("end_time"), F("start_time"))
+            + datetime.timedelta(minutes=1),
+            updated_at=Coalesce(F("end_time"), F("start_time"))
+            + datetime.timedelta(minutes=1),
+        )
+        for event in events:
+            event.refresh_from_db()
+        for run in runs:
+            run.refresh_from_db()
+
         return events, runs
+
+
+class RecalculateRunsTest(RecalculateRunsDataSetUpMixin, TestCase):
+    """Utility function 'recalculate_runs' test cases."""
 
     def assertExpectedRuns(self, old_runs, expected_run_times, recreated=True):
         """
@@ -157,3 +186,72 @@ class RecalculateRunsTest(TestCase):
         second_created_runs = util.recalculate_runs(events[0])
         self.assertEqual(len(second_created_runs), 0)
         self.assertExpectedRuns(old_runs, event_power_times, recreated=False)
+
+
+class RecalculateRunsForInstanceIdTest(RecalculateRunsDataSetUpMixin, TestCase):
+    """Utility function 'recalculate_runs_for_instance_id' test cases."""
+
+    def test_recalculate_runs_because_no_runs_exist(self):
+        """Test recalculating because no other Runs exist."""
+        start_time = self.account_setup_time + self.one_hour
+        event_power_times = ((start_time, None),)
+        events, __ = self.preload_data(event_power_times, ())
+
+        with patch.object(util, "recalculate_runs") as mock_recalc:
+            util.recalculate_runs_for_instance_id(self.instance.id)
+            mock_recalc.assert_called_once_with(events[0])
+
+    def test_recalculate_runs_because_event_newer_than_run_exists(self):
+        """Test recalculating because the InstanceEvent is newer than the newest Run."""
+        start_time = self.account_setup_time + self.one_hour
+        end_time = start_time + self.one_hour
+        event_power_times = ((start_time, end_time),)
+        run_times = ((start_time, None),)
+        events, __ = self.preload_data(event_power_times, run_times)
+
+        with patch.object(util, "recalculate_runs") as mock_recalc:
+            util.recalculate_runs_for_instance_id(self.instance.id)
+            mock_recalc.assert_called_once_with(events[1])
+
+    def test_no_recalculate_runs_because_no_need(self):
+        """Test not recalculating because no newer InstanceEvent exists."""
+        start_time = self.account_setup_time + self.one_hour
+        end_time = start_time + self.one_hour
+        event_power_times = ((start_time, end_time),)
+        run_times = ((start_time, end_time),)
+        self.preload_data(event_power_times, run_times)
+
+        with patch.object(util, "recalculate_runs") as mock_recalc:
+            util.recalculate_runs_for_instance_id(self.instance.id)
+            mock_recalc.assert_not_called()
+
+
+class RecalculateRunsForCloudAccountIdTest(RecalculateRunsDataSetUpMixin, TestCase):
+    """Utility function 'recalculate_runs_for_cloud_account_id' test cases."""
+
+    def test_find_instance_that_needs_recalculated_runs(self):
+        """Test finding an instance that needs recalculated runs."""
+        start_time = self.account_setup_time + self.one_hour
+        event_power_times = ((start_time, None),)
+        self.preload_data(event_power_times, ())
+
+        with patch.object(util, "recalculate_runs_for_instance_id") as mock_recalc:
+            util.recalculate_runs_for_cloud_account_id(self.account.id)
+            mock_recalc.assert_called_once_with(self.instance.id)
+
+    def test_no_instances_because_too_recent_since(self):
+        """
+        Test not finding instances with a custom "since" time that's too recent.
+
+        In this case, we deliberately choose a "since" time more recent than the last
+        and only event. Because this excludes the event from being found, there appears
+        to be no need to recalculate runs.
+        """
+        start_time = self.account_setup_time + self.one_hour
+        event_power_times = ((start_time, None),)
+        self.preload_data(event_power_times, ())
+
+        since = start_time + self.one_hour
+        with patch.object(util, "recalculate_runs_for_instance_id") as mock_recalc:
+            util.recalculate_runs_for_cloud_account_id(self.account.id, since)
+            mock_recalc.assert_not_called()
