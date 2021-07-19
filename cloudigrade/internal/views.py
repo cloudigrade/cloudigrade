@@ -3,9 +3,7 @@ import logging
 from datetime import timedelta
 
 from django.contrib.auth.models import User
-from django.db import transaction
 from django.http import JsonResponse
-from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
 from django_filters import rest_framework as django_filters
 from rest_framework import exceptions, mixins, permissions, status, viewsets
@@ -542,16 +540,8 @@ class InternalAzureMachineImageViewSet(
     }
 
 
-@method_decorator(transaction.non_atomic_requests, name="dispatch")
 class InternalDailyConcurrentUsageViewSet(DailyConcurrentUsageViewSet):
-    """
-    Generate report of concurrent usage within a time frame.
-
-    This viewset has to be wrapped in a non_atomic_requests decorator. DRF by default
-    runs viewset methods inside of an atomic transaction. But in this case we have to
-    create ConcurrentUsageCalculationTask to schedule jobs even when we raise a
-    ResultsUnavailable 425 exception.
-    """
+    """Generate report of concurrent usage within a time frame."""
 
     def get_authenticators(self):
         """Instantiate and return the list of authenticators that this view can use."""
