@@ -361,18 +361,12 @@ class DailyConcurrentUsageDummyQueryset(object):
         days = self.days[index]
         concurrent_usages = []
 
-        # If multiple days are requested, we want to queue up the concurrent usage
-        # calculation for every single day. raise ResultsUnavailable if one of the
-        # days requested is not available.
-        results_available = True
+        # Try to get data for each day, but raise ResultsUnavailable if data is missing.
         for date in days:
-            try:
-                concurrent_usage = get_max_concurrent_usage(date, self.user_id)
+            if concurrent_usage := get_max_concurrent_usage(date, self.user_id):
                 concurrent_usages.append(concurrent_usage)
-            except ResultsUnavailable:
-                results_available = False
-        if not results_available:
-            raise ResultsUnavailable
+            else:
+                raise ResultsUnavailable
         return concurrent_usages
 
 
