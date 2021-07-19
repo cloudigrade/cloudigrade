@@ -3,8 +3,6 @@ from datetime import timedelta
 
 from dateutil.parser import parse
 from django.conf import settings
-from django.db import transaction
-from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
 from django_filters import rest_framework as django_filters
 from rest_framework import exceptions, mixins, permissions, viewsets
@@ -75,16 +73,8 @@ class SysconfigViewSet(viewsets.ViewSet):
         return Response(response)
 
 
-@method_decorator(transaction.non_atomic_requests, name="dispatch")
 class DailyConcurrentUsageViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
-    """
-    Generate report of concurrent usage within a time frame.
-
-    This viewset has to be wrapped in a non_atomic_requests decorator. DRF by default
-    runs viewset methods inside of an atomic transaction. But in this case we have to
-    create ConcurrentUsageCalculationTask to schedule jobs even when we raise a
-    ResultsUnavailable 425 exception.
-    """
+    """Generate report of concurrent usage within a time frame."""
 
     schema = schemas.ConcurrentSchema(tags=["api-v2"])
     serializer_class = serializers.DailyConcurrentUsageSerializer
