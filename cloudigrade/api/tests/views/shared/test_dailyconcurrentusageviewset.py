@@ -7,7 +7,6 @@ from django.test import TransactionTestCase
 from django.utils.translation import gettext as _
 from rest_framework.test import APIClient, APIRequestFactory
 
-from api.models import ConcurrentUsageCalculationTask
 from api.tests import helper as api_helper
 from util.misc import get_today
 from util.tests import helper as util_helper
@@ -251,7 +250,6 @@ class SharedDailyConcurrentUsageViewSetTest(TransactionTestCase):
         client.force_authenticate(user=self.user1)
         response = client.get(self.concurrent_api_url, data=data, format="json")
 
-        self.assertEqual(1, ConcurrentUsageCalculationTask.objects.count())
         self.assertEqual(response.status_code, 425)
 
     @patch("api.tasks.calculate_max_concurrent_usage_task")
@@ -266,8 +264,6 @@ class SharedDailyConcurrentUsageViewSetTest(TransactionTestCase):
 
         client = APIClient()
         client.force_authenticate(user=self.user1)
-        self.assertEqual(0, ConcurrentUsageCalculationTask.objects.count())
 
         response = client.get(self.concurrent_api_url, data=data, format="json")
-        self.assertEqual(3, ConcurrentUsageCalculationTask.objects.count())
         self.assertEqual(response.status_code, 425)

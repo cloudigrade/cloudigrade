@@ -21,7 +21,6 @@ from api.models import (
     InstanceEvent,
     Run,
 )
-from util.exceptions import ResultsUnavailable
 from util.misc import get_today
 
 logger = logging.getLogger(__name__)
@@ -198,16 +197,15 @@ def get_max_concurrent_usage(date, user_id):
     """
     Get maximum concurrent usage of RHEL instances in given parameters.
 
-    This may get a pre-calculated version of the results from ConcurrentUsage. We
-    attempt to load stored results from the database; we only perform the underlying
-    calculation (and save results for future requests) if the result does not yet exist.
+    This only gets a pre-calculated version of the results from ConcurrentUsage.
+    We never perform the underlying calculation as a side-effect of this function.
 
     Args:
         date (datetime.date): the day during which we are measuring usage
         user_id (int): required filter on user
 
     Returns:
-        ConcurrentUsage for the give date and user_id.
+        ConcurrentUsage for the give date and user_id, or None if not found.
 
     """
     logger.debug(
@@ -217,8 +215,8 @@ def get_max_concurrent_usage(date, user_id):
 
     today = get_today()
     if date > today:
-        # Early return stub values; we never project future calculations.
-        return ConcurrentUsage(date=date, user_id=user_id)
+        # Early return because we never attempt to project future calculations.
+        return None
 
     try:
         logger.info(
@@ -232,25 +230,8 @@ def get_max_concurrent_usage(date, user_id):
             _("Could not find ConcurrentUsage(date=%(date)s, user_id=%(user_id)s)"),
             {"date": date, "user_id": user_id},
         )
-        # If it does not exist, we will create it after this exception handler.
-        pass
 
-    last_calculation_task = get_last_scheduled_concurrent_usage_calculation_task(
-        user_id, date
-    )
-    logger.info(
-        _("last_calculation_task is %(last_calculation_task)s"),
-        {"last_calculation_task": last_calculation_task},
-    )
-    if last_calculation_task is not None:
-        if last_calculation_task.status in (
-            ConcurrentUsageCalculationTask.SCHEDULED,
-            ConcurrentUsageCalculationTask.RUNNING,
-        ):
-            raise ResultsUnavailable
-
-    schedule_concurrent_calculation_task(date, user_id)
-    raise ResultsUnavailable
+    return None
 
 
 def calculate_max_concurrent_usage(date, user_id):
