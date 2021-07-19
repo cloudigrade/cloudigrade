@@ -69,6 +69,26 @@ objects:
           value: ${ENV_NAME}
         - name: ANALYZE_LOG_SCHEDULE
           value: ${ANALYZE_LOG_SCHEDULE}
+        - name: AZURE_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              key: client_id
+              name: cloudigrade-azure
+        - name: AZURE_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              key: client_secret
+              name: cloudigrade-azure
+        - name: AZURE_SUBSCRIPTION_ID
+          valueFrom:
+            secretKeyRef:
+              key: subscription_id
+              name: cloudigrade-azure
+        - name: AZURE_TENANT_ID
+          valueFrom:
+            secretKeyRef:
+              key: tenant_id
+              name: cloudigrade-azure
         - name: AWS_ACCESS_KEY_ID
           valueFrom:
             secretKeyRef:
@@ -303,6 +323,26 @@ objects:
         env:
         - name: ANALYZE_LOG_SCHEDULE
           value: ${ANALYZE_LOG_SCHEDULE}
+        - name: AZURE_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              key: client_id
+              name: cloudigrade-azure
+        - name: AZURE_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              key: client_secret
+              name: cloudigrade-azure
+        - name: AZURE_SUBSCRIPTION_ID
+          valueFrom:
+            secretKeyRef:
+              key: subscription_id
+              name: cloudigrade-azure
+        - name: AZURE_TENANT_ID
+          valueFrom:
+            secretKeyRef:
+              key: tenant_id
+              name: cloudigrade-azure
         - name: AWS_ACCESS_KEY_ID
           valueFrom:
             secretKeyRef:
@@ -392,6 +432,8 @@ objects:
           value: ${HOUNDIGRADE_ECS_SCALE_UP_CLUSTER_SCHEDULE}
         - name: HOUNDIGRADE_ECS_PERSIST_INSPECTION_RESULTS_SCHEDULE
           value: ${HOUNDIGRADE_ECS_PERSIST_INSPECTION_RESULTS_SCHEDULE}
+        - name: REPOPULATE_AZURE_INSTANCE_MAPPING_SCHEDULE
+          value: ${REPOPULATE_AZURE_INSTANCE_MAPPING_SCHEDULE}
         - name: AWS_REPOPULATE_EC2_INSTANCE_MAPPING_SCHEDULE
           value: ${AWS_REPOPULATE_EC2_INSTANCE_MAPPING_SCHEDULE}
         - name: CLOUDIGRADE_VERSION
@@ -532,6 +574,26 @@ objects:
           value: ${CELERY_SENTRY_DSN}
         - name: CELERY_SENTRY_ENVIRONMENT
           value: ${CELERY_SENTRY_ENVIRONMENT}
+        - name: AZURE_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              key: client_id
+              name: cloudigrade-azure
+        - name: AZURE_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              key: client_secret
+              name: cloudigrade-azure
+        - name: AZURE_SUBSCRIPTION_ID
+          valueFrom:
+            secretKeyRef:
+              key: subscription_id
+              name: cloudigrade-azure
+        - name: AZURE_TENANT_ID
+          valueFrom:
+            secretKeyRef:
+              key: tenant_id
+              name: cloudigrade-azure
         - name: AWS_ACCESS_KEY_ID
           valueFrom:
             secretKeyRef:
@@ -621,6 +683,8 @@ objects:
           value: ${HOUNDIGRADE_ECS_SCALE_UP_CLUSTER_SCHEDULE}
         - name: HOUNDIGRADE_ECS_PERSIST_INSPECTION_RESULTS_SCHEDULE
           value: ${HOUNDIGRADE_ECS_PERSIST_INSPECTION_RESULTS_SCHEDULE}
+        - name: REPOPULATE_AZURE_INSTANCE_MAPPING_SCHEDULE
+          value: ${REPOPULATE_AZURE_INSTANCE_MAPPING_SCHEDULE}
         - name: AWS_REPOPULATE_EC2_INSTANCE_MAPPING_SCHEDULE
           value: ${AWS_REPOPULATE_EC2_INSTANCE_MAPPING_SCHEDULE}
         - name: CLOUDIGRADE_VERSION
@@ -702,7 +766,7 @@ objects:
             --loglevel info
             --concurrency 1
             --task-events
-            --queues celery,initial_aws_describe_instances,copy_ami_snapshot,copy_ami_to_customer_account,remove_snapshot_ownership,create_volume,enqueue_ready_volumes,delete_snapshot,inspect_pending_images,scale_up_inspection_cluster,attach_volumes_to_cluster,run_inspection_cluster,persist_inspection_cluster_results_task,scale_down_cluster,analyze_log,repopulate_ec2_instance_mapping,create_from_sources_kafka_message,configure_customer_aws_and_create_cloud_account,delete_from_sources_kafka_message,delete_inactive_users,delete_cloud_account,calculate_max_concurrent_usage,notify_application_availability_task,enable_account
+            --queues celery,initial_aws_describe_instances,copy_ami_snapshot,copy_ami_to_customer_account,remove_snapshot_ownership,create_volume,enqueue_ready_volumes,delete_snapshot,inspect_pending_images,scale_up_inspection_cluster,attach_volumes_to_cluster,run_inspection_cluster,persist_inspection_cluster_results_task,scale_down_cluster,analyze_log,repopulate_ec2_instance_mapping,create_from_sources_kafka_message,configure_customer_aws_and_create_cloud_account,delete_from_sources_kafka_message,delete_inactive_users,delete_cloud_account,calculate_max_concurrent_usage,notify_application_availability_task,enable_account,repopulate_azure_instance_mapping
         livenessProbe:
           exec:
             command:
@@ -733,6 +797,26 @@ objects:
             cpu: ${CELERY_WORKER_LIMITS_CONTAINER_CPU_LIMIT}
             memory: ${CELERY_WORKER_LIMITS_CONTAINER_MEM_LIMIT}
         env:
+        - name: AZURE_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              key: client_id
+              name: cloudigrade-azure
+        - name: AZURE_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              key: client_secret
+              name: cloudigrade-azure
+        - name: AZURE_SUBSCRIPTION_ID
+          valueFrom:
+            secretKeyRef:
+              key: subscription_id
+              name: cloudigrade-azure
+        - name: AZURE_TENANT_ID
+          valueFrom:
+            secretKeyRef:
+              key: tenant_id
+              name: cloudigrade-azure
         - name: AWS_ACCESS_KEY_ID
           valueFrom:
             secretKeyRef:
@@ -822,6 +906,8 @@ objects:
           value: ${HOUNDIGRADE_ECS_SCALE_UP_CLUSTER_SCHEDULE}
         - name: HOUNDIGRADE_ECS_PERSIST_INSPECTION_RESULTS_SCHEDULE
           value: ${HOUNDIGRADE_ECS_PERSIST_INSPECTION_RESULTS_SCHEDULE}
+        - name: REPOPULATE_AZURE_INSTANCE_MAPPING_SCHEDULE
+          value: ${REPOPULATE_AZURE_INSTANCE_MAPPING_SCHEDULE}
         - name: AWS_REPOPULATE_EC2_INSTANCE_MAPPING_SCHEDULE
           value: ${AWS_REPOPULATE_EC2_INSTANCE_MAPPING_SCHEDULE}
         - name: CLOUDIGRADE_VERSION
@@ -996,6 +1082,10 @@ parameters:
   name: HOUNDIGRADE_ECS_PERSIST_INSPECTION_RESULTS_SCHEDULE
   required: true
   value: '120'
+- displayName: Repopulate Azure Instance Mapping Schedule
+  name: REPOPULATE_AZURE_INSTANCE_MAPPING_SCHEDULE
+  required: true
+  value: '604800'
 - displayName: AWS Repopulate EC2 Instance Mapping Schedule
   name: AWS_REPOPULATE_EC2_INSTANCE_MAPPING_SCHEDULE
   required: true

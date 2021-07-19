@@ -1,0 +1,7 @@
+
+if [ -n "${1}" ]
+then
+echo "YUP: WE SPECIFIED: ${@}"
+else
+echo "NOPE: WE DID NOT SPECIFY ANYTHING"
+fi
