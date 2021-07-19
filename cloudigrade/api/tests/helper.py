@@ -87,7 +87,6 @@ class SandboxedRestClient(object):
         - aws.get_session is used in account deletion
         - aws.sts._get_primary_account_id is used in sysconfig
         - tasks.initial_aws_describe_instances is used in account creation
-        - api.util.schedule_concurrent_calculation_task used in getting concurrent usage
 
         Returns:
             rest_framework.response.Response
@@ -102,8 +101,6 @@ class SandboxedRestClient(object):
             aws.sts, "_get_primary_account_id"
         ) as mock_get_primary_account_id, patch.object(
             tasks, "initial_aws_describe_instances"
-        ), patch(
-            "api.util.schedule_concurrent_calculation_task"
         ):
             mock_verify.return_value = self.aws_account_verified, []
             mock_verify_permissions.return_value = True
@@ -788,12 +785,7 @@ def generate_single_run(
             no_instance_type=no_instance_type,
         )
     if calculate_concurrent_usage:
-        # Calculate the runs directly instead of scheduling a task for testing purposes
-        with patch(
-            "api.util.schedule_concurrent_calculation_task"
-        ) as mock_schedule_concurrent_task:
-            mock_schedule_concurrent_task.side_effect = calculate_max_concurrent_usage
-            calculate_max_concurrent_usage_from_runs([run])
+        calculate_max_concurrent_usage_from_runs([run])
     return run
 
 

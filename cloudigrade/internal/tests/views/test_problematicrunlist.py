@@ -42,8 +42,7 @@ class ProblematicRunListTest(TestCase):
 
     def generate_runs(self, problematic=False):
         """Generate the run for the test, optionally problematic."""
-        with patch("api.util.schedule_concurrent_calculation_task"):
-            runs = recalculate_runs(self.events[0])
+        runs = recalculate_runs(self.events[0])
         if problematic:
             # Forget the stop_time for the first run to make it problematic,
             # and delete the other runs.

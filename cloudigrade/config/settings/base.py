@@ -506,11 +506,6 @@ DELETE_INACTIVE_USERS_MIN_AGE = env.int(
     "DELETE_INACTIVE_USERS_MIN_AGE", default=60 * 60 * 24
 )
 
-# Delay in seconds for concurrent usage calculation
-SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY = env.int(
-    "SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY", default=30 * 60
-)
-
 # Cache ttl settings
 CACHE_TTL_DEFAULT = env.int("CACHE_TTL_DEFAULT", default=60)
 

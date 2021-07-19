@@ -4,10 +4,8 @@ import itertools
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from uuid import uuid4
 
 from dateutil import tz
-from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import IntegrityError, transaction
 from django.db.models import Q
@@ -15,7 +13,6 @@ from django.utils.translation import gettext as _
 
 from api.models import (
     ConcurrentUsage,
-    ConcurrentUsageCalculationTask,
     Instance,
     InstanceDefinition,
     InstanceEvent,
@@ -513,75 +510,14 @@ def calculate_max_concurrent_usage_from_runs(runs):
 
     We try to find the common intersection of the given runs across the dates,
     users, and cloud accounts referenced in the given Runs.
+
+    Beware that this function may have an expensive run time. Use it sparingly.
     """
     date_user_cloud_accounts = get_users_dates_from_runs(runs)
+    concurrent_usages = []
     for date, user_id in date_user_cloud_accounts:
-
-        # If we already have a concurrent usage calculation task with the same userid
-        # same date, and status=SCHEDULED, then we do not run this
-
-        last_calculate_task = get_last_scheduled_concurrent_usage_calculation_task(
-            user_id=user_id, date=date
-        )
-
-        # If no such task exists, then schedule one
-        if last_calculate_task is None:
-            schedule_concurrent_calculation_task(date, user_id)
-        # If this task is already complete or is in the process of running,
-        # then we schedule a new task.
-        elif last_calculate_task.status != ConcurrentUsageCalculationTask.SCHEDULED:
-            schedule_concurrent_calculation_task(date, user_id)
-
-        # If the task is scheduled (but has not started running) and it has been
-        # in the queue for too long, then we revoke it and schedule a new task.
-        elif last_calculate_task.created_at < datetime.now(tz=tz.tzutc()) - timedelta(
-            seconds=settings.SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY
-        ):
-            logger.info(
-                "Previous scheduled task to calculate concurrent usage for "
-                "user_id: %(user_id)s and date: %(date)s has expired. "
-                "Scheduling new calculation task." % {"user_id": user_id, "date": date}
-            )
-            last_calculate_task.cancel()
-            schedule_concurrent_calculation_task(date, user_id)
-
-        # If the task already exists and is scheduled and it reasonably recent,
-        # simply log this message for visibility.
-        else:
-            logger.info(
-                "Task to calculate concurrent usage for user_id: %(user_id)s and "
-                "date: %(date)s already exists." % {"user_id": user_id, "date": date}
-            )
-
-
-def schedule_concurrent_calculation_task(date, user_id):
-    """
-    Start a task to calculate the concurrent usage calculation.
-
-    This is needed because we always want a ConcurrentUsageCalculationTask
-    object created to track the task.
-
-    Args:
-        user_id (int): id of the user
-        date (date): date to calculate the concurrent usage.
-    """
-    logger.info(
-        "Scheduling Task to calculate concurrent usage for user_id: "
-        "%(user_id)s and date: %(date)s." % {"user_id": user_id, "date": date}
-    )
-
-    from api.tasks import calculate_max_concurrent_usage_task
-
-    task_id = f"calculate-concurrent-usage-{uuid4()}"
-
-    ConcurrentUsageCalculationTask.objects.create(
-        user_id=user_id, date=date, task_id=task_id
-    )
-    calculate_max_concurrent_usage_task.apply_async(
-        kwargs={"date": date, "user_id": user_id},
-        countdown=settings.SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY,
-        task_id=task_id,
-    )
+        concurrent_usages.append(calculate_max_concurrent_usage(date, user_id))
+    return concurrent_usages
 
 
 def _runs_match_denormalized_runs(runs, denormalized_runs):
@@ -692,17 +628,6 @@ def get_standard_cloud_account_name(cloud_name, external_cloud_account_id):
         cloud_name=cloud_name,
         external_cloud_account_id=external_cloud_account_id,
     )
-
-
-def get_last_scheduled_concurrent_usage_calculation_task(user_id, date):
-    """Get the last created concurrent usage calculation task."""
-    if ConcurrentUsageCalculationTask.objects.filter(
-        user__id=user_id, date=date
-    ).exists():
-        return ConcurrentUsageCalculationTask.objects.filter(
-            user__id=user_id, date=date
-        ).latest("created_at")
-    return None
 
 
 def find_problematic_runs(user_id=None):

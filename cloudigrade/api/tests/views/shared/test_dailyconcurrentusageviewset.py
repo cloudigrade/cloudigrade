@@ -1,6 +1,5 @@
 """Collection of shared tests for ConcurrentUsageView."""
 import datetime
-from unittest.mock import patch
 
 import faker
 from django.test import TransactionTestCase
@@ -235,8 +234,7 @@ class SharedDailyConcurrentUsageViewSetTest(TransactionTestCase):
             [_("end_date must be same as or after the user creation date.")],
         )
 
-    @patch("api.tasks.calculate_max_concurrent_usage_task")
-    def test_end_date_same_as_user_create_date_expect_425(self, mock_calculate_task):
+    def test_end_date_same_as_user_create_date_expect_425(self):
         """
         Test with end_date exactly as the user creation date, expecting 425.
 
@@ -252,8 +250,7 @@ class SharedDailyConcurrentUsageViewSetTest(TransactionTestCase):
 
         self.assertEqual(response.status_code, 425)
 
-    @patch("api.tasks.calculate_max_concurrent_usage_task")
-    def test_425_if_no_concurrent_usage(self, mock_calculate_task):
+    def test_425_if_no_concurrent_usage(self):
         """Test if no concurrent usage is present, an 425 error code is returned."""
         start_date = datetime.date(2019, 1, 1)
         end_date = datetime.date(2019, 1, 4)

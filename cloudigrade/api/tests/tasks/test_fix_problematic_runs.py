@@ -47,8 +47,7 @@ class FixProblematicRunTest(TestCase):
             instance = api_helper.generate_instance(account)
             events = api_helper.generate_instance_events(instance, powered_times)
 
-        with patch("api.util.schedule_concurrent_calculation_task"):
-            api_helper.recalculate_runs_from_events(events)
+        api_helper.recalculate_runs_from_events(events)
 
         runs = models.Run.objects.all().order_by("id")
         self.assertEqual(len(runs), 2)

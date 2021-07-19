@@ -1,6 +1,5 @@
 """Collection of tests for internal views."""
 import decimal
-from unittest.mock import patch
 
 from django.contrib.auth.models import User
 from django.test import TestCase
@@ -170,9 +169,7 @@ class InternalViewSetTest(TestCase):
 
     def test_list_runs(self):
         """Assert that a user sees all Run objects."""
-        # We need to recalculate runs, but there's no task delaying inside tests.
-        with patch("api.util.schedule_concurrent_calculation_task"):
-            api_helper.recalculate_runs_from_events(self.events)
+        api_helper.recalculate_runs_from_events(self.events)
 
         runs = list(models.Run.objects.all())
         expected_ids = set(run.id for run in runs)
