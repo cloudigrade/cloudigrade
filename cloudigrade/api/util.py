@@ -603,6 +603,32 @@ def schedule_concurrent_calculation_task(date, user_id):
     )
 
 
+def _runs_match_denormalized_runs(runs, denormalized_runs):
+    """
+    Compare list of Run objects to list of calculated DenormalizedRun objects.
+
+    Note:
+        This comparison function assumes the input lists are already sorted.
+
+    Returns:
+        bool: True if they are effectively equal. False if they are not.
+    """
+    if len(denormalized_runs) != len(runs):
+        return False
+    for run, denormalized_run in zip(runs, denormalized_runs):
+        if (
+            run.start_time != denormalized_run.start_time
+            or run.end_time != denormalized_run.end_time
+            or run.machineimage_id != denormalized_run.image_id
+            or run.instance_id != denormalized_run.instance_id
+            or run.instance_type != denormalized_run.instance_type
+            or run.memory != denormalized_run.instance_memory
+            or run.vcpu != denormalized_run.instance_vcpu
+        ):
+            return False
+    return True
+
+
 @transaction.atomic()
 def recalculate_runs(event):
     """
@@ -621,12 +647,14 @@ def recalculate_runs(event):
     during_run = Q(start_time__lte=event.occurred_at, end_time__gt=event.occurred_at)
     during_run_no_end = Q(start_time__lte=event.occurred_at, end_time=None)
     filters = after_run | during_run | during_run_no_end
-    runs = Run.objects.filter(filters, instance_id=event.instance_id)
+    runs = Run.objects.filter(filters, instance_id=event.instance_id).order_by(
+        "start_time"
+    )
 
     # Determine the earliest time from which we should start recalculating runs.
     # We can use the earliest run as a baseline to fetch all relevant events.
     # If no runs exist, simply use the event's own occurred_at as the starting event.
-    earliest_run = runs.order_by("start_time").first()
+    earliest_run = runs.first()
     earliest_time = earliest_run.start_time if earliest_run else event.occurred_at
 
     events = (
@@ -638,6 +666,12 @@ def recalculate_runs(event):
     )
 
     denormalized_runs = denormalize_runs(events)
+
+    if _runs_match_denormalized_runs(runs.all(), denormalized_runs):
+        # Compare the existing saved Runs with the newly calculated denormalized_runs.
+        # If they are effectively the same, return early since we have nothing to do.
+        return []
+
     runs.delete()
     saved_runs = []
     denormalized_runs_count = len(denormalized_runs)
