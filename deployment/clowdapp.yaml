@@ -1066,6 +1066,8 @@ objects:
       version: 10
     dependencies:
     - sources-api
+    - sources-monitor
+    - sources-superkey-worker
     kafkaTopics:
     - topicName: platform.sources.event-stream
     - topicName: platform.sources.status
