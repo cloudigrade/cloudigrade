@@ -33,10 +33,11 @@ SECRET_KEY = env("DJANGO_SECRET_KEY")
 ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS")
 
 if isClowderEnabled():
-    DATABASES["default"]["NAME"] = clowder_cfg.database.name
-    DATABASES["default"]["HOST"] = clowder_cfg.database.hostname
-    DATABASES["default"]["USER"] = clowder_cfg.database.username
-    DATABASES["default"]["PASSWORD"] = clowder_cfg.database.password
+    DATABASES["default"]["NAME"] = CLOWDER_DATABASE_NAME
+    DATABASES["default"]["HOST"] = CLOWDER_DATABASE_HOST
+    DATABASES["default"]["PORT"] = CLOWDER_DATABASE_PORT
+    DATABASES["default"]["USER"] = CLOWDER_DATABASE_USER
+    DATABASES["default"]["PASSWORD"] = CLOWDER_DATABASE_PASSWORD
 else:
     DATABASES["default"]["NAME"] = env("DJANGO_DATABASE_NAME")
     DATABASES["default"]["HOST"] = env("DJANGO_DATABASE_HOST")

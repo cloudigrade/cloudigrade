@@ -144,14 +144,28 @@ DATABASES = {
 }
 
 if isClowderEnabled():
+    CLOWDER_DATABASE_NAME = clowder_cfg.database.name
+    CLOWDER_DATABASE_HOST = clowder_cfg.database.hostname
+    CLOWDER_DATABASE_PORT = clowder_cfg.database.port
+    CLOWDER_DATABASE_USER = clowder_cfg.database.username
+    CLOWDER_DATABASE_PASSWORD = clowder_cfg.database.password
+
+    # with postigrade deployed in clowder, we need to hit its endpoint
+    # hostname and webPort instead.
+    for endpoint in clowder_cfg.endpoints:
+        if endpoint.app == "cloudigrade" and endpoint.name == "postigrade":
+            CLOWDER_DATABASE_HOST     = endpoint.hostname
+            CLOWDER_DATABASE_PORT     = endpoint.port
+
+if isClowderEnabled():
     DATABASES["default"] = {**DATABASES["default"], **{
-            "NAME": clowder_cfg.database.name,
-            "HOST": clowder_cfg.database.hostname,
-            "USER": clowder_cfg.database.username,
-            "PASSWORD": clowder_cfg.database.password,
-            "PORT": clowder_cfg.database.port,
+            "NAME": CLOWDER_DATABASE_NAME,
+            "HOST": CLOWDER_DATABASE_HOST,
+            "PORT": CLOWDER_DATABASE_PORT,
+            "USER": CLOWDER_DATABASE_USER,
+            "PASSWORD": CLOWDER_DATABASE_PASSWORD,
         }}
-    __print(f"Clowder: Database name: {clowder_cfg.database.name} host: {clowder_cfg.database.hostname}:{clowder_cfg.database.port}")
+    __print(f"Clowder: Database name: {CLOWDER_DATABASE_NAME} host: {CLOWDER_DATABASE_HOST}:{CLOWDER_DATABASE_PORT}")
 else:
     DATABASES["default"] = {**DATABASES["default"], **{
             "NAME": env("DJANGO_DATABASE_NAME", default="postgres"),

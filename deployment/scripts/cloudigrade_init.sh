@@ -30,6 +30,17 @@ else
   # Wait for the database to be ready
   echo "${LOGPREFIX} Waiting for database readiness ..."
   check_svc_status $DATABASE_HOST $DATABASE_PORT
+
+  # If postigrade is deployed in Clowder, let's also make sure sure that it is ready
+  export PG_SVC="`cat $ACG_CONFIG | jq -r '.endpoints[].name' | grep -n 'postigrade'`"
+  if [[ -n "${PG_SVC}" ]]; then
+    EP_NUM=$(( ${PG_SVC/:*/} - 1 ))
+    DATABASE_HOST=$(cat $ACG_CONFIG | jq -r ".endpoints[${EP_NUM}].hostname")
+    DATABASE_PORT=$(cat $ACG_CONFIG | jq -r ".endpoints[${EP_NUM}].port")
+
+    echo "${LOGPREFIX} Waiting for postigrade readiness ..."
+    check_svc_status $DATABASE_HOST $DATABASE_PORT
+  fi
 fi
 
 # Configure cloud provider entities and migrate the Cloudigrade database

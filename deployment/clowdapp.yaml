@@ -988,6 +988,79 @@ objects:
           value: ${WATCHTOWER_SEND_INTERVAL}
         - name: WATCHTOWER_MAX_BATCH_COUNT
           value: ${WATCHTOWER_MAX_BATCH_COUNT}
+    - name: postigrade
+      #
+      # Component cloudigrade-postigrade deployment:
+      #
+      replicas: 1
+      revisionHistoryLimit: 10
+      webServices:
+        public:
+          enabled: true
+      podSpec:
+        image: ${POSTIGRADE_IMAGE}:${POSTIGRADE_IMAGE_TAG}
+        imagePullPolicy: Always
+        livenessProbe:
+          exec:
+            command:
+              - /probe-liveness.sh
+          failureThreshold: 3
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        readinessProbe:
+          exec:
+            command:
+              - /probe-readiness.sh
+          failureThreshold: 3
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        resources:
+          requests:
+            cpu: ${POSTIGRADE_LIMITS_CONTAINER_CPU_REQUEST}
+            memory: ${POSTIGRADE_LIMITS_CONTAINER_MEM_REQUEST}
+          limits:
+            cpu: ${POSTIGRADE_LIMITS_CONTAINER_CPU_LIMIT}
+            memory: ${POSTIGRADE_LIMITS_CONTAINER_MEM_LIMIT}
+        env:
+        - name: DB_NAME
+          valueFrom:
+            secretKeyRef:
+              key: db.name
+              name: cloudigrade-rds
+        - name: DB_PORT
+          valueFrom:
+            secretKeyRef:
+              key: db.port
+              name: cloudigrade-rds
+        - name: DB_HOST
+          valueFrom:
+            secretKeyRef:
+              key: db.host
+              name: cloudigrade-rds
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              key: db.user
+              name: cloudigrade-rds
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: db.password
+              name: cloudigrade-rds
+        - name: HABERDASHER_EMITTER
+          value: ${HABERDASHER_EMITTER}
+        - name: HABERDASHER_KAFKA_BOOTSTRAP
+          value: ${HABERDASHER_KAFKA_BOOTSTRAP}
+        - name: HABERDASHER_KAFKA_TOPIC
+          value: ${HABERDASHER_KAFKA_TOPIC}
+        - name: HABERDASHER_LABELS
+          value: ${HABERDASHER_LABELS}
+        - name: HABERDASHER_TAGS
+          value: ${HABERDASHER_TAGS}
     database:
       name: cloudigrade 
       version: 10
@@ -996,6 +1069,7 @@ objects:
     kafkaTopics:
     - topicName: platform.sources.event-stream
     - topicName: platform.sources.status
+
 - apiVersion: autoscaling/v2beta1
   kind: HorizontalPodAutoscaler
   metadata:
@@ -1012,6 +1086,7 @@ objects:
       resource:
         name: cpu
         targetAverageUtilization: ${{API_TARGET_AVERAGE_CPU_UTILIZATION}}
+
 - apiVersion: autoscaling/v2beta1
   kind: HorizontalPodAutoscaler
   metadata:
@@ -1498,3 +1573,45 @@ parameters:
   name: WATCHTOWER_MAX_BATCH_COUNT
   required: true
   value: '1'
+#
+# Component cloudigrade-postigrade parameters:
+#
+- displayName: Postigrade Container CPU Request
+  name: POSTIGRADE_LIMITS_CONTAINER_CPU_REQUEST
+  required: true
+  value: 500m
+- displayName: Postigrade Container Memory Request
+  name: POSTIGRADE_LIMITS_CONTAINER_MEM_REQUEST
+  required: true
+  value: 512Mi
+- displayName: Postigrade Container CPU Limit
+  name: POSTIGRADE_LIMITS_CONTAINER_CPU_LIMIT
+  required: true
+  value: 1000m
+- displayName: Postigrade Container Memory Limit
+  name: POSTIGRADE_LIMITS_CONTAINER_MEM_LIMIT
+  required: true
+  value: 1024Mi
+- displayName: Postigrade Image
+  name: POSTIGRADE_IMAGE
+  required: true
+  value: quay.io/cloudservices/postigrade
+- displayName: Postigrade Image tag
+  name: POSTIGRADE_IMAGE_TAG
+  required: true
+  value: latest
+- name: HABERDASHER_EMITTER
+  description: Emitter for haberdasher logs [stderr|kafka]
+  value: kafka
+- name: HABERDASHER_KAFKA_BOOTSTRAP
+  description: Bootstrap server for haberdasher kafka emitter
+  value: ''
+- name: HABERDASHER_KAFKA_TOPIC
+  description: Kafka topic for haberdasher kafka emitter
+  value: 'platform.logging.logs'
+- name: HABERDASHER_TAGS
+  description: Haberdasher tags for unstrutured logs
+  value: '["cloudigrade"]'
+- name: HABERDASHER_LABELS
+  description: Haberdasher labels for unstructured logs
+  value: '{"app": "cloudigrade"}'
