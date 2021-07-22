@@ -7,14 +7,15 @@ from argparse import ArgumentTypeError
 from dateutil import tz
 from dateutil.parser import parse as dateutil_parse
 from django.contrib.auth.models import User
-from django.core.management import call_command
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.utils.translation import gettext as _
 from tqdm import tqdm
 
 from api.models import InstanceEvent
+from api.tasks import recalculate_concurrent_usage_for_user_id
 from api.tests import helper as account_helper
+from api.util import recalculate_runs_for_cloud_account_id
 from util.misc import get_now
 from util.tests import helper as util_helper
 
@@ -332,5 +333,10 @@ class Command(BaseCommand):
         self.stdout.write(
             _("Expect {} new run(s) to be generated").format(expected_runs_total)
         )
+        since = options["since"].replace(
+            hour=0, minute=0, second=0, microsecond=0, tzinfo=tz.tzutc()
+        )
+        for account in accounts:
+            recalculate_runs_for_cloud_account_id(account.id, since)
 
-        call_command("create_runs", "--confirm")
+        recalculate_concurrent_usage_for_user_id(user.id, since.date())
