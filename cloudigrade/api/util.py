@@ -289,11 +289,19 @@ def calculate_max_concurrent_usage(date, user_id):
         {"user_id": user_id, "date": date},
     )
 
-    runs = (
-        get_runs_for_user_id_on_date(user_id, date)
-        .prefetch_related("machineimage")
-        .all()
+    runs_queryset = get_runs_for_user_id_on_date(user_id, date)
+    # This prefetch_related may generate a few large queries at first,
+    # but that *should* result in better overall performance for large sets of runs.
+    # Without it, each iteration step below generates 8 additional DB queries.
+    # With it, each step generates only 1 additional DB queries.
+    runs_queryset = runs_queryset.prefetch_related(
+        "instance",
+        "instance__cloud_account",
+        "instance__content_object",
+        "machineimage",
+        "machineimage__content_object",
     )
+    runs = runs_queryset.all()
     runs_count = runs.count()
 
     # Now that we have the Runs, we need to extract the start and stop times
@@ -331,9 +339,9 @@ def calculate_max_concurrent_usage(date, user_id):
                 run.instance.cloud_account.cloud_account_id,
                 run.instance.cloud_type,
                 run.instance.cloud_instance_id,
-                run.instance.machine_image.rhel_version,
-                run.instance.machine_image.syspurpose,
-                run.instance.machine_image.architecture,
+                run.machineimage.rhel_version,
+                run.machineimage.syspurpose,
+                run.machineimage.architecture,
             )
         )
 
@@ -347,9 +355,9 @@ def calculate_max_concurrent_usage(date, user_id):
                     run.instance.cloud_account.cloud_account_id,
                     run.instance.cloud_type,
                     run.instance.cloud_instance_id,
-                    run.instance.machine_image.rhel_version,
-                    run.instance.machine_image.syspurpose,
-                    run.instance.machine_image.architecture,
+                    run.machineimage.rhel_version,
+                    run.machineimage.syspurpose,
+                    run.machineimage.architecture,
                 )
             )
 
