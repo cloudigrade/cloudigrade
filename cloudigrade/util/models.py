@@ -25,8 +25,10 @@ class BaseModel(models.Model):
 class BaseGenericModel(BaseModel):
     """Abstract model to add fields needed for Generic Relationships."""
 
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_id = models.PositiveIntegerField()
+    content_type = models.ForeignKey(
+        ContentType, on_delete=models.CASCADE, db_index=True
+    )
+    object_id = models.PositiveIntegerField(db_index=True)
     content_object = GenericForeignKey()
 
     class Meta:
