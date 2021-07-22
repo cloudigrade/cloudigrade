@@ -593,7 +593,7 @@ class InstanceEvent(BaseGenericModel):
         null=False,
         blank=False,
     )
-    occurred_at = models.DateTimeField(null=False)
+    occurred_at = models.DateTimeField(null=False, db_index=True)
 
     @property
     def cloud_type(self):
@@ -636,8 +636,8 @@ class InstanceEvent(BaseGenericModel):
 class Run(BaseModel):
     """Base model for a Run object."""
 
-    start_time = models.DateTimeField(null=False)
-    end_time = models.DateTimeField(blank=True, null=True)
+    start_time = models.DateTimeField(null=False, db_index=True)
+    end_time = models.DateTimeField(blank=True, null=True, db_index=True)
     machineimage = models.ForeignKey(
         MachineImage,
         on_delete=models.CASCADE,
