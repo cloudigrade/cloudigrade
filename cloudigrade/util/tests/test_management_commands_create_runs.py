@@ -1,4 +1,5 @@
 """Collection of tests for the 'create_runs' management command."""
+from io import StringIO
 from unittest.mock import patch
 
 import faker
@@ -16,6 +17,8 @@ class CreateRunsTest(TestCase):
 
     def setUp(self):
         """Set up test data."""
+        self.stdout = StringIO()
+        self.stderr = StringIO()
         self.user = util_helper.generate_test_user()
         self.account = api_helper.generate_cloud_account(user=self.user)
         self.image_rhel = api_helper.generate_image(rhel_detected=True)
@@ -64,13 +67,16 @@ class CreateRunsTest(TestCase):
         self.assertEqual(models.Run.objects.all().count(), 1)
         self.assertEqual(models.ConcurrentUsage.objects.all().count(), 1)
 
+    @patch("util.management.commands.create_runs.tqdm")
     @patch(
         "util.management.commands.create_runs.calculate_max_concurrent_usage_from_runs"
     )
-    def test_handle_confirm_flag(self, mock_calculate):
+    def test_handle_confirm_flag(self, mock_calculate, mock_tqdm):
         """Test calling create_runs with confirm arg."""
+        # Silence tqdm output during the test.
+        mock_tqdm.side_effect = lambda iterable, *args, **kwargs: iterable
         old_run = self.get_first_run()
-        call_command("create_runs", "--confirm")
+        call_command("create_runs", "--confirm", stdout=self.stdout, stderr=self.stderr)
         self.assertCreateRunsCompleted(old_run)
         mock_calculate.assert_called_with([self.get_first_run()])
 
@@ -81,17 +87,20 @@ class CreateRunsTest(TestCase):
     def test_handle_input_no(self, mock_input, mock_calculate):
         """Test calling create_runs with "N" no input."""
         old_run = self.get_first_run()
-        call_command("create_runs")
+        call_command("create_runs", stdout=self.stdout, stderr=self.stderr)
         self.assertCreateRunsAborted(old_run)
         mock_calculate.assert_not_called()
 
+    @patch("util.management.commands.create_runs.tqdm")
     @patch(
         "util.management.commands.create_runs.calculate_max_concurrent_usage_from_runs"
     )
     @patch("util.management.commands.create_runs.input", return_value="Y")
-    def test_handle_input_yes(self, mock_input, mock_calculate):
+    def test_handle_input_yes(self, mock_input, mock_calculate, mock_tqdm):
         """Test calling create_runs with "Y" yes input."""
+        # Silence tqdm output during the test.
+        mock_tqdm.side_effect = lambda iterable, *args, **kwargs: iterable
         old_run = models.Run.objects.first()
-        call_command("create_runs")
+        call_command("create_runs", stdout=self.stdout, stderr=self.stderr)
         self.assertCreateRunsCompleted(old_run)
         mock_calculate.assert_called_with([self.get_first_run()])

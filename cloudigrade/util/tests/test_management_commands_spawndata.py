@@ -1,4 +1,5 @@
 """Collection of tests for the 'spawndata' management command."""
+from io import StringIO
 from unittest.mock import patch
 
 from django.core.management import call_command
@@ -30,6 +31,8 @@ class SpawnDataTest(TestCase):
 
     def setUp(self):
         """Set up common variables for tests."""
+        self.stdout = StringIO()
+        self.stderr = StringIO()
         self.user = util_helper.generate_test_user()
         # Important note! Because recalculate_concurrent_usage_for_user_id checks the
         # User object's date_joined value when determining which days should calculate
@@ -69,6 +72,8 @@ class SpawnDataTest(TestCase):
             "--confirm",
             self.user.id,
             user_join_datetime.strftime("%Y-%m-%d"),
+            stdout=self.stdout,
+            stderr=self.stderr,
         )
 
         self.assertEquals(AwsCloudAccount.objects.count(), 1)
@@ -123,6 +128,8 @@ class SpawnDataTest(TestCase):
             "--confirm",
             self.user.id,
             user_join_datetime.strftime("%Y-%m-%d"),
+            stdout=self.stdout,
+            stderr=self.stderr,
         )
 
         self.assertEquals(AzureCloudAccount.objects.count(), 1)

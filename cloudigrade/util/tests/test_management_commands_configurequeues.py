@@ -1,4 +1,5 @@
 """Collection of tests for the 'configurequeues' management command."""
+from io import StringIO
 from unittest.mock import PropertyMock, call, patch
 
 import faker
@@ -45,7 +46,9 @@ class ConfigureQueuesTest(TestCase):
             mock_queue_urls.return_value = [queue_urls[queue_names[-1]]]
             mock_aws.get_sqs_queue_url.side_effect = fake_get_sqs_queue_url
 
-            call_command("configurequeues")
+            stdout = StringIO()
+            stderr = StringIO()
+            call_command("configurequeues", stdout=stdout, stderr=stderr)
 
             mock_aws.get_sqs_queue_url.assert_has_calls(expected_get_url_calls)
             mock_aws.ensure_queue_has_dlq.assert_has_calls(
