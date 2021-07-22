@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 from django.core.management import call_command
 from django.test import TestCase
+from django.test import override_settings
 
 from api.clouds.aws.models import (
     AwsCloudAccount,
@@ -16,9 +17,12 @@ from api.clouds.azure.models import (
     AzureInstanceEvent,
     AzureMachineImage,
 )
-from api.models import InstanceEvent, MachineImage
+from api.models import ConcurrentUsage, InstanceEvent, MachineImage, Run
 from api.tests import helper as api_helper
 from util.tests import helper as util_helper
+
+user_join_datetime = util_helper.utc_dt(2019, 4, 15, 0, 0, 0)
+command_run_datetime = util_helper.utc_dt(2019, 4, 20, 0, 0, 0)
 
 
 class SpawnDataTest(TestCase):
@@ -27,13 +31,19 @@ class SpawnDataTest(TestCase):
     def setUp(self):
         """Set up common variables for tests."""
         self.user = util_helper.generate_test_user()
+        # Important note! Because recalculate_concurrent_usage_for_user_id checks the
+        # User object's date_joined value when determining which days should calculate
+        # but we are creating this User in setUp, unless we force an older date into the
+        # User, spawndata will not calculate/save ConcurrentUsage objects as expected.
+        self.user.date_joined = user_join_datetime
+        self.user.save()
         api_helper.generate_instance_type_definitions()
 
-    @util_helper.clouditardis(util_helper.utc_dt(2019, 4, 20, 0, 0, 0))
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=True)
+    @util_helper.clouditardis(command_run_datetime)
     @patch("util.management.commands.spawndata.random")
     @patch("util.management.commands.spawndata.tqdm")
-    @patch("util.management.commands.spawndata.call_command")
-    def test_command_output(self, mock_call_command, mock_tqdm, mock_random):
+    def test_command_output(self, mock_tqdm, mock_random):
         """Test that 'spawndata' correctly calls seeds data."""
         # Silence tqdm output during the test.
         mock_tqdm.side_effect = lambda iterable, *args, **kwargs: iterable
@@ -57,11 +67,9 @@ class SpawnDataTest(TestCase):
             "--mean_run_count=1",
             "--mean_hours_between_runs=1",
             "--confirm",
-            "1",
-            "2019-04-15",
+            self.user.id,
+            user_join_datetime.strftime("%Y-%m-%d"),
         )
-
-        mock_call_command.assert_called_with("create_runs", "--confirm")
 
         self.assertEquals(AwsCloudAccount.objects.count(), 1)
         self.assertEquals(AwsMachineImage.objects.count(), 5)
@@ -70,20 +78,25 @@ class SpawnDataTest(TestCase):
             self.assertTrue(image.openshift)
         self.assertEquals(AwsInstance.objects.count(), 10)
         self.assertEquals(AwsInstanceEvent.objects.count(), 20)
+        self.assertEqual(Run.objects.count(), 10)
+
+        # 6 days inclusive between "user_join_date" 2019-04-15 and "today" 2019-04-20,
+        # and 1 ConcurrentUsage per day means we expect 6 total.
+        self.assertEqual(ConcurrentUsage.objects.count(), 6)
 
         # Verify all events were created between the start and "now".
         # Remember that clouditardis changed "now" to 2019-04-20.
-        start_time_range = util_helper.utc_dt(2019, 4, 15)
-        end_time_range = util_helper.utc_dt(2019, 4, 20)
+        start_time_range = user_join_datetime
+        end_time_range = command_run_datetime
         for event in InstanceEvent.objects.all():
             self.assertGreaterEqual(event.occurred_at, start_time_range)
             self.assertLess(event.occurred_at, end_time_range)
 
-    @util_helper.clouditardis(util_helper.utc_dt(2019, 4, 20, 0, 0, 0))
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=True)
+    @util_helper.clouditardis(command_run_datetime)
     @patch("util.management.commands.spawndata.random")
     @patch("util.management.commands.spawndata.tqdm")
-    @patch("util.management.commands.spawndata.call_command")
-    def test_command_output_azure(self, mock_call_command, mock_tqdm, mock_random):
+    def test_command_output_azure(self, mock_tqdm, mock_random):
         """Test that 'spawndata' correctly calls seeds data for azure account."""
         # Silence tqdm output during the test.
         mock_tqdm.side_effect = lambda iterable, *args, **kwargs: iterable
@@ -108,11 +121,9 @@ class SpawnDataTest(TestCase):
             "--mean_run_count=1",
             "--mean_hours_between_runs=1",
             "--confirm",
-            "1",
-            "2019-04-15",
+            self.user.id,
+            user_join_datetime.strftime("%Y-%m-%d"),
         )
-
-        mock_call_command.assert_called_with("create_runs", "--confirm")
 
         self.assertEquals(AzureCloudAccount.objects.count(), 1)
         self.assertEquals(AzureMachineImage.objects.count(), 5)
@@ -121,11 +132,16 @@ class SpawnDataTest(TestCase):
             self.assertTrue(image.openshift)
         self.assertEquals(AzureInstance.objects.count(), 10)
         self.assertEquals(AzureInstanceEvent.objects.count(), 20)
+        self.assertEqual(Run.objects.count(), 10)
+
+        # 6 days inclusive between "user_join_date" 2019-04-15 and "today" 2019-04-20,
+        # and 1 ConcurrentUsage per day means we expect 6 total.
+        self.assertEqual(ConcurrentUsage.objects.count(), 6)
 
         # Verify all events were created between the start and "now".
         # Remember that clouditardis changed "now" to 2019-04-20.
-        start_time_range = util_helper.utc_dt(2019, 4, 15)
-        end_time_range = util_helper.utc_dt(2019, 4, 20)
+        start_time_range = user_join_datetime
+        end_time_range = command_run_datetime
         for event in InstanceEvent.objects.all():
             self.assertGreaterEqual(event.occurred_at, start_time_range)
             self.assertLess(event.occurred_at, end_time_range)
