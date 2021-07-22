@@ -264,11 +264,11 @@ objects:
         - name: HABERDASHER_TAGS
           value: ${HABERDASHER_TAGS}
         - name: WATCHTOWER_USE_QUEUES
-          value: ${WATCHTOWER_USE_QUEUES}
+          value: ${API_WATCHTOWER_USE_QUEUES}
         - name: WATCHTOWER_SEND_INTERVAL
-          value: ${WATCHTOWER_SEND_INTERVAL}
+          value: ${API_WATCHTOWER_SEND_INTERVAL}
         - name: WATCHTOWER_MAX_BATCH_COUNT
-          value: ${WATCHTOWER_MAX_BATCH_COUNT}
+          value: ${API_WATCHTOWER_MAX_BATCH_COUNT}
     - name: beat
       #
       # Component cloudigrade-beat deployment:
@@ -1107,20 +1107,359 @@ objects:
         targetAverageUtilization: ${{CELERY_TARGET_AVERAGE_CPU_UTILIZATION}}
 
 parameters:
+#
+# Component cloudigrade-api parameters:
+#
+- name: API_LIMITS_CONTAINER_MEM_LIMIT
+  displayName: Cloudigrade Container Memory Limit
+  required: true
+  value: 512Mi
+- name: API_LIMITS_CONTAINER_MEM_REQUEST
+  displayName: Cloudigrade Container Memory Request
+  required: true
+  value: 256Mi
+- name: API_LIMITS_CONTAINER_CPU_LIMIT
+  displayName: Cloudigrade Container CPU Limit
+  required: true
+  value: 200m
+- name: API_LIMITS_CONTAINER_CPU_REQUEST
+  displayName: Cloudigrade Container CPU Request
+  required: true
+  value: 100m
+- name: API_REPLICA_COUNT
+  displayName: Cloudigrade Replica Count
+  required: true
+  value: '2'
+- name: API_REPLICA_COUNT_MAX
+  displayName: Cloudigrade Max Replica Count
+  required: true
+  value: '8'
+- name: API_SENTRY_ENABLED_STR
+  displayName: API Sentry Enabled (Str)
+  required: true
+  value: 'true'
+- name: API_SENTRY_ENVIRONMENT
+  displayName: API Sentry Environment
+  required: true
+  value: ephemeral
+- name: API_TARGET_AVERAGE_CPU_UTILIZATION
+  displayName: Cloudigrade Target Average CPU Utilization
+  required: true
+  value: '80'
+- name: API_WATCHTOWER_MAX_BATCH_COUNT
+  displayName: Watchtower max batch count for Cloudigrade API
+  required: true
+  value: '1000'
+- name: API_WATCHTOWER_SEND_INTERVAL
+  displayName: Watchtower send interval (seconds) for Cloudigrade API
+  required: true
+  value: '1.0'
+- name: API_WATCHTOWER_USE_QUEUES
+  displayName: Watchtower use queues for Cloudigrade API
+  required: true
+  value: 'true'
 - name: APP_NAME
   displayName: Application Name
   description: Application name to be used in request paths. Only used when PATH_PREFIX is also specified.
   value: cloudigrade
+- name: AWS_S3_BUCKET_LC_NAME
+  displayName: AWS S3 Bucket Lifecycle Name
+  required: true
+  value: s3_lifecycle_policy
+- name: AWS_S3_BUCKET_LC_IA_TRANSITION
+  displayName: AWS S3 Bucket Lifecycle IA Transition
+  required: true
+  value: '30'
+- name: AWS_S3_BUCKET_LC_GLACIER_TRANSITION
+  displayName: AWS S3 Bucket Lifecycle Glacier Transition
+  required: true
+  value: '60'
+- name: AWS_S3_BUCKET_LC_MAX_AGE
+  displayName: AWS S3 Bucket Lifecycle Max Age
+  required: true
+  value: '1460'
+- name: CELERY_SENTRY_ENABLED_STR
+  displayName: Celery Sentry Enabled (Str)
+  required: true
+  value: 'true'
+- name: COMMIT_REF
+  displayName: Cloudigrade Commit Ref
+  required: true
+  value: latest
+- name: HOUNDIGRADE_SENTRY_ENABLED_STR
+  displayName: Houndigrade Sentry Enabled (Str)
+  required: true
+  value: 'true'
+- name: HOUNDIGRADE_SENTRY_ENVIRONMENT
+  displayName: Houndigrade Sentry Environment
+  required: true
+  value: ephemeral
+- name: IMAGE_NAMESPACE
+  displayName: Image namespace
+  required: true
+  value: cloudigrade-ephemeral
+- name: LISTENER_ENABLE_SENTRY
+  displayName: Listener Enable Sentry
+  required: true
+  value: 'true'
+- name: LISTENER_SENTRY_ENVIRONMENT
+  displayName: Listener Sentry Environment
+  required: true
+  value: ephemeral
+- name: POSTIGRADE_HOST
+  displayName: Postigrade Host
+  required: true
+  value: postigrade.cloudigrade-ephemeral.svc.cluster.local
+- name: POSTIGRADE_PORT
+  displayName: Postigrade Port
+  required: true
+  value: '5432'
+- name: VERBOSE_INSIGHTS_IDENTITY_HEADER_LOGGING
+  displayName: Enable verbose Insights identity header logging
+  required: true
+  value: 'false'
+#
+# Component cloudigrade-beat parameters:
+#
+- name: CELERY_BEAT_LIMITS_CONTAINER_CPU_LIMIT
+  displayName: Cloudigrade Celery Beat Container CPU Limit
+  required: true
+  value: 100m
+- name: CELERY_BEAT_LIMITS_CONTAINER_CPU_REQUEST
+  displayName: Cloudigrade Celery Beat Container CPU Request
+  required: true
+  value: 100m
+- name: CELERY_BEAT_LIMITS_CONTAINER_MEM_LIMIT
+  displayName: Cloudigrade Celery Beat Container Memory Limit
+  required: true
+  value: 128Mi
+- name: CELERY_BEAT_LIMITS_CONTAINER_MEM_REQUEST
+  displayName: Cloudigrade Celery Beat Container Memory Request
+  required: true
+  value: 100Mi
+- name: CELERY_BEAT_REPLICA_COUNT
+  displayName: Cloudigrade Replica Count
+  required: true
+  value: '1'
+#
+# Component cloudigrade-listener parameters:
+#
+- name: LISTENER_LIMITS_CONTAINER_MEM_LIMIT
+  displayName: Cloudigrade Listener Container Memory Limit
+  required: true
+  value: 256Mi
+- name: LISTENER_LIMITS_CONTAINER_MEM_REQUEST
+  displayName: Cloudigrade Listener Container Memory Request
+  required: true
+  value: 128Mi
+- name: LISTENER_LIMITS_CONTAINER_CPU_LIMIT
+  displayName: Cloudigrade Listener Container CPU Limit
+  required: true
+  value: 200m
+- name: LISTENER_LIMITS_CONTAINER_CPU_REQUEST
+  displayName: Cloudigrade Listener Container CPU Request
+  required: true
+  value: 100m
+- name: LISTENER_WORKER_REPLICA_COUNT
+  displayName: Cloudigrade Listener Replica Count
+  required: true
+  value: '1'
+#
+# Component cloudigrade-worker parameters:
+#
+- name: CELERY_TARGET_AVERAGE_CPU_UTILIZATION
+  displayName: Cloudigrade Worker Target Average CPU Utilization
+  required: true
+  value: '60'
+- name: CELERY_WORKER_LIMITS_CONTAINER_MEM_LIMIT
+  displayName: Cloudigrade Celery Worker Container Memory Limit
+  required: true
+  value: 512Mi
+- name: CELERY_WORKER_LIMITS_CONTAINER_MEM_REQUEST
+  displayName: Cloudigrade Celery Worker Container Memory Request
+  required: true
+  value: 256Mi
+- name: CELERY_WORKER_LIMITS_CONTAINER_CPU_LIMIT
+  displayName: Cloudigrade Celery Worker Container CPU Limit
+  required: true
+  value: 200m
+- name: CELERY_WORKER_LIMITS_CONTAINER_CPU_REQUEST
+  displayName: Cloudigrade Celery Worker Container CPU Request
+  required: true
+  value: 100m
+- name: CELERY_WORKER_REPLICA_COUNT
+  displayName: Cloudigrade Replica Count
+  required: true
+  value: '2'
+- name: CELERY_WORKER_REPLICA_COUNT_MAX
+  displayName: Cloudigrade Worker Replica Count Max
+  required: true
+  value: '8'
+#
+# Component cloudigrade-postigrade parameters:
+#
+- name: POSTIGRADE_IMAGE
+  displayName: Postigrade Image
+  required: true
+  value: quay.io/cloudservices/postigrade
+- name: POSTIGRADE_IMAGE_TAG
+  displayName: Postigrade Image tag
+  required: true
+  value: latest
+- name: POSTIGRADE_LIMITS_CONTAINER_MEM_LIMIT
+  displayName: Postigrade Container Memory Limit
+  required: true
+  value: 1024Mi
+- name: POSTIGRADE_LIMITS_CONTAINER_MEM_REQUEST
+  displayName: Postigrade Container Memory Request
+  required: true
+  value: 512Mi
+- name: POSTIGRADE_LIMITS_CONTAINER_CPU_LIMIT
+  displayName: Postigrade Container CPU Limit
+  required: true
+  value: 1000m
+- name: POSTIGRADE_LIMITS_CONTAINER_CPU_REQUEST
+  displayName: Postigrade Container CPU Request
+  required: true
+  value: 500m
+#
+# Parameters shared between components
+#
+- name: ANALYZE_LOG_SCHEDULE
+  displayName: ANALYZE_LOG Schedule
+  required: true
+  value: '30'
+- name: AWS_DEFAULT_REGION
+  displayName: AWS Default Region
+  required: true
+  value: us-east-1
+- name: AWS_REPOPULATE_EC2_INSTANCE_MAPPING_SCHEDULE
+  displayName: AWS Repopulate EC2 Instance Mapping Schedule
+  required: true
+  value: '604800'
+- name: AWS_SQS_MAX_RECEIVE_COUNT
+  displayName: AWS SQS Max Receive Count
+  required: true
+  value: '5'
+- name: AWS_SQS_MAX_YIELD_COUNT
+  displayName: AWS SQS Max Yield Count
+  required: true
+  value: '25'
+- name: AWS_SQS_MAX_HOUNDI_YIELD_COUNT
+  displayName: AWS SQS Max Houndigrade Yield Count
+  required: true
+  value: '10'
+- name: AWS_SQS_REGION
+  displayName: AWS SQS Default Region
+  required: true
+  value: us-east-1
+- name: CACHE_TTL_DEFAULT
+  description: Default time to live in seconds for caches where specific ttl is not specified
+  value: '60'
+- name: CACHE_TTL_SOURCES_APPLICATION_TYPE_ID
+  description: Time to live in seconds for sources application type id cache (overrides CACHE_TTL_DEFAULT)
+  value: '60'
+- name: CELERY_SENTRY_ENVIRONMENT
+  displayName: Celery Sentry Environment
+  required: true
+  value: ephemeral
+- name: CELERY_SENTRY_RELEASE
+  displayName: Celery Sentry Release
+  required: true
+  value: ephemeral
+- name: CLOUDIGRADE_ENABLE_CLOUDWATCH
+  displayName: Enable Cloudwatch
+  required: true
+  value: 'false'
+- name: CLOUDIGRADE_ENVIRONMENT
+  displayName: Cloudigrade Environment
+  required: true
+  value: ephemeral
+- name: CLOUDIGRADE_CW_LEVEL
+  displayName: Cloudwatch Log Level
+  required: true
+  value: 'INFO'
+- name: CLOUDIGRADE_CW_STREAM_NAME
+  displayName: Cloudwatch Stream Name.
+  required: true
+  value: cloudigrade-ephemeral
+- name: CLOUDIGRADE_LOG_LEVEL
+  displayName: Cloudigrade Log Level
+  required: true
+  value: 'INFO'
 - name: CLOWDER_ENABLED
   description: Determines Clowder deployment
   value: "True"
+- name: DJANGO_ALL_LOG_LEVEL
+  displayName: Django All Log Level
+  required: true
+  value: 'INFO'
+- name: DJANGO_ALLOWED_HOSTS
+  displayName: Django Allowed Hosts
+  required: true
+  value: '*'
+- name: DJANGO_CONSOLE_LOG_LEVEL
+  displayName: Django Console Log Level
+  required: true
+  value: 'DEBUG'
+- name: DJANGO_DATABASE_CONN_MAX_AGE
+  displayName: The lifetime of a database connection, as an integer of seconds.
+  required: true
+  value: '0'
+- name: DJANGO_DEBUG
+  displayName: Django Debug
+  required: true
+  value: 'false'
+- name: DJANGO_LOG_LEVEL
+  displayName: Django Log Level
+  required: true
+  value: 'DEBUG'
+- name: DJANGO_SETTINGS_MODULE
+  displayName: Django Settings Module
+  required: true
+  value: config.settings.prod
 - name: ENV_NAME
   description: ClowdEnv Name
   required: true
-- displayName: Health Check Host Header
-  name: HEALTH_CHECK_HOST_HEADER
+- name: HABERDASHER_EMITTER
+  description: Emitter for haberdasher logs [stderr|kafka]
+  value: kafka
+- name: HABERDASHER_KAFKA_BOOTSTRAP
+  description: Bootstrap server for haberdasher kafka emitter
+  value: ''
+- name: HABERDASHER_KAFKA_TOPIC
+  description: Kafka topic for haberdasher kafka emitter
+  value: 'platform.logging.logs'
+- name: HABERDASHER_TAGS
+  description: Haberdasher tags for unstrutured logs
+  value: '["cloudigrade"]'
+- name: HABERDASHER_LABELS
+  description: Haberdasher labels for unstructured logs
+  value: '{"app": "cloudigrade"}'
+- name: HEALTH_CHECK_HOST_HEADER
+  displayName: Health Check Host Header
   required: true
   value: health.cloudigrade.insights.openshiftapps.com
+- name: HOUNDIGRADE_ECS_FAMILY_NAME
+  displayName: AWS Houndigrade ECS Image Tag
+  required: true
+  value: Houndigrade
+- name: HOUNDIGRADE_ECS_IMAGE_NAME
+  displayName: AWS Houndigrade ECS Image Name
+  required: true
+  value: quay.io/cloudservices/houndigrade
+- name: HOUNDIGRADE_ECS_IMAGE_TAG
+  displayName: AWS Houndigrade ECS Image Tag
+  required: true
+  value: '0.6.3'
+- name: HOUNDIGRADE_ECS_PERSIST_INSPECTION_RESULTS_SCHEDULE
+  displayName: AWS Houndigrade ECS Persist Inspection Results Schedule
+  required: true
+  value: '120'
+- name: HOUNDIGRADE_ECS_SCALE_UP_CLUSTER_SCHEDULE
+  displayName: AWS Houndigrade ECS Scale Up Cluster Schedule
+  required: true
+  value: '300'
 - name: IMAGE
   displayName: Cloudigrade Image
   required: true
@@ -1129,491 +1468,82 @@ parameters:
   displayName: Cloudigrade Image tag
   required: true
   value: latest
+- name: INSPECT_PENDING_IMAGES_MIN_AGE
+  displayName: Minimum age of images to inspect
+  required: true
+  value: '43200'
+- name: INSPECT_PENDING_IMAGES_SCHEDULE
+  displayName: Schedule to inspect pending images
+  required: true
+  value: '900'
+- name: INSPECTION_CLUSTER_INSTANCE_AGE_LIMIT
+  displayName: Inspection cluster instance age limit
+  requires: true
+  value: '600'
+- name: LISTENER_GROUP_ID
+  displayName: Listener Group ID
+  required: true
+  value: cloudmeter_ephemeral
+- name: LISTENER_LOG_LEVEL
+  displayName: Listener Log Level
+  required: true
+  value: INFO
+- name: LISTENER_PORT
+  displayName: Listerner Kafka Server Port
+  required: true
+  value: '9092'
+- name: LISTENER_SERVER
+  displayName: Listerner Kafka Server Address
+  required: true
+  value: platform-mq-ephemeral-kafka-bootstrap.platform-mq-ephemeral.svc
+- name: LISTENER_TOPIC
+  displayName: Listener Topic
+  required: true
+  value: platform.sources.event-stream
 - name: MIN_REPLICAS
   description: The number of replicas to use in the deployment
   value: "1"
-#
-# Component cloudigrade-api parameters:
-#
-- displayName: AWS Default Region
-  name: AWS_DEFAULT_REGION
+- name: OSD_REDEPLOY_TRIGGER
+  displayName: Change this value to trigger OSD to redeploy
   required: true
-  value: us-east-1
-- displayName: AWS Houndigrade ECS Image Name
-  name: HOUNDIGRADE_ECS_IMAGE_NAME
-  required: true
-  value: quay.io/cloudservices/houndigrade
-- displayName: AWS Houndigrade ECS Image Tag
-  name: HOUNDIGRADE_ECS_IMAGE_TAG
-  required: true
-  value: '0.6.3'
-- displayName: AWS Houndigrade ECS Image Tag
-  name: HOUNDIGRADE_ECS_FAMILY_NAME
-  required: true
-  value: Houndigrade
-- displayName: AWS Houndigrade ECS Scale Up Cluster Schedule
-  name: HOUNDIGRADE_ECS_SCALE_UP_CLUSTER_SCHEDULE
-  required: true
-  value: '300'
-- displayName: AWS Houndigrade ECS Persist Inspection Results Schedule
-  name: HOUNDIGRADE_ECS_PERSIST_INSPECTION_RESULTS_SCHEDULE
-  required: true
-  value: '120'
-- displayName: Repopulate Azure Instance Mapping Schedule
-  name: REPOPULATE_AZURE_INSTANCE_MAPPING_SCHEDULE
+  value: '1'
+- name: REPOPULATE_AZURE_INSTANCE_MAPPING_SCHEDULE
+  displayName: Repopulate Azure Instance Mapping Schedule
   required: true
   value: '604800'
-- displayName: AWS Repopulate EC2 Instance Mapping Schedule
-  name: AWS_REPOPULATE_EC2_INSTANCE_MAPPING_SCHEDULE
-  required: true
-  value: '604800'
-- displayName: AWS SQS Default Region
-  name: AWS_SQS_REGION
-  required: true
-  value: us-east-1
-- displayName: AWS SQS Max Receive Count
-  name: AWS_SQS_MAX_RECEIVE_COUNT
-  required: true
-  value: '5'
-- displayName: AWS SQS Max Yield Count
-  name: AWS_SQS_MAX_YIELD_COUNT
-  required: true
-  value: '25'
-- displayName: AWS SQS Max Houndigrade Yield Count
-  name: AWS_SQS_MAX_HOUNDI_YIELD_COUNT
-  required: true
-  value: '10'
-- displayName: AWS S3 Bucket Lifecycle Name
-  name: AWS_S3_BUCKET_LC_NAME
-  required: true
-  value: s3_lifecycle_policy
-- displayName: AWS S3 Bucket Lifecycle IA Transition
-  name: AWS_S3_BUCKET_LC_IA_TRANSITION
-  required: true
-  value: '30'
-- displayName: AWS S3 Bucket Lifecycle Glacier Transition
-  name: AWS_S3_BUCKET_LC_GLACIER_TRANSITION
-  required: true
-  value: '60'
-- displayName: AWS S3 Bucket Lifecycle Max Age
-  name: AWS_S3_BUCKET_LC_MAX_AGE
-  required: true
-  value: '1460'
-- displayName: ANALYZE_LOG Schedule
-  name: ANALYZE_LOG_SCHEDULE
-  required: true
-  value: '30'
-- displayName: Django Allowed Hosts
-  name: DJANGO_ALLOWED_HOSTS
-  required: true
-  value: '*'
-- displayName: Django Debug
-  name: DJANGO_DEBUG
-  required: true
-  value: 'false'
-- displayName: Django Log Level
-  name: DJANGO_LOG_LEVEL
-  required: true
-  value: 'DEBUG'
-- displayName: Django All Log Level
-  name: DJANGO_ALL_LOG_LEVEL
-  required: true
-  value: 'INFO'
-- displayName: Django Console Log Level
-  name: DJANGO_CONSOLE_LOG_LEVEL
-  required: true
-  value: 'DEBUG'
-- displayName: Cloudigrade Log Level
-  name: CLOUDIGRADE_LOG_LEVEL
-  required: true
-  value: 'INFO'
-- displayName: Django Settings Module
-  name: DJANGO_SETTINGS_MODULE
-  required: true
-  value: config.settings.prod
-- displayName: Sentry Performance Sample Rate
-  name: SENTRY_TRACES_SAMPLE_RATE
-  required: true
-  value: '0.0'
-- displayName: API Sentry Enabled (Str)
-  name: API_SENTRY_ENABLED_STR
-  required: true
-  value: 'true'
-- displayName: Celery Sentry Enabled (Str)
-  name: CELERY_SENTRY_ENABLED_STR
-  required: true
-  value: 'true'
-- displayName: Houndigrade Sentry Enabled (Str)
-  name: HOUNDIGRADE_SENTRY_ENABLED_STR
-  required: true
-  value: 'true'
-- displayName: Minimum age of images to inspect
-  name: INSPECT_PENDING_IMAGES_MIN_AGE
-  required: true
-  value: '43200'
-- displayName: Schedule to inspect pending images
-  name: INSPECT_PENDING_IMAGES_SCHEDULE
-  required: true
-  value: '900'
-- displayName: Inspection cluster instance age limit
-  name: INSPECTION_CLUSTER_INSTANCE_AGE_LIMIT
-  requires: true
-  value: '600'
-- displayName: Listener Log Level
-  name: LISTENER_LOG_LEVEL
-  required: true
-  value: INFO
-- displayName: Listener Topic
-  name: LISTENER_TOPIC
-  required: true
-  value: platform.sources.event-stream
-- displayName: Listerner Kafka Server Port
-  name: LISTENER_PORT
-  required: true
-  value: '9092'
-- displayName: Listener Enable Sentry
-  name: LISTENER_ENABLE_SENTRY
-  required: true
-  value: 'true'
-- displayName: Postigrade Port
-  name: POSTIGRADE_PORT
-  required: true
-  value: '5432'
-- displayName: Enable Data Management From Sources Kafka
-  name: SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA
-  required: true
-  value: 'true'
-- displayName: Cloudigrade Replica Count
-  name: API_REPLICA_COUNT
-  required: true
-  value: '2'
-- displayName: Cloudigrade Max Replica Count
-  name: API_REPLICA_COUNT_MAX
-  required: true
-  value: '8'
-- displayName: Cloudigrade Target Average CPU Utilization
-  name: API_TARGET_AVERAGE_CPU_UTILIZATION
-  required: true
-  value: '80'
-- displayName: Cloudigrade Container CPU Request
-  name: API_LIMITS_CONTAINER_CPU_REQUEST
-  required: true
-  value: 100m
-- displayName: Cloudigrade Container Memory Request
-  name: API_LIMITS_CONTAINER_MEM_REQUEST
-  required: true
-  value: 256Mi
-- displayName: Cloudigrade Container CPU Limit
-  name: API_LIMITS_CONTAINER_CPU_LIMIT
-  required: true
-  value: 200m
-- displayName: Cloudigrade Container Memory Limit
-  name: API_LIMITS_CONTAINER_MEM_LIMIT
-  required: true
-  value: 512Mi
-- displayName: Health Check Host Header
-  name: HEALTH_CHECK_HOST_HEADER
-  required: true
-  value: health.cloudigrade.insights.openshiftapps.com
-- displayName: SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY
-  name: SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY
+- name: SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY
+  displayName: SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY
   required: true
   value: '1800'
-- displayName: Verify Task Interval (seconds)
-  name: SCHEDULE_VERIFY_VERIFY_TASKS_INTERVAL
+- name: SCHEDULE_VERIFY_VERIFY_TASKS_INTERVAL
+  displayName: Verify Task Interval (seconds)
   required: true
   value: '86400'
-- name: HABERDASHER_EMITTER
-  description: Emitter for haberdasher logs [stderr|kafka]
-  value: kafka
-- name: HABERDASHER_KAFKA_BOOTSTRAP
-  description: Bootstrap server for haberdasher kafka emitter
-  value: ''
-- name: HABERDASHER_KAFKA_TOPIC
-  description: Kafka topic for haberdasher kafka emitter
-  value: 'platform.logging.logs'
-- name: HABERDASHER_TAGS
-  description: Haberdasher tags for unstrutured logs
-  value: '["cloudigrade"]'
-- name: HABERDASHER_LABELS
-  description: Haberdasher labels for unstructured logs
-  value: '{"app": "cloudigrade"}'
-- name: CACHE_TTL_DEFAULT
-  description: Default time to live in seconds for caches where specific ttl is not specified
-  value: '60'
-- name: CACHE_TTL_SOURCES_APPLICATION_TYPE_ID
-  description: Time to live in seconds for sources application type id cache (overrides CACHE_TTL_DEFAULT)
-  value: '60'
-- displayName: API Sentry Environment
-  name: API_SENTRY_ENVIRONMENT
+- name: SENTRY_TRACES_SAMPLE_RATE
+  displayName: Sentry Performance Sample Rate
   required: true
-  value: ephemeral
-- displayName: Celery Sentry Environment
-  name: CELERY_SENTRY_ENVIRONMENT
-  required: true
-  value: ephemeral
-- displayName: Celery Sentry Release
-  name: CELERY_SENTRY_RELEASE
-  required: true
-  value: ephemeral
-- displayName: Houndigrade Sentry Environment
-  name: HOUNDIGRADE_SENTRY_ENVIRONMENT
-  required: true
-  value: ephemeral
-- displayName: Cloudigrade Commit Ref
-  name: COMMIT_REF
-  required: true
-  value: latest
-- displayName: Cloudigrade Environment
-  name: CLOUDIGRADE_ENVIRONMENT
-  required: true
-  value: ephemeral
-- displayName: Listener Group ID
-  name: LISTENER_GROUP_ID
-  required: true
-  value: cloudmeter_ephemeral
-- displayName: Listerner Kafka Server Address
-  name: LISTENER_SERVER
-  required: true
-  value: platform-mq-ephemeral-kafka-bootstrap.platform-mq-ephemeral.svc
-- displayName: Listener Sentry Environment
-  name: LISTENER_SENTRY_ENVIRONMENT
-  required: true
-  value: ephemeral
-- displayName: Postigrade Host
-  name: POSTIGRADE_HOST
-  required: true
-  value: postigrade.cloudigrade-ephemeral.svc.cluster.local
-- displayName: Sources API Base URL
-  name: SOURCES_API_BASE_URL
-  required: true
-  value: http://sources-api-svc.sources-ephemeral.svc:8000
-- displayName: Image namespace
-  name: IMAGE_NAMESPACE
-  required: true
-  value: cloudigrade-ephemeral
-- displayName: Enable Cloudwatch
-  name: CLOUDIGRADE_ENABLE_CLOUDWATCH
-  required: true
-  value: 'false'
-- displayName: Cloudwatch Log Level
-  name: CLOUDIGRADE_CW_LEVEL
-  required: true
-  value: 'INFO'
-- displayName: Cloudwatch Stream Name.
-  name: CLOUDIGRADE_CW_STREAM_NAME
-  required: true
-  value: cloudigrade-ephemeral
-- displayName: Enable verbose Insights identity header logging
-  name: VERBOSE_INSIGHTS_IDENTITY_HEADER_LOGGING
-  required: true
-  value: 'false'
-- displayName: Enable verbose sources notification logging
-  name: VERBOSE_SOURCES_NOTIFICATION_LOGGING
-  required: true
-  value: 'false'
-- displayName: Change this value to trigger OSD to redeploy
-  name: OSD_REDEPLOY_TRIGGER
-  required: true
-  value: '1'
-- displayName: The lifetime of a database connection, as an integer of seconds.
-  name: DJANGO_DATABASE_CONN_MAX_AGE
-  required: true
-  value: '0'
-- displayName: Watchtower use queues
-  name: WATCHTOWER_USE_QUEUES
+  value: '0.0'
+- name: SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA
+  displayName: Enable Data Management From Sources Kafka
   required: true
   value: 'true'
-- displayName: Watchtower send interval (seconds)
-  name: WATCHTOWER_SEND_INTERVAL
+- name: SOURCES_API_BASE_URL
+  displayName: Sources API Base URL
   required: true
-  value: '1.0'
-- displayName: Watchtower max batch count
-  name: WATCHTOWER_MAX_BATCH_COUNT
-  required: true
-  value: '1000'
-#
-# Component cloudigrade-beat parameters:
-#
-- displayName: Cloudigrade Replica Count
-  name: CELERY_BEAT_REPLICA_COUNT
-  required: true
-  value: '1'
-- displayName: Cloudigrade Celery Beat Container CPU Request
-  name: CELERY_BEAT_LIMITS_CONTAINER_CPU_REQUEST
-  required: true
-  value: 100m
-- displayName: Cloudigrade Celery Beat Container Memory Request
-  name: CELERY_BEAT_LIMITS_CONTAINER_MEM_REQUEST
-  required: true
-  value: 100Mi
-- displayName: Cloudigrade Celery Beat Container CPU Limit
-  name: CELERY_BEAT_LIMITS_CONTAINER_CPU_LIMIT
-  required: true
-  value: 100m
-- displayName: Cloudigrade Celery Beat Container Memory Limit
-  name: CELERY_BEAT_LIMITS_CONTAINER_MEM_LIMIT
-  required: true
-  value: 128Mi
-- displayName: Watchtower use queues
-  name: WATCHTOWER_USE_QUEUES
+  value: http://sources-api-svc.sources-ephemeral.svc:8000
+- name: VERBOSE_SOURCES_NOTIFICATION_LOGGING
+  displayName: Enable verbose sources notification logging
   required: true
   value: 'false'
-- displayName: Watchtower send interval (seconds)
-  name: WATCHTOWER_SEND_INTERVAL
+- name: WATCHTOWER_MAX_BATCH_COUNT
+  displayName: Watchtower max batch count
+  required: true
+  value: '1'
+- name: WATCHTOWER_SEND_INTERVAL
+  displayName: Watchtower send interval (seconds)
   required: true
   value: '0.0'
-- displayName: Watchtower max batch count
-  name: WATCHTOWER_MAX_BATCH_COUNT
-  required: true
-  value: '1'
-#
-# Component cloudigrade-listener parameters:
-#
-- displayName: Cloudigrade Listener Replica Count
-  name: LISTENER_WORKER_REPLICA_COUNT
-  required: true
-  value: '1'
-- displayName: Cloudigrade Listener Container CPU Request
-  name: LISTENER_LIMITS_CONTAINER_CPU_REQUEST
-  required: true
-  value: 100m
-- displayName: Cloudigrade Listener Container Memory Request
-  name: LISTENER_LIMITS_CONTAINER_MEM_REQUEST
-  required: true
-  value: 128Mi
-- displayName: Cloudigrade Listener Container CPU Limit
-  name: LISTENER_LIMITS_CONTAINER_CPU_LIMIT
-  required: true
-  value: 200m
-- displayName: Cloudigrade Listener Container Memory Limit
-  name: LISTENER_LIMITS_CONTAINER_MEM_LIMIT
-  required: true
-  value: 256Mi
-- name: HABERDASHER_EMITTER
-  description: Emitter for haberdasher logs [stderr|kafka]
-  value: kafka
-- name: HABERDASHER_KAFKA_BOOTSTRAP
-  description: Bootstrap server for haberdasher kafka emitter
-  value: ''
-- name: HABERDASHER_KAFKA_TOPIC
-  description: Kafka topic for haberdasher kafka emitter
-  value: 'platform.logging.logs'
-- name: HABERDASHER_TAGS
-  description: Haberdasher tags for unstrutured logs
-  value: '["cloudigrade"]'
-- name: HABERDASHER_LABELS
-  description: Haberdasher labels for unstructured logs
-  value: '{"app": "cloudigrade"}'
-- displayName: Watchtower use queues
-  name: WATCHTOWER_USE_QUEUES
+- name: WATCHTOWER_USE_QUEUES
+  displayName: Watchtower use queues
   required: true
   value: 'false'
-- displayName: Watchtower send interval (seconds)
-  name: WATCHTOWER_SEND_INTERVAL
-  required: true
-  value: '0.0'
-- displayName: Watchtower max batch count
-  name: WATCHTOWER_MAX_BATCH_COUNT
-  required: true
-  value: '1'
-#
-# Component cloudigrade-worker parameters:
-#
-- displayName: Cloudigrade Replica Count
-  name: CELERY_WORKER_REPLICA_COUNT
-  required: true
-  value: '2'
-- displayName: Cloudigrade Worker Replica Count Max
-  name: CELERY_WORKER_REPLICA_COUNT_MAX
-  required: true
-  value: '8'
-- displayName: Cloudigrade Worker Target Average CPU Utilization
-  name: CELERY_TARGET_AVERAGE_CPU_UTILIZATION
-  required: true
-  value: '60'
-- displayName: Cloudigrade Celery Worker Container CPU Request
-  name: CELERY_WORKER_LIMITS_CONTAINER_CPU_REQUEST
-  required: true
-  value: 100m
-- displayName: Cloudigrade Celery Worker Container Memory Request
-  name: CELERY_WORKER_LIMITS_CONTAINER_MEM_REQUEST
-  required: true
-  value: 256Mi
-- displayName: Cloudigrade Celery Worker Container CPU Limit
-  name: CELERY_WORKER_LIMITS_CONTAINER_CPU_LIMIT
-  required: true
-  value: 200m
-- displayName: Cloudigrade Celery Worker Container Memory Limit
-  name: CELERY_WORKER_LIMITS_CONTAINER_MEM_LIMIT
-  required: true
-  value: 512Mi
-- name: HABERDASHER_EMITTER
-  description: Emitter for haberdasher logs [stderr|kafka]
-  value: kafka
-- name: HABERDASHER_KAFKA_BOOTSTRAP
-  description: Bootstrap server for haberdasher kafka emitter
-  value: ''
-- name: HABERDASHER_KAFKA_TOPIC
-  description: Kafka topic for haberdasher kafka emitter
-  value: 'platform.logging.logs'
-- name: HABERDASHER_TAGS
-  description: Haberdasher tags for unstrutured logs
-  value: '["cloudigrade"]'
-- name: HABERDASHER_LABELS
-  description: Haberdasher labels for unstructured logs
-  value: '{"app": "cloudigrade"}'
-- displayName: Watchtower use queues
-  name: WATCHTOWER_USE_QUEUES
-  required: true
-  value: 'false'
-- displayName: Watchtower send interval (seconds)
-  name: WATCHTOWER_SEND_INTERVAL
-  required: true
-  value: '0.0'
-- displayName: Watchtower max batch count
-  name: WATCHTOWER_MAX_BATCH_COUNT
-  required: true
-  value: '1'
-#
-# Component cloudigrade-postigrade parameters:
-#
-- displayName: Postigrade Container CPU Request
-  name: POSTIGRADE_LIMITS_CONTAINER_CPU_REQUEST
-  required: true
-  value: 500m
-- displayName: Postigrade Container Memory Request
-  name: POSTIGRADE_LIMITS_CONTAINER_MEM_REQUEST
-  required: true
-  value: 512Mi
-- displayName: Postigrade Container CPU Limit
-  name: POSTIGRADE_LIMITS_CONTAINER_CPU_LIMIT
-  required: true
-  value: 1000m
-- displayName: Postigrade Container Memory Limit
-  name: POSTIGRADE_LIMITS_CONTAINER_MEM_LIMIT
-  required: true
-  value: 1024Mi
-- displayName: Postigrade Image
-  name: POSTIGRADE_IMAGE
-  required: true
-  value: quay.io/cloudservices/postigrade
-- displayName: Postigrade Image tag
-  name: POSTIGRADE_IMAGE_TAG
-  required: true
-  value: latest
-- name: HABERDASHER_EMITTER
-  description: Emitter for haberdasher logs [stderr|kafka]
-  value: kafka
-- name: HABERDASHER_KAFKA_BOOTSTRAP
-  description: Bootstrap server for haberdasher kafka emitter
-  value: ''
-- name: HABERDASHER_KAFKA_TOPIC
-  description: Kafka topic for haberdasher kafka emitter
-  value: 'platform.logging.logs'
-- name: HABERDASHER_TAGS
-  description: Haberdasher tags for unstrutured logs
-  value: '["cloudigrade"]'
-- name: HABERDASHER_LABELS
-  description: Haberdasher labels for unstructured logs
-  value: '{"app": "cloudigrade"}'
