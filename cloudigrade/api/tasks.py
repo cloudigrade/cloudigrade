@@ -46,19 +46,22 @@ from api.clouds.aws.util import (
 )
 from api.models import (
     CloudAccount,
+    ConcurrentUsage,
     InstanceEvent,
     MachineImage,
     Run,
     UserTaskLock,
 )
 from api.util import (
+    calculate_max_concurrent_usage,
+    get_runs_for_user_id_on_date,
     recalculate_runs,
     recalculate_runs_for_cloud_account_id as _recalculate_runs_for_cloud_account_id,
 )
 from util import aws
 from util.celery import retriable_shared_task
 from util.exceptions import AwsThrottlingException, KafkaProducerException
-from util.misc import get_now, lock_task_for_user_ids
+from util.misc import get_now, get_today, lock_task_for_user_ids
 from util.redhatcloud import sources
 
 logger = logging.getLogger(__name__)
@@ -688,3 +691,105 @@ def recalculate_runs_for_all_cloud_accounts():
     cloud_accounts = CloudAccount.objects.all()
     for cloud_account in cloud_accounts:
         recalculate_runs_for_cloud_account_id.delay(cloud_account.id)
+
+
+@shared_task(name="api.tasks.recalculate_concurrent_usage_for_user_id_on_date")
+@transaction.atomic()
+def recalculate_concurrent_usage_for_user_id_on_date(user_id, date):
+    """
+    Recalculate ConcurrentUsage for the given user id and date, but only if necessary.
+
+    Before performing the actual calculations, this function checks any existing
+    ConcurrentUsage and Run objects that may be relevant. Only perform the calculations
+    if there is no saved ConcurrentUsage data or if we find Runs that should be counted.
+
+    Args:
+        user_id (int): user id
+        date (datetime.date): date of the calculated concurrent usage
+    """
+    try:
+        usage = ConcurrentUsage.objects.get(user_id=user_id, date=date)
+        # **Django internal leaky abstraction warning!!**
+        # The following querysets have a seemingly useless "order_by()" on their ends,
+        # but these are important because Django's "difference" query builder refuses
+        # to build a working query if the compound querysets are ordered. Applying the
+        # empty "order_by()" forces those querysets *not* to have an ORDER BY clause.
+        # If you don't explicitly clear the order, Django always orders as defined in
+        # the model, and our BaseModel defines `ordering = ("created_at",)`.
+        # See also django.db.utils.DatabaseError:
+        # ORDER BY not allowed in subqueries of compound statements.
+        runs_queryset = get_runs_for_user_id_on_date(user_id, date).order_by()
+        difference = runs_queryset.difference(usage.potentially_related_runs.order_by())
+        needs_calculation = difference.exists()
+        logger.debug(
+            _(
+                "ConcurrentUsage needs calculation for user %(user_id)s on %(date)s "
+                "because %(difference_count)s Runs are not in potentially_related_runs"
+            ),
+            {
+                "difference_count": difference.count(),
+                "user_id": user_id,
+                "date": date,
+            },
+        )
+    except ConcurrentUsage.DoesNotExist:
+        logger.debug(
+            _(
+                "ConcurrentUsage needs calculation for user %(user_id)s on %(date)s "
+                "because ConcurrentUsage.DoesNotExist"
+            ),
+            {
+                "user_id": user_id,
+                "date": date,
+            },
+        )
+        needs_calculation = True
+
+    if needs_calculation:
+        calculate_max_concurrent_usage(date, user_id)
+
+
+@shared_task(name="api.tasks.recalculate_concurrent_usage_for_user_id")
+def recalculate_concurrent_usage_for_user_id(user_id, since=None):
+    """
+    Recalculate recent ConcurrentUsage for the given user id.
+
+    Args:
+        user_id (int): user id
+        since (datetime.date): optional starting date to search for runs
+    """
+    today = get_today()
+    if not since:
+        since = today - timedelta(days=7)  # TODO make the timedelta configurable
+    user = User.objects.get(id=user_id)
+    date_joined = user.date_joined.date()
+    one_day = timedelta(days=1)
+
+    # Only calculate since the user joined. Older dates would always have empty data.
+    target_day = max(date_joined, since)
+    # Stop calculation on "today". Never project future dates because data will change.
+    while target_day <= today:
+        # Important note! apply_async with serializer="pickle" is required here because
+        # the "target_day" object is a datetime.date which the default serializer
+        # converts to a plain string like "2021-05-01T00:00:00".
+        recalculate_concurrent_usage_for_user_id_on_date.apply_async(
+            args=(user_id, target_day), serializer="pickle"
+        )
+        target_day += one_day
+
+
+@shared_task(name="api.tasks.recalculate_concurrent_usage_for_all_users")
+def recalculate_concurrent_usage_for_all_users(since=None):
+    """
+    Recalculate recent ConcurrentUsage for all Users.
+
+    Args:
+        since (datetime.date): optional starting date for calculating concurrent usage
+    """
+    for user in User.objects.all():
+        # Important note! apply_async with serializer="pickle" is required here because
+        # the "since" object is a datetime.date which the default serializer converts
+        # to a plain string like "2021-05-01T00:00:00".
+        recalculate_concurrent_usage_for_user_id.apply_async(
+            args=(user.id, since), serializer="pickle"
+        )
