@@ -726,7 +726,7 @@ class MachineImageInspectionStart(BaseModel):
 class ConcurrentUsage(ExportModelOperationsMixin("ConcurrentUsage"), BaseModel):
     """Saved calculation of max concurrent usage for a date+user."""
 
-    date = models.DateField()
+    date = models.DateField(db_index=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, db_index=True)
     _maximum_counts = models.TextField(db_column="maximum_counts", default="[]")
     potentially_related_runs = models.ManyToManyField(Run)
