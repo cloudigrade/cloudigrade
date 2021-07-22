@@ -1,5 +1,6 @@
 """Collection of tests for the 'load_definitions' management command."""
 import random
+from io import StringIO
 from unittest.mock import patch
 
 from django.core.management import call_command
@@ -11,6 +12,11 @@ from util.tests import helper
 
 class LoadDefinitionsTest(TestCase):
     """Management command 'load_definitions' test case."""
+
+    def setUp(self):
+        """Set up test data."""
+        self.stdout = StringIO()
+        self.stderr = StringIO()
 
     def create_random_definition(self):
         """Create and save a random definition."""
@@ -35,7 +41,7 @@ class LoadDefinitionsTest(TestCase):
         _path = "util.management.commands.load_definitions"
         with patch("{}.aws_tasks".format(_path)) as mock_aws_tasks:
             with patch("{}.azure_tasks".format(_path)) as mock_azure_tasks:
-                call_command("load_definitions")
+                call_command("load_definitions", stdout=self.stdout, stderr=self.stderr)
                 aws_task = mock_aws_tasks.repopulate_ec2_instance_mapping
                 azure_task = mock_azure_tasks.repopulate_azure_instance_mapping
 
@@ -47,7 +53,7 @@ class LoadDefinitionsTest(TestCase):
         _path = "util.management.commands.load_definitions"
         with patch("{}.aws_tasks".format(_path)) as mock_aws_tasks:
             with patch("{}.azure_tasks".format(_path)) as mock_azure_tasks:
-                call_command("load_definitions")
+                call_command("load_definitions", stdout=self.stdout, stderr=self.stderr)
                 aws_task = mock_aws_tasks.repopulate_ec2_instance_mapping
                 azure_task = mock_azure_tasks.repopulate_azure_instance_mapping
 
@@ -60,7 +66,12 @@ class LoadDefinitionsTest(TestCase):
         _path = "util.management.commands.load_definitions"
         with patch("{}.aws_tasks".format(_path)) as mock_aws_tasks:
             with patch("{}.azure_tasks".format(_path)) as mock_azure_tasks:
-                call_command("load_definitions", force=True)
+                call_command(
+                    "load_definitions",
+                    force=True,
+                    stdout=self.stdout,
+                    stderr=self.stderr,
+                )
                 aws_task = mock_aws_tasks.repopulate_ec2_instance_mapping
                 azure_task = mock_azure_tasks.repopulate_azure_instance_mapping
 

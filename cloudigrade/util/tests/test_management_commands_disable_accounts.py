@@ -1,4 +1,5 @@
 """Collection of tests for the 'delete_accounts' management command."""
+from io import StringIO
 from unittest.mock import patch
 
 from django.core.management import call_command
@@ -15,6 +16,8 @@ class DeleteAccountsTest(TransactionTestCase):
 
     def setUp(self):
         """Set up test data."""
+        self.stdout = StringIO()
+        self.stderr = StringIO()
         self.user = util_helper.generate_test_user()
         self.account = api_helper.generate_cloud_account(user=self.user)
         self.account_2 = api_helper.generate_cloud_account(user=self.user)
@@ -33,7 +36,9 @@ class DeleteAccountsTest(TransactionTestCase):
     def test_handle(self, mock_delete_cloudtrail, mock_notify_sources):
         """Test calling disable_accounts with confirm arg."""
         self.assertPresent()
-        call_command("disable_accounts", "--confirm")
+        call_command(
+            "disable_accounts", "--confirm", stdout=self.stdout, stderr=self.stderr
+        )
         mock_notify_sources.delay.assert_called()
         mock_delete_cloudtrail.assert_called()
         self.assertDisabled()
@@ -47,7 +52,9 @@ class DeleteAccountsTest(TransactionTestCase):
         """Test disable_accounts works despite sources-api errors."""
         self.assertPresent()
         mock_notify_sources.delay.side_effect = KafkaProducerException("bad error")
-        call_command("disable_accounts", "--confirm")
+        call_command(
+            "disable_accounts", "--confirm", stdout=self.stdout, stderr=self.stderr
+        )
         mock_notify_sources.delay.assert_called()
         mock_delete_cloudtrail.assert_called()
         self.assertDisabled()
@@ -56,7 +63,7 @@ class DeleteAccountsTest(TransactionTestCase):
     def test_handle_no(self, mock_input):
         """Test calling disable_accounts with 'N' (no) input."""
         self.assertPresent()
-        call_command("disable_accounts")
+        call_command("disable_accounts", stdout=self.stdout, stderr=self.stderr)
         self.assertPresent()
 
     @override_settings(SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA=False)
@@ -66,7 +73,7 @@ class DeleteAccountsTest(TransactionTestCase):
     def test_handle_yes(self, mock_input, mock_delete_cloudtrail, mock_notify_sources):
         """Test calling disable_accounts with 'Y' (yes) input."""
         self.assertPresent()
-        call_command("disable_accounts")
+        call_command("disable_accounts", stdout=self.stdout, stderr=self.stderr)
         self.assertDisabled()
         mock_delete_cloudtrail.assert_called()
         mock_notify_sources.delay.assert_called()
@@ -81,7 +88,7 @@ class DeleteAccountsTest(TransactionTestCase):
     ):
         """Test calling disable_accounts in production does nothing."""
         self.assertPresent()
-        call_command("disable_accounts")
+        call_command("disable_accounts", stdout=self.stdout, stderr=self.stderr)
         self.assertPresent()
         mock_delete_cloudtrail.assert_not_called()
         mock_notify_sources.delay.assert_not_called()
