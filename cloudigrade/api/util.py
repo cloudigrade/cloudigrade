@@ -231,6 +231,35 @@ def get_max_concurrent_usage(date, user_id):
     return None
 
 
+def get_runs_for_user_id_on_date(user_id, date):
+    """
+    Get all of the Runs for the user ID that overlap with the given date.
+
+    TODO Put this in a custom models.Manager for Run?
+
+    Args:
+        user_id (int): required filter on user
+        date (datetime.date): the day during which we are measuring usage
+
+    Returns:
+        queryset
+    """
+    start_time = datetime(date.year, date.month, date.day, 0, 0, 0, tzinfo=tz.tzutc())
+    end_time = start_time + timedelta(days=1)
+
+    # We want to filter to Runs that:
+    # - started before (not inclusive) our end time
+    # - ended at or after our start time (inclusive) or have never stopped
+    # - are for instances belonging to a cloud account for the given user
+    time_filters = Q(start_time__lt=end_time) & (
+        Q(end_time__isnull=True) | Q(end_time__gte=start_time)
+    )
+    user_filter = Q(instance__cloud_account__user__id=user_id)
+    filters = user_filter & time_filters
+    queryset = Run.objects.filter(filters)
+    return queryset
+
+
 def calculate_max_concurrent_usage(date, user_id):
     """
     Calculate maximum concurrent usage of RHEL instances in given parameters.
@@ -260,18 +289,11 @@ def calculate_max_concurrent_usage(date, user_id):
         {"user_id": user_id, "date": date},
     )
 
-    queryset = Run.objects.filter(instance__cloud_account__user__id=user_id)
-
-    start = datetime(date.year, date.month, date.day, 0, 0, 0, tzinfo=tz.tzutc())
-    end = start + timedelta(days=1)
-
-    # We want to filter to Runs that have:
-    # - started before (not inclusive) our end time
-    # - ended at or after our start time (inclusive) or have never stopped
-    runs = queryset.filter(
-        Q(end_time__isnull=True) | Q(end_time__gte=start),
-        start_time__lt=end,
-    ).prefetch_related("machineimage")
+    runs = (
+        get_runs_for_user_id_on_date(user_id, date)
+        .prefetch_related("machineimage")
+        .all()
+    )
 
     # Now that we have the Runs, we need to extract the start and stop times
     # from each Run, put them in a list, and order them chronologically. If we
