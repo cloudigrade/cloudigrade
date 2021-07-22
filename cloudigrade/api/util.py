@@ -294,6 +294,7 @@ def calculate_max_concurrent_usage(date, user_id):
         .prefetch_related("machineimage")
         .all()
     )
+    runs_count = runs.count()
 
     # Now that we have the Runs, we need to extract the start and stop times
     # from each Run, put them in a list, and order them chronologically. If we
@@ -301,18 +302,23 @@ def calculate_max_concurrent_usage(date, user_id):
     # repeat the following pattern for each other filter/condition.
     rhel_on_offs = []
     logger.info(
-        _("Iterating through runs for user_id %(user_id)s and %(date)s"),
-        {"user_id": user_id, "date": date},
+        _("Iterating through %(runs_count)s runs for user_id %(user_id)s and %(date)s"),
+        {"user_id": user_id, "runs_count": runs_count, "date": date},
     )
     for number, run in enumerate(runs):
         if number % 100 == 0:
             # This is temporary to diagnose possible issues with large data sets.
             logger.info(
                 _(
-                    "iterating at step %(number)s of runs "
+                    "ConcurrentUsage processed %(number)s/%(runs_count)s of runs "
                     "for user_id %(user_id)s and %(date)s"
                 ),
-                {"number": number, "user_id": user_id, "date": date},
+                {
+                    "number": number,
+                    "runs_count": runs_count,
+                    "user_id": user_id,
+                    "date": date,
+                },
             )
         if not run.machineimage or not run.machineimage.rhel:
             continue
