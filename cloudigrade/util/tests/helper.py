@@ -815,7 +815,9 @@ def utc_dt(*args, **kwargs):
     return datetime.datetime(*args, **kwargs).replace(tzinfo=tz.tzutc())
 
 
-def generate_test_user(account_number=None, password=None, is_superuser=False):
+def generate_test_user(
+    account_number=None, password=None, is_superuser=False, date_joined=None
+):
     """
     Generate and save a user for testing.
 
@@ -823,6 +825,7 @@ def generate_test_user(account_number=None, password=None, is_superuser=False):
         account_number (str): optional account_number
         password (str): optional password
         is_superuser (bool): create as a superuser if True
+        date_joined (datetime.datetime): optional when the user joined
 
     Returns:
         User: created Django auth User
@@ -830,11 +833,15 @@ def generate_test_user(account_number=None, password=None, is_superuser=False):
     """
     if not account_number:
         account_number = _faker.random_int(min=100000, max=999999)
-    user = User.objects.create_user(
-        username=account_number,
-        password=password,
-        is_superuser=is_superuser,
-    )
+    kwargs = {
+        "username": account_number,
+        "password": password,
+        "is_superuser": is_superuser,
+    }
+    if date_joined:
+        kwargs["date_joined"] = date_joined
+    user = User.objects.create_user(**kwargs)
+
     return user
 
 
