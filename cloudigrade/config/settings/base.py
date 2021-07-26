@@ -513,6 +513,13 @@ CACHE_TTL_SOURCES_APPLICATION_TYPE_ID = env.int(
     "CACHE_TTL_SOURCES_APPLICATION_TYPE_ID", default=CACHE_TTL_DEFAULT
 )
 
+# How far back should we look for related data when recalculating runs
+RECALCULATE_RUNS_SINCE_DAYS_AGO = env.int("RECALCULATE_RUNS_SINCE_DAYS_AGO", default=3)
+# How far back should we look for related data when recalculating concurrent usage
+RECALCULATE_CONCURRENT_USAGE_SINCE_DAYS_AGO = env.int(
+    "RECALCULATE_CONCURRENT_USAGE_SINCE_DAYS_AGO", default=3
+)
+
 #####################################################################
 # cloudigrade authentication-related configs
 

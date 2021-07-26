@@ -4,6 +4,7 @@ from unittest.mock import Mock, call, patch
 
 import faker
 from dateutil.rrule import DAILY, rrule
+from django.conf import settings
 from django.test import TestCase
 
 from api import models, tasks, util
@@ -62,7 +63,7 @@ class RecalculateConcurrentUsageForUserIdTask(TestCase):
         """Test typical behavior triggers recalculation for user since default date."""
         tasks.recalculate_concurrent_usage_for_user_id(self.user.id)
 
-        since_days_ago = 7  # TODO change if this default value becomes configurable
+        since_days_ago = settings.RECALCULATE_CONCURRENT_USAGE_SINCE_DAYS_AGO
         today = get_today()
         default_since = today - datetime.timedelta(days=since_days_ago)
         expected_dates = [

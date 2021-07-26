@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 
 from dateutil import tz
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import IntegrityError, transaction
 from django.db.models import Q
@@ -715,7 +716,8 @@ def recalculate_runs_for_cloud_account_id(cloud_account_id, since=None):
         since (datetime.datetime): optional starting time to search for events
     """
     if not since:
-        since = get_now() - timedelta(days=1)  # TODO make the timedelta configurable
+        days_ago = settings.RECALCULATE_RUNS_SINCE_DAYS_AGO
+        since = get_now() - timedelta(days=days_ago)
     logger.debug(
         _(
             "starting to recalculate runs "
