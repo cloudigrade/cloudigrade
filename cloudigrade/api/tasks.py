@@ -760,7 +760,8 @@ def recalculate_concurrent_usage_for_user_id(user_id, since=None):
     """
     today = get_today()
     if not since:
-        since = today - timedelta(days=7)  # TODO make the timedelta configurable
+        days_ago = settings.RECALCULATE_CONCURRENT_USAGE_SINCE_DAYS_AGO
+        since = today - timedelta(days=days_ago)
     user = User.objects.get(id=user_id)
     date_joined = user.date_joined.date()
     one_day = timedelta(days=1)
