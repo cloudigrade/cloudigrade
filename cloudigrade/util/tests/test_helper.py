@@ -215,11 +215,13 @@ class UtilHelperTest(TestCase):
     def test_generate_test_user_with_args(self):
         """Assert generation of test user with specified arguments."""
         account_number = _faker.random_int(min=100000, max=999999)
+        date_joined = helper.utc_dt(2017, 12, 11, 8, 0, 0)
         user = helper.generate_test_user(
-            account_number=account_number, is_superuser=True
+            account_number=account_number, is_superuser=True, date_joined=date_joined
         )
         self.assertEqual(user.username, account_number)
         self.assertTrue(user.is_superuser)
+        self.assertEqual(user.date_joined, date_joined)
 
     def test_generate_mock_image_dict(self):
         """Assert generation of an image-like dict."""
