@@ -38,6 +38,20 @@ app.conf.beat_schedule = {
         "task": "api.tasks.inspect_pending_images",
         "schedule": env.int("INSPECT_PENDING_IMAGES_SCHEDULE", default=15 * 60),
     },
+    "recalculate_runs_for_all_cloud_accounts": {
+        "task": "api.tasks.recalculate_runs_for_all_cloud_accounts",
+        "schedule": env.int(
+            "RECALCULATE_RUNS_FOR_ALL_CLOUD_ACCOUNTS_SCHEDULE",
+            default=60 * 60,  # hourly
+        ),
+    },
+    "recalculate_concurrent_usage_for_all_users": {
+        "task": "api.tasks.recalculate_concurrent_usage_for_all_users",
+        "schedule": env.int(
+            "RECALCULATE_CONCURRENT_USAGE_FOR_ALL_USERS_SCHEDULE",
+            default=60 * 60,  # hourly
+        ),
+    },
     "scale_up_inspection_cluster_every_60_min": {
         "task": "api.clouds.aws.tasks.scale_up_inspection_cluster",
         "schedule": env.int(
