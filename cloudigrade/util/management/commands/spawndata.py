@@ -6,6 +6,7 @@ from argparse import ArgumentTypeError
 
 from dateutil import tz
 from dateutil.parser import parse as dateutil_parse
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 from django.db import transaction
@@ -311,6 +312,8 @@ class Command(BaseCommand):
             ).format(**options)
         )
 
+        self.check_celery_eager()
+
         if not options.get("confirm") and not self.confirm():
             return False
 
@@ -340,3 +343,14 @@ class Command(BaseCommand):
             recalculate_runs_for_cloud_account_id(account.id, since)
 
         recalculate_concurrent_usage_for_user_id(user.id, since.date())
+
+    def check_celery_eager(self):
+        """Display a message if not CELERY_TASK_ALWAYS_EAGER."""
+        eager = settings.CELERY_TASK_ALWAYS_EAGER
+        if not eager:
+            self.stdout.write(
+                _(
+                    "CELERY_TASK_ALWAYS_EAGER is {}. You may need to run the Celery "
+                    "worker after this program completes to finish calculations."
+                ).format(eager)
+            )
