@@ -988,83 +988,11 @@ objects:
           value: ${WATCHTOWER_SEND_INTERVAL}
         - name: WATCHTOWER_MAX_BATCH_COUNT
           value: ${WATCHTOWER_MAX_BATCH_COUNT}
-    - name: postigrade
-      #
-      # Component cloudigrade-postigrade deployment:
-      #
-      replicas: 1
-      revisionHistoryLimit: 10
-      webServices:
-        public:
-          enabled: true
-      podSpec:
-        image: ${POSTIGRADE_IMAGE}:${POSTIGRADE_IMAGE_TAG}
-        imagePullPolicy: Always
-        livenessProbe:
-          exec:
-            command:
-              - /probe-liveness.sh
-          failureThreshold: 3
-          initialDelaySeconds: 5
-          periodSeconds: 10
-          successThreshold: 1
-          timeoutSeconds: 1
-        readinessProbe:
-          exec:
-            command:
-              - /probe-readiness.sh
-          failureThreshold: 3
-          initialDelaySeconds: 5
-          periodSeconds: 10
-          successThreshold: 1
-          timeoutSeconds: 1
-        resources:
-          requests:
-            cpu: ${POSTIGRADE_LIMITS_CONTAINER_CPU_REQUEST}
-            memory: ${POSTIGRADE_LIMITS_CONTAINER_MEM_REQUEST}
-          limits:
-            cpu: ${POSTIGRADE_LIMITS_CONTAINER_CPU_LIMIT}
-            memory: ${POSTIGRADE_LIMITS_CONTAINER_MEM_LIMIT}
-        env:
-        - name: DB_NAME
-          valueFrom:
-            secretKeyRef:
-              key: db.name
-              name: cloudigrade-rds
-        - name: DB_PORT
-          valueFrom:
-            secretKeyRef:
-              key: db.port
-              name: cloudigrade-rds
-        - name: DB_HOST
-          valueFrom:
-            secretKeyRef:
-              key: db.host
-              name: cloudigrade-rds
-        - name: DB_USER
-          valueFrom:
-            secretKeyRef:
-              key: db.user
-              name: cloudigrade-rds
-        - name: DB_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              key: db.password
-              name: cloudigrade-rds
-        - name: HABERDASHER_EMITTER
-          value: ${HABERDASHER_EMITTER}
-        - name: HABERDASHER_KAFKA_BOOTSTRAP
-          value: ${HABERDASHER_KAFKA_BOOTSTRAP}
-        - name: HABERDASHER_KAFKA_TOPIC
-          value: ${HABERDASHER_KAFKA_TOPIC}
-        - name: HABERDASHER_LABELS
-          value: ${HABERDASHER_LABELS}
-        - name: HABERDASHER_TAGS
-          value: ${HABERDASHER_TAGS}
     database:
       name: cloudigrade 
-      version: 10
+      version: 12
     dependencies:
+    - postigrade
     - sources-api
     - sources-monitor
     - sources-superkey-worker
@@ -1295,33 +1223,6 @@ parameters:
   displayName: Cloudigrade Worker Replica Count Max
   required: true
   value: '8'
-#
-# Component cloudigrade-postigrade parameters:
-#
-- name: POSTIGRADE_IMAGE
-  displayName: Postigrade Image
-  required: true
-  value: quay.io/cloudservices/postigrade
-- name: POSTIGRADE_IMAGE_TAG
-  displayName: Postigrade Image tag
-  required: true
-  value: latest
-- name: POSTIGRADE_LIMITS_CONTAINER_MEM_LIMIT
-  displayName: Postigrade Container Memory Limit
-  required: true
-  value: 1024Mi
-- name: POSTIGRADE_LIMITS_CONTAINER_MEM_REQUEST
-  displayName: Postigrade Container Memory Request
-  required: true
-  value: 512Mi
-- name: POSTIGRADE_LIMITS_CONTAINER_CPU_LIMIT
-  displayName: Postigrade Container CPU Limit
-  required: true
-  value: 1000m
-- name: POSTIGRADE_LIMITS_CONTAINER_CPU_REQUEST
-  displayName: Postigrade Container CPU Request
-  required: true
-  value: 500m
 #
 # Parameters shared between components
 #

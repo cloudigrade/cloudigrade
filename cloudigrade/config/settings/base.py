@@ -153,7 +153,7 @@ if isClowderEnabled():
     # with postigrade deployed in clowder, we need to hit its endpoint
     # hostname and webPort instead.
     for endpoint in clowder_cfg.endpoints:
-        if endpoint.app == "cloudigrade" and endpoint.name == "postigrade":
+        if endpoint.app == "postigrade" and endpoint.name == "svc":
             CLOWDER_DATABASE_HOST     = endpoint.hostname
             CLOWDER_DATABASE_PORT     = endpoint.port
 
