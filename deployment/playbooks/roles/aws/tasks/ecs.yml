@@ -1,77 +1,4 @@
 ---
-# Create Block
-- block:
-  - name: create / ecs iam role
-    iam_role:
-      name: "{{ecs_iam_role_name}}"
-      state: present
-      create_instance_profile: true
-      assume_role_policy_document:
-        Version: '2012-10-17'
-        Statement:
-        - Action: sts:AssumeRole
-          Effect: Allow
-          Principal:
-            Service: ["ec2.amazonaws.com", "ecs.amazonaws.com"]
-      managed_policy:
-        - "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
-      purge_policies: true
-
-  - name: create / ecs iam cloudwatch policy
-    iam_policy:
-      iam_type: role
-      iam_name: "{{ecs_iam_role_name}}"
-      policy_name: "{{ecs_cloudwatch_iam_policy_name}}"
-      policy_json: "{{ lookup('file', '../files/cloudwatch-policy.json') }}"
-      skip_duplicates: false
-      state: present
-
-  - name: create / ecs cluster
-    ecs_cluster:
-      name: "{{ecs_cluster_name}}"
-      state: present
-    register: ecs_cluster
-
-  - name: create / ec2 ssh keypair
-    ec2_key:
-      name: "{{ec2_ssh_key_name}}"
-      state: present
-    register: ssh_keypair
-
-  - name: create / ec2 security group
-    ec2_group:
-      name: "{{ec2_sg_name}}"
-      description: "Cloudigrade-{{env}} SG"
-      purge_rules: true
-      purge_rules_egress: true
-      state: present
-
-  - name: create / ec2 launch configuration
-    ec2_lc:
-      name: "{{ec2_lc_name}}"
-      key_name: "{{ec2_ssh_key_name}}"
-      image_id: "{{recommended_ami.image_id}}"
-      instance_monitoring: "{{ ec2_instance_monitoring }}"
-      instance_profile_name: "{{ ecs_iam_role_name }}"
-      instance_type: "{{ec2_instance_type}}"
-      security_groups: ["{{ec2_sg_name}}"]
-      user_data: "{{ ec2_userdata }}"
-      state: present
-    register: ec2_launch_configuration
-
-  - name: create / ec2 auto scaling group
-    ec2_asg:
-      name: "{{ec2_asg_name}}"
-      availability_zones: ["{{ec2_asg_az}}",]
-      desired_capacity: "{{ec2_asg_desired_capacity}}"
-      min_size: "{{ec2_asg_min_size}}"
-      max_size: "{{ec2_asg_max_size}}"
-      launch_config_name: "{{ec2_lc_name}}"
-      state: present
-    register: ec2_autoscaling_group
-
-  when: aws_state == "present"
-
 # Destroy Block
 - block:
   - name: destroy / ec2 auto scaling group
@@ -82,16 +9,6 @@
   - name: destroy / ec2 launch configuration
     ec2_lc:
       name: "{{ec2_lc_name}}"
-      state: absent
-
-  - name: destroy / ec2 ssh keypair
-    ec2_key:
-      name: "{{ec2_ssh_key_name}}"
-      state: absent
-
-  - name: destroy / ec2 security group
-    ec2_group:
-      name: "{{ec2_sg_name}}"
       state: absent
 
   - name: destroy / ecs cluster
@@ -120,5 +37,4 @@
       purge_policies: true
       state: absent
 
-  when: aws_state == "absent"
-
+  when: ecs_state == "absent"

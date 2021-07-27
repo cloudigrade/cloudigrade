@@ -1,0 +1,48 @@
+---
+# Create Block
+- block:
+  - name: create / ec2 ssh keypair
+    ec2_key:
+      name: "{{ec2_ssh_key_name}}"
+      state: present
+    register: ssh_keypair
+
+  - name: create / ec2 security group
+    ec2_group:
+      name: "{{ec2_sg_name}}"
+      description: "Cloudigrade-{{env}} SG"
+      purge_rules: true
+      purge_rules_egress: true
+      state: present
+
+  - name: create / ec2 launch template
+    ec2_launch_template:
+      name: "{{ec2_lt_name}}"
+      key_name: "{{ec2_ssh_key_name}}"
+      image_id: "{{ec2_lt_recommended_ami.image_id}}"
+      instance_type: "{{ec2_lt_instance_type}}"
+      security_groups: ["{{ec2_sg_name}}"]
+      state: present
+    register: ec2_launch_configuration
+
+  when: aws_state == "present"
+
+# Destroy Block
+- block:
+  - name: destroy / ec2 launch configuration
+    ec2_launch_template:
+      name: "{{ec2_lc_name}}"
+      state: absent
+
+  - name: destroy / ec2 ssh keypair
+    ec2_key:
+      name: "{{ec2_ssh_key_name}}"
+      state: absent
+
+  - name: destroy / ec2 security group
+    ec2_group:
+      name: "{{ec2_sg_name}}"
+      state: absent
+
+  when: aws_state == "absent"
+

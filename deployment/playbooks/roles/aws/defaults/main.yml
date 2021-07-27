@@ -2,7 +2,8 @@
 env: dev
 
 # Default component state
-ecs_state: "present"
+ecs_state: "absent"
+ec2_state: "present"
 s3_state: "present"
 
 ### ecs.yml
@@ -42,7 +43,15 @@ ec2_asg_min_size: 0
 ec2_asg_max_size: 0
 ec2_asg_desired_capacity: 0
 ec2_asg_replace_all_instances: yes
-### ecs.yml
+
+
+### ec2.yml
+# EC2 LT Defaults
+ec2_lt_name: cloudigrade-lt-{{env}}
+ec2_lt_instance_monitoring: true
+ec2_lt_instance_type: "t2.micro"
+ec2_lt_recommended_ami: "{{ lookup('aws_ssm', '/aws/service/ecs/optimized-ami/amazon-linux-2/recommended', shortnames=true, bypath=true ) }}"
+
 
 ### s3.yml
 # Names
