@@ -340,7 +340,7 @@ class Command(BaseCommand):
             hour=0, minute=0, second=0, microsecond=0, tzinfo=tz.tzutc()
         )
         for account in accounts:
-            recalculate_runs_for_cloud_account_id(account.id, since)
+            recalculate_runs_for_cloud_account_id(account.id, since, show_progress=True)
 
         recalculate_concurrent_usage_for_user_id(user.id, since.date())
 

@@ -46,10 +46,12 @@ class SpawnDataTest(TestCase):
     @util_helper.clouditardis(command_run_datetime)
     @patch("util.management.commands.spawndata.random")
     @patch("util.management.commands.spawndata.tqdm")
-    def test_command_output(self, mock_tqdm, mock_random):
+    @patch("api.util.tqdm")
+    def test_command_output(self, mock_util_tqdm, mock_command_tqdm, mock_random):
         """Test that 'spawndata' correctly calls seeds data."""
         # Silence tqdm output during the test.
-        mock_tqdm.side_effect = lambda iterable, *args, **kwargs: iterable
+        mock_command_tqdm.side_effect = lambda iterable, *args, **kwargs: iterable
+        mock_util_tqdm.side_effect = lambda iterable, *args, **kwargs: iterable
 
         # Make all random calculations deterministic.
         mock_random.choice.side_effect = lambda population: population[0]
@@ -101,10 +103,12 @@ class SpawnDataTest(TestCase):
     @util_helper.clouditardis(command_run_datetime)
     @patch("util.management.commands.spawndata.random")
     @patch("util.management.commands.spawndata.tqdm")
-    def test_command_output_azure(self, mock_tqdm, mock_random):
+    @patch("api.util.tqdm")
+    def test_command_output_azure(self, mock_util_tqdm, mock_command_tqdm, mock_random):
         """Test that 'spawndata' correctly calls seeds data for azure account."""
         # Silence tqdm output during the test.
-        mock_tqdm.side_effect = lambda iterable, *args, **kwargs: iterable
+        mock_command_tqdm.side_effect = lambda iterable, *args, **kwargs: iterable
+        mock_util_tqdm.side_effect = lambda iterable, *args, **kwargs: iterable
 
         # Make all random calculations deterministic.
         mock_random.choice.side_effect = lambda population: population[0]
