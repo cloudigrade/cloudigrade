@@ -51,7 +51,6 @@ CLOUDIGRADE_ENVIRONMENT = env("CLOUDIGRADE_ENVIRONMENT")
 AWS_NAME_PREFIX = f"{CLOUDIGRADE_ENVIRONMENT}-"
 CLOUDTRAIL_NAME_PREFIX = AWS_NAME_PREFIX
 
-
 #####################################################################
 # Standard Django project configs
 
@@ -231,7 +230,6 @@ REST_FRAMEWORK = {
     "EXCEPTION_HANDLER": "util.exceptions.api_exception_handler",
 }
 
-
 #####################################################################
 # Logging
 # https://docs.djangoproject.com/en/3.2/topics/logging/
@@ -339,7 +337,6 @@ if CLOUDIGRADE_ENABLE_CLOUDWATCH:
 # Important note: dictConfig must happen *after* adding the Watchtower handlers above.
 logging.config.dictConfig(LOGGING)
 
-
 #####################################################################
 # AWS S3 (file buckets)
 
@@ -353,7 +350,6 @@ AWS_S3_BUCKET_LC_GLACIER_TRANSITION = env.int(
     "AWS_S3_BUCKET_LC_GLACIER_TRANSITION", default=60
 )
 AWS_S3_BUCKET_LC_MAX_AGE = env.int("AWS_S3_BUCKET_LC_MAX_AGE", default=1460)
-
 
 #####################################################################
 # AWS SQS (message queues)
@@ -400,7 +396,6 @@ AWS_SQS_MAX_HOUNDI_YIELD_COUNT = env.int("AWS_SQS_MAX_HOUNDI_YIELD_COUNT", defau
 # actually running cloudigrade, such as in local.py and prod.py.
 AWS_CLOUDTRAIL_EVENT_URL = f"https://sqs.us-east-1.amazonaws.com/000000000000/cloudigrade-cloudtrail-s3-{CLOUDIGRADE_ENVIRONMENT}"
 
-
 #####################################################################
 # Configs used for running houndigrade and accessing its results
 
@@ -422,18 +417,13 @@ HOUNDIGRADE_ECS_IMAGE_TAG = env("HOUNDIGRADE_ECS_IMAGE_TAG", default="latest")
 HOUNDIGRADE_EXCHANGE_NAME = env("HOUNDIGRADE_EXCHANGE_NAME", default="")
 HOUNDIGRADE_RESULTS_QUEUE_NAME = f"{AWS_NAME_PREFIX}inspection_results"
 
-if env.bool("HOUNDIGRADE_ENABLE_SENTRY", default=False):
-    HOUNDIGRADE_ENABLE_SENTRY = True
-    HOUNDIGRADE_SENTRY_DSN = env("HOUNDIGRADE_SENTRY_DSN")
-    HOUNDIGRADE_SENTRY_RELEASE = (
-        HOUNDIGRADE_ECS_IMAGE_TAG
-        if HOUNDIGRADE_ECS_IMAGE_TAG
-        else env("HOUNDIGRADE_SENTRY_RELEASE")
-    )
-    HOUNDIGRADE_SENTRY_ENVIRONMENT = env("HOUNDIGRADE_SENTRY_ENVIRONMENT")
-else:
-    HOUNDIGRADE_ENABLE_SENTRY = False
-
+HOUNDIGRADE_SENTRY_DSN = env("HOUNDIGRADE_SENTRY_DSN", default="")
+HOUNDIGRADE_SENTRY_RELEASE = (
+    HOUNDIGRADE_ECS_IMAGE_TAG
+    if HOUNDIGRADE_ECS_IMAGE_TAG
+    else env("HOUNDIGRADE_SENTRY_RELEASE", default="")
+)
+HOUNDIGRADE_SENTRY_ENVIRONMENT = env("HOUNDIGRADE_SENTRY_ENVIRONMENT", default="")
 
 #####################################################################
 # Celery broker
@@ -444,7 +434,6 @@ CELERY_BROKER_TRANSPORT_OPTIONS = {
 }
 CELERY_BROKER_URL = AWS_SQS_URL
 CELERY_ACCEPT_CONTENT = ["json", "pickle"]
-
 
 #####################################################################
 # Celery tasks
@@ -509,7 +498,6 @@ CELERY_TASK_ROUTES = {
     },
 }
 
-
 #####################################################################
 # cloudigrade various configs
 
@@ -530,10 +518,13 @@ INSPECT_PENDING_IMAGES_MIN_AGE = env.int(
     "INSPECT_PENDING_IMAGES_MIN_AGE", default=60 * 60 * 12  # 12 hours
 )
 
-# Limit in seconds for how long we expect the inspection cluster instance to exist.
-INSPECTION_CLUSTER_INSTANCE_AGE_LIMIT = env.int(
-    "INSPECTION_CLUSTER_INSTANCE_AGE_LIMIT", default=10 * 60  # 10 minutes
-)
+# Limit in seconds for how long we expect the inspection snapshots to exist.
+INSPECTION_SNAPSHOT_CLEAN_UP_INITIAL_DELAY = env.int(
+    "INSPECTION_SNAPSHOT_CLEAN_UP_INITIAL_DELAY", default=60 * 60
+)  # 1 hour
+INSPECTION_SNAPSHOT_CLEAN_UP_RETRY_DELAY = env.int(
+    "INSPECTION_SNAPSHOT_CLEAN_UP_RETRY_DELAY", default=60 * 30
+)  # 30 minutes
 
 DELETE_INACTIVE_USERS_MIN_AGE = env.int(
     "DELETE_INACTIVE_USERS_MIN_AGE", default=60 * 60 * 24
@@ -568,7 +559,6 @@ CLOUDIGRADE_REQUEST_HEADER = "X-CLOUDIGRADE-REQUEST-ID"
 INSIGHTS_REQUEST_ID_HEADER = "HTTP_X_RH_INSIGHTS_REQUEST_ID"
 INSIGHTS_IDENTITY_HEADER = "HTTP_X_RH_IDENTITY"
 INSIGHTS_INTERNAL_FAKE_IDENTITY_HEADER = "HTTP_X_RH_INTERNAL_FAKE_IDENTITY"
-
 
 #####################################################################
 # Kafka
@@ -630,6 +620,5 @@ SOURCES_STATUS_TOPIC = env("SOURCES_STATUS_TOPIC", default="platform.sources.sta
 SOURCES_AVAILABILITY_EVENT_TYPE = env(
     "SOURCES_AVAILABILITY_EVENT_TYPE", default="availability_status"
 )
-
 
 #####################################################################

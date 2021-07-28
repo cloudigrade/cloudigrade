@@ -24,21 +24,14 @@ Therefore, we should always preserve the original name in each task function's
 decorator even if the function itself is renamed or moved elsewhere.
 """
 from api.clouds.aws.tasks.cloudtrail import analyze_log
+from api.clouds.aws.tasks.inspection import launch_inspection_instance
 from api.clouds.aws.tasks.imageprep import (
     CLOUD_KEY,
     CLOUD_TYPE_AWS,
     copy_ami_snapshot,
     copy_ami_to_customer_account,
-    create_volume,
     delete_snapshot,
-    enqueue_ready_volume,
     remove_snapshot_ownership,
-)
-from api.clouds.aws.tasks.inspection import (
-    attach_volumes_to_cluster,
-    run_inspection_cluster,
-    scale_down_cluster,
-    scale_up_inspection_cluster,
 )
 from api.clouds.aws.tasks.maintenance import repopulate_ec2_instance_mapping
 from api.clouds.aws.tasks.onboarding import (

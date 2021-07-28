@@ -3,6 +3,7 @@ from unittest.mock import Mock, patch
 
 from botocore.exceptions import ClientError
 from celery.exceptions import Retry
+from django.conf import settings
 from django.test import TestCase
 
 from api.clouds.aws import tasks
@@ -39,20 +40,25 @@ class CopyAmiSnapshotTest(TestCase):
         mock_aws.get_snapshot.return_value = mock_snapshot
         mock_aws.copy_snapshot.return_value = mock_new_snapshot_id
 
-        with patch.object(tasks.imageprep, "create_volume") as mock_create_volume:
-            with patch.object(
-                tasks.imageprep, "remove_snapshot_ownership"
-            ) as mock_remove_snapshot_ownership:
-                tasks.copy_ami_snapshot(mock_arn, mock_image_id, mock_region)
-                mock_create_volume.delay.assert_called_with(
-                    mock_image_id, mock_new_snapshot_id
-                )
-                mock_remove_snapshot_ownership.delay.assert_called_with(
-                    mock_arn,
-                    mock_snapshot_id,
-                    mock_region,
-                    mock_new_snapshot_id,
-                )
+        with patch.object(
+            tasks.imageprep, "launch_inspection_instance"
+        ) as mock_lii, patch.object(
+            tasks.imageprep, "remove_snapshot_ownership"
+        ) as mock_remove_snapshot_ownership, patch.object(
+            tasks.imageprep, "delete_snapshot"
+        ) as mock_delete_snapshot:
+            tasks.copy_ami_snapshot(mock_arn, mock_image_id, mock_region)
+            mock_lii.delay.assert_called_with(mock_image_id, mock_new_snapshot_id)
+            mock_remove_snapshot_ownership.delay.assert_called_with(
+                mock_arn,
+                mock_snapshot_id,
+                mock_region,
+                mock_new_snapshot_id,
+            )
+            mock_delete_snapshot.apply_async.assert_called_with(
+                args=[mock_new_snapshot_id, mock_image_id, mock_region],
+                countdown=settings.INSPECTION_SNAPSHOT_CLEAN_UP_INITIAL_DELAY,
+            )
 
         mock_aws.get_session.assert_called_with(mock_arn)
         mock_aws.get_ami.assert_called_with(mock_session, mock_image_id, mock_region)
@@ -94,17 +100,21 @@ class CopyAmiSnapshotTest(TestCase):
         mock_aws.copy_snapshot.return_value = mock_new_snapshot_id
 
         with patch.object(
-            tasks.imageprep, "create_volume"
-        ) as mock_create_volume, patch.object(
+            tasks.imageprep, "launch_inspection_instance"
+        ) as mock_lii, patch.object(
             tasks.imageprep, "remove_snapshot_ownership"
-        ) as mock_remove_snapshot_ownership:
+        ) as mock_remove_snapshot_ownership, patch.object(
+            tasks.imageprep, "delete_snapshot"
+        ) as mock_delete_snapshot:
             tasks.copy_ami_snapshot(arn, new_image_id, region, reference_image_id)
             # arn, customer_snapshot_id, snapshot_region, snapshot_copy_id
             mock_remove_snapshot_ownership.delay.assert_called_with(
                 arn, mock_snapshot_id, region, mock_new_snapshot_id
             )
-            mock_create_volume.delay.assert_called_with(
-                reference_image_id, mock_new_snapshot_id
+            mock_lii.delay.assert_called_with(reference_image_id, mock_new_snapshot_id)
+            mock_delete_snapshot.apply_async.assert_called_with(
+                args=[mock_new_snapshot_id, reference_image_id, region],
+                countdown=settings.INSPECTION_SNAPSHOT_CLEAN_UP_INITIAL_DELAY,
             )
 
         mock_aws.get_session.assert_called_with(arn)
@@ -143,12 +153,17 @@ class CopyAmiSnapshotTest(TestCase):
 
         ami = account_helper.generate_image(ec2_ami_id=mock_image_id)
 
-        with patch.object(tasks, "create_volume") as mock_create_volume:
+        with patch.object(
+            tasks.imageprep, "launch_inspection_instance"
+        ) as mock_lii, patch.object(
+            tasks.imageprep, "delete_snapshot"
+        ) as mock_delete_snapshot:
             tasks.copy_ami_snapshot(mock_arn, mock_image_id, mock_region)
             ami.refresh_from_db()
             self.assertTrue(ami.is_encrypted)
             self.assertEqual(ami.status, ami.ERROR)
-            mock_create_volume.delay.assert_not_called()
+            mock_lii.delay.assert_not_called()
+            mock_delete_snapshot.assert_not_called()
 
     @patch("api.clouds.aws.tasks.imageprep.aws")
     def test_copy_ami_snapshot_retry_on_copy_limit(self, mock_aws):
@@ -174,13 +189,18 @@ class CopyAmiSnapshotTest(TestCase):
         mock_aws.add_snapshot_ownership.return_value = True
         mock_aws.copy_snapshot.side_effect = AwsSnapshotCopyLimitError()
 
-        with patch.object(tasks, "create_volume") as mock_create_volume, patch.object(
+        with patch.object(
+            tasks.imageprep, "launch_inspection_instance"
+        ) as mock_lii, patch.object(
             tasks.copy_ami_snapshot, "retry"
-        ) as mock_retry:
+        ) as mock_retry, patch.object(
+            tasks.imageprep, "delete_snapshot"
+        ) as mock_delete_snapshot:
             mock_retry.side_effect = Retry()
             with self.assertRaises(Retry):
                 tasks.copy_ami_snapshot(mock_arn, mock_image_id, mock_region)
-            mock_create_volume.delay.assert_not_called()
+            mock_lii.delay.assert_not_called()
+            mock_delete_snapshot.assert_not_called()
 
     @patch("api.clouds.aws.tasks.imageprep.aws")
     def test_copy_ami_snapshot_missing_image(self, mock_aws):
@@ -214,13 +234,18 @@ class CopyAmiSnapshotTest(TestCase):
         mock_aws.get_snapshot.return_value = mock_snapshot
         mock_aws.add_snapshot_ownership.side_effect = AwsSnapshotNotOwnedError()
 
-        with patch.object(tasks, "create_volume") as mock_create_volume, patch.object(
+        with patch.object(
+            tasks.imageprep, "launch_inspection_instance"
+        ) as mock_lii, patch.object(
             tasks.copy_ami_snapshot, "retry"
-        ) as mock_retry:
+        ) as mock_retry, patch.object(
+            tasks.imageprep, "delete_snapshot"
+        ) as mock_delete_snapshot:
             mock_retry.side_effect = Retry()
             with self.assertRaises(Retry):
                 tasks.copy_ami_snapshot(mock_arn, mock_image_id, mock_region)
-            mock_create_volume.delay.assert_not_called()
+            mock_lii.delay.assert_not_called()
+            mock_delete_snapshot.assert_not_called()
 
     @patch("api.clouds.aws.tasks.imageprep.aws")
     def test_copy_ami_snapshot_private_shared(self, mock_aws):
@@ -250,12 +275,15 @@ class CopyAmiSnapshotTest(TestCase):
         account_helper.generate_image(ec2_ami_id=mock_image_id)
 
         with patch.object(
-            tasks.imageprep, "create_volume"
-        ) as mock_create_volume, patch.object(
+            tasks.imageprep, "launch_inspection_instance"
+        ) as mock_lii, patch.object(
             tasks.imageprep, "copy_ami_to_customer_account"
-        ) as mock_copy_ami_to_customer_account:
+        ) as mock_copy_ami_to_customer_account, patch.object(
+            tasks.imageprep, "delete_snapshot"
+        ) as mock_delete_snapshot:
             tasks.copy_ami_snapshot(mock_arn, mock_image_id, mock_region)
-            mock_create_volume.delay.assert_not_called()
+            mock_lii.delay.assert_not_called()
+            mock_delete_snapshot.assert_not_called()
             mock_copy_ami_to_customer_account.delay.assert_called_with(
                 mock_arn, mock_image_id, mock_region
             )
@@ -285,12 +313,15 @@ class CopyAmiSnapshotTest(TestCase):
         account_helper.generate_image(ec2_ami_id=mock_image_id)
 
         with patch.object(
-            tasks.imageprep, "create_volume"
-        ) as mock_create_volume, patch.object(
+            tasks.imageprep, "launch_inspection_instance"
+        ) as mock_lii, patch.object(
             tasks.imageprep, "copy_ami_to_customer_account"
-        ) as mock_copy_ami_to_customer_account:
+        ) as mock_copy_ami_to_customer_account, patch.object(
+            tasks.imageprep, "delete_snapshot"
+        ) as mock_delete_snapshot:
             tasks.copy_ami_snapshot(mock_arn, mock_image_id, mock_region)
-            mock_create_volume.delay.assert_not_called()
+            mock_lii.delay.assert_not_called()
+            mock_delete_snapshot.assert_not_called()
             mock_copy_ami_to_customer_account.delay.assert_called_with(
                 mock_arn, mock_image_id, mock_region
             )
@@ -337,11 +368,16 @@ class CopyAmiSnapshotTest(TestCase):
 
         mock_aws.get_ami.return_value = None
 
-        with patch.object(tasks, "create_volume") as mock_create_volume, patch.object(
+        with patch.object(
+            tasks.imageprep, "launch_inspection_instance"
+        ) as mock_lii, patch.object(
             tasks, "copy_ami_to_customer_account"
-        ) as mock_copy_ami_to_customer_account:
+        ) as mock_copy_ami_to_customer_account, patch.object(
+            tasks.imageprep, "delete_snapshot"
+        ) as mock_delete_snapshot:
             tasks.copy_ami_snapshot(arn, ami_id, snapshot_region)
-            mock_create_volume.delay.assert_not_called()
+            mock_lii.delay.assert_not_called()
+            mock_delete_snapshot.assert_not_called()
             mock_copy_ami_to_customer_account.delay.assert_not_called()
 
         image.refresh_from_db()
@@ -360,11 +396,16 @@ class CopyAmiSnapshotTest(TestCase):
         mock_aws.get_ami.return_value = image
         mock_aws.get_ami_snapshot_id.return_value = None
 
-        with patch.object(tasks, "create_volume") as mock_create_volume, patch.object(
+        with patch.object(
+            tasks.imageprep, "launch_inspection_instance"
+        ) as mock_lii, patch.object(
             tasks, "copy_ami_to_customer_account"
-        ) as mock_copy_ami_to_customer_account:
+        ) as mock_copy_ami_to_customer_account, patch.object(
+            tasks.imageprep, "delete_snapshot"
+        ) as mock_delete_snapshot:
             tasks.copy_ami_snapshot(arn, ami_id, snapshot_region)
-            mock_create_volume.delay.assert_not_called()
+            mock_lii.delay.assert_not_called()
+            mock_delete_snapshot.assert_not_called()
             mock_copy_ami_to_customer_account.delay.assert_not_called()
 
         image.refresh_from_db()

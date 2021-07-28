@@ -748,7 +748,7 @@ objects:
             --loglevel info
             --concurrency 1
             --task-events
-            --queues celery,initial_aws_describe_instances,copy_ami_snapshot,copy_ami_to_customer_account,remove_snapshot_ownership,create_volume,enqueue_ready_volumes,delete_snapshot,inspect_pending_images,scale_up_inspection_cluster,attach_volumes_to_cluster,run_inspection_cluster,persist_inspection_cluster_results_task,scale_down_cluster,analyze_log,repopulate_ec2_instance_mapping,create_from_sources_kafka_message,configure_customer_aws_and_create_cloud_account,delete_from_sources_kafka_message,delete_inactive_users,delete_cloud_account,calculate_max_concurrent_usage,notify_application_availability_task,enable_account,repopulate_azure_instance_mapping
+            --queues celery,initial_aws_describe_instances,copy_ami_snapshot,copy_ami_to_customer_account,remove_snapshot_ownership,create_volume,enqueue_ready_volumes,delete_snapshot,inspect_pending_images,scale_up_inspection_cluster,attach_volumes_to_cluster,run_inspection_cluster,persist_inspection_cluster_results_task,scale_down_cluster,analyze_log,repopulate_ec2_instance_mapping,create_from_sources_kafka_message,configure_customer_aws_and_create_cloud_account,delete_from_sources_kafka_message,delete_inactive_users,delete_cloud_account,calculate_max_concurrent_usage,notify_application_availability_task,enable_account,repopulate_azure_instance_mapping,launch_inspection_instance
         livenessProbe:
           exec:
             command:
@@ -965,7 +965,7 @@ objects:
         - name: WATCHTOWER_MAX_BATCH_COUNT
           value: ${WATCHTOWER_MAX_BATCH_COUNT}
     database:
-      name: cloudigrade 
+      name: cloudigrade
       version: 12
     dependencies:
     - postigrade
