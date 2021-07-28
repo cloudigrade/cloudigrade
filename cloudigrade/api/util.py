@@ -48,7 +48,6 @@ def get_last_known_instance_type(instance, before_date):
         str: The last known instance type or None if no type is found.
 
     """
-    # raise Exception
     event = (
         InstanceEvent.objects.filter(
             instance=instance,
