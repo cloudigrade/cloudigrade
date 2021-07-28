@@ -7,14 +7,15 @@ from django.conf import settings
 from django.utils.translation import gettext as _
 
 from api.clouds.aws.models import AwsMachineImage
+from api.clouds.aws.tasks import launch_inspection_instance
 from api.clouds.aws.util import (
     create_aws_machine_image_copy,
     update_aws_image_status_error,
     update_aws_image_status_inspected,
 )
+from api.models import MachineImage
 from util import aws
 from util.aws import rewrap_aws_errors
-from util.aws.sqs import add_messages_to_queue
 from util.celery import retriable_shared_task
 
 logger = logging.getLogger(__name__)
@@ -209,8 +210,13 @@ def copy_ami_snapshot(  # noqa: C901
         create_aws_machine_image_copy(ami_id, reference_ami_id)
         ami_id = reference_ami_id
 
-    # Create volume from snapshot copy
-    create_volume.delay(ami_id, snapshot_copy_id)
+    # We only need the snapshot to launch the inspection now, so...
+    launch_inspection_instance.delay(ami_id, snapshot_copy_id)
+    # Schedule a task to cleanup the snapshot once the inspection is done.
+    delete_snapshot.apply_async(
+        args=[snapshot_copy_id, ami_id, snapshot_region],
+        countdown=settings.INSPECTION_SNAPSHOT_CLEAN_UP_INITIAL_DELAY,
+    )
 
 
 @retriable_shared_task(name="api.clouds.aws.tasks.copy_ami_to_customer_account")
@@ -373,88 +379,56 @@ def remove_snapshot_ownership(
     aws.remove_snapshot_ownership(customer_snapshot)
 
 
-@retriable_shared_task(name="api.clouds.aws.tasks.create_volume")
-@rewrap_aws_errors
-def create_volume(ami_id, snapshot_copy_id):
-    """
-    Create an AWS Volume in the primary AWS account.
-
-    Args:
-        ami_id (str): The AWS AMI id for which this request originated
-        snapshot_copy_id (str): The id of the snapshot to use for the volume
-    Returns:
-        None: Run as an asynchronous Celery task.
-    """
-    zone = settings.HOUNDIGRADE_AWS_AVAILABILITY_ZONE
-    volume_id = aws.create_volume(snapshot_copy_id, zone)
-    region = aws.get_region_from_availability_zone(zone)
-
-    logger.info(
-        _(
-            "%(label)s: ami_id=%(ami_id)s, snapshot_copy_id=%(snapshot_copy_id)s, "
-            "volume_id=%(volume_id)s, volume_region=%(region)s"
-        ),
-        {
-            "label": "create_volume",
-            "ami_id": ami_id,
-            "snapshot_copy_id": snapshot_copy_id,
-            "volume_id": volume_id,
-            "region": region,
-        },
-    )
-
-    delete_snapshot.delay(snapshot_copy_id, volume_id, region)
-    enqueue_ready_volume.delay(ami_id, volume_id, region)
-
-
 @retriable_shared_task(name="api.clouds.aws.tasks.delete_snapshot")
 @rewrap_aws_errors
-def delete_snapshot(snapshot_copy_id, volume_id, volume_region):
+def delete_snapshot(snapshot_copy_id, ami_id, snapshot_region):
     """
-    Delete snapshot after volume is ready.
+    Delete snapshot after image is inspected.
 
     Args:
         snapshot_copy_id (str): The id of the snapshot to delete
-        volume_id (str): The id of the volume that must be ready
-        volume_region (str): The region of the volume
+        ami_id (str): The id of the image that must be inspected
+        snapshot_region (str): The region the snapshot resides in
     Returns:
         None: Run as an asynchronous Celery task.
     """
-    ec2 = boto3.resource("ec2")
+    clean_up = False
+    try:
+        ami = AwsMachineImage.objects.get(ec2_ami_id=ami_id)
+        machine_image = ami.machine_image.get()
+        if machine_image.status == MachineImage.INSPECTED:
+            clean_up = True
+    except AwsMachineImage.DoesNotExist:
+        logger.info(
+            _(
+                "%(label)s AMI ID %(ami_id)s no longer available, "
+                "snapshot id %(snapshot_copy_id) being cleaned up."
+            ),
+            {
+                "label": "delete_snapshot",
+                "ami_id": ami_id,
+                "snapshot_copy_id": snapshot_copy_id,
+            },
+        )
+        clean_up = True
 
-    # Wait for volume to be ready
-    volume = aws.get_volume(volume_id, volume_region)
-    aws.check_volume_state(volume)
-
-    # Delete snapshot_copy
-    logger.info(
-        _("%(label)s delete cloudigrade snapshot copy %(copy_id)s"),
-        {"label": "delete_snapshot", "copy_id": snapshot_copy_id},
-    )
-    snapshot_copy = ec2.Snapshot(snapshot_copy_id)
-    snapshot_copy.delete(DryRun=False)
-
-
-@retriable_shared_task(name="api.clouds.aws.tasks.enqueue_ready_volume")
-@rewrap_aws_errors
-def enqueue_ready_volume(ami_id, volume_id, volume_region):
-    """
-    Enqueues information about an AMI and volume for later use.
-
-    Args:
-        ami_id (str): The AWS AMI id for which this request originated
-        volume_id (str): The id of the volume that must be ready
-        volume_region (str): The region of the volume
-    Returns:
-        None: Run as an asynchronous Celery task.
-    """
-    volume = aws.get_volume(volume_id, volume_region)
-    aws.check_volume_state(volume)
-    messages = [{"ami_id": ami_id, "volume_id": volume_id}]
-
-    queue_name = "{0}ready_volumes".format(settings.AWS_NAME_PREFIX)
-    logger.info(
-        _("Adding ready volume to queue %(queue_name)s: %(messages)s"),
-        {"queue_name": queue_name, "messages": messages},
-    )
-    add_messages_to_queue(queue_name, messages)
+    if clean_up:
+        logger.info(
+            _("%(label)s delete cloudigrade snapshot copy %(copy_id)s"),
+            {"label": "delete_snapshot", "copy_id": snapshot_copy_id},
+        )
+        ec2 = boto3.resource("ec2")
+        snapshot_copy = ec2.Snapshot(snapshot_copy_id)
+        snapshot_copy.delete(DryRun=False)
+    else:
+        logger.info(
+            _(
+                "%(label)s cloudigrade snapshot copy "
+                "%(copy_id)s not inspected yet, not deleting."
+            ),
+            {"label": "delete_snapshot", "copy_id": snapshot_copy_id},
+        )
+        delete_snapshot.apply_async(
+            args=[snapshot_copy_id, ami_id, snapshot_region],
+            countdown=settings.INSPECTION_SNAPSHOT_CLEAN_UP_RETRY_DELAY,
+        )

@@ -37,7 +37,6 @@ from api.clouds.aws.tasks import (
     CLOUD_KEY,
     CLOUD_TYPE_AWS,
     configure_customer_aws_and_create_cloud_account,
-    scale_down_cluster,
 )
 from api.clouds.aws.util import (
     persist_aws_inspection_cluster_results,
@@ -449,9 +448,7 @@ def persist_inspection_cluster_results_task():
             )
             failures.append(message)
 
-    if successes or failures:
-        scale_down_cluster.delay()
-    else:
+    if not (successes or failures):
         logger.info("No inspection results found.")
 
     return successes, failures

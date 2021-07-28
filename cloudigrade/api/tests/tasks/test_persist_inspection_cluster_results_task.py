@@ -14,24 +14,19 @@ class PersistInspectionClusterResultsTaskTest(TestCase):
 
     @patch("api.tasks.aws.yield_messages_from_queue")
     @patch("api.tasks.aws.get_sqs_queue_url")
-    @patch("api.tasks.scale_down_cluster")
     @patch("api.tasks.persist_aws_inspection_cluster_results")
-    def test_persist_inspect_results_no_messages(
-        self, mock_persist, mock_scale_down, _, mock_receive
-    ):
+    def test_persist_inspect_results_no_messages(self, mock_persist, _, mock_receive):
         """Assert empty yield results are properly ignored."""
         mock_receive.return_value = []
         tasks.persist_inspection_cluster_results_task()
         mock_persist.assert_not_called()
-        mock_scale_down.assert_not_called()
 
     @patch("api.tasks.aws.delete_messages_from_queue")
     @patch("api.tasks.aws.yield_messages_from_queue")
     @patch("api.tasks.aws.get_sqs_queue_url")
-    @patch("api.tasks.scale_down_cluster")
     @patch("api.tasks.persist_aws_inspection_cluster_results")
     def test_persist_inspect_results_task_aws_success(
-        self, mock_persist, mock_scale_down, _, mock_receive, mock_delete
+        self, mock_persist, _, mock_receive, mock_delete
     ):
         """Assert that a valid message is correctly handled and deleted."""
         receipt_handle = str(uuid.uuid4())
@@ -66,17 +61,15 @@ class PersistInspectionClusterResultsTaskTest(TestCase):
 
         mock_persist.assert_called_once_with(body_dict)
         mock_delete.assert_called_once()
-        mock_scale_down.delay.assert_called_once()
         self.assertIn(sqs_message, s)
         self.assertEqual([], f)
 
     @patch("api.tasks.aws.delete_messages_from_queue")
     @patch("api.tasks.aws.yield_messages_from_queue")
     @patch("api.tasks.aws.get_sqs_queue_url")
-    @patch("api.tasks.scale_down_cluster")
     @patch("api.tasks.persist_aws_inspection_cluster_results")
     def test_persist_inspect_results_unknown_cloud(
-        self, mock_persist, mock_scale_down, _, mock_receive, mock_delete
+        self, mock_persist, _, mock_receive, mock_delete
     ):
         """Assert message is not deleted for unknown cloud."""
         receipt_handle = str(uuid.uuid4())
@@ -91,16 +84,14 @@ class PersistInspectionClusterResultsTaskTest(TestCase):
 
         mock_persist.assert_not_called()
         mock_delete.assert_not_called()
-        mock_scale_down.delay.assert_called_once()
         self.assertEqual([], s)
         self.assertIn(sqs_message, f)
 
     @patch("api.tasks.aws.delete_messages_from_queue")
     @patch("api.tasks.aws.yield_messages_from_queue")
     @patch("api.tasks.aws.get_sqs_queue_url")
-    @patch("api.tasks.scale_down_cluster")
     def test_persist_inspect_results_aws_cloud_no_images(
-        self, mock_scale_down, _, mock_receive, mock_delete
+        self, _, mock_receive, mock_delete
     ):
         """Assert message is not deleted if it is missing images."""
         receipt_handle = str(uuid.uuid4())
@@ -114,16 +105,14 @@ class PersistInspectionClusterResultsTaskTest(TestCase):
         s, f = tasks.persist_inspection_cluster_results_task()
 
         mock_delete.assert_not_called()
-        mock_scale_down.delay.assert_called_once()
         self.assertEqual([], s)
         self.assertIn(sqs_message, f)
 
     @patch("api.tasks.aws.delete_messages_from_queue")
     @patch("api.tasks.aws.yield_messages_from_queue")
     @patch("api.tasks.aws.get_sqs_queue_url")
-    @patch("api.tasks.scale_down_cluster")
     def test_persist_inspect_results_aws_cloud_image_not_found(
-        self, mock_scale_down, _, mock_receive, mock_delete
+        self, _, mock_receive, mock_delete
     ):
         """
         Assert message is still deleted when our image is not found.
@@ -141,6 +130,5 @@ class PersistInspectionClusterResultsTaskTest(TestCase):
         s, f = tasks.persist_inspection_cluster_results_task()
 
         mock_delete.assert_called_once()
-        mock_scale_down.delay.assert_called_once()
         self.assertIn(sqs_message, s)
         self.assertEqual([], f)
