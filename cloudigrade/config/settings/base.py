@@ -411,6 +411,7 @@ CELERY_BROKER_TRANSPORT_OPTIONS = {
     "region": AWS_SQS_REGION,
 }
 CELERY_BROKER_URL = AWS_SQS_URL
+CELERY_ACCEPT_CONTENT = ["json", "pickle"]
 
 
 #####################################################################
