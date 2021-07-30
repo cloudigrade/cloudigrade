@@ -4,7 +4,8 @@ FROM registry.access.redhat.com/ubi8/ubi-minimal:8.3
 RUN chmod g=u /etc/passwd /etc/group
 
 WORKDIR /opt/cloudigrade
-RUN microdnf install shadow-utils \
+# Need jq for parsing the clowder configuration json in shell scripts
+RUN microdnf install shadow-utils jq \
 	&& useradd -r cloudigrade \
 	&& microdnf clean all
 
@@ -26,10 +27,6 @@ RUN microdnf update \
     && poetry config virtualenvs.create false \
     && PYCURL_SSL_LIBRARY=openssl poetry install -n --no-dev \
     && microdnf remove libcurl-devel gcc python3-devel openssl-devel annobin -y \
-    && microdnf clean all
-
-# Need jq for parsing the clowder configuration json in shell scripts
-RUN microdnf install jq -y \
     && microdnf clean all
 
 COPY deployment/playbooks/ ./playbooks
