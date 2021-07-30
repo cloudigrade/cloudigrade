@@ -263,6 +263,10 @@ objects:
           value: ${HABERDASHER_LABELS}
         - name: HABERDASHER_TAGS
           value: ${HABERDASHER_TAGS}
+        - name: RECALCULATE_CONCURRENT_USAGE_FOR_ALL_USERS_SCHEDULE
+          value: ${RECALCULATE_CONCURRENT_USAGE_FOR_ALL_USERS_SCHEDULE}
+        - name: RECALCULATE_RUNS_FOR_ALL_CLOUD_ACCOUNTS_SCHEDULE
+          value: ${RECALCULATE_RUNS_FOR_ALL_CLOUD_ACCOUNTS_SCHEDULE}
         - name: WATCHTOWER_USE_QUEUES
           value: ${API_WATCHTOWER_USE_QUEUES}
         - name: WATCHTOWER_SEND_INTERVAL
@@ -494,6 +498,10 @@ objects:
           value: ${HABERDASHER_LABELS}
         - name: HABERDASHER_TAGS
           value: ${HABERDASHER_TAGS}
+        - name: RECALCULATE_CONCURRENT_USAGE_FOR_ALL_USERS_SCHEDULE
+          value: ${RECALCULATE_CONCURRENT_USAGE_FOR_ALL_USERS_SCHEDULE}
+        - name: RECALCULATE_RUNS_FOR_ALL_CLOUD_ACCOUNTS_SCHEDULE
+          value: ${RECALCULATE_RUNS_FOR_ALL_CLOUD_ACCOUNTS_SCHEDULE}
         - name: VERBOSE_SOURCES_NOTIFICATION_LOGGING
           value: ${VERBOSE_SOURCES_NOTIFICATION_LOGGING}
         - name: CACHE_TTL_DEFAULT
@@ -731,6 +739,10 @@ objects:
           value: ${HABERDASHER_LABELS}
         - name: HABERDASHER_TAGS
           value: ${HABERDASHER_TAGS}
+        - name: RECALCULATE_CONCURRENT_USAGE_FOR_ALL_USERS_SCHEDULE
+          value: ${RECALCULATE_CONCURRENT_USAGE_FOR_ALL_USERS_SCHEDULE}
+        - name: RECALCULATE_RUNS_FOR_ALL_CLOUD_ACCOUNTS_SCHEDULE
+          value: ${RECALCULATE_RUNS_FOR_ALL_CLOUD_ACCOUNTS_SCHEDULE}
         - name: VERBOSE_SOURCES_NOTIFICATION_LOGGING
           value: ${VERBOSE_SOURCES_NOTIFICATION_LOGGING}
         - name: CACHE_TTL_DEFAULT
@@ -976,6 +988,10 @@ objects:
           value: ${HABERDASHER_LABELS}
         - name: HABERDASHER_TAGS
           value: ${HABERDASHER_TAGS}
+        - name: RECALCULATE_CONCURRENT_USAGE_FOR_ALL_USERS_SCHEDULE
+          value: ${RECALCULATE_CONCURRENT_USAGE_FOR_ALL_USERS_SCHEDULE}
+        - name: RECALCULATE_RUNS_FOR_ALL_CLOUD_ACCOUNTS_SCHEDULE
+          value: ${RECALCULATE_RUNS_FOR_ALL_CLOUD_ACCOUNTS_SCHEDULE}
         - name: VERBOSE_SOURCES_NOTIFICATION_LOGGING
           value: ${VERBOSE_SOURCES_NOTIFICATION_LOGGING}
         - name: CACHE_TTL_DEFAULT
@@ -1408,6 +1424,14 @@ parameters:
   displayName: Change this value to trigger OSD to redeploy
   required: true
   value: '1'
+- name: RECALCULATE_CONCURRENT_USAGE_FOR_ALL_USERS_SCHEDULE
+  displayName: Recalculate Concurrent Usage For All Users Schedule
+  required: true
+  value: '3600'
+- name: RECALCULATE_RUNS_FOR_ALL_CLOUD_ACCOUNTS_SCHEDULE
+  displayName: Recalculate Runs For All Cloud Accounts Schedule
+  required: true
+  value: '3600'
 - name: REPOPULATE_AZURE_INSTANCE_MAPPING_SCHEDULE
   displayName: Repopulate Azure Instance Mapping Schedule
   required: true
