@@ -685,7 +685,7 @@ def recalculate_runs_for_cloud_account_id(cloud_account_id):
     _recalculate_runs_for_cloud_account_id(cloud_account_id)
 
 
-@shared_task(name="api.tasks.recalculate_runs_for_all_users")
+@shared_task(name="api.tasks.recalculate_runs_for_all_cloud_accounts")
 def recalculate_runs_for_all_cloud_accounts():
     """Recalculate recent runs for all cloud accounts."""
     cloud_accounts = CloudAccount.objects.all()
