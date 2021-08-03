@@ -676,21 +676,23 @@ def fix_problematic_runs(run_ids):
 
 
 @shared_task(name="api.tasks.recalculate_runs_for_cloud_account_id")
-def recalculate_runs_for_cloud_account_id(cloud_account_id):
+def recalculate_runs_for_cloud_account_id(cloud_account_id, since=None):
     """
     Recalculate recent Runs for the given cloud account id.
 
     This is simply a Celery task wrapper for recalculate_runs_for_cloud_account_id.
     """
-    _recalculate_runs_for_cloud_account_id(cloud_account_id)
+    _recalculate_runs_for_cloud_account_id(cloud_account_id, since)
 
 
 @shared_task(name="api.tasks.recalculate_runs_for_all_cloud_accounts")
-def recalculate_runs_for_all_cloud_accounts():
+def recalculate_runs_for_all_cloud_accounts(since=None):
     """Recalculate recent runs for all cloud accounts."""
     cloud_accounts = CloudAccount.objects.all()
     for cloud_account in cloud_accounts:
-        recalculate_runs_for_cloud_account_id.delay(cloud_account.id)
+        recalculate_runs_for_cloud_account_id.apply_async(
+            args=(cloud_account.id, since), serializer="pickle"
+        )
 
 
 @shared_task(name="api.tasks.recalculate_concurrent_usage_for_user_id_on_date")
