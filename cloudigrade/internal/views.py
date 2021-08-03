@@ -2,6 +2,8 @@
 import logging
 from datetime import timedelta
 
+from dateutil import tz
+from dateutil.parser import parse
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.utils.translation import gettext as _
@@ -161,6 +163,75 @@ def sources_kafka(request):
     }
 
     return JsonResponse(data=response)
+
+
+@api_view(["POST"])
+@authentication_classes([IdentityHeaderAuthenticationInternal])
+@permission_classes([permissions.AllowAny])
+@schema(None)
+def recalculate_runs(request):
+    """
+    Trigger a recalculate_runs_for_* task function to run.
+
+    Optional POST params include "cloud_account_id" and "since".
+
+    This triggers a Celery task, either `recalculate_runs_for_all_cloud_accounts` or
+    `recalculate_runs_for_cloud_account_id` depending on if `cloud_account_id` is given.
+    Because the task runs asynchronously, a 202 response will be returned immediately
+    even though the task may not actually have completed execution.
+
+    Example request using httpie:
+
+        http :8000/internal/recalculate_runs/ \
+            cloud_account_id="420" \
+            since="2021-06-09"
+
+    And the response for that example:
+
+        HTTP/1.1 202 Accepted
+    """
+    data = request.data
+
+    try:
+        if cloud_account_id := data.get("cloud_account_id"):
+            cloud_account_id = int(cloud_account_id)
+    except (ValueError, TypeError) as e:
+        raise exceptions.ValidationError({"cloud_account_id": e})
+
+    try:
+        if since := data.get("since"):
+            # We need a datetime object, not just the input string.
+            since = parse(since)
+        if since and not since.tzinfo:
+            # Force to UTC if no timezone/offset was provided.
+            since = since.replace(tzinfo=tz.tzutc())
+    except ValueError as e:
+        raise exceptions.ValidationError({"since": e})
+
+    if cloud_account_id:
+        logger.info(
+            _(
+                "internal API calling recalculate_runs_for_cloud_account_id "
+                "with args %(args)s"
+            ),
+            {"args": (cloud_account_id, since)},
+        )
+        tasks.recalculate_runs_for_cloud_account_id.apply_async(
+            args=(cloud_account_id, since), serializer="pickle"
+        )
+    else:
+        logger.info(
+            _(
+                "internal API calling recalculate_runs_for_all_cloud_accounts "
+                "with args %(args)s"
+            ),
+            {"args": (since,)},
+        )
+        tasks.recalculate_runs_for_all_cloud_accounts.apply_async(
+            args=(since,), serializer="pickle"
+        )
+
+    return Response(status=status.HTTP_202_ACCEPTED)
 
 
 class ProblematicRunList(APIView):
