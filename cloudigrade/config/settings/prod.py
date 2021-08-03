@@ -17,13 +17,6 @@ DJANGO_DEBUG = "False"
 # explicitly. By reloading here *without* a default, we halt app startup if not present.
 CLOUDIGRADE_ENVIRONMENT = env("CLOUDIGRADE_ENVIRONMENT")
 
-# Note: Why is HOUNDIGRADE_AWS_AVAILABILITY_ZONE special here?
-# Originally, we manually configured houndigrade to always use this AZ, and we preserved
-# that decision when we built its related Ansible playbook role. This could be made
-# configurable in both places, but we're leaving it static for now because this should
-# change when we (eventually) replace houndigrade's use of ECS with cloud-init.
-HOUNDIGRADE_AWS_AVAILABILITY_ZONE = "us-east-1a"
-
 # Instead of calling util.aws.sts._get_primary_account_id,
 # we use boto here directly to avoid a potential import loop.
 account_id = client("sts").get_caller_identity().get("Account")

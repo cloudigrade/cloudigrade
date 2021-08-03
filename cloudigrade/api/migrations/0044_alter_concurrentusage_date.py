@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0043_auto_20210722_1652'),
+        ("api", "0043_auto_20210722_1652"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='concurrentusage',
-            name='date',
+            model_name="concurrentusage",
+            name="date",
             field=models.DateField(db_index=True),
         ),
     ]

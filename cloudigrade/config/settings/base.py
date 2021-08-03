@@ -399,24 +399,12 @@ AWS_CLOUDTRAIL_EVENT_URL = f"https://sqs.us-east-1.amazonaws.com/000000000000/cl
 #####################################################################
 # Configs used for running houndigrade and accessing its results
 
-HOUNDIGRADE_AWS_AVAILABILITY_ZONE = env(
-    "HOUNDIGRADE_AWS_AVAILABILITY_ZONE", default="us-east-1b"
-)
-HOUNDIGRADE_AWS_AUTOSCALING_GROUP_NAME = (
-    f"cloudigrade-ecs-asg-{CLOUDIGRADE_ENVIRONMENT}"
-)
-HOUNDIGRADE_AWS_VOLUME_BATCH_SIZE = env.int(
-    "HOUNDIGRADE_AWS_VOLUME_BATCH_SIZE", default=32
-)
-HOUNDIGRADE_ECS_CLUSTER_NAME = f"cloudigrade-ecs-{CLOUDIGRADE_ENVIRONMENT}"
-HOUNDIGRADE_ECS_FAMILY_NAME = env("HOUNDIGRADE_ECS_FAMILY_NAME", default="Houndigrade")
 HOUNDIGRADE_ECS_IMAGE_NAME = env(
     "HOUNDIGRADE_ECS_IMAGE_NAME", default="cloudigrade/houndigrade"
 )
 HOUNDIGRADE_ECS_IMAGE_TAG = env("HOUNDIGRADE_ECS_IMAGE_TAG", default="latest")
 HOUNDIGRADE_EXCHANGE_NAME = env("HOUNDIGRADE_EXCHANGE_NAME", default="")
 HOUNDIGRADE_RESULTS_QUEUE_NAME = f"{AWS_NAME_PREFIX}inspection_results"
-
 HOUNDIGRADE_SENTRY_DSN = env("HOUNDIGRADE_SENTRY_DSN", default="")
 HOUNDIGRADE_SENTRY_RELEASE = (
     HOUNDIGRADE_ECS_IMAGE_TAG
@@ -477,17 +465,10 @@ CELERY_TASK_ROUTES = {
     "api.clouds.aws.tasks.remove_snapshot_ownership": {
         "queue": "remove_snapshot_ownership"
     },
-    "api.clouds.aws.tasks.create_volume": {"queue": "create_volume"},
-    "api.clouds.aws.tasks.enqueue_ready_volume": {"queue": "enqueue_ready_volumes"},
     "api.clouds.aws.tasks.delete_snapshot": {"queue": "delete_snapshot"},
-    "api.clouds.aws.tasks.scale_up_inspection_cluster": {
-        "queue": "scale_up_inspection_cluster"
+    "api.clouds.aws.tasks.launch_inspection_instance": {
+        "queue": "launch_inspection_instance"
     },
-    "api.clouds.aws.tasks.attach_volumes_to_cluster": {
-        "queue": "attach_volumes_to_cluster"
-    },
-    "api.clouds.aws.tasks.run_inspection_cluster": {"queue": "run_inspection_cluster"},
-    "api.clouds.aws.tasks.scale_down_cluster": {"queue": "scale_down_cluster"},
     "api.clouds.aws.tasks.analyze_log": {"queue": "analyze_log"},
     "api.tasks.calculate_max_concurrent_usage": {
         "queue": "calculate_max_concurrent_usage"

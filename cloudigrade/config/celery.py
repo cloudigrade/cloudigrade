@@ -52,12 +52,6 @@ app.conf.beat_schedule = {
             default=60 * 60,  # hourly
         ),
     },
-    "scale_up_inspection_cluster_every_60_min": {
-        "task": "api.clouds.aws.tasks.scale_up_inspection_cluster",
-        "schedule": env.int(
-            "HOUNDIGRADE_ECS_SCALE_UP_CLUSTER_SCHEDULE", default=60 * 60
-        ),
-    },
     "analyze_log_every_2_mins": {
         "task": "api.clouds.aws.tasks.analyze_log",
         "schedule": env.int("ANALYZE_LOG_SCHEDULE", default=30),
