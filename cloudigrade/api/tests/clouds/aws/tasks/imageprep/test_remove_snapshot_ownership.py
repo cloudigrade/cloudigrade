@@ -2,7 +2,6 @@
 from unittest.mock import Mock, patch
 
 from botocore.exceptions import ClientError
-from django.conf import settings
 from django.test import TestCase
 
 from api.clouds.aws import tasks
@@ -23,7 +22,7 @@ class RemoveSnapshotOwnershipTest(TestCase):
         )
         mock_snapshot_copy_id = util_helper.generate_dummy_snapshot_id()
         mock_snapshot_copy = util_helper.generate_mock_snapshot(mock_snapshot_copy_id)
-        zone = settings.HOUNDIGRADE_AWS_AVAILABILITY_ZONE
+        zone = util_helper.generate_dummy_availability_zone()
         region = zone[:-1]
 
         resource = mock_boto3.resource.return_value
@@ -51,7 +50,7 @@ class RemoveSnapshotOwnershipTest(TestCase):
         )
         mock_snapshot_copy_id = util_helper.generate_dummy_snapshot_id()
         mock_snapshot_copy = util_helper.generate_mock_snapshot(mock_snapshot_copy_id)
-        zone = settings.HOUNDIGRADE_AWS_AVAILABILITY_ZONE
+        zone = util_helper.generate_dummy_availability_zone()
         region = zone[:-1]
 
         client_error = ClientError(
@@ -81,7 +80,7 @@ class RemoveSnapshotOwnershipTest(TestCase):
         mock_arn = util_helper.generate_dummy_arn()
         mock_customer_snapshot_id = util_helper.generate_dummy_snapshot_id()
         mock_snapshot_copy_id = util_helper.generate_dummy_snapshot_id()
-        zone = settings.HOUNDIGRADE_AWS_AVAILABILITY_ZONE
+        zone = util_helper.generate_dummy_availability_zone()
         region = zone[:-1]
 
         client_error = ClientError(

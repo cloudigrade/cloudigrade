@@ -6,28 +6,28 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0044_alter_concurrentusage_date'),
+        ("api", "0044_alter_concurrentusage_date"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='cloudaccount',
-            name='object_id',
+            model_name="cloudaccount",
+            name="object_id",
             field=models.PositiveIntegerField(db_index=True),
         ),
         migrations.AlterField(
-            model_name='instance',
-            name='object_id',
+            model_name="instance",
+            name="object_id",
             field=models.PositiveIntegerField(db_index=True),
         ),
         migrations.AlterField(
-            model_name='instanceevent',
-            name='object_id',
+            model_name="instanceevent",
+            name="object_id",
             field=models.PositiveIntegerField(db_index=True),
         ),
         migrations.AlterField(
-            model_name='machineimage',
-            name='object_id',
+            model_name="machineimage",
+            name="object_id",
             field=models.PositiveIntegerField(db_index=True),
         ),
     ]

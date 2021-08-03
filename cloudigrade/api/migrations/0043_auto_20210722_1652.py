@@ -6,23 +6,23 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0042_delete_concurrentusagecalculationtask'),
+        ("api", "0042_delete_concurrentusagecalculationtask"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='instanceevent',
-            name='occurred_at',
+            model_name="instanceevent",
+            name="occurred_at",
             field=models.DateTimeField(db_index=True),
         ),
         migrations.AlterField(
-            model_name='run',
-            name='end_time',
+            model_name="run",
+            name="end_time",
             field=models.DateTimeField(blank=True, db_index=True, null=True),
         ),
         migrations.AlterField(
-            model_name='run',
-            name='start_time',
+            model_name="run",
+            name="start_time",
             field=models.DateTimeField(db_index=True),
         ),
     ]
