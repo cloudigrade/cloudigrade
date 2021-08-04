@@ -82,6 +82,7 @@ urlpatterns = [
     path("healthz/", include("health_check.urls")),
     path("admin/", admin.site.urls),
     path("error/", views.fake_error),
+    path("recalculate_concurrent_usage/", views.recalculate_concurrent_usage),
     path("recalculate_runs/", views.recalculate_runs),
     path("", include("django_prometheus.urls")),
     path("api/cloudigrade/v1/", include(router.urls)),

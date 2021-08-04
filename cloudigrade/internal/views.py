@@ -234,6 +234,72 @@ def recalculate_runs(request):
     return Response(status=status.HTTP_202_ACCEPTED)
 
 
+@api_view(["POST"])
+@authentication_classes([IdentityHeaderAuthenticationInternal])
+@permission_classes([permissions.AllowAny])
+@schema(None)
+def recalculate_concurrent_usage(request):
+    """
+    Trigger a recalculate_concurrent_usage_for_* task function to run.
+
+    Optional POST params include "user_id" and "since".
+
+    This triggers a Celery task, either `recalculate_concurrent_usage_for_all_users` or
+    `recalculate_concurrent_usage_for_user_id` depending on if `user_id` is given.
+    Because the task runs asynchronously, a 202 response will be returned immediately
+    even though the task may not actually have completed execution.
+
+    Example request using httpie:
+
+        http :8000/internal/recalculate_concurrent_usage/ \
+            user_id="420" \
+            since="2021-06-09"
+
+    And the response for that example:
+
+        HTTP/1.1 202 Accepted
+    """
+    data = request.data
+
+    try:
+        if user_id := data.get("user_id"):
+            user_id = int(user_id)
+    except (ValueError, TypeError) as e:
+        raise exceptions.ValidationError({"user_id": e})
+
+    try:
+        if since := data.get("since"):
+            # We need a date object, not just the input string.
+            since = parse(since).date()
+    except ValueError as e:
+        raise exceptions.ValidationError({"since": e})
+
+    if user_id:
+        logger.info(
+            _(
+                "internal API calling recalculate_concurrent_usage_for_user_id "
+                "with args %(args)s"
+            ),
+            {"args": (user_id, since)},
+        )
+        tasks.recalculate_concurrent_usage_for_user_id.apply_async(
+            args=(user_id, since), serializer="pickle"
+        )
+    else:
+        logger.info(
+            _(
+                "internal API calling recalculate_concurrent_usage_for_all_users "
+                "with args %(args)s"
+            ),
+            {"args": (since,)},
+        )
+        tasks.recalculate_concurrent_usage_for_all_users.apply_async(
+            args=(since,), serializer="pickle"
+        )
+
+    return Response(status=status.HTTP_202_ACCEPTED)
+
+
 class ProblematicRunList(APIView):
     """List all problematic unending Runs or try to fix them."""
 
