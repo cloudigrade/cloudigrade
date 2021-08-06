@@ -1,0 +1,3 @@
+---
+- include_tasks: push_local.yml
+- include_tasks: clowder.yml
