@@ -126,16 +126,18 @@ def cleanup_request_id(**kwargs):
     local.request_id = None
 
 
-@signals.setup_logging.connect
-def on_celery_setup_logging(**kwargs):
-    """
-    Stop celery from overriding default logging setup.
+if env.bool("CELERY_DISABLE_LOGGING_HIJACK", default=True):
 
-    By default celery hijacks the root logger. The configuration setting
-    CELERYD_HIJACK_ROOT_LOGGER only stops celery from updating the handler,
-    celery still updates the formatter and we lose the filter.
+    @signals.setup_logging.connect
+    def on_celery_setup_logging(**kwargs):
+        """
+        Stop celery from overriding default logging setup.
 
-    Since the formatter we want to use is the configured Django one,
-    we can just configure celery to not touch logging.
-    """
-    pass
+        By default celery hijacks the root logger. The configuration setting
+        CELERYD_HIJACK_ROOT_LOGGER only stops celery from updating the handler,
+        celery still updates the formatter and we lose the filter.
+
+        Since the formatter we want to use is the configured Django one,
+        we can just configure celery to not touch logging.
+        """
+        pass
