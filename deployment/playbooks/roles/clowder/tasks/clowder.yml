@@ -1,0 +1,103 @@
+---
+# Create Block
+- block:
+  - name: create / create tmp directory
+    tempfile:
+      state: directory
+      suffix: clowder
+    register: clowder_tmp_dir
+
+  - debug: var=clowder_tmp_dir.path
+
+  - name: create / create tmp/secrets directory
+    file:
+      state: directory
+      path: "{{ clowder_tmp_dir.path }}/secrets"
+
+  - name: create / template clowder config
+    template:
+      src: config.yaml.j2
+      dest: "{{ clowder_tmp_dir.path }}/config.yaml"
+
+  - name: create / template cloudigrade app secret
+    template:
+      src: cloudigrade_app_secret.json.j2
+      dest: "{{ clowder_tmp_dir.path }}/secrets/cloudigrade_app_secret.json"
+
+  - name: create / template cloudigrade azure secret
+    template:
+      src: cloudigrade_azure.json.j2
+      dest: "{{ clowder_tmp_dir.path }}/secrets/cloudigrade_azure.json"
+
+  - name: create / template cloudwatch secret
+    template:
+      src: cloudwatch.json.j2
+      dest: "{{ clowder_tmp_dir.path }}/secrets/cloudwatch.json"
+
+  - name: create / run bonfire deploy - master
+    shell: |
+      oc project {{ namespace }}
+      bonfire deploy cloudigrade \
+        --source local \
+        --clowd-env env-{{ namespace }} \
+        --namespace {{ namespace }} \
+        --timeout 600 \
+        --import-secrets \
+        --secrets-dir "{{ clowder_tmp_dir.path }}/secrets" \
+        --set-parameter "cloudigrade/CLOUDIGRADE_ENVIRONMENT={{ env }}" \
+        --set-parameter "cloudigrade/DJANGO_SETTINGS_MODULE=config.settings.prod" \
+        --set-parameter "cloudigrade/DJANGO_ALL_LOG_LEVEL=DEBUG" \
+        --set-parameter "rbac/DISABLE_MIGRATE=False" \
+        --set-parameter "rbac/PERMISSION_SEEDING_ENABLED=True" \
+        --set-parameter "rbac/ROLE_SEEDING=True" \
+        --set-parameter "rbac/GROUP_SEEDING_ENABLED=True"
+    args:
+      chdir: "{{ clowder_tmp_dir.path }}"
+    when: push_local_state == "absent"
+    register: bonfire_run_debug
+
+  - name: create / run bonfire deploy - local push
+    shell: |
+      oc project {{ namespace }}
+      bonfire deploy cloudigrade \
+        --source local \
+        --clowd-env env-{{ namespace }} \
+        --namespace {{ namespace }} \
+        --timeout 600 \
+        --import-secrets \
+        --secrets-dir "{{ clowder_tmp_dir.path }}/secrets" \
+        --set-parameter "cloudigrade/IMAGE=quay.io/{{ quay_user }}/cloudigrade" \
+        --set-parameter "cloudigrade/IMAGE_TAG={{ new_image_tag.stdout }}" \
+        --set-parameter "cloudigrade/CLOUDIGRADE_ENVIRONMENT={{ env }}" \
+        --set-parameter "cloudigrade/DJANGO_SETTINGS_MODULE=config.settings.prod" \
+        --set-parameter "cloudigrade/DJANGO_ALL_LOG_LEVEL=DEBUG" \
+        --set-parameter "postigrade/IMAGE=quay.io/{{ quay_user }}/postigrade" \
+        --set-parameter "postigrade/IMAGE_TAG={{ new_image_tag.stdout }}"  \
+        --set-parameter "rbac/DISABLE_MIGRATE=False" \
+        --set-parameter "rbac/PERMISSION_SEEDING_ENABLED=True" \
+        --set-parameter "rbac/ROLE_SEEDING=True" \
+        --set-parameter "rbac/GROUP_SEEDING_ENABLED=True"
+    args:
+      chdir: "{{ clowder_tmp_dir.path }}"
+    when: push_local_state == "present"
+    register: bonfire_run_debug
+
+  - debug: var=bonfire_run_debug
+
+  when: clowder_state == "present"
+
+# Destroy Block
+- block:
+  - name: destroy / delete apps in {{ namespace }}
+    shell: |
+      for app in rbac \
+                 sources-api sources-monitor sources-superkey-worker \
+                 postigrade cloudigrade
+      do
+        oc delete app ${app} -n {{ namespace }}
+      done
+    register: cleanup_output
+
+  - debug: var=cleanup_output.stdout_lines
+
+  when: clowder_state == "absent"

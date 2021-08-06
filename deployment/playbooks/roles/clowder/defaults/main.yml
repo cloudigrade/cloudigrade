@@ -1,0 +1,16 @@
+# Name of this environment
+env: dev
+
+# Default component state
+push_local_state: "absent"
+clowder_state: "present"
+
+## Defaults
+aws_access_key_id: "aws_key_id"
+aws_secret_access_key: "aws_secret_key"
+
+### clowder.yml
+cloudigrade_deployment_host: github
+cloudigrade_deployment_repo: cloudigrade/cloudigrade
+postigrade_deployment_host: github
+postigrade_deployment_repo: cloudigrade/postigrade
