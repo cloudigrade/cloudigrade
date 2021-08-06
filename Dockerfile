@@ -4,7 +4,8 @@ FROM registry.access.redhat.com/ubi8/ubi-minimal:8.3
 RUN chmod g=u /etc/passwd /etc/group
 
 WORKDIR /opt/cloudigrade
-RUN microdnf install shadow-utils \
+# Need jq for parsing the clowder configuration json in shell scripts
+RUN microdnf install shadow-utils jq \
 	&& useradd -r cloudigrade \
 	&& microdnf clean all
 
@@ -30,10 +31,12 @@ RUN microdnf update \
 
 COPY deployment/playbooks/ ./playbooks
 COPY deployment/scripts/mid_hook.sh ./scripts/mid_hook.sh
+COPY deployment/scripts/cloudigrade_init.sh ./scripts/cloudigrade_init.sh
 COPY cloudigrade .
 USER cloudigrade
 
-EXPOSE 8080
+# Default is 8080, For clowder it is 8000
+EXPOSE 8080 8000
 
 ENTRYPOINT ["gunicorn"]
 CMD ["-c","config/gunicorn.py","config.wsgi"]

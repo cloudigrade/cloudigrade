@@ -4,6 +4,9 @@ import sys
 from decimal import Decimal
 from urllib.parse import quote
 
+from app_common_python import isClowderEnabled
+from app_common_python import LoadedConfig as clowder_cfg
+
 import environ
 from boto3.session import Session
 
@@ -36,9 +39,11 @@ if environ.os.path.isfile(ENV_FILE_PATH):
     env.read_env(ENV_FILE_PATH)
     __print("The .env file has been loaded. See base.py for more information")
 
+if isClowderEnabled():
+  __print("Clowder: Enabled")
+
 # Used to derive several other configs' default values later.
 CLOUDIGRADE_ENVIRONMENT = env("CLOUDIGRADE_ENVIRONMENT")
-
 
 # TODO refactor our app to use exclusively only one of these configs
 # CLOUDIGRADE_ENVIRONMENT, AWS_NAME_PREFIX, and CLOUDTRAIL_NAME_PREFIX don't all need to
@@ -134,14 +139,41 @@ DATABASES = {
             "DJANGO_DATABASE_ENGINE",
             default="django_prometheus.db.backends.postgresql",
         ),
-        "NAME": env("DJANGO_DATABASE_NAME", default="postgres"),
-        "HOST": env("DJANGO_DATABASE_HOST", default="localhost"),
-        "USER": env("DJANGO_DATABASE_USER", default="postgres"),
-        "PASSWORD": env("DJANGO_DATABASE_PASSWORD", default="postgres"),
-        "PORT": env.int("DJANGO_DATABASE_PORT", default=5432),
         "CONN_MAX_AGE": env.int("DJANGO_DATABASE_CONN_MAX_AGE", default=0),
     }
 }
+
+if isClowderEnabled():
+    CLOWDER_DATABASE_NAME = clowder_cfg.database.name
+    CLOWDER_DATABASE_HOST = clowder_cfg.database.hostname
+    CLOWDER_DATABASE_PORT = clowder_cfg.database.port
+    CLOWDER_DATABASE_USER = clowder_cfg.database.username
+    CLOWDER_DATABASE_PASSWORD = clowder_cfg.database.password
+
+    # with postigrade deployed in clowder, we need to hit its endpoint
+    # hostname and webPort instead.
+    for endpoint in clowder_cfg.endpoints:
+        if endpoint.app == "postigrade" and endpoint.name == "svc":
+            CLOWDER_DATABASE_HOST     = endpoint.hostname
+            CLOWDER_DATABASE_PORT     = endpoint.port
+
+if isClowderEnabled():
+    DATABASES["default"] = {**DATABASES["default"], **{
+            "NAME": CLOWDER_DATABASE_NAME,
+            "HOST": CLOWDER_DATABASE_HOST,
+            "PORT": CLOWDER_DATABASE_PORT,
+            "USER": CLOWDER_DATABASE_USER,
+            "PASSWORD": CLOWDER_DATABASE_PASSWORD,
+        }}
+    __print(f"Clowder: Database name: {CLOWDER_DATABASE_NAME} host: {CLOWDER_DATABASE_HOST}:{CLOWDER_DATABASE_PORT}")
+else:
+    DATABASES["default"] = {**DATABASES["default"], **{
+            "NAME": env("DJANGO_DATABASE_NAME", default="postgres"),
+            "HOST": env("DJANGO_DATABASE_HOST", default="localhost"),
+            "USER": env("DJANGO_DATABASE_USER", default="postgres"),
+            "PASSWORD": env("DJANGO_DATABASE_PASSWORD", default="postgres"),
+            "PORT": env.int("DJANGO_DATABASE_PORT", default=5432),
+        }}
 
 # New in Django 3.2:
 # 3.1 and older default is 32-bit AutoField. 3.2 now recommends 64-bit BigAutoField.
@@ -548,12 +580,20 @@ INSIGHTS_INTERNAL_FAKE_IDENTITY_HEADER = "HTTP_X_RH_INTERNAL_FAKE_IDENTITY"
 # Sources/Kafka Listener Values
 LISTENER_TOPIC = env("LISTENER_TOPIC", default="platform.sources.event-stream")
 LISTENER_GROUP_ID = env("LISTENER_GROUP_ID", default="cloudmeter_ci")
-LISTENER_SERVER = env(
-    "LISTENER_SERVER", default="platform-mq-ci-kafka-bootstrap.platform-mq-ci.svc"
-)
-LISTENER_PORT = env.int("LISTENER_PORT", default=9092)
-LISTENER_METRICS_PORT = env.int("LISTENER_METRICS_PORT", default=8080)
 
+if isClowderEnabled():
+    kafka_broker = clowder_cfg.kafka.brokers[0]
+    LISTENER_SERVER = kafka_broker.hostname
+    LISTENER_PORT = kafka_broker.port
+    LISTENER_METRICS_PORT = clowder_cfg.metricsPort
+    __print(f"Clowder: Listener server: {LISTENER_SERVER}:{LISTENER_PORT}")
+    __print(f"Clowder: Listener metrics port: {LISTENER_METRICS_PORT}")
+else:
+    LISTENER_SERVER = env(
+        "LISTENER_SERVER", default="platform-mq-ci-kafka-bootstrap.platform-mq-ci.svc"
+    )
+    LISTENER_PORT = env.int("LISTENER_PORT", default=9092)
+    LISTENER_METRICS_PORT = env.int("LISTENER_METRICS_PORT", default=8080)
 
 #####################################################################
 # Sources API integration
@@ -562,9 +602,21 @@ SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA = env.bool(
     "SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA", default=True
 )
 
-SOURCES_API_BASE_URL = env(
-    "SOURCES_API_BASE_URL", default="http://sources-api.sources-ci.svc:8080"
-)
+
+if isClowderEnabled():
+    CLOWDER_SOURCES_API_BASE_URL = ""
+    for endpoint in clowder_cfg.endpoints:
+        if endpoint.app == "sources-api":
+            CLOWDER_SOURCES_API_BASE_URL=f"http://{endpoint.hostname}:{endpoint.port}"
+    if CLOWDER_SOURCES_API_BASE_URL == "":
+      __print(f"Clowder: Sources api service was not found, using default url: {SOURCES_API_BASE_URL}")
+    else:
+      SOURCES_API_BASE_URL = CLOWDER_SOURCES_API_BASE_URL
+      __print(f"Clowder: Sources api service url: {SOURCES_API_BASE_URL}")
+else:
+    SOURCES_API_BASE_URL = env(
+        "SOURCES_API_BASE_URL", default="http://sources-api.sources-ci.svc:8080"
+    )
 
 SOURCE_API_INTERNAL_URI = "/internal/v1.0/"
 SOURCES_API_EXTERNAL_URI = "/api/sources/v3.0/"
