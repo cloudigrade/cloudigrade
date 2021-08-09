@@ -7,6 +7,7 @@ from dateutil.parser import parse
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.utils.translation import gettext as _
+from django_celery_beat.models import PeriodicTask
 from django_filters import rest_framework as django_filters
 from rest_framework import exceptions, mixins, permissions, status, viewsets
 from rest_framework.decorators import (
@@ -681,3 +682,13 @@ class InternalDailyConcurrentUsageViewSet(DailyConcurrentUsageViewSet):
     def late_start_date_error(self):
         """Return the error message for specifying a late start_date."""
         return _("start_date cannot be in the future.")
+
+
+@schema(None)
+class InternalPeriodicTaskViewSet(
+    InternalViewSetMixin, mixins.UpdateModelMixin, viewsets.ReadOnlyModelViewSet
+):
+    """Retrieve, update, or list PeriodicTasks for internal use."""
+
+    queryset = PeriodicTask.objects.all()
+    serializer_class = serializers.InternalPeriodicTaskSerializer

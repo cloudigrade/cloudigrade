@@ -1,5 +1,7 @@
 """DRF serializers for the cloudigrade internal API."""
 from django.contrib.auth.models import User
+from django_celery_beat.models import PeriodicTask
+from rest_framework import serializers
 from rest_framework.fields import BooleanField
 from rest_framework.serializers import ModelSerializer
 
@@ -233,4 +235,25 @@ class InternalAzureMachineImageSerializer(ModelSerializer):
             # from property functions:
             "is_cloud_access",
             "is_marketplace",
+        )
+
+
+class InternalPeriodicTaskSerializer(ModelSerializer):
+    """Serialize PeriodicTask for the internal API."""
+
+    # Important note: last_run_at is redefined here because in the underlying model it
+    # has "editable=False" which coerces DRF into making it a read-only field, but we
+    # specifically want it writable from this serializer.
+    last_run_at = serializers.DateTimeField()
+
+    class Meta:
+        model = PeriodicTask
+        fields = "__all__"
+
+        # For now, *all* of the fields *except* "last_run_at" are read-only.
+        # We may relax this later as needed, but we want to minimize use of this API.
+        # PeriodicTask objects should normally be updated by the beat's config directly
+        # or by in-app model changes.
+        read_only_fields = tuple(
+            set(f.name for f in model._meta.get_fields()) - set(("last_run_at",))
         )
