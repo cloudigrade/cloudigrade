@@ -19,6 +19,7 @@ routes += [
 # "None" for the third tuple value means to use the model's name.
 routes += [
     ("users", views.InternalUserViewSet, "user"),
+    ("periodictasks", views.InternalPeriodicTaskViewSet, None),
     ("usertasklocks", views.InternalUserTaskLockViewSet, None),
     ("cloudaccounts", views.InternalCloudAccountViewSet, None),
     ("instances", views.InternalInstanceViewSet, None),
