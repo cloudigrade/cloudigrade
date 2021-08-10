@@ -47,13 +47,13 @@ def basegenericmodel_post_delete_callback(sender, instance, *args, **kwargs):
     Note: Signal receivers must accept keyword arguments (**kwargs).
     """
     if issubclass(sender, BaseGenericModel):
-        logger.info(
-            _("deleting %(self_class)s-related content object: %(content_object)s"),
-            {
-                "self_class": sender.__class__.__name__,
-                "content_object": instance.content_object,
-            },
-        )
         if instance.content_object is not None:
+            logger.debug(
+                _("deleting %(self_class)s-related content object: %(content_object)s"),
+                {
+                    "self_class": sender.__class__.__name__,
+                    "content_object": instance.content_object,
+                },
+            )
             instance.content_object.delete()
-            logger.info(_("deleting %s"), instance)
+            logger.debug(_("deleting %s"), instance)
