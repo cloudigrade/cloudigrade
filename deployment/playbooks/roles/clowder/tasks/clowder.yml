@@ -66,13 +66,13 @@
         --timeout 600 \
         --import-secrets \
         --secrets-dir "{{ clowder_tmp_dir.path }}/secrets" \
-        --set-parameter "cloudigrade/IMAGE=quay.io/{{ quay_user }}/cloudigrade" \
-        --set-parameter "cloudigrade/IMAGE_TAG={{ new_image_tag.stdout }}" \
+        --set-parameter "cloudigrade/IMAGE=quay.io/{{ (cloudigrade_deployment_host == 'local') | ternary(quay_user, 'cloudservices') }}/cloudigrade" \
+        --set-parameter "cloudigrade/IMAGE_TAG={{ (cloudigrade_deployment_host == 'local') | ternary(new_image_tag.stdout, 'latest') }}" \
         --set-parameter "cloudigrade/CLOUDIGRADE_ENVIRONMENT={{ env }}" \
         --set-parameter "cloudigrade/DJANGO_SETTINGS_MODULE=config.settings.prod" \
         --set-parameter "cloudigrade/DJANGO_ALL_LOG_LEVEL=DEBUG" \
-        --set-parameter "postigrade/IMAGE=quay.io/{{ quay_user }}/postigrade" \
-        --set-parameter "postigrade/IMAGE_TAG={{ new_image_tag.stdout }}"  \
+        --set-parameter "postigrade/IMAGE=quay.io/{{ (postigrade_deployment_host == 'local') | ternary(quay_user, 'cloudservices') }}/postigrade" \
+        --set-parameter "postigrade/IMAGE_TAG={{ (postigrade_deployment_host == 'local') | ternary(new_image_tag.stdout, 'latest') }}"  \
         --set-parameter "rbac/DISABLE_MIGRATE=False" \
         --set-parameter "rbac/PERMISSION_SEEDING_ENABLED=True" \
         --set-parameter "rbac/ROLE_SEEDING=True" \
