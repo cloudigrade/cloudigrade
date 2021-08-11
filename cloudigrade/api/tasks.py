@@ -27,12 +27,14 @@ from datetime import timedelta
 from celery import shared_task
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from django.db.models import Q
 from django.utils.translation import gettext as _
 from requests.exceptions import BaseHTTPError, RequestException
 
 from api import error_codes
+from api.clouds.aws import models as aws_models
 from api.clouds.aws.tasks import (
     CLOUD_KEY,
     CLOUD_TYPE_AWS,
@@ -43,9 +45,11 @@ from api.clouds.aws.util import (
     start_image_inspection,
     update_aws_cloud_account,
 )
+from api.clouds.azure import models as azure_models
 from api.models import (
     CloudAccount,
     ConcurrentUsage,
+    Instance,
     InstanceEvent,
     MachineImage,
     Run,
@@ -285,11 +289,121 @@ def _delete_cloud_accounts(cloud_accounts):
             # See https://gitlab.com/cloudigrade/cloudigrade/-/merge_requests/811
             try:
                 cloud_account.refresh_from_db()
+                _delete_cloud_account_related_objects(cloud_account)
                 CloudAccount.objects.filter(id=cloud_account.id).delete()
             except CloudAccount.DoesNotExist:
                 logger.info(
                     _("Cloud Account %s has already been deleted"), cloud_account
                 )
+
+
+def _delete_cloud_account_related_objects(cloud_account):
+    """
+    Quickly delete most objects related to a CloudAccount.
+
+    This function deliberately bypasses the normal Django model delete calls and signals
+    in an effort to improve performance with very large data sets. The tradeoff is that
+    this function now has much greater knowledge of all potentially related models that
+    would normally be resolved through generic relations.
+
+    In practice, deleting a CloudAccount with ~290,000 related InstanceEvents previously
+    took about 12 minutes to complete using normal Django model deletes with a local DB.
+    This "optimized" function completes the same operation in about 2 seconds.
+
+    Since we use generic relations and there is no direct relationship between some of
+    our models' underlying tables, some of the operations here effectively build queries
+    like "DELETE FROM table WHERE id IN (SELECT FROM other_table)" with the inner query
+    retrieving the ids that we want to delete in the outer query.
+
+    To further complicate this function, since deleting an Instance would normally also
+    delete its MachineImage if no other related Instances use it, we have to recreate
+    that logic here because we do not emit Instance.delete signals.
+
+    Todo:
+        A future iteration of this code could move it into a pre-delete signal for the
+        actual CloudAccount model (and its related AwsCloudAccount, etc. models).
+        If we do that, then there are additional changes we should make, such as
+        dropping the pre- and post-delete signals from other models like Instance.
+
+    Args:
+        cloud_account (CloudAccount): the cloud account being deleted
+
+    """
+    # Delete ConcurrentUsages via Runs, but use the normal Django model "delete" since
+    # these models have a many-to-many relationship that isn't defined with an explicit
+    # "through" model. This means it's "slow" and iterates through each one, but that's
+    # not as problematic performance-wise as the related Instances and InstanceEvents.
+    concurrent_usages = ConcurrentUsage.objects.filter(
+        potentially_related_runs__instance__cloud_account=cloud_account
+    )
+    concurrent_usages.delete()
+
+    # Delete Runs via related Instances.
+    runs = Run.objects.filter(instance__cloud_account=cloud_account)
+    runs._raw_delete(runs.db)
+
+    # define cloud-specific related classes to remove
+    if isinstance(cloud_account.content_object, aws_models.AwsCloudAccount):
+        instance_event_cloud_class = aws_models.AwsInstanceEvent
+        instance_cloud_class = aws_models.AwsInstance
+    elif isinstance(cloud_account.content_object, azure_models.AzureCloudAccount):
+        instance_event_cloud_class = azure_models.AzureInstanceEvent
+        instance_cloud_class = azure_models.AzureInstance
+    else:
+        # future-proofing...
+        raise NotImplementedError(
+            f"Unexpected cloud_account.content_object "
+            f"{type(cloud_account.content_object)}"
+        )
+
+    # Delete {cloud}InstanceEvent by constructing a list of ids from InstanceEvent.
+    cloud_instance_event_ids = InstanceEvent.objects.filter(
+        content_type=ContentType.objects.get_for_model(instance_event_cloud_class),
+        instance__cloud_account=cloud_account,
+    ).values_list("object_id", flat=True)
+    cloud_instance_events = instance_event_cloud_class.objects.filter(
+        id__in=cloud_instance_event_ids
+    )
+    cloud_instance_events._raw_delete(cloud_instance_events.db)
+
+    # Delete {cloud}Instance by constructing a list of ids from Instance.
+    cloud_instance_ids = Instance.objects.filter(
+        content_type=ContentType.objects.get_for_model(instance_cloud_class),
+        cloud_account=cloud_account,
+    ).values_list("object_id", flat=True)
+    cloud_instances = instance_cloud_class.objects.filter(id__in=cloud_instance_ids)
+    cloud_instances._raw_delete(cloud_instances.db)
+
+    # Delete InstanceEvents via related Instances.
+    instance_events = InstanceEvent.objects.filter(
+        instance__cloud_account=cloud_account
+    )
+    instance_events._raw_delete(instance_events.db)
+
+    # Before deleting the Instances, fetch the list of related MachineImage ids that are
+    # being used by any Instances belonging to this cloud account. Note that we wrap the
+    # queryset with set() to force it to evaluate *now* since lazy evaluation later may
+    # not work after we delete this CloudAccount's Instances.
+    machine_image_ids = set(
+        Instance.objects.filter(cloud_account=cloud_account).values_list(
+            "machine_image_id", flat=True
+        )
+    )
+
+    # Delete Instances.
+    instances = Instance.objects.filter(cloud_account=cloud_account)
+    instances._raw_delete(instances.db)
+
+    # Using that list of MachineImage ids used by this CloudAccount's Instances, find
+    # and delete (using normal Django delete) any MachineImages that are no longer being
+    # used by other Instances (belonging to other CloudAccounts).
+    active_machine_image_ids = (
+        Instance.objects.filter(machine_image_id__in=machine_image_ids)
+        .exclude(cloud_account=cloud_account)
+        .values_list("machine_image_id", flat=True)
+    )
+    delete_machine_image_ids = set(machine_image_ids) - set(active_machine_image_ids)
+    MachineImage.objects.filter(id__in=delete_machine_image_ids).delete()
 
 
 @retriable_shared_task(
