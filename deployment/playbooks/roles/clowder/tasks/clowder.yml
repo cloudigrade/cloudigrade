@@ -44,6 +44,8 @@
         --timeout 600 \
         --import-secrets \
         --secrets-dir "{{ clowder_tmp_dir.path }}/secrets" \
+        --set-parameter "cloudigrade/IMAGE_TAG=latest" \
+        --set-parameter "postigrade/IMAGE_TAG=latest"  \
         --set-parameter "cloudigrade/CLOUDIGRADE_ENVIRONMENT={{ env }}" \
         --set-parameter "cloudigrade/DJANGO_SETTINGS_MODULE=config.settings.prod" \
         --set-parameter "cloudigrade/DJANGO_ALL_LOG_LEVEL=DEBUG" \
