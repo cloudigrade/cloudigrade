@@ -253,16 +253,6 @@ objects:
             secretKeyRef:
               key: slack-token
               name: cloudigrade-app-secret
-        - name: HABERDASHER_EMITTER
-          value: ${HABERDASHER_EMITTER}
-        - name: HABERDASHER_KAFKA_BOOTSTRAP
-          value: ${HABERDASHER_KAFKA_BOOTSTRAP}
-        - name: HABERDASHER_KAFKA_TOPIC
-          value: ${HABERDASHER_KAFKA_TOPIC}
-        - name: HABERDASHER_LABELS
-          value: ${HABERDASHER_LABELS}
-        - name: HABERDASHER_TAGS
-          value: ${HABERDASHER_TAGS}
         - name: RECALCULATE_CONCURRENT_USAGE_FOR_ALL_USERS_SCHEDULE
           value: ${RECALCULATE_CONCURRENT_USAGE_FOR_ALL_USERS_SCHEDULE}
         - name: RECALCULATE_RUNS_FOR_ALL_CLOUD_ACCOUNTS_SCHEDULE
@@ -488,16 +478,6 @@ objects:
           value: ${OSD_REDEPLOY_TRIGGER}
         - name: IMAGE_TAG
           value: ${IMAGE_TAG}
-        - name: HABERDASHER_EMITTER
-          value: ${HABERDASHER_EMITTER}
-        - name: HABERDASHER_KAFKA_BOOTSTRAP
-          value: ${HABERDASHER_KAFKA_BOOTSTRAP}
-        - name: HABERDASHER_KAFKA_TOPIC
-          value: ${HABERDASHER_KAFKA_TOPIC}
-        - name: HABERDASHER_LABELS
-          value: ${HABERDASHER_LABELS}
-        - name: HABERDASHER_TAGS
-          value: ${HABERDASHER_TAGS}
         - name: RECALCULATE_CONCURRENT_USAGE_FOR_ALL_USERS_SCHEDULE
           value: ${RECALCULATE_CONCURRENT_USAGE_FOR_ALL_USERS_SCHEDULE}
         - name: RECALCULATE_RUNS_FOR_ALL_CLOUD_ACCOUNTS_SCHEDULE
@@ -729,16 +709,6 @@ objects:
           value: ${OSD_REDEPLOY_TRIGGER}
         - name: IMAGE_TAG
           value: ${IMAGE_TAG}
-        - name: HABERDASHER_EMITTER
-          value: ${HABERDASHER_EMITTER}
-        - name: HABERDASHER_KAFKA_BOOTSTRAP
-          value: ${HABERDASHER_KAFKA_BOOTSTRAP}
-        - name: HABERDASHER_KAFKA_TOPIC
-          value: ${HABERDASHER_KAFKA_TOPIC}
-        - name: HABERDASHER_LABELS
-          value: ${HABERDASHER_LABELS}
-        - name: HABERDASHER_TAGS
-          value: ${HABERDASHER_TAGS}
         - name: RECALCULATE_CONCURRENT_USAGE_FOR_ALL_USERS_SCHEDULE
           value: ${RECALCULATE_CONCURRENT_USAGE_FOR_ALL_USERS_SCHEDULE}
         - name: RECALCULATE_RUNS_FOR_ALL_CLOUD_ACCOUNTS_SCHEDULE
@@ -978,16 +948,6 @@ objects:
           value: ${OSD_REDEPLOY_TRIGGER}
         - name: IMAGE_TAG
           value: ${IMAGE_TAG}
-        - name: HABERDASHER_EMITTER
-          value: ${HABERDASHER_EMITTER}
-        - name: HABERDASHER_KAFKA_BOOTSTRAP
-          value: ${HABERDASHER_KAFKA_BOOTSTRAP}
-        - name: HABERDASHER_KAFKA_TOPIC
-          value: ${HABERDASHER_KAFKA_TOPIC}
-        - name: HABERDASHER_LABELS
-          value: ${HABERDASHER_LABELS}
-        - name: HABERDASHER_TAGS
-          value: ${HABERDASHER_TAGS}
         - name: RECALCULATE_CONCURRENT_USAGE_FOR_ALL_USERS_SCHEDULE
           value: ${RECALCULATE_CONCURRENT_USAGE_FOR_ALL_USERS_SCHEDULE}
         - name: RECALCULATE_RUNS_FOR_ALL_CLOUD_ACCOUNTS_SCHEDULE
@@ -1338,21 +1298,6 @@ parameters:
 - name: ENV_NAME
   description: ClowdEnv Name
   required: true
-- name: HABERDASHER_EMITTER
-  description: Emitter for haberdasher logs [stderr|kafka]
-  value: kafka
-- name: HABERDASHER_KAFKA_BOOTSTRAP
-  description: Bootstrap server for haberdasher kafka emitter
-  value: ''
-- name: HABERDASHER_KAFKA_TOPIC
-  description: Kafka topic for haberdasher kafka emitter
-  value: 'platform.logging.logs'
-- name: HABERDASHER_TAGS
-  description: Haberdasher tags for unstrutured logs
-  value: '["cloudigrade"]'
-- name: HABERDASHER_LABELS
-  description: Haberdasher labels for unstructured logs
-  value: '{"app": "cloudigrade"}'
 - name: HEALTH_CHECK_HOST_HEADER
   displayName: Health Check Host Header
   required: true
