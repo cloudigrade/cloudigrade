@@ -109,3 +109,6 @@ ENV/
 
 # persisted queue data
 /rabbitmq
+
+# mprof profile captures
+mprofile_*.dat
