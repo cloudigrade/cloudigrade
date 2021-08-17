@@ -159,9 +159,133 @@ class SandboxedRestClient(object):
         return self._call_api(verb=verb, path=path, data=data)
 
 
-def generate_cloud_account(  # noqa: C901
+def generate_cloud_account(cloud_type=AWS_PROVIDER_STRING, **kwargs):
+    """
+    Generate a CloudAccount with linked provider-specific model instance for testing.
+
+    Note:
+        This function may be deprecated and removed in the near future since we will
+        stop assuming AWS is a default as we improve support for additional cloud types.
+        Please use a cloud-specific function (e.g. generate_cloud_account_aws,
+        generate_cloud_account_azure) instead of this.
+
+    Args:
+        cloud_type (str): cloud provider type identifier
+        **kwargs (dict): Optional additional kwargs to pass to generate_cloud_account.
+
+    Returns:
+        CloudAccount: The created CloudAccount instance.
+    """
+    if cloud_type == AWS_PROVIDER_STRING:
+        return generate_cloud_account_aws(**kwargs)
+    elif cloud_type == AZURE_PROVIDER_STRING:
+        return generate_cloud_account_azure(**kwargs)
+    else:
+        raise NotImplementedError(f"Unsupported cloud_type '{cloud_type}'")
+
+
+def generate_cloud_account_aws(
     arn=None,
     aws_account_id=None,
+    created_at=None,
+    generate_verify_task=True,
+    verify_task=None,
+    **kwargs,
+):
+    """
+    Generate a CloudAccount with linked AwsCloudAccount for testing.
+
+    Any optional arguments not provided will be randomly generated.
+
+    Args:
+        arn (str): Optional ARN.
+        aws_account_id (str): Optional 12-digit AWS account ID.
+        created_at (datetime): Optional creation datetime for this account.
+        generate_verify_task (bool): Optional should a verify_task be generated here.
+        verify_task (PeriodicTask): Optional Celery verify task for this account.
+        **kwargs (dict): Optional additional kwargs to pass to generate_cloud_account.
+
+    Returns:
+        CloudAccount: The created CloudAccount instance.
+    """
+    if arn is None:
+        arn = helper.generate_dummy_arn(account_id=aws_account_id)
+
+    if created_at is None:
+        created_at = get_now()
+
+    if verify_task is None and generate_verify_task:
+        schedule, _ = IntervalSchedule.objects.get_or_create(
+            every=settings.SCHEDULE_VERIFY_VERIFY_TASKS_INTERVAL,
+            period=IntervalSchedule.SECONDS,
+        )
+        verify_task, _ = PeriodicTask.objects.get_or_create(
+            interval=schedule,
+            name=f"Verify {arn}.",
+            task="api.clouds.aws.tasks.verify_account_permissions",
+            kwargs=json.dumps(
+                {
+                    "account_arn": arn,
+                }
+            ),
+            defaults={"start_time": created_at},
+        )
+
+    provider_cloud_account = AwsCloudAccount.objects.create(
+        account_arn=arn,
+        aws_account_id=aws.AwsArn(arn).account_id,
+        verify_task=verify_task,
+    )
+    provider_cloud_account.created_at = created_at
+    provider_cloud_account.save()
+
+    return _generate_cloud_account(
+        provider_cloud_account, created_at=created_at, **kwargs
+    )
+
+
+def generate_cloud_account_azure(
+    azure_subscription_id=None,
+    azure_tenant_id=None,
+    created_at=None,
+    **kwargs,
+):
+    """
+    Generate a CloudAccount with linked AzureCloudAccount for testing.
+
+    Any optional arguments not provided will be randomly generated.
+
+    Args:
+        azure_subscription_id (str): optional uuid str for azure subscription id
+        azure_tenant_id (str): optional uuid str for azure tenant id
+        created_at (datetime): Optional creation datetime for this account.
+        **kwargs (dict): Optional additional kwargs to pass to generate_cloud_account.
+
+    Returns:
+        CloudAccount: The created CloudAccount instance.
+    """
+    if created_at is None:
+        created_at = get_now()
+
+    if azure_subscription_id is None:
+        azure_subscription_id = uuid.uuid4()
+
+    if azure_tenant_id is None:
+        azure_tenant_id = uuid.uuid4()
+
+    provider_cloud_account = AzureCloudAccount.objects.create(
+        subscription_id=azure_subscription_id, tenant_id=azure_tenant_id
+    )
+    provider_cloud_account.created_at = created_at
+    provider_cloud_account.save()
+
+    return _generate_cloud_account(
+        provider_cloud_account, created_at=created_at, **kwargs
+    )
+
+
+def _generate_cloud_account(
+    provider_cloud_account,
     user=None,
     name=None,
     created_at=None,
@@ -170,20 +294,16 @@ def generate_cloud_account(  # noqa: C901
     platform_source_id=None,
     is_enabled=True,
     enabled_at=None,
-    verify_task=None,
-    generate_verify_task=True,
-    cloud_type=AWS_PROVIDER_STRING,
-    azure_subscription_id=None,
-    azure_tenant_id=None,
 ):
     """
-    Generate an CloudAccount for testing.
+    Generate a CloudAccount for testing.
 
     Any optional arguments not provided will be randomly generated.
 
     Args:
-        arn (str): Optional ARN.
-        aws_account_id (12-digit string): Optional AWS account ID.
+        provider_cloud_account (object): the provider-specific cloud account
+            model instance (e.g. AwsCloudAccount, AzureCloudAccount) to be linked with
+            the newly-created CloudAccount
         user (User): Optional Django auth User to be this account's owner.
         name (str): Optional name for this account.
         created_at (datetime): Optional creation datetime for this account.
@@ -192,11 +312,6 @@ def generate_cloud_account(  # noqa: C901
         platform_source_id (int): Optional platform source source ID.
         is_enabled (bool): Optional should the account be enabled.
         enabled_at (datetime): Optional enabled datetime for this account.
-        verify_task (PeriodicTask): Optional Celery verify task for this account.
-        generate_verify_task (bool): Optional should a verify_task be generated here.
-        cloud_type (str): Str denoting cloud type, defaults to "aws"
-        azure_subscription_id (str): optional uuid str for azure subscription id
-        azure_tenant_id (str): optional uuid str for azure tenant id
 
     Returns:
         CloudAccount: The created Cloud Account.
@@ -223,51 +338,10 @@ def generate_cloud_account(  # noqa: C901
     if platform_source_id is None:
         platform_source_id = _faker.pyint()
 
-    if cloud_type == AZURE_PROVIDER_STRING:
-        if azure_subscription_id is None:
-            azure_subscription_id = uuid.uuid4()
-
-        if azure_tenant_id is None:
-            azure_tenant_id = uuid.uuid4()
-        cloud_provider_account = AzureCloudAccount.objects.create(
-            subscription_id=azure_subscription_id, tenant_id=azure_tenant_id
-        )
-
-    # default to AWS
-    else:
-        if arn is None:
-            arn = helper.generate_dummy_arn(account_id=aws_account_id)
-
-        if verify_task is None and generate_verify_task:
-            schedule, _ = IntervalSchedule.objects.get_or_create(
-                every=settings.SCHEDULE_VERIFY_VERIFY_TASKS_INTERVAL,
-                period=IntervalSchedule.SECONDS,
-            )
-            verify_task, _ = PeriodicTask.objects.get_or_create(
-                interval=schedule,
-                name=f"Verify {arn}.",
-                task="api.clouds.aws.tasks.verify_account_permissions",
-                kwargs=json.dumps(
-                    {
-                        "account_arn": arn,
-                    }
-                ),
-                defaults={"start_time": created_at},
-            )
-
-        cloud_provider_account = AwsCloudAccount.objects.create(
-            account_arn=arn,
-            aws_account_id=aws.AwsArn(arn).account_id,
-            verify_task=verify_task,
-        )
-
-    cloud_provider_account.created_at = created_at
-    cloud_provider_account.save()
-
     cloud_account = CloudAccount.objects.create(
         user=user,
         name=name,
-        content_object=cloud_provider_account,
+        content_object=provider_cloud_account,
         platform_authentication_id=platform_authentication_id,
         platform_application_id=platform_application_id,
         platform_source_id=platform_source_id,

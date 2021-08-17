@@ -172,17 +172,17 @@ class GenerateCloudAccountTest(TestCase):
         )
 
         account = helper.generate_cloud_account(
-            arn,
-            aws_account_id,
-            user,
-            name,
-            created_at,
-            platform_authentication_id,
-            platform_application_id,
-            platform_source_id,
-            is_enabled,
-            enabled_at,
-            verify_task,
+            arn=arn,
+            aws_account_id=aws_account_id,
+            user=user,
+            name=name,
+            created_at=created_at,
+            platform_authentication_id=platform_authentication_id,
+            platform_application_id=platform_application_id,
+            platform_source_id=platform_source_id,
+            is_enabled=is_enabled,
+            enabled_at=enabled_at,
+            verify_task=verify_task,
         )
         self.assertIsInstance(account, CloudAccount)
         self.assertEqual(account.content_object.account_arn, arn)
