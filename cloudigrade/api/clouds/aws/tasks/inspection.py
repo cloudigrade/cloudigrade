@@ -5,6 +5,7 @@ import boto3
 from django.conf import settings
 from django.utils.translation import gettext as _
 
+from api.clouds.aws.models import AwsMachineImage
 from util import aws
 from util.celery import retriable_shared_task
 
@@ -23,9 +24,17 @@ def launch_inspection_instance(ami_id, snapshot_copy_id):
     """
     ec2_client = boto3.client("ec2")
 
+    # Check Snapshot
     snapshot_copy = ec2_client.Snapshot(snapshot_copy_id)
     aws.check_snapshot_state(snapshot_copy)
 
+    # Update Status
+    aws_image = AwsMachineImage.objects.get(ec2_ami_id=ami_id)
+    machine_image = aws_image.machine_image.get()
+    machine_image.status = machine_image.INSPECTING
+    machine_image.save()
+
+    # Run Inspection
     cloud_init_script = _build_cloud_init_script(ami_id)
     logger.info(
         _("Launching inspection for AMI %(ami_id)s"),
