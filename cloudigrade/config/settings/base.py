@@ -609,6 +609,8 @@ else:
         "SOURCES_API_BASE_URL", default="http://sources-api.sources-ci.svc:8080"
     )
 
+SOURCES_PSK = env("SOURCES_PSK", default="")
+
 SOURCE_API_INTERNAL_URI = "/internal/v1.0/"
 SOURCES_API_EXTERNAL_URI = "/api/sources/v3.0/"
 

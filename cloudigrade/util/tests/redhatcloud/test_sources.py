@@ -198,7 +198,7 @@ class SourcesTest(TestCase):
             topic=self.sources_kafka_topic,
             value=json.dumps(self.kafka_payload),
             headers={
-                "x-rh-identity": self.headers["X-RH-IDENTITY"],
+                "x-rh-sources-account-number": self.account_number,
                 "event_type": self.sources_availability_event_type,
             },
             callback=_check_response,
@@ -247,7 +247,7 @@ class SourcesTest(TestCase):
                 topic=self.sources_kafka_topic,
                 value=json.dumps(self.kafka_payload),
                 headers={
-                    "x-rh-identity": self.headers["X-RH-IDENTITY"],
+                    "x-rh-sources-account-number": self.account_number,
                     "event_type": self.sources_availability_event_type,
                 },
                 callback=_check_response,
@@ -282,7 +282,7 @@ class SourcesTest(TestCase):
                 topic=self.sources_kafka_topic,
                 value=json.dumps(self.kafka_payload),
                 headers={
-                    "x-rh-identity": self.headers["X-RH-IDENTITY"],
+                    "x-rh-sources-account-number": self.account_number,
                     "event_type": self.sources_availability_event_type,
                 },
                 callback=_check_response,

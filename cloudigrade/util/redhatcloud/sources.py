@@ -42,7 +42,7 @@ def get_authentication(account_number, authentication_id):
         f"authentications/{authentication_id}/"
     )
 
-    headers = identity.generate_http_identity_headers(account_number, is_org_admin=True)
+    headers = generate_sources_headers(account_number)
     params = {"expose_encrypted_attribute[]": "password"}
 
     return make_sources_call(account_number, url, headers, params)
@@ -70,7 +70,7 @@ def get_application(account_number, application_id):
         f"applications/{application_id}/"
     )
 
-    headers = identity.generate_http_identity_headers(account_number, is_org_admin=True)
+    headers = generate_sources_headers(account_number)
     return make_sources_call(account_number, url, headers)
 
 
@@ -96,7 +96,7 @@ def list_application_authentications(account_number, authentication_id):
         f"application_authentications/?filter[authentication_id]={authentication_id}"
     )
 
-    headers = identity.generate_http_identity_headers(account_number, is_org_admin=True)
+    headers = generate_sources_headers(account_number)
     return make_sources_call(account_number, url, headers)
 
 
@@ -161,23 +161,25 @@ def extract_ids_from_kafka_message(message, headers):
         (account_number, platform_id) (str, str):
             the extracted account number and platform id.
     """
-    auth_header = identity.get_x_rh_identity_header(headers)
-    if not auth_header:
-        logger.error(
-            _("Missing expected auth header from message %s, headers %s"),
-            message,
-            headers,
-        )
-        # Early exit if auth_header does not exist
-        return None, None
+    account_number = get_sources_account_number_from_headers(headers)
+    if account_number == "":
+        auth_header = identity.get_x_rh_identity_header(headers)
+        if not auth_header:
+            logger.error(
+                _("Missing expected auth header from message %s, headers %s"),
+                message,
+                headers,
+            )
+            # Early exit if auth_header does not exist
+            return None, None
 
-    account_number = auth_header.get("identity", {}).get("account_number")
-    if not account_number:
-        logger.error(
-            _("Missing expected account number from message %s, headers %s"),
-            message,
-            headers,
-        )
+        account_number = auth_header.get("identity", {}).get("account_number")
+        if not account_number:
+            logger.error(
+                _("Missing expected account number from message %s, headers %s"),
+                message,
+                headers,
+            )
 
     platform_id = message.get("id")
     if not platform_id:
@@ -186,6 +188,14 @@ def extract_ids_from_kafka_message(message, headers):
         )
 
     return account_number, platform_id
+
+
+def get_sources_account_number_from_headers(headers):
+    """Get the x-rh-sources-account-number from the headers."""
+    for header in headers:
+        if header[0] == "x-rh-sources-account-number":
+            return header[1]
+    return ""
 
 
 @cache_memoize(settings.CACHE_TTL_SOURCES_APPLICATION_TYPE_ID)
@@ -198,7 +208,7 @@ def get_cloudigrade_application_type_id(account_number):
         f"application_types?filter[name]=/insights/platform/cloud-meter"
     )
 
-    headers = identity.generate_http_identity_headers(account_number)
+    headers = generate_sources_headers(account_number)
     cloudigrade_application_type = make_sources_call(account_number, url, headers)
     if cloudigrade_application_type:
         return cloudigrade_application_type.get("data")[0].get("id")
@@ -254,13 +264,11 @@ def notify_application_availability(
             )
         kafka_producer = KafkaProducer(sources_kafka_config)
 
-        headers = identity.generate_http_identity_headers(
-            account_number, is_org_admin=True
-        )
+        headers = generate_sources_headers(account_number, include_psk=False)
         message_topic = settings.SOURCES_STATUS_TOPIC
         message_value = json.dumps(payload)
         message_headers = {
-            "x-rh-identity": headers["X-RH-IDENTITY"],
+            **headers,
             "event_type": settings.SOURCES_AVAILABILITY_EVENT_TYPE,
         }
 
@@ -313,3 +321,31 @@ def _check_response(error, message):
             logger.info(*log_msg)
         else:
             logger.debug(*log_msg)
+
+
+def generate_sources_headers(account_number, include_psk=True):
+    """
+    Return the headers needed for accessing Sources.
+
+    The Sources API requires the x-rh-sources-account-number
+    as well as the x-rh-sources-psk for service to service
+    communication instead of the earlier x-rh-identity.
+
+    By default we include the PSK, but for Kafka messages,
+    the PSK is not required, so we can optionally exclude it.
+
+    Args:
+        account_number (str): Account number identifier
+        include_psk (boolean): Whether or not to include the PSK
+    """
+    headers = {"x-rh-sources-account-number": account_number}
+
+    if include_psk:
+        if settings.SOURCES_PSK == "":
+            raise SourcesAPINotOkStatus(
+                "Failed to generate headers for Sources, SOURCES_PSK is not defined"
+            )
+        else:
+            headers = {**headers, "x-rh-sources-psk": settings.SOURCES_PSK}
+
+    return headers
