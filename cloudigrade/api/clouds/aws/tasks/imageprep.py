@@ -402,7 +402,7 @@ def delete_snapshot(snapshot_copy_id, ami_id, snapshot_region):
         logger.info(
             _(
                 "%(label)s AMI ID %(ami_id)s no longer available, "
-                "snapshot id %(snapshot_copy_id) being cleaned up."
+                "snapshot id %(snapshot_copy_id)s being cleaned up."
             ),
             {
                 "label": "delete_snapshot",
