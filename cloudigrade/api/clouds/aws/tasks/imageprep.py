@@ -419,7 +419,19 @@ def delete_snapshot(snapshot_copy_id, ami_id, snapshot_region):
         )
         ec2 = boto3.resource("ec2")
         snapshot_copy = ec2.Snapshot(snapshot_copy_id)
-        snapshot_copy.delete(DryRun=False)
+        try:
+            snapshot_copy.delete(DryRun=False)
+        except ClientError as e:
+            if e.response.get("Error", {}).get("Code") == "InvalidSnapshot.NotFound":
+                logger.info(
+                    _(
+                        "%(label)s detected snapshot_copy_id %(copy_id)s "
+                        "already deleted."
+                    ),
+                    {"label": "delete_snapshot", "copy_id": snapshot_copy_id},
+                )
+            else:
+                raise
     else:
         logger.info(
             _(
