@@ -40,7 +40,7 @@ if environ.os.path.isfile(ENV_FILE_PATH):
     __print("The .env file has been loaded. See base.py for more information")
 
 if isClowderEnabled():
-  __print("Clowder: Enabled")
+    __print("Clowder: Enabled")
 
 # Used to derive several other configs' default values later.
 CLOUDIGRADE_ENVIRONMENT = env("CLOUDIGRADE_ENVIRONMENT")
@@ -153,26 +153,34 @@ if isClowderEnabled():
     # hostname and webPort instead.
     for endpoint in clowder_cfg.endpoints:
         if endpoint.app == "postigrade" and endpoint.name == "svc":
-            CLOWDER_DATABASE_HOST     = endpoint.hostname
-            CLOWDER_DATABASE_PORT     = endpoint.port
+            CLOWDER_DATABASE_HOST = endpoint.hostname
+            CLOWDER_DATABASE_PORT = endpoint.port
 
 if isClowderEnabled():
-    DATABASES["default"] = {**DATABASES["default"], **{
+    DATABASES["default"] = {
+        **DATABASES["default"],
+        **{
             "NAME": CLOWDER_DATABASE_NAME,
             "HOST": CLOWDER_DATABASE_HOST,
             "PORT": CLOWDER_DATABASE_PORT,
             "USER": CLOWDER_DATABASE_USER,
             "PASSWORD": CLOWDER_DATABASE_PASSWORD,
-        }}
-    __print(f"Clowder: Database name: {CLOWDER_DATABASE_NAME} host: {CLOWDER_DATABASE_HOST}:{CLOWDER_DATABASE_PORT}")
+        },
+    }
+    __print(
+        f"Clowder: Database name: {CLOWDER_DATABASE_NAME} host: {CLOWDER_DATABASE_HOST}:{CLOWDER_DATABASE_PORT}"
+    )
 else:
-    DATABASES["default"] = {**DATABASES["default"], **{
+    DATABASES["default"] = {
+        **DATABASES["default"],
+        **{
             "NAME": env("DJANGO_DATABASE_NAME", default="postgres"),
             "HOST": env("DJANGO_DATABASE_HOST", default="localhost"),
             "USER": env("DJANGO_DATABASE_USER", default="postgres"),
             "PASSWORD": env("DJANGO_DATABASE_PASSWORD", default="postgres"),
             "PORT": env.int("DJANGO_DATABASE_PORT", default=5432),
-        }}
+        },
+    }
 
 # New in Django 3.2:
 # 3.1 and older default is 32-bit AutoField. 3.2 now recommends 64-bit BigAutoField.
@@ -578,12 +586,14 @@ if isClowderEnabled():
     CLOWDER_SOURCES_API_BASE_URL = ""
     for endpoint in clowder_cfg.endpoints:
         if endpoint.app == "sources-api":
-            CLOWDER_SOURCES_API_BASE_URL=f"http://{endpoint.hostname}:{endpoint.port}"
+            CLOWDER_SOURCES_API_BASE_URL = f"http://{endpoint.hostname}:{endpoint.port}"
     if CLOWDER_SOURCES_API_BASE_URL == "":
-      __print(f"Clowder: Sources api service was not found, using default url: {SOURCES_API_BASE_URL}")
+        __print(
+            f"Clowder: Sources api service was not found, using default url: {SOURCES_API_BASE_URL}"
+        )
     else:
-      SOURCES_API_BASE_URL = CLOWDER_SOURCES_API_BASE_URL
-      __print(f"Clowder: Sources api service url: {SOURCES_API_BASE_URL}")
+        SOURCES_API_BASE_URL = CLOWDER_SOURCES_API_BASE_URL
+        __print(f"Clowder: Sources api service url: {SOURCES_API_BASE_URL}")
 else:
     SOURCES_API_BASE_URL = env(
         "SOURCES_API_BASE_URL", default="http://sources-api.sources-ci.svc:8080"

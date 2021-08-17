@@ -21,16 +21,18 @@ def launch_inspection_instance(ami_id, snapshot_copy_id):
         ami_id(str): ID of the AMI being inspected
         snapshot_copy_id(str): ID of the AMI snapshot
     """
-    cloud_init_script = _build_cloud_init_script(ami_id)
+    ec2_client = boto3.client("ec2")
 
+    snapshot_copy = ec2_client.Snapshot(snapshot_copy_id)
+    aws.check_snapshot_state(snapshot_copy)
+
+    cloud_init_script = _build_cloud_init_script(ami_id)
     logger.info(
         _("Launching inspection for AMI %(ami_id)s"),
         {
             "ami_id": ami_id,
         },
     )
-
-    ec2_client = boto3.client("ec2")
     ec2_client.run_instances(
         BlockDeviceMappings=[
             {
