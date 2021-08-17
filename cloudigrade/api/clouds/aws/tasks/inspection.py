@@ -22,10 +22,9 @@ def launch_inspection_instance(ami_id, snapshot_copy_id):
         ami_id(str): ID of the AMI being inspected
         snapshot_copy_id(str): ID of the AMI snapshot
     """
-    ec2_client = boto3.client("ec2")
-
     # Check Snapshot
-    snapshot_copy = ec2_client.Snapshot(snapshot_copy_id)
+    ec2_resource = boto3.resource("ec2")
+    snapshot_copy = ec2_resource.Snapshot(snapshot_copy_id)
     aws.check_snapshot_state(snapshot_copy)
 
     # Update Status
@@ -42,6 +41,7 @@ def launch_inspection_instance(ami_id, snapshot_copy_id):
             "ami_id": ami_id,
         },
     )
+    ec2_client = boto3.client("ec2")
     ec2_client.run_instances(
         BlockDeviceMappings=[
             {
