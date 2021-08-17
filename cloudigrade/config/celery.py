@@ -24,6 +24,7 @@ app = Celery("config")
 app.config_from_object("django.conf:settings", namespace="CELERY")
 # Remember: the "schedule" values are integer numbers of seconds.
 app.conf.beat_schedule = {
+    # Enabled Tasks
     "delete_inactive_users": {
         "task": "api.tasks.delete_inactive_users",
         "schedule": env.int("DELETE_INACTIVE_USERS_SCHEDULE", default=24 * 60 * 60),
@@ -69,6 +70,12 @@ app.conf.beat_schedule = {
             "REPOPULATE_AZURE_INSTANCE_MAPPING_SCHEDULE",
             default=60 * 60 * 24 * 7,  # 1 week in seconds
         ),
+    },
+    # Disabled Tasks
+    "scale_up_inspection_cluster_every_60_min": {
+        "task": "api.clouds.aws.tasks.scale_up_inspection_cluster",
+        "schedule": 999999,
+        "enabled": False,
     },
 }
 task_packages = ["api.clouds.aws.tasks", "api.clouds.azure.tasks", "api.tasks"]
