@@ -23,6 +23,14 @@ the new automatic name, and Celery cannot know that the two were once the same.
 Therefore, we should always preserve the original name in each task function's
 decorator even if the function itself is renamed or moved elsewhere.
 """
+
+import logging
+
+from celery import shared_task
+
+# IMPORTANT NOTE: DO NOT LET PYCHARM, ISORT, etc REARRANGE api.clouds.aws.tasks IMPORTS.
+# There are still, as of the time of this comment, interdependencies among these tasks,
+# and rearranging these imports *may* result in problematic circular imports.
 from api.clouds.aws.tasks.cloudtrail import analyze_log
 from api.clouds.aws.tasks.inspection import launch_inspection_instance
 from api.clouds.aws.tasks.imageprep import (
@@ -42,3 +50,45 @@ from api.clouds.aws.tasks.verification import (
     verify_account_permissions,
     verify_verify_tasks,
 )
+
+#
+# Begin the horrible temporary kludges for deprecated celery tasks...
+#
+
+logger = logging.getLogger(__name__)
+
+
+@shared_task(name="api.clouds.aws.tasks.create_volume")
+def create_volume(*args, **kwargs):
+    """Do nothing when running deprecated create_volume task."""
+    logger.error("create_volume is deprecated")
+
+
+@shared_task(name="api.clouds.aws.tasks.enqueue_ready_volume")
+def enqueue_ready_volume(*args, **kwargs):
+    """Do nothing when running deprecated enqueue_ready_volume task."""
+    logger.error("enqueue_ready_volume is deprecated")
+
+
+@shared_task(name="api.clouds.aws.tasks.attach_volumes_to_cluster")
+def attach_volumes_to_cluster(*args, **kwargs):
+    """Do nothing when running deprecated attach_volumes_to_cluster task."""
+    logger.error("attach_volumes_to_cluster is deprecated")
+
+
+@shared_task(name="api.clouds.aws.tasks.run_inspection_cluster")
+def run_inspection_cluster(*args, **kwargs):
+    """Do nothing when running deprecated run_inspection_cluster task."""
+    logger.error("run_inspection_cluster is deprecated")
+
+
+@shared_task(name="api.clouds.aws.tasks.scale_down_cluster")
+def scale_down_cluster(*args, **kwargs):
+    """Do nothing when running deprecated scale_down_cluster task."""
+    logger.error("scale_down_cluster is deprecated")
+
+
+@shared_task(name="api.clouds.aws.tasks.scale_up_inspection_cluster")
+def scale_up_inspection_cluster(*args, **kwargs):
+    """Do nothing when running deprecated scale_up_inspection_cluster task."""
+    logger.error("scale_up_inspection_cluster is deprecated")
