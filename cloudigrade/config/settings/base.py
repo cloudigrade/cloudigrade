@@ -434,6 +434,14 @@ CELERY_ACCEPT_CONTENT = ["json", "pickle"]
 #####################################################################
 # Celery tasks
 
+# Warning: setting Celery's "eager" option is intended only for local development.
+# Setting this to "True" means Celery will never enqueue task messages for processing.
+# Instead it will always act as though the task function was called *directly*, and that
+# will block the current thread while the task function executes synchronously.
+# See also Celery docs:
+# https://docs.celeryproject.org/en/stable/userguide/configuration.html#std-setting-task_always_eager
+CELERY_TASK_ALWAYS_EAGER = env.bool("CELERY_TASK_ALWAYS_EAGER", default=False)
+
 SCHEDULE_VERIFY_VERIFY_TASKS_INTERVAL = env.int(
     "SCHEDULE_VERIFY_VERIFY_TASKS_INTERVAL", default=60 * 60 * 24
 )  # 24 Hours)
