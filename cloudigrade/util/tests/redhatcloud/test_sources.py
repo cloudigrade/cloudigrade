@@ -14,6 +14,8 @@ from util.exceptions import (
 )
 from util.redhatcloud import identity, sources
 from util.redhatcloud.sources import _check_response
+from util.redhatcloud.sources import generate_sources_headers
+from util.redhatcloud.sources import get_sources_account_number_from_headers
 
 _faker = faker.Faker()
 
@@ -321,3 +323,61 @@ class SourcesTest(TestCase):
         self.assertIn("ERROR", logs.output[0])
         self.assertIn(error, logs.output[0])
         self.assertIn(fail_message, logs.output[0])
+
+    def test_generate_sources_headers_account_number_no_psk(self):
+        """Assert generate_sources_headers generates sources header with no psk."""
+        sources_account_number = _faker.slug()
+        headers = generate_sources_headers(sources_account_number, include_psk=False)
+        expected_headers = {"x-rh-sources-account-number": sources_account_number}
+
+        self.assertEqual(headers, expected_headers)
+
+    def test_generate_sources_headers_account_number_with_psk(self):
+        """Assert generate_sources_headers generates sources header with psk."""
+        sources_account_number = _faker.slug()
+        sources_psk = _faker.slug()
+        with override_settings(SOURCES_PSK=sources_psk):
+            headers = generate_sources_headers(sources_account_number)
+
+        expected_headers = {
+            "x-rh-sources-account-number": sources_account_number,
+            "x-rh-sources-psk": sources_psk,
+        }
+
+        self.assertEqual(headers, expected_headers)
+
+    def test_generate_sources_headers_account_number_with_missing_psk(self):
+        """Assert generate_sources_headers fails with missing psk."""
+        sources_account_number = _faker.slug()
+        with override_settings(SOURCES_PSK=""):
+            with self.assertRaises(SourcesAPINotOkStatus):
+                generate_sources_headers(sources_account_number)
+
+    def test_get_sources_account_number_from_headers_present(self):
+        """
+        Test get_sources_account_number_from_headers with existing account number.
+
+        Asserts that get_sources_account_number_from_headers returns the account_number
+        from the x-rh-sources-account-number header.
+        """
+        sources_account_number = _faker.slug()
+        headers = [
+            ["x-rh-identity", _faker.slug()],
+            ["x-rh-sources-account-number", sources_account_number],
+            ["x-other", _faker.slug()],
+        ]
+        account_number = get_sources_account_number_from_headers(headers)
+
+        self.assertEqual(account_number, sources_account_number)
+
+    def test_get_sources_account_number_from_headers_missing(self):
+        """
+        Test get_sources_account_number_from_headers with missing account number.
+
+        Asserts get_sources_account_number_from_headers returns the empty string
+        when the x-rh-sources-account-number is missing from the headers.
+        """
+        headers = [["x-rh-identity", _faker.slug()], ["x-other", _faker.slug()]]
+        account_number = get_sources_account_number_from_headers(headers)
+
+        self.assertEqual(account_number, "")
