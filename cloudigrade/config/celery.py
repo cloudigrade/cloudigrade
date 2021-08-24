@@ -71,6 +71,10 @@ app.conf.beat_schedule = {
             default=60 * 60 * 24 * 7,  # 1 week in seconds
         ),
     },
+    "verify_verify_tasks": {
+        "task": "api.clouds.aws.tasks.verify_verify_tasks",
+        "schedule": env.int("VERIFY_VERIFY_TASKS_SCHEDULE", default=60 * 60),
+    },
     # Disabled Tasks
     "scale_up_inspection_cluster_every_60_min": {
         "task": "api.clouds.aws.tasks.scale_up_inspection_cluster",
