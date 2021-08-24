@@ -235,6 +235,8 @@ REST_FRAMEWORK = {
         "api.authentication.IdentityHeaderAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
+    # https://www.django-rest-framework.org/api-guide/renderers/#setting-the-renderers
+    "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
     "EXCEPTION_HANDLER": "util.exceptions.api_exception_handler",
 }
 

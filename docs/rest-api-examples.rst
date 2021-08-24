@@ -83,7 +83,6 @@ Response:
     Content-Length: 1163
     Content-Type: application/json
     Referrer-Policy: same-origin
-    Vary: Accept
     X-CLOUDIGRADE-REQUEST-ID: 84c299fd-13bf-4de7-8134-4a89e6996ad3
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
@@ -159,7 +158,6 @@ Response:
     Content-Length: 488
     Content-Type: application/json
     Referrer-Policy: same-origin
-    Vary: Accept
     X-CLOUDIGRADE-REQUEST-ID: f87bd8ca-f863-4b96-bbd9-ddcc05a8e200
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
@@ -206,7 +204,6 @@ Response:
     Content-Length: 2617
     Content-Type: application/json
     Referrer-Policy: same-origin
-    Vary: Accept
     X-CLOUDIGRADE-REQUEST-ID: bd2e4d81-9141-4510-bedc-43f1d34dc568
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
@@ -334,7 +331,6 @@ Response:
     Content-Length: 355
     Content-Type: application/json
     Referrer-Policy: same-origin
-    Vary: Accept
     X-CLOUDIGRADE-REQUEST-ID: 62cf620f-29a4-4f20-bd49-bad4550ef109
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
@@ -378,7 +374,6 @@ Response:
     Content-Length: 2373
     Content-Type: application/json
     Referrer-Policy: same-origin
-    Vary: Accept
     X-CLOUDIGRADE-REQUEST-ID: 7b6a247d-e3dd-4ab7-94ac-b226cffc5a69
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
@@ -496,7 +491,6 @@ Response:
     Content-Length: 6718
     Content-Type: application/json
     Referrer-Policy: same-origin
-    Vary: Accept
     X-CLOUDIGRADE-REQUEST-ID: 099c7762-750c-4978-8726-0508999e21a1
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
@@ -753,7 +747,6 @@ Response:
     Content-Length: 1075
     Content-Type: application/json
     Referrer-Policy: same-origin
-    Vary: Accept
     X-CLOUDIGRADE-REQUEST-ID: 521ab38c-a658-4162-88c6-c77d1ce10f9c
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
@@ -832,7 +825,6 @@ Response:
     Content-Length: 17102
     Content-Type: application/json
     Referrer-Policy: same-origin
-    Vary: Accept
     X-CLOUDIGRADE-REQUEST-ID: 42b32872-87e2-4ce8-8f9a-c100e2097e53
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
@@ -2056,7 +2048,6 @@ Response:
     Content-Length: 64
     Content-Type: application/json
     Referrer-Policy: same-origin
-    Vary: Accept
     X-CLOUDIGRADE-REQUEST-ID: 9ac827d7-6195-4bb7-b4ce-7810cc1584de
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
@@ -2086,7 +2077,6 @@ Response:
     Content-Length: 50
     Content-Type: application/json
     Referrer-Policy: same-origin
-    Vary: Accept
     X-CLOUDIGRADE-REQUEST-ID: ee380257-b4f6-4fe6-91d1-52098625df41
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
@@ -2118,7 +2108,6 @@ Response:
     Content-Length: 112
     Content-Type: application/json
     Referrer-Policy: same-origin
-    Vary: Accept
     X-CLOUDIGRADE-REQUEST-ID: ea0a1039-210a-4c03-82d8-7254dc29cc26
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
@@ -2152,7 +2141,6 @@ Response:
     Content-Length: 74
     Content-Type: application/json
     Referrer-Policy: same-origin
-    Vary: Accept
     X-CLOUDIGRADE-REQUEST-ID: dea775f7-5f81-41e6-8780-089217adcbce
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
@@ -2186,7 +2174,6 @@ Response:
     Content-Length: 608
     Content-Type: application/json
     Referrer-Policy: same-origin
-    Vary: Accept
     X-CLOUDIGRADE-REQUEST-ID: b3779da1-ef56-461f-b8ae-b69f4bc9d920
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
@@ -2262,7 +2249,6 @@ Response:
     Content-Length: 501
     Content-Type: application/json
     Referrer-Policy: same-origin
-    Vary: Accept
     X-CLOUDIGRADE-REQUEST-ID: f5aefbcf-1f84-4cc9-be30-09c864715fc1
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
@@ -2311,7 +2297,6 @@ Response:
     Content-Length: 93
     Content-Type: application/json
     Referrer-Policy: same-origin
-    Vary: Accept
     X-CLOUDIGRADE-REQUEST-ID: 5bcaa113-f40b-46ef-8a7c-41e606f185aa
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
@@ -2349,7 +2334,6 @@ Response:
     Content-Length: 515
     Content-Type: application/json
     Referrer-Policy: same-origin
-    Vary: Accept
     X-CLOUDIGRADE-REQUEST-ID: 53b84014-5a12-4f5b-b107-58592d02d4f9
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
