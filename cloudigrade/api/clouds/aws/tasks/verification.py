@@ -64,8 +64,8 @@ def verify_account_permissions(account_arn):
     return valid
 
 
-@retriable_shared_task(name="api.clouds.aws.tasks.verify_verify_tasks")
-def verify_verify_tasks():
+@retriable_shared_task(name="api.clouds.aws.tasks.ensure_all_verify_tasks_are_valid")
+def ensure_all_verify_tasks_are_valid():
     """
     Periodic task that maintains periodic verify permissions tasks.
 

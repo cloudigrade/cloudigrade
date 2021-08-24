@@ -48,7 +48,7 @@ from api.clouds.aws.tasks.onboarding import (
 )
 from api.clouds.aws.tasks.verification import (
     verify_account_permissions,
-    verify_verify_tasks,
+    ensure_all_verify_tasks_are_valid,
 )
 
 #
@@ -92,3 +92,9 @@ def scale_down_cluster(*args, **kwargs):
 def scale_up_inspection_cluster(*args, **kwargs):
     """Do nothing when running deprecated scale_up_inspection_cluster task."""
     logger.error("scale_up_inspection_cluster is deprecated")
+
+
+@shared_task(name="api.clouds.aws.tasks.verify_verify_tasks")
+def verify_verify_tasks(*args, **kwargs):
+    """Do nothing when running deprecated verify_verify_tasks task."""
+    logger.error("verify_verify_tasks is deprecated")

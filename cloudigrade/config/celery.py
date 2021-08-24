@@ -71,8 +71,8 @@ app.conf.beat_schedule = {
             default=60 * 60 * 24 * 7,  # 1 week in seconds
         ),
     },
-    "verify_verify_tasks": {
-        "task": "api.clouds.aws.tasks.verify_verify_tasks",
+    "ensure_all_verify_tasks_are_valid": {
+        "task": "api.clouds.aws.tasks.ensure_all_verify_tasks_are_valid",
         "schedule": env.int("VERIFY_VERIFY_TASKS_SCHEDULE", default=60 * 60),
     },
     # Disabled Tasks
