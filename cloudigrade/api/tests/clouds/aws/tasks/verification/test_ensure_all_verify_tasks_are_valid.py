@@ -1,15 +1,15 @@
-"""Collection of tests for aws.tasks.cloudtrail.verify_verify_tasks."""
+"""Collection of tests for aws.tasks.cloudtrail.ensure_all_verify_tasks_are_valid."""
 
 from django.test import TestCase
 from django_celery_beat.models import IntervalSchedule, PeriodicTask
 
 from api.clouds.aws.models import AwsCloudAccount
-from api.clouds.aws.tasks import verify_verify_tasks
+from api.clouds.aws.tasks import ensure_all_verify_tasks_are_valid
 from api.tests import helper as account_helper
 
 
 class VerifyVerifyAccountPeriodicTaskTest(TestCase):
-    """Task 'verify_verify_tasks' test cases."""
+    """Task 'ensure_all_verify_tasks_are_valid' test cases."""
 
     def test_noop(self):
         """No tasks need creation or cleaning up."""
@@ -22,7 +22,7 @@ class VerifyVerifyAccountPeriodicTaskTest(TestCase):
             task="api.clouds.aws.tasks.verify_account_permissions"
         ).count()
 
-        verify_verify_tasks()
+        ensure_all_verify_tasks_are_valid()
 
         self.assertEqual(
             aws_clount_before_count,
@@ -52,7 +52,7 @@ class VerifyVerifyAccountPeriodicTaskTest(TestCase):
         )
 
         with self.assertLogs("api.clouds.aws.tasks", level="INFO") as cm:
-            verify_verify_tasks()
+            ensure_all_verify_tasks_are_valid()
 
             self.assertEqual(len(cm.records), 1)
             self.assertEqual(cm.records[0].levelname, "ERROR")
@@ -79,7 +79,7 @@ class VerifyVerifyAccountPeriodicTaskTest(TestCase):
         )
 
         with self.assertLogs("api.clouds.aws.tasks", level="INFO") as cm:
-            verify_verify_tasks()
+            ensure_all_verify_tasks_are_valid()
 
             self.assertEqual(len(cm.records), 1)
             self.assertEqual(cm.records[0].levelname, "ERROR")
