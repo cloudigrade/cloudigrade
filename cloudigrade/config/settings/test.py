@@ -4,6 +4,7 @@ from .base import *
 DEBUG = env.bool("DJANGO_DEBUG", default=False)
 SECRET_KEY = env("DJANGO_SECRET_KEY", default="test")
 TEST_RUNNER = "django.test.runner.DiscoverRunner"
+SOURCES_PSK = env("SOURCES_PSK", default="test")
 
 DATABASES = {
     "default": {

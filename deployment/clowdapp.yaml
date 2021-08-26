@@ -200,6 +200,12 @@ objects:
           value: ${SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA}
         - name: SOURCES_API_BASE_URL
           value: ${SOURCES_API_BASE_URL}
+        - name: SOURCES_PSK
+          valueFrom:
+            secretKeyRef:
+              name: sources-api-secrets
+              key: psks
+              optional: true
         - name: CLOUDIGRADE_ENABLE_CLOUDWATCH
           value: ${CLOUDIGRADE_ENABLE_CLOUDWATCH}
         - name: CW_AWS_ACCESS_KEY_ID
@@ -448,6 +454,12 @@ objects:
           value: ${SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA}
         - name: SOURCES_API_BASE_URL
           value: ${SOURCES_API_BASE_URL}
+        - name: SOURCES_PSK
+          valueFrom:
+            secretKeyRef:
+              name: sources-api-secrets
+              key: psks
+              optional: true
         - name: CLOUDIGRADE_ENABLE_CLOUDWATCH
           value: ${CLOUDIGRADE_ENABLE_CLOUDWATCH}
         - name: CW_AWS_ACCESS_KEY_ID
@@ -554,6 +566,12 @@ objects:
           value: ${SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA}
         - name: SOURCES_API_BASE_URL
           value: ${SOURCES_API_BASE_URL}
+        - name: SOURCES_PSK
+          valueFrom:
+            secretKeyRef:
+              name: sources-api-secrets
+              key: psks
+              optional: true
         - name: SENTRY_TRACES_SAMPLE_RATE
           value: ${SENTRY_TRACES_SAMPLE_RATE}
         - name: CELERY_ENABLE_SENTRY
@@ -918,6 +936,12 @@ objects:
           value: ${SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA}
         - name: SOURCES_API_BASE_URL
           value: ${SOURCES_API_BASE_URL}
+        - name: SOURCES_PSK
+          valueFrom:
+            secretKeyRef:
+              name: sources-api-secrets
+              key: psks
+              optional: true
         - name: CLOUDIGRADE_ENABLE_CLOUDWATCH
           value: ${CLOUDIGRADE_ENABLE_CLOUDWATCH}
         - name: CW_AWS_ACCESS_KEY_ID
