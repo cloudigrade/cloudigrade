@@ -380,4 +380,4 @@ class SourcesTest(TestCase):
         headers = [["x-rh-identity", _faker.slug()], ["x-other", _faker.slug()]]
         account_number = get_sources_account_number_from_headers(headers)
 
-        self.assertEqual(account_number, "")
+        self.assertEqual(account_number, None)

@@ -162,13 +162,15 @@ def extract_ids_from_kafka_message(message, headers):
             the extracted account number and platform id.
     """
     account_number = get_sources_account_number_from_headers(headers)
-    if account_number == "":
+    if not account_number:
         auth_header = identity.get_x_rh_identity_header(headers)
         if not auth_header:
             logger.error(
-                _("Missing expected auth header from message %s, headers %s"),
-                message,
-                headers,
+                _(
+                    "Missing expected auth header from message "
+                    "%(message)s, headers %(headers)s"
+                ),
+                {"message": message, "headers": headers},
             )
             # Early exit if auth_header does not exist
             return None, None
@@ -176,9 +178,11 @@ def extract_ids_from_kafka_message(message, headers):
         account_number = auth_header.get("identity", {}).get("account_number")
         if not account_number:
             logger.error(
-                _("Missing expected account number from message %s, headers %s"),
-                message,
-                headers,
+                _(
+                    "Missing expected account number from message "
+                    "%(message)s, headers %(headers)s"
+                ),
+                {"message": message, "headers": headers},
             )
 
     platform_id = message.get("id")
@@ -195,7 +199,7 @@ def get_sources_account_number_from_headers(headers):
     for header in headers:
         if header[0] == "x-rh-sources-account-number":
             return header[1]
-    return ""
+    return None
 
 
 @cache_memoize(settings.CACHE_TTL_SOURCES_APPLICATION_TYPE_ID)
@@ -264,13 +268,10 @@ def notify_application_availability(
             )
         kafka_producer = KafkaProducer(sources_kafka_config)
 
-        headers = generate_sources_headers(account_number, include_psk=False)
+        message_headers = generate_sources_headers(account_number, include_psk=False)
         message_topic = settings.SOURCES_STATUS_TOPIC
         message_value = json.dumps(payload)
-        message_headers = {
-            **headers,
-            "event_type": settings.SOURCES_AVAILABILITY_EVENT_TYPE,
-        }
+        message_headers["event_type"] = settings.SOURCES_AVAILABILITY_EVENT_TYPE
 
         if settings.VERBOSE_SOURCES_NOTIFICATION_LOGGING:
             logger.info(
@@ -346,6 +347,6 @@ def generate_sources_headers(account_number, include_psk=True):
                 "Failed to generate headers for Sources, SOURCES_PSK is not defined"
             )
         else:
-            headers = {**headers, "x-rh-sources-psk": settings.SOURCES_PSK}
+            headers["x-rh-sources-psk"] = settings.SOURCES_PSK
 
     return headers
