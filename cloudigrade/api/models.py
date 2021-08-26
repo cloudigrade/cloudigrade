@@ -48,6 +48,12 @@ class CloudAccount(ExportModelOperationsMixin("CloudAccount"), BaseGenericModel)
     platform_application_id = models.IntegerField()
     platform_source_id = models.IntegerField()
 
+    # The related Application has its own pause/resume functionality that is orthogonal
+    # to our is_enabled state. We must track the external paused state and combine it
+    # with our is_enabled state to determine when we should or should not process new
+    # data for this CloudAccount.
+    platform_application_is_paused = models.BooleanField(null=False, default=False)
+
     class Meta:
         unique_together = (
             ("user", "name"),
@@ -99,6 +105,7 @@ class CloudAccount(ExportModelOperationsMixin("CloudAccount"), BaseGenericModel)
             f"user_id={self.user_id}, "
             f"platform_authentication_id={self.platform_authentication_id}, "
             f"platform_application_id={self.platform_application_id}, "
+            f"platform_application_is_paused={self.platform_application_is_paused}, "
             f"platform_source_id={self.platform_source_id}, "
             f"created_at=parse({created_at}), "
             f"updated_at=parse({updated_at})"

@@ -882,6 +882,9 @@
           "platform_application_id": {
             "type": "integer"
           },
+          "platform_application_is_paused": {
+            "type": "boolean"
+          },
           "platform_source_id": {
             "type": "integer"
           }

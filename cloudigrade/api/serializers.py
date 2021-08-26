@@ -83,6 +83,7 @@ class CloudAccountSerializer(ModelSerializer):
             "is_enabled",
             "platform_authentication_id",
             "platform_application_id",
+            "platform_application_is_paused",
             "platform_source_id",
         )
         read_only_fields = (
