@@ -1028,7 +1028,7 @@ def create_aws_cloud_account(
         # know to rollback the transaction if anything related to enabling fails.
         # Yes, this means holding the transaction open while we wait on calls
         # to AWS.
-        if cloud_account.enable() is False:
+        if not cloud_account.enable(disable_upon_failure=False):
             # Enabling of cloud account failed, rolling back.
             transaction.set_rollback(True)
             raise ValidationError(

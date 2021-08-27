@@ -96,6 +96,7 @@ class AwsCloudAccount(BaseModel):
         transaction.on_commit(
             lambda: tasks.initial_aws_describe_instances.delay(self.id)
         )
+        return True
 
     def disable(self):
         """
