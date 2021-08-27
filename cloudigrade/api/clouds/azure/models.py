@@ -63,7 +63,7 @@ class AzureCloudAccount(BaseModel):
         TODO: add logic to verify permissions, do an initial describe instances,
               and schedule a verification task
         """
-        pass
+        return True
 
     def disable(self):
         """
