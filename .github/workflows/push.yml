@@ -38,16 +38,6 @@ jobs:
       - run: poetry install
       - run: safety check
 
-  test-docker:
-    name: Docker Build
-    runs-on: ubuntu-latest
-    container:
-      image: docker:latest
-    steps:
-      - uses: actions/checkout@v2
-      - run: docker pull $IMAGE_NAME:latest || true
-      - run: docker build --cache-from $IMAGE_NAME:latest .
-
   test-docs:
     name: Verify docs and openapi.json
     runs-on: ubuntu-latest
@@ -61,21 +51,3 @@ jobs:
       - run: poetry run make openapi-test
       - run: poetry run openapi-spec-validator openapi.json
       - run: poetry run openapi-spec-validator openapi-internal.json
-
-  deploy-build-and-push-image:
-    name: Build and Push Image
-    if: github.ref == 'refs/heads/master'
-    needs: [test-py39, test-flake8, test-vulnerability, test-docker, test-docs]
-    runs-on: ubuntu-latest
-    container:
-      image: docker:latest
-    env:
-      QUAY_BOT_USERNAME: ${{ secrets.QUAY_BOT_USERNAME }}
-      QUAY_BOT_TOKEN: ${{ secrets.QUAY_BOT_TOKEN}}
-    steps:
-      - uses: actions/checkout@v2
-      - run: echo "${QUAY_BOT_TOKEN}" | docker login quay.io -u ${QUAY_BOT_USERNAME} --password-stdin
-      - run: docker pull $IMAGE_NAME:latest || true
-      - run: docker build --cache-from ${IMAGE_NAME}:latest --tag ${IMAGE_NAME}:${{ github.sha }} --tag ${IMAGE_NAME}:latest .
-      - run: docker push ${IMAGE_NAME}:${{ github.sha }}
-      - run: docker push ${IMAGE_NAME}:latest
