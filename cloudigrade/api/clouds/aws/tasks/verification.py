@@ -3,12 +3,10 @@ import logging
 
 from celery import shared_task
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import transaction
 from django.utils.translation import gettext as _
 from django_celery_beat.models import PeriodicTask
 
 from api.clouds.aws.models import AwsCloudAccount
-from api.clouds.aws.util import verify_permissions
 from api.models import CloudAccount
 from util.celery import retriable_shared_task
 
@@ -18,50 +16,40 @@ logger = logging.getLogger(__name__)
 @shared_task(name="api.clouds.aws.tasks.verify_account_permissions")
 def verify_account_permissions(account_arn):
     """
-    Periodic task that verifies the account arn is still valid.
+    Periodic task ensures a CloudAccount with the given ARN is enabled if possible.
+
+    Note that this function does not simply verify permissions. It actively attempts to
+    enable the related CloudAccount. During the enable process, we automatically check
+    the permissions through the ARN Role, attempt to configure the AWS CloudTrail, and
+    update our internal models accordingly. If that process fails, the CloudAccount also
+    automatically disables itself.
+
+    So, this "verify_account_permissions" name is an historic oddity that probably
+    should be changed to reflect the actual underling functionality.
 
     Args:
-        account_arn: The ARN for the account to check
+        account_arn (str): The AWS ARN related to a CloudAccount to verify and enable
 
     Returns:
-        bool: True if the ARN is still valid.
+        bool: True if the CloudAccount related to the ARN was successfully enabled.
 
     """
-    valid = verify_permissions(account_arn)
-    logger.debug(
-        _("%(account_arn)s verified permissions? %(valid)s"),
-        {"account_arn": account_arn, "valid": valid},
-    )
-
-    if not valid:
-        # Disable the cloud account.
+    successfully_enabled = False
+    try:
+        aws_cloud_account = AwsCloudAccount.objects.get(account_arn=account_arn)
+        cloud_account = aws_cloud_account.cloud_account.get()
+        successfully_enabled = cloud_account.enable()
+    except (
+        AwsCloudAccount.DoesNotExist,
+        CloudAccount.DoesNotExist,
+        ObjectDoesNotExist,
+    ) as exception:
+        # If the account was deleted before or during our check, log and return.
         logger.info(
-            _("ARN %s failed validation. Disabling the cloud account."), account_arn
+            "cloud account object does not exist for ARN %(arn)s (%(exception)s)",
+            {"arn": account_arn, "exception": exception},
         )
-        with transaction.atomic():
-            try:
-                aws_cloud_account = AwsCloudAccount.objects.get(account_arn=account_arn)
-                cloud_account = aws_cloud_account.cloud_account.get()
-                if cloud_account:
-                    # We do *not* need to notify sources here because verify_permissions
-                    # should have just done that with a more specific error message.
-                    cloud_account.disable(notify_sources=False)
-                else:
-                    raise CloudAccount.DoesNotExist
-
-            except (
-                AwsCloudAccount.DoesNotExist,
-                CloudAccount.DoesNotExist,
-                ObjectDoesNotExist,
-            ) as exception:
-                # If the account was deleted before or during our check, log and return.
-                logger.info(
-                    "Cannot disable: cloud account object does not exist for "
-                    "ARN %(arn)s (%(exception)s)",
-                    {"arn": account_arn, "exception": exception},
-                )
-
-    return valid
+    return successfully_enabled
 
 
 @retriable_shared_task(name="api.clouds.aws.tasks.ensure_all_verify_tasks_are_valid")
