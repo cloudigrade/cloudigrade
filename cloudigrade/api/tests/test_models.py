@@ -9,7 +9,6 @@ from django.test import TestCase
 from api.models import ConcurrentUsage, Run
 from api.tests import helper as api_helper
 from api.util import calculate_max_concurrent_usage
-from util.misc import get_today
 from util.tests import helper as util_helper
 
 _faker = faker.Faker()
@@ -146,27 +145,3 @@ class CloudAccountTest(TestCase):
         )
         account.delete()
         self.assertTrue(User.objects.filter(username=username).exists())
-
-    @patch("api.tasks.notify_application_availability_task")
-    @patch("api.clouds.aws.util.verify_permissions")
-    @patch("api.clouds.aws.tasks.initial_aws_describe_instances")
-    def test_concurrent_usage_deleted_when_clount_enables(
-        self,
-        mock_initial_aws_describe_instances,
-        mock_verify_permissions,
-        mock_notify_sources,
-    ):
-        """Test stale ConcurrentUsage is deleted when clount is enabled."""
-        user = util_helper.generate_test_user()
-
-        concurrent_usage = ConcurrentUsage(user=user, date=get_today())
-        concurrent_usage.save()
-
-        self.assertEqual(1, ConcurrentUsage.objects.filter(user=user).count())
-        aws_account_id = util_helper.generate_dummy_aws_account_id()
-        account = api_helper.generate_cloud_account(
-            aws_account_id=aws_account_id,
-            user=user,
-        )
-        account.enable()
-        self.assertEqual(0, ConcurrentUsage.objects.filter(user=user).count())
