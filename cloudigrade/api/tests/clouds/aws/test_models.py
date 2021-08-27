@@ -128,7 +128,8 @@ class AwsCloudAccountModelTest(TransactionTestCase, ModelStrTestMixin):
         ) as mock_initial_aws_describe_instances:
             mock_verify_permissions.side_effect = Exception("Something broke.")
             with self.assertLogs("api.models", level="INFO") as cm:
-                self.account.enable()
+                success = self.account.enable(disable_upon_failure=False)
+                self.assertFalse(success)
             log_record = cm.records[1]
             self.assertEqual(
                 str(mock_verify_permissions.side_effect), log_record.message
@@ -163,7 +164,8 @@ class AwsCloudAccountModelTest(TransactionTestCase, ModelStrTestMixin):
             )
             mock_verify.return_value = (True, "")
             with self.assertLogs("api.clouds.aws.util", level="WARNING") as cm:
-                self.account.enable()
+                success = self.account.enable(disable_upon_failure=False)
+                self.assertFalse(success)
                 self.assertIn(
                     str(mock_cloudtrail.side_effect.detail),
                     cm.records[1].message,

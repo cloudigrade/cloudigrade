@@ -112,8 +112,7 @@ class CloudAccount(ExportModelOperationsMixin("CloudAccount"), BaseGenericModel)
             f")"
         )
 
-    @transaction.atomic
-    def enable(self):
+    def enable(self, disable_upon_failure=True):
         """
         Mark this CloudAccount as enabled and perform operations to make it so.
 
@@ -125,28 +124,42 @@ class CloudAccount(ExportModelOperationsMixin("CloudAccount"), BaseGenericModel)
         AwsCloudAccount) to make any cloud-specific changes. If any that cloud-specific
         function fails, we rollback our state change and re-raise the exception for the
         caller to handle further.
+
+        If we fail to enable the account (for example, if cloud-specific permissions
+        checks fail), this function automatically calls `disable` to ensure that our
+        internal state is correctly reflected.
         """
         logger.info(
             _("'is_enabled' is %(is_enabled)s before enabling %(cloudaccount)s"),
             {"is_enabled": self.is_enabled, "cloudaccount": self},
         )
-        if not self.is_enabled:
-            self.is_enabled = True
-            self.enabled_at = get_now()
-            self.save()
-        try:
-            self.content_object.enable()
-        except Exception as e:
-            # All failure notifications should happen during the failure
-            logger.info(e)
-            transaction.set_rollback(True)
-            return False
+        previously_enabled = self.is_enabled
+        enabled_successfully = False
+        with transaction.atomic():
+            if not previously_enabled:
+                self.is_enabled = True
+                self.enabled_at = get_now()
+                self.save()
+            try:
+                enabled_successfully = self.content_object.enable()
+            except Exception as e:
+                logger.info(e)
+            finally:
+                if not enabled_successfully:
+                    transaction.set_rollback(True)
 
-        from api.tasks import notify_application_availability_task
+        if enabled_successfully:
+            from api.tasks import notify_application_availability_task
 
-        notify_application_availability_task.delay(
-            self.user.username, self.platform_application_id, "available"
-        )
+            notify_application_availability_task.delay(
+                self.user.username, self.platform_application_id, "available"
+            )
+        elif disable_upon_failure and not previously_enabled:
+            # We do not need to notify sources when calling self.disable() here because
+            # self.content_object.enable() should have already notified with its error.
+            self.disable(notify_sources=False)
+
+        return enabled_successfully
 
     @transaction.atomic
     def disable(self, message="", power_off_instances=True, notify_sources=True):

@@ -77,7 +77,7 @@ def create_azure_cloud_account(
 
         # This enable call *must* be inside the transaction because we need to
         # know to rollback the transaction if anything related to enabling fails.
-        if cloud_account.enable() is False:
+        if not cloud_account.enable(disable_upon_failure=False):
             # Enabling of cloud account failed, rolling back.
             transaction.set_rollback(True)
             raise ValidationError(
