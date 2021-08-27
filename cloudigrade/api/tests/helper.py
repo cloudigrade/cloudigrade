@@ -348,12 +348,10 @@ def _generate_cloud_account(
         platform_application_is_paused=platform_application_is_paused,
         platform_source_id=platform_source_id,
         is_enabled=is_enabled,
+        enabled_at=enabled_at,
     )
     cloud_account.created_at = created_at
     cloud_account.save()
-    if enabled_at:
-        cloud_account.enabled_at = enabled_at
-        cloud_account.save()
 
     return cloud_account
 

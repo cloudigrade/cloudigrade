@@ -273,7 +273,7 @@ def _is_relevant_event(occurred_at, aws_account_id, event_type):
             },
         )
         return False
-    if cloud_account.enabled_at > parse(occurred_at):
+    if cloud_account.enabled_at and cloud_account.enabled_at > parse(occurred_at):
         logger.info(
             _(
                 "Skipping CloudTrail record %(event_type)s event extraction for AWS "

@@ -195,9 +195,11 @@ class InternalAccountViewSetTest(TransactionTestCase):
         self.account2.refresh_from_db()
         self.assertIsNotNone(self.account2)
 
-    @patch.object(CloudAccount, "enable")
-    def test_create_account_with_name_success(self, mock_enable):
+    @patch("api.tasks.notify_application_availability_task")
+    @patch("api.clouds.aws.models.AwsCloudAccount.enable")
+    def test_create_account_with_name_success(self, mock_enable, mock_task):
         """Test create account with a name succeeds."""
+        mock_enable.return_value = True
         data = util_helper.generate_dummy_aws_cloud_account_post_data()
 
         request = self.factory.post("/accounts/", data=data)
@@ -214,9 +216,10 @@ class InternalAccountViewSetTest(TransactionTestCase):
         self.assertIsNotNone(response.data["name"])
         self.assertEqual(response.data["is_enabled"], True)  # True by default
         mock_enable.assert_called()
+        mock_task.delay.assert_called()
 
-    @patch.object(CloudAccount, "enable")
-    def test_create_azure_account_with_name_success(self, mock_enable):
+    @patch("api.tasks.notify_application_availability_task")
+    def test_create_azure_account_with_name_success(self, mock_task):
         """Test creating an azure account succeeds."""
         data = util_helper.generate_dummy_azure_cloud_account_post_data()
 
@@ -233,7 +236,7 @@ class InternalAccountViewSetTest(TransactionTestCase):
         self.assertEqual(response.data["name"], data["name"])
         self.assertIsNotNone(response.data["name"])
         self.assertEqual(response.data["is_enabled"], True)  # True by default
-        mock_enable.assert_called()
+        mock_task.delay.assert_called()
 
     @patch.object(util, "aws")
     @patch("api.clouds.aws.tasks.initial_aws_describe_instances")
