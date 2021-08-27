@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi8/ubi-minimal:8.3
+FROM registry.access.redhat.com/ubi8/ubi-minimal:8.4
 
 # Make Ansible happy with arbitrary UID/GID in OpenShift.
 RUN chmod g=u /etc/passwd /etc/group
@@ -19,9 +19,9 @@ RUN microdnf install libicu \
 
 COPY pyproject.toml poetry.lock ./
 RUN microdnf update \
-    && microdnf install git which procps-ng nmap-ncat libcurl-devel gcc openssl-devel python38-devel python38-pip redhat-rpm-config -y \
-    && if [ ! -e /usr/bin/pip ]; then ln -s /usr/bin/pip3.8 /usr/bin/pip ; fi \
-    && if [[ ! -e /usr/bin/python ]]; then ln -sf /usr/bin/python3.8 /usr/bin/python; fi \
+    && microdnf install git which procps-ng nmap-ncat libcurl-devel gcc openssl-devel python39-devel python39-pip redhat-rpm-config -y \
+    && if [ ! -e /usr/bin/pip ]; then ln -s /usr/bin/pip3.9 /usr/bin/pip ; fi \
+    && if [[ ! -e /usr/bin/python ]]; then ln -sf /usr/bin/python3.9 /usr/bin/python; fi \
     && pip install -U pip \
     && pip install poetry \
     && poetry config virtualenvs.create false \
