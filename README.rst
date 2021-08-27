@@ -23,7 +23,7 @@ Development Setup
 
 Running **cloudigrade** locally may require installing some or all of the following dependencies:
 
--  Python 3.8
+-  Python 3.9
 -  `poetry <https://python-poetry.org/docs/>`_
 -  `tox <https://tox.readthedocs.io/>`_
 -  `Docker Desktop <https://docs.docker.com/get-docker/>`_
@@ -41,7 +41,7 @@ The following commands should install everything you need:
 .. code-block:: bash
 
     brew update
-    brew install python@3.8 gettext awscli azure-cli postgresql openssl curl librdkafka tox poetry
+    brew install python@3.9 gettext awscli azure-cli postgresql openssl curl librdkafka tox poetry
 
 
 Linux dependencies
@@ -54,14 +54,14 @@ We recommend developing on the latest version of Fedora. Follow the following co
     sudo dnf install awscli gettext postgresql-devel librdkafka-devel -y
 
 
-Python 3.8.x
+Python 3.9.x
 ------------
 
 This step is optional, but we recommend you install a local Python version via `pyenv <https://github.com/pyenv/pyenv#installation>`_ instead of using the brew or dnf version. This will ensure you keep a *specific* stable version when you are working on **cloudigrade**. For example:
 
 .. code-block:: bash
 
-    pyenv install 3.8.7
+    pyenv install 3.9.6
     pyenv local
 
 
