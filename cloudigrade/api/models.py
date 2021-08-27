@@ -11,7 +11,7 @@ from django.utils.translation import gettext as _
 from django_prometheus.models import ExportModelOperationsMixin
 
 from api import AWS_PROVIDER_STRING, AZURE_PROVIDER_STRING
-from util.misc import get_now, get_today, lock_task_for_user_ids
+from util.misc import get_now, lock_task_for_user_ids
 from util.models import BaseGenericModel, BaseModel
 
 logger = logging.getLogger(__name__)
@@ -132,8 +132,6 @@ class CloudAccount(ExportModelOperationsMixin("CloudAccount"), BaseGenericModel)
             self.save()
         try:
             self.content_object.enable()
-            # delete stale ConcurrentUsage when an clount is enabled
-            ConcurrentUsage.objects.filter(user=self.user, date=get_today()).delete()
         except Exception as e:
             # All failure notifications should happen during the failure
             logger.info(e)
