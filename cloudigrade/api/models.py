@@ -36,8 +36,11 @@ class CloudAccount(ExportModelOperationsMixin("CloudAccount"), BaseGenericModel)
         null=False,
     )
     name = models.CharField(max_length=256, null=False, db_index=True)
-    is_enabled = models.BooleanField(null=False, default=True)
-    enabled_at = models.DateTimeField(auto_now_add=True)
+
+    # New CloudAccount instances are created with is_enabled=False because we must rely
+    # on the enable method to determine if is_enabled can be True and update if so.
+    is_enabled = models.BooleanField(null=False, default=False)
+    enabled_at = models.DateTimeField(null=True, blank=True)
 
     # We must store the platform authentication_id in order to know things
     # like when to delete the Clount.

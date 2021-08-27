@@ -6559,7 +6559,7 @@
           "enabled_at": {
             "type": "string",
             "format": "date-time",
-            "readOnly": true
+            "nullable": true
           },
           "platform_authentication_id": {
             "type": "integer"
