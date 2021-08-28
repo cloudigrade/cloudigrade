@@ -7,15 +7,15 @@ env:
 on: [pull_request]
 
 jobs:
-  test-py38:
-    name: py38
+  test-py39:
+    name: py39
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/cloudigrade/build-container:latest
     steps:
       - uses: actions/checkout@v2
       - run: pip install tox codecov poetry
-      - run: tox -e py38
+      - run: tox -e py39
       - run: codecov
 
   test-flake8:

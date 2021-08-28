@@ -10,15 +10,15 @@ on:
       - created
 
 jobs:
-  test-py38:
-    name: py38
+  test-py39:
+    name: py39
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/cloudigrade/build-container:latest
     steps:
       - uses: actions/checkout@v2
       - run: pip install tox codecov poetry
-      - run: tox -e py38
+      - run: tox -e py39
       - run: codecov
 
   test-flake8:
@@ -72,7 +72,7 @@ jobs:
       COMMIT_TAG: ${{ github.event.release.tag_name }}
       QUAY_BOT_USERNAME: ${{ secrets.QUAY_BOT_USERNAME }}
       QUAY_BOT_TOKEN: ${{ secrets.QUAY_BOT_TOKEN}}
-    needs: [test-py38, test-flake8, test-vulnerability, test-docker, test-docs]
+    needs: [test-py39, test-flake8, test-vulnerability, test-docker, test-docs]
     runs-on: ubuntu-latest
     container:
       image: docker:latest
