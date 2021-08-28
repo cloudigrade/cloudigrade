@@ -81,47 +81,57 @@ def configure_customer_aws_and_create_cloud_account(
 
 @retriable_shared_task(name="api.clouds.aws.tasks.initial_aws_describe_instances")
 @rewrap_aws_errors
-def initial_aws_describe_instances(account_id):
+def initial_aws_describe_instances(aws_cloud_account_id):
     """
-    Fetch and save instances data found upon AWS cloud account creation.
+    Fetch and save instances data found upon enabling an AwsCloudAccount.
 
     Args:
-        account_id (int): the AwsAccount id
+        aws_cloud_account_id (int): the AwsCloudAccount id
     """
     try:
-        aws_account = AwsCloudAccount.objects.get(pk=account_id)
+        aws_cloud_account = AwsCloudAccount.objects.get(pk=aws_cloud_account_id)
     except AwsCloudAccount.DoesNotExist:
         logger.warning(
             _("AwsCloudAccount id %s could not be found for initial describe"),
-            account_id,
+            aws_cloud_account_id,
         )
         # This can happen if a customer creates and then quickly deletes their
         # cloud account before this async task has started to run. Early exit!
         return
 
-    account = aws_account.cloud_account.get()
-    if not account.is_enabled:
+    cloud_account = aws_cloud_account.cloud_account.get()
+    if not cloud_account.is_enabled:
         logger.warning(
             _("AwsCloudAccount id %s is not enabled; skipping initial describe"),
-            account_id,
+            aws_cloud_account_id,
         )
         # This can happen if a customer creates and then quickly disabled their
         # cloud account before this async task has started to run. Early exit!
         return
-    arn = aws_account.account_arn
+
+    if cloud_account.platform_application_is_paused:
+        logger.warning(
+            _("AwsCloudAccount id %s is paused; skipping initial describe"),
+            aws_cloud_account_id,
+        )
+        # This can happen if a customer pauses the sources-api application for an
+        # otherwise normally-working cloud account. Early exit!
+        return
+
+    arn = aws_cloud_account.account_arn
 
     session = aws.get_session(arn)
     instances_data = aws.describe_instances_everywhere(session)
 
     try:
-        user_id = account.user.id
+        user_id = cloud_account.user.id
     except User.DoesNotExist:
         logger.info(
             _(
                 "User for account id %s has already been deleted; "
                 "skipping initial describe."
             ),
-            account_id,
+            aws_cloud_account_id,
         )
         # This can happen if a customer creates and then quickly deletes their
         # cloud account before this async task has started to run. If the user has
@@ -135,22 +145,22 @@ def initial_aws_describe_instances(account_id):
             # We do this at the start of this transaction in case the account has been
             # deleted during the potentially slow describe_instances_everywhere above.
             # If this fails, we'll jump to the except block to log an important warning.
-            AwsCloudAccount.objects.get(pk=account_id)
+            AwsCloudAccount.objects.get(pk=aws_cloud_account_id)
 
-            create_missing_power_off_aws_instance_events(account, instances_data)
+            create_missing_power_off_aws_instance_events(cloud_account, instances_data)
             new_ami_ids = create_new_machine_images(session, instances_data)
             logger.info(
                 _("Created new machine images include: %(new_ami_ids)s"),
                 {"new_ami_ids": new_ami_ids},
             )
-            create_initial_aws_instance_events(account, instances_data)
+            create_initial_aws_instance_events(cloud_account, instances_data)
         except AwsCloudAccount.DoesNotExist:
             logger.warning(
                 _(
                     "AwsCloudAccount id %s could not be found to save newly "
                     "discovered images and instances"
                 ),
-                account_id,
+                aws_cloud_account_id,
             )
             # This can happen if a customer deleted their cloud account between
             # the start of this function and here. The AWS calls for
