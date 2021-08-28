@@ -93,9 +93,13 @@ class AwsCloudAccount(BaseModel):
             raise ValidationError({"account_arn": message})
 
         self._enable_verify_task()
-        transaction.on_commit(
-            lambda: tasks.initial_aws_describe_instances.delay(self.id)
-        )
+
+        if not self.cloud_account.get().platform_application_is_paused:
+            # Only describe if the application is *not* paused.
+            transaction.on_commit(
+                lambda: tasks.initial_aws_describe_instances.delay(self.id)
+            )
+
         return True
 
     def disable(self):
