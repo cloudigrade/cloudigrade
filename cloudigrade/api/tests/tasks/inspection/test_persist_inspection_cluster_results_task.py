@@ -1,30 +1,30 @@
-"""Collection of tests for tasks.persist_inspection_cluster_results_task."""
+"""Collection of tests for tasks.inspection.persist_inspection_cluster_results_task."""
 import json
 import uuid
 from unittest.mock import patch
 
 from django.test import TestCase
 
-from api import tasks
+from api.tasks import inspection
 from util.tests import helper as util_helper
 
 
 class PersistInspectionClusterResultsTaskTest(TestCase):
     """Celery task 'persist_inspection_cluster_results_task' test cases."""
 
-    @patch("api.tasks.aws.yield_messages_from_queue")
-    @patch("api.tasks.aws.get_sqs_queue_url")
-    @patch("api.tasks.persist_aws_inspection_cluster_results")
+    @patch("util.aws.yield_messages_from_queue")
+    @patch("util.aws.get_sqs_queue_url")
+    @patch("api.tasks.inspection.persist_aws_inspection_cluster_results")
     def test_persist_inspect_results_no_messages(self, mock_persist, _, mock_receive):
         """Assert empty yield results are properly ignored."""
         mock_receive.return_value = []
-        tasks.persist_inspection_cluster_results_task()
+        inspection.persist_inspection_cluster_results_task()
         mock_persist.assert_not_called()
 
-    @patch("api.tasks.aws.delete_messages_from_queue")
-    @patch("api.tasks.aws.yield_messages_from_queue")
-    @patch("api.tasks.aws.get_sqs_queue_url")
-    @patch("api.tasks.persist_aws_inspection_cluster_results")
+    @patch("util.aws.delete_messages_from_queue")
+    @patch("util.aws.yield_messages_from_queue")
+    @patch("util.aws.get_sqs_queue_url")
+    @patch("api.tasks.inspection.persist_aws_inspection_cluster_results")
     def test_persist_inspect_results_task_aws_success(
         self, mock_persist, _, mock_receive, mock_delete
     ):
@@ -57,17 +57,17 @@ class PersistInspectionClusterResultsTaskTest(TestCase):
         )
         mock_receive.return_value = [sqs_message]
 
-        s, f = tasks.persist_inspection_cluster_results_task()
+        s, f = inspection.persist_inspection_cluster_results_task()
 
         mock_persist.assert_called_once_with(body_dict)
         mock_delete.assert_called_once()
         self.assertIn(sqs_message, s)
         self.assertEqual([], f)
 
-    @patch("api.tasks.aws.delete_messages_from_queue")
-    @patch("api.tasks.aws.yield_messages_from_queue")
-    @patch("api.tasks.aws.get_sqs_queue_url")
-    @patch("api.tasks.persist_aws_inspection_cluster_results")
+    @patch("util.aws.delete_messages_from_queue")
+    @patch("util.aws.yield_messages_from_queue")
+    @patch("util.aws.get_sqs_queue_url")
+    @patch("api.tasks.inspection.persist_aws_inspection_cluster_results")
     def test_persist_inspect_results_unknown_cloud(
         self, mock_persist, _, mock_receive, mock_delete
     ):
@@ -80,16 +80,16 @@ class PersistInspectionClusterResultsTaskTest(TestCase):
         )
         mock_receive.return_value = [sqs_message]
 
-        s, f = tasks.persist_inspection_cluster_results_task()
+        s, f = inspection.persist_inspection_cluster_results_task()
 
         mock_persist.assert_not_called()
         mock_delete.assert_not_called()
         self.assertEqual([], s)
         self.assertIn(sqs_message, f)
 
-    @patch("api.tasks.aws.delete_messages_from_queue")
-    @patch("api.tasks.aws.yield_messages_from_queue")
-    @patch("api.tasks.aws.get_sqs_queue_url")
+    @patch("util.aws.delete_messages_from_queue")
+    @patch("util.aws.yield_messages_from_queue")
+    @patch("util.aws.get_sqs_queue_url")
     def test_persist_inspect_results_aws_cloud_no_images(
         self, _, mock_receive, mock_delete
     ):
@@ -102,15 +102,15 @@ class PersistInspectionClusterResultsTaskTest(TestCase):
         )
         mock_receive.return_value = [sqs_message]
 
-        s, f = tasks.persist_inspection_cluster_results_task()
+        s, f = inspection.persist_inspection_cluster_results_task()
 
         mock_delete.assert_not_called()
         self.assertEqual([], s)
         self.assertIn(sqs_message, f)
 
-    @patch("api.tasks.aws.delete_messages_from_queue")
-    @patch("api.tasks.aws.yield_messages_from_queue")
-    @patch("api.tasks.aws.get_sqs_queue_url")
+    @patch("util.aws.delete_messages_from_queue")
+    @patch("util.aws.yield_messages_from_queue")
+    @patch("util.aws.get_sqs_queue_url")
     def test_persist_inspect_results_aws_cloud_image_not_found(
         self, _, mock_receive, mock_delete
     ):
@@ -127,7 +127,7 @@ class PersistInspectionClusterResultsTaskTest(TestCase):
         )
         mock_receive.return_value = [sqs_message]
 
-        s, f = tasks.persist_inspection_cluster_results_task()
+        s, f = inspection.persist_inspection_cluster_results_task()
 
         mock_delete.assert_called_once()
         self.assertIn(sqs_message, s)

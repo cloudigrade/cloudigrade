@@ -1,4 +1,4 @@
-"""Collection of tests for tasks.delete_inactive_users."""
+"""Collection of tests for tasks.maintenance.delete_inactive_users."""
 from datetime import timedelta
 
 import faker
@@ -6,8 +6,8 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.test import TestCase
 
-from api import tasks
 from api.models import CloudAccount, ConcurrentUsage
+from api.tasks import maintenance
 from api.tests import helper as api_helper
 from util import misc
 
@@ -29,7 +29,7 @@ class DeleteInactiveUsersTest(TestCase):
             )
         self.assertEqual(User.objects.count(), USERS_COUNT)
         self.assertEqual(ConcurrentUsage.objects.count(), USERS_COUNT)
-        tasks.delete_inactive_users()
+        maintenance.delete_inactive_users()
         self.assertEqual(User.objects.count(), 0)
         self.assertEqual(ConcurrentUsage.objects.count(), 0)
 
@@ -42,7 +42,7 @@ class DeleteInactiveUsersTest(TestCase):
             api_helper.generate_cloud_account(user=user)
         self.assertEqual(User.objects.count(), USERS_COUNT)
         self.assertEqual(CloudAccount.objects.count(), USERS_COUNT)
-        tasks.delete_inactive_users()
+        maintenance.delete_inactive_users()
         self.assertEqual(User.objects.count(), USERS_COUNT)
 
     def test_delete_inactive_users_ignores_superusers(self):
@@ -54,7 +54,7 @@ class DeleteInactiveUsersTest(TestCase):
                 account_number, date_joined=old_date, is_superuser=True
             )
         self.assertEqual(User.objects.count(), USERS_COUNT)
-        tasks.delete_inactive_users()
+        maintenance.delete_inactive_users()
         self.assertEqual(User.objects.count(), USERS_COUNT)
 
     def test_delete_inactive_users_ignores_new_users(self):
@@ -62,5 +62,5 @@ class DeleteInactiveUsersTest(TestCase):
         for account_number in range(1, USERS_COUNT + 1):
             User.objects.create_user(account_number)
         self.assertEqual(User.objects.count(), USERS_COUNT)
-        tasks.delete_inactive_users()
+        maintenance.delete_inactive_users()
         self.assertEqual(User.objects.count(), USERS_COUNT)

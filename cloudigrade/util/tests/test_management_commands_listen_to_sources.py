@@ -13,9 +13,9 @@ class SourcesListenerTest(TestCase):
 
     @patch("util.management.commands.listen_to_sources.logger")
     @patch("util.management.commands.listen_to_sources.Consumer")
-    @patch("api.tasks.update_from_source_kafka_message")
-    @patch("api.tasks.delete_from_sources_kafka_message")
-    @patch("api.tasks.create_from_sources_kafka_message")
+    @patch("api.tasks.sources.update_from_source_kafka_message")
+    @patch("api.tasks.sources.delete_from_sources_kafka_message")
+    @patch("api.tasks.sources.create_from_sources_kafka_message")
     def test_listen(
         self,
         mock_create_task,

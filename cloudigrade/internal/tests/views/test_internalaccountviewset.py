@@ -195,7 +195,7 @@ class InternalAccountViewSetTest(TransactionTestCase):
         self.account2.refresh_from_db()
         self.assertIsNotNone(self.account2)
 
-    @patch("api.tasks.notify_application_availability_task")
+    @patch("api.tasks.sources.notify_application_availability_task")
     @patch("api.clouds.aws.models.AwsCloudAccount.enable")
     def test_create_account_with_name_success(self, mock_enable, mock_task):
         """Test create account with a name succeeds."""
@@ -218,7 +218,7 @@ class InternalAccountViewSetTest(TransactionTestCase):
         mock_enable.assert_called()
         mock_task.delay.assert_called()
 
-    @patch("api.tasks.notify_application_availability_task")
+    @patch("api.tasks.sources.notify_application_availability_task")
     def test_create_azure_account_with_name_success(self, mock_task):
         """Test creating an azure account succeeds."""
         data = util_helper.generate_dummy_azure_cloud_account_post_data()

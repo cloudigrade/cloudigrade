@@ -223,7 +223,7 @@ class CloudsAwsUtilVerifyPermissionsTest(TestCase):
         ) as mock_aws_verify_account_access, patch.object(
             util.aws, "configure_cloudtrail"
         ), patch(
-            "api.tasks.notify_application_availability_task"
+            "api.tasks.sources.notify_application_availability_task"
         ) as mock_notify_sources:
             mock_aws_verify_account_access.return_value = True, []
             verified = util.verify_permissions(self.arn)
@@ -235,7 +235,7 @@ class CloudsAwsUtilVerifyPermissionsTest(TestCase):
         """Test handling when the CloudAccount is missing."""
         arn = util_helper.generate_dummy_arn()
         with patch(
-            "api.tasks.notify_application_availability_task"
+            "api.tasks.sources.notify_application_availability_task"
         ) as mock_notify_sources:
             verified = util.verify_permissions(arn)
 
@@ -251,7 +251,7 @@ class CloudsAwsUtilVerifyPermissionsTest(TestCase):
             operation_name=Mock(),
         )
         with patch.object(util.aws, "get_session") as mock_get_session, patch(
-            "api.tasks.notify_application_availability_task"
+            "api.tasks.sources.notify_application_availability_task"
         ) as mock_notify_sources:
             mock_get_session.side_effect = client_error
             verified = util.verify_permissions(self.arn)
@@ -269,7 +269,7 @@ class CloudsAwsUtilVerifyPermissionsTest(TestCase):
         with self.assertLogs(
             "api.clouds.aws.util", level="ERROR"
         ) as logger, patch.object(util.aws, "get_session") as mock_get_session, patch(
-            "api.tasks.notify_application_availability_task"
+            "api.tasks.sources.notify_application_availability_task"
         ) as mock_notify_sources:
             mock_get_session.side_effect = client_error
             verified = util.verify_permissions(self.arn)
@@ -292,7 +292,7 @@ class CloudsAwsUtilVerifyPermissionsTest(TestCase):
         ) as mock_aws_verify_account_access, patch.object(
             util.aws, "configure_cloudtrail"
         ), patch(
-            "api.tasks.notify_application_availability_task"
+            "api.tasks.sources.notify_application_availability_task"
         ) as mock_notify_sources:
             mock_aws_verify_account_access.return_value = False, [_faker.slug()]
             verified = util.verify_permissions(self.arn)
@@ -307,7 +307,7 @@ class CloudsAwsUtilVerifyPermissionsTest(TestCase):
         ) as mock_verify_access, patch.object(
             util.aws, "configure_cloudtrail"
         ) as mock_configure_cloudtrail, patch(
-            "api.tasks.notify_application_availability_task"
+            "api.tasks.sources.notify_application_availability_task"
         ) as mock_notify_sources:
             mock_verify_access.return_value = True, []
             mock_configure_cloudtrail.side_effect = (
@@ -323,7 +323,7 @@ class CloudsAwsUtilVerifyPermissionsTest(TestCase):
         with patch.object(util.aws, "get_session"), patch.object(
             util.aws, "verify_account_access"
         ) as mock_verify_access, patch(
-            "api.tasks.notify_application_availability_task"
+            "api.tasks.sources.notify_application_availability_task"
         ) as mock_notify_sources:
             mock_verify_access.side_effect = Exception
             verified = util.verify_permissions(self.arn)

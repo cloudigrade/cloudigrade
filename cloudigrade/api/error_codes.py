@@ -31,7 +31,7 @@ class CloudigradeError:
 
     def notify(self, account_number, application_id, error_message=None):
         """Tell sources an application is not available because of error."""
-        from api.tasks import notify_application_availability_task
+        from api.tasks.sources import notify_application_availability_task
 
         if not error_message:
             error_message = self.get_message()

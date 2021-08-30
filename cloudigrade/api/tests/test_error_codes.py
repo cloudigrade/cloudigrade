@@ -41,7 +41,7 @@ class ErrorCodeTestCase(TestCase):
                 "Longer internal message {}, {}".format(var1, var2), captured.output[1]
             )
 
-    @patch("api.tasks.notify_application_availability_task")
+    @patch("api.tasks.sources.notify_application_availability_task")
     def test_notify_sources(self, mock_notify_sources):
         """Test that notify calls notify_application_availability."""
         account_number = str(_faker.pyint())

@@ -4,9 +4,9 @@ from unittest.mock import patch
 import faker
 from django.test import TestCase
 
-from api import tasks
 from api.clouds.aws import models as aws_models
 from api.models import CloudAccount
+from api.tasks import sources
 from api.tests import helper as api_helper
 from util.aws import sts
 from util.tests import helper as util_helper
@@ -31,7 +31,7 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         )
         self.user = self.account.user
 
-    @patch("api.tasks.notify_application_availability_task")
+    @patch("api.tasks.sources.notify_application_availability_task")
     def test_delete_from_sources_kafka_message_application_authentication_success(
         self, mock_notify_sources
     ):
@@ -51,21 +51,22 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         )
 
         expected_logger_infos = [
-            "INFO:api.tasks:delete_from_sources_kafka_message for account_number "
+            "INFO:api.tasks.sources:delete_from_sources_kafka_message "
+            "for account_number "
             f"{account_number}, platform_id {self.application_authentication_id}",
-            "INFO:api.tasks:Deleting CloudAccounts using filter "
+            "INFO:api.tasks.sources:Deleting CloudAccounts using filter "
             f"(AND: ('platform_application_id', {self.application_id}), "
             f"('platform_authentication_id', {self.authentication_id}))",
         ]
 
         with patch.object(sts, "boto3") as mock_boto3, patch.object(
             aws_models, "_delete_cloudtrail"
-        ), self.assertLogs("api.tasks", level="INFO") as logging_watcher:
+        ), self.assertLogs("api.tasks.sources", level="INFO") as logging_watcher:
             role = util_helper.generate_dummy_role()
             mock_assume_role = mock_boto3.client.return_value.assume_role
             mock_assume_role.return_value = role
 
-            tasks.delete_from_sources_kafka_message(message, headers)
+            sources.delete_from_sources_kafka_message(message, headers)
             for index, expected_logger_info in enumerate(expected_logger_infos):
                 self.assertEqual(expected_logger_info, logging_watcher.output[index])
         self.assertEqual(CloudAccount.objects.count(), 0)
@@ -78,7 +79,7 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
 
         message = {}
         headers = []
-        tasks.delete_from_sources_kafka_message(message, headers)
+        sources.delete_from_sources_kafka_message(message, headers)
 
         # Delete should not have been called.
         self.assertEqual(CloudAccount.objects.count(), 1)
@@ -100,7 +101,7 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
             authentication_id=authentication_id,
         )
 
-        tasks.delete_from_sources_kafka_message(message, headers)
+        sources.delete_from_sources_kafka_message(message, headers)
 
         # Delete should not have been called.
         self.assertEqual(CloudAccount.objects.count(), 1)
@@ -123,7 +124,7 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
             authentication_id=authentication_id,
         )
 
-        tasks.delete_from_sources_kafka_message(message, headers)
+        sources.delete_from_sources_kafka_message(message, headers)
 
         # Delete should not have been called.
         self.assertEqual(CloudAccount.objects.count(), 1)

@@ -152,7 +152,7 @@ class CloudAccount(ExportModelOperationsMixin("CloudAccount"), BaseGenericModel)
                     transaction.set_rollback(True)
 
         if enabled_successfully:
-            from api.tasks import notify_application_availability_task
+            from api.tasks.sources import notify_application_availability_task
 
             notify_application_availability_task.delay(
                 self.user.username, self.platform_application_id, "available"
@@ -195,7 +195,7 @@ class CloudAccount(ExportModelOperationsMixin("CloudAccount"), BaseGenericModel)
             self._power_off_instances(power_off_time=get_now())
         self.content_object.disable()
         if notify_sources:
-            from api.tasks import notify_application_availability_task
+            from api.tasks.sources import notify_application_availability_task
 
             notify_application_availability_task.delay(
                 self.user.username, self.platform_application_id, "unavailable", message
