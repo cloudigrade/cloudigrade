@@ -62,3 +62,23 @@ class LaunchInspectionInstanceTest(TestCase):
 
         self.image1.refresh_from_db()
         self.assertEqual(self.image1.status, MachineImage.PREPARING)
+
+    @patch("api.clouds.aws.tasks.inspection.boto3")
+    def test_launch_inspection_instance_snapshot_not_known(self, mock_boto3):
+        """Assert that the launch_inspection_instance exists early on unknown ami."""
+        mock_ec2_resource = mock_boto3.resource
+        mock_ec2_snapshot = mock_ec2_resource.return_value.Snapshot
+        mock_ec2_snapshot.return_value.state = "completed"
+
+        mock_ec2_client = mock_boto3.client
+        mock_ec2_run_instances = mock_ec2_client.return_value.run_instances
+
+        self.image1.delete()
+
+        with self.assertLogs("api.clouds.aws.tasks.inspection", level="INFO") as logs:
+            launch_inspection_instance(self.mock_ami_id, self.mock_snapshot_id)
+
+        self.assertIn(self.mock_ami_id, logs.output[0])
+        self.assertIn("no longer known to us", logs.output[0])
+        mock_ec2_client.assert_not_called()
+        mock_ec2_run_instances.assert_not_called()
