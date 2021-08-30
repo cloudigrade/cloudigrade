@@ -451,17 +451,21 @@ SCHEDULE_VERIFY_VERIFY_TASKS_INTERVAL = env.int(
 
 CELERY_TASK_ROUTES = {
     # api.tasks
-    "api.tasks.create_from_sources_kafka_message": {
-        "queue": "create_from_sources_kafka_message"
-    },
     "api.tasks.delete_cloud_account": {"queue": "delete_cloud_account"},
-    "api.tasks.delete_from_sources_kafka_message": {
-        "queue": "delete_from_sources_kafka_message"
-    },
     "api.tasks.delete_inactive_users": {"queue": "delete_inactive_users"},
     "api.tasks.inspect_pending_images": {"queue": "inspect_pending_images"},
     "api.tasks.persist_inspection_cluster_results_task": {
         "queue": "persist_inspection_cluster_results_task"
+    },
+    # api.tasks supporting source kafka message handling
+    "api.tasks.create_from_sources_kafka_message": {
+        "queue": "create_from_sources_kafka_message"
+    },
+    "api.tasks.delete_from_sources_kafka_message": {
+        "queue": "delete_from_sources_kafka_message"
+    },
+    "api.tasks.update_from_sources_kafka_message": {
+        "queue": "update_from_sources_kafka_message"
     },
     # api.clouds.azure.tasks
     "api.clouds.azure.tasks.repopulate_azure_instance_mapping": {
