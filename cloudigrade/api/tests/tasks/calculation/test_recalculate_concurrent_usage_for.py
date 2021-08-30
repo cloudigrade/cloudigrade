@@ -1,4 +1,4 @@
-"""Collection of tests for tasks.recalculate_concurrent_usage_for_* functions."""
+"""Collection of tests for recalculate_concurrent_usage_for_* functions."""
 import datetime
 from unittest.mock import Mock, call, patch
 
@@ -7,7 +7,8 @@ from dateutil.rrule import DAILY, rrule
 from django.conf import settings
 from django.test import TestCase
 
-from api import models, tasks, util
+from api import models, util
+from api.tasks import calculation
 from api.tests import helper as api_helper
 from util.misc import get_today
 from util.tests import helper as util_helper
@@ -25,22 +26,22 @@ class RecalculateConcurrentUsageForAllUsersTest(TestCase):
             util_helper.generate_test_user(),
         ]
 
-    @patch("api.tasks.recalculate_concurrent_usage_for_user_id")
+    @patch("api.tasks.calculation.recalculate_concurrent_usage_for_user_id")
     def test_recalculate_usage_for_all(self, mock_recalculate_for_user):
         """Test typical behavior triggers recalculation for all users."""
-        tasks.recalculate_concurrent_usage_for_all_users()
+        calculation.recalculate_concurrent_usage_for_all_users()
 
         expected_calls = [
             call(args=(user.id, None), serializer="pickle") for user in self.users
         ]
         mock_recalculate_for_user.apply_async.assert_has_calls(expected_calls)
 
-    @patch("api.tasks.recalculate_concurrent_usage_for_user_id")
+    @patch("api.tasks.calculation.recalculate_concurrent_usage_for_user_id")
     def test_recalculate_usage_for_all_since(self, mock_recalculate_for_user):
         """Test typical behavior triggers recalculation for all users since a date."""
         since = Mock()
 
-        tasks.recalculate_concurrent_usage_for_all_users(since)
+        calculation.recalculate_concurrent_usage_for_all_users(since)
 
         expected_calls = [
             call(args=(user.id, since), serializer="pickle") for user in self.users
@@ -58,10 +59,10 @@ class RecalculateConcurrentUsageForUserIdTask(TestCase):
         )
 
     @util_helper.clouditardis(util_helper.utc_dt(2021, 6, 20, 0, 0, 0))
-    @patch("api.tasks.recalculate_concurrent_usage_for_user_id_on_date")
+    @patch("api.tasks.calculation.recalculate_concurrent_usage_for_user_id_on_date")
     def test_recalculate_usage_for_user(self, mock_recalculate_for_user_on_date):
         """Test typical behavior triggers recalculation for user since default date."""
-        tasks.recalculate_concurrent_usage_for_user_id(self.user.id)
+        calculation.recalculate_concurrent_usage_for_user_id(self.user.id)
 
         since_days_ago = settings.RECALCULATE_CONCURRENT_USAGE_SINCE_DAYS_AGO
         today = get_today()
@@ -77,14 +78,14 @@ class RecalculateConcurrentUsageForUserIdTask(TestCase):
         mock_recalculate_for_user_on_date.apply_async.assert_has_calls(expected_calls)
 
     @util_helper.clouditardis(util_helper.utc_dt(2021, 6, 20, 0, 0, 0))
-    @patch("api.tasks.recalculate_concurrent_usage_for_user_id_on_date")
+    @patch("api.tasks.calculation.recalculate_concurrent_usage_for_user_id_on_date")
     def test_recalculate_usage_for_user_since(self, mock_recalculate_for_user_on_date):
         """Test typical behavior triggers recalculation for user since given date."""
         today = get_today()
         since_days_ago = _faker.random_int(min=10, max=30)
         since = today - datetime.timedelta(days=since_days_ago)
 
-        tasks.recalculate_concurrent_usage_for_user_id(self.user.id, since)
+        calculation.recalculate_concurrent_usage_for_user_id(self.user.id, since)
 
         expected_dates = [
             _datetime.date()
@@ -126,16 +127,16 @@ class RecalculateConcurrentUsageForUserIdOnDateTest(TestCase):
         self.events = api_helper.generate_instance_events(self.instance, powered_times)
         self.runs = util.recalculate_runs(self.events[0])
 
-    @patch("api.tasks.calculate_max_concurrent_usage")
+    @patch("api.tasks.calculation.calculate_max_concurrent_usage")
     def test_usage_does_not_exist_needs_calculation(self, mock_calculate):
         """Test calculating because ConcurrentUsage does not yet exist."""
         target_date = self.account_setup_time.date()
-        tasks.recalculate_concurrent_usage_for_user_id_on_date(
+        calculation.recalculate_concurrent_usage_for_user_id_on_date(
             self.user.id, target_date
         )
         mock_calculate.assert_called_with(target_date, self.user.id)
 
-    @patch("api.tasks.calculate_max_concurrent_usage")
+    @patch("api.tasks.calculation.calculate_max_concurrent_usage")
     def test_usage_exists_but_different_runs_needs_calculation(self, mock_calculate):
         """Test calculating because ConcurrentUsage exists without expected runs."""
         target_date = self.account_setup_time.date()
@@ -148,12 +149,12 @@ class RecalculateConcurrentUsageForUserIdOnDateTest(TestCase):
         concurrent_usage.potentially_related_runs.add(self.runs[0])
         concurrent_usage.save()
 
-        tasks.recalculate_concurrent_usage_for_user_id_on_date(
+        calculation.recalculate_concurrent_usage_for_user_id_on_date(
             self.user.id, target_date
         )
         mock_calculate.assert_called_with(target_date, self.user.id)
 
-    @patch("api.tasks.calculate_max_concurrent_usage")
+    @patch("api.tasks.calculation.calculate_max_concurrent_usage")
     def test_usage_exists_with_same_runs_no_calculation(self, mock_calculate):
         """Test not calculating because ConcurrentUsage exists with expected runs."""
         target_date = self.account_setup_time.date()
@@ -165,7 +166,7 @@ class RecalculateConcurrentUsageForUserIdOnDateTest(TestCase):
         concurrent_usage.potentially_related_runs.add(*self.runs)
         concurrent_usage.save()
 
-        tasks.recalculate_concurrent_usage_for_user_id_on_date(
+        calculation.recalculate_concurrent_usage_for_user_id_on_date(
             self.user.id, target_date
         )
         mock_calculate.assert_not_called()

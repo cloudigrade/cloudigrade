@@ -4,7 +4,7 @@ from unittest.mock import patch
 import faker
 from django.test import TestCase
 
-from api.tasks import notify_application_availability_task
+from api.tasks.sources import notify_application_availability_task
 from util.exceptions import KafkaProducerException
 
 _faker = faker.Faker()

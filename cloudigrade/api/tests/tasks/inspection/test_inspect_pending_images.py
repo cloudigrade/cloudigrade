@@ -1,11 +1,11 @@
-"""Collection of tests for tasks.inspect_pending_images."""
+"""Collection of tests for tasks.inspection.inspect_pending_images."""
 import datetime
 from unittest.mock import call, patch
 
 from django.test import TestCase
 
-from api import tasks
 from api.models import MachineImage
+from api.tasks import inspection
 from api.tests import helper as account_helper
 from util.misc import get_now
 from util.tests.helper import clouditardis
@@ -69,6 +69,6 @@ class InspectPendingImagesTest(TestCase):
                 instance_old_pending.content_object.region,
             )
         ]
-        with patch.object(tasks, "start_image_inspection") as mock_start:
-            tasks.inspect_pending_images()
+        with patch.object(inspection, "start_image_inspection") as mock_start:
+            inspection.inspect_pending_images()
             mock_start.assert_has_calls(expected_calls, any_order=True)

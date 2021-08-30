@@ -260,7 +260,7 @@ class InitialAwsDescribeInstancesPowerOffNotRunningTest(TestCase):
 class InitialAwsDescribeInstancesTransactionTest(TransactionTestCase):
     """Test cases for 'initial_aws_describe_instances', but with transactions."""
 
-    @patch("api.tasks.notify_application_availability_task")
+    @patch("api.tasks.sources.notify_application_availability_task")
     @patch("api.clouds.aws.tasks.onboarding.start_image_inspection")
     @patch("api.clouds.aws.tasks.onboarding.aws")
     @patch("api.clouds.aws.util.aws")
@@ -355,7 +355,7 @@ class InitialAwsDescribeInstancesTransactionTest(TransactionTestCase):
         self.assertEqual(instance_event.occurred_at, date_of_initial_describe)
         self.assertEqual(instance_event.event_type, InstanceEvent.TYPE.power_on)
 
-    @patch("api.tasks.notify_application_availability_task")
+    @patch("api.tasks.sources.notify_application_availability_task")
     @patch("api.clouds.aws.tasks.onboarding.start_image_inspection")
     @patch("api.clouds.aws.tasks.onboarding.aws")
     @patch("api.clouds.aws.util.aws")

@@ -9,7 +9,7 @@ from django.core.management import BaseCommand
 from django.utils.translation import gettext as _
 from prometheus_client import Counter, start_http_server
 
-from api import tasks
+from api.tasks import sources
 
 logger = logging.getLogger(__name__)
 
@@ -143,7 +143,7 @@ def process_sources_create_event(value, headers):
         {"value": value, "headers": headers},
     )
     if settings.SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA:
-        tasks.create_from_sources_kafka_message.delay(value, headers)
+        sources.create_from_sources_kafka_message.delay(value, headers)
 
 
 def process_sources_destroy_event(value, headers):
@@ -156,7 +156,7 @@ def process_sources_destroy_event(value, headers):
         {"value": value, "headers": headers},
     )
     if settings.SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA:
-        tasks.delete_from_sources_kafka_message.delay(value, headers)
+        sources.delete_from_sources_kafka_message.delay(value, headers)
 
 
 def process_sources_update_event(value, headers):
@@ -169,7 +169,7 @@ def process_sources_update_event(value, headers):
         {"value": value, "headers": headers},
     )
     if settings.SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA:
-        tasks.update_from_source_kafka_message.delay(value, headers)
+        sources.update_from_source_kafka_message.delay(value, headers)
 
 
 # Metrics

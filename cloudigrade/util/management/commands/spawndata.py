@@ -14,7 +14,7 @@ from django.utils.translation import gettext as _
 from tqdm import tqdm
 
 from api.models import InstanceEvent
-from api.tasks import recalculate_concurrent_usage_for_user_id
+from api.tasks.calculation import recalculate_concurrent_usage_for_user_id
 from api.tests import helper as account_helper
 from api.util import recalculate_runs_for_cloud_account_id
 from util.misc import get_now

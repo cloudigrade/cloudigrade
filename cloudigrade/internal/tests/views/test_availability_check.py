@@ -5,7 +5,7 @@ import faker
 from django.test import TestCase
 from rest_framework.test import APIRequestFactory, force_authenticate
 
-from api.tasks import enable_account
+from api.tasks.maintenance import enable_account
 from api.tests import helper as api_helper
 from internal.views import availability_check
 from util.tests import helper as util_helper
@@ -50,7 +50,7 @@ class AvailabilityCheckViewTest(TestCase):
 
         mock_enable.delay.assert_called()
 
-    @patch("api.tasks.notify_application_availability_task")
+    @patch("api.tasks.sources.notify_application_availability_task")
     def test_availability_check_task(self, mock_notify_sources):
         """Test the task that is called by the availability_check_api."""
         with patch("api.clouds.aws.util.verify_permissions") as mock_verify_permissions:

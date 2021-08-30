@@ -1,9 +1,10 @@
-"""Collection of tests for tasks._delete_cloud_accounts helper function."""
+"""Collection of tests for tasks.maintenance._delete_cloud_accounts helper function."""
 
 from django.test import TestCase, override_settings
 from django_celery_beat.models import PeriodicTask
 
-from api import models, tasks
+from api import models
+from api.tasks import calculation, maintenance
 from api.tests import helper as api_helper
 from util.tests import helper as util_helper
 
@@ -74,11 +75,11 @@ class DeleteCloudAccountsTest(TestCase):
         api_helper.generate_instance_events(self.instance_azure_2_1, powered_times)
         api_helper.generate_instance_events(self.instance_azure_2_2, powered_times)
 
-        tasks.recalculate_runs_for_all_cloud_accounts(since=start_time)
-        tasks.recalculate_concurrent_usage_for_user_id_on_date(
+        calculation.recalculate_runs_for_all_cloud_accounts(since=start_time)
+        calculation.recalculate_concurrent_usage_for_user_id_on_date(
             self.user.id, start_time.date()
         )
-        tasks.recalculate_concurrent_usage_for_user_id_on_date(
+        calculation.recalculate_concurrent_usage_for_user_id_on_date(
             self.user.id, stop_time.date()
         )
 
@@ -117,7 +118,7 @@ class DeleteCloudAccountsTest(TestCase):
         self.assertObjectCountsBeforeDelete()
         aws_arn = self.account_aws_1.content_object.account_arn
 
-        tasks.delete_cloud_account(self.account_aws_1.id)
+        maintenance.delete_cloud_account(self.account_aws_1.id)
 
         self.assertObjectCountsAfterDelete()
         # The deleted account should not exist, but the other should be okay.
@@ -162,7 +163,7 @@ class DeleteCloudAccountsTest(TestCase):
         self.generate_activity()
         self.assertObjectCountsBeforeDelete()
 
-        tasks.delete_cloud_account(self.account_azure_1.id)
+        maintenance.delete_cloud_account(self.account_azure_1.id)
 
         self.assertObjectCountsAfterDelete()
         # The deleted account should not exist, but the other should be okay.
@@ -186,8 +187,8 @@ class DeleteCloudAccountsTest(TestCase):
         self.generate_activity()
         self.assertObjectCountsBeforeDelete()
 
-        tasks.delete_cloud_account(self.account_aws_1.id)
-        tasks.delete_cloud_account(self.account_aws_2.id)
+        maintenance.delete_cloud_account(self.account_aws_1.id)
+        maintenance.delete_cloud_account(self.account_aws_2.id)
 
         self.assertObjectCountsAfterDelete(accounts_deleted=2)
         with self.assertRaises(models.CloudAccount.DoesNotExist):
