@@ -5,7 +5,7 @@
     "version": ""
   },
   "paths": {
-    "/api/cloudigrade/v1/accounts/": {
+    "/internal/api/cloudigrade/v1/accounts/": {
       "get": {
         "operationId": "listAccounts",
         "description": "List cloud accounts.",
@@ -131,7 +131,7 @@
         ]
       }
     },
-    "/api/cloudigrade/v1/accounts/{id}/": {
+    "/internal/api/cloudigrade/v1/accounts/{id}/": {
       "get": {
         "operationId": "retrieveAccount",
         "description": "Retrieve a cloud account.",
@@ -284,7 +284,7 @@
         ]
       }
     },
-    "/api/cloudigrade/v1/concurrent/": {
+    "/internal/api/cloudigrade/v1/concurrent/": {
       "get": {
         "operationId": "listDailyConcurrentUsages",
         "parameters": [
@@ -416,7 +416,7 @@
         }
       }
     },
-    "/api/cloudigrade/v1/users/": {
+    "/internal/api/cloudigrade/v1/users/": {
       "get": {
         "operationId": "listUsers",
         "description": "Retrieve or list Users for internal use.",
@@ -539,7 +539,7 @@
         ]
       }
     },
-    "/api/cloudigrade/v1/users/{id}/": {
+    "/internal/api/cloudigrade/v1/users/{id}/": {
       "get": {
         "operationId": "retrieveUser",
         "description": "Retrieve or list Users for internal use.",
@@ -607,7 +607,7 @@
         ]
       }
     },
-    "/api/cloudigrade/v1/usertasklocks/": {
+    "/internal/api/cloudigrade/v1/usertasklocks/": {
       "get": {
         "operationId": "listUserTaskLocks",
         "description": "Retrieve, delete, or list UserTaskLocks for internal use.",
@@ -766,7 +766,7 @@
         ]
       }
     },
-    "/api/cloudigrade/v1/usertasklocks/{id}/": {
+    "/internal/api/cloudigrade/v1/usertasklocks/{id}/": {
       "get": {
         "operationId": "retrieveUserTaskLock",
         "description": "Retrieve, delete, or list UserTaskLocks for internal use.",
@@ -965,7 +965,7 @@
         ]
       }
     },
-    "/api/cloudigrade/v1/cloudaccounts/": {
+    "/internal/api/cloudigrade/v1/cloudaccounts/": {
       "get": {
         "operationId": "listCloudAccounts",
         "description": "Retrieve, delete, or list CloudAccounts for internal use.",
@@ -1178,7 +1178,7 @@
         ]
       }
     },
-    "/api/cloudigrade/v1/cloudaccounts/{id}/": {
+    "/internal/api/cloudigrade/v1/cloudaccounts/{id}/": {
       "get": {
         "operationId": "retrieveCloudAccount",
         "description": "Retrieve, delete, or list CloudAccounts for internal use.",
@@ -1485,7 +1485,7 @@
         ]
       }
     },
-    "/api/cloudigrade/v1/instances/": {
+    "/internal/api/cloudigrade/v1/instances/": {
       "get": {
         "operationId": "listInstances",
         "description": "Retrieve or list Instances for internal use.",
@@ -1671,7 +1671,7 @@
         ]
       }
     },
-    "/api/cloudigrade/v1/instances/{id}/": {
+    "/internal/api/cloudigrade/v1/instances/{id}/": {
       "get": {
         "operationId": "retrieveInstance",
         "description": "Retrieve or list Instances for internal use.",
@@ -1802,7 +1802,7 @@
         ]
       }
     },
-    "/api/cloudigrade/v1/instanceevents/": {
+    "/internal/api/cloudigrade/v1/instanceevents/": {
       "get": {
         "operationId": "listInstanceEvents",
         "description": "Retrieve or list InstanceEvents for internal use.",
@@ -1993,7 +1993,7 @@
         ]
       }
     },
-    "/api/cloudigrade/v1/instanceevents/{id}/": {
+    "/internal/api/cloudigrade/v1/instanceevents/{id}/": {
       "get": {
         "operationId": "retrieveInstanceEvent",
         "description": "Retrieve or list InstanceEvents for internal use.",
@@ -2129,7 +2129,7 @@
         ]
       }
     },
-    "/api/cloudigrade/v1/machineimages/": {
+    "/internal/api/cloudigrade/v1/machineimages/": {
       "get": {
         "operationId": "listMachineImages",
         "description": "Retrieve, reinspect, or list MachineImages for internal use.",
@@ -2314,7 +2314,7 @@
         ]
       }
     },
-    "/api/cloudigrade/v1/machineimages/{id}/": {
+    "/internal/api/cloudigrade/v1/machineimages/{id}/": {
       "get": {
         "operationId": "retrieveMachineImage",
         "description": "Retrieve, reinspect, or list MachineImages for internal use.",
@@ -2444,7 +2444,7 @@
         ]
       }
     },
-    "/api/cloudigrade/v1/runs/": {
+    "/internal/api/cloudigrade/v1/runs/": {
       "get": {
         "operationId": "listRuns",
         "description": "Retrieve or list Runs for internal use.",
@@ -2702,7 +2702,7 @@
         ]
       }
     },
-    "/api/cloudigrade/v1/runs/{id}/": {
+    "/internal/api/cloudigrade/v1/runs/{id}/": {
       "get": {
         "operationId": "retrieveRun",
         "description": "Retrieve or list Runs for internal use.",
@@ -2905,7 +2905,7 @@
         ]
       }
     },
-    "/api/cloudigrade/v1/machineimageinspectionstarts/": {
+    "/internal/api/cloudigrade/v1/machineimageinspectionstarts/": {
       "get": {
         "operationId": "listMachineImageInspectionStarts",
         "description": "Retrieve or list MachineImageInspectionStarts for internal use.",
@@ -3055,7 +3055,7 @@
         ]
       }
     },
-    "/api/cloudigrade/v1/machineimageinspectionstarts/{id}/": {
+    "/internal/api/cloudigrade/v1/machineimageinspectionstarts/{id}/": {
       "get": {
         "operationId": "retrieveMachineImageInspectionStart",
         "description": "Retrieve or list MachineImageInspectionStarts for internal use.",
@@ -3150,7 +3150,7 @@
         ]
       }
     },
-    "/api/cloudigrade/v1/concurrentusages/": {
+    "/internal/api/cloudigrade/v1/concurrentusages/": {
       "get": {
         "operationId": "listConcurrentUsages",
         "description": "Retrieve or list ConcurrentUsages for internal use.",
@@ -3336,7 +3336,7 @@
         ]
       }
     },
-    "/api/cloudigrade/v1/concurrentusages/{id}/": {
+    "/internal/api/cloudigrade/v1/concurrentusages/{id}/": {
       "get": {
         "operationId": "retrieveConcurrentUsage",
         "description": "Retrieve or list ConcurrentUsages for internal use.",
@@ -3467,7 +3467,7 @@
         ]
       }
     },
-    "/api/cloudigrade/v1/instancedefinitions/": {
+    "/internal/api/cloudigrade/v1/instancedefinitions/": {
       "get": {
         "operationId": "listInstanceDefinitions",
         "description": "Retrieve or list ConcurrentUsages for internal use.",
@@ -3648,7 +3648,7 @@
         ]
       }
     },
-    "/api/cloudigrade/v1/instancedefinitions/{id}/": {
+    "/internal/api/cloudigrade/v1/instancedefinitions/{id}/": {
       "get": {
         "operationId": "retrieveInstanceDefinition",
         "description": "Retrieve or list ConcurrentUsages for internal use.",
@@ -3774,7 +3774,7 @@
         ]
       }
     },
-    "/api/cloudigrade/v1/awscloudaccounts/": {
+    "/internal/api/cloudigrade/v1/awscloudaccounts/": {
       "get": {
         "operationId": "listAwsCloudAccounts",
         "description": "Retrieve or list AwsCloudAccount for internal use.",
@@ -3951,7 +3951,7 @@
         ]
       }
     },
-    "/api/cloudigrade/v1/awscloudaccounts/{id}/": {
+    "/internal/api/cloudigrade/v1/awscloudaccounts/{id}/": {
       "get": {
         "operationId": "retrieveAwsCloudAccount",
         "description": "Retrieve or list AwsCloudAccount for internal use.",
@@ -4073,7 +4073,7 @@
         ]
       }
     },
-    "/api/cloudigrade/v1/awsinstances/": {
+    "/internal/api/cloudigrade/v1/awsinstances/": {
       "get": {
         "operationId": "listAwsInstances",
         "description": "Retrieve or list AwsInstances for internal use.",
@@ -4232,7 +4232,7 @@
         ]
       }
     },
-    "/api/cloudigrade/v1/awsinstances/{id}/": {
+    "/internal/api/cloudigrade/v1/awsinstances/{id}/": {
       "get": {
         "operationId": "retrieveAwsInstance",
         "description": "Retrieve or list AwsInstances for internal use.",
@@ -4336,7 +4336,7 @@
         ]
       }
     },
-    "/api/cloudigrade/v1/awsmachineimages/": {
+    "/internal/api/cloudigrade/v1/awsmachineimages/": {
       "get": {
         "operationId": "listAwsMachineImages",
         "description": "Retrieve or list AwsMachineImages for internal use.",
@@ -4526,7 +4526,7 @@
         ]
       }
     },
-    "/api/cloudigrade/v1/awsmachineimages/{id}/": {
+    "/internal/api/cloudigrade/v1/awsmachineimages/{id}/": {
       "get": {
         "operationId": "retrieveAwsMachineImage",
         "description": "Retrieve or list AwsMachineImages for internal use.",
@@ -4661,7 +4661,7 @@
         ]
       }
     },
-    "/api/cloudigrade/v1/awsmachineimagecopies/": {
+    "/internal/api/cloudigrade/v1/awsmachineimagecopies/": {
       "get": {
         "operationId": "listAwsMachineImageCopys",
         "description": "Retrieve or list AwsMachineImageCopies for internal use.",
@@ -4860,7 +4860,7 @@
         ]
       }
     },
-    "/api/cloudigrade/v1/awsmachineimagecopies/{id}/": {
+    "/internal/api/cloudigrade/v1/awsmachineimagecopies/{id}/": {
       "get": {
         "operationId": "retrieveAwsMachineImageCopy",
         "description": "Retrieve or list AwsMachineImageCopies for internal use.",
@@ -5004,7 +5004,7 @@
         ]
       }
     },
-    "/api/cloudigrade/v1/awsinstanceevents/": {
+    "/internal/api/cloudigrade/v1/awsinstanceevents/": {
       "get": {
         "operationId": "listAwsInstanceEvents",
         "description": "Retrieve or list AwsInstanceEvents for internal use.",
@@ -5163,7 +5163,7 @@
         ]
       }
     },
-    "/api/cloudigrade/v1/awsinstanceevents/{id}/": {
+    "/internal/api/cloudigrade/v1/awsinstanceevents/{id}/": {
       "get": {
         "operationId": "retrieveAwsInstanceEvent",
         "description": "Retrieve or list AwsInstanceEvents for internal use.",
@@ -5267,7 +5267,7 @@
         ]
       }
     },
-    "/api/cloudigrade/v1/azurecloudaccounts/": {
+    "/internal/api/cloudigrade/v1/azurecloudaccounts/": {
       "get": {
         "operationId": "listAzureCloudAccounts",
         "description": "Retrieve or list AzureMachineImages for internal use.",
@@ -5435,7 +5435,7 @@
         ]
       }
     },
-    "/api/cloudigrade/v1/azurecloudaccounts/{id}/": {
+    "/internal/api/cloudigrade/v1/azurecloudaccounts/{id}/": {
       "get": {
         "operationId": "retrieveAzureCloudAccount",
         "description": "Retrieve or list AzureMachineImages for internal use.",
@@ -5548,7 +5548,7 @@
         ]
       }
     },
-    "/api/cloudigrade/v1/azureinstances/": {
+    "/internal/api/cloudigrade/v1/azureinstances/": {
       "get": {
         "operationId": "listAzureInstances",
         "description": "Retrieve or list AzureInstanceEvents for internal use.",
@@ -5707,7 +5707,7 @@
         ]
       }
     },
-    "/api/cloudigrade/v1/azureinstances/{id}/": {
+    "/internal/api/cloudigrade/v1/azureinstances/{id}/": {
       "get": {
         "operationId": "retrieveAzureInstance",
         "description": "Retrieve or list AzureInstanceEvents for internal use.",
@@ -5811,7 +5811,7 @@
         ]
       }
     },
-    "/api/cloudigrade/v1/azuremachineimages/": {
+    "/internal/api/cloudigrade/v1/azuremachineimages/": {
       "get": {
         "operationId": "listAzureMachineImages",
         "description": "Retrieve or list AzureMachineImages for internal use.",
@@ -5979,7 +5979,7 @@
         ]
       }
     },
-    "/api/cloudigrade/v1/azuremachineimages/{id}/": {
+    "/internal/api/cloudigrade/v1/azuremachineimages/{id}/": {
       "get": {
         "operationId": "retrieveAzureMachineImage",
         "description": "Retrieve or list AzureMachineImages for internal use.",
@@ -6092,7 +6092,7 @@
         ]
       }
     },
-    "/api/cloudigrade/v1/azureinstanceevents/": {
+    "/internal/api/cloudigrade/v1/azureinstanceevents/": {
       "get": {
         "operationId": "listAzureInstanceEvents",
         "description": "Retrieve or list AzureInstanceEvents for internal use.",
@@ -6242,7 +6242,7 @@
         ]
       }
     },
-    "/api/cloudigrade/v1/azureinstanceevents/{id}/": {
+    "/internal/api/cloudigrade/v1/azureinstanceevents/{id}/": {
       "get": {
         "operationId": "retrieveAzureInstanceEvent",
         "description": "Retrieve or list AzureInstanceEvents for internal use.",
@@ -6337,7 +6337,7 @@
         ]
       }
     },
-    "/api/cloudigrade/v1/machineimages/{id}/reinspect/": {
+    "/internal/api/cloudigrade/v1/machineimages/{id}/reinspect/": {
       "post": {
         "operationId": "reinspectMachineImage",
         "description": "Set the machine image status to pending, so it gets reinspected.",

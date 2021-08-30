@@ -101,6 +101,7 @@ urlpatterns = [
             permission_classes=[permissions.AllowAny],
             authentication_classes=[],
             public=True,
+            url="/internal/",
             urlconf="internal.urls",
         ),
         name="openapi-schema-internal",
