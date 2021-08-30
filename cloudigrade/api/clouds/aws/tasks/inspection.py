@@ -28,7 +28,21 @@ def launch_inspection_instance(ami_id, snapshot_copy_id):
     aws.check_snapshot_state(snapshot_copy)
 
     # Update Status
-    aws_image = AwsMachineImage.objects.get(ec2_ami_id=ami_id)
+    try:
+        aws_image = AwsMachineImage.objects.get(ec2_ami_id=ami_id)
+    except AwsMachineImage.DoesNotExist:
+        logger.info(
+            _(
+                "%(label)s AMI ID %(ami_id)s is no longer known to us, "
+                "cancelling launch of this inspection."
+            ),
+            {
+                "label": "launch_inspection_instance",
+                "ami_id": ami_id,
+            },
+        )
+        return
+
     machine_image = aws_image.machine_image.get()
     machine_image.status = machine_image.INSPECTING
     machine_image.save()
