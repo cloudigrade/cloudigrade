@@ -824,11 +824,22 @@ def verify_permissions(customer_role_arn):
         cloud_account = CloudAccount.objects.get(
             aws_cloud_account__aws_account_id=aws_account_id
         )
-        # Get the username immediately from the related user in case the user is deleted
-        # while we are verifying access and configuring cloudtrail; we'll need it later
-        # in order to notify sources of our error.
-        username = cloud_account.user.username
+    except CloudAccount.DoesNotExist:
+        # Failure to get CloudAccount means it was removed before this function started.
+        logger.warning(
+            "Cannot verify permissions because CloudAccount does not exist for %(arn)s",
+            {"arn": customer_role_arn},
+        )
+        # Alas, we can't notify sources here since we don't have the CloudAccount which
+        # is what has the required platform_application_id.
+        return False
 
+    # Get the username immediately from the related user in case the user is deleted
+    # while we are verifying access and configuring cloudtrail; we'll need it later
+    # in order to notify sources of our error.
+    username = cloud_account.user.username
+
+    try:
         session = aws.get_session(arn_str)
         access_verified, failed_actions = aws.verify_account_access(session)
         if access_verified:
@@ -840,16 +851,8 @@ def verify_permissions(customer_role_arn):
                     "Policy action %(action)s failed in verification for via %(arn)s",
                     {"action": action, "arn": arn_str},
                 )
-            error_code = error_codes.CG3000  # TODO Consider a new error code?
+            error_code = error_codes.CG3003
             error_code.notify(username, cloud_account.platform_application_id)
-    except CloudAccount.DoesNotExist:
-        # Failure to get CloudAccount means it was removed before this function started.
-        logger.warning(
-            "Cannot verify permissions because CloudAccount does not exist for %(arn)s",
-            {"arn": customer_role_arn},
-        )
-        # Alas, we can't notify sources here since we don't have the CloudAccount which
-        # is what has the required platform_application_id.
     except ClientError as error:
         # Generally only raised when we don't have access to the AWS account.
         client_error_code = error.response.get("Error", {}).get("Code")
@@ -862,7 +865,7 @@ def verify_permissions(customer_role_arn):
                 {"code": client_error_code},
             )
         # Irrespective of error code, log and notify sources about the access error.
-        error_code = error_codes.CG3000
+        error_code = error_codes.CG3002
         error_code.log_internal_message(
             logger, {"cloud_account_id": cloud_account.id, "exception": error}
         )
