@@ -1134,7 +1134,10 @@ def update_aws_cloud_account(
             },
         )
 
-        cloud_account.disable(power_off_instances=False)
+        # We don't need to notify sources here because we're just about to create the
+        # new replacement CloudAccount which will also notify sources when enabled, and
+        # we already have explicit calls to notify if we can't create the CloudAccount.
+        cloud_account.disable(power_off_instances=False, notify_sources=False)
 
         # Remove instances associated with the clount
         # TODO instead of deleting instances here, delete the original CloudAccount.

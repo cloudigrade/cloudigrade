@@ -128,6 +128,13 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
         self.assertEqual(self.clount.content_object.account_arn, new_arn)
         self.assertFalse(self.clount.is_enabled)
 
+        mock_notify_sources.delay.assert_called_once_with(
+            self.clount.user.username,
+            self.clount.platform_application_id,
+            "unavailable",
+            str(validation_error),
+        )
+
     @patch("api.tasks.sources.update_aws_cloud_account")
     def test_update_from_sources_kafka_message_fail_missing_message_data(
         self, mock_update_account
@@ -190,6 +197,7 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
             sources.update_from_source_kafka_message(message, headers)
 
         mock_enable.assert_called()
+        mock_notify_sources.delay.assert_not_called()
 
     @patch("util.redhatcloud.sources.list_application_authentications")
     @patch("api.tasks.sources.update_aws_cloud_account")
