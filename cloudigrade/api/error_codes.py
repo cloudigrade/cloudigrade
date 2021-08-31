@@ -166,20 +166,43 @@ CG2004 = CloudigradeError(
 # Use CG3*** for cloud account enablement issues
 CG3000 = CloudigradeError(
     "CG3000",
-    _("Failed to enable Cloud Account %(cloud_account_id)s: " "because %(exception)s"),
+    _("Failed to enable Cloud Account %(cloud_account_id)s: because %(exception)s"),
     _(
-        "Could not enable cloud metering. "
-        "Please contact support. Error code %(error_code)s."
+        "Could not enable cloud metering. Encountered unknown issue with "
+        "provided credentials. Please verify provided credentials and try "
+        "again. Error code %(error_code)s."
     ),
 )
 
 # Too many cloudtrails
 CG3001 = CloudigradeError(
     "CG3001",
-    _("Failed to enable Cloud Account %(cloud_account_id)s: " "because %(exception)s"),
+    _("Failed to enable Cloud Account %(cloud_account_id)s: because %(exception)s"),
     _(
         "Could not enable cloud metering. You've reached the AWS CloudTrail "
-        "limit for your account. Please either increase the CloudTrail limit, or "
-        "delete an existing CloudTrail. Error code %(error_code)s."
+        "limit for your account. Please ensure you have not reached the CloudTrail "
+        "limit for your account, and try again. Error code %(error_code)s."
+    ),
+)
+
+# Misconfigured role
+CG3002 = CloudigradeError(
+    "CG3002",
+    _("Failed to enable Cloud Account %(cloud_account_id)s: because %(exception)s"),
+    _(
+        "Could not enable cloud metering. An AccessDenied error was received when "
+        "using the ARN, suggesting that the role was misconfigured. Please verify "
+        "role and try again. Error code %(error_code)s."
+    ),
+)
+
+# Misconfigured Policy
+CG3003 = CloudigradeError(
+    "CG3003",
+    _("Failed to enable Cloud Account %(cloud_account_id)s: because %(exception)s"),
+    _(
+        "Could not enable cloud metering. Failed to verify at least one policy action, "
+        "suggesting that the policy attached to the role may be misconfigured. Please "
+        "verify and try again. Error code %(error_code)s."
     ),
 )
