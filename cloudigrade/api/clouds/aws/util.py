@@ -1137,6 +1137,9 @@ def update_aws_cloud_account(
         cloud_account.disable(power_off_instances=False)
 
         # Remove instances associated with the clount
+        # TODO instead of deleting instances here, delete the original CloudAccount.
+        # We can't delete it here due to 7b02f90fc643533246e51f20078e8ae2366df32b, but
+        # we could delete it after we've created the new CloudAccount a few lines later.
         Instance.objects.filter(cloud_account=cloud_account).delete()
 
         try:
