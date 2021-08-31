@@ -4,17 +4,14 @@ FROM registry.access.redhat.com/ubi8/ubi-minimal:8.4
 RUN chmod g=u /etc/passwd /etc/group
 
 WORKDIR /opt/cloudigrade
-# Need jq for parsing the clowder configuration json in shell scripts
-RUN microdnf install shadow-utils jq \
-	&& useradd -r cloudigrade \
-	&& microdnf clean all
 
-RUN microdnf install libicu \
+RUN microdnf install libicu shadow-utils jq \
     && curl -O https://download.postgresql.org/pub/repos/yum/11/redhat/rhel-8.3-x86_64/postgresql11-libs-11.9-4PGDG.rhel8.x86_64.rpm \
     && curl -O https://download.postgresql.org/pub/repos/yum/11/redhat/rhel-8.3-x86_64/postgresql11-11.9-4PGDG.rhel8.x86_64.rpm \
     && rpm -iv postgresql11-libs-11.9-4PGDG.rhel8.x86_64.rpm \
     && rpm --nodeps -iv postgresql11-11.9-4PGDG.rhel8.x86_64.rpm \
     && rm -f postgresql11-libs-11.9-4PGDG.rhel8.x86_64.rpm postgresql11-11.9-4PGDG.rhel8.x86_64.rpm \
+    && useradd -r cloudigrade \
     && microdnf clean all
 
 COPY pyproject.toml poetry.lock ./
