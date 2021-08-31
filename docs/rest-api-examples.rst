@@ -2043,7 +2043,7 @@ Response:
 
 ::
 
-    HTTP/1.1 425
+    HTTP/1.1 425 Too Early
     Allow: GET, HEAD, OPTIONS
     Content-Length: 64
     Content-Type: application/json
