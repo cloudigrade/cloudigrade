@@ -2,7 +2,6 @@ name: Tag
 
 env:
   IMAGE_NAME: quay.io/cloudservices/cloudigrade
-  NGINX_IMAGE_NAME: quay.io/cloudservices/cloudinginx
 
 on:
   release:
@@ -14,7 +13,7 @@ jobs:
     name: py39
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/cloudigrade/build-container:latest
+      image: ghcr.io/cloudigrade/build-container:ubi84-python39
     steps:
       - uses: actions/checkout@v2
       - run: pip install tox codecov poetry
@@ -25,7 +24,7 @@ jobs:
     name: flake8
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/cloudigrade/build-container:latest
+      image: ghcr.io/cloudigrade/build-container:ubi84-python39
     steps:
       - uses: actions/checkout@v2
       - run: pip install tox codecov poetry
@@ -35,7 +34,7 @@ jobs:
     name: Vulnerability
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/cloudigrade/build-container:latest
+      image: ghcr.io/cloudigrade/build-container:ubi84-python39
     steps:
       - uses: actions/checkout@v2
       - run: pip install poetry safety
@@ -56,7 +55,7 @@ jobs:
     name: Verify docs and openapi.json
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/cloudigrade/build-container:latest
+      image: ghcr.io/cloudigrade/build-container:ubi84-python39
     steps:
       - uses: actions/checkout@v2
       - run: pip install poetry
