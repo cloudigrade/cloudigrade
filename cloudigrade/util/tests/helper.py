@@ -997,6 +997,43 @@ def generate_applicationauthentication_create_message_value(
     return message, headers
 
 
+def generate_application_event_message_value(
+    event_type, application_id, account_number
+):
+    """
+    Generate an 'Application.{event_type}' message's extracted value and headers.
+
+    Args:
+        event_type (str): the Application-specific event type (e.g. "pause")
+        application_id (str): the Application's id (e.g. "123")
+        account_number (str): account number (e.g. "1234567")
+
+    Returns:
+        tuple(dict, list) representing the Kafka message's value and headers.
+
+    """
+    strftime_fmt = "%Y-%m-%dT%H:%M:%SZ"
+    message = {
+        "source_id": _faker.pyint(),
+        "paused_at": _faker.date_time_this_decade().strftime(strftime_fmt),
+        "id": application_id,
+        "extra": {},
+        "application_type_id": _faker.pyint(),
+        "created_at": _faker.date_time_this_decade().strftime(strftime_fmt),
+        "updated_at": _faker.date_time_this_decade().strftime(strftime_fmt),
+        "availability_status": "available",
+        "availability_status_error": "this is the last known status error string",
+        "last_checked_at": _faker.date_time_this_decade().strftime(strftime_fmt),
+        "last_available_at": None,
+        "superkey_data": None,
+        "tenant": account_number,
+    }
+    headers = generate_sources_kafka_message_headers(
+        account_number, f"Authentication.{event_type}"
+    )
+    return message, headers
+
+
 @contextmanager
 def clouditardis(destination):
     """

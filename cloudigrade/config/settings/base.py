@@ -467,6 +467,12 @@ CELERY_TASK_ROUTES = {
     "api.tasks.update_from_sources_kafka_message": {
         "queue": "update_from_sources_kafka_message"
     },
+    "api.tasks.pause_from_sources_kafka_message": {
+        "queue": "pause_from_sources_kafka_message"
+    },
+    "api.tasks.unpause_from_sources_kafka_message": {
+        "queue": "unpause_from_sources_kafka_message"
+    },
     # api.clouds.azure.tasks
     "api.clouds.azure.tasks.repopulate_azure_instance_mapping": {
         "queue": "repopulate_azure_instance_mapping"

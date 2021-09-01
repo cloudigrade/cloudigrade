@@ -43,5 +43,7 @@ from api.tasks.sources import (
     create_from_sources_kafka_message,
     delete_from_sources_kafka_message,
     notify_application_availability_task,
+    pause_from_sources_kafka_message,
+    unpause_from_sources_kafka_message,
     update_from_source_kafka_message,
 )
