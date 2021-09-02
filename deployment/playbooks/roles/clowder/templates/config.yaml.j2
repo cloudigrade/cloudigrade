@@ -16,21 +16,3 @@ apps:
       host: {{ postigrade_deployment_host }}
       repo: {{ postigrade_deployment_repo }}
       path: deployment/clowdapp.yaml
-- name: sources-api
-  components:
-    - name: sources-api
-      host: github
-      repo: RedHatInsights/sources-api
-      path: deploy/clowdapp.yaml 
-- name: sources-monitor
-  components:
-    - name: sources-monitor
-      host: github
-      repo: RedHatInsights/sources-monitor
-      path: deploy/clowdapp.yaml 
-- name: sources-superkey-worker
-  components:
-    - name: sources-superkey-worker
-      host: github
-      repo: RedHatInsights/sources-superkey-worker
-      path: deploy/clowdapp.yaml 
