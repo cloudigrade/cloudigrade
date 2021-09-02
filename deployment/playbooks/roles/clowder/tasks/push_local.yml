@@ -10,25 +10,25 @@
   - debug: var=new_image_tag.stdout
 
   - name: create / build cloudigrade
-    shell: docker build . --tag quay.io/{{ quay_user }}/cloudigrade:{{ new_image_tag.stdout }}
+    shell: podman build . --tag quay.io/{{ quay_user }}/cloudigrade:{{ new_image_tag.stdout }}
     args:
       chdir: "{{ cloudigrade_deployment_repo }}"
     when: cloudigrade_deployment_host == 'local'
 
   - name: create / build postigrade
-    shell: docker build . --tag quay.io/{{ quay_user }}/postigrade:{{ new_image_tag.stdout }}
+    shell: podman build . --tag quay.io/{{ quay_user }}/postigrade:{{ new_image_tag.stdout }}
     args:
       chdir: "{{ postigrade_deployment_repo }}"
     when: postigrade_deployment_host == 'local'
 
   - name: create / push cloudigrade
-    shell: docker push quay.io/{{ quay_user }}/cloudigrade:{{ new_image_tag.stdout }}
+    shell: podman push quay.io/{{ quay_user }}/cloudigrade:{{ new_image_tag.stdout }}
     args:
       chdir: "{{ cloudigrade_deployment_repo }}"
     when: cloudigrade_deployment_host == 'local'
 
   - name: create / push postigrade
-    shell: docker push quay.io/{{ quay_user }}/postigrade:{{ new_image_tag.stdout }}
+    shell: podman push quay.io/{{ quay_user }}/postigrade:{{ new_image_tag.stdout }}
     args:
       chdir: "{{ postigrade_deployment_repo }}"
     when: postigrade_deployment_host == 'local'
