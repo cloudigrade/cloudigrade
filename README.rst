@@ -26,7 +26,7 @@ Running **cloudigrade** locally may require installing some or all of the follow
 -  Python 3.9
 -  `poetry <https://python-poetry.org/docs/>`_
 -  `tox <https://tox.readthedocs.io/>`_
--  `Docker Desktop <https://docs.docker.com/get-docker/>`_
+-  `Podman <https://podman.io/>`_
 -  `gettext <https://www.gnu.org/software/gettext/>`_
 -  `PostgreSQL <https://www.postgresql.org/download/>`_
 -  `AWS Command Line Interface <https://aws.amazon.com/cli/>`_
@@ -41,7 +41,20 @@ The following commands should install everything you need:
 .. code-block:: bash
 
     brew update
-    brew install python@3.9 gettext awscli azure-cli postgresql openssl curl librdkafka tox poetry
+    brew install python@3.9 gettext awscli azure-cli postgresql openssl curl librdkafka tox poetry podman
+
+To start the podman machine that will be running the commands run:
+
+.. code-block:: bash
+
+    podman machine init
+    podman machine start
+
+    # you can check the status by running
+    podman info
+
+
+New to podman? Fortunately if you're already familiar with docker, the following rule is true: ``alias docker=podman``
 
 
 Linux dependencies
@@ -51,7 +64,7 @@ We recommend developing on the latest version of Fedora. Follow the following co
 
 .. code-block:: bash
 
-    sudo dnf install awscli gettext postgresql-devel librdkafka-devel -y
+    sudo dnf install awscli gettext postgresql-devel librdkafka-devel podman -y
 
 
 Python 3.9.x
