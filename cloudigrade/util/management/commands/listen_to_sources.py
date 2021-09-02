@@ -98,6 +98,12 @@ def process_message(message):
     elif event_type == "Authentication.update":
         update_events.inc()
         process_sources_update_event(value, headers)
+    elif event_type == "Application.pause":
+        pause_events.inc()
+        process_sources_pause_event(value, headers)
+    elif event_type == "Application.unpause":
+        unpause_events.inc()
+        process_sources_unpause_event(value, headers)
 
 
 def extract_raw_sources_kafka_message(message):
@@ -172,6 +178,32 @@ def process_sources_update_event(value, headers):
         sources.update_from_source_kafka_message.delay(value, headers)
 
 
+def process_sources_pause_event(value, headers):
+    """Process the given sources-api pause event message."""
+    logger.info(
+        _(
+            "An application object was paused. "
+            "Message: %(value)s. Headers: %(headers)s"
+        ),
+        {"value": value, "headers": headers},
+    )
+    if settings.SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA:
+        sources.pause_from_sources_kafka_message.delay(value, headers)
+
+
+def process_sources_unpause_event(value, headers):
+    """Process the given sources-api unpause event message."""
+    logger.info(
+        _(
+            "An application object was unpaused. "
+            "Message: %(value)s. Headers: %(headers)s"
+        ),
+        {"value": value, "headers": headers},
+    )
+    if settings.SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA:
+        sources.unpause_from_sources_kafka_message.delay(value, headers)
+
+
 # Metrics
 total_events_metric = Counter(
     "listener_processed_events_total",
@@ -181,6 +213,8 @@ total_events_metric = Counter(
 create_events = total_events_metric.labels("create")
 update_events = total_events_metric.labels("update")
 destroy_events = total_events_metric.labels("destroy")
+pause_events = total_events_metric.labels("pause")
+unpause_events = total_events_metric.labels("unpause")
 total_events = total_events_metric.labels("total")
 
 
