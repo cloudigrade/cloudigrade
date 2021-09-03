@@ -41,7 +41,6 @@ def create_mock_message(event_type):
 class SourcesListenerTest(TestCase):
     """Add App Configuration Test Case."""
 
-    @patch("util.management.commands.listen_to_sources.logger")
     @patch("util.management.commands.listen_to_sources.Consumer")
     @patch("api.tasks.sources.update_from_source_kafka_message")
     @patch("api.tasks.sources.delete_from_sources_kafka_message")
@@ -52,7 +51,6 @@ class SourcesListenerTest(TestCase):
         mock_delete_task,
         mock_update_task,
         mock_consumer,
-        mock_logger,
     ):
         """Assert listener processes messages."""
         message_create = create_mock_message("ApplicationAuthentication.create")
@@ -72,7 +70,7 @@ class SourcesListenerTest(TestCase):
         message_broken = Mock()
         message_broken.error.return_value = {"Borked."}
         message_broken.value = "bad message"
-        message_broken.headers = [Mock(), Mock()]
+        message_broken.headers = []
 
         mock_message_bundle_items = [
             message_create,
@@ -86,7 +84,9 @@ class SourcesListenerTest(TestCase):
         mock_consumer_poll.side_effect = mock_message_bundle_items
 
         # Let the script hit the end of the message list
-        with self.assertRaises(StopIteration):
+        with self.assertRaises(StopIteration), self.assertLogs(
+            "util.management.commands.listen_to_sources", level="INFO"
+        ) as log_context:
             call_command("listen_to_sources")
 
         mock_create_task.delay.assert_called_once()
@@ -94,8 +94,19 @@ class SourcesListenerTest(TestCase):
         mock_update_task.delay.assert_called_once()
         mock_consumer.assert_called_once()
         mock_consumer_poll.assert_called()
-        self.assertEqual(10, mock_logger.info.call_count)
-        self.assertEqual(1, mock_logger.warning.call_count)
+
+        info_records = [r for r in log_context.records if r.levelname == "INFO"]
+        warning_records = [r for r in log_context.records if r.levelname == "WARNING"]
+
+        # Why are there 10 info messages? We currently log:
+        # + 2 at listener start
+        # + 2 for each of the 3 successful messages (6 total logs)
+        # + 1 for the invalid message
+        # + 1 at listener close
+        self.assertEqual(10, len(info_records))
+        # 1 warning from the broken message.
+        self.assertEqual(1, len(warning_records))
+        warning_records[0].message = "Consumer error: {'Borked.'}"
 
     @patch("util.management.commands.listen_to_sources.logger")
     def test_listener_cleanup(self, mock_logger):
