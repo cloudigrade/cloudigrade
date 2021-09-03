@@ -65,7 +65,9 @@ class Command(BaseCommand):
                 if msg is None:
                     continue
                 if msg.error():
-                    logger.warning(_("Consumer error: {error}"), {"error": msg.error()})
+                    logger.warning(
+                        _("Consumer error: %(error)s"), {"error": msg.error()}
+                    )
                     continue
 
                 process_message(msg)
