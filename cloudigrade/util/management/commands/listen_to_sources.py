@@ -83,7 +83,19 @@ def process_message(message):
     Args:
         message(confluent_kafka.Message): message object from the Kafka listener
     """
-    event_type, headers, value = extract_raw_sources_kafka_message(message)
+    try:
+        event_type, headers, value = extract_raw_sources_kafka_message(message)
+    except (json.JSONDecodeError, UnicodeDecodeError) as e:
+        logger.exception(e)
+        logger.warning(
+            _("Malformed sources kafka message's raw value: %(value)s"),
+            {"value": message.value() if hasattr(message, "value") else None},
+        )
+        logger.warning(
+            _("Malformed sources kafka message's raw headers: %(headers)s"),
+            {"headers": message.headers() if hasattr(message, "headers") else None},
+        )
+        return
 
     logger.info(
         _("Processing %(event_type)s Message: %(value)s. Headers: %(headers)s"),
