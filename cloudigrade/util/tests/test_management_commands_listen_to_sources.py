@@ -1,11 +1,41 @@
 """Collection of tests for the Sources Listener."""
+import json
 import signal
 from unittest.mock import Mock, patch
 
+import faker
 from django.core.management import call_command
 from django.test import TestCase
 
 from util.management.commands.listen_to_sources import _listener_cleanup
+
+_faker = faker.Faker()
+
+
+def create_mock_message(event_type):
+    """
+    Create a mock sources kafka message.
+
+    Args:
+        event_type (str): the value for the message's event_type header
+
+    Returns:
+        Mock object populated to look and behave like a sources kafka message.
+    """
+    message = Mock()
+    message.error.return_value = None
+    message.value.return_value = json.dumps(
+        {
+            "id": _faker.pyint(),
+            _faker.slug(): _faker.pyint(),
+            _faker.slug(): _faker.pyint(),
+        }
+    ).encode()
+    message.headers.return_value = [
+        ("event_type", event_type.encode()),
+        ("encoding", b"json"),
+    ]
+    return message
 
 
 class SourcesListenerTest(TestCase):
@@ -25,31 +55,9 @@ class SourcesListenerTest(TestCase):
         mock_logger,
     ):
         """Assert listener processes messages."""
-        message_create = Mock()
-        message_create.error.return_value = None
-        message_create.value.return_value = (
-            b'{"application_id": 42, "authentication_id": 7}'
-        )
-        message_create.headers.return_value = [
-            ("event_type", b"ApplicationAuthentication.create"),
-            ("encoding", b"json"),
-        ]
-
-        message_destroy = Mock()
-        message_destroy.error.return_value = None
-        message_destroy.value.return_value = b'{"value": "test message 2"}'
-        message_destroy.headers.return_value = [
-            ("event_type", b"ApplicationAuthentication.destroy"),
-            ("encoding", b"json"),
-        ]
-
-        message_update = Mock()
-        message_update.error.return_value = None
-        message_update.value.return_value = b'{"value": "test message 3"}'
-        message_update.headers.return_value = [
-            ("event_type", b"Authentication.update"),
-            ("encoding", b"json"),
-        ]
+        message_create = create_mock_message("ApplicationAuthentication.create")
+        message_destroy = create_mock_message("ApplicationAuthentication.destroy")
+        message_update = create_mock_message("Authentication.update")
 
         message_invalid = Mock()
         message_invalid.error.return_value = None
