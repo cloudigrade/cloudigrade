@@ -42,6 +42,8 @@ class SourcesListenerTest(TestCase):
     """Add App Configuration Test Case."""
 
     @patch("util.management.commands.listen_to_sources.Consumer")
+    @patch("api.tasks.sources.unpause_from_sources_kafka_message")
+    @patch("api.tasks.sources.pause_from_sources_kafka_message")
     @patch("api.tasks.sources.update_from_source_kafka_message")
     @patch("api.tasks.sources.delete_from_sources_kafka_message")
     @patch("api.tasks.sources.create_from_sources_kafka_message")
@@ -50,12 +52,16 @@ class SourcesListenerTest(TestCase):
         mock_create_task,
         mock_delete_task,
         mock_update_task,
+        mock_pause_task,
+        mock_unpause_task,
         mock_consumer,
     ):
         """Assert listener processes messages."""
         message_create = create_mock_message("ApplicationAuthentication.create")
         message_destroy = create_mock_message("ApplicationAuthentication.destroy")
         message_update = create_mock_message("Authentication.update")
+        message_pause = create_mock_message("Application.pause")
+        message_unpause = create_mock_message("Application.unpause")
 
         message_invalid_json = create_mock_message("Authentication.update")
         message_invalid_json.value.return_value = b"this is not json"
@@ -74,6 +80,8 @@ class SourcesListenerTest(TestCase):
             message_create,
             message_destroy,
             message_update,
+            message_pause,
+            message_unpause,
             message_invalid_json,
             message_invalid_encoding,
             message_with_error,
@@ -91,6 +99,8 @@ class SourcesListenerTest(TestCase):
         mock_create_task.delay.assert_called_once()
         mock_delete_task.delay.assert_called_once()
         mock_update_task.delay.assert_called_once()
+        mock_pause_task.delay.assert_called_once()
+        mock_unpause_task.delay.assert_called_once()
         mock_consumer.assert_called_once()
         mock_consumer_poll.assert_called()
 
@@ -98,11 +108,11 @@ class SourcesListenerTest(TestCase):
         warning_records = [r for r in log_context.records if r.levelname == "WARNING"]
         error_records = [r for r in log_context.records if r.levelname == "ERROR"]
 
-        # Why are there 9 info messages? We currently log:
+        # Why are there 13 info messages? We currently log:
         # + 2 at listener start
-        # + 2 for each of the 3 successful messages (6 total logs)
+        # + 2 for each of the 5 successful messages (10 total logs)
         # + 1 at listener close
-        self.assertEqual(9, len(info_records))
+        self.assertEqual(13, len(info_records))
 
         # 1 error for each invalid message (2 total logs)
         self.assertEqual(2, len(error_records))
