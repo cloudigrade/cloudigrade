@@ -25,48 +25,54 @@ class SourcesListenerTest(TestCase):
         mock_logger,
     ):
         """Assert listener processes messages."""
-        message1 = Mock()
-        message2 = Mock()
-        message3 = Mock()
-        message4 = Mock()
-        message5 = Mock()
-
-        message1.error.return_value = None
-        message2.error.return_value = None
-        message3.error.return_value = None
-        message4.error.return_value = None
-        message5.error.return_value = {"Borked."}
-
-        message1.value.return_value = b'{"application_id": 42, "authentication_id": 7}'
-        message1.headers.return_value = [
+        message_create = Mock()
+        message_create.error.return_value = None
+        message_create.value.return_value = (
+            b'{"application_id": 42, "authentication_id": 7}'
+        )
+        message_create.headers.return_value = [
             ("event_type", b"ApplicationAuthentication.create"),
             ("encoding", b"json"),
         ]
 
-        message2.value.return_value = b'{"value": "test message 2"}'
-        message2.headers.return_value = [
+        message_destroy = Mock()
+        message_destroy.error.return_value = None
+        message_destroy.value.return_value = b'{"value": "test message 2"}'
+        message_destroy.headers.return_value = [
             ("event_type", b"ApplicationAuthentication.destroy"),
             ("encoding", b"json"),
         ]
 
-        message3.value.return_value = b'{"value": "test message 3"}'
-        message3.headers.return_value = [
+        message_update = Mock()
+        message_update.error.return_value = None
+        message_update.value.return_value = b'{"value": "test message 3"}'
+        message_update.headers.return_value = [
             ("event_type", b"Authentication.update"),
             ("encoding", b"json"),
         ]
 
-        message4.value.return_value = b'{"authtype": "INVALID"}'
-        message4.headers.return_value = [
+        message_invalid = Mock()
+        message_invalid.error.return_value = None
+        message_invalid.value.return_value = b'{"authtype": "INVALID"}'
+        message_invalid.headers.return_value = [
             ("event_type", b"Authentication.create"),
             ("encoding", b"json"),
         ]
 
         # Make sure to send this message last,
         # since it raises the TypeError that terminates the listener
-        message5.value = "bad message"
-        message5.headers = [Mock(), Mock()]
+        message_broken = Mock()
+        message_broken.error.return_value = {"Borked."}
+        message_broken.value = "bad message"
+        message_broken.headers = [Mock(), Mock()]
 
-        mock_message_bundle_items = [message1, message2, message3, message4, message5]
+        mock_message_bundle_items = [
+            message_create,
+            message_destroy,
+            message_update,
+            message_invalid,
+            message_broken,
+        ]
 
         mock_consumer_poll = mock_consumer.return_value.poll
         mock_consumer_poll.side_effect = mock_message_bundle_items
