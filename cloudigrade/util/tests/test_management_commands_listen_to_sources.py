@@ -57,27 +57,26 @@ class SourcesListenerTest(TestCase):
         message_destroy = create_mock_message("ApplicationAuthentication.destroy")
         message_update = create_mock_message("Authentication.update")
 
-        message_invalid = Mock()
-        message_invalid.error.return_value = None
-        message_invalid.value.return_value = b'{"authtype": "INVALID"}'
-        message_invalid.headers.return_value = [
-            ("event_type", b"Authentication.create"),
-            ("encoding", b"json"),
-        ]
+        message_invalid_json = create_mock_message("Authentication.update")
+        message_invalid_json.value.return_value = b"this is not json"
+
+        message_invalid_encoding = create_mock_message("Authentication.update")
+        message_invalid_encoding.value.return_value = b'{"not":"utf-8 safe\x8a"}'
 
         # Make sure to send this message last,
         # since it raises the TypeError that terminates the listener
-        message_broken = Mock()
-        message_broken.error.return_value = {"Borked."}
-        message_broken.value = "bad message"
-        message_broken.headers = []
+        message_with_error = Mock()
+        message_with_error.error.return_value = {"Borked."}
+        message_with_error.value = "bad message"
+        message_with_error.headers = []
 
         mock_message_bundle_items = [
             message_create,
             message_destroy,
             message_update,
-            message_invalid,
-            message_broken,
+            message_invalid_json,
+            message_invalid_encoding,
+            message_with_error,
         ]
 
         mock_consumer_poll = mock_consumer.return_value.poll
@@ -97,16 +96,23 @@ class SourcesListenerTest(TestCase):
 
         info_records = [r for r in log_context.records if r.levelname == "INFO"]
         warning_records = [r for r in log_context.records if r.levelname == "WARNING"]
+        error_records = [r for r in log_context.records if r.levelname == "ERROR"]
 
-        # Why are there 10 info messages? We currently log:
+        # Why are there 9 info messages? We currently log:
         # + 2 at listener start
         # + 2 for each of the 3 successful messages (6 total logs)
-        # + 1 for the invalid message
         # + 1 at listener close
-        self.assertEqual(10, len(info_records))
-        # 1 warning from the broken message.
-        self.assertEqual(1, len(warning_records))
-        warning_records[0].message = "Consumer error: {'Borked.'}"
+        self.assertEqual(9, len(info_records))
+
+        # 1 error for each invalid message (2 total logs)
+        self.assertEqual(2, len(error_records))
+        self.assertIn("Expecting value", error_records[0].message)
+        self.assertIn("invalid start byte", error_records[1].message)
+
+        # 2 warnings for each of the 2 invalid messages (4 total logs)
+        # 1 warning from the message that has an error.
+        self.assertEqual(5, len(warning_records))
+        warning_records[4].message = "Consumer error: {'Borked.'}"
 
     @patch("util.management.commands.listen_to_sources.logger")
     def test_listener_cleanup(self, mock_logger):
