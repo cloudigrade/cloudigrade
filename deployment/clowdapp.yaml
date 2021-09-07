@@ -184,7 +184,7 @@ objects:
               key: api-sentry-dsn
               name: cloudigrade-app-secret
         - name: DJANGO_SENTRY_ENVIRONMENT
-          value: ${DJANGO_SENTRY_ENVIRONMENT}
+          value: ${API_SENTRY_ENVIRONMENT}
         - name: HOUNDIGRADE_ENABLE_SENTRY
           value: ${HOUNDIGRADE_ENABLE_SENTRY}
         - name: HOUNDIGRADE_SENTRY_DSN
@@ -445,7 +445,10 @@ objects:
         - name: CELERY_ENABLE_SENTRY
           value: ${CELERY_ENABLE_SENTRY}
         - name: CELERY_SENTRY_DSN
-          value: ${CELERY_SENTRY_DSN}
+          valueFrom:
+            secretKeyRef:
+              key: celery-sentry-dsn
+              name: cloudigrade-app-secret
         - name: CELERY_SENTRY_RELEASE
           value: ${CELERY_SENTRY_RELEASE}
         - name: CELERY_SENTRY_ENVIRONMENT
@@ -575,9 +578,12 @@ objects:
         - name: SENTRY_TRACES_SAMPLE_RATE
           value: ${SENTRY_TRACES_SAMPLE_RATE}
         - name: CELERY_ENABLE_SENTRY
-          value: ${CELERY_ENABLE_SENTRY}
+          value: ${LISTENER_ENABLE_SENTRY}
         - name: CELERY_SENTRY_DSN
-          value: ${CELERY_SENTRY_DSN}
+          valueFrom:
+            secretKeyRef:
+              key: listener-sentry-dsn
+              name: cloudigrade-app-secret
         - name: CELERY_SENTRY_ENVIRONMENT
           value: ${CELERY_SENTRY_ENVIRONMENT}
         - name: AZURE_CLIENT_ID
@@ -919,7 +925,10 @@ objects:
         - name: CELERY_ENABLE_SENTRY
           value: ${CELERY_ENABLE_SENTRY}
         - name: CELERY_SENTRY_DSN
-          value: ${CELERY_SENTRY_DSN}
+          valueFrom:
+            secretKeyRef:
+              key: celery-sentry-dsn
+              name: cloudigrade-app-secret
         - name: CELERY_SENTRY_RELEASE
           value: ${CELERY_SENTRY_RELEASE}
         - name: CELERY_SENTRY_ENVIRONMENT
@@ -1038,6 +1047,10 @@ parameters:
 #
 # Component cloudigrade-api parameters:
 #
+- name: API_ENABLE_SENTRY
+  displayName: API Sentry Enabled
+  required: true
+  value: 'true'
 - name: API_LIMITS_CONTAINER_MEM_LIMIT
   displayName: Cloudigrade Container Memory Limit
   required: true
@@ -1062,10 +1075,6 @@ parameters:
   displayName: Cloudigrade Max Replica Count
   required: true
   value: '8'
-- name: API_SENTRY_ENABLED_STR
-  displayName: API Sentry Enabled (Str)
-  required: true
-  value: 'true'
 - name: API_SENTRY_ENVIRONMENT
   displayName: API Sentry Environment
   required: true
@@ -1106,16 +1115,12 @@ parameters:
   displayName: AWS S3 Bucket Lifecycle Max Age
   required: true
   value: '1460'
-- name: CELERY_SENTRY_ENABLED_STR
-  displayName: Celery Sentry Enabled (Str)
-  required: true
-  value: 'true'
 - name: COMMIT_REF
   displayName: Cloudigrade Commit Ref
   required: true
   value: latest
-- name: HOUNDIGRADE_SENTRY_ENABLED_STR
-  displayName: Houndigrade Sentry Enabled (Str)
+- name: HOUNDIGRADE_ENABLE_SENTRY
+  displayName: Houndigrade Sentry Enabled
   required: true
   value: 'true'
 - name: HOUNDIGRADE_SENTRY_ENVIRONMENT
@@ -1127,7 +1132,7 @@ parameters:
   required: true
   value: cloudigrade-ephemeral
 - name: LISTENER_ENABLE_SENTRY
-  displayName: Listener Enable Sentry
+  displayName: Listener Sentry Enabled
   required: true
   value: 'true'
 - name: LISTENER_SENTRY_ENVIRONMENT
@@ -1260,6 +1265,10 @@ parameters:
 - name: CACHE_TTL_SOURCES_APPLICATION_TYPE_ID
   description: Time to live in seconds for sources application type id cache (overrides CACHE_TTL_DEFAULT)
   value: '60'
+- name: CELERY_ENABLE_SENTRY
+  displayName: Celery Sentry Enabled
+  required: true
+  value: 'true'
 - name: CELERY_SENTRY_ENVIRONMENT
   displayName: Celery Sentry Environment
   required: true
