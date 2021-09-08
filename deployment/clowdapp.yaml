@@ -577,15 +577,15 @@ objects:
               optional: true
         - name: SENTRY_TRACES_SAMPLE_RATE
           value: ${SENTRY_TRACES_SAMPLE_RATE}
-        - name: CELERY_ENABLE_SENTRY
+        - name: API_ENABLE_SENTRY
           value: ${LISTENER_ENABLE_SENTRY}
-        - name: CELERY_SENTRY_DSN
+        - name: DJANGO_SENTRY_DSN
           valueFrom:
             secretKeyRef:
               key: listener-sentry-dsn
               name: cloudigrade-app-secret
-        - name: CELERY_SENTRY_ENVIRONMENT
-          value: ${CELERY_SENTRY_ENVIRONMENT}
+        - name: DJANGO_SENTRY_ENVIRONMENT
+          value: ${LISTENER_SENTRY_ENVIRONMENT}
         - name: AZURE_CLIENT_ID
           valueFrom:
             secretKeyRef:
