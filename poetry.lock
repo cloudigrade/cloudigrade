@@ -141,7 +141,7 @@ tests_no_zope = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>
 
 [[package]]
 name = "azure-cli-core"
-version = "2.27.2"
+version = "2.28.0"
 description = "Microsoft Azure Command-Line Tools Core Module"
 category = "main"
 optional = false
@@ -558,7 +558,7 @@ toml = ["toml"]
 
 [[package]]
 name = "crc-bonfire"
-version = "2.7.2"
+version = "2.7.3"
 description = "A CLI tool used to deploy ephemeral environments for testing cloud.redhat.com applications"
 category = "dev"
 optional = false
@@ -1251,7 +1251,7 @@ python-versions = ">=3.6"
 
 [[package]]
 name = "matplotlib-inline"
-version = "0.1.2"
+version = "0.1.3"
 description = "Inline Matplotlib backend for Jupyter"
 category = "dev"
 optional = false
@@ -1492,8 +1492,8 @@ strict_rfc3339 = ["strict-rfc3339"]
 
 [[package]]
 name = "openapi-spec-validator"
-version = "0.2.10"
-description = "OpenAPI 2.0 (aka Swagger) and OpenAPI 3.0.0 spec validator"
+version = "0.3.1"
+description = "OpenAPI 2.0 (aka Swagger) and OpenAPI 3.0 spec validator"
 category = "dev"
 optional = false
 python-versions = ">= 2.7, != 3.0.*, != 3.1.*, != 3.2.*, != 3.3.*, != 3.4.*"
@@ -1947,7 +1947,7 @@ test = ["flaky", "pytest", "pytest-qt"]
 
 [[package]]
 name = "qtpy"
-version = "1.10.0"
+version = "1.11.0"
 description = "Provides an abstraction layer on top of the various Qt bindings (PyQt5, PyQt4 and PySide) and additional custom QWidgets."
 category = "dev"
 optional = false
@@ -2125,7 +2125,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
 [[package]]
 name = "terminado"
-version = "0.11.1"
+version = "0.12.1"
 description = "Tornado websocket backend for the Xterm.js Javascript terminal emulator library."
 category = "dev"
 optional = false
@@ -2325,7 +2325,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "d1037db2b1452007d9897d8d8e72035750eb27e48a7730c0ba36abf892b6d66d"
+content-hash = "2e8472606af613ade360f95ef0af14cd356158459d80a0efc16ab83622470c31"
 
 [metadata.files]
 adal = [
@@ -2383,8 +2383,8 @@ attrs = [
     {file = "attrs-21.2.0.tar.gz", hash = "sha256:ef6aaac3ca6cd92904cdd0d83f629a15f18053ec84e6432106f7a4d04ae4f5fb"},
 ]
 azure-cli-core = [
-    {file = "azure-cli-core-2.27.2.tar.gz", hash = "sha256:e7d99cbd910d6d0554313726f4d41f1d2c16b4b2eb77f52ad5d011d549d5714f"},
-    {file = "azure_cli_core-2.27.2-py3-none-any.whl", hash = "sha256:8ebfc4c3a83b5a59448a0e2ec7c9198168586bb0c6235a7cfde4444830af3877"},
+    {file = "azure-cli-core-2.28.0.tar.gz", hash = "sha256:fcd170c278d6e39d1a846c04254b290b335542e823dfc54ba7094dea3fa50778"},
+    {file = "azure_cli_core-2.28.0-py3-none-any.whl", hash = "sha256:919b0173da95b49d64b2f639a1232098d6aeb9a5a4c00d90e931ffbd2ce10a1a"},
 ]
 azure-cli-telemetry = [
     {file = "azure-cli-telemetry-1.0.6.tar.gz", hash = "sha256:fc6cadf59f14f3bbd6c01d1b4d6ad54cfc1456303510d8bdb6206db08c40e661"},
@@ -2621,8 +2621,8 @@ coverage = [
     {file = "coverage-5.5.tar.gz", hash = "sha256:ebe78fe9a0e874362175b02371bdfbee64d8edc42a044253ddf4ee7d3c15212c"},
 ]
 crc-bonfire = [
-    {file = "crc-bonfire-2.7.2.tar.gz", hash = "sha256:e10e078ef49b6bdc2e626609213a59ede365098b5d00a503ccb56f18f1e141b4"},
-    {file = "crc_bonfire-2.7.2-py3-none-any.whl", hash = "sha256:c6200f0bb16fbcf8e27416e9e1eebd8ee597e6a6b8f4800ae7eecedeb19ff17b"},
+    {file = "crc-bonfire-2.7.3.tar.gz", hash = "sha256:75e61b385155f3125995814673874be34a8b294c558d939f2881da2ed8d301e4"},
+    {file = "crc_bonfire-2.7.3-py3-none-any.whl", hash = "sha256:4f65d5cb21a7ea3be5d1a69c310201a4e069438add5b514f7daf19b138bd87af"},
 ]
 cryptography = [
     {file = "cryptography-3.3.2-cp27-cp27m-macosx_10_10_x86_64.whl", hash = "sha256:541dd758ad49b45920dda3b5b48c968f8b2533d8981bcdb43002798d8f7a89ed"},
@@ -2919,8 +2919,8 @@ markupsafe = [
     {file = "MarkupSafe-2.0.1.tar.gz", hash = "sha256:594c67807fb16238b30c44bdf74f36c02cdf22d1c8cda91ef8a0ed8dabf5620a"},
 ]
 matplotlib-inline = [
-    {file = "matplotlib-inline-0.1.2.tar.gz", hash = "sha256:f41d5ff73c9f5385775d5c0bc13b424535c8402fe70ea8210f93e11f3683993e"},
-    {file = "matplotlib_inline-0.1.2-py3-none-any.whl", hash = "sha256:5cf1176f554abb4fa98cb362aa2b55c500147e4bdbb07e3fda359143e1da0811"},
+    {file = "matplotlib-inline-0.1.3.tar.gz", hash = "sha256:a04bfba22e0d1395479f866853ec1ee28eea1485c1d69a6faf00dc3e24ff34ee"},
+    {file = "matplotlib_inline-0.1.3-py3-none-any.whl", hash = "sha256:aed605ba3b72462d64d475a21a9296f400a19c4f74a31b59103d2a99ffd5aa5c"},
 ]
 mccabe = [
     {file = "mccabe-0.6.1-py2.py3-none-any.whl", hash = "sha256:ab8a6258860da4b6677da4bd2fe5dc2c659cff31b3ee4f7f5d64e79735b80d42"},
@@ -2999,9 +2999,9 @@ openapi-schema-validator = [
     {file = "openapi_schema_validator-0.1.5-py3-none-any.whl", hash = "sha256:b65d6c2242620bfe76d4c749b61cd9657e4528895a8f4fb6f916085b508ebd24"},
 ]
 openapi-spec-validator = [
-    {file = "openapi-spec-validator-0.2.10.tar.gz", hash = "sha256:5dc0918ae5a125f2689e70477910db6a3d3eef60613ed6166adc55e91a85e09c"},
-    {file = "openapi_spec_validator-0.2.10-py2-none-any.whl", hash = "sha256:11b1825933f4fa442be42f16b05ed5987f62639c7181c0ad827b16d33c9dea30"},
-    {file = "openapi_spec_validator-0.2.10-py3-none-any.whl", hash = "sha256:518189ef0d925ef5cb5da55970dbde8c3f08b2de7ecefd5d5a2e44e282e226cf"},
+    {file = "openapi-spec-validator-0.3.1.tar.gz", hash = "sha256:3d70e6592754799f7e77a45b98c6a91706bdd309a425169d17d8e92173e198a2"},
+    {file = "openapi_spec_validator-0.3.1-py2-none-any.whl", hash = "sha256:0a7da925bad4576f4518f77302c0b1990adb2fbcbe7d63fb4ed0de894cad8bdd"},
+    {file = "openapi_spec_validator-0.3.1-py3-none-any.whl", hash = "sha256:ba28b06e63274f2bc6de995a07fb572c657e534425b5baf68d9f7911efe6929f"},
 ]
 packaging = [
     {file = "packaging-21.0-py3-none-any.whl", hash = "sha256:c86254f9220d55e31cc94d69bade760f0847da8000def4dfe1c6b872fd14ff14"},
@@ -3341,8 +3341,8 @@ qtconsole = [
     {file = "qtconsole-5.1.1.tar.gz", hash = "sha256:bbc34bca14f65535afcb401bc74b752bac955e5313001ba640383f7e5857dc49"},
 ]
 qtpy = [
-    {file = "QtPy-1.10.0-py2.py3-none-any.whl", hash = "sha256:f683ce6cd825ba8248a798bf1dfa1a07aca387c88ae44fa5479537490aace7be"},
-    {file = "QtPy-1.10.0.tar.gz", hash = "sha256:3d20f010caa3b2c04835d6a2f66f8873b041bdaf7a76085c2a0d7890cdd65ea9"},
+    {file = "QtPy-1.11.0-py2.py3-none-any.whl", hash = "sha256:bd8baebb80c4d0d97e4e5a5cf15695522f6acc1fecc20b94a70a01ddf6c9e27e"},
+    {file = "QtPy-1.11.0.tar.gz", hash = "sha256:bbd61f8d6480a01cec39ad94249dbde7d0a8fce2aca61ff5037b645c4fd13e02"},
 ]
 regex = [
     {file = "regex-2021.8.28-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:9d05ad5367c90814099000442b2125535e9d77581855b9bee8780f1b41f2b1a2"},
@@ -3441,8 +3441,8 @@ tblib = [
     {file = "tblib-1.7.0.tar.gz", hash = "sha256:059bd77306ea7b419d4f76016aef6d7027cc8a0785579b5aad198803435f882c"},
 ]
 terminado = [
-    {file = "terminado-0.11.1-py3-none-any.whl", hash = "sha256:9e0457334863be3e6060c487ad60e0995fa1df54f109c67b24ff49a4f2f34df5"},
-    {file = "terminado-0.11.1.tar.gz", hash = "sha256:962b402edbb480718054dc37027bada293972ecadfb587b89f01e2b8660a2132"},
+    {file = "terminado-0.12.1-py3-none-any.whl", hash = "sha256:09fdde344324a1c9c6e610ee4ca165c4bb7f5bbf982fceeeb38998a988ef8452"},
+    {file = "terminado-0.12.1.tar.gz", hash = "sha256:b20fd93cc57c1678c799799d117874367cc07a3d2d55be95205b1a88fa08393f"},
 ]
 testpath = [
     {file = "testpath-0.5.0-py3-none-any.whl", hash = "sha256:8044f9a0bab6567fc644a3593164e872543bb44225b0e24846e2c89237937589"},

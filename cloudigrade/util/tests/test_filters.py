@@ -109,3 +109,16 @@ class Jinja2FiltersTest(TestCase):
         )
         actual = filters.httpied_command(mock_request, version=2)
         self.assertEqual(expected, actual)
+
+    def test_httpied_command_v2_allow_public(self):
+        """Assert httpied_command with public=True includes no auth headers."""
+        uri = "http://localhost/api/cloudigrade/v2/ok"
+
+        mock_request = MagicMock()
+        mock_request.method = "get"
+        mock_request.user = None
+        mock_request.build_absolute_uri.return_value = uri
+
+        expected = "http http://localhost/api/cloudigrade/v2/ok"
+        actual = filters.httpied_command(mock_request, public=True)
+        self.assertEqual(expected, actual)

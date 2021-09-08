@@ -62,6 +62,7 @@ ALLOWED_HOSTS = env("DJANGO_ALLOWED_HOSTS", default=["*"])
 # Azure Settings
 AZURE_CLIENT_ID = env("AZURE_CLIENT_ID", default="azure-client-id")
 AZURE_CLIENT_SECRET = env("AZURE_CLIENT_SECRET", default="very-secret-much-secure")
+AZURE_SP_OBJECT_ID = env("AZURE_SP_OBJECT_ID", default="azure-sp-object-id")
 AZURE_SUBSCRIPTION_ID = env("AZURE_SUBSCRIPTION_ID", default="azure-subscription-id")
 AZURE_TENANT_ID = env("AZURE_TENANT_ID", default="azure-tenant-id")
 

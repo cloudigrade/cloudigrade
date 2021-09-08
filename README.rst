@@ -216,6 +216,7 @@ The tenant id is your Azure directory id, the subscription id is as it says. To 
 #. Name your app e.g. `cloudigrade-dev-kb`
 #. Click Register. You should now be taken to your new App Registration.
 #. Note your `Application (client) ID` on the Overview page, this is your `Client ID`.
+#. Note your `Object ID` on the Overview page, this is your `Object ID`.
 #. In the left column, under `Manage`, select `Certificates & secrets`.
 #. Select `New client secret`
 #. Add a helpful description and expiration date.
@@ -225,6 +226,7 @@ After you've acquired those values, set the environment variables:
 
 - ``AZURE_CLIENT_ID="your client id from above"``
 - ``AZURE_CLIENT_SECRET="your client secret from above"``
+- ``AZURE_SP_OBJECT_ID="your object id from above"``
 - ``AZURE_SUBSCRIPTION_ID="your azure subscription id"``
 - ``AZURE_TENANT_ID="your azure directory id"``
 
