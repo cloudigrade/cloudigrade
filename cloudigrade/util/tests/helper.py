@@ -901,6 +901,39 @@ def get_internal_identity_auth_header():
     return base64.b64encode(json.dumps(header).encode("utf-8"))
 
 
+def generate_sources_kafka_message_headers(account_number, event_type):
+    """
+    Generate headers for a typical Kafka message coming from sources-api.
+
+    The contents of these headers are real strings, not encoded bytes. This simulates
+    the headers *after* we have decoded them from the raw Kafka message object using
+    extract_raw_sources_kafka_message.
+
+    Args:
+        account_number (str): the account number (e.g. "1234567")
+        event_type (str): the event type (e.g. "Application.pause")
+
+    Returns:
+        list of tuples, each effectively a key and value representing a header
+    """
+    x_rh_identity_header = base64.b64encode(
+        json.dumps(
+            {
+                "identity": {
+                    "account_number": account_number,
+                    "user": {"is_org_admin": True},
+                }
+            }
+        ).encode("utf-8")
+    ).decode("utf-8")
+    headers = [
+        ("event_type", event_type),
+        ("x-rh-sources-account-number", account_number),
+        ("x-rh-identity", x_rh_identity_header),
+    ]
+    return headers
+
+
 def generate_authentication_create_message_value(
     account_number="1337",
     username=None,
@@ -930,12 +963,9 @@ def generate_authentication_create_message_value(
         "authtype": authentication_type,
         "resource_id": resource_id,
     }
-    auth_header = base64.b64encode(
-        json.dumps({"identity": {"account_number": account_number}}).encode("utf-8")
+    headers = generate_sources_kafka_message_headers(
+        account_number, "Authentication.create"
     )
-    headers = [
-        ("x-rh-identity", auth_header),
-    ]
     return message, headers
 
 
@@ -961,12 +991,9 @@ def generate_applicationauthentication_create_message_value(
         "application_id": application_id,
         "authentication_id": authentication_id,
     }
-    auth_header = base64.b64encode(
-        json.dumps({"identity": {"account_number": account_number}}).encode("utf-8")
+    headers = generate_sources_kafka_message_headers(
+        account_number, "ApplicationAuthentication.create"
     )
-    headers = [
-        ("x-rh-identity", auth_header),
-    ]
     return message, headers
 
 
