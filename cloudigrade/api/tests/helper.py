@@ -291,6 +291,7 @@ def _generate_cloud_account(
     created_at=None,
     platform_authentication_id=None,
     platform_application_id=None,
+    platform_application_is_paused=False,
     platform_source_id=None,
     is_enabled=True,
     enabled_at=None,
@@ -344,6 +345,7 @@ def _generate_cloud_account(
         content_object=provider_cloud_account,
         platform_authentication_id=platform_authentication_id,
         platform_application_id=platform_application_id,
+        platform_application_is_paused=platform_application_is_paused,
         platform_source_id=platform_source_id,
         is_enabled=is_enabled,
     )
