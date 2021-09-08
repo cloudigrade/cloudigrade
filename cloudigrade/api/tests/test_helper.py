@@ -124,6 +124,7 @@ class GenerateCloudAccountTest(TestCase):
         self.assertEqual(account.enabled_at, created_at)
         self.assertIsNotNone(account.platform_authentication_id)
         self.assertIsNotNone(account.platform_application_id)
+        self.assertFalse(account.platform_application_is_paused)
         self.assertIsNotNone(account.platform_source_id)
         self.assertIsNotNone(account.content_object.verify_task)
 
@@ -140,6 +141,7 @@ class GenerateCloudAccountTest(TestCase):
         self.assertEqual(account.enabled_at, created_at)
         self.assertIsNotNone(account.platform_authentication_id)
         self.assertIsNotNone(account.platform_application_id)
+        self.assertFalse(account.platform_application_is_paused)
         self.assertIsNotNone(account.platform_source_id)
 
     def test_generate_aws_account_with_args(self):
@@ -179,6 +181,7 @@ class GenerateCloudAccountTest(TestCase):
             created_at=created_at,
             platform_authentication_id=platform_authentication_id,
             platform_application_id=platform_application_id,
+            platform_application_is_paused=True,
             platform_source_id=platform_source_id,
             is_enabled=is_enabled,
             enabled_at=enabled_at,
@@ -190,6 +193,7 @@ class GenerateCloudAccountTest(TestCase):
 
         self.assertEqual(account.platform_authentication_id, platform_authentication_id)
         self.assertEqual(account.platform_application_id, platform_application_id)
+        self.assertTrue(account.platform_application_is_paused)
         self.assertEqual(account.platform_source_id, platform_source_id)
         self.assertEqual(account.user, user)
         self.assertEqual(account.name, name)
