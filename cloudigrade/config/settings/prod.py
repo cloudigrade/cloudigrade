@@ -3,9 +3,6 @@ import sentry_sdk
 from boto3 import client
 from sentry_sdk.integrations.django import DjangoIntegration
 
-from app_common_python import isClowderEnabled
-from app_common_python import LoadedConfig as clowder_cfg
-
 from .base import *
 
 IS_PRODUCTION = CLOUDIGRADE_ENVIRONMENT == "prod"
@@ -45,6 +42,7 @@ AWS_SQS_SECRET_ACCESS_KEY = env("AWS_SQS_SECRET_ACCESS_KEY")
 # Azure Settings
 AZURE_CLIENT_ID = env("AZURE_CLIENT_ID")
 AZURE_CLIENT_SECRET = env("AZURE_CLIENT_SECRET")
+AZURE_SP_OBJECT_ID = env("AZURE_SP_OBJECT_ID")
 AZURE_SUBSCRIPTION_ID = env("AZURE_SUBSCRIPTION_ID")
 AZURE_TENANT_ID = env("AZURE_TENANT_ID")
 

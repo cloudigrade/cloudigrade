@@ -43,6 +43,7 @@ The following resource paths are currently available:
 -  ``/api/v2/instances/`` returns instances data
 -  ``/api/v2/images/`` returns images data
 -  ``/api/v2/sysconfig/`` returns sysconfig data
+-  ``/api/v2/azure-offer-template/`` returns azure offer template data
 -  ``/api/v2/concurrent/`` returns concurrency data
 
 
@@ -238,6 +239,19 @@ Request:
 Response:
 
 {{ v2_get_sysconfig | stringify_http_response | rst_codeblock }}
+
+Retrieve anonymously viewable Azure Offer Template
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The Azure Offer Template endpoint returns a json template populated with current running data, to be consumed by Azure to grant cloudigrade access to the customers account.
+
+Request:
+
+{{ v2_get_azure_offer.wsgi_request | httpied_command(public=True) | rst_codeblock("bash") }}
+
+Response:
+
+{{ v2_get_azure_offer | stringify_http_response | rst_codeblock }}
 
 
 Internal APIs

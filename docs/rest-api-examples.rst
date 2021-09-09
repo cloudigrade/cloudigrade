@@ -52,6 +52,7 @@ The following resource paths are currently available:
 -  ``/api/v2/instances/`` returns instances data
 -  ``/api/v2/images/`` returns images data
 -  ``/api/v2/sysconfig/`` returns sysconfig data
+-  ``/api/v2/azure-offer-template/`` returns azure offer template data
 -  ``/api/v2/concurrent/`` returns concurrency data
 
 
@@ -83,7 +84,7 @@ Response:
     Content-Length: 1163
     Content-Type: application/json
     Referrer-Policy: same-origin
-    X-CLOUDIGRADE-REQUEST-ID: 84c299fd-13bf-4de7-8134-4a89e6996ad3
+    X-CLOUDIGRADE-REQUEST-ID: fd13bf6d-e7c1-444a-89e6-996ad3f87bd8
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -93,8 +94,8 @@ Response:
                 "account_id": 1,
                 "cloud_type": "aws",
                 "content_object": {
-                    "account_arn": "arn:aws:iam::544771852898:role/role-for-cloudigrade",
-                    "aws_account_id": "544771852898",
+                    "account_arn": "arn:aws:iam::923899456057:role/role-for-cloudigrade",
+                    "aws_account_id": "923899456057",
                     "aws_cloud_account_id": 1,
                     "created_at": "2020-05-04T00:00:00Z",
                     "updated_at": "2020-05-18T13:51:59.722367Z"
@@ -114,8 +115,8 @@ Response:
                 "content_object": {
                     "azure_cloud_account_id": 1,
                     "created_at": "2020-05-04T00:00:00Z",
-                    "subscription_id": "67ebc8d4-4df7-4a5b-95e4-e83781234823",
-                    "tenant_id": "c1189ecc-40fc-4888-bbb4-cf9ae6254f19",
+                    "subscription_id": "4df77a5b-95e4-4837-8123-4823c1189ecc",
+                    "tenant_id": "40fce888-fbb4-4f9a-a625-4f19ba12e6d9",
                     "updated_at": "2020-05-18T13:51:59.722367Z"
                 },
                 "created_at": "2020-05-04T00:00:00Z",
@@ -158,7 +159,7 @@ Response:
     Content-Length: 488
     Content-Type: application/json
     Referrer-Policy: same-origin
-    X-CLOUDIGRADE-REQUEST-ID: f87bd8ca-f863-4b96-bbd9-ddcc05a8e200
+    X-CLOUDIGRADE-REQUEST-ID: caf8639b-963b-49dd-8c05-a8e200bd2e4d
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -166,8 +167,8 @@ Response:
         "account_id": 1,
         "cloud_type": "aws",
         "content_object": {
-            "account_arn": "arn:aws:iam::544771852898:role/role-for-cloudigrade",
-            "aws_account_id": "544771852898",
+            "account_arn": "arn:aws:iam::923899456057:role/role-for-cloudigrade",
+            "aws_account_id": "923899456057",
             "aws_cloud_account_id": 1,
             "created_at": "2020-05-04T00:00:00Z",
             "updated_at": "2020-05-18T13:51:59.722367Z"
@@ -201,10 +202,10 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 2617
+    Content-Length: 2611
     Content-Type: application/json
     Referrer-Policy: same-origin
-    X-CLOUDIGRADE-REQUEST-ID: bd2e4d81-9141-4510-bedc-43f1d34dc568
+    X-CLOUDIGRADE-REQUEST-ID: 81914155-107e-4c43-b1d3-4dc56862cf62
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -216,8 +217,8 @@ Response:
                 "content_object": {
                     "aws_instance_id": 1,
                     "created_at": "2020-05-18T13:51:59.722367Z",
-                    "ec2_instance_id": "i-af3bda6fe8102c0fa",
-                    "region": "ap-northeast-1",
+                    "ec2_instance_id": "i-f3bda6fe8102c0fa7",
+                    "region": "eu-west-1",
                     "updated_at": "2020-05-18T13:51:59.722367Z"
                 },
                 "created_at": "2020-05-18T13:51:59.722367Z",
@@ -231,7 +232,7 @@ Response:
                 "content_object": {
                     "aws_instance_id": 2,
                     "created_at": "2020-05-18T13:51:59.722367Z",
-                    "ec2_instance_id": "i-2af3993a69e2ca795",
+                    "ec2_instance_id": "i-af3993a69e2ca7956",
                     "region": "ap-northeast-1",
                     "updated_at": "2020-05-18T13:51:59.722367Z"
                 },
@@ -246,8 +247,8 @@ Response:
                 "content_object": {
                     "aws_instance_id": 3,
                     "created_at": "2020-05-18T13:51:59.722367Z",
-                    "ec2_instance_id": "i-12c876d8efb2a3fa6",
-                    "region": "ca-central-1",
+                    "ec2_instance_id": "i-2c876d8efb2a3fa67",
+                    "region": "ap-northeast-1",
                     "updated_at": "2020-05-18T13:51:59.722367Z"
                 },
                 "created_at": "2020-05-18T13:51:59.722367Z",
@@ -261,8 +262,8 @@ Response:
                 "content_object": {
                     "azure_instance_id": 1,
                     "created_at": "2020-05-18T13:51:59.722367Z",
-                    "region": "North Europe",
-                    "resource_id": "/subscriptions/d00f19c8-25da-4238-8bd1-92a2e8ef889a/resourceGroups/interview/providers/Microsoft.Compute/virtualMachines/why",
+                    "region": "East US",
+                    "resource_id": "/subscriptions/19c825da-b238-4bd1-92a2-e8ef889aae12/resourceGroups/interview/providers/Microsoft.Compute/virtualMachines/why",
                     "updated_at": "2020-05-18T13:51:59.722367Z"
                 },
                 "created_at": "2020-05-18T13:51:59.722367Z",
@@ -277,7 +278,7 @@ Response:
                     "azure_instance_id": 2,
                     "created_at": "2020-05-18T13:51:59.722367Z",
                     "region": "East US",
-                    "resource_id": "/subscriptions/9b0531f6-f82f-471f-ba35-bacc0fefad05/resourceGroups/floor/providers/Microsoft.Compute/virtualMachines/me",
+                    "resource_id": "/subscriptions/31f6f82f-b71f-4a35-bacc-0fefad058b6c/resourceGroups/floor/providers/Microsoft.Compute/virtualMachines/me",
                     "updated_at": "2020-05-18T13:51:59.722367Z"
                 },
                 "created_at": "2020-05-18T13:51:59.722367Z",
@@ -291,8 +292,8 @@ Response:
                 "content_object": {
                     "azure_instance_id": 3,
                     "created_at": "2020-05-18T13:51:59.722367Z",
-                    "region": "North Europe",
-                    "resource_id": "/subscriptions/0a9819b3-fc64-4342-9be7-bb78d6e6eb91/resourceGroups/wait/providers/Microsoft.Compute/virtualMachines/whatever",
+                    "region": "EAST US 2 EUAP",
+                    "resource_id": "/subscriptions/19b3fc64-3342-4be7-bb78-d6e6eb912bb2/resourceGroups/wait/providers/Microsoft.Compute/virtualMachines/whatever",
                     "updated_at": "2020-05-18T13:51:59.722367Z"
                 },
                 "created_at": "2020-05-18T13:51:59.722367Z",
@@ -328,10 +329,10 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 355
+    Content-Length: 350
     Content-Type: application/json
     Referrer-Policy: same-origin
-    X-CLOUDIGRADE-REQUEST-ID: 62cf620f-29a4-4f20-bd49-bad4550ef109
+    X-CLOUDIGRADE-REQUEST-ID: 0f29a4ef-203d-49ba-9455-0ef1097b6a24
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -341,8 +342,8 @@ Response:
         "content_object": {
             "aws_instance_id": 1,
             "created_at": "2020-05-18T13:51:59.722367Z",
-            "ec2_instance_id": "i-af3bda6fe8102c0fa",
-            "region": "ap-northeast-1",
+            "ec2_instance_id": "i-f3bda6fe8102c0fa7",
+            "region": "eu-west-1",
             "updated_at": "2020-05-18T13:51:59.722367Z"
         },
         "created_at": "2020-05-18T13:51:59.722367Z",
@@ -371,10 +372,10 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 2373
+    Content-Length: 2365
     Content-Type: application/json
     Referrer-Policy: same-origin
-    X-CLOUDIGRADE-REQUEST-ID: 7b6a247d-e3dd-4ab7-94ac-b226cffc5a69
+    X-CLOUDIGRADE-REQUEST-ID: 7de3dd9a-b714-4cb2-a6cf-fc5a69099c77
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -386,8 +387,8 @@ Response:
                 "content_object": {
                     "aws_instance_id": 1,
                     "created_at": "2020-05-18T13:51:59.722367Z",
-                    "ec2_instance_id": "i-af3bda6fe8102c0fa",
-                    "region": "ap-northeast-1",
+                    "ec2_instance_id": "i-f3bda6fe8102c0fa7",
+                    "region": "eu-west-1",
                     "updated_at": "2020-05-18T13:51:59.722367Z"
                 },
                 "created_at": "2020-05-18T13:51:59.722367Z",
@@ -401,7 +402,7 @@ Response:
                 "content_object": {
                     "aws_instance_id": 2,
                     "created_at": "2020-05-18T13:51:59.722367Z",
-                    "ec2_instance_id": "i-2af3993a69e2ca795",
+                    "ec2_instance_id": "i-af3993a69e2ca7956",
                     "region": "ap-northeast-1",
                     "updated_at": "2020-05-18T13:51:59.722367Z"
                 },
@@ -416,8 +417,8 @@ Response:
                 "content_object": {
                     "azure_instance_id": 1,
                     "created_at": "2020-05-18T13:51:59.722367Z",
-                    "region": "North Europe",
-                    "resource_id": "/subscriptions/d00f19c8-25da-4238-8bd1-92a2e8ef889a/resourceGroups/interview/providers/Microsoft.Compute/virtualMachines/why",
+                    "region": "East US",
+                    "resource_id": "/subscriptions/19c825da-b238-4bd1-92a2-e8ef889aae12/resourceGroups/interview/providers/Microsoft.Compute/virtualMachines/why",
                     "updated_at": "2020-05-18T13:51:59.722367Z"
                 },
                 "created_at": "2020-05-18T13:51:59.722367Z",
@@ -432,7 +433,7 @@ Response:
                     "azure_instance_id": 2,
                     "created_at": "2020-05-18T13:51:59.722367Z",
                     "region": "East US",
-                    "resource_id": "/subscriptions/9b0531f6-f82f-471f-ba35-bacc0fefad05/resourceGroups/floor/providers/Microsoft.Compute/virtualMachines/me",
+                    "resource_id": "/subscriptions/31f6f82f-b71f-4a35-bacc-0fefad058b6c/resourceGroups/floor/providers/Microsoft.Compute/virtualMachines/me",
                     "updated_at": "2020-05-18T13:51:59.722367Z"
                 },
                 "created_at": "2020-05-18T13:51:59.722367Z",
@@ -446,8 +447,8 @@ Response:
                 "content_object": {
                     "azure_instance_id": 3,
                     "created_at": "2020-05-18T13:51:59.722367Z",
-                    "region": "North Europe",
-                    "resource_id": "/subscriptions/0a9819b3-fc64-4342-9be7-bb78d6e6eb91/resourceGroups/wait/providers/Microsoft.Compute/virtualMachines/whatever",
+                    "region": "EAST US 2 EUAP",
+                    "resource_id": "/subscriptions/19b3fc64-3342-4be7-bb78-d6e6eb912bb2/resourceGroups/wait/providers/Microsoft.Compute/virtualMachines/whatever",
                     "updated_at": "2020-05-18T13:51:59.722367Z"
                 },
                 "created_at": "2020-05-18T13:51:59.722367Z",
@@ -491,7 +492,7 @@ Response:
     Content-Length: 6718
     Content-Type: application/json
     Referrer-Policy: same-origin
-    X-CLOUDIGRADE-REQUEST-ID: 099c7762-750c-4978-8726-0508999e21a1
+    X-CLOUDIGRADE-REQUEST-ID: 62750c19-78c7-4605-8899-9e21a1521ab3
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -503,11 +504,11 @@ Response:
                 "content_object": {
                     "aws_image_id": 1,
                     "created_at": "2020-05-18T13:51:59.722367Z",
-                    "ec2_ami_id": "ami-7a26774e",
+                    "ec2_ami_id": "ami-a26774e2",
                     "id": 1,
                     "is_cloud_access": false,
                     "is_marketplace": false,
-                    "owner_aws_account_id": "544771852898",
+                    "owner_aws_account_id": "923899456057",
                     "platform": "none",
                     "region": null,
                     "updated_at": "2020-05-18T13:51:59.722367Z"
@@ -541,11 +542,11 @@ Response:
                 "content_object": {
                     "aws_image_id": 2,
                     "created_at": "2020-05-18T13:51:59.722367Z",
-                    "ec2_ami_id": "ami-6518f224",
+                    "ec2_ami_id": "ami-518f2244",
                     "id": 2,
                     "is_cloud_access": false,
                     "is_marketplace": false,
-                    "owner_aws_account_id": "544771852898",
+                    "owner_aws_account_id": "923899456057",
                     "platform": "none",
                     "region": null,
                     "updated_at": "2020-05-18T13:51:59.722367Z"
@@ -579,11 +580,11 @@ Response:
                 "content_object": {
                     "aws_image_id": 3,
                     "created_at": "2020-05-18T13:51:59.722367Z",
-                    "ec2_ami_id": "ami-70837b5a",
+                    "ec2_ami_id": "ami-0837b5ad",
                     "id": 3,
                     "is_cloud_access": false,
                     "is_marketplace": false,
-                    "owner_aws_account_id": "544771852898",
+                    "owner_aws_account_id": "923899456057",
                     "platform": "none",
                     "region": null,
                     "updated_at": "2020-05-18T13:51:59.722367Z"
@@ -620,7 +621,7 @@ Response:
                     "id": 1,
                     "is_marketplace": false,
                     "region": null,
-                    "resource_id": "/subscriptions/ae12061f-a230-4bd4-931e-64175ed5fb1d/resourceGroups/step/providers/Microsoft.Compute/images/themselves",
+                    "resource_id": "/subscriptions/061fa230-9bd4-431e-a417-5ed5fb1d099b/resourceGroups/step/providers/Microsoft.Compute/images/themselves",
                     "updated_at": "2020-05-18T13:51:59.722367Z"
                 },
                 "created_at": "2020-05-18T13:51:59.722367Z",
@@ -655,7 +656,7 @@ Response:
                     "id": 2,
                     "is_marketplace": false,
                     "region": null,
-                    "resource_id": "/subscriptions/8b6c9e19-d542-4138-92a5-4d596f2e0f80/resourceGroups/help/providers/Microsoft.Compute/images/past",
+                    "resource_id": "/subscriptions/9e19d542-1138-42a5-8d59-6f2e0f80770a/resourceGroups/help/providers/Microsoft.Compute/images/past",
                     "updated_at": "2020-05-18T13:51:59.722367Z"
                 },
                 "created_at": "2020-05-18T13:51:59.722367Z",
@@ -690,7 +691,7 @@ Response:
                     "id": 3,
                     "is_marketplace": false,
                     "region": null,
-                    "resource_id": "/subscriptions/2bb2ac34-f7c4-4ec9-ad28-d8295787401e/resourceGroups/discover/providers/Microsoft.Compute/images/mother",
+                    "resource_id": "/subscriptions/ac34f7c4-0ec9-4d28-9829-5787401e98eb/resourceGroups/discover/providers/Microsoft.Compute/images/mother",
                     "updated_at": "2020-05-18T13:51:59.722367Z"
                 },
                 "created_at": "2020-05-18T13:51:59.722367Z",
@@ -747,7 +748,7 @@ Response:
     Content-Length: 1075
     Content-Type: application/json
     Referrer-Policy: same-origin
-    X-CLOUDIGRADE-REQUEST-ID: 521ab38c-a658-4162-88c6-c77d1ce10f9c
+    X-CLOUDIGRADE-REQUEST-ID: 8ca65831-62c8-46c7-bd1c-e10f9cb3779d
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -757,11 +758,11 @@ Response:
         "content_object": {
             "aws_image_id": 1,
             "created_at": "2020-05-18T13:51:59.722367Z",
-            "ec2_ami_id": "ami-7a26774e",
+            "ec2_ami_id": "ami-a26774e2",
             "id": 1,
             "is_cloud_access": false,
             "is_marketplace": false,
-            "owner_aws_account_id": "544771852898",
+            "owner_aws_account_id": "923899456057",
             "platform": "none",
             "region": null,
             "updated_at": "2020-05-18T13:51:59.722367Z"
@@ -825,7 +826,7 @@ Response:
     Content-Length: 17102
     Content-Type: application/json
     Referrer-Policy: same-origin
-    X-CLOUDIGRADE-REQUEST-ID: 42b32872-87e2-4ce8-8f9a-c100e2097e53
+    X-CLOUDIGRADE-REQUEST-ID: 7287e27c-e88f-4ac1-80e2-097e534fd677
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -2048,7 +2049,7 @@ Response:
     Content-Length: 64
     Content-Type: application/json
     Referrer-Policy: same-origin
-    X-CLOUDIGRADE-REQUEST-ID: 9ac827d7-6195-4bb7-b4ce-7810cc1584de
+    X-CLOUDIGRADE-REQUEST-ID: d761954b-b7b4-4e78-90cc-1584deea0a10
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -2077,7 +2078,7 @@ Response:
     Content-Length: 50
     Content-Type: application/json
     Referrer-Policy: same-origin
-    X-CLOUDIGRADE-REQUEST-ID: ee380257-b4f6-4fe6-91d1-52098625df41
+    X-CLOUDIGRADE-REQUEST-ID: 57b4f6bf-e651-4152-8986-25df419ac827
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -2108,7 +2109,7 @@ Response:
     Content-Length: 112
     Content-Type: application/json
     Referrer-Policy: same-origin
-    X-CLOUDIGRADE-REQUEST-ID: ea0a1039-210a-4c03-82d8-7254dc29cc26
+    X-CLOUDIGRADE-REQUEST-ID: 39210a4c-03c2-4872-94dc-29cc26dea775
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -2141,7 +2142,7 @@ Response:
     Content-Length: 74
     Content-Type: application/json
     Referrer-Policy: same-origin
-    X-CLOUDIGRADE-REQUEST-ID: dea775f7-5f81-41e6-8780-089217adcbce
+    X-CLOUDIGRADE-REQUEST-ID: f75f8161-e687-4008-9217-adcbce84c299
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -2171,15 +2172,15 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 608
+    Content-Length: 680
     Content-Type: application/json
     Referrer-Policy: same-origin
-    X-CLOUDIGRADE-REQUEST-ID: b3779da1-ef56-461f-b8ae-b69f4bc9d920
+    X-CLOUDIGRADE-REQUEST-ID: a1ef56a6-1ff8-4eb6-9f4b-c9d920f5e963
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
     {
-        "aws_account_id": 434533559245,
+        "aws_account_id": 988212965548,
         "aws_policies": {
             "traditional_inspection": {
                 "Statement": [
@@ -2208,7 +2209,118 @@ Response:
                 "Version": "2012-10-17"
             }
         },
+        "azure_offer_template_path": "/api/cloudigrade/v2/azure-offer-template/",
         "version": "489-cloudigrade-version - d2b30c637ce3788e22990b21434bac2edcfb7ede"
+    }
+
+Retrieve anonymously viewable Azure Offer Template
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The Azure Offer Template endpoint returns a json template populated with current running data, to be consumed by Azure to grant cloudigrade access to the customers account.
+
+Request:
+
+.. code:: bash
+
+    http localhost:8080/api/cloudigrade/v2/azure-offer-template/
+
+Response:
+
+::
+
+    HTTP/1.1 200 OK
+    Access-Control-Allow-Origin: *
+    Allow: GET, HEAD, OPTIONS
+    Content-Length: 2017
+    Content-Type: application/json
+    Referrer-Policy: same-origin
+    X-CLOUDIGRADE-REQUEST-ID: f93bd15d-1298-4424-b500-34a8acbbf0e6
+    X-Content-Type-Options: nosniff
+    X-Frame-Options: DENY
+
+    {
+        "$schema": "https://schema.management.azure.com/schemas/2019-08-01/subscriptionDeploymentTemplate.json#",
+        "contentVersion": "1.0.0.0",
+        "outputs": {
+            "authorizations": {
+                "type": "array",
+                "value": "[parameters('authorizations')]"
+            },
+            "mspOfferName": {
+                "type": "string",
+                "value": "[concat('Managed by', ' ', parameters('mspOfferName'))]"
+            }
+        },
+        "parameters": {
+            "authorizations": {
+                "allowedValues": [
+                    [
+                        {
+                            "principalId": "691f0b3e-exam-ple3-b03f-6eb5120acabb",
+                            "principalIdDisplayName": "cloudigrade-rest-api-examples",
+                            "roleDefinitionId": "acdd72a7-3385-48ef-bd42-f606fba81ae7"
+                        }
+                    ]
+                ],
+                "defaultValue": [
+                    {
+                        "principalId": "691f0b3e-exam-ple3-b03f-6eb5120acabb",
+                        "principalIdDisplayName": "cloudigrade-rest-api-examples",
+                        "roleDefinitionId": "acdd72a7-3385-48ef-bd42-f606fba81ae7"
+                    }
+                ],
+                "type": "array"
+            },
+            "managedByTenantId": {
+                "allowedValues": [
+                    "81329282-exam-ple3-80af-f6457b5b32ad"
+                ],
+                "defaultValue": "81329282-exam-ple3-80af-f6457b5b32ad",
+                "type": "string"
+            },
+            "mspOfferDescription": {
+                "allowedValues": [
+                    ""
+                ],
+                "defaultValue": "",
+                "type": "string"
+            },
+            "mspOfferName": {
+                "allowedValues": [
+                    "cloudigrade-rest-api-examples"
+                ],
+                "defaultValue": "cloudigrade-rest-api-examples",
+                "type": "string"
+            }
+        },
+        "resources": [
+            {
+                "apiVersion": "2020-02-01-preview",
+                "name": "[variables('mspRegistrationName')]",
+                "properties": {
+                    "authorizations": "[parameters('authorizations')]",
+                    "description": "[parameters('mspOfferDescription')]",
+                    "managedByTenantId": "[parameters('managedByTenantId')]",
+                    "registrationDefinitionName": "[parameters('mspOfferName')]"
+                },
+                "type": "Microsoft.ManagedServices/registrationDefinitions"
+            },
+            {
+                "apiVersion": "2020-02-01-preview",
+                "dependsOn": [
+                    "[resourceId('Microsoft.ManagedServices/registrationDefinitions/', variables('mspRegistrationName'))]"
+                ],
+                "name": "[variables('mspAssignmentName')]",
+                "properties": {
+                    "registrationDefinitionId": "[resourceId('Microsoft.ManagedServices/registrationDefinitions/', variables('mspRegistrationName'))]"
+                },
+                "type": "Microsoft.ManagedServices/registrationAssignments"
+            }
+        ],
+        "variables": {
+            "mspAssignmentName": "[guid(parameters('mspOfferName'))]",
+            "mspRegistrationName": "[guid(parameters('mspOfferName'))]"
+        }
     }
 
 
@@ -2234,7 +2346,7 @@ Request:
 
     http post localhost:8080/internal/api/cloudigrade/v1/accounts/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
         cloud_type="aws" \
-        account_arn="arn:aws:iam::887838253945:role/role-for-cloudigrade" \
+        account_arn="arn:aws:iam::335555691572:role/role-for-cloudigrade" \
         name="yet another account" \
         platform_authentication_id="1553" \
         platform_application_id="4104" \
@@ -2249,7 +2361,7 @@ Response:
     Content-Length: 501
     Content-Type: application/json
     Referrer-Policy: same-origin
-    X-CLOUDIGRADE-REQUEST-ID: f5aefbcf-1f84-4cc9-be30-09c864715fc1
+    X-CLOUDIGRADE-REQUEST-ID: dff5aefb-cf1f-44dc-89fe-3009c864715f
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -2257,8 +2369,8 @@ Response:
         "account_id": 3,
         "cloud_type": "aws",
         "content_object": {
-            "account_arn": "arn:aws:iam::887838253945:role/role-for-cloudigrade",
-            "aws_account_id": "887838253945",
+            "account_arn": "arn:aws:iam::335555691572:role/role-for-cloudigrade",
+            "aws_account_id": "335555691572",
             "aws_cloud_account_id": 2,
             "created_at": "2020-05-18T13:51:59.722367Z",
             "updated_at": "2020-05-18T13:51:59.722367Z"
@@ -2282,7 +2394,7 @@ Request:
 
     http post localhost:8080/internal/api/cloudigrade/v1/accounts/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
         cloud_type="aws" \
-        account_arn="arn:aws:iam::887838253945:role/role-for-cloudigrade" \
+        account_arn="arn:aws:iam::335555691572:role/role-for-cloudigrade" \
         name="but this account already exists" \
         platform_authentication_id="1618" \
         platform_application_id="1208" \
@@ -2297,7 +2409,7 @@ Response:
     Content-Length: 93
     Content-Type: application/json
     Referrer-Policy: same-origin
-    X-CLOUDIGRADE-REQUEST-ID: 5bcaa113-f40b-46ef-8a7c-41e606f185aa
+    X-CLOUDIGRADE-REQUEST-ID: 745bcaa1-13f4-4be6-af0a-7c41e606f185
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -2318,8 +2430,8 @@ Request:
 
     http post localhost:8080/internal/api/cloudigrade/v1/accounts/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
         cloud_type="azure" \
-        subscription_id="814ef21d-256d-4490-acec-15ef1a6a1019" \
-        tenant_id="9192e037-3a17-46d1-a2e3-a0c780b2866b" \
+        subscription_id="6b814ef2-1d25-4de4-906c-ec15ef1a6a10" \
+        tenant_id="aa9192e0-373a-47c6-91e2-e3a0c780b286" \
         name="it's an azure account" \
         platform_authentication_id="7113" \
         platform_application_id="5180" \
@@ -2334,7 +2446,7 @@ Response:
     Content-Length: 515
     Content-Type: application/json
     Referrer-Policy: same-origin
-    X-CLOUDIGRADE-REQUEST-ID: 53b84014-5a12-4f5b-b107-58592d02d4f9
+    X-CLOUDIGRADE-REQUEST-ID: f653b840-145a-421f-9bb1-0758592d02d4
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -2344,8 +2456,8 @@ Response:
         "content_object": {
             "azure_cloud_account_id": 2,
             "created_at": "2020-05-18T13:51:59.722367Z",
-            "subscription_id": "814ef21d-256d-4490-acec-15ef1a6a1019",
-            "tenant_id": "9192e037-3a17-46d1-a2e3-a0c780b2866b",
+            "subscription_id": "6b814ef2-1d25-4de4-906c-ec15ef1a6a10",
+            "tenant_id": "aa9192e0-373a-47c6-91e2-e3a0c780b286",
             "updated_at": "2020-05-18T13:51:59.722367Z"
         },
         "created_at": "2020-05-18T13:51:59.722367Z",

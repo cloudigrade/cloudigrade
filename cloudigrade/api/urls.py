@@ -11,6 +11,7 @@ routes = [
     ("instances", views.InstanceViewSet, "instance"),
     ("images", views.MachineImageViewSet, "machineimage"),
     ("sysconfig", views.SysconfigViewSet, "sysconfig"),
+    ("azure-offer-template", views.AzureOfferTemplateViewSet, "azure-offer"),
     ("concurrent", views.DailyConcurrentUsageViewSet, "concurrent"),
 ]
 

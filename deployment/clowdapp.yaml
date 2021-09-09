@@ -79,6 +79,11 @@ objects:
             secretKeyRef:
               key: client_secret
               name: cloudigrade-azure
+        - name: AZURE_SP_OBJECT_ID
+          valueFrom:
+            secretKeyRef:
+              key: sp_object_id
+              name: cloudigrade-azure
         - name: AZURE_SUBSCRIPTION_ID
           valueFrom:
             secretKeyRef:
@@ -332,6 +337,11 @@ objects:
           valueFrom:
             secretKeyRef:
               key: client_secret
+              name: cloudigrade-azure
+        - name: AZURE_SP_OBJECT_ID
+          valueFrom:
+            secretKeyRef:
+              key: sp_object_id
               name: cloudigrade-azure
         - name: AZURE_SUBSCRIPTION_ID
           valueFrom:
@@ -596,6 +606,11 @@ objects:
             secretKeyRef:
               key: client_secret
               name: cloudigrade-azure
+        - name: AZURE_SP_OBJECT_ID
+          valueFrom:
+            secretKeyRef:
+              key: sp_object_id
+              name: cloudigrade-azure
         - name: AZURE_SUBSCRIPTION_ID
           valueFrom:
             secretKeyRef:
@@ -812,6 +827,11 @@ objects:
           valueFrom:
             secretKeyRef:
               key: client_secret
+              name: cloudigrade-azure
+        - name: AZURE_SP_OBJECT_ID
+          valueFrom:
+            secretKeyRef:
+              key: sp_object_id
               name: cloudigrade-azure
         - name: AZURE_SUBSCRIPTION_ID
           valueFrom:

@@ -20,6 +20,12 @@ os.environ["AWS_SECRET_ACCESS_KEY"] = "nope"
 os.environ["AWS_DEFAULT_REGION"] = "nope"
 os.environ["AWS_SQS_ACCESS_KEY_ID"] = "nope"
 os.environ["AWS_SQS_SECRET_ACCESS_KEY"] = "nope"
+os.environ["AZURE_CLIENT_ID"] = "f5daa17f-exam-ple3-8d70-8f7f301b1466"
+os.environ["AZURE_CLIENT_SECRET"] = "nope"
+os.environ["AZURE_SP_OBJECT_ID"] = "691f0b3e-exam-ple3-b03f-6eb5120acabb"
+os.environ["AZURE_SUBSCRIPTION"] = "62c769b6-exam-ple3-ba22-d272720a649e"
+os.environ["AZURE_TENANT_ID"] = "81329282-exam-ple3-80af-f6457b5b32ad"
+
 # Force this script to always use the test settings.
 # This has the benefit of using the sqlite DB which should always be empty.
 os.environ["DJANGO_SETTINGS_MODULE"] = "config.settings.test"
@@ -74,6 +80,7 @@ class DocsApiHandler(object):
         self.customer_user.date_joined = util_helper.utc_dt(2019, 1, 1, 0, 0, 0)
         self.customer_user.save()
 
+        self.anonymous_client = api_helper.SandboxedRestClient()
         self.customer_client = api_helper.SandboxedRestClient()
         self.customer_client._force_authenticate(self.customer_user)
         self.internal_client = api_helper.SandboxedRestClient(
@@ -382,6 +389,28 @@ class DocsApiHandler(object):
 
         return responses
 
+    def gather_anonymous_api_responses(self):
+        """
+        Call the public API and collect all the responses to be output.
+
+        Returns:
+            dict: All of the API responses.
+
+        """
+        responses = dict()
+
+        ########################
+        # V2 Public Commands
+        # Retrieve the ARM Offer Template
+        response = self.anonymous_client.verb_noun(
+            verb='get',
+            noun='azure-offer-template'
+        )
+        assert_status(response, 200)
+        responses["v2_get_azure_offer"] = response
+
+        return responses
+
 
 def render(data):
     """
@@ -428,12 +457,14 @@ if __name__ == "__main__":
     ):
         mock_uuid4.side_effect = seeded_uuid4
         api_hander = DocsApiHandler()
-        public_responses = api_hander.gather_api_responses()
+        authenticated_responses = api_hander.gather_api_responses()
         internal_responses = api_hander.gather_internal_api_responses()
+        anonymous_responses = api_hander.gather_anonymous_api_responses()
         transaction.set_rollback(True)
     responses = {}
-    responses.update(public_responses)
+    responses.update(authenticated_responses)
     responses.update(internal_responses)
+    responses.update(anonymous_responses)
     output = render(responses)
     output = "\n".join((line.rstrip() for line in output.split("\n")))
     print(output)

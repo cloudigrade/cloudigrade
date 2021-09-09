@@ -3,6 +3,7 @@ from datetime import timedelta
 
 from dateutil.parser import parse
 from django.conf import settings
+from django.urls import reverse
 from django.utils.translation import gettext as _
 from django_filters import rest_framework as django_filters
 from rest_framework import exceptions, mixins, permissions, viewsets
@@ -13,6 +14,7 @@ from api import schemas
 from api.authentication import IdentityHeaderAuthenticationUserNotRequired
 from api.serializers import DailyConcurrentUsageDummyQueryset
 from util.aws.sts import _get_primary_account_id, cloudigrade_policy
+from util.azure import ARM_TEMPLATE
 from util.misc import get_today
 
 
@@ -68,9 +70,24 @@ class SysconfigViewSet(viewsets.ViewSet):
             "aws_policies": {
                 "traditional_inspection": cloudigrade_policy,
             },
+            "azure_offer_template_path": reverse("v2-azure-offer-list"),
             "version": settings.CLOUDIGRADE_VERSION,
         }
         return Response(response)
+
+
+class AzureOfferTemplateViewSet(viewsets.ViewSet):
+    """Generate and serve Azure offer template based on current state."""
+
+    # We intentionally require no authentication here as this
+    # endpoint needs to be public and accessible by Azure.
+    authentication_classes = []
+    permission_classes = [permissions.AllowAny]
+    schema = schemas.AzureOfferTemplateSchema(tags=["api-v2"])
+
+    def list(self, *args, **kwargs):
+        """Get ARM offer template populated with ids used by this installation."""
+        return Response(ARM_TEMPLATE, headers={"Access-Control-Allow-Origin": "*"})
 
 
 class DailyConcurrentUsageViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
