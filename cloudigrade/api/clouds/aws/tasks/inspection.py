@@ -2,6 +2,7 @@
 import logging
 
 import boto3
+from botocore.exceptions import ClientError
 from django.conf import settings
 from django.utils.translation import gettext as _
 
@@ -55,27 +56,44 @@ def launch_inspection_instance(ami_id, snapshot_copy_id):
             "ami_id": ami_id,
         },
     )
+    launch_template_name = f"cloudigrade-lt-{settings.CLOUDIGRADE_ENVIRONMENT}"
     ec2_client = boto3.client("ec2")
-    ec2_client.run_instances(
-        BlockDeviceMappings=[
-            {
-                "DeviceName": "/dev/xvdbb",
-                "Ebs": {
-                    "DeleteOnTermination": True,
-                    "SnapshotId": snapshot_copy_id,
-                    "VolumeType": "gp2",
-                    "Encrypted": False,
+    try:
+        ec2_client.run_instances(
+            BlockDeviceMappings=[
+                {
+                    "DeviceName": "/dev/xvdbb",
+                    "Ebs": {
+                        "DeleteOnTermination": True,
+                        "SnapshotId": snapshot_copy_id,
+                        "VolumeType": "gp2",
+                        "Encrypted": False,
+                    },
                 },
-            },
-        ],
-        InstanceInitiatedShutdownBehavior="terminate",
-        LaunchTemplate={
-            "LaunchTemplateName": f"cloudigrade-lt-{settings.CLOUDIGRADE_ENVIRONMENT}"
-        },
-        MaxCount=1,
-        MinCount=1,
-        UserData=cloud_init_script,
-    )
+            ],
+            InstanceInitiatedShutdownBehavior="terminate",
+            LaunchTemplate={"LaunchTemplateName": launch_template_name},
+            MaxCount=1,
+            MinCount=1,
+            UserData=cloud_init_script,
+        )
+    except ClientError as e:
+        error_code = e.response.get("Error", {}).get("Code")
+        error_message = e.response.get("Error", {}).get("Message")
+        if error_code == "OptInRequired" and "Marketplace" in error_message:
+            logger.info(
+                _(
+                    "Cannot launch inspection instance for AMI %(ami_id)s because "
+                    "it appears to be an AWS Marketplace image; %(error_message)s"
+                ),
+                {"ami_id": ami_id, "error_message": error_message},
+            )
+            aws_image.aws_marketplace_image = True
+            aws_image.save()
+            machine_image.status = machine_image.INSPECTED
+            machine_image.save()
+            return
+        raise e
 
 
 def _build_cloud_init_script(ami_id):
