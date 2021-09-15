@@ -16,6 +16,7 @@ from api.tasks.maintenance import _delete_cloud_accounts
 from util import aws
 from util.celery import retriable_shared_task
 from util.exceptions import AwsThrottlingException, KafkaProducerException
+from util.misc import lock_task_for_user_ids
 from util.redhatcloud import sources
 
 logger = logging.getLogger(__name__)
@@ -346,14 +347,15 @@ def pause_from_sources_kafka_message(message, headers):
 
     try:
         cloud_account = CloudAccount.objects.get(platform_application_id=application_id)
-        cloud_account.platform_application_is_paused = True
-        cloud_account.save()
-        # We do not want to notify sources when we disable here because it may actually
-        # still be available. Since "paused" and "unavailable" are orthogonal states, we
-        # should not act as though pausing also means making unavailable. Only the
-        # periodic availability checks should be determining that and updating sources
-        # if necessary.
-        cloud_account.disable(notify_sources=False)
+        with lock_task_for_user_ids([cloud_account.user.id]):
+            cloud_account.platform_application_is_paused = True
+            cloud_account.save()
+            # We do not want to notify sources when we disable here because it may
+            # actually still be available. Since "paused" and "unavailable" are
+            # orthogonal states, we should not act as though pausing also means making
+            # unavailable. Only the periodic availability checks should be determining
+            # that and updating sources if necessary.
+            cloud_account.disable(notify_sources=False)
     except CloudAccount.DoesNotExist:
         logger.info(
             _(
@@ -403,9 +405,10 @@ def unpause_from_sources_kafka_message(message, headers):
 
     try:
         cloud_account = CloudAccount.objects.get(platform_application_id=application_id)
-        cloud_account.platform_application_is_paused = False
-        cloud_account.save()
-        cloud_account.enable()
+        with lock_task_for_user_ids([cloud_account.user.id]):
+            cloud_account.platform_application_is_paused = False
+            cloud_account.save()
+            cloud_account.enable()
     except CloudAccount.DoesNotExist:
         logger.info(
             _(
