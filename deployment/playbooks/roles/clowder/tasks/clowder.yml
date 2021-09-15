@@ -93,7 +93,7 @@
   - name: destroy / delete apps in {{ namespace }}
     shell: |
       for app in rbac \
-                 sources-api sources-monitor sources-superkey-worker \
+                 sources-api sources-monitor-go sources-superkey-worker \
                  postigrade cloudigrade
       do
         oc delete app ${app} -n {{ namespace }}
