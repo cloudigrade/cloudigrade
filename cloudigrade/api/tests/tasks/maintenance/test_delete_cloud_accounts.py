@@ -4,6 +4,7 @@ from django.test import TestCase, override_settings
 from django_celery_beat.models import PeriodicTask
 
 from api import models
+from api.clouds.aws import models as aws_models
 from api.tasks import calculation, maintenance
 from api.tests import helper as api_helper
 from util.tests import helper as util_helper
@@ -211,3 +212,92 @@ class DeleteCloudAccountsTest(TestCase):
 
         # So, we should have only the 3 Azure images.
         self.assertEqual(models.MachineImage.objects.count(), 3)
+
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=True)
+    @override_settings(SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA=False)
+    def test_delete_when_missing_cloud_account_content_object(self):
+        """Test partial delete when cloud_account.content_object is None."""
+        self.generate_activity()
+        self.assertObjectCountsBeforeDelete()
+
+        # Delete only the related AwsCloudAccount to simulate weird conditions.
+        # It's unclear how that could happen unless we have a hidden race condition
+        # related to the delete process while processing multiple messages in parallel.
+        aws_cloud_accounts = aws_models.AwsCloudAccount.objects.filter(
+            id=self.account_aws_1.object_id
+        )
+        aws_cloud_accounts._raw_delete(aws_cloud_accounts.db)
+
+        # verify the related CloudAccount is still present after the raw_delete above
+        self.account_aws_1.refresh_from_db()
+
+        with self.assertLogs(
+            "api.tasks.maintenance", level="INFO"
+        ) as logs_maintenance, self.assertLogs(
+            "api.models", level="INFO"
+        ) as logs_models:
+            maintenance.delete_cloud_account(self.account_aws_1.id)
+
+        self.assertObjectCountsAfterDelete()
+        maintenance_infos = [
+            r.getMessage() for r in logs_maintenance.records if r.levelname == "INFO"
+        ]
+        maintenance_errors = [
+            r.getMessage() for r in logs_maintenance.records if r.levelname == "ERROR"
+        ]
+        model_errors = [
+            r.getMessage() for r in logs_models.records if r.levelname == "ERROR"
+        ]
+        self.assertEqual(len(maintenance_infos), 1)
+        self.assertEqual(len(maintenance_errors), 1)
+        self.assertEqual(len(model_errors), 1)
+        self.assertIn("Deleting CloudAccount with ID", maintenance_infos[0])
+        self.assertIn("cloud_account.content_object is None", maintenance_errors[0])
+        self.assertIn("content_object is missing", model_errors[0])
+
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=True)
+    @override_settings(SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA=False)
+    def test_delete_when_missing_multiple_related_objects(self):
+        """Test partial delete when multiple related content_objects are None."""
+        self.generate_activity()
+        self.assertObjectCountsBeforeDelete()
+
+        # Delete only the related AwsCloudAccount to simulate weird conditions.
+        # Also delete the related AwsInstanceEvents and AwsInstances.
+        # It's unclear how that could happen unless we have a hidden race condition
+        # related to the delete process while processing multiple messages in parallel.
+        aws_cloud_accounts = aws_models.AwsCloudAccount.objects.filter(
+            id=self.account_aws_1.object_id
+        )
+        aws_cloud_accounts._raw_delete(aws_cloud_accounts.db)
+        aws_instance_events = aws_models.AwsInstanceEvent.objects.filter(
+            instance_event__instance__cloud_account_id=self.account_aws_1.object_id
+        )
+        aws_instance_events._raw_delete(aws_instance_events.db)
+        aws_instances = aws_models.AwsInstance.objects.filter(
+            instance__cloud_account_id=self.account_aws_1.object_id
+        )
+        aws_instances._raw_delete(aws_instances.db)
+
+        with self.assertLogs("api.tasks.maintenance", level="INFO") as logs_maintenance:
+            maintenance.delete_cloud_account(self.account_aws_1.id)
+
+        self.assertObjectCountsAfterDelete()
+        maintenance_infos = [
+            r.getMessage() for r in logs_maintenance.records if r.levelname == "INFO"
+        ]
+        maintenance_errors = [
+            r.getMessage() for r in logs_maintenance.records if r.levelname == "ERROR"
+        ]
+        self.assertEqual(len(maintenance_infos), 3)
+        self.assertEqual(len(maintenance_errors), 1)
+        self.assertIn("Deleting CloudAccount with ID", maintenance_infos[0])
+        self.assertIn(
+            "Could not delete cloud-specific InstanceEvent class",
+            maintenance_infos[1],
+        )
+        self.assertIn(
+            "Could not delete cloud-specific Instance class",
+            maintenance_infos[2],
+        )
+        self.assertIn("cloud_account.content_object is None", maintenance_errors[0])

@@ -205,6 +205,8 @@ def _delete_cloud_account_related_objects(cloud_account):
     runs = Run.objects.filter(instance__cloud_account=cloud_account)
     runs._raw_delete(runs.db)
 
+    instance_event_cloud_class = None
+    instance_cloud_class = None
     # define cloud-specific related classes to remove
     if isinstance(cloud_account.content_object, aws_models.AwsCloudAccount):
         instance_event_cloud_class = aws_models.AwsInstanceEvent
@@ -212,6 +214,13 @@ def _delete_cloud_account_related_objects(cloud_account):
     elif isinstance(cloud_account.content_object, azure_models.AzureCloudAccount):
         instance_event_cloud_class = azure_models.AzureInstanceEvent
         instance_cloud_class = azure_models.AzureInstance
+    elif cloud_account.content_object is None:
+        logger.error(
+            "cloud_account.content_object is None in "
+            "_delete_cloud_account_related_objects. This should not happen, and some "
+            "objects may be orphaned that related to %(cloud_account)s",
+            {"cloud_account": cloud_account},
+        )
     else:
         # future-proofing...
         raise NotImplementedError(
@@ -219,23 +228,55 @@ def _delete_cloud_account_related_objects(cloud_account):
             f"{type(cloud_account.content_object)}"
         )
 
-    # Delete {cloud}InstanceEvent by constructing a list of ids from InstanceEvent.
-    cloud_instance_event_ids = InstanceEvent.objects.filter(
-        content_type=ContentType.objects.get_for_model(instance_event_cloud_class),
-        instance__cloud_account=cloud_account,
-    ).values_list("object_id", flat=True)
-    cloud_instance_events = instance_event_cloud_class.objects.filter(
-        id__in=cloud_instance_event_ids
-    )
-    cloud_instance_events._raw_delete(cloud_instance_events.db)
+    if not instance_event_cloud_class:
+        # If cloud_account.content_object is missing, try to find the InstanceEvent's
+        # cloud-specific class just by checking the first InstanceEvent object we can
+        # find that also belongs to this CloudAccount.
+        instance_event = InstanceEvent.objects.filter(
+            instance__cloud_account=cloud_account
+        ).first()
+        if instance_event and instance_event.content_object:
+            instance_event_cloud_class = instance_event.content_object.__class__
 
-    # Delete {cloud}Instance by constructing a list of ids from Instance.
-    cloud_instance_ids = Instance.objects.filter(
-        content_type=ContentType.objects.get_for_model(instance_cloud_class),
-        cloud_account=cloud_account,
-    ).values_list("object_id", flat=True)
-    cloud_instances = instance_cloud_class.objects.filter(id__in=cloud_instance_ids)
-    cloud_instances._raw_delete(cloud_instances.db)
+    if instance_event_cloud_class:
+        # Delete {cloud}InstanceEvent by constructing a list of ids from InstanceEvent.
+        cloud_instance_event_ids = InstanceEvent.objects.filter(
+            content_type=ContentType.objects.get_for_model(instance_event_cloud_class),
+            instance__cloud_account=cloud_account,
+        ).values_list("object_id", flat=True)
+        cloud_instance_events = instance_event_cloud_class.objects.filter(
+            id__in=cloud_instance_event_ids
+        )
+        cloud_instance_events._raw_delete(cloud_instance_events.db)
+    else:
+        logger.info(
+            "Could not delete cloud-specific InstanceEvent class related to "
+            "%(cloud_account)s. Orphaned objects might exist.",
+            {"cloud_account": cloud_account},
+        )
+
+    if not instance_cloud_class:
+        # If cloud_account.content_object is missing, try to find the Instance's
+        # cloud-specific class just by checking the first Instance object we can
+        # find that also belongs to this CloudAccount.
+        instance = Instance.objects.filter(cloud_account=cloud_account).first()
+        if instance and instance.content_object:
+            instance_cloud_class = instance.content_object.__class__
+
+    if instance_cloud_class:
+        # Delete {cloud}Instance by constructing a list of ids from Instance.
+        cloud_instance_ids = Instance.objects.filter(
+            content_type=ContentType.objects.get_for_model(instance_cloud_class),
+            cloud_account=cloud_account,
+        ).values_list("object_id", flat=True)
+        cloud_instances = instance_cloud_class.objects.filter(id__in=cloud_instance_ids)
+        cloud_instances._raw_delete(cloud_instances.db)
+    else:
+        logger.info(
+            "Could not delete cloud-specific Instance class related to "
+            "%(cloud_account)s. Orphaned objects might exist.",
+            {"cloud_account": cloud_account},
+        )
 
     # Delete InstanceEvents via related Instances.
     instance_events = InstanceEvent.objects.filter(

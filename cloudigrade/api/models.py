@@ -193,7 +193,16 @@ class CloudAccount(ExportModelOperationsMixin("CloudAccount"), BaseGenericModel)
             self.save()
         if power_off_instances:
             self._power_off_instances(power_off_time=get_now())
-        self.content_object.disable()
+        if self.content_object:
+            self.content_object.disable()
+        else:
+            logger.error(
+                _(
+                    "content_object is missing and cannot completely disable "
+                    "%(cloud_account)s"
+                ),
+                {"cloud_account": self},
+            )
         if notify_sources:
             from api.tasks.sources import notify_application_availability_task
 
