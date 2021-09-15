@@ -1023,7 +1023,7 @@ objects:
     dependencies:
     - postigrade
     - sources-api
-    - sources-monitor
+    - sources-monitor-go
     - sources-superkey-worker
     kafkaTopics:
     - topicName: platform.sources.event-stream
