@@ -273,6 +273,20 @@ def _is_relevant_event(occurred_at, aws_account_id, event_type):
             },
         )
         return False
+    if cloud_account.platform_application_is_paused:
+        logger.info(
+            _(
+                "Skipping CloudTrail record %(event_type)s event extraction for AWS "
+                "account ID %(aws_account_id)s because CloudAccount "
+                "%(cloud_account_id)s is paused."
+            ),
+            {
+                "event_type": event_type,
+                "aws_account_id": aws_account_id,
+                "cloud_account_id": cloud_account.id,
+            },
+        )
+        return False
     if cloud_account.enabled_at and cloud_account.enabled_at > parse(occurred_at):
         logger.info(
             _(
