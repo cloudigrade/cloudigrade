@@ -93,6 +93,33 @@ def analyze_log():
     return successes, failures
 
 
+def _drop_events_for_paused_accounts(events):
+    """
+    Drop events from the given list if the related CloudAccount is paused or absent.
+
+    Args:
+        events (list): event-like objects that have an aws_account_ids attribute
+
+    Returns:
+        list that is a subset of the original events argument
+    """
+    aws_account_ids = set([e.aws_account_id for e in events])
+    okay_aws_account_ids = []
+    for aws_account_id in aws_account_ids:
+        try:
+            aws_cloud_account = AwsCloudAccount.objects.get(
+                aws_account_id=aws_account_id
+            )
+            cloud_account = aws_cloud_account.cloud_account.get()
+            if cloud_account and not cloud_account.platform_application_is_paused:
+                okay_aws_account_ids.append(aws_account_id)
+        except AwsCloudAccount.DoesNotExist:
+            # if the account does not exist, simply skip this message
+            pass
+    events = [event for event in events if event.aws_account_id in okay_aws_account_ids]
+    return events
+
+
 def _process_cloudtrail_message(message):
     """
     Process a single CloudTrail log update's SQS message.
@@ -129,6 +156,9 @@ def _process_cloudtrail_message(message):
         for record in content.get("Records", []):
             instance_events.extend(extract_ec2_instance_events(record))
             ami_tag_events.extend(extract_ami_tag_events(record))
+
+    instance_events = _drop_events_for_paused_accounts(instance_events)
+    ami_tag_events = _drop_events_for_paused_accounts(ami_tag_events)
 
     # Get supporting details from AWS so we can save our models.
     # Note: It's important that we do all AWS API loading calls here before
