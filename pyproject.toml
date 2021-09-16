@@ -51,7 +51,6 @@ flake8-docstrings = "*"
 flake8-import-order = "*"
 isort = "*"
 coverage = "*"
-tblib = "*"
 pydocstyle = "*"
 flake8-black = "*"
 black = {version = "*", allow-prereleases = true}
