@@ -10,6 +10,19 @@ objects:
     name: cloudigrade
   spec:
     envName: ${ENV_NAME}
+    testing:
+      iqePlugin: cloudmeter
+    database:
+      name: cloudigrade
+      version: 12
+    dependencies:
+    - postigrade
+    - sources-api
+    - sources-monitor-go
+    - sources-superkey-worker
+    kafkaTopics:
+    - topicName: platform.sources.event-stream
+    - topicName: platform.sources.status
     deployments:
     - name: api
       #
@@ -98,24 +111,24 @@ objects:
           valueFrom:
             secretKeyRef:
               key: aws-access-key-id
-              name: cloudigrade-app-secret
+              name: cloudigrade-aws
         - name: AWS_SECRET_ACCESS_KEY
           valueFrom:
             secretKeyRef:
               key: aws-secret-access-key
-              name: cloudigrade-app-secret
+              name: cloudigrade-aws
         - name: AWS_DEFAULT_REGION
           value: ${AWS_DEFAULT_REGION}
         - name: AWS_SQS_ACCESS_KEY_ID
           valueFrom:
             secretKeyRef:
               key: aws-sqs-access-key-id
-              name: cloudigrade-app-secret
+              name: cloudigrade-aws
         - name: AWS_SQS_SECRET_ACCESS_KEY
           valueFrom:
             secretKeyRef:
               key: aws-sqs-secret-access-key
-              name: cloudigrade-app-secret
+              name: cloudigrade-aws
         - name: AWS_SQS_REGION
           value: ${AWS_SQS_REGION}
         - name: AWS_SQS_MAX_RECEIVE_COUNT
@@ -357,24 +370,24 @@ objects:
           valueFrom:
             secretKeyRef:
               key: aws-access-key-id
-              name: cloudigrade-app-secret
+              name: cloudigrade-aws
         - name: AWS_SECRET_ACCESS_KEY
           valueFrom:
             secretKeyRef:
               key: aws-secret-access-key
-              name: cloudigrade-app-secret
+              name: cloudigrade-aws
         - name: AWS_DEFAULT_REGION
           value: ${AWS_DEFAULT_REGION}
         - name: AWS_SQS_ACCESS_KEY_ID
           valueFrom:
             secretKeyRef:
               key: aws-sqs-access-key-id
-              name: cloudigrade-app-secret
+              name: cloudigrade-aws
         - name: AWS_SQS_SECRET_ACCESS_KEY
           valueFrom:
             secretKeyRef:
               key: aws-sqs-secret-access-key
-              name: cloudigrade-app-secret
+              name: cloudigrade-aws
         - name: AWS_SQS_REGION
           value: ${AWS_SQS_REGION}
         - name: AWS_SQS_MAX_RECEIVE_COUNT
@@ -625,24 +638,24 @@ objects:
           valueFrom:
             secretKeyRef:
               key: aws-access-key-id
-              name: cloudigrade-app-secret
+              name: cloudigrade-aws
         - name: AWS_SECRET_ACCESS_KEY
           valueFrom:
             secretKeyRef:
               key: aws-secret-access-key
-              name: cloudigrade-app-secret
+              name: cloudigrade-aws
         - name: AWS_DEFAULT_REGION
           value: ${AWS_DEFAULT_REGION}
         - name: AWS_SQS_ACCESS_KEY_ID
           valueFrom:
             secretKeyRef:
               key: aws-sqs-access-key-id
-              name: cloudigrade-app-secret
+              name: cloudigrade-aws
         - name: AWS_SQS_SECRET_ACCESS_KEY
           valueFrom:
             secretKeyRef:
               key: aws-sqs-secret-access-key
-              name: cloudigrade-app-secret
+              name: cloudigrade-aws
         - name: AWS_SQS_REGION
           value: ${AWS_SQS_REGION}
         - name: AWS_SQS_MAX_RECEIVE_COUNT
@@ -847,24 +860,24 @@ objects:
           valueFrom:
             secretKeyRef:
               key: aws-access-key-id
-              name: cloudigrade-app-secret
+              name: cloudigrade-aws
         - name: AWS_SECRET_ACCESS_KEY
           valueFrom:
             secretKeyRef:
               key: aws-secret-access-key
-              name: cloudigrade-app-secret
+              name: cloudigrade-aws
         - name: AWS_DEFAULT_REGION
           value: ${AWS_DEFAULT_REGION}
         - name: AWS_SQS_ACCESS_KEY_ID
           valueFrom:
             secretKeyRef:
               key: aws-sqs-access-key-id
-              name: cloudigrade-app-secret
+              name: cloudigrade-aws
         - name: AWS_SQS_SECRET_ACCESS_KEY
           valueFrom:
             secretKeyRef:
               key: aws-sqs-secret-access-key
-              name: cloudigrade-app-secret
+              name: cloudigrade-aws
         - name: AWS_SQS_REGION
           value: ${AWS_SQS_REGION}
         - name: AWS_SQS_MAX_RECEIVE_COUNT
@@ -1017,18 +1030,47 @@ objects:
           value: ${WATCHTOWER_SEND_INTERVAL}
         - name: WATCHTOWER_MAX_BATCH_COUNT
           value: ${WATCHTOWER_MAX_BATCH_COUNT}
-    database:
-      name: cloudigrade
-      version: 12
-    dependencies:
-    - postigrade
-    - sources-api
-    - sources-monitor-go
-    - sources-superkey-worker
-    kafkaTopics:
-    - topicName: platform.sources.event-stream
-    - topicName: platform.sources.status
-
+# Secrets
+- apiVersion: v1
+  data:
+    api-sentry-dsn: ${DJANGO_SENTRY_DSN}
+    listener-sentry-dsn: ${LISTENER_SENTRY_DSN}
+    houndigrade-sentry-dsn: ${HOUNDIGRADE_SENTRY_DSN}
+    django-secret-key: ${DJANGO_SECRET_KEY}
+    celery-sentry-dsn: ${CELERY_SENTRY_DSN}
+    slack-token: ${SLACK_TOKEN}
+  kind: Secret
+  metadata:
+    name: cloudigrade-app-secret
+- apiVersion: v1
+  data:
+    aws-access-key-id: ${AWS_ACCESS_KEY_ID}
+    aws-secret-access-key: ${AWS_SECRET_ACCESS_KEY}
+    aws-sqs-access-key-id: ${AWS_SQS_ACCESS_KEY_ID}
+    aws-sqs-secret-access-key: ${AWS_SQS_SECRET_ACCESS_KEY}
+  kind: Secret
+  metadata:
+    name: cloudigrade-aws
+- apiVersion: v1
+  data:
+    client_id: ${AZURE_CLIENT_ID}
+    client_secret: ${AZURE_CLIENT_SECRET}
+    sp_object_id: ${AZURE_SP_OBJECT_ID}
+    subscription_id: ${AZURE_SUBSCRIPTION_ID}
+    tenant_id: ${AZURE_TENANT_ID}
+  kind: Secret
+  metadata:
+    name: cloudigrade-azure
+- apiVersion: v1
+  data:
+    aws_access_key_id: ${CW_AWS_ACCESS_KEY_ID}
+    aws_region: ${CW_AWS_REGION_NAME}
+    aws_secret_access_key: ${CW_AWS_SECRET_ACCESS_KEY}
+    log_group_name: ${CLOUDIGRADE_CW_LOG_GROUP}
+  kind: Secret
+  metadata:
+    name: cloudwatch
+# HPA's
 - apiVersion: autoscaling/v2beta1
   kind: HorizontalPodAutoscaler
   metadata:
@@ -1045,7 +1087,6 @@ objects:
       resource:
         name: cpu
         targetAverageUtilization: ${{API_TARGET_AVERAGE_CPU_UTILIZATION}}
-
 - apiVersion: autoscaling/v2beta1
   kind: HorizontalPodAutoscaler
   metadata:
@@ -1064,6 +1105,85 @@ objects:
         targetAverageUtilization: ${{CELERY_TARGET_AVERAGE_CPU_UTILIZATION}}
 
 parameters:
+#
+# Ephemeral Secret Values:
+#
+- name: DJANGO_SENTRY_DSN
+  displayName: Django (API) Sentry DSN
+  required: false
+  value: ''
+- name: LISTENER_SENTRY_DSN
+  displayName: Django (Listener) Sentry DSN
+  required: false
+  value: ''
+- name: HOUNDIGRADE_SENTRY_DSN
+  displayName: Houndigrade Sentry DSN
+  required: false
+  value: ''
+- name: DJANGO_SECRET_KEY
+  displayName: Django Secret Key
+  required: true
+  value: 'ZXBoZW1lcmFs'
+- name: CELERY_SENTRY_DSN
+  displayName: Celery Sentry DSN
+  required: false
+  value: ''
+- name: SLACK_TOKEN
+  displayName: Slack Deploy Notification Token
+  required: false
+  value: ''
+- name: AWS_ACCESS_KEY_ID
+  displayName: AWS Access Key ID
+  required: true
+  value: 'ZXBoZW1lcmFs'
+- name: AWS_SECRET_ACCESS_KEY
+  displayName: AWS Secret Access Key
+  required: true
+  value: 'ZXBoZW1lcmFs'
+- name: AWS_SQS_ACCESS_KEY_ID
+  displayName: AWS SQS Access Key ID
+  required: true
+  value: 'ZXBoZW1lcmFs'
+- name: AWS_SQS_SECRET_ACCESS_KEY
+  displayName: AWS SQS Secret Access Key
+  required: true
+  value: 'ZXBoZW1lcmFs'
+- name: AZURE_CLIENT_ID
+  displayName: Azure Client ID
+  required: true
+  value: 'ZXBoZW1lcmFs'
+- name: AZURE_CLIENT_SECRET
+  displayName: Azure Client Secret
+  required: true
+  value: 'ZXBoZW1lcmFs'
+- name: AZURE_SP_OBJECT_ID
+  displayName: Azure Service Principal Object ID
+  required: true
+  value: 'ZXBoZW1lcmFs'
+- name: AZURE_SUBSCRIPTION_ID
+  displayName: Azure Subscription ID
+  required: true
+  value: 'ZXBoZW1lcmFs'
+- name: AZURE_TENANT_ID
+  displayName: Azure Tenant ID
+  required: true
+  value: 'ZXBoZW1lcmFs'
+- name: CW_AWS_ACCESS_KEY_ID
+  displayName: Cloudwatch AWS Access Key ID
+  required: false
+  value: ''
+- name: CW_AWS_REGION_NAME
+  displayName: Cloudwatch AWS Region Name
+  required: false
+  value: ''
+- name: CW_AWS_SECRET_ACCESS_KEY
+  displayName: Cloudwatch AWS Secret Access Key
+  required: false
+  value: ''
+- name: CLOUDIGRADE_CW_LOG_GROUP
+  displayName: Cloudwatch AWS Log Group
+  required: false
+  value: ''
 #
 # Component cloudigrade-api parameters:
 #
@@ -1147,10 +1267,6 @@ parameters:
   displayName: Houndigrade Sentry Environment
   required: true
   value: ephemeral
-- name: IMAGE_NAMESPACE
-  displayName: Image namespace
-  required: true
-  value: cloudigrade-ephemeral
 - name: LISTENER_ENABLE_SENTRY
   displayName: Listener Sentry Enabled
   required: true

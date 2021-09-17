@@ -6,11 +6,14 @@
     args:
       chdir: "{{ cloudigrade_deployment_repo }}"
     register: new_image_tag
+    when: cloudigrade_deployment_host == 'local' or postigrade_deployment_host == 'local'
 
   - debug: var=new_image_tag.stdout
 
   - name: create / build cloudigrade
-    shell: podman build . --tag quay.io/{{ quay_user }}/cloudigrade:{{ new_image_tag.stdout }}
+    shell: |
+      podman pull quay.io/{{ quay_user }}/cloudigrade:latest || true
+      podman build . --tag quay.io/{{ quay_user }}/cloudigrade:{{ new_image_tag.stdout }} --tag quay.io/{{ quay_user }}/cloudigrade:latest
     args:
       chdir: "{{ cloudigrade_deployment_repo }}"
     when: cloudigrade_deployment_host == 'local'
@@ -22,7 +25,9 @@
     when: postigrade_deployment_host == 'local'
 
   - name: create / push cloudigrade
-    shell: podman push quay.io/{{ quay_user }}/cloudigrade:{{ new_image_tag.stdout }}
+    shell: |
+      podman push quay.io/{{ quay_user }}/cloudigrade:{{ new_image_tag.stdout }}
+      podman push quay.io/{{ quay_user }}/cloudigrade:latest
     args:
       chdir: "{{ cloudigrade_deployment_repo }}"
     when: cloudigrade_deployment_host == 'local'

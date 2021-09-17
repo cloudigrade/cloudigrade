@@ -10,7 +10,7 @@ jobs:
     name: py39
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/cloudigrade/build-container:ubi84-python39
+      image: ghcr.io/cloudigrade/build-container:ubi84-python39-2
     steps:
       - uses: actions/checkout@v2
       - run: pip install tox codecov poetry
@@ -21,7 +21,7 @@ jobs:
     name: flake8
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/cloudigrade/build-container:ubi84-python39
+      image: ghcr.io/cloudigrade/build-container:ubi84-python39-2
     steps:
       - uses: actions/checkout@v2
       - run: pip install tox codecov poetry
@@ -31,28 +31,18 @@ jobs:
     name: Vulnerability
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/cloudigrade/build-container:ubi84-python39
+      image: ghcr.io/cloudigrade/build-container:ubi84-python39-2
     steps:
       - uses: actions/checkout@v2
       - run: pip install poetry safety
       - run: poetry install
       - run: safety check
 
-  test-docker:
-    name: Docker Build
-    runs-on: ubuntu-latest
-    container:
-      image: docker:latest
-    steps:
-      - uses: actions/checkout@v2
-      - run: docker pull $IMAGE_NAME:latest || true
-      - run: docker build --cache-from $IMAGE_NAME:latest .
-
   test-docs:
     name: Verify docs and openapi.json
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/cloudigrade/build-container:ubi84-python39
+      image: ghcr.io/cloudigrade/build-container:ubi84-python39-2
     steps:
       - uses: actions/checkout@v2
       - run: pip install poetry

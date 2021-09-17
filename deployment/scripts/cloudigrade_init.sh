@@ -6,6 +6,11 @@
 export LOGPREFIX="Clowder Init:"
 echo "${LOGPREFIX}"
 
+# This is so ansible can run with a random {u,g}id in OpenShift
+echo "ansible:x:$(id -u):$(id -g):,,,:${HOME}:/bin/bash" >> /etc/passwd
+echo "ansible:x:$(id -G | cut -d' ' -f 2)" >> /etc/group
+id
+
 function check_svc_status() {
   local SVC_NAME=$1 SVC_PORT=$2
 
@@ -43,5 +48,16 @@ else
   fi
 fi
 
-# Configure cloud provider entities and migrate the Cloudigrade database
-./scripts/mid_hook.sh
+ANSIBLE_CONFIG=/opt/cloudigrade/playbooks/ansible.cfg ansible-playbook -e env=${CLOUDIGRADE_ENVIRONMENT} playbooks/manage-cloudigrade.yml | tee /tmp/slack-payload
+
+if [[ -z "${SLACK_TOKEN}" ]]; then
+  echo "Cloudigrade Init: SLACK_TOKEN is not defined, not uploading the slack payload"
+else
+  slack_payload=`cat /tmp/slack-payload | tail -n 3`
+  slack_payload="${CLOUDIGRADE_ENVIRONMENT} -- $slack_payload"
+  curl -X POST --data-urlencode "payload={\"channel\": \"#cloudmeter-deployments\", \"text\": \"$slack_payload\"}" ${SLACK_TOKEN}
+fi
+
+python3 ./manage.py configurequeues
+python3 ./manage.py syncbucketlifecycle
+python3 ./manage.py migrate
