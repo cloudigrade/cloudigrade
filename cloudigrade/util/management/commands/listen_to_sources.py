@@ -7,7 +7,6 @@ from confluent_kafka import Consumer
 from django.conf import settings
 from django.core.management import BaseCommand
 from django.utils.translation import gettext as _
-from prometheus_client import Counter, start_http_server
 
 from api.tasks import sources
 
@@ -27,9 +26,6 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """Launch the listener."""
-        start_http_server(
-            settings.LISTENER_METRICS_PORT
-        )  # Start the metrics export server
         self.listen()
 
     def listen(self):
@@ -101,22 +97,16 @@ def process_message(message):
         _("Processing %(event_type)s Message: %(value)s. Headers: %(headers)s"),
         {"event_type": event_type, "value": value, "headers": headers},
     )
-    total_events.inc()
 
     if event_type == "ApplicationAuthentication.create":
-        create_events.inc()
         process_sources_create_event(value, headers)
     elif event_type == "ApplicationAuthentication.destroy":
-        destroy_events.inc()
         process_sources_destroy_event(value, headers)
     elif event_type == "Authentication.update":
-        update_events.inc()
         process_sources_update_event(value, headers)
     elif event_type == "Application.pause":
-        pause_events.inc()
         process_sources_pause_event(value, headers)
     elif event_type == "Application.unpause":
-        unpause_events.inc()
         process_sources_unpause_event(value, headers)
 
 
@@ -216,20 +206,6 @@ def process_sources_unpause_event(value, headers):
     )
     if settings.SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA:
         sources.unpause_from_sources_kafka_message.delay(value, headers)
-
-
-# Metrics
-total_events_metric = Counter(
-    "listener_processed_events_total",
-    "Total number of processed events.",
-    ("event_type",),
-)
-create_events = total_events_metric.labels("create")
-update_events = total_events_metric.labels("update")
-destroy_events = total_events_metric.labels("destroy")
-pause_events = total_events_metric.labels("pause")
-unpause_events = total_events_metric.labels("unpause")
-total_events = total_events_metric.labels("total")
 
 
 # Signal handling
