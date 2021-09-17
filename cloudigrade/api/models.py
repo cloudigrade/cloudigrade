@@ -8,7 +8,6 @@ from django.db import models, transaction
 from django.db.models.signals import post_delete, pre_delete
 from django.dispatch import receiver
 from django.utils.translation import gettext as _
-from django_prometheus.models import ExportModelOperationsMixin
 
 from api import AWS_PROVIDER_STRING, AZURE_PROVIDER_STRING
 from util.misc import get_now, lock_task_for_user_ids
@@ -26,7 +25,7 @@ class UserTaskLock(BaseModel):
     locked = models.BooleanField(default=False, null=False)
 
 
-class CloudAccount(ExportModelOperationsMixin("CloudAccount"), BaseGenericModel):
+class CloudAccount(BaseGenericModel):
     """Base Customer Cloud Account Model."""
 
     user = models.ForeignKey(
@@ -294,7 +293,7 @@ def cloud_account_post_delete_callback(*args, **kwargs):
         logger.info(_("User for clount id %s has already been deleted."), instance.id)
 
 
-class MachineImage(ExportModelOperationsMixin("MachineImage"), BaseGenericModel):
+class MachineImage(BaseGenericModel):
     """Base model for a cloud VM image."""
 
     PENDING = "pending"
@@ -516,7 +515,7 @@ class MachineImage(ExportModelOperationsMixin("MachineImage"), BaseGenericModel)
         return super().save(*args, **kwargs)
 
 
-class Instance(ExportModelOperationsMixin("Instance"), BaseGenericModel):
+class Instance(BaseGenericModel):
     """Base model for a compute/VM instance in a cloud."""
 
     cloud_account = models.ForeignKey(
@@ -760,7 +759,7 @@ class MachineImageInspectionStart(BaseModel):
     )
 
 
-class ConcurrentUsage(ExportModelOperationsMixin("ConcurrentUsage"), BaseModel):
+class ConcurrentUsage(BaseModel):
     """Saved calculation of max concurrent usage for a date+user."""
 
     date = models.DateField(db_index=True)
