@@ -956,30 +956,14 @@ def create_aws_cloud_account(
         # Verify that no AwsCloudAccount already exists with the same ARN.
         if AwsCloudAccount.objects.filter(account_arn=arn_str).exists():
             error_code = error_codes.CG1001
-            existing_user_id = (
-                AwsCloudAccount.objects.get(account_arn=arn_str)
-                .cloud_account.get()
-                .user.id
-            )
-            # If the CloudAccount with the duplicate ARN belongs to the same user,
-            # we want to give the error code in addition to the generic message
-            error_message = _notify_error_with_generic_message_for_different_user(
-                error_code, existing_user_id, user, platform_application_id, arn_str
-            )
-            raise ValidationError({"account_arn": error_message})
+            error_code.notify(user.username, platform_application_id)
+            raise ValidationError({"account_arn": error_code.get_message()})
 
         # Verify that no AwsCloudAccount already exists with the same AWS Account ID.
         if AwsCloudAccount.objects.filter(aws_account_id=aws_account_id).exists():
             error_code = error_codes.CG1002
-            existing_user_id = (
-                AwsCloudAccount.objects.get(aws_account_id=aws_account_id)
-                .cloud_account.get()
-                .user.id
-            )
-            error_message = _notify_error_with_generic_message_for_different_user(
-                error_code, existing_user_id, user, platform_application_id, arn_str
-            )
-            raise ValidationError({"account_arn": error_message})
+            error_code.notify(user.username, platform_application_id)
+            raise ValidationError({"account_arn": error_code.get_message()})
 
         try:
             # Use get_or_create here in case there is another task running concurrently
@@ -991,29 +975,15 @@ def create_aws_cloud_account(
             # get_or_create can throw integrity error in the case that
             # aws_account_id xor arn already exists in an account.
             error_code = error_codes.CG1002
-            existing_user_id = (
-                AwsCloudAccount.objects.get(aws_account_id=aws_account_id)
-                .cloud_account.get()
-                .user.id
-            )
-            error_message = _notify_error_with_generic_message_for_different_user(
-                error_code, existing_user_id, user, platform_application_id, arn_str
-            )
-            raise ValidationError({"account_arn": error_message})
+            error_code.notify(user.username, platform_application_id)
+            raise ValidationError({"account_arn": error_code.get_message()})
 
         if not created:
             # If aws_account_id and arn already exist in an account because a
             # another task created it, notify the user.
             error_code = error_codes.CG1002
-            existing_user_id = (
-                AwsCloudAccount.objects.get(aws_account_id=aws_account_id)
-                .cloud_account.get()
-                .user.id
-            )
-            error_message = _notify_error_with_generic_message_for_different_user(
-                error_code, existing_user_id, user, platform_application_id, arn_str
-            )
-            raise ValidationError({"account_arn": error_message})
+            error_code.notify(user.username, platform_application_id)
+            raise ValidationError({"account_arn": error_code.get_message()})
 
         cloud_account = CloudAccount.objects.create(
             user=user,
@@ -1038,34 +1008,6 @@ def create_aws_cloud_account(
             )
 
     return cloud_account
-
-
-def _notify_error_with_generic_message_for_different_user(
-    error_code, existing_user_id, user, platform_application_id, arn_str
-):
-    """
-    Conditionally notify the user with generic error message.
-
-    If the CloudAccount with the duplicate AWS Account ID or duplicate ARN
-    belongs to the same user, we want to give the error code in addition to the
-    generic message. Otherwise give only the generic message.
-    """
-    error_code.log_internal_message(
-        logger,
-        {
-            "application_id": platform_application_id,
-            "arn": arn_str,
-            "username": existing_user_id,
-        },
-    )
-
-    if user.id == existing_user_id:
-        error_message = error_code.get_message()
-    else:
-        error_message = error_codes.GENERIC_ACCOUNT_SETUP_ERROR_MESSAGE
-
-    error_code.notify(user.username, platform_application_id, error_message)
-    return error_message
 
 
 def update_aws_cloud_account(
@@ -1155,20 +1097,7 @@ def update_aws_cloud_account(
         # Verify that no AwsCloudAccount already exists with the same ARN.
         if AwsCloudAccount.objects.filter(account_arn=customer_arn).exists():
             error_code = error_codes.CG1001
-            existing_user_id = (
-                AwsCloudAccount.objects.get(account_arn=customer_arn)
-                .cloud_account.get()
-                .user.id
-            )
-            # If the CloudAccount with the duplicate ARN belongs to the same user,
-            # we want to give the error code in addition to the generic message
-            _notify_error_with_generic_message_for_different_user(
-                error_code,
-                existing_user_id,
-                account_number,
-                application_id,
-                customer_arn,
-            )
+            error_code.notify(account_number, application_id)
             return
 
         # Verify that no AwsCloudAccount already exists with the same AWS Account ID.
@@ -1176,18 +1105,7 @@ def update_aws_cloud_account(
             aws_account_id=customer_aws_account_id
         ).exists():
             error_code = error_codes.CG1002
-            existing_user_id = (
-                AwsCloudAccount.objects.get(aws_account_id=customer_aws_account_id)
-                .cloud_account.get()
-                .user.id
-            )
-            _notify_error_with_generic_message_for_different_user(
-                error_code,
-                existing_user_id,
-                account_number,
-                application_id,
-                customer_arn,
-            )
+            error_code.notify(account_number, application_id)
             return
         cloud_account.content_object.account_arn = customer_arn
         cloud_account.content_object.aws_account_id = customer_aws_account_id
