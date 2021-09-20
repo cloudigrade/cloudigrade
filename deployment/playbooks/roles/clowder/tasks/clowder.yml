@@ -33,15 +33,15 @@
         --set-parameter "postigrade/IMAGE_TAG=latest"  \
         --set-parameter "cloudigrade/CLOUDIGRADE_ENVIRONMENT={{ env }}" \
         --set-parameter "cloudigrade/DJANGO_SETTINGS_MODULE=config.settings.prod" \
-        --set-parameter "cloudigrade/AWS_ACCESS_KEY_ID={{ lookup('env', 'AWS_ACCESS_KEY_ID') }}" \
-        --set-parameter "cloudigrade/AWS_SECRET_ACCESS_KEY={{ lookup('env', 'AWS_SECRET_ACCESS_KEY') }}" \
-        --set-parameter "cloudigrade/AWS_SQS_ACCESS_KEY_ID={{ lookup('env', 'AWS_SQS_ACCESS_KEY_ID') | default(lookup('env', 'AWS_ACCESS_KEY_ID'), True) }}" \
-        --set-parameter "cloudigrade/AWS_SQS_SECRET_ACCESS_KEY={{ lookup('env', 'AWS_SQS_SECRET_ACCESS_KEY') | default(lookup('env', 'AWS_SECRET_ACCESS_KEY'), True) }}" \
-        --set-parameter "cloudigrade/AZURE_CLIENT_ID={{ lookup('env', 'AZURE_CLIENT_ID') | default('\"\"', True) }}" \
-        --set-parameter "cloudigrade/AZURE_CLIENT_SECRET={{ lookup('env', 'AZURE_CLIENT_SECRET') | default('\"\"', True) }}" \
-        --set-parameter "cloudigrade/AZURE_SP_OBJECT_ID={{ lookup('env', 'AZURE_SP_OBJECT_ID') | default('\"\"', True) }}" \
-        --set-parameter "cloudigrade/AZURE_SUBSCRIPTION_ID={{ lookup('env', 'AZURE_SUBSCRIPTION_ID') | default('\"\"', True) }}" \
-        --set-parameter "cloudigrade/AZURE_TENANT_ID={{ lookup('env', 'AZURE_TENANT_ID') | default('\"\"', True) }}" \
+        --set-parameter "cloudigrade/AWS_ACCESS_KEY_ID={{ lookup('env', 'AWS_ACCESS_KEY_ID') | b64encode }}" \
+        --set-parameter "cloudigrade/AWS_SECRET_ACCESS_KEY={{ lookup('env', 'AWS_SECRET_ACCESS_KEY') | b64encode }}" \
+        --set-parameter "cloudigrade/AWS_SQS_ACCESS_KEY_ID={{ lookup('env', 'AWS_SQS_ACCESS_KEY_ID') | default(lookup('env', 'AWS_ACCESS_KEY_ID'), True) | b64encode }}" \
+        --set-parameter "cloudigrade/AWS_SQS_SECRET_ACCESS_KEY={{ lookup('env', 'AWS_SQS_SECRET_ACCESS_KEY') | default(lookup('env', 'AWS_SECRET_ACCESS_KEY'), True) | b64encode }}" \
+        --set-parameter "cloudigrade/AZURE_CLIENT_ID={{ lookup('env', 'AZURE_CLIENT_ID') | default('\"\"', True) | b64encode }}" \
+        --set-parameter "cloudigrade/AZURE_CLIENT_SECRET={{ lookup('env', 'AZURE_CLIENT_SECRET') | default('\"\"', True) | b64encode }}" \
+        --set-parameter "cloudigrade/AZURE_SP_OBJECT_ID={{ lookup('env', 'AZURE_SP_OBJECT_ID') | default('\"\"', True) | b64encode }}" \
+        --set-parameter "cloudigrade/AZURE_SUBSCRIPTION_ID={{ lookup('env', 'AZURE_SUBSCRIPTION_ID') | default('\"\"', True) | b64encode }}" \
+        --set-parameter "cloudigrade/AZURE_TENANT_ID={{ lookup('env', 'AZURE_TENANT_ID') | default('\"\"', True) | b64encode }}" \
         --set-parameter "rbac/DISABLE_MIGRATE=False" \
         --set-parameter "rbac/PERMISSION_SEEDING_ENABLED=True" \
         --set-parameter "rbac/ROLE_SEEDING=True" \
@@ -65,15 +65,15 @@
         --set-parameter "cloudigrade/IMAGE_TAG={{ (cloudigrade_deployment_host == 'local') | ternary(new_image_tag.stdout, 'latest') }}" \
         --set-parameter "cloudigrade/CLOUDIGRADE_ENVIRONMENT={{ env }}" \
         --set-parameter "cloudigrade/DJANGO_SETTINGS_MODULE=config.settings.prod" \
-        --set-parameter "cloudigrade/AWS_ACCESS_KEY_ID={{ lookup('env', 'AWS_ACCESS_KEY_ID') }}" \
-        --set-parameter "cloudigrade/AWS_SECRET_ACCESS_KEY={{ lookup('env', 'AWS_SECRET_ACCESS_KEY') }}" \
-        --set-parameter "cloudigrade/AWS_SQS_ACCESS_KEY_ID={{ lookup('env', 'AWS_SQS_ACCESS_KEY_ID') | default(lookup('env', 'AWS_ACCESS_KEY_ID'), True) }}" \
-        --set-parameter "cloudigrade/AWS_SQS_SECRET_ACCESS_KEY={{ lookup('env', 'AWS_SQS_SECRET_ACCESS_KEY') | default(lookup('env', 'AWS_SECRET_ACCESS_KEY'), True) }}" \
-        --set-parameter "cloudigrade/AZURE_CLIENT_ID={{ lookup('env', 'AZURE_CLIENT_ID') | default('\"\"', True) }}" \
-        --set-parameter "cloudigrade/AZURE_CLIENT_SECRET={{ lookup('env', 'AZURE_CLIENT_SECRET') | default('\"\"', True) }}" \
-        --set-parameter "cloudigrade/AZURE_SP_OBJECT_ID={{ lookup('env', 'AZURE_SP_OBJECT_ID') | default('\"\"', True) }}" \
-        --set-parameter "cloudigrade/AZURE_SUBSCRIPTION_ID={{ lookup('env', 'AZURE_SUBSCRIPTION_ID') | default('\"\"', True) }}" \
-        --set-parameter "cloudigrade/AZURE_TENANT_ID={{ lookup('env', 'AZURE_TENANT_ID') | default('\"\"', True) }}" \
+        --set-parameter "cloudigrade/AWS_ACCESS_KEY_ID={{ lookup('env', 'AWS_ACCESS_KEY_ID') | b64encode }}" \
+        --set-parameter "cloudigrade/AWS_SECRET_ACCESS_KEY={{ lookup('env', 'AWS_SECRET_ACCESS_KEY') | b64encode }}" \
+        --set-parameter "cloudigrade/AWS_SQS_ACCESS_KEY_ID={{ lookup('env', 'AWS_SQS_ACCESS_KEY_ID') | default(lookup('env', 'AWS_ACCESS_KEY_ID'), True) | b64encode }}" \
+        --set-parameter "cloudigrade/AWS_SQS_SECRET_ACCESS_KEY={{ lookup('env', 'AWS_SQS_SECRET_ACCESS_KEY') | default(lookup('env', 'AWS_SECRET_ACCESS_KEY'), True) | b64encode }}" \
+        --set-parameter "cloudigrade/AZURE_CLIENT_ID={{ lookup('env', 'AZURE_CLIENT_ID') | default('\"\"', True) | b64encode }}" \
+        --set-parameter "cloudigrade/AZURE_CLIENT_SECRET={{ lookup('env', 'AZURE_CLIENT_SECRET') | default('\"\"', True) | b64encode }}" \
+        --set-parameter "cloudigrade/AZURE_SP_OBJECT_ID={{ lookup('env', 'AZURE_SP_OBJECT_ID') | default('\"\"', True) | b64encode }}" \
+        --set-parameter "cloudigrade/AZURE_SUBSCRIPTION_ID={{ lookup('env', 'AZURE_SUBSCRIPTION_ID') | default('\"\"', True) | b64encode }}" \
+        --set-parameter "cloudigrade/AZURE_TENANT_ID={{ lookup('env', 'AZURE_TENANT_ID') | default('\"\"', True) | b64encode }}" \
         --set-parameter "postigrade/IMAGE=quay.io/{{ (postigrade_deployment_host == 'local') | ternary(quay_user, 'cloudservices') }}/postigrade" \
         --set-parameter "postigrade/IMAGE_TAG={{ (postigrade_deployment_host == 'local') | ternary(new_image_tag.stdout, 'latest') }}"  \
         --set-parameter "rbac/DISABLE_MIGRATE=False" \
