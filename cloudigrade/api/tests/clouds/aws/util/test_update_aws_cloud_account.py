@@ -64,7 +64,7 @@ class UpdateAWSClountTest(TestCase):
         mock_disable.assert_called()
         mock_enable.assert_called()
 
-    @patch("api.clouds.aws.util._notify_error_with_generic_message_for_different_user")
+    @patch("api.tasks.sources.notify_application_availability_task")
     @patch.object(CloudAccount, "disable")
     @patch.object(CloudAccount, "enable")
     def test_update_aws_clount_different_aws_account_id_fails_arn_already_exists(
@@ -82,10 +82,10 @@ class UpdateAWSClountTest(TestCase):
 
         # The old CloudAccount should be disabled regardless of the new one's success.
         mock_disable.assert_called()
-        mock_notify_error.assert_called()
+        mock_notify_error.delay.assert_called_once()
         mock_enable.assert_not_called()
 
-    @patch("api.clouds.aws.util._notify_error_with_generic_message_for_different_user")
+    @patch("api.tasks.sources.notify_application_availability_task")
     @patch.object(CloudAccount, "disable")
     @patch.object(CloudAccount, "enable")
     def test_update_aws_clount_different_aws_account_id_fails_account_id_already_exists(
@@ -104,5 +104,5 @@ class UpdateAWSClountTest(TestCase):
 
         # The old CloudAccount should be disabled regardless of the new one's success.
         mock_disable.assert_called()
-        mock_notify_error.assert_called()
+        mock_notify_error.delay.assert_called_once()
         mock_enable.assert_not_called()

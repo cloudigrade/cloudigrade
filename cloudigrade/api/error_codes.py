@@ -2,14 +2,10 @@
 from dataclasses import dataclass
 from gettext import gettext as _
 
+from django.conf import settings
 
-GENERIC_ACCOUNT_SETUP_ERROR_MESSAGE = (
-    "Could not set up cloud metering. Please contact support."
-)
-
-GENERIC_ACCOUNT_SETUP_ERROR_MESSAGE_WITH_ERROR_CODE = (
-    GENERIC_ACCOUNT_SETUP_ERROR_MESSAGE + " Error code %(error_code)s."
-)
+GENERIC_ERROR_MESSAGE = "Could not enable cloud metering."
+GENERIC_ERROR_MESSAGE_WITH_CODE = f"{GENERIC_ERROR_MESSAGE} Error code %(error_code)s."
 
 
 @dataclass
@@ -18,7 +14,7 @@ class CloudigradeError:
 
     code: str
     internal_message: str
-    message: str = _(GENERIC_ACCOUNT_SETUP_ERROR_MESSAGE_WITH_ERROR_CODE)
+    message: str = _(GENERIC_ERROR_MESSAGE_WITH_CODE)
 
     def log_internal_message(self, logger, message_details):
         """Log an internal message for an error."""
@@ -58,9 +54,12 @@ CG1000 = CloudigradeError(
 CG1001 = CloudigradeError(
     "CG1001",
     _(
-        "Failed to create Cloud Account for Sources Application id "
-        "%(application_id)s: CloudAccount already exists with ARN "
-        "%(arn)s for user %(username)s."
+        "Failed to create cloud account for Sources Application ID %(application_id)s "
+        "because a cloud account already exists with ARN %(arn)s."
+    ),
+    _(
+        f"{GENERIC_ERROR_MESSAGE_WITH_CODE} AWS ARN must be unique, but "
+        "another cloud account with the same AWS ARN already exists."
     ),
 )
 
@@ -68,9 +67,12 @@ CG1001 = CloudigradeError(
 CG1002 = CloudigradeError(
     "CG1002",
     _(
-        "Failed to create Cloud Account for Sources Application id "
-        "%(application_id)s: CloudAccount already exists with AWS Account ID "
-        "for ARN %(arn)s for user %(username)s."
+        "Failed to create cloud account for Sources Application ID %(application_id)s "
+        "because a cloud account already exists with AWS Account ID %(account_id)s."
+    ),
+    _(
+        f"{GENERIC_ERROR_MESSAGE_WITH_CODE} AWS account ID must be unique, but "
+        "another cloud account with the same AWS account ID already exists."
     ),
 )
 
@@ -81,11 +83,12 @@ CG1004 = CloudigradeError(
         "Failed to create Cloud Account for Sources Application id "
         "%(application_id)s: Invalid ARN."
     ),
-    _(GENERIC_ACCOUNT_SETUP_ERROR_MESSAGE_WITH_ERROR_CODE + " Invalid ARN."),
+    _(f"{GENERIC_ERROR_MESSAGE_WITH_CODE} Invalid ARN."),
 )
 
 
 # Use CG2*** for sources specific issues
+SOURCES_API_ERROR_MESSAGE = "This is likely the result of an error in sources-api."
 
 # Sources Authentication Not Found
 CG2000 = CloudigradeError(
@@ -95,8 +98,8 @@ CG2000 = CloudigradeError(
         "%(account_number)s does not exist; aborting cloud account creation."
     ),
     _(
-        GENERIC_ACCOUNT_SETUP_ERROR_MESSAGE_WITH_ERROR_CODE
-        + " Attached Sources Authentication object does not exist."
+        f"{GENERIC_ERROR_MESSAGE_WITH_CODE} Required authentication was not found. "
+        f"{SOURCES_API_ERROR_MESSAGE}"
     ),
 )
 
@@ -108,8 +111,9 @@ CG2001 = CloudigradeError(
         "unsupported type %(authtype)s.",
     ),
     _(
-        GENERIC_ACCOUNT_SETUP_ERROR_MESSAGE_WITH_ERROR_CODE
-        + " Attached Authentication has unsupported authentication_type."
+        f"{GENERIC_ERROR_MESSAGE_WITH_CODE} The authentication has unsupported type; "
+        f"type must be {' or '.join(settings.SOURCES_CLOUDMETER_AUTHTYPES)}. "
+        f"{SOURCES_API_ERROR_MESSAGE}"
     ),
 )
 
@@ -122,8 +126,9 @@ CG2002 = CloudigradeError(
         "is not of type Application; aborting cloud account creation."
     ),
     _(
-        GENERIC_ACCOUNT_SETUP_ERROR_MESSAGE_WITH_ERROR_CODE
-        + " Associated resource is not of type Application."
+        f"{GENERIC_ERROR_MESSAGE_WITH_CODE} The authentication's resource has "
+        f"unsupported type; type must be {settings.SOURCES_RESOURCE_TYPE}. "
+        f"{SOURCES_API_ERROR_MESSAGE}"
     ),
 )
 
@@ -136,8 +141,8 @@ CG2003 = CloudigradeError(
         "%(account_number)s does not exist; aborting cloud account creation."
     ),
     _(
-        GENERIC_ACCOUNT_SETUP_ERROR_MESSAGE_WITH_ERROR_CODE
-        + " No Endpoint Resource exist for Source."
+        f"{GENERIC_ERROR_MESSAGE_WITH_CODE} Required endpoint resource was not found. "
+        f"{SOURCES_API_ERROR_MESSAGE}"
     ),
 )
 
@@ -149,8 +154,8 @@ CG2004 = CloudigradeError(
         "id %(authentication_id)s"
     ),
     _(
-        GENERIC_ACCOUNT_SETUP_ERROR_MESSAGE_WITH_ERROR_CODE
-        + " Attached Authentication missing ARN in username (or password) field."
+        f"{GENERIC_ERROR_MESSAGE_WITH_CODE} Authentication did not include required "
+        "ARN in either username or password field."
     ),
 )
 
@@ -159,9 +164,8 @@ CG3000 = CloudigradeError(
     "CG3000",
     _("Failed to enable Cloud Account %(cloud_account_id)s: because %(exception)s"),
     _(
-        "Could not enable cloud metering. Encountered unknown issue with "
-        "provided credentials. Please verify provided credentials and try "
-        "again. Error code %(error_code)s."
+        f"{GENERIC_ERROR_MESSAGE_WITH_CODE} Encountered unknown issue with provided "
+        "credentials. Please verify provided credentials and try again."
     ),
 )
 
@@ -170,9 +174,9 @@ CG3001 = CloudigradeError(
     "CG3001",
     _("Failed to enable Cloud Account %(cloud_account_id)s: because %(exception)s"),
     _(
-        "Could not enable cloud metering. You've reached the AWS CloudTrail "
-        "limit for your account. Please ensure you have not reached the CloudTrail "
-        "limit for your account, and try again. Error code %(error_code)s."
+        f"{GENERIC_ERROR_MESSAGE_WITH_CODE} You've reached the AWS CloudTrail limit "
+        "for your account. Please ensure you have not reached the CloudTrail limit for "
+        "your account, and try again."
     ),
 )
 
@@ -181,9 +185,9 @@ CG3002 = CloudigradeError(
     "CG3002",
     _("Failed to enable Cloud Account %(cloud_account_id)s: because %(exception)s"),
     _(
-        "Could not enable cloud metering. An AccessDenied error was received when "
-        "using the ARN, suggesting that the role was misconfigured. Please verify "
-        "role and try again. Error code %(error_code)s."
+        f"{GENERIC_ERROR_MESSAGE_WITH_CODE} An AccessDenied error was received when "
+        "using the ARN, suggesting that the AWS role is misconfigured. Please verify "
+        "the AWS role and try again."
     ),
 )
 
@@ -192,8 +196,8 @@ CG3003 = CloudigradeError(
     "CG3003",
     _("Failed to enable Cloud Account %(cloud_account_id)s: because %(exception)s"),
     _(
-        "Could not enable cloud metering. Failed to verify at least one policy action, "
-        "suggesting that the policy attached to the role may be misconfigured. Please "
-        "verify and try again. Error code %(error_code)s."
+        f"{GENERIC_ERROR_MESSAGE_WITH_CODE} Failed to verify at least one AWS policy "
+        "action, suggesting that the policy attached to the role is misconfigured. "
+        "Please verify the AWS policy and try again."
     ),
 )

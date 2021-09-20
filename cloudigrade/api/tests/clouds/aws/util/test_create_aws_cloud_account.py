@@ -64,7 +64,7 @@ class CreateAWSClountTest(TestCase):
         exception_detail = raise_context.exception.detail
         self.assertIn("account_arn", exception_detail)
         self.assertIn(
-            "Could not set up cloud metering.", exception_detail["account_arn"]
+            "Could not enable cloud metering.", exception_detail["account_arn"]
         )
         self.assertIn("CG1002", exception_detail["account_arn"])
 
@@ -91,9 +91,9 @@ class CreateAWSClountTest(TestCase):
         exception_detail = raise_context.exception.detail
         self.assertIn("account_arn", exception_detail)
         self.assertIn(
-            "Could not set up cloud metering.", exception_detail["account_arn"]
+            "Could not enable cloud metering.", exception_detail["account_arn"]
         )
-        self.assertNotIn("CG1002", exception_detail["account_arn"])
+        self.assertIn("CG1001", exception_detail["account_arn"])
 
     @patch("api.tasks.sources.notify_application_availability_task")
     @patch.object(CloudAccount, "enable")
@@ -116,7 +116,7 @@ class CreateAWSClountTest(TestCase):
         exception_detail = raise_context.exception.detail
         self.assertIn("account_arn", exception_detail)
         self.assertIn(
-            "Could not set up cloud metering.", exception_detail["account_arn"]
+            "Could not enable cloud metering.", exception_detail["account_arn"]
         )
         self.assertIn("CG1001", exception_detail["account_arn"])
 
@@ -149,6 +149,6 @@ class CreateAWSClountTest(TestCase):
             )
         exception_detail = raise_context.exception.detail
         self.assertIn(
-            "Could not set up cloud metering.", exception_detail["account_arn"]
+            "Could not enable cloud metering.", exception_detail["account_arn"]
         )
-        self.assertNotIn("CG1002", exception_detail["account_arn"])
+        self.assertIn("CG1002", exception_detail["account_arn"])

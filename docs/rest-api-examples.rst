@@ -2408,7 +2408,7 @@ Response:
 
     HTTP/1.1 400 Bad Request
     Allow: GET, POST, HEAD, OPTIONS
-    Content-Length: 93
+    Content-Length: 157
     Content-Type: application/json
     Referrer-Policy: same-origin
     X-CLOUDIGRADE-REQUEST-ID: dcc9fe30-09c8-4471-9fc1-30745bcaa113
@@ -2416,7 +2416,7 @@ Response:
     X-Frame-Options: DENY
 
     {
-        "account_arn": "Could not set up cloud metering. Please contact support. Error code CG1001."
+        "account_arn": "Could not enable cloud metering. Error code CG1001. AWS ARN must be unique, but another cloud account with the same AWS ARN already exists."
     }
 
 
