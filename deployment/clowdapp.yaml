@@ -1343,7 +1343,7 @@ parameters:
 - name: CELERY_WORKER_LIMITS_CONTAINER_MEM_LIMIT
   displayName: Cloudigrade Celery Worker Container Memory Limit
   required: true
-  value: 512Mi
+  value: 896Mi
 - name: CELERY_WORKER_LIMITS_CONTAINER_MEM_REQUEST
   displayName: Cloudigrade Celery Worker Container Memory Request
   required: true
