@@ -1343,19 +1343,19 @@ parameters:
 - name: CELERY_WORKER_LIMITS_CONTAINER_MEM_LIMIT
   displayName: Cloudigrade Celery Worker Container Memory Limit
   required: true
-  value: 512Mi
+  value: 1024Mi
 - name: CELERY_WORKER_LIMITS_CONTAINER_MEM_REQUEST
   displayName: Cloudigrade Celery Worker Container Memory Request
   required: true
-  value: 256Mi
+  value: 768Mi
 - name: CELERY_WORKER_LIMITS_CONTAINER_CPU_LIMIT
   displayName: Cloudigrade Celery Worker Container CPU Limit
   required: true
-  value: 200m
+  value: 400m
 - name: CELERY_WORKER_LIMITS_CONTAINER_CPU_REQUEST
   displayName: Cloudigrade Celery Worker Container CPU Request
   required: true
-  value: 100m
+  value: 200m
 - name: CELERY_WORKER_REPLICA_COUNT
   displayName: Cloudigrade Replica Count
   required: true
