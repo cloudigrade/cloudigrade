@@ -221,7 +221,7 @@ objects:
         - name: SOURCES_PSK
           valueFrom:
             secretKeyRef:
-              name: sources-api-secrets
+              name: ${SOURCES_PSK_SECRET_NAME}
               key: psks
               optional: true
         - name: CLOUDIGRADE_ENABLE_CLOUDWATCH
@@ -483,7 +483,7 @@ objects:
         - name: SOURCES_PSK
           valueFrom:
             secretKeyRef:
-              name: sources-api-secrets
+              name: ${SOURCES_PSK_SECRET_NAME}
               key: psks
               optional: true
         - name: CLOUDIGRADE_ENABLE_CLOUDWATCH
@@ -595,7 +595,7 @@ objects:
         - name: SOURCES_PSK
           valueFrom:
             secretKeyRef:
-              name: sources-api-secrets
+              name: ${SOURCES_PSK_SECRET_NAME}
               key: psks
               optional: true
         - name: SENTRY_TRACES_SAMPLE_RATE
@@ -981,7 +981,7 @@ objects:
         - name: SOURCES_PSK
           valueFrom:
             secretKeyRef:
-              name: sources-api-secrets
+              name: ${SOURCES_PSK_SECRET_NAME}
               key: psks
               optional: true
         - name: CLOUDIGRADE_ENABLE_CLOUDWATCH
@@ -1570,6 +1570,10 @@ parameters:
   displayName: Sources API Base URL
   required: true
   value: http://sources-api-svc.sources-ephemeral.svc:8000
+- name: SOURCES_PSK_SECRET_NAME
+  description: Sources PSK secret name
+  required: true
+  value: sources-api-secrets
 - name: VERBOSE_SOURCES_NOTIFICATION_LOGGING
   displayName: Enable verbose sources notification logging
   required: true
