@@ -22,8 +22,10 @@ objects:
             command:
               - iqe_runner.sh
             env:
+              - name: NAMESPACE
+                value: ${NAMESPACE}
               - name: ENV_FOR_DYNACONF
-                value: stage_proxy
+                value: clowder_smoke
               - name: IQE_PLUGINS
                 value: cloudmeter
               - name: IQE_MARKER_EXPRESSION
@@ -66,4 +68,7 @@ objects:
 parameters:
 - name: IMAGE_TAG
   value: ''
+  required: true
+- name: NAMESPACE
+  value: 'cloudigrade-stage'
   required: true
