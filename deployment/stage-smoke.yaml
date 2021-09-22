@@ -23,7 +23,11 @@ objects:
               - iqe_runner.sh
             env:
               - name: NAMESPACE
-                value: ${NAMESPACE}
+                value: 'cloudigrade-stage'
+              - name: CLOWDER_ENABLED
+                value: 'true'
+              - name: ACG_CONFIG
+                value: /cdapp/cdappconfig.json
               - name: ENV_FOR_DYNACONF
                 value: clowder_smoke
               - name: IQE_PLUGINS
@@ -64,11 +68,15 @@ objects:
                     key: githubToken
                     name: iqe-vault
                     optional: true
-
+            volumeMounts:
+              - name: config-secret
+                mountPath: /cdapp/
+        volumes:
+          - name: config-secret
+            secret:
+              secretName: cloudigrade
+              defaultMode: 420
 parameters:
 - name: IMAGE_TAG
   value: ''
-  required: true
-- name: NAMESPACE
-  value: 'cloudigrade-stage'
   required: true
