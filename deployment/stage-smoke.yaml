@@ -28,6 +28,40 @@ objects:
                 value: cloudmeter
               - name: IQE_MARKER_EXPRESSION
                 value: smoke
+              - name: DYNACONF_IQE_VAULT_LOADER_ENABLED
+                value: "true"
+              - name: DYNACONF_IQE_VAULT_VERIFY
+                value: "true"
+              - name: DYNACONF_IQE_VAULT_URL
+                valueFrom:
+                  secretKeyRef:
+                    key: url
+                    name: iqe-vault
+                    optional: true
+              - name: DYNACONF_IQE_VAULT_MOUNT_POINT
+                valueFrom:
+                  secretKeyRef:
+                    key: mountPoint
+                    name: iqe-vault
+                    optional: true
+              - name: DYNACONF_IQE_VAULT_ROLE_ID
+                valueFrom:
+                  secretKeyRef:
+                    key: roleId
+                    name: iqe-vault
+                    optional: true
+              - name: DYNACONF_IQE_VAULT_SECRET_ID
+                valueFrom:
+                  secretKeyRef:
+                    key: secretId
+                    name: iqe-vault
+                    optional: true
+              - name: DYNACONF_IQE_VAULT_GITHUB_TOKEN
+                valueFrom:
+                  secretKeyRef:
+                    key: githubToken
+                    name: iqe-vault
+                    optional: true
 
 parameters:
 - name: IMAGE_TAG
