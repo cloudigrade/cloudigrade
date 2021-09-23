@@ -407,7 +407,6 @@ def generate_dummy_aws_cloud_account_post_data():
     data = {
         "cloud_type": AWS_PROVIDER_STRING,
         "account_arn": generate_dummy_arn(),
-        "name": _faker.bs()[:256],
         "platform_authentication_id": _faker.pyint(),
         "platform_application_id": _faker.pyint(),
         "platform_source_id": _faker.pyint(),
@@ -426,7 +425,6 @@ def generate_dummy_azure_cloud_account_post_data():
         "cloud_type": AZURE_PROVIDER_STRING,
         "subscription_id": uuid.uuid4(),
         "tenant_id": uuid.uuid4(),
-        "name": _faker.bs()[:256],
         "platform_authentication_id": _faker.pyint(),
         "platform_application_id": _faker.pyint(),
         "platform_source_id": _faker.pyint(),

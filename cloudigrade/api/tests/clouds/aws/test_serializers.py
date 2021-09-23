@@ -23,7 +23,7 @@ class AwsAccountSerializerTest(TransactionTestCase):
         self.arn = util_helper.generate_dummy_arn(self.aws_account_id)
         self.role = util_helper.generate_dummy_role()
         self.validated_data = util_helper.generate_dummy_aws_cloud_account_post_data()
-        self.validated_data.update({"account_arn": self.arn, "name": "account_name"})
+        self.validated_data.update({"account_arn": self.arn})
 
     def test_serialization_fails_when_all_empty_fields(self):
         """Test that an account is not saved if all fields are empty."""
@@ -46,30 +46,6 @@ class AwsAccountSerializerTest(TransactionTestCase):
                 "This field is required.",
                 str(serializer.errors["cloud_type"][0]),
             )
-            self.assertEquals(
-                "This field is required.", str(serializer.errors["name"][0])
-            )
-
-    def test_serialization_fails_on_only_empty_name(self):
-        """Test that an account is not saved if only name is empty."""
-        mock_request = Mock()
-        mock_request.user = util_helper.generate_test_user()
-        context = {"request": mock_request}
-
-        validated_data = {"account_arn": self.arn, "cloud_type": "aws"}
-
-        with patch.object(aws, "verify_account_access") as mock_verify, patch.object(
-            aws.sts, "boto3"
-        ) as mock_boto3:
-            mock_assume_role = mock_boto3.client.return_value.assume_role
-            mock_assume_role.return_value = self.role
-            mock_verify.return_value = True, []
-
-            serializer = CloudAccountSerializer(context=context, data=validated_data)
-            serializer.is_valid()
-            self.assertEquals(
-                "This field is required.", str(serializer.errors["name"][0])
-            )
 
     def test_serialization_fails_on_only_empty_cloud_type(self):
         """Test that an account is not saved if only cloud_type is empty."""
@@ -77,7 +53,7 @@ class AwsAccountSerializerTest(TransactionTestCase):
         mock_request.user = util_helper.generate_test_user()
         context = {"request": mock_request}
 
-        validated_data = {"account_arn": self.arn, "name": _faker.name()}
+        validated_data = {"account_arn": self.arn}
 
         with patch.object(aws, "verify_account_access") as mock_verify, patch.object(
             aws.sts, "boto3"
@@ -99,7 +75,7 @@ class AwsAccountSerializerTest(TransactionTestCase):
         mock_request.user = util_helper.generate_test_user()
         context = {"request": mock_request}
 
-        validated_data = {"cloud_type": "aws", "name": _faker.name()}
+        validated_data = {"cloud_type": "aws"}
 
         with patch.object(aws, "verify_account_access") as mock_verify, patch.object(
             aws.sts, "boto3"
@@ -124,7 +100,7 @@ class AwsAccountSerializerTest(TransactionTestCase):
         context = {"request": mock_request}
 
         bad_type = _faker.name()
-        validated_data = {"cloud_type": bad_type, "name": _faker.name()}
+        validated_data = {"cloud_type": bad_type}
 
         with patch.object(aws, "verify_account_access") as mock_verify, patch.object(
             aws.sts, "boto3"

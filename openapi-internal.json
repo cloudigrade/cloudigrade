@@ -998,15 +998,6 @@
             }
           },
           {
-            "name": "name",
-            "required": false,
-            "in": "query",
-            "description": "name",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
             "name": "object_id",
             "required": false,
             "in": "query",
@@ -1202,15 +1193,6 @@
             }
           },
           {
-            "name": "name",
-            "required": false,
-            "in": "query",
-            "description": "name",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
             "name": "object_id",
             "required": false,
             "in": "query",
@@ -1353,15 +1335,6 @@
             "required": false,
             "in": "query",
             "description": "is_enabled",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "name",
-            "required": false,
-            "in": "query",
-            "description": "name",
             "schema": {
               "type": "string"
             }
@@ -6403,10 +6376,6 @@
             "format": "date-time",
             "readOnly": true
           },
-          "name": {
-            "type": "string",
-            "maxLength": 256
-          },
           "updated_at": {
             "type": "string",
             "format": "date-time",
@@ -6456,7 +6425,6 @@
           }
         },
         "required": [
-          "name",
           "cloud_type",
           "platform_authentication_id",
           "platform_application_id",
@@ -6549,10 +6517,6 @@
           "object_id": {
             "type": "integer"
           },
-          "name": {
-            "type": "string",
-            "maxLength": 256
-          },
           "is_enabled": {
             "type": "boolean"
           },
@@ -6582,7 +6546,6 @@
         },
         "required": [
           "object_id",
-          "name",
           "platform_authentication_id",
           "platform_application_id",
           "platform_source_id",

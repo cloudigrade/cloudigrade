@@ -81,7 +81,7 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 1241
+    Content-Length: 1189
     Content-Type: application/json
     Referrer-Policy: same-origin
     X-CLOUDIGRADE-REQUEST-ID: 87800892-17ad-4bce-84c2-99fd13bf6de7
@@ -102,7 +102,6 @@ Response:
                 },
                 "created_at": "2020-05-04T00:00:00Z",
                 "is_enabled": true,
-                "name": "greatest account ever",
                 "platform_application_id": 6890,
                 "platform_application_is_paused": false,
                 "platform_authentication_id": 6311,
@@ -122,7 +121,6 @@ Response:
                 },
                 "created_at": "2020-05-04T00:00:00Z",
                 "is_enabled": true,
-                "name": "meh account",
                 "platform_application_id": 8376,
                 "platform_application_is_paused": false,
                 "platform_authentication_id": 4242,
@@ -158,7 +156,7 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 527
+    Content-Length: 496
     Content-Type: application/json
     Referrer-Policy: same-origin
     X-CLOUDIGRADE-REQUEST-ID: c1344a89-e699-4ad3-b87b-d8caf8639b96
@@ -177,7 +175,6 @@ Response:
         },
         "created_at": "2020-05-04T00:00:00Z",
         "is_enabled": true,
-        "name": "greatest account ever",
         "platform_application_id": 6890,
         "platform_application_is_paused": false,
         "platform_authentication_id": 6311,
@@ -2354,10 +2351,9 @@ Request:
     http post localhost:8080/internal/api/cloudigrade/v1/accounts/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
         cloud_type="aws" \
         account_arn="arn:aws:iam::761488217673:role/role-for-cloudigrade" \
-        name="yet another account" \
-        platform_authentication_id="1553" \
-        platform_application_id="4104" \
-        platform_source_id="8725"
+        platform_authentication_id="2281" \
+        platform_application_id="4617" \
+        platform_source_id="2289"
 
 Response:
 
@@ -2365,7 +2361,7 @@ Response:
 
     HTTP/1.1 201 Created
     Allow: GET, POST, HEAD, OPTIONS
-    Content-Length: 540
+    Content-Length: 511
     Content-Type: application/json
     Referrer-Policy: same-origin
     X-CLOUDIGRADE-REQUEST-ID: 4bc9d920-f5e9-43cc-8bea-bedff5aefbcf
@@ -2384,11 +2380,10 @@ Response:
         },
         "created_at": "2020-05-18T13:51:59.722367Z",
         "is_enabled": true,
-        "name": "yet another account",
-        "platform_application_id": 4104,
+        "platform_application_id": 4617,
         "platform_application_is_paused": false,
-        "platform_authentication_id": 1553,
-        "platform_source_id": 8725,
+        "platform_authentication_id": 2281,
+        "platform_source_id": 2289,
         "updated_at": "2020-05-18T13:51:59.722367Z",
         "user_id": 1
     }
@@ -2403,10 +2398,9 @@ Request:
     http post localhost:8080/internal/api/cloudigrade/v1/accounts/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
         cloud_type="aws" \
         account_arn="arn:aws:iam::761488217673:role/role-for-cloudigrade" \
-        name="but this account already exists" \
-        platform_authentication_id="1618" \
-        platform_application_id="1208" \
-        platform_source_id="5409"
+        platform_authentication_id="1553" \
+        platform_application_id="4104" \
+        platform_source_id="8725"
 
 Response:
 
@@ -2440,10 +2434,9 @@ Request:
         cloud_type="azure" \
         subscription_id="3a17c6d1-e2e3-40c7-80b2-866b814ef21d" \
         tenant_id="f40be6ef-0a7c-41e6-86f1-85aa9192e037" \
-        name="it's an azure account" \
-        platform_authentication_id="7113" \
-        platform_application_id="5180" \
-        platform_source_id="3350"
+        platform_authentication_id="9861" \
+        platform_application_id="2407" \
+        platform_source_id="5081"
 
 Response:
 
@@ -2451,7 +2444,7 @@ Response:
 
     HTTP/1.1 201 Created
     Allow: GET, POST, HEAD, OPTIONS
-    Content-Length: 554
+    Content-Length: 523
     Content-Type: application/json
     Referrer-Policy: same-origin
     X-CLOUDIGRADE-REQUEST-ID: f407ca72-6eaf-4a07-bfeb-ddf653b84014
@@ -2470,11 +2463,10 @@ Response:
         },
         "created_at": "2020-05-18T13:51:59.722367Z",
         "is_enabled": true,
-        "name": "it's an azure account",
-        "platform_application_id": 5180,
+        "platform_application_id": 2407,
         "platform_application_is_paused": false,
-        "platform_authentication_id": 7113,
-        "platform_source_id": 3350,
+        "platform_authentication_id": 9861,
+        "platform_source_id": 5081,
         "updated_at": "2020-05-18T13:51:59.722367Z",
         "user_id": 1
     }

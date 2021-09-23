@@ -24,8 +24,6 @@ from util.misc import get_now, get_today
 
 logger = logging.getLogger(__name__)
 
-cloud_account_name_pattern = "{cloud_name}-account-{external_cloud_account_id}"
-
 ANY = "_ANY"
 
 ConcurrentKey = collections.namedtuple(
@@ -773,24 +771,6 @@ def recalculate_runs_for_cloud_account_id(
             "instance_count": instance_count,
             "cloud_account_id": cloud_account_id,
         },
-    )
-
-
-def get_standard_cloud_account_name(cloud_name, external_cloud_account_id):
-    """
-    Get cloudigrade's standard CloudAccount name for a given account ID.
-
-    Args:
-        cloud_name (str): cloud name (e.g. 'aws')
-        external_cloud_account_id (str): customer's external cloud account id
-
-    Returns:
-        str of cloudigrade's standard CloudAccount name
-
-    """
-    return cloud_account_name_pattern.format(
-        cloud_name=cloud_name,
-        external_cloud_account_id=external_cloud_account_id,
     )
 
 

@@ -107,12 +107,10 @@ class DocsApiHandler(object):
         self.aws_customer_account = api_helper.generate_cloud_account_aws(
             arn=util_helper.generate_dummy_arn(),
             user=self.customer_user,
-            name="greatest account ever",
             created_at=self.two_weeks_ago,
         )
         self.azure_customer_account = api_helper.generate_cloud_account_azure(
             user=self.customer_user,
-            name="meh account",
             created_at=self.two_weeks_ago,
             azure_subscription_id=str(seeded_uuid4()),
             azure_tenant_id=str(seeded_uuid4()),
@@ -344,9 +342,7 @@ class DocsApiHandler(object):
         aws_cloud_account_data = (
             util_helper.generate_dummy_aws_cloud_account_post_data()
         )
-        aws_cloud_account_data.update(
-            {"account_arn": another_arn, "name": "yet another account"}
-        )
+        aws_cloud_account_data.update({"account_arn": another_arn})
         response = self.internal_client.create_accounts(data=aws_cloud_account_data)
         assert_status(response, 201)
         responses["internal_account_create_aws"] = response
@@ -359,9 +355,7 @@ class DocsApiHandler(object):
         aws_cloud_account_duplicate_arn_data = (
             util_helper.generate_dummy_aws_cloud_account_post_data()
         )
-        aws_cloud_account_duplicate_arn_data.update(
-            {"account_arn": another_arn, "name": "but this account already exists"}
-        )
+        aws_cloud_account_duplicate_arn_data.update({"account_arn": another_arn})
         response = self.internal_client.create_accounts(
             data=aws_cloud_account_duplicate_arn_data
         )
@@ -373,9 +367,7 @@ class DocsApiHandler(object):
         azure_cloud_account_data = (
             util_helper.generate_dummy_azure_cloud_account_post_data()
         )
-        azure_cloud_account_data.update(
-            {"tenant_id": tenant_id, "name": "it's an azure account"}
-        )
+        azure_cloud_account_data.update({"tenant_id": tenant_id})
         response = self.internal_client.create_accounts(data=azure_cloud_account_data)
         assert_status(response, 201)
         responses["internal_account_create_azure"] = response

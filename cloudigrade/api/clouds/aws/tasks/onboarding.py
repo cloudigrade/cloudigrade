@@ -15,7 +15,6 @@ from api.clouds.aws.util import (
     generate_aws_ami_messages,
     start_image_inspection,
 )
-from api.util import get_standard_cloud_account_name
 from util import aws
 from util.aws import rewrap_aws_errors
 from util.celery import retriable_shared_task
@@ -58,19 +57,17 @@ def configure_customer_aws_and_create_cloud_account(
         error.notify(username, application_id)
         return
     try:
-        customer_aws_account_id = aws.AwsArn(customer_arn).account_id
+        getattr(aws.AwsArn(customer_arn), "account_id")
     except InvalidArn:
         error = error_codes.CG1004
         error.log_internal_message(logger, {"application_id": application_id})
         error.notify(username, application_id)
         return
 
-    cloud_account_name = get_standard_cloud_account_name("aws", customer_aws_account_id)
     try:
         create_aws_cloud_account(
             user,
             customer_arn,
-            cloud_account_name,
             authentication_id,
             application_id,
             source_id,

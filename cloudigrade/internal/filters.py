@@ -16,7 +16,6 @@ class InternalCloudAccountFilterSet(django_filters.FilterSet):
         model = models.CloudAccount
         fields = {
             "is_enabled": ["exact"],
-            "name": ["exact"],
             "object_id": ["exact"],
             "platform_application_id": ["exact"],
             "platform_authentication_id": ["exact"],

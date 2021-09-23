@@ -13,7 +13,6 @@ from django.test import TransactionTestCase
 from rest_framework.test import APIRequestFactory, force_authenticate
 
 from api import serializers
-from api.clouds.aws import util
 from api.models import CloudAccount
 from api.tests import helper as api_helper
 from internal.views import InternalAccountViewSet
@@ -27,19 +26,13 @@ class InternalAccountViewSetTest(TransactionTestCase):
         """Set up a bunch of test data."""
         self.user1 = util_helper.generate_test_user()
         self.user2 = util_helper.generate_test_user()
-        self.account1 = api_helper.generate_cloud_account(user=self.user1)
-        self.account2 = api_helper.generate_cloud_account(user=self.user1)
-        self.account3 = api_helper.generate_cloud_account(user=self.user2)
-        self.account4 = api_helper.generate_cloud_account(user=self.user2)
-        self.account5 = api_helper.generate_cloud_account(
-            user=self.user2, name="unique"
-        )
-        self.azure_account1 = api_helper.generate_cloud_account(
-            user=self.user1, cloud_type="azure"
-        )
-        self.azure_account2 = api_helper.generate_cloud_account(
-            user=self.user2, cloud_type="azure"
-        )
+        self.account1 = api_helper.generate_cloud_account_aws(user=self.user1)
+        self.account2 = api_helper.generate_cloud_account_aws(user=self.user1)
+        self.account3 = api_helper.generate_cloud_account_aws(user=self.user2)
+        self.account4 = api_helper.generate_cloud_account_aws(user=self.user2)
+        self.account5 = api_helper.generate_cloud_account_aws(user=self.user2)
+        self.azure_account1 = api_helper.generate_cloud_account_azure(user=self.user1)
+        self.azure_account2 = api_helper.generate_cloud_account_azure(user=self.user2)
 
         # APIRequestFactory calls require a path, but its value doesn't really matter
         # since we explicitly instantiate the ViewSet that will be used. Regardless,
@@ -53,7 +46,6 @@ class InternalAccountViewSetTest(TransactionTestCase):
         """Assert the response has data matching the account object."""
         self.assertEqual(response.data["account_id"], account.id)
         self.assertEqual(response.data["user_id"], account.user_id)
-        self.assertEqual(response.data["name"], account.name)
 
         if isinstance(account, CloudAccount):
             if account.cloud_type == "aws":
@@ -197,8 +189,8 @@ class InternalAccountViewSetTest(TransactionTestCase):
 
     @patch("api.tasks.sources.notify_application_availability_task")
     @patch("api.clouds.aws.models.AwsCloudAccount.enable")
-    def test_create_account_with_name_success(self, mock_enable, mock_task):
-        """Test create account with a name succeeds."""
+    def test_create_aws_account_success(self, mock_enable, mock_task):
+        """Test creating an aws account succeeds."""
         mock_enable.return_value = True
         data = util_helper.generate_dummy_aws_cloud_account_post_data()
 
@@ -212,14 +204,12 @@ class InternalAccountViewSetTest(TransactionTestCase):
         self.assertEqual(
             response.data["content_object"]["account_arn"], data["account_arn"]
         )
-        self.assertEqual(response.data["name"], data["name"])
-        self.assertIsNotNone(response.data["name"])
         self.assertEqual(response.data["is_enabled"], True)  # True by default
         mock_enable.assert_called()
         mock_task.delay.assert_called()
 
     @patch("api.tasks.sources.notify_application_availability_task")
-    def test_create_azure_account_with_name_success(self, mock_task):
+    def test_create_azure_account_success(self, mock_task):
         """Test creating an azure account succeeds."""
         data = util_helper.generate_dummy_azure_cloud_account_post_data()
 
@@ -233,77 +223,8 @@ class InternalAccountViewSetTest(TransactionTestCase):
         self.assertEqual(
             response.data["content_object"]["tenant_id"], str(data["tenant_id"])
         )
-        self.assertEqual(response.data["name"], data["name"])
-        self.assertIsNotNone(response.data["name"])
         self.assertEqual(response.data["is_enabled"], True)  # True by default
         mock_task.delay.assert_called()
-
-    @patch.object(util, "aws")
-    @patch("api.clouds.aws.tasks.initial_aws_describe_instances")
-    def test_create_account_with_duplicate_name_fail(self, mock_aws, mock_task):
-        """Test create account with a duplicate name fails."""
-        mock_aws.verify_account_access.return_value = True, []
-
-        data = util_helper.generate_dummy_aws_cloud_account_post_data()
-        data["name"] = "unique"  # should collide with self.account5
-
-        request = self.factory.post("/accounts/", data=data)
-        force_authenticate(request, user=self.user2)
-
-        view = InternalAccountViewSet.as_view(actions={"post": "create"})
-        response = view(request)
-
-        self.assertEqual(response.status_code, 400)
-        self.assertIn("name", response.data)
-        mock_task.delay.assert_not_called()
-
-    def test_create_account_without_name_fail(self):
-        """Test create account without a name fails."""
-        data = util_helper.generate_dummy_aws_cloud_account_post_data()
-        del data["name"]
-
-        request = self.factory.post("/accounts/", data=data)
-        force_authenticate(request, user=self.user2)
-
-        view = InternalAccountViewSet.as_view(actions={"post": "create"})
-        response = view(request)
-
-        self.assertEqual(response.status_code, 400)
-        self.assertIn("name", response.data)
-
-    def test_update_account_patch_name_success(self):
-        """Test updating an account with a name succeeds."""
-        data = {
-            "cloud_type": "aws",
-            "name": self.faker.bs()[:256],
-        }
-
-        account_id = self.account4.id
-        request = self.factory.patch("/accounts/", data=data)
-        force_authenticate(request, user=self.user2)
-
-        view = InternalAccountViewSet.as_view(actions={"patch": "partial_update"})
-        response = view(request, pk=account_id)
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(data["name"], response.data["name"])
-
-    def test_update_account_patch_duplicate_name_fail(self):
-        """Test updating an account with a duplicate name fails."""
-        data = {
-            "cloud_type": "aws",
-            "name": "unique",
-        }
-
-        account_id = self.account3.id
-        request = self.factory.patch("/accounts/", data=data)
-        force_authenticate(request, user=self.user2)
-
-        view = InternalAccountViewSet.as_view(actions={"patch": "partial_update"})
-        response = view(request, pk=account_id)
-
-        self.assertEqual(response.status_code, 400)
-        self.assertIn("name", response.data)
 
     def test_update_account_patch_arn_fails(self):
         """Test that updating to change the arn fails."""

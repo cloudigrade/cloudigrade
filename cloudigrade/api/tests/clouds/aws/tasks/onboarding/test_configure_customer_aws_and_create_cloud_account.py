@@ -6,7 +6,6 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from rest_framework.exceptions import ValidationError
 
-from api import util as api_util
 from api.clouds.aws import tasks
 from api.clouds.aws.models import AwsCloudAccount
 from api.models import CloudAccount
@@ -60,13 +59,9 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
             source_id,
         )
 
-        cloud_account_name = api_util.get_standard_cloud_account_name(
-            "aws", session_account_id
-        )
         mock_create.assert_called_with(
             user,
             role_arn,
-            cloud_account_name,
             auth_id,
             application_id,
             source_id,
