@@ -17,6 +17,13 @@ objects:
           - name: quay-cloudservices-pull
         containers:
           - image: 'quay.io/cloudservices/iqe-tests:cloudmeter'
+            resources:
+              limits:
+                cpu: '1'
+                memory: 1Gi
+              requests:
+                cpu: 200m
+                memory: 256Mi
             imagePullPolicy: Always
             name: cloudigrade-smoke-iqe
             command:
