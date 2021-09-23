@@ -22,8 +22,6 @@ objects:
             command:
               - iqe_runner.sh
             env:
-              - name: NAMESPACE
-                value: 'cloudigrade-stage'
               - name: CLOWDER_ENABLED
                 value: 'true'
               - name: ACG_CONFIG
