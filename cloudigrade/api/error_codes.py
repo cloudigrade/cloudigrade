@@ -74,15 +74,6 @@ CG1002 = CloudigradeError(
     ),
 )
 
-# Duplicate Cloud Account Name
-CG1003 = CloudigradeError(
-    "CG1003",
-    _(
-        "Failed to create Cloud Account for Sources Application id "
-        "%(application_id)s: CloudAccount already exists with name %(name)s."
-    ),
-)
-
 # Invalid ARN
 CG1004 = CloudigradeError(
     "CG1004",

@@ -31,7 +31,6 @@ class UpdateAWSClountTest(TestCase):
             arn=self.arn,
             aws_account_id=self.aws_account_id,
             user=self.user,
-            name=self.account_number,
             platform_authentication_id=self.auth_id,
             platform_application_id=self.app_id,
             platform_source_id=self.source_id,

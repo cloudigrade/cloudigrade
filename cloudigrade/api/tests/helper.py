@@ -287,7 +287,6 @@ def generate_cloud_account_azure(
 def _generate_cloud_account(
     provider_cloud_account,
     user=None,
-    name=None,
     created_at=None,
     platform_authentication_id=None,
     platform_application_id=None,
@@ -306,7 +305,6 @@ def _generate_cloud_account(
             model instance (e.g. AwsCloudAccount, AzureCloudAccount) to be linked with
             the newly-created CloudAccount
         user (User): Optional Django auth User to be this account's owner.
-        name (str): Optional name for this account.
         created_at (datetime): Optional creation datetime for this account.
         platform_authentication_id (int): Optional platform source authentication ID.
         platform_application_id (int): Optional platform source application ID.
@@ -320,9 +318,6 @@ def _generate_cloud_account(
     """
     if user is None:
         user = helper.generate_test_user()
-
-    if name is None:
-        name = str(uuid.uuid4())
 
     if created_at is None:
         created_at = get_now()
@@ -341,7 +336,6 @@ def _generate_cloud_account(
 
     cloud_account = CloudAccount.objects.create(
         user=user,
-        name=name,
         content_object=provider_cloud_account,
         platform_authentication_id=platform_authentication_id,
         platform_application_id=platform_application_id,

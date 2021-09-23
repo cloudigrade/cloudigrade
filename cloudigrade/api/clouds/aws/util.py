@@ -907,7 +907,6 @@ def verify_permissions(customer_role_arn):
 def create_aws_cloud_account(
     user,
     customer_role_arn,
-    cloud_account_name,
     platform_authentication_id,
     platform_application_id,
     platform_source_id,
@@ -924,7 +923,6 @@ def create_aws_cloud_account(
     Args:
         user (django.contrib.auth.models.User): user to own the CloudAccount
         customer_role_arn (str): ARN to access the customer's AWS account
-        cloud_account_name (str): the name to use for our CloudAccount
         platform_authentication_id (str): Platform Sources' Authentication object id
         platform_application_id (str): Platform Sources' Application object id
         platform_source_id (str): Platform Sources' Source object id
@@ -946,7 +944,6 @@ def create_aws_cloud_account(
         {
             "user": user.username,
             "customer_role_arn": customer_role_arn,
-            "cloud_account_name": cloud_account_name,
             "platform_authentication_id": platform_authentication_id,
             "platform_application_id": platform_application_id,
             "platform_source_id": platform_source_id,
@@ -984,19 +981,6 @@ def create_aws_cloud_account(
             )
             raise ValidationError({"account_arn": error_message})
 
-        # Verify that no CloudAccount exists with the same name.
-        if CloudAccount.objects.filter(user=user, name=cloud_account_name).exists():
-            error_code = error_codes.CG1003
-            error_code.log_internal_message(
-                logger,
-                {
-                    "application_id": platform_application_id,
-                    "name": cloud_account_name,
-                },
-            )
-            error_code.notify(user.username, platform_application_id)
-            raise ValidationError({"name": error_code.get_message()})
-
         try:
             # Use get_or_create here in case there is another task running concurrently
             # that created the AwsCloudAccount at the same time.
@@ -1033,7 +1017,6 @@ def create_aws_cloud_account(
 
         cloud_account = CloudAccount.objects.create(
             user=user,
-            name=cloud_account_name,
             content_object=aws_cloud_account,
             platform_application_id=platform_application_id,
             platform_authentication_id=platform_authentication_id,

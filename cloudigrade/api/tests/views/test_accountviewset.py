@@ -17,19 +17,13 @@ class AccountViewSetTest(TransactionTestCase):
         """Set up a bunch of test data."""
         self.user1 = util_helper.generate_test_user()
         self.user2 = util_helper.generate_test_user()
-        self.account1 = api_helper.generate_cloud_account(user=self.user1)
-        self.account2 = api_helper.generate_cloud_account(user=self.user1)
-        self.account3 = api_helper.generate_cloud_account(user=self.user2)
-        self.account4 = api_helper.generate_cloud_account(user=self.user2)
-        self.account5 = api_helper.generate_cloud_account(
-            user=self.user2, name="unique"
-        )
-        self.azure_account1 = api_helper.generate_cloud_account(
-            user=self.user1, cloud_type="azure"
-        )
-        self.azure_account2 = api_helper.generate_cloud_account(
-            user=self.user2, cloud_type="azure"
-        )
+        self.account1 = api_helper.generate_cloud_account_aws(user=self.user1)
+        self.account2 = api_helper.generate_cloud_account_aws(user=self.user1)
+        self.account3 = api_helper.generate_cloud_account_aws(user=self.user2)
+        self.account4 = api_helper.generate_cloud_account_aws(user=self.user2)
+        self.account5 = api_helper.generate_cloud_account_aws(user=self.user2)
+        self.azure_account1 = api_helper.generate_cloud_account_azure(user=self.user1)
+        self.azure_account2 = api_helper.generate_cloud_account_azure(user=self.user2)
 
         self.factory = APIRequestFactory()
         self.faker = faker.Faker()
@@ -38,7 +32,6 @@ class AccountViewSetTest(TransactionTestCase):
         """Assert the response has data matching the account object."""
         self.assertEqual(response.data["account_id"], account.id)
         self.assertEqual(response.data["user_id"], account.user_id)
-        self.assertEqual(response.data["name"], account.name)
 
         if isinstance(account, CloudAccount):
             if account.cloud_type == "aws":

@@ -34,7 +34,6 @@ class CloudAccount(BaseGenericModel):
         db_index=True,
         null=False,
     )
-    name = models.CharField(max_length=256, null=False, db_index=True)
 
     # New CloudAccount instances are created with is_enabled=False because we must rely
     # on the enable method to determine if is_enabled can be True and update if so.
@@ -57,10 +56,7 @@ class CloudAccount(BaseGenericModel):
     platform_application_is_paused = models.BooleanField(null=False, default=False)
 
     class Meta:
-        unique_together = (
-            ("user", "name"),
-            ("platform_authentication_id", "platform_application_id"),
-        )
+        unique_together = (("platform_authentication_id", "platform_application_id"),)
 
     @property
     def cloud_account_id(self):
@@ -101,7 +97,6 @@ class CloudAccount(BaseGenericModel):
         return (
             f"{self.__class__.__name__}("
             f"id={self.id}, "
-            f"name='{self.name}', "
             f"is_enabled='{self.is_enabled}', "
             f"enabled_at=parse({enabled_at}), "
             f"user_id={self.user_id}, "

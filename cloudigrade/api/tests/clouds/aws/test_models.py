@@ -57,7 +57,6 @@ class AwsCloudAccountModelTest(TransactionTestCase, ModelStrTestMixin):
         self.account = helper.generate_cloud_account(
             arn=arn,
             aws_account_id=aws_account_id,
-            name="test",
             created_at=self.created_at,
             generate_verify_task=False,
         )

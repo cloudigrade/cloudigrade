@@ -63,14 +63,12 @@ class SandboxedRestClientTest(TestCase):
         client = helper.SandboxedRestClient(api_root="/internal/api/cloudigrade/v1")
         client._force_authenticate(self.user)
         arn = util_helper.generate_dummy_arn()
-        name = _faker.sentence()
         data = util_helper.generate_dummy_aws_cloud_account_post_data()
-        data.update({"account_arn": arn, "name": name})
+        data.update({"account_arn": arn})
         response = client.create_accounts(data=data)
         self.assertEqual(response.status_code, http.HTTPStatus.CREATED)
         response_json = response.json()
         self.assertEqual(response_json["content_object"]["account_arn"], arn)
-        self.assertEqual(response_json["name"], name)
         self.assertEqual(response_json["user_id"], self.user.id)
 
     def test_get_noun(self):
@@ -149,7 +147,6 @@ class GenerateCloudAccountTest(TestCase):
         aws_account_id = util_helper.generate_dummy_aws_account_id()
         arn = util_helper.generate_dummy_arn(account_id=aws_account_id)
         user = util_helper.generate_test_user()
-        name = _faker.name()
         created_at = util_helper.utc_dt(2017, 1, 1, 0, 0, 0)
         platform_authentication_id = _faker.pyint()
         platform_application_id = _faker.pyint()
@@ -177,7 +174,6 @@ class GenerateCloudAccountTest(TestCase):
             arn=arn,
             aws_account_id=aws_account_id,
             user=user,
-            name=name,
             created_at=created_at,
             platform_authentication_id=platform_authentication_id,
             platform_application_id=platform_application_id,
@@ -196,7 +192,6 @@ class GenerateCloudAccountTest(TestCase):
         self.assertTrue(account.platform_application_is_paused)
         self.assertEqual(account.platform_source_id, platform_source_id)
         self.assertEqual(account.user, user)
-        self.assertEqual(account.name, name)
         self.assertEqual(account.created_at, created_at)
         self.assertFalse(account.is_enabled)
         self.assertEqual(account.enabled_at, enabled_at)

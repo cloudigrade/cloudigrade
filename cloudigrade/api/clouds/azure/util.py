@@ -14,7 +14,6 @@ logger = logging.getLogger(__name__)
 
 def create_azure_cloud_account(
     user,
-    cloud_account_name,
     subscription_id,
     tenant_id,
     platform_authentication_id,
@@ -68,7 +67,6 @@ def create_azure_cloud_account(
         )
         cloud_account = CloudAccount.objects.create(
             user=user,
-            name=cloud_account_name,
             content_object=azure_cloud_account,
             platform_application_id=platform_application_id,
             platform_authentication_id=platform_authentication_id,

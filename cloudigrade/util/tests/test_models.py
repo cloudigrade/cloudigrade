@@ -19,8 +19,8 @@ class BaseGenericModelTest(TestCase):
         aws_account_id = util_helper.generate_dummy_aws_account_id()
         arn = util_helper.generate_dummy_arn(account_id=aws_account_id)
         self.role = util_helper.generate_dummy_role()
-        self.account = helper.generate_cloud_account(
-            arn=arn, aws_account_id=aws_account_id, name="test"
+        self.account = helper.generate_cloud_account_aws(
+            arn=arn, aws_account_id=aws_account_id
         )
 
     @patch("api.tasks.sources.notify_application_availability_task")

@@ -27,9 +27,7 @@ class DenormalizeRunsTest(TestCase):
         self.user_super = util_helper.generate_test_user(is_superuser=True)
 
         # define users' cloud accounts
-        self.account_1 = api_helper.generate_cloud_account(
-            user=self.user_1, name=_faker.bs()
-        )
+        self.account_1 = api_helper.generate_cloud_account_aws(user=self.user_1)
 
         # define instances that belong to user_1 account_1
         self.instance_plain = api_helper.generate_instance(

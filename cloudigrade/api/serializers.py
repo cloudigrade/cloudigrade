@@ -71,7 +71,6 @@ class CloudAccountSerializer(ModelSerializer):
         fields = (
             "account_id",
             "created_at",
-            "name",
             "updated_at",
             "user_id",
             "content_object",
@@ -93,19 +92,6 @@ class CloudAccountSerializer(ModelSerializer):
             "is_enabled",
         )
         create_only_fields = ("cloud_type", "subscription_id", "tenant_id")
-
-    def validate_name(self, value):
-        """Validate the input name is unique."""
-        user = self.context["request"].user
-
-        if CloudAccount.objects.filter(user=user, name=value).exists():
-            raise ValidationError(
-                _(
-                    "Account with name '{0}' for account number '{1}' already exists"
-                ).format(value, user.username)
-            )
-
-        return value
 
     def validate_account_arn(self, value):
         """Validate the input account_arn."""
@@ -183,14 +169,12 @@ class CloudAccountSerializer(ModelSerializer):
         """
         arn = validated_data["account_arn"]
         user = self.context["request"].user
-        name = validated_data.get("name")
         platform_authentication_id = validated_data.get("platform_authentication_id")
         platform_application_id = validated_data.get("platform_application_id")
         platform_source_id = validated_data.get("platform_source_id")
         cloud_account = create_aws_cloud_account(
             user,
             arn,
-            name,
             platform_authentication_id,
             platform_application_id,
             platform_source_id,
@@ -200,7 +184,6 @@ class CloudAccountSerializer(ModelSerializer):
     def create_azure_cloud_account(self, validated_data):
         """Create an Azure flavored CloudAccount."""
         user = self.context["request"].user
-        name = validated_data.get("name")
         subscription_id = validated_data["subscription_id"]
         tenant_id = validated_data["tenant_id"]
 
@@ -209,7 +192,6 @@ class CloudAccountSerializer(ModelSerializer):
         platform_source_id = validated_data.get("platform_source_id")
         cloud_account = create_azure_cloud_account(
             user,
-            name,
             subscription_id,
             tenant_id,
             platform_authentication_id,
