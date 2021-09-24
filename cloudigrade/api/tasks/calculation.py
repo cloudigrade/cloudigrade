@@ -179,7 +179,15 @@ def recalculate_concurrent_usage_for_user_id(user_id, since=None):
     if not since:
         days_ago = settings.RECALCULATE_CONCURRENT_USAGE_SINCE_DAYS_AGO
         since = today - timedelta(days=days_ago)
-    user = User.objects.get(id=user_id)
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        # The user may have been deleted before this task started.
+        logger.info(
+            _("User id %(user_id)s not found; skipping concurrent usage calculation"),
+            {"user_id": user_id},
+        )
+        return
     date_joined = user.date_joined.date()
     one_day = timedelta(days=1)
 

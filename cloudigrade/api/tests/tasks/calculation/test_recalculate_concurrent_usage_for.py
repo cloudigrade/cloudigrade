@@ -5,6 +5,7 @@ from unittest.mock import Mock, call, patch
 import faker
 from dateutil.rrule import DAILY, rrule
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.test import TestCase
 
 from api import models, util
@@ -76,6 +77,16 @@ class RecalculateConcurrentUsageForUserIdTask(TestCase):
             for date in expected_dates
         ]
         mock_recalculate_for_user_on_date.apply_async.assert_has_calls(expected_calls)
+
+    @util_helper.clouditardis(util_helper.utc_dt(2021, 6, 20, 0, 0, 0))
+    @patch("api.tasks.calculation.recalculate_concurrent_usage_for_user_id_on_date")
+    def test_recalculate_usage_for_user_does_not_exist(
+        self, mock_recalculate_for_user_on_date
+    ):
+        """Test early return if a User does not exist for the given id."""
+        invalid_user_id = User.objects.order_by("-id").first().id + 10
+        calculation.recalculate_concurrent_usage_for_user_id(invalid_user_id)
+        mock_recalculate_for_user_on_date.apply_async.assert_not_called()
 
     @util_helper.clouditardis(util_helper.utc_dt(2021, 6, 20, 0, 0, 0))
     @patch("api.tasks.calculation.recalculate_concurrent_usage_for_user_id_on_date")
