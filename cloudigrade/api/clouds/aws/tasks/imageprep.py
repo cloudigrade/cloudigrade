@@ -60,6 +60,7 @@ def copy_ami_snapshot(  # noqa: C901
         },
     )
 
+    # Check if the image object exists for this API.
     if reference_ami_id:
         if not AwsMachineImage.objects.filter(ec2_ami_id=reference_ami_id).exists():
             logger.warning(
@@ -80,9 +81,14 @@ def copy_ami_snapshot(  # noqa: C901
         )
         return
 
+    # Establish session for upcoming AWS API calls.
     session = aws.get_session(arn)
     session_account_id = aws.get_session_account_id(session)
+
+    # Try to get the AMI from AWS.
     ami = aws.get_ami(session, ami_id, snapshot_region)
+
+    # Update image status to "error" and exit if that failed, else continue.
     if not ami:
         logger.info(
             _(
@@ -94,7 +100,10 @@ def copy_ami_snapshot(  # noqa: C901
         update_aws_image_status_error(ami_id)
         return
 
+    # Try to get the snapshot ID from AWS.
     customer_snapshot_id = aws.get_ami_snapshot_id(ami)
+
+    # Update image status to "error" and exit if that failed, else continue.
     if not customer_snapshot_id:
         logger.info(
             _(
@@ -105,61 +114,12 @@ def copy_ami_snapshot(  # noqa: C901
         )
         update_aws_image_status_error(ami_id)
         return
+
+    # Try to get the snapshot object from AWS.
     try:
         customer_snapshot = aws.get_snapshot(
             session, customer_snapshot_id, snapshot_region
         )
-
-        if customer_snapshot.encrypted:
-            awsimage = AwsMachineImage.objects.get(ec2_ami_id=ami_id)
-            image = awsimage.machine_image.get()
-            image.is_encrypted = True
-            image.status = image.ERROR
-            image.save()
-            logger.info(
-                _(
-                    'AWS snapshot "%(snapshot_id)s" for image "%(image_id)s" '
-                    'found using customer ARN "%(arn)s" is encrypted and '
-                    "cannot be copied."
-                ),
-                {
-                    "snapshot_id": customer_snapshot.snapshot_id,
-                    "image_id": ami.id,
-                    "arn": arn,
-                },
-            )
-            return
-
-        logger.info(
-            _(
-                'AWS snapshot "%(snapshot_id)s" for image "%(image_id)s" has '
-                'owner "%(owner_id)s"; current session is account '
-                '"%(account_id)s"'
-            ),
-            {
-                "snapshot_id": customer_snapshot.snapshot_id,
-                "image_id": ami.id,
-                "owner_id": customer_snapshot.owner_id,
-                "account_id": session_account_id,
-            },
-        )
-
-        if (
-            customer_snapshot.owner_id != session_account_id
-            and reference_ami_id is None
-        ):
-            logger.info(
-                _(
-                    "Snapshot owner is not current session account. "
-                    "Copying AMI %(ami)s to customer account with ARN %(arn)s"
-                ),
-                {"ami": ami, "arn": arn},
-            )
-            copy_ami_to_customer_account.delay(arn, ami_id, snapshot_region)
-            # Early return because we need to stop processing the current AMI.
-            # A future call will process this new copy of the
-            # current AMI instead.
-            return
     except ClientError as e:
         error_code = e.response.get("Error").get("Code")
         if error_code == "InvalidSnapshot.NotFound":
@@ -174,6 +134,55 @@ def copy_ami_snapshot(  # noqa: C901
             copy_ami_to_customer_account.delay(arn, ami_id, snapshot_region)
             return
         raise e
+
+    # If the snapshot is encrypted, update our model and exit.
+    if customer_snapshot.encrypted:
+        awsimage = AwsMachineImage.objects.get(ec2_ami_id=ami_id)
+        image = awsimage.machine_image.get()
+        image.is_encrypted = True
+        image.status = image.ERROR
+        image.save()
+        logger.info(
+            _(
+                'AWS snapshot "%(snapshot_id)s" for image "%(image_id)s" '
+                'found using customer ARN "%(arn)s" is encrypted and '
+                "cannot be copied."
+            ),
+            {
+                "snapshot_id": customer_snapshot.snapshot_id,
+                "image_id": ami.id,
+                "arn": arn,
+            },
+        )
+        return
+
+    logger.info(
+        _(
+            'AWS snapshot "%(snapshot_id)s" for image "%(image_id)s" has '
+            'owner "%(owner_id)s"; current session is account '
+            '"%(account_id)s"'
+        ),
+        {
+            "snapshot_id": customer_snapshot.snapshot_id,
+            "image_id": ami.id,
+            "owner_id": customer_snapshot.owner_id,
+            "account_id": session_account_id,
+        },
+    )
+
+    if customer_snapshot.owner_id != session_account_id and reference_ami_id is None:
+        logger.info(
+            _(
+                "Snapshot owner is not current session account. "
+                "Copying AMI %(ami)s to customer account with ARN %(arn)s"
+            ),
+            {"ami": ami, "arn": arn},
+        )
+        copy_ami_to_customer_account.delay(arn, ami_id, snapshot_region)
+        # Early return because we need to stop processing the current AMI.
+        # A future call will process this new copy of the
+        # current AMI instead.
+        return
 
     aws.add_snapshot_ownership(customer_snapshot)
 
