@@ -4,7 +4,7 @@ kind: Template
 metadata:
   name: cloudigrade-smoke
 objects:
-- apiVersion: batch/v1
+- apiVersion: cloud.redhat.com/v1alpha1
   kind: ClowdJobInvocation
   metadata:
     name: smoke-iqe-${IMAGE_TAG}
