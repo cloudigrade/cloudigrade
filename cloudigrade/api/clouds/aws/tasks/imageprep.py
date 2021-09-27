@@ -25,13 +25,90 @@ CLOUD_KEY = "cloud"
 CLOUD_TYPE_AWS = "aws"
 
 
+def _get_ami_and_snapshot_for_copying(session, arn, ami_id, snapshot_region):
+    """
+    Get the EC2 Image and EC2 Snapshot objects from AWS in support of copy_ami_snapshot.
+
+    Possible side effects:
+        - If the AWS data cannot be loaded or the snapshot is encrypted, this function
+          updates our corresponding MachineImage with status ERROR.
+        - If AWS indicates that the snapshot ID exists but we cannot get the snapshot,
+          we call copy_ami_to_customer_account and return early, expecting that we may
+          later get access to the copy that function will create.
+
+    Returns:
+        tuple containing the boto3 EC2 Image and Snapshot objects if both can be loaded
+        successfully, else None.
+    """
+    if not (ami := aws.get_ami(session, ami_id, snapshot_region)):
+        logger.info(
+            _(
+                "Cannot copy AMI %(image_id)s snapshot from "
+                "%(source_region)s. Saving ERROR status."
+            ),
+            {"image_id": ami_id, "source_region": snapshot_region},
+        )
+        update_aws_image_status_error(ami_id)
+        return
+
+    if not (customer_snapshot_id := aws.get_ami_snapshot_id(ami)):
+        logger.info(
+            _(
+                "Cannot get customer snapshot id from AMI %(image_id)s "
+                "in %(source_region)s. Saving ERROR status."
+            ),
+            {"image_id": ami_id, "source_region": snapshot_region},
+        )
+        update_aws_image_status_error(ami_id)
+        return
+
+    try:
+        customer_snapshot = aws.get_snapshot(
+            session, customer_snapshot_id, snapshot_region
+        )
+    except ClientError as e:
+        error_code = e.response.get("Error").get("Code")
+        if error_code == "InvalidSnapshot.NotFound":
+            # Possibly a marketplace AMI, try to handle it by copying.
+            logger.info(
+                _(
+                    "Encountered %(error_code)s. Possibly a marketplace AMI? "
+                    "Copying AMI %(ami)s to customer account with ARN %(arn)s"
+                ),
+                {"error_code": error_code, "ami": ami, "arn": arn},
+            )
+            copy_ami_to_customer_account.delay(arn, ami_id, snapshot_region)
+            return
+        raise e
+
+    if customer_snapshot.encrypted:
+        logger.info(
+            _(
+                'AWS snapshot "%(snapshot_id)s" for image "%(image_id)s" '
+                'found using customer ARN "%(arn)s" is encrypted and '
+                "cannot be copied."
+            ),
+            {
+                "snapshot_id": customer_snapshot.snapshot_id,
+                "image_id": ami.id,
+                "arn": arn,
+            },
+        )
+        update_aws_image_status_error(ec2_ami_id=ami_id, is_encrypted=True)
+        return
+
+    return ami, customer_snapshot
+
+
 @retriable_shared_task(name="api.clouds.aws.tasks.copy_ami_snapshot")
 @rewrap_aws_errors
-def copy_ami_snapshot(  # noqa: C901
-    arn, ami_id, snapshot_region, reference_ami_id=None
-):
+def copy_ami_snapshot(arn, ami_id, snapshot_region, reference_ami_id=None):
     """
     Copy an AWS Snapshot to the primary AWS account.
+
+    If we cannot load the image and snapshot data from AWS and our own model's
+    representation, then this function returns early, effectively abandoning the process
+    that would result in the image's inspection.
 
     Args:
         arn (str): The AWS Resource Number for the account with the snapshot
@@ -60,24 +137,20 @@ def copy_ami_snapshot(  # noqa: C901
         },
     )
 
-    # Check if the image object exists for this API.
-    if reference_ami_id:
-        if not AwsMachineImage.objects.filter(ec2_ami_id=reference_ami_id).exists():
-            logger.warning(
-                _(
-                    "AwsMachineImage with EC2 AMI ID %(ami_id)s could not be "
-                    "found for copy_ami_snapshot (using reference_ami_id)."
-                ),
-                {"ami_id": ami_id},
-            )
-            return
-    elif not AwsMachineImage.objects.filter(ec2_ami_id=ami_id).exists():
+    # Check if the image object exists for this AMI ID.
+    ec2_ami_id = reference_ami_id if reference_ami_id else ami_id
+    if not AwsMachineImage.objects.filter(ec2_ami_id=ec2_ami_id).exists():
         logger.warning(
             _(
-                "AwsMachineImage with EC2 AMI ID %(ami_id)s could not be "
-                "found for copy_ami_snapshot."
+                "AwsMachineImage with EC2 AMI ID %(ec2_ami_id)s could not be "
+                "found for copy_ami_snapshot (using %(ami_variable_name)s)"
             ),
-            {"ami_id": ami_id},
+            {
+                "ec2_ami_id": ec2_ami_id,
+                "ami_variable_name": "reference_ami_id"
+                if reference_ami_id
+                else "ami_id",
+            },
         )
         return
 
@@ -85,76 +158,14 @@ def copy_ami_snapshot(  # noqa: C901
     session = aws.get_session(arn)
     session_account_id = aws.get_session_account_id(session)
 
-    # Try to get the AMI from AWS.
-    ami = aws.get_ami(session, ami_id, snapshot_region)
-
-    # Update image status to "error" and exit if that failed, else continue.
-    if not ami:
-        logger.info(
-            _(
-                "Cannot copy AMI %(image_id)s snapshot from "
-                "%(source_region)s. Saving ERROR status."
-            ),
-            {"image_id": ami_id, "source_region": snapshot_region},
+    # Try to get the AMI and Snapshot from AWS.
+    if not (
+        ami_and_snapshot := _get_ami_and_snapshot_for_copying(
+            session, arn, ami_id, snapshot_region
         )
-        update_aws_image_status_error(ami_id)
+    ):
         return
-
-    # Try to get the snapshot ID from AWS.
-    customer_snapshot_id = aws.get_ami_snapshot_id(ami)
-
-    # Update image status to "error" and exit if that failed, else continue.
-    if not customer_snapshot_id:
-        logger.info(
-            _(
-                "Cannot get customer snapshot id from AMI %(image_id)s "
-                "in %(source_region)s. Saving ERROR status."
-            ),
-            {"image_id": ami_id, "source_region": snapshot_region},
-        )
-        update_aws_image_status_error(ami_id)
-        return
-
-    # Try to get the snapshot object from AWS.
-    try:
-        customer_snapshot = aws.get_snapshot(
-            session, customer_snapshot_id, snapshot_region
-        )
-    except ClientError as e:
-        error_code = e.response.get("Error").get("Code")
-        if error_code == "InvalidSnapshot.NotFound":
-            # Possibly a marketplace AMI, try to handle it by copying.
-            logger.info(
-                _(
-                    "Encountered %(error_code)s. Possibly a marketplace AMI? "
-                    "Copying AMI %(ami)s to customer account with ARN %(arn)s"
-                ),
-                {"error_code": error_code, "ami": ami, "arn": arn},
-            )
-            copy_ami_to_customer_account.delay(arn, ami_id, snapshot_region)
-            return
-        raise e
-
-    # If the snapshot is encrypted, update our model and exit.
-    if customer_snapshot.encrypted:
-        awsimage = AwsMachineImage.objects.get(ec2_ami_id=ami_id)
-        image = awsimage.machine_image.get()
-        image.is_encrypted = True
-        image.status = image.ERROR
-        image.save()
-        logger.info(
-            _(
-                'AWS snapshot "%(snapshot_id)s" for image "%(image_id)s" '
-                'found using customer ARN "%(arn)s" is encrypted and '
-                "cannot be copied."
-            ),
-            {
-                "snapshot_id": customer_snapshot.snapshot_id,
-                "image_id": ami.id,
-                "arn": arn,
-            },
-        )
-        return
+    ami, customer_snapshot = ami_and_snapshot
 
     logger.info(
         _(
@@ -186,7 +197,7 @@ def copy_ami_snapshot(  # noqa: C901
 
     aws.add_snapshot_ownership(customer_snapshot)
 
-    snapshot_copy_id = aws.copy_snapshot(customer_snapshot_id, snapshot_region)
+    snapshot_copy_id = aws.copy_snapshot(customer_snapshot.snapshot_id, snapshot_region)
     logger.info(
         _(
             "%(label)s: customer_snapshot_id=%(snapshot_id)s, "
@@ -194,14 +205,14 @@ def copy_ami_snapshot(  # noqa: C901
         ),
         {
             "label": "copy_ami_snapshot",
-            "snapshot_id": customer_snapshot_id,
+            "snapshot_id": customer_snapshot.snapshot_id,
             "copy_id": snapshot_copy_id,
         },
     )
 
     # Schedule removal of ownership on customer snapshot
     remove_snapshot_ownership.delay(
-        arn, customer_snapshot_id, snapshot_region, snapshot_copy_id
+        arn, customer_snapshot.snapshot_id, snapshot_region, snapshot_copy_id
     )
 
     if reference_ami_id is not None:
