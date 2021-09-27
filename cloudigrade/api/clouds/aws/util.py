@@ -764,12 +764,13 @@ def update_aws_image_status_inspected(
     return True
 
 
-def update_aws_image_status_error(ec2_ami_id):
+def update_aws_image_status_error(ec2_ami_id, is_encrypted=None):
     """
     Set an AwsMachineImage's MachineImage status to ERROR.
 
     Args:
         ec2_ami_id (str): the AWS EC2 AMI ID of the AwsMachineImage to update.
+        is_encrypted (bool): optionally also set MachineImage.encrypted.
 
     Returns:
         bool True if status is successfully updated, else False.
@@ -786,6 +787,8 @@ def update_aws_image_status_error(ec2_ami_id):
                 {"ec2_ami_id": ec2_ami_id},
             )
             return False
+        if is_encrypted is not None:
+            machine_image.is_encrypted = is_encrypted
         machine_image.status = machine_image.ERROR
         machine_image.save()
     return True
