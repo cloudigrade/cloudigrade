@@ -248,6 +248,7 @@ class AwsMachineImage(BaseModel):
         blank=True,
     )
     aws_marketplace_image = models.BooleanField(default=False)
+    product_codes = models.JSONField(null=True)
 
     @property
     def is_cloud_access(self):
@@ -300,6 +301,7 @@ class AwsMachineImage(BaseModel):
             f"owner_aws_account_id={self.owner_aws_account_id}, "
             f"region={region}, "
             f"aws_marketplace_image={self.aws_marketplace_image}, "
+            f"product_codes={self.product_codes}, "
             f"created_at=parse({created_at}), "
             f"updated_at=parse({updated_at})"
             f")"

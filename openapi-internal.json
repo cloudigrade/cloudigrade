@@ -7022,6 +7022,10 @@
           "is_marketplace": {
             "type": "string",
             "readOnly": true
+          },
+          "product_codes": {
+            "type": "object",
+            "nullable": true
           }
         },
         "required": [

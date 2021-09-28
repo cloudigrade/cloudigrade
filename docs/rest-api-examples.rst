@@ -492,7 +492,7 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 6718
+    Content-Length: 6781
     Content-Type: application/json
     Referrer-Policy: same-origin
     X-CLOUDIGRADE-REQUEST-ID: 14acb226-cffc-4a69-899c-7762750c1978
@@ -513,6 +513,7 @@ Response:
                     "is_marketplace": false,
                     "owner_aws_account_id": "923899456057",
                     "platform": "none",
+                    "product_codes": null,
                     "region": null,
                     "updated_at": "2020-05-18T13:51:59.722367Z"
                 },
@@ -551,6 +552,7 @@ Response:
                     "is_marketplace": false,
                     "owner_aws_account_id": "923899456057",
                     "platform": "none",
+                    "product_codes": null,
                     "region": null,
                     "updated_at": "2020-05-18T13:51:59.722367Z"
                 },
@@ -589,6 +591,7 @@ Response:
                     "is_marketplace": false,
                     "owner_aws_account_id": "923899456057",
                     "platform": "none",
+                    "product_codes": null,
                     "region": null,
                     "updated_at": "2020-05-18T13:51:59.722367Z"
                 },
@@ -748,7 +751,7 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 1075
+    Content-Length: 1096
     Content-Type: application/json
     Referrer-Policy: same-origin
     X-CLOUDIGRADE-REQUEST-ID: c7260508-999e-41a1-921a-b38ca6583162
@@ -767,6 +770,7 @@ Response:
             "is_marketplace": false,
             "owner_aws_account_id": "923899456057",
             "platform": "none",
+            "product_codes": null,
             "region": null,
             "updated_at": "2020-05-18T13:51:59.722367Z"
         },
