@@ -162,6 +162,7 @@ class InternalAwsMachineImageSerializer(ModelSerializer):
             # from property functions:
             "is_cloud_access",
             "is_marketplace",
+            "product_codes",
         )
 
 

@@ -57,3 +57,5 @@ OPENSHIFT_TAG = "cloudigrade-ocp-present"
 RHEL_TAG = "cloudigrade-rhel-present"
 
 ECS_CLUSTER_REGION = "us-east-1"  # For now, our cluster is *always* in us-east-1.
+
+AWS_PRODUCT_CODE_TYPE_MARKETPLACE = "marketplace"

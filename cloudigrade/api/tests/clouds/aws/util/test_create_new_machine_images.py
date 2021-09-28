@@ -78,3 +78,42 @@ class CreateNewMachineImagesTest(TestCase):
         self.assertEqual(len(images), 1)
         self.assertEqual(images[0].ec2_ami_id, ami_id)
         self.assertEqual(images[0].platform, AwsMachineImage.WINDOWS)
+
+    def test_create_new_machine_images_with_marketplace_product_code(self):
+        """Test that the marketplace product code is set in the image appropriately."""
+        aws_account_id = util_helper.generate_dummy_aws_account_id()
+        arn = util_helper.generate_dummy_arn(aws_account_id)
+        api_helper.generate_cloud_account(arn=arn, aws_account_id=aws_account_id)
+
+        region = util_helper.get_random_region()
+        instances_data = {
+            region: [
+                util_helper.generate_dummy_describe_instance(
+                    state=aws.InstanceState.running
+                )
+            ]
+        }
+        ami_id = instances_data[region][0]["ImageId"]
+
+        mock_session = Mock()
+        described_amis = util_helper.generate_dummy_describe_image(
+            image_id=ami_id,
+            owner_id=aws_account_id,
+            generate_marketplace_product_code=True,
+        )
+
+        with patch.object(util.aws, "describe_images") as mock_describe_images:
+            mock_describe_images.return_value = [described_amis]
+            result = util.create_new_machine_images(mock_session, instances_data)
+            mock_describe_images.assert_called_with(mock_session, {ami_id}, region)
+
+        self.assertEqual(result, [ami_id])
+
+        images = list(AwsMachineImage.objects.all())
+        self.assertEqual(len(images), 1)
+        image = images[0]
+        self.assertEqual(image.ec2_ami_id, ami_id)
+        self.assertTrue(image.aws_marketplace_image)
+        self.assertIn(
+            aws.AWS_PRODUCT_CODE_TYPE_MARKETPLACE, image.product_codes[0].values()
+        )

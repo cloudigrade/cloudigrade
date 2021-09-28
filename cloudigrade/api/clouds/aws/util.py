@@ -123,6 +123,8 @@ def create_new_machine_images(session, instances_data):
             rhel_detected_by_tag = aws.RHEL_TAG in tag_keys
             openshift = aws.OPENSHIFT_TAG in tag_keys
 
+            product_codes = described_image.get("ProductCodes")
+
             logger.info(
                 _("%(prefix)s: Saving new AMI ID: %(ami_id)s"),
                 {"prefix": log_prefix, "ami_id": ami_id},
@@ -136,6 +138,7 @@ def create_new_machine_images(session, instances_data):
                 windows,
                 region,
                 architecture,
+                product_codes,
             )
             if new:
                 new_image_ids.append(ami_id)
@@ -152,6 +155,7 @@ def save_new_aws_machine_image(
     windows_detected,
     region,
     architecture,
+    product_codes,
 ):
     """
     Save a new AwsMachineImage image object.
@@ -181,6 +185,13 @@ def save_new_aws_machine_image(
         platform = AwsMachineImage.WINDOWS
         status = MachineImage.INSPECTED
 
+    aws_marketplace_image = False
+    if product_codes and aws.AWS_PRODUCT_CODE_TYPE_MARKETPLACE in [
+        product_code.get("ProductCodeType", "") for product_code in product_codes
+    ]:
+        aws_marketplace_image = True
+        status = MachineImage.INSPECTED
+
     with transaction.atomic():
         awsmachineimage, created = AwsMachineImage.objects.get_or_create(
             ec2_ami_id=ami_id,
@@ -188,6 +199,8 @@ def save_new_aws_machine_image(
                 "platform": platform,
                 "owner_aws_account_id": owner_aws_account_id,
                 "region": region,
+                "aws_marketplace_image": aws_marketplace_image,
+                "product_codes": product_codes,
             },
         )
 

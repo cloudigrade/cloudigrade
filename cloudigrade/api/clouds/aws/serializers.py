@@ -39,6 +39,7 @@ class AwsMachineImageSerializer(ModelSerializer):
             "updated_at",
             "is_cloud_access",
             "is_marketplace",
+            "product_codes",
         )
         read_only_fields = (
             "created_at",
@@ -50,6 +51,7 @@ class AwsMachineImageSerializer(ModelSerializer):
             "updated_at",
             "is_cloud_access",
             "is_marketplace",
+            "product_codes",
         )
 
     def create(self, validated_data):

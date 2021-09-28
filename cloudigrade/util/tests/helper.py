@@ -603,6 +603,7 @@ def generate_dummy_describe_image(
     openshift=False,
     platform=None,
     architecture=None,
+    generate_marketplace_product_code=False,
 ):
     """
     Generate dummy image to imitate 'describe images' API response.
@@ -616,6 +617,8 @@ def generate_dummy_describe_image(
         openshift (bool): Optional indicator for openshift.
         platform (str): Optional known Platform value.
         architecture (str): Optional known Architecture value.
+        generate_marketplace_product_code (bool): Optional should the generated image
+            also have a marketplace-type product code.
 
     Returns:
         dict: Well-formed image data structure.
@@ -649,6 +652,14 @@ def generate_dummy_describe_image(
         mock_image["Platform"] = platform
     if architecture is not None:
         mock_image["Architecture"] = architecture
+
+    if generate_marketplace_product_code:
+        mock_image["ProductCodes"] = [
+            {
+                "ProductCodeId": str(uuid.uuid4()),
+                "ProductCodeType": aws.AWS_PRODUCT_CODE_TYPE_MARKETPLACE,
+            }
+        ]
 
     return mock_image
 
