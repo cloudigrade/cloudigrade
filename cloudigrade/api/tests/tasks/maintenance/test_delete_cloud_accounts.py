@@ -40,21 +40,13 @@ class DeleteCloudAccountsTest(TestCase):
         self.image_azure_shared = api_helper.generate_image(
             cloud_type=api_helper.AWS_PROVIDER_STRING
         )
-        self.instance_azure_1_1 = api_helper.generate_instance(
-            self.account_azure_1, cloud_type=api_helper.AZURE_PROVIDER_STRING
-        )
+        self.instance_azure_1_1 = api_helper.generate_instance(self.account_azure_1)
         self.instance_azure_1_2 = api_helper.generate_instance(
-            self.account_azure_1,
-            image=self.image_azure_shared,
-            cloud_type=api_helper.AZURE_PROVIDER_STRING,
+            self.account_azure_1, image=self.image_azure_shared
         )
-        self.instance_azure_2_1 = api_helper.generate_instance(
-            self.account_azure_2, cloud_type=api_helper.AZURE_PROVIDER_STRING
-        )
+        self.instance_azure_2_1 = api_helper.generate_instance(self.account_azure_2)
         self.instance_azure_2_2 = api_helper.generate_instance(
-            self.account_azure_2,
-            image=self.image_azure_shared,
-            cloud_type=api_helper.AZURE_PROVIDER_STRING,
+            self.account_azure_2, image=self.image_azure_shared
         )
 
     def generate_activity(self):
