@@ -356,14 +356,89 @@ def _generate_cloud_account(
     return cloud_account
 
 
-def generate_instance(  # noqa: C901
+def generate_instance(cloud_account, **kwargs):
+    """
+    Generate an Instance with linked provider-specific model instance for testing.
+
+    Note:
+        Please consider using a cloud-specific function (e.g. generate_instance_aws,
+        generate_instance_azure) instead of this.
+
+    Args:
+        cloud_account (CloudAccount): account that owns the instance.
+        **kwargs (dict): Optional additional kwargs to pass to type-specific function.
+
+    Returns:
+        Instance: The created Instance instance.
+    """
+    if isinstance(cloud_account.content_object, AwsCloudAccount):
+        return generate_instance_aws(cloud_account, **kwargs)
+    elif isinstance(cloud_account.content_object, AzureCloudAccount):
+        return generate_instance_azure(cloud_account, **kwargs)
+    else:
+        raise NotImplementedError(
+            f"Unsupported cloud account type '{cloud_account.content_object.__class__}'"
+        )
+
+
+def generate_instance_azure(
+    cloud_account,
+    region=None,
+    image=None,
+    no_image=False,
+    azure_instance_resource_id=None,
+):
+    """
+    Generate an AzureInstance for the given CloudAccount for testing.
+
+    Any optional arguments not provided will be randomly generated.
+
+    Args:
+        cloud_account (CloudAccount): Account that will own the instance.
+        region (str): Optional Azure region where the instance runs.
+        image (MachineImage): Optional image to add instead of creating one.
+        no_image (bool): Whether an image should be attached to this instance.
+        azure_instance_resource_id (str): optional str for azure instance resource id
+
+    Returns:
+        Instance: The created Instance.
+
+    """
+    cloud_type = AZURE_PROVIDER_STRING
+    if region is None:
+        region = helper.get_random_region(cloud_type=cloud_type)
+    if azure_instance_resource_id is None:
+        azure_instance_resource_id = helper.generate_dummy_azure_instance_id()
+    if image is None and not no_image:
+        image_resource_id = helper.generate_dummy_azure_image_id()
+        try:
+            azure_image = AzureMachineImage.objects.get(resource_id=image_resource_id)
+            image = azure_image.machine_image.get()
+        except AzureMachineImage.DoesNotExist:
+            image = generate_image(
+                azure_image_resource_id=image_resource_id,
+                status=MachineImage.PENDING,
+                cloud_type=cloud_type,
+            )
+    azure_instance = AzureInstance.objects.create(
+        resource_id=azure_instance_resource_id,
+        region=region,
+    )
+    instance = Instance.objects.create(
+        cloud_account=cloud_account,
+        content_object=azure_instance,
+        machine_image=image,
+    )
+
+    return instance
+
+
+def generate_instance_aws(
     cloud_account,
     ec2_instance_id=None,
     region=None,
     image=None,
     no_image=False,
-    cloud_type=AWS_PROVIDER_STRING,
-    azure_instance_resource_id=None,
 ):
     """
     Generate an AwsInstance for the AwsAccount for testing.
@@ -376,63 +451,38 @@ def generate_instance(  # noqa: C901
         region (str): Optional AWS region where the instance runs.
         image (MachineImage): Optional image to add instead of creating one.
         no_image (bool): Whether an image should be attached to this instance.
-        cloud_type (str): Str denoting cloud type, defaults to "aws"
-        azure_instance_resource_id (str): optional str for azure instance resource id
 
     Returns:
         Instance: The created Instance.
 
     """
+    cloud_type = AWS_PROVIDER_STRING
+
     if region is None:
         region = helper.get_random_region(cloud_type=cloud_type)
 
-    if cloud_type == AZURE_PROVIDER_STRING:
-        if azure_instance_resource_id is None:
-            azure_instance_resource_id = helper.generate_dummy_azure_instance_id()
-        if image is None:
-            if not no_image:
-                image_resource_id = helper.generate_dummy_azure_image_id()
+    if ec2_instance_id is None:
+        ec2_instance_id = helper.generate_dummy_instance_id()
+    if image is None and not no_image:
+        ec2_ami_id = helper.generate_dummy_image_id()
+        try:
+            aws_image = AwsMachineImage.objects.get(ec2_ami_id=ec2_ami_id)
+            image = aws_image.machine_image.get()
+        except AwsMachineImage.DoesNotExist:
+            aws_account_id = cloud_account.content_object.aws_account_id
+            image = generate_image(
+                ec2_ami_id=ec2_ami_id,
+                owner_aws_account_id=aws_account_id,
+                status=MachineImage.PENDING,
+            )
 
-                try:
-                    azure_image = AzureMachineImage.objects.get(
-                        resource_id=image_resource_id
-                    )
-                    image = azure_image.machine_image.get()
-                except AzureMachineImage.DoesNotExist:
-                    image = generate_image(
-                        azure_image_resource_id=image_resource_id,
-                        status=MachineImage.PENDING,
-                        cloud_type=cloud_type,
-                    )
-        provider_instance = AzureInstance.objects.create(
-            resource_id=azure_instance_resource_id,
-            region=region,
-        )
-    else:
-        if ec2_instance_id is None:
-            ec2_instance_id = helper.generate_dummy_instance_id()
-        if image is None:
-            if not no_image:
-                ec2_ami_id = helper.generate_dummy_image_id()
-
-                try:
-                    aws_image = AwsMachineImage.objects.get(ec2_ami_id=ec2_ami_id)
-                    image = aws_image.machine_image.get()
-                except AwsMachineImage.DoesNotExist:
-                    aws_account_id = cloud_account.content_object.aws_account_id
-                    image = generate_image(
-                        ec2_ami_id=ec2_ami_id,
-                        owner_aws_account_id=aws_account_id,
-                        status=MachineImage.PENDING,
-                    )
-
-        provider_instance = AwsInstance.objects.create(
-            ec2_instance_id=ec2_instance_id,
-            region=region,
-        )
+    aws_instance = AwsInstance.objects.create(
+        ec2_instance_id=ec2_instance_id,
+        region=region,
+    )
     instance = Instance.objects.create(
         cloud_account=cloud_account,
-        content_object=provider_instance,
+        content_object=aws_instance,
         machine_image=image,
     )
 

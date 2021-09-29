@@ -220,7 +220,7 @@ class GenerateInstanceTest(TestCase):
     def test_generate_azure_instance_default(self):
         """Assert generation of an Instance with minimal args."""
         account = helper.generate_cloud_account(cloud_type="azure")
-        instance = helper.generate_instance(account, cloud_type="azure")
+        instance = helper.generate_instance(account)
         self.assertIsInstance(instance, Instance)
         self.assertEqual(instance.cloud_account, account)
         self.assertIsNotNone(instance.content_object.resource_id)
@@ -233,9 +233,7 @@ class GenerateInstanceTest(TestCase):
         ec2_instance_id = util_helper.generate_dummy_instance_id()
         region = util_helper.get_random_region()
         instance = helper.generate_instance(
-            account,
-            ec2_instance_id=ec2_instance_id,
-            region=region,
+            account, ec2_instance_id=ec2_instance_id, region=region
         )
         self.assertIsInstance(instance, Instance)
         self.assertEqual(instance.cloud_account, account)
@@ -256,7 +254,7 @@ class GenerateInstanceEventsTest(TestCase):
     def test_generate_azure_events_default_and_no_times(self):
         """Assert generation of an azure InstanceEvent."""
         account = helper.generate_cloud_account(cloud_type="azure")
-        instance = helper.generate_instance(account, cloud_type="azure")
+        instance = helper.generate_instance(account)
         events = helper.generate_instance_events(instance, tuple(), cloud_type="azure")
         self.assertEqual(len(events), 0)
 

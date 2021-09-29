@@ -104,17 +104,16 @@ class DocsApiHandler(object):
 
         ######################################
         # Generate AWS data for the customer user.
-        self.aws_customer_account = api_helper.generate_cloud_account(
+        self.aws_customer_account = api_helper.generate_cloud_account_aws(
             arn=util_helper.generate_dummy_arn(),
             user=self.customer_user,
             name="greatest account ever",
             created_at=self.two_weeks_ago,
         )
-        self.azure_customer_account = api_helper.generate_cloud_account(
+        self.azure_customer_account = api_helper.generate_cloud_account_azure(
             user=self.customer_user,
             name="meh account",
             created_at=self.two_weeks_ago,
-            cloud_type="azure",
             azure_subscription_id=str(seeded_uuid4()),
             azure_tenant_id=str(seeded_uuid4()),
         )
@@ -122,15 +121,9 @@ class DocsApiHandler(object):
             api_helper.generate_instance(self.aws_customer_account),
             api_helper.generate_instance(self.aws_customer_account),
             api_helper.generate_instance(self.aws_customer_account),
-            api_helper.generate_instance(
-                self.azure_customer_account, cloud_type="azure"
-            ),
-            api_helper.generate_instance(
-                self.azure_customer_account, cloud_type="azure"
-            ),
-            api_helper.generate_instance(
-                self.azure_customer_account, cloud_type="azure"
-            ),
+            api_helper.generate_instance(self.azure_customer_account),
+            api_helper.generate_instance(self.azure_customer_account),
+            api_helper.generate_instance(self.azure_customer_account),
         ]
 
         # Generate events so we can see customer activity in the responses.
@@ -403,8 +396,7 @@ class DocsApiHandler(object):
         # V2 Public Commands
         # Retrieve the ARM Offer Template
         response = self.anonymous_client.verb_noun(
-            verb='get',
-            noun='azure-offer-template'
+            verb="get", noun="azure-offer-template"
         )
         assert_status(response, 200)
         responses["v2_get_azure_offer"] = response

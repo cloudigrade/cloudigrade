@@ -488,8 +488,7 @@ class InstanceModelTest(TestCase, ModelStrTestMixin):
             cloud_account=self.account, image=self.image
         )
         self.instance_without_image = helper.generate_instance(
-            cloud_account=self.account,
-            no_image=True,
+            cloud_account=self.account, no_image=True
         )
 
     def test_instance_str(self):

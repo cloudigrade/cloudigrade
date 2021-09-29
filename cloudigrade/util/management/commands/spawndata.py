@@ -175,9 +175,7 @@ class Command(BaseCommand):
         ):
             instances.append(
                 account_helper.generate_instance(
-                    cloud_account=random.choice(accounts),
-                    image=random.choice(images),
-                    cloud_type=options["cloud_type"],
+                    cloud_account=random.choice(accounts), image=random.choice(images)
                 )
             )
         self.stdout.write(_("Created {} instances(s)").format(len(instances)))
