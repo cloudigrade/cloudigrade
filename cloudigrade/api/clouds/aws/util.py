@@ -124,6 +124,7 @@ def create_new_machine_images(session, instances_data):
             openshift = aws.OPENSHIFT_TAG in tag_keys
 
             product_codes = described_image.get("ProductCodes")
+            platform_details = described_image.get("PlatformDetails")
 
             logger.info(
                 _("%(prefix)s: Saving new AMI ID: %(ami_id)s"),
@@ -139,6 +140,7 @@ def create_new_machine_images(session, instances_data):
                 region,
                 architecture,
                 product_codes,
+                platform_details,
             )
             if new:
                 new_image_ids.append(ami_id)
@@ -156,6 +158,7 @@ def save_new_aws_machine_image(
     region,
     architecture,
     product_codes,
+    platform_details,
 ):
     """
     Save a new AwsMachineImage image object.
@@ -201,6 +204,7 @@ def save_new_aws_machine_image(
                 "region": region,
                 "aws_marketplace_image": aws_marketplace_image,
                 "product_codes": product_codes,
+                "platform_details": platform_details,
             },
         )
 

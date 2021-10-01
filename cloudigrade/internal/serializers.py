@@ -163,6 +163,7 @@ class InternalAwsMachineImageSerializer(ModelSerializer):
             "is_cloud_access",
             "is_marketplace",
             "product_codes",
+            "platform_details",
         )
 
 
