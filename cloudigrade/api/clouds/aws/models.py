@@ -250,6 +250,7 @@ class AwsMachineImage(BaseModel):
     aws_marketplace_image = models.BooleanField(default=False)
     product_codes = models.JSONField(null=True)
     platform_details = models.CharField(max_length=256, null=True, blank=True)
+    usage_operation = models.CharField(max_length=256, null=True, blank=True)
 
     @property
     def is_cloud_access(self):
@@ -304,6 +305,7 @@ class AwsMachineImage(BaseModel):
             f"aws_marketplace_image={self.aws_marketplace_image}, "
             f"product_codes={self.product_codes}, "
             f"platform_details={self.platform_details}, "
+            f"usage_operation={self.usage_operation}, "
             f"created_at=parse({created_at}), "
             f"updated_at=parse({updated_at})"
             f")"
