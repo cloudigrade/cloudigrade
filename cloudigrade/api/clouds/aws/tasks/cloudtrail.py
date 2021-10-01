@@ -538,6 +538,7 @@ def _save_cloudtrail_activity(
             name = described_image["Name"]
             architecture = described_image.get("Architecture")
             product_codes = described_image.get("ProductCodes")
+            platform_details = described_image.get("PlatformDetails")
 
             windows = ami_id in windows_ami_ids
             rhel_detected_by_tag = ami_id in rhel_tagged_ami_ids
@@ -558,6 +559,7 @@ def _save_cloudtrail_activity(
                 region,
                 architecture,
                 product_codes,
+                platform_details,
             )
 
             image = awsimage.machine_image.get()

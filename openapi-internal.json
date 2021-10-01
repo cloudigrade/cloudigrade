@@ -6989,6 +6989,11 @@
           "product_codes": {
             "type": "object",
             "nullable": true
+          },
+          "platform_details": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 256
           }
         },
         "required": [
