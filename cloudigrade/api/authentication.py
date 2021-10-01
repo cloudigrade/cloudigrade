@@ -10,7 +10,70 @@ from django.utils.translation import gettext as _
 from rest_framework import HTTP_HEADER_ENCODING
 from rest_framework.authentication import BaseAuthentication, exceptions
 
+from util.redhatcloud.psk import psk_service_name
+
 logger = logging.getLogger(__name__)
+
+
+def parse_insights_request_id(request):
+    """Parse and log the Insights Request ID."""
+    insights_request_id = request.META.get(settings.INSIGHTS_REQUEST_ID_HEADER, None)
+    logger.info(
+        _("Authenticating via insights, INSIGHTS_REQUEST_ID: %s"),
+        insights_request_id,
+    )
+
+
+def parse_psk_header(request):
+    """
+    Get relevant information from the given request's PSK and account number headers.
+
+    Returns:
+        (str, str): the tuple of psk and account_number fields.
+            If the psk header is not present and the account_number
+            header is specified, this function returns (None, None).
+            Otherwise it will return (str, str|None) with the valid
+            PSK and the account_number if specified.
+
+    Raises:
+        AuthenticationFailed: If an invalid PSK is specified.
+    """
+    service_psk = request.META.get(settings.CLOUDIGRADE_PSK_HEADER, None)
+
+    if service_psk is None:
+        return None, None
+
+    service_name = psk_service_name(service_psk)
+    if not service_name:
+        logger.info(
+            _("Authentication Failed: Invalid PSK %s specified in header"), service_psk
+        )
+        raise exceptions.AuthenticationFailed(
+            _("Authentication Failed: Invalid PSK specified in header")
+        )
+
+    account_number = request.META.get(settings.CLOUDIGRADE_ACCOUNT_NUMBER_HEADER, None)
+
+    if account_number is None:
+        logger.info(
+            _("PSK header for service '%(service_name)s'" " with no account_number', "),
+            {
+                "service_name": service_name,
+            },
+        )
+        return service_psk, None
+
+    logger.info(
+        _(
+            "PSK header for service '%(service_name)s'"
+            " with account_number '%(account_number)s', "
+        ),
+        {
+            "service_name": service_name,
+            "account_number": account_number,
+        },
+    )
+    return service_psk, account_number
 
 
 def parse_requests_header(request, allow_internal_fake_identity_header=False):
@@ -18,19 +81,14 @@ def parse_requests_header(request, allow_internal_fake_identity_header=False):
     Get relevant information from the given request's identity header.
 
     Returns:
-        (str, str, bool): the tuple of auth_header, account_number, is_org_admin
-            fields. If the auth header is not present, this function returns
-            (None, None, False)
+        (str, str, bool): the tuple of psk and account_number fields. Both psk
+            and account_number headers must be specified in the request.
+            If the psk header is not present or invalid and the account_number
+            header is missing, this function returns (None, None)
 
     Raises:
-        AuthenticationFailed: If any of the fields are malformed.
+        AuthenticationFailed: If any of the fields are invalid or missing.
     """
-    insights_request_id = request.META.get(settings.INSIGHTS_REQUEST_ID_HEADER, None)
-    logger.info(
-        _("Authenticating via insights, INSIGHTS_REQUEST_ID: %s"),
-        insights_request_id,
-    )
-
     auth_header = request.META.get(settings.INSIGHTS_IDENTITY_HEADER, None)
     if allow_internal_fake_identity_header:
         auth_header = request.META.get(
@@ -177,20 +235,25 @@ class IdentityHeaderAuthentication(BaseAuthentication):
         return user
 
     def authenticate(self, request):
-        """Authenticate the request using the identity header."""
-        auth_header, account_number, is_org_admin = parse_requests_header(
-            request, self.allow_internal_fake_identity_header
-        )
+        """Authenticate the request using the PSK or the identity header."""
+        parse_insights_request_id(request)
+        psk, account_number = parse_psk_header(request)
+        if psk:
+            self.assert_account_number(account_number)
+        else:
+            auth_header, account_number, is_org_admin = parse_requests_header(
+                request, self.allow_internal_fake_identity_header
+            )
 
-        # Can't authenticate if there isn't a header
-        if not auth_header:
-            if not self.require_account_number and not self.require_org_admin:
-                return None
-            else:
-                raise exceptions.AuthenticationFailed
+            # Can't authenticate if there isn't a header
+            if not auth_header:
+                if not self.require_account_number and not self.require_org_admin:
+                    return None
+                else:
+                    raise exceptions.AuthenticationFailed
 
-        self.assert_account_number(account_number)
-        self.assert_org_admin(account_number, is_org_admin)
+            self.assert_account_number(account_number)
+            self.assert_org_admin(account_number, is_org_admin)
         if user := self.get_user(account_number):
             return user, True
         return None
