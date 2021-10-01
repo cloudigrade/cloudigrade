@@ -180,6 +180,9 @@ def save_new_aws_machine_image(
         windows_detected (bool): was windows detected for this image
         region (str): Region where the image was found
         architecture (str): CPU architecture detected for this image
+        product_codes (list[dict]): AMI product codes
+        platform_details (str): AMI platform details (e.g. "Linux/UNIX")
+        usage_operation (str): AMI usage operation (e.g. "RunInstances")
 
     Returns (AwsMachineImage, bool): The object representing the saved model
         and a boolean of whether it was new or not.
