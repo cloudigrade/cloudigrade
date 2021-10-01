@@ -164,6 +164,7 @@ class InternalAwsMachineImageSerializer(ModelSerializer):
             "is_marketplace",
             "product_codes",
             "platform_details",
+            "usage_operation",
         )
 
 

@@ -6994,6 +6994,11 @@
             "type": "string",
             "nullable": true,
             "maxLength": 256
+          },
+          "usage_operation": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 256
           }
         },
         "required": [

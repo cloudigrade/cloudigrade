@@ -125,6 +125,7 @@ def create_new_machine_images(session, instances_data):
 
             product_codes = described_image.get("ProductCodes")
             platform_details = described_image.get("PlatformDetails")
+            usage_operation = described_image.get("UsageOperation")
 
             logger.info(
                 _("%(prefix)s: Saving new AMI ID: %(ami_id)s"),
@@ -141,6 +142,7 @@ def create_new_machine_images(session, instances_data):
                 architecture,
                 product_codes,
                 platform_details,
+                usage_operation,
             )
             if new:
                 new_image_ids.append(ami_id)
@@ -159,6 +161,7 @@ def save_new_aws_machine_image(
     architecture,
     product_codes,
     platform_details,
+    usage_operation,
 ):
     """
     Save a new AwsMachineImage image object.
@@ -205,6 +208,7 @@ def save_new_aws_machine_image(
                 "aws_marketplace_image": aws_marketplace_image,
                 "product_codes": product_codes,
                 "platform_details": platform_details,
+                "usage_operation": usage_operation,
             },
         )
 

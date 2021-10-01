@@ -41,6 +41,7 @@ class AwsMachineImageSerializer(ModelSerializer):
             "is_marketplace",
             "product_codes",
             "platform_details",
+            "usage_operation",
         )
         read_only_fields = (
             "created_at",
@@ -54,6 +55,7 @@ class AwsMachineImageSerializer(ModelSerializer):
             "is_marketplace",
             "product_codes",
             "platform_details",
+            "usage_operation",
         )
 
     def create(self, validated_data):

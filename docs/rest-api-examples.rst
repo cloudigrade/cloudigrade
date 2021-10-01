@@ -489,7 +489,7 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 6853
+    Content-Length: 6922
     Content-Type: application/json
     Referrer-Policy: same-origin
     X-CLOUDIGRADE-REQUEST-ID: 14acb226-cffc-4a69-899c-7762750c1978
@@ -513,7 +513,8 @@ Response:
                     "platform_details": null,
                     "product_codes": null,
                     "region": null,
-                    "updated_at": "2020-05-18T13:51:59.722367Z"
+                    "updated_at": "2020-05-18T13:51:59.722367Z",
+                    "usage_operation": null
                 },
                 "created_at": "2020-05-18T13:51:59.722367Z",
                 "image_id": 1,
@@ -553,7 +554,8 @@ Response:
                     "platform_details": null,
                     "product_codes": null,
                     "region": null,
-                    "updated_at": "2020-05-18T13:51:59.722367Z"
+                    "updated_at": "2020-05-18T13:51:59.722367Z",
+                    "usage_operation": null
                 },
                 "created_at": "2020-05-18T13:51:59.722367Z",
                 "image_id": 2,
@@ -593,7 +595,8 @@ Response:
                     "platform_details": null,
                     "product_codes": null,
                     "region": null,
-                    "updated_at": "2020-05-18T13:51:59.722367Z"
+                    "updated_at": "2020-05-18T13:51:59.722367Z",
+                    "usage_operation": null
                 },
                 "created_at": "2020-05-18T13:51:59.722367Z",
                 "image_id": 3,
@@ -751,7 +754,7 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 1120
+    Content-Length: 1143
     Content-Type: application/json
     Referrer-Policy: same-origin
     X-CLOUDIGRADE-REQUEST-ID: c7260508-999e-41a1-921a-b38ca6583162
@@ -773,7 +776,8 @@ Response:
             "platform_details": null,
             "product_codes": null,
             "region": null,
-            "updated_at": "2020-05-18T13:51:59.722367Z"
+            "updated_at": "2020-05-18T13:51:59.722367Z",
+            "usage_operation": null
         },
         "created_at": "2020-05-18T13:51:59.722367Z",
         "image_id": 1,
