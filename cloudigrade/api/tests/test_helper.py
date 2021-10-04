@@ -333,7 +333,7 @@ class GenerateAwsImageTest(TestCase):
 
     def test_generate_aws_image_default(self):
         """Assert generation of an AwsMachineImage with minimal args."""
-        image = helper.generate_image()
+        image = helper.generate_image_aws()
         self.assertIsInstance(image.content_object.owner_aws_account_id, Decimal)
         self.assertEqual(image.content_object.platform, image.content_object.NONE)
         self.assertIsNotNone(image.content_object.ec2_ami_id)
@@ -357,7 +357,7 @@ class GenerateAwsImageTest(TestCase):
         syspurpose = {_faker.slug(): _faker.text()}
         architecture = _faker.slug()
 
-        image = helper.generate_image(
+        image = helper.generate_image_aws(
             account_id,
             is_encrypted=True,
             is_windows=True,
@@ -394,7 +394,7 @@ class GenerateAwsImageTest(TestCase):
     def test_generate_aws_image_with_rhel_detected_details_args(self):
         """Assert generation of an AwsMachineImage with RHEL JSON details."""
         rhel_version = _faker.slug()
-        image = helper.generate_image(
+        image = helper.generate_image_aws(
             rhel_detected=True,
             rhel_detected_repos=True,
             rhel_detected_certs=True,
@@ -417,7 +417,7 @@ class GenerateAwsImageTest(TestCase):
         account_id = util_helper.generate_dummy_aws_account_id()
         name = _faker.name()
 
-        image = helper.generate_image(
+        image = helper.generate_image_aws(
             account_id,
             name=name,
             is_cloud_access=True,
@@ -439,7 +439,7 @@ class GenerateAwsImageTest(TestCase):
         account_id = util_helper.generate_dummy_aws_account_id()
         name = _faker.name()
 
-        image = helper.generate_image(
+        image = helper.generate_image_aws(
             account_id,
             name=name,
             is_marketplace=True,
