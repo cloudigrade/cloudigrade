@@ -777,6 +777,10 @@ def generate_image_aws(
     is_marketplace=False,
     is_cloud_access=False,
     is_windows=False,
+    product_codes=None,
+    platform_details=None,
+    usage_operation=None,
+    generate_marketplace_product_code=False,
     **kwargs,
 ):
     """
@@ -793,6 +797,10 @@ def generate_image_aws(
         is_cloud_access (bool): is the image from Cloud Access. If true, this also
             overrides the owner_aws_account_id and name as appropriate.
         is_windows (bool): is the AMI Windows
+        product_codes (list[dict]): AMI product codes
+        platform_details (str): AMI platform details (e.g. "Linux/UNIX")
+        usage_operation (str): AMI usage operation (e.g. "RunInstances:0010")
+        generate_marketplace_product_code (bool): generate a marketplace product code
         **kwargs (dict): additional optional arguments for _generate_image
 
     Returns:
@@ -805,18 +813,33 @@ def generate_image_aws(
         ec2_ami_id = helper.generate_dummy_image_id()
     platform = AwsMachineImage.WINDOWS if is_windows else AwsMachineImage.NONE
 
+    aws_marketplace_image = False
     if is_marketplace:
         name = f"{name or _faker.name()}{MARKETPLACE_NAME_TOKEN}"
         owner_aws_account_id = random.choice(settings.RHEL_IMAGES_AWS_ACCOUNTS)
+        # Note: At the time of this writing, we do not set aws_marketplace_image=True
+        # during image describe operations based on the name and owner account.
+        # We only check at AwsMachineImage.is_marketplace runtime to see if the name
+        # and owner contain values that would indicate marketplace as its origin.
 
     if is_cloud_access:
         name = f"{name or _faker.name()}{CLOUD_ACCESS_NAME_TOKEN}"
         owner_aws_account_id = random.choice(settings.RHEL_IMAGES_AWS_ACCOUNTS)
 
+    if generate_marketplace_product_code:
+        if not product_codes:
+            product_codes = []
+        product_codes.append({"ProductCodeType": aws.AWS_PRODUCT_CODE_TYPE_MARKETPLACE})
+        aws_marketplace_image = True
+
     aws_machine_image = AwsMachineImage.objects.create(
         owner_aws_account_id=owner_aws_account_id,
         ec2_ami_id=ec2_ami_id,
         platform=platform,
+        product_codes=product_codes,
+        platform_details=platform_details,
+        usage_operation=usage_operation,
+        aws_marketplace_image=aws_marketplace_image,
     )
 
     machine_image = _generate_image(aws_machine_image, name, **kwargs)
