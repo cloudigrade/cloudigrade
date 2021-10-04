@@ -13,6 +13,7 @@ from django.db import transaction
 from django.utils.translation import gettext as _
 from tqdm import tqdm
 
+from api import AWS_PROVIDER_STRING
 from api.models import InstanceEvent
 from api.tasks.calculation import recalculate_concurrent_usage_for_user_id
 from api.tests import helper as account_helper
@@ -146,16 +147,19 @@ class Command(BaseCommand):
         for __ in tqdm(
             range(options["image_count"]), desc="Spawn image progress", unit="images"
         ):
-            images.append(
-                account_helper.generate_image(
-                    owner_aws_account_id=random.choice(accounts).cloud_account_id
+            kwargs = {
+                "rhel_detected": random.random() < options["rhel_chance"],
+                "openshift_detected": random.random() < options["ocp_chance"],
+                "cloud_type": options["cloud_type"],
+            }
+            if options["cloud_type"] == AWS_PROVIDER_STRING:
+                kwargs["owner_aws_account_id"] = (
+                    random.choice(accounts).cloud_account_id
                     if random.random() < options["other_owner_chance"]
-                    else util_helper.generate_dummy_aws_account_id(),
-                    rhel_detected=random.random() < options["rhel_chance"],
-                    openshift_detected=random.random() < options["ocp_chance"],
-                    cloud_type=options["cloud_type"],
+                    else util_helper.generate_dummy_aws_account_id()
                 )
-            )
+            images.append(account_helper.generate_image(**kwargs))
+
         self.stdout.write(_("Created {} images").format(len(images)))
         return images
 

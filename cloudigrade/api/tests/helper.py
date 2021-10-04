@@ -663,11 +663,36 @@ def generate_cloudtrail_instance_event(
     return event
 
 
-def generate_image(  # noqa: C901
-    owner_aws_account_id=None,
+def generate_image(cloud_type=AWS_PROVIDER_STRING, **kwargs):
+    """
+    Generate a MachineImage with linked provider-specific model instance for testing.
+
+    Note:
+        This function may be deprecated and removed in the near future since we will
+        stop assuming AWS is a default as we improve support for additional cloud types.
+        Please use a cloud-specific function (e.g. generate_image_aws,
+        generate_image_azure) instead of this.
+
+    Args:
+        cloud_type (str): cloud provider type identifier
+        **kwargs (dict): Optional additional kwargs to pass to type-specific function.
+
+    Returns:
+        MachineImage: The created MachineImage instance.
+    """
+    if cloud_type == AWS_PROVIDER_STRING:
+        return generate_image_aws(**kwargs)
+    elif cloud_type == AZURE_PROVIDER_STRING:
+        return generate_image_azure(**kwargs)
+    else:
+        raise NotImplementedError(f"Unsupported cloud_type '{cloud_type}'")
+
+
+def _generate_image(
+    provider_machine_image,
+    name=None,
+    status=MachineImage.INSPECTED,
     is_encrypted=False,
-    is_windows=False,
-    ec2_ami_id=None,
     rhel_detected=False,
     rhel_detected_by_tag=False,
     rhel_detected_repos=False,
@@ -677,50 +702,29 @@ def generate_image(  # noqa: C901
     rhel_version=None,
     syspurpose=None,
     openshift_detected=False,
-    name=None,
-    status=MachineImage.INSPECTED,
-    is_cloud_access=False,
-    is_marketplace=False,
     architecture="x86_64",
-    cloud_type=AWS_PROVIDER_STRING,
-    azure_image_resource_id=None,
 ):
     """
-    Generate an MachineImage.
-
-    Any optional arguments not provided will be randomly generated.
+    Generate a MachineImage linked to the given provider-specific model instance.
 
     Args:
-        owner_aws_account_id (int): Optional AWS account that owns the image.
-        is_encrypted (bool): Optional Indicates if image is encrypted.
-        is_windows (bool): Optional Indicates if AMI is Windows.
-        ec2_ami_id (str): Optional EC2 AMI ID of the image
-        rhel_detected (bool): Optional Indicates if RHEL is detected.
-        rhel_detected_by_tag (bool): Optional indicates if RHEL is detected by tag.
-        rhel_detected_repos (bool): Optional indicates if RHEL is detected via
-            enabled yum repos.
-        rhel_detected_certs (bool): Optional indicates if RHEL is detected via
-            product certificates.
-        rhel_detected_release_files (bool): Optional indicates if RHEL is
-            detected via release files.
-        rhel_detected_signed_packages (bool): Optional indicates if RHEL is
-            detected via signed packages.
-        rhel_version (str): Optional indicates what RHEL version is detected.
-        syspurpose (dict): Optional indicates what syspurpose is detected.
-        openshift_detected (bool): Optional Indicates if OpenShift is detected.
-        name (str): Optional AMI name.
-        status (str): Optional MachineImage inspection status.
-        is_cloud_access (bool): Optional indicates if image is from Cloud
-            Access. Has side-effect of modifying the owner_aws_account_id and
-            name as appropriate.
-        is_marketplace (bool): Optional indicates if image is from Marketplace.
-            Has side-effect of modifying the owner_aws_account_id and name as
-            appropriate.
-        architecture (str): Optional indicates the detected CPU architecture.
+        provider_machine_image (object): cloud provider specific MachineImage instance
+        name (str): image name
+        status (str): MachineImage inspection status
+        is_encrypted (bool): is image filesystem data encrypted
+        rhel_detected (bool): is RHEL detected by any unspecified method
+        rhel_detected_by_tag (bool): is RHEL detected by tag
+        rhel_detected_repos (bool): is RHEL detected via enabled yum/dnf repos
+        rhel_detected_certs (bool): is RHEL detected via product certificates
+        rhel_detected_release_files (bool): is RHEL detected via release files
+        rhel_detected_signed_packages (bool): is RHEL detected via signed packages
+        rhel_version (str): RHEL version string
+        syspurpose (dict): syspurpose JSON file contents
+        openshift_detected (bool): is OpenShift detected
+        architecture (str): image's CPU architecture
 
     Returns:
-        MachineImage: The created AwsMachineImage.
-
+        MachineImage: The created MachineImage instance.
     """
     if rhel_detected:
         if not syspurpose:
@@ -733,14 +737,14 @@ def generate_image(  # noqa: C901
                 rhel_detected_signed_packages,
             )
         ):
-            image_json = json.dumps(
+            inspection_json = json.dumps(
                 {
                     "rhel_release_files_found": rhel_detected,
                     "syspurpose": syspurpose,
                 }
             )
         else:
-            image_json = json.dumps(
+            inspection_json = json.dumps(
                 {
                     "rhel_enabled_repos_found": rhel_detected_repos,
                     "rhel_product_certs_found": rhel_detected_certs,
@@ -751,38 +755,11 @@ def generate_image(  # noqa: C901
                 }
             )
     else:
-        image_json = None
+        inspection_json = None
 
-    if cloud_type == AZURE_PROVIDER_STRING:
-        if azure_image_resource_id is None:
-            azure_image_resource_id = helper.generate_dummy_azure_image_id()
-        provider_machine_image = AzureMachineImage.objects.create(
-            resource_id=azure_image_resource_id,
-            azure_marketplace_image=is_marketplace,
-        )
-    else:
-        if not owner_aws_account_id:
-            owner_aws_account_id = helper.generate_dummy_aws_account_id()
-        if not ec2_ami_id:
-            ec2_ami_id = helper.generate_dummy_image_id()
-        platform = AwsMachineImage.WINDOWS if is_windows else AwsMachineImage.NONE
-
-        if is_marketplace:
-            name = f"{name or _faker.name()}{MARKETPLACE_NAME_TOKEN}"
-            owner_aws_account_id = random.choice(settings.RHEL_IMAGES_AWS_ACCOUNTS)
-
-        if is_cloud_access:
-            name = f"{name or _faker.name()}{CLOUD_ACCESS_NAME_TOKEN}"
-            owner_aws_account_id = random.choice(settings.RHEL_IMAGES_AWS_ACCOUNTS)
-
-        provider_machine_image = AwsMachineImage.objects.create(
-            owner_aws_account_id=owner_aws_account_id,
-            ec2_ami_id=ec2_ami_id,
-            platform=platform,
-        )
     machine_image = MachineImage.objects.create(
         is_encrypted=is_encrypted,
-        inspection_json=image_json,
+        inspection_json=inspection_json,
         rhel_detected_by_tag=rhel_detected_by_tag,
         openshift_detected=openshift_detected,
         name=name,
@@ -790,6 +767,87 @@ def generate_image(  # noqa: C901
         content_object=provider_machine_image,
         architecture=architecture,
     )
+    return machine_image
+
+
+def generate_image_aws(
+    owner_aws_account_id=None,
+    name=None,
+    ec2_ami_id=None,
+    is_marketplace=False,
+    is_cloud_access=False,
+    is_windows=False,
+    **kwargs,
+):
+    """
+    Generate a MachineImage with linked AwsMachineImage for testing.
+
+    Values will be randomly generated for any missing optional arguments.
+
+    Args:
+        name (str): AMI name
+        owner_aws_account_id (int): AWS account ID that owns the image
+        ec2_ami_id (str): EC2 AMI ID of the image
+        is_marketplace (bool): is the image from the AWS Marketplace. If true, this also
+            overrides the owner_aws_account_id and name as appropriate.
+        is_cloud_access (bool): is the image from Cloud Access. If true, this also
+            overrides the owner_aws_account_id and name as appropriate.
+        is_windows (bool): is the AMI Windows
+        **kwargs (dict): additional optional arguments for _generate_image
+
+    Returns:
+        MachineImage: The created MachineImage instance.
+
+    """
+    if not owner_aws_account_id:
+        owner_aws_account_id = helper.generate_dummy_aws_account_id()
+    if not ec2_ami_id:
+        ec2_ami_id = helper.generate_dummy_image_id()
+    platform = AwsMachineImage.WINDOWS if is_windows else AwsMachineImage.NONE
+
+    if is_marketplace:
+        name = f"{name or _faker.name()}{MARKETPLACE_NAME_TOKEN}"
+        owner_aws_account_id = random.choice(settings.RHEL_IMAGES_AWS_ACCOUNTS)
+
+    if is_cloud_access:
+        name = f"{name or _faker.name()}{CLOUD_ACCESS_NAME_TOKEN}"
+        owner_aws_account_id = random.choice(settings.RHEL_IMAGES_AWS_ACCOUNTS)
+
+    aws_machine_image = AwsMachineImage.objects.create(
+        owner_aws_account_id=owner_aws_account_id,
+        ec2_ami_id=ec2_ami_id,
+        platform=platform,
+    )
+
+    machine_image = _generate_image(aws_machine_image, name, **kwargs)
+
+    return machine_image
+
+
+def generate_image_azure(azure_image_resource_id=None, is_marketplace=False, **kwargs):
+    """
+    Generate a MachineImage with linked AwsMachineImage for testing.
+
+    Values will be randomly generated for any missing optional arguments.
+
+    Args:
+        azure_image_resource_id (str): Azure image resource ID (UUID)
+        is_marketplace (bool): is the image from the Azure Marketplace.
+        **kwargs (dict): additional optional arguments for _generate_image
+
+    Returns:
+        MachineImage: The created MachineImage instance.
+
+    """
+    if azure_image_resource_id is None:
+        azure_image_resource_id = helper.generate_dummy_azure_image_id()
+
+    azure_machine_image = AzureMachineImage.objects.create(
+        resource_id=azure_image_resource_id,
+        azure_marketplace_image=is_marketplace,
+    )
+
+    machine_image = _generate_image(azure_machine_image, **kwargs)
 
     return machine_image
 
