@@ -192,6 +192,11 @@ objects:
           value: ${CLOUDIGRADE_VERSION}
         - name: CLOUDIGRADE_ENVIRONMENT
           value: ${CLOUDIGRADE_ENVIRONMENT}
+        - name: CLOUDIGRADE_PSKS
+          valueFrom:
+            secretKeyRef:
+              key: cloudigrade-psks
+              name: cloudigrade-app-secret
         - name: SENTRY_TRACES_SAMPLE_RATE
           value: ${SENTRY_TRACES_SAMPLE_RATE}
         - name: API_ENABLE_SENTRY
@@ -460,6 +465,11 @@ objects:
           value: ${CLOUDIGRADE_VERSION}
         - name: CLOUDIGRADE_ENVIRONMENT
           value: ${CLOUDIGRADE_ENVIRONMENT}
+        - name: CLOUDIGRADE_PSKS
+          valueFrom:
+            secretKeyRef:
+              key: cloudigrade-psks
+              name: cloudigrade-app-secret
         - name: SENTRY_TRACES_SAMPLE_RATE
           value: ${SENTRY_TRACES_SAMPLE_RATE}
         - name: CELERY_ENABLE_SENTRY
@@ -724,6 +734,11 @@ objects:
           value: ${CLOUDIGRADE_VERSION}
         - name: CLOUDIGRADE_ENVIRONMENT
           value: ${CLOUDIGRADE_ENVIRONMENT}
+        - name: CLOUDIGRADE_PSKS
+          valueFrom:
+            secretKeyRef:
+              key: cloudigrade-psks
+              name: cloudigrade-app-secret
         - name: CLOUDIGRADE_ENABLE_CLOUDWATCH
           value: ${CLOUDIGRADE_ENABLE_CLOUDWATCH}
         - name: CW_AWS_ACCESS_KEY_ID
@@ -944,6 +959,11 @@ objects:
           value: ${CLOUDIGRADE_VERSION}
         - name: CLOUDIGRADE_ENVIRONMENT
           value: ${CLOUDIGRADE_ENVIRONMENT}
+        - name: CLOUDIGRADE_PSKS
+          valueFrom:
+            secretKeyRef:
+              key: cloudigrade-psks
+              name: cloudigrade-app-secret
         - name: SENTRY_TRACES_SAMPLE_RATE
           value: ${SENTRY_TRACES_SAMPLE_RATE}
         - name: CELERY_ENABLE_SENTRY
@@ -1029,7 +1049,7 @@ objects:
     django-secret-key: ${DJANGO_SECRET_KEY}
     celery-sentry-dsn: ${CELERY_SENTRY_DSN}
     slack-token: ${SLACK_TOKEN}
-    cloudigrade-psks: ${CLOUDIGRADE_PSKS}
+    cloudigrade-psks: ${CLOUDIGRADE_PSKS_DEFAULT}
   kind: Secret
   metadata:
     name: cloudigrade-app-secret
@@ -1054,7 +1074,7 @@ objects:
     name: cloudigrade-azure
 - apiVersion: v1
   data:
-    psk: ${CLOUDIGRADE_PSK}
+    psk: ${CLOUDIGRADE_PSK_DEFAULT}
   kind: Secret
   metadata:
     name: cloudigrade-psk
@@ -1131,14 +1151,14 @@ parameters:
   displayName: Slack Deploy Notification Token
   required: false
   value: ''
-- name: CLOUDIGRADE_PSK
+- name: CLOUDIGRADE_PSK_DEFAULT
   displayName: Default cloudigrade PSK for ephemeral micro-services
   required: true
-  value: 'NTYyZWI3NDUtYmEwMDIxNzYtZTdlNTU0YzQtYzZjZGQyZDgK'
-- name: CLOUDIGRADE_PSKS
-  displayName: Micro service pre-shared keys to Cloudigrade
+  value: 'NTYyZWI3NDUtYmEwMDIxNzYtZTdlNTU0YzQtYzZjZGQyZDg='
+- name: CLOUDIGRADE_PSKS_DEFAULT
+  displayName: Default micro-service pre-shared keys to Cloudigrade
   required: true
-  value: 'ZXBoZW1lcmFsOjU2MmViNzQ1LWJhMDAyMTc2LWU3ZTU1NGM0LWM2Y2RkMmQ4Cg=='
+  value: 'ZXBoZW1lcmFsOjU2MmViNzQ1LWJhMDAyMTc2LWU3ZTU1NGM0LWM2Y2RkMmQ4'
 - name: AWS_ACCESS_KEY_ID
   displayName: AWS Access Key ID
   required: true
