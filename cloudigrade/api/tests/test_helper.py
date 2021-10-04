@@ -15,6 +15,7 @@ from django.test import TestCase
 from django_celery_beat.models import IntervalSchedule, PeriodicTask
 
 from api.clouds.aws.models import (
+    AwsMachineImage,
     CLOUD_ACCESS_NAME_TOKEN,
     MARKETPLACE_NAME_TOKEN,
 )
@@ -334,19 +335,27 @@ class GenerateAwsImageTest(TestCase):
     def test_generate_aws_image_default(self):
         """Assert generation of an AwsMachineImage with minimal args."""
         image = helper.generate_image_aws()
-        self.assertIsInstance(image.content_object.owner_aws_account_id, Decimal)
-        self.assertEqual(image.content_object.platform, image.content_object.NONE)
-        self.assertIsNotNone(image.content_object.ec2_ami_id)
-        self.assertGreater(len(image.content_object.ec2_ami_id), 0)
+
+        self.assertIsInstance(image, MachineImage)
         self.assertFalse(image.rhel_detected)
         self.assertFalse(image.rhel_detected_by_tag)
         self.assertFalse(image.openshift_detected)
         self.assertIsNone(image.name)
         self.assertIsNone(image.rhel_version)
         self.assertIsNone(image.syspurpose)
-        self.assertFalse(image.content_object.is_cloud_access)
-        self.assertFalse(image.content_object.is_marketplace)
         self.assertEqual(image.architecture, "x86_64")
+
+        aws_machine_image = image.content_object
+        self.assertIsInstance(aws_machine_image, AwsMachineImage)
+        self.assertIsInstance(aws_machine_image.owner_aws_account_id, Decimal)
+        self.assertEqual(aws_machine_image.platform, AwsMachineImage.NONE)
+        self.assertIsNotNone(aws_machine_image.ec2_ami_id)
+        self.assertGreater(len(aws_machine_image.ec2_ami_id), 0)
+        self.assertFalse(aws_machine_image.is_cloud_access)
+        self.assertFalse(aws_machine_image.is_marketplace)
+        self.assertIsNone(aws_machine_image.product_codes)
+        self.assertIsNone(aws_machine_image.platform_details)
+        self.assertIsNone(aws_machine_image.usage_operation)
 
     def test_generate_aws_image_with_args(self):
         """Assert generation of an AwsMachineImage with all specified args."""
@@ -356,6 +365,9 @@ class GenerateAwsImageTest(TestCase):
         rhel_version = _faker.slug()
         syspurpose = {_faker.slug(): _faker.text()}
         architecture = _faker.slug()
+        product_codes = {_faker.slug(): _faker.text()}
+        platform_details = _faker.slug()
+        usage_operation = _faker.slug()
 
         image = helper.generate_image_aws(
             account_id,
@@ -374,12 +386,12 @@ class GenerateAwsImageTest(TestCase):
             name=name,
             status=MachineImage.PREPARING,
             architecture=architecture,
+            product_codes=product_codes,
+            platform_details=platform_details,
+            usage_operation=usage_operation,
         )
 
         self.assertIsInstance(image, MachineImage)
-        self.assertEqual(image.content_object.owner_aws_account_id, account_id)
-        self.assertEqual(image.content_object.platform, image.content_object.WINDOWS)
-        self.assertEqual(image.content_object.ec2_ami_id, ec2_ami_id)
         self.assertTrue(image.rhel_detected)
         self.assertTrue(image.rhel_detected_by_tag)
         self.assertEqual(image.rhel_version, rhel_version)
@@ -387,9 +399,18 @@ class GenerateAwsImageTest(TestCase):
         self.assertTrue(image.openshift_detected)
         self.assertEqual(image.name, name)
         self.assertEqual(image.status, MachineImage.PREPARING)
-        self.assertFalse(image.content_object.is_cloud_access)
-        self.assertFalse(image.content_object.is_marketplace)
         self.assertEqual(image.architecture, architecture)
+
+        aws_machine_image = image.content_object
+        self.assertIsInstance(aws_machine_image, AwsMachineImage)
+        self.assertEqual(aws_machine_image.owner_aws_account_id, account_id)
+        self.assertEqual(aws_machine_image.platform, AwsMachineImage.WINDOWS)
+        self.assertEqual(aws_machine_image.ec2_ami_id, ec2_ami_id)
+        self.assertFalse(aws_machine_image.is_cloud_access)
+        self.assertFalse(aws_machine_image.is_marketplace)
+        self.assertEqual(aws_machine_image.product_codes, product_codes)
+        self.assertEqual(aws_machine_image.platform_details, platform_details)
+        self.assertEqual(aws_machine_image.usage_operation, usage_operation)
 
     def test_generate_aws_image_with_rhel_detected_details_args(self):
         """Assert generation of an AwsMachineImage with RHEL JSON details."""
@@ -423,16 +444,18 @@ class GenerateAwsImageTest(TestCase):
             is_cloud_access=True,
         )
 
-        self.assertNotEqual(image.content_object.owner_aws_account_id, account_id)
-        self.assertIn(
-            image.content_object.owner_aws_account_id, settings.RHEL_IMAGES_AWS_ACCOUNTS
-        )
         self.assertTrue(image.rhel_detected)
         self.assertFalse(image.openshift_detected)
         self.assertNotEqual(image.name, name)
         self.assertIn(CLOUD_ACCESS_NAME_TOKEN, image.name)
-        self.assertTrue(image.content_object.is_cloud_access)
-        self.assertFalse(image.content_object.is_marketplace)
+
+        aws_cloud_account = image.content_object
+        self.assertNotEqual(aws_cloud_account.owner_aws_account_id, account_id)
+        self.assertIn(
+            aws_cloud_account.owner_aws_account_id, settings.RHEL_IMAGES_AWS_ACCOUNTS
+        )
+        self.assertTrue(aws_cloud_account.is_cloud_access)
+        self.assertFalse(aws_cloud_account.is_marketplace)
 
     def test_generate_aws_image_with_is_marketplace(self):
         """Assert generation of an AwsMachineImage with is_marketplace."""
@@ -445,16 +468,26 @@ class GenerateAwsImageTest(TestCase):
             is_marketplace=True,
         )
 
-        self.assertNotEqual(image.content_object.owner_aws_account_id, account_id)
-        self.assertIn(
-            image.content_object.owner_aws_account_id, settings.RHEL_IMAGES_AWS_ACCOUNTS
-        )
         self.assertFalse(image.rhel_detected)
         self.assertFalse(image.openshift_detected)
         self.assertNotEqual(image.name, name)
+
+        aws_cloud_account = image.content_object
+        self.assertNotEqual(aws_cloud_account.owner_aws_account_id, account_id)
+        self.assertIn(
+            aws_cloud_account.owner_aws_account_id, settings.RHEL_IMAGES_AWS_ACCOUNTS
+        )
         self.assertIn(MARKETPLACE_NAME_TOKEN, image.name)
-        self.assertFalse(image.content_object.is_cloud_access)
-        self.assertTrue(image.content_object.is_marketplace)
+        self.assertFalse(aws_cloud_account.is_cloud_access)
+        self.assertTrue(aws_cloud_account.is_marketplace)
+
+    def test_generate_aws_image_with_generate_marketplace_product_code(self):
+        """Assert generation of an AwsMachineImage with marketplace product code."""
+        image = helper.generate_image_aws(generate_marketplace_product_code=True)
+
+        self.assertFalse(image.rhel_detected)
+        aws_cloud_account = image.content_object
+        self.assertTrue(aws_cloud_account.is_marketplace)
 
 
 class GenerateInstanceDefinitionsTest(TestCase):
