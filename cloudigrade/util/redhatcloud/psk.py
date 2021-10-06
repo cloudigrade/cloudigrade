@@ -3,7 +3,7 @@ import binascii
 import os
 import re
 
-import environ
+from django.conf import settings
 
 
 def normalize_service_name(svc_name):
@@ -23,10 +23,7 @@ def service_entry(svc_name, svc_psk):
 
 def psk_service_name(psk):
     """Given a PSK, this function returns the related service name."""
-    env = environ.Env()
-    cloudigrade_psks = env("CLOUDIGRADE_PSKS", default="")
-
-    for service_psk in cloudigrade_psks.split(","):
+    for service_psk in settings.CLOUDIGRADE_PSKS.split(","):
         svc_name, svc_psk = service_psk.split(":")
         if svc_psk == psk:
             return normalize_service_name(svc_name)

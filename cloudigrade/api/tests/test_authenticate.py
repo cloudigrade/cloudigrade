@@ -6,16 +6,104 @@ from unittest.mock import Mock
 import faker
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from rest_framework.authentication import exceptions
 
 from api.authentication import (
     IdentityHeaderAuthentication,
     IdentityHeaderAuthenticationUserNotRequired,
+    parse_insights_request_id,
 )
+from util.redhatcloud import psk
 from util.tests import helper as util_helper
 
 _faker = faker.Faker()
+
+
+class PskHeaderAuthenticateTestCase(TestCase):
+    """Test that PSK header authentication works as expected."""
+
+    def setUp(self):
+        """Set up data for tests."""
+        self.insights_request_id = _faker.uuid4().replace("-", "")
+        self.account_number = str(_faker.pyint())
+        self.account_number_not_found = str(_faker.pyint())
+        self.user = util_helper.generate_test_user(self.account_number)
+        self.valid_svc_psk = psk.generate_psk()
+        self.valid_svc_name = psk.normalize_service_name(_faker.slug())
+        self.invalid_svc_psk = psk.generate_psk()
+        self.cloudigrade_psks = psk.add_service_psk(
+            "", self.valid_svc_name, self.valid_svc_psk
+        )
+        self.auth_class = IdentityHeaderAuthentication()
+
+    def test_parse_insights_request_id(self):
+        """Make sure the Insights Id of the authenticated request is logged."""
+        request = Mock()
+        request.META = {settings.INSIGHTS_REQUEST_ID_HEADER: self.insights_request_id}
+        with self.assertLogs("api.authentication", level="INFO") as logging_watcher:
+            parse_insights_request_id(request)
+            self.assertIn(
+                "Authenticating via insights, INSIGHTS_REQUEST_ID: "
+                + self.insights_request_id,
+                logging_watcher.output[0],
+            )
+
+    def test_get_user_with_missing_account_number(self):
+        """Test that get_user with a missing account number returns None."""
+        self.assertIsNone(IdentityHeaderAuthentication.get_user(self.auth_class, None))
+
+    def test_authenticate(self):
+        """Test that authentication with the correct PSK and account header succeeds."""
+        request = Mock()
+        request.META = {
+            settings.CLOUDIGRADE_PSK_HEADER: self.valid_svc_psk,
+            settings.CLOUDIGRADE_ACCOUNT_NUMBER_HEADER: self.account_number,
+        }
+
+        with override_settings(CLOUDIGRADE_PSKS=self.cloudigrade_psks):
+            user, auth = self.auth_class.authenticate(request)
+
+            self.assertTrue(auth)
+            self.assertEqual(self.account_number, user.username)
+            self.assertEqual(user, self.user)
+
+    def test_authenticate_with_invalid_psk(self):
+        """Test that authentication with an invalid PSK header fails."""
+        request = Mock()
+        request.META = {
+            settings.CLOUDIGRADE_PSK_HEADER: self.invalid_svc_psk,
+            settings.CLOUDIGRADE_ACCOUNT_NUMBER_HEADER: self.account_number,
+        }
+
+        with override_settings(CLOUDIGRADE_PSKS=self.cloudigrade_psks):
+            with self.assertLogs("api.authentication", level="INFO") as logging_watcher:
+                with self.assertRaises(exceptions.AuthenticationFailed):
+                    self.auth_class.authenticate(request)
+                    self.assertIn(
+                        "Authentication Failed: Invalid PSK "
+                        + self.invalid_svc_psk
+                        + " specified in header",
+                        logging_watcher.output[0],
+                    )
+
+    def test_authenticate_with_missing_account_number(self):
+        """Test that PSK authentication with a missing account number fails."""
+        request = Mock()
+        request.META = {
+            settings.CLOUDIGRADE_PSK_HEADER: self.valid_svc_psk,
+        }
+
+        with override_settings(CLOUDIGRADE_PSKS=self.cloudigrade_psks):
+            with self.assertLogs("api.authentication", level="INFO") as logging_watcher:
+                with self.assertRaises(exceptions.AuthenticationFailed):
+                    self.auth_class.authenticate(request)
+                    self.assertIn(
+                        "PSK header for service "
+                        + self.valid_svc_name
+                        + " with no account_number",
+                        logging_watcher.output[0],
+                    )
 
 
 class IdentityHeaderAuthenticateTestCase(TestCase):
@@ -57,6 +145,19 @@ class IdentityHeaderAuthenticateTestCase(TestCase):
         self.assertTrue(auth)
         self.assertEqual(self.account_number, user.username)
         self.assertEqual(user, self.user)
+
+    def test_authenticate_with_verbose_logging(self):
+        """Test that valid authentication logs the decoded header."""
+        request = Mock()
+        request.META = {settings.INSIGHTS_IDENTITY_HEADER: self.rh_header_as_admin}
+
+        with override_settings(VERBOSE_INSIGHTS_IDENTITY_HEADER_LOGGING=True):
+            with self.assertLogs("api.authentication", level="INFO") as logging_watcher:
+                user, auth = self.auth_class.authenticate(request)
+
+                self.assertTrue(auth)
+                self.assertEqual(self.account_number, user.username)
+                self.assertIn("Decoded identity header: ", logging_watcher.output[1])
 
     def test_authenticate_not_org_admin_fails(self):
         """Test that header without org admin user fails."""
