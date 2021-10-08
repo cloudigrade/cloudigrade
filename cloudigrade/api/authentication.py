@@ -56,7 +56,7 @@ def parse_psk_header(request):
 
     if account_number is None:
         logger.info(
-            _("PSK header for service '%(service_name)s'" " with no account_number', "),
+            _("PSK header for service '%(service_name)s' with no account_number"),
             {
                 "service_name": service_name,
             },
