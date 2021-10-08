@@ -37,7 +37,7 @@ class CreatePskTest(TestCase):
         self.assertRegex(command_output, expected_pattern)
 
     def test_create_psk_and_add_to_psks(self):
-        """Create a PSK for a service."""
+        """Create a PSK for a service and add it to the list of PSKs."""
         svc_name = "a-new-service"
         current_psks = "current-service:09ABCDEF"
         cmd_args = ["create_psk", "--psks", current_psks, svc_name]
