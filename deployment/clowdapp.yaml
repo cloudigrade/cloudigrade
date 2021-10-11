@@ -28,9 +28,9 @@ objects:
       #
       # Component cloudigrade-api deployment:
       #
-      replicas: ${{MIN_REPLICAS}}
-      minReplicas: ${{API_REPLICA_COUNT}}
-      maxReplicas: ${{API_REPLICA_COUNT_MAX}}
+      # FIXME: Set back to `API_REPLICA_COUNT`
+      #        when Clowder supports HPAs.
+      replicas: ${{API_REPLICA_COUNT_MAX}}
       revisionHistoryLimit: 10
       webServices:
         public:
@@ -778,9 +778,9 @@ objects:
       #
       # Component cloudigrade-worker deployment:
       #
-      replicas: ${{MIN_REPLICAS}}
-      minReplicas: ${{CELERY_WORKER_REPLICA_COUNT}}
-      maxReplicas: ${{CELERY_WORKER_REPLICA_COUNT_MAX}}
+      # FIXME: Set back to `CELERY_WORKER_REPLICA_COUNT`
+      #        when Clowder supports HPAs.
+      replicas: ${{CELERY_WORKER_REPLICA_COUNT_MAX}}
       webServices:
         public:
           enabled: false
@@ -1066,39 +1066,41 @@ objects:
   kind: Secret
   metadata:
     name: cloudwatch
-# HPA's
-- apiVersion: autoscaling/v2beta1
-  kind: HorizontalPodAutoscaler
-  metadata:
-    name: cloudigrade-api-cpu
-  spec:
-    scaleTargetRef:
-      apiVersion: apps/v1
-      kind: Deployment
-      name: cloudigrade-api
-    minReplicas: ${{API_REPLICA_COUNT}}
-    maxReplicas: ${{API_REPLICA_COUNT_MAX}}
-    metrics:
-    - type: Resource
-      resource:
-        name: cpu
-        targetAverageUtilization: ${{API_TARGET_AVERAGE_CPU_UTILIZATION}}
-- apiVersion: autoscaling/v2beta1
-  kind: HorizontalPodAutoscaler
-  metadata:
-    name: cloudigrade-worker-cpu
-  spec:
-    scaleTargetRef:
-      apiVersion: apps/v1
-      kind: Deployment
-      name: cloudigrade-worker
-    minReplicas: ${{CELERY_WORKER_REPLICA_COUNT}}
-    maxReplicas: ${{CELERY_WORKER_REPLICA_COUNT_MAX}}
-    metrics:
-    - type: Resource
-      resource:
-        name: cpu
-        targetAverageUtilization: ${{CELERY_TARGET_AVERAGE_CPU_UTILIZATION}}
+#### HPA's
+#### FIXME: HPAs can not be used until clowder adds support for them.
+#### https://coreos.slack.com/archives/C022YV4E0NA/p1633973680455600
+# - apiVersion: autoscaling/v2beta1
+#   kind: HorizontalPodAutoscaler
+#   metadata:
+#     name: cloudigrade-api-cpu
+#   spec:
+#     scaleTargetRef:
+#       apiVersion: apps/v1
+#       kind: Deployment
+#       name: cloudigrade-api
+#     minReplicas: ${{API_REPLICA_COUNT}}
+#     maxReplicas: ${{API_REPLICA_COUNT_MAX}}
+#     metrics:
+#     - type: Resource
+#       resource:
+#         name: cpu
+#         targetAverageUtilization: ${{API_TARGET_AVERAGE_CPU_UTILIZATION}}
+# - apiVersion: autoscaling/v2beta1
+#   kind: HorizontalPodAutoscaler
+#   metadata:
+#     name: cloudigrade-worker-cpu
+#   spec:
+#     scaleTargetRef:
+#       apiVersion: apps/v1
+#       kind: Deployment
+#       name: cloudigrade-worker
+#     minReplicas: ${{CELERY_WORKER_REPLICA_COUNT}}
+#     maxReplicas: ${{CELERY_WORKER_REPLICA_COUNT_MAX}}
+#     metrics:
+#     - type: Resource
+#       resource:
+#         name: cpu
+#         targetAverageUtilization: ${{CELERY_TARGET_AVERAGE_CPU_UTILIZATION}}
 
 parameters:
 #
@@ -1206,11 +1208,11 @@ parameters:
 - name: API_REPLICA_COUNT
   displayName: Cloudigrade Replica Count
   required: true
-  value: '2'
+  value: '1'
 - name: API_REPLICA_COUNT_MAX
   displayName: Cloudigrade Max Replica Count
   required: true
-  value: '8'
+  value: '1'
 - name: API_SENTRY_ENVIRONMENT
   displayName: API Sentry Environment
   required: true
@@ -1355,11 +1357,11 @@ parameters:
 - name: CELERY_WORKER_REPLICA_COUNT
   displayName: Cloudigrade Replica Count
   required: true
-  value: '2'
+  value: '1'
 - name: CELERY_WORKER_REPLICA_COUNT_MAX
   displayName: Cloudigrade Worker Replica Count Max
   required: true
-  value: '8'
+  value: '1'
 #
 # Parameters shared between components
 #
