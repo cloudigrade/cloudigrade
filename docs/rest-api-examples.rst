@@ -2151,7 +2151,7 @@ Response:
 
     HTTP/1.1 400 Bad Request
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 74
+    Content-Length: 151
     Content-Type: application/json
     Referrer-Policy: same-origin
     X-CLOUDIGRADE-REQUEST-ID: c2d87254-dc29-4c26-9ea7-75f75f8161e6
@@ -2161,6 +2161,9 @@ Response:
     {
         "end_date": [
             "end_date must be same as or after the user creation date."
+        ],
+        "start_date": [
+            "start_date must be same as or after the user creation date."
         ]
     }
 

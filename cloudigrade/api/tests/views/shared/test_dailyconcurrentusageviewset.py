@@ -234,21 +234,27 @@ class SharedDailyConcurrentUsageViewSetTest(TransactionTestCase):
             [_("end_date must be same as or after the user creation date.")],
         )
 
-    def test_end_date_same_as_user_create_date_expect_425(self):
+    def test_start_date_before_user_create_date_returns_400(self):
         """
-        Test with end_date exactly as the user creation date, expecting 425.
+        Test with start_date preceding the user creation date, expecting no results.
 
-        When we give an end_date that is the same as the user creation date,
-        and no concurrent data, we expect a 425.
+        When we give a start_date that is before the user creation date, we return
+        a 400 because we do not know anything before the user creation date.
         """
-        end_date = self.user1.date_joined.date()
-        start_date = end_date - datetime.timedelta(days=1)
-        data = {"start_date": str(start_date), "end_date": str(end_date)}
+        before_user_join_date = self.user1.date_joined.date() - datetime.timedelta(
+            days=1
+        )
+        data = {"start_date": str(before_user_join_date)}
         client = APIClient()
         client.force_authenticate(user=self.user1)
         response = client.get(self.concurrent_api_url, data=data, format="json")
+        self.assertEqual(response.status_code, 400)
 
-        self.assertEqual(response.status_code, 425)
+        body = response.json()
+        self.assertEqual(
+            body["start_date"],
+            [_("start_date must be same as or after the user creation date.")],
+        )
 
     def test_425_if_no_concurrent_usage(self):
         """Test if no concurrent usage is present, an 425 error code is returned."""

@@ -104,6 +104,10 @@ class DailyConcurrentUsageViewSet(viewsets.GenericViewSet, mixins.ListModelMixin
         """Return the latest allowed start_date."""
         return get_today() - timedelta(days=1)
 
+    def early_start_date_error(self):
+        """Return the error message for specifying an early start_date."""
+        return _("start_date must be same as or after the user creation date.")
+
     def late_start_date_error(self):
         """Return the error message for specifying a late start_date."""
         return _("start_date cannot be today or in the future.")
@@ -145,6 +149,8 @@ class DailyConcurrentUsageViewSet(viewsets.GenericViewSet, mixins.ListModelMixin
             # we do not return anything
             if start_date > self.latest_start_date():
                 errors["start_date"] = [self.late_start_date_error()]
+            if start_date < user.date_joined.date():
+                errors["start_date"] = [self.early_start_date_error()]
         except ValueError:
             errors["start_date"] = [self.invalid_start_date_error()]
 
