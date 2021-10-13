@@ -199,6 +199,10 @@ objects:
               name: cloudigrade-app-secret
         - name: SENTRY_TRACES_SAMPLE_RATE
           value: ${SENTRY_TRACES_SAMPLE_RATE}
+        - name: DJANGO_SENTRY_SAMPLE_RATE_DEFAULT
+          value: ${DJANGO_SENTRY_SAMPLE_RATE_DEFAULT}
+        - name: DJANGO_SENTRY_SAMPLE_RATE_BY_VIEW_NAME
+          value: ${DJANGO_SENTRY_SAMPLE_RATE_BY_VIEW_NAME}
         - name: API_ENABLE_SENTRY
           value: ${API_ENABLE_SENTRY}
         - name: DJANGO_SENTRY_DSN
@@ -1487,6 +1491,14 @@ parameters:
   displayName: Django Log Level
   required: true
   value: 'DEBUG'
+- name: DJANGO_SENTRY_SAMPLE_RATE_DEFAULT
+  displayName: Default Sentry performance sample rate for Django HTTP APIs
+  required: true
+  value: '1.0'
+- name: DJANGO_SENTRY_SAMPLE_RATE_BY_VIEW_NAME
+  displayName: Sentry performance sample rates for specific Djando view names
+  required: true
+  value: '{"v2-sysconfig-list": 0.1, "health_check:health_check_home": 0.0}'
 - name: DJANGO_SETTINGS_MODULE
   displayName: Django Settings Module
   required: true
