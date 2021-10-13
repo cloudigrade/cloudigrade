@@ -1,6 +1,9 @@
 """Settings file meant for production like environments."""
+import json
+
 import sentry_sdk
 from boto3 import client
+from django.urls import reverse
 from sentry_sdk.integrations.django import DjangoIntegration
 
 from .base import *
@@ -52,12 +55,30 @@ if env.bool("API_ENABLE_SENTRY", default=False):
     DJANGO_SENTRY_RELEASE = (
         CLOUDIGRADE_VERSION if CLOUDIGRADE_VERSION else env("DJANGO_SENTRY_RELEASE")
     )
+    DJANGO_SENTRY_SAMPLE_RATE_DEFAULT = env.float(
+        "DJANGO_SENTRY_SAMPLE_RATE_DEFAULT", default=1.0
+    )
+    DJANGO_SENTRY_SAMPLE_RATE_BY_VIEW_NAME = json.loads(
+        env.str(
+            "DJANGO_SENTRY_SAMPLE_RATE_BY_VIEW_NAME",
+            default='{"v2-sysconfig-list": 0.1, "health_check:health_check_home": 0.0}',
+        )
+    )
+
+    def django_traces_sampler(sampling_context):
+        """Determine Sentry trace sampler rate for the given context."""
+        context_path = sampling_context.get("wsgi_environ", {}).get("PATH_INFO")
+        for view_name, sample_rate in DJANGO_SENTRY_SAMPLE_RATE_BY_VIEW_NAME.items():
+            view_path = reverse(view_name)
+            if context_path == view_path:
+                return sample_rate
+        return DJANGO_SENTRY_SAMPLE_RATE_DEFAULT
 
     sentry_sdk.init(
         dsn=env("DJANGO_SENTRY_DSN"),
         environment=env("DJANGO_SENTRY_ENVIRONMENT"),
         release=DJANGO_SENTRY_RELEASE,
-        traces_sample_rate=env.float("SENTRY_TRACES_SAMPLE_RATE", default=0.0),
+        traces_sampler=django_traces_sampler,
         integrations=[DjangoIntegration()],
         send_default_pii=True,
     )
