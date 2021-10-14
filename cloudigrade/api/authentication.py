@@ -15,9 +15,8 @@ logger = logging.getLogger(__name__)
 
 def psk_service_name(psk):
     """Given a PSK, this function returns the related service name."""
-    psk_lc = psk.lower()
     for svc_name, svc_psk in settings.CLOUDIGRADE_PSKS.items():
-        if psk_lc == svc_psk.lower():
+        if psk == svc_psk:
             return svc_name
 
     return None
@@ -75,7 +74,7 @@ def parse_psk_header(request):
     logger.info(
         _(
             "PSK header for service '%(service_name)s'"
-            " with account_number '%(account_number)s', "
+            " with account_number '%(account_number)s'"
         ),
         {
             "service_name": service_name,
