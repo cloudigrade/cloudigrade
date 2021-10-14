@@ -26,8 +26,6 @@ export NAMESPACE=$(bonfire namespace reserve)
 oc get secret/cloudigrade-aws -o json -n ephemeral-base | jq -r '.data' > aws-creds.json
 oc get secret/cloudigrade-azure -o json -n ephemeral-base | jq -r '.data' > azure-creds.json
 
-set +x
-
 AWS_ACCESS_KEY_ID=$(jq -r '."aws-access-key-id"' < aws-creds.json)
 AWS_SECRET_ACCESS_KEY=$(jq -r '."aws-secret-access-key"' < aws-creds.json)
 AWS_SQS_ACCESS_KEY_ID=$(jq -r '."aws-sqs-access-key-id"' < aws-creds.json)
@@ -61,8 +59,6 @@ bonfire deploy \
     --set-parameter cloudigrade/AZURE_SP_OBJECT_ID=${AZURE_SP_OBJECT_ID} \
     --set-parameter cloudigrade/AZURE_SUBSCRIPTION_ID=${AZURE_SUBSCRIPTION_ID} \
     --set-parameter cloudigrade/AZURE_TENANT_ID=${AZURE_TENANT_ID} \
-
-set -x
 
 # Run smoke tests with ClowdJobInvocation
 source $CICD_ROOT/cji_smoke_test.sh
