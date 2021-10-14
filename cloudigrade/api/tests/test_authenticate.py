@@ -14,7 +14,6 @@ from api.authentication import (
     IdentityHeaderAuthenticationUserNotRequired,
     parse_insights_request_id,
 )
-from util.redhatcloud import psk
 from util.tests import helper as util_helper
 
 _faker = faker.Faker()
@@ -29,12 +28,10 @@ class PskHeaderAuthenticateTestCase(TestCase):
         self.account_number = str(_faker.pyint())
         self.account_number_not_found = str(_faker.pyint())
         self.user = util_helper.generate_test_user(self.account_number)
-        self.valid_svc_psk = psk.generate_psk()
-        self.valid_svc_name = psk.normalize_service_name(_faker.slug())
-        self.invalid_svc_psk = psk.generate_psk()
-        self.cloudigrade_psks = psk.add_service_psk(
-            "", self.valid_svc_name, self.valid_svc_psk
-        )
+        self.valid_svc_psk = _faker.uuid4()
+        self.valid_svc_name = _faker.slug()
+        self.invalid_svc_psk = _faker.uuid4()
+        self.cloudigrade_psks = {self.valid_svc_name: self.valid_svc_psk}
         self.auth_class = IdentityHeaderAuthentication()
 
     def test_parse_insights_request_id(self):
@@ -80,12 +77,12 @@ class PskHeaderAuthenticateTestCase(TestCase):
             with self.assertLogs("api.authentication", level="INFO") as logging_watcher:
                 with self.assertRaises(exceptions.AuthenticationFailed):
                     self.auth_class.authenticate(request)
-                    self.assertIn(
-                        "Authentication Failed: Invalid PSK "
-                        + self.invalid_svc_psk
-                        + " specified in header",
-                        logging_watcher.output[0],
-                    )
+                self.assertIn(
+                    "Authentication Failed: Invalid PSK '"
+                    + self.invalid_svc_psk
+                    + "' specified in header",
+                    logging_watcher.output[1],
+                )
 
     def test_authenticate_with_missing_account_number(self):
         """Test that PSK authentication with a missing account number fails."""
@@ -98,12 +95,12 @@ class PskHeaderAuthenticateTestCase(TestCase):
             with self.assertLogs("api.authentication", level="INFO") as logging_watcher:
                 with self.assertRaises(exceptions.AuthenticationFailed):
                     self.auth_class.authenticate(request)
-                    self.assertIn(
-                        "PSK header for service "
-                        + self.valid_svc_name
-                        + " with no account_number",
-                        logging_watcher.output[0],
-                    )
+                self.assertIn(
+                    "PSK header for service '"
+                    + self.valid_svc_name
+                    + "' with no account_number",
+                    logging_watcher.output[1],
+                )
 
 
 class IdentityHeaderAuthenticateTestCase(TestCase):

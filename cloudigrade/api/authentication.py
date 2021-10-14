@@ -10,9 +10,17 @@ from django.utils.translation import gettext as _
 from rest_framework import HTTP_HEADER_ENCODING
 from rest_framework.authentication import BaseAuthentication, exceptions
 
-from util.redhatcloud.psk import psk_service_name
-
 logger = logging.getLogger(__name__)
+
+
+def psk_service_name(psk):
+    """Given a PSK, this function returns the related service name."""
+    psk_lc = psk.lower()
+    for svc_name, svc_psk in settings.CLOUDIGRADE_PSKS.items():
+        if psk_lc == svc_psk.lower():
+            return svc_name
+
+    return None
 
 
 def parse_insights_request_id(request):
@@ -46,7 +54,8 @@ def parse_psk_header(request):
     service_name = psk_service_name(service_psk)
     if not service_name:
         logger.info(
-            _("Authentication Failed: Invalid PSK %s specified in header"), service_psk
+            _("Authentication Failed: Invalid PSK '%s' specified in header"),
+            service_psk,
         )
         raise exceptions.AuthenticationFailed(
             _("Authentication Failed: Invalid PSK specified in header")

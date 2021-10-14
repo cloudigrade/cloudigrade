@@ -1,4 +1,5 @@
 """Base settings file."""
+import json
 import logging.config
 import sys
 from decimal import Decimal
@@ -557,7 +558,8 @@ VERBOSE_INSIGHTS_IDENTITY_HEADER_LOGGING = env.bool(
 VERBOSE_SOURCES_NOTIFICATION_LOGGING = env.bool(
     "VERBOSE_SOURCES_NOTIFICATION_LOGGING", default=False
 )
-CLOUDIGRADE_PSKS = env("CLOUDIGRADE_PSKS", default="")
+CLOUDIGRADE_PSKS_JSON = env("CLOUDIGRADE_PSKS", default="{}")
+CLOUDIGRADE_PSKS = dict(json.loads(CLOUDIGRADE_PSKS_JSON))
 
 # Various HEADER names
 CLOUDIGRADE_REQUEST_HEADER = "X-CLOUDIGRADE-REQUEST-ID"

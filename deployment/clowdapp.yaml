@@ -1154,11 +1154,11 @@ parameters:
 - name: CLOUDIGRADE_PSK_DEFAULT
   displayName: Default cloudigrade PSK for ephemeral micro-services
   required: true
-  value: 'NTYyZWI3NDUtYmEwMDIxNzYtZTdlNTU0YzQtYzZjZGQyZDg='
+  value: 'RkE1MzQ5OEYtMUVGQS00M0IwLTg4MTctMUREQjZDN0VFRUYz'
 - name: CLOUDIGRADE_PSKS_DEFAULT
   displayName: Default micro-service pre-shared keys to Cloudigrade
   required: true
-  value: 'ZXBoZW1lcmFsOjU2MmViNzQ1LWJhMDAyMTc2LWU3ZTU1NGM0LWM2Y2RkMmQ4'
+  value: 'eyJlcGhlbWVyYWwiOiJGQTUzNDk4Ri0xRUZBLTQzQjAtODgxNy0xRERCNkM3RUVFRjMifQ=='
 - name: AWS_ACCESS_KEY_ID
   displayName: AWS Access Key ID
   required: true
