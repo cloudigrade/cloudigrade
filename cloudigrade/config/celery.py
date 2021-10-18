@@ -1,4 +1,5 @@
 """Celery app for use in Django project."""
+import json
 import logging
 import uuid
 
@@ -88,6 +89,23 @@ logger.info("Celery setup.")
 
 if env("CELERY_ENABLE_SENTRY", default=False):
     logger.info("Enabling sentry.")
+
+    CELERY_SENTRY_SAMPLE_RATE_DEFAULT = env.float(
+        "CELERY_SENTRY_SAMPLE_RATE_DEFAULT", default=1.0
+    )
+    # CELERY_SENTRY_SAMPLE_RATE_BY_TASK_NAME example value:
+    # '{"api.tasks.enable_account": "0.5", "api.clouds.aws.tasks.analyze_log": "0.1"}'
+    CELERY_SENTRY_SAMPLE_RATE_BY_TASK_NAME = json.loads(
+        env.str("CELERY_SENTRY_SAMPLE_RATE_BY_TASK_NAME", default="{}")
+    )
+
+    def celery_traces_sampler(sampling_context):
+        """Determine Sentry trace sampler rate for the given context."""
+        context_task_name = sampling_context.get("celery_job", {}).get("task")
+        if context_task_name in CELERY_SENTRY_SAMPLE_RATE_BY_TASK_NAME:
+            return CELERY_SENTRY_SAMPLE_RATE_BY_TASK_NAME[context_task_name]
+        return CELERY_SENTRY_SAMPLE_RATE_DEFAULT
+
     CELERY_SENTRY_RELEASE = (
         settings.CLOUDIGRADE_VERSION
         if settings.CLOUDIGRADE_VERSION
@@ -97,7 +115,7 @@ if env("CELERY_ENABLE_SENTRY", default=False):
         dsn=env("CELERY_SENTRY_DSN"),
         environment=env("CELERY_SENTRY_ENVIRONMENT"),
         release=CELERY_SENTRY_RELEASE,
-        traces_sample_rate=env.float("SENTRY_TRACES_SAMPLE_RATE", default=0.0),
+        traces_sampler=celery_traces_sampler,
         integrations=[CeleryIntegration()],
     )
     logger.info("Sentry setup.")
