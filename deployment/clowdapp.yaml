@@ -476,6 +476,10 @@ objects:
               name: cloudigrade-app-secret
         - name: SENTRY_TRACES_SAMPLE_RATE
           value: ${SENTRY_TRACES_SAMPLE_RATE}
+        - name: CELERY_SENTRY_SAMPLE_RATE_DEFAULT
+          value: ${CELERY_SENTRY_SAMPLE_RATE_DEFAULT}
+        - name: CELERY_SENTRY_SAMPLE_RATE_BY_TASK_NAME
+          value: ${CELERY_SENTRY_SAMPLE_RATE_BY_TASK_NAME}
         - name: CELERY_ENABLE_SENTRY
           value: ${CELERY_ENABLE_SENTRY}
         - name: CELERY_SENTRY_DSN
@@ -970,6 +974,10 @@ objects:
               name: cloudigrade-app-secret
         - name: SENTRY_TRACES_SAMPLE_RATE
           value: ${SENTRY_TRACES_SAMPLE_RATE}
+        - name: CELERY_SENTRY_SAMPLE_RATE_DEFAULT
+          value: ${CELERY_SENTRY_SAMPLE_RATE_DEFAULT}
+        - name: CELERY_SENTRY_SAMPLE_RATE_BY_TASK_NAME
+          value: ${CELERY_SENTRY_SAMPLE_RATE_BY_TASK_NAME}
         - name: CELERY_ENABLE_SENTRY
           value: ${CELERY_ENABLE_SENTRY}
         - name: CELERY_SENTRY_DSN
@@ -1444,6 +1452,14 @@ parameters:
   displayName: Celery Sentry Release
   required: true
   value: ephemeral
+- name: CELERY_SENTRY_SAMPLE_RATE_DEFAULT
+  displayName: Default Sentry performance sample rate for Celery tasks
+  required: true
+  value: '1.0'
+- name: CELERY_SENTRY_SAMPLE_RATE_BY_TASK_NAME
+  displayName: Sentry performance sample rates for specific Celery task names
+  required: true
+  value: '{}'
 - name: CLOUDIGRADE_ENABLE_CLOUDWATCH
   displayName: Enable Cloudwatch
   required: true
