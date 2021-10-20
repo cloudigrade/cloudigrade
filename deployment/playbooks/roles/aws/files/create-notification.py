@@ -5,6 +5,26 @@ import argparse
 
 import boto3
 
+CLOUDTRAIL_RULES = [
+    {
+        'Name': 'prefix',
+        'Value': 'AWSLogs/'
+    },
+    {
+        'Name': 'suffix',
+        'Value': '.json.gz'
+    },
+]
+INSPECTION_RULES = [
+    {
+        'Name': 'prefix',
+        'Value': 'InspectionResults/'
+    },
+    {
+        'Name': 'suffix',
+        'Value': '.json'
+    },
+]
 
 def add_notification(bucket_name, sqs_arn):
     """Create notification to from bucket to queue.
@@ -12,6 +32,8 @@ def add_notification(bucket_name, sqs_arn):
     For any object created in the bucket, a notification will be sent to the
     queue.
     """
+    rules = INSPECTION_RULES if 'inspection' in bucket_name else CLOUDTRAIL_RULES
+
     client = boto3.client('s3')
     bucket_notifications_config = {
         'QueueConfigurations': [{
@@ -20,16 +42,7 @@ def add_notification(bucket_name, sqs_arn):
             'Events': ['s3:ObjectCreated:*'],
             'Filter': {
                 'Key': {
-                    'FilterRules': [
-                        {
-                            'Name': 'prefix',
-                            'Value': 'AWSLogs/'
-                            },
-                        {
-                            'Name': 'suffix',
-                            'Value': '.json.gz'
-                            },
-                        ]
+                    'FilterRules': rules
                     }
                 },
         }]

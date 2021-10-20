@@ -1,27 +1,50 @@
 ---
 # tasks file for aws-cloudigrade-cloudtrail
 - block:
-  - name: create / sqs queue
+  - name: create / sqs cloudtrail queue
     sqs_queue:
-      name: "{{ sqs_name }}"
+      name: "{{ sqs_trail_name }}"
       state: present
-    register: sqs_queue
+    register: sqs_trail_queue
 
-  - name: create / s3 bucket with policy
+  - name: create / sqs inspection result queue
+    sqs_queue:
+      name: "{{ sqs_inspection_name }}"
+      state: present
+    register: sqs_inspection_queue
+
+  - name: create / s3 cloudtrail bucket with policy
     s3_bucket:
-      name: "{{ s3_bucket_name }}"
-      policy: "{{ lookup( 'template', 's3_bucket_policy.json.j2') | to_json }}"
+      name: "{{ s3_trail_bucket_name }}"
+      policy: "{{ lookup( 'template', 's3_trail_bucket_policy.json.j2') | to_json }}"
       state: present
-    register: s3_bucket
+    register: s3_trail_bucket
 
-  - name: update / sqs queue with policy
+  - name: create / s3 inspection result bucket
+    s3_bucket:
+      name: "{{ s3_inspection_bucket_name }}"
+      state: present
+    register: s3_inspection_bucket
+
+  - name: update / sqs cloudtrail queue with policy
     sqs_queue:
-      name: "{{ sqs_name }}"
-      policy: "{{ lookup( 'template', 'sqs_policy.json.j2') | to_json }}"
+      name: "{{ sqs_trail_name }}"
+      policy: "{{ lookup( 'template', 'sqs_trail_policy.json.j2') | to_json }}"
       state: present
 
-  - name: create / sqs notification for s3 bucket
-    script: "create-notification.py --bucket {{ s3_bucket_name }} --queue {{ sqs_queue.queue_arn }}"
+  - name: update / sqs inspection queue with policy
+    sqs_queue:
+      name: "{{ sqs_inspection_name }}"
+      policy: "{{ lookup( 'template', 'sqs_inspection_policy.json.j2') | to_json }}"
+      state: present
+
+  - name: create / sqs cloudtrail notification for s3 cloudtrail bucket
+    script: "create-notification.py --bucket {{ s3_trail_bucket_name }} --queue {{ sqs_trail_queue.queue_arn }}"
+    args:
+      executable: python3
+
+  - name: create / sqs cloudtrail notification for s3 inspect result bucket
+    script: "create-notification.py --bucket {{ s3_inspection_bucket_name }} --queue {{ sqs_inspection_queue.queue_arn }}"
     args:
       executable: python3
 
@@ -29,15 +52,24 @@
 
 
 - block:
-  - name: destroy / s3 bucket
+  - name: destroy / s3 trail bucket
     s3_bucket:
-      name: "{{ s3_bucket_name }}"
+      name: "{{ s3_trail_bucket_name }}"
+      force: yes
+      state: absent
+  - name: destroy / s3 inspection bucket
+    s3_bucket:
+      name: "{{ s3_inspection_bucket_name }}"
       force: yes
       state: absent
 
-  - name: destroy / sqs queue
+  - name: destroy / sqs cloudtrail queue
     sqs_queue:
-      name: "{{ sqs_name }}"
+      name: "{{ sqs_trail_name }}"
+      state: absent
+  - name: destroy / sqs inspection queue
+    sqs_queue:
+      name: "{{ sqs_inspection_name }}"
       state: absent
 
   when: aws_state == "absent"
