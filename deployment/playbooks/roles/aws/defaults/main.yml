@@ -47,7 +47,9 @@ ec2_asg_replace_all_instances: yes
 
 ### ec2.yml
 # EC2 LT Defaults
-ec2_lt_name: cloudigrade-lt-{{env}}
+ec2_lt_name: "cloudigrade-lt-{{env}}"
+ec2_lt_policy_name: "{{ec2_lt_name}}-policy"
+ec2_lt_role_name: "{{ec2_lt_name}}-role"
 ec2_lt_instance_monitoring: true
 ec2_lt_instance_type: "t2.micro"
 ec2_lt_recommended_ami: "{{ lookup('aws_ssm', '/aws/service/ecs/optimized-ami/amazon-linux-2/recommended', shortnames=true, bypath=true ) }}"
@@ -55,6 +57,11 @@ ec2_lt_recommended_ami: "{{ lookup('aws_ssm', '/aws/service/ecs/optimized-ami/am
 
 ### s3.yml
 # Names
-s3_bucket_name: "{{env}}-cloudigrade-trails"
-sqs_name: "cloudigrade-cloudtrail-s3-{{env}}"
-s3_bucket_arn: "arn:aws:s3:::{{ s3_bucket_name }}"
+# Cloudtrail
+sqs_trail_name: "cloudigrade-cloudtrail-s3-{{env}}"
+s3_trail_bucket_name: "{{env}}-cloudigrade-trails"
+s3_trail_bucket_arn: "arn:aws:s3:::{{ s3_trail_bucket_name }}"
+# Inspection Results
+sqs_inspection_name: "cloudigrade-inspections-s3-{{env}}"
+s3_inspection_bucket_name: "{{env}}-cloudigrade-inspections"
+s3_inspection_bucket_arn: "arn:aws:s3:::{{ s3_inspection_bucket_name }}"

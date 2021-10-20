@@ -1,18 +1,18 @@
 {
   "Version": "2012-10-17",
-  "Id": "{{ sqs_name }}-policy-id",
+  "Id": "{{ sqs_inspection_name }}-policy-id",
   "Statement": [
     {
-      "Sid": "{{ sqs_name }}-statement-id",
+      "Sid": "{{ sqs_inspection_name }}-statement-id",
       "Effect": "Allow",
       "Principal": {
         "AWS": "*"
       },
       "Action": "SQS:SendMessage",
-      "Resource": "{{ sqs_queue.queue_arn }}",
+      "Resource": "{{ sqs_inspection_queue.queue_arn }}",
       "Condition": {
         "ArnLike": {
-          "aws:SourceArn": "{{ s3_bucket_arn }}"
+          "aws:SourceArn": "{{ s3_inspection_bucket_arn }}"
         }
       }
     }
