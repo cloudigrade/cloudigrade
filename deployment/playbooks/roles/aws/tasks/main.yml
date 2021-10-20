@@ -1,4 +1,3 @@
 ---
-- include_tasks: ecs.yml
 - include_tasks: ec2.yml
 - include_tasks: s3.yml
