@@ -7,7 +7,7 @@ license = "GPL-3.0-or-later"
 
 [tool.poetry.dependencies]
 python = "^3.9"
-ansible = "~=2.10.5"
+ansible = "~=4.2.0"
 boto = "~=2.49.0"
 django-environ = "~=0.4.5"
 boto3 = "~=1.17.60"
