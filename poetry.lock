@@ -557,7 +557,7 @@ toml = ["tomli"]
 
 [[package]]
 name = "crc-bonfire"
-version = "2.15.0"
+version = "2.15.1"
 description = "A CLI tool used to deploy ephemeral environments for testing cloud.redhat.com applications"
 category = "dev"
 optional = false
@@ -2588,8 +2588,8 @@ coverage = [
     {file = "coverage-6.0.2.tar.gz", hash = "sha256:6807947a09510dc31fa86f43595bf3a14017cd60bf633cc746d52141bfa6b149"},
 ]
 crc-bonfire = [
-    {file = "crc-bonfire-2.15.0.tar.gz", hash = "sha256:d495efb57ac140f0236d097ab49bd50c76d2897f62239cdd2c73d687b8f6bf48"},
-    {file = "crc_bonfire-2.15.0-py3-none-any.whl", hash = "sha256:4c390239d85d9b94460e7d28edea7585b5beb459f774f3de1e14530c701d4879"},
+    {file = "crc-bonfire-2.15.1.tar.gz", hash = "sha256:f594c187395e820b283ebc6ea00285f5ab3e054ead058e474fe582a2ed470f58"},
+    {file = "crc_bonfire-2.15.1-py3-none-any.whl", hash = "sha256:51287a50f64f711d9a2764ba7c453ddf87d6663d5e4237ff21872eef3404a884"},
 ]
 cryptography = [
     {file = "cryptography-35.0.0-cp36-abi3-macosx_10_10_x86_64.whl", hash = "sha256:d57e0cdc1b44b6cdf8af1d01807db06886f10177469312fbde8f44ccbb284bc9"},
