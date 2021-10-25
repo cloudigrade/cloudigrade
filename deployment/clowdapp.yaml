@@ -1455,7 +1455,7 @@ parameters:
 - name: CELERY_SENTRY_SAMPLE_RATE_DEFAULT
   displayName: Default Sentry performance sample rate for Celery tasks
   required: true
-  value: '1.0'
+  value: '0.1'
 - name: CELERY_SENTRY_SAMPLE_RATE_BY_TASK_NAME
   displayName: Sentry performance sample rates for specific Celery task names
   required: true
@@ -1510,7 +1510,7 @@ parameters:
 - name: DJANGO_SENTRY_SAMPLE_RATE_DEFAULT
   displayName: Default Sentry performance sample rate for Django HTTP APIs
   required: true
-  value: '1.0'
+  value: '0.5'
 - name: DJANGO_SENTRY_SAMPLE_RATE_BY_VIEW_NAME
   displayName: Sentry performance sample rates for specific Djando view names
   required: true

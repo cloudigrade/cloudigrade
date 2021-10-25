@@ -56,7 +56,7 @@ if env.bool("API_ENABLE_SENTRY", default=False):
         CLOUDIGRADE_VERSION if CLOUDIGRADE_VERSION else env("DJANGO_SENTRY_RELEASE")
     )
     DJANGO_SENTRY_SAMPLE_RATE_DEFAULT = env.float(
-        "DJANGO_SENTRY_SAMPLE_RATE_DEFAULT", default=1.0
+        "DJANGO_SENTRY_SAMPLE_RATE_DEFAULT", default=0.5
     )
     DJANGO_SENTRY_SAMPLE_RATE_BY_VIEW_NAME = json.loads(
         env.str(
