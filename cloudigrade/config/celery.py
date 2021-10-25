@@ -91,7 +91,7 @@ if env("CELERY_ENABLE_SENTRY", default=False):
     logger.info("Enabling sentry.")
 
     CELERY_SENTRY_SAMPLE_RATE_DEFAULT = env.float(
-        "CELERY_SENTRY_SAMPLE_RATE_DEFAULT", default=1.0
+        "CELERY_SENTRY_SAMPLE_RATE_DEFAULT", default=0.1
     )
     # CELERY_SENTRY_SAMPLE_RATE_BY_TASK_NAME example value:
     # '{"api.tasks.enable_account": "0.5", "api.clouds.aws.tasks.analyze_log": "0.1"}'
