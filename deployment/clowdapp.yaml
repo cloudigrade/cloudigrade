@@ -30,7 +30,7 @@ objects:
       #
       # FIXME: Set back to `API_REPLICA_COUNT`
       #        when Clowder supports HPAs.
-      replicas: ${{API_REPLICA_COUNT_MAX}}
+      minReplicas: ${{API_REPLICA_COUNT_MAX}}
       revisionHistoryLimit: 10
       webServices:
         public:
@@ -299,7 +299,7 @@ objects:
       #
       # Component cloudigrade-beat deployment:
       #
-      replicas: ${{CELERY_BEAT_REPLICA_COUNT}}
+      minReplicas: ${{CELERY_BEAT_REPLICA_COUNT}}
       revisionHistoryLimit: 10
       webServices:
         public:
@@ -550,7 +550,7 @@ objects:
       #
       # Component cloudigrade-listener deployment:
       #
-      replicas: ${{LISTENER_WORKER_REPLICA_COUNT}}
+      minReplicas: ${{LISTENER_WORKER_REPLICA_COUNT}}
       revisionHistoryLimit: 10
       webServices:
         public:
@@ -799,7 +799,7 @@ objects:
       #
       # FIXME: Set back to `CELERY_WORKER_REPLICA_COUNT`
       #        when Clowder supports HPAs.
-      replicas: ${{CELERY_WORKER_REPLICA_COUNT_MAX}}
+      minReplicas: ${{CELERY_WORKER_REPLICA_COUNT_MAX}}
       webServices:
         public:
           enabled: false
