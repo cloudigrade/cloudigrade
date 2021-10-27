@@ -165,6 +165,17 @@ class IdentityHeaderAuthenticateTestCase(TestCase):
             self.auth_class.authenticate(request)
         self.assertIn("User must be an org admin", e.exception.args[0])
 
+    def test_authenticate_bad_b64_padding(self):
+        """Test authentication fails when the identity header has bad b64 padding."""
+        bad_rh_header = "111"  # This string triggers binascii.Error in b64decode.
+
+        request = Mock()
+        request.META = {settings.INSIGHTS_IDENTITY_HEADER: bad_rh_header}
+
+        with self.assertRaises(exceptions.AuthenticationFailed) as e:
+            self.auth_class.authenticate(request)
+        self.assertIn("Authentication Failed", e.exception.args[0])
+
     def test_authenticate_not_json_header_fails(self):
         """Test that authentication fails when the identity header is invalid JSON."""
         bad_rh_header = base64.b64encode(b"Not JSON")
