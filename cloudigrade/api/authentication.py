@@ -1,5 +1,6 @@
 """Authentication classes for cloudigrade APIs."""
 import base64
+import binascii
 import json
 import logging
 
@@ -109,7 +110,7 @@ def parse_requests_header(request, allow_internal_fake_identity_header=False):
     try:
         auth = json.loads(base64.b64decode(auth_header).decode(HTTP_HEADER_ENCODING))
 
-    except (TypeError, UnicodeDecodeError, json.JSONDecodeError) as e:
+    except (TypeError, UnicodeDecodeError, json.JSONDecodeError, binascii.Error) as e:
         logger.info(_("Authentication Failed: identity header parsing error %s"), e)
         logger.info(_("Raw header was: %s"), auth_header)
         raise exceptions.AuthenticationFailed(
