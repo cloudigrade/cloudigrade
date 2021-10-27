@@ -82,11 +82,19 @@ urlpatterns = [
     path("api-auth/", include("rest_framework.urls")),
     path("healthz/", include("health_check.urls")),
     path("admin/", admin.site.urls),
-    path("error/", views.fake_error),
-    path("recalculate_concurrent_usage/", views.recalculate_concurrent_usage),
-    path("recalculate_runs/", views.recalculate_runs),
+    path("error/", views.fake_error, name="internal-fake-error"),
+    path(
+        "recalculate_concurrent_usage/",
+        views.recalculate_concurrent_usage,
+        name="internal-recalculate-concurrent-usage",
+    ),
+    path("recalculate_runs/", views.recalculate_runs, name="internal-recalculate-runs"),
     path("api/cloudigrade/v1/", include(router.urls)),
-    path("api/cloudigrade/v1/availability_status", views.availability_check),
+    path(
+        "api/cloudigrade/v1/availability_status",
+        views.availability_check,
+        name="internal-availability-status",
+    ),
     path(
         "api/cloudigrade/v1/problematic_runs/",
         views.ProblematicRunList.as_view(),
