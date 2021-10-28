@@ -1,18 +1,18 @@
 {
   "Version": "2012-10-17",
-  "Id": "{{ s3_bucket_name }}-policy-id",
+  "Id": "{{ s3_trail_bucket_name }}-policy-id",
   "Statement": [
     {
-      "Sid": "{{ s3_bucket_name }}-statement-id-allow-cloudtrail-get-acl",
+      "Sid": "{{ s3_trail_bucket_name }}-statement-id-allow-cloudtrail-get-acl",
       "Effect": "Allow",
       "Principal": {
         "Service": "cloudtrail.amazonaws.com"
       },
       "Action": "s3:GetBucketAcl",
-      "Resource": "{{ s3_bucket_arn }}"
+      "Resource": "{{ s3_trail_bucket_arn }}"
     },
     {
-      "Sid": "{{ s3_bucket_name }}-statement-id-allow-cloudtrail-put-object",
+      "Sid": "{{ s3_trail_bucket_name }}-statement-id-allow-cloudtrail-put-object",
       "Effect": "Allow",
       "Action": "s3:PutObject",
       "Principal": {
@@ -24,7 +24,7 @@
         }
       },
       "Resource": [
-        "{{ s3_bucket_arn }}/AWSLogs/*"
+        "{{ s3_trail_bucket_arn }}/AWSLogs/*"
       ]
     }
   ]

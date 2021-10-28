@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0045_auto_20210722_2020'),
+        ("api", "0045_auto_20210722_2020"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='cloudaccount',
-            name='platform_application_is_paused',
+            model_name="cloudaccount",
+            name="platform_application_is_paused",
             field=models.BooleanField(default=False),
         ),
     ]

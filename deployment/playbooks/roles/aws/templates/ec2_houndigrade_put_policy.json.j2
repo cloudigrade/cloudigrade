@@ -1,0 +1,15 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": ["s3:ListBucket"],
+      "Resource": "{{ s3_inspection_bucket_arn }}"
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["s3:PutObject"],
+      "Resource": "{{ s3_inspection_bucket_arn }}/InspectionResults/*"
+    }
+  ]
+}

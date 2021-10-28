@@ -135,15 +135,11 @@ docker pull docker pull {houndigrade_image}
 docker run \
     --mount type=bind,source=/dev,target=/dev \
     --privileged --rm \
-    -e AWS_ACCESS_KEY_ID={settings.AWS_SQS_ACCESS_KEY_ID} \
     -e AWS_DEFAULT_REGION={settings.AWS_SQS_REGION} \
-    -e AWS_SECRET_ACCESS_KEY={settings.AWS_SQS_SECRET_ACCESS_KEY} \
-    -e EXCHANGE_NAME={settings.HOUNDIGRADE_EXCHANGE_NAME} \
     -e HOUNDIGRADE_SENTRY_DSN={settings.HOUNDIGRADE_SENTRY_DSN} \
     -e HOUNDIGRADE_SENTRY_RELEASE={settings.HOUNDIGRADE_SENTRY_RELEASE} \
     -e HOUNDIGRADE_SENTRY_ENVIRONMENT={settings.HOUNDIGRADE_SENTRY_ENVIRONMENT} \
-    -e RESULTS_QUEUE_NAME={settings.HOUNDIGRADE_RESULTS_QUEUE_NAME} \
-    -e QUEUE_CONNECTION_URL={settings.AWS_SQS_URL} \
+    -e RESULTS_BUCKET_NAME={settings.HOUNDIGRADE_RESULTS_BUCKET_NAME} \
     {houndigrade_image} \
     -c aws \
     -t {ami_id} /dev/xvdbb
