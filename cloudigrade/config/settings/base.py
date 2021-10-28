@@ -402,7 +402,7 @@ AWS_SQS_MAX_HOUNDI_YIELD_COUNT = env.int("AWS_SQS_MAX_HOUNDI_YIELD_COUNT", defau
 # This AWS_CLOUDTRAIL_EVENT_URL has a placeholder where an AWS Account ID should be.
 # That placeholder "000000000000" value is okay for tests but *must* be overridden when
 # actually running cloudigrade, such as in local.py and prod.py.
-AWS_CLOUDTRAIL_EVENT_URL = f"https://sqs.us-east-1.amazonaws.com/000000000000/cloudigrade-cloudtrail-s3-{CLOUDIGRADE_ENVIRONMENT}"
+AWS_CLOUDTRAIL_EVENT_URL = f"https://sqs.us-east-1.amazonaws.com/000000000000/{CLOUDIGRADE_ENVIRONMENT}-cloudigrade-cloudtrail-s3"
 
 #####################################################################
 # Configs used for running houndigrade and accessing its results
@@ -411,7 +411,7 @@ HOUNDIGRADE_ECS_IMAGE_NAME = env(
     "HOUNDIGRADE_ECS_IMAGE_NAME", default="cloudigrade/houndigrade"
 )
 HOUNDIGRADE_ECS_IMAGE_TAG = env("HOUNDIGRADE_ECS_IMAGE_TAG", default="latest")
-HOUNDIGRADE_RESULTS_QUEUE_NAME = f"cloudigrade-inspections-s3-{CLOUDIGRADE_ENVIRONMENT}"
+HOUNDIGRADE_RESULTS_QUEUE_NAME = f"{CLOUDIGRADE_ENVIRONMENT}-cloudigrade-inspections-s3"
 HOUNDIGRADE_RESULTS_BUCKET_NAME = f"{CLOUDIGRADE_ENVIRONMENT}-cloudigrade-inspections"
 HOUNDIGRADE_SENTRY_DSN = env("HOUNDIGRADE_SENTRY_DSN", default="")
 HOUNDIGRADE_SENTRY_RELEASE = (
