@@ -6,18 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0046_cloudaccount_platform_application_is_paused'),
+        ("api", "0046_cloudaccount_platform_application_is_paused"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='cloudaccount',
-            name='enabled_at',
+            model_name="cloudaccount",
+            name="enabled_at",
             field=models.DateTimeField(blank=True, null=True),
         ),
         migrations.AlterField(
-            model_name='cloudaccount',
-            name='is_enabled',
+            model_name="cloudaccount",
+            name="is_enabled",
             field=models.BooleanField(default=False),
         ),
     ]
