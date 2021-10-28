@@ -10,6 +10,7 @@ from api import AWS_PROVIDER_STRING
 from api.clouds.aws import util
 from api.clouds.aws.util import generate_aws_ami_messages
 from api.tests import helper as api_helper
+from util import aws
 from util.aws.sqs import _sqs_unwrap_message, _sqs_wrap_message, add_messages_to_queue
 from util.exceptions import MaximumNumberOfTrailsExceededException
 from util.tests import helper as util_helper
@@ -244,20 +245,21 @@ class CloudsAwsUtilVerifyPermissionsTest(TestCase):
         # the application_id needed to notify sources!
         mock_notify_sources.delay.assert_not_called()
 
-    def test_verify_permissions_fails_if_session_access_denied(self):
-        """Test handling AccessDenied error from AWS when trying to get a session."""
-        client_error = ClientError(
-            error_response={"Error": {"Code": "AccessDenied"}},
-            operation_name=Mock(),
-        )
-        with patch.object(util.aws, "get_session") as mock_get_session, patch(
-            "api.tasks.sources.notify_application_availability_task"
-        ) as mock_notify_sources:
-            mock_get_session.side_effect = client_error
-            verified = util.verify_permissions(self.arn)
+    def test_verify_permissions_fails_if_session_error_code_in_tuple(self):
+        """Test handling error codes from AWS when trying to get a session."""
+        for error_code in aws.COMMON_AWS_ACCESS_DENIED_ERROR_CODES:
+            client_error = ClientError(
+                error_response={"Error": {"Code": error_code}},
+                operation_name=Mock(),
+            )
+            with patch.object(util.aws, "get_session") as mock_get_session, patch(
+                "api.tasks.sources.notify_application_availability_task"
+            ) as mock_notify_sources:
+                mock_get_session.side_effect = client_error
+                verified = util.verify_permissions(self.arn)
 
-        self.assertFalse(verified)
-        mock_notify_sources.delay.assert_called()
+            self.assertFalse(verified)
+            mock_notify_sources.delay.assert_called()
 
     def test_verify_permissions_fails_if_mystery_aws_error(self):
         """Test handling some other error from AWS when trying to get a session."""
