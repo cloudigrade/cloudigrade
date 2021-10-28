@@ -58,10 +58,10 @@ ec2_lt_recommended_ami: "{{ lookup('aws_ssm', '/aws/service/ecs/optimized-ami/am
 ### s3.yml
 # Names
 # Cloudtrail
-sqs_trail_name: "cloudigrade-cloudtrail-s3-{{env}}"
+sqs_trail_name: "{{env}}-cloudigrade-cloudtrail-s3"
 s3_trail_bucket_name: "{{env}}-cloudigrade-trails"
 s3_trail_bucket_arn: "arn:aws:s3:::{{ s3_trail_bucket_name }}"
 # Inspection Results
-sqs_inspection_name: "cloudigrade-inspections-s3-{{env}}"
+sqs_inspection_name: "{{env}}-cloudigrade-inspections-s3"
 s3_inspection_bucket_name: "{{env}}-cloudigrade-inspections"
 s3_inspection_bucket_arn: "arn:aws:s3:::{{ s3_inspection_bucket_name }}"
