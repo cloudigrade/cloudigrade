@@ -66,6 +66,21 @@ def _get_ami_and_snapshot_for_copying(session, arn, ami_id, snapshot_region):
         customer_snapshot = aws.get_snapshot(
             session, customer_snapshot_id, snapshot_region
         )
+        if customer_snapshot.encrypted:
+            logger.info(
+                _(
+                    'AWS snapshot "%(snapshot_id)s" for image "%(image_id)s" '
+                    'found using customer ARN "%(arn)s" is encrypted and '
+                    "cannot be copied."
+                ),
+                {
+                    "snapshot_id": customer_snapshot.snapshot_id,
+                    "image_id": ami.id,
+                    "arn": arn,
+                },
+            )
+            update_aws_image_status_error(ec2_ami_id=ami_id, is_encrypted=True)
+            return
     except ClientError as e:
         error_code = e.response.get("Error").get("Code")
         if error_code == "InvalidSnapshot.NotFound":
@@ -80,22 +95,6 @@ def _get_ami_and_snapshot_for_copying(session, arn, ami_id, snapshot_region):
             copy_ami_to_customer_account.delay(arn, ami_id, snapshot_region)
             return
         raise e
-
-    if customer_snapshot.encrypted:
-        logger.info(
-            _(
-                'AWS snapshot "%(snapshot_id)s" for image "%(image_id)s" '
-                'found using customer ARN "%(arn)s" is encrypted and '
-                "cannot be copied."
-            ),
-            {
-                "snapshot_id": customer_snapshot.snapshot_id,
-                "image_id": ami.id,
-                "arn": arn,
-            },
-        )
-        update_aws_image_status_error(ec2_ami_id=ami_id, is_encrypted=True)
-        return
 
     return ami, customer_snapshot
 
