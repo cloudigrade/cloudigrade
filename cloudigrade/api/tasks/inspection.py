@@ -35,34 +35,65 @@ def persist_inspection_cluster_results_task():
     for message in aws.yield_messages_from_queue(
         queue_url, settings.AWS_SQS_MAX_HOUNDI_YIELD_COUNT
     ):
-        logger.info(_('Processing inspection results with id "%s"'), message.message_id)
+        logger.info(
+            _('Processing inspection results notification with id "%s"'),
+            message.message_id,
+        )
 
-        inspection_results = json.loads(message.body)
-        if inspection_results.get(CLOUD_KEY) == CLOUD_TYPE_AWS:
-            try:
-                persist_aws_inspection_cluster_results(inspection_results)
-            except Exception as e:
-                logger.exception(_("Unexpected error in result processing: %s"), e)
-                logger.debug(_("Failed message body is: %s"), message.body)
+        inspection_results = _fetch_inspection_results(message)
+        for inspection_result in inspection_results:
+            if inspection_result.get(CLOUD_KEY) == CLOUD_TYPE_AWS:
+                try:
+                    persist_aws_inspection_cluster_results(inspection_result)
+                except Exception as e:
+                    logger.exception(_("Unexpected error in result processing: %s"), e)
+                    logger.debug(_("Failed message body is: %s"), message.body)
+                    failures.append(message)
+                    continue
+
+                logger.info(
+                    _("Successfully processed message id %s; deleting from queue."),
+                    message.message_id,
+                )
+                aws.delete_messages_from_queue(queue_url, [message])
+                successes.append(message)
+            else:
+                logger.error(
+                    _('Unsupported cloud type: "%s"'), inspection_result.get(CLOUD_KEY)
+                )
                 failures.append(message)
-                continue
-
-            logger.info(
-                _("Successfully processed message id %s; deleting from queue."),
-                message.message_id,
-            )
-            aws.delete_messages_from_queue(queue_url, [message])
-            successes.append(message)
-        else:
-            logger.error(
-                _('Unsupported cloud type: "%s"'), inspection_results.get(CLOUD_KEY)
-            )
-            failures.append(message)
 
     if not (successes or failures):
         logger.info("No inspection results found.")
 
     return successes, failures
+
+
+def _fetch_inspection_results(message):
+    """
+    Fetch inspection results from S3 bucket via key specified in message.
+
+    Returns:
+        list(json): list of json result(s) retrieved.
+    """
+    logs = []
+    inspection_results = []
+    extracted_messages = aws.extract_sqs_message(message)
+    for extracted_message in extracted_messages:
+        bucket = extracted_message["bucket"]["name"]
+        key = extracted_message["object"]["key"]
+        raw_content = aws.get_object_content_from_s3(bucket, key)
+        content = json.loads(raw_content)
+        logs.append((content, bucket, key))
+        inspection_results.append(content)
+        logger.info(
+            _(
+                "Read Houndigrade Inspection Result file "
+                "from bucket %(bucket)s object key %(key)s"
+            ),
+            {"bucket": bucket, "key": key},
+        )
+    return inspection_results
 
 
 @shared_task(name="api.tasks.inspect_pending_images")

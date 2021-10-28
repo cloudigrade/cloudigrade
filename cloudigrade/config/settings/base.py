@@ -133,7 +133,9 @@ WSGI_APPLICATION = "config.wsgi.application"
 DATABASES = {
     "default": {
         "ATOMIC_REQUESTS": env("DJANGO_ATOMIC_REQUESTS", default=True),
-        "ENGINE": env("DJANGO_DATABASE_ENGINE", default="django.db.backends.postgresql"),
+        "ENGINE": env(
+            "DJANGO_DATABASE_ENGINE", default="django.db.backends.postgresql"
+        ),
         "CONN_MAX_AGE": env.int("DJANGO_DATABASE_CONN_MAX_AGE", default=0),
     }
 }
@@ -409,8 +411,8 @@ HOUNDIGRADE_ECS_IMAGE_NAME = env(
     "HOUNDIGRADE_ECS_IMAGE_NAME", default="cloudigrade/houndigrade"
 )
 HOUNDIGRADE_ECS_IMAGE_TAG = env("HOUNDIGRADE_ECS_IMAGE_TAG", default="latest")
-HOUNDIGRADE_EXCHANGE_NAME = env("HOUNDIGRADE_EXCHANGE_NAME", default="")
-HOUNDIGRADE_RESULTS_QUEUE_NAME = f"{AWS_NAME_PREFIX}inspection_results"
+HOUNDIGRADE_RESULTS_QUEUE_NAME = f"cloudigrade-inspections-s3-{CLOUDIGRADE_ENVIRONMENT}"
+HOUNDIGRADE_RESULTS_BUCKET_NAME = f"{CLOUDIGRADE_ENVIRONMENT}-cloudigrade-inspections"
 HOUNDIGRADE_SENTRY_DSN = env("HOUNDIGRADE_SENTRY_DSN", default="")
 HOUNDIGRADE_SENTRY_RELEASE = (
     HOUNDIGRADE_ECS_IMAGE_TAG
