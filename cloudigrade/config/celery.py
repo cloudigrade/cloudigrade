@@ -33,7 +33,7 @@ app.conf.beat_schedule = {
     "persist_inspection_cluster_results": {
         "task": "api.tasks.persist_inspection_cluster_results_task",
         "schedule": env.int(
-            "HOUNDIGRADE_ECS_PERSIST_INSPECTION_RESULTS_SCHEDULE", default=5 * 60
+            "HOUNDIGRADE_ECS_PERSIST_INSPECTION_RESULTS_SCHEDULE", default=60
         ),
     },
     "inspect_pending_images": {

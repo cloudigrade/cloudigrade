@@ -21,8 +21,11 @@ class SyncBucketLifecycleTest(TestCase):
             mock_boto3.resource.assert_called_with("s3")
 
             mock_s3 = mock_boto3.resource()
-            mock_s3.BucketLifecycleConfiguration.assert_called_with(
-                settings.AWS_S3_BUCKET_NAME
+            mock_s3.BucketLifecycleConfiguration.assert_any_call(
+                settings.HOUNDIGRADE_RESULTS_BUCKET_NAME
+            )
+            mock_s3.BucketLifecycleConfiguration.assert_any_call(
+                settings.AWS_S3_BUCKET_NAME,
             )
 
             mock_bucket_lc = mock_s3.BucketLifecycleConfiguration()

@@ -6,16 +6,16 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0048_awsmachineimage_product_codes'),
+        ("api", "0048_awsmachineimage_product_codes"),
     ]
 
     operations = [
         migrations.AlterUniqueTogether(
-            name='cloudaccount',
-            unique_together={('platform_authentication_id', 'platform_application_id')},
+            name="cloudaccount",
+            unique_together={("platform_authentication_id", "platform_application_id")},
         ),
         migrations.RemoveField(
-            model_name='cloudaccount',
-            name='name',
+            model_name="cloudaccount",
+            name="name",
         ),
     ]
