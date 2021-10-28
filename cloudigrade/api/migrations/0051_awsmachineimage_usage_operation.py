@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0050_awsmachineimage_platform_details'),
+        ("api", "0050_awsmachineimage_platform_details"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='awsmachineimage',
-            name='usage_operation',
+            model_name="awsmachineimage",
+            name="usage_operation",
             field=models.CharField(blank=True, max_length=256, null=True),
         ),
     ]
