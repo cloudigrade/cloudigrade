@@ -415,7 +415,7 @@ def delete_snapshot(snapshot_copy_id, ami_id, snapshot_region):
     try:
         ami = AwsMachineImage.objects.get(ec2_ami_id=ami_id)
         machine_image = ami.machine_image.get()
-        if machine_image.status == MachineImage.INSPECTED:
+        if machine_image.status in MachineImage.TERMINAL_STATUSES:
             clean_up = True
     except AwsMachineImage.DoesNotExist:
         logger.info(
