@@ -18,24 +18,30 @@ class DeleteSnapshotTest(TestCase):
     @patch("api.clouds.aws.tasks.imageprep.boto3")
     def test_delete_snapshot_success(self, mock_boto3, mock_ami):
         """Assert that the delete snapshot succeeds."""
-        mock_ami_id = util_helper.generate_dummy_image_id()
+        for status in MachineImage.TERMINAL_STATUSES:
+            mock_ami_id = util_helper.generate_dummy_image_id()
+            mock_image = account_helper.generate_image(
+                ec2_ami_id=mock_ami_id, status=status
+            )
+            mock_snapshot_copy_id = util_helper.generate_dummy_snapshot_id()
+            mock_region = util_helper.get_random_region()
 
-        mock_image = account_helper.generate_image(
-            ec2_ami_id=mock_ami_id, status=MachineImage.INSPECTED
-        )
-        mock_snapshot_copy_id = util_helper.generate_dummy_snapshot_id()
-        mock_region = util_helper.get_random_region()
+            mock_ami_get = mock_ami.objects.get
+            mock_ami_get.return_value.machine_image.get.return_value = mock_image
+            mock_ec2_client = mock_boto3.resource
+            mock_snapshot = mock_ec2_client.return_value.Snapshot
 
-        mock_ami_get = mock_ami.objects.get
-        mock_ami_get.return_value.machine_image.get.return_value = mock_image
-        mock_ec2_client = mock_boto3.resource
-        mock_snapshot = mock_ec2_client.return_value.Snapshot
+            delete_snapshot(mock_snapshot_copy_id, mock_ami_id, mock_region)
 
-        delete_snapshot(mock_snapshot_copy_id, mock_ami_id, mock_region)
+            mock_ec2_client.assert_called_once_with("ec2")
+            mock_snapshot.assert_called_once_with(mock_snapshot_copy_id)
+            mock_snapshot.return_value.delete.assert_called_once()
 
-        mock_ec2_client.assert_called_once_with("ec2")
-        mock_snapshot.assert_called_once_with(mock_snapshot_copy_id)
-        mock_snapshot.return_value.delete.assert_called_once()
+            # Reset the mocks since we are iterating over multiple images.
+            mock_boto3.reset_mock()
+            mock_ec2_client.reset_mock()
+            mock_snapshot.reset_mock()
+            mock_snapshot.return_value.delete.reset_mock()
 
     @patch("api.clouds.aws.tasks.imageprep.delete_snapshot.apply_async")
     @patch("api.clouds.aws.tasks.imageprep.AwsMachineImage")
