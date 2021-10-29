@@ -66,6 +66,9 @@ class CloudAccountSerializer(ModelSerializer):
         required=False,
     )
 
+    # Foreign key non-string properties
+    user_id = IntegerField(read_only=True)
+
     class Meta:
         model = CloudAccount
         fields = (
@@ -276,6 +279,10 @@ class InstanceSerializer(ModelSerializer):
         required=False,
     )
     instance_id = IntegerField(source="id", read_only=True)
+
+    # Foreign key non-string properties
+    cloud_account_id = IntegerField(read_only=True)
+    machine_image_id = IntegerField(read_only=True)
 
     class Meta:
         model = Instance
