@@ -441,7 +441,19 @@ def delete_snapshot(snapshot_copy_id, ami_id, snapshot_region):
         try:
             snapshot_copy.delete(DryRun=False)
         except ClientError as e:
-            if e.response.get("Error", {}).get("Code") == "InvalidSnapshot.NotFound":
+            if e.response.get("Error", {}).get("Code") == "RequestLimitExceeded":
+                logger.info(
+                    _(
+                        "%(label)s RequestLimitExceeded while trying to delete"
+                        " snapshot_copy_id %(copy_id)s "
+                    ),
+                    {"label": "delete_snapshot", "copy_id": snapshot_copy_id},
+                )
+                delete_snapshot.apply_async(
+                    args=[snapshot_copy_id, ami_id, snapshot_region],
+                    countdown=settings.INSPECTION_SNAPSHOT_CLEAN_UP_RETRY_DELAY,
+                )
+            elif e.response.get("Error", {}).get("Code") == "InvalidSnapshot.NotFound":
                 logger.info(
                     _(
                         "%(label)s detected snapshot_copy_id %(copy_id)s "
