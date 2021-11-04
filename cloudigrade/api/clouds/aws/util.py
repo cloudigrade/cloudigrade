@@ -342,8 +342,7 @@ def save_instance(account, instance_data, region):
             logger.info(
                 _(
                     "Existing AwsMachineImage %(awsmachineimage_id)s "
-                    "(ec2_ami_id=%(ec2_ami_id)s) found has no "
-                    "MachineImage. This should not happen!"
+                    "(ec2_ami_id=%(ec2_ami_id)s) found has no MachineImage."
                 ),
                 {
                     "awsmachineimage_id": awsmachineimage.id,

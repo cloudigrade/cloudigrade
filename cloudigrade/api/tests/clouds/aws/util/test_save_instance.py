@@ -79,7 +79,7 @@ class SaveInstanceTest(TestCase):
 
         logged_condition = (
             "Existing AwsMachineImage {aws_ami_id} (ec2_ami_id={ec2_ami_id})"
-            " found has no MachineImage. This should not happen!"
+            " found has no MachineImage."
         ).format(aws_ami_id=aws_machine_image.id, ec2_ami_id=ami_id)
         self.assertIn(logged_condition, " ".join(logging_watcher.output))
         self.assertEqual(instance.machine_image.content_object.ec2_ami_id, ami_id)
