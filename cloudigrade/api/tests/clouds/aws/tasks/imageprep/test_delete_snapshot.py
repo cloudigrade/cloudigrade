@@ -112,3 +112,49 @@ class DeleteSnapshotTest(TestCase):
         mock_ec2_client.assert_called_once_with("ec2")
         mock_snapshot.assert_called_once_with(mock_snapshot_copy_id)
         mock_snapshot.return_value.delete.assert_called_once()
+
+    @patch("api.clouds.aws.tasks.imageprep.delete_snapshot.apply_async")
+    @patch("api.clouds.aws.tasks.imageprep.AwsMachineImage")
+    @patch("api.clouds.aws.tasks.imageprep.boto3")
+    def test_delete_snapshot_request_limit_exceeded(
+        self, mock_boto3, mock_ami, mock_async
+    ):
+        """Assert that the delete snapshot handles request limit exceeded."""
+        mock_ami_id = util_helper.generate_dummy_image_id()
+
+        mock_image = account_helper.generate_image(
+            ec2_ami_id=mock_ami_id, status=MachineImage.INSPECTED
+        )
+        mock_snapshot_copy_id = util_helper.generate_dummy_snapshot_id()
+        mock_region = util_helper.get_random_region()
+
+        client_error = ClientError(
+            error_response={"Error": {"Code": "RequestLimitExceeded"}},
+            operation_name=Mock(),
+        )
+
+        mock_ami_get = mock_ami.objects.get
+        mock_ami_get.return_value.machine_image.get.return_value = mock_image
+        mock_ec2_client = mock_boto3.resource
+        mock_snapshot = mock_ec2_client.return_value.Snapshot
+        mock_snapshot.return_value.delete.side_effect = client_error
+
+        with self.assertLogs(
+            "api.clouds.aws.tasks.imageprep", level="INFO"
+        ) as logging_watcher:
+            delete_snapshot(mock_snapshot_copy_id, mock_ami_id, mock_region)
+
+        logged_condition = (
+            "delete_snapshot RequestLimitExceeded while trying to delete"
+            " snapshot_copy_id {copy_id}"
+        ).format(copy_id=mock_snapshot_copy_id)
+        self.assertIn(logged_condition, " ".join(logging_watcher.output))
+
+        mock_ec2_client.assert_called_once_with("ec2")
+        mock_snapshot.assert_called_once_with(mock_snapshot_copy_id)
+        mock_snapshot.return_value.delete.assert_called_once()
+
+        mock_async.assert_called_once_with(
+            args=[mock_snapshot_copy_id, mock_ami_id, mock_region],
+            countdown=settings.INSPECTION_SNAPSHOT_CLEAN_UP_RETRY_DELAY,
+        )
