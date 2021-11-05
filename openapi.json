@@ -843,7 +843,7 @@
             "readOnly": true
           },
           "user_id": {
-            "type": "string",
+            "type": "integer",
             "readOnly": true
           },
           "content_object": {
@@ -896,7 +896,7 @@
         "type": "object",
         "properties": {
           "cloud_account_id": {
-            "type": "string",
+            "type": "integer",
             "readOnly": true
           },
           "created_at": {
@@ -909,7 +909,7 @@
             "readOnly": true
           },
           "machine_image_id": {
-            "type": "string",
+            "type": "integer",
             "readOnly": true
           },
           "updated_at": {

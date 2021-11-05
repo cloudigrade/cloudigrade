@@ -339,11 +339,10 @@ def save_instance(account, instance_data, region):
             # We are not sure how this could happen. Whenever we save a new
             # AwsMachineImage, we *should* always follow up with creating
             # its paired MachineImage. Investigate if you see this error!
-            logger.error(
+            logger.info(
                 _(
                     "Existing AwsMachineImage %(awsmachineimage_id)s "
-                    "(ec2_ami_id=%(ec2_ami_id)s) found has no "
-                    "MachineImage. This should not happen!"
+                    "(ec2_ami_id=%(ec2_ami_id)s) found has no MachineImage."
                 ),
                 {
                     "awsmachineimage_id": awsmachineimage.id,

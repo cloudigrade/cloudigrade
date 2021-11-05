@@ -73,9 +73,15 @@ class SaveInstanceTest(TestCase):
         with self.assertRaises(MachineImage.DoesNotExist):
             aws_machine_image.machine_image.get()
 
-        awsinstance = util.save_instance(account, instances_data[region][0], region)
+        with self.assertLogs("api.clouds.aws.util", level="INFO") as logging_watcher:
+            awsinstance = util.save_instance(account, instances_data[region][0], region)
         instance = awsinstance.instance.get()
 
+        logged_condition = (
+            "Existing AwsMachineImage {aws_ami_id} (ec2_ami_id={ec2_ami_id})"
+            " found has no MachineImage."
+        ).format(aws_ami_id=aws_machine_image.id, ec2_ami_id=ami_id)
+        self.assertIn(logged_condition, " ".join(logging_watcher.output))
         self.assertEqual(instance.machine_image.content_object.ec2_ami_id, ami_id)
         self.assertEqual(instance.machine_image.status, MachineImage.UNAVAILABLE)
 

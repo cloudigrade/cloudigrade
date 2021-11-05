@@ -6382,7 +6382,7 @@
             "readOnly": true
           },
           "user_id": {
-            "type": "string",
+            "type": "integer",
             "readOnly": true
           },
           "content_object": {
