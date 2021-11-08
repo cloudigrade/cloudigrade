@@ -81,9 +81,9 @@ Imports should be grouped and then sorted alphabetically following the `pycharm 
     # apply all changes to files
     isort -rc ./cloudigrade/
 
-If you use PyCharm or IntelliJ IDEA with the Python plugin, you can coerce it to use a compliant import behavior by `configuring your Optimize Imports settings <docs/illustrations/pycharm-settings-imports.png>`_.
+If you use PyCharm or IntelliJ IDEA with the Python plugin, you can coerce it to use a compliant import behavior by `configuring your Optimize Imports settings <docs/images/pycharm-settings-imports.png>`_.
 
-Aternatively, you may eschew PyCharm's built-in import optimizer and instead `add "isort" as an External Tool <docs/illustrations/pycharm-isort-external-tool.png>`_ and `give it a custom keyboard shortcut <docs/illustrations/pycharm-isort-keymap.png>`_.
+Aternatively, you may eschew PyCharm's built-in import optimizer and instead `add "isort" as an External Tool <docs/images/pycharm-isort-external-tool.png>`_ and `give it a custom keyboard shortcut <docs/images/pycharm-isort-keymap.png>`_.
 
 If you use Visual Studio Code with the `ms-python.python <https://marketplace.visualstudio.com/items?itemName=ms-python.python>`_ extension enabled, its "Python Refactor: Sort Imports" action will use ``isort`` with our custom ``.isort.cfg`` automatically by default.
 
