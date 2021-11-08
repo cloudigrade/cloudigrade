@@ -13,6 +13,7 @@ What is cloudigrade?
 See the `cloudigrade wiki <https://github.com/cloudigrade/cloudigrade/wiki>`_ or the following documents for more details:
 
 - `Contributing to cloudigrade <./CONTRIBUTING.rst>`_
+- `cloudigrade architecture <./docs/architecture.md>`_
 - `Development environment setup and commands <./docs/development-environment.rst>`_
 - `REST API Examples <./docs/rest-api-examples.rst>`_
 
