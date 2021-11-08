@@ -1,9 +1,0 @@
-seqdiag {
-    'cron'; cloudigrade; 'message queue'; db; 'task queue';
-    'cron' => cloudigrade [label='process results'] {
-        cloudigrade => 'message queue' [label='get inspection data', return='data'];
-        === if no messages, abort and retry later ===
-        cloudigrade => db [label='save inspection data'];
-        cloudigrade => 'task queue' [label='async cleanup cluster'];
-    }
-}
