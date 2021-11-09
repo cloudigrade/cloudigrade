@@ -61,6 +61,24 @@ cloudigrade has the following operational dependencies. See also [app.yml](https
 
 <img src="images/cloudigrade-arch-aws.svg">
 
+## Resource Capacity and Growth
+
+The dev team expects cloudigrade's CPU, memory, and disk use for both OpenShift and the RDS database to grow proportionally to the number of users, the length of time since a user joined, and the amount of activity in the users' cloud accounts.
+
+How do those factors affect storage/database growth?
+
+- cloudigrade retains information for each cloud account source for each user.
+- cloudigrade retains information for each instance in each cloud account.
+- cloudigrade retains information for each image used by each instance. When an image is shared by multiple instances, only one copy of the image's data is stored.
+- cloudigrade retains information when each instance starts and stops for the known lifetime of each cloud account.
+- cloudigrade retains calculated usage totals for each day for each user.
+
+How do these factors affect CPU and memory?
+
+- cloudigrade processes near-real-time events from the public clouds for each cloud account. This processing increases proportionally to the number of accounts and the amount of activity in those accounts.
+- cloudigrade calculates daily usage totals for each user. This processing increases proportionally to the number of users. By default, cloudigrade only calculates daily usage in a sliding window. So, this process is generally unaffected by the lifetime age of the user.
+- cloudigrade uses many asynchronous Celery workers to perform the required cloud data retrieval, processing, inspection, and calculation tasks. In general, as cloudigrade has more users and data, cloudigrade will need proportionally more OpenShift pods for workers to keep up with the increased number of tasks.
+
 ## Data Continuity and Disaster Recovery
 
 - AWS RDS (PSQL):
