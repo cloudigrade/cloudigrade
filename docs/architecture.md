@@ -96,3 +96,8 @@ How do these factors affect CPU and memory?
 
 In summary, the cloudigrade database in AWS RDS is the *only* critical data store that may need to be recovered following a disaster. All other stores are either ephemeral or transactional and *do not* need to be recovered.
 
+## Data Loss Impact
+
+If there is a disaster that results in a *nontrivial* time gap since the last database backup was made, the dev team does not have a strategy to recreate the data lost during that gap. The overwhelming majority of cloudigrade's incoming data is either ephemeral or transactional and only read once. If there is a nontrivial gap, Red Hat may consider notifying customers about data being absent during that gap.
+
+cloudigrade does not retain or report any personally identifying information (PII) or critical financial records. Losing data in cloudigrade due to a disaster only noticeably affects the displayed RHEL usage data in Subscription Watch graphs and tables on console.redhat.com. The graphs and tables might show zero or smaller-than-actual numbers for public cloud RHEL use during the period when data was lost. Reported usage before and after the loss period should be accurate.
