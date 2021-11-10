@@ -128,7 +128,7 @@ class GenerateCloudAccountTest(TestCase):
         self.assertIsNotNone(account.content_object.verify_task)
 
     def test_generate_azure_account_default(self):
-        """Assert generation of an AwsAccount with default/no args."""
+        """Assert generation of an AzureAccount with default/no args."""
         created_at = util_helper.utc_dt(2017, 1, 1, 0, 0, 0)
         with util_helper.clouditardis(created_at):
             account = helper.generate_cloud_account(cloud_type="azure")
@@ -197,6 +197,16 @@ class GenerateCloudAccountTest(TestCase):
         self.assertFalse(account.is_enabled)
         self.assertEqual(account.enabled_at, enabled_at)
         self.assertEqual(account.content_object.verify_task, verify_task)
+
+    def test_generate_aws_account_missing_content_object(self):
+        """Assert generation of an AwsAccount with missing content object."""
+        created_at = util_helper.utc_dt(2017, 1, 1, 0, 0, 0)
+        with util_helper.clouditardis(created_at):
+            account = helper.generate_cloud_account(
+                cloud_type="aws", missing_content_object=True
+            )
+        self.assertIsInstance(account, CloudAccount)
+        self.assertIsNone(account.content_object)
 
 
 class GenerateInstanceTest(TestCase):

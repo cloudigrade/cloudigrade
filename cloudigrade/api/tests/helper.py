@@ -294,6 +294,7 @@ def _generate_cloud_account(
     platform_source_id=None,
     is_enabled=True,
     enabled_at=None,
+    missing_content_object=False,
 ):
     """
     Generate a CloudAccount for testing.
@@ -311,6 +312,9 @@ def _generate_cloud_account(
         platform_source_id (int): Optional platform source source ID.
         is_enabled (bool): Optional should the account be enabled.
         enabled_at (datetime): Optional enabled datetime for this account.
+        missing_content_object (bool): should the provider-specific cloud account
+            (content_object) be missing; this is used to simulate unwanted edge cases in
+            which the content_object is not correctly deleted with the CloudAccount.
 
     Returns:
         CloudAccount: The created Cloud Account.
@@ -346,6 +350,17 @@ def _generate_cloud_account(
     )
     cloud_account.created_at = created_at
     cloud_account.save()
+
+    if missing_content_object:
+        provider_cloud_account_class = cloud_account.content_object.__class__
+        content_object_queryset = provider_cloud_account_class.objects.filter(
+            id=cloud_account.content_object.id
+        )
+        # Use _raw_delete so we don't trigger any signals or other model side-effects.
+        content_object_queryset._raw_delete(content_object_queryset.db)
+        # We need to get a fresh instance, not just use .refresh_from_db() because the
+        # generic relation doesn't seem to update when calling .refresh_from_db() here.
+        cloud_account = CloudAccount.objects.get(id=cloud_account.id)
 
     return cloud_account
 
