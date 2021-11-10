@@ -564,7 +564,7 @@ class Instance(BaseGenericModel):
         This should be treated like an abstract method, but we can't actually
         extend ABC here because it conflicts with Django's Meta class.
         """
-        return self.content_object.cloud_type
+        return getattr(self.content_object, "cloud_type", None)
 
     @property
     def cloud_instance_id(self):
@@ -574,7 +574,7 @@ class Instance(BaseGenericModel):
         This should be treated like an abstract method, but we can't actually
         extend ABC here because it conflicts with Django's Meta class.
         """
-        return self.content_object.cloud_instance_id
+        return getattr(self.content_object, "cloud_instance_id", None)
 
 
 @receiver(post_delete, sender=Instance)

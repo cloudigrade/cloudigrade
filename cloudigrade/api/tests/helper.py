@@ -396,6 +396,7 @@ def generate_instance_azure(
     image=None,
     no_image=False,
     azure_instance_resource_id=None,
+    missing_content_object=False,
 ):
     """
     Generate an AzureInstance for the given CloudAccount for testing.
@@ -408,6 +409,9 @@ def generate_instance_azure(
         image (MachineImage): Optional image to add instead of creating one.
         no_image (bool): Whether an image should be attached to this instance.
         azure_instance_resource_id (str): optional str for azure instance resource id
+        missing_content_object (bool): should the provider-specific cloud account
+            (content_object) be missing; this is used to simulate unwanted edge cases in
+            which the content_object is not correctly deleted with the Instance.
 
     Returns:
         Instance: The created Instance.
@@ -439,6 +443,14 @@ def generate_instance_azure(
         machine_image=image,
     )
 
+    if missing_content_object:
+        content_object_queryset = AzureInstance.objects.filter(id=azure_instance.id)
+        # Use _raw_delete so we don't trigger any signals or other model side-effects.
+        content_object_queryset._raw_delete(content_object_queryset.db)
+        # We need to get a fresh instance, not just use .refresh_from_db() because the
+        # generic relation doesn't seem to update when calling .refresh_from_db() here.
+        instance = Instance.objects.get(id=instance.id)
+
     return instance
 
 
@@ -448,6 +460,7 @@ def generate_instance_aws(
     region=None,
     image=None,
     no_image=False,
+    missing_content_object=False,
 ):
     """
     Generate an AwsInstance for the AwsAccount for testing.
@@ -460,6 +473,9 @@ def generate_instance_aws(
         region (str): Optional AWS region where the instance runs.
         image (MachineImage): Optional image to add instead of creating one.
         no_image (bool): Whether an image should be attached to this instance.
+        missing_content_object (bool): should the provider-specific cloud account
+            (content_object) be missing; this is used to simulate unwanted edge cases in
+            which the content_object is not correctly deleted with the Instance.
 
     Returns:
         Instance: The created Instance.
@@ -494,6 +510,14 @@ def generate_instance_aws(
         content_object=aws_instance,
         machine_image=image,
     )
+
+    if missing_content_object:
+        content_object_queryset = AwsInstance.objects.filter(id=aws_instance.id)
+        # Use _raw_delete so we don't trigger any signals or other model side-effects.
+        content_object_queryset._raw_delete(content_object_queryset.db)
+        # We need to get a fresh instance, not just use .refresh_from_db() because the
+        # generic relation doesn't seem to update when calling .refresh_from_db() here.
+        instance = Instance.objects.get(id=instance.id)
 
     return instance
 

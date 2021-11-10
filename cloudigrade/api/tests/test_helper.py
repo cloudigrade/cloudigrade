@@ -246,6 +246,20 @@ class GenerateInstanceTest(TestCase):
         self.assertEqual(instance.content_object.ec2_instance_id, ec2_instance_id)
         self.assertEqual(instance.content_object.region, region)
 
+    def test_generate_aws_instance_with_missing_content_object(self):
+        """Assert generation of an Instance for AWS with missing content object."""
+        account = helper.generate_cloud_account()
+        instance = helper.generate_instance_aws(account, missing_content_object=True)
+        self.assertIsInstance(instance, Instance)
+        self.assertIsNone(instance.content_object)
+
+    def test_generate_azure_instance_with_missing_content_object(self):
+        """Assert generation of an Instance for Azure with missing content object."""
+        account = helper.generate_cloud_account()
+        instance = helper.generate_instance_azure(account, missing_content_object=True)
+        self.assertIsInstance(instance, Instance)
+        self.assertIsNone(instance.content_object)
+
 
 class GenerateInstanceEventsTest(TestCase):
     """generate_instance_events test case."""
