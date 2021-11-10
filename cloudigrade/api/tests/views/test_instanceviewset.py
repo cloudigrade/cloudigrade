@@ -16,27 +16,45 @@ class InstanceViewSetTest(TestCase):
         self.user1 = util_helper.generate_test_user()
         self.user2 = util_helper.generate_test_user()
 
-        self.account1 = api_helper.generate_cloud_account(user=self.user1)
-        self.account2 = api_helper.generate_cloud_account(user=self.user1)
-        self.account3 = api_helper.generate_cloud_account(user=self.user2)
-        self.account4 = api_helper.generate_cloud_account(user=self.user2)
+        self.account_user1_aws1 = api_helper.generate_cloud_account_aws(user=self.user1)
+        self.account_user1_aws2 = api_helper.generate_cloud_account_aws(user=self.user1)
+        self.account_user1_azure1 = api_helper.generate_cloud_account_azure(
+            user=self.user1
+        )
+        self.account_user2_aws1 = api_helper.generate_cloud_account_aws(user=self.user2)
+        self.account_user2_aws2 = api_helper.generate_cloud_account_aws(user=self.user2)
 
-        self.image_plain = api_helper.generate_image()
-        self.image_windows = api_helper.generate_image(is_windows=True)
-        self.image_rhel = api_helper.generate_image(rhel_detected=True)
-        self.image_ocp = api_helper.generate_image(openshift_detected=True)
+        self.image_aws_plain = api_helper.generate_image_aws()
+        self.image_aws_windows = api_helper.generate_image_aws(is_windows=True)
+        self.image_aws_rhel = api_helper.generate_image_aws(rhel_detected=True)
+        self.image_aws_ocp = api_helper.generate_image_aws(openshift_detected=True)
+        self.image_azure_plain = api_helper.generate_image_azure()
 
-        self.instance1 = api_helper.generate_instance(
-            cloud_account=self.account1, image=self.image_plain
+        self.instance_user1_aws1 = api_helper.generate_instance_aws(
+            cloud_account=self.account_user1_aws1, image=self.image_aws_plain
         )
-        self.instance2 = api_helper.generate_instance(
-            cloud_account=self.account2, image=self.image_windows
+        self.instance_user1_aws2 = api_helper.generate_instance_aws(
+            cloud_account=self.account_user1_aws2, image=self.image_aws_windows
         )
-        self.instance3 = api_helper.generate_instance(
-            cloud_account=self.account3, image=self.image_rhel
+        self.instance_user1_aws3 = api_helper.generate_instance_aws(
+            cloud_account=self.account_user1_aws2,
+            image=self.image_aws_windows,
+            missing_content_object=True,
         )
-        self.instance4 = api_helper.generate_instance(
-            cloud_account=self.account4, image=self.image_ocp
+        self.instance_user1_azure1 = api_helper.generate_instance_azure(
+            cloud_account=self.account_user1_azure1, image=self.image_azure_plain
+        )
+        self.instance_user1_azure2 = api_helper.generate_instance_azure(
+            cloud_account=self.account_user1_azure1,
+            image=self.image_azure_plain,
+            missing_content_object=True,
+        )
+
+        self.instance_user2_aws1 = api_helper.generate_instance_aws(
+            cloud_account=self.account_user2_aws1, image=self.image_aws_rhel
+        )
+        self.instance_user2_aws2 = api_helper.generate_instance_aws(
+            cloud_account=self.account_user2_aws2, image=self.image_aws_ocp
         )
         self.factory = APIRequestFactory()
 
@@ -108,8 +126,11 @@ class InstanceViewSetTest(TestCase):
     def test_list_instances_as_user1(self):
         """Assert that user1 sees only its own instances."""
         expected_instances = {
-            self.instance1.id,
-            self.instance2.id,
+            self.instance_user1_aws1.id,
+            self.instance_user1_aws2.id,
+            self.instance_user1_aws3.id,
+            self.instance_user1_azure1.id,
+            self.instance_user1_azure2.id,
         }
         response = self.get_instance_list_response(self.user1)
         actual_instances = self.get_instance_ids_from_list_response(response)
@@ -118,8 +139,8 @@ class InstanceViewSetTest(TestCase):
     def test_list_instances_as_user2(self):
         """Assert that user2 sees only its own instances."""
         expected_instances = {
-            self.instance3.id,
-            self.instance4.id,
+            self.instance_user2_aws1.id,
+            self.instance_user2_aws2.id,
         }
         response = self.get_instance_list_response(self.user2)
         actual_instances = self.get_instance_ids_from_list_response(response)
@@ -128,7 +149,7 @@ class InstanceViewSetTest(TestCase):
     def test_get_user1s_instance_as_user1_returns_ok(self):
         """Assert that user1 can get one of its own instances."""
         user = self.user1
-        instance = self.instance2  # Instance belongs to user1.
+        instance = self.instance_user1_aws2  # Instance belongs to user1.
 
         response = self.get_instance_get_response(user, instance.id)
         self.assertEqual(response.status_code, 200)
@@ -137,7 +158,7 @@ class InstanceViewSetTest(TestCase):
     def test_get_user1s_instance_as_user2_returns_404(self):
         """Assert that user2 cannot get an instance belonging to user1."""
         user = self.user2
-        instance = self.instance2  # Instance belongs to user1, NOT user2.
+        instance = self.instance_user1_aws2  # Instance belongs to user1, NOT user2.
 
         response = self.get_instance_get_response(user, instance.id)
         self.assertEqual(response.status_code, 404)
@@ -147,24 +168,24 @@ class InstanceViewSetTest(TestCase):
         """
         Assert that user1 can only see his/her running instances.
 
-        instance1 (user1/account1) started in 2019-02 and is still running.
-        instance2 (user1/account2) started in 2019-03 and has stopped running.
-        instance3 (user2/account3) started in 2019-04 and is still running.
-        instance4 (user2/account4) has never run.
+        instance_user1_aws1 started in 2019-02 and is still running.
+        instance_user1_aws2 started in 2019-03 and has stopped running.
+        instance_user1_aws1 started in 2019-04 and is still running.
+        instance_user2_aws2 has never run.
 
         Requesting since mid 2016 as user1 should return no instances.
-        Requesting since mid 2017 as user1 should return instance1.
-        Requesting since mid 2018 as user1 should return instance1.
-        Requesting since mid 2019 as user1 should return instance1.
+        Requesting since mid 2017 as user1 should return instance_user1_aws1.
+        Requesting since mid 2018 as user1 should return instance_user1_aws1.
+        Requesting since mid 2019 as user1 should return instance_user1_aws1.
         """
         # Generate activity for instances
         api_helper.generate_single_run(
-            self.instance1,
+            self.instance_user1_aws1,
             (util_helper.utc_dt(2019, 2, 2, 0, 0, 0), None),
         )
 
         api_helper.generate_single_run(
-            self.instance2,
+            self.instance_user1_aws2,
             (
                 util_helper.utc_dt(2019, 3, 1, 0, 0, 0),
                 util_helper.utc_dt(2019, 3, 2, 0, 0, 0),
@@ -172,7 +193,7 @@ class InstanceViewSetTest(TestCase):
         )
 
         api_helper.generate_single_run(
-            self.instance3,
+            self.instance_user2_aws1,
             (util_helper.utc_dt(2019, 4, 1, 0, 0, 0), None),
         )
 
@@ -181,9 +202,9 @@ class InstanceViewSetTest(TestCase):
         mid_2019_03 = util_helper.utc_dt(2019, 3, 15, 0, 0, 0)
         mid_2019_04 = util_helper.utc_dt(2019, 4, 15, 0, 0, 0)
         expected_instances_since_mid_2019_01 = set()
-        expected_instances_since_mid_2019_02 = {self.instance1.id}
-        expected_instances_since_mid_2019_03 = {self.instance1.id}
-        expected_instances_since_mid_2019_04 = {self.instance1.id}
+        expected_instances_since_mid_2019_02 = {self.instance_user1_aws1.id}
+        expected_instances_since_mid_2019_03 = {self.instance_user1_aws1.id}
+        expected_instances_since_mid_2019_04 = {self.instance_user1_aws1.id}
 
         params = {"running_since": mid_2019_01}
         response = self.get_instance_list_response(self.user1, params)
