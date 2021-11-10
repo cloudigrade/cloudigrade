@@ -718,6 +718,7 @@ def _generate_image(
     syspurpose=None,
     openshift_detected=False,
     architecture="x86_64",
+    missing_content_object=False,
 ):
     """
     Generate a MachineImage linked to the given provider-specific model instance.
@@ -737,6 +738,9 @@ def _generate_image(
         syspurpose (dict): syspurpose JSON file contents
         openshift_detected (bool): is OpenShift detected
         architecture (str): image's CPU architecture
+        missing_content_object (bool): should the provider-specific machine image
+            (content_object) be missing; this is used to simulate unwanted edge cases in
+            which the content_object is not correctly deleted with the MachineImage.
 
     Returns:
         MachineImage: The created MachineImage instance.
@@ -782,6 +786,18 @@ def _generate_image(
         content_object=provider_machine_image,
         architecture=architecture,
     )
+
+    if missing_content_object:
+        provider_machine_image_class = machine_image.content_object.__class__
+        content_object_queryset = provider_machine_image_class.objects.filter(
+            id=machine_image.content_object.id
+        )
+        # Use _raw_delete so we don't trigger any signals or other model side-effects.
+        content_object_queryset._raw_delete(content_object_queryset.db)
+        # We need to get a fresh instance, not just use .refresh_from_db() because the
+        # generic relation doesn't seem to update when calling .refresh_from_db() here.
+        machine_image = MachineImage.objects.get(id=machine_image.id)
+
     return machine_image
 
 

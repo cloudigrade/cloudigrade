@@ -499,6 +499,13 @@ class GenerateAwsImageTest(TestCase):
         aws_cloud_account = image.content_object
         self.assertTrue(aws_cloud_account.is_marketplace)
 
+    def test_generate_aws_image_with_missing_content_object(self):
+        """Assert generation of an AwsMachineImage with missing content object."""
+        image = helper.generate_image_aws(missing_content_object=True)
+
+        self.assertIsInstance(image, MachineImage)
+        self.assertIsNone(image.content_object)
+
 
 class GenerateInstanceDefinitionsTest(TestCase):
     """generate_aws_ec2_definitions test case."""
