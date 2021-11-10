@@ -408,7 +408,7 @@ class MachineImage(BaseGenericModel):
         """
         return (
             self.rhel_detected_by_tag
-            or self.content_object.is_cloud_access
+            or getattr(self.content_object, "is_cloud_access", False)
             or self.rhel_enabled_repos_found
             or self.rhel_product_certs_found
             or self.rhel_release_files_found
@@ -443,22 +443,22 @@ class MachineImage(BaseGenericModel):
     @property
     def cloud_image_id(self):
         """Get the external cloud provider's ID for this image."""
-        return self.content_object.is_cloud_access
+        return getattr(self.content_object, "is_cloud_access", None)
 
     @property
     def is_cloud_access(self):
         """Indicate if the image is provided by Red Hat Cloud Access."""
-        return self.content_object.is_cloud_access
+        return getattr(self.content_object, "is_cloud_access", False)
 
     @property
     def is_marketplace(self):
         """Indicate if the image is from AWS/Azure/GCP/etc. Marketplace."""
-        return self.content_object.is_marketplace
+        return getattr(self.content_object, "is_marketplace", False)
 
     @property
     def cloud_type(self):
         """Get the external cloud provider type."""
-        return self.content_object.cloud_type
+        return getattr(self.content_object, "cloud_type", None)
 
     def __str__(self):
         """Get the string representation."""
