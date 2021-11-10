@@ -531,6 +531,7 @@ def generate_single_instance_event(
     no_instance_type=False,
     no_subnet=False,
     cloud_type=AWS_PROVIDER_STRING,
+    missing_content_object=False,
 ):
     """
     Generate single AwsInstanceEvent for testing.
@@ -546,6 +547,10 @@ def generate_single_instance_event(
         subnet (str): Optional subnet ID where instance runs.
         no_instance_type (bool): If true, don't assign an instance type.
         no_subnet (bool): If true, don't create and assign a subnet.
+        cloud_type (str): cloud provider type identifier
+        missing_content_object (bool): should the provider-specific instance event
+            (content_object) be missing; this is used to simulate unwanted edge cases in
+            which the content_object is not correctly deleted with the InstanceEvent.
 
     Returns:
         AwsInstanceEvent: The created AwsInstanceEvent.
@@ -580,6 +585,18 @@ def generate_single_instance_event(
         occurred_at=occurred_at,
         content_object=cloud_provider_event,
     )
+
+    if missing_content_object:
+        provider_instance_event_class = cloud_provider_event.__class__
+        content_object_queryset = provider_instance_event_class.objects.filter(
+            id=cloud_provider_event.id
+        )
+        # Use _raw_delete so we don't trigger any signals or other model side-effects.
+        content_object_queryset._raw_delete(content_object_queryset.db)
+        # We need to get a fresh instance, not just use .refresh_from_db() because the
+        # generic relation doesn't seem to update when calling .refresh_from_db().
+        event = InstanceEvent.objects.get(id=event.id)
+
     return event
 
 
@@ -590,6 +607,7 @@ def generate_instance_events(
     subnet=None,
     no_instance_type=False,
     cloud_type=AWS_PROVIDER_STRING,
+    missing_content_object=False,
 ):
     """
     Generate list of InstanceEvents for the Instance for testing.
@@ -610,6 +628,10 @@ def generate_instance_events(
         instance_type (str): Optional AWS instance type.
         subnet (str): Optional subnet ID where instance runs.
         no_instance_type (bool): If true, instance_type is not set
+        cloud_type (str): cloud provider type identifier
+        missing_content_object (bool): should the provider-specific instance event
+            (content_object) be missing; this is used to simulate unwanted edge cases in
+            which the content_object is not correctly deleted with the InstanceEvent.
 
     Returns:
         list(InstanceEvent): The list of created AwsInstanceEvents.
@@ -633,6 +655,7 @@ def generate_instance_events(
                 subnet=subnet,
                 no_instance_type=no_instance_type,
                 cloud_type=cloud_type,
+                missing_content_object=missing_content_object,
             )
             events.append(event)
         if power_off_time is not None:
@@ -646,6 +669,7 @@ def generate_instance_events(
                 subnet=subnet,
                 no_instance_type=no_instance_type,
                 cloud_type=cloud_type,
+                missing_content_object=missing_content_object,
             )
             events.append(event)
     return events

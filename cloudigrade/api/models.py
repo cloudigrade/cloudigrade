@@ -636,7 +636,7 @@ class InstanceEvent(BaseGenericModel):
         This should be treated like an abstract method, but we can't actually
         extend ABC here because it conflicts with Django's Meta class.
         """
-        return self.content_object.cloud_type
+        return getattr(self.content_object, "cloud_type", None)
 
     def __str__(self):
         """Get the string representation."""

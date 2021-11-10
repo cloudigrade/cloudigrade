@@ -352,6 +352,21 @@ class GenerateInstanceEventsTest(TestCase):
             self.assertEqual(event.content_object.instance_type, instance_type)
             self.assertEqual(event.content_object.subnet, subnet)
 
+    def test_generate_aws_events_missing_content_object(self):
+        """Assert generation of InstanceEvents with missing content objects."""
+        account = helper.generate_cloud_account()
+        instance = helper.generate_instance(account)
+        powered_times = (
+            (util_helper.utc_dt(2017, 1, 2), util_helper.utc_dt(2017, 1, 3)),
+        )
+        events = helper.generate_instance_events(
+            instance, powered_times, missing_content_object=True
+        )
+
+        self.assertEqual(len(events), 2)
+        for event in events:
+            self.assertIsNone(event.content_object)
+
 
 class GenerateAwsImageTest(TestCase):
     """generate_aws_image test case."""
