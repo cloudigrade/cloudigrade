@@ -2,6 +2,7 @@
 
 import faker
 from django.test import TransactionTestCase
+from rest_framework import status
 from rest_framework.test import APIRequestFactory, force_authenticate
 
 from api.models import CloudAccount
@@ -15,16 +16,25 @@ class AccountViewSetTest(TransactionTestCase):
 
     def setUp(self):
         """Set up a bunch of test data."""
+        # First user and its accounts
         self.user1 = util_helper.generate_test_user()
+        self.account_user1_aws1 = api_helper.generate_cloud_account_aws(user=self.user1)
+        self.account_user1_aws2 = api_helper.generate_cloud_account_aws(user=self.user1)
+        self.account_user1_aws3 = api_helper.generate_cloud_account_aws(
+            user=self.user1, missing_content_object=True
+        )
+        self.account_user1_azure1 = api_helper.generate_cloud_account_azure(
+            user=self.user1
+        )
+        # Second user and its accounts
         self.user2 = util_helper.generate_test_user()
-        self.account1 = api_helper.generate_cloud_account_aws(user=self.user1)
-        self.account2 = api_helper.generate_cloud_account_aws(user=self.user1)
-        self.account3 = api_helper.generate_cloud_account_aws(user=self.user2)
-        self.account4 = api_helper.generate_cloud_account_aws(user=self.user2)
-        self.account5 = api_helper.generate_cloud_account_aws(user=self.user2)
-        self.azure_account1 = api_helper.generate_cloud_account_azure(user=self.user1)
-        self.azure_account2 = api_helper.generate_cloud_account_azure(user=self.user2)
-
+        self.account_user2_aws1 = api_helper.generate_cloud_account_aws(user=self.user2)
+        self.account_user2_aws2 = api_helper.generate_cloud_account_aws(user=self.user2)
+        self.account_user2_aws3 = api_helper.generate_cloud_account_aws(user=self.user2)
+        self.account_user2_azure1 = api_helper.generate_cloud_account_azure(
+            user=self.user2
+        )
+        # Other utility helpers
         self.factory = APIRequestFactory()
         self.faker = faker.Faker()
 
@@ -53,25 +63,28 @@ class AccountViewSetTest(TransactionTestCase):
                     str(account.content_object.tenant_id),
                 )
 
-    def get_account_ids_from_list_response(self, response):
+    def get_cloud_account_ids_from_list_response(self, response):
         """
-        Get the aws_account_id and azure_tenant_id from the paginated response.
+        Get the aws_account_id and azure_tenant_id values from the paginated response.
+
+        If an account's cloud_type or content_object is None, no value will be returned
+        from this function for that account.
 
         Args:
             response (Response): Django response object to inspect
 
         Returns:
-            set[int]: the aws_account_id values found in the response
+            set[int]: the values found in the response
 
         """
         aws_account_ids = [
-            account["content_object"]["aws_account_id"]
+            account.get("content_object", {}).get("aws_account_id")
             for account in response.data["data"]
             if account["cloud_type"] == "aws"
         ]
 
         azure_tenant_ids = [
-            account["content_object"]["tenant_id"]
+            account.get("content_object", {}).get("tenant_id")
             for account in response.data["data"]
             if account["cloud_type"] == "azure"
         ]
@@ -117,31 +130,36 @@ class AccountViewSetTest(TransactionTestCase):
 
     def test_list_accounts_as_user1(self):
         """Assert that user1 sees only its own accounts."""
-        expected_accounts = {
-            str(self.account1.content_object.aws_account_id),
-            str(self.account2.content_object.aws_account_id),
-            str(self.azure_account1.content_object.tenant_id),
+        expected_cloud_account_ids = {
+            str(self.account_user1_aws1.content_object.aws_account_id),
+            str(self.account_user1_aws2.content_object.aws_account_id),
+            str(self.account_user1_azure1.content_object.tenant_id),
         }
         response = self.get_account_list_response(self.user1)
-        actual_accounts = self.get_account_ids_from_list_response(response)
-        self.assertEqual(expected_accounts, actual_accounts)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        actual_accounts = self.get_cloud_account_ids_from_list_response(response)
+        self.assertEqual(expected_cloud_account_ids, actual_accounts)
+
+        # The "broken" self.account_user1_aws3 should also be in the data list.
+        expected_accounts_count = len(expected_cloud_account_ids) + 1
+        self.assertEqual(len(response.data["data"]), expected_accounts_count)
 
     def test_list_accounts_as_user2(self):
         """Assert that user2 sees only its own accounts."""
-        expected_accounts = {
-            str(self.account3.content_object.aws_account_id),
-            str(self.account4.content_object.aws_account_id),
-            str(self.account5.content_object.aws_account_id),
-            str(self.azure_account2.content_object.tenant_id),
+        expected_cloud_account_ids = {
+            str(self.account_user2_aws1.content_object.aws_account_id),
+            str(self.account_user2_aws2.content_object.aws_account_id),
+            str(self.account_user2_aws3.content_object.aws_account_id),
+            str(self.account_user2_azure1.content_object.tenant_id),
         }
         response = self.get_account_list_response(self.user2)
-        actual_accounts = self.get_account_ids_from_list_response(response)
-        self.assertEqual(expected_accounts, actual_accounts)
+        actual_accounts = self.get_cloud_account_ids_from_list_response(response)
+        self.assertEqual(expected_cloud_account_ids, actual_accounts)
 
     def test_get_user1s_account_as_user1_returns_ok(self):
         """Assert that user1 can get one of its own accounts."""
         user = self.user1
-        account = self.account2  # Account belongs to user1.
+        account = self.account_user1_aws2  # Account belongs to user1.
 
         response = self.get_account_get_response(user, account.id)
         self.assertEqual(response.status_code, 200)
@@ -150,7 +168,7 @@ class AccountViewSetTest(TransactionTestCase):
     def test_get_user1s_azure_account_as_user1_returns_ok(self):
         """Assert that user1 can get one of its own azure accounts."""
         user = self.user1
-        account = self.azure_account1
+        account = self.account_user1_azure1
 
         response = self.get_account_get_response(user, account.id)
         self.assertEqual(response.status_code, 200)
@@ -159,7 +177,7 @@ class AccountViewSetTest(TransactionTestCase):
     def test_get_user1s_account_as_user2_returns_404(self):
         """Assert that user2 cannot get an account belonging to user1."""
         user = self.user2
-        account = self.account2  # Account belongs to user1, NOT user2.
+        account = self.account_user1_aws2  # Account belongs to user1, NOT user2.
 
         response = self.get_account_get_response(user, account.id)
         self.assertEqual(response.status_code, 404)
