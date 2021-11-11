@@ -225,7 +225,7 @@ def rewrap_aws_errors(original_function):
                 message = _("Unexpected AWS {0}: {1}").format(error_code, error_message)
                 logger.warning(message)
                 return None
-            elif error_code == "ThrottlingException":
+            elif error_code in ["ThrottlingException", "RequestLimitExceeded"]:
                 logger.info(
                     "AWS Throttling error %s detected, raising AwsThrottlingException.",
                     e,

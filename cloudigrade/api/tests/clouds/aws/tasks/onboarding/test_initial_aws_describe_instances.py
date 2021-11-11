@@ -1,7 +1,8 @@
 """Collection of tests for aws.tasks.cloudtrail.initial_aws_describe_instances."""
 import datetime
-from unittest.mock import call, patch
+from unittest.mock import Mock, call, patch
 
+from botocore.exceptions import ClientError
 from django.test import TestCase, TransactionTestCase
 
 from api.clouds.aws import tasks
@@ -13,6 +14,7 @@ from api.models import (
     MachineImage,
 )
 from api.tests import helper as account_helper
+from util.exceptions import AwsThrottlingException
 from util.tests import helper as util_helper
 
 
@@ -170,6 +172,31 @@ class InitialAwsDescribeInstancesTest(TestCase):
         account = account_helper.generate_cloud_account(is_enabled=False)
         tasks.initial_aws_describe_instances(account.id)
         mock_aws.get_session.assert_not_called()
+
+    @patch("api.clouds.aws.tasks.onboarding.aws")
+    def test_initial_aws_describe_instances_request_limit_exceeded(self, mock_aws):
+        """Test Aws RequestLimitExceeded exception while describing instances."""
+        account = account_helper.generate_cloud_account(is_enabled=True)
+
+        client_error = ClientError(
+            error_response={"Error": {"Code": "RequestLimitExceeded"}},
+            operation_name=Mock(),
+        )
+
+        mock_describe_instances_everywhere = mock_aws.describe_instances_everywhere
+        mock_describe_instances_everywhere.side_effect = client_error
+
+        logged_condition = (
+            "RequestLimitExceeded while trying to DescribeInstances"
+            " for AwsCloudAccount id {aws_account_id}"
+        ).format(aws_account_id=account.id)
+
+        with self.assertLogs(
+            "api.clouds.aws.tasks.onboarding", level="INFO"
+        ) as logging_watcher:
+            with self.assertRaises(AwsThrottlingException):
+                tasks.initial_aws_describe_instances(account.id)
+            self.assertIn(logged_condition, " ".join(logging_watcher.output))
 
 
 class InitialAwsDescribeInstancesPowerOffNotRunningTest(TestCase):
