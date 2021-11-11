@@ -1,6 +1,8 @@
 """Celery tasks related to on-boarding new customer AWS cloud accounts."""
 import logging
 
+
+from botocore.exceptions import ClientError
 from django.contrib.auth.models import User
 from django.utils.translation import gettext as _
 from rest_framework.serializers import ValidationError
@@ -118,7 +120,7 @@ def initial_aws_describe_instances(aws_cloud_account_id):
     arn = aws_cloud_account.account_arn
 
     session = aws.get_session(arn)
-    instances_data = aws.describe_instances_everywhere(session)
+    instances_data = _aws_describe_instances_everywhere(session, aws_cloud_account_id)
 
     try:
         user_id = cloud_account.user.id
@@ -168,3 +170,30 @@ def initial_aws_describe_instances(aws_cloud_account_id):
     messages = generate_aws_ami_messages(instances_data, new_ami_ids)
     for message in messages:
         start_image_inspection(str(arn), message["image_id"], message["region"])
+
+
+def _aws_describe_instances_everywhere(session, aws_cloud_account_id):
+    """
+    Describe all instances for the Aws session specified.
+
+    Args:
+        session (boto3.Session): A temporary session tied to a customer account
+        aws_cloud_account_id (int): the AwsCloudAccount id
+
+    Returns:
+        dict: Lists of instance IDs keyed by region where they were found.
+    """
+    try:
+        instances_data = aws.describe_instances_everywhere(session)
+    except ClientError as e:
+        if e.response.get("Error", {}).get("Code") == "RequestLimitExceeded":
+            logger.info(
+                _(
+                    "RequestLimitExceeded while trying to DescribeInstances"
+                    " for AwsCloudAccount id %s"
+                ),
+                aws_cloud_account_id,
+            )
+        raise e
+
+    return instances_data
