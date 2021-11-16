@@ -95,6 +95,9 @@ ENV/
 # Visual Code settings
 .vscode/
 
+# Editors
+.idea/
+
 # mkdocs documentation
 /site
 
@@ -110,3 +113,7 @@ ENV/
 
 # mprof profile captures
 mprofile_*.dat
+
+# SonarQube
+sonarqube/
+.scannerwork/
