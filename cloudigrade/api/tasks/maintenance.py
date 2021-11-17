@@ -23,6 +23,7 @@ from util import aws
 from util.celery import retriable_shared_task
 from util.exceptions import AwsThrottlingException
 from util.misc import get_now, lock_task_for_user_ids
+from util.redhatcloud import sources
 
 logger = logging.getLogger(__name__)
 
@@ -308,3 +309,63 @@ def _delete_cloud_account_related_objects(cloud_account):
     )
     delete_machine_image_ids = set(machine_image_ids) - set(active_machine_image_ids)
     MachineImage.objects.filter(id__in=delete_machine_image_ids).delete()
+
+
+@shared_task(name="api.tasks.delete_orphaned_cloud_accounts")
+@aws.rewrap_aws_errors
+def delete_orphaned_cloud_accounts():
+    """
+    Identify and delete orphaned CloudAccount objects.
+
+    This function is a reactionary "cleanup" task to deal with broken data that we do
+    not understand how is persisting. Somehow it is possible to have a CloudAccount
+    without its cloud provider-specific instance (e.g. AwsCloudAccount), and that broken
+    relationship may cause problems such as a failing to configure new sources. Until we
+    confidently understand and prevent that situation, this function exists to clean up
+    the mess left behind.
+    """
+    max_updated_at = get_now() - timedelta(
+        seconds=settings.DELETE_ORPHANED_ACCOUNTS_UPDATED_MORE_THAN_SECONDS_AGO
+    )
+
+    found_orphans = []
+    deleted_orphans = []
+    for cloud_account in CloudAccount.objects.filter(updated_at__lt=max_updated_at):
+        if not cloud_account.content_object:
+            found_orphans.append(cloud_account)
+            logger.info(
+                _("Found orphan %(cloud_account)s"), {"cloud_account": cloud_account}
+            )
+            try:
+                account_number = cloud_account.user.username
+                source_id = cloud_account.platform_source_id
+                if source := sources.get_source(account_number, source_id):
+                    logger.error(
+                        _(
+                            "Orphaned account still has a source! Please investigate! "
+                            "account %(cloud_account)s has source %(source)s"
+                        ),
+                        {"cloud_account": cloud_account, "source": source},
+                    )
+                else:
+                    deleted_orphans.append(cloud_account)
+                    # If the CloudAccount exists but its content_object (Aws/Azure/etc)
+                    # doesn't exist, use delete_cloud_account since it will thoroughly
+                    # attempt to delete all related objects whether or not they exist.
+                    delete_cloud_account.delay(cloud_account.id)
+            except Exception as e:
+                # If something went wrong talking to sources or celery, log and proceed.
+                # This could happen if platform infrastructure is misbehaving again.
+                logger.exception(e)
+                logger.warning(
+                    _("Unexpected error getting source for %(cloud_account)s: %(e)s"),
+                    {"cloud_account": cloud_account, "e": e},
+                )
+
+    logger.info(
+        _(
+            "Found %(count_found)s orphaned CloudAccount instances; "
+            "attempted to delete %(count_deleted)s of them."
+        ),
+        {"count_found": len(found_orphans), "count_deleted": len(deleted_orphans)},
+    )
