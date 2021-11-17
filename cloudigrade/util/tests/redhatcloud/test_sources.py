@@ -173,6 +173,17 @@ class SourcesTest(TestCase):
         self.assertIsNone(response_app_type_id)
         mock_get.assert_called()
 
+    @patch("requests.get")
+    def test_get_sources_source_success(self, mock_get):
+        """Assert get_source returns response content."""
+        expected = {"hello": "world"}
+        mock_get.return_value.status_code = http.HTTPStatus.OK
+        mock_get.return_value.json.return_value = expected
+
+        application = sources.get_source(self.account_number, self.application_id)
+        self.assertEqual(application, expected)
+        mock_get.assert_called()
+
     @patch("util.redhatcloud.sources.KafkaProducer")
     def test_notify_sources_application_availability_success(
         self,
