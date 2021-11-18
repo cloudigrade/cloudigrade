@@ -1,4 +1,6 @@
 """Tasks for various data maintenance, activation, and upkeep operations."""
+import collections
+import itertools
 import logging
 from datetime import timedelta
 
@@ -315,7 +317,7 @@ def _delete_cloud_account_related_objects(cloud_account):
 @aws.rewrap_aws_errors
 def delete_orphaned_cloud_accounts():
     """
-    Identify and delete orphaned CloudAccount objects.
+    Identify and delete orphaned CloudAccount and *CloudAccount objects.
 
     This function is a reactionary "cleanup" task to deal with broken data that we do
     not understand how is persisting. Somehow it is possible to have a CloudAccount
@@ -327,7 +329,19 @@ def delete_orphaned_cloud_accounts():
     max_updated_at = get_now() - timedelta(
         seconds=settings.DELETE_ORPHANED_ACCOUNTS_UPDATED_MORE_THAN_SECONDS_AGO
     )
+    _delete_orphaned_cloud_accounts(max_updated_at)
+    _delete_orphaned_cloud_account_content_objects(max_updated_at)
 
+
+def _delete_orphaned_cloud_accounts(max_updated_at):
+    """
+    Identify and delete orphaned CloudAccount objects (having no related *CloudAccount).
+
+    Args:
+        max_updated_at (datetime.datetime): max updated_id for finding potentially
+        affected instances so that we reduce the risk of deleting instances that are
+        still being created at the time that this function runs.
+    """
     found_orphans = []
     deleted_orphans = []
     for cloud_account in CloudAccount.objects.filter(updated_at__lt=max_updated_at):
@@ -369,3 +383,36 @@ def delete_orphaned_cloud_accounts():
         ),
         {"count_found": len(found_orphans), "count_deleted": len(deleted_orphans)},
     )
+
+
+def _delete_orphaned_cloud_account_content_objects(max_updated_at):
+    """
+    Identify and delete orphaned *CloudAccount objects (having no related CloudAccount).
+
+    Args:
+        max_updated_at (datetime.datetime): max updated_id for finding potentially
+        affected instances so that we reduce the risk of deleting instances that are
+        still being created at the time that this function runs.
+    """
+    found_orphans = collections.defaultdict(list)
+    all_content_objects = itertools.chain(
+        aws_models.AwsCloudAccount.objects.filter(updated_at__lt=max_updated_at),
+        azure_models.AzureCloudAccount.objects.filter(updated_at__lt=max_updated_at),
+    )
+
+    for content_object in all_content_objects:
+        try:
+            content_object.cloud_account.get()
+        except CloudAccount.DoesNotExist:
+            found_orphans[content_object.__class__.__name__].append(content_object)
+
+    for class_name, content_objects in found_orphans.items():
+        logger.info(
+            _("Found %(count_found)s orphaned %(class_name)s instances to delete"),
+            {"count_found": len(content_objects), "class_name": class_name},
+        )
+
+    for content_objects_by_class in found_orphans.values():
+        for content_object in content_objects_by_class:
+            content_object.disable()
+            content_object.delete()
