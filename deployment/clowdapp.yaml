@@ -295,6 +295,10 @@ objects:
           value: ${API_WATCHTOWER_SEND_INTERVAL}
         - name: WATCHTOWER_MAX_BATCH_COUNT
           value: ${API_WATCHTOWER_MAX_BATCH_COUNT}
+        - name: DELETE_ORPHANED_ACCOUNTS_UPDATED_MORE_THAN_SECONDS_AGO
+          value: ${DELETE_ORPHANED_ACCOUNTS_UPDATED_MORE_THAN_SECONDS_AGO}
+        - name: DELETE_ORPHANED_ACCOUNTS_SCHEDULE
+          value: ${DELETE_ORPHANED_ACCOUNTS_SCHEDULE}
     - name: beat
       #
       # Component cloudigrade-beat deployment:
@@ -546,6 +550,10 @@ objects:
           value: ${WATCHTOWER_SEND_INTERVAL}
         - name: WATCHTOWER_MAX_BATCH_COUNT
           value: ${WATCHTOWER_MAX_BATCH_COUNT}
+        - name: DELETE_ORPHANED_ACCOUNTS_UPDATED_MORE_THAN_SECONDS_AGO
+          value: ${DELETE_ORPHANED_ACCOUNTS_UPDATED_MORE_THAN_SECONDS_AGO}
+        - name: DELETE_ORPHANED_ACCOUNTS_SCHEDULE
+          value: ${DELETE_ORPHANED_ACCOUNTS_SCHEDULE}
     - name: listener
       #
       # Component cloudigrade-listener deployment:
@@ -793,6 +801,10 @@ objects:
           value: ${WATCHTOWER_SEND_INTERVAL}
         - name: WATCHTOWER_MAX_BATCH_COUNT
           value: ${WATCHTOWER_MAX_BATCH_COUNT}
+        - name: DELETE_ORPHANED_ACCOUNTS_UPDATED_MORE_THAN_SECONDS_AGO
+          value: ${DELETE_ORPHANED_ACCOUNTS_UPDATED_MORE_THAN_SECONDS_AGO}
+        - name: DELETE_ORPHANED_ACCOUNTS_SCHEDULE
+          value: ${DELETE_ORPHANED_ACCOUNTS_SCHEDULE}
     - name: worker
       #
       # Component cloudigrade-worker deployment:
@@ -1052,6 +1064,10 @@ objects:
           value: ${WATCHTOWER_SEND_INTERVAL}
         - name: WATCHTOWER_MAX_BATCH_COUNT
           value: ${WATCHTOWER_MAX_BATCH_COUNT}
+        - name: DELETE_ORPHANED_ACCOUNTS_UPDATED_MORE_THAN_SECONDS_AGO
+          value: ${DELETE_ORPHANED_ACCOUNTS_UPDATED_MORE_THAN_SECONDS_AGO}
+        - name: DELETE_ORPHANED_ACCOUNTS_SCHEDULE
+          value: ${DELETE_ORPHANED_ACCOUNTS_SCHEDULE}
 # Secrets
 - apiVersion: v1
   data:
@@ -1645,3 +1661,11 @@ parameters:
   displayName: Watchtower use queues
   required: true
   value: 'false'
+- name: DELETE_ORPHANED_ACCOUNTS_UPDATED_MORE_THAN_SECONDS_AGO
+  displayName: Delete orphaned accounts updated more than seconds ago
+  required: true
+  value: '300'
+- name: DELETE_ORPHANED_ACCOUNTS_SCHEDULE
+  displayName: Delete orphaned accounts schedule (seconds)
+  required: true
+  value: '86400'
