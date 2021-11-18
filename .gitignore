@@ -95,9 +95,6 @@ ENV/
 # Visual Code settings
 .vscode/
 
-# Editors
-.idea/
-
 # mkdocs documentation
 /site
 
