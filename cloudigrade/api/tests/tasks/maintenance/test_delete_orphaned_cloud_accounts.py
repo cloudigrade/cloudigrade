@@ -45,13 +45,30 @@ class DeleteOrphanedCloudAccountsTest(TestCase):
 
         orphaned_accounts = [account_no_azure, account_no_aws]
 
-        return healthy_accounts, orphaned_accounts
+        # orphaned AwsCloudAccount without its CloudAccount
+        account_aws = api_helper.generate_cloud_account_aws(user=self.user)
+        orphaned_aws_cloud_account = account_aws.content_object
+        cloud_account_query = models.CloudAccount.objects.filter(id=account_aws.id)
+        cloud_account_query._raw_delete(cloud_account_query.db)
+
+        # orphaned CloudAccount without its AzureCloudAccount
+        account_azure = api_helper.generate_cloud_account_azure(user=self.user)
+        orphaned_azure_cloud_account = account_azure.content_object
+        cloud_account_query = models.CloudAccount.objects.filter(id=account_azure.id)
+        cloud_account_query._raw_delete(cloud_account_query.db)
+
+        orphaned_content_objects = [
+            orphaned_aws_cloud_account,
+            orphaned_azure_cloud_account,
+        ]
+
+        return healthy_accounts, orphaned_accounts, orphaned_content_objects
 
     @override_settings(CELERY_TASK_ALWAYS_EAGER=True)
     @override_settings(SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA=False)
     def test_delete_orphaned_cloud_accounts(self):
         """
-        Test identifying and deleting orphaned accounts without sources.
+        Test identifying and deleting orphaned account without sources.
 
         We create multiple accounts in healthy and orphaned states that are old and new.
         Expect only the old orphaned accounts should be deleted.
@@ -61,11 +78,19 @@ class DeleteOrphanedCloudAccountsTest(TestCase):
 
         with util_helper.clouditardis(long_ago):
             # We need to generate in the past so they are old enough to be found.
-            old_healthy_accounts, old_orphaned_accounts = self.generate_accounts()
+            (
+                old_healthy_accounts,
+                old_orphaned_accounts,
+                old_orphaned_content_objects,
+            ) = self.generate_accounts()
 
         with util_helper.clouditardis(recently):
             # We need to generate recently so they are too new to be found.
-            new_healthy_accounts, new_orphaned_accounts = self.generate_accounts()
+            (
+                new_healthy_accounts,
+                new_orphaned_accounts,
+                new_orphaned_content_objects,
+            ) = self.generate_accounts()
 
         expected_cloud_accounts_before = (
             old_healthy_accounts
@@ -89,11 +114,20 @@ class DeleteOrphanedCloudAccountsTest(TestCase):
             mock_get_source.return_value = None
             maintenance.delete_orphaned_cloud_accounts()
 
-        self.assertEqual(
+        info_messages = {
+            record.message
+            for record in logging_watcher.records
+            if record.levelname == "INFO"
+        }
+        expected_info_messages = [
             f"Found {len(old_orphaned_accounts)} orphaned CloudAccount instances; "
             f"attempted to delete {len(old_orphaned_accounts)} of them.",
-            logging_watcher.records[-1].message,
-        )
+            "Found 2 orphaned CloudAccount instances; attempted to delete 2 of them.",
+            "Found 1 orphaned AwsCloudAccount instances to delete",
+            "Found 1 orphaned AzureCloudAccount instances to delete",
+        ]
+        for expected_info_message in expected_info_messages:
+            self.assertIn(expected_info_message, info_messages)
 
         expected_error_messages = {
             "cloud_account.content_object is None in "
@@ -133,7 +167,7 @@ class DeleteOrphanedCloudAccountsTest(TestCase):
 
         with util_helper.clouditardis(long_ago):
             # We need to generate in the past so they are old enough to be found.
-            healthy_accounts, orphaned_accounts = self.generate_accounts()
+            healthy_accounts, orphaned_accounts, _ = self.generate_accounts()
 
         expected_cloud_accounts = healthy_accounts + orphaned_accounts
 
@@ -150,10 +184,15 @@ class DeleteOrphanedCloudAccountsTest(TestCase):
             mock_get_source.return_value = dummy_source
             maintenance.delete_orphaned_cloud_accounts()
 
-        self.assertEqual(
+        info_messages = {
+            record.message
+            for record in logging_watcher.records
+            if record.levelname == "INFO"
+        }
+        self.assertIn(
             f"Found {len(orphaned_accounts)} orphaned CloudAccount instances; "
             f"attempted to delete 0 of them.",
-            logging_watcher.records[-1].message,
+            info_messages,
         )
 
         expected_error_messages = {
@@ -181,7 +220,7 @@ class DeleteOrphanedCloudAccountsTest(TestCase):
 
         with util_helper.clouditardis(long_ago):
             # We need to generate in the past so they are old enough to be found.
-            healthy_accounts, orphaned_accounts = self.generate_accounts()
+            healthy_accounts, orphaned_accounts, _ = self.generate_accounts()
 
         expected_cloud_accounts = healthy_accounts + orphaned_accounts
 
@@ -198,10 +237,15 @@ class DeleteOrphanedCloudAccountsTest(TestCase):
             mock_get_source.side_effect = sources_api_error
             maintenance.delete_orphaned_cloud_accounts()
 
-        self.assertEqual(
+        info_messages = {
+            record.message
+            for record in logging_watcher.records
+            if record.levelname == "INFO"
+        }
+        self.assertIn(
             f"Found {len(orphaned_accounts)} orphaned CloudAccount instances; "
             f"attempted to delete 0 of them.",
-            logging_watcher.records[-1].message,
+            info_messages,
         )
 
         expected_error_messages = {str(sources_api_error), str(sources_api_error)}
