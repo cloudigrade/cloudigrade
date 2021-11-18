@@ -2,7 +2,7 @@
 
 echo "SonarQube Scan"
 echo "Directory: $PWD"
-echo "JAVA:      $JAVA_HOME"
+echo "JAVA_HOME: $JAVA_HOME"
 
 mkdir $PWD/sonarqube/
 mkdir $PWD/sonarqube/download/
@@ -32,7 +32,7 @@ export SONAR_SCANNER_CLI_VERSION="4.6.2.2472"
 export SONAR_SCANNER_DOWNLOAD_NAME="sonar-scanner-cli-$SONAR_SCANNER_CLI_VERSION-$SONAR_SCANNER_OS"
 export SONAR_SCANNER_NAME="sonar-scanner-$SONAR_SCANNER_CLI_VERSION-$SONAR_SCANNER_OS"
 
-curl -o $PWD/sonarqube/download/$SONAR_SCANNER_DOWNLOAD_NAME.zip --insecure https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/$SONAR_SCANNER_DOWNLOAD_NAME.zip
+curl -o $PWD/sonarqube/download/$SONAR_SCANNER_DOWNLOAD_NAME.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/$SONAR_SCANNER_DOWNLOAD_NAME.zip
 
 unzip -d $PWD/sonarqube/extract/ $PWD/sonarqube/download/$SONAR_SCANNER_DOWNLOAD_NAME.zip
 
