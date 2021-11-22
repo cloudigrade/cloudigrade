@@ -841,7 +841,7 @@ def generate_test_user(
 
     """
     if not account_number:
-        account_number = _faker.random_int(min=100000, max=999999)
+        account_number = str(_faker.random_int(min=100000, max=999999))
     kwargs = {
         "username": account_number,
         "password": password,
