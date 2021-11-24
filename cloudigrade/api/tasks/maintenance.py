@@ -344,7 +344,17 @@ def _delete_orphaned_cloud_accounts(max_updated_at):
     """
     found_orphans = []
     deleted_orphans = []
-    for cloud_account in CloudAccount.objects.filter(updated_at__lt=max_updated_at):
+    logger.info(_("Searching for potentially orphaned CloudAccount instances."))
+
+    all_cloud_accounts = CloudAccount.objects.filter(
+        updated_at__lt=max_updated_at
+    ).order_by("id")
+    for index, cloud_account in enumerate(all_cloud_accounts):
+        if index > 0 and index % 100 == 0:
+            logger.info(
+                _("Checked %(index)s CloudAccount instances for potential orphans"),
+                {"index": index},
+            )
         if not cloud_account.content_object:
             found_orphans.append(cloud_account)
             logger.info(
@@ -394,17 +404,32 @@ def _delete_orphaned_cloud_account_content_objects(max_updated_at):
         affected instances so that we reduce the risk of deleting instances that are
         still being created at the time that this function runs.
     """
-    found_orphans = collections.defaultdict(list)
+    logger.info(_("Searching for potentially orphaned *CloudAccount instances."))
+
     all_content_objects = itertools.chain(
-        aws_models.AwsCloudAccount.objects.filter(updated_at__lt=max_updated_at),
-        azure_models.AzureCloudAccount.objects.filter(updated_at__lt=max_updated_at),
+        aws_models.AwsCloudAccount.objects.filter(
+            updated_at__lt=max_updated_at
+        ).order_by("id"),
+        azure_models.AzureCloudAccount.objects.filter(
+            updated_at__lt=max_updated_at
+        ).order_by("id"),
     )
 
-    for content_object in all_content_objects:
+    found_orphans = collections.defaultdict(list)
+    for index, content_object in enumerate(all_content_objects):
+        if index > 0 and index % 100 == 0:
+            logger.info(
+                _("Checked %(index)s *CloudAccount instances for potential orphans"),
+                {"index": index},
+            )
         try:
             content_object.cloud_account.get()
         except CloudAccount.DoesNotExist:
             found_orphans[content_object.__class__.__name__].append(content_object)
+    logger.info(
+        _("Checked %(index)s *CloudAccount instances for potential orphans"),
+        {"index": index},
+    )
 
     for class_name, content_objects in found_orphans.items():
         logger.info(
