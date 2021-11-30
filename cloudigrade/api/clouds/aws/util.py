@@ -524,11 +524,12 @@ def create_missing_power_off_aws_instance_events(account, instances_data):
     occurred_at = get_now()
     event_type = InstanceEvent.TYPE.power_off
     for instance, aws_instance in still_running_instances.values():
-        # Let's log this at error level for now because we should be made aware of how
-        # frequently this is happening. If we are regularly creating events here, that
-        # means we probably have something broken in our CloudTrail processing that is
-        # losing messages!
-        logger.error(
+        # Let's log this at info level for now because it may be useful for tracing
+        # events back through logs if we think we have problems with event timing.
+        # We used to log this at "error" level because we thought it would be a rare
+        # occurrence, but we have enough activity in production that it's causing
+        # unwanted noise; it's been a false positive when no real error has occurred.
+        logger.info(
             "Adding missing InstanceEvent power_off for %(instance)s %(aws_instance)s",
             {"instance": instance, "aws_instance": aws_instance},
         )
