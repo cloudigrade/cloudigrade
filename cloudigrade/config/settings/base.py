@@ -451,14 +451,47 @@ SCHEDULE_VERIFY_VERIFY_TASKS_INTERVAL = env.int(
 
 CELERY_TASK_ROUTES = {
     # api.tasks
-    "api.tasks.delete_cloud_account": {"queue": "delete_cloud_account"},
-    "api.tasks.delete_inactive_users": {"queue": "delete_inactive_users"},
-    "api.tasks.inspect_pending_images": {"queue": "inspect_pending_images"},
-    "api.tasks.persist_inspection_cluster_results_task": {
-        "queue": "persist_inspection_cluster_results_task"
+    "api.tasks.calculate_max_concurrent_usage": {
+        "queue": "calculate_max_concurrent_usage"
+    },
+    "api.tasks.delete_cloud_account": {
+        "queue": "delete_cloud_account"
+    },
+    "api.tasks.enable_account": {
+        "queue": "enable_account"
+    },
+    "api.tasks.delete_inactive_users": {
+        "queue": "delete_inactive_users"
     },
     "api.tasks.delete_orphaned_cloud_accounts": {
         "queue": "delete_orphaned_cloud_accounts"
+    },
+    "api.tasks.fix_problematic_runs": {
+        "queue": "fix_problematic_runs"
+    },
+    "api.tasks.inspect_pending_images": {
+        "queue": "inspect_pending_images"
+    },
+    "api.tasks.notify_application_availability_task": {
+        "queue": "notify_application_availability_task"
+    },
+    "api.tasks.persist_inspection_cluster_results_task": {
+        "queue": "persist_inspection_cluster_results_task"
+    },
+    "api.tasks.recalculate_concurrent_usage_for_all_users": {
+        "queue": "recalculate_concurrent_usage_for_all_users"
+    },
+    "api.tasks.recalculate_concurrent_usage_for_user_id": {
+        "queue": "recalculate_concurrent_usage_for_user_id"
+    },
+    "api.tasks.recalculate_concurrent_usage_for_user_id_on_date": {
+        "queue": "recalculate_concurrent_usage_for_user_id_on_date"
+    },
+    "api.tasks.recalculate_runs_for_all_cloud_accounts": {
+        "queue": "recalculate_runs_for_all_cloud_accounts"
+    },
+    "api.tasks.recalculate_runs_for_cloud_account_id": {
+        "queue": "recalculate_runs_for_cloud_account_id"
     },
     # api.tasks supporting source kafka message handling
     "api.tasks.create_from_sources_kafka_message": {
@@ -476,38 +509,61 @@ CELERY_TASK_ROUTES = {
     "api.tasks.unpause_from_sources_kafka_message": {
         "queue": "unpause_from_sources_kafka_message"
     },
-    # api.clouds.azure.tasks
-    "api.clouds.azure.tasks.repopulate_azure_instance_mapping": {
-        "queue": "repopulate_azure_instance_mapping"
-    },
     # api.clouds.aws.tasks
-    "api.clouds.aws.tasks.repopulate_ec2_instance_mapping": {
-        "queue": "repopulate_ec2_instance_mapping"
+    "api.clouds.aws.tasks.analyze_log": {
+        "queue": "analyze_log"
+    },
+    "api.clouds.aws.tasks.attach_volumes_to_cluster": {
+        "queue": "attach_volumes_to_cluster"
     },
     "api.clouds.aws.tasks.configure_customer_aws_and_create_cloud_account": {
         "queue": "configure_customer_aws_and_create_cloud_account"
     },
+    "api.clouds.aws.tasks.copy_ami_snapshot": {
+        "queue": "copy_ami_snapshot"
+    },
+    "api.clouds.aws.tasks.copy_ami_to_customer_account": {
+        "queue": "copy_ami_to_customer_account"
+    },
+    "api.clouds.aws.tasks.enqueue_ready_volume": {
+        "queue": "enqueue_ready_volume"
+    },
+    "api.clouds.aws.tasks.ensure_all_verify_tasks_are_valid": {
+        "queue": "ensure_all_verify_tasks_are_valid"
+    },
+    "api.clouds.aws.tasks.delete_snapshot": {
+        "queue": "delete_snapshot"
+    },
     "api.clouds.aws.tasks.initial_aws_describe_instances": {
         "queue": "initial_aws_describe_instances"
     },
-    "api.clouds.aws.tasks.copy_ami_snapshot": {"queue": "copy_ami_snapshot"},
-    "api.clouds.aws.tasks.copy_ami_to_customer_account": {
-        "queue": "copy_ami_to_customer_account"
+    "api.clouds.aws.tasks.launch_inspection_instance": {
+        "queue": "launch_inspection_instance"
     },
     "api.clouds.aws.tasks.remove_snapshot_ownership": {
         "queue": "remove_snapshot_ownership"
     },
-    "api.clouds.aws.tasks.delete_snapshot": {"queue": "delete_snapshot"},
-    "api.clouds.aws.tasks.launch_inspection_instance": {
-        "queue": "launch_inspection_instance"
+    "api.clouds.aws.tasks.repopulate_ec2_instance_mapping": {
+        "queue": "repopulate_ec2_instance_mapping"
     },
-    "api.clouds.aws.tasks.analyze_log": {"queue": "analyze_log"},
-    "api.tasks.calculate_max_concurrent_usage": {
-        "queue": "calculate_max_concurrent_usage"
+    "api.clouds.aws.tasks.run_inspection_cluster": {
+        "queue": "run_inspection_cluster"
     },
-    "api.tasks.enable_account": {"queue": "enable_account"},
-    "api.tasks.notify_application_availability_task": {
-        "queue": "notify_application_availability_task"
+    "api.clouds.aws.tasks.scale_down_cluster": {
+        "queue": "scale_down_cluster"
+    },
+    "api.clouds.aws.tasks.scale_up_inspection_cluster": {
+        "queue": "scale_up_inspection_cluster"
+    },
+    "api.clouds.aws.tasks.verify_account_permissions": {
+        "queue": "verify_account_permissions"
+    },
+    "api.clouds.aws.tasks.verify_verify_tasks": {
+        "queue": "verify_verify_tasks"
+    },
+    # api.clouds.azure.tasks
+    "api.clouds.azure.tasks.repopulate_azure_instance_mapping": {
+        "queue": "repopulate_azure_instance_mapping"
     },
 }
 
