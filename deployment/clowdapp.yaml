@@ -828,7 +828,7 @@ objects:
             --loglevel info
             --concurrency 1
             --task-events
-            --queues celery,initial_aws_describe_instances,copy_ami_snapshot,copy_ami_to_customer_account,remove_snapshot_ownership,create_volume,enqueue_ready_volumes,delete_snapshot,inspect_pending_images,scale_up_inspection_cluster,attach_volumes_to_cluster,run_inspection_cluster,persist_inspection_cluster_results_task,scale_down_cluster,analyze_log,repopulate_ec2_instance_mapping,create_from_sources_kafka_message,configure_customer_aws_and_create_cloud_account,delete_from_sources_kafka_message,delete_inactive_users,delete_cloud_account,calculate_max_concurrent_usage,notify_application_availability_task,enable_account,repopulate_azure_instance_mapping,launch_inspection_instance,pause_from_sources_kafka_message,unpause_from_sources_kafka_message,delete_orphaned_cloud_accounts
+            --queues ${CELERY_QUEUE_NAMES}
         livenessProbe:
           exec:
             command:
@@ -1458,6 +1458,48 @@ parameters:
 #
 # Component cloudigrade-worker parameters:
 #
+- name: CELERY_QUEUE_NAMES
+  displayname: List of Celery Queue Names
+  required true:
+  value: "celery,\
+    analyze_log,\
+    attach_volumes_to_cluster,\
+    calculate_max_concurrent_usage,\
+    configure_customer_aws_and_create_cloud_account,\
+    copy_ami_snapshot,\
+    copy_ami_to_customer_account,\
+    create_from_sources_kafka_message,\
+    create_volume,\
+    delete_cloud_account,\
+    delete_from_sources_kafka_message,\
+    delete_inactive_users,\
+    delete_orphaned_cloud_accounts,\
+    delete_snapshot,\
+    enable_account,\
+    ensure_all_verify_tasks_are_valid,\
+    enqueue_ready_volume,\
+    fix_problematic_runs,\
+    initial_aws_describe_instances,\
+    inspect_pending_images,\
+    launch_inspection_instance,\
+    notify_application_availability_task,\
+    pause_from_sources_kafka_message,\
+    persist_inspection_cluster_results_task,\
+    recalculate_concurrent_usage_for_all_users,\
+    recalculate_concurrent_usage_for_user_id,\
+    recalculate_concurrent_usage_for_user_id_on_date,\
+    recalculate_runs_for_all_cloud_accounts,\
+    recalculate_runs_for_cloud_account_id,\
+    remove_snapshot_ownership,\
+    repopulate_azure_instance_mapping,\
+    repopulate_ec2_instance_mapping,\
+    run_inspection_cluster,\
+    scale_down_cluster,\
+    scale_up_inspection_cluster,\
+    update_from_source_kafka_message,\
+    unpause_from_sources_kafka_message,\
+    verify_account_permissions,\
+    verify_verify_tasks"
 - name: CELERY_TARGET_AVERAGE_CPU_UTILIZATION
   displayName: Cloudigrade Worker Target Average CPU Utilization
   required: true
