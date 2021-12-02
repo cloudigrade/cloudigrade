@@ -454,24 +454,14 @@ CELERY_TASK_ROUTES = {
     "api.tasks.calculate_max_concurrent_usage": {
         "queue": "calculate_max_concurrent_usage"
     },
-    "api.tasks.delete_cloud_account": {
-        "queue": "delete_cloud_account"
-    },
-    "api.tasks.enable_account": {
-        "queue": "enable_account"
-    },
-    "api.tasks.delete_inactive_users": {
-        "queue": "delete_inactive_users"
-    },
+    "api.tasks.delete_cloud_account": {"queue": "delete_cloud_account"},
+    "api.tasks.enable_account": {"queue": "enable_account"},
+    "api.tasks.delete_inactive_users": {"queue": "delete_inactive_users"},
     "api.tasks.delete_orphaned_cloud_accounts": {
         "queue": "delete_orphaned_cloud_accounts"
     },
-    "api.tasks.fix_problematic_runs": {
-        "queue": "fix_problematic_runs"
-    },
-    "api.tasks.inspect_pending_images": {
-        "queue": "inspect_pending_images"
-    },
+    "api.tasks.fix_problematic_runs": {"queue": "fix_problematic_runs"},
+    "api.tasks.inspect_pending_images": {"queue": "inspect_pending_images"},
     "api.tasks.notify_application_availability_task": {
         "queue": "notify_application_availability_task"
     },
@@ -510,30 +500,22 @@ CELERY_TASK_ROUTES = {
         "queue": "unpause_from_sources_kafka_message"
     },
     # api.clouds.aws.tasks
-    "api.clouds.aws.tasks.analyze_log": {
-        "queue": "analyze_log"
-    },
+    "api.clouds.aws.tasks.analyze_log": {"queue": "analyze_log"},
     "api.clouds.aws.tasks.attach_volumes_to_cluster": {
         "queue": "attach_volumes_to_cluster"
     },
     "api.clouds.aws.tasks.configure_customer_aws_and_create_cloud_account": {
         "queue": "configure_customer_aws_and_create_cloud_account"
     },
-    "api.clouds.aws.tasks.copy_ami_snapshot": {
-        "queue": "copy_ami_snapshot"
-    },
+    "api.clouds.aws.tasks.copy_ami_snapshot": {"queue": "copy_ami_snapshot"},
     "api.clouds.aws.tasks.copy_ami_to_customer_account": {
         "queue": "copy_ami_to_customer_account"
     },
-    "api.clouds.aws.tasks.enqueue_ready_volume": {
-        "queue": "enqueue_ready_volume"
-    },
+    "api.clouds.aws.tasks.enqueue_ready_volume": {"queue": "enqueue_ready_volume"},
     "api.clouds.aws.tasks.ensure_all_verify_tasks_are_valid": {
         "queue": "ensure_all_verify_tasks_are_valid"
     },
-    "api.clouds.aws.tasks.delete_snapshot": {
-        "queue": "delete_snapshot"
-    },
+    "api.clouds.aws.tasks.delete_snapshot": {"queue": "delete_snapshot"},
     "api.clouds.aws.tasks.initial_aws_describe_instances": {
         "queue": "initial_aws_describe_instances"
     },
@@ -546,21 +528,15 @@ CELERY_TASK_ROUTES = {
     "api.clouds.aws.tasks.repopulate_ec2_instance_mapping": {
         "queue": "repopulate_ec2_instance_mapping"
     },
-    "api.clouds.aws.tasks.run_inspection_cluster": {
-        "queue": "run_inspection_cluster"
-    },
-    "api.clouds.aws.tasks.scale_down_cluster": {
-        "queue": "scale_down_cluster"
-    },
+    "api.clouds.aws.tasks.run_inspection_cluster": {"queue": "run_inspection_cluster"},
+    "api.clouds.aws.tasks.scale_down_cluster": {"queue": "scale_down_cluster"},
     "api.clouds.aws.tasks.scale_up_inspection_cluster": {
         "queue": "scale_up_inspection_cluster"
     },
     "api.clouds.aws.tasks.verify_account_permissions": {
         "queue": "verify_account_permissions"
     },
-    "api.clouds.aws.tasks.verify_verify_tasks": {
-        "queue": "verify_verify_tasks"
-    },
+    "api.clouds.aws.tasks.verify_verify_tasks": {"queue": "verify_verify_tasks"},
     # api.clouds.azure.tasks
     "api.clouds.azure.tasks.repopulate_azure_instance_mapping": {
         "queue": "repopulate_azure_instance_mapping"
