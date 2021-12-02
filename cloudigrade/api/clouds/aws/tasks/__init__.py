@@ -47,8 +47,8 @@ from api.clouds.aws.tasks.onboarding import (
     initial_aws_describe_instances,
 )
 from api.clouds.aws.tasks.verification import (
-    verify_account_permissions,
     ensure_all_verify_tasks_are_valid,
+    verify_account_permissions,
 )
 
 #

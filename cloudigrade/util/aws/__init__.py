@@ -31,11 +31,11 @@ from util.aws.ec2 import (
     remove_snapshot_ownership,
 )
 from util.aws.helper import (
+    COMMON_AWS_ACCESS_DENIED_ERROR_CODES,
     get_region_from_availability_zone,
     get_regions,
     rewrap_aws_errors,
     verify_account_access,
-    COMMON_AWS_ACCESS_DENIED_ERROR_CODES,
 )
 from util.aws.s3 import get_object_content_from_s3
 from util.aws.sqs import (
