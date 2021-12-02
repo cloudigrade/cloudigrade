@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+"""Standard Django manage.py script for running commands."""
 import os
 import sys
 

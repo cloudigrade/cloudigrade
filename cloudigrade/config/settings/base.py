@@ -5,10 +5,9 @@ import sys
 from decimal import Decimal
 from urllib.parse import quote
 
-from app_common_python import isClowderEnabled
-from app_common_python import LoadedConfig as clowder_cfg
-
 import environ
+from app_common_python import LoadedConfig as clowder_cfg
+from app_common_python import isClowderEnabled
 from boto3.session import Session
 
 
@@ -166,7 +165,8 @@ if isClowderEnabled():
         },
     }
     __print(
-        f"Clowder: Database name: {CLOWDER_DATABASE_NAME} host: {CLOWDER_DATABASE_HOST}:{CLOWDER_DATABASE_PORT}"
+        f"Clowder: Database name: {CLOWDER_DATABASE_NAME} "
+        f"host: {CLOWDER_DATABASE_HOST}:{CLOWDER_DATABASE_PORT}"
     )
 else:
     DATABASES["default"] = {
@@ -191,7 +191,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",  # noqa: E501
     },
     {
         "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
@@ -242,7 +242,7 @@ REST_FRAMEWORK = {
 # Logging
 # https://docs.djangoproject.com/en/3.2/topics/logging/
 # https://docs.python.org/3.8/library/logging.html
-# https://www.caktusgroup.com/blog/2015/01/27/Django-Logging-Configuration-logging_config-default-settings-logger/
+# https://www.caktusgroup.com/blog/2015/01/27/Django-Logging-Configuration-logging_config-default-settings-logger/  # noqa:E501
 LOGGING_CONFIG = None
 LOGGING = {
     "version": 1,
@@ -402,7 +402,10 @@ AWS_SQS_MAX_HOUNDI_YIELD_COUNT = env.int("AWS_SQS_MAX_HOUNDI_YIELD_COUNT", defau
 # This AWS_CLOUDTRAIL_EVENT_URL has a placeholder where an AWS Account ID should be.
 # That placeholder "000000000000" value is okay for tests but *must* be overridden when
 # actually running cloudigrade, such as in local.py and prod.py.
-AWS_CLOUDTRAIL_EVENT_URL = f"https://sqs.us-east-1.amazonaws.com/000000000000/{CLOUDIGRADE_ENVIRONMENT}-cloudigrade-cloudtrail-s3"
+AWS_CLOUDTRAIL_EVENT_URL = (
+    f"https://sqs.us-east-1.amazonaws.com/"
+    f"000000000000/{CLOUDIGRADE_ENVIRONMENT}-cloudigrade-cloudtrail-s3"
+)
 
 #####################################################################
 # Configs used for running houndigrade and accessing its results
@@ -439,7 +442,7 @@ CELERY_ACCEPT_CONTENT = ["json", "pickle"]
 # Instead it will always act as though the task function was called *directly*, and that
 # will block the current thread while the task function executes synchronously.
 # See also Celery docs:
-# https://docs.celeryproject.org/en/stable/userguide/configuration.html#std-setting-task_always_eager
+# https://docs.celeryproject.org/en/stable/userguide/configuration.html#std-setting-task_always_eager  # noqa:E501
 CELERY_TASK_ALWAYS_EAGER = env.bool("CELERY_TASK_ALWAYS_EAGER", default=False)
 
 SCHEDULE_VERIFY_VERIFY_TASKS_INTERVAL = env.int(
@@ -619,7 +622,8 @@ if isClowderEnabled():
             CLOWDER_SOURCES_API_BASE_URL = f"http://{endpoint.hostname}:{endpoint.port}"
     if CLOWDER_SOURCES_API_BASE_URL == "":
         __print(
-            f"Clowder: Sources api service was not found, using default url: {SOURCES_API_BASE_URL}"
+            f"Clowder: Sources api service was not found, "
+            f"using default url: {SOURCES_API_BASE_URL}"
         )
     else:
         SOURCES_API_BASE_URL = CLOWDER_SOURCES_API_BASE_URL
