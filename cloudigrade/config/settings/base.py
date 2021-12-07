@@ -490,8 +490,8 @@ CELERY_TASK_ROUTES = {
     "api.tasks.delete_from_sources_kafka_message": {
         "queue": "delete_from_sources_kafka_message"
     },
-    "api.tasks.update_from_sources_kafka_message": {
-        "queue": "update_from_sources_kafka_message"
+    "api.tasks.update_from_source_kafka_message": {
+        "queue": "update_from_source_kafka_message"
     },
     "api.tasks.pause_from_sources_kafka_message": {
         "queue": "pause_from_sources_kafka_message"
@@ -511,6 +511,7 @@ CELERY_TASK_ROUTES = {
     "api.clouds.aws.tasks.copy_ami_to_customer_account": {
         "queue": "copy_ami_to_customer_account"
     },
+    "api.clouds.aws.tasks.create_volume": {"queue": "create_volume"},
     "api.clouds.aws.tasks.enqueue_ready_volume": {"queue": "enqueue_ready_volume"},
     "api.clouds.aws.tasks.ensure_all_verify_tasks_are_valid": {
         "queue": "ensure_all_verify_tasks_are_valid"
