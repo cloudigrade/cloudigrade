@@ -11,7 +11,7 @@ _faker = faker.Faker()
 
 
 class NotifyApplicationAvailabilityTaskTest(TestCase):
-    """Celery task 'update_from_source_kafka_message' test cases."""
+    """Celery task 'notify_application_availability_task' test cases."""
 
     def setUp(self):
         """Set up shared variables."""

@@ -490,8 +490,8 @@ CELERY_TASK_ROUTES = {
     "api.tasks.delete_from_sources_kafka_message": {
         "queue": "delete_from_sources_kafka_message"
     },
-    "api.tasks.update_from_source_kafka_message": {
-        "queue": "update_from_source_kafka_message"
+    "api.tasks.update_from_sources_kafka_message": {
+        "queue": "update_from_sources_kafka_message"
     },
     "api.tasks.pause_from_sources_kafka_message": {
         "queue": "pause_from_sources_kafka_message"

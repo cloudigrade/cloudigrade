@@ -179,7 +179,7 @@ def process_sources_update_event(value, headers):
         {"value": value, "headers": headers},
     )
     if settings.SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA:
-        sources.update_from_source_kafka_message.delay(value, headers)
+        sources.update_from_sources_kafka_message.delay(value, headers)
 
 
 def process_sources_pause_event(value, headers):
