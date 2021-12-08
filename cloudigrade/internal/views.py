@@ -149,7 +149,7 @@ def sources_kafka(request):
     elif event_type == "ApplicationAuthentication.destroy":
         func = tasks.delete_from_sources_kafka_message
     elif event_type == "Authentication.update":
-        func = tasks.update_from_source_kafka_message
+        func = tasks.update_from_sources_kafka_message
 
     if func:
         func(value, headers)

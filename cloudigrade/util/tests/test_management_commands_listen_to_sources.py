@@ -44,7 +44,7 @@ class SourcesListenerTest(TestCase):
     @patch("util.management.commands.listen_to_sources.Consumer")
     @patch("api.tasks.sources.unpause_from_sources_kafka_message")
     @patch("api.tasks.sources.pause_from_sources_kafka_message")
-    @patch("api.tasks.sources.update_from_source_kafka_message")
+    @patch("api.tasks.sources.update_from_sources_kafka_message")
     @patch("api.tasks.sources.delete_from_sources_kafka_message")
     @patch("api.tasks.sources.create_from_sources_kafka_message")
     def test_listen(

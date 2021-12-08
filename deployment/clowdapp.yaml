@@ -1496,7 +1496,7 @@ parameters:
     run_inspection_cluster,\
     scale_down_cluster,\
     scale_up_inspection_cluster,\
-    update_from_source_kafka_message,\
+    update_from_sources_kafka_message,\
     unpause_from_sources_kafka_message,\
     verify_account_permissions,\
     verify_verify_tasks"

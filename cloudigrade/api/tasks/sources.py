@@ -198,10 +198,10 @@ def delete_from_sources_kafka_message(message, headers):
         RuntimeError,
         AwsThrottlingException,
     ),
-    name="api.tasks.update_from_source_kafka_message",
+    name="api.tasks.update_from_sources_kafka_message",
 )
 @aws.rewrap_aws_errors
-def update_from_source_kafka_message(message, headers):
+def update_from_sources_kafka_message(message, headers):
     """
     Update our model objects from the Sources Kafka message.
 
