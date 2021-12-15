@@ -41,6 +41,8 @@ app-common-python = "^0.1.8"
 azure-mgmt-resourcegraph = "^8.0.0"
 azure-mgmt-resource = "^19.0.0"
 azure-cli-core = "^2.27.2"
+django-prometheus = "~=2.1.0"
+
 
 [tool.poetry.dev-dependencies]
 jinja2 = "*"
