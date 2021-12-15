@@ -81,6 +81,7 @@ for (prefix, viewset, basename) in routes:
 urlpatterns = [
     path("api-auth/", include("rest_framework.urls")),
     path("healthz/", include("health_check.urls")),
+    path("", include("django_prometheus.urls")),  # serves "/metrics"
     path("admin/", admin.site.urls),
     path("error/", views.fake_error, name="internal-fake-error"),
     path(

@@ -82,6 +82,7 @@ THIRD_PARTY_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
     "django_filters",
+    "django_prometheus",
     "generic_relations",
     "health_check",
     "health_check.db",
@@ -97,6 +98,7 @@ LOCAL_APPS = [
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
+    "django_prometheus.middleware.PrometheusBeforeMiddleware",  # should always be first
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -105,6 +107,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "util.middleware.RequestIDLoggingMiddleware",
+    "django_prometheus.middleware.PrometheusAfterMiddleware",  # should always be last
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -133,7 +136,7 @@ DATABASES = {
     "default": {
         "ATOMIC_REQUESTS": env("DJANGO_ATOMIC_REQUESTS", default=True),
         "ENGINE": env(
-            "DJANGO_DATABASE_ENGINE", default="django.db.backends.postgresql"
+            "DJANGO_DATABASE_ENGINE", default="django_prometheus.db.backends.postgresql"
         ),
         "CONN_MAX_AGE": env.int("DJANGO_DATABASE_CONN_MAX_AGE", default=0),
     }
