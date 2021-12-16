@@ -58,14 +58,10 @@ class AccountViewSetTest(TransactionTestCase):
                     response.data["content_object"]["subscription_id"],
                     str(account.content_object.subscription_id),
                 )
-                self.assertEqual(
-                    response.data["content_object"]["tenant_id"],
-                    str(account.content_object.tenant_id),
-                )
 
     def get_cloud_account_ids_from_list_response(self, response):
         """
-        Get the aws_account_id and azure_tenant_id values from the paginated response.
+        Get aws_account_id and azure_subscription_id values from the paginated response.
 
         If an account's cloud_type or content_object is None, no value will be returned
         from this function for that account.
@@ -83,13 +79,13 @@ class AccountViewSetTest(TransactionTestCase):
             if account["cloud_type"] == "aws"
         ]
 
-        azure_tenant_ids = [
-            account.get("content_object", {}).get("tenant_id")
+        azure_subscription_ids = [
+            account.get("content_object", {}).get("subscription_id")
             for account in response.data["data"]
             if account["cloud_type"] == "azure"
         ]
 
-        return set(aws_account_ids + azure_tenant_ids)
+        return set(aws_account_ids + azure_subscription_ids)
 
     def get_account_get_response(self, user, account_id):
         """
@@ -133,7 +129,7 @@ class AccountViewSetTest(TransactionTestCase):
         expected_cloud_account_ids = {
             str(self.account_user1_aws1.content_object.aws_account_id),
             str(self.account_user1_aws2.content_object.aws_account_id),
-            str(self.account_user1_azure1.content_object.tenant_id),
+            str(self.account_user1_azure1.content_object.subscription_id),
         }
         response = self.get_account_list_response(self.user1)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -150,7 +146,7 @@ class AccountViewSetTest(TransactionTestCase):
             str(self.account_user2_aws1.content_object.aws_account_id),
             str(self.account_user2_aws2.content_object.aws_account_id),
             str(self.account_user2_aws3.content_object.aws_account_id),
-            str(self.account_user2_azure1.content_object.tenant_id),
+            str(self.account_user2_azure1.content_object.subscription_id),
         }
         response = self.get_account_list_response(self.user2)
         actual_accounts = self.get_cloud_account_ids_from_list_response(response)

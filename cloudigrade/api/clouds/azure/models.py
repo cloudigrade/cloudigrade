@@ -17,13 +17,12 @@ class AzureCloudAccount(BaseModel):
     cloud_account = GenericRelation(
         CloudAccount, related_query_name="azure_cloud_account"
     )
-    subscription_id = models.UUIDField()
-    tenant_id = models.UUIDField(unique=True)
+    subscription_id = models.UUIDField(unique=True)
 
     @property
     def cloud_account_id(self):
-        """Get the Azure Tenant ID for this account."""
-        return str(self.tenant_id)
+        """Get the Azure Subscription ID for this account."""
+        return str(self.subscription_id)
 
     @property
     def cloud_type(self):
@@ -47,7 +46,6 @@ class AzureCloudAccount(BaseModel):
             f"{self.__class__.__name__}("
             f"id={self.id}, "
             f"subscription_id={self.subscription_id}, "
-            f"tenant_id='{self.tenant_id}', "
             f"created_at=parse({created_at}), "
             f"updated_at=parse({updated_at})"
             f")"

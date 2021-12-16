@@ -62,14 +62,10 @@ class InternalAccountViewSetTest(TransactionTestCase):
                     response.data["content_object"]["subscription_id"],
                     str(account.content_object.subscription_id),
                 )
-                self.assertEqual(
-                    response.data["content_object"]["tenant_id"],
-                    str(account.content_object.tenant_id),
-                )
 
     def get_account_ids_from_list_response(self, response):
         """
-        Get the aws_account_id and azure_tenant_id from the paginated response.
+        Get the aws_account_id and azure_subscription_id from the paginated response.
 
         Args:
             response (Response): Django response object to inspect
@@ -84,13 +80,13 @@ class InternalAccountViewSetTest(TransactionTestCase):
             if account["cloud_type"] == "aws"
         ]
 
-        azure_tenant_ids = [
-            account["content_object"]["tenant_id"]
+        azure_subscription_ids = [
+            account.get("content_object", {}).get("subscription_id")
             for account in response.data["data"]
             if account["cloud_type"] == "azure"
         ]
 
-        return set(aws_account_ids + azure_tenant_ids)
+        return set(aws_account_ids + azure_subscription_ids)
 
     def get_account_get_response(self, user, account_id):
         """
@@ -155,8 +151,8 @@ class InternalAccountViewSetTest(TransactionTestCase):
             str(self.account3.content_object.aws_account_id),
             str(self.account4.content_object.aws_account_id),
             str(self.account5.content_object.aws_account_id),
-            str(self.azure_account1.content_object.tenant_id),
-            str(self.azure_account2.content_object.tenant_id),
+            str(self.azure_account1.content_object.subscription_id),
+            str(self.azure_account2.content_object.subscription_id),
         }
         response = self.get_account_list_response(None)
         actual_accounts = self.get_account_ids_from_list_response(response)
@@ -209,8 +205,10 @@ class InternalAccountViewSetTest(TransactionTestCase):
         mock_task.delay.assert_called()
 
     @patch("api.tasks.sources.notify_application_availability_task")
-    def test_create_azure_account_success(self, mock_task):
+    @patch("api.clouds.azure.models.AzureCloudAccount.enable")
+    def test_create_azure_account_success(self, mock_enable, mock_task):
         """Test creating an azure account succeeds."""
+        mock_enable.return_value = True
         data = util_helper.generate_dummy_azure_cloud_account_post_data()
 
         request = self.factory.post("/accounts/", data=data)
@@ -221,7 +219,8 @@ class InternalAccountViewSetTest(TransactionTestCase):
         response = view(request)
         self.assertEqual(response.status_code, 201)
         self.assertEqual(
-            response.data["content_object"]["tenant_id"], str(data["tenant_id"])
+            response.data["content_object"]["subscription_id"],
+            str(data["subscription_id"]),
         )
         self.assertEqual(response.data["is_enabled"], True)  # True by default
         mock_task.delay.assert_called()

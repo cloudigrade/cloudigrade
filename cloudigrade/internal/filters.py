@@ -125,7 +125,6 @@ class InternalAzureCloudAccountFilterSet(django_filters.FilterSet):
         model = azure_models.AzureCloudAccount
         fields = {
             "subscription_id": ["exact"],
-            "tenant_id": ["exact"],
             "created_at": ["lt", "exact", "gt"],
             "updated_at": ["lt", "exact", "gt"],
         }

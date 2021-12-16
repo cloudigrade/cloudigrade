@@ -865,9 +865,6 @@
           "subscription_id": {
             "type": "string"
           },
-          "tenant_id": {
-            "type": "string"
-          },
           "is_enabled": {
             "type": "boolean",
             "readOnly": true

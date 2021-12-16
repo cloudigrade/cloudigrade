@@ -5273,15 +5273,6 @@
             }
           },
           {
-            "name": "tenant_id",
-            "required": false,
-            "in": "query",
-            "description": "tenant_id",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
             "name": "created_at__lt",
             "required": false,
             "in": "query",
@@ -5427,15 +5418,6 @@
             "required": false,
             "in": "query",
             "description": "subscription_id",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "tenant_id",
-            "required": false,
-            "in": "query",
-            "description": "tenant_id",
             "schema": {
               "type": "string"
             }
@@ -6404,9 +6386,6 @@
           "subscription_id": {
             "type": "string"
           },
-          "tenant_id": {
-            "type": "string"
-          },
           "is_enabled": {
             "type": "boolean",
             "readOnly": true
@@ -7115,15 +7094,10 @@
           "subscription_id": {
             "type": "string",
             "format": "uuid"
-          },
-          "tenant_id": {
-            "type": "string",
-            "format": "uuid"
           }
         },
         "required": [
-          "subscription_id",
-          "tenant_id"
+          "subscription_id"
         ]
       },
       "InternalAzureInstance": {

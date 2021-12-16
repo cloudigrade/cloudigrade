@@ -134,7 +134,6 @@ class GenerateCloudAccountTest(TestCase):
             account = helper.generate_cloud_account(cloud_type="azure")
         self.assertIsInstance(account, CloudAccount)
         self.assertIsNotNone(account.content_object.subscription_id)
-        self.assertIsNotNone(account.content_object.tenant_id)
         self.assertEqual(account.created_at, created_at)
         self.assertTrue(account.is_enabled)
         self.assertEqual(account.enabled_at, created_at)
