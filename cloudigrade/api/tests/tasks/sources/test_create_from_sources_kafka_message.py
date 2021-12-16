@@ -1,4 +1,5 @@
 """Collection of tests for tasks.create_from_sources_kafka_message."""
+import uuid
 from unittest.mock import patch
 
 import faker
@@ -34,6 +35,7 @@ class CreateFromSourcesKafkaMessageTest(TestCase):
         )
 
         self.arn = util_helper.generate_dummy_arn()
+        self.subscription_id = uuid.uuid4()
 
         self.auth_return_value = {
             "username": self.arn,
@@ -42,19 +44,26 @@ class CreateFromSourcesKafkaMessageTest(TestCase):
             "id": self.authentication_id,
             "authtype": settings.SOURCES_CLOUDMETER_ARN_AUTHTYPE,
         }
+        self.auth_azure_return_value = {
+            "username": self.subscription_id,
+            "resource_type": settings.SOURCES_RESOURCE_TYPE,
+            "resource_id": self.application_id,
+            "id": self.authentication_id,
+            "authtype": settings.SOURCES_CLOUDMETER_LIGHTHOUSE_AUTHTYPE,
+        }
 
     @patch("util.redhatcloud.sources.get_authentication")
     @patch("util.redhatcloud.sources.get_cloudigrade_application_type_id")
     @patch("util.redhatcloud.sources.get_application")
     @patch("api.tasks.sources.configure_customer_aws_and_create_cloud_account")
-    def test_create_from_sources_kafka_message_success(
+    def test_create_from_sources_kafka_message_aws_success(
         self,
         mock_task,
         mock_get_app,
         mock_get_app_type_id,
         mock_get_auth,
     ):
-        """Assert create_from_sources_kafka_message happy path success."""
+        """Assert create_from_sources_kafka_message aws happy path success."""
         mock_get_app.return_value = {
             "application_type_id": self.cloudigrade_sources_app_id,
             "source_id": self.source_id,
@@ -71,6 +80,36 @@ class CreateFromSourcesKafkaMessageTest(TestCase):
         mock_task.delay.assert_called_with(
             user.username,
             arn,
+            self.authentication_id,
+            self.application_id,
+            self.source_id,
+        )
+
+    @patch("util.redhatcloud.sources.get_authentication")
+    @patch("util.redhatcloud.sources.get_cloudigrade_application_type_id")
+    @patch("util.redhatcloud.sources.get_application")
+    @patch("api.tasks.sources.check_azure_subscription_and_create_cloud_account")
+    def test_create_from_sources_kafka_message_azure_success(
+        self,
+        mock_task,
+        mock_get_app,
+        mock_get_app_type_id,
+        mock_get_auth,
+    ):
+        """Assert create_from_sources_kafka_message azure happy path success."""
+        mock_get_app.return_value = {
+            "application_type_id": self.cloudigrade_sources_app_id,
+            "source_id": self.source_id,
+        }
+        mock_get_app_type_id.return_value = self.cloudigrade_sources_app_id
+
+        mock_get_auth.return_value = self.auth_azure_return_value
+        sources.create_from_sources_kafka_message(self.message, self.headers)
+
+        user = User.objects.get(username=self.account_number)
+        mock_task.delay.assert_called_with(
+            user.username,
+            self.subscription_id,
             self.authentication_id,
             self.application_id,
             self.source_id,

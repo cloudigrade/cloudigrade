@@ -3,9 +3,11 @@ import logging
 
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
+from rest_framework.exceptions import ValidationError
 
 from api import AZURE_PROVIDER_STRING
 from api.models import CloudAccount, Instance, InstanceEvent, MachineImage
+from util.azure.identity import get_cloudigrade_available_subscriptions
 from util.models import BaseModel
 
 logger = logging.getLogger(__name__)
@@ -61,6 +63,14 @@ class AzureCloudAccount(BaseModel):
         TODO: add logic to verify permissions, do an initial describe instances,
               and schedule a verification task
         """
+        if self.subscription_id not in get_cloudigrade_available_subscriptions():
+            message = (
+                f"Could not enable {repr(self)}; subscription not present in "
+                f"list of available subscriptions."
+            )
+            logger.info(message)
+            raise ValidationError({"subscription_id": message})
+
         return True
 
     def disable(self):

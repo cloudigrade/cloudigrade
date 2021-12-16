@@ -155,7 +155,7 @@ CG2004 = CloudigradeError(
     ),
     _(
         f"{GENERIC_ERROR_MESSAGE_WITH_CODE} Authentication did not include required "
-        "ARN in either username or password field."
+        "Authentication Token in either username or password field."
     ),
 )
 
