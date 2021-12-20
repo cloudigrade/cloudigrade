@@ -76,7 +76,6 @@ class LockUserTaskTest(TransactionTestCase):
         account = api_helper.generate_cloud_account(
             arn=arn,
             aws_account_id=aws_account_id,
-            generate_verify_task=False,
         )
 
         with lock_task_for_user_ids([account.user.id]):
@@ -93,7 +92,6 @@ class LockUserTaskTest(TransactionTestCase):
         account = api_helper.generate_cloud_account(
             arn=arn,
             aws_account_id=aws_account_id,
-            generate_verify_task=False,
         )
         UserTaskLock.objects.create(user=account.user)
         with self.assertRaises(transaction.TransactionManagementError):

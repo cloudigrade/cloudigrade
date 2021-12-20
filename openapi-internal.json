@@ -3789,15 +3789,6 @@
             }
           },
           {
-            "name": "verify_task",
-            "required": false,
-            "in": "query",
-            "description": "verify_task",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
             "name": "created_at__lt",
             "required": false,
             "in": "query",
@@ -3952,15 +3943,6 @@
             "required": false,
             "in": "query",
             "description": "account_arn",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "verify_task",
-            "required": false,
-            "in": "query",
-            "description": "verify_task",
             "schema": {
               "type": "string"
             }
@@ -6871,10 +6853,6 @@
           "account_arn": {
             "type": "string",
             "maxLength": 256
-          },
-          "verify_task": {
-            "type": "integer",
-            "nullable": true
           }
         },
         "required": [

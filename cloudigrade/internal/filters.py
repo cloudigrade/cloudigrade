@@ -110,7 +110,6 @@ class InternalAwsCloudAccountFilterSet(django_filters.FilterSet):
         fields = {
             "aws_account_id": ["exact"],
             "account_arn": ["exact"],
-            "verify_task": ["exact"],
             "created_at": ["lt", "exact", "gt"],
             "updated_at": ["lt", "exact", "gt"],
         }

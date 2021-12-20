@@ -46,10 +46,6 @@ from api.clouds.aws.tasks.onboarding import (
     configure_customer_aws_and_create_cloud_account,
     initial_aws_describe_instances,
 )
-from api.clouds.aws.tasks.verification import (
-    ensure_all_verify_tasks_are_valid,
-    verify_account_permissions,
-)
 
 #
 # Begin the horrible temporary kludges for deprecated celery tasks...
