@@ -1455,20 +1455,17 @@ parameters:
   required true:
   value: "celery,\
     analyze_log,\
-    attach_volumes_to_cluster,\
     calculate_max_concurrent_usage,\
     configure_customer_aws_and_create_cloud_account,\
     copy_ami_snapshot,\
     copy_ami_to_customer_account,\
     create_from_sources_kafka_message,\
-    create_volume,\
     delete_cloud_account,\
     delete_from_sources_kafka_message,\
     delete_inactive_users,\
     delete_orphaned_cloud_accounts,\
     delete_snapshot,\
     enable_account,\
-    enqueue_ready_volume,\
     fix_problematic_runs,\
     initial_aws_describe_instances,\
     inspect_pending_images,\
@@ -1484,9 +1481,6 @@ parameters:
     remove_snapshot_ownership,\
     repopulate_azure_instance_mapping,\
     repopulate_ec2_instance_mapping,\
-    run_inspection_cluster,\
-    scale_down_cluster,\
-    scale_up_inspection_cluster,\
     update_from_sources_kafka_message,\
     unpause_from_sources_kafka_message"
 - name: CELERY_TARGET_AVERAGE_CPU_UTILIZATION

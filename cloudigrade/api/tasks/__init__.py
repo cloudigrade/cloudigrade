@@ -22,7 +22,6 @@ decorator even if the function itself is renamed or moved elsewhere.
 """
 
 from api.tasks.calculation import (
-    calculate_max_concurrent_usage_task,
     fix_problematic_runs,
     recalculate_concurrent_usage_for_all_users,
     recalculate_concurrent_usage_for_user_id,

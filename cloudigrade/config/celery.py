@@ -77,16 +77,10 @@ app.conf.beat_schedule = {
         ),
     },
     # Disabled Tasks
-    "ensure_all_verify_tasks_are_valid": {
-        "task": "api.clouds.aws.tasks.ensure_all_verify_tasks_are_valid",
-        "schedule": 999999,
-        "enabled": False,
-    },
-    "scale_up_inspection_cluster_every_60_min": {
-        "task": "api.clouds.aws.tasks.scale_up_inspection_cluster",
-        "schedule": 999999,
-        "enabled": False,
-    },
+    # Important note for future readers! If you intend to disable an existing task,
+    # you need to either 1) keep it here and reconfigure with '"schedule": 999999' and
+    # '"enabled": False', or 2) write a migration to remove it from the database.
+    # Simply removing it from this schedule config will **not** remove it from the DB.
 }
 task_packages = ["api.clouds.aws.tasks", "api.clouds.azure.tasks", "api.tasks"]
 app.autodiscover_tasks(task_packages)
