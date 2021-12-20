@@ -450,9 +450,6 @@ CELERY_TASK_ALWAYS_EAGER = env.bool("CELERY_TASK_ALWAYS_EAGER", default=False)
 
 CELERY_TASK_ROUTES = {
     # api.tasks
-    "api.tasks.calculate_max_concurrent_usage": {
-        "queue": "calculate_max_concurrent_usage"
-    },
     "api.tasks.delete_cloud_account": {"queue": "delete_cloud_account"},
     "api.tasks.enable_account": {"queue": "enable_account"},
     "api.tasks.delete_inactive_users": {"queue": "delete_inactive_users"},
@@ -500,9 +497,6 @@ CELERY_TASK_ROUTES = {
     },
     # api.clouds.aws.tasks
     "api.clouds.aws.tasks.analyze_log": {"queue": "analyze_log"},
-    "api.clouds.aws.tasks.attach_volumes_to_cluster": {
-        "queue": "attach_volumes_to_cluster"
-    },
     "api.clouds.aws.tasks.configure_customer_aws_and_create_cloud_account": {
         "queue": "configure_customer_aws_and_create_cloud_account"
     },
@@ -510,8 +504,6 @@ CELERY_TASK_ROUTES = {
     "api.clouds.aws.tasks.copy_ami_to_customer_account": {
         "queue": "copy_ami_to_customer_account"
     },
-    "api.clouds.aws.tasks.create_volume": {"queue": "create_volume"},
-    "api.clouds.aws.tasks.enqueue_ready_volume": {"queue": "enqueue_ready_volume"},
     "api.clouds.aws.tasks.delete_snapshot": {"queue": "delete_snapshot"},
     "api.clouds.aws.tasks.initial_aws_describe_instances": {
         "queue": "initial_aws_describe_instances"
@@ -524,11 +516,6 @@ CELERY_TASK_ROUTES = {
     },
     "api.clouds.aws.tasks.repopulate_ec2_instance_mapping": {
         "queue": "repopulate_ec2_instance_mapping"
-    },
-    "api.clouds.aws.tasks.run_inspection_cluster": {"queue": "run_inspection_cluster"},
-    "api.clouds.aws.tasks.scale_down_cluster": {"queue": "scale_down_cluster"},
-    "api.clouds.aws.tasks.scale_up_inspection_cluster": {
-        "queue": "scale_up_inspection_cluster"
     },
     # api.clouds.azure.tasks
     "api.clouds.azure.tasks.repopulate_azure_instance_mapping": {

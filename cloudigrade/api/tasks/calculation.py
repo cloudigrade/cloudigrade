@@ -20,16 +20,6 @@ from util.misc import get_today
 logger = logging.getLogger(__name__)
 
 
-@shared_task(
-    bind=True,
-    name="api.tasks.calculate_max_concurrent_usage_task",
-    track_started=True,
-)
-def calculate_max_concurrent_usage_task(self, date, user_id):
-    """Raise NotImplementedError for any old in-flight tasks."""
-    raise NotImplementedError
-
-
 @transaction.atomic()
 def _fix_problematic_run(run_id):
     """
