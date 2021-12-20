@@ -11,6 +11,7 @@ from requests.exceptions import BaseHTTPError, RequestException
 from api import error_codes
 from api.clouds.aws.tasks import configure_customer_aws_and_create_cloud_account
 from api.clouds.aws.util import update_aws_cloud_account
+from api.clouds.azure.tasks import check_azure_subscription_and_create_cloud_account
 from api.models import CloudAccount, UserTaskLock
 from api.tasks.maintenance import _delete_cloud_accounts
 from util import aws
@@ -57,33 +58,10 @@ def create_from_sources_kafka_message(message, headers):
         logger.error(_("Aborting creation. Incorrect message details."))
         return
 
-    application = sources.get_application(account_number, application_id)
-    if not application:
-        logger.info(
-            _(
-                "Application ID %(application_id)s for account number "
-                "%(account_number)s does not exist; aborting cloud account creation."
-            ),
-            {"application_id": application_id, "account_number": account_number},
-        )
-        return
-
-    application_type = application["application_type_id"]
-    if application_type is not sources.get_cloudigrade_application_type_id(
-        account_number
-    ):
-        logger.info(_("Aborting creation. Application Type is not cloudmeter."))
-        return
-
-    authentication = sources.get_authentication(account_number, authentication_id)
-
-    if not authentication:
-        error_code = error_codes.CG2000
-        error_code.log_internal_message(
-            logger,
-            {"authentication_id": authentication_id, "account_number": account_number},
-        )
-        error_code.notify(account_number, application_id)
+    application, authentication = _get_and_verify_sources_data(
+        account_number, application_id, authentication_id
+    )
+    if application is None or authentication is None:
         return
 
     authtype = authentication.get("authtype")
@@ -106,9 +84,11 @@ def create_from_sources_kafka_message(message, headers):
         return
 
     source_id = application.get("source_id")
-    arn = authentication.get("username") or authentication.get("password")
+    authentication_token = authentication.get("username") or authentication.get(
+        "password"
+    )
 
-    if not arn:
+    if not authentication_token:
         error_code = error_codes.CG2004
         error_code.log_internal_message(
             logger, {"authentication_id": authentication_id}
@@ -130,11 +110,62 @@ def create_from_sources_kafka_message(message, headers):
     if authtype == settings.SOURCES_CLOUDMETER_ARN_AUTHTYPE:
         configure_customer_aws_and_create_cloud_account.delay(
             user.username,
-            arn,
+            authentication_token,
             authentication_id,
             application_id,
             source_id,
         )
+    elif authtype == settings.SOURCES_CLOUDMETER_LIGHTHOUSE_AUTHTYPE:
+        check_azure_subscription_and_create_cloud_account.delay(
+            user.username,
+            authentication_token,
+            authentication_id,
+            application_id,
+            source_id,
+        )
+
+
+def _get_and_verify_sources_data(account_number, application_id, authentication_id):
+    """
+    Call the sources API and look up the object IDs we were given.
+
+    Args:
+        account_number (str): User account number.
+        application_id (int): The application object id.
+        authentication_id (int): the authentication object id.
+
+    Returns:
+        (dict, dict): application and authentication dicts if present and valid,
+            otherwise None.
+    """
+    application = sources.get_application(account_number, application_id)
+    if not application:
+        logger.info(
+            _(
+                "Application ID %(application_id)s for account number "
+                "%(account_number)s does not exist; aborting cloud account creation."
+            ),
+            {"application_id": application_id, "account_number": account_number},
+        )
+        return None, None
+
+    application_type = application["application_type_id"]
+    if application_type is not sources.get_cloudigrade_application_type_id(
+        account_number
+    ):
+        logger.info(_("Aborting creation. Application Type is not cloudmeter."))
+        return None, None
+
+    authentication = sources.get_authentication(account_number, authentication_id)
+    if not authentication:
+        error_code = error_codes.CG2000
+        error_code.log_internal_message(
+            logger,
+            {"authentication_id": authentication_id, "account_number": account_number},
+        )
+        error_code.notify(account_number, application_id)
+        return application, None
+    return application, authentication
 
 
 @retriable_shared_task(

@@ -15,7 +15,6 @@ logger = logging.getLogger(__name__)
 def create_azure_cloud_account(
     user,
     subscription_id,
-    tenant_id,
     platform_authentication_id,
     platform_application_id,
     platform_source_id,
@@ -32,7 +31,6 @@ def create_azure_cloud_account(
     Args:
         user (django.contrib.auth.models.User): user to own the CloudAccount
         subscription_id (str): UUID of the customer subscription
-        tenant_id (str): UUID of the customer tenant
         platform_authentication_id (str): Platform Sources' Authentication object id
         platform_application_id (str): Platform Sources' Application object id
         platform_source_id (str): Platform Sources' Source object id
@@ -46,7 +44,6 @@ def create_azure_cloud_account(
             "Creating an AzureCloudAccount. "
             "user=%(user)s, "
             "subscription_id=%(subscription_id)s, "
-            "tenant_id=%(tenant_id)s, "
             "platform_authentication_id=%(platform_authentication_id)s, "
             "platform_application_id=%(platform_application_id)s, "
             "platform_source_id=%(platform_source_id)s"
@@ -54,7 +51,6 @@ def create_azure_cloud_account(
         {
             "user": user.username,
             "subscription_id": subscription_id,
-            "tenant_id": tenant_id,
             "platform_authentication_id": platform_authentication_id,
             "platform_application_id": platform_application_id,
             "platform_source_id": platform_source_id,
@@ -63,7 +59,7 @@ def create_azure_cloud_account(
 
     with transaction.atomic():
         azure_cloud_account = AzureCloudAccount.objects.create(
-            subscription_id=subscription_id, tenant_id=tenant_id
+            subscription_id=subscription_id
         )
         cloud_account = CloudAccount.objects.create(
             user=user,

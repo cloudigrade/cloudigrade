@@ -15,7 +15,6 @@ class AzureCloudAccountSerializer(ModelSerializer):
         fields = (
             "azure_cloud_account_id",
             "subscription_id",
-            "tenant_id",
             "created_at",
             "updated_at",
         )

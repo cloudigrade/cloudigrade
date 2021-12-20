@@ -246,7 +246,6 @@ def generate_cloud_account_aws(
 
 def generate_cloud_account_azure(
     azure_subscription_id=None,
-    azure_tenant_id=None,
     created_at=None,
     **kwargs,
 ):
@@ -257,7 +256,6 @@ def generate_cloud_account_azure(
 
     Args:
         azure_subscription_id (str): optional uuid str for azure subscription id
-        azure_tenant_id (str): optional uuid str for azure tenant id
         created_at (datetime): Optional creation datetime for this account.
         **kwargs (dict): Optional additional kwargs to pass to generate_cloud_account.
 
@@ -270,11 +268,8 @@ def generate_cloud_account_azure(
     if azure_subscription_id is None:
         azure_subscription_id = uuid.uuid4()
 
-    if azure_tenant_id is None:
-        azure_tenant_id = uuid.uuid4()
-
     provider_cloud_account = AzureCloudAccount.objects.create(
-        subscription_id=azure_subscription_id, tenant_id=azure_tenant_id
+        subscription_id=azure_subscription_id,
     )
     provider_cloud_account.created_at = created_at
     provider_cloud_account.save()

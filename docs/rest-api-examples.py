@@ -113,7 +113,6 @@ class DocsApiHandler(object):
             user=self.customer_user,
             created_at=self.two_weeks_ago,
             azure_subscription_id=str(seeded_uuid4()),
-            azure_tenant_id=str(seeded_uuid4()),
         )
         self.customer_instances = [
             api_helper.generate_instance(self.aws_customer_account),
@@ -363,11 +362,11 @@ class DocsApiHandler(object):
         responses["internal_account_create_aws_duplicate_arn"] = response
 
         # Create an Azure account (success)
-        tenant_id = str(seeded_uuid4())
+        subscription_id = str(seeded_uuid4())
         azure_cloud_account_data = (
             util_helper.generate_dummy_azure_cloud_account_post_data()
         )
-        azure_cloud_account_data.update({"tenant_id": tenant_id})
+        azure_cloud_account_data.update({"subscription_id": subscription_id})
         response = self.internal_client.create_accounts(data=azure_cloud_account_data)
         assert_status(response, 201)
         responses["internal_account_create_azure"] = response
@@ -436,10 +435,13 @@ if __name__ == "__main__":
         SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA=False
     ), patch.object(uuid, "uuid4") as mock_uuid4, patch(
         "api.tasks.sources.notify_application_availability_task"
-    ) as mock_notify_sources, util_helper.clouditardis(
+    ) as mock_notify_sources, patch(
+        "api.clouds.azure.models.AzureCloudAccount.enable"
+    ) as mock_azure_enable, util_helper.clouditardis(
         docs_date
     ):
         mock_uuid4.side_effect = seeded_uuid4
+        mock_azure_enable.return_value = True
         api_hander = DocsApiHandler()
         authenticated_responses = api_hander.gather_api_responses()
         internal_responses = api_hander.gather_internal_api_responses()
