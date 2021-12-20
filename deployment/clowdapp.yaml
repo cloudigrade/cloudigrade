@@ -178,8 +178,6 @@ objects:
           value: ${CLOUDIGRADE_LOG_LEVEL}
         - name: SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY
           value: ${SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY}
-        - name: SCHEDULE_VERIFY_VERIFY_TASKS_INTERVAL
-          value: ${SCHEDULE_VERIFY_VERIFY_TASKS_INTERVAL}
         - name: HOUNDIGRADE_ECS_IMAGE_NAME
           value: ${HOUNDIGRADE_ECS_IMAGE_NAME}
         - name: HOUNDIGRADE_ECS_IMAGE_TAG
@@ -449,8 +447,6 @@ objects:
           value: ${SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY}
         - name: DJANGO_CONSOLE_LOG_LEVEL
           value: ${DJANGO_CONSOLE_LOG_LEVEL}
-        - name: SCHEDULE_VERIFY_VERIFY_TASKS_INTERVAL
-          value: ${SCHEDULE_VERIFY_VERIFY_TASKS_INTERVAL}
         - name: HOUNDIGRADE_ECS_IMAGE_NAME
           value: ${HOUNDIGRADE_ECS_IMAGE_NAME}
         - name: HOUNDIGRADE_ECS_IMAGE_TAG
@@ -726,8 +722,6 @@ objects:
           value: ${CLOUDIGRADE_LOG_LEVEL}
         - name: SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY
           value: ${SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY}
-        - name: SCHEDULE_VERIFY_VERIFY_TASKS_INTERVAL
-          value: ${SCHEDULE_VERIFY_VERIFY_TASKS_INTERVAL}
         - name: HOUNDIGRADE_ECS_IMAGE_NAME
           value: ${HOUNDIGRADE_ECS_IMAGE_NAME}
         - name: HOUNDIGRADE_ECS_IMAGE_TAG
@@ -955,8 +949,6 @@ objects:
           value: ${CLOUDIGRADE_LOG_LEVEL}
         - name: SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY
           value: ${SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY}
-        - name: SCHEDULE_VERIFY_VERIFY_TASKS_INTERVAL
-          value: ${SCHEDULE_VERIFY_VERIFY_TASKS_INTERVAL}
         - name: HOUNDIGRADE_ECS_IMAGE_NAME
           value: ${HOUNDIGRADE_ECS_IMAGE_NAME}
         - name: HOUNDIGRADE_ECS_IMAGE_TAG
@@ -1476,7 +1468,6 @@ parameters:
     delete_orphaned_cloud_accounts,\
     delete_snapshot,\
     enable_account,\
-    ensure_all_verify_tasks_are_valid,\
     enqueue_ready_volume,\
     fix_problematic_runs,\
     initial_aws_describe_instances,\
@@ -1497,9 +1488,7 @@ parameters:
     scale_down_cluster,\
     scale_up_inspection_cluster,\
     update_from_sources_kafka_message,\
-    unpause_from_sources_kafka_message,\
-    verify_account_permissions,\
-    verify_verify_tasks"
+    unpause_from_sources_kafka_message"
 - name: CELERY_TARGET_AVERAGE_CPU_UTILIZATION
   displayName: Cloudigrade Worker Target Average CPU Utilization
   required: true
@@ -1730,10 +1719,6 @@ parameters:
   displayName: SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY
   required: true
   value: '1800'
-- name: SCHEDULE_VERIFY_VERIFY_TASKS_INTERVAL
-  displayName: Verify Task Interval (seconds)
-  required: true
-  value: '86400'
 - name: SENTRY_TRACES_SAMPLE_RATE
   displayName: Sentry Performance Sample Rate
   required: true

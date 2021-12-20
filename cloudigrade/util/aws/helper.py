@@ -217,10 +217,9 @@ def rewrap_aws_errors(original_function):
             if error_code in COMMON_AWS_ACCESS_DENIED_ERROR_CODES:
                 # If we failed due to missing AWS permissions, return quietly for now.
                 # This only typically happens if a user has changed their Role or Policy
-                # after initial setup in a way that is incompatible with our needs, but
-                # we have not yet run our routine verify_account_permissions task.
-                # We rely on the verify_account_permissions task to periodically check
-                # the account and disable it if necessary.
+                # after initial setup in a way that is incompatible with our needs.
+                # We rely on sources-api to regularly hit our availability_check API
+                # to periodically check the account and disable it if necessary.
                 error_message = response_error.get("Message")
                 message = _("Unexpected AWS {0}: {1}").format(error_code, error_message)
                 logger.warning(message)

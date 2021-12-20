@@ -1,7 +1,6 @@
 """Collection of tests for tasks.maintenance._delete_cloud_accounts helper function."""
 
 from django.test import TestCase, override_settings
-from django_celery_beat.models import PeriodicTask
 
 from api import models
 from api.clouds.aws import models as aws_models
@@ -83,12 +82,6 @@ class DeleteCloudAccountsTest(TestCase):
         self.assertEqual(models.Run.objects.count(), 8)
         self.assertEqual(models.ConcurrentUsage.objects.count(), 2)
         self.assertEqual(models.MachineImage.objects.count(), 6)
-        self.assertEqual(
-            PeriodicTask.objects.filter(
-                task="api.clouds.aws.tasks.verify_account_permissions"
-            ).count(),
-            2,
-        )
 
     def assertObjectCountsAfterDelete(self, accounts_deleted=1):
         """Sanity-check expected object counts before deleting."""
@@ -109,7 +102,6 @@ class DeleteCloudAccountsTest(TestCase):
         """
         self.generate_activity()
         self.assertObjectCountsBeforeDelete()
-        aws_arn = self.account_aws_1.content_object.account_arn
 
         maintenance.delete_cloud_account(self.account_aws_1.id)
 
@@ -120,23 +112,6 @@ class DeleteCloudAccountsTest(TestCase):
         self.account_aws_2.refresh_from_db()
         self.account_azure_1.refresh_from_db()
         self.account_azure_2.refresh_from_db()
-
-        # The periodic permissions check task for this account should not exist.
-        self.assertFalse(
-            PeriodicTask.objects.filter(
-                name=f"Verify {aws_arn}.",
-                task="api.clouds.aws.tasks.verify_account_permissions",
-            ).exists()
-        )
-        # But the other should be unaffected.
-        self.assertEqual(
-            PeriodicTask.objects.filter(
-                task="api.clouds.aws.tasks.verify_account_permissions"
-            )
-            .exclude(name=f"Verify {aws_arn}.")
-            .count(),
-            1,
-        )
 
         # The shared image should exist since it's used by the other AWS account.
         self.image_aws_shared.refresh_from_db()
@@ -190,13 +165,6 @@ class DeleteCloudAccountsTest(TestCase):
             self.account_aws_2.refresh_from_db()
         self.account_azure_1.refresh_from_db()
         self.account_azure_2.refresh_from_db()
-
-        # Both PeriodicTasks should have been deleted.
-        self.assertFalse(
-            PeriodicTask.objects.filter(
-                task="api.clouds.aws.tasks.verify_account_permissions"
-            ).exists()
-        )
 
         # The shared AWS image should be gone since nothing uses it now.
         with self.assertRaises(models.MachineImage.DoesNotExist):

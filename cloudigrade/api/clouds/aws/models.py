@@ -1,14 +1,10 @@
 """Cloudigrade API v2 Models for AWS."""
-import json
 import logging
 
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models, transaction
-from django.db.models.signals import post_delete
-from django.dispatch import receiver
 from django.utils.translation import gettext as _
-from django_celery_beat.models import IntervalSchedule, PeriodicTask
 from rest_framework.exceptions import ValidationError
 
 from api import AWS_PROVIDER_STRING
@@ -30,9 +26,6 @@ class AwsCloudAccount(BaseModel):
         max_digits=12, decimal_places=0, db_index=True, unique=True
     )
     account_arn = models.CharField(max_length=256, unique=True)
-    verify_task = models.OneToOneField(
-        PeriodicTask, models.CASCADE, blank=True, null=True
-    )
 
     @property
     def cloud_account_id(self):
@@ -62,7 +55,6 @@ class AwsCloudAccount(BaseModel):
             f"id={self.id}, "
             f"aws_account_id={self.aws_account_id}, "
             f"account_arn='{self.account_arn}', "
-            f"verify_task_id='{self.verify_task_id}', "
             f"created_at=parse({created_at}), "
             f"updated_at=parse({updated_at})"
             f")"
@@ -92,8 +84,6 @@ class AwsCloudAccount(BaseModel):
             logger.info(message)
             raise ValidationError({"account_arn": message})
 
-        self._enable_verify_task()
-
         if not self.cloud_account.get().platform_application_is_paused:
             # Only describe if the application is *not* paused.
             transaction.on_commit(
@@ -114,71 +104,8 @@ class AwsCloudAccount(BaseModel):
         CloudTrail, we simply log a message and proceed regardless.
         """
         logger.info(_("Attempting to disable %(account)s"), {"account": self})
-        self._disable_verify_task()
         transaction.on_commit(lambda: _delete_cloudtrail(self))
         logger.info(_("Finished disabling %(account)s"), {"account": self})
-
-    def _enable_verify_task(self):
-        """Enable the given AwsCloudAccount's Verify Task."""
-        schedule, _ = IntervalSchedule.objects.get_or_create(
-            every=settings.SCHEDULE_VERIFY_VERIFY_TASKS_INTERVAL,
-            period=IntervalSchedule.SECONDS,
-        )
-        verify_task, created = PeriodicTask.objects.get_or_create(
-            interval=schedule,
-            name=f"Verify {self.account_arn}.",
-            task="api.clouds.aws.tasks.verify_account_permissions",
-            kwargs=json.dumps(
-                {
-                    "account_arn": self.account_arn,
-                }
-            ),
-            defaults={"start_time": self.created_at},
-        )
-        self.verify_task = verify_task
-        self.save()
-        if not created:
-            verify_task.enabled = True
-            verify_task.save()
-
-    def _disable_verify_task(self):
-        """Disable the given AwsCloudAccount's Verify Task."""
-        if self.verify_task:
-            self.verify_task.enabled = False
-            self.verify_task.save()
-        else:
-            logger.error(
-                _(
-                    "Disable verify task for AWSCloudAccount ID "
-                    "%(aws_cloud_account_id)s failed, as no verify "
-                    "task was present. This should not be possible "
-                    "as every AwsCloudAccount should have a verify task."
-                ),
-                {"aws_cloud_account_id": self.id},
-            )
-
-
-@receiver(post_delete, sender=AwsCloudAccount)
-def awscloudaccount_post_delete_callback(*args, **kwargs):
-    """
-    Delete AwsCloudAccount.verify_task upon deleting AwsCloudAccount.
-
-    Note: Signal receivers must accept keyword arguments (**kwargs).
-    """
-    aws_cloud_account = kwargs["instance"]
-
-    if aws_cloud_account.verify_task:
-        logger.info(
-            _(
-                "%(periodic_task)s is no longer used by %(aws_cloud_account)s and "
-                "will be deleted."
-            ),
-            {
-                "periodic_task": aws_cloud_account.verify_task,
-                "aws_cloud_account": aws_cloud_account,
-            },
-        )
-        aws_cloud_account.verify_task.delete()
 
 
 def _delete_cloudtrail(aws_cloud_account):

@@ -448,10 +448,6 @@ CELERY_ACCEPT_CONTENT = ["json", "pickle"]
 # https://docs.celeryproject.org/en/stable/userguide/configuration.html#std-setting-task_always_eager  # noqa:E501
 CELERY_TASK_ALWAYS_EAGER = env.bool("CELERY_TASK_ALWAYS_EAGER", default=False)
 
-SCHEDULE_VERIFY_VERIFY_TASKS_INTERVAL = env.int(
-    "SCHEDULE_VERIFY_VERIFY_TASKS_INTERVAL", default=60 * 60 * 24
-)  # 24 Hours)
-
 CELERY_TASK_ROUTES = {
     # api.tasks
     "api.tasks.calculate_max_concurrent_usage": {
@@ -516,9 +512,6 @@ CELERY_TASK_ROUTES = {
     },
     "api.clouds.aws.tasks.create_volume": {"queue": "create_volume"},
     "api.clouds.aws.tasks.enqueue_ready_volume": {"queue": "enqueue_ready_volume"},
-    "api.clouds.aws.tasks.ensure_all_verify_tasks_are_valid": {
-        "queue": "ensure_all_verify_tasks_are_valid"
-    },
     "api.clouds.aws.tasks.delete_snapshot": {"queue": "delete_snapshot"},
     "api.clouds.aws.tasks.initial_aws_describe_instances": {
         "queue": "initial_aws_describe_instances"
@@ -537,10 +530,6 @@ CELERY_TASK_ROUTES = {
     "api.clouds.aws.tasks.scale_up_inspection_cluster": {
         "queue": "scale_up_inspection_cluster"
     },
-    "api.clouds.aws.tasks.verify_account_permissions": {
-        "queue": "verify_account_permissions"
-    },
-    "api.clouds.aws.tasks.verify_verify_tasks": {"queue": "verify_verify_tasks"},
     # api.clouds.azure.tasks
     "api.clouds.azure.tasks.repopulate_azure_instance_mapping": {
         "queue": "repopulate_azure_instance_mapping"

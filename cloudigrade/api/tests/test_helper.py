@@ -12,7 +12,6 @@ from unittest.mock import patch
 import faker
 from django.conf import settings
 from django.test import TestCase
-from django_celery_beat.models import IntervalSchedule, PeriodicTask
 
 from api.clouds.aws.models import (
     AwsMachineImage,
@@ -125,7 +124,6 @@ class GenerateCloudAccountTest(TestCase):
         self.assertIsNotNone(account.platform_application_id)
         self.assertFalse(account.platform_application_is_paused)
         self.assertIsNotNone(account.platform_source_id)
-        self.assertIsNotNone(account.content_object.verify_task)
 
     def test_generate_azure_account_default(self):
         """Assert generation of an AzureAccount with default/no args."""
@@ -154,22 +152,6 @@ class GenerateCloudAccountTest(TestCase):
         is_enabled = False
         enabled_at = util_helper.utc_dt(2017, 1, 2, 0, 0, 0)
 
-        schedule, _ = IntervalSchedule.objects.get_or_create(
-            every=settings.SCHEDULE_VERIFY_VERIFY_TASKS_INTERVAL,
-            period=IntervalSchedule.SECONDS,
-        )
-        verify_task, _ = PeriodicTask.objects.get_or_create(
-            interval=schedule,
-            name=f"Verify {arn}.",
-            task="api.clouds.aws.tasks.verify_account_permissions",
-            kwargs=json.dumps(
-                {
-                    "account_arn": arn,
-                }
-            ),
-            defaults={"start_time": created_at},
-        )
-
         account = helper.generate_cloud_account(
             arn=arn,
             aws_account_id=aws_account_id,
@@ -181,7 +163,6 @@ class GenerateCloudAccountTest(TestCase):
             platform_source_id=platform_source_id,
             is_enabled=is_enabled,
             enabled_at=enabled_at,
-            verify_task=verify_task,
         )
         self.assertIsInstance(account, CloudAccount)
         self.assertEqual(account.content_object.account_arn, arn)
@@ -195,7 +176,6 @@ class GenerateCloudAccountTest(TestCase):
         self.assertEqual(account.created_at, created_at)
         self.assertFalse(account.is_enabled)
         self.assertEqual(account.enabled_at, enabled_at)
-        self.assertEqual(account.content_object.verify_task, verify_task)
 
     def test_generate_aws_account_missing_content_object(self):
         """Assert generation of an AwsAccount with missing content object."""

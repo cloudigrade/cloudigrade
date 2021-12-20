@@ -1,5 +1,4 @@
 """Collection of tests for custom Django model logic."""
-import json
 import logging
 from random import choice
 from unittest.mock import Mock, patch
@@ -8,7 +7,6 @@ from botocore.exceptions import ClientError
 from django.conf import settings
 from django.db.models import ForeignKey
 from django.test import TestCase, TransactionTestCase
-from django_celery_beat.models import IntervalSchedule, PeriodicTask
 
 import api.clouds.aws.util
 from api import models
@@ -58,7 +56,6 @@ class AwsCloudAccountModelTest(TransactionTestCase, ModelStrTestMixin):
             arn=arn,
             aws_account_id=aws_account_id,
             created_at=self.created_at,
-            generate_verify_task=False,
         )
 
     def test_cloud_account_str(self):
@@ -103,12 +100,6 @@ class AwsCloudAccountModelTest(TransactionTestCase, ModelStrTestMixin):
         self.account.refresh_from_db()
         self.assertTrue(self.account.is_enabled)
         self.assertEqual(self.account.enabled_at, enable_date)
-
-        self.assertTrue(self.account.content_object.verify_task.enabled)
-        self.assertEqual(
-            self.account.content_object.verify_task.start_time,
-            self.account.content_object.created_at,
-        )
 
     def test_enable_failure(self):
         """Test that enabling an account rolls back if cloud-specific step fails."""
@@ -312,7 +303,6 @@ class AwsCloudAccountModelTest(TransactionTestCase, ModelStrTestMixin):
         self.assertGreater(models.Run.objects.count(), 0)
         self.assertGreater(aws_models.AwsInstance.objects.count(), 0)
         self.assertGreater(models.Instance.objects.count(), 0)
-        self.assertGreater(PeriodicTask.objects.count(), 0)
 
         with patch("api.clouds.aws.util.delete_cloudtrail") as mock_delete_cloudtrail:
             mock_delete_cloudtrail.return_value = True
@@ -324,7 +314,6 @@ class AwsCloudAccountModelTest(TransactionTestCase, ModelStrTestMixin):
         self.assertEqual(0, models.Run.objects.count())
         self.assertEqual(0, aws_models.AwsInstance.objects.count())
         self.assertEqual(0, models.Instance.objects.count())
-        self.assertEqual(0, PeriodicTask.objects.count())
 
     @patch("api.tasks.sources.notify_application_availability_task")
     def test_delete_via_queryset_succeeds_if_delete_cloudtrail_fails(
@@ -357,77 +346,6 @@ class AwsCloudAccountModelTest(TransactionTestCase, ModelStrTestMixin):
         self.assertEqual(0, models.Run.objects.count())
         self.assertEqual(0, aws_models.AwsInstance.objects.count())
         self.assertEqual(0, models.Instance.objects.count())
-
-    def test_enable_verify_task_created(self):
-        """Verify Task is created."""
-        aws_clount = self.account.content_object
-        self.assertIsNone(aws_clount.verify_task)
-
-        aws_clount._enable_verify_task()
-
-        self.assertIsNotNone(aws_clount.verify_task)
-        self.assertTrue(aws_clount.verify_task.enabled)
-        self.assertEqual(aws_clount.verify_task.start_time, aws_clount.created_at)
-
-    @patch("api.tasks.sources.notify_application_availability_task")
-    @patch("api.clouds.aws.util.verify_permissions")
-    @patch("api.clouds.aws.tasks.initial_aws_describe_instances")
-    def test_enable_verify_task_existing(
-        self,
-        mock_describe,
-        mock_verify,
-        mock_notify_sources,
-    ):
-        """Verify Task is assigned and re-enabled since it already existed."""
-        aws_clount = self.account.content_object
-        self.assertIsNone(aws_clount.verify_task)
-
-        schedule, _ = IntervalSchedule.objects.get_or_create(
-            every=settings.SCHEDULE_VERIFY_VERIFY_TASKS_INTERVAL,
-            period=IntervalSchedule.SECONDS,
-        )
-        verify_task = PeriodicTask.objects.create(
-            interval=schedule,
-            name=f"Verify {aws_clount.account_arn}.",
-            task="api.clouds.aws.tasks.verify_account_permissions",
-            kwargs=json.dumps(
-                {
-                    "account_arn": aws_clount.account_arn,
-                }
-            ),
-            start_time=self.created_at,
-        )
-
-        verify_task.enabled = False
-        verify_task.save()
-
-        enable_date = util_helper.utc_dt(2019, 1, 4, 0, 0, 0)
-        with util_helper.clouditardis(enable_date):
-            self.account.enable()
-
-        self.assertIsNotNone(aws_clount.verify_task)
-
-    @patch("api.tasks.sources.notify_application_availability_task")
-    def test_disable_verify_task_existing(self, mock_notify_sources):
-        """Verify Task is disabled."""
-        aws_clount = self.account.content_object
-        enable_date = util_helper.utc_dt(2019, 1, 4, 0, 0, 0)
-        with patch("api.clouds.aws.util.verify_permissions"), patch(
-            "api.clouds.aws.tasks.initial_aws_describe_instances"
-        ), util_helper.clouditardis(enable_date):
-            self.account.enable()
-
-        self.assertTrue(aws_clount.verify_task.enabled)
-        self.account.content_object._disable_verify_task()
-        self.assertFalse(aws_clount.verify_task.enabled)
-
-    def test_disable_verify_task_fail(self):
-        """Verify Task fails to be disabled, since it does not exist."""
-        aws_clount = self.account.content_object
-        self.assertIsNone(aws_clount.verify_task)
-        with self.assertLogs("api.clouds.aws.models", level="ERROR") as cm:
-            self.account.content_object._disable_verify_task()
-            self.assertIn("ERROR", cm.output[0])
 
     @patch("api.tasks.sources.notify_application_availability_task")
     def test_delete_account_with_instance_event_succeeds(self, mock_notify_sources):
