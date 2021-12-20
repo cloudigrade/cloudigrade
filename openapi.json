@@ -462,9 +462,6 @@
                                       "type": "string"
                                     }
                                   }
-                                },
-                                "additionalProperties": {
-                                  "type": "string"
                                 }
                               }
                             },
@@ -480,7 +477,8 @@
                       "format": "uri"
                     },
                     "version": {
-                      "type": "string"
+                      "type": "string",
+                      "nullable": true
                     }
                   }
                 }

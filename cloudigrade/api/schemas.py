@@ -74,9 +74,6 @@ class SysconfigSchema(AutoSchema):
                                                                     },
                                                                 },
                                                             },
-                                                            "additionalProperties": {
-                                                                "type": "string"
-                                                            },
                                                         },
                                                     },
                                                     "Version": {"type": "string"},
@@ -88,7 +85,10 @@ class SysconfigSchema(AutoSchema):
                                         "type": "string",
                                         "format": "uri",
                                     },
-                                    "version": {"type": "string"},
+                                    "version": {
+                                        "type": "string",
+                                        "nullable": True,
+                                    },
                                 },
                             }
                         }

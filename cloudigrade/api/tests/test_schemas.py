@@ -42,9 +42,6 @@ class SchemaTestCase(TestCase):
                                                                 },
                                                             },
                                                         },
-                                                        "additionalProperties": {
-                                                            "type": "string"
-                                                        },
                                                     },
                                                 },
                                                 "Version": {"type": "string"},
@@ -56,7 +53,7 @@ class SchemaTestCase(TestCase):
                                     "type": "string",
                                     "format": "uri",
                                 },
-                                "version": {"type": "string"},
+                                "version": {"type": "string", "nullable": True},
                             },
                         }
                     }
