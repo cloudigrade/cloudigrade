@@ -51,3 +51,14 @@ jobs:
       - run: poetry run make openapi-test
       - run: poetry run openapi-spec-validator openapi.json
       - run: poetry run openapi-spec-validator openapi-internal.json
+
+  test-celery-configs:
+    name: Verify Celery task configs
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/cloudigrade/build-container:ubi84-python39-2
+    steps:
+      - uses: actions/checkout@v2
+      - run: pip install poetry
+      - run: poetry install
+      - run: poetry run make checkceleryconfigs
