@@ -1456,6 +1456,7 @@ parameters:
   value: "celery,\
     analyze_log,\
     calculate_max_concurrent_usage,\
+    check_azure_subscription_and_create_cloud_account,\
     configure_customer_aws_and_create_cloud_account,\
     copy_ami_snapshot,\
     copy_ami_to_customer_account,\
