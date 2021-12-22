@@ -30,6 +30,12 @@ app.conf.beat_schedule = {
         "task": "api.tasks.delete_inactive_users",
         "schedule": env.int("DELETE_INACTIVE_USERS_SCHEDULE", default=24 * 60 * 60),
     },
+    "delete_cloud_accounts_not_in_sources": {
+        "task": "api.tasks.delete_cloud_accounts_not_in_sources",
+        "schedule": env.int(
+            "DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_SCHEDULE", default=24 * 60 * 60
+        ),
+    },
     "delete_orphaned_cloud_accounts": {
         "task": "api.tasks.delete_orphaned_cloud_accounts",
         "schedule": env.int("DELETE_ORPHANED_ACCOUNTS_SCHEDULE", default=24 * 60 * 60),

@@ -453,6 +453,9 @@ CELERY_TASK_ROUTES = {
     "api.tasks.delete_cloud_account": {"queue": "delete_cloud_account"},
     "api.tasks.enable_account": {"queue": "enable_account"},
     "api.tasks.delete_inactive_users": {"queue": "delete_inactive_users"},
+    "api.tasks.delete_cloud_accounts_not_in_sources": {
+        "queue": "delete_cloud_accounts_not_in_sources"
+    },
     "api.tasks.delete_orphaned_cloud_accounts": {
         "queue": "delete_orphaned_cloud_accounts"
     },
@@ -575,6 +578,11 @@ RECALCULATE_CONCURRENT_USAGE_SINCE_DAYS_AGO = env.int(
 # How far back should we look for orphaned CloudAccounts to delete
 DELETE_ORPHANED_ACCOUNTS_UPDATED_MORE_THAN_SECONDS_AGO = env.int(
     "DELETE_ORPHANED_ACCOUNTS_UPDATED_MORE_THAN_SECONDS_AGO", default=5 * 60
+)
+
+# How far back should we look for CloudAccounts not in sources to delete
+DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_UPDATED_MORE_THAN_SECONDS_AGO = env.int(
+    "DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_UPDATED_MORE_THAN_SECONDS_AGO", default=5 * 60
 )
 
 #####################################################################
