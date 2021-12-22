@@ -441,3 +441,53 @@ def _delete_orphaned_cloud_account_content_objects(max_updated_at):
         for content_object in content_objects_by_class:
             content_object.disable()
             content_object.delete()
+
+
+@shared_task(name="api.tasks.delete_cloud_accounts_not_in_sources")
+@aws.rewrap_aws_errors
+def delete_cloud_accounts_not_in_sources():
+    """
+    Identify and delete CloudAccount and related objects not in sources.
+
+    Scheduled task to delete CloudAccounts and related *CloudAccount objects that do not
+    have a related account in sources.
+    """
+    tdelta = settings.DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_UPDATED_MORE_THAN_SECONDS_AGO
+    max_updated_at = get_now() - timedelta(seconds=tdelta)
+
+    accounts_not_in_sources = []
+    logger.info(_("Searching for CloudAccount instances not in sources."))
+
+    all_cloud_accounts = CloudAccount.objects.filter(
+        updated_at__lt=max_updated_at
+    ).order_by("id")
+    for index, cloud_account in enumerate(all_cloud_accounts):
+        if index > 0 and index % 100 == 0:
+            logger.info(
+                _("Checked %(index)s CloudAccount instances not in sources."),
+                {"index": index},
+            )
+        if cloud_account.content_object:
+            try:
+                account_number = cloud_account.user.username
+                source_id = cloud_account.platform_source_id
+                source = sources.get_source(account_number, source_id)
+                if not source:
+                    accounts_not_in_sources.append(cloud_account)
+                    logger.info(
+                        _("Found account %(cloud_account)s not in sources."),
+                        {"cloud_account": cloud_account},
+                    )
+                    delete_cloud_account.delay(cloud_account.id)
+            except Exception as e:
+                # If something went wrong talking to sources or celery, log and proceed.
+                logger.exception(e)
+                logger.warning(
+                    _("Unexpected error getting source for %(cloud_account)s: %(e)s"),
+                    {"cloud_account": cloud_account, "e": e},
+                )
+
+    logger.info(
+        _("Found %(num_accounts_found)s CloudAccount instances not in sources."),
+        {"num_accounts_found": len(accounts_not_in_sources)},
+    )

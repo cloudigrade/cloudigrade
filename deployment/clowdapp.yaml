@@ -297,6 +297,10 @@ objects:
           value: ${DELETE_ORPHANED_ACCOUNTS_UPDATED_MORE_THAN_SECONDS_AGO}
         - name: DELETE_ORPHANED_ACCOUNTS_SCHEDULE
           value: ${DELETE_ORPHANED_ACCOUNTS_SCHEDULE}
+        - name: DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_UPDATED_MORE_THAN_SECONDS_AGO
+          value: ${DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_UPDATED_MORE_THAN_SECONDS_AGO}
+        - name: DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_SCHEDULE
+          value: ${DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_SCHEDULE}
     - name: beat
       #
       # Component cloudigrade-beat deployment:
@@ -550,6 +554,10 @@ objects:
           value: ${DELETE_ORPHANED_ACCOUNTS_UPDATED_MORE_THAN_SECONDS_AGO}
         - name: DELETE_ORPHANED_ACCOUNTS_SCHEDULE
           value: ${DELETE_ORPHANED_ACCOUNTS_SCHEDULE}
+        - name: DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_UPDATED_MORE_THAN_SECONDS_AGO
+          value: ${DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_UPDATED_MORE_THAN_SECONDS_AGO}
+        - name: DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_SCHEDULE
+          value: ${DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_SCHEDULE}
     - name: listener
       #
       # Component cloudigrade-listener deployment:
@@ -799,6 +807,10 @@ objects:
           value: ${DELETE_ORPHANED_ACCOUNTS_UPDATED_MORE_THAN_SECONDS_AGO}
         - name: DELETE_ORPHANED_ACCOUNTS_SCHEDULE
           value: ${DELETE_ORPHANED_ACCOUNTS_SCHEDULE}
+        - name: DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_UPDATED_MORE_THAN_SECONDS_AGO
+          value: ${DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_UPDATED_MORE_THAN_SECONDS_AGO}
+        - name: DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_SCHEDULE
+          value: ${DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_SCHEDULE}
     - name: worker
       #
       # Component cloudigrade-worker deployment:
@@ -1060,6 +1072,10 @@ objects:
           value: ${DELETE_ORPHANED_ACCOUNTS_UPDATED_MORE_THAN_SECONDS_AGO}
         - name: DELETE_ORPHANED_ACCOUNTS_SCHEDULE
           value: ${DELETE_ORPHANED_ACCOUNTS_SCHEDULE}
+        - name: DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_UPDATED_MORE_THAN_SECONDS_AGO
+          value: ${DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_UPDATED_MORE_THAN_SECONDS_AGO}
+        - name: DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_SCHEDULE
+          value: ${DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_SCHEDULE}
     jobs:
     - name: floorist
       schedule: ${FLOORIST_SCHEDULE}
@@ -1462,6 +1478,7 @@ parameters:
     copy_ami_to_customer_account,\
     create_from_sources_kafka_message,\
     delete_cloud_account,\
+    delete_cloud_accounts_not_in_sources,\
     delete_from_sources_kafka_message,\
     delete_inactive_users,\
     delete_orphaned_cloud_accounts,\
@@ -1756,6 +1773,14 @@ parameters:
   value: '300'
 - name: DELETE_ORPHANED_ACCOUNTS_SCHEDULE
   displayName: Delete orphaned accounts schedule (seconds)
+  required: true
+  value: '86400'
+- name: DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_UPDATED_MORE_THAN_SECONDS_AGO
+  displayName: Delete cloud accounts not in sources updated more than seconds ago
+  required: true
+  value: '300'
+- name: DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_SCHEDULE
+  displayName: Delete cloud accounts not in sources schedule (seconds)
   required: true
   value: '86400'
 #
