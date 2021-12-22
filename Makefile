@@ -39,4 +39,7 @@ openapi-test:
 	CLOUDIGRADE_ENVIRONMENT="make-openapi-test" AWS_ACCESS_KEY_ID="fake" AWS_SECRET_ACCESS_KEY="fake" $(PYTHON) $(PYDIR)/manage.py generateschema --title "Cloudigrade public API v2" --format openapi-json --settings=config.settings.test --urlconf api.urls | diff ./openapi.json -
 	CLOUDIGRADE_ENVIRONMENT="make-openapi-test" AWS_ACCESS_KEY_ID="fake" AWS_SECRET_ACCESS_KEY="fake" $(PYTHON) $(PYDIR)/manage.py generateschema --title "Cloudigrade internal API" --format openapi-json --settings=config.settings.test --urlconf internal.urls --url /internal/ | diff ./openapi-internal.json -
 
+checkceleryconfigs:
+	CLOUDIGRADE_ENVIRONMENT="checkceleryconfigs" AWS_ACCESS_KEY_ID="fake" AWS_SECRET_ACCESS_KEY="fake" $(PYTHON) $(PYDIR)/manage.py checkceleryconfigs --settings=config.settings.test
+
 .PHONY: docs
