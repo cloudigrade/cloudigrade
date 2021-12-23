@@ -35,6 +35,7 @@ from api.tasks.inspection import (
 )
 from api.tasks.maintenance import (
     delete_cloud_account,
+    delete_cloud_accounts_not_in_sources,
     delete_inactive_users,
     delete_orphaned_cloud_accounts,
     enable_account,

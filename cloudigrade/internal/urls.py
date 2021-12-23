@@ -83,6 +83,11 @@ urlpatterns = [
     path("healthz/", include("health_check.urls")),
     path("", include("django_prometheus.urls")),  # serves "/metrics"
     path("admin/", admin.site.urls),
+    path(
+        "delete_cloud_accounts_not_in_sources/",
+        views.delete_cloud_accounts_not_in_sources,
+        name="internal-delete-cloud-accounts-not-in-sources",
+    ),
     path("error/", views.fake_error, name="internal-fake-error"),
     path(
         "recalculate_concurrent_usage/",
