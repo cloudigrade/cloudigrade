@@ -456,7 +456,10 @@ def delete_cloud_accounts_not_in_sources():
     max_updated_at = get_now() - timedelta(seconds=tdelta)
 
     accounts_not_in_sources = []
-    logger.info(_("Searching for CloudAccount instances not in sources."))
+    logger.info(
+        _("Searching %(count)s CloudAccount instances potentially not in sources."),
+        {"count": CloudAccount.objects.count()},
+    )
 
     all_cloud_accounts = CloudAccount.objects.filter(
         updated_at__lt=max_updated_at
@@ -464,7 +467,10 @@ def delete_cloud_accounts_not_in_sources():
     for index, cloud_account in enumerate(all_cloud_accounts):
         if index > 0 and index % 100 == 0:
             logger.info(
-                _("Checked %(index)s CloudAccount instances not in sources."),
+                _(
+                    "Checked %(index)s"
+                    " CloudAccount instances potentially not in sources."
+                ),
                 {"index": index},
             )
         if cloud_account.content_object:
@@ -486,6 +492,11 @@ def delete_cloud_accounts_not_in_sources():
                     _("Unexpected error getting source for %(cloud_account)s: %(e)s"),
                     {"cloud_account": cloud_account, "e": e},
                 )
+
+    logger.info(
+        _("Checked %(count)s CloudAccount instances potentially not in sources."),
+        {"count": len(all_cloud_accounts)},
+    )
 
     logger.info(
         _("Found %(num_accounts_found)s CloudAccount instances not in sources."),
