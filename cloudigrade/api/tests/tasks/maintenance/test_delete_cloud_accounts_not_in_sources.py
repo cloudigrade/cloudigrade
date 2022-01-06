@@ -73,8 +73,12 @@ class DeleteCloudAccountsNotInSourcesTest(TestCase):
         }
 
         expected_info_messages = [
+            f"Searching {len(expected_cloud_accounts_before)}"
+            " CloudAccount instances potentially not in sources.",
+            f"Checked {len(old_healthy_accounts_not_in_sources)}"
+            " CloudAccount instances potentially not in sources.",
             f"Found {len(old_healthy_accounts_not_in_sources)}"
-            " CloudAccount instances not in sources."
+            " CloudAccount instances not in sources.",
         ] + [
             f"Deleting CloudAccount with ID {account.id}"
             for account in old_healthy_accounts_not_in_sources
@@ -116,10 +120,9 @@ class DeleteCloudAccountsNotInSourcesTest(TestCase):
                 self.generate_accounts() + self.generate_accounts()
             )
 
-        expected_cloud_accounts_before = (
+        expected_cloud_accounts_before = expected_cloud_accounts_after = (
             old_healthy_accounts_not_in_sources + new_healthy_accounts_not_in_sources
         )
-        expected_cloud_accounts_after = expected_cloud_accounts_before
 
         self.assertEqual(
             len(expected_cloud_accounts_before), models.CloudAccount.objects.count()
@@ -141,6 +144,10 @@ class DeleteCloudAccountsNotInSourcesTest(TestCase):
         }
 
         expected_info_messages = [
+            f"Searching {len(expected_cloud_accounts_before)}"
+            " CloudAccount instances potentially not in sources.",
+            f"Checked {len(old_healthy_accounts_not_in_sources)}"
+            " CloudAccount instances potentially not in sources.",
             "Found 0 CloudAccount instances not in sources.",
         ]
         for expected_info_message in expected_info_messages:
@@ -167,10 +174,18 @@ class DeleteCloudAccountsNotInSourcesTest(TestCase):
             # We need to generate in the past so they are old enough to be found.
             old_healthy_accounts_not_in_sources = self.generate_accounts()
 
-        expected_cloud_accounts = old_healthy_accounts_not_in_sources
+        with util_helper.clouditardis(recently):
+            # We need to generate recent so they are too new to be considered.
+            new_healthy_accounts_not_in_sources = (
+                self.generate_accounts() + self.generate_accounts()
+            )
+
+        expected_cloud_accounts_before = expected_cloud_accounts_after = (
+            old_healthy_accounts_not_in_sources + new_healthy_accounts_not_in_sources
+        )
 
         self.assertEqual(
-            len(expected_cloud_accounts), models.CloudAccount.objects.count()
+            len(expected_cloud_accounts_before), models.CloudAccount.objects.count()
         )
 
         sources_api_error = SourcesAPINotOkStatus("503 unavailable")
@@ -188,10 +203,15 @@ class DeleteCloudAccountsNotInSourcesTest(TestCase):
             if record.levelname == "INFO"
         }
 
-        self.assertIn(
+        expected_info_messages = [
+            f"Searching {len(expected_cloud_accounts_before)}"
+            " CloudAccount instances potentially not in sources.",
+            f"Checked {len(old_healthy_accounts_not_in_sources)}"
+            " CloudAccount instances potentially not in sources.",
             "Found 0 CloudAccount instances not in sources.",
-            info_messages,
-        )
+        ]
+        for expected_info_message in expected_info_messages:
+            self.assertIn(expected_info_message, info_messages)
 
         expected_error_messages = {str(sources_api_error), str(sources_api_error)}
         error_messages = {
@@ -213,5 +233,5 @@ class DeleteCloudAccountsNotInSourcesTest(TestCase):
         self.assertEqual(expected_warning_messages, warning_messages)
 
         self.assertEqual(
-            len(expected_cloud_accounts), models.CloudAccount.objects.count()
+            len(expected_cloud_accounts_after), models.CloudAccount.objects.count()
         )
