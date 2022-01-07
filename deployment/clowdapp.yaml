@@ -221,6 +221,8 @@ objects:
           value: ${HOUNDIGRADE_SENTRY_RELEASE}
         - name: HOUNDIGRADE_SENTRY_ENVIRONMENT
           value: ${HOUNDIGRADE_SENTRY_ENVIRONMENT}
+        - name: SOURCES_ENABLE_DATA_MANAGEMENT
+          value: ${SOURCES_ENABLE_DATA_MANAGEMENT}
         - name: SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA
           value: ${SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA}
         - name: SOURCES_API_BASE_URL
@@ -495,6 +497,8 @@ objects:
           value: ${CELERY_SENTRY_RELEASE}
         - name: CELERY_SENTRY_ENVIRONMENT
           value: ${CELERY_SENTRY_ENVIRONMENT}
+        - name: SOURCES_ENABLE_DATA_MANAGEMENT
+          value: ${SOURCES_ENABLE_DATA_MANAGEMENT}
         - name: SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA
           value: ${SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA}
         - name: SOURCES_API_BASE_URL
@@ -614,6 +618,8 @@ objects:
           value: ${LISTENER_SERVER}
         - name: LISTENER_PORT
           value: ${LISTENER_PORT}
+        - name: SOURCES_ENABLE_DATA_MANAGEMENT
+          value: ${SOURCES_ENABLE_DATA_MANAGEMENT}
         - name: SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA
           value: ${SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA}
         - name: SOURCES_API_BASE_URL
@@ -1013,6 +1019,8 @@ objects:
           value: ${LISTENER_SERVER}
         - name: LISTENER_PORT
           value: ${LISTENER_PORT}
+        - name: SOURCES_ENABLE_DATA_MANAGEMENT
+          value: ${SOURCES_ENABLE_DATA_MANAGEMENT}
         - name: SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA
           value: ${SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA}
         - name: SOURCES_API_BASE_URL
@@ -1735,6 +1743,10 @@ parameters:
   displayName: Sentry Performance Sample Rate
   required: true
   value: '0.0'
+- name: SOURCES_ENABLE_DATA_MANAGEMENT
+  displayName: Enable Data Management From Sources
+  required: true
+  value: 'true'
 - name: SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA
   displayName: Enable Data Management From Sources Kafka
   required: true

@@ -235,3 +235,64 @@ class DeleteCloudAccountsNotInSourcesTest(TestCase):
         self.assertEqual(
             len(expected_cloud_accounts_after), models.CloudAccount.objects.count()
         )
+
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=True)
+    @override_settings(SOURCES_ENABLE_DATA_MANAGEMENT=False)
+    @override_settings(SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA=False)
+    def test_delete_cloud_accounts_not_in_sources_with_sources_data_management_diabled(
+        self,
+    ):
+        """
+        Test deleting old healthy account not in sources.
+
+        We create multiple old and new healthy accounts that are not
+        in sources. Expect only the old healthy accounts to be deleted.
+        """
+        long_ago = util_helper.utc_dt(2018, 1, 5, 0, 0, 0)
+        recently = util_helper.utc_dt(2021, 11, 17, 0, 0, 0)
+
+        with util_helper.clouditardis(long_ago):
+            # We need to generate in the past so they are old enough to be considered.
+            old_healthy_accounts_not_in_sources = self.generate_accounts()
+
+        with util_helper.clouditardis(recently):
+            # We need to generate recent so they are too new to be considered.
+            new_healthy_accounts_not_in_sources = self.generate_accounts()
+
+        expected_cloud_accounts_before = expected_cloud_accounts_after = (
+            old_healthy_accounts_not_in_sources + new_healthy_accounts_not_in_sources
+        )
+
+        self.assertEqual(
+            len(expected_cloud_accounts_before), models.CloudAccount.objects.count()
+        )
+
+        with util_helper.clouditardis(recently), patch(
+            "util.redhatcloud.sources.get_source"
+        ) as mock_get_source, self.assertLogs(
+            "api.tasks.maintenance", level="INFO"
+        ) as logging_watcher:
+            mock_get_source.return_value = None
+            maintenance.delete_cloud_accounts_not_in_sources()
+
+        info_messages = {
+            record.message
+            for record in logging_watcher.records
+            if record.levelname == "INFO"
+        }
+
+        self.assertIn(
+            "Skipping delete_cloud_accounts_not_in_sources because"
+            " settings.SOURCES_ENABLE_DATA_MANAGEMENT is not enabled.",
+            info_messages,
+        )
+
+        self.assertEqual(
+            len(expected_cloud_accounts_after), models.CloudAccount.objects.count()
+        )
+        self.assertEqual(
+            len(expected_cloud_accounts_after),
+            models.CloudAccount.objects.filter(
+                id__in=[account.id for account in expected_cloud_accounts_after]
+            ).count(),
+        )

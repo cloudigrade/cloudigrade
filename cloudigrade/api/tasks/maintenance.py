@@ -452,6 +452,13 @@ def delete_cloud_accounts_not_in_sources():
     Scheduled task to delete CloudAccounts and related *CloudAccount objects that do not
     have a related account in sources.
     """
+    if not settings.SOURCES_ENABLE_DATA_MANAGEMENT:
+        logger.info(
+            "Skipping delete_cloud_accounts_not_in_sources because "
+            "settings.SOURCES_ENABLE_DATA_MANAGEMENT is not enabled."
+        )
+        return
+
     tdelta = settings.DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_UPDATED_MORE_THAN_SECONDS_AGO
     max_updated_at = get_now() - timedelta(seconds=tdelta)
 
