@@ -257,9 +257,13 @@ def notify_application_availability(
         availability_status (string): Availability status to set
         availability_status_error (string): Optional status error
     """
-    if not settings.SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA:
+    if (
+        not settings.SOURCES_ENABLE_DATA_MANAGEMENT
+        or not settings.SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA
+    ):
         logger.info(
             "Skipping notify_application_availability because "
+            "settings.SOURCES_ENABLE_DATA_MANAGEMENT or "
             "settings.SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA is not enabled."
         )
         return

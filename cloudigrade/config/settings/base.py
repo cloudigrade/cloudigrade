@@ -630,6 +630,9 @@ else:
 #####################################################################
 # Sources API integration
 
+SOURCES_ENABLE_DATA_MANAGEMENT = env.bool(
+    "SOURCES_ENABLE_DATA_MANAGEMENT", default=True
+)
 SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA = env.bool(
     "SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA", default=True
 )

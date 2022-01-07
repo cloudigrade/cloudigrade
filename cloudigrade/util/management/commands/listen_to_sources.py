@@ -152,7 +152,10 @@ def process_sources_create_event(value, headers):
         ),
         {"value": value, "headers": headers},
     )
-    if settings.SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA:
+    if (
+        settings.SOURCES_ENABLE_DATA_MANAGEMENT
+        and settings.SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA
+    ):
         sources.create_from_sources_kafka_message.delay(value, headers)
 
 
@@ -165,7 +168,10 @@ def process_sources_destroy_event(value, headers):
         ),
         {"value": value, "headers": headers},
     )
-    if settings.SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA:
+    if (
+        settings.SOURCES_ENABLE_DATA_MANAGEMENT
+        and settings.SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA
+    ):
         sources.delete_from_sources_kafka_message.delay(value, headers)
 
 
@@ -178,7 +184,10 @@ def process_sources_update_event(value, headers):
         ),
         {"value": value, "headers": headers},
     )
-    if settings.SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA:
+    if (
+        settings.SOURCES_ENABLE_DATA_MANAGEMENT
+        and settings.SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA
+    ):
         sources.update_from_sources_kafka_message.delay(value, headers)
 
 
@@ -191,7 +200,10 @@ def process_sources_pause_event(value, headers):
         ),
         {"value": value, "headers": headers},
     )
-    if settings.SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA:
+    if (
+        settings.SOURCES_ENABLE_DATA_MANAGEMENT
+        and settings.SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA
+    ):
         sources.pause_from_sources_kafka_message.delay(value, headers)
 
 
@@ -204,7 +216,10 @@ def process_sources_unpause_event(value, headers):
         ),
         {"value": value, "headers": headers},
     )
-    if settings.SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA:
+    if (
+        settings.SOURCES_ENABLE_DATA_MANAGEMENT
+        and settings.SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA
+    ):
         sources.unpause_from_sources_kafka_message.delay(value, headers)
 
 
