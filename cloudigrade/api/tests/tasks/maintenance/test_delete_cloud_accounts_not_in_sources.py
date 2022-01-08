@@ -165,7 +165,7 @@ class DeleteCloudAccountsNotInSourcesTest(TestCase):
 
     @override_settings(CELERY_TASK_ALWAYS_EAGER=True)
     @override_settings(SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA=False)
-    def test_delete_cloud_accounts_not_in_sources_not_if_sources_api_is_down(self):
+    def test_delete_cloud_accounts_not_in_sources_if_sources_api_is_down(self):
         """Test identifying but not deleting accounts if sources-api is down."""
         long_ago = util_helper.utc_dt(2018, 1, 5, 0, 0, 0)
         recently = util_helper.utc_dt(2021, 11, 17, 0, 0, 0)
@@ -239,14 +239,15 @@ class DeleteCloudAccountsNotInSourcesTest(TestCase):
     @override_settings(CELERY_TASK_ALWAYS_EAGER=True)
     @override_settings(SOURCES_ENABLE_DATA_MANAGEMENT=False)
     @override_settings(SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA=False)
-    def test_delete_cloud_accounts_not_in_sources_with_sources_data_management_diabled(
+    def test_delete_cloud_accounts_not_in_sources_with_sources_data_management_disabled(
         self,
     ):
         """
-        Test deleting old healthy account not in sources.
+        Test skipping the task if source api data management is disabled.
 
         We create multiple old and new healthy accounts that are not
-        in sources. Expect only the old healthy accounts to be deleted.
+        in sources. Expect log message mentioning the taks being skipped
+        and that no data is updated.
         """
         long_ago = util_helper.utc_dt(2018, 1, 5, 0, 0, 0)
         recently = util_helper.utc_dt(2021, 11, 17, 0, 0, 0)

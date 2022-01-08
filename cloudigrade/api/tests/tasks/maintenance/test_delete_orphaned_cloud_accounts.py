@@ -270,3 +270,50 @@ class DeleteOrphanedCloudAccountsTest(TestCase):
         self.assertEqual(
             len(expected_cloud_accounts), models.CloudAccount.objects.count()
         )
+
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=True)
+    @override_settings(SOURCES_ENABLE_DATA_MANAGEMENT=False)
+    @override_settings(SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA=False)
+    def test_delete_orphaned_cloud_accounts_if_sources_data_management_disabled(self):
+        """Test skipping task if sources api data management is disabled."""
+        long_ago = util_helper.utc_dt(2018, 1, 5, 0, 0, 0)
+        recently = util_helper.utc_dt(2021, 11, 17, 0, 0, 0)
+
+        with util_helper.clouditardis(long_ago):
+            # We need to generate in the past so they are old enough to be found.
+            healthy_accounts, orphaned_accounts, _ = self.generate_accounts()
+
+        expected_cloud_accounts = healthy_accounts + orphaned_accounts
+
+        self.assertEqual(
+            len(expected_cloud_accounts), models.CloudAccount.objects.count()
+        )
+
+        with util_helper.clouditardis(recently), patch(
+            "util.redhatcloud.sources.get_source"
+        ) as mock_get_source, self.assertLogs(
+            "api.tasks.maintenance", level="INFO"
+        ) as logging_watcher:
+            mock_get_source.return_value = None
+            maintenance.delete_orphaned_cloud_accounts()
+
+        info_messages = {
+            record.message
+            for record in logging_watcher.records
+            if record.levelname == "INFO"
+        }
+        self.assertIn(
+            "Skipping delete_orphaned_cloud_accounts because "
+            "settings.SOURCES_ENABLE_DATA_MANAGEMENT is not enabled.",
+            info_messages,
+        )
+
+        self.assertEqual(
+            len(expected_cloud_accounts), models.CloudAccount.objects.count()
+        )
+        self.assertEqual(
+            len(expected_cloud_accounts),
+            models.CloudAccount.objects.filter(
+                id__in=[account.id for account in expected_cloud_accounts]
+            ).count(),
+        )
