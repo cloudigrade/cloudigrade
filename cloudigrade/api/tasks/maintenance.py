@@ -326,6 +326,13 @@ def delete_orphaned_cloud_accounts():
     confidently understand and prevent that situation, this function exists to clean up
     the mess left behind.
     """
+    if not settings.SOURCES_ENABLE_DATA_MANAGEMENT:
+        logger.info(
+            "Skipping delete_orphaned_cloud_accounts because "
+            "settings.SOURCES_ENABLE_DATA_MANAGEMENT is not enabled."
+        )
+        return
+
     max_updated_at = get_now() - timedelta(
         seconds=settings.DELETE_ORPHANED_ACCOUNTS_UPDATED_MORE_THAN_SECONDS_AGO
     )

@@ -77,7 +77,7 @@ def delete_cloud_accounts_not_in_sources(request):
     """
     Delete cloud accounts that are not in sources.
 
-    This internal api allows the user to manuall trigger the periodic task
+    This internal api allows the user to manually trigger the periodic task
     delete_cloud_accounts_not_in_sources. This task deletes CloudAccounts and
     related *CloudAccount objects that do not have a related account in
     sources.
