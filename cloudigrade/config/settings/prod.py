@@ -85,13 +85,3 @@ if env.bool("API_ENABLE_SENTRY", default=False):
         integrations=[DjangoIntegration()],
         send_default_pii=True,
     )
-
-# Specifically in production, these defaults should be False.
-SOURCES_ENABLE_DATA_MANAGEMENT = env.bool(
-    "SOURCES_ENABLE_DATA_MANAGEMENT",
-    default=False,
-)
-SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA = env.bool(
-    "SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA",
-    default=False,
-)
