@@ -10,6 +10,9 @@ objects:
     name: cloudigrade
   spec:
     envName: ${ENV_NAME}
+    # inMemoryDb enables clowder redis supprt in ephemeral and stage/prod
+    # more info: https://redhatinsights.github.io/clowder/clowder/dev/providers/inmemorydb.html#_clowdenv_configuration
+    inMemoryDb: true
     testing:
       iqePlugin: cloudmeter
     database:
@@ -119,18 +122,6 @@ objects:
               name: cloudigrade-aws
         - name: AWS_DEFAULT_REGION
           value: ${AWS_DEFAULT_REGION}
-        - name: AWS_SQS_ACCESS_KEY_ID
-          valueFrom:
-            secretKeyRef:
-              key: aws-sqs-access-key-id
-              name: cloudigrade-aws
-        - name: AWS_SQS_SECRET_ACCESS_KEY
-          valueFrom:
-            secretKeyRef:
-              key: aws-sqs-secret-access-key
-              name: cloudigrade-aws
-        - name: AWS_SQS_REGION
-          value: ${AWS_SQS_REGION}
         - name: AWS_SQS_MAX_RECEIVE_COUNT
           value: ${AWS_SQS_MAX_RECEIVE_COUNT}
         - name: AWS_SQS_MAX_YIELD_COUNT
@@ -394,18 +385,6 @@ objects:
               name: cloudigrade-aws
         - name: AWS_DEFAULT_REGION
           value: ${AWS_DEFAULT_REGION}
-        - name: AWS_SQS_ACCESS_KEY_ID
-          valueFrom:
-            secretKeyRef:
-              key: aws-sqs-access-key-id
-              name: cloudigrade-aws
-        - name: AWS_SQS_SECRET_ACCESS_KEY
-          valueFrom:
-            secretKeyRef:
-              key: aws-sqs-secret-access-key
-              name: cloudigrade-aws
-        - name: AWS_SQS_REGION
-          value: ${AWS_SQS_REGION}
         - name: AWS_SQS_MAX_RECEIVE_COUNT
           value: ${AWS_SQS_MAX_RECEIVE_COUNT}
         - name: AWS_SQS_MAX_YIELD_COUNT
@@ -677,18 +656,6 @@ objects:
               name: cloudigrade-aws
         - name: AWS_DEFAULT_REGION
           value: ${AWS_DEFAULT_REGION}
-        - name: AWS_SQS_ACCESS_KEY_ID
-          valueFrom:
-            secretKeyRef:
-              key: aws-sqs-access-key-id
-              name: cloudigrade-aws
-        - name: AWS_SQS_SECRET_ACCESS_KEY
-          valueFrom:
-            secretKeyRef:
-              key: aws-sqs-secret-access-key
-              name: cloudigrade-aws
-        - name: AWS_SQS_REGION
-          value: ${AWS_SQS_REGION}
         - name: AWS_SQS_MAX_RECEIVE_COUNT
           value: ${AWS_SQS_MAX_RECEIVE_COUNT}
         - name: AWS_SQS_MAX_YIELD_COUNT
@@ -908,18 +875,6 @@ objects:
               name: cloudigrade-aws
         - name: AWS_DEFAULT_REGION
           value: ${AWS_DEFAULT_REGION}
-        - name: AWS_SQS_ACCESS_KEY_ID
-          valueFrom:
-            secretKeyRef:
-              key: aws-sqs-access-key-id
-              name: cloudigrade-aws
-        - name: AWS_SQS_SECRET_ACCESS_KEY
-          valueFrom:
-            secretKeyRef:
-              key: aws-sqs-secret-access-key
-              name: cloudigrade-aws
-        - name: AWS_SQS_REGION
-          value: ${AWS_SQS_REGION}
         - name: AWS_SQS_MAX_RECEIVE_COUNT
           value: ${AWS_SQS_MAX_RECEIVE_COUNT}
         - name: AWS_SQS_MAX_YIELD_COUNT
@@ -1152,8 +1107,6 @@ objects:
   data:
     aws-access-key-id: ${AWS_ACCESS_KEY_ID}
     aws-secret-access-key: ${AWS_SECRET_ACCESS_KEY}
-    aws-sqs-access-key-id: ${AWS_SQS_ACCESS_KEY_ID}
-    aws-sqs-secret-access-key: ${AWS_SQS_SECRET_ACCESS_KEY}
   kind: Secret
   metadata:
     name: cloudigrade-aws
@@ -1276,14 +1229,6 @@ parameters:
   value: 'ZXBoZW1lcmFs'
 - name: AWS_SECRET_ACCESS_KEY
   displayName: AWS Secret Access Key
-  required: true
-  value: 'ZXBoZW1lcmFs'
-- name: AWS_SQS_ACCESS_KEY_ID
-  displayName: AWS SQS Access Key ID
-  required: true
-  value: 'ZXBoZW1lcmFs'
-- name: AWS_SQS_SECRET_ACCESS_KEY
-  displayName: AWS SQS Secret Access Key
   required: true
   value: 'ZXBoZW1lcmFs'
 - name: AZURE_CLIENT_ID
@@ -1564,10 +1509,6 @@ parameters:
   displayName: AWS SQS Max Houndigrade Yield Count
   required: true
   value: '10'
-- name: AWS_SQS_REGION
-  displayName: AWS SQS Default Region
-  required: true
-  value: us-east-1
 - name: CACHE_TTL_DEFAULT
   description: Default time to live in seconds for caches where specific ttl is not specified
   value: '60'

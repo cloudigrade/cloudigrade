@@ -38,11 +38,6 @@ else:
     DATABASES["default"]["USER"] = env("DJANGO_DATABASE_USER")
     DATABASES["default"]["PASSWORD"] = env("DJANGO_DATABASE_PASSWORD")
 
-# Require these AWS_SQS_ variables to be set explicitly. No defaults.
-AWS_SQS_REGION = env("AWS_SQS_REGION")
-AWS_SQS_ACCESS_KEY_ID = env("AWS_SQS_ACCESS_KEY_ID")
-AWS_SQS_SECRET_ACCESS_KEY = env("AWS_SQS_SECRET_ACCESS_KEY")
-
 # Azure Settings
 AZURE_CLIENT_ID = env("AZURE_CLIENT_ID")
 AZURE_CLIENT_SECRET = env("AZURE_CLIENT_SECRET")

@@ -25,8 +25,6 @@ FROM base as build
 COPY pyproject.toml poetry.lock ./
 RUN microdnf install -y \
         gcc \
-        libcurl-devel \
-        openssl-devel \
         postgresql12-devel \
         python39-devel \
         python39-pip \
@@ -34,7 +32,7 @@ RUN microdnf install -y \
     && pip install -U pip \
     && pip install poetry \
     && poetry config virtualenvs.in-project true \
-    && PATH="$PATH:/usr/pgsql-12/bin" PYCURL_SSL_LIBRARY=openssl poetry install -n --no-dev
+    && PATH="$PATH:/usr/pgsql-12/bin" poetry install -n --no-dev
 
 
 ### Create a release image

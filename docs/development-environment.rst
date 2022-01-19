@@ -23,7 +23,7 @@ The following commands should install everything you need:
 .. code-block:: bash
 
     brew update
-    brew install python@3.9 gettext awscli azure-cli postgresql openssl curl librdkafka tox poetry podman
+    brew install python@3.9 gettext awscli azure-cli postgresql librdkafka tox poetry podman
 
 To start the podman machine that will be running the commands run:
 
@@ -72,43 +72,6 @@ Once you have poetry installed, use it to install our Python package requirement
     poetry env remove
     poetry install
 
-If you plan to run **cloudigrade** or Celery locally on macOS, the required ``pycurl`` package may fail to install or may install improperly despite ``poetry install`` appearing to complete successfully. You should verify that ``pycurl`` is installed correctly by simply importing it in a Python shell like this:
-
-.. code-block:: sh
-
-    poetry run python -c 'import pycurl'
-
-If you see no output, everything is okay! Otherwise (e.g. "libcurl link-time ssl backend (openssl) is different from compile-time ssl backend (none/other)"), it may not have installed correctly. Try the following commands (macOS users only) to force reinstalling with the openssl backend:
-
-.. code-block:: sh
-
-    brew update
-    brew install openssl curl-openssl
-    brew doctor  # ...and resolve any known problems.
-
-    poetry run pip uninstall pycurl -y
-
-    BREW_PATH=$(brew --prefix)
-    export LDFLAGS="-L${BREW_PATH}/opt/curl/lib -L${BREW_PATH}/opt/openssl/lib"
-    export CPPFLAGS="-I${BREW_PATH}/opt/curl/include -I${BREW_PATH}/opt/openssl/include"
-    export PYCURL_SSL_LIBRARY="openssl"
-
-    poetry install
-    poetry run python -c 'import pycurl'
-
-If this resolves the import error, you may also need to export all of those variables any time you have `tox` recreate its own virtual environments.
-
-If using a system that has dnf, try the following commands:
-
-.. code-block:: sh
-
-    poetry run pip uninstall pycurl -y
-    sudo dnf install openssl libcurl-devel
-    export PYCURL_SSL_LIBRARY=openssl
-    poetry install
-
-Try the aforementioned import commands again, and all should be good. If not, kindly reach out to another **cloudigrade** developer to seek assistance!
-
 After finishing the installation of dependencies, you can instantiate a shell uses the virtual environment by running ``poetry shell``.
 
 
@@ -120,16 +83,6 @@ If you're working with macOS Big Sur you may run into issues around the system v
 .. code-block:: sh
 
     SYSTEM_VERSION_COMPAT=1 poetry install
-
-You'll likely also run into more issues with installing pycurl. Follow the following steps to get back on track.
-
-.. code-block:: sh
-
-    poetry shell
-    pip uninstall pycurl -y
-    export LDFLAGS="-L${BREW_PATH}/opt/curl/lib"
-    export CPPFLAGS="-I${BREW_PATH}/opt/curl/include"
-    pip install --no-cache-dir --compile --ignore-installed --install-option="--with-openssl" --install-option="--openssl-dir=/usr/local/opt/openssl@1.1" pycurl
 
 
 AWS account setup
@@ -332,14 +285,6 @@ To run all local tests as well as our code-quality checking commands:
 
     tox
 
-If ``tox`` cannot create its environment due to errors installing pycurl, try setting these environment variables first:
-
-.. code-block:: sh
-
-    export LDFLAGS=-L/usr/local/opt/openssl/lib
-    export CPPFLAGS=-I/usr/local/opt/openssl/include
-    export PYCURL_SSL_LIBRARY=openssl
-
 If you wish to run *only* the tests:
 
 .. code-block:: sh
@@ -398,7 +343,8 @@ for instance for testing. To create a user this way, use:
 Message Broker
 ==============
 
-Amazon SQS is used to broker messages between **cloudigrade**, Celery workers, and houndigrade.
+Amazon SQS is used to notify **cloudigrade** of new inspection results or logs to analyze.
+Redis is used to broker messages between **cloudigrade** and celery workers.
 
 
 Kafka Listener

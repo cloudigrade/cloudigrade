@@ -24,7 +24,7 @@ cloudigrade has the following operational dependencies. See also [app.yml](https
 
 - Red Hat/internal:
   - [OpenShift](https://openshift.com) ([status](https://status.pro.openshift.com/)) service hosting.
-  - [Quay.io](https://quay.io) ([status](https://status.quay.io/)) as contianer registry.
+  - [Quay.io](https://quay.io) ([status](https://status.quay.io/)) as container registry.
   - [App-SRE Jenkins](ci.ext.devshift.net) for various build jobs.
   - [app-interface](https://gitlab.cee.redhat.com/service/app-interface/) to define and trigger OpenShift configuration changes.
   - [Clowder](https://github.com/RedHatInsights/clowder/) operator running in OpenShift to manage deployments.
@@ -46,7 +46,10 @@ cloudigrade has the following operational dependencies. See also [app.yml](https
       - establish sessions with customer accounts (via STS)
       - read customer CloudTrail activity logs from S3
       - inspect EC2 images via [houndigrade](https://github.com/cloudigrade/houndigrade/) in EC2 cloud-init
-    - AWS Red Hat SRE account for SRE-managed RDS PSQL database and CloudWatch logging.
+    - AWS Red Hat SRE account to:
+      - RDS PSQL database
+      - Redis database
+      - CloudWatch logging
   - [Microsoft Azure](https://azure.microsoft.com/) ([status](https://status.azure.com/)):
     - cloudigrade subscription to:
       - describe VM resource capability definitions
@@ -82,14 +85,18 @@ How do these factors affect CPU and memory?
 ## Data Continuity and Disaster Recovery
 
 - AWS RDS (PSQL):
-  - All critical, persisent data for cloudigrade resides in AWS RDS (PSQL) instances which belong to and are managed by Red Hat's AppSRE team and infrastucture. cloudigrade's RDS resources are defined in app-interface's [cloudigrade-prod.yml](https://gitlab.cee.redhat.com/service/app-interface/-/blob/master/data/services/insights/cloudigrade/namespaces/cloudigrade-prod.yml) and [stage-cloudigrade-stage.yml](https://gitlab.cee.redhat.com/service/app-interface/-/blob/master/data/services/insights/cloudigrade/namespaces/stage-cloudigrade-stage.yml) for prod and stage respectively.
+  - All critical, persistent data for cloudigrade resides in AWS RDS (PSQL) instances which belong to and are managed by Red Hat's AppSRE team and infrastructure. cloudigrade's RDS resources are defined in app-interface's [cloudigrade-prod.yml](https://gitlab.cee.redhat.com/service/app-interface/-/blob/master/data/services/insights/cloudigrade/namespaces/cloudigrade-prod.yml) and [stage-cloudigrade-stage.yml](https://gitlab.cee.redhat.com/service/app-interface/-/blob/master/data/services/insights/cloudigrade/namespaces/stage-cloudigrade-stage.yml) for prod and stage respectively.
   - In case of a database disaster, AppSRE would need to recreate that database and restore the latest backup. Furthermore, cloudigrade deployments automatically check and apply schema migrations upon startup. So, if migrations were lost in the disaster, deploying cloudigrade will automatically update an out-of-date schema.
 - AWS S3 buckets:
   - cloudigrade collects customer activity data via AWS's CloudTrail service which is configured to automatically send its logs to S3 buckets that reside in cloudigrade's AWS account. cloudigrade also collects image inspection results from houndigrade into S3 buckets that reside in cloudigrade's AWS account. Permissions are automatically applied to these buckets to allow only our AWS account (bucket owner) to list and read their objects. Lifecycle policies are applied to these buckets to automatically migrate files to Standard-IA at day 30, to Glacier at day 60, and to expire at day 1460. We *do not* actively back up S3 buckets because we consider their objects to be transactional.
   - *No actions* need to be taken to recover the data in these buckets. cloudigrade automatically recreates missing S3 buckets as needed.
 - AWS SQS queues:
-  - clouigrade uses AWS SQS for Celery's task message broker and to receive notifications from S3 when new files arrive. We *do not* actively back up SQS queues data because we consider their messages to be transactional.
+  - cloudigrade uses AWS SQS to receive notifications from S3 when new files arrive. We *do not* actively back up SQS queues data because we consider their messages to be transactional.
   - *No actions* need to be taken to recover the data in these queues. cloudigrade automatically recreates missing SQS queues as needed.
+- Redis:
+  - Deployed via clowder.
+  - cloudigrade uses Redis for Celery's task message broker. We *do not* actively back up Redis queues data because we consider their messages to be transactional.
+  - *No actions* need to be taken to recover the data in these queues. cloudigrade automatically recreates missing Redis queues as needed.
 - Local filesystems:
   - Local filesystems on deployed pods *do not* keep any business-critical data.
   - *No actions* need to be taken to recover the data in these queues. Simply destroy and recreate deployments and pods as needed.
