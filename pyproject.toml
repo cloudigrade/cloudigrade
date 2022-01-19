@@ -29,7 +29,6 @@ Faker = "~=8.1.1"
 requests = "~=2.25.1"
 uritemplate = "~=3.0.1"
 rest-framework-generic-relations = "~=2.0.0"
-pycurl = "~=7.43.0"
 watchtower = "~=1.0.6"
 confluent-kafka = "^1.6.1"
 django-filter = "~=2.4.0"
@@ -42,6 +41,7 @@ azure-mgmt-resourcegraph = "^8.0.0"
 azure-mgmt-resource = "^19.0.0"
 azure-cli-core = "^2.27.2"
 django-prometheus = "~=2.1.0"
+redis = "^4.1.0"
 
 
 [tool.poetry.dev-dependencies]

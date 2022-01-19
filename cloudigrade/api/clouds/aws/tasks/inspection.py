@@ -135,7 +135,7 @@ docker pull docker pull {houndigrade_image}
 docker run \
     --mount type=bind,source=/dev,target=/dev \
     --privileged --rm \
-    -e AWS_DEFAULT_REGION={settings.AWS_SQS_REGION} \
+    -e AWS_DEFAULT_REGION={settings.AWS_DEFAULT_REGION} \
     -e HOUNDIGRADE_SENTRY_DSN={settings.HOUNDIGRADE_SENTRY_DSN} \
     -e HOUNDIGRADE_SENTRY_RELEASE={settings.HOUNDIGRADE_SENTRY_RELEASE} \
     -e HOUNDIGRADE_SENTRY_ENVIRONMENT={settings.HOUNDIGRADE_SENTRY_ENVIRONMENT} \

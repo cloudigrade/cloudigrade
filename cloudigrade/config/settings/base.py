@@ -3,7 +3,6 @@ import json
 import logging.config
 import sys
 from decimal import Decimal
-from urllib.parse import quote
 
 import environ
 from app_common_python import LoadedConfig as clowder_cfg
@@ -363,45 +362,8 @@ AWS_S3_BUCKET_LC_GLACIER_TRANSITION = env.int(
 AWS_S3_BUCKET_LC_MAX_AGE = env.int("AWS_S3_BUCKET_LC_MAX_AGE", default=1460)
 
 #####################################################################
-# AWS SQS (message queues)
-
-# SQS configs for general queue use like reading CloudTrail/S3 notifications
-SQS_DEFAULT_REGION = env("SQS_DEFAULT_REGION", default="us-east-1")
-AWS_SQS_MAX_RECEIVE_COUNT = env.int("AWS_SQS_MAX_RECEIVE_COUNT", default=5)
-AWS_SQS_MAX_YIELD_COUNT = env.int("AWS_SQS_MAX_YIELD_COUNT", default=25)
-
-# SQS configs for houndigrade's message queue
-AWS_SQS_REGION = env(
-    "AWS_SQS_REGION", default=env("AWS_DEFAULT_REGION", default="us-east-1")
-)
-AWS_SQS_ACCESS_KEY_ID = env(
-    "AWS_SQS_ACCESS_KEY_ID", default=env("AWS_ACCESS_KEY_ID", default="")
-)
-AWS_SQS_SECRET_ACCESS_KEY = env(
-    "AWS_SQS_SECRET_ACCESS_KEY", default=env("AWS_SECRET_ACCESS_KEY", default="")
-)
-
-# We still need to ensure we have an access key and secret key for SQS.
-# So, if they were not explicitly set in the environment (for example, if
-# AWS_PROFILE was set instead), try to extract them from boto's session.
-if not AWS_SQS_ACCESS_KEY_ID or not AWS_SQS_SECRET_ACCESS_KEY:
-    import boto3
-
-    session = boto3.Session()
-    credentials = session.get_credentials()
-    credentials = credentials.get_frozen_credentials()
-    AWS_SQS_ACCESS_KEY_ID = credentials.access_key
-    AWS_SQS_SECRET_ACCESS_KEY = credentials.secret_key
-
-AWS_SQS_URL = env(
-    "AWS_SQS_URL",
-    default="sqs://{}:{}@".format(
-        quote(AWS_SQS_ACCESS_KEY_ID, safe=""), quote(AWS_SQS_SECRET_ACCESS_KEY, safe="")
-    ),
-)
-AWS_SQS_MAX_HOUNDI_YIELD_COUNT = env.int("AWS_SQS_MAX_HOUNDI_YIELD_COUNT", default=10)
-
-# AWS CloudTrail configs
+# AWS SQS (Cloudtrail Notifications)
+#
 # This AWS_CLOUDTRAIL_EVENT_URL has a placeholder where an AWS Account ID should be.
 # That placeholder "000000000000" value is okay for tests but *must* be overridden when
 # actually running cloudigrade, such as in local.py and prod.py.
@@ -409,6 +371,11 @@ AWS_CLOUDTRAIL_EVENT_URL = (
     f"https://sqs.us-east-1.amazonaws.com/"
     f"000000000000/{CLOUDIGRADE_ENVIRONMENT}-cloudigrade-cloudtrail-s3"
 )
+AWS_DEFAULT_REGION = env("AWS_DEFAULT_REGION", default="us-east-1")
+SQS_DEFAULT_REGION = env("SQS_DEFAULT_REGION", default=AWS_DEFAULT_REGION)
+AWS_SQS_MAX_HOUNDI_YIELD_COUNT = env.int("AWS_SQS_MAX_HOUNDI_YIELD_COUNT", default=10)
+AWS_SQS_MAX_RECEIVE_COUNT = env.int("AWS_SQS_MAX_RECEIVE_COUNT", default=5)
+AWS_SQS_MAX_YIELD_COUNT = env.int("AWS_SQS_MAX_YIELD_COUNT", default=25)
 
 #####################################################################
 # Configs used for running houndigrade and accessing its results
@@ -428,13 +395,34 @@ HOUNDIGRADE_SENTRY_RELEASE = (
 HOUNDIGRADE_SENTRY_ENVIRONMENT = env("HOUNDIGRADE_SENTRY_ENVIRONMENT", default="")
 
 #####################################################################
+# Redis (message queues)
+
+if isClowderEnabled():
+    REDIS_USERNAME = clowder_cfg.inMemoryDb.username
+    REDIS_PASSWORD = clowder_cfg.inMemoryDb.password
+    REDIS_HOST = clowder_cfg.inMemoryDb.hostname
+    REDIS_PORT = clowder_cfg.inMemoryDb.port
+    __print(f"Clowder: Redis: {REDIS_HOST}:{REDIS_PORT}")
+else:
+    REDIS_USERNAME = env("REDIS_USERNAME", default="")
+    REDIS_PASSWORD = env("REDIS_PASSWORD", default="")
+    REDIS_HOST = env("REDIS_HOST", default="localhost")
+    REDIS_PORT = env.int("REDIS_PORT", default=6379)
+
+REDIS_AUTH = f"{REDIS_USERNAME or ''}:{REDIS_PASSWORD}@" if REDIS_PASSWORD else ""
+REDIS_URL = f"redis://{REDIS_AUTH}{REDIS_HOST}:{REDIS_PORT}"
+
+#####################################################################
 # Celery broker
 
 CELERY_BROKER_TRANSPORT_OPTIONS = {
-    "queue_name_prefix": AWS_NAME_PREFIX,
-    "region": AWS_SQS_REGION,
+    "global_keyprefix": AWS_NAME_PREFIX,
 }
-CELERY_BROKER_URL = AWS_SQS_URL
+
+CELERY_BROKER_URL = REDIS_URL
+CELERY_RESULT_BACKEND = CELERY_BROKER_URL
+CELERY_BROKER_USE_SSL = None
+CELERY_REDIS_BACKEND_USE_SSL = CELERY_BROKER_USE_SSL
 CELERY_ACCEPT_CONTENT = ["json", "pickle"]
 
 #####################################################################

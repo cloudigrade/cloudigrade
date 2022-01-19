@@ -21,7 +21,6 @@
 
   - name: create / run bonfire deploy - master
     shell: |
-      oc project {{ namespace }}
       bonfire deploy cloudigrade \
         --source local \
         --clowd-env env-{{ namespace }} \
@@ -35,8 +34,6 @@
         --set-parameter "cloudigrade/DJANGO_SETTINGS_MODULE=config.settings.prod" \
         --set-parameter "cloudigrade/AWS_ACCESS_KEY_ID={{ lookup('env', 'AWS_ACCESS_KEY_ID') | b64encode }}" \
         --set-parameter "cloudigrade/AWS_SECRET_ACCESS_KEY={{ lookup('env', 'AWS_SECRET_ACCESS_KEY') | b64encode }}" \
-        --set-parameter "cloudigrade/AWS_SQS_ACCESS_KEY_ID={{ lookup('env', 'AWS_SQS_ACCESS_KEY_ID') | default(lookup('env', 'AWS_ACCESS_KEY_ID'), True) | b64encode }}" \
-        --set-parameter "cloudigrade/AWS_SQS_SECRET_ACCESS_KEY={{ lookup('env', 'AWS_SQS_SECRET_ACCESS_KEY') | default(lookup('env', 'AWS_SECRET_ACCESS_KEY'), True) | b64encode }}" \
         --set-parameter "cloudigrade/AZURE_CLIENT_ID={{ lookup('env', 'AZURE_CLIENT_ID') | default('\"\"', True) | b64encode }}" \
         --set-parameter "cloudigrade/AZURE_CLIENT_SECRET={{ lookup('env', 'AZURE_CLIENT_SECRET') | default('\"\"', True) | b64encode }}" \
         --set-parameter "cloudigrade/AZURE_SP_OBJECT_ID={{ lookup('env', 'AZURE_SP_OBJECT_ID') | default('\"\"', True) | b64encode }}" \
@@ -53,7 +50,6 @@
 
   - name: create / run bonfire deploy - local push
     shell: |
-      oc project {{ namespace }}
       bonfire deploy cloudigrade \
         --source local \
         --clowd-env env-{{ namespace }} \
@@ -67,8 +63,6 @@
         --set-parameter "cloudigrade/DJANGO_SETTINGS_MODULE=config.settings.prod" \
         --set-parameter "cloudigrade/AWS_ACCESS_KEY_ID={{ lookup('env', 'AWS_ACCESS_KEY_ID') | b64encode }}" \
         --set-parameter "cloudigrade/AWS_SECRET_ACCESS_KEY={{ lookup('env', 'AWS_SECRET_ACCESS_KEY') | b64encode }}" \
-        --set-parameter "cloudigrade/AWS_SQS_ACCESS_KEY_ID={{ lookup('env', 'AWS_SQS_ACCESS_KEY_ID') | default(lookup('env', 'AWS_ACCESS_KEY_ID'), True) | b64encode }}" \
-        --set-parameter "cloudigrade/AWS_SQS_SECRET_ACCESS_KEY={{ lookup('env', 'AWS_SQS_SECRET_ACCESS_KEY') | default(lookup('env', 'AWS_SECRET_ACCESS_KEY'), True) | b64encode }}" \
         --set-parameter "cloudigrade/AZURE_CLIENT_ID={{ lookup('env', 'AZURE_CLIENT_ID') | default('\"\"', True) | b64encode }}" \
         --set-parameter "cloudigrade/AZURE_CLIENT_SECRET={{ lookup('env', 'AZURE_CLIENT_SECRET') | default('\"\"', True) | b64encode }}" \
         --set-parameter "cloudigrade/AZURE_SP_OBJECT_ID={{ lookup('env', 'AZURE_SP_OBJECT_ID') | default('\"\"', True) | b64encode }}" \
