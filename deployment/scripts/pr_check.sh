@@ -60,5 +60,6 @@ bonfire deploy \
     --set-parameter cloudigrade/AZURE_SUBSCRIPTION_ID=${AZURE_SUBSCRIPTION_ID} \
     --set-parameter cloudigrade/AZURE_TENANT_ID=${AZURE_TENANT_ID} \
 
+
 # Run smoke tests with ClowdJobInvocation
 source $CICD_ROOT/cji_smoke_test.sh
