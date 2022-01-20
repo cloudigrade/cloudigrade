@@ -64,8 +64,10 @@ if env.bool("API_ENABLE_SENTRY", default=False):
     def django_traces_sampler(sampling_context):
         """Determine Sentry trace sampler rate for the given context."""
         context_path = (
-            sampling_context.get("wsgi_environ", {}).get("PATH_INFO").rstrip("/")
+            sampling_context.get("wsgi_environ", {}).get("PATH_INFO", "").rstrip("/")
         )
+        if not context_path:
+            return DJANGO_SENTRY_SAMPLE_RATE_DEFAULT
         for view_name, sample_rate in DJANGO_SENTRY_SAMPLE_RATE_BY_VIEW_NAME.items():
             view_path = reverse(view_name).rstrip("/")
             if context_path == view_path:
