@@ -4,6 +4,7 @@ import logging
 import boto3
 from botocore.exceptions import ClientError
 from django.conf import settings
+from django.db import transaction
 from django.utils.translation import gettext as _
 
 from api.clouds.aws.models import AwsMachineImage
@@ -15,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 @retriable_shared_task(name="api.clouds.aws.tasks.launch_inspection_instance")
 @aws.rewrap_aws_errors
+@transaction.atomic
 def launch_inspection_instance(ami_id, snapshot_copy_id):
     """
     Run an inspection instance.
