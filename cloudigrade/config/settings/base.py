@@ -426,6 +426,22 @@ CELERY_REDIS_BACKEND_USE_SSL = CELERY_BROKER_USE_SSL
 CELERY_ACCEPT_CONTENT = ["json", "pickle"]
 
 #####################################################################
+# Flower UI
+
+FLOWER_PORT = "5555"
+FLOWER_HOSTNAME = "localhost"
+if isClowderEnabled():
+    FLOWER_PORT = "8000"  # Default for Clowder
+    for endpoint in clowder_cfg.endpoints:
+        if endpoint.app == "cloudigrade" and endpoint.name == "flower":
+            FLOWER_HOSTNAME = endpoint.hostname
+            FLOWER_PORT = endpoint.port
+    __print(f"Clowder: Flower: {FLOWER_HOSTNAME}:{FLOWER_PORT}")
+
+FLOWER_BASIC_AUTH = REDIS_AUTH
+FLOWER_BROKER_API = REDIS_URL
+
+#####################################################################
 # Celery tasks
 
 # Warning: setting Celery's "eager" option is intended only for local development.

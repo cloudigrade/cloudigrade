@@ -32,6 +32,7 @@ RUN microdnf install -y \
     && pip install -U pip \
     && pip install poetry \
     && poetry config virtualenvs.in-project true \
+    && poetry run pip install 'setuptools==59.6.0' \
     && PATH="$PATH:/usr/pgsql-12/bin" poetry install -n --no-dev
 
 
