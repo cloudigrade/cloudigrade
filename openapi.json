@@ -929,8 +929,7 @@
         "properties": {
           "architecture": {
             "type": "string",
-            "readOnly": true,
-            "nullable": true
+            "readOnly": true
           },
           "created_at": {
             "type": "string",
@@ -943,8 +942,7 @@
           },
           "inspection_json": {
             "type": "string",
-            "readOnly": true,
-            "nullable": true
+            "readOnly": true
           },
           "is_encrypted": {
             "type": "boolean",
@@ -952,8 +950,7 @@
           },
           "name": {
             "type": "string",
-            "readOnly": true,
-            "nullable": true
+            "readOnly": true
           },
           "openshift": {
             "type": "string",
