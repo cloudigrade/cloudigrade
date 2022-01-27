@@ -164,7 +164,17 @@ def extract_sqs_message(message, service="s3"):
 
     """
     extracted_records = []
-    message_body = json.loads(message.body)
+    try:
+        message_body = json.loads(message.body)
+    except Exception as e:
+        # This should be exceptionally rare and may indicate an AWS failure of some
+        # kind because the messages written to our queues should always contain JSON.
+        logger.exception(
+            _("Unexpected failure (%(error)s) loading SQS message.body: %(body)s"),
+            {"error": e, "body": getattr(message, "body", None)},
+        )
+        raise e
+
     for record in message_body.get("Records", []):
         extracted_records.append(record[service])
     return extracted_records
