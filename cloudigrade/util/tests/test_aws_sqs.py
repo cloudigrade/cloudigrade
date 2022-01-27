@@ -508,3 +508,48 @@ class ReadMessagesFromQueueTest(TestCase):
         mock_sqs.delete_message.side_effect = exception
         read_messages = read_messages_from_queue(queue_name, requested_count)
         self.assertEqual(set(read_messages), set())
+
+
+class ExtractSqsMessageTest(TestCase):
+    """Test cases for util.aws.sqs.extract_sqs_message."""
+
+    def test_extract_sqs_message(self):
+        """Test extract_sqs_message happy path."""
+        record = _faker.slug()
+        body = {"Records": [{"s3": record}]}
+        message_body = json.dumps(body)
+        sqs_message = helper.generate_mock_sqs_message(
+            _faker.uuid4(), message_body, _faker.uuid4()
+        )
+        expected_result = [record]
+        actual_result = sqs.extract_sqs_message(sqs_message)
+        self.assertEqual(expected_result, actual_result)
+
+    def test_extract_sqs_message_no_body(self):
+        """Test extract_sqs_message failure when message has no body."""
+        broken_message = object()
+        with self.assertRaises(AttributeError) as error_cm, self.assertLogs(
+            "util.aws.sqs", level="ERROR"
+        ) as log_context:
+            sqs.extract_sqs_message(broken_message)
+        self.assertEqual(
+            f"Unexpected failure ({error_cm.exception.args[0]}) loading SQS "
+            f"message.body: {None}",
+            log_context.records[0].message,
+        )
+
+    def test_extract_sqs_message_not_json(self):
+        """Test extract_sqs_message failure when message body cannot parse to JSON."""
+        not_json_string = _faker.sentence()
+        broken_message = helper.generate_mock_sqs_message(
+            _faker.uuid4(), not_json_string, _faker.uuid4()
+        )
+        with self.assertRaises(json.JSONDecodeError) as error_cm, self.assertLogs(
+            "util.aws.sqs", level="ERROR"
+        ) as log_context:
+            sqs.extract_sqs_message(broken_message)
+        self.assertEqual(
+            f"Unexpected failure ({error_cm.exception.args[0]}) loading SQS "
+            f"message.body: {not_json_string}",
+            log_context.records[0].message,
+        )

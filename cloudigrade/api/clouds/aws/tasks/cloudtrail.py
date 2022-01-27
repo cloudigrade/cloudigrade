@@ -142,11 +142,20 @@ def _process_cloudtrail_message(message):
     for extracted_message in extracted_messages:
         bucket = extracted_message["bucket"]["name"]
         key = extracted_message["object"]["key"]
-        raw_content = aws.get_object_content_from_s3(bucket, key)
-        content = json.loads(raw_content)
+        logger.info(
+            _(
+                "Attempting to read CloudTrail log file from "
+                "S3 bucket '%(bucket)s' key '%(key)s'"
+            ),
+            {"bucket": bucket, "key": key},
+        )
+        content = load_json_from_s3(bucket, key)
         logs.append((content, bucket, key))
         logger.info(
-            _("Read CloudTrail log file from bucket %(bucket)s object key %(key)s"),
+            _(
+                "Successfully read CloudTrail log file from "
+                "S3 bucket '%(bucket)s' key '%(key)s'"
+            ),
             {"bucket": bucket, "key": key},
         )
 
@@ -202,6 +211,39 @@ def _process_cloudtrail_message(message):
             {"instance_events": instance_events, "ami_tag_events": ami_tag_events},
         )
         return False
+
+
+def load_json_from_s3(bucket, key):
+    """Load content from S3 bucket/key and return JSON-parsed object."""
+    try:
+        raw_content = aws.get_object_content_from_s3(bucket, key)
+    except Exception as e:
+        # This should be exceptionally rare and may indicate an AWS failure of some
+        # kind because we should always have access to our buckets' contents.
+        logger.exception(
+            _(
+                "Unexpected failure (%(error)s) getting object content from S3 "
+                "bucket '%(bucket)s' key '%(key)s'"
+            ),
+            {"error": e, "bucket": bucket, "key": key},
+        )
+        raise e
+
+    try:
+        content = json.loads(raw_content)
+    except Exception as e:
+        # This should be exceptionally rare and may indicate an AWS failure of some
+        # kind because the S3 files written by CloudTrail should always contain JSON.
+        logger.exception(
+            _(
+                "Unexpected failure (%(error)s) in json.loads from S3 "
+                "bucket '%(bucket)s' key '%(key)s' content: %(raw_content)s"
+            ),
+            {"error": e, "bucket": bucket, "key": key, "raw_content": raw_content},
+        )
+        raise e
+
+    return content
 
 
 def _load_missing_instance_data(instance_events):  # noqa: C901
