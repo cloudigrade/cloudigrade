@@ -27,7 +27,8 @@ def persist_inspection_cluster_results_task():
     Task to run periodically and read houndigrade messages.
 
     Returns:
-        tuple[list, list]: lists of messages that succeeded and failed to process
+        tuple[list, list]: lists of dicts describing messages that succeeded and failed
+        to process. Note that these must be JSON-serializable, not AWS Message objects.
 
     """
     queue_url = aws.get_sqs_queue_url(settings.HOUNDIGRADE_RESULTS_QUEUE_NAME)
@@ -35,9 +36,12 @@ def persist_inspection_cluster_results_task():
     for message in aws.yield_messages_from_queue(
         queue_url, settings.AWS_SQS_MAX_HOUNDI_YIELD_COUNT
     ):
+        message_id = getattr(message, "message_id")
+        message_body = getattr(message, "body")
+        message_dict = {"message_id": message_id, "body": message_body}
+
         logger.info(
-            _('Processing inspection results notification with id "%s"'),
-            message.message_id,
+            _('Processing inspection results notification with id "%s"'), message_id
         )
 
         inspection_results = _fetch_inspection_results(message)
@@ -47,21 +51,21 @@ def persist_inspection_cluster_results_task():
                     persist_aws_inspection_cluster_results(inspection_result)
                 except Exception as e:
                     logger.exception(_("Unexpected error in result processing: %s"), e)
-                    logger.debug(_("Failed message body is: %s"), message.body)
-                    failures.append(message)
+                    failures.append({"message_id": message_id, "body": message_body})
+                    logger.debug(_("Failed message body is: %s"), message_body)
                     continue
 
                 logger.info(
                     _("Successfully processed message id %s; deleting from queue."),
-                    message.message_id,
+                    message_id,
                 )
                 aws.delete_messages_from_queue(queue_url, [message])
-                successes.append(message)
+                successes.append(message_dict)
             else:
                 logger.error(
                     _('Unsupported cloud type: "%s"'), inspection_result.get(CLOUD_KEY)
                 )
-                failures.append(message)
+                failures.append(message_dict)
 
     if not (successes or failures):
         logger.info("No inspection results found.")
