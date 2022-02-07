@@ -66,7 +66,8 @@ class PersistInspectionClusterResultsTaskTest(TestCase):
 
         mock_persist.assert_called_once_with(inspection_dict)
         mock_delete.assert_called_once()
-        self.assertIn(sqs_message, s)
+        self.assertEqual(sqs_message.message_id, s[0]["message_id"])
+        self.assertEqual(sqs_message.body, s[0]["body"])
         self.assertEqual([], f)
 
     @patch("util.aws.delete_messages_from_queue")
@@ -94,7 +95,8 @@ class PersistInspectionClusterResultsTaskTest(TestCase):
         mock_persist.assert_not_called()
         mock_delete.assert_not_called()
         self.assertEqual([], s)
-        self.assertIn(sqs_message, f)
+        self.assertEqual(sqs_message.message_id, f[0]["message_id"])
+        self.assertEqual(sqs_message.body, f[0]["body"])
 
     @patch("util.aws.delete_messages_from_queue")
     @patch("util.aws.yield_messages_from_queue")
@@ -117,7 +119,8 @@ class PersistInspectionClusterResultsTaskTest(TestCase):
 
         mock_delete.assert_not_called()
         self.assertEqual([], s)
-        self.assertIn(sqs_message, f)
+        self.assertEqual(sqs_message.message_id, f[0]["message_id"])
+        self.assertEqual(sqs_message.body, f[0]["body"])
 
     @patch("util.aws.delete_messages_from_queue")
     @patch("util.aws.yield_messages_from_queue")
@@ -143,7 +146,8 @@ class PersistInspectionClusterResultsTaskTest(TestCase):
         s, f = inspection.persist_inspection_cluster_results_task()
 
         mock_delete.assert_called_once()
-        self.assertIn(sqs_message, s)
+        self.assertEqual(sqs_message.message_id, s[0]["message_id"])
+        self.assertEqual(sqs_message.body, s[0]["body"])
         self.assertEqual([], f)
 
     @patch("api.tasks.inspection.aws")
