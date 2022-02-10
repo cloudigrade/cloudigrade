@@ -278,8 +278,8 @@ SOME_AZURE_INSTANCE_TYPES = {
     "Standard_D64d_v4": {"memory": 256, "vcpu": 64},
 }
 
-MIN_AWS_ACCOUNT_ID = 10 ** 10  # start "big" to better test handling of "big" numbers
-MAX_AWS_ACCOUNT_ID = 10 ** 12 - 1
+MIN_AWS_ACCOUNT_ID = 10**10  # start "big" to better test handling of "big" numbers
+MAX_AWS_ACCOUNT_ID = 10**12 - 1
 
 
 RH_IDENTITY_ORG_ADMIN = {
