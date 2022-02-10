@@ -327,12 +327,13 @@ if CLOUDIGRADE_ENABLE_CLOUDWATCH:
         aws_secret_access_key=env("CW_AWS_SECRET_ACCESS_KEY"),
         region_name=env("CW_AWS_REGION_NAME"),
     )
+    cw_boto3_client = cw_boto3_session.client("cloudwatch")
     LOGGING["handlers"]["watchtower"] = {
         "level": CLOUDIGRADE_CW_LEVEL,
         "class": "watchtower.CloudWatchLogHandler",
-        "boto3_session": cw_boto3_session,
-        "log_group": CLOUDIGRADE_CW_LOG_GROUP,
-        "stream_name": CLOUDIGRADE_CW_STREAM_NAME,
+        "boto3_client": cw_boto3_client,
+        "log_group_name": CLOUDIGRADE_CW_LOG_GROUP,
+        "log_stream_name": CLOUDIGRADE_CW_STREAM_NAME,
         "formatter": "verbose",
         "use_queues": WATCHTOWER_USE_QUEUES,
         "send_interval": WATCHTOWER_SEND_INTERVAL,
