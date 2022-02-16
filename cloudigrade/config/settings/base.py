@@ -4,10 +4,10 @@ import logging.config
 import sys
 from decimal import Decimal
 
+import boto3
 import environ
 from app_common_python import LoadedConfig as clowder_cfg
 from app_common_python import isClowderEnabled
-from boto3.session import Session
 
 
 def __print(*args, **kwargs):
@@ -322,7 +322,8 @@ WATCHTOWER_MAX_BATCH_COUNT = env.int("WATCHTOWER_MAX_BATCH_COUNT", default=1000)
 
 if CLOUDIGRADE_ENABLE_CLOUDWATCH:
     __print("Configuring CloudWatch...")
-    cw_boto3_session = Session(
+    cw_boto3_client = boto3.client(
+        "logs",
         aws_access_key_id=env("CW_AWS_ACCESS_KEY_ID"),
         aws_secret_access_key=env("CW_AWS_SECRET_ACCESS_KEY"),
         region_name=env("CW_AWS_REGION_NAME"),
@@ -330,9 +331,9 @@ if CLOUDIGRADE_ENABLE_CLOUDWATCH:
     LOGGING["handlers"]["watchtower"] = {
         "level": CLOUDIGRADE_CW_LEVEL,
         "class": "watchtower.CloudWatchLogHandler",
-        "boto3_session": cw_boto3_session,
-        "log_group": CLOUDIGRADE_CW_LOG_GROUP,
-        "stream_name": CLOUDIGRADE_CW_STREAM_NAME,
+        "boto3_client": cw_boto3_client,
+        "log_group_name": CLOUDIGRADE_CW_LOG_GROUP,
+        "log_stream_name": CLOUDIGRADE_CW_STREAM_NAME,
         "formatter": "verbose",
         "use_queues": WATCHTOWER_USE_QUEUES,
         "send_interval": WATCHTOWER_SEND_INTERVAL,
