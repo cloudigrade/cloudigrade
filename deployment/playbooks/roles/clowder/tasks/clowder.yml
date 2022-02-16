@@ -34,6 +34,11 @@
         --set-parameter "cloudigrade/DJANGO_SETTINGS_MODULE=config.settings.prod" \
         --set-parameter "cloudigrade/AWS_ACCESS_KEY_ID={{ lookup('env', 'AWS_ACCESS_KEY_ID') | b64encode }}" \
         --set-parameter "cloudigrade/AWS_SECRET_ACCESS_KEY={{ lookup('env', 'AWS_SECRET_ACCESS_KEY') | b64encode }}" \
+        --set-parameter "cloudigrade/CW_AWS_ACCESS_KEY_ID={{ lookup('env', 'AWS_ACCESS_KEY_ID') | b64encode }}" \
+        --set-parameter "cloudigrade/CW_AWS_SECRET_ACCESS_KEY={{ lookup('env', 'AWS_SECRET_ACCESS_KEY') | b64encode }}" \
+        --set-parameter "cloudigrade/CW_AWS_REGION_NAME={{ lookup('env', 'CW_AWS_REGION_NAME') | default('us-east-1', True) | b64encode }}"  \
+        --set-parameter "cloudigrade/CLOUDIGRADE_CW_LOG_GROUP={{ env | b64encode }}"  \
+        --set-parameter "cloudigrade/CLOUDIGRADE_ENABLE_CLOUDWATCH=True"  \
         --set-parameter "cloudigrade/AZURE_CLIENT_ID={{ lookup('env', 'AZURE_CLIENT_ID') | default('\"\"', True) | b64encode }}" \
         --set-parameter "cloudigrade/AZURE_CLIENT_SECRET={{ lookup('env', 'AZURE_CLIENT_SECRET') | default('\"\"', True) | b64encode }}" \
         --set-parameter "cloudigrade/AZURE_SP_OBJECT_ID={{ lookup('env', 'AZURE_SP_OBJECT_ID') | default('\"\"', True) | b64encode }}" \
@@ -63,6 +68,11 @@
         --set-parameter "cloudigrade/DJANGO_SETTINGS_MODULE=config.settings.prod" \
         --set-parameter "cloudigrade/AWS_ACCESS_KEY_ID={{ lookup('env', 'AWS_ACCESS_KEY_ID') | b64encode }}" \
         --set-parameter "cloudigrade/AWS_SECRET_ACCESS_KEY={{ lookup('env', 'AWS_SECRET_ACCESS_KEY') | b64encode }}" \
+        --set-parameter "cloudigrade/CW_AWS_ACCESS_KEY_ID={{ lookup('env', 'AWS_ACCESS_KEY_ID') | b64encode }}" \
+        --set-parameter "cloudigrade/CW_AWS_SECRET_ACCESS_KEY={{ lookup('env', 'AWS_SECRET_ACCESS_KEY') | b64encode }}" \
+        --set-parameter "cloudigrade/CW_AWS_REGION_NAME={{ lookup('env', 'CW_AWS_REGION_NAME') | default('us-east-1', True) | b64encode }}"  \
+        --set-parameter "cloudigrade/CLOUDIGRADE_CW_LOG_GROUP={{ env | b64encode }}"  \
+        --set-parameter "cloudigrade/CLOUDIGRADE_ENABLE_CLOUDWATCH=True"  \
         --set-parameter "cloudigrade/AZURE_CLIENT_ID={{ lookup('env', 'AZURE_CLIENT_ID') | default('\"\"', True) | b64encode }}" \
         --set-parameter "cloudigrade/AZURE_CLIENT_SECRET={{ lookup('env', 'AZURE_CLIENT_SECRET') | default('\"\"', True) | b64encode }}" \
         --set-parameter "cloudigrade/AZURE_SP_OBJECT_ID={{ lookup('env', 'AZURE_SP_OBJECT_ID') | default('\"\"', True) | b64encode }}" \
