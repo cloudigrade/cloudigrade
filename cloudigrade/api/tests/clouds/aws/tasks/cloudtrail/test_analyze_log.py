@@ -621,6 +621,13 @@ class AnalyzeLogTest(TestCase):
             helper.generate_mock_cloudtrail_sqs_message(),
             helper.generate_mock_cloudtrail_sqs_message(),
         ]
+        expected_successes = [
+            {"message_id": sqs_messages[0].message_id, "body": sqs_messages[0].body},
+            {"message_id": sqs_messages[2].message_id, "body": sqs_messages[2].body},
+        ]
+        expected_failures = [
+            {"message_id": sqs_messages[1].message_id, "body": sqs_messages[1].body}
+        ]
         mock_receive.return_value = sqs_messages
         simple_content = {"Records": []}
         mock_s3.side_effect = [
@@ -632,10 +639,9 @@ class AnalyzeLogTest(TestCase):
         successes, failures = tasks.analyze_log()
 
         self.assertEqual(len(successes), 2)
-        self.assertIn(sqs_messages[0], successes)
-        self.assertIn(sqs_messages[2], successes)
+        self.assertEqual(expected_successes, successes)
         self.assertEqual(len(failures), 1)
-        self.assertIn(sqs_messages[1], failures)
+        self.assertEqual(expected_failures, failures)
 
         mock_del.assert_called()
         delete_message_calls = mock_del.call_args_list
@@ -938,6 +944,10 @@ class AnalyzeLogTest(TestCase):
             operation_name=Mock(),
         )
         messages = [MagicMock()]
+        messages_dict = [
+            {"message_id": message.message_id, "body": message.body}
+            for message in messages
+        ]
         mock_yield.return_value = messages
         mock_process.side_effect = client_error
 
@@ -946,7 +956,7 @@ class AnalyzeLogTest(TestCase):
         ) as logging_watcher:
             successes, failures = tasks.analyze_log()
         self.assertEqual(len(successes), 0)
-        self.assertEqual(failures, messages)
+        self.assertEqual(failures, messages_dict)
         mock_del.assert_not_called()
 
         self.assertIn(
@@ -971,6 +981,10 @@ class AnalyzeLogTest(TestCase):
             operation_name=Mock(),
         )
         messages = [MagicMock()]
+        messages_dict = [
+            {"message_id": message.message_id, "body": message.body}
+            for message in messages
+        ]
         mock_yield.return_value = messages
         mock_process.side_effect = client_error
 
@@ -979,7 +993,7 @@ class AnalyzeLogTest(TestCase):
         ) as logging_watcher:
             successes, failures = tasks.analyze_log()
         self.assertEqual(len(successes), 0)
-        self.assertEqual(failures, messages)
+        self.assertEqual(failures, messages_dict)
         mock_del.assert_not_called()
 
         self.assertIn(

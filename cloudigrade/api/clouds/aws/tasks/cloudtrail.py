@@ -40,12 +40,22 @@ logger = logging.getLogger(__name__)
 @shared_task(name="api.clouds.aws.tasks.analyze_log")
 @rewrap_aws_errors
 def analyze_log():
-    """Read SQS Queue for log location, and parse log for events."""
+    """
+    Read SQS Queue for log location, and parse log for events.
+
+    Returns:
+       tuple[list, list]: lists of dicts describing messages that succeeded and failed
+       to process. Note that these must be JSON-serializable, not AWS Message objects.
+    """
     queue_url = settings.AWS_CLOUDTRAIL_EVENT_URL
     successes, failures = [], []
     for message in aws.yield_messages_from_queue(queue_url):
         success = False
         log_failure_as_warning = False
+        message_id = getattr(message, "message_id")
+        message_body = getattr(message, "body")
+        message_dict = {"message_id": message_id, "body": message_body}
+
         try:
             success = _process_cloudtrail_message(message)
         except ClientError as e:
@@ -76,21 +86,21 @@ def analyze_log():
         if success:
             logger.info(
                 _("Successfully processed message id %s; deleting from queue."),
-                message.message_id,
+                message_id,
             )
             aws.delete_messages_from_queue(queue_url, [message])
-            successes.append(message)
+            successes.append(message_dict)
         else:
             log_message, log_args = (
                 _("Failed to process message id %(message_id)s; leaving on queue."),
-                {"message_id": message.message_id},
+                {"message_id": message_id},
             )
             if log_failure_as_warning:
                 logger.warning(log_message, log_args)
             else:
                 logger.error(log_message, log_args)
-            logger.debug(_("Failed message body is: %s"), message.body)
-            failures.append(message)
+            logger.debug(_("Failed message body is: %s"), message_body)
+            failures.append(message_dict)
     return successes, failures
 
 
