@@ -37,6 +37,7 @@ AZURE_SUBSCRIPTION_ID=$(jq -r '."subscription_id"' < azure-creds.json)
 AZURE_TENANT_ID=$(jq -r '."tenant_id"' < azure-creds.json)
 CW_AWS_REGION_NAME=$(echo -n "us-east-1" | base64)
 CLOUDIGRADE_CW_LOG_GROUP=$(echo -n "ephemeral-${NAMESPACE}" | base64)
+CLOUDIGRADE_CW_RETENTION_DAYS="3"
 
 bonfire deploy \
     ${APP_NAME} \
@@ -60,6 +61,7 @@ bonfire deploy \
     --set-parameter cloudigrade/CW_AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
     --set-parameter cloudigrade/CW_AWS_REGION_NAME=${CW_AWS_REGION_NAME} \
     --set-parameter cloudigrade/CLOUDIGRADE_CW_LOG_GROUP=${CLOUDIGRADE_CW_LOG_GROUP} \
+    --set-parameter cloudigrade/CLOUDIGRADE_CW_RETENTION_DAYS=${CLOUDIGRADE_CW_RETENTION_DAYS} \
     --set-parameter cloudigrade/CLOUDIGRADE_ENABLE_CLOUDWATCH=True \
     --set-parameter cloudigrade/AZURE_CLIENT_ID=${AZURE_CLIENT_ID} \
     --set-parameter cloudigrade/AZURE_CLIENT_SECRET=${AZURE_CLIENT_SECRET} \
