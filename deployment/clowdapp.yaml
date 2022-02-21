@@ -249,6 +249,8 @@ objects:
               name: cloudwatch
         - name: CLOUDIGRADE_CW_STREAM_NAME
           value: ${CLOUDIGRADE_CW_STREAM_NAME}
+        - name: CLOUDIGRADE_CW_RETENTION_DAYS
+          value: ${CLOUDIGRADE_CW_RETENTION_DAYS}
         - name: LISTENER_LOG_LEVEL
           value: ${LISTENER_LOG_LEVEL}
         - name: LISTENER_TOPIC
@@ -513,6 +515,8 @@ objects:
               name: cloudwatch
         - name: CLOUDIGRADE_CW_STREAM_NAME
           value: ${CLOUDIGRADE_CW_STREAM_NAME}
+        - name: CLOUDIGRADE_CW_RETENTION_DAYS
+          value: ${CLOUDIGRADE_CW_RETENTION_DAYS}
         - name: OSD_REDEPLOY_TRIGGER
           value: ${OSD_REDEPLOY_TRIGGER}
         - name: IMAGE_TAG
@@ -756,6 +760,8 @@ objects:
               name: cloudwatch
         - name: CLOUDIGRADE_CW_STREAM_NAME
           value: ${CLOUDIGRADE_CW_STREAM_NAME}
+        - name: CLOUDIGRADE_CW_RETENTION_DAYS
+          value: ${CLOUDIGRADE_CW_RETENTION_DAYS}
         - name: OSD_REDEPLOY_TRIGGER
           value: ${OSD_REDEPLOY_TRIGGER}
         - name: IMAGE_TAG
@@ -1011,6 +1017,8 @@ objects:
               name: cloudwatch
         - name: CLOUDIGRADE_CW_STREAM_NAME
           value: ${CLOUDIGRADE_CW_STREAM_NAME}
+        - name: CLOUDIGRADE_CW_RETENTION_DAYS
+          value: ${CLOUDIGRADE_CW_RETENTION_DAYS}
         - name: OSD_REDEPLOY_TRIGGER
           value: ${OSD_REDEPLOY_TRIGGER}
         - name: IMAGE_TAG
@@ -1551,6 +1559,9 @@ parameters:
   displayName: Cloudwatch Stream Name.
   required: true
   value: cloudigrade-ephemeral
+- name: CLOUDIGRADE_CW_RETENTION_DAYS
+  displayName: Cloudwatch log retention in days.
+  value: ''
 - name: CLOUDIGRADE_LOG_LEVEL
   displayName: Cloudigrade Log Level
   required: true
