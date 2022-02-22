@@ -2,6 +2,7 @@
 import logging
 import re
 import threading
+import time
 
 from django.utils.translation import gettext as _
 from prometheus_client import Counter, Gauge, Histogram
@@ -15,17 +16,15 @@ logger = logging.getLogger(__name__)
 class CeleryMetrics:
     """Celery Metrics class for processing and exposing Prometheus metrics."""
 
-    def __init__(self, buckets=None):
+    def __init__(self, interval=2, buckets=None):
         """Celery Metrics Initializer."""
         self.listener_started = False
+        self.interval = interval
         self.state_counters = {
             "task-sent": Counter(
                 "celery_task_sent",
                 "Sent when a task message is published.",
-                [
-                    "name",
-                    "hostname",
-                ],
+                ["name", "hostname"],
             ),
             "task-received": Counter(
                 "celery_task_received",
@@ -35,10 +34,7 @@ class CeleryMetrics:
             "task-started": Counter(
                 "celery_task_started",
                 "Sent just before the worker executes the task.",
-                [
-                    "name",
-                    "hostname",
-                ],
+                ["name", "hostname"],
             ),
             "task-succeeded": Counter(
                 "celery_task_succeeded",
@@ -52,7 +48,6 @@ class CeleryMetrics:
             ),
             "task-rejected": Counter(
                 "celery_task_rejected",
-                # pylint: disable=line-too-long
                 "The task was rejected by the worker, "
                 "possibly to be re-queued or moved to a dead letter queue.",
                 ["name", "hostname"],
@@ -175,9 +170,32 @@ class CeleryMetrics:
         for key in self.state_counters:
             handlers[key] = self.handle_task_event
 
-        with self.app.connection() as connection:
-            recv = self.app.events.Receiver(connection, handlers=handlers)
-            recv.capture(limit=None, timeout=None, wakeup=True)
+        while True:
+            try:
+                with self.app.connection() as connection:
+                    recv = self.app.events.Receiver(connection, handlers=handlers)
+                    logger.info(
+                        _("Capturing Celery Events from %s"),
+                        connection.as_uri(),
+                    )
+                    recv.capture(limit=None, timeout=None, wakeup=True)
+
+            except (KeyboardInterrupt, SystemExit):
+                raise
+
+            except Exception as e:
+                # unable to capture
+                logger.info(
+                    _(
+                        "Celery Metrics Listener Exception %s,"
+                        " retrying in %d seconds."
+                    ),
+                    str(e),
+                    self.interval,
+                )
+                pass
+
+            time.sleep(self.interval)
 
 
 exception_pattern = re.compile(r"^(\w+)\(")
