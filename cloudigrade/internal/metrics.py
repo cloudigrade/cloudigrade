@@ -88,25 +88,31 @@ class CeleryMetrics:
             _("Received celery event='%s' for task='%s'"), event["type"], task.name
         )
 
-        counter = self.state_counters.get(event["type"])
-        if not counter:
+        if event["type"] not in self.state_counters:
             logger.warning(_("No celery counter matches task state='%s'"), task.state)
-            return
 
-        labels = {}
-        # pylint: disable=protected-access
-        for labelname in counter._labelnames:
-            value = getattr(task, labelname)
-            if labelname == "exception":
-                logger.debug(value)
-                value = get_exception_class(value)
-            labels[labelname] = value
+        labels = {"name": task.name, "hostname": task.hostname}
 
-        counter.labels(**labels).inc()
-        logger.debug(
-            _("Incremented celery metric='%s' labels='%s'"), counter._name, labels
-        )
+        for counter_name, counter in self.state_counters.items():
+            _labels = labels.copy()
 
+            if counter_name == "task-failed":
+                if counter_name == event["type"]:
+                    _labels["exception"] = get_exception_class(task.exception)
+                else:
+                    _labels["exception"] = ""
+
+            if counter_name == event["type"]:
+                counter.labels(**_labels).inc()
+            else:
+                # increase unaffected counters by zero in order to make them visible
+                counter.labels(**_labels).inc(0)
+
+            logger.debug(
+                _("Incremented celery metric='%s' labels='%s'"), counter._name, labels
+            )
+
+        # observe task runtime
         if event["type"] == "task-succeeded":
             self.celery_task_runtime.labels(**labels).observe(task.runtime)
             logger.debug(
@@ -204,4 +210,5 @@ exception_pattern = re.compile(r"^(\w+)\(")
 def get_exception_class(exception_name: str):
     """Given the exception name, return the exception class."""
     m = exception_pattern.match(exception_name)
+    assert m
     return m.group(1)
