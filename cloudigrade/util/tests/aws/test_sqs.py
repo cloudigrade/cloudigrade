@@ -159,9 +159,17 @@ class UtilAwsSqsTest(TestCase):
     def test_delete_message_from_queue(self):
         """Assert that messages are deleted from SQS queue."""
         mock_queue_url = "https://123.abc"
+        message_data = [
+            [str(uuid.uuid4()), "message 1", str(uuid.uuid4())],
+            [str(uuid.uuid4()), "message 2", str(uuid.uuid4())],
+        ]
         mock_messages_to_delete = [
-            helper.generate_mock_sqs_message(str(uuid.uuid4()), "", str(uuid.uuid4())),
-            helper.generate_mock_sqs_message(str(uuid.uuid4()), "", str(uuid.uuid4())),
+            helper.generate_mock_sqs_message(*message_data[0]),
+            helper.generate_mock_sqs_message(*message_data[1]),
+        ]
+        expected_delete_entries = [
+            {"Id": message_data[0][0], "ReceiptHandle": message_data[0][2]},
+            {"Id": message_data[1][0], "ReceiptHandle": message_data[1][2]},
         ]
         mock_response = {
             "ResponseMetadata": {
@@ -193,6 +201,7 @@ class UtilAwsSqsTest(TestCase):
             )
 
         self.assertEqual(mock_response, actual_response)
+        mock_queue.delete_messages.assert_called_with(Entries=expected_delete_entries)
 
     def test_delete_message_from_queue_with_empty_list(self):
         """Assert an empty list of messages handled by delete."""

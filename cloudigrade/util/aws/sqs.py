@@ -141,7 +141,7 @@ def delete_messages_from_queue(queue_url, messages):
     sqs_queue = _get_queue(queue_url)
 
     messages_to_delete = [
-        {"Id": message.message_id, "ReceiptHandle": message._receipt_handle}
+        {"Id": message.message_id, "ReceiptHandle": message.receipt_handle}
         for message in messages
     ]
 
