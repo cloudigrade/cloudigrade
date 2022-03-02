@@ -89,7 +89,9 @@ class CeleryMetrics:
         )
 
         if event["type"] not in self.state_counters:
-            logger.warning(_("No celery counter matches task state='%s'"), task.state)
+            logger.warning(
+                _("No celery counter matches task state='%s'"), event["type"]
+            )
 
         labels = {"name": task.name, "hostname": task.hostname}
 
@@ -154,14 +156,18 @@ class CeleryMetrics:
             _("Updated celery gauge='%s' value='%s'"), self.celery_worker_up._name, up
         )
 
-    def listener(self):
+    def listener(self, daemon=False):
         """If not started, start the Celery event handler in a thread."""
         if self.listener_started:
             logger.info(_("Celery Metrics Listener already started"))
-            return
+            return None
         logger.info(_("Celery Metrics Listener started ..."))
         self.listener_started = True
-        threading.Thread(target=self.celery_handler).start()
+        thread = threading.Thread(target=self.celery_handler)
+        if daemon:
+            thread.daemon = True
+        thread.start()
+        return thread
 
     def celery_handler(self):
         """Register and trigger Celery handlers on events."""
@@ -182,7 +188,7 @@ class CeleryMetrics:
                     recv = self.app.events.Receiver(connection, handlers=handlers)
                     logger.info(
                         _("Capturing Celery Events from %s"),
-                        connection.as_uri(),
+                        self.app.connection.as_uri(),
                     )
                     recv.capture(limit=None, timeout=None, wakeup=True)
 
