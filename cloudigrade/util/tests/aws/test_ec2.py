@@ -529,7 +529,7 @@ class UtilAwsEc2Test(TestCase):
         mock_session = Mock()
         mock_ec2_client = mock_session.client.return_value
         mock_original_image = Mock()
-        mock_copied_image_dict = helper.generate_mock_image_dict()
+        mock_copied_image_dict = {"ImageId": helper.generate_dummy_image_id()}
         mock_ec2_client.copy_image.return_value = mock_copied_image_dict
 
         image_id = mock_original_image.id
