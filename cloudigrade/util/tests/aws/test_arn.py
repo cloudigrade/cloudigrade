@@ -65,6 +65,14 @@ class UtilAwsArnTest(TestCase):
         with self.assertRaises(InvalidArn):
             AwsArn(mock_arn)
 
+    def test_parse_arn_with_various_known_partitions(self):
+        """Assert successful ARN parsing with various known partitions."""
+        partitions = ("aws", "aws-cn", "aws-us-gov")
+        for partition in partitions:
+            mock_arn = helper.generate_dummy_arn(partition=partition)
+            arn_object = AwsArn(mock_arn)
+            self.assertEqual(arn_object.partition, partition)
+
     def test_parse_arn_with_slash_separator(self):
         """Assert successful ARN parsing with a slash separator."""
         mock_arn = helper.generate_dummy_arn(resource_separator="/")
