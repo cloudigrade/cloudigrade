@@ -53,7 +53,7 @@ class InternalMetricsTest(TestCase):
         mock_recv = MagicMock()
         mock_recv().capture = mock_capture
         mock_celery_app.connection = MagicMock()
-        mock_celery_app.connection.as_uri.return_value = self.broker_url
+        mock_celery_app.connection().as_uri.return_value = self.broker_url
         mock_celery_app.events = MagicMock(Receiver=mock_recv)
         with self.assertRaises(SystemExit), self.assertLogs(
             "internal.metrics", level="INFO"
@@ -77,7 +77,7 @@ class InternalMetricsTest(TestCase):
         mock_recv = MagicMock()
         mock_recv().capture = mock_capture
         mock_celery_app.connection = MagicMock()
-        mock_celery_app.connection.as_uri.return_value = self.broker_url
+        mock_celery_app.connection().as_uri.return_value = self.broker_url
         mock_celery_app.events = MagicMock(Receiver=mock_recv)
         with self.assertRaises(SystemExit), self.assertLogs(
             "internal.metrics", level="INFO"

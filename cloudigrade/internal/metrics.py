@@ -184,13 +184,13 @@ class CeleryMetrics:
 
         while True:
             try:
-                with self.app.connection() as connection:
-                    recv = self.app.events.Receiver(connection, handlers=handlers)
-                    logger.info(
-                        _("Capturing Celery Events from %s"),
-                        self.app.connection.as_uri(),
-                    )
-                    recv.capture(limit=None, timeout=None, wakeup=True)
+                recv = self.app.events.Receiver(
+                    self.app.connection(), handlers=handlers
+                )
+                logger.info(
+                    _("Capturing Celery Events from %s"), self.app.connection().as_uri()
+                )
+                recv.capture(limit=None, timeout=None, wakeup=True)
 
             except (KeyboardInterrupt, SystemExit):
                 raise
