@@ -711,27 +711,6 @@ def generate_mock_image(image_id=None, encrypted=False, state=None):
     return mock_image
 
 
-def generate_mock_image_dict(image_id=None):
-    """
-    Generate a mocked EC2 image dict.
-
-    Some of the AWS/boto3 APIs return a dict object like this instead of the
-    EC2 Image object.
-
-    Args:
-        image_id (str): The AMI image id.
-
-    Returns:
-        Mock: A dict with attributes similar to what boto3 produces.
-
-    """
-    if image_id is None:
-        image_id = generate_dummy_image_id()
-
-    mock_image = {"ImageId": image_id}
-    return mock_image
-
-
 def generate_mock_snapshot(
     snapshot_id=None, encrypted=False, state=None, owner_id=None
 ):

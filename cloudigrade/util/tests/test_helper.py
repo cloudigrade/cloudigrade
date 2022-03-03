@@ -223,17 +223,6 @@ class UtilHelperTest(TestCase):
         self.assertTrue(user.is_superuser)
         self.assertEqual(user.date_joined, date_joined)
 
-    def test_generate_mock_image_dict(self):
-        """Assert generation of an image-like dict."""
-        image_dict = helper.generate_mock_image_dict()
-        self.assertIn("ImageId", image_dict)
-
-    def test_generate_mock_image_dict_with_args(self):
-        """Assert generation of an image-like dict with specified arguments."""
-        image_id = helper.generate_dummy_image_id()
-        image_dict = helper.generate_mock_image_dict(image_id)
-        self.assertEqual(image_dict["ImageId"], image_id)
-
     def test_get_test_user_creates(self):
         """Assert get_test_user creates a user when it doesn't yet exist."""
         user = helper.get_test_user()
