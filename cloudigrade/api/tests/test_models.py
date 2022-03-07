@@ -6,9 +6,10 @@ import faker
 from django.contrib.auth.models import User
 from django.test import TestCase
 
-from api.models import ConcurrentUsage, Run
+from api.models import ConcurrentUsage, Run, SyntheticDataRequest
 from api.tests import helper as api_helper
 from api.util import calculate_max_concurrent_usage
+from util.misc import get_now
 from util.tests import helper as util_helper
 
 _faker = faker.Faker()
@@ -145,3 +146,17 @@ class CloudAccountTest(TestCase):
         )
         account.delete()
         self.assertTrue(User.objects.filter(username=username).exists())
+
+
+class SyntheticDataRequestModelTest(TestCase, api_helper.ModelStrTestMixin):
+    """SyntheticDataRequest tests."""
+
+    def setUp(self):
+        """Set up basic SyntheticDataRequest."""
+        self.request = SyntheticDataRequest.objects.create(expires_at=get_now())
+
+    def test_synthetic_data_request_str(self):
+        """Test that the SyntheticDataRequest str and repr are valid."""
+        self.assertTypicalStrOutput(
+            self.request, exclude_field_names=("machine_images",)
+        )
