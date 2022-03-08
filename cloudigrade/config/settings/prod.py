@@ -8,6 +8,10 @@ from .base import *
 
 IS_PRODUCTION = CLOUDIGRADE_ENVIRONMENT == "prod"
 
+if IS_PRODUCTION and "django.contrib.admin" in DJANGO_APPS:
+    # Do not allow the standard Django admin in production environments.
+    DJANGO_APPS.remove("django.contrib.admin")
+
 DJANGO_DEBUG = "False"
 
 # CLOUDIGRADE_ENVIRONMENT may have been loaded in base.py, but if not present, it would

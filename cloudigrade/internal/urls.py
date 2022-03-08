@@ -1,5 +1,4 @@
 """Internal API URL configuration for cloudigrade."""
-from django.contrib import admin
 from django.urls import include, path
 from rest_framework import permissions, renderers, routers
 from rest_framework.schemas import get_schema_view
@@ -85,12 +84,6 @@ urlpatterns = []
 urlpatterns += [
     path("healthz/", include("health_check.urls")),
     path("", include("django_prometheus.urls")),  # serves "/metrics"
-]
-
-# URL patterns for standard Django admin interface.
-urlpatterns += [
-    path("api-auth/", include("rest_framework.urls")),
-    path("admin/", admin.site.urls),
 ]
 
 # URL patterns for general debugging.
