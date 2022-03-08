@@ -144,7 +144,7 @@ def sources_kafka(request):
     data from a Kafka message: value (dict), headers (list), and event_type (string).
     The value and headers attributes should be sent as JSON. For example, using httpie:
 
-        http post :8000/internal/api/cloudigrade/v1/sources_kafka/ \
+        http post :8000/internal/sources_kafka/ \
             event_type="ApplicationAuthentication.destroy" \
             value:='{"application_id": 100, "authentication_id":200, "id": 300}' \
             headers:='[["x-rh-identity","'"$(echo -n \

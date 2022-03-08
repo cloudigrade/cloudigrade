@@ -111,6 +111,7 @@ urlpatterns += [
         name="internal-recalculate-concurrent-usage",
     ),
     path("recalculate_runs/", views.recalculate_runs, name="internal-recalculate-runs"),
+    path("sources_kafka/", views.sources_kafka, name="internal-sources-kafka"),
 ]
 
 # URL patterns for accessing various models.
@@ -125,7 +126,6 @@ urlpatterns += [
         "api/cloudigrade/v1/problematic_runs/",
         views.ProblematicRunList.as_view(),
     ),
-    path("api/cloudigrade/v1/sources_kafka/", views.sources_kafka),
     path(
         "openapi.json",
         get_schema_view(
