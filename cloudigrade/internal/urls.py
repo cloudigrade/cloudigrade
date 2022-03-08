@@ -78,23 +78,43 @@ for (prefix, viewset, basename) in routes:
     basename = f"internal-{basename}"
     router.register(prefix, viewset, basename=basename)
 
-urlpatterns = [
-    path("api-auth/", include("rest_framework.urls")),
+# Prepare a list of Django URL patterns.
+urlpatterns = []
+
+# URL Patterns for various automated service checks and metrics.
+urlpatterns += [
     path("healthz/", include("health_check.urls")),
     path("", include("django_prometheus.urls")),  # serves "/metrics"
+]
+
+# URL patterns for standard Django admin interface.
+urlpatterns += [
+    path("api-auth/", include("rest_framework.urls")),
     path("admin/", admin.site.urls),
+]
+
+# URL patterns for general debugging.
+urlpatterns += [
+    path("error/", views.fake_error, name="internal-fake-error"),
+]
+
+# URL patterns for potentially-destructive custom commands.
+urlpatterns += [
     path(
         "delete_cloud_accounts_not_in_sources/",
         views.delete_cloud_accounts_not_in_sources,
         name="internal-delete-cloud-accounts-not-in-sources",
     ),
-    path("error/", views.fake_error, name="internal-fake-error"),
     path(
         "recalculate_concurrent_usage/",
         views.recalculate_concurrent_usage,
         name="internal-recalculate-concurrent-usage",
     ),
     path("recalculate_runs/", views.recalculate_runs, name="internal-recalculate-runs"),
+]
+
+# URL patterns for accessing various models.
+urlpatterns += [
     path("api/cloudigrade/v1/", include(router.urls)),
     path(
         "api/cloudigrade/v1/availability_status",
