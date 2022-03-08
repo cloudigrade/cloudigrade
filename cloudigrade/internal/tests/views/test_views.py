@@ -235,12 +235,3 @@ class InternalViewSetTest(TestCase):
         self.assertGreater(count, 0)
         self.assertEqual(count, len(events))
         self.assertEqual(expected_ids, actual_ids)
-
-    def test_sources_kafka_invalid_header(self):
-        """Assert that an invalid header to sources_kafka returns 400."""
-        response = self.client.post_sources_kafka(
-            data={"headers": "invalid_base64_header"}
-        )
-        self.assertEqual(response.status_code, 400)
-        body = response.json()
-        self.assertEqual(body["headers"], "headers is not valid base64 encoded json")
