@@ -1,6 +1,7 @@
 """Cloudigrade API v2 Models."""
 import json
 import logging
+from datetime import timedelta
 
 import model_utils
 from django.contrib.auth.models import User
@@ -832,6 +833,16 @@ class InstanceDefinition(BaseModel):
         unique_together = (("instance_type", "cloud_type"),)
 
 
+def syntheticdatarequest_expires_at_default():
+    """
+    Get default value for SyntheticDataRequest.expires_at.
+
+    We always want synthetic data to expire within one day. If someone has not
+    already explicitly deleted it by then, a periodic process will delete it soon.
+    """
+    return get_now() + timedelta(days=1)
+
+
 class SyntheticDataRequest(BaseModel):
     """
     Synthetic data request definition which may be used for "live" test operations.
@@ -873,7 +884,8 @@ class SyntheticDataRequest(BaseModel):
     hours_between_runs_mean = models.FloatField(
         default=8.0, validators=[validators.MinValueValidator(0)]
     )
-    expires_at = models.DateTimeField()
+
+    expires_at = models.DateTimeField(default=syntheticdatarequest_expires_at_default)
 
     # References to objects that may be synthesized after initial creation:
     user = models.OneToOneField(

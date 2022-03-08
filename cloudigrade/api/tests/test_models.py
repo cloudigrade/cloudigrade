@@ -9,7 +9,6 @@ from django.test import TestCase
 from api.models import ConcurrentUsage, Run, SyntheticDataRequest
 from api.tests import helper as api_helper
 from api.util import calculate_max_concurrent_usage
-from util.misc import get_now
 from util.tests import helper as util_helper
 
 _faker = faker.Faker()
@@ -153,7 +152,7 @@ class SyntheticDataRequestModelTest(TestCase, api_helper.ModelStrTestMixin):
 
     def setUp(self):
         """Set up basic SyntheticDataRequest."""
-        self.request = SyntheticDataRequest.objects.create(expires_at=get_now())
+        self.request = SyntheticDataRequest.objects.create()
 
     def test_synthetic_data_request_str(self):
         """Test that the SyntheticDataRequest str and repr are valid."""
