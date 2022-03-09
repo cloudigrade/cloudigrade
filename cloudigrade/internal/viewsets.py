@@ -13,7 +13,7 @@ from api import models, schemas, tasks
 from api.clouds.aws import models as aws_models
 from api.clouds.azure import models as azure_models
 from api.serializers import CloudAccountSerializer
-from api.views import AccountViewSet, DailyConcurrentUsageViewSet
+from api.viewsets import AccountViewSet, DailyConcurrentUsageViewSet
 from internal import filters, serializers
 from internal.authentication import (
     IdentityHeaderAuthenticationInternal,
