@@ -4,9 +4,15 @@ from unittest.mock import patch
 
 import faker
 from django.contrib.auth.models import User
-from django.test import TestCase
+from django.test import TestCase, TransactionTestCase, override_settings
 
-from api.models import ConcurrentUsage, Run, SyntheticDataRequest
+from api.models import (
+    CloudAccount,
+    ConcurrentUsage,
+    MachineImage,
+    Run,
+    SyntheticDataRequest,
+)
 from api.tests import helper as api_helper
 from api.util import calculate_max_concurrent_usage
 from util.tests import helper as util_helper
@@ -159,3 +165,29 @@ class SyntheticDataRequestModelTest(TestCase, api_helper.ModelStrTestMixin):
         self.assertTypicalStrOutput(
             self.request, exclude_field_names=("machine_images",)
         )
+
+    def test_synthetic_data_request_pre_delete_callback(self):
+        """Test the SyntheticDataRequest pre-delete callback deletes images."""
+        image = api_helper.generate_image_aws()
+        self.request.machine_images.add(image)
+        self.request.delete()
+        with self.assertRaises(MachineImage.DoesNotExist):
+            image.refresh_from_db()
+
+
+class SyntheticDataRequestModelTransactionTest(TransactionTestCase):
+    """SyntheticDataRequest tests that require transaction.on_commit handling."""
+
+    def setUp(self):
+        """Set up basic SyntheticDataRequest."""
+        self.request = SyntheticDataRequest.objects.create()
+
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=True)
+    def test_synthetic_data_request_post_delete_callback(self):
+        """Test the SyntheticDataRequest post-delete callback deletes accounts."""
+        account = api_helper.generate_cloud_account_aws(is_synthetic=True)
+        self.request.user = account.user
+        self.request.save()
+        self.request.delete()
+        with self.assertRaises(CloudAccount.DoesNotExist):
+            account.refresh_from_db()
