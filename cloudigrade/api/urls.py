@@ -3,16 +3,16 @@ from django.urls import include, path
 from rest_framework import permissions, renderers, routers
 from rest_framework.schemas import get_schema_view
 
-from api import views
+from api import viewsets
 
 # Prepare a list of DRF ViewSet routes.
 routes = [
-    ("accounts", views.AccountViewSet, "account"),
-    ("instances", views.InstanceViewSet, "instance"),
-    ("images", views.MachineImageViewSet, "machineimage"),
-    ("sysconfig", views.SysconfigViewSet, "sysconfig"),
-    ("azure-offer-template", views.AzureOfferTemplateViewSet, "azure-offer"),
-    ("concurrent", views.DailyConcurrentUsageViewSet, "concurrent"),
+    ("accounts", viewsets.AccountViewSet, "account"),
+    ("instances", viewsets.InstanceViewSet, "instance"),
+    ("images", viewsets.MachineImageViewSet, "machineimage"),
+    ("sysconfig", viewsets.SysconfigViewSet, "sysconfig"),
+    ("azure-offer-template", viewsets.AzureOfferTemplateViewSet, "azure-offer"),
+    ("concurrent", viewsets.DailyConcurrentUsageViewSet, "concurrent"),
 ]
 
 # Register all the DRF ViewSet routes with a common "v2-" basename prefix.

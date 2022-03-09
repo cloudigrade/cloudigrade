@@ -7,7 +7,7 @@ from rest_framework.test import APIRequestFactory, force_authenticate
 
 from api.models import CloudAccount
 from api.tests import helper as api_helper
-from api.views import AccountViewSet
+from api.viewsets import AccountViewSet
 from util.tests import helper as util_helper
 
 

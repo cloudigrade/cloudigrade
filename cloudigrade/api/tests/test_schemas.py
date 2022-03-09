@@ -2,7 +2,7 @@
 from django.test import TestCase
 
 from api.schemas import AzureOfferTemplateSchema, ConcurrentSchema, SysconfigSchema
-from api.views import SysconfigViewSet
+from api.viewsets import SysconfigViewSet
 
 
 class SchemaTestCase(TestCase):

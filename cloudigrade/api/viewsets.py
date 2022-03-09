@@ -1,4 +1,4 @@
-"""Public views for cloudigrade API."""
+"""Public viewset classes for cloudigrade API."""
 from datetime import timedelta
 
 from dateutil.parser import parse

@@ -4,7 +4,7 @@ from rest_framework.test import APIRequestFactory, force_authenticate
 
 from api.clouds.aws.models import AwsInstance
 from api.tests import helper as api_helper
-from api.views import InstanceViewSet
+from api.viewsets import InstanceViewSet
 from util.tests import helper as util_helper
 
 

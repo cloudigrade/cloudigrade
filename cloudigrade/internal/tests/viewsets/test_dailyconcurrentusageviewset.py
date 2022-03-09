@@ -6,7 +6,7 @@ from django.utils.translation import gettext as _
 from rest_framework.test import APIClient
 
 from api.tests import helper as api_helper
-from api.tests.views.shared.test_dailyconcurrentusageviewset import (
+from api.tests.viewsets.shared.test_dailyconcurrentusageviewset import (
     SharedDailyConcurrentUsageViewSetTest,
 )
 from util.misc import get_today

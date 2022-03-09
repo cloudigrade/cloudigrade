@@ -3,7 +3,7 @@
 from django.test import TransactionTestCase
 from rest_framework.test import APIRequestFactory
 
-from api.views import AzureOfferTemplateViewSet
+from api.viewsets import AzureOfferTemplateViewSet
 from util.azure import ARM_TEMPLATE
 
 
