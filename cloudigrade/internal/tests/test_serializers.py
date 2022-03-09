@@ -7,7 +7,7 @@ from rest_framework.test import APIRequestFactory
 
 from api.tests import helper as api_helper
 from api.util import calculate_max_concurrent_usage
-from internal import views
+from internal import viewsets
 from util.tests import helper as util_helper
 
 _faker = faker.Faker()
@@ -49,13 +49,13 @@ class InternalConcurrentUsageSerializerTest(TransactionTestCase):
     def test_without_include_runs(self):
         """Assert potentially_related_runs is not included by default."""
         request = self.factory.get("/dummy/path")
-        view = views.InternalConcurrentUsageViewSet.as_view({"get": "list"})
+        view = viewsets.InternalConcurrentUsageViewSet.as_view({"get": "list"})
         response = view(request)
         self.assertNotIn("potentially_related_runs", response.data["data"][0])
 
     def test_with_include_runs(self):
         """Assert potentially_related_runs is included when include_runs is set."""
         request = self.factory.get("/dummy/path?include_runs=True")
-        view = views.InternalConcurrentUsageViewSet.as_view({"get": "list"})
+        view = viewsets.InternalConcurrentUsageViewSet.as_view({"get": "list"})
         response = view(request)
         self.assertIn("potentially_related_runs", response.data["data"][0])
