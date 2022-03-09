@@ -15,7 +15,7 @@ from rest_framework.test import APIRequestFactory, force_authenticate
 from api import serializers
 from api.models import CloudAccount
 from api.tests import helper as api_helper
-from internal.views import InternalAccountViewSet
+from internal.viewsets import InternalAccountViewSet
 from util.tests import helper as util_helper
 
 
@@ -264,7 +264,7 @@ class InternalAccountViewSetTest(TransactionTestCase):
             )
 
         with patch(
-            "internal.views.InternalAccountViewSet.get_serializer_class"
+            "internal.viewsets.InternalAccountViewSet.get_serializer_class"
         ) as mock_viewset_serializer:
             mock_viewset_serializer.return_value = MockCloudAccountSerializer
             data = {

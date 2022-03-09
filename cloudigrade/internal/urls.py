@@ -3,52 +3,56 @@ from django.urls import include, path
 from rest_framework import permissions, renderers, routers
 from rest_framework.schemas import get_schema_view
 
-from internal import views
+from internal import views, viewsets
 
 # Prepare a list of DRF ViewSet routes.
 routes = []
 
 # URLs for slightly different internal versions of public viewset routes.
 routes += [
-    ("accounts", views.InternalAccountViewSet, "account"),
-    ("concurrent", views.InternalDailyConcurrentUsageViewSet, "concurrent"),
+    ("accounts", viewsets.InternalAccountViewSet, "account"),
+    ("concurrent", viewsets.InternalDailyConcurrentUsageViewSet, "concurrent"),
 ]
 
 # URLs for common models
 # "None" for the third tuple value means to use the model's name.
 routes += [
-    ("users", views.InternalUserViewSet, "user"),
-    ("periodictasks", views.InternalPeriodicTaskViewSet, None),
-    ("usertasklocks", views.InternalUserTaskLockViewSet, None),
-    ("cloudaccounts", views.InternalCloudAccountViewSet, None),
-    ("instances", views.InternalInstanceViewSet, None),
-    ("instanceevents", views.InternalInstanceEventViewSet, None),
-    ("machineimages", views.InternalMachineImageViewSet, None),
-    (r"runs", views.InternalRunViewSet, None),
+    ("users", viewsets.InternalUserViewSet, "user"),
+    ("periodictasks", viewsets.InternalPeriodicTaskViewSet, None),
+    ("usertasklocks", viewsets.InternalUserTaskLockViewSet, None),
+    ("cloudaccounts", viewsets.InternalCloudAccountViewSet, None),
+    ("instances", viewsets.InternalInstanceViewSet, None),
+    ("instanceevents", viewsets.InternalInstanceEventViewSet, None),
+    ("machineimages", viewsets.InternalMachineImageViewSet, None),
+    (r"runs", viewsets.InternalRunViewSet, None),
     (
         "machineimageinspectionstarts",
-        views.InternalMachineImageInspectionStartViewSet,
+        viewsets.InternalMachineImageInspectionStartViewSet,
         None,
     ),
-    ("concurrentusages", views.InternalConcurrentUsageViewSet, None),
-    ("instancedefinitions", views.InternalInstanceDefinitionViewSet, None),
+    ("concurrentusages", viewsets.InternalConcurrentUsageViewSet, None),
+    ("instancedefinitions", viewsets.InternalInstanceDefinitionViewSet, None),
 ]
 
 # URLs for AWS models
 routes += [
-    ("awscloudaccounts", views.InternalAwsCloudAccountViewSet, None),
-    ("awsinstances", views.InternalAwsInstanceViewSet, None),
-    ("awsmachineimages", views.InternalAwsMachineImageViewSet, None),
-    ("awsmachineimagecopies", views.InternalAwsMachineImageCopyViewSet, None),
-    ("awsinstanceevents", views.InternalAwsInstanceEventViewSet, None),
+    ("awscloudaccounts", viewsets.InternalAwsCloudAccountViewSet, None),
+    ("awsinstances", viewsets.InternalAwsInstanceViewSet, None),
+    ("awsmachineimages", viewsets.InternalAwsMachineImageViewSet, None),
+    (
+        "awsmachineimagecopies",
+        viewsets.InternalAwsMachineImageCopyViewSet,
+        None,
+    ),
+    ("awsinstanceevents", viewsets.InternalAwsInstanceEventViewSet, None),
 ]
 
 # URLs for Azure models
 routes += [
-    ("azurecloudaccounts", views.InternalAzureCloudAccountViewSet, None),
-    ("azureinstances", views.InternalAzureInstanceViewSet, None),
-    ("azuremachineimages", views.InternalAzureMachineImageViewSet, None),
-    ("azureinstanceevents", views.InternalAzureInstanceEventViewSet, None),
+    ("azurecloudaccounts", viewsets.InternalAzureCloudAccountViewSet, None),
+    ("azureinstances", viewsets.InternalAzureInstanceViewSet, None),
+    ("azuremachineimages", viewsets.InternalAzureMachineImageViewSet, None),
+    ("azureinstanceevents", viewsets.InternalAzureInstanceEventViewSet, None),
 ]
 
 

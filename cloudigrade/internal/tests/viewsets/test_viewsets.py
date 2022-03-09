@@ -1,4 +1,4 @@
-"""Collection of tests for internal views."""
+"""Collection of tests for internal viewsets."""
 import decimal
 
 from django.contrib.auth.models import User
@@ -11,7 +11,7 @@ from util.tests import helper as util_helper
 
 
 class InternalViewSetTest(TestCase):
-    """Test internal views."""
+    """Test internal viewsets."""
 
     def setUp(self):
         """
