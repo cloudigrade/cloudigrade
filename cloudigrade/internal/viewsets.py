@@ -383,3 +383,23 @@ class InternalPeriodicTaskViewSet(
 
     queryset = PeriodicTask.objects.all()
     serializer_class = serializers.InternalPeriodicTaskSerializer
+
+
+class InternalSyntheticDataRequestViewSet(
+    InternalViewSetMixin,
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.DestroyModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet,
+):
+    """Create, retrieve, delete, or list SyntheticDataRequests for internal use."""
+
+    queryset = models.SyntheticDataRequest.objects.all()
+    serializer_class = serializers.InternalSyntheticDataRequestSerializer
+    filterset_fields = {
+        "user_id": ["exact"],
+        "expires_at": ["lt", "exact", "gt"],
+        "created_at": ["lt", "exact", "gt"],
+        "updated_at": ["lt", "exact", "gt"],
+    }

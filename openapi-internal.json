@@ -3747,6 +3747,457 @@
         ]
       }
     },
+    "/internal/api/cloudigrade/v1/syntheticdatarequests/": {
+      "get": {
+        "operationId": "listSyntheticDataRequests",
+        "description": "Create, retrieve, delete, or list SyntheticDataRequests for internal use.",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "The initial index from which to return the results.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "user_id",
+            "required": false,
+            "in": "query",
+            "description": "user_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expires_at__lt",
+            "required": false,
+            "in": "query",
+            "description": "expires_at__lt",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expires_at",
+            "required": false,
+            "in": "query",
+            "description": "expires_at",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expires_at__gt",
+            "required": false,
+            "in": "query",
+            "description": "expires_at__gt",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "created_at__lt",
+            "required": false,
+            "in": "query",
+            "description": "created_at__lt",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "created_at",
+            "required": false,
+            "in": "query",
+            "description": "created_at",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "created_at__gt",
+            "required": false,
+            "in": "query",
+            "description": "created_at__gt",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "updated_at__lt",
+            "required": false,
+            "in": "query",
+            "description": "updated_at__lt",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "updated_at",
+            "required": false,
+            "in": "query",
+            "description": "updated_at",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "updated_at__gt",
+            "required": false,
+            "in": "query",
+            "description": "updated_at__gt",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "count": {
+                          "type": "integer",
+                          "example": 123
+                        }
+                      }
+                    },
+                    "links": {
+                      "type": "object",
+                      "properties": {
+                        "first": {
+                          "type": "string",
+                          "nullable": true,
+                          "format": "uri",
+                          "example": "http://api.example.org/accounts/?offset=400&limit=100"
+                        },
+                        "last": {
+                          "type": "string",
+                          "nullable": true,
+                          "format": "uri",
+                          "example": "http://api.example.org/accounts/?offset=400&limit=100"
+                        },
+                        "next": {
+                          "type": "string",
+                          "nullable": true,
+                          "format": "uri",
+                          "example": "http://api.example.org/accounts/?offset=400&limit=100"
+                        },
+                        "previous": {
+                          "type": "string",
+                          "nullable": true,
+                          "format": "uri",
+                          "example": "http://api.example.org/accounts/?offset=400&limit=100"
+                        }
+                      }
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/InternalSyntheticDataRequest"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "api"
+        ]
+      },
+      "post": {
+        "operationId": "createSyntheticDataRequest",
+        "description": "Create, retrieve, delete, or list SyntheticDataRequests for internal use.",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InternalSyntheticDataRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/InternalSyntheticDataRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/InternalSyntheticDataRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalSyntheticDataRequest"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "api"
+        ]
+      }
+    },
+    "/internal/api/cloudigrade/v1/syntheticdatarequests/{id}/": {
+      "get": {
+        "operationId": "retrieveSyntheticDataRequest",
+        "description": "Create, retrieve, delete, or list SyntheticDataRequests for internal use.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "A unique integer value identifying this synthetic data request.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "user_id",
+            "required": false,
+            "in": "query",
+            "description": "user_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expires_at__lt",
+            "required": false,
+            "in": "query",
+            "description": "expires_at__lt",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expires_at",
+            "required": false,
+            "in": "query",
+            "description": "expires_at",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expires_at__gt",
+            "required": false,
+            "in": "query",
+            "description": "expires_at__gt",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "created_at__lt",
+            "required": false,
+            "in": "query",
+            "description": "created_at__lt",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "created_at",
+            "required": false,
+            "in": "query",
+            "description": "created_at",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "created_at__gt",
+            "required": false,
+            "in": "query",
+            "description": "created_at__gt",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "updated_at__lt",
+            "required": false,
+            "in": "query",
+            "description": "updated_at__lt",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "updated_at",
+            "required": false,
+            "in": "query",
+            "description": "updated_at",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "updated_at__gt",
+            "required": false,
+            "in": "query",
+            "description": "updated_at__gt",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalSyntheticDataRequest"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "api"
+        ]
+      },
+      "delete": {
+        "operationId": "destroySyntheticDataRequest",
+        "description": "Create, retrieve, delete, or list SyntheticDataRequests for internal use.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "A unique integer value identifying this synthetic data request.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "user_id",
+            "required": false,
+            "in": "query",
+            "description": "user_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expires_at__lt",
+            "required": false,
+            "in": "query",
+            "description": "expires_at__lt",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expires_at",
+            "required": false,
+            "in": "query",
+            "description": "expires_at",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expires_at__gt",
+            "required": false,
+            "in": "query",
+            "description": "expires_at__gt",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "created_at__lt",
+            "required": false,
+            "in": "query",
+            "description": "created_at__lt",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "created_at",
+            "required": false,
+            "in": "query",
+            "description": "created_at",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "created_at__gt",
+            "required": false,
+            "in": "query",
+            "description": "created_at__gt",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "updated_at__lt",
+            "required": false,
+            "in": "query",
+            "description": "updated_at__lt",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "updated_at",
+            "required": false,
+            "in": "query",
+            "description": "updated_at",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "updated_at__gt",
+            "required": false,
+            "in": "query",
+            "description": "updated_at__gt",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "api"
+        ]
+      }
+    },
     "/internal/api/cloudigrade/v1/awscloudaccounts/": {
       "get": {
         "operationId": "listAwsCloudAccounts",
@@ -6827,6 +7278,95 @@
         "required": [
           "instance_type",
           "json_definition",
+          "cloud_type"
+        ]
+      },
+      "InternalSyntheticDataRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "user": {
+            "type": "string",
+            "readOnly": true,
+            "nullable": true
+          },
+          "machine_images": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "readOnly": true
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "cloud_type": {
+            "enum": [
+              "aws",
+              "azure"
+            ],
+            "type": "string"
+          },
+          "since_days_ago": {
+            "type": "integer"
+          },
+          "account_count": {
+            "type": "integer"
+          },
+          "image_count": {
+            "type": "integer"
+          },
+          "image_ocp_chance": {
+            "type": "number",
+            "maximum": 1,
+            "minimum": 0
+          },
+          "image_rhel_chance": {
+            "type": "number",
+            "maximum": 1,
+            "minimum": 0
+          },
+          "image_other_owner_chance": {
+            "type": "number",
+            "maximum": 1,
+            "minimum": 0
+          },
+          "instance_count": {
+            "type": "integer"
+          },
+          "run_count_per_instance_mean": {
+            "type": "number",
+            "minimum": 0
+          },
+          "hours_per_run_min": {
+            "type": "number",
+            "minimum": 0
+          },
+          "hours_per_run_mean": {
+            "type": "number",
+            "minimum": 0
+          },
+          "hours_between_runs_mean": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "required": [
           "cloud_type"
         ]
       },
