@@ -5,7 +5,6 @@ from rest_framework import serializers
 from rest_framework.fields import BooleanField
 from rest_framework.serializers import ModelSerializer
 
-
 from api import models
 from api.clouds.aws import models as aws_models
 from api.clouds.azure import models as azure_models
@@ -259,4 +258,57 @@ class InternalPeriodicTaskSerializer(ModelSerializer):
         # or by in-app model changes.
         read_only_fields = tuple(
             set(f.name for f in model._meta.get_fields()) - set(("last_run_at",))
+        )
+
+
+class InternalSyntheticDataRequestSerializer(ModelSerializer):
+    """Serialize SyntheticDataRequest for the internal API."""
+
+    class Meta:
+        model = models.SyntheticDataRequest
+        fields = (
+            "id",
+            "user",
+            "machine_images",
+            "expires_at",
+            "created_at",
+            "updated_at",
+            "cloud_type",
+            "since_days_ago",
+            "account_count",
+            "image_count",
+            "image_ocp_chance",
+            "image_rhel_chance",
+            "image_other_owner_chance",
+            "instance_count",
+            "run_count_per_instance_mean",
+            "hours_per_run_min",
+            "hours_per_run_mean",
+            "hours_between_runs_mean",
+            "expires_at",
+        )
+
+        read_only_fields = (
+            "id",
+            "user",
+            "machine_images",
+            "expires_at",
+            "created_at",
+            "updated_at",
+        )
+
+        create_only_fields = (
+            "cloud_type",
+            "since_days_ago",
+            "account_count",
+            "image_count",
+            "image_ocp_chance",
+            "image_rhel_chance",
+            "image_other_owner_chance",
+            "instance_count",
+            "run_count_per_instance_mean",
+            "hours_per_run_min",
+            "hours_per_run_mean",
+            "hours_between_runs_mean",
+            "expires_at",
         )

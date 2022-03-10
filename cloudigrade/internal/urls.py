@@ -32,6 +32,7 @@ routes += [
     ),
     ("concurrentusages", viewsets.InternalConcurrentUsageViewSet, None),
     ("instancedefinitions", viewsets.InternalInstanceDefinitionViewSet, None),
+    ("syntheticdatarequests", viewsets.InternalSyntheticDataRequestViewSet, None),
 ]
 
 # URLs for AWS models
