@@ -41,6 +41,7 @@ azure-mgmt-resource = "^19.0.0"
 azure-cli-core = "^2.27.2"
 django-prometheus = "~=2.1.0"
 redis = "^4.1.0"
+kombu = "^5.2.4"
 
 
 [tool.poetry.dev-dependencies]
