@@ -7,7 +7,7 @@ import model_utils
 from django.contrib.auth.models import User
 from django.core import validators
 from django.db import models, transaction
-from django.db.models.signals import post_delete, pre_delete
+from django.db.models.signals import post_delete, post_save, pre_delete
 from django.dispatch import receiver
 from django.utils.translation import gettext as _
 
@@ -937,6 +937,17 @@ class SyntheticDataRequest(BaseModel):
             f"updated_at={updated_at}"
             f")"
         )
+
+
+@receiver(post_save, sender=SyntheticDataRequest)
+def synthetic_data_request_post_save_callback(*args, **kwargs):
+    """After creation, start the async tasks to synthesize activity."""
+    instance = kwargs["instance"]
+    created = kwargs["created"]
+    if created:
+        from api.tasks import synthesize_user
+
+        transaction.on_commit(lambda: synthesize_user.apply_async(args=(instance.id,)))
 
 
 @receiver(pre_delete, sender=SyntheticDataRequest)

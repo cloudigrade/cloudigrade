@@ -489,6 +489,8 @@ CELERY_TASK_ROUTES = {
     "api.tasks.unpause_from_sources_kafka_message": {
         "queue": "unpause_from_sources_kafka_message"
     },
+    # api.tasks supporting synthetic data generation
+    "api.tasks.synthesize_user": {"queue": "synthesize_user"},
     # api.clouds.aws.tasks
     "api.clouds.aws.tasks.analyze_log": {"queue": "analyze_log"},
     "api.clouds.aws.tasks.configure_customer_aws_and_create_cloud_account": {
