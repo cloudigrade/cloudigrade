@@ -4,6 +4,7 @@ import logging
 from datetime import timedelta
 
 import model_utils
+from celery import chain
 from django.contrib.auth.models import User
 from django.core import validators
 from django.db import models, transaction
@@ -945,9 +946,14 @@ def synthetic_data_request_post_save_callback(*args, **kwargs):
     instance = kwargs["instance"]
     created = kwargs["created"]
     if created:
-        from api.tasks import synthesize_user
+        from api.tasks import synthesize_cloud_accounts, synthesize_user
 
-        transaction.on_commit(lambda: synthesize_user.apply_async(args=(instance.id,)))
+        transaction.on_commit(
+            lambda: chain(
+                synthesize_user.s(instance.id),
+                synthesize_cloud_accounts.s(),
+            ).apply_async()
+        )
 
 
 @receiver(pre_delete, sender=SyntheticDataRequest)

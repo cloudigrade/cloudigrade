@@ -6,6 +6,7 @@ import faker
 from django.contrib.auth.models import User
 from django.test import TestCase, TransactionTestCase, override_settings
 
+from api import AWS_PROVIDER_STRING
 from api.models import (
     CloudAccount,
     ConcurrentUsage,
@@ -175,19 +176,20 @@ class SyntheticDataRequestModelTest(TestCase, api_helper.ModelStrTestMixin):
             image.refresh_from_db()
 
 
+@override_settings(CELERY_TASK_ALWAYS_EAGER=True)
 class SyntheticDataRequestModelTransactionTest(TransactionTestCase):
     """SyntheticDataRequest tests that require transaction.on_commit handling."""
 
     def setUp(self):
         """Set up basic SyntheticDataRequest."""
-        self.request = SyntheticDataRequest.objects.create()
+        self.request = SyntheticDataRequest.objects.create(
+            cloud_type=AWS_PROVIDER_STRING
+        )
 
-    @override_settings(CELERY_TASK_ALWAYS_EAGER=True)
     def test_synthetic_data_request_post_delete_callback(self):
         """Test the SyntheticDataRequest post-delete callback deletes accounts."""
-        account = api_helper.generate_cloud_account_aws(is_synthetic=True)
-        self.request.user = account.user
-        self.request.save()
+        self.request.refresh_from_db()  # because user is assigned during post_create
+        user_id = self.request.user_id
+        self.assertTrue(CloudAccount.objects.filter(user_id=user_id).exists())
         self.request.delete()
-        with self.assertRaises(CloudAccount.DoesNotExist):
-            account.refresh_from_db()
+        self.assertFalse(CloudAccount.objects.filter(user_id=user_id).exists())
