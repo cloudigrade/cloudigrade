@@ -491,6 +491,7 @@ CELERY_TASK_ROUTES = {
     },
     # api.tasks supporting synthetic data generation
     "api.tasks.synthesize_user": {"queue": "synthesize_user"},
+    "api.tasks.synthesize_cloud_accounts": {"queue": "synthesize_cloud_accounts"},
     # api.clouds.aws.tasks
     "api.clouds.aws.tasks.analyze_log": {"queue": "analyze_log"},
     "api.clouds.aws.tasks.configure_customer_aws_and_create_cloud_account": {
