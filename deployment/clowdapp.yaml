@@ -802,6 +802,55 @@ objects:
           value: ${DELETE_EXPIRED_SYNTHETIC_DATA_SCHEDULE}
         - name: ENABLE_SYNTHETIC_DATA_REQUEST_HTTP_API
           value: ${ENABLE_SYNTHETIC_DATA_REQUEST_HTTP_API}
+    - name: metrics
+      #
+      # Component cloudigrade-metrics deployment:
+      #
+      minReplicas: ${{CELERY_METRICS_REPLICA_COUNT}}
+      revisionHistoryLimit: 10
+      webServices:
+        public:
+          enabled: true
+      podSpec:
+        image: ${CELERY_METRICS_IMAGE}:${CELERY_METRICS_IMAGE_TAG}
+        imagePullPolicy: Always
+        livenessProbe:
+          exec:
+            command:
+              - /bin/sh
+              - -c
+              - 'if [ $(ps axo command | grep "^python" | grep "cli.py" | wc -l) -ne "1" ]; then exit 1; fi'
+          failureThreshold: 3
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        readinessProbe:
+          httpGet:
+            path: /metrics
+            port: 8000
+            scheme: HTTP
+          failureThreshold: 3
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        resources:
+          limits:
+            cpu: ${CELERY_METRICS_LIMITS_CONTAINER_CPU_LIMIT}
+            memory: ${CELERY_METRICS_LIMITS_CONTAINER_MEM_LIMIT}
+          requests:
+            cpu: ${CELERY_METRICS_LIMITS_CONTAINER_CPU_REQUEST}
+            memory: ${CELERY_METRICS_LIMITS_CONTAINER_MEM_REQUEST}
+        env:
+        - name: CELERY_METRICS_LOG_LEVEL
+          value: ${CELERY_METRICS_LOG_LEVEL}
+        - name: CELERY_METRICS_PORT
+          value: ${CELERY_METRICS_PORT}
+        - name: CELERY_METRICS_RETRY_INTERVAL
+          value: ${CELERY_METRICS_RETRY_INTERVAL}
+        - name: CLOUDIGRADE_ENVIRONMENT
+          value: ${CLOUDIGRADE_ENVIRONMENT}
     - name: worker
       #
       # Component cloudigrade-worker deployment:
@@ -1374,6 +1423,49 @@ parameters:
   displayName: Cloudigrade Listener Replica Count
   required: true
   value: '1'
+#
+# Component cloudigrade-metrics parameters
+#
+- name: CELERY_METRICS_IMAGE
+  displayName: Celery Metrics Image
+  required: true
+  value: quay.io/abellott/celery-exporter
+- name: CELERY_METRICS_IMAGE_TAG
+  displayName: Celery Metrics Image Tag
+  required: true
+  value: latest
+- name: CELERY_METRICS_LIMITS_CONTAINER_CPU_LIMIT
+  displayName: Cloudigrade Celery Metrics Container CPU Limit
+  required: true
+  value: 100m
+- name: CELERY_METRICS_LIMITS_CONTAINER_CPU_REQUEST
+  displayName: Cloudigrade Celery Metrics Container CPU Request
+  required: true
+  value: 100m
+- name: CELERY_METRICS_LIMITS_CONTAINER_MEM_LIMIT
+  displayName: Cloudigrade Celery Metrics Container Memory Limit
+  required: true
+  value: 128Mi
+- name: CELERY_METRICS_LIMITS_CONTAINER_MEM_REQUEST
+  displayName: Cloudigrade Celery Metrics Container Memory Request
+  required: true
+  value: 100Mi
+- name: CELERY_METRICS_LOG_LEVEL
+  displayName: Celery Metrics Log Level
+  required: true
+  value: 'INFO'
+- name: CELERY_METRICS_PORT
+  displayName: Celery Metrics Port
+  required: true
+  value: '9808'
+- name: CELERY_METRICS_REPLICA_COUNT
+  displayName: Cloudigrade Celery Metrics Replica Count
+  required: true
+  value: '1'
+- name: CELERY_METRICS_RETRY_INTERVAL
+  displayName: Celery Metrics Retry Interval in seconds
+  required: true
+  value: '5'
 #
 # Component cloudigrade-worker parameters:
 #
