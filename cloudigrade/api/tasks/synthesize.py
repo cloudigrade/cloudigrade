@@ -1,5 +1,6 @@
 """Tasks for synthesizing data for live service testing."""
 import logging
+import random
 from datetime import timedelta
 from functools import partial
 from typing import Optional
@@ -11,7 +12,7 @@ from django.utils.translation import gettext as _
 from faker import Faker
 
 from api import AWS_PROVIDER_STRING, AZURE_PROVIDER_STRING
-from api.models import SyntheticDataRequest
+from api.models import CloudAccount, SyntheticDataRequest
 from api.tests import helper as api_helper  # TODO Don't import from tests module.
 
 logger = logging.getLogger(__name__)
@@ -136,3 +137,57 @@ def _synthesize_aws_account_id() -> str:
     """
     aws_account_id = f"{_faker.pyint(max_value=10 ** 6):012d}"
     return aws_account_id
+
+
+@shared_task(name="api.tasks.synthesize_images")
+@transaction.atomic
+def synthesize_images(request_id: int) -> Optional[int]:
+    """
+    Synthesize images for the given SyntheticDataRequest ID.
+
+    Args:
+        request_id (int): the SyntheticDataRequest.id to process
+
+    Returns:
+        int: the same SyntheticDataRequest.id if processing succeeded, else None.
+    """
+    if not (request := SyntheticDataRequest.objects.filter(id=request_id).first()):
+        logger.warning(
+            _("SyntheticDataRequest %(id)s does not exist."), {"id": request_id}
+        )
+        return None
+    if not (cloud_accounts := list(CloudAccount.objects.filter(user=request.user))):
+        logger.warning(
+            _("SyntheticDataRequest %(id)s has no CloudAccount."), {"id": request_id}
+        )
+        return None
+
+    for __ in range(request.image_count):
+        rhel_detected = _faker.random.random() < request.image_rhel_chance
+        openshift_detected = _faker.random.random() < request.image_ocp_chance
+
+        if request.cloud_type == AWS_PROVIDER_STRING:
+            owner_aws_account_id = (
+                _synthesize_aws_account_id()
+                if random.random() <= request.image_other_owner_chance
+                else _faker.random_element(cloud_accounts).content_object.aws_account_id
+            )
+            image = api_helper.generate_image_aws(
+                rhel_detected=rhel_detected,
+                openshift_detected=openshift_detected,
+                owner_aws_account_id=owner_aws_account_id,
+                ec2_ami_id=_synthesize_id(),
+                name=_synthesize_id(),
+            )
+            request.machine_images.add(image)
+        elif request.cloud_type == AZURE_PROVIDER_STRING:
+            image = api_helper.generate_image_azure(
+                rhel_detected=rhel_detected, openshift_detected=openshift_detected
+            )
+            request.machine_images.add(image)
+
+    logger.info(
+        _("Synthesized %(count)s MachineImages for SyntheticDataRequest %(id)s"),
+        {"count": request.image_count, "id": request.id},
+    )
+    return request_id
