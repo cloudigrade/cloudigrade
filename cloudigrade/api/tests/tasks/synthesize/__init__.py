@@ -9,7 +9,9 @@ from api.tasks import synthesize
 from util.tests import helper as util_helper
 
 
-def create_synthetic_data_request_without_post_save(cloud_type, synthesize_user=True):
+def create_synthetic_data_request_without_post_save(
+    cloud_type, synthesize_user=True, synthesize_cloud_accounts=True
+):
     """
     Create a SyntheticDataRequest with only some relations populated.
 
@@ -27,6 +29,10 @@ def create_synthetic_data_request_without_post_save(cloud_type, synthesize_user=
         if not synthesize_user:
             return request
         synthesize.synthesize_user(request.id)
+        if not synthesize_cloud_accounts:
+            request.refresh_from_db()
+            return request
+        synthesize.synthesize_cloud_accounts(request.id)
         request.refresh_from_db()
         return request
 

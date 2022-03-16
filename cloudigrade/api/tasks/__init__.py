@@ -48,4 +48,8 @@ from api.tasks.sources import (
     unpause_from_sources_kafka_message,
     update_from_sources_kafka_message,
 )
-from api.tasks.synthesize import synthesize_cloud_accounts, synthesize_user
+from api.tasks.synthesize import (
+    synthesize_cloud_accounts,
+    synthesize_images,
+    synthesize_user,
+)

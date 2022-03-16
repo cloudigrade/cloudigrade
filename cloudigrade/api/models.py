@@ -946,12 +946,17 @@ def synthetic_data_request_post_save_callback(*args, **kwargs):
     instance = kwargs["instance"]
     created = kwargs["created"]
     if created:
-        from api.tasks import synthesize_cloud_accounts, synthesize_user
+        from api.tasks import (
+            synthesize_cloud_accounts,
+            synthesize_images,
+            synthesize_user,
+        )
 
         transaction.on_commit(
             lambda: chain(
                 synthesize_user.s(instance.id),
                 synthesize_cloud_accounts.s(),
+                synthesize_images.s(),
             ).apply_async()
         )
 
