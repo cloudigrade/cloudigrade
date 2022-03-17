@@ -1,4 +1,9 @@
-"""Tasks for synthesizing data for live service testing."""
+"""
+Tasks for synthesizing data for live service testing.
+
+Many of these tasks return the exact same arguments they are given, assuming they
+complete successfully, in order to facilitate task chaining or chording.
+"""
 import logging
 import random
 from datetime import timedelta
@@ -189,5 +194,57 @@ def synthesize_images(request_id: int) -> Optional[int]:
     logger.info(
         _("Synthesized %(count)s MachineImages for SyntheticDataRequest %(id)s"),
         {"count": request.image_count, "id": request.id},
+    )
+    return request_id
+
+
+@shared_task(name="api.tasks.synthesize_instances")
+@transaction.atomic
+def synthesize_instances(request_id: int) -> Optional[int]:
+    """
+    Synthesize instances for the given SyntheticDataRequest ID.
+
+    Args:
+        request_id (int): the SyntheticDataRequest.id to process
+
+    Returns:
+        int: the same SyntheticDataRequest.id if processing succeeded, else None.
+    """
+    if not (request := SyntheticDataRequest.objects.filter(id=request_id).first()):
+        logger.warning(
+            _("SyntheticDataRequest %(id)s does not exist."), {"id": request_id}
+        )
+        return None
+    if not (cloud_accounts := list(CloudAccount.objects.filter(user=request.user))):
+        logger.warning(
+            _("SyntheticDataRequest %(id)s has no CloudAccount."), {"id": request_id}
+        )
+        return None
+    if not (images := request.machine_images.all()):
+        logger.warning(
+            _("SyntheticDataRequest %(id)s has no MachineImage."), {"id": request_id}
+        )
+        return None
+
+    for __ in range(request.instance_count):
+        cloud_account = _faker.random_element(cloud_accounts)
+        image = _faker.random_element(images)
+
+        if request.cloud_type == AWS_PROVIDER_STRING:
+            api_helper.generate_instance_aws(
+                cloud_account=cloud_account,
+                image=image,
+                ec2_instance_id=_synthesize_id(),
+            )
+        elif request.cloud_type == AZURE_PROVIDER_STRING:
+            api_helper.generate_instance_azure(
+                cloud_account=cloud_account,
+                image=image,
+                azure_instance_resource_id=_synthesize_id(),
+            )
+
+    logger.info(
+        _("Synthesized %(count)s Instances for SyntheticDataRequest %(id)s"),
+        {"count": request.instance_count, "id": request_id},
     )
     return request_id
