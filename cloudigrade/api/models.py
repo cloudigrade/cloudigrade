@@ -949,6 +949,7 @@ def synthetic_data_request_post_save_callback(*args, **kwargs):
         from api.tasks import (
             synthesize_cloud_accounts,
             synthesize_images,
+            synthesize_instances,
             synthesize_user,
         )
 
@@ -957,6 +958,7 @@ def synthetic_data_request_post_save_callback(*args, **kwargs):
                 synthesize_user.s(instance.id),
                 synthesize_cloud_accounts.s(),
                 synthesize_images.s(),
+                synthesize_instances.s(),
             ).apply_async()
         )
 
