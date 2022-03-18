@@ -11,9 +11,11 @@ from util.tests import helper as util_helper
 
 def create_synthetic_data_request_without_post_save(
     cloud_type,
+    create_kwargs=None,
     synthesize_user=True,
     synthesize_cloud_accounts=True,
     synthesize_images=True,
+    synthesize_instances=True,
 ):
     """
     Create a SyntheticDataRequest with only some relations populated.
@@ -28,7 +30,11 @@ def create_synthetic_data_request_without_post_save(
         models.synthetic_data_request_post_save_callback,
         models.SyntheticDataRequest,
     ):
-        request = models.SyntheticDataRequest.objects.create(cloud_type=cloud_type)
+        if not create_kwargs:
+            create_kwargs = {}
+        request = models.SyntheticDataRequest.objects.create(
+            cloud_type=cloud_type, **create_kwargs
+        )
         if not synthesize_user:
             return request
         synthesize.synthesize_user(request.id)
@@ -40,6 +46,10 @@ def create_synthetic_data_request_without_post_save(
             request.refresh_from_db()
             return request
         synthesize.synthesize_images(request.id)
+        if not synthesize_instances:
+            request.refresh_from_db()
+            return request
+        synthesize.synthesize_instances(request.id)
         request.refresh_from_db()
         return request
 

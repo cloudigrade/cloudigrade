@@ -1462,6 +1462,7 @@ parameters:
     repopulate_ec2_instance_mapping,\
     synthesize_cloud_accounts,\
     synthesize_images,\
+    synthesize_instance_events,\
     synthesize_instances,\
     synthesize_user,\
     update_from_sources_kafka_message,\

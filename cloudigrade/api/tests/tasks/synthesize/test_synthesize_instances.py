@@ -20,7 +20,7 @@ class SynthesizeInstancesTest(TestCase):
         expected_total_instance_count = 0
         for cloud_type in CLOUD_PROVIDERS:
             request = create_synthetic_data_request_without_post_save(
-                cloud_type=cloud_type
+                cloud_type=cloud_type, synthesize_instances=False
             )
             expected_total_instance_count += request.instance_count
             response = synthesize.synthesize_instances(request.id)
