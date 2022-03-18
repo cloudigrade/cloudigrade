@@ -5,9 +5,9 @@ Many of these tasks return the exact same arguments they are given, assuming the
 complete successfully, in order to facilitate task chaining or chording.
 """
 import logging
-import random
+import secrets
+import uuid
 from datetime import date, datetime, timedelta
-from functools import partial
 from math import ceil
 from typing import Optional
 
@@ -16,7 +16,6 @@ from dateutil import rrule
 from django.contrib.auth.models import User
 from django.db import transaction
 from django.utils.translation import gettext as _
-from faker import Faker
 
 from api import AWS_PROVIDER_STRING, AZURE_PROVIDER_STRING
 from api.models import CloudAccount, Instance, SyntheticDataRequest
@@ -24,13 +23,12 @@ from api.tests import helper as api_helper  # TODO Don't import from tests modul
 from util.misc import get_now
 
 logger = logging.getLogger(__name__)
-_faker = Faker()
-_pyint_negative = partial(_faker.pyint, min_value=-999999, max_value=-1)
+random = secrets.SystemRandom()
 
 
 def _synthesize_id() -> str:
     """Synthesize an ID that should never collide with real-world IDs."""
-    return f"SYNTHETIC-{_faker.uuid4()}"
+    return f"SYNTHETIC-{uuid.uuid4()}"
 
 
 @shared_task(name="api.tasks.synthesize_user")
@@ -98,9 +96,9 @@ def synthesize_cloud_accounts(request_id: int) -> Optional[int]:
     for __ in range(request.account_count):
         # Real-world IDs from sources-api are always positive integers. By generating
         # random *negative* integers, they will never collide with actual IDs.
-        platform_authentication_id = _pyint_negative()
-        platform_application_id = _pyint_negative()
-        platform_source_id = _pyint_negative()
+        platform_authentication_id = random.randrange(-999999, -1)
+        platform_application_id = random.randrange(-999999, -1)
+        platform_source_id = random.randrange(-999999, -1)
 
         if request.cloud_type == AWS_PROVIDER_STRING:
             aws_account_id = _synthesize_aws_account_id()
@@ -117,7 +115,7 @@ def synthesize_cloud_accounts(request_id: int) -> Optional[int]:
             )
         elif request.cloud_type == AZURE_PROVIDER_STRING:
             api_helper.generate_cloud_account_azure(
-                azure_subscription_id=_faker.uuid4(),
+                azure_subscription_id=uuid.uuid4(),
                 user=request.user,
                 platform_authentication_id=platform_authentication_id,
                 platform_application_id=platform_application_id,
@@ -143,7 +141,7 @@ def _synthesize_aws_account_id() -> str:
     significantly reduce the likelihood of collisions with current real AWS account IDs,
     though collisions may still be *possible*.
     """
-    aws_account_id = f"{_faker.pyint(max_value=10 ** 6):012d}"
+    aws_account_id = f"{random.randrange(0, 10 ** 6):012d}"
     return aws_account_id
 
 
@@ -171,14 +169,14 @@ def synthesize_images(request_id: int) -> Optional[int]:
         return None
 
     for __ in range(request.image_count):
-        rhel_detected = _faker.random.random() < request.image_rhel_chance
-        openshift_detected = _faker.random.random() < request.image_ocp_chance
+        rhel_detected = random.random() < request.image_rhel_chance
+        openshift_detected = random.random() < request.image_ocp_chance
 
         if request.cloud_type == AWS_PROVIDER_STRING:
             owner_aws_account_id = (
                 _synthesize_aws_account_id()
                 if random.random() <= request.image_other_owner_chance
-                else _faker.random_element(cloud_accounts).content_object.aws_account_id
+                else random.choice(cloud_accounts).content_object.aws_account_id
             )
             image = api_helper.generate_image_aws(
                 rhel_detected=rhel_detected,
@@ -230,8 +228,8 @@ def synthesize_instances(request_id: int) -> Optional[int]:
         return None
 
     for __ in range(request.instance_count):
-        cloud_account = _faker.random_element(cloud_accounts)
-        image = _faker.random_element(images)
+        cloud_account = random.choice(cloud_accounts)
+        image = random.choice(images)
 
         if request.cloud_type == AWS_PROVIDER_STRING:
             api_helper.generate_instance_aws(
@@ -327,7 +325,7 @@ def _synthesize_run_times(
         run_count_to_make = max(
             run_count_min,
             min(
-                ceil(random.gauss(run_count_mean, run_count_max / 5) - 0.5),
+                ceil(random.normalvariate(run_count_mean, run_count_max / 5) - 0.5),
                 run_count_max,
             ),
         )
