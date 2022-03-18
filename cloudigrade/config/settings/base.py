@@ -494,6 +494,7 @@ CELERY_TASK_ROUTES = {
     "api.tasks.synthesize_cloud_accounts": {"queue": "synthesize_cloud_accounts"},
     "api.tasks.synthesize_images": {"queue": "synthesize_images"},
     "api.tasks.synthesize_instances": {"queue": "synthesize_instances"},
+    "api.tasks.synthesize_instance_events": {"queue": "synthesize_instance_events"},
     # api.clouds.aws.tasks
     "api.clouds.aws.tasks.analyze_log": {"queue": "analyze_log"},
     "api.clouds.aws.tasks.configure_customer_aws_and_create_cloud_account": {

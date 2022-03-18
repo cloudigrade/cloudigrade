@@ -6,8 +6,9 @@ complete successfully, in order to facilitate task chaining or chording.
 """
 import logging
 import random
-from datetime import timedelta
+from datetime import datetime, timedelta
 from functools import partial
+from math import ceil
 from typing import Optional
 
 from celery import shared_task
@@ -17,8 +18,9 @@ from django.utils.translation import gettext as _
 from faker import Faker
 
 from api import AWS_PROVIDER_STRING, AZURE_PROVIDER_STRING
-from api.models import CloudAccount, SyntheticDataRequest
+from api.models import CloudAccount, Instance, SyntheticDataRequest
 from api.tests import helper as api_helper  # TODO Don't import from tests module.
+from util.misc import get_now
 
 logger = logging.getLogger(__name__)
 _faker = Faker()
@@ -248,3 +250,137 @@ def synthesize_instances(request_id: int) -> Optional[int]:
         {"count": request.instance_count, "id": request_id},
     )
     return request_id
+
+
+@shared_task(name="api.tasks.synthesize_instance_events")
+@transaction.atomic
+def synthesize_instance_events(request_id: int) -> Optional[int]:
+    """
+    Synthesize events for all Instances for the given SyntheticDataRequest ID.
+
+    Args:
+        request_id (int): the SyntheticDataRequest.id to process
+
+    Returns:
+        int: the same SyntheticDataRequest.id if processing succeeded, else None.
+    """
+    if not (request := SyntheticDataRequest.objects.filter(id=request_id).first()):
+        logger.warning(
+            _("SyntheticDataRequest %(id)s does not exist."), {"id": request_id}
+        )
+        return None
+    if not (
+        instances := Instance.objects.filter(cloud_account__user_id=request.user_id)
+    ):
+        logger.warning(
+            _("SyntheticDataRequest %(id)s has no Instance."), {"id": request_id}
+        )
+        return None
+
+    run_times = _synthesize_run_times(
+        request.since_days_ago,
+        request.hours_per_run_min,
+        request.hours_per_run_mean,
+        request.run_count_per_instance_min,
+        request.run_count_per_instance_mean,
+        request.hours_between_runs_mean,
+        request.instance_count,
+    )
+
+    for instance, run_times in zip(instances, run_times):
+        api_helper.generate_instance_events(instance, run_times)
+
+    return request_id
+
+
+def _synthesize_run_times(
+    since_days_ago: int,
+    hours_per_run_min: float,
+    hours_per_run_mean: float,
+    run_count_per_instance_min: int,
+    run_count_per_instance_mean: int,
+    hours_between_runs_mean: float,
+    instance_count: int,
+) -> list[list[tuple[datetime, datetime]]]:
+    """
+    Synthesize pairs of pseudorandom datetime objects representing run starts and ends.
+
+    This function returns a list of list of tuples. The outer list length matches the
+    number of instances. Each outer list element has a list of (start, end) tuples.
+    """
+    now = get_now()
+    since_seconds_ago = since_days_ago * 24 * 60 * 60
+
+    secs_per_run_min = int(hours_per_run_min * 3600)
+    secs_per_run_mean = max(secs_per_run_min, int(hours_per_run_mean * 3600))
+    secs_per_run_max = secs_per_run_mean * 2 - secs_per_run_min
+    run_count_min = run_count_per_instance_min
+    run_count_mean = run_count_per_instance_mean
+    run_count_max = int(run_count_mean * 2)
+    max_secs_between_runs = int(hours_between_runs_mean * 3600 * 2)
+
+    instances_run_times = []  # For each instance, a list of tuples defining run times.
+
+    for __ in range(instance_count):
+        # How many runs to define for this instance.
+        run_count_to_make = max(
+            run_count_min,
+            min(
+                ceil(random.gauss(run_count_mean, run_count_max / 5) - 0.5),
+                run_count_max,
+            ),
+        )
+        # How long should each run last.
+        run_durations = [
+            int(random.uniform(secs_per_run_min, secs_per_run_max))
+            for ___ in range(run_count_to_make)
+        ]
+        # How much time before the next run starts.
+        # First element is 0 because we will calculate an initial starting delay later.
+        delays_between_runs = [0] + [
+            int(random.uniform(1, max_secs_between_runs))
+            for ___ in range(run_count_to_make - 1)
+        ]
+        total_duration = sum(run_durations) + sum(delays_between_runs)
+        average_duration = (
+            total_duration / run_count_to_make if run_count_to_make else 0
+        )
+
+        # How soon after the "since" time should the first run start?
+        # Subtract the total duration to try fitting most of the runs within the time,
+        # but the average duration of one of the runs to increase a chance that
+        # the final run will actually not have ended yet. Then pick a random value
+        # from zero to that number to be the first offset from the "since" time.
+        # Don't let that value be negative, though, which could happen if the cumulative
+        # requested run time is too large
+        initial_delay = max(
+            int(random.uniform(0, average_duration)),
+            int(
+                random.uniform(0, since_seconds_ago - total_duration + average_duration)
+            ),
+        )
+        delays_between_runs[0] = initial_delay
+
+        # Initialize baseline start and stop times at since_seconds_ago from now.
+        # The run times will be created using increasing offsets from these two.
+        start_time = now - timedelta(seconds=since_seconds_ago)
+        stop_time = start_time
+
+        run_times = []  # List of (start, end) tuples for this instance's run times.
+        for delay, duration in zip(delays_between_runs, run_durations):
+            start_time = stop_time + timedelta(seconds=delay)
+            stop_time = start_time + timedelta(seconds=duration)
+
+            # If this would start in the future, we've gone too far!
+            if start_time > now:
+                break
+
+            # If this would stop in the future, keep the run with no stop time, meaning
+            # it is "still running", and we must stop creating more runs.
+            if stop_time > now:
+                run_times.append((start_time, None))
+                break
+            run_times.append((start_time, stop_time))
+        instances_run_times.append(run_times)
+
+    return instances_run_times
