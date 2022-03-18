@@ -156,7 +156,9 @@ def recalculate_concurrent_usage_for_user_id_on_date(user_id, date):
         calculate_max_concurrent_usage(date, user_id)
 
 
-@shared_task(name="api.tasks.recalculate_concurrent_usage_for_user_id")
+@shared_task(
+    name="api.tasks.recalculate_concurrent_usage_for_user_id", serializer="pickle"
+)
 def recalculate_concurrent_usage_for_user_id(user_id, since=None):
     """
     Recalculate recent ConcurrentUsage for the given user id.

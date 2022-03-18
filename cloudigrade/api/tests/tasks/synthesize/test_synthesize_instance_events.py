@@ -19,7 +19,7 @@ class SynthesizeInstanceEventsTest(TestCase):
         """
         for cloud_type in CLOUD_PROVIDERS:
             request = create_synthetic_data_request_without_post_save(
-                cloud_type=cloud_type
+                cloud_type=cloud_type, synthesize_instance_events=False
             )
             response = synthesize.synthesize_instance_events(request.id)
             self.assertEqual(response, request.id)
@@ -60,6 +60,7 @@ class SynthesizeInstanceEventsTest(TestCase):
                 "run_count_per_instance_min": 0,
                 "run_count_per_instance_mean": 0,
             },
+            synthesize_instance_events=False,
         )
         response = synthesize.synthesize_instance_events(request.id)
         self.assertEqual(response, request.id)

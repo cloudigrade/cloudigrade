@@ -1461,9 +1461,11 @@ parameters:
     repopulate_azure_instance_mapping,\
     repopulate_ec2_instance_mapping,\
     synthesize_cloud_accounts,\
+    synthesize_concurrent_usage,\
     synthesize_images,\
     synthesize_instance_events,\
     synthesize_instances,\
+    synthesize_runs_and_usage,\
     synthesize_user,\
     update_from_sources_kafka_message,\
     unpause_from_sources_kafka_message"
