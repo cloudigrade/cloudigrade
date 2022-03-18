@@ -6,12 +6,13 @@ complete successfully, in order to facilitate task chaining or chording.
 """
 import logging
 import random
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from functools import partial
 from math import ceil
 from typing import Optional
 
-from celery import shared_task
+from celery import chord, group, shared_task
+from dateutil import rrule
 from django.contrib.auth.models import User
 from django.db import transaction
 from django.utils.translation import gettext as _
@@ -384,3 +385,80 @@ def _synthesize_run_times(
         instances_run_times.append(run_times)
 
     return instances_run_times
+
+
+@shared_task(name="api.tasks.synthesize_runs_and_usage")
+def synthesize_runs_and_usage(request_id: int) -> Optional[int]:
+    """
+    Trigger calculation of Run and ConcurrentUsage data for recently-synthesized data.
+
+    Note that this task calls (and chords) additional tasks asynchronously. This means
+    callers should not expect all of the "inner" calculations to have completed by the
+    time *this* function has returned. This differs from other synthesize_ tasks that
+    can be chained together with the expectation that one has completed before the next.
+
+    Args:
+        request_id (int): the SyntheticDataRequest.id to process
+
+    Returns:
+        int: the same SyntheticDataRequest.id if processing succeeded, else None.
+    """
+    if not (request := SyntheticDataRequest.objects.filter(id=request_id).first()):
+        logger.warning(
+            _("SyntheticDataRequest %(id)s does not exist."), {"id": request_id}
+        )
+        return None
+    if not (cloud_accounts := CloudAccount.objects.filter(user=request.user)):
+        logger.warning(
+            _("SyntheticDataRequest %(id)s has no CloudAccount."), {"id": request_id}
+        )
+        return None
+
+    # Locally import other tasks to avoid potential import loops.
+    from api.tasks import recalculate_runs_for_cloud_account_id
+
+    recalculate_runs_tasks = [
+        recalculate_runs_for_cloud_account_id.s(cloud_account.id)
+        for cloud_account in cloud_accounts
+    ]
+
+    active_dates = [
+        _datetime.date()
+        for _datetime in rrule.rrule(
+            freq=rrule.DAILY,
+            dtstart=request.user.date_joined.date(),
+            until=request.created_at.date(),
+        )
+    ]
+    recalculate_concurrent_tasks = [
+        synthesize_concurrent_usage.s(request.user.id, _date) for _date in active_dates
+    ]
+
+    # Important note! apply_async with serializer="pickle" is required *here* because
+    # nested task calls constructed through `chord` or `group` appear to ignore the
+    # serializer definitions on those nested task functions, specifically here in
+    # synthesize_concurrent_usage. This feels wrong and may be a Celery bug, but without
+    # forcing the serializer from the outermost call here, serialization fails
+    # catastrophically in the nested task.
+    chord(
+        group(recalculate_runs_tasks),
+        group(recalculate_concurrent_tasks),
+    ).apply_async(serializer="pickle")
+
+    return request_id
+
+
+@shared_task(name="api.tasks.synthesize_concurrent_usage", serializer="pickle")
+def synthesize_concurrent_usage(__: object, user_id: int, on_date: date) -> int:
+    """
+    Wrap recalculate_concurrent_usage_for_user_id for use at the end of a Celery chain.
+
+    Celery callbacks and chains require subsequent tasks to accept the preceding tasks'
+    results as additional arguments *before* the final task's own arguments. Since we
+    don't care about task results here and there appears to be no way to disable this
+    behavior, this wrapper task effectively discards that first argument.
+    """
+    from api.tasks import recalculate_concurrent_usage_for_user_id_on_date
+
+    recalculate_concurrent_usage_for_user_id_on_date(user_id, on_date)
+    return user_id

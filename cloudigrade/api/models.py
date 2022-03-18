@@ -955,6 +955,7 @@ def synthetic_data_request_post_save_callback(*args, **kwargs):
             synthesize_images,
             synthesize_instance_events,
             synthesize_instances,
+            synthesize_runs_and_usage,
             synthesize_user,
         )
 
@@ -965,6 +966,7 @@ def synthetic_data_request_post_save_callback(*args, **kwargs):
                 synthesize_images.s(),
                 synthesize_instances.s(),
                 synthesize_instance_events.s(),
+                synthesize_runs_and_usage.s(),
             ).apply_async()
         )
 
