@@ -264,10 +264,13 @@ class InternalPeriodicTaskSerializer(ModelSerializer):
 class InternalSyntheticDataRequestSerializer(ModelSerializer):
     """Serialize SyntheticDataRequest for the internal API."""
 
+    is_ready = serializers.BooleanField(read_only=True)
+
     class Meta:
         model = models.SyntheticDataRequest
         fields = (
             "id",
+            "is_ready",
             "user",
             "machine_images",
             "expires_at",
@@ -291,6 +294,7 @@ class InternalSyntheticDataRequestSerializer(ModelSerializer):
 
         read_only_fields = (
             "id",
+            "is_ready",
             "user",
             "machine_images",
             "expires_at",

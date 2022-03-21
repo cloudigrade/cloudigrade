@@ -7288,6 +7288,10 @@
             "type": "integer",
             "readOnly": true
           },
+          "is_ready": {
+            "type": "boolean",
+            "readOnly": true
+          },
           "user": {
             "type": "string",
             "readOnly": true,
