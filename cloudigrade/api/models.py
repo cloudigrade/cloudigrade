@@ -904,6 +904,18 @@ class SyntheticDataRequest(BaseModel):
     )
     machine_images = models.ManyToManyField(MachineImage)
 
+    def is_ready(self):
+        """Determine if the synthetic data is ready to use."""
+        if not self.user:
+            return False
+        start_date = self.user.date_joined.date()
+        created_date = self.created_at.date()
+        days_active = (created_date - start_date).days + 1
+        concurrent_usages_count = ConcurrentUsage.objects.filter(
+            user=self.user, date__gte=start_date, date__lte=created_date
+        ).count()
+        return concurrent_usages_count == days_active
+
     def __str__(self):
         """Get the string representation."""
         return repr(self)
