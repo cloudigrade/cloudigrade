@@ -40,6 +40,10 @@ app.conf.beat_schedule = {
         "task": "api.tasks.delete_orphaned_cloud_accounts",
         "schedule": env.int("DELETE_ORPHANED_ACCOUNTS_SCHEDULE", default=24 * 60 * 60),
     },
+    "delete_expired_synthetic_data": {
+        "task": "api.tasks.delete_expired_synthetic_data",
+        "schedule": env.int("DELETE_EXPIRED_SYNTHETIC_DATA_SCHEDULE", default=60 * 60),
+    },
     "persist_inspection_cluster_results": {
         "task": "api.tasks.persist_inspection_cluster_results_task",
         "schedule": env.int(

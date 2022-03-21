@@ -20,6 +20,7 @@ from api.models import (
     InstanceEvent,
     MachineImage,
     Run,
+    SyntheticDataRequest,
 )
 from util import aws
 from util.celery import retriable_shared_task
@@ -516,3 +517,10 @@ def delete_cloud_accounts_not_in_sources():
         _("Found %(num_accounts_found)s CloudAccount instances not in sources."),
         {"num_accounts_found": len(accounts_not_in_sources)},
     )
+
+
+@shared_task(name="api.tasks.delete_expired_synthetic_data")
+@transaction.atomic
+def delete_expired_synthetic_data():
+    """Delete expired SyntheticDataRequest objects."""
+    SyntheticDataRequest.objects.filter(expires_at__lte=get_now()).delete()
