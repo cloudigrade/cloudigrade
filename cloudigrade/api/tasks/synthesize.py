@@ -406,18 +406,17 @@ def synthesize_runs_and_usage(request_id: int) -> Optional[int]:
             _("SyntheticDataRequest %(id)s does not exist."), {"id": request_id}
         )
         return None
-    if not (cloud_accounts := CloudAccount.objects.filter(user=request.user)):
+    if not (instances := Instance.objects.filter(cloud_account__user=request.user)):
         logger.warning(
-            _("SyntheticDataRequest %(id)s has no CloudAccount."), {"id": request_id}
+            _("SyntheticDataRequest %(id)s has no Instance."), {"id": request_id}
         )
         return None
 
     # Locally import other tasks to avoid potential import loops.
-    from api.tasks import recalculate_runs_for_cloud_account_id
+    from api.tasks import recalculate_runs_for_instance_id
 
     recalculate_runs_tasks = [
-        recalculate_runs_for_cloud_account_id.s(cloud_account.id)
-        for cloud_account in cloud_accounts
+        recalculate_runs_for_instance_id.s(instance.id) for instance in instances
     ]
 
     active_dates = [

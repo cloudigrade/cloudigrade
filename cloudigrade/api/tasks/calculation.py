@@ -14,6 +14,7 @@ from api.util import (
     get_runs_for_user_id_on_date,
     recalculate_runs,
     recalculate_runs_for_cloud_account_id as _recalculate_runs_for_cloud_account_id,
+    recalculate_runs_for_instance_id as _recalculate_runs_for_instance_id,
 )
 from util.misc import get_today
 
@@ -78,6 +79,16 @@ def fix_problematic_runs(run_ids):
     """Fix list of problematic runs in an async task."""
     for run_id in run_ids:
         _fix_problematic_run(run_id)
+
+
+@shared_task(name="api.tasks.recalculate_runs_for_instance_id")
+def recalculate_runs_for_instance_id(instance_id):
+    """
+    Recalculate recent Runs for the given cloud account id.
+
+    This is simply a Celery task wrapper for recalculate_runs_for_instance_id.
+    """
+    _recalculate_runs_for_instance_id(instance_id)
 
 
 @shared_task(name="api.tasks.recalculate_runs_for_cloud_account_id")

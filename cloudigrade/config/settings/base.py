@@ -473,6 +473,9 @@ CELERY_TASK_ROUTES = {
     "api.tasks.recalculate_runs_for_cloud_account_id": {
         "queue": "recalculate_runs_for_cloud_account_id"
     },
+    "api.tasks.recalculate_runs_for_instance_id": {
+        "queue": "recalculate_runs_for_instance_id"
+    },
     # api.tasks supporting source kafka message handling
     "api.tasks.create_from_sources_kafka_message": {
         "queue": "create_from_sources_kafka_message"
