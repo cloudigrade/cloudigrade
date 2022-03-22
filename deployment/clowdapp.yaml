@@ -1466,6 +1466,7 @@ parameters:
     recalculate_concurrent_usage_for_user_id_on_date,\
     recalculate_runs_for_all_cloud_accounts,\
     recalculate_runs_for_cloud_account_id,\
+    recalculate_runs_for_instance_id,\
     remove_snapshot_ownership,\
     repopulate_azure_instance_mapping,\
     repopulate_ec2_instance_mapping,\
