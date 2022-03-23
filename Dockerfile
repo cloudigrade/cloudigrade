@@ -10,7 +10,7 @@ RUN rpm -iv https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/p
         jq \
         libicu \
         nmap-ncat \
-        postgresql12-libs \
+        postgresql14-libs \
         procps-ng \
         python39 \
         redhat-rpm-config \
@@ -25,14 +25,14 @@ FROM base as build
 COPY pyproject.toml poetry.lock ./
 RUN microdnf install -y \
         gcc \
-        postgresql12-devel \
+        postgresql14-devel \
         python39-devel \
         python39-pip \
     && if [ ! -e /usr/bin/pip ]; then ln -s /usr/bin/pip3.9 /usr/bin/pip ; fi \
     && pip install -U pip \
     && pip install poetry \
     && poetry config virtualenvs.in-project true \
-    && PATH="$PATH:/usr/pgsql-12/bin" poetry install -n --no-dev
+    && PATH="$PATH:/usr/pgsql-14/bin" poetry install -n --no-dev
 
 
 ### Create a release image
