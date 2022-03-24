@@ -476,7 +476,7 @@ def delete_cloud_accounts_not_in_sources():
     )
 
     all_cloud_accounts = CloudAccount.objects.filter(
-        updated_at__lt=max_updated_at
+        updated_at__lt=max_updated_at, is_synthetic=False
     ).order_by("id")
     for index, cloud_account in enumerate(all_cloud_accounts):
         if index > 0 and index % 100 == 0:

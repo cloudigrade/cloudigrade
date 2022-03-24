@@ -818,7 +818,7 @@ def update_aws_image_status_error(ec2_ami_id, is_encrypted=None):
     return True
 
 
-def verify_permissions(customer_role_arn):
+def verify_permissions(customer_role_arn):  # noqa: C901
     """
     Verify AWS permissions.
 
@@ -860,6 +860,11 @@ def verify_permissions(customer_role_arn):
         # Alas, we can't notify sources here since we don't have the CloudAccount which
         # is what has the required platform_application_id.
         return False
+
+    if cloud_account.is_synthetic:
+        # Synthetic accounts should never have real AWS accounts, CloudTrail, etc.
+        # but we should return early and treat them as if all systems are go.
+        return True
 
     # Get the username immediately from the related user in case the user is deleted
     # while we are verifying access and configuring cloudtrail; we'll need it later

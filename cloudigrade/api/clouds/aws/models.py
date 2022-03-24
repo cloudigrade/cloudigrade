@@ -76,6 +76,11 @@ class AwsCloudAccount(BaseModel):
         Raises:
             ValidationError or ClientError from verify_permissions if it fails.
         """
+        cloud_account = self.cloud_account.get()
+        if cloud_account.is_synthetic:
+            # Bypass permission verify, describe, etc. if this is a synthetic account.
+            return True
+
         from api.clouds.aws import tasks, util  # Avoid circular import.
 
         verified = util.verify_permissions(self.account_arn)
@@ -84,7 +89,7 @@ class AwsCloudAccount(BaseModel):
             logger.info(message)
             raise ValidationError({"account_arn": message})
 
-        if not self.cloud_account.get().platform_application_is_paused:
+        if not cloud_account.platform_application_is_paused:
             # Only describe if the application is *not* paused.
             transaction.on_commit(
                 lambda: tasks.initial_aws_describe_instances.delay(self.id)
@@ -103,6 +108,15 @@ class AwsCloudAccount(BaseModel):
         AWS CloudTrail only upon committing the transaction.  If we cannot delete the
         CloudTrail, we simply log a message and proceed regardless.
         """
+        try:
+            if self.cloud_account.get().is_synthetic:
+                # Bypass cloudtrail operations if this is a synthetic account.
+                return
+        except CloudAccount.DoesNotExist:
+            # The related CloudAccount normally should always exist, but it might not if
+            # we are in the middle of deleting this account and/or the AwsCloudAccount
+            # has been (temporarily?) orphaned from its CloudAccount.
+            pass
         logger.info(_("Attempting to disable %(account)s"), {"account": self})
         transaction.on_commit(lambda: _delete_cloudtrail(self))
         logger.info(_("Finished disabling %(account)s"), {"account": self})
