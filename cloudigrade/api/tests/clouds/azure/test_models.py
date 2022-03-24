@@ -7,11 +7,10 @@ from django.test import TransactionTestCase
 from api import AZURE_PROVIDER_STRING
 from api.clouds.azure import models as azure_models
 from api.tests import helper
-from api.tests.clouds.aws.test_models import ModelStrTestMixin
 from util.tests import helper as util_helper
 
 
-class AzureCloudAccountModelTest(TransactionTestCase, ModelStrTestMixin):
+class AzureCloudAccountModelTest(TransactionTestCase, helper.ModelStrTestMixin):
     """AzureCloudAccount Model Test Cases."""
 
     def setUp(self):

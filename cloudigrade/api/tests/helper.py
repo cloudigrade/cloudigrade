@@ -9,6 +9,7 @@ from unittest.mock import patch
 
 import faker
 from django.conf import settings
+from django.db.models import ForeignKey
 from rest_framework.test import APIClient
 
 from api import AWS_PROVIDER_STRING, AZURE_PROVIDER_STRING
@@ -1337,3 +1338,27 @@ def calculate_concurrent(start_date, end_date, user_id):
     for i in range(delta.days + 1):
         day = start_date + timedelta(days=i)
         calculate_max_concurrent_usage(date=day, user_id=user_id)
+
+
+class ModelStrTestMixin:
+    """Mixin for test classes to add common assertion for str correctness."""
+
+    def assertTypicalStrOutput(self, instance, exclude_field_names=None):
+        """
+        Assert instance's str output includes all relevant data.
+
+        Our typical model string representation should look like:
+            ClassName(field="value", other_field="value", related_model_id=1)
+        """
+        if exclude_field_names is None:
+            exclude_field_names = ()
+        output = str(instance)
+        self.assertEqual(output, repr(instance))
+        self.assertTrue(output.startswith(f"{instance.__class__.__name__}("))
+        field_names = (
+            field.name if not isinstance(field, ForeignKey) else f"{field.name}_id"
+            for field in instance.__class__._meta.local_fields
+            if field.name not in exclude_field_names
+        )
+        for field_name in field_names:
+            self.assertIn(f"{field_name}=", output)
