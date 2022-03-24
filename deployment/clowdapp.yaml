@@ -17,7 +17,7 @@ objects:
       iqePlugin: cloudmeter
     database:
       name: cloudigrade
-      version: 14
+      version: 13
     dependencies:
     - postigrade
     - sources-api
