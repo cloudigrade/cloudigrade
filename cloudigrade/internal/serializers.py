@@ -1,7 +1,9 @@
 """DRF serializers for the cloudigrade internal API."""
 from django.contrib.auth.models import User
+from django.utils.translation import gettext as _
 from django_celery_beat.models import PeriodicTask
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from rest_framework.fields import BooleanField
 from rest_framework.serializers import ModelSerializer
 
@@ -297,24 +299,22 @@ class InternalSyntheticDataRequestSerializer(ModelSerializer):
             "is_ready",
             "user",
             "machine_images",
-            "expires_at",
             "created_at",
             "updated_at",
         )
 
-        create_only_fields = (
-            "cloud_type",
-            "since_days_ago",
-            "account_count",
-            "image_count",
-            "image_ocp_chance",
-            "image_rhel_chance",
-            "image_other_owner_chance",
-            "instance_count",
-            "run_count_per_instance_min",
-            "run_count_per_instance_mean",
-            "hours_per_run_min",
-            "hours_per_run_mean",
-            "hours_between_runs_mean",
-            "expires_at",
-        )
+        updatable_fields = ("expires_at",)
+
+    def update(self, instance, validated_data):
+        """Update the instance with the name from validated_data."""
+        errors = {}
+
+        for field in validated_data.copy():
+            if field not in self.Meta.updatable_fields:
+                if getattr(instance, field) != validated_data.get(field):
+                    errors[field] = [_("You cannot update field {}.").format(field)]
+                else:
+                    validated_data.pop(field, None)
+        if errors:
+            raise ValidationError(errors)
+        return super().update(instance, validated_data)

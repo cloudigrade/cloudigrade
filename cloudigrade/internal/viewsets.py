@@ -385,15 +385,8 @@ class InternalPeriodicTaskViewSet(
     serializer_class = serializers.InternalPeriodicTaskSerializer
 
 
-class InternalSyntheticDataRequestViewSet(
-    InternalViewSetMixin,
-    mixins.CreateModelMixin,
-    mixins.RetrieveModelMixin,
-    mixins.DestroyModelMixin,
-    mixins.ListModelMixin,
-    viewsets.GenericViewSet,
-):
-    """Create, retrieve, delete, or list SyntheticDataRequests for internal use."""
+class InternalSyntheticDataRequestViewSet(InternalViewSetMixin, viewsets.ModelViewSet):
+    """Create, retrieve, update, delete, or list SyntheticDataRequests."""
 
     queryset = models.SyntheticDataRequest.objects.all()
     serializer_class = serializers.InternalSyntheticDataRequestSerializer
