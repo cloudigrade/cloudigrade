@@ -268,6 +268,7 @@ def _generate_cloud_account(
     is_enabled=True,
     enabled_at=None,
     missing_content_object=False,
+    is_synthetic=False,
 ):
     """
     Generate a CloudAccount for testing.
@@ -288,6 +289,8 @@ def _generate_cloud_account(
         missing_content_object (bool): should the provider-specific cloud account
             (content_object) be missing; this is used to simulate unwanted edge cases in
             which the content_object is not correctly deleted with the CloudAccount.
+        is_synthetic (bool): Optional should the account be treated as if it originated
+            from a SyntheticDataRequest.
 
     Returns:
         CloudAccount: The created Cloud Account.
@@ -320,6 +323,7 @@ def _generate_cloud_account(
         platform_source_id=platform_source_id,
         is_enabled=is_enabled,
         enabled_at=enabled_at,
+        is_synthetic=is_synthetic,
     )
     cloud_account.created_at = created_at
     cloud_account.save()

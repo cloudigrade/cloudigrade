@@ -6498,6 +6498,9 @@
           "platform_application_is_paused": {
             "type": "boolean"
           },
+          "is_synthetic": {
+            "type": "boolean"
+          },
           "content_type": {
             "type": "integer"
           },
