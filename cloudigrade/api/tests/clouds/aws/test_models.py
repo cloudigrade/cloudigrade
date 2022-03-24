@@ -5,7 +5,6 @@ from unittest.mock import Mock, patch
 
 from botocore.exceptions import ClientError
 from django.conf import settings
-from django.db.models import ForeignKey
 from django.test import TestCase, TransactionTestCase
 
 import api.clouds.aws.util
@@ -19,31 +18,7 @@ from util.tests import helper as util_helper
 logger = logging.getLogger(__name__)
 
 
-class ModelStrTestMixin:
-    """Mixin for test classes to add common assertion for str correctness."""
-
-    def assertTypicalStrOutput(self, instance, exclude_field_names=None):
-        """
-        Assert instance's str output includes all relevant data.
-
-        Our typical model string representation should look like:
-            ClassName(field="value", other_field="value", related_model_id=1)
-        """
-        if exclude_field_names is None:
-            exclude_field_names = ()
-        output = str(instance)
-        self.assertEqual(output, repr(instance))
-        self.assertTrue(output.startswith(f"{instance.__class__.__name__}("))
-        field_names = (
-            field.name if not isinstance(field, ForeignKey) else f"{field.name}_id"
-            for field in instance.__class__._meta.local_fields
-            if field.name not in exclude_field_names
-        )
-        for field_name in field_names:
-            self.assertIn(f"{field_name}=", output)
-
-
-class AwsCloudAccountModelTest(TransactionTestCase, ModelStrTestMixin):
+class AwsCloudAccountModelTest(TransactionTestCase, helper.ModelStrTestMixin):
     """AwsCloudAccount Model Test Cases."""
 
     def setUp(self):
@@ -393,7 +368,7 @@ class AwsCloudAccountModelTest(TransactionTestCase, ModelStrTestMixin):
         self.assertEqual(0, aws_models.AwsCloudAccount.objects.count())
 
 
-class InstanceModelTest(TestCase, ModelStrTestMixin):
+class InstanceModelTest(TestCase, helper.ModelStrTestMixin):
     """Instance Model Test Cases."""
 
     def setUp(self):
@@ -451,7 +426,7 @@ class InstanceModelTest(TestCase, ModelStrTestMixin):
         self.assertEqual(0, models.Instance.objects.count())
 
 
-class MachineImageModelTest(TestCase, ModelStrTestMixin):
+class MachineImageModelTest(TestCase, helper.ModelStrTestMixin):
     """Instance Model Test Cases."""
 
     def setUp(self):
