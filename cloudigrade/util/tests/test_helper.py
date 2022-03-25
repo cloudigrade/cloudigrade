@@ -9,6 +9,8 @@ import string
 
 import faker
 from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.test import TestCase
 
 from util import aws
@@ -284,3 +286,22 @@ class UtilHelperTest(TestCase):
                 instance_id,
             )
         )
+
+    def test_mock_signal_handler(self):
+        """Assert mock_signal_handler temporarily bypasses original signal handler."""
+
+        class OriginalHandlerWasCalled(Exception):
+            """Raise to identify when the original signal handler is called."""
+
+        @receiver(post_save, sender=User)
+        def _handler(*args, **kwargs):
+            """Raise exception to indicate the handler was called."""
+            raise OriginalHandlerWasCalled
+
+        with helper.mock_signal_handler(post_save, _handler, User) as mock_handler:
+            # OriginalHandlerWasCalled should not be raised because _handler is mocked.
+            User.objects.create_user(_faker.name())
+            mock_handler.assert_called_once()
+
+        with self.assertRaises(OriginalHandlerWasCalled):
+            User.objects.create_user(_faker.name())

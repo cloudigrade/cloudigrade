@@ -1043,3 +1043,14 @@ def clouditardis(destination):
         mock_datetime.datetime.now.return_value = destination
         mock_django_now.return_value = destination
         yield
+
+
+@contextmanager
+def mock_signal_handler(signal, handler, sender):
+    """Temporarily replace an existing Django signal handler with a Mock."""
+    signal.disconnect(handler, sender=sender)
+    mock_handler = Mock()
+    signal.connect(mock_handler, sender=sender)
+    yield mock_handler
+    signal.disconnect(mock_handler, sender=sender)
+    signal.connect(handler, sender=sender)
