@@ -7349,6 +7349,10 @@
           "instance_count": {
             "type": "integer"
           },
+          "run_count_per_instance_min": {
+            "type": "integer",
+            "minimum": 0
+          },
           "run_count_per_instance_mean": {
             "type": "number",
             "minimum": 0

@@ -880,6 +880,9 @@ class SyntheticDataRequest(BaseModel):
         validators=[validators.MinValueValidator(0), validators.MaxValueValidator(1)],
     )
     instance_count = models.PositiveIntegerField(default=100)
+    run_count_per_instance_min = models.IntegerField(
+        default=1, validators=[validators.MinValueValidator(0)]
+    )
     run_count_per_instance_mean = models.FloatField(
         default=1.0, validators=[validators.MinValueValidator(0)]
     )
@@ -930,6 +933,7 @@ class SyntheticDataRequest(BaseModel):
             f"image_rhel_chance={self.image_rhel_chance}, "
             f"image_other_owner_chance={self.image_other_owner_chance}, "
             f"instance_count={self.instance_count}, "
+            f"run_count_per_instance_min={self.run_count_per_instance_min}, "
             f"run_count_per_instance_mean={self.run_count_per_instance_mean}, "
             f"hours_per_run_min={self.hours_per_run_min}, "
             f"hours_per_run_mean={self.hours_per_run_mean}, "
