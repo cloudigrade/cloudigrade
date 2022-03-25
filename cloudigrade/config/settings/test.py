@@ -15,3 +15,6 @@ DATABASES = {
 
 LOGGING["handlers"]["console"]["level"] = "CRITICAL"
 logging.config.dictConfig(LOGGING)
+
+# Always enable SyntheticDataRequest HTTP API for tests.
+ENABLE_SYNTHETIC_DATA_REQUEST_HTTP_API = True

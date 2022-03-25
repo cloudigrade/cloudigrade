@@ -1,4 +1,5 @@
 """Internal API URL configuration for cloudigrade."""
+from django.conf import settings
 from django.urls import include, path
 from rest_framework import permissions, renderers, routers
 from rest_framework.schemas import get_schema_view
@@ -32,8 +33,12 @@ routes += [
     ),
     ("concurrentusages", viewsets.InternalConcurrentUsageViewSet, None),
     ("instancedefinitions", viewsets.InternalInstanceDefinitionViewSet, None),
-    ("syntheticdatarequests", viewsets.InternalSyntheticDataRequestViewSet, None),
 ]
+
+if settings.ENABLE_SYNTHETIC_DATA_REQUEST_HTTP_API:
+    routes.append(
+        ("syntheticdatarequests", viewsets.InternalSyntheticDataRequestViewSet, None)
+    )
 
 # URLs for AWS models
 routes += [
