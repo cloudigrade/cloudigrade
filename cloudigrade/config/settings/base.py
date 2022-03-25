@@ -590,6 +590,11 @@ DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_UPDATED_MORE_THAN_SECONDS_AGO = env.int(
     "DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_UPDATED_MORE_THAN_SECONDS_AGO", default=5 * 60
 )
 
+# Should the internal HTTP API for SyntheticDataRequest objects be available?
+ENABLE_SYNTHETIC_DATA_REQUEST_HTTP_API = env.bool(
+    "ENABLE_SYNTHETIC_DATA_REQUEST_HTTP_API", default=False
+)
+
 #####################################################################
 # cloudigrade authentication-related configs
 

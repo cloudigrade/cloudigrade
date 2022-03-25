@@ -298,6 +298,8 @@ objects:
           value: ${DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_SCHEDULE}
         - name: DELETE_EXPIRED_SYNTHETIC_DATA_SCHEDULE
           value: ${DELETE_EXPIRED_SYNTHETIC_DATA_SCHEDULE}
+        - name: ENABLE_SYNTHETIC_DATA_REQUEST_HTTP_API
+          value: ${ENABLE_SYNTHETIC_DATA_REQUEST_HTTP_API}
     - name: beat
       #
       # Component cloudigrade-beat deployment:
@@ -549,6 +551,8 @@ objects:
           value: ${DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_SCHEDULE}
         - name: DELETE_EXPIRED_SYNTHETIC_DATA_SCHEDULE
           value: ${DELETE_EXPIRED_SYNTHETIC_DATA_SCHEDULE}
+        - name: ENABLE_SYNTHETIC_DATA_REQUEST_HTTP_API
+          value: ${ENABLE_SYNTHETIC_DATA_REQUEST_HTTP_API}
     - name: listener
       #
       # Component cloudigrade-listener deployment:
@@ -796,6 +800,8 @@ objects:
           value: ${DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_SCHEDULE}
         - name: DELETE_EXPIRED_SYNTHETIC_DATA_SCHEDULE
           value: ${DELETE_EXPIRED_SYNTHETIC_DATA_SCHEDULE}
+        - name: ENABLE_SYNTHETIC_DATA_REQUEST_HTTP_API
+          value: ${ENABLE_SYNTHETIC_DATA_REQUEST_HTTP_API}
     - name: worker
       #
       # Component cloudigrade-worker deployment:
@@ -1055,6 +1061,8 @@ objects:
           value: ${DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_SCHEDULE}
         - name: DELETE_EXPIRED_SYNTHETIC_DATA_SCHEDULE
           value: ${DELETE_EXPIRED_SYNTHETIC_DATA_SCHEDULE}
+        - name: ENABLE_SYNTHETIC_DATA_REQUEST_HTTP_API
+          value: ${ENABLE_SYNTHETIC_DATA_REQUEST_HTTP_API}
     jobs:
     - name: floorist
       schedule: ${FLOORIST_SCHEDULE}
@@ -1768,6 +1776,10 @@ parameters:
   displayName: Delete expired synthetic data schedule (seconds)
   required: true
   value: '3600'
+- name: ENABLE_SYNTHETIC_DATA_REQUEST_HTTP_API
+  displayName: Enable the synthetic data internal HTTP API
+  required: true
+  value: 'false'
 #
 # Floorist Parameters
 #
