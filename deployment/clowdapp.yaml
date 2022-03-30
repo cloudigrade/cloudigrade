@@ -819,7 +819,7 @@ objects:
             command:
               - /bin/sh
               - -c
-              - 'if [ $(ps axo command | grep "^python" | grep "cli.py" | wc -l) -ne "1" ]; then exit 1; fi'
+              - '[[ $(ps axo command | grep "^python" | grep -c "cli.py") -eq 1 ]]'
           failureThreshold: 3
           initialDelaySeconds: 5
           periodSeconds: 10
