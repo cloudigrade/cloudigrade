@@ -103,8 +103,13 @@ def recalculate_runs_for_cloud_account_id(cloud_account_id, since=None):
 
 @shared_task(name="api.tasks.recalculate_runs_for_all_cloud_accounts")
 def recalculate_runs_for_all_cloud_accounts(since=None):
-    """Recalculate recent runs for all cloud accounts."""
-    cloud_accounts = CloudAccount.objects.all()
+    """
+    Recalculate recent runs for all cloud accounts.
+
+    Except synthetic accounts. All of their runs and concurrent usage are calculated
+    once during initial synthesis and never need to be recalculated again after that.
+    """
+    cloud_accounts = CloudAccount.objects.filter(is_synthetic=False)
     for cloud_account in cloud_accounts:
         recalculate_runs_for_cloud_account_id.apply_async(
             args=(cloud_account.id, since), serializer="pickle"
