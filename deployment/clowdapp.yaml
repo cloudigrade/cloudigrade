@@ -1109,21 +1109,6 @@ objects:
   metadata:
     name: cloudwatch
 
-# Floorist
-# https://docs.engineering.redhat.com/display/COMPL/Floorist+onboarding
-- apiVersion: v1
-  kind: ConfigMap
-  metadata:
-    name: floorplan
-  data:
-    floorplan.yaml: |
-      - prefix: insights/cloudigrade/total_user_count
-        query: >-
-          select count(1) as total_user_count from auth_user;
-      - prefix: insights/cloudigrade/total_user_count_again
-        query: >-
-          select count(1) as total_user_count from auth_user;
-
 #### HPA's
 #### FIXME: HPAs can not be used until clowder adds support for them.
 #### https://coreos.slack.com/archives/C022YV4E0NA/p1633973680455600
@@ -1738,28 +1723,3 @@ parameters:
   displayName: Enable the synthetic data internal HTTP API
   required: true
   value: 'false'
-#
-# Floorist Parameters
-#
-- name: FLOORIST_SCHEDULE
-  description: Cronjob schedule definition
-  required: true
-  value: '30 11 * * *'
-- name: FLOORIST_SUSPEND
-  description: Disable Floorist cronjob execution
-  required: true
-  value: 'true'
-- description: Floorist image name
-  name: FLOORIST_IMAGE
-  value: quay.io/cloudservices/floorist
-- description: Floorist Image tag
-  name: FLOORIST_IMAGE_TAG
-  required: true
-  value: latest
-- description: bucket secret name
-  name: FLOORIST_BUCKET_SECRET_NAME
-  required: true
-  value: dummy-secret
-- name: FLOORIST_LOGLEVEL
-  description: Floorist loglevel config
-  value: 'INFO'
