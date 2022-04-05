@@ -1683,7 +1683,7 @@ parameters:
 - name: HOUNDIGRADE_ECS_IMAGE_TAG
   displayName: AWS Houndigrade ECS Image Tag
   required: true
-  value: '0.8.1'
+  value: '1.0.0'
 - name: HOUNDIGRADE_ECS_PERSIST_INSPECTION_RESULTS_SCHEDULE
   displayName: AWS Houndigrade ECS Persist Inspection Results Schedule
   required: true
