@@ -1429,7 +1429,7 @@ parameters:
 - name: CELERY_METRICS_IMAGE
   displayName: Celery Metrics Image
   required: true
-  value: quay.io/cloudservices/celery-exporter
+  value: quay.io/cloudservices/celery-exporter-container
 - name: CELERY_METRICS_IMAGE_TAG
   displayName: Celery Metrics Image Tag
   required: true
