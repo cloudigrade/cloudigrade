@@ -998,6 +998,15 @@
             }
           },
           {
+            "name": "is_synthetic",
+            "required": false,
+            "in": "query",
+            "description": "is_synthetic",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "object_id",
             "required": false,
             "in": "query",
@@ -1011,6 +1020,15 @@
             "required": false,
             "in": "query",
             "description": "platform_application_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "platform_application_is_paused",
+            "required": false,
+            "in": "query",
+            "description": "platform_application_is_paused",
             "schema": {
               "type": "string"
             }
@@ -1193,6 +1211,15 @@
             }
           },
           {
+            "name": "is_synthetic",
+            "required": false,
+            "in": "query",
+            "description": "is_synthetic",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "object_id",
             "required": false,
             "in": "query",
@@ -1206,6 +1233,15 @@
             "required": false,
             "in": "query",
             "description": "platform_application_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "platform_application_is_paused",
+            "required": false,
+            "in": "query",
+            "description": "platform_application_is_paused",
             "schema": {
               "type": "string"
             }
@@ -1340,6 +1376,15 @@
             }
           },
           {
+            "name": "is_synthetic",
+            "required": false,
+            "in": "query",
+            "description": "is_synthetic",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "object_id",
             "required": false,
             "in": "query",
@@ -1353,6 +1398,15 @@
             "required": false,
             "in": "query",
             "description": "platform_application_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "platform_application_is_paused",
+            "required": false,
+            "in": "query",
+            "description": "platform_application_is_paused",
             "schema": {
               "type": "string"
             }
