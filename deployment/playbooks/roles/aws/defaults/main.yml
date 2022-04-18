@@ -11,7 +11,6 @@ s3_state: "present"
 ecs_cluster_name: cloudigrade-ecs-{{env}}
 ecs_iam_role_name: cloudigrade-ecs-role-{{env}}
 ecs_iam_policy_name: cloudigrade-ecs-policy-{{env}}
-ecs_cloudwatch_iam_policy_name: cloudigrade-cloudwatch-policy-{{env}}
 ec2_ssh_key_name: cloudigrade-ecs-ssh-{{env}}
 ec2_sg_name: cloudigrade-sg-{{env}}
 ec2_lc_name: cloudigrade-lc-{{env}}
@@ -49,6 +48,7 @@ ec2_asg_replace_all_instances: yes
 # EC2 LT Defaults
 ec2_lt_name: "cloudigrade-lt-{{env}}"
 ec2_lt_policy_name: "{{ec2_lt_name}}-policy"
+ec2_cw_policy_name: "{{ec2_lt_name}}-cw-policy"
 ec2_lt_role_name: "{{ec2_lt_name}}-role"
 ec2_lt_instance_monitoring: true
 ec2_lt_instance_type: "t2.micro"

@@ -28,6 +28,13 @@
       policy_name: "{{ec2_lt_policy_name}}"
       policy_json: "{{ lookup( 'template', 'ec2_houndigrade_put_policy.json.j2') | to_json }}"
 
+  - name: create / ec2 cloud watch policy
+    iam_policy:
+      iam_name: "{{ec2_lt_role_name}}"
+      iam_type: role
+      policy_name: "{{ec2_cw_policy_name}}"
+      policy_json: "{{ lookup('file','cloudwatch-policy.json') }}"
+
   - name: create / ec2 launch template
     ec2_launch_template:
       name: "{{ec2_lt_name}}"
