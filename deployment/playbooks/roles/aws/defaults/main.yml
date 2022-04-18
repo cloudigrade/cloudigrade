@@ -6,44 +6,6 @@ ecs_state: "absent"
 ec2_state: "present"
 s3_state: "present"
 
-### ecs.yml
-# ECS Resource Names
-ecs_cluster_name: cloudigrade-ecs-{{env}}
-ecs_iam_role_name: cloudigrade-ecs-role-{{env}}
-ecs_iam_policy_name: cloudigrade-ecs-policy-{{env}}
-ec2_ssh_key_name: cloudigrade-ecs-ssh-{{env}}
-ec2_sg_name: cloudigrade-sg-{{env}}
-ec2_lc_name: cloudigrade-lc-{{env}}
-ec2_asg_name: cloudigrade-ecs-asg-{{env}}
-
-# EC2 LC Defaults
-ec2_instance_monitoring: true
-ec2_instance_type: "t2.micro"
-recommended_ami: "{{ lookup('aws_ssm', '/aws/service/ecs/optimized-ami/amazon-linux-2/recommended', shortnames=true, bypath=true ) }}"
-# Needed to register the EC2 instance with ECS
-# https://aws.amazon.com/premiumsupport/knowledge-center/execute-user-data-ec2/
-ec2_userdata: |
-  Content-Type: multipart/mixed; boundary="//"
-  MIME-Version: 1.0
-
-  --//
-  MIME-Version: 1.0
-  Content-Type: text/x-shellscript; charset="us-ascii"
-
-  #!/bin/bash
-
-  # Set cluster name in ECS config
-  echo ECS_CLUSTER={{ ecs_cluster_name }} >> /etc/ecs/ecs.config;
-  --//
-
-# ECS ASG Defaults
-ec2_asg_az: "us-east-1a"
-ec2_asg_min_size: 0
-ec2_asg_max_size: 0
-ec2_asg_desired_capacity: 0
-ec2_asg_replace_all_instances: yes
-
-
 ### ec2.yml
 # EC2 LT Defaults
 ec2_lt_name: "cloudigrade-lt-{{env}}"
@@ -54,6 +16,12 @@ ec2_lt_instance_monitoring: true
 ec2_lt_instance_type: "t2.micro"
 ec2_lt_recommended_ami: "{{ lookup('aws_ssm', '/aws/service/ecs/optimized-ami/amazon-linux-2/recommended', shortnames=true, bypath=true ) }}"
 
+# EC2 LC Defaults
+ec2_ssh_key_name: cloudigrade-ecs-ssh-{{env}}
+ec2_sg_name: cloudigrade-sg-{{env}}
+ec2_instance_monitoring: true
+ec2_instance_type: "t2.micro"
+recommended_ami: "{{ lookup('aws_ssm', '/aws/service/ecs/optimized-ami/amazon-linux-2/recommended', shortnames=true, bypath=true ) }}"
 
 ### s3.yml
 # Names
