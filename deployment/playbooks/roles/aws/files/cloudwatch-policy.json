@@ -4,14 +4,14 @@
         {
             "Effect": "Allow",
             "Action": [
-                "logs:CreateLogGroup",
-                "logs:CreateLogStream",
+                "logs:PutRetentionPolicy",
                 "logs:PutLogEvents",
-                "logs:DescribeLogStreams"
+                "logs:DescribeLogStreams",
+                "logs:DescribeLogGroups",
+                "logs:CreateLogStream",
+                "logs:CreateLogGroup"
             ],
-            "Resource": [
-                "arn:aws:logs:*:*:*"
-            ]
+            "Resource": "*"
         }
     ]
 }
