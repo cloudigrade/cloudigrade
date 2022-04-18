@@ -7,13 +7,15 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0055_syntheticdatarequest'),
+        ("api", "0055_syntheticdatarequest"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='syntheticdatarequest',
-            name='expires_at',
-            field=models.DateTimeField(default=api.models.syntheticdatarequest_expires_at_default),
+            model_name="syntheticdatarequest",
+            name="expires_at",
+            field=models.DateTimeField(
+                default=api.models.syntheticdatarequest_expires_at_default
+            ),
         ),
     ]
