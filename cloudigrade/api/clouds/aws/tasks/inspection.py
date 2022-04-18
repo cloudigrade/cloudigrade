@@ -1,4 +1,5 @@
 """Celery tasks related to the AWS image inspection process."""
+import json
 import logging
 
 import boto3
@@ -111,6 +112,30 @@ def _build_cloud_init_script(ami_id):
     houndigrade_image = (
         f"{settings.HOUNDIGRADE_ECS_IMAGE_NAME}:{settings.HOUNDIGRADE_ECS_IMAGE_TAG}"
     )
+    cw_config = {
+        "logs": {
+            "logs_collected": {
+                "files": {
+                    "collect_list": [
+                        {
+                            "file_path": "/var/log/houndigrade",
+                            "log_group_name": f"houndigrade-"
+                            f"{settings.CLOUDIGRADE_ENVIRONMENT}",
+                            "log_stream_name": f"{ami_id}-inspection",
+                            "retention_in_days": 14,
+                        },
+                        {
+                            "file_path": "/var/log/messages",
+                            "log_group_name": f"houndigrade-"
+                            f"{settings.CLOUDIGRADE_ENVIRONMENT}",
+                            "log_stream_name": f"{ami_id}-system",
+                            "retention_in_days": 14,
+                        },
+                    ]
+                }
+            }
+        }
+    }
 
     cloud_init_script = f"""Content-Type: multipart/mixed; boundary="//"
 MIME-Version: 1.0
@@ -132,8 +157,21 @@ Content-Transfer-Encoding: 7bit
 Content-Disposition: attachment; filename="userdata.txt"
 
 #!/bin/bash
+#Setup Cloudwatch
+touch /var/log/houndigrade
+cat << EOF > config.json
+{json.dumps(cw_config)}
+EOF
 
-docker pull docker pull {houndigrade_image}
+yum install amazon-cloudwatch-agent -y
+/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+    -a fetch-config \
+    -m ec2 \
+    -s \
+    -c file:config.json
+
+# Run Houndigrade
+docker pull {houndigrade_image}
 docker run \
     --mount type=bind,source=/dev,target=/dev \
     --privileged --rm \
@@ -144,9 +182,11 @@ docker run \
     -e RESULTS_BUCKET_NAME={settings.HOUNDIGRADE_RESULTS_BUCKET_NAME} \
     {houndigrade_image} \
     -c aws \
-    -t {ami_id} /dev/xvdbb
+    -t {ami_id} /dev/xvdbb \
+    > /var/log/houndigrade 2>&1
 
-shutdown -h now
+# Add a ten second sleep so cloudwatch has plenty of time to upload remaining logs
+sleep 10; shutdown -h now
 
 --//--
     """
