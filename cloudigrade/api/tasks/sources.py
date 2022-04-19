@@ -50,6 +50,7 @@ def create_from_sources_kafka_message(message, headers):
     authentication_id = message.get("authentication_id", None)
     application_id = message.get("application_id", None)
     (
+        org_id,
         account_number,
         platform_id,
     ) = sources.extract_ids_from_kafka_message(message, headers)
@@ -59,7 +60,7 @@ def create_from_sources_kafka_message(message, headers):
         return
 
     application, authentication = _get_and_verify_sources_data(
-        account_number, application_id, authentication_id
+        org_id, account_number, application_id, authentication_id
     )
     if application is None or authentication is None:
         return
@@ -125,7 +126,9 @@ def create_from_sources_kafka_message(message, headers):
         )
 
 
-def _get_and_verify_sources_data(account_number, application_id, authentication_id):
+def _get_and_verify_sources_data(
+    org_id, account_number, application_id, authentication_id
+):
     """
     Call the sources API and look up the object IDs we were given.
 
@@ -138,7 +141,7 @@ def _get_and_verify_sources_data(account_number, application_id, authentication_
         (dict, dict): application and authentication dicts if present and valid,
             otherwise None.
     """
-    application = sources.get_application(account_number, application_id)
+    application = sources.get_application(org_id, account_number, application_id)
     if not application:
         logger.info(
             _(
@@ -151,12 +154,14 @@ def _get_and_verify_sources_data(account_number, application_id, authentication_
 
     application_type = application["application_type_id"]
     if application_type is not sources.get_cloudigrade_application_type_id(
-        account_number
+        org_id, account_number
     ):
         logger.info(_("Aborting creation. Application Type is not cloudmeter."))
         return None, None
 
-    authentication = sources.get_authentication(account_number, authentication_id)
+    authentication = sources.get_authentication(
+        org_id, account_number, authentication_id
+    )
     if not authentication:
         error_code = error_codes.CG2000
         error_code.log_internal_message(
@@ -191,6 +196,7 @@ def delete_from_sources_kafka_message(message, headers):
 
     """
     (
+        org_id,
         account_number,
         platform_id,
     ) = sources.extract_ids_from_kafka_message(message, headers)
@@ -254,27 +260,32 @@ def update_from_sources_kafka_message(message, headers):
 
     """
     (
+        org_id,
         account_number,
         authentication_id,
     ) = sources.extract_ids_from_kafka_message(message, headers)
 
-    if account_number is None or authentication_id is None:
+    if (org_id is None and account_number is None) or authentication_id is None:
         logger.error(_("Aborting update. Incorrect message details."))
         return
 
     try:
         clount = CloudAccount.objects.get(platform_authentication_id=authentication_id)
 
-        authentication = sources.get_authentication(account_number, authentication_id)
+        authentication = sources.get_authentication(
+            org_id, account_number, authentication_id
+        )
 
         if not authentication:
             logger.info(
                 _(
-                    "Authentication ID %(authentication_id)s for account number "
+                    "Authentication ID %(authentication_id)s for "
+                    "org_id %(org_id)s account number "
                     "%(account_number)s does not exist; aborting cloud account update."
                 ),
                 {
                     "authentication_id": authentication_id,
+                    "org_id": org_id,
                     "account_number": account_number,
                 },
             )
@@ -285,14 +296,19 @@ def update_from_sources_kafka_message(message, headers):
         if resource_type != settings.SOURCES_RESOURCE_TYPE:
             logger.info(
                 _(
-                    "Resource ID %(resource_id)s for account number %(account_number)s "
+                    "Resource ID %(resource_id)s for org id %(org_id)s "
+                    "account number %(account_number)s "
                     "is not of type Application; aborting cloud account update."
                 ),
-                {"resource_id": application_id, "account_number": account_number},
+                {
+                    "resource_id": application_id,
+                    "org_id": org_id,
+                    "account_number": account_number,
+                },
             )
             return
 
-        application = sources.get_application(account_number, application_id)
+        application = sources.get_application(org_id, account_number, application_id)
         source_id = application.get("source_id")
 
         arn = authentication.get("username") or authentication.get("password")
@@ -302,7 +318,7 @@ def update_from_sources_kafka_message(message, headers):
             error_code.log_internal_message(
                 logger, {"authentication_id": authentication_id}
             )
-            error_code.notify(account_number, application_id)
+            error_code.notify(org_id or account_number, application_id)
             return
 
         # If the Authentication being updated is arn, do arn things.
@@ -312,7 +328,7 @@ def update_from_sources_kafka_message(message, headers):
             update_aws_cloud_account(
                 clount,
                 arn,
-                account_number,
+                org_id or account_number,
                 authentication_id,
                 source_id,
             )
@@ -320,7 +336,7 @@ def update_from_sources_kafka_message(message, headers):
         # Is this authentication meant to be for us? We should check.
         # Get list of all app-auth objects and filter by our authentication
         response_json = sources.list_application_authentications(
-            account_number, authentication_id
+            org_id, account_number, authentication_id
         )
 
         if response_json.get("meta").get("count") > 0:
@@ -362,6 +378,7 @@ def pause_from_sources_kafka_message(message, headers):
             "Application.pause"
     """
     (
+        org_id,
         account_number,
         application_id,
     ) = sources.extract_ids_from_kafka_message(message, headers)
@@ -420,6 +437,7 @@ def unpause_from_sources_kafka_message(message, headers):
             "Application.unpause"
     """
     (
+        org_id,
         account_number,
         application_id,
     ) = sources.extract_ids_from_kafka_message(message, headers)
@@ -428,9 +446,14 @@ def unpause_from_sources_kafka_message(message, headers):
         logger.error(
             _(
                 "Aborting unpause. Incorrect message details. "
-                "account_number=%(account_number)s application_id=%(application_id)s"
+                "org_id=%(org_id)s account_number=%(account_number)s "
+                "application_id=%(application_id)s"
             ),
-            {"account_number": account_number, "application_id": application_id},
+            {
+                "org_id": org_id,
+                "account_number": account_number,
+                "application_id": application_id,
+            },
         )
         return
 
@@ -455,7 +478,11 @@ def unpause_from_sources_kafka_message(message, headers):
     name="api.tasks.notify_application_availability_task",
 )
 def notify_application_availability_task(
-    account_number, application_id, availability_status, availability_status_error=""
+    org_id,
+    account_number,
+    application_id,
+    availability_status,
+    availability_status_error="",
 ):
     """
     Update Sources application's availability status.
@@ -464,6 +491,7 @@ def notify_application_availability_task(
     method which sends the availability_status Kafka message to Sources.
 
     Args:
+        org_id (str): Org Id identifier
         account_number (str): Account number identifier
         application_id (int): Platform insights application id
         availability_status (string): Availability status to set
@@ -471,6 +499,7 @@ def notify_application_availability_task(
     """
     try:
         sources.notify_application_availability(
+            org_id,
             account_number,
             application_id,
             availability_status,

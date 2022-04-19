@@ -25,6 +25,7 @@ class SourcesTest(TestCase):
 
     def setUp(self):
         """Set up test data."""
+        self.org_id = None
         self.account_number = str(_faker.pyint())
         self.authentication_id = _faker.user_name()
         self.application_id = _faker.pyint()
@@ -55,7 +56,7 @@ class SourcesTest(TestCase):
         mock_get.return_value.json.return_value = expected
 
         authentication = sources.get_authentication(
-            self.account_number, self.authentication_id
+            self.org_id, self.account_number, self.authentication_id
         )
         self.assertEqual(authentication, expected)
         mock_get.assert_called()
@@ -66,7 +67,7 @@ class SourcesTest(TestCase):
         mock_get.return_value.status_code = http.HTTPStatus.NOT_FOUND
 
         endpoint = sources.get_authentication(
-            self.account_number, self.authentication_id
+            self.org_id, self.account_number, self.authentication_id
         )
         self.assertIsNone(endpoint)
         mock_get.assert_called()
@@ -79,7 +80,9 @@ class SourcesTest(TestCase):
             Mock(), MagicMock(), MagicMock()
         )
         with self.assertRaises(SourcesAPINotJsonContent):
-            sources.get_authentication(self.account_number, self.authentication_id)
+            sources.get_authentication(
+                self.org_id, self.account_number, self.authentication_id
+            )
         mock_get.assert_called()
 
     @patch("requests.get")
@@ -87,7 +90,9 @@ class SourcesTest(TestCase):
         """Assert get_authentication fails when response is not-200/404."""
         mock_get.return_value.status_code = http.HTTPStatus.INTERNAL_SERVER_ERROR
         with self.assertRaises(SourcesAPINotOkStatus):
-            sources.get_authentication(self.account_number, self.authentication_id)
+            sources.get_authentication(
+                self.org_id, self.account_number, self.authentication_id
+            )
 
         mock_get.assert_called()
 
@@ -98,7 +103,9 @@ class SourcesTest(TestCase):
         mock_get.return_value.status_code = http.HTTPStatus.OK
         mock_get.return_value.json.return_value = expected
 
-        application = sources.get_application(self.account_number, self.application_id)
+        application = sources.get_application(
+            self.org_id, self.account_number, self.application_id
+        )
         self.assertEqual(application, expected)
         mock_get.assert_called()
 
@@ -107,7 +114,9 @@ class SourcesTest(TestCase):
         """Assert get_application returns None if not found."""
         mock_get.return_value.status_code = http.HTTPStatus.NOT_FOUND
 
-        application = sources.get_application(self.account_number, self.application_id)
+        application = sources.get_application(
+            self.org_id, self.account_number, self.application_id
+        )
         self.assertIsNone(application)
         mock_get.assert_called()
 
@@ -119,7 +128,7 @@ class SourcesTest(TestCase):
         mock_get.return_value.json.return_value = expected
 
         application = sources.list_application_authentications(
-            self.account_number, self.authentication_id
+            self.org_id, self.account_number, self.authentication_id
         )
         self.assertEqual(application, expected)
         mock_get.assert_called()
@@ -133,7 +142,7 @@ class SourcesTest(TestCase):
         mock_get.return_value.json.return_value = expected
 
         response_app_type_id = sources.get_cloudigrade_application_type_id(
-            self.account_number
+            self.org_id, self.account_number
         )
         self.assertEqual(response_app_type_id, cloudigrade_app_type_id)
         mock_get.assert_called()
@@ -147,7 +156,7 @@ class SourcesTest(TestCase):
         mock_get.return_value.json.return_value = expected
 
         response_app_type_id = sources.get_cloudigrade_application_type_id(
-            self.account_number
+            self.org_id, self.account_number
         )
         self.assertEqual(response_app_type_id, cloudigrade_app_type_id)
 
@@ -157,7 +166,7 @@ class SourcesTest(TestCase):
         mock_get.return_value.json.return_value = not_expected
 
         response_app_type_id = sources.get_cloudigrade_application_type_id(
-            self.account_number
+            self.org_id, self.account_number
         )
         self.assertEqual(response_app_type_id, cloudigrade_app_type_id)
         mock_get.assert_called_once()
@@ -168,7 +177,7 @@ class SourcesTest(TestCase):
         mock_get.return_value.status_code = http.HTTPStatus.NOT_FOUND
 
         response_app_type_id = sources.get_cloudigrade_application_type_id(
-            self.account_number
+            self.org_id, self.account_number
         )
         self.assertIsNone(response_app_type_id)
         mock_get.assert_called()
@@ -180,7 +189,7 @@ class SourcesTest(TestCase):
         mock_get.return_value.status_code = http.HTTPStatus.OK
         mock_get.return_value.json.return_value = expected
 
-        application = sources.get_source(self.account_number, self.application_id)
+        application = sources.get_source(None, self.account_number, self.application_id)
         self.assertEqual(application, expected)
         mock_get.assert_called()
 
@@ -202,6 +211,7 @@ class SourcesTest(TestCase):
             VERBOSE_SOURCES_NOTIFICATION_LOGGING=True,
         ):
             sources.notify_application_availability(
+                self.org_id,
                 self.account_number,
                 self.application_id,
                 availability_status=self.available_status,
@@ -226,6 +236,7 @@ class SourcesTest(TestCase):
         """Test notify source application availability skips if not enabled."""
         with override_settings(SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA=False):
             sources.notify_application_availability(
+                self.org_id,
                 self.account_number,
                 self.application_id,
                 availability_status=self.available_status,
@@ -251,6 +262,7 @@ class SourcesTest(TestCase):
         ):
             with self.assertRaises(KafkaProducerException):
                 sources.notify_application_availability(
+                    self.org_id,
                     self.account_number,
                     self.application_id,
                     availability_status=self.available_status,
@@ -286,6 +298,7 @@ class SourcesTest(TestCase):
         ):
             with self.assertRaises(KafkaProducerException):
                 sources.notify_application_availability(
+                    self.org_id,
                     self.account_number,
                     self.application_id,
                     availability_status=self.available_status,
@@ -337,18 +350,22 @@ class SourcesTest(TestCase):
 
     def test_generate_sources_headers_account_number_no_psk(self):
         """Assert generate_sources_headers generates sources header with no psk."""
+        sources_org_id = None
         sources_account_number = _faker.slug()
-        headers = generate_sources_headers(sources_account_number, include_psk=False)
+        headers = generate_sources_headers(
+            sources_org_id, sources_account_number, include_psk=False
+        )
         expected_headers = {"x-rh-sources-account-number": sources_account_number}
 
         self.assertEqual(headers, expected_headers)
 
     def test_generate_sources_headers_account_number_with_psk(self):
         """Assert generate_sources_headers generates sources header with psk."""
+        sources_org_id = None
         sources_account_number = _faker.slug()
         sources_psk = _faker.slug()
         with override_settings(SOURCES_PSK=sources_psk):
-            headers = generate_sources_headers(sources_account_number)
+            headers = generate_sources_headers(sources_org_id, sources_account_number)
 
         expected_headers = {
             "x-rh-sources-account-number": sources_account_number,
@@ -359,10 +376,11 @@ class SourcesTest(TestCase):
 
     def test_generate_sources_headers_account_number_with_missing_psk(self):
         """Assert generate_sources_headers fails with missing psk."""
+        sources_org_id = None
         sources_account_number = _faker.slug()
         with override_settings(SOURCES_PSK=""):
             with self.assertRaises(SourcesAPINotOkStatus):
-                generate_sources_headers(sources_account_number)
+                generate_sources_headers(sources_org_id, sources_account_number)
 
     def test_get_sources_account_number_from_headers_present(self):
         """

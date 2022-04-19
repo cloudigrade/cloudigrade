@@ -19,6 +19,7 @@ class CreateFromSourcesKafkaMessageTest(TestCase):
 
     def setUp(self):
         """Set up shared values for kafka creation tests."""
+        self.org_id = None
         self.account_number = str(_faker.pyint())
         self.username = _faker.user_name()
         self.authentication_id = _faker.pyint()

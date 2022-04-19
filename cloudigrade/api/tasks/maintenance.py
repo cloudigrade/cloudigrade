@@ -417,15 +417,19 @@ def _delete_orphaned_cloud_accounts(max_updated_at):
                 _("Found orphan %(cloud_account)s"), {"cloud_account": cloud_account}
             )
             try:
+                org_id = cloud_account.user.last_name
                 account_number = cloud_account.user.username
                 source_id = cloud_account.platform_source_id
-                if source := sources.get_source(account_number, source_id):
+                if source := sources.get_source(org_id, account_number, source_id):
                     logger.error(
                         _(
                             "Orphaned account still has a source! Please investigate! "
                             "account %(cloud_account)s has source %(source)s"
                         ),
-                        {"cloud_account": cloud_account, "source": source},
+                        {
+                            "cloud_account": cloud_account,
+                            "source": source,
+                        },
                     )
                 else:
                     deleted_orphans.append(cloud_account)
@@ -538,14 +542,18 @@ def delete_cloud_accounts_not_in_sources():
             )
         if cloud_account.content_object:
             try:
+                org_id = cloud_account.user.last_name
                 account_number = cloud_account.user.username
                 source_id = cloud_account.platform_source_id
-                source = sources.get_source(account_number, source_id)
+                source = sources.get_source(org_id, account_number, source_id)
                 if not source:
                     accounts_not_in_sources.append(cloud_account)
                     logger.info(
-                        _("Found account %(cloud_account)s not in sources."),
-                        {"cloud_account": cloud_account},
+                        _(
+                            "Found org_id %(org_id)s "
+                            "account %(cloud_account)s not in sources."
+                        ),
+                        {"org_id": org_id, "cloud_account": cloud_account},
                     )
                     delete_cloud_account.delay(cloud_account.id)
             except Exception as e:
