@@ -170,6 +170,8 @@ objects:
           value: ${CLOUDIGRADE_LOG_LEVEL}
         - name: SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY
           value: ${SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY}
+        - name: HOUNDIGRADE_CW_RETENTION_DAYS
+          value: ${HOUNDIGRADE_CW_RETENTION_DAYS}
         - name: HOUNDIGRADE_ECS_IMAGE_NAME
           value: ${HOUNDIGRADE_ECS_IMAGE_NAME}
         - name: HOUNDIGRADE_ECS_IMAGE_TAG
@@ -439,6 +441,8 @@ objects:
           value: ${SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY}
         - name: DJANGO_CONSOLE_LOG_LEVEL
           value: ${DJANGO_CONSOLE_LOG_LEVEL}
+        - name: HOUNDIGRADE_CW_RETENTION_DAYS
+          value: ${HOUNDIGRADE_CW_RETENTION_DAYS}
         - name: HOUNDIGRADE_ECS_IMAGE_NAME
           value: ${HOUNDIGRADE_ECS_IMAGE_NAME}
         - name: HOUNDIGRADE_ECS_IMAGE_TAG
@@ -716,6 +720,8 @@ objects:
           value: ${CLOUDIGRADE_LOG_LEVEL}
         - name: SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY
           value: ${SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY}
+        - name: HOUNDIGRADE_CW_RETENTION_DAYS
+          value: ${HOUNDIGRADE_CW_RETENTION_DAYS}
         - name: HOUNDIGRADE_ECS_IMAGE_NAME
           value: ${HOUNDIGRADE_ECS_IMAGE_NAME}
         - name: HOUNDIGRADE_ECS_IMAGE_TAG
@@ -990,6 +996,8 @@ objects:
           value: ${CLOUDIGRADE_LOG_LEVEL}
         - name: SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY
           value: ${SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY}
+        - name: HOUNDIGRADE_CW_RETENTION_DAYS
+          value: ${HOUNDIGRADE_CW_RETENTION_DAYS}
         - name: HOUNDIGRADE_ECS_IMAGE_NAME
           value: ${HOUNDIGRADE_ECS_IMAGE_NAME}
         - name: HOUNDIGRADE_ECS_IMAGE_TAG
@@ -1673,6 +1681,10 @@ parameters:
   displayName: Health Check Host Header
   required: true
   value: health.cloudigrade.insights.openshiftapps.com
+- name: HOUNDIGRADE_CW_RETENTION_DAYS
+  displayName: How long should cloudigrade inspection logs be stored in cloudwatch
+  required: true
+  value: '90'
 - name: HOUNDIGRADE_ECS_FAMILY_NAME
   displayName: AWS Houndigrade ECS Image Tag
   required: true
