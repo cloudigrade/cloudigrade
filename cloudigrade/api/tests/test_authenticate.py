@@ -48,7 +48,9 @@ class PskHeaderAuthenticateTestCase(TestCase):
 
     def test_get_user_with_missing_account_number(self):
         """Test that get_user with a missing account number returns None."""
-        self.assertIsNone(IdentityHeaderAuthentication.get_user(self.auth_class, None))
+        self.assertIsNone(
+            IdentityHeaderAuthentication.get_user(self.auth_class, None, None)
+        )
 
     def test_authenticate(self):
         """Test that authentication with the correct PSK and account header succeeds."""
@@ -98,7 +100,7 @@ class PskHeaderAuthenticateTestCase(TestCase):
                 self.assertIn(
                     "PSK header for service '"
                     + self.valid_svc_name
-                    + "' with no account_number",
+                    + "' with no org_id or account_number",
                     logging_watcher.output[1],
                 )
 

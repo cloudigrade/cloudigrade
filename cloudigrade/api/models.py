@@ -19,6 +19,13 @@ from util.models import BaseGenericModel, BaseModel
 logger = logging.getLogger(__name__)
 
 
+# For Authentication we use the Django user model object's last_name as
+# a placeholder for the Insights org_id. This is temporary until the
+# account_number is no longer used/passed down in the authentication header.
+# For org_id, we need this to be unique in the User object.
+User._meta.get_field("last_name")._unique = True
+
+
 class UserTaskLock(BaseModel):
     """Model used to lock running tasks for a user."""
 
@@ -159,7 +166,10 @@ class CloudAccount(BaseGenericModel):
             from api.tasks.sources import notify_application_availability_task
 
             notify_application_availability_task.delay(
-                self.user.username, self.platform_application_id, "available"
+                self.user.last_name,
+                self.user.username,
+                self.platform_application_id,
+                "available",
             )
         elif disable_upon_failure and not previously_enabled:
             # We do not need to notify sources when calling self.disable() here because
@@ -211,7 +221,11 @@ class CloudAccount(BaseGenericModel):
             from api.tasks.sources import notify_application_availability_task
 
             notify_application_availability_task.delay(
-                self.user.username, self.platform_application_id, "unavailable", message
+                self.user.last_name,
+                self.user.username,
+                self.platform_application_id,
+                "unavailable",
+                message,
             )
         logger.info(_("Finished disabling %(account)s"), {"account": self})
 
