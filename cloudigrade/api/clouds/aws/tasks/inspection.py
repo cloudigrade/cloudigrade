@@ -122,14 +122,14 @@ def _build_cloud_init_script(ami_id):
                             "log_group_name": f"houndigrade-"
                             f"{settings.CLOUDIGRADE_ENVIRONMENT}",
                             "log_stream_name": f"{ami_id}-inspection",
-                            "retention_in_days": 14,
+                            "retention_in_days": settings.HOUNDIGRADE_CW_RETENTION_DAYS,
                         },
                         {
                             "file_path": "/var/log/messages",
                             "log_group_name": f"houndigrade-"
                             f"{settings.CLOUDIGRADE_ENVIRONMENT}",
                             "log_stream_name": f"{ami_id}-system",
-                            "retention_in_days": 14,
+                            "retention_in_days": settings.HOUNDIGRADE_CW_RETENTION_DAYS,
                         },
                     ]
                 }

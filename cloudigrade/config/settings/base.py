@@ -383,6 +383,7 @@ AWS_SQS_MAX_YIELD_COUNT = env.int("AWS_SQS_MAX_YIELD_COUNT", default=25)
 #####################################################################
 # Configs used for running houndigrade and accessing its results
 
+HOUNDIGRADE_CW_RETENTION_DAYS = env.int("HOUNDIGRADE_CW_RETENTION_DAYS", default=90)
 HOUNDIGRADE_ECS_IMAGE_NAME = env(
     "HOUNDIGRADE_ECS_IMAGE_NAME", default="cloudigrade/houndigrade"
 )
