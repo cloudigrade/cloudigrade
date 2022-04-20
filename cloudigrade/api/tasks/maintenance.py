@@ -164,6 +164,136 @@ def _delete_cloud_accounts(cloud_accounts):
                 )
 
 
+def __delete_runs_and_concurrent_usage(cloud_account):
+    """
+    Delete Run and ConcurrentUsage objects related to the given CloudAccount.
+
+    This function bypasses the normal Django delete logic in favor of `_raw_delete` to
+    optimize for performance especially in the case for very large data sets. Note that
+    this means signals such as pre_delete and post_delete will not be called.
+    """
+    # We need to get a list of all related concurrent usages *before* deleting their
+    # potentially_related_runs because we can't find them after those are deleted.
+    # We cast the resulting QuerySet to a list to force the underlying query to execute
+    # *now* and not when we use its results later, at which point the related runs
+    # will be gone, resulting in no matching ConcurrentUsage objects.
+    concurrent_usage_ids = list(
+        ConcurrentUsage.objects.filter(
+            potentially_related_runs__instance__cloud_account=cloud_account
+        )
+        .values_list("id", flat=True)
+        .distinct()
+    )
+
+    # Delete the "through" table's contents for potentially related Runs.
+    # Do this explicitly rather than relying on the Django ORM to cascade deletes.
+    potentially_related_runs = (
+        ConcurrentUsage.potentially_related_runs.through.objects.filter(
+            run__instance__cloud_account=cloud_account
+        )
+    )
+    potentially_related_runs._raw_delete(potentially_related_runs.db)
+
+    # Delete ConcurrentUsage now that it has no potentially related Runs.
+    concurrent_usages = ConcurrentUsage.objects.filter(id__in=concurrent_usage_ids)
+    concurrent_usages.delete()
+
+    # Delete Runs via related Instances.
+    runs = Run.objects.filter(instance__cloud_account=cloud_account)
+    runs._raw_delete(runs.db)
+
+
+def __delete_events(cloud_account, instance_event_cloud_class):
+    """
+    Delete InstanceEvent objects related to the given CloudAccount.
+
+    This function bypasses the normal Django delete logic in favor of `_raw_delete` to
+    optimize for performance especially in the case for very large data sets. Note that
+    this means signals such as pre_delete and post_delete will not be called.
+    """
+    if not instance_event_cloud_class:
+        # If cloud_account.content_object is missing, try to find the InstanceEvent's
+        # cloud-specific class just by checking the first InstanceEvent object we can
+        # find that also belongs to this CloudAccount.
+        instance_event = InstanceEvent.objects.filter(
+            instance__cloud_account=cloud_account
+        ).first()
+        if instance_event and instance_event.content_object:
+            instance_event_cloud_class = instance_event.content_object.__class__
+
+    if instance_event_cloud_class:
+        # Delete {cloud}InstanceEvent by constructing a list of ids from InstanceEvent.
+        cloud_instance_event_ids = InstanceEvent.objects.filter(
+            content_type=ContentType.objects.get_for_model(instance_event_cloud_class),
+            instance__cloud_account=cloud_account,
+        ).values("object_id")
+        cloud_instance_events = instance_event_cloud_class.objects.filter(
+            id__in=cloud_instance_event_ids
+        )
+        cloud_instance_events._raw_delete(cloud_instance_events.db)
+    else:
+        logger.info(
+            "Could not delete cloud-specific InstanceEvent class related to "
+            "%(cloud_account)s. Orphaned objects might exist.",
+            {"cloud_account": cloud_account},
+        )
+
+    # Delete InstanceEvents via related Instances.
+    instance_events = InstanceEvent.objects.filter(
+        instance__cloud_account=cloud_account
+    )
+    instance_events._raw_delete(instance_events.db)
+
+
+def __delete_instance_and_images(cloud_account, instance_cloud_class):
+    """
+    Delete Instance and Image objects related to the given CloudAccount.
+
+    This function bypasses the normal Django delete logic in favor of `_raw_delete` to
+    optimize for performance especially in the case for very large data sets. Note that
+    this means signals such as pre_delete and post_delete will not be called.
+    """
+    # Before deleting the Instances, fetch the list of related MachineImage ids that are
+    # being used by any Instances belonging to this cloud account. Note that we wrap the
+    # queryset with list() to force it to evaluate *now* since lazy evaluation later may
+    # not work after we delete this CloudAccount's Instances.
+    machine_image_ids = list(
+        Instance.objects.filter(cloud_account=cloud_account)
+        .values_list("machine_image_id", flat=True)
+        .distinct()
+    )
+
+    if instance_cloud_class:
+        # Delete {cloud}Instance by constructing a list of ids from Instance.
+        cloud_instance_ids = Instance.objects.filter(
+            content_type=ContentType.objects.get_for_model(instance_cloud_class),
+            cloud_account=cloud_account,
+        ).values_list("object_id", flat=True)
+        cloud_instances = instance_cloud_class.objects.filter(id__in=cloud_instance_ids)
+        cloud_instances._raw_delete(cloud_instances.db)
+    else:
+        logger.info(
+            "Could not delete cloud-specific Instance class related to "
+            "%(cloud_account)s. Orphaned objects might exist.",
+            {"cloud_account": cloud_account},
+        )
+
+    # Delete Instances.
+    instances = Instance.objects.filter(cloud_account=cloud_account)
+    instances._raw_delete(instances.db)
+
+    # Using that list of MachineImage ids used by this CloudAccount's Instances, find
+    # and delete (using normal Django delete) any MachineImages that are no longer being
+    # used by other Instances (belonging to other CloudAccounts).
+    active_machine_image_ids = (
+        Instance.objects.filter(machine_image_id__in=machine_image_ids)
+        .exclude(cloud_account=cloud_account)
+        .values_list("machine_image_id", flat=True)
+    )
+    delete_machine_image_ids = set(machine_image_ids) - set(active_machine_image_ids)
+    MachineImage.objects.filter(id__in=delete_machine_image_ids).delete()
+
+
 def _delete_cloud_account_related_objects(cloud_account):
     """
     Quickly delete most objects related to a CloudAccount.
@@ -196,19 +326,6 @@ def _delete_cloud_account_related_objects(cloud_account):
         cloud_account (CloudAccount): the cloud account being deleted
 
     """
-    # Delete ConcurrentUsages via Runs, but use the normal Django model "delete" since
-    # these models have a many-to-many relationship that isn't defined with an explicit
-    # "through" model. This means it's "slow" and iterates through each one, but that's
-    # not as problematic performance-wise as the related Instances and InstanceEvents.
-    concurrent_usages = ConcurrentUsage.objects.filter(
-        potentially_related_runs__instance__cloud_account=cloud_account
-    )
-    concurrent_usages.delete()
-
-    # Delete Runs via related Instances.
-    runs = Run.objects.filter(instance__cloud_account=cloud_account)
-    runs._raw_delete(runs.db)
-
     instance_event_cloud_class = None
     instance_cloud_class = None
     # define cloud-specific related classes to remove
@@ -232,33 +349,6 @@ def _delete_cloud_account_related_objects(cloud_account):
             f"{type(cloud_account.content_object)}"
         )
 
-    if not instance_event_cloud_class:
-        # If cloud_account.content_object is missing, try to find the InstanceEvent's
-        # cloud-specific class just by checking the first InstanceEvent object we can
-        # find that also belongs to this CloudAccount.
-        instance_event = InstanceEvent.objects.filter(
-            instance__cloud_account=cloud_account
-        ).first()
-        if instance_event and instance_event.content_object:
-            instance_event_cloud_class = instance_event.content_object.__class__
-
-    if instance_event_cloud_class:
-        # Delete {cloud}InstanceEvent by constructing a list of ids from InstanceEvent.
-        cloud_instance_event_ids = InstanceEvent.objects.filter(
-            content_type=ContentType.objects.get_for_model(instance_event_cloud_class),
-            instance__cloud_account=cloud_account,
-        ).values_list("object_id", flat=True)
-        cloud_instance_events = instance_event_cloud_class.objects.filter(
-            id__in=cloud_instance_event_ids
-        )
-        cloud_instance_events._raw_delete(cloud_instance_events.db)
-    else:
-        logger.info(
-            "Could not delete cloud-specific InstanceEvent class related to "
-            "%(cloud_account)s. Orphaned objects might exist.",
-            {"cloud_account": cloud_account},
-        )
-
     if not instance_cloud_class:
         # If cloud_account.content_object is missing, try to find the Instance's
         # cloud-specific class just by checking the first Instance object we can
@@ -267,51 +357,9 @@ def _delete_cloud_account_related_objects(cloud_account):
         if instance and instance.content_object:
             instance_cloud_class = instance.content_object.__class__
 
-    if instance_cloud_class:
-        # Delete {cloud}Instance by constructing a list of ids from Instance.
-        cloud_instance_ids = Instance.objects.filter(
-            content_type=ContentType.objects.get_for_model(instance_cloud_class),
-            cloud_account=cloud_account,
-        ).values_list("object_id", flat=True)
-        cloud_instances = instance_cloud_class.objects.filter(id__in=cloud_instance_ids)
-        cloud_instances._raw_delete(cloud_instances.db)
-    else:
-        logger.info(
-            "Could not delete cloud-specific Instance class related to "
-            "%(cloud_account)s. Orphaned objects might exist.",
-            {"cloud_account": cloud_account},
-        )
-
-    # Delete InstanceEvents via related Instances.
-    instance_events = InstanceEvent.objects.filter(
-        instance__cloud_account=cloud_account
-    )
-    instance_events._raw_delete(instance_events.db)
-
-    # Before deleting the Instances, fetch the list of related MachineImage ids that are
-    # being used by any Instances belonging to this cloud account. Note that we wrap the
-    # queryset with set() to force it to evaluate *now* since lazy evaluation later may
-    # not work after we delete this CloudAccount's Instances.
-    machine_image_ids = set(
-        Instance.objects.filter(cloud_account=cloud_account).values_list(
-            "machine_image_id", flat=True
-        )
-    )
-
-    # Delete Instances.
-    instances = Instance.objects.filter(cloud_account=cloud_account)
-    instances._raw_delete(instances.db)
-
-    # Using that list of MachineImage ids used by this CloudAccount's Instances, find
-    # and delete (using normal Django delete) any MachineImages that are no longer being
-    # used by other Instances (belonging to other CloudAccounts).
-    active_machine_image_ids = (
-        Instance.objects.filter(machine_image_id__in=machine_image_ids)
-        .exclude(cloud_account=cloud_account)
-        .values_list("machine_image_id", flat=True)
-    )
-    delete_machine_image_ids = set(machine_image_ids) - set(active_machine_image_ids)
-    MachineImage.objects.filter(id__in=delete_machine_image_ids).delete()
+    __delete_runs_and_concurrent_usage(cloud_account)
+    __delete_events(cloud_account, instance_event_cloud_class)
+    __delete_instance_and_images(cloud_account, instance_cloud_class)
 
 
 @shared_task(name="api.tasks.delete_orphaned_cloud_accounts")
