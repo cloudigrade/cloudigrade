@@ -39,7 +39,7 @@ def get_authentication(account_number, authentication_id):
 
     url = (
         f"{sources_api_base_url}/{sources_api_internal_uri}"
-        f"authentications/{authentication_id}/"
+        f"authentications/{authentication_id}"
     )
 
     headers = generate_sources_headers(account_number)
@@ -67,7 +67,7 @@ def get_application(account_number, application_id):
 
     url = (
         f"{sources_api_base_url}/{sources_api_external_uri}"
-        f"applications/{application_id}/"
+        f"applications/{application_id}"
     )
 
     headers = generate_sources_headers(account_number)
@@ -117,7 +117,7 @@ def get_source(account_number, source_id):
     sources_api_base_url = settings.SOURCES_API_BASE_URL
     sources_api_external_uri = settings.SOURCES_API_EXTERNAL_URI
 
-    url = f"{sources_api_base_url}/{sources_api_external_uri}" f"sources/{source_id}/"
+    url = f"{sources_api_base_url}/{sources_api_external_uri}sources/{source_id}"
 
     headers = generate_sources_headers(account_number)
     return make_sources_call(account_number, url, headers)
