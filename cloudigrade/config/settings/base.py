@@ -650,7 +650,7 @@ SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA = env.bool(
 
 SOURCES_API_BASE_URL = env(
     "SOURCES_API_BASE_URL", default="http://sources-api.sources-ci.svc:8080"
-)
+).rstrip("/")
 if isClowderEnabled():
     CLOWDER_SOURCES_API_BASE_URL = ""
     for endpoint in clowder_cfg.endpoints:
