@@ -34,17 +34,12 @@ def get_authentication(account_number, authentication_id):
         dict response payload from the sources api.
 
     """
-    sources_api_base_url = settings.SOURCES_API_BASE_URL
-    sources_api_internal_uri = settings.SOURCE_API_INTERNAL_URI
-
     url = (
-        f"{sources_api_base_url}/{sources_api_internal_uri}"
-        f"authentications/{authentication_id}/"
+        f"{settings.SOURCES_API_INTERNAL_BASE_URL}"
+        f"/authentications/{authentication_id}"
     )
-
     headers = generate_sources_headers(account_number)
     params = {"expose_encrypted_attribute[]": "password"}
-
     return make_sources_call(account_number, url, headers, params)
 
 
@@ -62,14 +57,7 @@ def get_application(account_number, application_id):
     Returns:
         dict response payload from the sources api.
     """
-    sources_api_base_url = settings.SOURCES_API_BASE_URL
-    sources_api_external_uri = settings.SOURCES_API_EXTERNAL_URI
-
-    url = (
-        f"{sources_api_base_url}/{sources_api_external_uri}"
-        f"applications/{application_id}/"
-    )
-
+    url = f"{settings.SOURCES_API_EXTERNAL_BASE_URL}/applications/{application_id}"
     headers = generate_sources_headers(account_number)
     return make_sources_call(account_number, url, headers)
 
@@ -88,14 +76,10 @@ def list_application_authentications(account_number, authentication_id):
     Returns:
         dict response payload from the sources api.
     """
-    sources_api_base_url = settings.SOURCES_API_BASE_URL
-    sources_api_external_uri = settings.SOURCES_API_EXTERNAL_URI
-
     url = (
-        f"{sources_api_base_url}/{sources_api_external_uri}"
-        f"application_authentications/?filter[authentication_id]={authentication_id}"
+        f"{settings.SOURCES_API_EXTERNAL_BASE_URL}/application_authentications"
+        f"?filter[authentication_id]={authentication_id}"
     )
-
     headers = generate_sources_headers(account_number)
     return make_sources_call(account_number, url, headers)
 
@@ -114,11 +98,7 @@ def get_source(account_number, source_id):
     Returns:
         dict response payload from the sources api.
     """
-    sources_api_base_url = settings.SOURCES_API_BASE_URL
-    sources_api_external_uri = settings.SOURCES_API_EXTERNAL_URI
-
-    url = f"{sources_api_base_url}/{sources_api_external_uri}" f"sources/{source_id}/"
-
+    url = f"{settings.SOURCES_API_EXTERNAL_BASE_URL}/sources/{source_id}"
     headers = generate_sources_headers(account_number)
     return make_sources_call(account_number, url, headers)
 
@@ -228,11 +208,9 @@ def get_sources_account_number_from_headers(headers):
 @cache_memoize(settings.CACHE_TTL_SOURCES_APPLICATION_TYPE_ID)
 def get_cloudigrade_application_type_id(account_number):
     """Get the cloudigrade application type id from sources."""
-    sources_api_base_url = settings.SOURCES_API_BASE_URL
-    sources_api_external_uri = settings.SOURCES_API_EXTERNAL_URI
     url = (
-        f"{sources_api_base_url}/{sources_api_external_uri}"
-        f"application_types?filter[name]=/insights/platform/cloud-meter"
+        f"{settings.SOURCES_API_EXTERNAL_BASE_URL}/application_types"
+        f"?filter[name]=/insights/platform/cloud-meter"
     )
 
     headers = generate_sources_headers(account_number)

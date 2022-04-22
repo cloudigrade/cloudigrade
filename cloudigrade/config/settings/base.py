@@ -651,7 +651,7 @@ SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA = env.bool(
 
 SOURCES_API_BASE_URL = env(
     "SOURCES_API_BASE_URL", default="http://sources-api.sources-ci.svc:8080"
-)
+).rstrip("/")
 if isClowderEnabled():
     CLOWDER_SOURCES_API_BASE_URL = ""
     for endpoint in clowder_cfg.endpoints:
@@ -668,8 +668,8 @@ if isClowderEnabled():
 
 SOURCES_PSK = env("SOURCES_PSK", default="")
 
-SOURCE_API_INTERNAL_URI = "/internal/v1.0/"
-SOURCES_API_EXTERNAL_URI = "/api/sources/v3.0/"
+SOURCES_API_INTERNAL_BASE_URL = f"{SOURCES_API_BASE_URL}/internal/v1.0"
+SOURCES_API_EXTERNAL_BASE_URL = f"{SOURCES_API_BASE_URL}/api/sources/v3.0"
 
 SOURCES_CLOUDMETER_ARN_AUTHTYPE = "cloud-meter-arn"
 SOURCES_CLOUDMETER_LIGHTHOUSE_AUTHTYPE = "lighthouse_subscription_id"
