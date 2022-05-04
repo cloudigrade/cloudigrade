@@ -54,8 +54,6 @@ cloudigrade has the following operational dependencies. See also [app.yml](https
     - cloudigrade subscription to:
       - describe VM resource capability definitions
 
-
-
 ## Runtime Dependencies Overview
 
 <img src="images/cloudigrade-arch-dependencies.svg">
@@ -63,6 +61,16 @@ cloudigrade has the following operational dependencies. See also [app.yml](https
 ## AWS API Interactions Overview
 
 <img src="images/cloudigrade-arch-aws.svg">
+
+## OpenShift Deployment Replicas
+
+cloudigrade's `clowdapp.yaml` defines several OpenShift deployments, but some of them are defined to have only one replica. Here is a brief definition of each deployment and explanation of each's expected replica count:
+
+- `cloudigrade-api` runs cloudigrade's [`gunicorn`](https://docs.gunicorn.org/) process to serve public and internal HTTP APIs. This deployment should have **several** replicas so that they can handle many simultaneous HTTP requests.
+- `cloudigrade-worker` runs cloudigrade's [`celery worker`](https://docs.celeryq.dev/en/stable/userguide/workers.html) process. This deployment should have **several** replicas so that tasks can be processed by multiple workers in parallel and be completed in a timely manner.
+- `cloudigrade-beat` runs cloudigrade's [`celery beat`](https://django-celery-beat.readthedocs.io/en/latest/) process. django-celery-beat is a scheduled and periodic task manager and is analogous to cron. This deployment should have **exactly one** replica because running multiple `celery beat` processes would result in the same task being executed multiple times which *at best* would waste resources or *at worst* cause a deadlock as two competing tasks try manipulating the same objects at the same time.
+- `cloudigrade-listener` runs cloudigrade's `listen_to_sources` management command to read messages from sources-api's Kafka topics and call tasks to process them. This deployment should have **exactly one** replica because the order of messages from sources-api is important, and having multiple listeners may result in messages being processed out of order.
+- `cloudigrade-metrics` runs cloudigrade's [`celery-exporter-container`](https://quay.io/repository/cloudservices/celery-exporter-container) process to serve an internal `/metrics` HTTP endpoint for Prometheus metrics gathering. This deployment should have **several** replicas so that they can handle many simultaneous HTTP requests.
 
 ## Resource Capacity and Growth
 
