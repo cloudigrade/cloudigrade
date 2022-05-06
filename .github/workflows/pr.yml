@@ -12,7 +12,7 @@ jobs:
     container:
       image: ghcr.io/cloudigrade/build-container:ubi84-python39-2
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - run: pip install tox codecov poetry
       - run: tox -e py39
       - run: codecov
@@ -23,7 +23,7 @@ jobs:
     container:
       image: ghcr.io/cloudigrade/build-container:ubi84-python39-2
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - run: pip install tox codecov poetry
       - run: tox -e flake8
 
@@ -33,7 +33,7 @@ jobs:
     container:
       image: ghcr.io/cloudigrade/build-container:ubi84-python39-2
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - run: pip install poetry safety
       - run: poetry install
       - run: safety check
@@ -44,7 +44,7 @@ jobs:
     container:
       image: ghcr.io/cloudigrade/build-container:ubi84-python39-2
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - run: pip install poetry
       - run: poetry install
       - run: poetry run make docs-api-examples-test
@@ -58,7 +58,7 @@ jobs:
     container:
       image: ghcr.io/cloudigrade/build-container:ubi84-python39-2
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - run: pip install poetry
       - run: poetry install
       - run: poetry run make checkceleryconfigs
