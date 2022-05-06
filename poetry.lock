@@ -278,7 +278,7 @@ azure-core = ">=1.15.0,<2.0.0"
 
 [[package]]
 name = "azure-mgmt-resource"
-version = "20.1.0"
+version = "21.1.0"
 description = "Microsoft Azure Resource Management Client Library for Python"
 category = "main"
 optional = false
@@ -2515,7 +2515,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "705d84e656060a7acf7d465f6922ce141d3aa1a3f42714d97cb6b960d5ab5c5b"
+content-hash = "389143f47bc5b31114cddfd06228d9a420cd8f6cd97137fa8c0a7ec4d6a694f5"
 
 [metadata.files]
 adal = [
@@ -2624,8 +2624,8 @@ azure-mgmt-core = [
     {file = "azure_mgmt_core-1.3.0-py2.py3-none-any.whl", hash = "sha256:7b7fa952aeb9d3eaa13eff905880f3d3b62200f7be7a8ba5a50c8b2e7295322a"},
 ]
 azure-mgmt-resource = [
-    {file = "azure-mgmt-resource-20.1.0.zip", hash = "sha256:4fbb2158320e0bdd367882642f266a6dfb3b4b8610792b3afbbca39089f212d7"},
-    {file = "azure_mgmt_resource-20.1.0-py3-none-any.whl", hash = "sha256:b009dcd66bee43691b71048b97c3da9c269ea24f338f1f9788bbd4c4726336c3"},
+    {file = "azure-mgmt-resource-21.1.0.zip", hash = "sha256:52965ade31cd059fea2b1513d65fe616046e433de0e583dcf5c9c9bebf3ebd69"},
+    {file = "azure_mgmt_resource-21.1.0-py3-none-any.whl", hash = "sha256:5c8203f72bfb483adb345f73df1be65351072f25714fc6bb77eb0d5b970aba3b"},
 ]
 azure-mgmt-resourcegraph = [
     {file = "azure-mgmt-resourcegraph-8.0.0.zip", hash = "sha256:d25f01dae3897780fb3ddca16d1625b6347c32f1b581c767fba5ef3b24443f11"},
