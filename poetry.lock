@@ -873,7 +873,7 @@ python-versions = "*"
 
 [[package]]
 name = "faker"
-version = "13.7.0"
+version = "13.10.0"
 description = "Faker is a Python package that generates fake data for you."
 category = "main"
 optional = false
@@ -1237,7 +1237,7 @@ qtconsole = "*"
 
 [[package]]
 name = "jupyter-client"
-version = "7.3.0"
+version = "7.3.1"
 description = "Jupyter protocol implementation and client libraries"
 category = "dev"
 optional = false
@@ -1350,7 +1350,7 @@ zookeeper = ["kazoo (>=1.3.1)"]
 
 [[package]]
 name = "kubernetes"
-version = "23.3.0"
+version = "23.6.0"
 description = "Kubernetes python client"
 category = "dev"
 optional = false
@@ -1481,7 +1481,7 @@ python-versions = "*"
 
 [[package]]
 name = "nbclient"
-version = "0.6.2"
+version = "0.6.3"
 description = "A client library for executing notebooks. Formerly nbconvert's ExecutePreprocessor."
 category = "dev"
 optional = false
@@ -1494,7 +1494,7 @@ nest-asyncio = "*"
 traitlets = ">=5.0.0"
 
 [package.extras]
-sphinx = ["mock", "moto", "myst-parser", "Sphinx (>=1.7)", "sphinx-book-theme"]
+sphinx = ["autodoc-traits", "mock", "moto", "myst-parser", "Sphinx (>=1.7)", "sphinx-book-theme"]
 test = ["black", "check-manifest", "flake8", "ipykernel", "ipython (<8.0.0)", "ipywidgets (<8.0.0)", "mypy", "pip (>=18.1)", "pre-commit", "pytest (>=4.1)", "pytest-asyncio", "pytest-cov (>=2.6.1)", "setuptools (>=60.0)", "testpath", "twine (>=1.11.0)", "xmltodict"]
 
 [[package]]
@@ -2106,7 +2106,7 @@ test = ["pytest (>=6,!=7.0.0,!=7.0.1)", "pytest-cov (>=3.0.0)", "pytest-qt"]
 
 [[package]]
 name = "redis"
-version = "4.2.2"
+version = "4.3.1"
 description = "Python client for Redis database and key-value store"
 category = "main"
 optional = false
@@ -2515,7 +2515,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "ef62d065cf840a2034e901c008e40450a93a6967be7f9a4f798f597aacc282bf"
+content-hash = "9aa8ce5b03dc23e782dd3020f03f91cb421bcd8dc2b60fa5498dcdf70b1191b7"
 
 [metadata.files]
 adal = [
@@ -2975,8 +2975,8 @@ executing = [
     {file = "executing-0.8.3.tar.gz", hash = "sha256:c6554e21c6b060590a6d3be4b82fb78f8f0194d809de5ea7df1c093763311501"},
 ]
 faker = [
-    {file = "Faker-13.7.0-py3-none-any.whl", hash = "sha256:b1903db92175d78051858128ada397c7dc76f376f6967975419da232b3ebd429"},
-    {file = "Faker-13.7.0.tar.gz", hash = "sha256:0301ace8365d98f3d0bf6e9a40200c8548e845d3812402ae1daf589effe3fb01"},
+    {file = "Faker-13.10.0-py3-none-any.whl", hash = "sha256:b5d64e8032a1954306ce4d3c570adf9861e341b3fb8c2d80a40d6d82038d66f6"},
+    {file = "Faker-13.10.0.tar.gz", hash = "sha256:97092f2df86f9d384d4dcdb03fc9b9547aae92e38957d0f740d5fa8b995fca4b"},
 ]
 fastjsonschema = [
     {file = "fastjsonschema-2.15.3-py3-none-any.whl", hash = "sha256:ddb0b1d8243e6e3abb822bd14e447a89f4ab7439342912d590444831fa00b6a0"},
@@ -3078,8 +3078,8 @@ jupyter = [
     {file = "jupyter-1.0.0.zip", hash = "sha256:3e1f86076bbb7c8c207829390305a2b1fe836d471ed54be66a3b8c41e7f46cc7"},
 ]
 jupyter-client = [
-    {file = "jupyter_client-7.3.0-py3-none-any.whl", hash = "sha256:671dd2d90d03f41716b09627a4eb06bb37875f92bf6563cc2ce4fe71c61c5cda"},
-    {file = "jupyter_client-7.3.0.tar.gz", hash = "sha256:3bcc8e08a294d0fa9406e48cfe17e11ef0efdb7c504fe8cc335128e3ef8f3dac"},
+    {file = "jupyter_client-7.3.1-py3-none-any.whl", hash = "sha256:404abe552540aff3527e66e16beb114b6b4ff58479d51a301f4eb9701e4f52ef"},
+    {file = "jupyter_client-7.3.1.tar.gz", hash = "sha256:05d4ff6a0ade25138c6bb0fbeac7ddc26b5fe835e7dd816b64b4a45b931bdc0b"},
 ]
 jupyter-console = [
     {file = "jupyter_console-6.4.3-py3-none-any.whl", hash = "sha256:e630bcb682c0088dda45688ad7c2424d4a825c8acf494cb036ced03ed0424841"},
@@ -3106,8 +3106,8 @@ kombu = [
     {file = "kombu-5.2.4.tar.gz", hash = "sha256:37cee3ee725f94ea8bb173eaab7c1760203ea53bbebae226328600f9d2799610"},
 ]
 kubernetes = [
-    {file = "kubernetes-23.3.0-py2.py3-none-any.whl", hash = "sha256:223ff8f0ece5bc20fb65545f09a2308c5e1e9c0be83ae68504c1b1c6baa38f5b"},
-    {file = "kubernetes-23.3.0.tar.gz", hash = "sha256:05c98e4bd92f7091fa0fa58f594490e712c9151144d5f458235663a8909e342a"},
+    {file = "kubernetes-23.6.0-py2.py3-none-any.whl", hash = "sha256:dd58e286a53071bc8e32041f07f3c2236b3ed8ca5b9f57794a5077358f7ccb06"},
+    {file = "kubernetes-23.6.0.tar.gz", hash = "sha256:cadb1cd7c44eae5b39b50316313343c0f2aff94529f067ec2ba44d38411158e3"},
 ]
 markupsafe = [
     {file = "MarkupSafe-2.1.1-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:86b1f75c4e7c2ac2ccdaec2b9022845dbb81880ca318bb7a0a01fbf7813e3812"},
@@ -3245,8 +3245,8 @@ mypy-extensions = [
     {file = "mypy_extensions-0.4.3.tar.gz", hash = "sha256:2d82818f5bb3e369420cb3c4060a7970edba416647068eb4c5343488a6c604a8"},
 ]
 nbclient = [
-    {file = "nbclient-0.6.2-py3-none-any.whl", hash = "sha256:0d575e1e2622ce433b0bb793fec7d8a77aacc2fd21831aec9be3bd48aaee126b"},
-    {file = "nbclient-0.6.2.tar.gz", hash = "sha256:8b47553f1ced077cd7c4537fd5d701d46f7681f24b28275e5cc1d347e7c9b46b"},
+    {file = "nbclient-0.6.3-py3-none-any.whl", hash = "sha256:2747ac9b385720d8a6c34f2f71e72cbe64aec6cadaadcc064a4df0b0e99c5874"},
+    {file = "nbclient-0.6.3.tar.gz", hash = "sha256:b80726fc1fb89a0e8f8be1e77e28d0026b1e8ed90bc143c8a0c7622e4f8cdd9e"},
 ]
 nbconvert = [
     {file = "nbconvert-6.5.0-py3-none-any.whl", hash = "sha256:c56dd0b8978a1811a5654f74c727ff16ca87dd5a43abd435a1c49b840fcd8360"},
@@ -3618,8 +3618,8 @@ qtpy = [
     {file = "QtPy-2.1.0.tar.gz", hash = "sha256:ca8cd4217175186344299ee4c0f7e7adcf362c70852ba35b255a534077025c06"},
 ]
 redis = [
-    {file = "redis-4.2.2-py3-none-any.whl", hash = "sha256:4e95f4ec5f49e636efcf20061a5a9110c20852f607cfca6865c07aaa8a739ee2"},
-    {file = "redis-4.2.2.tar.gz", hash = "sha256:0107dc8e98a4f1d1d4aa00100e044287f77121a1e6d2085545c4b7fa94a7a27f"},
+    {file = "redis-4.3.1-py3-none-any.whl", hash = "sha256:84316970995a7adb907a56754d2b92d88fc2d252963dc5ac34c88f0f1a22c25d"},
+    {file = "redis-4.3.1.tar.gz", hash = "sha256:94b617b4cd296e94991146f66fc5559756fbefe9493604f0312e4d3298ac63e9"},
 ]
 requests = [
     {file = "requests-2.27.1-py2.py3-none-any.whl", hash = "sha256:f22fa1e554c9ddfd16e6e41ac79759e17be9e492b3587efa038054674760e72d"},
