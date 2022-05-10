@@ -285,6 +285,12 @@ objects:
           value: ${RECALCULATE_CONCURRENT_USAGE_FOR_ALL_USERS_SCHEDULE}
         - name: RECALCULATE_RUNS_FOR_ALL_CLOUD_ACCOUNTS_SCHEDULE
           value: ${RECALCULATE_RUNS_FOR_ALL_CLOUD_ACCOUNTS_SCHEDULE}
+        - name: TENANT_TRANSLATOR_HOST
+          value: ${TENANT_TRANSLATOR_HOST}
+        - name: TENANT_TRANSLATOR_PORT
+          value: ${TENANT_TRANSLATOR_PORT}
+        - name: TENANT_TRANSLATOR_SCHEME
+          value: ${TENANT_TRANSLATOR_SCHEME}
         - name: WATCHTOWER_USE_QUEUES
           value: ${API_WATCHTOWER_USE_QUEUES}
         - name: WATCHTOWER_SEND_INTERVAL
@@ -1404,6 +1410,18 @@ parameters:
   displayName: Postigrade Port
   required: true
   value: '5432'
+- description: Host for the EAN to OrgId translator.
+  name: TENANT_TRANSLATOR_HOST
+  required: true
+  value: 'apicast.3scale-dev.svc.cluster.local'
+- description: Port for the EAN to OrgId translator.
+  name: TENANT_TRANSLATOR_PORT
+  required: true
+  value: '8892'
+- description: Scheme for the EAN to OrgId translator.
+  name: TENANT_TRANSLATOR_SCHEME
+  required: true
+  value: 'http'
 - name: VERBOSE_INSIGHTS_IDENTITY_HEADER_LOGGING
   displayName: Enable verbose Insights identity header logging
   required: true
