@@ -125,7 +125,8 @@ class IdentityHeaderAuthenticationInternalConcurrentCase(TestCase):
         with self.assertRaises(exceptions.AuthenticationFailed) as e:
             self.auth_class.authenticate(request)
         self.assertIn(
-            "identity account number is required but was not present in request.",
+            "identity account number is required but neither account_number"
+            " nor org_id was present in request.",
             str(e.exception),
         )
 
