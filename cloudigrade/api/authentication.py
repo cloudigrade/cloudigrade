@@ -37,7 +37,7 @@ def parse_psk_header(request):
     Get relevant information from the given request's PSK and account number headers.
 
     Returns:
-        (str, str, str): the triplet of psk, ord_id and/or account_number fields.
+        (str, str, str): the tuple of psk, ord_id and/or account_number fields.
             If the psk header is not present and the org_id or account_number
             header is specified, this function returns (None, None, None).
             Otherwise, it will return (str, str|None, str|None) with the valid
