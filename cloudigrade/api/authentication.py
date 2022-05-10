@@ -179,13 +179,13 @@ class IdentityHeaderAuthentication(BaseAuthentication):
     create_user = False
     allow_internal_fake_identity_header = False
 
-    def assert_account_number(self, account_number):
+    def assert_account_number(self, account_number, org_id):
         """Assert org_id or account_number is set if required."""
-        if not account_number and self.require_account_number:
+        if not account_number and not org_id and self.require_account_number:
             raise exceptions.AuthenticationFailed(
                 _(
                     "Authentication Failed: identity account number is required "
-                    "but was not present in request."
+                    "but neither account_number nor org_id was present in request."
                 )
             )
 
@@ -282,7 +282,7 @@ class IdentityHeaderAuthentication(BaseAuthentication):
         psk, org_id, account_number = parse_psk_header(request)
 
         if psk:
-            self.assert_account_number(account_number)
+            self.assert_account_number(account_number, org_id)
         else:
             auth_header, org_id, account_number, is_org_admin = parse_requests_header(
                 request, self.allow_internal_fake_identity_header
@@ -295,7 +295,7 @@ class IdentityHeaderAuthentication(BaseAuthentication):
                 else:
                     raise exceptions.AuthenticationFailed
 
-            self.assert_account_number(account_number)
+            self.assert_account_number(account_number, org_id)
             self.assert_org_admin(org_id, account_number, is_org_admin)
         if user := self.get_user(org_id, account_number):
             return user, True
