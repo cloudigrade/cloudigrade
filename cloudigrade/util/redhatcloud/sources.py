@@ -40,7 +40,7 @@ def get_authentication(org_id, account_number, authentication_id):
     )
     headers = generate_sources_headers(org_id, account_number)
     params = {"expose_encrypted_attribute[]": "password"}
-    return make_sources_call(account_number, url, headers, params)
+    return make_sources_call(org_id or account_number, url, headers, params)
 
 
 def get_application(org_id, account_number, application_id):
@@ -59,7 +59,7 @@ def get_application(org_id, account_number, application_id):
     """
     url = f"{settings.SOURCES_API_EXTERNAL_BASE_URL}/applications/{application_id}"
     headers = generate_sources_headers(org_id, account_number)
-    return make_sources_call(account_number, url, headers)
+    return make_sources_call(org_id or account_number, url, headers)
 
 
 def list_application_authentications(org_id, account_number, authentication_id):
@@ -81,7 +81,7 @@ def list_application_authentications(org_id, account_number, authentication_id):
         f"?filter[authentication_id]={authentication_id}"
     )
     headers = generate_sources_headers(org_id, account_number)
-    return make_sources_call(account_number, url, headers)
+    return make_sources_call(org_id or account_number, url, headers)
 
 
 def get_source(org_id, account_number, source_id):
@@ -101,7 +101,7 @@ def get_source(org_id, account_number, source_id):
     """
     url = f"{settings.SOURCES_API_EXTERNAL_BASE_URL}/sources/{source_id}"
     headers = generate_sources_headers(org_id, account_number)
-    return make_sources_call(account_number, url, headers)
+    return make_sources_call(org_id or account_number, url, headers)
 
 
 def make_sources_call(account_number, url, headers, params=None):
@@ -227,7 +227,9 @@ def get_cloudigrade_application_type_id(org_id, account_number):
     )
 
     headers = generate_sources_headers(org_id, account_number)
-    cloudigrade_application_type = make_sources_call(account_number, url, headers)
+    cloudigrade_application_type = make_sources_call(
+        org_id or account_number, url, headers
+    )
     if cloudigrade_application_type:
         return cloudigrade_application_type.get("data")[0].get("id")
     return None
