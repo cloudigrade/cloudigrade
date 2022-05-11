@@ -858,6 +858,8 @@ objects:
           value: ${CELERY_METRICS_RETRY_INTERVAL}
         - name: CLOUDIGRADE_ENVIRONMENT
           value: ${CLOUDIGRADE_ENVIRONMENT}
+        - name: OSD_REDEPLOY_TRIGGER
+          value: ${OSD_REDEPLOY_TRIGGER}
     - name: worker
       #
       # Component cloudigrade-worker deployment:
