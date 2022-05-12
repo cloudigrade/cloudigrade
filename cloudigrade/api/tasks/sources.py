@@ -265,7 +265,7 @@ def update_from_sources_kafka_message(message, headers):
         authentication_id,
     ) = sources.extract_ids_from_kafka_message(message, headers)
 
-    if (org_id is None and account_number is None) or authentication_id is None:
+    if (not org_id and not account_number) or authentication_id is None:
         logger.error(_("Aborting update. Incorrect message details."))
         return
 

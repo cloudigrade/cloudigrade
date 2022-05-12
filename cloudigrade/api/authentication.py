@@ -64,7 +64,7 @@ def parse_psk_header(request):
     org_id = request.META.get(settings.CLOUDIGRADE_ORG_ID_HEADER, None)
     account_number = request.META.get(settings.CLOUDIGRADE_ACCOUNT_NUMBER_HEADER, None)
 
-    if org_id is None and account_number is None:
+    if not org_id and not account_number:
         logger.info(
             _(
                 "PSK header for service '%(service_name)s'"

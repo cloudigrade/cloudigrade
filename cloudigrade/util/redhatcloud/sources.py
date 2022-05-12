@@ -367,8 +367,8 @@ def generate_sources_headers(org_id, account_number, include_psk=True):
         account_number (str): Account number identifier
         include_psk (boolean): Whether or not to include the PSK
     """
-    if org_id is not None:
-        headers = {"x-rh-sources-org-number": org_id}
+    if org_id:
+        headers = {"x-rh-sources-org-id": org_id}
     else:
         headers = {"x-rh-sources-account-number": account_number}
 
