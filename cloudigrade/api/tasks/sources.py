@@ -55,7 +55,11 @@ def create_from_sources_kafka_message(message, headers):
         platform_id,
     ) = sources.extract_ids_from_kafka_message(message, headers)
 
-    if account_number is None or authentication_id is None or application_id is None:
+    if (
+        (not org_id and not account_number)
+        or authentication_id is None
+        or application_id is None
+    ):
         logger.error(_("Aborting creation. Incorrect message details."))
         return
 
