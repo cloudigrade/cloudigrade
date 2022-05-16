@@ -18,7 +18,7 @@ def migrate_account_numbers_to_org_ids(_apps, _schema_editor):
 
         env = environ.Env()
         tenant_translator_url = "{}://{}:{}/internal/orgIds".format(
-            env("TENANT_TRANSLATOR_SCHEMA"),
+            env("TENANT_TRANSLATOR_SCHEME"),
             env("TENANT_TRANSLATOR_HOST"),
             env("TENANT_TRANSLATOR_PORT"),
         )
