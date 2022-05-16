@@ -284,8 +284,8 @@ def update_from_sources_kafka_message(message, headers):
             logger.info(
                 _(
                     "Authentication ID %(authentication_id)s for "
-                    "org_id %(org_id)s account number "
-                    "%(account_number)s does not exist; aborting cloud account update."
+                    "org_id %(org_id)s or account number %(account_number)s "
+                    "does not exist; aborting cloud account update."
                 ),
                 {
                     "authentication_id": authentication_id,
@@ -300,8 +300,8 @@ def update_from_sources_kafka_message(message, headers):
         if resource_type != settings.SOURCES_RESOURCE_TYPE:
             logger.info(
                 _(
-                    "Resource ID %(resource_id)s for org id %(org_id)s "
-                    "account number %(account_number)s "
+                    "Resource ID %(resource_id)s for org_id %(org_id)s "
+                    "or account number %(account_number)s "
                     "is not of type Application; aborting cloud account update."
                 ),
                 {

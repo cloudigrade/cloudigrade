@@ -549,11 +549,8 @@ def delete_cloud_accounts_not_in_sources():
                 if not source:
                     accounts_not_in_sources.append(cloud_account)
                     logger.info(
-                        _(
-                            "Found org_id %(org_id)s "
-                            "account %(cloud_account)s not in sources."
-                        ),
-                        {"org_id": org_id, "cloud_account": cloud_account},
+                        _("Found account %(cloud_account)s not in sources."),
+                        {"cloud_account": cloud_account},
                     )
                     delete_cloud_account.delay(cloud_account.id)
             except Exception as e:

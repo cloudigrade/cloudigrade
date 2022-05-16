@@ -187,7 +187,7 @@ def extract_ids_from_kafka_message(message, headers):
                 if not account_number:
                     logger.error(
                         _(
-                            "Missing expected account number from message "
+                            "Missing expected org_id or account number from message "
                             "%(message)s, headers %(headers)s"
                         ),
                         {"message": message, "headers": headers},
