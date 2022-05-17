@@ -1,9 +1,12 @@
 """Tasks for various data maintenance, activation, and upkeep operations."""
 import collections
 import itertools
+import json
 import logging
 from datetime import timedelta
 
+import environ
+import requests
 from celery import shared_task
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -577,3 +580,53 @@ def delete_cloud_accounts_not_in_sources():
 def delete_expired_synthetic_data():
     """Delete expired SyntheticDataRequest objects."""
     SyntheticDataRequest.objects.filter(expires_at__lte=get_now()).delete()
+
+
+@shared_task(name="api.tasks.migrate_account_numbers_to_org_ids")
+def migrate_account_numbers_to_org_ids():
+    """
+    Task to migrate EBS Account Numbers to Org IDs.
+
+    Returns:
+        None: Run as an asynchronous Celery task.
+
+    """
+    try:
+        env = environ.Env()
+
+        tenant_translator_url = "{}://{}:{}/internal/orgIds".format(
+            env("TENANT_TRANSLATOR_SCHEME"),
+            env("TENANT_TRANSLATOR_HOST"),
+            env("TENANT_TRANSLATOR_PORT"),
+        )
+
+        users_with_no_org_ids = User.objects.filter(last_name="")
+        if not users_with_no_org_ids:
+            logger.info("There are no account_numbers without org_ids to migrate")
+        else:
+            user_account_numbers = list(
+                users_with_no_org_ids.values_list("username", flat=True)
+            )
+
+            logger.info(
+                f"Migrating {len(user_account_numbers)} account_numbers to org_id"
+            )
+            logger.info(f"Calling tenant translator API {tenant_translator_url}")
+            response = requests.post(
+                tenant_translator_url, data=json.dumps(user_account_numbers)
+            )
+            org_ids = response.json()
+            for user_account in users_with_no_org_ids:
+                account_number = user_account.username
+                if account_number in org_ids:
+                    org_id = org_ids[account_number]
+                    user_account.last_name = org_id
+                    user_account.save()
+                    logger.info(
+                        f"  Migrated user account_number {account_number} "
+                        f"to org_id {org_id}"
+                    )
+
+    except Exception as e:
+        logger.error(f"Failed to migrate account_numbers to org_ids {e}", exc_info=True)
+        return
