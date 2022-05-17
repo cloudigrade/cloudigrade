@@ -41,6 +41,7 @@ from api.tasks.maintenance import (
     delete_inactive_users,
     delete_orphaned_cloud_accounts,
     enable_account,
+    migrate_account_numbers_to_org_ids,
 )
 from api.tasks.sources import (
     create_from_sources_kafka_message,

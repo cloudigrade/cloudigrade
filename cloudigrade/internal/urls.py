@@ -110,6 +110,11 @@ urlpatterns += [
         name="internal-delete-cloud-accounts-not-in-sources",
     ),
     path(
+        "migrate_account_numbers_to_org_ids/",
+        views.migrate_account_numbers_to_org_ids,
+        name="migrate-account-numbers-to-org-ids",
+    ),
+    path(
         "recalculate_concurrent_usage/",
         views.recalculate_concurrent_usage,
         name="internal-recalculate-concurrent-usage",

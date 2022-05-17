@@ -81,6 +81,34 @@ def delete_cloud_accounts_not_in_sources(request):
 @authentication_classes([IdentityHeaderAuthenticationInternal])
 @permission_classes([permissions.AllowAny])
 @schema(None)
+def migrate_account_numbers_to_org_ids(request):
+    """
+    Trigger a migrate_account_numbers_to_org_id task function to run.
+
+    This triggers a Celery task, `migrate_account_numbers_to_org_ids`
+    Because the task runs asynchronously, a 202 response will be returned immediately
+    even though the task may not actually have completed execution.
+
+    Example request using httpie:
+
+        http POST :8000/internal/migrate_account_numbers_to_org_ids/
+
+    And the response for that example:
+
+        HTTP/1.1 202 Accepted
+    """
+    logger.info(
+        _("Internal API invoking the migrate_account_numbers_to_org_ids task"),
+    )
+    tasks.migrate_account_numbers_to_org_ids.apply_async()
+
+    return Response(status=status.HTTP_202_ACCEPTED)
+
+
+@api_view(["POST"])
+@authentication_classes([IdentityHeaderAuthenticationInternal])
+@permission_classes([permissions.AllowAny])
+@schema(None)
 def fake_error(request):
     """
     Cause an error for internal testing purposes.

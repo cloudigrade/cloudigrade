@@ -454,6 +454,9 @@ CELERY_TASK_ROUTES = {
     },
     "api.tasks.fix_problematic_runs": {"queue": "fix_problematic_runs"},
     "api.tasks.inspect_pending_images": {"queue": "inspect_pending_images"},
+    "api.tasks.migrate_account_numbers_to_org_ids": {
+        "queue": "migrate_account_numbers_to_org_ids"
+    },
     "api.tasks.notify_application_availability_task": {
         "queue": "notify_application_availability_task"
     },
