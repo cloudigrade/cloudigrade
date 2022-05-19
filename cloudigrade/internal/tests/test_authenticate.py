@@ -83,8 +83,13 @@ class IdentityHeaderAuthenticationInternalCreateUserTestCase(TestCase):
     def setUp(self):
         """Set up data for tests."""
         self.account_number_not_found = str(_faker.pyint())
+        self.org_id_not_found = str(_faker.pyint())
         self.rh_header_as_admin_not_found = util_helper.get_identity_auth_header(
             account_number=self.account_number_not_found
+        )
+        self.rh_header_with_org_id_not_found = util_helper.get_identity_auth_header(
+            account_number=self.account_number_not_found,
+            org_id=self.org_id_not_found,
         )
         self.auth_class = IdentityHeaderAuthenticationInternalCreateUser()
 
@@ -97,6 +102,22 @@ class IdentityHeaderAuthenticationInternalCreateUserTestCase(TestCase):
         user, auth = self.auth_class.authenticate(request)
         self.assertEqual(user.username, self.account_number_not_found)
         self.assertEqual(user, User.objects.get(username=self.account_number_not_found))
+
+    def test_authenticate_no_user_with_org_id(self):
+        """Test that authentication creates a user for auth if it does not exist."""
+        request = Mock()
+        request.META = {
+            settings.INSIGHTS_IDENTITY_HEADER: self.rh_header_with_org_id_not_found
+        }
+        user, auth = self.auth_class.authenticate(request)
+        self.assertEqual(user.username, self.account_number_not_found)
+        self.assertEqual(user.last_name, self.org_id_not_found)
+        self.assertEqual(
+            user,
+            User.objects.get(
+                username=self.account_number_not_found, last_name=self.org_id_not_found
+            ),
+        )
 
 
 class IdentityHeaderAuthenticationInternalConcurrentCase(TestCase):
