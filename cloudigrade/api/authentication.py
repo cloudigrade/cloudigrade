@@ -37,11 +37,11 @@ def parse_psk_header(request):
     Get relevant information from the given request's PSK and account number headers.
 
     Returns:
-        (str, str, str): the tuple of psk, ord_id and/or account_number fields.
-            If the psk header is not present and the org_id or account_number
+        (str, str, str): the tuple of psk, account_number and/or ord_id fields.
+            If the psk header is not present and the account_number or org_id
             header is specified, this function returns (None, None, None).
             Otherwise, it will return (str, str|None, str|None) with the valid
-            PSK and the org_id and/or the account_number if specified.
+            PSK and the account_number and/or org_id if specified.
 
     Raises:
         AuthenticationFailed: If an invalid PSK is specified.
@@ -61,14 +61,14 @@ def parse_psk_header(request):
             _("Authentication Failed: Invalid PSK specified in header")
         )
 
-    org_id = request.META.get(settings.CLOUDIGRADE_ORG_ID_HEADER, None)
     account_number = request.META.get(settings.CLOUDIGRADE_ACCOUNT_NUMBER_HEADER, None)
+    org_id = request.META.get(settings.CLOUDIGRADE_ORG_ID_HEADER, None)
 
-    if not org_id and not account_number:
+    if not account_number and not org_id:
         logger.info(
             _(
                 "PSK header for service '%(service_name)s'"
-                " with no org_id or account_number"
+                " with no account_number or org_id"
             ),
             {
                 "service_name": service_name,
@@ -79,15 +79,15 @@ def parse_psk_header(request):
     logger.info(
         _(
             "PSK header for service '%(service_name)s'"
-            " with org_id '%(org_id)s' and account_number '%(account_number)s'"
+            " with account_number '%(account_number)s' and org_id '%(org_id)s'"
         ),
         {
             "service_name": service_name,
-            "org_id": org_id,
             "account_number": account_number,
+            "org_id": org_id,
         },
     )
-    return service_psk, org_id, account_number
+    return service_psk, account_number, org_id
 
 
 def get_or_create_user(account_number, org_id):
@@ -126,10 +126,10 @@ def parse_requests_header(request, allow_internal_fake_identity_header=False):
     Get relevant information from the given request's identity header.
 
     Returns:
-        (str, str, str, bool): the tuple of psk, org_id and account_number fields.
-            Both psk and either org_id or account_number headers must be specified
+        (str, str, str, bool): the tuple of psk, account_number and org_id fields.
+            Both psk and either account_number or org_id headers must be specified
             in the request. If the psk header is not present or invalid and
-            the org_id or account_number header is missing, this function
+            the account_number or org_id header is missing, this function
             returns (None, None, None)
 
     Raises:
@@ -166,10 +166,10 @@ def parse_requests_header(request, allow_internal_fake_identity_header=False):
 
     account_number = identity.get("account_number")
     org_id = identity.get("org_id")
-    # If neither org_id or account_number exist in header, authentication fails
-    if not org_id and not account_number:
+    # If neither account_number nor org_id exist in header, authentication fails
+    if not account_number and not org_id:
         logger.info(
-            _("org_id or account_number not contained in identity header %s."),
+            _("account_number or org_id not contained in identity header %s."),
             auth_header,
         )
 
@@ -179,20 +179,22 @@ def parse_requests_header(request, allow_internal_fake_identity_header=False):
     email = user.get("email")
     logger.info(
         _(
-            "identity header has org_id '%(org_id)s', "
+            "identity header has "
             "account_number '%(account_number)s', "
-            "is_org_admin '%(is_org_admin)s', username '%(username)s', "
+            "org_id '%(org_id)s', "
+            "is_org_admin '%(is_org_admin)s', "
+            "username '%(username)s', "
             "email '%(email)s'"
         ),
         {
-            "org_id": org_id,
             "account_number": account_number,
+            "org_id": org_id,
             "is_org_admin": is_org_admin,
             "username": username,
             "email": email,
         },
     )
-    return auth_header, org_id, account_number, is_org_admin
+    return auth_header, account_number, org_id, is_org_admin
 
 
 class IdentityHeaderAuthentication(BaseAuthentication):
@@ -211,7 +213,7 @@ class IdentityHeaderAuthentication(BaseAuthentication):
     allow_internal_fake_identity_header = False
 
     def assert_account_number(self, account_number, org_id):
-        """Assert org_id or account_number is set if required."""
+        """Assert account_number or org_id is set if required."""
         if not account_number and not org_id and self.require_account_number:
             raise exceptions.AuthenticationFailed(
                 _(
@@ -220,7 +222,7 @@ class IdentityHeaderAuthentication(BaseAuthentication):
                 )
             )
 
-    def assert_org_admin(self, org_id, account_number, is_org_admin):
+    def assert_org_admin(self, account_number, org_id, is_org_admin):
         """
         Assert org_admin is set if required.
 
@@ -232,33 +234,34 @@ class IdentityHeaderAuthentication(BaseAuthentication):
         if self.require_org_admin and not is_org_admin:
             logger.info(
                 _(
-                    "Authentication Failed: identity org_id %(org_id)"
-                    " or account number %(account_number)s"
+                    "Authentication Failed: identity "
+                    "account_number '%(account_number)s' "
+                    "or org_id '%(org_id)s'"
                     "is not org admin in identity header."
                 ),
-                {"org_id": org_id, "account_number": account_number},
+                {"account_number": account_number, "org_id": org_id},
             )
             raise exceptions.PermissionDenied(_("User must be an org admin."))
 
-    def get_user(self, org_id, account_number):
-        """Get the Django User for the org_id or account number specified."""
-        if not org_id and not account_number:
+    def get_user(self, account_number, org_id):
+        """Get the Django User for the account_number or org_id specified."""
+        if not account_number and not org_id:
             return None
 
         user = None
         if self.create_user:
             user = get_or_create_user(account_number, org_id)
-        elif User.objects.filter(last_name=org_id).exists():
-            user = User.objects.get(last_name=org_id)
-            logger.info(
-                _("Authentication found user with org_id %(org_id)s"),
-                {"org_id": org_id},
-            )
         elif User.objects.filter(username=account_number).exists():
             user = User.objects.get(username=account_number)
             logger.info(
                 _("Authentication found user with username %(account_number)s"),
                 {"account_number": account_number},
+            )
+        elif User.objects.filter(last_name=org_id).exists():
+            user = User.objects.get(last_name=org_id)
+            logger.info(
+                _("Authentication found user with org_id %(org_id)s"),
+                {"org_id": org_id},
             )
         elif self.require_user:
             message = _(
@@ -269,7 +272,7 @@ class IdentityHeaderAuthentication(BaseAuthentication):
             raise exceptions.AuthenticationFailed()
         else:
             logger.info(
-                _("Username %s or org_id %s was not found but is not required."),
+                _("Username '%s' or org_id '%s' was not found but is not required."),
                 account_number,
                 org_id,
             )
@@ -285,12 +288,12 @@ class IdentityHeaderAuthentication(BaseAuthentication):
     def authenticate(self, request):
         """Authenticate the request using the PSK or the identity header."""
         parse_insights_request_id(request)
-        psk, org_id, account_number = parse_psk_header(request)
+        psk, account_number, org_id = parse_psk_header(request)
 
         if psk:
             self.assert_account_number(account_number, org_id)
         else:
-            auth_header, org_id, account_number, is_org_admin = parse_requests_header(
+            auth_header, account_number, org_id, is_org_admin = parse_requests_header(
                 request, self.allow_internal_fake_identity_header
             )
 
@@ -302,8 +305,8 @@ class IdentityHeaderAuthentication(BaseAuthentication):
                     raise exceptions.AuthenticationFailed
 
             self.assert_account_number(account_number, org_id)
-            self.assert_org_admin(org_id, account_number, is_org_admin)
-        if user := self.get_user(org_id, account_number):
+            self.assert_org_admin(account_number, org_id, is_org_admin)
+        if user := self.get_user(account_number, org_id):
             return user, True
         return None
 

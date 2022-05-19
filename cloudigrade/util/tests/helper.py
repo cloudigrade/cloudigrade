@@ -814,8 +814,17 @@ def utc_dt(*args, **kwargs):
     return datetime.datetime(*args, **kwargs).replace(tzinfo=tz.tzutc())
 
 
+def generate_org_id():
+    """Generate a random org_id."""
+    return str(_faker.random_int(min=100000, max=999999))
+
+
 def generate_test_user(
-    account_number=None, password=None, is_superuser=False, date_joined=None
+    account_number=None,
+    password=None,
+    is_superuser=False,
+    date_joined=None,
+    org_id=None,
 ):
     """
     Generate and save a user for testing.
@@ -825,6 +834,7 @@ def generate_test_user(
         password (str): optional password
         is_superuser (bool): create as a superuser if True
         date_joined (datetime.datetime): optional when the user joined
+        org_id (str): optional org_id (last_name)
 
     Returns:
         User: created Django auth User
@@ -837,6 +847,8 @@ def generate_test_user(
         "password": password,
         "is_superuser": is_superuser,
     }
+    if org_id:
+        kwargs["last_name"] = org_id
     if date_joined:
         kwargs["date_joined"] = date_joined
     user = User.objects.create_user(**kwargs)
@@ -868,7 +880,7 @@ def get_test_user(account_number=None, password=None, is_superuser=False):
     return user
 
 
-def get_identity_auth_header(account_number="1337", is_org_admin=True):
+def get_identity_auth_header(account_number="1337", is_org_admin=True, org_id=None):
     """
     Get an example identity auth header.
 
@@ -876,6 +888,7 @@ def get_identity_auth_header(account_number="1337", is_org_admin=True):
         account_number (str): account number for the identity/insights account.
             defaults to "1337".
         is_org_admin (bool): should the identity be an org admin. defaults to True.
+        org_id (str): Optionally set the org_id in the header.
 
     Returns:
         str: base64 encoded identity header
@@ -885,6 +898,8 @@ def get_identity_auth_header(account_number="1337", is_org_admin=True):
         RH_IDENTITY_ORG_ADMIN if is_org_admin else RH_IDENTITY_NOT_ORG_ADMIN
     )
     header["identity"]["account_number"] = account_number
+    if org_id:
+        header["identity"]["org_id"] = org_id
     return base64.b64encode(json.dumps(header).encode("utf-8"))
 
 
@@ -930,6 +945,54 @@ def generate_sources_kafka_message_headers(account_number, event_type):
         ("x-rh-sources-account-number", account_number),
         ("x-rh-identity", x_rh_identity_header),
     ]
+    return headers
+
+
+def generate_sources_kafka_message_identity_headers(
+    identity_account_number=None,
+    identity_org_id=None,
+    sources_account_number=None,
+    sources_org_id=None,
+    event_type=None,
+):
+    """
+    Generate headers for a typical Kafka message coming from sources-api.
+
+    The contents of these headers are real strings, not encoded bytes. This simulates
+    the headers *after* we have decoded them from the raw Kafka message object using
+    extract_raw_sources_kafka_message.
+
+    Args:
+        identity_account_number (str): the identity account number or None
+        identity_org_id (str): the identity Org Id or None
+        sources_account_number (str): x-rh-sources-account-number or None
+        sources_org_id (str): the x-rh-sources-org-id or None
+        event_type (str): the event type (e.g. "Application.pause")
+
+    Returns:
+        list of tuples, each effectively a key and value representing a header
+    """
+    identity_header = {
+        "identity": {
+            "user": {"is_org_admin": True},
+        }
+    }
+    if identity_account_number:
+        identity_header["identity"]["account_number"] = identity_account_number
+    if identity_org_id:
+        identity_header["identity"]["org_id"] = identity_org_id
+    x_rh_identity_header = base64.b64encode(
+        json.dumps(identity_header).encode("utf-8")
+    ).decode("utf-8")
+    headers = [
+        ("x-rh-identity", x_rh_identity_header),
+    ]
+    if event_type:
+        headers.append(("event_type", event_type))
+    if sources_account_number:
+        headers.append(("x-rh-sources-account-number", sources_account_number))
+    if sources_org_id:
+        headers.append(("x-rh-sources-org-id", sources_org_id))
     return headers
 
 

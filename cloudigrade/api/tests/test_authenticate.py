@@ -27,7 +27,10 @@ class PskHeaderAuthenticateTestCase(TestCase):
         self.insights_request_id = _faker.uuid4().replace("-", "")
         self.account_number = str(_faker.pyint())
         self.account_number_not_found = str(_faker.pyint())
-        self.user = util_helper.generate_test_user(self.account_number)
+        self.org_id = str(_faker.pyint())
+        self.user = util_helper.generate_test_user(
+            self.account_number, org_id=self.org_id
+        )
         self.valid_svc_psk = _faker.uuid4()
         self.valid_svc_name = _faker.slug()
         self.invalid_svc_psk = _faker.uuid4()
@@ -52,6 +55,13 @@ class PskHeaderAuthenticateTestCase(TestCase):
             IdentityHeaderAuthentication.get_user(self.auth_class, None, None)
         )
 
+    def test_get_user_with_org_id(self):
+        """Test that get_user with org_id returns the user."""
+        self.assertEqual(
+            IdentityHeaderAuthentication.get_user(self.auth_class, None, self.org_id),
+            self.user,
+        )
+
     def test_authenticate(self):
         """Test that authentication with the correct PSK and account header succeeds."""
         request = Mock()
@@ -65,6 +75,21 @@ class PskHeaderAuthenticateTestCase(TestCase):
 
             self.assertTrue(auth)
             self.assertEqual(self.account_number, user.username)
+            self.assertEqual(user, self.user)
+
+    def test_authenticate_with_org_id(self):
+        """Test that authentication with the correct PSK and org_id header succeeds."""
+        request = Mock()
+        request.META = {
+            settings.CLOUDIGRADE_PSK_HEADER: self.valid_svc_psk,
+            settings.CLOUDIGRADE_ORG_ID_HEADER: self.org_id,
+        }
+
+        with override_settings(CLOUDIGRADE_PSKS=self.cloudigrade_psks):
+            user, auth = self.auth_class.authenticate(request)
+
+            self.assertTrue(auth)
+            self.assertEqual(self.org_id, user.last_name)
             self.assertEqual(user, self.user)
 
     def test_authenticate_with_invalid_psk(self):
@@ -100,7 +125,7 @@ class PskHeaderAuthenticateTestCase(TestCase):
                 self.assertIn(
                     "PSK header for service '"
                     + self.valid_svc_name
-                    + "' with no org_id or account_number",
+                    + "' with no account_number or org_id",
                     logging_watcher.output[1],
                 )
 
@@ -119,7 +144,10 @@ class IdentityHeaderAuthenticateTestCase(TestCase):
         """Set up data for tests."""
         self.account_number = str(_faker.pyint())
         self.account_number_not_found = str(_faker.pyint())
-        self.user = util_helper.generate_test_user(self.account_number)
+        self.org_id = str(_faker.pyint())
+        self.user = util_helper.generate_test_user(
+            self.account_number, org_id=self.org_id
+        )
         self.rh_header_as_admin = util_helper.get_identity_auth_header(
             account_number=self.account_number
         )
@@ -132,6 +160,9 @@ class IdentityHeaderAuthenticateTestCase(TestCase):
         self.rh_header_as_admin_not_found = util_helper.get_identity_auth_header(
             account_number=self.account_number_not_found
         )
+        self.rh_header_as_admin_with_org_id = util_helper.get_identity_auth_header(
+            account_number=self.account_number, org_id=self.org_id
+        )
         self.auth_class = IdentityHeaderAuthentication()
 
     def test_authenticate(self):
@@ -143,6 +174,20 @@ class IdentityHeaderAuthenticateTestCase(TestCase):
 
         self.assertTrue(auth)
         self.assertEqual(self.account_number, user.username)
+        self.assertEqual(user, self.user)
+
+    def test_authenticate_with_account_number_and_org_id(self):
+        """Test that authentication with both account_number and org_id succeeds."""
+        request = Mock()
+        request.META = {
+            settings.INSIGHTS_IDENTITY_HEADER: self.rh_header_as_admin_with_org_id
+        }
+
+        user, auth = self.auth_class.authenticate(request)
+
+        self.assertTrue(auth)
+        self.assertEqual(self.account_number, user.username)
+        self.assertEqual(self.org_id, user.last_name)
         self.assertEqual(user, self.user)
 
     def test_authenticate_with_verbose_logging(self):

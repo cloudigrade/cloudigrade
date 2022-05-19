@@ -15,18 +15,18 @@ class NotifyApplicationAvailabilityTaskTest(TestCase):
 
     def setUp(self):
         """Set up shared variables."""
-        self.org_id = None
         self.account_number = str(_faker.pyint())
+        self.org_id = None
         self.application_id = _faker.pyint()
 
     @patch("util.redhatcloud.sources.notify_application_availability")
     def test_notify_application_availability_task_success(self, mock_notify_sources):
         """Assert notify_application_availability with available message success."""
         notify_application_availability_task(
-            self.org_id, self.account_number, self.application_id, "available", ""
+            self.account_number, self.org_id, self.application_id, "available", ""
         )
         mock_notify_sources.assert_called_with(
-            self.org_id, self.account_number, self.application_id, "available", ""
+            self.account_number, self.org_id, self.application_id, "available", ""
         )
 
     @patch("util.redhatcloud.sources.notify_application_availability")
@@ -35,15 +35,15 @@ class NotifyApplicationAvailabilityTaskTest(TestCase):
     ):
         """Assert notify_application_availability with unavailable message success."""
         notify_application_availability_task(
-            self.org_id,
             self.account_number,
+            self.org_id,
             self.application_id,
             "unavailable",
             "bad_error",
         )
         mock_notify_sources.assert_called_with(
-            self.org_id,
             self.account_number,
+            self.org_id,
             self.application_id,
             "unavailable",
             "bad_error",
@@ -57,8 +57,8 @@ class NotifyApplicationAvailabilityTaskTest(TestCase):
         mock_notify_sources.side_effect = KafkaProducerException("network error")
         with self.assertRaises(KafkaProducerException):
             notify_application_availability_task(
-                self.org_id, self.account_number, self.application_id, "available", ""
+                self.account_number, self.org_id, self.application_id, "available", ""
             )
         mock_notify_sources.assert_called_with(
-            self.org_id, self.account_number, self.application_id, "available", ""
+            self.account_number, self.org_id, self.application_id, "available", ""
         )

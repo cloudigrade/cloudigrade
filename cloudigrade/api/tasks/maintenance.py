@@ -420,10 +420,10 @@ def _delete_orphaned_cloud_accounts(max_updated_at):
                 _("Found orphan %(cloud_account)s"), {"cloud_account": cloud_account}
             )
             try:
-                org_id = cloud_account.user.last_name
                 account_number = cloud_account.user.username
+                org_id = cloud_account.user.last_name
                 source_id = cloud_account.platform_source_id
-                if source := sources.get_source(org_id, account_number, source_id):
+                if source := sources.get_source(account_number, org_id, source_id):
                     logger.error(
                         _(
                             "Orphaned account still has a source! Please investigate! "
@@ -545,10 +545,10 @@ def delete_cloud_accounts_not_in_sources():
             )
         if cloud_account.content_object:
             try:
-                org_id = cloud_account.user.last_name
                 account_number = cloud_account.user.username
+                org_id = cloud_account.user.last_name
                 source_id = cloud_account.platform_source_id
-                source = sources.get_source(org_id, account_number, source_id)
+                source = sources.get_source(account_number, org_id, source_id)
                 if not source:
                     accounts_not_in_sources.append(cloud_account)
                     logger.info(
@@ -628,5 +628,7 @@ def migrate_account_numbers_to_org_ids():
                     )
 
     except Exception as e:
-        logger.error(f"Failed to migrate account_numbers to org_ids {e}", exc_info=True)
+        logger.error(
+            f"Failed to migrate account_numbers to org_ids - {e}", exc_info=True
+        )
         return
