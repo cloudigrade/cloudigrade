@@ -90,6 +90,37 @@ def parse_psk_header(request):
     return service_psk, org_id, account_number
 
 
+def get_or_create_user(account_number, org_id):
+    """
+    Get or create a user with the specified account_number and org_id.
+
+    Returns:
+        Auth user object found or created
+    """
+    # Note: Declaring this transaction might not be necessary since we have
+    # ATOMIC_REQUESTS default to True, but since it's *possible* to disable that
+    # setting, this bit of paranoia ensures the User and UserTaskLock are always
+    # created together in a shared transaction.
+    user = None
+    with transaction.atomic():
+        if account_number and org_id:
+            user, created = User.objects.get_or_create(
+                username=account_number, last_name=org_id
+            )
+        else:
+            user, created = User.objects.get_or_create(username=account_number)
+        if created:
+            user.set_unusable_password()
+            logger.info(
+                _("Username %s was not found and has been created."),
+                account_number,
+            )
+            from api.models import UserTaskLock  # local import to avoid loop
+
+            UserTaskLock.objects.get_or_create(user=user)
+    return user
+
+
 def parse_requests_header(request, allow_internal_fake_identity_header=False):
     """
     Get relevant information from the given request's identity header.
@@ -216,24 +247,7 @@ class IdentityHeaderAuthentication(BaseAuthentication):
 
         user = None
         if self.create_user:
-            # Note: Declaring this transaction might not be necessary since we have
-            # ATOMIC_REQUESTS default to True, but since it's *possible* to disable that
-            # setting, this bit of paranoia ensures the User and UserTaskLock are always
-            # created together in a shared transaction.
-            with transaction.atomic():
-                if org_id:
-                    user, created = User.objects.get_or_create(last_name=org_id)
-                else:
-                    user, created = User.objects.get_or_create(username=account_number)
-                if created:
-                    user.set_unusable_password()
-                    logger.info(
-                        _("Username %s was not found and has been created."),
-                        account_number,
-                    )
-                    from api.models import UserTaskLock  # local import to avoid loop
-
-                    UserTaskLock.objects.get_or_create(user=user)
+            user = get_or_create_user(account_number, org_id)
         elif User.objects.filter(last_name=org_id).exists():
             user = User.objects.get(last_name=org_id)
             logger.info(
@@ -247,33 +261,25 @@ class IdentityHeaderAuthentication(BaseAuthentication):
                 {"account_number": account_number},
             )
         elif self.require_user:
-            if org_id:
-                message = _(
-                    "Authentication Failed: user with org_id {org_id} "
-                    "does not exist."
-                ).format(org_id=org_id)
-            else:
-                message = _(
-                    "Authentication Failed: user with account number {username} "
-                    "does not exist."
-                ).format(username=account_number)
+            message = _(
+                "Authentication Failed: user with account number '{username}', "
+                " org_id '{org_id}' does not exist."
+            ).format(username=account_number, org_id=org_id)
             logger.info(message)
             raise exceptions.AuthenticationFailed()
         else:
             logger.info(
-                _("Username %s was not found but is not required."),
+                _("Username %s or org_id %s was not found but is not required."),
                 account_number,
+                org_id,
             )
-        if org_id:
-            logger.debug(
-                _("Authenticated user for org_id %(org_id)s is %(user)s"),
-                {"org_id": org_id, "user": user},
-            )
-        else:
-            logger.debug(
-                _("Authenticated user for username %(account_number)s is %(user)s"),
-                {"account_number": account_number, "user": user},
-            )
+        logger.debug(
+            _(
+                "Authenticated user for username '%(account_number)s', "
+                " org_id '%(org_id)' is %(user)s"
+            ),
+            {"account_number": account_number, "org_id": org_id, "user": user},
+        )
         return user
 
     def authenticate(self, request):

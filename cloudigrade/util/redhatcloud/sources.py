@@ -182,16 +182,15 @@ def extract_ids_from_kafka_message(message, headers):
                 return None, None, None
 
             org_id = auth_header.get("identity", {}).get("org_id")
-            if not org_id:
-                account_number = auth_header.get("identity", {}).get("account_number")
-                if not account_number:
-                    logger.error(
-                        _(
-                            "Missing expected org_id or account number from message "
-                            "%(message)s, headers %(headers)s"
-                        ),
-                        {"message": message, "headers": headers},
-                    )
+            account_number = auth_header.get("identity", {}).get("account_number")
+            if not org_id and not account_number:
+                logger.error(
+                    _(
+                        "Missing expected org_id or account number from message "
+                        "%(message)s, headers %(headers)s"
+                    ),
+                    {"message": message, "headers": headers},
+                )
 
     platform_id = message.get("id")
     if not platform_id:
@@ -356,8 +355,9 @@ def generate_sources_headers(org_id, account_number, include_psk=True):
     Return the headers needed for accessing Sources.
 
     The Sources API requires the x-rh-sources-account-number
-    as well as the x-rh-sources-psk for service to service
-    communication instead of the earlier x-rh-identity.
+    and/or the x-rh-sources-org-id header as well as the
+    x-rh-sources-psk for service to service communication instead
+    of the earlier x-rh-identity.
 
     By default we include the PSK, but for Kafka messages,
     the PSK is not required, so we can optionally exclude it.
@@ -367,10 +367,11 @@ def generate_sources_headers(org_id, account_number, include_psk=True):
         account_number (str): Account number identifier
         include_psk (boolean): Whether or not to include the PSK
     """
+    headers = {}
     if org_id:
-        headers = {"x-rh-sources-org-id": org_id}
-    else:
-        headers = {"x-rh-sources-account-number": account_number}
+        headers["x-rh-sources-org-id"] = org_id
+    if account_number:
+        headers["x-rh-sources-account-number"] = account_number
 
     if include_psk:
         if settings.SOURCES_PSK == "":
