@@ -2,17 +2,16 @@
 import logging
 
 from django.conf import settings
-from django.contrib.auth.models import User
-from django.db import transaction
 from django.db.models import Q
 from django.utils.translation import gettext as _
 from requests.exceptions import BaseHTTPError, RequestException
 
 from api import error_codes
+from api.authentication import get_or_create_user
 from api.clouds.aws.tasks import configure_customer_aws_and_create_cloud_account
 from api.clouds.aws.util import update_aws_cloud_account
 from api.clouds.azure.tasks import check_azure_subscription_and_create_cloud_account
-from api.models import CloudAccount, UserTaskLock
+from api.models import CloudAccount
 from api.tasks.maintenance import _delete_cloud_accounts
 from util import aws
 from util.celery import retriable_shared_task
@@ -101,15 +100,7 @@ def create_from_sources_kafka_message(message, headers):
         error_code.notify(account_number, application_id)
         return
 
-    with transaction.atomic():
-        user, created = User.objects.get_or_create(username=account_number)
-        if created:
-            user.set_unusable_password()
-            logger.info(
-                _("User %s was not found and has been created."),
-                account_number,
-            )
-            UserTaskLock.objects.get_or_create(user=user)
+    user = get_or_create_user(account_number, org_id)
 
     # Conditionalize the logic for different cloud providers
     if authtype == settings.SOURCES_CLOUDMETER_ARN_AUTHTYPE:
@@ -284,13 +275,13 @@ def update_from_sources_kafka_message(message, headers):
             logger.info(
                 _(
                     "Authentication ID %(authentication_id)s for "
-                    "org_id %(org_id)s or account number %(account_number)s "
+                    "account number %(account_number)s or org_id %(org_id)s "
                     "does not exist; aborting cloud account update."
                 ),
                 {
                     "authentication_id": authentication_id,
-                    "org_id": org_id,
                     "account_number": account_number,
+                    "org_id": org_id,
                 },
             )
             return
@@ -300,14 +291,14 @@ def update_from_sources_kafka_message(message, headers):
         if resource_type != settings.SOURCES_RESOURCE_TYPE:
             logger.info(
                 _(
-                    "Resource ID %(resource_id)s for org_id %(org_id)s "
-                    "or account number %(account_number)s "
+                    "Resource ID %(resource_id)s for "
+                    "account number %(account_number)s or org_id %(org_id)s "
                     "is not of type Application; aborting cloud account update."
                 ),
                 {
                     "resource_id": application_id,
-                    "org_id": org_id,
                     "account_number": account_number,
+                    "org_id": org_id,
                 },
             )
             return
@@ -387,13 +378,18 @@ def pause_from_sources_kafka_message(message, headers):
         application_id,
     ) = sources.extract_ids_from_kafka_message(message, headers)
 
-    if account_number is None or application_id is None:
+    if (account_number is None and org_id is None) or application_id is None:
         logger.error(
             _(
                 "Aborting pause. Incorrect message details. "
-                "account_number=%(account_number)s application_id=%(application_id)s"
+                "account_number=%(account_number)s org_id=%(org_id) "
+                "application_id=%(application_id)s"
             ),
-            {"account_number": account_number, "application_id": application_id},
+            {
+                "account_number": account_number,
+                "org_id": org_id,
+                "application_id": application_id,
+            },
         )
         return
 
@@ -446,16 +442,16 @@ def unpause_from_sources_kafka_message(message, headers):
         application_id,
     ) = sources.extract_ids_from_kafka_message(message, headers)
 
-    if account_number is None or application_id is None:
+    if (account_number is None and org_id is None) or application_id is None:
         logger.error(
             _(
                 "Aborting unpause. Incorrect message details. "
-                "org_id=%(org_id)s account_number=%(account_number)s "
+                "account_number=%(account_number)s org_id=%(org_id)s "
                 "application_id=%(application_id)s"
             ),
             {
-                "org_id": org_id,
                 "account_number": account_number,
+                "org_id": org_id,
                 "application_id": application_id,
             },
         )
