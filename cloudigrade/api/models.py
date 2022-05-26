@@ -166,8 +166,8 @@ class CloudAccount(BaseGenericModel):
             from api.tasks.sources import notify_application_availability_task
 
             notify_application_availability_task.delay(
-                self.user.last_name,
                 self.user.username,
+                self.user.last_name,
                 self.platform_application_id,
                 "available",
             )
@@ -221,8 +221,8 @@ class CloudAccount(BaseGenericModel):
             from api.tasks.sources import notify_application_availability_task
 
             notify_application_availability_task.delay(
-                self.user.last_name,
                 self.user.username,
+                self.user.last_name,
                 self.platform_application_id,
                 "unavailable",
                 message,
