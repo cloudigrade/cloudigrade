@@ -103,21 +103,20 @@ def get_or_create_user(account_number, org_id):
     # created together in a shared transaction.
     user = None
     with transaction.atomic():
-        if account_number and org_id:
-            user, created = User.objects.get_or_create(
-                username=account_number, last_name=org_id
-            )
-        else:
+        if account_number:
             user, created = User.objects.get_or_create(username=account_number)
-        if created:
-            user.set_unusable_password()
-            logger.info(
-                _("Username %s was not found and has been created."),
-                account_number,
-            )
-            from api.models import UserTaskLock  # local import to avoid loop
+            if created:
+                if org_id:
+                    user.last_name = org_id
+                    user.save()
+                user.set_unusable_password()
+                logger.info(
+                    _("Username %s was not found and has been created."),
+                    account_number,
+                )
+                from api.models import UserTaskLock  # local import to avoid loop
 
-            UserTaskLock.objects.get_or_create(user=user)
+                UserTaskLock.objects.get_or_create(user=user)
     return user
 
 
@@ -279,7 +278,7 @@ class IdentityHeaderAuthentication(BaseAuthentication):
         logger.debug(
             _(
                 "Authenticated user for username '%(account_number)s', "
-                " org_id '%(org_id)' is %(user)s"
+                " org_id '%(org_id)s' is %(user)s"
             ),
             {"account_number": account_number, "org_id": org_id, "user": user},
         )
