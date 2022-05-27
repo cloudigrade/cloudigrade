@@ -20,6 +20,7 @@ class UpdateAWSClountTest(TestCase):
     def setUp(self):
         """Set up shared variables."""
         self.account_number = _faker.random_int(min=100000, max=999999)
+        self.org_id = None
         self.user = util_helper.generate_test_user(account_number=self.account_number)
         self.aws_account_id = util_helper.generate_dummy_aws_account_id()
         self.arn = util_helper.generate_dummy_arn(account_id=self.aws_account_id)
@@ -40,7 +41,12 @@ class UpdateAWSClountTest(TestCase):
     def test_update_aws_clount_notifies_sources_invalid_arn(self, mock_notify_sources):
         """Test update_aws_cloud_account notifies sources if ARN is invalid."""
         util.update_aws_cloud_account(
-            self.clount, "INVALID", self.account_number, self.auth_id, self.source_id
+            self.clount,
+            "INVALID",
+            self.account_number,
+            self.org_id,
+            self.auth_id,
+            self.source_id,
         )
         mock_notify_sources.delay.assert_called()
 
@@ -56,7 +62,12 @@ class UpdateAWSClountTest(TestCase):
         api_helper.generate_instance(self.clount)
 
         util.update_aws_cloud_account(
-            self.clount, arn2, self.account_number, self.auth_id, self.source_id
+            self.clount,
+            arn2,
+            self.account_number,
+            self.org_id,
+            self.auth_id,
+            self.source_id,
         )
         self.assertTrue(AwsCloudAccount.objects.filter(account_arn=arn2).exists())
         self.assertEqual(0, Instance.objects.all().count())
@@ -77,7 +88,12 @@ class UpdateAWSClountTest(TestCase):
         api_helper.generate_cloud_account(arn=arn2, aws_account_id=aws_account_id2)
 
         util.update_aws_cloud_account(
-            self.clount, arn2, self.account_number, self.auth_id, self.source_id
+            self.clount,
+            arn2,
+            self.account_number,
+            self.org_id,
+            self.auth_id,
+            self.source_id,
         )
 
         # The old CloudAccount should be disabled regardless of the new one's success.
@@ -99,7 +115,12 @@ class UpdateAWSClountTest(TestCase):
         api_helper.generate_cloud_account(arn=arn2, aws_account_id=aws_account_id2)
 
         util.update_aws_cloud_account(
-            self.clount, arn3, self.account_number, self.auth_id, self.source_id
+            self.clount,
+            arn3,
+            self.account_number,
+            self.org_id,
+            self.auth_id,
+            self.source_id,
         )
 
         # The old CloudAccount should be disabled regardless of the new one's success.

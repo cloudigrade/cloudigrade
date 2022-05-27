@@ -25,7 +25,7 @@ class CloudigradeError:
         """Get the external message for an error."""
         return self.message % {"error_code": self.code}
 
-    def notify(self, account_number, application_id, error_message=None):
+    def notify(self, account_number, org_id, application_id, error_message=None):
         """Tell sources an application is not available because of error."""
         from api.tasks.sources import notify_application_availability_task
 
@@ -33,6 +33,7 @@ class CloudigradeError:
             error_message = self.get_message()
         notify_application_availability_task.delay(
             account_number,
+            org_id,
             application_id,
             availability_status="unavailable",
             availability_status_error=error_message,
