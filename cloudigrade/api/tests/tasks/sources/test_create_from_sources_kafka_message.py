@@ -7,6 +7,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.test import TestCase
 
+from api.authentication import get_user_by_account
 from api.tasks import sources
 from util.exceptions import SourcesAPINotOkStatus
 from util.tests import helper as util_helper
@@ -77,7 +78,7 @@ class CreateFromSourcesKafkaMessageTest(TestCase):
         mock_get_auth.return_value = self.auth_return_value
         sources.create_from_sources_kafka_message(self.message, self.headers)
 
-        user = User.objects.get(username=self.account_number)
+        user = get_user_by_account(account_number=self.account_number)
         mock_task.delay.assert_called_with(
             user.username,
             user.last_name,
@@ -108,7 +109,7 @@ class CreateFromSourcesKafkaMessageTest(TestCase):
         mock_get_auth.return_value = self.auth_azure_return_value
         sources.create_from_sources_kafka_message(self.message, self.headers)
 
-        user = User.objects.get(username=self.account_number)
+        user = get_user_by_account(account_number=self.account_number)
         mock_task.delay.assert_called_with(
             user.username,
             user.last_name,
@@ -327,7 +328,7 @@ class CreateFromSourcesKafkaMessageTest(TestCase):
         mock_get_auth.return_value = self.auth_return_value
         sources.create_from_sources_kafka_message(self.message, self.headers)
 
-        user = User.objects.get(username=self.account_number)
+        user = get_user_by_account(account_number=self.account_number)
         mock_task.delay.assert_called_with(
             user.username,
             user.last_name,

@@ -6,6 +6,7 @@ from django.utils.translation import gettext as _
 from rest_framework.serializers import ValidationError
 
 from api import error_codes
+from api.authentication import get_user_by_account
 from api.clouds.azure.util import create_azure_cloud_account
 from util.celery import retriable_shared_task
 
@@ -29,7 +30,7 @@ def check_azure_subscription_and_create_cloud_account(
         source_id (str): Platform Sources' Source object id
     """
     try:
-        user = User.objects.get(username=username)
+        user = get_user_by_account(account_number=username, org_id=org_id)
     except User.DoesNotExist:
         error = error_codes.CG1000
         error.log_internal_message(
