@@ -3,10 +3,10 @@ from unittest.mock import Mock
 
 import faker
 from django.conf import settings
-from django.contrib.auth.models import User
 from django.test import TestCase
 from rest_framework.authentication import exceptions
 
+from api.authentication import get_user_by_account
 from internal.authentication import (
     IdentityHeaderAuthenticationInternal,
     IdentityHeaderAuthenticationInternalAllowFakeIdentityHeader,
@@ -101,7 +101,9 @@ class IdentityHeaderAuthenticationInternalCreateUserTestCase(TestCase):
         }
         user, auth = self.auth_class.authenticate(request)
         self.assertEqual(user.username, self.account_number_not_found)
-        self.assertEqual(user, User.objects.get(username=self.account_number_not_found))
+        self.assertEqual(
+            user, get_user_by_account(account_number=self.account_number_not_found)
+        )
 
     def test_authenticate_no_user_with_org_id(self):
         """Test that authentication creates a user for auth if it does not exist."""
@@ -114,8 +116,9 @@ class IdentityHeaderAuthenticationInternalCreateUserTestCase(TestCase):
         self.assertEqual(user.last_name, self.org_id_not_found)
         self.assertEqual(
             user,
-            User.objects.get(
-                username=self.account_number_not_found, last_name=self.org_id_not_found
+            get_user_by_account(
+                account_number=self.account_number_not_found,
+                org_id=self.org_id_not_found,
             ),
         )
 

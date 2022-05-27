@@ -90,6 +90,26 @@ def parse_psk_header(request):
     return service_psk, account_number, org_id
 
 
+def get_user_by_account(account_number=None, org_id=None):
+    """
+    Given an account_number or org_id, return the user object.
+
+    Returns:
+        User object matching the account_number or org_id
+        specified, None otherwise.
+    """
+    if account_number is not None and org_id is not None:
+        return User.objects.get(username=account_number, last_name=org_id)
+
+    if account_number is not None:
+        return User.objects.get(username=account_number)
+
+    if org_id is not None:
+        return User.objects.get(last_name=org_id)
+
+    raise User.DoesNotExist("User matching account_number or org_id does not exist.")
+
+
 def get_or_create_user(account_number, org_id):
     """
     Get or create a user with the specified account_number and org_id.

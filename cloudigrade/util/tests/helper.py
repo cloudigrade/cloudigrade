@@ -16,6 +16,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 
 from api import AWS_PROVIDER_STRING, AZURE_PROVIDER_STRING
+from api.authentication import get_user_by_account
 from util import aws, misc
 
 _faker = faker.Faker()
@@ -870,7 +871,7 @@ def get_test_user(account_number=None, password=None, is_superuser=False):
 
     """
     try:
-        user = User.objects.get(username=account_number)
+        user = get_user_by_account(account_number=account_number)
         if password:
             user.set_password(password)
         user.is_superuser = is_superuser
