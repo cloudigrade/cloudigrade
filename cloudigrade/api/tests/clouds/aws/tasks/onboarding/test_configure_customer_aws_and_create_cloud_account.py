@@ -53,6 +53,7 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
 
         tasks.configure_customer_aws_and_create_cloud_account(
             user.username,
+            user.last_name,
             customer_secret_access_key,
             auth_id,
             application_id,
@@ -75,6 +76,7 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
     ):
         """Assert the task returns early if user is not found."""
         username = -1  # This user should never exist.
+        org_id = None
 
         customer_secret_access_key = util_helper.generate_dummy_arn()
         auth_id = _faker.pyint()
@@ -83,6 +85,7 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
 
         tasks.configure_customer_aws_and_create_cloud_account(
             username,
+            org_id,
             customer_secret_access_key,
             auth_id,
             application_id,
@@ -118,6 +121,7 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
 
         tasks.configure_customer_aws_and_create_cloud_account(
             user.username,
+            user.last_name,
             customer_secret_access_key,
             auth_id,
             application_id,
@@ -137,6 +141,7 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
         with self.assertLogs("api.clouds.aws.tasks", level="INFO") as cm:
             tasks.configure_customer_aws_and_create_cloud_account(
                 user.username,
+                user.last_name,
                 arn,
                 auth_id,
                 application_id,

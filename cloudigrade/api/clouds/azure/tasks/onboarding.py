@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
     name="api.clouds.azure.tasks.check_azure_subscription_and_create_cloud_account",
 )
 def check_azure_subscription_and_create_cloud_account(
-    username, subscription_id, authentication_id, application_id, source_id
+    username, org_id, subscription_id, authentication_id, application_id, source_id
 ):
     """
     Configure the customer's Azure account and create our CloudAccount.
@@ -35,7 +35,7 @@ def check_azure_subscription_and_create_cloud_account(
         error.log_internal_message(
             logger, {"application_id": application_id, "username": username}
         )
-        error.notify(username, application_id)
+        error.notify(username, org_id, application_id)
         return
 
     try:

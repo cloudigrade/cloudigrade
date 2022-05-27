@@ -6,6 +6,7 @@ import faker
 from django.test import TestCase
 
 from api import error_codes
+from util.tests import helper as util_helper
 
 
 _faker = faker.Faker()
@@ -45,10 +46,12 @@ class ErrorCodeTestCase(TestCase):
     def test_notify_sources(self, mock_notify_sources):
         """Test that notify calls notify_application_availability."""
         account_number = str(_faker.pyint())
+        org_id = util_helper.generate_org_id()
         app_id = _faker.pyint()
-        self.custom_error.notify(account_number, app_id)
+        self.custom_error.notify(account_number, org_id, app_id)
         mock_notify_sources.delay.assert_called_once_with(
             account_number,
+            org_id,
             app_id,
             availability_status="unavailable",
             availability_status_error="Message including {}".format(self.error_code),

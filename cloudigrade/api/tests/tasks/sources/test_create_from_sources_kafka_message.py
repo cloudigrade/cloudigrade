@@ -80,6 +80,7 @@ class CreateFromSourcesKafkaMessageTest(TestCase):
         user = User.objects.get(username=self.account_number)
         mock_task.delay.assert_called_with(
             user.username,
+            user.last_name,
             arn,
             self.authentication_id,
             self.application_id,
@@ -110,6 +111,7 @@ class CreateFromSourcesKafkaMessageTest(TestCase):
         user = User.objects.get(username=self.account_number)
         mock_task.delay.assert_called_with(
             user.username,
+            user.last_name,
             self.subscription_id,
             self.authentication_id,
             self.application_id,
@@ -328,6 +330,7 @@ class CreateFromSourcesKafkaMessageTest(TestCase):
         user = User.objects.get(username=self.account_number)
         mock_task.delay.assert_called_with(
             user.username,
+            user.last_name,
             arn,
             self.authentication_id,
             self.application_id,

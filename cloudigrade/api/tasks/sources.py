@@ -74,7 +74,7 @@ def create_from_sources_kafka_message(message, headers):
         error_code.log_internal_message(
             logger, {"authentication_id": authentication_id, "authtype": authtype}
         )
-        error_code.notify(account_number, application_id)
+        error_code.notify(account_number, org_id, application_id)
         return
 
     resource_type = authentication.get("resource_type")
@@ -84,7 +84,7 @@ def create_from_sources_kafka_message(message, headers):
         error_code.log_internal_message(
             logger, {"resource_id": resource_id, "account_number": account_number}
         )
-        error_code.notify(account_number, application_id)
+        error_code.notify(account_number, org_id, application_id)
         return
 
     source_id = application.get("source_id")
@@ -97,7 +97,7 @@ def create_from_sources_kafka_message(message, headers):
         error_code.log_internal_message(
             logger, {"authentication_id": authentication_id}
         )
-        error_code.notify(account_number, application_id)
+        error_code.notify(account_number, org_id, application_id)
         return
 
     user = get_or_create_user(account_number, org_id)
@@ -106,6 +106,7 @@ def create_from_sources_kafka_message(message, headers):
     if authtype == settings.SOURCES_CLOUDMETER_ARN_AUTHTYPE:
         configure_customer_aws_and_create_cloud_account.delay(
             user.username,
+            user.last_name,
             authentication_token,
             authentication_id,
             application_id,
@@ -114,6 +115,7 @@ def create_from_sources_kafka_message(message, headers):
     elif authtype == settings.SOURCES_CLOUDMETER_LIGHTHOUSE_AUTHTYPE:
         check_azure_subscription_and_create_cloud_account.delay(
             user.username,
+            user.last_name,
             authentication_token,
             authentication_id,
             application_id,
@@ -163,7 +165,7 @@ def _get_and_verify_sources_data(
             logger,
             {"authentication_id": authentication_id, "account_number": account_number},
         )
-        error_code.notify(account_number, application_id)
+        error_code.notify(account_number, org_id, application_id)
         return application, None
     return application, authentication
 
@@ -313,7 +315,7 @@ def update_from_sources_kafka_message(message, headers):
             error_code.log_internal_message(
                 logger, {"authentication_id": authentication_id}
             )
-            error_code.notify(account_number or org_id, application_id)
+            error_code.notify(account_number, org_id, application_id)
             return
 
         # If the Authentication being updated is arn, do arn things.
@@ -323,7 +325,8 @@ def update_from_sources_kafka_message(message, headers):
             update_aws_cloud_account(
                 clount,
                 arn,
-                account_number or org_id,
+                account_number,
+                org_id,
                 authentication_id,
                 source_id,
             )

@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 )
 @rewrap_aws_errors
 def configure_customer_aws_and_create_cloud_account(
-    username, customer_arn, authentication_id, application_id, source_id
+    username, org_id, customer_arn, authentication_id, application_id, source_id
 ):
     """
     Configure the customer's AWS account and create our CloudAccount.
@@ -44,6 +44,7 @@ def configure_customer_aws_and_create_cloud_account(
 
     Args:
         username (string): Username of the user that will own the new cloud account
+        org_id (string): Org Id of the user that will own the new cloud account
         customer_arn (str): customer's ARN
         authentication_id (str): Platform Sources' Authentication object id
         application_id (str): Platform Sources' Application object id
@@ -56,14 +57,14 @@ def configure_customer_aws_and_create_cloud_account(
         error.log_internal_message(
             logger, {"application_id": application_id, "username": username}
         )
-        error.notify(username, application_id)
+        error.notify(username, org_id, application_id)
         return
     try:
         getattr(aws.AwsArn(customer_arn), "account_id")
     except InvalidArn:
         error = error_codes.CG1004
         error.log_internal_message(logger, {"application_id": application_id})
-        error.notify(username, application_id)
+        error.notify(username, org_id, application_id)
         return
 
     try:

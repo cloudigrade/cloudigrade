@@ -30,6 +30,7 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
         )
 
         self.username = _faker.user_name()
+        self.org_id = None
         self.application_id = _faker.pyint()
         self.source_id = _faker.pyint()
 
@@ -66,6 +67,7 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
             self.clount,
             self.arn,
             self.account_number,
+            self.org_id,
             self.authentication_id,
             self.source_id,
         )

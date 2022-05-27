@@ -29,6 +29,7 @@ class CheckAzureSubscriptionAndCreateCloudAccountTest(TestCase):
 
         tasks.check_azure_subscription_and_create_cloud_account(
             user.username,
+            user.last_name,
             subscription_id,
             auth_id,
             application_id,
@@ -48,6 +49,7 @@ class CheckAzureSubscriptionAndCreateCloudAccountTest(TestCase):
     def test_fails_if_user_not_found(self, mock_create, mock_notify_sources):
         """Assert the task returns early if user is not found."""
         username = -1  # This user should never exist.
+        org_id = None
 
         subscription_id = str(uuid.uuid4())
         auth_id = _faker.pyint()
@@ -56,6 +58,7 @@ class CheckAzureSubscriptionAndCreateCloudAccountTest(TestCase):
 
         tasks.check_azure_subscription_and_create_cloud_account(
             username,
+            org_id,
             subscription_id,
             auth_id,
             application_id,
@@ -81,6 +84,7 @@ class CheckAzureSubscriptionAndCreateCloudAccountTest(TestCase):
 
         tasks.check_azure_subscription_and_create_cloud_account(
             user.username,
+            user.last_name,
             subscription_id,
             auth_id,
             application_id,
