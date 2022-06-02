@@ -1,8 +1,8 @@
 import logging
+import os
 
 from django.apps import AppConfig
 from django.conf import settings
-
 
 logger = logging.getLogger(__name__)
 
@@ -74,12 +74,24 @@ WATCHTOWER_SETTINGS_TO_LOG = [
     "WATCHTOWER_MAX_BATCH_COUNT",
 ]
 
+CREDENTIALS_TO_LOG_REDACTED = [
+    "AWS_ACCESS_KEY_ID",
+    "AWS_PROFILE",
+    "AWS_SECRET_ACCESS_KEY",
+    "AZURE_CLIENT_ID",
+    "AZURE_CLIENT_SECRET",
+    "AZURE_SP_OBJECT_ID",
+    "AZURE_SUBSCRIPTION_ID",
+    "AZURE_TENANT_ID",
+]
+
 
 class ApiConfig(AppConfig):
     name = "api"
 
     def ready(self):
         self.log_env_settings()
+        self.log_redacted_credentials()
 
     def log_env_settings(self):
         """Log a subset of non secret environment settings."""
@@ -105,3 +117,19 @@ class ApiConfig(AppConfig):
 
         logger.info('LOGGING["handlers"]:')
         logger.info(settings.LOGGING["handlers"])
+
+    def log_redacted_credentials(self):
+        """
+        Log redacted secrets for diagnosing possible configuration issues.
+
+        We redact all but the last *two* characters of every secret that has a value.
+        Because secrets should always be *significantly* longer, the potential risk
+        this adds if production logs were leaked should be minimal.
+        """
+        logger.info("Redacted Credentials:")
+        for setting in CREDENTIALS_TO_LOG_REDACTED:
+            value = getattr(settings, setting, None)
+            if not value:
+                value = os.environ.get(setting, None)
+            redacted = "*" * 18 + value[-2:] if value else None
+            logger.info(f"{setting}: {redacted}")
