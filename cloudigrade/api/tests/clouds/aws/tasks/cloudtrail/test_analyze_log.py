@@ -613,8 +613,8 @@ class AnalyzeLogTest(TestCase):
 
         Specifically, we are testing the handling of three messages. The first
         and third messages are valid and should complete successfully. The
-        second (middle) message is malformed and should be left on the queue
-        for retry later (in practice).
+        second (middle) message is malformed but should be deleted with the other
+        two messages.
         """
         sqs_messages = [
             helper.generate_mock_cloudtrail_sqs_message(),
@@ -623,11 +623,10 @@ class AnalyzeLogTest(TestCase):
         ]
         expected_successes = [
             {"message_id": sqs_messages[0].message_id, "body": sqs_messages[0].body},
+            {"message_id": sqs_messages[1].message_id, "body": sqs_messages[1].body},
             {"message_id": sqs_messages[2].message_id, "body": sqs_messages[2].body},
         ]
-        expected_failures = [
-            {"message_id": sqs_messages[1].message_id, "body": sqs_messages[1].body}
-        ]
+        expected_failures = []
         mock_receive.return_value = sqs_messages
         simple_content = {"Records": []}
         mock_s3.side_effect = [
@@ -638,18 +637,20 @@ class AnalyzeLogTest(TestCase):
 
         successes, failures = tasks.analyze_log()
 
-        self.assertEqual(len(successes), 2)
+        self.assertEqual(len(successes), 3)
         self.assertEqual(expected_successes, successes)
-        self.assertEqual(len(failures), 1)
+        self.assertEqual(len(failures), 0)
         self.assertEqual(expected_failures, failures)
 
         mock_del.assert_called()
         delete_message_calls = mock_del.call_args_list
-        # Only the first and third message should be deleted.
-        self.assertEqual(len(delete_message_calls), 2)
+        # All messages should be deleted.
+        self.assertEqual(len(delete_message_calls), 3)
         delete_1_call = call(settings.AWS_CLOUDTRAIL_EVENT_URL, [sqs_messages[0]])
+        delete_2_call = call(settings.AWS_CLOUDTRAIL_EVENT_URL, [sqs_messages[1]])
         delete_3_call = call(settings.AWS_CLOUDTRAIL_EVENT_URL, [sqs_messages[2]])
         self.assertIn(delete_1_call, delete_message_calls)
+        self.assertIn(delete_2_call, delete_message_calls)
         self.assertIn(delete_3_call, delete_message_calls)
 
     @patch("api.clouds.aws.tasks.cloudtrail.start_image_inspection")
@@ -916,21 +917,18 @@ class AnalyzeLogTest(TestCase):
         Test that a malformed (not JSON) log is not processed.
 
         This is a "supported" failure case. If somehow we cannot process the
-        log file, the expected behavior is to log an exception message and not
-        delete the SQS message that led us to that message. This means that the
-        message would be picked up again and again with each task run. This is
-        okay and expected, and we will (eventually) configure a DLQ to take any
-        messages that we repeatedly fail to process.
+        log file, the expected behavior is to log an exception message and
+        delete the SQS message that led us to that log file.
         """
         sqs_message = helper.generate_mock_cloudtrail_sqs_message()
         mock_receive.return_value = [sqs_message]
         mock_s3.return_value = "hello world"
 
         successes, failures = tasks.analyze_log()
-        self.assertEqual(len(successes), 0)
-        self.assertEqual(len(failures), 1)
+        self.assertEqual(len(successes), 1)
+        self.assertEqual(len(failures), 0)
 
-        mock_del.assert_not_called()
+        mock_del.assert_called()
 
     @patch("api.clouds.aws.tasks.cloudtrail.aws.delete_messages_from_queue")
     @patch("api.clouds.aws.tasks.cloudtrail._process_cloudtrail_message")

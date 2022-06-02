@@ -160,14 +160,25 @@ def _process_cloudtrail_message(message):
             {"bucket": bucket, "key": key},
         )
         content = load_json_from_s3(bucket, key)
-        logs.append((content, bucket, key))
-        logger.info(
-            _(
-                "Successfully read CloudTrail log file from "
-                "S3 bucket '%(bucket)s' key '%(key)s'"
-            ),
-            {"bucket": bucket, "key": key},
-        )
+        if content:
+            logs.append((content, bucket, key))
+            logger.info(
+                _(
+                    "Successfully read CloudTrail log file from "
+                    "S3 bucket '%(bucket)s' key '%(key)s'"
+                ),
+                {"bucket": bucket, "key": key},
+            )
+        else:
+            logger.warning(
+                _(
+                    "Failed to read CloudTrail log file (or it was empty) from "
+                    "S3 bucket '%(bucket)s' key '%(key)s'"
+                ),
+                {"bucket": bucket, "key": key},
+            )
+            # Early return since there's nothing to process here.
+            return True
 
     # Extract actionable details from each of the S3 log files
     instance_events = []
@@ -224,12 +235,41 @@ def _process_cloudtrail_message(message):
 
 
 def load_json_from_s3(bucket, key):
-    """Load content from S3 bucket/key and return JSON-parsed object."""
+    """
+    Load content from S3 bucket/key and return JSON-parsed object.
+
+    If we fail to read the message in a catastrophic way that we don't want to retry
+    because we assume we'll never be able to read it, return None.
+    """
     try:
         raw_content = aws.get_object_content_from_s3(bucket, key)
+    except ClientError as e:
+        # Log the full original exception to help us diagnose problems later.
+        logger.info(e, exc_info=True)
+
+        # Carefully dissect the object to avoid AttributeError and KeyError.
+        response_error = getattr(e, "response", {}).get("Error", {})
+        error_code = response_error.get("Code")
+        error_message = response_error.get("Message")
+        log_message, log_args = _(
+            "Unexpected AWS %(code)s in load_json_from_s3: %(message)s"
+        ), {
+            "code": error_code,
+            "message": error_message,
+        }
+
+        if error_code in aws.COMMON_AWS_ACCESS_DENIED_ERROR_CODES:
+            logger.warning(log_message, log_args)
+        else:
+            logger.error(log_message, log_args)
+
+        return None
+
     except Exception as e:
         # This should be exceptionally rare and may indicate an AWS failure of some
         # kind because we should always have access to our buckets' contents.
+        # Don't return None here because this could be a temporary error, and we may
+        # want the caller to retry later.
         logger.exception(
             _(
                 "Unexpected failure (%(error)s) getting object content from S3 "
@@ -251,7 +291,8 @@ def load_json_from_s3(bucket, key):
             ),
             {"error": e, "bucket": bucket, "key": key, "raw_content": raw_content},
         )
-        raise e
+        # Simply return None if we couldn't parse the file.
+        return None
 
     return content
 
