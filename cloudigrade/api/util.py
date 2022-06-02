@@ -7,11 +7,11 @@ from decimal import Decimal
 
 from dateutil import tz
 from django.conf import settings
-from django.contrib.auth.models import User
 from django.db import IntegrityError, transaction
 from django.db.models import Q
 from django.utils.translation import gettext as _
 from tqdm import tqdm
+
 
 from api.models import (
     ConcurrentUsage,
@@ -19,6 +19,7 @@ from api.models import (
     InstanceDefinition,
     InstanceEvent,
     Run,
+    User,
 )
 from util.misc import get_now, get_today
 

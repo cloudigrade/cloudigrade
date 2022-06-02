@@ -3,7 +3,6 @@ import datetime
 from unittest.mock import patch
 
 import faker
-from django.contrib.auth.models import User
 from django.test import TestCase, TransactionTestCase, override_settings
 
 from api import AWS_PROVIDER_STRING
@@ -14,6 +13,7 @@ from api.models import (
     Run,
     SyntheticDataRequest,
 )
+from api.models import User
 from api.tests import helper as api_helper
 from api.util import calculate_max_concurrent_usage
 from util.tests import helper as util_helper
@@ -123,7 +123,7 @@ class CloudAccountTest(TestCase):
     def test_delete_clount_deletes_user(self, mock_notify_sources):
         """Test User is deleted if last clount is deleted."""
         user = util_helper.generate_test_user()
-        username = user.username
+        account_number = user.account_number
         aws_account_id = util_helper.generate_dummy_aws_account_id()
         account = api_helper.generate_cloud_account(
             aws_account_id=aws_account_id,
@@ -131,7 +131,7 @@ class CloudAccountTest(TestCase):
         )
 
         account.delete()
-        self.assertFalse(User.objects.filter(username=username).exists())
+        self.assertFalse(User.objects.filter(account_number=account_number).exists())
 
     @patch("api.tasks.sources.notify_application_availability_task")
     def test_delete_clount_doesnt_delete_user_for_two_clounts(
@@ -139,7 +139,7 @@ class CloudAccountTest(TestCase):
     ):
         """Test User is not deleted if it has more clounts left."""
         user = util_helper.generate_test_user()
-        username = user.username
+        account_number = user.account_number
         aws_account_id = util_helper.generate_dummy_aws_account_id()
         account = api_helper.generate_cloud_account(
             aws_account_id=aws_account_id,
@@ -151,7 +151,7 @@ class CloudAccountTest(TestCase):
             user=user,
         )
         account.delete()
-        self.assertTrue(User.objects.filter(username=username).exists())
+        self.assertTrue(User.objects.filter(account_number=account_number).exists())
 
 
 class SyntheticDataRequestModelTest(TestCase, api_helper.ModelStrTestMixin):

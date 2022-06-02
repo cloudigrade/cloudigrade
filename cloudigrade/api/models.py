@@ -1,15 +1,17 @@
 """Cloudigrade API v2 Models."""
 import json
 import logging
+import uuid
 from datetime import timedelta
 
 import model_utils
 from celery import chain
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.core import validators
 from django.db import models, transaction
 from django.db.models.signals import post_delete, post_save, pre_delete
 from django.dispatch import receiver
+from django.utils.timezone import now
 from django.utils.translation import gettext as _
 
 from api import AWS_PROVIDER_STRING, AZURE_PROVIDER_STRING
@@ -19,11 +21,81 @@ from util.models import BaseGenericModel, BaseModel
 logger = logging.getLogger(__name__)
 
 
-# For Authentication we use the Django user model object's last_name as
-# a placeholder for the Insights org_id. This is temporary until the
-# account_number is no longer used/passed down in the authentication header.
-# For org_id, we need this to be unique in the User object.
-User._meta.get_field("last_name")._unique = True
+class UserManager(BaseUserManager):
+    """Manager class for the Api User model."""
+
+    def create_user(
+        self,
+        account_number=None,
+        org_id=None,
+        password=None,
+        date_joined=None,
+        is_active=True,
+        is_superuser=False,
+    ):
+        """create_user creates a user, requires at least an account_number or org_id."""
+        if not account_number and not org_id:
+            raise ValueError("Users must have at least an account_number or org_id")
+
+        user = self.model(account_number=account_number, org_id=org_id)
+        if password:
+            user.set_password(password)
+        else:
+            user.set_unusable_password()
+
+        if date_joined:
+            user.date_joined = date_joined
+
+        user.is_active = is_active
+        user.is_superuser = is_superuser
+        user.save(using=self._db)
+        return user
+
+
+class User(AbstractBaseUser):
+    """Class for the our Api User model."""
+
+    def user_uuid():
+        """Return a UUID string to use for newly created Api users."""
+        return str(uuid.uuid4())
+
+    uuid = models.TextField(
+        verbose_name="User Unique Id",
+        max_length=150,
+        unique=True,
+        blank=False,
+        default=user_uuid,
+    )
+    account_number = models.TextField(
+        verbose_name="Account Number",
+        max_length=150,
+        unique=True,
+        null=True,
+    )
+    org_id = models.TextField(
+        verbose_name="Org Id", max_length=150, unique=True, null=True
+    )
+    is_active = models.BooleanField(default=False)
+    is_superuser = models.BooleanField(default=False)
+    date_joined = models.DateTimeField(verbose_name="Date Joined", default=now)
+
+    objects = UserManager()
+
+    USERNAME_FIELD = "uuid"
+    REQUIRED_FIELDS = []
+
+    class Meta:
+        app_label = "api"
+
+    def __str__(self):
+        """Return the friendly string representation for the Api User."""
+        return (
+            f"{self.__class__.__name__}("
+            f"uuid={self.uuid}, "
+            f"account_number={self.account_number}, "
+            f"org_id={self.org_id}"
+            f")"
+        )
 
 
 class UserTaskLock(BaseModel):
@@ -166,8 +238,8 @@ class CloudAccount(BaseGenericModel):
             from api.tasks.sources import notify_application_availability_task
 
             notify_application_availability_task.delay(
-                self.user.username,
-                self.user.last_name,
+                self.user.account_number,
+                self.user.org_id,
                 self.platform_application_id,
                 "available",
             )
@@ -221,8 +293,8 @@ class CloudAccount(BaseGenericModel):
             from api.tasks.sources import notify_application_availability_task
 
             notify_application_availability_task.delay(
-                self.user.username,
-                self.user.last_name,
+                self.user.account_number,
+                self.user.org_id,
                 self.platform_application_id,
                 "unavailable",
                 message,

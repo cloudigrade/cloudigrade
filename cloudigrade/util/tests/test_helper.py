@@ -8,11 +8,11 @@ import re
 import string
 
 import faker
-from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.test import TestCase
 
+from api.models import User
 from util import aws
 from util.tests import helper
 
@@ -212,7 +212,7 @@ class UtilHelperTest(TestCase):
         self.assertFalse(user.is_superuser)
         other_user = helper.generate_test_user()
         self.assertNotEqual(user, other_user)
-        self.assertNotEqual(user.username, other_user.username)
+        self.assertNotEqual(user.account_number, other_user.account_number)
 
     def test_generate_test_user_with_args(self):
         """Assert generation of test user with specified arguments."""
@@ -221,7 +221,7 @@ class UtilHelperTest(TestCase):
         user = helper.generate_test_user(
             account_number=account_number, is_superuser=True, date_joined=date_joined
         )
-        self.assertEqual(user.username, account_number)
+        self.assertEqual(user.account_number, account_number)
         self.assertTrue(user.is_superuser)
         self.assertEqual(user.date_joined, date_joined)
 

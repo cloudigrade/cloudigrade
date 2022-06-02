@@ -13,12 +13,12 @@ from typing import Optional
 
 from celery import chord, group, shared_task
 from dateutil import rrule
-from django.contrib.auth.models import User
 from django.db import transaction
 from django.utils.translation import gettext as _
 
 from api import AWS_PROVIDER_STRING, AZURE_PROVIDER_STRING
 from api.models import CloudAccount, Instance, SyntheticDataRequest
+from api.models import User
 from api.tests import helper as api_helper  # TODO Don't import from tests module.
 from util.misc import get_now
 
@@ -62,7 +62,7 @@ def synthesize_user(request_id: int) -> Optional[int]:
     user_date_joined = request.created_at - timedelta(days=request.since_days_ago + 1)
 
     user = User.objects.create_user(
-        username=username, is_active=False, date_joined=user_date_joined
+        account_number=username, is_active=False, date_joined=user_date_joined
     )
     request.user = user
     request.save()

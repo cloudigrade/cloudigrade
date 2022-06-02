@@ -105,8 +105,8 @@ def create_from_sources_kafka_message(message, headers):
     # Conditionalize the logic for different cloud providers
     if authtype == settings.SOURCES_CLOUDMETER_ARN_AUTHTYPE:
         configure_customer_aws_and_create_cloud_account.delay(
-            user.username,
-            user.last_name,
+            user.account_number,
+            user.org_id,
             authentication_token,
             authentication_id,
             application_id,
@@ -114,8 +114,8 @@ def create_from_sources_kafka_message(message, headers):
         )
     elif authtype == settings.SOURCES_CLOUDMETER_LIGHTHOUSE_AUTHTYPE:
         check_azure_subscription_and_create_cloud_account.delay(
-            user.username,
-            user.last_name,
+            user.account_number,
+            user.org_id,
             authentication_token,
             authentication_id,
             application_id,

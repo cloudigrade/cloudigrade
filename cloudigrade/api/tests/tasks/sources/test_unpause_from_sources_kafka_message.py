@@ -20,7 +20,7 @@ class UnpauseFromSourcesKafkaMessageTest(TestCase):
         self.cloud_account = api_helper.generate_cloud_account(
             platform_application_is_paused=True
         )
-        self.account_number = self.cloud_account.user.username
+        self.account_number = self.cloud_account.user.account_number
         self.application_id = self.cloud_account.platform_application_id
 
     def test_unpause_from_sources_kafka_message_success(self):

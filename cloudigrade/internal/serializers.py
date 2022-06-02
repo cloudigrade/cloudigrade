@@ -1,5 +1,4 @@
 """DRF serializers for the cloudigrade internal API."""
-from django.contrib.auth.models import User
 from django.utils.translation import gettext as _
 from django_celery_beat.models import PeriodicTask
 from rest_framework import serializers
@@ -10,6 +9,7 @@ from rest_framework.serializers import ModelSerializer
 from api import models
 from api.clouds.aws import models as aws_models
 from api.clouds.azure import models as azure_models
+from api.models import User
 
 
 class InternalUserSerializer(ModelSerializer):
@@ -20,7 +20,9 @@ class InternalUserSerializer(ModelSerializer):
         fields = (
             "date_joined",
             "id",
-            "username",
+            "uuid",
+            "account_number",
+            "org_id",
         )
 
 

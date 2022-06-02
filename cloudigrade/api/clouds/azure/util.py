@@ -29,7 +29,7 @@ def create_azure_cloud_account(
     That is why we put almost everything here in a transaction.atomic() context.
 
     Args:
-        user (django.contrib.auth.models.User): user to own the CloudAccount
+        user (api.User): user to own the CloudAccount
         subscription_id (str): UUID of the customer subscription
         platform_authentication_id (str): Platform Sources' Authentication object id
         platform_application_id (str): Platform Sources' Application object id
@@ -42,14 +42,16 @@ def create_azure_cloud_account(
     logger.info(
         _(
             "Creating an AzureCloudAccount. "
-            "user=%(user)s, "
+            "account_number=%(account_number)s, "
+            "org_id=%(org_id)s, "
             "subscription_id=%(subscription_id)s, "
             "platform_authentication_id=%(platform_authentication_id)s, "
             "platform_application_id=%(platform_application_id)s, "
             "platform_source_id=%(platform_source_id)s"
         ),
         {
-            "user": user.username,
+            "account_number": user.account_number,
+            "org_id": user.org_id,
             "subscription_id": subscription_id,
             "platform_authentication_id": platform_authentication_id,
             "platform_application_id": platform_application_id,

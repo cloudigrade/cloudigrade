@@ -5,11 +5,12 @@ import json
 import logging
 
 from django.conf import settings
-from django.contrib.auth.models import User
 from django.db import transaction
 from django.utils.translation import gettext as _
 from rest_framework import HTTP_HEADER_ENCODING
 from rest_framework.authentication import BaseAuthentication, exceptions
+
+from api.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +38,7 @@ def parse_psk_header(request):
     Get relevant information from the given request's PSK and account number headers.
 
     Returns:
-        (str, str, str): the tuple of psk, account_number and/or ord_id fields.
+        (str, str, str): the tuple of psk, account_number and/or org_id fields.
             If the psk header is not present and the account_number or org_id
             header is specified, this function returns (None, None, None).
             Otherwise, it will return (str, str|None, str|None) with the valid
@@ -98,14 +99,14 @@ def get_user_by_account(account_number=None, org_id=None):
         User object matching the account_number or org_id
         specified, None otherwise.
     """
-    if account_number is not None and org_id is not None:
-        return User.objects.get(username=account_number, last_name=org_id)
+    if account_number and org_id:
+        return User.objects.get(account_number=account_number, org_id=org_id)
 
-    if account_number is not None:
-        return User.objects.get(username=account_number)
+    if account_number:
+        return User.objects.get(account_number=account_number)
 
-    if org_id is not None:
-        return User.objects.get(last_name=org_id)
+    if org_id:
+        return User.objects.get(org_id=org_id)
 
     raise User.DoesNotExist("User matching account_number or org_id does not exist.")
 
@@ -123,20 +124,28 @@ def get_or_create_user(account_number, org_id):
     # created together in a shared transaction.
     user = None
     with transaction.atomic():
-        if account_number:
-            user, created = User.objects.get_or_create(username=account_number)
-            if created:
-                if org_id:
-                    user.last_name = org_id
-                    user.save()
-                user.set_unusable_password()
-                logger.info(
-                    _("Username %s was not found and has been created."),
-                    account_number,
-                )
-                from api.models import UserTaskLock  # local import to avoid loop
+        if account_number and org_id:
+            user, created = User.objects.get_or_create(
+                account_number=account_number, org_id=org_id
+            )
+        elif account_number:
+            user, created = User.objects.get_or_create(account_number=account_number)
+        elif org_id:
+            user, created = User.objects.get_or_create(org_id=org_id)
+        if created:
+            user.set_unusable_password()
+            user.save()
+            logger.info(
+                _(
+                    "account_number '%s' and org_id '%s'"
+                    "was not found and has been created."
+                ),
+                account_number,
+                org_id,
+            )
+            from api.models import UserTaskLock  # local import to avoid loop
 
-                UserTaskLock.objects.get_or_create(user=user)
+            UserTaskLock.objects.get_or_create(user=user)
     return user
 
 
@@ -185,7 +194,7 @@ def parse_requests_header(request, allow_internal_fake_identity_header=False):
 
     account_number = identity.get("account_number")
     org_id = identity.get("org_id")
-    # If neither account_number nor org_id exist in header, authentication fails
+    # If account_number or org_id is not in header, authentication fails
     if not account_number and not org_id:
         logger.info(
             _("account_number or org_id not contained in identity header %s."),
@@ -237,7 +246,7 @@ class IdentityHeaderAuthentication(BaseAuthentication):
             raise exceptions.AuthenticationFailed(
                 _(
                     "Authentication Failed: identity account number is required "
-                    "but neither account_number nor org_id was present in request."
+                    "but account_number or org_id was not present in request."
                 )
             )
 
@@ -270,34 +279,40 @@ class IdentityHeaderAuthentication(BaseAuthentication):
         user = None
         if self.create_user:
             user = get_or_create_user(account_number, org_id)
-        elif User.objects.filter(username=account_number).exists():
-            user = User.objects.get(username=account_number)
+        elif (
+            account_number
+            and User.objects.filter(account_number=account_number).exists()
+        ):
+            user = User.objects.get(account_number=account_number)
             logger.info(
-                _("Authentication found user with username %(account_number)s"),
+                _("Authentication found user with account_number %(account_number)s"),
                 {"account_number": account_number},
             )
-        elif User.objects.filter(last_name=org_id).exists():
-            user = User.objects.get(last_name=org_id)
+        elif org_id and User.objects.filter(org_id=org_id).exists():
+            user = User.objects.get(org_id=org_id)
             logger.info(
                 _("Authentication found user with org_id %(org_id)s"),
                 {"org_id": org_id},
             )
         elif self.require_user:
             message = _(
-                "Authentication Failed: user with account number '{username}', "
+                "Authentication Failed: user with account_number '{account_number}', "
                 " org_id '{org_id}' does not exist."
-            ).format(username=account_number, org_id=org_id)
+            ).format(account_number=account_number, org_id=org_id)
             logger.info(message)
             raise exceptions.AuthenticationFailed()
         else:
             logger.info(
-                _("Username '%s' or org_id '%s' was not found but is not required."),
+                _(
+                    "account_number '%s' or org_id '%s'"
+                    " was not found but is not required."
+                ),
                 account_number,
                 org_id,
             )
         logger.debug(
             _(
-                "Authenticated user for username '%(account_number)s', "
+                "Authenticated user for account_number '%(account_number)s', "
                 " org_id '%(org_id)s' is %(user)s"
             ),
             {"account_number": account_number, "org_id": org_id, "user": user},

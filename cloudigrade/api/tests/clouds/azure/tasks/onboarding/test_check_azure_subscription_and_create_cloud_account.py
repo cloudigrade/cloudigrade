@@ -3,11 +3,11 @@ import uuid
 from unittest.mock import patch
 
 import faker
-from django.contrib.auth.models import User
 from django.test import TestCase
 
 from api.clouds.azure import tasks
 from api.models import CloudAccount
+from api.models import User
 
 _faker = faker.Faker()
 
@@ -19,7 +19,9 @@ class CheckAzureSubscriptionAndCreateCloudAccountTest(TestCase):
     def test_success(self, mock_create):
         """Assert the task happy path upon normal operation."""
         # User that would ultimately own the created objects.
-        user = User.objects.create()
+        user = User.objects.create(
+            account_number=_faker.random_int(min=100000, max=999999)
+        )
 
         # Dummy values for the various interactions.
         subscription_id = str(uuid.uuid4())
@@ -28,8 +30,8 @@ class CheckAzureSubscriptionAndCreateCloudAccountTest(TestCase):
         source_id = _faker.pyint()
 
         tasks.check_azure_subscription_and_create_cloud_account(
-            user.username,
-            user.last_name,
+            user.account_number,
+            user.org_id,
             subscription_id,
             auth_id,
             application_id,
@@ -48,7 +50,7 @@ class CheckAzureSubscriptionAndCreateCloudAccountTest(TestCase):
     @patch("api.clouds.azure.tasks.onboarding.create_azure_cloud_account")
     def test_fails_if_user_not_found(self, mock_create, mock_notify_sources):
         """Assert the task returns early if user is not found."""
-        username = -1  # This user should never exist.
+        account_number = -1  # This user should never exist.
         org_id = None
 
         subscription_id = str(uuid.uuid4())
@@ -57,7 +59,7 @@ class CheckAzureSubscriptionAndCreateCloudAccountTest(TestCase):
         source_id = _faker.pyint()
 
         tasks.check_azure_subscription_and_create_cloud_account(
-            username,
+            account_number,
             org_id,
             subscription_id,
             auth_id,
@@ -83,8 +85,8 @@ class CheckAzureSubscriptionAndCreateCloudAccountTest(TestCase):
         mock_get_subs.return_value = []
 
         tasks.check_azure_subscription_and_create_cloud_account(
-            user.username,
-            user.last_name,
+            user.account_number,
+            user.org_id,
             subscription_id,
             auth_id,
             application_id,

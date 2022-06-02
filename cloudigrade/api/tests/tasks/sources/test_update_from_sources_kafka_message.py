@@ -131,8 +131,8 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
         self.assertFalse(self.clount.is_enabled)
 
         mock_notify_sources.delay.assert_called_once_with(
-            self.clount.user.username,
-            self.clount.user.last_name,
+            self.clount.user.account_number,
+            self.clount.user.org_id,
             self.clount.platform_application_id,
             "unavailable",
             str(validation_error),

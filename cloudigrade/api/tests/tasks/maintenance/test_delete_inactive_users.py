@@ -3,10 +3,10 @@ from datetime import timedelta
 
 import faker
 from django.conf import settings
-from django.contrib.auth.models import User
 from django.test import TestCase
 
 from api.models import CloudAccount, ConcurrentUsage
+from api.models import User
 from api.tasks import maintenance
 from api.tests import helper as api_helper
 from util import misc

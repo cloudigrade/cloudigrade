@@ -6,7 +6,7 @@ from django.conf import settings
 from django.test import TestCase
 from rest_framework.authentication import exceptions
 
-from api.authentication import get_user_by_account
+from api.models import User
 from internal.authentication import (
     IdentityHeaderAuthenticationInternal,
     IdentityHeaderAuthenticationInternalAllowFakeIdentityHeader,
@@ -50,7 +50,7 @@ class IdentityHeaderAuthenticationInternalTestCase(TestCase):
         user, auth = self.auth_class.authenticate(request)
 
         self.assertTrue(auth)
-        self.assertEqual(self.account_number, user.username)
+        self.assertEqual(self.account_number, user.account_number)
 
     def test_authenticate_not_admin(self):
         """Test that authentication header without org admin user succeeds."""
@@ -60,7 +60,7 @@ class IdentityHeaderAuthenticationInternalTestCase(TestCase):
         user, auth = self.auth_class.authenticate(request)
 
         self.assertTrue(auth)
-        self.assertEqual(self.account_number, user.username)
+        self.assertEqual(self.account_number, user.account_number)
 
     def test_authenticate_no_user(self):
         """Test that authentication returns None when user does not exist."""
@@ -100,9 +100,9 @@ class IdentityHeaderAuthenticationInternalCreateUserTestCase(TestCase):
             settings.INSIGHTS_IDENTITY_HEADER: self.rh_header_as_admin_not_found
         }
         user, auth = self.auth_class.authenticate(request)
-        self.assertEqual(user.username, self.account_number_not_found)
+        self.assertEqual(user.account_number, self.account_number_not_found)
         self.assertEqual(
-            user, get_user_by_account(account_number=self.account_number_not_found)
+            user, User.objects.get(account_number=self.account_number_not_found)
         )
 
     def test_authenticate_no_user_with_org_id(self):
@@ -112,11 +112,11 @@ class IdentityHeaderAuthenticationInternalCreateUserTestCase(TestCase):
             settings.INSIGHTS_IDENTITY_HEADER: self.rh_header_with_org_id_not_found
         }
         user, auth = self.auth_class.authenticate(request)
-        self.assertEqual(user.username, self.account_number_not_found)
-        self.assertEqual(user.last_name, self.org_id_not_found)
+        self.assertEqual(user.account_number, self.account_number_not_found)
+        self.assertEqual(user.org_id, self.org_id_not_found)
         self.assertEqual(
             user,
-            get_user_by_account(
+            User.objects.get(
                 account_number=self.account_number_not_found,
                 org_id=self.org_id_not_found,
             ),
@@ -149,8 +149,8 @@ class IdentityHeaderAuthenticationInternalConcurrentCase(TestCase):
         with self.assertRaises(exceptions.AuthenticationFailed) as e:
             self.auth_class.authenticate(request)
         self.assertIn(
-            "identity account number is required but neither account_number"
-            " nor org_id was present in request.",
+            "identity account number is required but account_number"
+            " or org_id was not present in request.",
             str(e.exception),
         )
 
@@ -216,4 +216,4 @@ class IdentityHeaderAuthenticationInternalConcurrentCase(TestCase):
         user, auth = self.auth_class.authenticate(request)
 
         self.assertTrue(auth)
-        self.assertEqual(self.account_number, user.username)
+        self.assertEqual(self.account_number, user.account_number)

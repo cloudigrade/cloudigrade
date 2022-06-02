@@ -75,7 +75,7 @@ class InternalDailyConcurrentUsageViewSetTest(SharedDailyConcurrentUsageViewSetT
         today = get_today()
         api_helper.calculate_concurrent(yesterday, today, self.user1.id)
         fake_header = util_helper.get_identity_auth_header(
-            account_number=self.user1.username,
+            account_number=self.user1.account_number,
             is_org_admin=True,
         )
 
@@ -126,7 +126,7 @@ class InternalDailyConcurrentUsageViewSetTest(SharedDailyConcurrentUsageViewSetT
         today = get_today()
         api_helper.calculate_concurrent(yesterday, today, self.user1.id)
         fake_header = util_helper.get_identity_auth_header(
-            account_number=self.user1.username,
+            account_number=self.user1.account_number,
             is_org_admin=False,
         )
 

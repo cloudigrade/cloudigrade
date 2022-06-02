@@ -3,7 +3,6 @@ import logging
 
 
 from botocore.exceptions import ClientError
-from django.contrib.auth.models import User
 from django.utils.translation import gettext as _
 from rest_framework.serializers import ValidationError
 
@@ -18,6 +17,7 @@ from api.clouds.aws.util import (
     generate_aws_ami_messages,
     start_image_inspection,
 )
+from api.models import User
 from util import aws
 from util.aws import rewrap_aws_errors
 from util.celery import retriable_shared_task

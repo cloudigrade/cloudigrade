@@ -13,10 +13,9 @@ from unittest.mock import Mock, patch
 import faker
 from dateutil import tz
 from django.conf import settings
-from django.contrib.auth.models import User
 
 from api import AWS_PROVIDER_STRING, AZURE_PROVIDER_STRING
-from api.authentication import get_user_by_account
+from api.models import User
 from util import aws, misc
 
 _faker = faker.Faker()
@@ -835,7 +834,7 @@ def generate_test_user(
         password (str): optional password
         is_superuser (bool): create as a superuser if True
         date_joined (datetime.datetime): optional when the user joined
-        org_id (str): optional org_id (last_name)
+        org_id (str): optional org_id
 
     Returns:
         User: created Django auth User
@@ -844,12 +843,12 @@ def generate_test_user(
     if not account_number:
         account_number = str(_faker.random_int(min=100000, max=999999))
     kwargs = {
-        "username": account_number,
+        "account_number": account_number,
         "password": password,
         "is_superuser": is_superuser,
     }
     if org_id:
-        kwargs["last_name"] = org_id
+        kwargs["org_id"] = org_id
     if date_joined:
         kwargs["date_joined"] = date_joined
     user = User.objects.create_user(**kwargs)
@@ -871,7 +870,7 @@ def get_test_user(account_number=None, password=None, is_superuser=False):
 
     """
     try:
-        user = get_user_by_account(account_number=account_number)
+        user = User.objects.get(account_number=account_number)
         if password:
             user.set_password(password)
         user.is_superuser = is_superuser

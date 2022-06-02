@@ -4,10 +4,9 @@ from unittest.mock import patch
 
 import faker
 from django.conf import settings
-from django.contrib.auth.models import User
 from django.test import TestCase
 
-from api.authentication import get_user_by_account
+from api.models import User
 from api.tasks import sources
 from util.exceptions import SourcesAPINotOkStatus
 from util.tests import helper as util_helper
@@ -78,10 +77,10 @@ class CreateFromSourcesKafkaMessageTest(TestCase):
         mock_get_auth.return_value = self.auth_return_value
         sources.create_from_sources_kafka_message(self.message, self.headers)
 
-        user = get_user_by_account(account_number=self.account_number)
+        user = User.objects.get(account_number=self.account_number)
         mock_task.delay.assert_called_with(
-            user.username,
-            user.last_name,
+            user.account_number,
+            user.org_id,
             arn,
             self.authentication_id,
             self.application_id,
@@ -109,10 +108,10 @@ class CreateFromSourcesKafkaMessageTest(TestCase):
         mock_get_auth.return_value = self.auth_azure_return_value
         sources.create_from_sources_kafka_message(self.message, self.headers)
 
-        user = get_user_by_account(account_number=self.account_number)
+        user = User.objects.get(account_number=self.account_number)
         mock_task.delay.assert_called_with(
-            user.username,
-            user.last_name,
+            user.account_number,
+            user.org_id,
             self.subscription_id,
             self.authentication_id,
             self.application_id,
@@ -328,10 +327,10 @@ class CreateFromSourcesKafkaMessageTest(TestCase):
         mock_get_auth.return_value = self.auth_return_value
         sources.create_from_sources_kafka_message(self.message, self.headers)
 
-        user = get_user_by_account(account_number=self.account_number)
+        user = User.objects.get(account_number=self.account_number)
         mock_task.delay.assert_called_with(
-            user.username,
-            user.last_name,
+            user.account_number,
+            user.org_id,
             arn,
             self.authentication_id,
             self.application_id,

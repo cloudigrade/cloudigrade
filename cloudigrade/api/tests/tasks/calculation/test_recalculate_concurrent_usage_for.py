@@ -5,10 +5,10 @@ from unittest.mock import Mock, call, patch
 import faker
 from dateutil.rrule import DAILY, rrule
 from django.conf import settings
-from django.contrib.auth.models import User
 from django.test import TestCase
 
 from api import models, util
+from api.models import User
 from api.tasks import calculation
 from api.tests import helper as api_helper
 from util.misc import get_today

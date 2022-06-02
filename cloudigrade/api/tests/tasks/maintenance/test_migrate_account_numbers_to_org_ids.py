@@ -6,9 +6,9 @@ from unittest import mock
 from unittest.mock import patch
 
 import faker
-from django.contrib.auth.models import User
 from django.test import TestCase
 
+from api.models import User
 from api.tasks import maintenance
 from util.tests import helper as util_helper
 
@@ -65,7 +65,7 @@ class MigrateAccountNumbersToOrgIdsTest(TestCase):
         """
         Test migrating account numbers with no org_ids.
 
-        For Django user objects with no org_id (last_name attribute),
+        For Django user objects with no org_id,
         Query the tenant translation api and update the DB with the
         appropriate org_id's for those users.
         """
@@ -76,13 +76,13 @@ class MigrateAccountNumbersToOrgIdsTest(TestCase):
         user1_org_id = util_helper.generate_org_id()
         user3_org_id = util_helper.generate_org_id()
 
-        expected_users_to_migrate = [user1.username, user3.username]
+        expected_users_to_migrate = [user1.account_number, user3.account_number]
 
         with self.assertLogs("api.tasks.maintenance", level="INFO") as logging_watcher:
             mock_post.return_value.status_code = http.HTTPStatus.OK
             mock_post.return_value.json.return_value = {
-                user1.username: user1_org_id,
-                user3.username: user3_org_id,
+                user1.account_number: user1_org_id,
+                user3.account_number: user3_org_id,
             }
             maintenance.migrate_account_numbers_to_org_ids()
 
@@ -95,9 +95,9 @@ class MigrateAccountNumbersToOrgIdsTest(TestCase):
         expected_info_messages = [
             f"Migrating {len(expected_users_to_migrate)} account_numbers to org_id",
             f"Calling tenant translator API {self.tenant_translator_url}",
-            f"Migrated user account_number {user1.username}"
+            f"Migrated user account_number {user1.account_number}"
             f" to org_id {user1_org_id}",
-            f"Migrated user account_number {user3.username}"
+            f"Migrated user account_number {user3.account_number}"
             f" to org_id {user3_org_id}",
         ]
 
@@ -108,11 +108,11 @@ class MigrateAccountNumbersToOrgIdsTest(TestCase):
             self.tenant_translator_url, data=json.dumps(expected_users_to_migrate)
         )
 
-        updated_user1 = User.objects.filter(username=user1.username).get()
-        updated_user3 = User.objects.filter(username=user3.username).get()
+        updated_user1 = User.objects.filter(account_number=user1.account_number).get()
+        updated_user3 = User.objects.filter(account_number=user3.account_number).get()
 
-        self.assertEqual(updated_user1.last_name, user1_org_id)
-        self.assertEqual(updated_user3.last_name, user3_org_id)
+        self.assertEqual(updated_user1.org_id, user1_org_id)
+        self.assertEqual(updated_user3.org_id, user3_org_id)
 
     @mock.patch.dict(os.environ, {"TENANT_TRANSLATOR_SCHEME": tenant_translator_scheme})
     @mock.patch.dict(os.environ, {"TENANT_TRANSLATOR_HOST": tenant_translator_host})
@@ -127,7 +127,7 @@ class MigrateAccountNumbersToOrgIdsTest(TestCase):
         """
         user1 = util_helper.generate_test_user()
 
-        expected_users_to_migrate = [user1.username]
+        expected_users_to_migrate = [user1.account_number]
 
         with self.assertLogs("api.tasks.maintenance", level="ERROR") as logging_watcher:
             mock_post.side_effect = Exception(
