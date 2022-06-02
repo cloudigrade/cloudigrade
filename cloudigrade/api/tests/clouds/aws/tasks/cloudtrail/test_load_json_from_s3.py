@@ -49,14 +49,14 @@ class LoadJsonFromS33Test(TestCase):
 
     @patch("api.clouds.aws.tasks.cloudtrail.aws.get_object_content_from_s3")
     def test_json_loads_failed(self, mock_get_object_content_from_s3):
-        """Test load_json_from_s3 failure when message cannot parse to JSON."""
+        """Test load_json_from_s3 returns None when message cannot parse to JSON."""
         not_json_content = _faker.sentence()
         mock_get_object_content_from_s3.return_value = not_json_content
-        with self.assertRaises(json.JSONDecodeError) as error_cm, self.assertLogs(
+        with self.assertLogs(
             "api.clouds.aws.tasks.cloudtrail", level="ERROR"
         ) as log_context:
-            load_json_from_s3(self.bucket, self.key)
-        self.assertIn(
-            f"Unexpected failure ({error_cm.exception}) in json.loads from S3",
-            log_context.records[0].message,
-        )
+            actual_results = load_json_from_s3(self.bucket, self.key)
+        logged_message = log_context.records[0].message
+        self.assertTrue(logged_message.startswith("Unexpected failure ("))
+        self.assertIn(" in json.loads from S3", logged_message)
+        self.assertIsNone(actual_results)
