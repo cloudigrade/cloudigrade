@@ -97,6 +97,10 @@ LOCAL_APPS = [
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
+# The AUTH_USER_MODEL for Django can't be easily switched mid-project
+# with migrations. Keeping this commented out for now.
+# AUTH_USER_MODEL = "api.User"
+
 MIDDLEWARE = [
     "django_prometheus.middleware.PrometheusBeforeMiddleware",  # should always be first
     "django.middleware.security.SecurityMiddleware",

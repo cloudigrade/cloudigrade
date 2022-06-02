@@ -5,7 +5,6 @@ from unittest.mock import Mock
 
 import faker
 from django.conf import settings
-from django.contrib.auth.models import User
 from django.test import TestCase, override_settings
 from rest_framework.authentication import exceptions
 
@@ -14,6 +13,7 @@ from api.authentication import (
     IdentityHeaderAuthenticationUserNotRequired,
     parse_insights_request_id,
 )
+from api.models import User
 from util.tests import helper as util_helper
 
 _faker = faker.Faker()
@@ -74,7 +74,7 @@ class PskHeaderAuthenticateTestCase(TestCase):
             user, auth = self.auth_class.authenticate(request)
 
             self.assertTrue(auth)
-            self.assertEqual(self.account_number, user.username)
+            self.assertEqual(self.account_number, user.account_number)
             self.assertEqual(user, self.user)
 
     def test_authenticate_with_org_id(self):
@@ -89,7 +89,7 @@ class PskHeaderAuthenticateTestCase(TestCase):
             user, auth = self.auth_class.authenticate(request)
 
             self.assertTrue(auth)
-            self.assertEqual(self.org_id, user.last_name)
+            self.assertEqual(self.org_id, user.org_id)
             self.assertEqual(user, self.user)
 
     def test_authenticate_with_invalid_psk(self):
@@ -136,8 +136,8 @@ class IdentityHeaderAuthenticateTestCase(TestCase):
 
     When a request for a v2 endpoint comes in, we expect a base64 encoded
     HTTP_X_RH_IDENTITY header containing JSON. When this header exists, we use the
-    JSON's identity's account number as the value to find a User's username for our
-    authentication.
+    JSON's identity's account number as the value to find a User's account_number
+    for our authentication.
     """
 
     def setUp(self):
@@ -173,7 +173,7 @@ class IdentityHeaderAuthenticateTestCase(TestCase):
         user, auth = self.auth_class.authenticate(request)
 
         self.assertTrue(auth)
-        self.assertEqual(self.account_number, user.username)
+        self.assertEqual(self.account_number, user.account_number)
         self.assertEqual(user, self.user)
 
     def test_authenticate_with_account_number_and_org_id(self):
@@ -186,8 +186,8 @@ class IdentityHeaderAuthenticateTestCase(TestCase):
         user, auth = self.auth_class.authenticate(request)
 
         self.assertTrue(auth)
-        self.assertEqual(self.account_number, user.username)
-        self.assertEqual(self.org_id, user.last_name)
+        self.assertEqual(self.account_number, user.account_number)
+        self.assertEqual(self.org_id, user.org_id)
         self.assertEqual(user, self.user)
 
     def test_authenticate_with_verbose_logging(self):
@@ -200,7 +200,7 @@ class IdentityHeaderAuthenticateTestCase(TestCase):
                 user, auth = self.auth_class.authenticate(request)
 
                 self.assertTrue(auth)
-                self.assertEqual(self.account_number, user.username)
+                self.assertEqual(self.account_number, user.account_number)
                 self.assertIn("Decoded identity header: ", logging_watcher.output[1])
 
     def test_authenticate_not_org_admin_fails(self):

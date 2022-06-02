@@ -18,7 +18,7 @@ class PauseFromSourcesKafkaMessageTest(TestCase):
     def setUp(self):
         """Set up common variables for tests."""
         self.cloud_account = api_helper.generate_cloud_account()
-        self.account_number = self.cloud_account.user.username
+        self.account_number = self.cloud_account.user.account_number
         self.application_id = self.cloud_account.platform_application_id
 
     def test_pause_from_sources_kafka_message_success(self):

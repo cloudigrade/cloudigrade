@@ -2,13 +2,13 @@
 from unittest.mock import patch
 
 import faker
-from django.contrib.auth.models import User
 from django.test import TestCase
 from rest_framework.exceptions import ValidationError
 
 from api.clouds.aws import tasks
 from api.clouds.aws.models import AwsCloudAccount
 from api.models import CloudAccount
+from api.models import User
 from util.tests import helper as util_helper
 
 _faker = faker.Faker()
@@ -23,7 +23,9 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
     def test_success(self, mock_primary_id, mock_tasks_aws, mock_create):
         """Assert the task happy path upon normal operation."""
         # User that would ultimately own the created objects.
-        user = User.objects.create()
+        user = User.objects.create(
+            account_number=_faker.random_int(min=100000, max=999999)
+        )
 
         # Dummy values for the various interactions.
         session_account_id = util_helper.generate_dummy_aws_account_id()
@@ -52,8 +54,8 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
         mock_ensure_role.return_value = (role_name, role_arn)
 
         tasks.configure_customer_aws_and_create_cloud_account(
-            user.username,
-            user.last_name,
+            user.account_number,
+            user.org_id,
             customer_secret_access_key,
             auth_id,
             application_id,
@@ -75,7 +77,7 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
         self, mock_tasks_aws, mock_create, mock_notify_sources
     ):
         """Assert the task returns early if user is not found."""
-        username = -1  # This user should never exist.
+        account_number = -1  # This user should never exist.
         org_id = None
 
         customer_secret_access_key = util_helper.generate_dummy_arn()
@@ -84,7 +86,7 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
         source_id = _faker.pyint()
 
         tasks.configure_customer_aws_and_create_cloud_account(
-            username,
+            account_number,
             org_id,
             customer_secret_access_key,
             auth_id,
@@ -120,8 +122,8 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
         mock_enable.side_effect = validation_error
 
         tasks.configure_customer_aws_and_create_cloud_account(
-            user.username,
-            user.last_name,
+            user.account_number,
+            user.org_id,
             customer_secret_access_key,
             auth_id,
             application_id,
@@ -133,15 +135,17 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
     @patch("api.tasks.sources.notify_application_availability_task")
     def test_account_not_created_if_arn_invalid(self, mock_notify_sources):
         """Test that error is logged if arn is invalid."""
-        user = User.objects.create()
+        user = User.objects.create(
+            account_number=_faker.random_int(min=100000, max=999999)
+        )
         auth_id = _faker.pyint()
         application_id = _faker.pyint()
         source_id = _faker.pyint()
         arn = "Badly formatted arn"
         with self.assertLogs("api.clouds.aws.tasks", level="INFO") as cm:
             tasks.configure_customer_aws_and_create_cloud_account(
-                user.username,
-                user.last_name,
+                user.account_number,
+                user.org_id,
                 arn,
                 auth_id,
                 application_id,

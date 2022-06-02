@@ -1,11 +1,11 @@
 """Collection of tests for internal viewsets."""
 import decimal
 
-from django.contrib.auth.models import User
 from django.test import TestCase
 
 from api import models
 from api.clouds.aws import models as aws_models
+from api.models import User
 from api.tests import helper as api_helper
 from util.tests import helper as util_helper
 
@@ -107,15 +107,17 @@ class InternalViewSetTest(TestCase):
     def test_list_users(self):
         """Assert that a user sees all User objects."""
         users = list(User.objects.all())
-        expected_usernames = set(user.username for user in users)
+        expected_account_numbers = set(user.account_number for user in users)
 
         response = self.client.get_users()
         count = response.data["meta"]["count"]
-        actual_usernames = set(item["username"] for item in response.data["data"])
+        actual_account_numbers = set(
+            item["account_number"] for item in response.data["data"]
+        )
 
         self.assertGreater(count, 0)
         self.assertEqual(count, len(users))
-        self.assertEqual(expected_usernames, actual_usernames)
+        self.assertEqual(expected_account_numbers, actual_account_numbers)
 
     def test_list_cloudaccounts(self):
         """Assert that a user sees all CloudAccount objects."""

@@ -4,11 +4,11 @@ from datetime import timedelta
 
 from celery import shared_task
 from django.conf import settings
-from django.contrib.auth.models import User
 from django.db import transaction
 from django.utils.translation import gettext as _
 
 from api.models import CloudAccount, ConcurrentUsage, InstanceEvent, Run
+from api.models import User
 from api.util import (
     calculate_max_concurrent_usage,
     get_runs_for_user_id_on_date,

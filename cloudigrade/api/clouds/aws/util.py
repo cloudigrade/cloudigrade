@@ -869,8 +869,8 @@ def verify_permissions(customer_role_arn):  # noqa: C901
     # Get the username immediately from the related user in case the user is deleted
     # while we are verifying access and configuring cloudtrail; we'll need it later
     # in order to notify sources of our error.
-    username = cloud_account.user.username
-    org_id = cloud_account.user.last_name
+    account_number = cloud_account.user.account_number
+    org_id = cloud_account.user.org_id
 
     try:
         session = aws.get_session(arn_str)
@@ -885,7 +885,9 @@ def verify_permissions(customer_role_arn):  # noqa: C901
                     {"action": action, "arn": arn_str},
                 )
             error_code = error_codes.CG3003
-            error_code.notify(username, org_id, cloud_account.platform_application_id)
+            error_code.notify(
+                account_number, org_id, cloud_account.platform_application_id
+            )
     except ClientError as error:
         # Generally only raised when we don't have access to the AWS account.
         client_error_code = error.response.get("Error", {}).get("Code")
@@ -902,13 +904,13 @@ def verify_permissions(customer_role_arn):  # noqa: C901
         error_code.log_internal_message(
             logger, {"cloud_account_id": cloud_account.id, "exception": error}
         )
-        error_code.notify(username, org_id, cloud_account.platform_application_id)
+        error_code.notify(account_number, org_id, cloud_account.platform_application_id)
     except MaximumNumberOfTrailsExceededException as error:
         error_code = error_codes.CG3001
         error_code.log_internal_message(
             logger, {"cloud_account_id": cloud_account.id, "exception": error}
         )
-        error_code.notify(username, org_id, cloud_account.platform_application_id)
+        error_code.notify(account_number, org_id, cloud_account.platform_application_id)
     except Exception as error:
         # It's unclear what could cause any other kind of exception to be raised here,
         # but we must handle anything, log/alert ourselves, and notify sources.
@@ -916,7 +918,7 @@ def verify_permissions(customer_role_arn):  # noqa: C901
             "Unexpected exception in verify_permissions: %(error)s", {"error": error}
         )
         error_code = error_codes.CG3000  # TODO Consider a new error code?
-        error_code.notify(username, org_id, cloud_account.platform_application_id)
+        error_code.notify(account_number, org_id, cloud_account.platform_application_id)
 
     return access_verified and cloudtrail_setup_complete
 
@@ -938,7 +940,7 @@ def create_aws_cloud_account(
     That is why we put almost everything here in a transaction.atomic() context.
 
     Args:
-        user (django.contrib.auth.models.User): user to own the CloudAccount
+        user (api.User): user to own the CloudAccount
         customer_role_arn (str): ARN to access the customer's AWS account
         platform_authentication_id (str): Platform Sources' Authentication object id
         platform_application_id (str): Platform Sources' Application object id
@@ -958,7 +960,7 @@ def create_aws_cloud_account(
             "platform_source_id=%(platform_source_id)s"
         ),
         {
-            "user": user.username,
+            "user": user.account_number,
             "customer_role_arn": customer_role_arn,
             "platform_authentication_id": platform_authentication_id,
             "platform_application_id": platform_application_id,
@@ -972,13 +974,13 @@ def create_aws_cloud_account(
         # Verify that no AwsCloudAccount already exists with the same ARN.
         if AwsCloudAccount.objects.filter(account_arn=arn_str).exists():
             error_code = error_codes.CG1001
-            error_code.notify(user.username, user.last_name, platform_application_id)
+            error_code.notify(user.account_number, user.org_id, platform_application_id)
             raise ValidationError({"account_arn": error_code.get_message()})
 
         # Verify that no AwsCloudAccount already exists with the same AWS Account ID.
         if AwsCloudAccount.objects.filter(aws_account_id=aws_account_id).exists():
             error_code = error_codes.CG1002
-            error_code.notify(user.username, user.last_name, platform_application_id)
+            error_code.notify(user.account_number, user.org_id, platform_application_id)
             raise ValidationError({"account_arn": error_code.get_message()})
 
         try:
@@ -991,14 +993,14 @@ def create_aws_cloud_account(
             # get_or_create can throw integrity error in the case that
             # aws_account_id xor arn already exists in an account.
             error_code = error_codes.CG1002
-            error_code.notify(user.username, user.last_name, platform_application_id)
+            error_code.notify(user.account_number, user.org_id, platform_application_id)
             raise ValidationError({"account_arn": error_code.get_message()})
 
         if not created:
             # If aws_account_id and arn already exist in an account because a
             # another task created it, notify the user.
             error_code = error_codes.CG1002
-            error_code.notify(user.username, user.last_name, platform_application_id)
+            error_code.notify(user.account_number, user.org_id, platform_application_id)
             raise ValidationError({"account_arn": error_code.get_message()})
 
         cloud_account = CloudAccount.objects.create(

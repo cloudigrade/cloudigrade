@@ -40,7 +40,7 @@ def get_authentication(account_number, org_id, authentication_id):
     )
     headers = generate_sources_headers(account_number, org_id)
     params = {"expose_encrypted_attribute[]": "password"}
-    return make_sources_call(account_number or org_id, url, headers, params)
+    return make_sources_call(account_number, org_id, url, headers, params)
 
 
 def get_application(account_number, org_id, application_id):
@@ -59,7 +59,7 @@ def get_application(account_number, org_id, application_id):
     """
     url = f"{settings.SOURCES_API_EXTERNAL_BASE_URL}/applications/{application_id}"
     headers = generate_sources_headers(account_number, org_id)
-    return make_sources_call(account_number or org_id, url, headers)
+    return make_sources_call(account_number, org_id, url, headers)
 
 
 def list_application_authentications(account_number, org_id, authentication_id):
@@ -81,7 +81,7 @@ def list_application_authentications(account_number, org_id, authentication_id):
         f"?filter[authentication_id]={authentication_id}"
     )
     headers = generate_sources_headers(account_number, org_id)
-    return make_sources_call(account_number or org_id, url, headers)
+    return make_sources_call(account_number, org_id, url, headers)
 
 
 def get_source(account_number, org_id, source_id):
@@ -101,10 +101,10 @@ def get_source(account_number, org_id, source_id):
     """
     url = f"{settings.SOURCES_API_EXTERNAL_BASE_URL}/sources/{source_id}"
     headers = generate_sources_headers(account_number, org_id)
-    return make_sources_call(account_number or org_id, url, headers)
+    return make_sources_call(account_number, org_id, url, headers)
 
 
-def make_sources_call(account_number, url, headers, params=None):
+def make_sources_call(account_number, org_id, url, headers, params=None):
     """
     Make an API call to the Sources API.
 
@@ -113,6 +113,7 @@ def make_sources_call(account_number, url, headers, params=None):
 
     Args:
         account_number (str): account number identifier for Insights auth
+        org_id (str): Org Id identifier for Insights auth
         url (str): the requested url
         headers (dict): a dict of headers for the request.
         params (dict): a dict of params for the request
@@ -126,8 +127,16 @@ def make_sources_call(account_number, url, headers, params=None):
         return None
     elif response.status_code != http.HTTPStatus.OK:
         message = _(
-            "unexpected status {status} using account {account_number} at {url}"
-        ).format(status=response.status_code, account_number=account_number, url=url)
+            "unexpected status {status} using"
+            " account_number '{account_number}'"
+            " and org_id '{org_id}'"
+            " at {url}"
+        ).format(
+            status=response.status_code,
+            account_number=account_number,
+            org_id=org_id,
+            url=url,
+        )
         logger.info(message)
         logger.info(
             _("sources-api response content: %(response_text)s"),
@@ -139,8 +148,11 @@ def make_sources_call(account_number, url, headers, params=None):
         response_json = response.json()
     except json.decoder.JSONDecodeError:
         message = _(
-            "unexpected non-json response using account {account_number} at {url}"
-        ).format(account_number=account_number, url=url)
+            "unexpected non-json response using"
+            " account_number '{account_number}'"
+            " and org_id '{org_id}'"
+            " at {url}"
+        ).format(account_number=account_number, org_id=org_id, url=url)
         logger.info(message)
         logger.info(
             _("sources-api response content: %(response_text)s"),
@@ -227,7 +239,7 @@ def get_cloudigrade_application_type_id(account_number, org_id):
 
     headers = generate_sources_headers(account_number, org_id)
     cloudigrade_application_type = make_sources_call(
-        account_number or org_id, url, headers
+        account_number, org_id, url, headers
     )
     if cloudigrade_application_type:
         return cloudigrade_application_type.get("data")[0].get("id")

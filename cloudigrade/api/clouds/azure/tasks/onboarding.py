@@ -1,13 +1,13 @@
 """Celery tasks related to on-boarding new customer Azure cloud accounts."""
 import logging
 
-from django.contrib.auth.models import User
 from django.utils.translation import gettext as _
 from rest_framework.serializers import ValidationError
 
 from api import error_codes
 from api.authentication import get_user_by_account
 from api.clouds.azure.util import create_azure_cloud_account
+from api.models import User
 from util.celery import retriable_shared_task
 
 logger = logging.getLogger(__name__)

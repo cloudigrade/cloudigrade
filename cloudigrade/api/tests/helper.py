@@ -132,7 +132,7 @@ class SandboxedRestClient(object):
         """Force client authentication as the given user."""
         self.authenticated_user = user
         self.client.credentials(
-            HTTP_X_RH_IDENTITY=helper.get_identity_auth_header(user.username)
+            HTTP_X_RH_IDENTITY=helper.get_identity_auth_header(user.account_number)
         )
 
     def verb_noun(

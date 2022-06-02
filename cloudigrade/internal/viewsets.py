@@ -1,7 +1,6 @@
 """Internal viewset classes for cloudigrade API."""
 from datetime import timedelta
 
-from django.contrib.auth.models import User
 from django.utils.translation import gettext as _
 from django_celery_beat.models import PeriodicTask
 from django_filters import rest_framework as django_filters
@@ -12,6 +11,7 @@ from rest_framework.response import Response
 from api import models, schemas, tasks
 from api.clouds.aws import models as aws_models
 from api.clouds.azure import models as azure_models
+from api.models import User
 from api.serializers import CloudAccountSerializer
 from api.viewsets import AccountViewSet, DailyConcurrentUsageViewSet
 from internal import filters, serializers
@@ -99,7 +99,8 @@ class InternalUserViewSet(InternalViewSetMixin, viewsets.ReadOnlyModelViewSet):
     queryset = User.objects.all()
     serializer_class = serializers.InternalUserSerializer
     filterset_fields = {
-        "username": ["exact"],
+        "account_number": ["exact"],
+        "org_id": ["exact"],
         "date_joined": ["lt", "exact", "gt"],
     }
 

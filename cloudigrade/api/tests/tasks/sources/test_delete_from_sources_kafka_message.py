@@ -39,7 +39,7 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         self.assertEqual(CloudAccount.objects.count(), 1)
         self.assertEqual(aws_models.AwsCloudAccount.objects.count(), 1)
 
-        account_number = str(self.user.username)
+        account_number = str(self.user.account_number)
         (
             message,
             headers,
@@ -110,7 +110,7 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         """Assert delete fails from nonexistent clount."""
         self.assertEqual(CloudAccount.objects.count(), 1)
 
-        account_number = str(self.user.username)
+        account_number = str(self.user.account_number)
         application_id = _faker.pyint()
         authentication_id = _faker.pyint()
         application_authentication_id = _faker.pyint()

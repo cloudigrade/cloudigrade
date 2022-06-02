@@ -35,9 +35,9 @@ django.setup()
 
 # All other app-related imports must come *after* Django setup since this is
 # a standalone script.
-from django.contrib.auth.models import User
 from django.conf import settings
 
+from api.models import User
 from api import models
 from api.tests import helper as api_helper
 from api.util import calculate_max_concurrent_usage, denormalize_runs

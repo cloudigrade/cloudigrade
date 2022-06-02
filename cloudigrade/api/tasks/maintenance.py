@@ -9,7 +9,6 @@ import environ
 import requests
 from celery import shared_task
 from django.conf import settings
-from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from django.utils.translation import gettext as _
@@ -25,6 +24,7 @@ from api.models import (
     Run,
     SyntheticDataRequest,
 )
+from api.models import User
 from util import aws
 from util.celery import retriable_shared_task
 from util.exceptions import AwsThrottlingException
@@ -420,8 +420,8 @@ def _delete_orphaned_cloud_accounts(max_updated_at):
                 _("Found orphan %(cloud_account)s"), {"cloud_account": cloud_account}
             )
             try:
-                account_number = cloud_account.user.username
-                org_id = cloud_account.user.last_name
+                account_number = cloud_account.user.account_number
+                org_id = cloud_account.user.org_id
                 source_id = cloud_account.platform_source_id
                 if source := sources.get_source(account_number, org_id, source_id):
                     logger.error(
@@ -429,10 +429,7 @@ def _delete_orphaned_cloud_accounts(max_updated_at):
                             "Orphaned account still has a source! Please investigate! "
                             "account %(cloud_account)s has source %(source)s"
                         ),
-                        {
-                            "cloud_account": cloud_account,
-                            "source": source,
-                        },
+                        {"cloud_account": cloud_account, "source": source},
                     )
                 else:
                     deleted_orphans.append(cloud_account)
@@ -545,8 +542,8 @@ def delete_cloud_accounts_not_in_sources():
             )
         if cloud_account.content_object:
             try:
-                account_number = cloud_account.user.username
-                org_id = cloud_account.user.last_name
+                account_number = cloud_account.user.account_number
+                org_id = cloud_account.user.org_id
                 source_id = cloud_account.platform_source_id
                 source = sources.get_source(account_number, org_id, source_id)
                 if not source:
@@ -600,12 +597,12 @@ def migrate_account_numbers_to_org_ids():
             env("TENANT_TRANSLATOR_PORT"),
         )
 
-        users_with_no_org_ids = User.objects.filter(last_name="")
+        users_with_no_org_ids = User.objects.filter(org_id=None)
         if not users_with_no_org_ids:
             logger.info("There are no account_numbers without org_ids to migrate")
         else:
             user_account_numbers = list(
-                users_with_no_org_ids.values_list("username", flat=True)
+                users_with_no_org_ids.values_list("account_number", flat=True)
             )
 
             logger.info(
@@ -617,10 +614,10 @@ def migrate_account_numbers_to_org_ids():
             )
             org_ids = response.json()
             for user_account in users_with_no_org_ids:
-                account_number = user_account.username
+                account_number = user_account.account_number
                 if account_number in org_ids:
                     org_id = org_ids[account_number]
-                    user_account.last_name = org_id
+                    user_account.org_id = org_id
                     user_account.save()
                     logger.info(
                         f"  Migrated user account_number {account_number} "

@@ -440,10 +440,19 @@
             }
           },
           {
-            "name": "username",
+            "name": "account_number",
             "required": false,
             "in": "query",
-            "description": "username",
+            "description": "account_number",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "org_id",
+            "required": false,
+            "in": "query",
+            "description": "org_id",
             "schema": {
               "type": "string"
             }
@@ -554,10 +563,19 @@
             }
           },
           {
-            "name": "username",
+            "name": "account_number",
             "required": false,
             "in": "query",
-            "description": "username",
+            "description": "account_number",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "org_id",
+            "required": false,
+            "in": "query",
+            "description": "org_id",
             "schema": {
               "type": "string"
             }
@@ -7202,16 +7220,21 @@
             "type": "integer",
             "readOnly": true
           },
-          "username": {
+          "uuid": {
             "type": "string",
-            "description": "Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.",
-            "pattern": "^[\\w.@+-]+\\z",
+            "maxLength": 150
+          },
+          "account_number": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 150
+          },
+          "org_id": {
+            "type": "string",
+            "nullable": true,
             "maxLength": 150
           }
-        },
-        "required": [
-          "username"
-        ]
+        }
       },
       "InternalUserTaskLock": {
         "type": "object",

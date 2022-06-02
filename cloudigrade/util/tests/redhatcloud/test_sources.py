@@ -197,7 +197,7 @@ class SourcesTest(TestCase):
         mock_get.return_value.status_code = http.HTTPStatus.OK
         mock_get.return_value.json.return_value = expected
 
-        application = sources.get_source(None, self.account_number, self.application_id)
+        application = sources.get_source(self.account_number, None, self.application_id)
         self.assertEqual(application, expected)
         mock_get.assert_called()
 
