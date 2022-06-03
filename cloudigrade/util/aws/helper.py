@@ -25,6 +25,7 @@ COMMON_AWS_ACCESS_DENIED_ERROR_CODES = (
     "AccessDenied",
     "AccessDeniedException",
     "AuthFailure",
+    "InsufficientDependencyServiceAccessPermissionException",
     "OptInRequired",
     "UnauthorizedOperation",
 )
