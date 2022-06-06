@@ -873,7 +873,7 @@ python-versions = "*"
 
 [[package]]
 name = "faker"
-version = "13.11.1"
+version = "13.12.1"
 description = "Faker is a Python package that generates fake data for you."
 category = "main"
 optional = false
@@ -2036,7 +2036,7 @@ python-versions = "*"
 name = "pywin32"
 version = "304"
 description = "Python for Window Extensions"
-category = "dev"
+category = "main"
 optional = false
 python-versions = "*"
 
@@ -2515,7 +2515,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "039a306fc10e1e08ea855c73c1cce4e341b9a159f8e6eaa4ac4c1a35e89dfb40"
+content-hash = "85b669b66b6054d33919f75b96c3b7b2415d4fdff7ff42ff076b1ce0edebf578"
 
 [metadata.files]
 adal = [
@@ -2975,8 +2975,8 @@ executing = [
     {file = "executing-0.8.3.tar.gz", hash = "sha256:c6554e21c6b060590a6d3be4b82fb78f8f0194d809de5ea7df1c093763311501"},
 ]
 faker = [
-    {file = "Faker-13.11.1-py3-none-any.whl", hash = "sha256:c6ff91847d7c820afc0a74d95e824b48aab71ddfd9003f300641e42d58ae886f"},
-    {file = "Faker-13.11.1.tar.gz", hash = "sha256:cad1f69d72a68878cd67855140b6fe3e44c11628971cd838595d289c98bc45de"},
+    {file = "Faker-13.12.1-py3-none-any.whl", hash = "sha256:0122b75e7960cbb1e2bbbf10ef9b8c183377878e38466854953539c6d822e7c0"},
+    {file = "Faker-13.12.1.tar.gz", hash = "sha256:fb95f956bac59c90f54543919d5c5ef41625e12a0773e5aa08c9b9c62ba58fb3"},
 ]
 fastjsonschema = [
     {file = "fastjsonschema-2.15.3-py3-none-any.whl", hash = "sha256:ddb0b1d8243e6e3abb822bd14e447a89f4ab7439342912d590444831fa00b6a0"},
