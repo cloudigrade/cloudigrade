@@ -1,5 +1,6 @@
 """Collection of tests for the api.models module."""
 import datetime
+import uuid
 from unittest.mock import patch
 
 import faker
@@ -193,3 +194,33 @@ class SyntheticDataRequestModelTransactionTest(TransactionTestCase):
         self.assertTrue(CloudAccount.objects.filter(user_id=user_id).exists())
         self.request.delete()
         self.assertFalse(CloudAccount.objects.filter(user_id=user_id).exists())
+
+
+class UserModelTest(TestCase):
+    """UserModel tests not covered indirectly via other tests."""
+
+    def test_user_object_string_representation(self):
+        """Test that the string includes the uuid, account_number and org_id."""
+        user_uuid = str(uuid.uuid4())
+        user_account_number = "11111111"
+        user_org_id = "22222222"
+
+        user = User.objects.create(
+            uuid=user_uuid, account_number=user_account_number, org_id=user_org_id
+        )
+
+        self.assertEqual(
+            str(user),
+            f"User(uuid={user_uuid},"
+            f" account_number={user_account_number},"
+            f" org_id={user_org_id})",
+        )
+
+    def test_create_user_raises_value_error_with_no_account_number_or_org_id(self):
+        """Test that we get a ValueError if account_number and org_id are missing."""
+        with self.assertRaises(ValueError) as ve:
+            User.objects.create_user()
+
+        self.assertEquals(
+            "Users must have at least an account_number or org_id", str(ve.exception)
+        )

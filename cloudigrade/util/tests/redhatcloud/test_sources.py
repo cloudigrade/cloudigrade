@@ -367,6 +367,17 @@ class SourcesTest(TestCase):
 
         self.assertEqual(headers, expected_headers)
 
+    def test_generate_sources_headers_org_id_no_psk(self):
+        """Assert generate_sources_headers for org_id sources header with no psk."""
+        sources_account_number = None
+        sources_org_id = _faker.slug()
+        headers = generate_sources_headers(
+            sources_account_number, sources_org_id, include_psk=False
+        )
+        expected_headers = {"x-rh-sources-org-id": sources_org_id}
+
+        self.assertEqual(headers, expected_headers)
+
     def test_generate_sources_headers_account_number_with_psk(self):
         """Assert generate_sources_headers generates sources header with psk."""
         sources_account_number = _faker.slug()
@@ -377,6 +388,21 @@ class SourcesTest(TestCase):
 
         expected_headers = {
             "x-rh-sources-account-number": sources_account_number,
+            "x-rh-sources-psk": sources_psk,
+        }
+
+        self.assertEqual(headers, expected_headers)
+
+    def test_generate_sources_headers_org_id_with_psk(self):
+        """Assert generate_sources_headers for org_id sources header with psk."""
+        sources_account_number = None
+        sources_org_id = _faker.slug()
+        sources_psk = _faker.slug()
+        with override_settings(SOURCES_PSK=sources_psk):
+            headers = generate_sources_headers(sources_account_number, sources_org_id)
+
+        expected_headers = {
+            "x-rh-sources-org-id": sources_org_id,
             "x-rh-sources-psk": sources_psk,
         }
 
