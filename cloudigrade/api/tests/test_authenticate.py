@@ -11,6 +11,8 @@ from rest_framework.authentication import exceptions
 from api.authentication import (
     IdentityHeaderAuthentication,
     IdentityHeaderAuthenticationUserNotRequired,
+    get_or_create_user,
+    get_user_by_account,
     parse_insights_request_id,
 )
 from api.models import User
@@ -323,3 +325,90 @@ class IdentityHeaderAuthenticationUserNotRequiredTestCase(TestCase):
 
         with self.assertRaises(exceptions.AuthenticationFailed):
             self.auth_class.authenticate(request)
+
+
+class GetUserByAccountMethodTests(TestCase):
+    """Tests to verify the right user objects are returned."""
+
+    def setUp(self):
+        """Set up data for tests."""
+        self.user1_account_number = str(_faker.pyint())
+        self.user1_org_id = str(_faker.pyint())
+        self.user1 = util_helper.generate_test_user(
+            account_number=self.user1_account_number, org_id=self.user1_org_id
+        )
+        self.user2_account_number = str(_faker.pyint())
+        self.user2 = util_helper.generate_test_user(
+            account_number=self.user2_account_number, org_id=None
+        )
+        self.user3_org_id = str(_faker.pyint())
+        self.user3 = util_helper.generate_test_user(
+            account_number=None, org_id=self.user3_org_id
+        )
+
+    def test_user_with_account_number_and_org_id(self):
+        """Test to search user object by account_number and org_id."""
+        user = get_user_by_account(
+            account_number=self.user1_account_number, org_id=self.user1_org_id
+        )
+        self.assertEqual(user, self.user1)
+
+    def test_user_with_account_number(self):
+        """Test to search user object by account_number."""
+        user = get_user_by_account(
+            account_number=self.user2_account_number,
+            org_id=None,
+        )
+        self.assertEqual(user, self.user2)
+
+    def test_user_with_org_id(self):
+        """Test to search user object by org_id."""
+        user = get_user_by_account(
+            account_number=None,
+            org_id=self.user3_org_id,
+        )
+        self.assertEqual(user, self.user3)
+
+
+class GetOrCreateUserMethodTests(TestCase):
+    """Tests to verify the right user objects are obtained or created."""
+
+    def setUp(self):
+        """Set up data for tests."""
+        self.user1_account_number = str(_faker.pyint())
+        self.user1_org_id = str(_faker.pyint())
+        self.user1 = util_helper.generate_test_user(
+            account_number=self.user1_account_number, org_id=self.user1_org_id
+        )
+        self.user2_account_number = str(_faker.pyint())
+        self.user2 = util_helper.generate_test_user(
+            account_number=self.user2_account_number, org_id=None
+        )
+        self.user3_org_id = str(_faker.pyint())
+        self.user3 = util_helper.generate_test_user(
+            account_number=None, org_id=self.user3_org_id
+        )
+
+    def test_get_with_account_number_and_org_id(self):
+        """Test to get user object by account_number and org_id."""
+        user = get_or_create_user(
+            account_number=self.user1_account_number, org_id=self.user1_org_id
+        )
+        self.assertEqual(user, self.user1)
+
+    def test_get_with_account_number(self):
+        """Test to get user object by account_number."""
+        user = get_or_create_user(account_number=self.user2_account_number, org_id=None)
+        self.assertEqual(user, self.user2)
+
+    def test_get_with_org_id(self):
+        """Test to get user object by org_id."""
+        user = get_or_create_user(account_number=None, org_id=self.user3_org_id)
+        self.assertEqual(user, self.user3)
+
+    def test_create_with_org_id(self):
+        """Test to create user object by org_id."""
+        new_org_id = str(_faker.pyint())
+        user = get_or_create_user(account_number=None, org_id=new_org_id)
+        self.assertIsNone(user.account_number)
+        self.assertEqual(user.org_id, new_org_id)

@@ -53,7 +53,7 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractBaseUser):
-    """Class for the our Api User model."""
+    """Class for our Api User model."""
 
     def user_uuid():
         """Return a UUID string to use for newly created Api users."""
