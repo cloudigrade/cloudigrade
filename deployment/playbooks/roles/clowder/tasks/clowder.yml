@@ -22,7 +22,6 @@
   - name: create / run bonfire deploy - master
     shell: |
       bonfire deploy cloudigrade \
-        --source local \
         --clowd-env env-{{ namespace }} \
         --namespace {{ namespace }} \
         --timeout 600 \
@@ -57,7 +56,6 @@
   - name: create / run bonfire deploy - local push
     shell: |
       bonfire deploy cloudigrade \
-        --source local \
         --clowd-env env-{{ namespace }} \
         --namespace {{ namespace }} \
         --timeout 600 \
