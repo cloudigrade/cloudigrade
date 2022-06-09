@@ -48,8 +48,7 @@
         --set-parameter "rbac/DISABLE_MIGRATE=False" \
         --set-parameter "rbac/PERMISSION_SEEDING_ENABLED=True" \
         --set-parameter "rbac/ROLE_SEEDING=True" \
-        --set-parameter "rbac/GROUP_SEEDING_ENABLED=True" \
-        --set-parameter "rbac/TENANT_TRANSLATOR_HOST=apicast.3scale-dev.svc.cluster.local"
+        --set-parameter "rbac/GROUP_SEEDING_ENABLED=True"
     args:
       chdir: "{{ clowder_tmp_dir.path }}"
     when: push_local_state == "absent"
@@ -86,8 +85,7 @@
         --set-parameter "rbac/DISABLE_MIGRATE=False" \
         --set-parameter "rbac/PERMISSION_SEEDING_ENABLED=True" \
         --set-parameter "rbac/ROLE_SEEDING=True" \
-        --set-parameter "rbac/GROUP_SEEDING_ENABLED=True" \
-        --set-parameter "rbac/TENANT_TRANSLATOR_HOST=apicast.3scale-dev.svc.cluster.local"
+        --set-parameter "rbac/GROUP_SEEDING_ENABLED=True"
     args:
       chdir: "{{ clowder_tmp_dir.path }}"
     when: push_local_state == "present"
