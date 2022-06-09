@@ -814,6 +814,8 @@ objects:
       # Component cloudigrade-metrics deployment:
       #
       minReplicas: ${{CELERY_METRICS_REPLICA_COUNT}}
+      autoscaler:
+        externalHPA: true
       revisionHistoryLimit: 10
       webServices:
         public:
@@ -1200,6 +1202,22 @@ objects:
       resource:
         name: cpu
         targetAverageUtilization: ${{CELERY_TARGET_AVERAGE_CPU_UTILIZATION}}
+- apiVersion: autoscaling/v2beta1
+  kind: HorizontalPodAutoscaler
+  metadata:
+    name: cloudigrade-metrics-cpu
+  spec:
+    scaleTargetRef:
+      apiVersion: apps/v1
+      kind: Deployment
+      name: cloudigrade-metrics
+    minReplicas: ${{CELERY_METRICS_REPLICA_COUNT}}
+    maxReplicas: ${{CELERY_METRICS_REPLICA_COUNT_MAX}}
+    metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        targetAverageUtilization: ${{CELERY_METRICS_TARGET_AVERAGE_CPU_UTILIZATION}}
 
 parameters:
 #
@@ -1473,6 +1491,14 @@ parameters:
   displayName: Cloudigrade Celery Metrics Replica Count
   required: true
   value: '1'
+- name: CELERY_METRICS_REPLICA_COUNT_MAX
+  displayName: Cloudigrade Celery Metrics Replica Count Max
+  required: true
+  value: '3'
+- name: CELERY_METRICS_TARGET_AVERAGE_CPU_UTILIZATION
+  displayName: Cloudigrade Celery Metrics Target Average CPU Utilization
+  required: true
+  value: '60'
 - name: CELERY_METRICS_RETRY_INTERVAL
   displayName: Celery Metrics Retry Interval in seconds
   required: true
