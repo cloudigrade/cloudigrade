@@ -4,6 +4,7 @@ from django.contrib.auth.models import User as DjangoUser
 
 from api.models import User as ApiUser
 
+
 def migrate_django_auth_user_to_api_user(_apps, _schema_editor):
     """Migrate Django auth users to api users."""
 
@@ -28,6 +29,7 @@ def migrate_django_auth_user_to_api_user(_apps, _schema_editor):
                 date_joined=user.date_joined,
             )
 
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -35,7 +37,8 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        # Adding the noop backward migration to allow for debugging.
         migrations.RunPython(
-            migrate_django_auth_user_to_api_user
+            migrate_django_auth_user_to_api_user, migrations.RunPython.noop
         )
     ]

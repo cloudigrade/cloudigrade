@@ -26,12 +26,12 @@ def migrate_account_numbers_to_org_ids(_apps, _schema_editor):
             settings.TENANT_TRANSLATOR_PORT,
         )
 
-        logger.info(
-            f"Migrating {len(user_account_numbers)} account_numbers to org_id"
-        )
+        logger.info(f"Migrating {len(user_account_numbers)} account_numbers to org_id")
         try:
             logger.info(f"Calling tenant translator API {tenant_translator_url}")
-            response = requests.post(tenant_translator_url, data=json.dumps(user_account_numbers))
+            response = requests.post(
+                tenant_translator_url, data=json.dumps(user_account_numbers)
+            )
             org_ids = response.json()
 
             for user_account in users_with_no_org_ids:
@@ -63,9 +63,7 @@ def reverse_to_account_numbers(_apps, _schema_editor):
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ("api", "0061_migrate_foreign_keys_to_api_user")
-    ]
+    dependencies = [("api", "0061_migrate_foreign_keys_to_api_user")]
 
     operations = [
         migrations.RunPython(
