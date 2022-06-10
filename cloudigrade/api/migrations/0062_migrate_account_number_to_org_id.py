@@ -2,10 +2,11 @@
 
 from api.models import User
 from django.db import migrations
-import environ
 import json
 import logging
 import requests
+
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -19,11 +20,10 @@ def migrate_account_numbers_to_org_ids(_apps, _schema_editor):
             users_with_no_org_ids.values_list("account_number", flat=True)
         )
 
-        env = environ.Env()
         tenant_translator_url = "{}://{}:{}/internal/orgIds".format(
-            env("TENANT_TRANSLATOR_SCHEME"),
-            env("TENANT_TRANSLATOR_HOST"),
-            env("TENANT_TRANSLATOR_PORT"),
+            settings.TENANT_TRANSLATOR_SCHEME,
+            settings.TENANT_TRANSLATOR_HOST,
+            settings.TENANT_TRANSLATOR_PORT,
         )
 
         logger.info(

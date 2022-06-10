@@ -5,7 +5,6 @@ import json
 import logging
 from datetime import timedelta
 
-import environ
 import requests
 from celery import shared_task
 from django.conf import settings
@@ -589,12 +588,10 @@ def migrate_account_numbers_to_org_ids():
 
     """
     try:
-        env = environ.Env()
-
         tenant_translator_url = "{}://{}:{}/internal/orgIds".format(
-            env("TENANT_TRANSLATOR_SCHEME"),
-            env("TENANT_TRANSLATOR_HOST"),
-            env("TENANT_TRANSLATOR_PORT"),
+            settings.TENANT_TRANSLATOR_SCHEME,
+            settings.TENANT_TRANSLATOR_HOST,
+            settings.TENANT_TRANSLATOR_PORT,
         )
 
         users_with_no_org_ids = User.objects.filter(org_id=None)

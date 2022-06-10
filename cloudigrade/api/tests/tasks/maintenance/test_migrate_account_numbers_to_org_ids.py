@@ -1,12 +1,10 @@
 """Collection of tests for tasks.maintenance.delete_cloud_accounts_not_in_sources."""
 import http
 import json
-import os
-from unittest import mock
 from unittest.mock import patch
 
 import faker
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from api.models import User
 from api.tasks import maintenance
@@ -27,9 +25,9 @@ class MigrateAccountNumbersToOrgIdsTest(TestCase):
         f"internal/orgIds"
     )
 
-    @mock.patch.dict(os.environ, {"TENANT_TRANSLATOR_SCHEME": tenant_translator_scheme})
-    @mock.patch.dict(os.environ, {"TENANT_TRANSLATOR_HOST": tenant_translator_host})
-    @mock.patch.dict(os.environ, {"TENANT_TRANSLATOR_PORT": tenant_translator_port})
+    @override_settings(TENANT_TRANSLATOR_SCHEME=tenant_translator_scheme)
+    @override_settings(TENANT_TRANSLATOR_HOST=tenant_translator_host)
+    @override_settings(TENANT_TRANSLATOR_PORT=tenant_translator_port)
     @patch("requests.post")
     def test_migrate_account_numbers_with_none_found(self, mock_post):
         """
@@ -57,9 +55,9 @@ class MigrateAccountNumbersToOrgIdsTest(TestCase):
         for expected_info_message in expected_info_messages:
             self.assertIn(expected_info_message, info_messages)
 
-    @mock.patch.dict(os.environ, {"TENANT_TRANSLATOR_SCHEME": tenant_translator_scheme})
-    @mock.patch.dict(os.environ, {"TENANT_TRANSLATOR_HOST": tenant_translator_host})
-    @mock.patch.dict(os.environ, {"TENANT_TRANSLATOR_PORT": tenant_translator_port})
+    @override_settings(TENANT_TRANSLATOR_SCHEME=tenant_translator_scheme)
+    @override_settings(TENANT_TRANSLATOR_HOST=tenant_translator_host)
+    @override_settings(TENANT_TRANSLATOR_PORT=tenant_translator_port)
     @patch("requests.post")
     def test_migrate_account_numbers_with_no_org_ids(self, mock_post):
         """
@@ -114,9 +112,9 @@ class MigrateAccountNumbersToOrgIdsTest(TestCase):
         self.assertEqual(updated_user1.org_id, user1_org_id)
         self.assertEqual(updated_user3.org_id, user3_org_id)
 
-    @mock.patch.dict(os.environ, {"TENANT_TRANSLATOR_SCHEME": tenant_translator_scheme})
-    @mock.patch.dict(os.environ, {"TENANT_TRANSLATOR_HOST": tenant_translator_host})
-    @mock.patch.dict(os.environ, {"TENANT_TRANSLATOR_PORT": tenant_translator_port})
+    @override_settings(TENANT_TRANSLATOR_SCHEME=tenant_translator_scheme)
+    @override_settings(TENANT_TRANSLATOR_HOST=tenant_translator_host)
+    @override_settings(TENANT_TRANSLATOR_PORT=tenant_translator_port)
     @patch("requests.post")
     def test_migrate_account_numbers_catches_exception(self, mock_post):
         """

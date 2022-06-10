@@ -55,14 +55,18 @@ def synthesize_user(request_id: int) -> Optional[int]:
         )
         return None
 
-    username = _synthesize_id()
+    account_number = _synthesize_id()
+    org_id = _synthesize_id()
     # Set the user's date_joined far enough in the past so that in a future task we can
     # calculate all past concurrent usage data for synthesized runs that occurred on
     # days earlier than "today".
     user_date_joined = request.created_at - timedelta(days=request.since_days_ago + 1)
 
     user = User.objects.create_user(
-        account_number=username, is_active=False, date_joined=user_date_joined
+        account_number=account_number,
+        org_id=org_id,
+        is_active=False,
+        date_joined=user_date_joined,
     )
     request.user = user
     request.save()
