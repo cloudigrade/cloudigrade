@@ -6,29 +6,35 @@ import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('api', '0060_migrate_django_auth_user_to_api_user')
-    ]
+    dependencies = [("api", "0060_migrate_django_auth_user_to_api_user")]
 
     operations = [
         migrations.AlterField(
-            model_name='cloudaccount',
-            name='user',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='api.user'),
+            model_name="cloudaccount",
+            name="user",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to="api.user"
+            ),
         ),
         migrations.AlterField(
-            model_name='concurrentusage',
-            name='user',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='api.user'),
+            model_name="concurrentusage",
+            name="user",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to="api.user"
+            ),
         ),
         migrations.AlterField(
-            model_name='syntheticdatarequest',
-            name='user',
-            field=models.OneToOneField(null=True, on_delete=django.db.models.deletion.CASCADE, to='api.user'),
+            model_name="syntheticdatarequest",
+            name="user",
+            field=models.OneToOneField(
+                null=True, on_delete=django.db.models.deletion.CASCADE, to="api.user"
+            ),
         ),
         migrations.AlterField(
-            model_name='usertasklock',
-            name='user',
-            field=models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to='api.user'),
+            model_name="usertasklock",
+            name="user",
+            field=models.OneToOneField(
+                on_delete=django.db.models.deletion.CASCADE, to="api.user"
+            ),
         ),
     ]
