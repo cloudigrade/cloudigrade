@@ -202,8 +202,8 @@ class UserModelTest(TestCase):
     def test_user_object_string_representation(self):
         """Test that the string includes the uuid, account_number and org_id."""
         user_uuid = str(uuid.uuid4())
-        user_account_number = "11111111"
-        user_org_id = "22222222"
+        user_account_number = str(_faker.random_int(min=100000, max=999999))
+        user_org_id = str(_faker.random_int(min=100000, max=999999))
 
         user = User.objects.create(
             uuid=user_uuid, account_number=user_account_number, org_id=user_org_id

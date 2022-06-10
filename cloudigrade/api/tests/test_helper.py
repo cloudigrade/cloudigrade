@@ -37,8 +37,13 @@ class SandboxedRestClientTest(TestCase):
     def setUp(self):
         """Set up user for the client tests."""
         self.account_number = _faker.random_int(min=100000, max=999999)
+        self.org_id = _faker.random_int(min=100000, max=999999)
         self.password = _faker.slug()
-        self.user = util_helper.generate_test_user(self.account_number, self.password)
+        self.user = util_helper.generate_test_user(
+            account_number=self.account_number,
+            org_id=self.org_id,
+            password=self.password,
+        )
 
     def test_list_noun(self):
         """Assert "list" requests work."""

@@ -707,3 +707,10 @@ SOURCES_AVAILABILITY_EVENT_TYPE = env(
 )
 
 #####################################################################
+# Org ID support
+
+TENANT_TRANSLATOR_SCHEME = env("TENANT_TRANSLATOR_SCHEME", default="http")
+TENANT_TRANSLATOR_HOST = env("TENANT_TRANSLATOR_HOST", default="localhost")
+TENANT_TRANSLATOR_PORT = env("TENANT_TRANSLATOR_PORT", default=8892)
+
+#####################################################################

@@ -67,13 +67,14 @@ class User(AbstractBaseUser):
         default=user_uuid,
     )
     account_number = models.TextField(
+        db_index=True,
         verbose_name="Account Number",
         max_length=150,
         unique=True,
         null=True,
     )
     org_id = models.TextField(
-        verbose_name="Org Id", max_length=150, unique=True, null=True
+        db_index=True, verbose_name="Org Id", max_length=150, unique=True, null=True
     )
     is_active = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
