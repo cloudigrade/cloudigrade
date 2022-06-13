@@ -74,6 +74,26 @@ Once you have poetry installed, use it to install our Python package requirement
 
 After finishing the installation of dependencies, you can instantiate a shell uses the virtual environment by running ``poetry shell``.
 
+macOS ``librdkafka`` Troubleshooting
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If ``poetry`` or ``tox`` fail to install ``confluent-kafka`` due to problems with ``librdkafka`` like the following:
+
+.. code-block::
+
+    /private/var/folders/71/5v1_8dbd03j_nfxbb8bkb1q00000gn/T/pip-req-build-xeit5a49/src/confluent_kafka/src/confluent_kafka.h:23:10: fatal error: 'librdkafka/rdkafka.h' file not found
+    #include <librdkafka/rdkafka.h>
+                ^~~~~~~~~~~~~~~~~~~~~~
+    1 error generated.
+    error: command '/usr/bin/clang' failed with exit code 1
+
+Set and export the following environment variables with the current ``librdkafka`` paths, and try your command again:
+
+.. code-block:: sh
+
+    export C_INCLUDE_PATH=/usr/local/Cellar/librdkafka/1.8.2/include
+    export LIBRARY_PATH=/usr/local/Cellar/librdkafka/1.8.2/lib
+
 
 macOS Big Sur Troubleshooting
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
