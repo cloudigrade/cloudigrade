@@ -132,3 +132,7 @@ Consequences of data loss may include but are not limited to:
 - Calculated daily concurrent usage may be inaccurate for the date(s) of the data loss.
 
 cloudigrade does not retain or report any personally identifying information (PII) or critical financial records. Losing data in cloudigrade due to a disaster only noticeably affects the displayed RHEL usage data in Subscription Watch graphs and tables on console.redhat.com. The graphs and tables might show zero or smaller-than-actual numbers for public cloud RHEL use during the period when data was lost. Reported usage before and after the loss period should be accurate.
+
+## Load Testing
+
+See: [app-interface: cloudigrade load testing](https://gitlab.cee.redhat.com/service/app-interface/-/blob/master/docs/console.redhat.com/app-sops/cloudigrade/cloudigrade-load-testing.md)
