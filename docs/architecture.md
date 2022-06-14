@@ -75,6 +75,8 @@ cloudigrade's `clowdapp.yaml` defines several OpenShift deployments, but some of
 - `cloudigrade-listener` runs cloudigrade's `listen_to_sources` management command to read messages from sources-api's Kafka topics and call tasks to process them. This deployment should have **exactly one** replica because the order of messages from sources-api is important, and having multiple listeners may result in messages being processed out of order.
 - `cloudigrade-metrics` runs cloudigrade's [`celery-exporter-container`](https://quay.io/repository/cloudservices/celery-exporter-container) process to serve an internal `/metrics` HTTP endpoint for Prometheus metrics gathering. This deployment should have **several** replicas so that they can handle many simultaneous HTTP requests.
 
+Deployments that scale use standard OpenShift HPA definitions to maintain appropriate replica counts by targeting memory or CPU metrics. The minimum and maximum counts vary by deployment and environment. Defaults are defined in [clowdapp.yml](https://github.com/cloudigrade/cloudigrade/blob/master/deployment/clowdapp.yaml), and stage/prod-specific overrides are defined in [deploy-clowder.yml](https://gitlab.cee.redhat.com/service/app-interface/-/blob/master/data/services/insights/cloudigrade/cicd/deploy-clowder.yml).
+
 ## Resource Capacity and Growth
 
 The dev team expects cloudigrade's CPU, memory, and disk use for both OpenShift and the RDS database to grow proportionally to the number of users, the length of time since a user joined, and the amount of activity in the users' cloud accounts.
