@@ -26,18 +26,18 @@ Upon deployment, cloudigrade automatically configures various resources for its 
 cloudigrade has the following operational dependencies. See also [app.yml](https://gitlab.cee.redhat.com/service/app-interface/-/blob/master/data/services/insights/cloudigrade/app.yml).
 
 - Red Hat/internal:
-  - [OpenShift](https://openshift.com) ([status](https://status.pro.openshift.com/)) service hosting.
-  - [Quay.io](https://quay.io) ([status](https://status.quay.io/)) as container registry.
-  - [App-SRE Jenkins](ci.ext.devshift.net) for various build jobs.
-  - [app-interface](https://gitlab.cee.redhat.com/service/app-interface/) to define and trigger OpenShift configuration changes.
-  - [Clowder](https://github.com/RedHatInsights/clowder/) operator running in OpenShift to manage deployments.
-  - [postigrade](https://github.com/cloudigrade/postigrade/) to proxy and pool database connections to AWS RDS.
-  - [Sources API](https://github.com/RedHatInsights/sources-api/) as primary source of customer cloud accounts.
-  - Platform-managed Kafka for sending and receiving messages between cloudigrade and other platform services.
+  - [OpenShift](https://openshift.com) ([status](https://status.pro.openshift.com/)) service hosting. If OpenShift is down or misbehaving, cloudigrade's APIs and tasks may stop running or fail, and that may result in pods restarting.
+  - [Quay.io](https://quay.io) ([status](https://status.quay.io/)) as container registry. If Quay is down or misbehaving, cloudigrade's deployments may fail.
+  - [App-SRE Jenkins](ci.ext.devshift.net) for various build jobs. If ci.ext is down or misbehaving, cloudigrade's PR checks may fail and new changes may not result in images in Quay.
+  - [app-interface](https://gitlab.cee.redhat.com/service/app-interface/) to define and trigger OpenShift configuration changes. If app-interface is down or misbehaving, configuration changes and deployments may fail.
+  - [Clowder](https://github.com/RedHatInsights/clowder/) operator running in OpenShift to manage deployments. If Clowder is down or misbehaving, configuration changes and deployments may fail.
+  - [postigrade](https://github.com/cloudigrade/postigrade/) to proxy and pool database connections to AWS RDS. If postigrade is down or misbehaving, cloudigrade's APIs and tasks may stop running or fail, and that may result in pods restarting.
+  - [Sources API](https://github.com/RedHatInsights/sources-api-go/) (see also [legacy version](https://github.com/RedHatInsights/sources-api/)) as primary source of customer cloud accounts. If sources-api is down or misbehaving, cloudigrade may not know about changes to customer accounts and whether or not to track them.
+  - Platform-managed Kafka for sending and receiving messages between cloudigrade and other platform services. If Kafka is down or misbehaving, communication with sources-api may fail, cloudigrade may not know about changes to customer accounts and whether or not to track them, and sources-api may not have accurate availability for sources.
 - External:
-  - [GitHub cloudigrade project](https://github.com/cloudigrade/) for source code repositories and development.
-  - [GitHub bonfire repo](https://github.com/RedHatInsights/bonfire) for PR check bootstrap.
-  - [Sentry.io](https://sentry.io/) ([status](https://status.sentry.io/)) for error issue and performance transaction monitoring
+  - [GitHub cloudigrade project](https://github.com/cloudigrade/) for source code repositories and development. If GitHub is down or misbehaving or the cloudigrade repos are unavailable, developers may not be able to update code.
+  - [GitHub bonfire repo](https://github.com/RedHatInsights/bonfire) for PR check bootstrap. If GitHub is down or misbehaving or the bonfire repo is unavailable, cloudigrade PR checks and IQE integration tests may fail.
+  - [Sentry.io](https://sentry.io/) ([status](https://status.sentry.io/)) for error issue and performance transaction monitoring. If Sentry is down or misbehaving, cloudigrade devs may not be alerted to new runtime errors.
   - [Amazon Web Services (AWS)](https://aws.amazon.com/) ([status](https://status.aws.amazon.com/))
     - AWS customer account(s) to:
       - configure CloudTrail monitoring
@@ -53,9 +53,11 @@ cloudigrade has the following operational dependencies. See also [app.yml](https
       - RDS PSQL database
       - Redis database
       - CloudWatch logging
+    - If AWS is down or misbehaving, many of cloudigrade's internal operations may fail, and that may result in errors and pods restarting, and pods may fail to start completely and report ready.
   - [Microsoft Azure](https://azure.microsoft.com/) ([status](https://status.azure.com/)):
     - cloudigrade subscription to:
       - describe VM resource capability definitions
+    - If Azure is down or misbehaving, many of cloudigrade's internal operations may fail, and that may result in errors and pods restarting, and pods may fail to start completely and report ready.
 
 ## Runtime Dependencies Overview
 
