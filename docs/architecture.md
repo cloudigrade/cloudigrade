@@ -21,6 +21,15 @@ cloudigrade deploys to AppSRE-managed projects in OpenShift using [app-interface
 
 Upon deployment, cloudigrade automatically configures various resources for its own AWS account using [Ansible](https://www.ansible.com/) playbooks defined in [playbooks](https://github.com/cloudigrade/cloudigrade/tree/master/deployment/playbooks).
 
+## Routes
+
+- cloudigrade does not define its own OpenShift Route objects.
+- `cloudigrade-api` handles HTTP requests to `api/cloudigrade/v2/` and `internal/` as defined in [urls.py](https://github.com/cloudigrade/cloudigrade/blob/master/cloudigrade/config/urls.py).
+  - `api/cloudigrade` is referenced in [Console Service Deployments](https://docs.google.com/spreadsheets/d/188uz04yPb0Oe4rcq6QxLV1rHBjAJtp5UbUNZlPD2pwQ/edit#gid=1930857575) for 3Scale.
+  - `internal` is referenced in [deploy.yml](https://gitlab.cee.redhat.com/service/app-interface/-/blob/master/data/services/insights/turnpike/deploy.yml) for Turnpike.
+- `cloudigrade-metrics` handles HTTP requests to `metrics` as defined in [http_server.py](https://github.com/danihodovic/celery-exporter/blob/master/src/http_server.py).
+  - `metrics` is used by Prometheus metrics collection (see: [stage](https://gitlab.cee.redhat.com/service/app-interface/-/blob/master/resources/insights-stage/cloudigrade-stage/cloudigrade-metrics.servicemonitor.yml) and [prod](https://gitlab.cee.redhat.com/service/app-interface/-/blob/master/resources/insights-prod/cloudigrade-prod/cloudigrade-metrics.servicemonitor.yml) configs)
+
 ## Dependencies
 
 cloudigrade has the following operational dependencies. See also [app.yml](https://gitlab.cee.redhat.com/service/app-interface/-/blob/master/data/services/insights/cloudigrade/app.yml).
