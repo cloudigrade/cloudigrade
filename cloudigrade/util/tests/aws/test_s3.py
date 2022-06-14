@@ -6,15 +6,22 @@ from unittest.mock import patch
 from django.test import TestCase
 
 from util.aws import s3
+from util.tests import helper
 
 
 class UtilAwsS3Test(TestCase):
     """AWS S3 utility functions test case."""
 
+    def setUp(self):
+        """Set up common variables for tests."""
+        self.aws_account_id = helper.generate_dummy_aws_account_id()
+        self.uncompressed_file_key = f"AWSLogs/{self.aws_account_id}/path/to/file"
+        self.compressed_file_key = f"{self.uncompressed_file_key}.gz"
+
     def test_get_object_content_from_s3_gzipped_name(self):
         """Assert that .gz file name is handled as gzipped data."""
         bucket = "test_bucket"
-        key = "/path/to/file.gz"
+        key = self.compressed_file_key
         content_bytes = b'{"Key": "Value"}'
         byte_stream = io.BytesIO(gzip.compress(content_bytes))
         object_body = {
@@ -33,7 +40,7 @@ class UtilAwsS3Test(TestCase):
     def test_get_object_content_from_s3_gzipped_content_type(self):
         """Assert that gzip content type is handled."""
         bucket = "test_bucket"
-        key = "/path/to/file"
+        key = self.uncompressed_file_key
         content_bytes = b'{"Key": "Value"}'
         byte_stream = io.BytesIO(gzip.compress(content_bytes))
         object_body = {
@@ -53,7 +60,7 @@ class UtilAwsS3Test(TestCase):
     def test_get_object_content_from_s3_uncompressed(self):
         """Assert that uncompressed content is handled."""
         bucket = "test_bucket"
-        key = "/path/to/file"
+        key = self.uncompressed_file_key
         content_bytes = b'{"Key": "Value"}'
         byte_stream = io.BytesIO(content_bytes)
         object_body = {
@@ -73,7 +80,7 @@ class UtilAwsS3Test(TestCase):
     def test_get_object_content_from_s3_uncompressed_not_utf8_error(self):
         """Assert that not-gzipped not-utf8 bits raise an appropriate error."""
         bucket = "test_bucket"
-        key = "/path/to/file"
+        key = self.uncompressed_file_key
         content_bytes = bytes.fromhex("deadbeef")  # not utf-8 safe!
         byte_stream = io.BytesIO(content_bytes)
         object_body = {"Body": byte_stream}

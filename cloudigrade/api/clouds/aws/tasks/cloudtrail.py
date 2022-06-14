@@ -2,6 +2,7 @@
 import itertools
 import json
 import logging
+import re
 from decimal import Decimal
 
 from botocore.exceptions import ClientError
@@ -152,6 +153,18 @@ def _process_cloudtrail_message(message):
     for extracted_message in extracted_messages:
         bucket = extracted_message["bucket"]["name"]
         key = extracted_message["object"]["key"]
+        account_number, valid = _parse_aws_account_id(key)
+        if not valid:
+            logger.info(
+                _(
+                    "Skipping reading CloudTrail log file from "
+                    "S3 bucket '%(bucket)s' key '%(key)s', "
+                    "invalid account number '%(account_number)s' "
+                    "specified in key"
+                ),
+                {"bucket": bucket, "key": key, "account_number": account_number},
+            )
+            continue
         logger.info(
             _(
                 "Attempting to read CloudTrail log file from "
@@ -232,6 +245,32 @@ def _process_cloudtrail_message(message):
             {"instance_events": instance_events, "ami_tag_events": ami_tag_events},
         )
         return False
+
+
+def _parse_aws_account_id(key):
+    """
+    Parse the AWS account id from the object key.
+
+    Returns:
+        tuple (str, boolean). First value is the AWS account id for
+        the related S3 object key, Second value is the boolean
+        whether the account_number if valid.
+    """
+    # Example object key syntax:
+    #   - AWSLogs/{aws_account_id}/CloudTrail/us-east-1/2022/06/13/
+    #       615644952395_CloudTrail_us-east-1_20220613T2220Z_5KKtQ8DEcTz7BzSC.json.gz
+    #
+    #   - AWSLogs/{aws_account_id}/CloudTrail/eu-west-1/2022/06/13/
+    #       977540122949_CloudTrail_eu-west-1_20220613T2225Z_aDBL7apnBlK4K3t8.json.gz
+    #
+    r = re.match(r"^AWSLogs/(?P<aws_account_id>[^/]+)/.*$", key)
+    if r:
+        aws_account_id = r.group("aws_account_id")
+        is_valid = AwsCloudAccount.objects.filter(
+            aws_account_id=aws_account_id
+        ).exists()
+        return aws_account_id, is_valid
+    return None, False
 
 
 def load_json_from_s3(bucket, key):

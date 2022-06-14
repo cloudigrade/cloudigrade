@@ -73,7 +73,9 @@ class AnalyzeLogTest(TestCase):
         verify that the appropriate events are created and that the instance type
         change correctly affects its following event.
         """
-        sqs_message = helper.generate_mock_cloudtrail_sqs_message()
+        sqs_message = helper.generate_mock_cloudtrail_sqs_message(
+            aws_account_id=self.aws_account_id
+        )
         mock_receive.return_value = [sqs_message]
         region = util_helper.get_random_region()
 
@@ -237,7 +239,9 @@ class AnalyzeLogTest(TestCase):
         discover that it has the "Windows" platform set, we save our model in
         an already-inspected state.
         """
-        sqs_message = helper.generate_mock_cloudtrail_sqs_message()
+        sqs_message = helper.generate_mock_cloudtrail_sqs_message(
+            aws_account_id=self.aws_account_id
+        )
         mock_receive.return_value = [sqs_message]
         region = util_helper.get_random_region()
         instance_type = util_helper.get_random_instance_type()
@@ -338,7 +342,9 @@ class AnalyzeLogTest(TestCase):
         In this case, we do *no* API describes and just process the CloudTrail
         record to save our model changes.
         """
-        sqs_message = helper.generate_mock_cloudtrail_sqs_message()
+        sqs_message = helper.generate_mock_cloudtrail_sqs_message(
+            aws_account_id=self.aws_account_id
+        )
         mock_receive.return_value = [sqs_message]
         region = util_helper.get_random_region()
         instance_type = util_helper.get_random_instance_type()
@@ -425,7 +431,9 @@ class AnalyzeLogTest(TestCase):
         information from the record alone and need to immediately describe the
         instance in AWS in order to populate our model.
         """
-        sqs_message = helper.generate_mock_cloudtrail_sqs_message()
+        sqs_message = helper.generate_mock_cloudtrail_sqs_message(
+            aws_account_id=self.aws_account_id
+        )
         mock_receive.return_value = [sqs_message]
         region = util_helper.get_random_region()
 
@@ -528,7 +536,9 @@ class AnalyzeLogTest(TestCase):
         it. In that case, we save an image with status 'Unavailable' to
         indicate that we can't (and probably never will) inspect it.
         """
-        sqs_message = helper.generate_mock_cloudtrail_sqs_message()
+        sqs_message = helper.generate_mock_cloudtrail_sqs_message(
+            aws_account_id=self.aws_account_id
+        )
         mock_receive.return_value = [sqs_message]
         region = util_helper.get_random_region()
 
@@ -669,7 +679,9 @@ class AnalyzeLogTest(TestCase):
         we do not need to make an extra describe instance call to AWS.
         """
         instance_type = "t1.potato"
-        sqs_message = helper.generate_mock_cloudtrail_sqs_message()
+        sqs_message = helper.generate_mock_cloudtrail_sqs_message(
+            aws_account_id=self.aws_account_id
+        )
         gen_instance = helper.generate_instance(self.account, region="us-east-1")
         trail_record = helper.generate_cloudtrail_modify_instance_record(
             aws_account_id=self.aws_account_id,
@@ -731,7 +743,9 @@ class AnalyzeLogTest(TestCase):
         this test should result in a new instance and one event for it, but
         no images should be created.
         """
-        sqs_message = helper.generate_mock_cloudtrail_sqs_message()
+        sqs_message = helper.generate_mock_cloudtrail_sqs_message(
+            aws_account_id=self.aws_account_id
+        )
         described_instance = util_helper.generate_dummy_describe_instance()
         s3_content = {
             "Records": [
@@ -780,12 +794,11 @@ class AnalyzeLogTest(TestCase):
         self.assertEqual(len(images), 0)
 
     @patch("api.clouds.aws.tasks.cloudtrail.start_image_inspection")
-    @patch("api.clouds.aws.tasks.cloudtrail.aws.get_session")
     @patch("api.clouds.aws.tasks.cloudtrail.aws.delete_messages_from_queue")
     @patch("api.clouds.aws.tasks.cloudtrail.aws.get_object_content_from_s3")
     @patch("api.clouds.aws.tasks.cloudtrail.aws.yield_messages_from_queue")
     def test_analyze_log_when_account_is_not_known(
-        self, mock_receive, mock_s3, mock_del, mock_session, mock_inspection
+        self, mock_receive, mock_s3, mock_del, mock_inspection
     ):
         """
         Test appropriate handling when the account ID in the log is unknown.
@@ -797,7 +810,13 @@ class AnalyzeLogTest(TestCase):
         to the unknown account return no new results, and the overall operation
         completes successfully with no new objects written to the database.
         """
-        sqs_message = helper.generate_mock_cloudtrail_sqs_message()
+        bucket_name = "analyzer-test-bucket"
+        invalid_aws_account_id = util_helper.generate_dummy_aws_account_id()
+        object_key = f"AWSLogs/{invalid_aws_account_id}/path/to/file.gz"
+        sqs_message = helper.generate_mock_cloudtrail_sqs_message(
+            bucket_name=bucket_name,
+            object_key=object_key,
+        )
         ec2_instance_id = util_helper.generate_dummy_instance_id()
         trail_record = helper.generate_cloudtrail_instances_record(
             aws_account_id=util_helper.generate_dummy_aws_account_id(),
@@ -807,7 +826,21 @@ class AnalyzeLogTest(TestCase):
         mock_receive.return_value = [sqs_message]
         mock_s3.return_value = json.dumps(s3_content)
 
-        successes, failures = tasks.analyze_log()
+        with self.assertLogs(
+            "api.clouds.aws.tasks.cloudtrail", level="INFO"
+        ) as logging_watcher:
+            successes, failures = tasks.analyze_log()
+
+        expected_message = (
+            f"Skipping reading CloudTrail log file from "
+            f"S3 bucket '{bucket_name}' key '{object_key}', "
+            f"invalid account number '{invalid_aws_account_id}' specified in key"
+        )
+
+        self.assertIn(
+            expected_message,
+            logging_watcher.records[0].message,
+        )
 
         self.assertEqual(len(successes), 1)
         self.assertEqual(len(failures), 0)
@@ -887,6 +920,40 @@ class AnalyzeLogTest(TestCase):
         ec2_instance_id = util_helper.generate_dummy_instance_id()
         trail_record = helper.generate_cloudtrail_instances_record(
             aws_account_id=self.aws_account_id,
+            instance_ids=[ec2_instance_id],
+        )
+        s3_content = {"Records": [trail_record]}
+        mock_receive.return_value = [sqs_message]
+        mock_s3.return_value = json.dumps(s3_content)
+
+        successes, failures = tasks.analyze_log()
+
+        self.assertEqual(len(successes), 1)
+        self.assertEqual(len(failures), 0)
+        mock_inspection.assert_not_called()
+        mock_del.assert_called()
+
+        instances = list(AwsInstance.objects.all())
+        self.assertEqual(len(instances), 0)
+        events = list(AwsInstanceEvent.objects.all())
+        self.assertEqual(len(events), 0)
+        images = list(AwsMachineImage.objects.all())
+        self.assertEqual(len(images), 0)
+
+    @patch("api.clouds.aws.tasks.cloudtrail.start_image_inspection")
+    @patch("api.clouds.aws.tasks.cloudtrail.aws.delete_messages_from_queue")
+    @patch("api.clouds.aws.tasks.cloudtrail.aws.get_object_content_from_s3")
+    @patch("api.clouds.aws.tasks.cloudtrail.aws.yield_messages_from_queue")
+    def test_analyze_log_when_object_key_is_invalid(
+        self, mock_receive, mock_s3, mock_del, mock_inspection
+    ):
+        """Test appropriate handling when the object key is invalid."""
+        sqs_message = helper.generate_mock_cloudtrail_sqs_message(
+            object_key="/bogus/path/file.gz"
+        )
+        ec2_instance_id = util_helper.generate_dummy_instance_id()
+        trail_record = helper.generate_cloudtrail_instances_record(
+            aws_account_id=util_helper.generate_dummy_aws_account_id(),
             instance_ids=[ec2_instance_id],
         )
         s3_content = {"Records": [trail_record]}
@@ -1034,7 +1101,9 @@ class AnalyzeLogTest(TestCase):
         ami = helper.generate_image()
         self.assertFalse(ami.openshift_detected)
 
-        sqs_message = helper.generate_mock_cloudtrail_sqs_message()
+        sqs_message = helper.generate_mock_cloudtrail_sqs_message(
+            aws_account_id=self.aws_account_id
+        )
         trail_record = helper.generate_cloudtrail_tag_set_record(
             aws_account_id=self.aws_account_id,
             image_ids=[ami.content_object.ec2_ami_id],
@@ -1066,7 +1135,9 @@ class AnalyzeLogTest(TestCase):
         self.assertTrue(ami.rhel_detected_by_tag)
         self.assertTrue(ami.openshift_detected)
 
-        sqs_message = helper.generate_mock_cloudtrail_sqs_message()
+        sqs_message = helper.generate_mock_cloudtrail_sqs_message(
+            aws_account_id=self.aws_account_id
+        )
         trail_record_1 = helper.generate_cloudtrail_tag_set_record(
             aws_account_id=self.aws_account_id,
             image_ids=[ami.content_object.ec2_ami_id],
@@ -1168,7 +1239,9 @@ class AnalyzeLogTest(TestCase):
         image_data = util_helper.generate_dummy_describe_image(image_id=new_ami_id)
         mock_describe.return_value = [image_data]
 
-        sqs_message = helper.generate_mock_cloudtrail_sqs_message()
+        sqs_message = helper.generate_mock_cloudtrail_sqs_message(
+            aws_account_id=self.aws_account_id
+        )
         region = util_helper.get_random_region()
         trail_record = helper.generate_cloudtrail_tag_set_record(
             aws_account_id=self.aws_account_id,
