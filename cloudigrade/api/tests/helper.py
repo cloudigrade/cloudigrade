@@ -1111,9 +1111,10 @@ def generate_cloudtrail_record(
 
 def generate_mock_cloudtrail_sqs_message(
     bucket_name="analyzer-test-bucket",
-    object_key="path/to/file.json.gz",
+    object_key=None,
     receipt_handle=None,
     message_id=None,
+    aws_account_id=None,
 ):
     """
     Generate a Mock object that behaves like a CloudTrail SQS message.
@@ -1128,6 +1129,11 @@ def generate_mock_cloudtrail_sqs_message(
         Mock: populated to look and behave like a CloudTrail SQS message
 
     """
+    # Let's build the proper syntax key with the AWS account id.
+    if not aws_account_id:
+        aws_account_id = helper.generate_dummy_aws_account_id()
+    if not object_key:
+        object_key = f"AWSLogs/{aws_account_id}/path/to/file.json.gz"
     if not receipt_handle:
         receipt_handle = str(uuid.uuid4())
 
