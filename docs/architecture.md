@@ -16,6 +16,7 @@ cloudigrade deploys to AppSRE-managed projects in OpenShift using [app-interface
 - cloudigrade-worker: asynchronous Celery workers (scaled to many pods)
 - cloudigrade-beat: Celery beat for scheduled tasks (only *exactly one* pod)
 - cloudigrade-listener: Kafka message queue reader (only *exactly one* pod)
+- cloudigrade-metrics: Prometheus metrics exporter for Celery tasks (scaled to many pods)
 - postigrade: PgBouncer proxy/pool to AWS RDS (scaled to many pods)
 
 Upon deployment, cloudigrade automatically configures various resources for its own AWS account using [Ansible](https://www.ansible.com/) playbooks defined in [playbooks](https://github.com/cloudigrade/cloudigrade/tree/master/deployment/playbooks).
