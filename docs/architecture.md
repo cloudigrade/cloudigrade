@@ -4,6 +4,8 @@
 
 cloudigrade is a service that monitors, tracks, and reports on RHEL instance activity in public clouds for Red Hat customers. See [README.md](https://github.com/cloudigrade/cloudigrade/blob/master/README.rst) and [Adding sources for public cloud metering](https://access.redhat.com/documentation/en-us/subscription_central/2021/html/getting_started_with_the_subscriptions_service/assembly-adding-sources-publiccloudmetering) for more general information.
 
+Please note that cloudigrade is still under active development, and all parts of this document are subject to change. This document may not always keep up entirely with the pace of development.
+
 ## Technology Stack
 
 cloudigrade is written in [Python 3](https://docs.python.org/3/) using [Django](https://www.djangoproject.com/) with [Django Rest Framework](https://www.django-rest-framework.org/) for HTTP APIs and model handling, [Celery](https://docs.celeryproject.org/) for asynchronous task processing, and [Poetry](https://python-poetry.org/) for managing its Python package dependencies. See cloudigrade's [Dockerfile](https://github.com/cloudigrade/cloudigrade/blob/master/Dockerfile) and [pyproject.toml](https://github.com/cloudigrade/cloudigrade/blob/master/pyproject.toml) for more details. cloudigrade records its data to a [PostgreSQL](https://www.postgresql.org/) database, typically pooled through [postigrade](https://github.com/cloudigrade/postigrade/) (a containerized [PgBouncer](https://www.pgbouncer.org/)).
