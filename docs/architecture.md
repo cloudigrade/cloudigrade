@@ -118,6 +118,15 @@ In summary, the cloudigrade database in AWS RDS is the *only* critical data stor
 
 ## Data Loss Impact
 
-If there is a disaster that results in a *nontrivial* time gap since the last database backup was made, the dev team does not have a strategy to recreate the data lost during that gap. The overwhelming majority of cloudigrade's incoming data is either ephemeral or transactional and only read once. If there is a nontrivial gap, Red Hat may consider notifying customers about data being absent during that gap.
+If there is a disaster that results in the database losing any data that previously had been recorded by normal cloudigrade operations, the dev team does not have a strategy to recreate the data lost during that gap. The overwhelming majority of cloudigrade's incoming data is either ephemeral or transactional and only read once. If there is any gap, Red Hat may need to notify customers about data loss during that time.
+
+Consequences of data loss may include but are not limited to:
+
+- CloudAccounts may disappear from cloudigrade for sources created in sources-api.
+- CloudAccounts may continue to be active in cloudigrade for sources paused or destroyed in sources-api. cloudigrade's periodic account cleanup jobs should stop these within 24 hours.
+- CloudAccounts may be disabled in cloudigrade for sources that were unpaused in sources-api. Normal activity should resume within a few hours as a result of sources-api's periodic availability checks.
+- Recorded customer activity from AWS or Azure that notified and was processed by cloudigrade may disappear.
+- Recorded customer image inspections may disappear, and they may not be able to inspect again if enough time has elapsed that the original image is no longer available.
+- Calculated daily concurrent usage may be inaccurate for the date(s) of the data loss.
 
 cloudigrade does not retain or report any personally identifying information (PII) or critical financial records. Losing data in cloudigrade due to a disaster only noticeably affects the displayed RHEL usage data in Subscription Watch graphs and tables on console.redhat.com. The graphs and tables might show zero or smaller-than-actual numbers for public cloud RHEL use during the period when data was lost. Reported usage before and after the loss period should be accurate.
