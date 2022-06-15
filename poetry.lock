@@ -819,6 +819,21 @@ python-versions = "*"
 prometheus-client = ">=0.7"
 
 [[package]]
+name = "django-redis"
+version = "5.2.0"
+description = "Full featured redis cache backend for Django."
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+Django = ">=2.2"
+redis = ">=3,<4.0.0 || >4.0.0,<4.0.1 || >4.0.1"
+
+[package.extras]
+hiredis = ["redis[hiredis] (>=3,!=4.0.0,!=4.0.1)"]
+
+[[package]]
 name = "django-timezone-field"
 version = "5.0"
 description = "A Django app providing DB, form, and REST framework fields for zoneinfo and pytz timezone objects."
@@ -2035,7 +2050,7 @@ python-versions = "*"
 name = "pywin32"
 version = "304"
 description = "Python for Window Extensions"
-category = "dev"
+category = "main"
 optional = false
 python-versions = "*"
 
@@ -2522,7 +2537,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "e5b3a9eeaeb2f0efad798a6f0ad1df23714e2e04d2835ba6158150d2b07ef7e4"
+content-hash = "b66fefda0b9d89db9b6fc3cd0bd253fa332a9707d4778ca466ca422d3c827c80"
 
 [metadata.files]
 adal = [
@@ -2960,6 +2975,10 @@ django-model-utils = [
 django-prometheus = [
     {file = "django-prometheus-2.2.0.tar.gz", hash = "sha256:240378a1307c408bd5fc85614a3a57f1ce633d4a222c9e291e2bbf325173b801"},
     {file = "django_prometheus-2.2.0-py2.py3-none-any.whl", hash = "sha256:e6616770d8820b8834762764bf1b76ec08e1b98e72a6f359d488a2e15fe3537c"},
+]
+django-redis = [
+    {file = "django-redis-5.2.0.tar.gz", hash = "sha256:8a99e5582c79f894168f5865c52bd921213253b7fd64d16733ae4591564465de"},
+    {file = "django_redis-5.2.0-py3-none-any.whl", hash = "sha256:1d037dc02b11ad7aa11f655d26dac3fb1af32630f61ef4428860a2e29ff92026"},
 ]
 django-timezone-field = [
     {file = "django-timezone-field-5.0.tar.gz", hash = "sha256:15746ed367a5a32eda76cfa2886eeec1de8cda79f519b7c5e12f87ed7cdbd663"},

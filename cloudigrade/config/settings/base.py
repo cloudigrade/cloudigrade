@@ -82,6 +82,7 @@ THIRD_PARTY_APPS = [
     "rest_framework.authtoken",
     "django_filters",
     "django_prometheus",
+    "django_redis",
     "generic_relations",
     "health_check",
     "health_check.db",
@@ -567,12 +568,24 @@ DELETE_INACTIVE_USERS_MIN_AGE = env.int(
     "DELETE_INACTIVE_USERS_MIN_AGE", default=60 * 60 * 24
 )
 
+#####################################################################
+# Django caching
+
 # Cache ttl settings
 CACHE_TTL_DEFAULT = env.int("CACHE_TTL_DEFAULT", default=60)
 
 CACHE_TTL_SOURCES_APPLICATION_TYPE_ID = env.int(
     "CACHE_TTL_SOURCES_APPLICATION_TYPE_ID", default=CACHE_TTL_DEFAULT
 )
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": REDIS_URL,
+        "KEY_PREFIX": f"{CLOUDIGRADE_ENVIRONMENT}-cloudigrade",
+        "TIMEOUT": CACHE_TTL_DEFAULT,
+    }
+}
 
 # How far back should we look for related data when recalculating runs
 RECALCULATE_RUNS_SINCE_DAYS_AGO = env.int("RECALCULATE_RUNS_SINCE_DAYS_AGO", default=3)

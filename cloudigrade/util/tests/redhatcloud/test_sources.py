@@ -151,7 +151,7 @@ class SourcesTest(TestCase):
         )
         self.assertEqual(response_app_type_id, cloudigrade_app_type_id)
 
-        """Call it again and make sure the original, cached value is returened"""
+        """Call it again and make sure the original, cached value is returned"""
         not_cloudigrade_app_type_id = _faker.pyint()
         not_expected = {"data": [{"id": not_cloudigrade_app_type_id}]}
         mock_get.return_value.json.return_value = not_expected
