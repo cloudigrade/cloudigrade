@@ -1170,7 +1170,7 @@ objects:
   kind: Secret
   metadata:
     name: cloudwatch
-- apiVersion: autoscaling/v2beta1
+- apiVersion: autoscaling/v2
   kind: HorizontalPodAutoscaler
   metadata:
     name: cloudigrade-api-cpu
@@ -1185,8 +1185,10 @@ objects:
     - type: Resource
       resource:
         name: cpu
-        targetAverageUtilization: ${{API_TARGET_AVERAGE_CPU_UTILIZATION}}
-- apiVersion: autoscaling/v2beta1
+        target:
+          type: Utilization
+          averageUtilization: ${{API_TARGET_AVERAGE_CPU_UTILIZATION}}
+- apiVersion: autoscaling/v2
   kind: HorizontalPodAutoscaler
   metadata:
     name: cloudigrade-worker-cpu
@@ -1201,8 +1203,10 @@ objects:
     - type: Resource
       resource:
         name: cpu
-        targetAverageUtilization: ${{CELERY_TARGET_AVERAGE_CPU_UTILIZATION}}
-- apiVersion: autoscaling/v2beta1
+        target:
+          type: Utilization
+          averageUtilization: ${{CELERY_TARGET_AVERAGE_CPU_UTILIZATION}}
+- apiVersion: autoscaling/v2
   kind: HorizontalPodAutoscaler
   metadata:
     name: cloudigrade-metrics-cpu
@@ -1217,7 +1221,9 @@ objects:
     - type: Resource
       resource:
         name: cpu
-        targetAverageUtilization: ${{CELERY_METRICS_TARGET_AVERAGE_CPU_UTILIZATION}}
+        target:
+          type: Utilization
+          averageUtilization: ${{CELERY_METRICS_TARGET_AVERAGE_CPU_UTILIZATION}}
 
 parameters:
 #
