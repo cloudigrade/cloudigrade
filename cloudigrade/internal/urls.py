@@ -103,6 +103,7 @@ urlpatterns += [
 
 # URL patterns for potentially-destructive custom commands.
 urlpatterns += [
+    path("cache/<str:key>/", views.cache_keys, name="internal-cache"),
     path(
         "delete_cloud_accounts_not_in_sources/",
         views.delete_cloud_accounts_not_in_sources,

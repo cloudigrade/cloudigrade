@@ -3,7 +3,8 @@ import logging
 
 from dateutil import tz
 from dateutil.parser import parse
-from django.http import JsonResponse
+from django.core.cache import cache
+from django.http import Http404, JsonResponse
 from django.utils.translation import gettext as _
 from rest_framework import exceptions, permissions, status
 from rest_framework.decorators import (
@@ -305,6 +306,38 @@ def recalculate_concurrent_usage(request):
         )
 
     return Response(status=status.HTTP_202_ACCEPTED)
+
+
+@api_view(["GET", "POST"])
+@authentication_classes([IdentityHeaderAuthenticationInternal])
+@permission_classes([permissions.AllowAny])
+@schema(None)
+def cache_keys(request, key):
+    """Post or Get Cloudigrade cache keys."""
+    method = request.method.lower()
+    if method == "get":
+        """Get a single cache key."""
+        value = cache.get(key)
+        if not value:
+            raise Http404
+        else:
+            return Response(content_type="text/plain", data=value)
+    elif method == "post":
+        """Post a single cache key."""
+        value = request.data.get("value")
+        if not value:
+            raise exceptions.ValidationError(detail="value field is required")
+        timeout = request.data.get("timeout")
+
+        logger.info(
+            _("Setting Cache key='%(key)s', timeout=%(timeout)s"),
+            {"key": key, "timeout": timeout},
+        )
+        if timeout:
+            cache.set(key, value, timeout=int(timeout))
+        else:
+            cache.set(key, value)
+        return Response(data=None)
 
 
 class ProblematicRunList(APIView):
