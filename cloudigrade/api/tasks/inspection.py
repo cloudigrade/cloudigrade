@@ -44,7 +44,17 @@ def persist_inspection_cluster_results_task():
             _('Processing inspection results notification with id "%s"'), message_id
         )
 
+        if _is_s3_testevent_message(message_body):
+            logger.info(_("s3:TestEvent message received: %s"), message_body)
+            aws.delete_messages_from_queue(queue_url, [message])
+            continue
+
         inspection_results = _fetch_inspection_results(message)
+        if not inspection_results:
+            logger.error(
+                _("No inspection results found for SQS message: %s"), message_body
+            )
+
         for inspection_result in inspection_results:
             if inspection_result.get(CLOUD_KEY) == CLOUD_TYPE_AWS:
                 try:
@@ -71,6 +81,17 @@ def persist_inspection_cluster_results_task():
         logger.info("No inspection results found.")
 
     return successes, failures
+
+
+def _is_s3_testevent_message(message):
+    """Determine if the message is an s3:TestEvent."""
+    try:
+        content = json.loads(message)
+        return content["Service"] == "Amazon S3" and content["Event"] == "s3:TestEvent"
+    except:  # noqa: E722
+        # We really do not care if we can't parse it because
+        # that still means it's not an S3 test message.
+        return False
 
 
 def _fetch_inspection_results(message):
