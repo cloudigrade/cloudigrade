@@ -266,9 +266,12 @@ def _parse_aws_account_id(key):
     r = re.match(r"^AWSLogs/(?P<aws_account_id>[^/]+)/.*$", key)
     if r:
         aws_account_id = r.group("aws_account_id")
-        is_valid = AwsCloudAccount.objects.filter(
-            aws_account_id=aws_account_id
-        ).exists()
+        try:
+            is_valid = AwsCloudAccount.objects.filter(
+                aws_account_id=aws_account_id
+            ).exists()
+        except Exception:
+            is_valid = False
         return aws_account_id, is_valid
     return None, False
 
