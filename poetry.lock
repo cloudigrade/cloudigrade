@@ -885,7 +885,7 @@ python-versions = "*"
 
 [[package]]
 name = "faker"
-version = "13.13.1"
+version = "13.14.0"
 description = "Faker is a Python package that generates fake data for you."
 category = "main"
 optional = false
@@ -2537,7 +2537,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "09a2af90112192ac21ccb8f55fc4c8cdd87581cf81d35b22293cd142be471cab"
+content-hash = "37b3ed9cd851e4c445b98141b24df66e54e1e3ab7c18612d0e8487078351a23e"
 
 [metadata.files]
 adal = [
@@ -3007,8 +3007,8 @@ executing = [
     {file = "executing-0.8.3.tar.gz", hash = "sha256:c6554e21c6b060590a6d3be4b82fb78f8f0194d809de5ea7df1c093763311501"},
 ]
 faker = [
-    {file = "Faker-13.13.1-py3-none-any.whl", hash = "sha256:f26d110d65b447014724fa5c573e1af42ba3e05fb830a7280ce5b4f381346b34"},
-    {file = "Faker-13.13.1.tar.gz", hash = "sha256:0458c5a08e1bda4e0b13069d64af7b3a910c49aa2c698aef15098b821d40f660"},
+    {file = "Faker-13.14.0-py3-none-any.whl", hash = "sha256:0297b7fc0f2458dfff8d5a92335c62fa25fb059f8cbaf7db580a0dd7177aff2e"},
+    {file = "Faker-13.14.0.tar.gz", hash = "sha256:b9f93ec97a70da79d43f497aa7b2b7d2bcd5d0c6d3ab7c102dde4193d0a38351"},
 ]
 fastjsonschema = [
     {file = "fastjsonschema-2.15.3-py3-none-any.whl", hash = "sha256:ddb0b1d8243e6e3abb822bd14e447a89f4ab7439342912d590444831fa00b6a0"},
