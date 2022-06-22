@@ -39,7 +39,21 @@ class CacheViewTest(TestCase):
 
         response = cache_keys(request, key)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data, value)
+        self.assertEqual(response.data["value"], value)
+
+    def test_cache_get_success_with_timeout(self):
+        """Test get of a key returns the key, its value and timeout."""
+        key = _faker.word()
+        value = _faker.slug()
+        timeout = _faker.random_int(min=600, max=3600)
+        cache.set(key, value, timeout)
+        request = self.factory.get(f"/cache/{key}")
+
+        response = cache_keys(request, key)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["key"], key)
+        self.assertEqual(response.data["value"], value)
+        self.assertTrue(timeout - 2 <= response.data["timeout"] <= timeout)
 
     def test_cache_set_missing_value(self):
         """Test cache set with missing value."""
