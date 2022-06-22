@@ -24,6 +24,7 @@ from internal.authentication import (
     IdentityHeaderAuthenticationInternal,
 )
 from util import exceptions as util_exceptions
+from util.cache import get_cache_key_timeout
 from util.redhatcloud import identity
 
 logger = logging.getLogger(__name__)
@@ -321,7 +322,12 @@ def cache_keys(request, key):
         if not value:
             raise Http404
         else:
-            return Response(content_type="text/plain", data=value)
+            data = {
+                "key": key,
+                "value": value,
+                "timeout": get_cache_key_timeout(key),
+            }
+            return Response(data=data)
     elif method == "post":
         """Post a single cache key."""
         value = request.data.get("value")

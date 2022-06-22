@@ -82,6 +82,7 @@ THIRD_PARTY_APPS = [
     "rest_framework.authtoken",
     "django_filters",
     "django_prometheus",
+    "django_redis",
     "generic_relations",
     "health_check",
     "health_check.db",
