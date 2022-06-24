@@ -16,7 +16,8 @@ RUN rpm -iv https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/p
         redhat-rpm-config \
         shadow-utils \
         which \
-    && if [[ ! -e /usr/bin/python ]]; then ln -sf /usr/bin/python3.9 /usr/bin/python; fi
+    && if [[ ! -e /usr/bin/python ]]; then ln -sf /usr/bin/python3.9 /usr/bin/python; fi \
+    && /usr/bin/pip3 install -U pip
 
 
 ### Build virtualenv
