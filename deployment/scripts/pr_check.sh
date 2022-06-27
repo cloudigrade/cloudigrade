@@ -4,7 +4,7 @@
 export APP_NAME="cloudigrade"  # name of app-sre "application" folder this component lives in
 export COMPONENT_NAME="cloudigrade"  # name of app-sre "resourceTemplate" in deploy.yaml for this component
 export IMAGE="quay.io/cloudservices/cloudigrade"  # the image location on quay
-export DEPLOY_TIMEOUT="420"  # give components a bit more time to deploy
+export DEPLOY_TIMEOUT="600"  # give components a bit more time to deploy
 
 # IQE Plugin Config
 export IQE_PLUGINS="cloudmeter"  # name of the IQE plugin for this APP
