@@ -396,6 +396,25 @@ class GetOrCreateUserMethodTests(TestCase):
         )
         self.assertEqual(user, self.user1)
 
+    def test_get_with_account_number_and_org_id_user_exists_with_only_account_number(
+        self,
+    ):
+        """
+        Test to get user object by account_number and org_id when one exists.
+
+        Unlike test_get_with_account_number_and_org_id, though, the existing user does
+        not have an org_id. This simulates the situation when we have an old user
+        but we failed to migrate and populate its org_id.
+        """
+        org_id = self.user1_org_id
+        self.user1.org_id = None
+        self.user1.save()
+        user = get_or_create_user(
+            account_number=self.user1_account_number, org_id=org_id
+        )
+        self.assertEqual(user, self.user1)
+        self.assertIsNone(self.user1.org_id)  # note that we didn't update it
+
     def test_get_with_account_number(self):
         """Test to get user object by account_number."""
         user = get_or_create_user(account_number=self.user2_account_number, org_id=None)

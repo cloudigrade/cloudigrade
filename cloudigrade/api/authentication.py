@@ -126,7 +126,7 @@ def get_or_create_user(account_number, org_id):
     with transaction.atomic():
         if account_number and org_id:
             user, created = User.objects.get_or_create(
-                account_number=account_number, org_id=org_id
+                account_number=account_number, defaults={"org_id": org_id}
             )
         elif account_number:
             user, created = User.objects.get_or_create(account_number=account_number)
