@@ -1113,6 +1113,12 @@ objects:
           value: ${CACHE_TTL_DEFAULT}
         - name: CACHE_TTL_SOURCES_APPLICATION_TYPE_ID
           value: ${CACHE_TTL_SOURCES_APPLICATION_TYPE_ID}
+        - name: TENANT_TRANSLATOR_HOST
+          value: ${TENANT_TRANSLATOR_HOST}
+        - name: TENANT_TRANSLATOR_PORT
+          value: ${TENANT_TRANSLATOR_PORT}
+        - name: TENANT_TRANSLATOR_SCHEME
+          value: ${TENANT_TRANSLATOR_SCHEME}
         - name: WATCHTOWER_USE_QUEUES
           value: ${WATCHTOWER_USE_QUEUES}
         - name: WATCHTOWER_SEND_INTERVAL
@@ -1410,18 +1416,6 @@ parameters:
   displayName: Postigrade Port
   required: true
   value: '5432'
-- description: Host for the EAN to OrgId translator.
-  name: TENANT_TRANSLATOR_HOST
-  required: true
-  value: 'apicast.3scale-dev.svc.cluster.local'
-- description: Port for the EAN to OrgId translator.
-  name: TENANT_TRANSLATOR_PORT
-  required: true
-  value: '8892'
-- description: Scheme for the EAN to OrgId translator.
-  name: TENANT_TRANSLATOR_SCHEME
-  required: true
-  value: 'http'
 - name: VERBOSE_INSIGHTS_IDENTITY_HEADER_LOGGING
   displayName: Enable verbose Insights identity header logging
   required: true
@@ -1851,6 +1845,18 @@ parameters:
   displayName: Enable verbose sources notification logging
   required: true
   value: 'false'
+- description: Host for the EAN to OrgId translator.
+  name: TENANT_TRANSLATOR_HOST
+  required: true
+  value: 'apicast.3scale-dev.svc.cluster.local'
+- description: Port for the EAN to OrgId translator.
+  name: TENANT_TRANSLATOR_PORT
+  required: true
+  value: '8892'
+- description: Scheme for the EAN to OrgId translator.
+  name: TENANT_TRANSLATOR_SCHEME
+  required: true
+  value: 'http'
 - name: WATCHTOWER_MAX_BATCH_COUNT
   displayName: Watchtower max batch count
   required: true
