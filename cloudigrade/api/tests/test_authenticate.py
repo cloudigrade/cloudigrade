@@ -412,8 +412,9 @@ class GetOrCreateUserMethodTests(TestCase):
         user = get_or_create_user(
             account_number=self.user1_account_number, org_id=org_id
         )
+        self.user1.refresh_from_db()
         self.assertEqual(user, self.user1)
-        self.assertIsNone(self.user1.org_id)  # note that we didn't update it
+        self.assertEqual(self.user1.org_id, org_id)  # and we updated that user
 
     def test_get_with_account_number(self):
         """Test to get user object by account_number."""
