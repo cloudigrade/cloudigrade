@@ -146,6 +146,9 @@ def get_or_create_user(account_number, org_id):
             from api.models import UserTaskLock  # local import to avoid loop
 
             UserTaskLock.objects.get_or_create(user=user)
+        elif org_id and not user.org_id:
+            user.org_id = org_id
+            user.save()
     return user
 
 
