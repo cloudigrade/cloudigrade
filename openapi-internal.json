@@ -449,15 +449,6 @@
             }
           },
           {
-            "name": "org_id",
-            "required": false,
-            "in": "query",
-            "description": "org_id",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
             "name": "date_joined__lt",
             "required": false,
             "in": "query",
@@ -480,6 +471,33 @@
             "required": false,
             "in": "query",
             "description": "date_joined__gt",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "org_id",
+            "required": false,
+            "in": "query",
+            "description": "org_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "uuid",
+            "required": false,
+            "in": "query",
+            "description": "uuid",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "username",
+            "required": false,
+            "in": "query",
+            "description": "username",
             "schema": {
               "type": "string"
             }
@@ -572,15 +590,6 @@
             }
           },
           {
-            "name": "org_id",
-            "required": false,
-            "in": "query",
-            "description": "org_id",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
             "name": "date_joined__lt",
             "required": false,
             "in": "query",
@@ -603,6 +612,33 @@
             "required": false,
             "in": "query",
             "description": "date_joined__gt",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "org_id",
+            "required": false,
+            "in": "query",
+            "description": "org_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "uuid",
+            "required": false,
+            "in": "query",
+            "description": "uuid",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "username",
+            "required": false,
+            "in": "query",
+            "description": "username",
             "schema": {
               "type": "string"
             }
@@ -7223,6 +7259,10 @@
           "uuid": {
             "type": "string",
             "maxLength": 150
+          },
+          "username": {
+            "type": "string",
+            "readOnly": true
           },
           "account_number": {
             "type": "string",

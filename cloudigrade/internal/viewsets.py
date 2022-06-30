@@ -98,11 +98,7 @@ class InternalUserViewSet(InternalViewSetMixin, viewsets.ReadOnlyModelViewSet):
 
     queryset = User.objects.all()
     serializer_class = serializers.InternalUserSerializer
-    filterset_fields = {
-        "account_number": ["exact"],
-        "org_id": ["exact"],
-        "date_joined": ["lt", "exact", "gt"],
-    }
+    filterset_class = filters.InternalUserFilterSet
 
 
 class InternalUserTaskLockViewSet(
