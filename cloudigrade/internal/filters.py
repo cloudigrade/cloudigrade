@@ -64,6 +64,21 @@ class InternalInstanceEventFilterSet(django_filters.FilterSet):
         }
 
 
+class InternalUserFilterSet(django_filters.FilterSet):
+    """FilterSet for limiting api.User for the internal API."""
+
+    username = django_filters.CharFilter(field_name="account_number")
+
+    class Meta:
+        model = models.User
+        fields = {
+            "account_number": ["exact"],
+            "date_joined": ["lt", "exact", "gt"],
+            "org_id": ["exact"],
+            "uuid": ["exact"],
+        }
+
+
 class InternalRunFilterSet(django_filters.FilterSet):
     """FilterSet for limiting Runs for the internal API."""
 

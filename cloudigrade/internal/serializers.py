@@ -3,7 +3,7 @@ from django.utils.translation import gettext as _
 from django_celery_beat.models import PeriodicTask
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-from rest_framework.fields import BooleanField
+from rest_framework.fields import BooleanField, CharField
 from rest_framework.serializers import ModelSerializer
 
 from api import models
@@ -15,12 +15,16 @@ from api.models import User
 class InternalUserSerializer(ModelSerializer):
     """Serialize User for the internal API."""
 
+    # Include the account_number in the "username" field for backward compatability.
+    username = CharField(source="account_number", read_only=True)
+
     class Meta:
         model = User
         fields = (
             "date_joined",
             "id",
             "uuid",
+            "username",
             "account_number",
             "org_id",
         )
