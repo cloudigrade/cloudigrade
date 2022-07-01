@@ -9,6 +9,7 @@ from django.core.management import BaseCommand
 from django.utils.translation import gettext as _
 
 from api.tasks import sources
+from util.redhatcloud.sources import update_kafka_sasl_config
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +47,7 @@ class Command(BaseCommand):
             {"consumer_conf": consumer_conf},
         )
 
-        consumer = Consumer(consumer_conf)
+        consumer = Consumer(update_kafka_sasl_config(consumer_conf))
 
         try:
             logger.info(
