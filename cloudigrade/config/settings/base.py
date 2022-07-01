@@ -640,24 +640,20 @@ CLOUDIGRADE_ORG_ID_HEADER = "HTTP_X_RH_CLOUDIGRADE_ORG_ID"
 #####################################################################
 # Kafka
 
-# TODO: Rename "LISTENER" variables with more general-purpose names.
-# Originally, cloudigrade only read messages from Kafka, but now it also produces them,
-# and the "LISTENER" nomenclature is leftover from an older version of its code.
-
 # Sources/Kafka Listener Values
 LISTENER_TOPIC = env("LISTENER_TOPIC", default="platform.sources.event-stream")
 LISTENER_GROUP_ID = env("LISTENER_GROUP_ID", default="cloudmeter_ci")
 
 if isClowderEnabled():
     kafka_broker = clowder_cfg.kafka.brokers[0]
-    LISTENER_SERVER = kafka_broker.hostname
-    LISTENER_PORT = kafka_broker.port
-    __print(f"Clowder: Listener server: {LISTENER_SERVER}:{LISTENER_PORT}")
+    KAFKA_SERVER_HOST = kafka_broker.hostname
+    KAFKA_SERVER_PORT = kafka_broker.port
+    __print(f"Clowder: Kafka server: {KAFKA_SERVER_HOST}:{KAFKA_SERVER_PORT}")
 else:
-    LISTENER_SERVER = env(
-        "LISTENER_SERVER", default="platform-mq-ci-kafka-bootstrap.platform-mq-ci.svc"
+    KAFKA_SERVER_HOST = env(
+        "KAFKA_SERVER_HOST", default="platform-mq-ci-kafka-bootstrap.platform-mq-ci.svc"
     )
-    LISTENER_PORT = env.int("LISTENER_PORT", default=9092)
+    KAFKA_SERVER_PORT = env.int("KAFKA_SERVER_PORT", default=9092)
 
 #####################################################################
 # Sources API integration
