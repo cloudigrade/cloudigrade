@@ -1,3 +1,4 @@
+import base64
 import json
 import os
 import random
@@ -60,7 +61,7 @@ def assert_status(response, status_code):
     """Assert the response has the expected status code."""
     assert (
         response.status_code == status_code
-    ), f"{response} should have status {status_code}"
+    ), f"{response} should have status {status_code}; {response.data}"
 
 
 class DocsApiHandler(object):
@@ -78,10 +79,28 @@ class DocsApiHandler(object):
         self.customer_user.date_joined = util_helper.utc_dt(2019, 1, 1, 0, 0, 0)
         self.customer_user.save()
 
+        self.x_rh_identity = util_helper.get_identity_auth_header(
+            self.customer_account_number
+        ).decode("utf-8")
+
+        # Create the fake HTTP clients
+        # Anonymous client has no authentication.
         self.anonymous_client = api_helper.SandboxedRestClient()
+        # Customer client has its user and identity header ready for all requests.
         self.customer_client = api_helper.SandboxedRestClient()
-        self.customer_client._force_authenticate(self.customer_user)
+        self.customer_client._force_authenticate(
+            self.customer_user, {"HTTP_X_RH_IDENTITY": self.x_rh_identity}
+        )
+        # Internal client has its user and identity header ready for all requests.
         self.internal_client = api_helper.SandboxedRestClient(
+            api_root="/internal/api/cloudigrade/v1"
+        )
+        self.internal_client._force_authenticate(
+            self.customer_user, {"HTTP_X_RH_IDENTITY": self.x_rh_identity}
+        )
+        # Another internal client has its user but no default identity header.
+        # Manually set other x-rh-cloudigrade-* headers on individual requests.
+        self.internal_client_no_rh_identity = api_helper.SandboxedRestClient(
             api_root="/internal/api/cloudigrade/v1"
         )
         self.internal_client._force_authenticate(self.customer_user)
@@ -209,9 +228,11 @@ class DocsApiHandler(object):
 
         ########################
         # V2 endpoints
-        responses["v2_rh_identity"] = util_helper.RH_IDENTITY_ORG_ADMIN
+        responses["v2_rh_identity"] = json.loads(
+            base64.b64decode(self.x_rh_identity.encode("utf-8")).decode("utf-8")
+        )
         # convert from binary string to string.
-        responses["v2_header"] = util_helper.get_identity_auth_header().decode("utf-8")
+        responses["v2_header"] = self.x_rh_identity
 
         #######################
         # Report Commands
@@ -336,6 +357,7 @@ class DocsApiHandler(object):
         psk = str(_faker.uuid4())
         account_number = str(_faker.random_int(min=10000, max=999999))
         org_id = str(_faker.random_int(min=10000, max=999999))
+
         responses["internal_psk"] = psk
         responses["internal_account_number"] = account_number
         responses["internal_org_id"] = org_id
@@ -377,6 +399,16 @@ class DocsApiHandler(object):
         response = self.internal_client.create_accounts(data=azure_cloud_account_data)
         assert_status(response, 201)
         responses["internal_account_create_azure"] = response
+
+        # List users filtered to specific account_number
+        # using another custom X-RH- header, not the typical X-RH-IDENTITY.
+        with override_settings(CLOUDIGRADE_PSKS={"docs": psk}):
+            response = self.internal_client_no_rh_identity.get_users(
+                data={"account_number": self.customer_user.account_number},
+                HTTP_X_RH_CLOUDIGRADE_PSK=psk,
+            )
+        assert_status(response, 200)
+        responses["internal_user_list_filtered_by_account_number"] = response
 
         return responses
 

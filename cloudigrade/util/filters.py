@@ -43,7 +43,7 @@ def stringify_http_response(response):
     return fulltext
 
 
-def httpied_command(wsgi_request, anonymous=False):
+def httpied_command(wsgi_request):
     """Construct an `httpie` command line string for the given request."""
     verb = wsgi_request.method.lower()
     url = wsgi_request.build_absolute_uri()
@@ -55,8 +55,12 @@ def httpied_command(wsgi_request, anonymous=False):
 
     linewrap = " \\\n    "
 
-    if not anonymous:
-        cli_text += f'{linewrap}"X-RH-IDENTITY:${{HTTP_X_RH_IDENTITY}}"'
+    for key in wsgi_request.headers.keys():
+        key = key.upper()
+        if key.startswith("X-"):
+            # Assumes X-* headers will be set using variables named HTTP_X_*.
+            env_var_name = f"HTTP_{key.replace('-','_')}"
+            cli_text += f'{linewrap}"{key}:${{{env_var_name}}}"'
 
     for key, value in wsgi_request.GET.items():
         cli_text += f'{linewrap}{key}=="{value}"'

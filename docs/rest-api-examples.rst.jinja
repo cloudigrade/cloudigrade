@@ -268,7 +268,7 @@ The Azure Offer Template endpoint returns a json template populated with current
 
 Request:
 
-{{ v2_get_azure_offer.wsgi_request | httpied_command(anonymous=True) | rst_codeblock("bash") }}
+{{ v2_get_azure_offer.wsgi_request | httpied_command() | rst_codeblock("bash") }}
 
 Response:
 
@@ -324,3 +324,17 @@ Request:
 Response:
 
 {{ internal_account_create_azure | stringify_http_response | rst_codeblock }}
+
+
+Search for a user
+~~~~~~~~~~~~~~~~~
+
+To search for and retrieve a user, you may filter using "account_number", "username"
+(which simply maps to the account_number for backward compatibility), or "org_id".
+
+Request:
+
+{{ internal_user_list_filtered_by_account_number.wsgi_request |  httpied_command() | rst_codeblock("bash") }}
+
+
+{{ internal_user_list_filtered_by_account_number | stringify_http_response | rst_codeblock }}
