@@ -304,7 +304,7 @@ def notify_application_availability(
                 _("Instantiating KafkaProducer with %(sources_kafka_config)s"),
                 {"sources_kafka_config": sources_kafka_config},
             )
-        kafka_producer = KafkaProducer(sources_kafka_config)
+        kafka_producer = KafkaProducer(update_kafka_sasl_config(sources_kafka_config))
 
         message_headers = generate_sources_headers(
             account_number, org_id, include_psk=False
@@ -396,3 +396,21 @@ def generate_sources_headers(account_number, org_id, include_psk=True):
             headers["x-rh-sources-psk"] = settings.SOURCES_PSK
 
     return headers
+
+
+def update_kafka_sasl_config(kafka_config):
+    """Update a kafka consumer or producer configure with the sasl information."""
+    if settings.KAFKA_SERVER_CA_LOCATION:
+        kafka_config["ssl.ca.location"] = settings.KAFKA_SERVER_CA_LOCATION
+
+    if settings.KAFKA_SERVER_SASL_USERNAME:
+        kafka_config.update(
+            {
+                "security.protocol": "sasl_ssl",
+                "sasl.mechanism": "SCRAM-SHA-512",
+                "sasl.username": settings.KAFKA_SERVER_SASL_USERNAME,
+                "sasl.password": settings.KAFKA_SERVER_SASL_PASSWORD,
+            }
+        )
+
+    return kafka_config

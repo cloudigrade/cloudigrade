@@ -18,6 +18,7 @@ from util.redhatcloud.sources import extract_ids_from_kafka_message
 from util.redhatcloud.sources import generate_sources_headers
 from util.redhatcloud.sources import get_sources_account_number_from_headers
 from util.redhatcloud.sources import get_sources_org_id_from_headers
+from util.redhatcloud.sources import update_kafka_sasl_config
 from util.tests.helper import generate_sources_kafka_message_identity_headers
 
 _faker = faker.Faker()
@@ -34,6 +35,9 @@ class SourcesTest(TestCase):
         self.application_id = _faker.pyint()
         self.kafka_server_host = _faker.hostname()
         self.kafka_server_port = str(_faker.pyint())
+        self.kafka_ca_location = _faker.file_path(depth=2)
+        self.kafka_sasl_username = _faker.slug()
+        self.kafka_sasl_password = _faker.slug()
         self.platform_id = _faker.pyint()
         self.sources_resource_type = _faker.slug()
         self.sources_kafka_topic = _faker.slug()
@@ -592,3 +596,34 @@ class SourcesTest(TestCase):
         self.assertEqual(account_number, sources_account_number)
         self.assertIsNone(org_id)
         self.assertIsNone(platform_id)
+
+    def test_kafka_sasl_config_properly_updated_and_returned(self):
+        """Test that the SASL Kafka config is properly updated and returned."""
+        kafka_config = {
+            "bootstrap.servers": (f"{self.kafka_server_host}:{self.kafka_server_port}")
+        }
+
+        with override_settings(
+            KAFKA_SERVER_CA_LOCATION=self.kafka_ca_location,
+            KAFKA_SERVER_SASL_USERNAME=self.kafka_sasl_username,
+            KAFKA_SERVER_SASL_PASSWORD=self.kafka_sasl_password,
+        ):
+            updated_kafka_config = update_kafka_sasl_config(kafka_config)
+
+        self.assertDictContainsSubset(
+            {
+                "ssl.ca.location": self.kafka_ca_location,
+                "sasl.username": self.kafka_sasl_username,
+                "sasl.password": self.kafka_sasl_password,
+            },
+            kafka_config,
+        )
+
+        self.assertDictContainsSubset(
+            {
+                "ssl.ca.location": self.kafka_ca_location,
+                "sasl.username": self.kafka_sasl_username,
+                "sasl.password": self.kafka_sasl_password,
+            },
+            updated_kafka_config,
+        )
