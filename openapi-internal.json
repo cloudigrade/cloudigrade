@@ -1169,6 +1169,24 @@
             }
           },
           {
+            "name": "account_number",
+            "required": false,
+            "in": "query",
+            "description": "account_number",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "org_id",
+            "required": false,
+            "in": "query",
+            "description": "org_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "username",
             "required": false,
             "in": "query",
@@ -1382,6 +1400,24 @@
             }
           },
           {
+            "name": "account_number",
+            "required": false,
+            "in": "query",
+            "description": "account_number",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "org_id",
+            "required": false,
+            "in": "query",
+            "description": "org_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "username",
             "required": false,
             "in": "query",
@@ -1547,6 +1583,24 @@
             }
           },
           {
+            "name": "account_number",
+            "required": false,
+            "in": "query",
+            "description": "account_number",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "org_id",
+            "required": false,
+            "in": "query",
+            "description": "org_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "username",
             "required": false,
             "in": "query",
@@ -1666,6 +1720,24 @@
             "required": false,
             "in": "query",
             "description": "updated_at__gt",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "account_number",
+            "required": false,
+            "in": "query",
+            "description": "account_number",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "org_id",
+            "required": false,
+            "in": "query",
+            "description": "org_id",
             "schema": {
               "type": "string"
             }
@@ -1848,6 +1920,24 @@
             }
           },
           {
+            "name": "account_number",
+            "required": false,
+            "in": "query",
+            "description": "account_number",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "org_id",
+            "required": false,
+            "in": "query",
+            "description": "org_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "running_since",
             "required": false,
             "in": "query",
@@ -1988,6 +2078,24 @@
             "required": false,
             "in": "query",
             "description": "updated_at__gt",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "account_number",
+            "required": false,
+            "in": "query",
+            "description": "account_number",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "org_id",
+            "required": false,
+            "in": "query",
+            "description": "org_id",
             "schema": {
               "type": "string"
             }
@@ -2170,6 +2278,24 @@
             "required": false,
             "in": "query",
             "description": "updated_at__gt",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "account_number",
+            "required": false,
+            "in": "query",
+            "description": "account_number",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "org_id",
+            "required": false,
+            "in": "query",
+            "description": "org_id",
             "schema": {
               "type": "string"
             }
@@ -2702,6 +2828,24 @@
             }
           },
           {
+            "name": "account_number",
+            "required": false,
+            "in": "query",
+            "description": "account_number",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "org_id",
+            "required": false,
+            "in": "query",
+            "description": "org_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "username",
             "required": false,
             "in": "query",
@@ -2946,6 +3090,24 @@
             "required": false,
             "in": "query",
             "description": "updated_at__gt",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "account_number",
+            "required": false,
+            "in": "query",
+            "description": "account_number",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "org_id",
+            "required": false,
+            "in": "query",
+            "description": "org_id",
             "schema": {
               "type": "string"
             }
@@ -3336,6 +3498,24 @@
             }
           },
           {
+            "name": "account_number",
+            "required": false,
+            "in": "query",
+            "description": "account_number",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "org_id",
+            "required": false,
+            "in": "query",
+            "description": "org_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "username",
             "required": false,
             "in": "query",
@@ -3508,6 +3688,24 @@
             "required": false,
             "in": "query",
             "description": "updated_at__gt",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "account_number",
+            "required": false,
+            "in": "query",
+            "description": "account_number",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "org_id",
+            "required": false,
+            "in": "query",
+            "description": "org_id",
             "schema": {
               "type": "string"
             }
@@ -4680,6 +4878,24 @@
             }
           },
           {
+            "name": "account_number",
+            "required": false,
+            "in": "query",
+            "description": "account_number",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "org_id",
+            "required": false,
+            "in": "query",
+            "description": "org_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "username",
             "required": false,
             "in": "query",
@@ -4834,6 +5050,24 @@
             "required": false,
             "in": "query",
             "description": "updated_at__gt",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "account_number",
+            "required": false,
+            "in": "query",
+            "description": "account_number",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "org_id",
+            "required": false,
+            "in": "query",
+            "description": "org_id",
             "schema": {
               "type": "string"
             }
@@ -6146,6 +6380,24 @@
             }
           },
           {
+            "name": "account_number",
+            "required": false,
+            "in": "query",
+            "description": "account_number",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "org_id",
+            "required": false,
+            "in": "query",
+            "description": "org_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "username",
             "required": false,
             "in": "query",
@@ -6291,6 +6543,24 @@
             "required": false,
             "in": "query",
             "description": "updated_at__gt",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "account_number",
+            "required": false,
+            "in": "query",
+            "description": "account_number",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "org_id",
+            "required": false,
+            "in": "query",
+            "description": "org_id",
             "schema": {
               "type": "string"
             }
