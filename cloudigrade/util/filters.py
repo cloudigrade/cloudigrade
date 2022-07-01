@@ -43,7 +43,7 @@ def stringify_http_response(response):
     return fulltext
 
 
-def httpied_command(wsgi_request, version=1, public=False):
+def httpied_command(wsgi_request, anonymous=False):
     """Construct an `httpie` command line string for the given request."""
     verb = wsgi_request.method.lower()
     url = wsgi_request.build_absolute_uri()
@@ -53,15 +53,11 @@ def httpied_command(wsgi_request, version=1, public=False):
     else:
         cli_text = " ".join(["http", verb, url])
 
-    if not public:
-        if version == 2:
-            cli_text += ' "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}"'
-        else:
-            if getattr(wsgi_request, "user", None):
-                print(getattr(wsgi_request, "user", None))
-                cli_text += ' "${AUTH}"'
-
     linewrap = " \\\n    "
+
+    if not anonymous:
+        cli_text += f'{linewrap}"X-RH-IDENTITY:${{HTTP_X_RH_IDENTITY}}"'
+
     for key, value in wsgi_request.GET.items():
         cli_text += f'{linewrap}{key}=="{value}"'
     for key, value in wsgi_request.POST.items():

@@ -83,7 +83,7 @@ List all accounts
 
 Request:
 
-{{ v2_account_list.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
+{{ v2_account_list.wsgi_request | httpied_command() | rst_codeblock("bash") }}
 
 Response:
 
@@ -95,7 +95,7 @@ Retrieve a specific account
 
 Request:
 
-{{ v2_account_get.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
+{{ v2_account_get.wsgi_request | httpied_command() | rst_codeblock("bash") }}
 
 Response:
 
@@ -110,7 +110,7 @@ List all instances
 
 Request:
 
-{{ v2_instance_list.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
+{{ v2_instance_list.wsgi_request | httpied_command() | rst_codeblock("bash") }}
 
 Response:
 
@@ -122,7 +122,7 @@ Retrieve a specific instance
 
 Request:
 
-{{ v2_instance_get.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
+{{ v2_instance_get.wsgi_request | httpied_command() | rst_codeblock("bash") }}
 
 Response:
 
@@ -137,7 +137,7 @@ instances that have been running uninterrupted since the given time.
 
 Request:
 
-{{ v2_instance_filter_running.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
+{{ v2_instance_filter_running.wsgi_request | httpied_command() | rst_codeblock("bash") }}
 
 Response:
 
@@ -154,7 +154,7 @@ Below command will return all images that have been seen used by any instance fo
 
 Request:
 
-{{ v2_list_images.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
+{{ v2_list_images.wsgi_request | httpied_command() | rst_codeblock("bash") }}
 
 Response:
 
@@ -166,7 +166,7 @@ Retrieve a specific image
 
 Request:
 
-{{ v2_get_image.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
+{{ v2_get_image.wsgi_request | httpied_command() | rst_codeblock("bash") }}
 
 Response:
 
@@ -193,7 +193,7 @@ reporting period. If not defined, default is "today".
 
 Request:
 
-{{ v2_list_concurrent.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
+{{ v2_list_concurrent.wsgi_request | httpied_command() | rst_codeblock("bash") }}
 
 Response:
 
@@ -204,7 +204,7 @@ dates that not completed their calculations, the server will return ``425 Too Ea
 
 Request:
 
-{{ v2_list_concurrent_too_early.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
+{{ v2_list_concurrent_too_early.wsgi_request | httpied_command() | rst_codeblock("bash") }}
 
 Response:
 
@@ -216,7 +216,7 @@ Daily max concurrency results will end "yesterday" at the latest.
 
 Request:
 
-{{ v2_list_concurrent_partial_future.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
+{{ v2_list_concurrent_partial_future.wsgi_request | httpied_command() | rst_codeblock("bash") }}
 
 Response:
 
@@ -228,7 +228,7 @@ future dates beyond "yesterday", the API will also return a 400 with the relevan
 
 Request:
 
-{{ v2_list_concurrent_all_future.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
+{{ v2_list_concurrent_all_future.wsgi_request | httpied_command() | rst_codeblock("bash") }}
 
 Response:
 
@@ -239,7 +239,7 @@ If your requested ``end_date`` value is not greater then that of the user
 
 Request:
 
-{{ v2_list_concurrent_past_end_date.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
+{{ v2_list_concurrent_past_end_date.wsgi_request | httpied_command() | rst_codeblock("bash") }}
 
 Response:
 
@@ -255,7 +255,7 @@ The sysconfig endpoint includes the AWS cloud account id used by the application
 
 Request:
 
-{{ v2_get_sysconfig.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
+{{ v2_get_sysconfig.wsgi_request | httpied_command() | rst_codeblock("bash") }}
 
 Response:
 
@@ -268,7 +268,7 @@ The Azure Offer Template endpoint returns a json template populated with current
 
 Request:
 
-{{ v2_get_azure_offer.wsgi_request | httpied_command(public=True) | rst_codeblock("bash") }}
+{{ v2_get_azure_offer.wsgi_request | httpied_command(anonymous=True) | rst_codeblock("bash") }}
 
 Response:
 
@@ -293,7 +293,7 @@ attributes are all required and should be integers.
 
 Request:
 
-{{ internal_account_create_aws.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
+{{ internal_account_create_aws.wsgi_request | httpied_command() | rst_codeblock("bash") }}
 
 Response:
 
@@ -304,7 +304,7 @@ the system, you should get a 400 error.
 
 Request:
 
-{{ internal_account_create_aws_duplicate_arn.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
+{{ internal_account_create_aws_duplicate_arn.wsgi_request | httpied_command() | rst_codeblock("bash") }}
 
 Response:
 
@@ -319,7 +319,7 @@ and "platform_source_id" attributes are all required and should be integers.
 
 Request:
 
-{{ internal_account_create_azure.wsgi_request | httpied_command(version=2) | rst_codeblock("bash") }}
+{{ internal_account_create_azure.wsgi_request | httpied_command() | rst_codeblock("bash") }}
 
 Response:
 
