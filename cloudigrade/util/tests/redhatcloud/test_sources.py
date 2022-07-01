@@ -32,8 +32,8 @@ class SourcesTest(TestCase):
         self.org_id = None
         self.authentication_id = _faker.user_name()
         self.application_id = _faker.pyint()
-        self.listener_server = _faker.hostname()
-        self.listener_port = str(_faker.pyint())
+        self.kafka_server_host = _faker.hostname()
+        self.kafka_server_port = str(_faker.pyint())
         self.platform_id = _faker.pyint()
         self.sources_resource_type = _faker.slug()
         self.sources_kafka_topic = _faker.slug()
@@ -43,7 +43,7 @@ class SourcesTest(TestCase):
             self.account_number, is_org_admin=True
         )
         self.sources_kafka_config = {
-            "bootstrap.servers": f"{self.listener_server}:{self.listener_port}"
+            "bootstrap.servers": f"{self.kafka_server_host}:{self.kafka_server_port}"
         }
         self.kafka_payload = {
             "resource_type": self.sources_resource_type,
@@ -210,8 +210,8 @@ class SourcesTest(TestCase):
         kafka_producer = mock_kafka_producer(self.sources_kafka_config)
 
         with override_settings(
-            LISTENER_SERVER=self.listener_server,
-            LISTENER_PORT=self.listener_port,
+            KAFKA_SERVER_HOST=self.kafka_server_host,
+            KAFKA_SERVER_PORT=self.kafka_server_port,
             SOURCES_STATUS_TOPIC=self.sources_kafka_topic,
             SOURCES_RESOURCE_TYPE=self.sources_resource_type,
             SOURCES_AVAILABILITY_EVENT_TYPE=self.sources_availability_event_type,
@@ -261,8 +261,8 @@ class SourcesTest(TestCase):
         kafka_producer.produce.side_effect = BufferError("bad error")
 
         with override_settings(
-            LISTENER_SERVER=self.listener_server,
-            LISTENER_PORT=self.listener_port,
+            KAFKA_SERVER_HOST=self.kafka_server_host,
+            KAFKA_SERVER_PORT=self.kafka_server_port,
             SOURCES_STATUS_TOPIC=self.sources_kafka_topic,
             SOURCES_RESOURCE_TYPE=self.sources_resource_type,
             SOURCES_AVAILABILITY_EVENT_TYPE=self.sources_availability_event_type,
@@ -297,8 +297,8 @@ class SourcesTest(TestCase):
         kafka_producer.produce.side_effect = KafkaException(KafkaError(5))
 
         with override_settings(
-            LISTENER_SERVER=self.listener_server,
-            LISTENER_PORT=self.listener_port,
+            KAFKA_SERVER_HOST=self.kafka_server_host,
+            KAFKA_SERVER_PORT=self.kafka_server_port,
             SOURCES_STATUS_TOPIC=self.sources_kafka_topic,
             SOURCES_RESOURCE_TYPE=self.sources_resource_type,
             SOURCES_AVAILABILITY_EVENT_TYPE=self.sources_availability_event_type,

@@ -278,7 +278,9 @@ def notify_application_availability(
         return
 
     sources_kafka_config = {
-        "bootstrap.servers": f"{settings.LISTENER_SERVER}:{settings.LISTENER_PORT}"
+        "bootstrap.servers": (
+            f"{settings.KAFKA_SERVER_HOST}:{settings.KAFKA_SERVER_PORT}"
+        )
     }
 
     payload = {

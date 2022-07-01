@@ -53,11 +53,11 @@ AWS_SETTINGS_TO_LOG = [
 
 # A list of Kafka settings that we want logged on app startup
 KAFKA_SETTINGS_TO_LOG = [
+    "KAFKA_SERVER_HOST",
+    "KAFKA_SERVER_PORT",
     "KAFKA_SESSION_TIMEOUT_MS",
     "LISTENER_AUTO_COMMIT",
     "LISTENER_GROUP_ID",
-    "LISTENER_PORT",
-    "LISTENER_SERVER",
     "LISTENER_TIMEOUT",
     "LISTENER_TOPIC",
     "SOURCES_API_BASE_URL",

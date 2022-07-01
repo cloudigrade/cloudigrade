@@ -374,10 +374,10 @@ Kafka Listener
 
 Several environment variables may override defaults from ``config.settings`` to configure this command:
 
+- ``KAFKA_SERVER_HOST`` - Kafka server host
+- ``KAFKA_SERVER_PORT`` -  Kafka server port
 - ``LISTENER_TOPIC`` - The topic to listen to
 - ``LISTENER_GROUP_ID`` - The listener group
-- ``LISTENER_SERVER`` - Kafka server
-- ``LISTENER_PORT`` -  Kafka server port
 - ``LISTENER_AUTO_COMMIT`` - Whether the messages being received should be marked as so
 - ``LISTENER_TIMEOUT`` - Timeout of the listener
 - ``LISTENER_PID_PATH`` - The path of the pid file

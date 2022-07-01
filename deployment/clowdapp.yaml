@@ -260,10 +260,10 @@ objects:
           value: ${LISTENER_TOPIC}
         - name: LISTENER_GROUP_ID
           value: ${LISTENER_GROUP_ID}
-        - name: LISTENER_SERVER
-          value: ${LISTENER_SERVER}
-        - name: LISTENER_PORT
-          value: ${LISTENER_PORT}
+        - name: KAFKA_SERVER_HOST
+          value: ${KAFKA_SERVER_HOST}
+        - name: KAFKA_SERVER_PORT
+          value: ${KAFKA_SERVER_PORT}
         - name: VERBOSE_INSIGHTS_IDENTITY_HEADER_LOGGING
           value: ${VERBOSE_INSIGHTS_IDENTITY_HEADER_LOGGING}
         - name: VERBOSE_SOURCES_NOTIFICATION_LOGGING
@@ -616,10 +616,10 @@ objects:
           value: ${LISTENER_TOPIC}
         - name: LISTENER_GROUP_ID
           value: ${LISTENER_GROUP_ID}
-        - name: LISTENER_SERVER
-          value: ${LISTENER_SERVER}
-        - name: LISTENER_PORT
-          value: ${LISTENER_PORT}
+        - name: KAFKA_SERVER_HOST
+          value: ${KAFKA_SERVER_HOST}
+        - name: KAFKA_SERVER_PORT
+          value: ${KAFKA_SERVER_PORT}
         - name: SOURCES_ENABLE_DATA_MANAGEMENT
           value: ${SOURCES_ENABLE_DATA_MANAGEMENT}
         - name: SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA
@@ -1056,10 +1056,10 @@ objects:
           value: ${LISTENER_TOPIC}
         - name: LISTENER_GROUP_ID
           value: ${LISTENER_GROUP_ID}
-        - name: LISTENER_SERVER
-          value: ${LISTENER_SERVER}
-        - name: LISTENER_PORT
-          value: ${LISTENER_PORT}
+        - name: KAFKA_SERVER_HOST
+          value: ${KAFKA_SERVER_HOST}
+        - name: KAFKA_SERVER_PORT
+          value: ${KAFKA_SERVER_PORT}
         - name: SOURCES_ENABLE_DATA_MANAGEMENT
           value: ${SOURCES_ENABLE_DATA_MANAGEMENT}
         - name: SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA
@@ -1782,14 +1782,14 @@ parameters:
   displayName: Listener Log Level
   required: true
   value: INFO
-- name: LISTENER_PORT
-  displayName: Listerner Kafka Server Port
-  required: true
-  value: '9092'
-- name: LISTENER_SERVER
-  displayName: Listerner Kafka Server Address
+- name: KAFKA_SERVER_HOST
+  displayName: Kafka Server Host
   required: true
   value: platform-mq-ephemeral-kafka-bootstrap.platform-mq-ephemeral.svc
+- name: KAFKA_SERVER_PORT
+  displayName: Kafka Server Port
+  required: true
+  value: '9092'
 - name: LISTENER_TOPIC
   displayName: Listener Topic
   required: true

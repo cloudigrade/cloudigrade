@@ -32,9 +32,9 @@ class Command(BaseCommand):
         """Listen to the configured topic."""
         topic = settings.LISTENER_TOPIC
         group_id = settings.LISTENER_GROUP_ID
-        bootstrap_server = settings.LISTENER_SERVER
-        bootstrap_server_port = settings.LISTENER_PORT
-        bootstrap_servers = f"{bootstrap_server}:{bootstrap_server_port}"
+        bootstrap_server_host = settings.KAFKA_SERVER_HOST
+        bootstrap_server_port = settings.KAFKA_SERVER_PORT
+        bootstrap_servers = f"{bootstrap_server_host}:{bootstrap_server_port}"
 
         consumer_conf = {
             "bootstrap.servers": bootstrap_servers,
