@@ -59,8 +59,10 @@ The following resource paths are currently available:
 User Setup
 ------------------
 
-When accessing any endpoint with the HTTP_X_RH_IDENTITY header,
-if the user found in the header does not exist, it will not be created.
+Users are not typically created via interaction with the HTTP APIs.
+When accessing any endpoint with the ``X-RH-IDENTITY`` header,
+if the user found in the header does not exist, it will not be created,
+but not all APIs require that a corresponding cloudigrade user exists.
 
 
 Customer Account Info
