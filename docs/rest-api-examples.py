@@ -440,15 +440,15 @@ if __name__ == "__main__":
     ):
         mock_uuid4.side_effect = seeded_uuid4
         mock_azure_enable.return_value = True
-        api_hander = DocsApiHandler()
-        authenticated_responses = api_hander.gather_api_responses()
-        internal_responses = api_hander.gather_internal_api_responses()
-        anonymous_responses = api_hander.gather_anonymous_api_responses()
+        api_handler = DocsApiHandler()
+        authenticated_responses = api_handler.gather_api_responses()
+        internal_responses = api_handler.gather_internal_api_responses()
+        anonymous_responses = api_handler.gather_anonymous_api_responses()
         transaction.set_rollback(True)
-    responses = {}
-    responses.update(authenticated_responses)
-    responses.update(internal_responses)
-    responses.update(anonymous_responses)
-    output = render(responses)
+    all_responses = {}
+    all_responses.update(authenticated_responses)
+    all_responses.update(internal_responses)
+    all_responses.update(anonymous_responses)
+    output = render(all_responses)
     output = "\n".join((line.rstrip() for line in output.split("\n")))
     print(output)
