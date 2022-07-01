@@ -46,6 +46,22 @@ The ``X-RH-IDENTITY`` header's value must contain the base64-encoded JSON data l
 
     HTTP_X_RH_IDENTITY=eyJpZGVudGl0eSI6IHsiYWNjb3VudF9udW1iZXIiOiAiMTMzNyIsICJ1c2VyIjogeyJpc19vcmdfYWRtaW4iOiB0cnVlfX19
 
+Some internal APIs may instead accept a combination of these custom HTTP headers:
+
+* ``X-RH-CLOUDIGRADE-PSK`` contains a pre-shared key (secret)
+* ``X-RH-CLOUDIGRADE-ACCOUNT-NUMBER`` contains the EBS account number for the user
+* ``X-RH-CLOUDIGRADE-ORG-ID`` contains the consoledot org ID for the user
+
+These three headers are not populated automatically by 3scale and must be explicitly
+defined by the caller as needed. This document will populate them using the following
+environment variables:
+
+.. code:: bash
+
+    HTTP_X_RH_CLOUDIGRADE_PSK=c17c6279-23c6-412f-8826-867323a7711a
+    HTTP_X_RH_CLOUDIGRADE_ACCOUNT_NUMBER=109437
+    HTTP_X_RH_CLOUDIGRADE_ORG_ID=658406
+
 Overview
 --------
 
@@ -2366,9 +2382,9 @@ Request:
     http post localhost:8080/internal/api/cloudigrade/v1/accounts/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
         cloud_type="aws" \
         account_arn="arn:aws:iam::887838253945:role/role-for-cloudigrade" \
-        platform_authentication_id="2281" \
-        platform_application_id="4617" \
-        platform_source_id="2289"
+        platform_authentication_id="4104" \
+        platform_application_id="8725" \
+        platform_source_id="9861"
 
 Response:
 
@@ -2395,10 +2411,10 @@ Response:
         },
         "created_at": "2020-05-18T13:51:59.722367Z",
         "is_enabled": true,
-        "platform_application_id": 4617,
+        "platform_application_id": 8725,
         "platform_application_is_paused": false,
-        "platform_authentication_id": 2281,
-        "platform_source_id": 2289,
+        "platform_authentication_id": 4104,
+        "platform_source_id": 9861,
         "updated_at": "2020-05-18T13:51:59.722367Z",
         "user_id": 1
     }
@@ -2413,9 +2429,9 @@ Request:
     http post localhost:8080/internal/api/cloudigrade/v1/accounts/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
         cloud_type="aws" \
         account_arn="arn:aws:iam::887838253945:role/role-for-cloudigrade" \
-        platform_authentication_id="1553" \
-        platform_application_id="4104" \
-        platform_source_id="8725"
+        platform_authentication_id="2407" \
+        platform_application_id="5081" \
+        platform_source_id="1618"
 
 Response:
 
@@ -2448,9 +2464,9 @@ Request:
     http post localhost:8080/internal/api/cloudigrade/v1/accounts/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
         cloud_type="azure" \
         subscription_id="9192e037-3a17-46d1-a2e3-a0c780b2866b" \
-        platform_authentication_id="9861" \
-        platform_application_id="2407" \
-        platform_source_id="5081"
+        platform_authentication_id="1208" \
+        platform_application_id="5409" \
+        platform_source_id="7735"
 
 Response:
 
@@ -2476,10 +2492,10 @@ Response:
         },
         "created_at": "2020-05-18T13:51:59.722367Z",
         "is_enabled": true,
-        "platform_application_id": 2407,
+        "platform_application_id": 5409,
         "platform_application_is_paused": false,
-        "platform_authentication_id": 9861,
-        "platform_source_id": 5081,
+        "platform_authentication_id": 1208,
+        "platform_source_id": 7735,
         "updated_at": "2020-05-18T13:51:59.722367Z",
         "user_id": 1
     }

@@ -37,6 +37,22 @@ The ``X-RH-IDENTITY`` header's value must contain the base64-encoded JSON data l
 
     HTTP_X_RH_IDENTITY={{v2_header}}
 
+Some internal APIs may instead accept a combination of these custom HTTP headers:
+
+* ``X-RH-CLOUDIGRADE-PSK`` contains a pre-shared key (secret)
+* ``X-RH-CLOUDIGRADE-ACCOUNT-NUMBER`` contains the EBS account number for the user
+* ``X-RH-CLOUDIGRADE-ORG-ID`` contains the consoledot org ID for the user
+
+These three headers are not populated automatically by 3scale and must be explicitly
+defined by the caller as needed. This document will populate them using the following
+environment variables:
+
+.. code:: bash
+
+    HTTP_X_RH_CLOUDIGRADE_PSK={{internal_psk}}
+    HTTP_X_RH_CLOUDIGRADE_ACCOUNT_NUMBER={{internal_account_number}}
+    HTTP_X_RH_CLOUDIGRADE_ORG_ID={{internal_org_id}}
+
 Overview
 --------
 
