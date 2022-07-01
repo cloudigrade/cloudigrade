@@ -94,8 +94,8 @@ class Jinja2FiltersTest(TestCase):
         actual = filters.stringify_http_response(response)
         self.assertEqual(expected, actual)
 
-    def test_httpied_command_v2_includes_x_hr_identity(self):
-        """Assert httpied_command with version=2 includes X_RH_IDENTITY."""
+    def test_httpied_command_includes_x_hr_identity(self):
+        """Assert httpied_command includes X_RH_IDENTITY."""
         uri = "http://localhost/api/cloudigrade/v2/ok"
 
         mock_request = MagicMock()
@@ -103,15 +103,16 @@ class Jinja2FiltersTest(TestCase):
         mock_request.user = None
         mock_request.build_absolute_uri.return_value = uri
 
-        expected = (
-            "http http://localhost/api/cloudigrade/v2/ok "
-            '"X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}"'
-        )
-        actual = filters.httpied_command(mock_request, version=2)
+        expected = """
+            http http://localhost/api/cloudigrade/v2/ok \\
+                "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}"
+            """  # noqa: E501
+        expected = textwrap.dedent(expected)[1:-1]  # trim whitespace
+        actual = filters.httpied_command(mock_request)
         self.assertEqual(expected, actual)
 
-    def test_httpied_command_v2_allow_public(self):
-        """Assert httpied_command with public=True includes no auth headers."""
+    def test_httpied_command_allow_anonymous(self):
+        """Assert httpied_command with anonymous=True includes no auth headers."""
         uri = "http://localhost/api/cloudigrade/v2/ok"
 
         mock_request = MagicMock()
@@ -120,5 +121,5 @@ class Jinja2FiltersTest(TestCase):
         mock_request.build_absolute_uri.return_value = uri
 
         expected = "http http://localhost/api/cloudigrade/v2/ok"
-        actual = filters.httpied_command(mock_request, public=True)
+        actual = filters.httpied_command(mock_request, anonymous=True)
         self.assertEqual(expected, actual)

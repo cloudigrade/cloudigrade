@@ -94,7 +94,8 @@ Request:
 
 .. code:: bash
 
-    http localhost:8080/api/cloudigrade/v2/accounts/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}"
+    http localhost:8080/api/cloudigrade/v2/accounts/ \
+        "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}"
 
 Response:
 
@@ -168,7 +169,8 @@ Request:
 
 .. code:: bash
 
-    http localhost:8080/api/cloudigrade/v2/accounts/1/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}"
+    http localhost:8080/api/cloudigrade/v2/accounts/1/ \
+        "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}"
 
 Response:
 
@@ -214,7 +216,8 @@ Request:
 
 .. code:: bash
 
-    http localhost:8080/api/cloudigrade/v2/instances/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}"
+    http localhost:8080/api/cloudigrade/v2/instances/ \
+        "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}"
 
 Response:
 
@@ -341,7 +344,8 @@ Request:
 
 .. code:: bash
 
-    http localhost:8080/api/cloudigrade/v2/instances/1/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}"
+    http localhost:8080/api/cloudigrade/v2/instances/1/ \
+        "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}"
 
 Response:
 
@@ -383,7 +387,8 @@ Request:
 
 .. code:: bash
 
-    http localhost:8080/api/cloudigrade/v2/instances/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
+    http localhost:8080/api/cloudigrade/v2/instances/ \
+        "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
         running_since=="2020-05-18 13:51:59.722367+00:00"
 
 Response:
@@ -501,7 +506,8 @@ Request:
 
 .. code:: bash
 
-    http localhost:8080/api/cloudigrade/v2/images/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}"
+    http localhost:8080/api/cloudigrade/v2/images/ \
+        "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}"
 
 Response:
 
@@ -766,7 +772,8 @@ Request:
 
 .. code:: bash
 
-    http localhost:8080/api/cloudigrade/v2/images/1/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}"
+    http localhost:8080/api/cloudigrade/v2/images/1/ \
+        "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}"
 
 Response:
 
@@ -846,7 +853,8 @@ Request:
 
 .. code:: bash
 
-    http localhost:8080/api/cloudigrade/v2/concurrent/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
+    http localhost:8080/api/cloudigrade/v2/concurrent/ \
+        "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
         start_date=="2020-05-11"
 
 Response:
@@ -2069,7 +2077,8 @@ Request:
 
 .. code:: bash
 
-    http localhost:8080/api/cloudigrade/v2/concurrent/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
+    http localhost:8080/api/cloudigrade/v2/concurrent/ \
+        "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
         start_date=="2020-04-17"
 
 Response:
@@ -2097,7 +2106,8 @@ Request:
 
 .. code:: bash
 
-    http localhost:8080/api/cloudigrade/v2/concurrent/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
+    http localhost:8080/api/cloudigrade/v2/concurrent/ \
+        "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
         start_date=="2020-05-17" \
         end_date=="2020-05-25"
 
@@ -2128,7 +2138,8 @@ Request:
 
 .. code:: bash
 
-    http localhost:8080/api/cloudigrade/v2/concurrent/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
+    http localhost:8080/api/cloudigrade/v2/concurrent/ \
+        "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
         start_date=="2020-05-19" \
         end_date=="2020-05-25"
 
@@ -2161,7 +2172,8 @@ Request:
 
 .. code:: bash
 
-    http localhost:8080/api/cloudigrade/v2/concurrent/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
+    http localhost:8080/api/cloudigrade/v2/concurrent/ \
+        "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
         start_date=="2018-12-18 00:00:00+00:00" \
         end_date=="2018-12-25 00:00:00+00:00"
 
@@ -2199,7 +2211,8 @@ Request:
 
 .. code:: bash
 
-    http localhost:8080/api/cloudigrade/v2/sysconfig/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}"
+    http localhost:8080/api/cloudigrade/v2/sysconfig/ \
+        "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}"
 
 Response:
 
@@ -2379,7 +2392,8 @@ Request:
 
 .. code:: bash
 
-    http post localhost:8080/internal/api/cloudigrade/v1/accounts/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
+    http post localhost:8080/internal/api/cloudigrade/v1/accounts/ \
+        "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
         cloud_type="aws" \
         account_arn="arn:aws:iam::887838253945:role/role-for-cloudigrade" \
         platform_authentication_id="4104" \
@@ -2426,7 +2440,8 @@ Request:
 
 .. code:: bash
 
-    http post localhost:8080/internal/api/cloudigrade/v1/accounts/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
+    http post localhost:8080/internal/api/cloudigrade/v1/accounts/ \
+        "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
         cloud_type="aws" \
         account_arn="arn:aws:iam::887838253945:role/role-for-cloudigrade" \
         platform_authentication_id="2407" \
@@ -2461,7 +2476,8 @@ Request:
 
 .. code:: bash
 
-    http post localhost:8080/internal/api/cloudigrade/v1/accounts/ "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
+    http post localhost:8080/internal/api/cloudigrade/v1/accounts/ \
+        "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
         cloud_type="azure" \
         subscription_id="9192e037-3a17-46d1-a2e3-a0c780b2866b" \
         platform_authentication_id="1208" \
