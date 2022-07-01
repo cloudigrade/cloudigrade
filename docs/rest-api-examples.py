@@ -331,6 +331,15 @@ class DocsApiHandler(object):
         """
         responses = dict()
 
+        _faker = faker.Faker()
+
+        psk = str(_faker.uuid4())
+        account_number = str(_faker.random_int(min=10000, max=999999))
+        org_id = str(_faker.random_int(min=10000, max=999999))
+        responses["internal_psk"] = psk
+        responses["internal_account_number"] = account_number
+        responses["internal_org_id"] = org_id
+
         ############################
         # Internal Customer Account Setup AWS
 
