@@ -44,11 +44,16 @@ class SandboxedRestClientTest(TestCase):
             org_id=self.org_id,
             password=self.password,
         )
+        self.x_rh_identity = util_helper.get_identity_auth_header(
+            self.account_number
+        ).decode("utf-8")
 
     def test_list_noun(self):
         """Assert "list" requests work."""
         client = helper.SandboxedRestClient()
-        client._force_authenticate(self.user)
+        client._force_authenticate(
+            self.user, {"HTTP_X_RH_IDENTITY": self.x_rh_identity}
+        )
         response = client.list_accounts()
         self.assertEqual(response.status_code, http.HTTPStatus.OK)
         response_json = response.json()
@@ -66,7 +71,9 @@ class SandboxedRestClientTest(TestCase):
     def test_create_noun(self, mock_notify_sources):
         """Assert "create" requests work."""
         client = helper.SandboxedRestClient(api_root="/internal/api/cloudigrade/v1")
-        client._force_authenticate(self.user)
+        client._force_authenticate(
+            self.user, {"HTTP_X_RH_IDENTITY": self.x_rh_identity}
+        )
         arn = util_helper.generate_dummy_arn()
         data = util_helper.generate_dummy_aws_cloud_account_post_data()
         data.update({"account_arn": arn})
@@ -79,7 +86,9 @@ class SandboxedRestClientTest(TestCase):
     def test_get_noun(self):
         """Assert "get" requests work."""
         client = helper.SandboxedRestClient()
-        client._force_authenticate(self.user)
+        client._force_authenticate(
+            self.user, {"HTTP_X_RH_IDENTITY": self.x_rh_identity}
+        )
         account = helper.generate_cloud_account(user=self.user)
         response = client.get_accounts(account.id)
         self.assertEqual(response.status_code, http.HTTPStatus.OK)
@@ -95,7 +104,9 @@ class SandboxedRestClientTest(TestCase):
     def test_action_noun_verb_detail(self):
         """Assert "detail" requests work."""
         client = helper.SandboxedRestClient()
-        client._force_authenticate(self.user)
+        client._force_authenticate(
+            self.user, {"HTTP_X_RH_IDENTITY": self.x_rh_identity}
+        )
 
         account = helper.generate_cloud_account(user=self.user)
         image = helper.generate_image(status=MachineImage.INSPECTED)

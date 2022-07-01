@@ -2,9 +2,12 @@
 import textwrap
 from unittest.mock import MagicMock, Mock
 
+import faker
 from django.test import TestCase
 
 from util import filters
+
+_faker = faker.Faker()
 
 
 class Jinja2FiltersTest(TestCase):
@@ -94,25 +97,31 @@ class Jinja2FiltersTest(TestCase):
         actual = filters.stringify_http_response(response)
         self.assertEqual(expected, actual)
 
-    def test_httpied_command_includes_x_hr_identity(self):
-        """Assert httpied_command includes X_RH_IDENTITY."""
+    def test_httpied_command_includes_x_headers(self):
+        """Assert httpied_command with includes X- headers."""
         uri = "http://localhost/api/cloudigrade/v2/ok"
+
+        x_header_names = [_faker.word().upper(), _faker.word().upper()]
 
         mock_request = MagicMock()
         mock_request.method = "get"
         mock_request.user = None
+        mock_request.headers = {
+            f"X-Rh-{name.lower()}": name[::-1] for name in x_header_names
+        }
         mock_request.build_absolute_uri.return_value = uri
 
-        expected = """
+        expected = f"""
             http http://localhost/api/cloudigrade/v2/ok \\
-                "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}"
+                "X-RH-{x_header_names[0]}:${{HTTP_X_RH_{x_header_names[0]}}}" \\
+                "X-RH-{x_header_names[1]}:${{HTTP_X_RH_{x_header_names[1]}}}"
             """  # noqa: E501
         expected = textwrap.dedent(expected)[1:-1]  # trim whitespace
         actual = filters.httpied_command(mock_request)
         self.assertEqual(expected, actual)
 
     def test_httpied_command_allow_anonymous(self):
-        """Assert httpied_command with anonymous=True includes no auth headers."""
+        """Assert httpied_command with no user auth includes no auth headers."""
         uri = "http://localhost/api/cloudigrade/v2/ok"
 
         mock_request = MagicMock()
@@ -121,5 +130,5 @@ class Jinja2FiltersTest(TestCase):
         mock_request.build_absolute_uri.return_value = uri
 
         expected = "http http://localhost/api/cloudigrade/v2/ok"
-        actual = filters.httpied_command(mock_request, anonymous=True)
+        actual = filters.httpied_command(mock_request)
         self.assertEqual(expected, actual)

@@ -73,7 +73,7 @@ class SandboxedRestClient(object):
         self.aws_primary_account_id = int(helper.generate_dummy_aws_account_id())
         self.api_root = api_root
 
-    def _call_api(self, verb, path, data=None):
+    def _call_api(self, verb, path, data=None, *args, **kwargs):
         """
         Make the simulated API call, optionally patching cloud interactions.
 
@@ -105,7 +105,7 @@ class SandboxedRestClient(object):
             mock_verify.return_value = self.aws_account_verified, []
             mock_verify_permissions.return_value = True
             mock_get_primary_account_id.return_value = self.aws_primary_account_id
-            response = getattr(self.client, verb)(path, data=data)
+            response = getattr(self.client, verb)(path, data=data, *args, **kwargs)
         return response
 
     def __getattr__(self, item):
@@ -128,12 +128,11 @@ class SandboxedRestClient(object):
                 f"'{self.__class__.__name__}' object " f"has no attribute '{item}'"
             )
 
-    def _force_authenticate(self, user):
+    def _force_authenticate(self, user, credential_headers=None):
         """Force client authentication as the given user."""
         self.authenticated_user = user
-        self.client.credentials(
-            HTTP_X_RH_IDENTITY=helper.get_identity_auth_header(user.account_number)
-        )
+        if credential_headers:
+            self.client.credentials(**credential_headers)
 
     def verb_noun(
         self,
@@ -143,6 +142,8 @@ class SandboxedRestClient(object):
         detail=None,
         data=None,
         api_root=None,
+        *args,
+        **kwargs,
     ):
         """Make a simulated REST API call for the given inputs."""
         if api_root is None:
@@ -156,7 +157,7 @@ class SandboxedRestClient(object):
             verb = "get"
         else:
             path = f"{api_root}/{noun}/"
-        return self._call_api(verb=verb, path=path, data=data)
+        return self._call_api(verb=verb, path=path, data=data, *args, **kwargs)
 
 
 def generate_cloud_account(cloud_type=AWS_PROVIDER_STRING, **kwargs):
