@@ -10,7 +10,9 @@ from api.filters import InstanceRunningSinceFilter
 class InternalCloudAccountFilterSet(django_filters.FilterSet):
     """FilterSet for limiting CloudAccounts for the internal API."""
 
-    username = django_filters.CharFilter(field_name="user__username")
+    account_number = django_filters.CharFilter(field_name="user__account_number")
+    org_id = django_filters.CharFilter(field_name="user__org_id")
+    username = django_filters.CharFilter(field_name="user__account_number")
 
     class Meta:
         model = models.CloudAccount
@@ -31,8 +33,14 @@ class InternalCloudAccountFilterSet(django_filters.FilterSet):
 class InternalInstanceFilterSet(django_filters.FilterSet):
     """FilterSet for limiting Instances for the internal API."""
 
+    account_number = django_filters.CharFilter(
+        field_name="cloud_account__user__account_number"
+    )
+    org_id = django_filters.CharFilter(field_name="cloud_account__user__org_id")
     running_since = InstanceRunningSinceFilter()
-    username = django_filters.CharFilter(field_name="cloud_account__user__username")
+    username = django_filters.CharFilter(
+        field_name="cloud_account__user__account_number"
+    )
 
     class Meta:
         model = models.Instance
@@ -48,8 +56,14 @@ class InternalInstanceFilterSet(django_filters.FilterSet):
 class InternalInstanceEventFilterSet(django_filters.FilterSet):
     """FilterSet for limiting InstanceEvents for the internal API."""
 
+    account_number = django_filters.CharFilter(
+        field_name="instance__cloud_account__user__account_number"
+    )
+    org_id = django_filters.CharFilter(
+        field_name="instance__cloud_account__user__org_id"
+    )
     username = django_filters.CharFilter(
-        field_name="instance__cloud_account__user__username"
+        field_name="instance__cloud_account__user__account_number"
     )
     cloud_account = django_filters.NumberFilter(field_name="instance__cloud_account")
 
@@ -82,8 +96,14 @@ class InternalUserFilterSet(django_filters.FilterSet):
 class InternalRunFilterSet(django_filters.FilterSet):
     """FilterSet for limiting Runs for the internal API."""
 
+    account_number = django_filters.CharFilter(
+        field_name="instance__cloud_account__user__account_number"
+    )
+    org_id = django_filters.CharFilter(
+        field_name="instance__cloud_account__user__org_id"
+    )
     username = django_filters.CharFilter(
-        field_name="instance__cloud_account__user__username"
+        field_name="instance__cloud_account__user__account_number"
     )
     cloud_account = django_filters.NumberFilter(field_name="instance__cloud_account")
 
@@ -105,7 +125,9 @@ class InternalRunFilterSet(django_filters.FilterSet):
 class InternalConcurrentUsageFilterSet(django_filters.FilterSet):
     """FilterSet for limiting ConcurrentUsages for the internal API."""
 
-    username = django_filters.CharFilter(field_name="user__username")
+    account_number = django_filters.CharFilter(field_name="user__account_number")
+    org_id = django_filters.CharFilter(field_name="user__org_id")
+    username = django_filters.CharFilter(field_name="user__account_number")
     run = django_filters.NumberFilter(field_name="potentially_related_runs")
 
     class Meta:
@@ -120,7 +142,13 @@ class InternalConcurrentUsageFilterSet(django_filters.FilterSet):
 class InternalAwsCloudAccountFilterSet(django_filters.FilterSet):
     """FilterSet for limiting AwsCloudAccounts for the internal API."""
 
-    username = django_filters.CharFilter(field_name="cloud_account__user__username")
+    account_number = django_filters.CharFilter(
+        field_name="cloud_account__user__account_number"
+    )
+    org_id = django_filters.CharFilter(field_name="cloud_account__user__org_id")
+    username = django_filters.CharFilter(
+        field_name="cloud_account__user__account_number"
+    )
 
     class Meta:
         model = aws_models.AwsCloudAccount
@@ -135,7 +163,13 @@ class InternalAwsCloudAccountFilterSet(django_filters.FilterSet):
 class InternalAzureCloudAccountFilterSet(django_filters.FilterSet):
     """FilterSet for limiting AzureCloudAccounts for the internal API."""
 
-    username = django_filters.CharFilter(field_name="cloud_account__user__username")
+    account_number = django_filters.CharFilter(
+        field_name="cloud_account__user__account_number"
+    )
+    org_id = django_filters.CharFilter(field_name="cloud_account__user__org_id")
+    username = django_filters.CharFilter(
+        field_name="cloud_account__user__account_number"
+    )
 
     class Meta:
         model = azure_models.AzureCloudAccount
