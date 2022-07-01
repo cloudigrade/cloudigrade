@@ -9,11 +9,12 @@ moved those tests here and updated them as necessary.
 from unittest.mock import patch
 
 import faker
-from django.test import TransactionTestCase
+from django.conf import settings
+from django.test import TransactionTestCase, override_settings
 from rest_framework.test import APIRequestFactory, force_authenticate
 
 from api import serializers
-from api.models import CloudAccount
+from api.models import CloudAccount, User
 from api.tests import helper as api_helper
 from internal.viewsets import InternalAccountViewSet
 from util.tests import helper as util_helper
@@ -41,6 +42,9 @@ class InternalAccountViewSetTest(TransactionTestCase):
 
         self.factory = APIRequestFactory()
         self.faker = faker.Faker()
+        self.valid_svc_name = self.faker.slug()
+        self.valid_svc_psk = self.faker.uuid4()
+        self.cloudigrade_psks = {self.valid_svc_name: self.valid_svc_psk}
 
     def assertResponseHasAccountData(self, response, account):
         """Assert the response has data matching the account object."""
@@ -283,3 +287,125 @@ class InternalAccountViewSetTest(TransactionTestCase):
 
             self.assertEqual(response.status_code, 400)
             self.assertEqual(expected_error, response.data["cloud_type"][0])
+
+    @patch("api.tasks.sources.notify_application_availability_task")
+    @patch("api.clouds.aws.models.AwsCloudAccount.enable")
+    def test_create_aws_account_creates_user_with_account_number(
+        self, mock_enable, _mock_task
+    ):
+        """Test auto creation of new user with account_number."""
+        mock_enable.return_value = True
+
+        user_account_number = str(self.faker.random_int(min=100000, max=999999))
+        credentials = {
+            f"{settings.CLOUDIGRADE_PSK_HEADER}": self.valid_svc_psk,
+            f"{settings.CLOUDIGRADE_ACCOUNT_NUMBER_HEADER}": user_account_number,
+        }
+
+        data = util_helper.generate_dummy_aws_cloud_account_post_data()
+
+        with override_settings(CLOUDIGRADE_PSKS=self.cloudigrade_psks):
+            request = self.factory.post("/accounts/", data=data, **credentials)
+            view = InternalAccountViewSet.as_view(actions={"post": "create"})
+            response = view(request)
+
+        mock_enable.assert_called()
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data["is_enabled"], True)
+        self.assertTrue(
+            User.objects.filter(
+                account_number=user_account_number, org_id=None
+            ).exists()
+        )
+
+    @patch("api.tasks.sources.notify_application_availability_task")
+    @patch("api.clouds.aws.models.AwsCloudAccount.enable")
+    def test_create_aws_account_creates_user_with_org_id(self, mock_enable, _mock_task):
+        """Test auto creation of new user with org_id."""
+        mock_enable.return_value = True
+
+        user_org_id = str(self.faker.random_int(min=100000, max=999999))
+        credentials = {
+            f"{settings.CLOUDIGRADE_PSK_HEADER}": self.valid_svc_psk,
+            f"{settings.CLOUDIGRADE_ORG_ID_HEADER}": user_org_id,
+        }
+
+        data = util_helper.generate_dummy_aws_cloud_account_post_data()
+
+        with override_settings(CLOUDIGRADE_PSKS=self.cloudigrade_psks):
+            request = self.factory.post("/accounts/", data=data, **credentials)
+            view = InternalAccountViewSet.as_view(actions={"post": "create"})
+            response = view(request)
+
+        mock_enable.assert_called()
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data["is_enabled"], True)
+        self.assertTrue(
+            User.objects.filter(account_number=None, org_id=user_org_id).exists()
+        )
+
+    @patch("api.tasks.sources.notify_application_availability_task")
+    @patch("api.clouds.aws.models.AwsCloudAccount.enable")
+    def test_create_aws_account_creates_user_with_account_number_and_org_id(
+        self, mock_enable, _mock_task
+    ):
+        """Test auto creation of new user with account_number and org_id."""
+        mock_enable.return_value = True
+
+        user_account_number = str(self.faker.random_int(min=100000, max=999999))
+        user_org_id = str(self.faker.random_int(min=100000, max=999999))
+        credentials = {
+            f"{settings.CLOUDIGRADE_PSK_HEADER}": self.valid_svc_psk,
+            f"{settings.CLOUDIGRADE_ACCOUNT_NUMBER_HEADER}": user_account_number,
+            f"{settings.CLOUDIGRADE_ORG_ID_HEADER}": user_org_id,
+        }
+
+        data = util_helper.generate_dummy_aws_cloud_account_post_data()
+
+        with override_settings(CLOUDIGRADE_PSKS=self.cloudigrade_psks):
+            request = self.factory.post("/accounts/", data=data, **credentials)
+            view = InternalAccountViewSet.as_view(actions={"post": "create"})
+            response = view(request)
+
+        mock_enable.assert_called()
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data["is_enabled"], True)
+        self.assertTrue(
+            User.objects.filter(
+                account_number=user_account_number, org_id=user_org_id
+            ).exists()
+        )
+
+    @patch("api.tasks.sources.notify_application_availability_task")
+    @patch("api.clouds.aws.models.AwsCloudAccount.enable")
+    def test_create_aws_account_uses_existing_user_with_org_id(
+        self, mock_enable, _mock_task
+    ):
+        """Test using existing user with an org_id."""
+        mock_enable.return_value = True
+
+        user_account_number = str(self.faker.random_int(min=100000, max=999999))
+        user_org_id = str(self.faker.random_int(min=100000, max=999999))
+        user = util_helper.generate_test_user(
+            account_number=user_account_number, org_id=user_org_id
+        )
+        credentials = {
+            f"{settings.CLOUDIGRADE_PSK_HEADER}": self.valid_svc_psk,
+            f"{settings.CLOUDIGRADE_ORG_ID_HEADER}": user_org_id,
+        }
+
+        data = util_helper.generate_dummy_aws_cloud_account_post_data()
+
+        with override_settings(CLOUDIGRADE_PSKS=self.cloudigrade_psks):
+            request = self.factory.post("/accounts/", data=data, **credentials)
+            view = InternalAccountViewSet.as_view(actions={"post": "create"})
+            response = view(request)
+
+        mock_enable.assert_called()
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data["is_enabled"], True)
+        self.assertEqual(User.objects.get(org_id=user_org_id), user)
