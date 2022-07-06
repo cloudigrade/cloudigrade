@@ -36,6 +36,8 @@ class SourcesTest(TestCase):
         self.kafka_server_host = _faker.hostname()
         self.kafka_server_port = str(_faker.pyint())
         self.kafka_ca_location = _faker.file_path(depth=2)
+        self.kafka_security_protocol = _faker.slug()
+        self.kafka_sasl_mechanism = _faker.slug()
         self.kafka_sasl_username = _faker.slug()
         self.kafka_sasl_password = _faker.slug()
         self.platform_id = _faker.pyint()
@@ -605,6 +607,8 @@ class SourcesTest(TestCase):
 
         with override_settings(
             KAFKA_SERVER_CA_LOCATION=self.kafka_ca_location,
+            KAFKA_SERVER_SECURITY_PROTOCOL=self.kafka_security_protocol,
+            KAFKA_SERVER_SASL_MECHANISM=self.kafka_sasl_mechanism,
             KAFKA_SERVER_SASL_USERNAME=self.kafka_sasl_username,
             KAFKA_SERVER_SASL_PASSWORD=self.kafka_sasl_password,
         ):
@@ -613,6 +617,8 @@ class SourcesTest(TestCase):
         self.assertDictContainsSubset(
             {
                 "ssl.ca.location": self.kafka_ca_location,
+                "security.protocol": self.kafka_security_protocol,
+                "sasl.mechanism": self.kafka_sasl_mechanism,
                 "sasl.username": self.kafka_sasl_username,
                 "sasl.password": self.kafka_sasl_password,
             },
@@ -622,6 +628,8 @@ class SourcesTest(TestCase):
         self.assertDictContainsSubset(
             {
                 "ssl.ca.location": self.kafka_ca_location,
+                "security.protocol": self.kafka_security_protocol,
+                "sasl.mechanism": self.kafka_sasl_mechanism,
                 "sasl.username": self.kafka_sasl_username,
                 "sasl.password": self.kafka_sasl_password,
             },
