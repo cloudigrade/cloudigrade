@@ -66,18 +66,11 @@ test = ["coverage"]
 
 [[package]]
 name = "app-common-python"
-version = "0.1.9.dev2+gcfedd9a"
+version = "0.2.3"
 description = ""
 category = "main"
 optional = false
 python-versions = "*"
-develop = false
-
-[package.source]
-type = "git"
-url = "https://github.com/RedHatInsights/app-common-python.git"
-reference = "psav/add_kafka_brokers"
-resolved_reference = "cfedd9a580cb14698e7e6eaa2ff2976d0b73605c"
 
 [[package]]
 name = "applicationinsights"
@@ -2544,7 +2537,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "6db94fd3f9371d4bd8e3b2c68cb1dda5368a2fe7dcda527734c1a16b2295d637"
+content-hash = "659435ae691992682ec4699c25fd01caabb4526d7d0bf4d2388075b76413f70c"
 
 [metadata.files]
 adal = [
@@ -2567,7 +2560,10 @@ anytree = [
     {file = "anytree-2.8.0-py2.py3-none-any.whl", hash = "sha256:14c55ac77492b11532395049a03b773d14c7e30b22aa012e337b1e983de31521"},
     {file = "anytree-2.8.0.tar.gz", hash = "sha256:3f0f93f355a91bc3e6245319bf4c1d50e3416cc7a35cc1133c1ff38306bbccab"},
 ]
-app-common-python = []
+app-common-python = [
+    {file = "app-common-python-0.2.3.tar.gz", hash = "sha256:ac4156343d84c2504deb6816eb7f7a5b68d25678234b5a03deb46d153eb3f622"},
+    {file = "app_common_python-0.2.3-py3-none-any.whl", hash = "sha256:a28e599ab569f6f5fb104a2e9f0e12996320191d9216e5854212e2612fb74db2"},
+]
 applicationinsights = [
     {file = "applicationinsights-0.11.10-py2.py3-none-any.whl", hash = "sha256:e89a890db1c6906b6a7d0bcfd617dac83974773c64573147c8d6654f9cf2a6ea"},
     {file = "applicationinsights-0.11.10.tar.gz", hash = "sha256:0b761f3ef0680acf4731906dfc1807faa6f2a57168ae74592db0084a6099f7b3"},

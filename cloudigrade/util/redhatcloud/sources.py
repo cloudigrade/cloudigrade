@@ -406,8 +406,8 @@ def update_kafka_sasl_config(kafka_config):
     if settings.KAFKA_SERVER_SASL_USERNAME:
         kafka_config.update(
             {
-                "security.protocol": "sasl_ssl",
-                "sasl.mechanism": "SCRAM-SHA-512",
+                "security.protocol": settings.KAFKA_SERVER_SECURITY_PROTOCOL,
+                "sasl.mechanism": settings.KAFKA_SERVER_SASL_MECHANISM,
                 "sasl.username": settings.KAFKA_SERVER_SASL_USERNAME,
                 "sasl.password": settings.KAFKA_SERVER_SASL_PASSWORD,
             }

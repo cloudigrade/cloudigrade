@@ -6,7 +6,6 @@ from decimal import Decimal
 
 import boto3
 import environ
-from app_common_python import KafkaBrokers
 from app_common_python import LoadedConfig as clowder_cfg
 from app_common_python import isClowderEnabled
 
@@ -646,22 +645,25 @@ LISTENER_TOPIC = env("LISTENER_TOPIC", default="platform.sources.event-stream")
 LISTENER_GROUP_ID = env("LISTENER_GROUP_ID", default="cloudmeter_ci")
 
 KAFKA_SERVER_CA_LOCATION = None
+KAFKA_SERVER_SECURITY_PROTOCOL = None
+KAFKA_SERVER_SASL_MECHANISM = None
 KAFKA_SERVER_SASL_USERNAME = None
 KAFKA_SERVER_SASL_PASSWORD = None
 if isClowderEnabled():
-    kafka_broker = KafkaBrokers[0]
+    kafka_broker = clowder_cfg.kafka.brokers[0]
     KAFKA_SERVER_HOST = kafka_broker.hostname
     KAFKA_SERVER_PORT = kafka_broker.port
     __print(f"Clowder: Kafka server: {KAFKA_SERVER_HOST}:{KAFKA_SERVER_PORT}")
-    if kafka_broker:
-        if kafka_broker.kafka_ca:
-            KAFKA_SERVER_CA_LOCATION = kafka_broker.kafka_ca
-            __print("Clowder: Kafka server ca defined")
+    if kafka_broker.cacert:
+        KAFKA_SERVER_CA_LOCATION = clowder_cfg.kafka_ca()
+        __print("Clowder: Kafka server CA defined")
 
         if kafka_broker.sasl and kafka_broker.sasl.username:
+            KAFKA_SERVER_SECURITY_PROTOCOL = kafka_broker.sasl.securityProtocol
+            KAFKA_SERVER_SASL_MECHANISM = kafka_broker.sasl.saslMechanism
             KAFKA_SERVER_SASL_USERNAME = kafka_broker.sasl.username
             KAFKA_SERVER_SASL_PASSWORD = kafka_broker.sasl.password
-            __print("Clowder: Kafka server sasl enabled")
+            __print("Clowder: Kafka server SASL enabled")
 else:
     KAFKA_SERVER_HOST = env(
         "KAFKA_SERVER_HOST", default="platform-mq-ci-kafka-bootstrap.platform-mq-ci.svc"
