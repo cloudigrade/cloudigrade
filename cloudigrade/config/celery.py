@@ -26,6 +26,12 @@ app.config_from_object("django.conf:settings", namespace="CELERY")
 # Remember: the "schedule" values are integer numbers of seconds.
 app.conf.beat_schedule = {
     # Enabled Tasks
+    "check_and_cache_sqs_queues_lengths": {
+        "task": "api.tasks.check_and_cache_sqs_queues_lengths",
+        "schedule": env.int(
+            "CHECK_AND_CACHE_SQS_QUEUES_LENGTHS_SCHEDULE", default=60 * 5
+        ),  # every 5 minutes
+    },
     "delete_inactive_users": {
         "task": "api.tasks.delete_inactive_users",
         "schedule": env.int("DELETE_INACTIVE_USERS_SCHEDULE", default=24 * 60 * 60),
