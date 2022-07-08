@@ -217,7 +217,6 @@ def get_sqs_approximate_number_of_messages(queue_url):
         error_code = getattr(e, "response", {}).get("Error", {}).get("Code", None)
         if str(error_code).endswith(".NonExistentQueue"):
             logger.warning(_("Queue does not exist at %s"), queue_url)
-            return None
         else:
             logger.exception(
                 _(
@@ -226,7 +225,15 @@ def get_sqs_approximate_number_of_messages(queue_url):
                 ),
                 {"queue_url": queue_url, "code": error_code, "e": e},
             )
-            raise
+    except Exception as e:
+        logger.exception(
+            _(
+                "Unexpected not-ClientError exception from "
+                "get_queue_attributes using queue url: %(queue_url)s %(e)s"
+            ),
+            {"queue_url": queue_url, "e": e},
+        )
+    return None
 
 
 def create_queue(queue_name, with_dlq=True, retention_period=RETENTION_DEFAULT):
