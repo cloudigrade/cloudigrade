@@ -307,6 +307,8 @@ objects:
           value: ${DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_SCHEDULE}
         - name: DELETE_EXPIRED_SYNTHETIC_DATA_SCHEDULE
           value: ${DELETE_EXPIRED_SYNTHETIC_DATA_SCHEDULE}
+        - name: CACHED_SQS_QUEUE_LENGTH_EXPIRATION_TTL
+          value: ${CACHED_SQS_QUEUE_LENGTH_EXPIRATION_TTL}
         - name: ENABLE_SYNTHETIC_DATA_REQUEST_HTTP_API
           value: ${ENABLE_SYNTHETIC_DATA_REQUEST_HTTP_API}
     - name: beat
@@ -562,6 +564,8 @@ objects:
           value: ${DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_SCHEDULE}
         - name: DELETE_EXPIRED_SYNTHETIC_DATA_SCHEDULE
           value: ${DELETE_EXPIRED_SYNTHETIC_DATA_SCHEDULE}
+        - name: CACHED_SQS_QUEUE_LENGTH_EXPIRATION_TTL
+          value: ${CACHED_SQS_QUEUE_LENGTH_EXPIRATION_TTL}
         - name: ENABLE_SYNTHETIC_DATA_REQUEST_HTTP_API
           value: ${ENABLE_SYNTHETIC_DATA_REQUEST_HTTP_API}
     - name: listener
@@ -813,6 +817,8 @@ objects:
           value: ${DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_SCHEDULE}
         - name: DELETE_EXPIRED_SYNTHETIC_DATA_SCHEDULE
           value: ${DELETE_EXPIRED_SYNTHETIC_DATA_SCHEDULE}
+        - name: CACHED_SQS_QUEUE_LENGTH_EXPIRATION_TTL
+          value: ${CACHED_SQS_QUEUE_LENGTH_EXPIRATION_TTL}
         - name: ENABLE_SYNTHETIC_DATA_REQUEST_HTTP_API
           value: ${ENABLE_SYNTHETIC_DATA_REQUEST_HTTP_API}
     - name: metrics
@@ -1135,6 +1141,8 @@ objects:
           value: ${DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_SCHEDULE}
         - name: DELETE_EXPIRED_SYNTHETIC_DATA_SCHEDULE
           value: ${DELETE_EXPIRED_SYNTHETIC_DATA_SCHEDULE}
+        - name: CACHED_SQS_QUEUE_LENGTH_EXPIRATION_TTL
+          value: ${CACHED_SQS_QUEUE_LENGTH_EXPIRATION_TTL}
         - name: ENABLE_SYNTHETIC_DATA_REQUEST_HTTP_API
           value: ${ENABLE_SYNTHETIC_DATA_REQUEST_HTTP_API}
 # Secrets
@@ -1530,6 +1538,7 @@ parameters:
   value: "celery,\
     analyze_log,\
     calculate_max_concurrent_usage,\
+    check_and_cache_sqs_queues_lengths,\
     check_azure_subscription_and_create_cloud_account,\
     configure_customer_aws_and_create_cloud_account,\
     copy_ami_snapshot,\
@@ -1889,6 +1898,10 @@ parameters:
   displayName: Delete expired synthetic data schedule (seconds)
   required: true
   value: '3600'
+- name: CACHED_SQS_QUEUE_LENGTH_EXPIRATION_TTL
+  displayName: Expiration TTL for cached SQS queue lengths (seconds)
+  required: true
+  value: '1800'
 - name: ENABLE_SYNTHETIC_DATA_REQUEST_HTTP_API
   displayName: Enable the synthetic data internal HTTP API
   required: true
