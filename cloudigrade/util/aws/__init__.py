@@ -46,6 +46,8 @@ from util.aws.sqs import (
     delete_messages_from_queue,
     ensure_queue_has_dlq,
     extract_sqs_message,
+    get_sqs_approximate_number_of_messages,
+    get_sqs_queue_dlq_name,
     get_sqs_queue_url,
     read_messages_from_queue,
     receive_messages_from_queue,
