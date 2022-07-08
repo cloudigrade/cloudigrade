@@ -35,6 +35,7 @@ from api.tasks.inspection import (
     persist_inspection_cluster_results_task,
 )
 from api.tasks.maintenance import (
+    check_and_cache_sqs_queues_lengths,
     delete_cloud_account,
     delete_cloud_accounts_not_in_sources,
     delete_expired_synthetic_data,

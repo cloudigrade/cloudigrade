@@ -485,6 +485,9 @@ CELERY_TASK_ROUTES = {
     "api.tasks.recalculate_runs_for_instance_id": {
         "queue": "recalculate_runs_for_instance_id"
     },
+    "api.tasks.check_and_cache_sqs_queues_lengths": {
+        "queue": "check_and_cache_sqs_queues_lengths"
+    },
     # api.tasks supporting source kafka message handling
     "api.tasks.create_from_sources_kafka_message": {
         "queue": "create_from_sources_kafka_message"
@@ -609,6 +612,11 @@ DELETE_ORPHANED_ACCOUNTS_UPDATED_MORE_THAN_SECONDS_AGO = env.int(
 # How far back should we look for CloudAccounts not in sources to delete
 DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_UPDATED_MORE_THAN_SECONDS_AGO = env.int(
     "DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_UPDATED_MORE_THAN_SECONDS_AGO", default=5 * 60
+)
+
+# How long should we keep cached SQS queue lengths (only used for metrics monitoring)
+CACHED_SQS_QUEUE_LENGTH_EXPIRATION_TTL = env.int(
+    "CACHED_SQS_QUEUE_LENGTH_EXPIRATION_TTL", default=30 * 60
 )
 
 # Should the internal HTTP API for SyntheticDataRequest objects be available?
