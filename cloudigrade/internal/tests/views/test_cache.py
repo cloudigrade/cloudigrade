@@ -41,6 +41,24 @@ class CacheViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["value"], value)
 
+    def test_cache_get_success_with_falsy_value(self):
+        """
+        Test getting a cache key for a falsy value (int 0).
+
+        This more thoroughly exercises the "is not None" condition because we may be
+        storing falsy values like 0 in the cache, and we expect to see those correctly
+        in the internal API's responses. Previously we did not explicitly check against
+        None, and falsy values could unexpectedly return a 404 Not Found response.
+        """
+        key = _faker.word()
+        value = 0
+        cache.set(key, value)
+        request = self.factory.get(f"/cache/{key}")
+
+        response = cache_keys(request, key)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["value"], value)
+
     def test_cache_get_success_with_timeout(self):
         """Test get of a key returns the key, its value and timeout."""
         key = _faker.word()

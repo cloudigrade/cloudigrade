@@ -347,7 +347,7 @@ def cache_keys(request, key):
     if method == "get":
         """Get a single cache key."""
         value = cache.get(key)
-        if not value:
+        if value is None:
             raise Http404
         else:
             data = {
@@ -359,7 +359,7 @@ def cache_keys(request, key):
     elif method == "post":
         """Post a single cache key."""
         value = request.data.get("value")
-        if not value:
+        if value is None:
             raise exceptions.ValidationError(detail="value field is required")
         timeout = request.data.get("timeout")
 
