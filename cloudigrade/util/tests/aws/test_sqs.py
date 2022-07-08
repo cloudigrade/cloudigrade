@@ -17,6 +17,10 @@ from util.tests import helper
 _faker = faker.Faker()
 
 
+class UnexpectedException(Exception):
+    """Dummy exception for testing."""
+
+
 class UtilAwsSqsTest(TestCase):
     """AWS SQS utility functions test case."""
 
@@ -135,10 +139,6 @@ class UtilAwsSqsTest(TestCase):
     def test_yield_messages_from_queue_raises_unhandled_exception(self):
         """Assert yield_messages_from_queue logs and raises other exceptions."""
         queue_url = _faker.url()
-
-        class UnexpectedException(Exception):
-            pass
-
         exception = UnexpectedException()
 
         with self.assertLogs(
@@ -434,6 +434,97 @@ class UtilAwsSqsTest(TestCase):
                 sqs.validate_redrive_policy(source_queue_name, redrive_policy)
             )
         mock_client.get_queue_url.assert_called_with(QueueName=dlq_name)
+
+    def test_get_sqs_approximate_number_of_messages(self):
+        """Test get_sqs_approximate_number_of_messages with valid queue and response."""
+        queue_url = _faker.url()
+        expected_number = _faker.random_int()
+        mock_client = Mock()
+        mock_client.get_queue_attributes.return_value = {
+            "Attributes": {"ApproximateNumberOfMessages": str(expected_number)}
+        }
+        with patch.object(sqs, "boto3") as mock_boto3:
+            mock_boto3.client.return_value = mock_client
+            actual_number = sqs.get_sqs_approximate_number_of_messages(queue_url)
+
+        self.assertEqual(expected_number, actual_number)
+        mock_client.get_queue_attributes.assert_called_with(
+            QueueUrl=queue_url, AttributeNames=["ApproximateNumberOfMessages"]
+        )
+
+    def test_get_sqs_approximate_number_of_messages_queue_does_not_exist(self):
+        """
+        Test get_sqs_approximate_number_of_messages with queue that doesn't exist.
+
+        We expect the AWS error to be logged and return None.
+        """
+        queue_url = _faker.url()
+        mock_client = Mock()
+        error_response = {"Error": {"Code": f"{_faker.slug()}.NonExistentQueue"}}
+        exception = ClientError(error_response, Mock())
+        mock_client.get_queue_attributes.side_effect = exception
+
+        with self.assertLogs(
+            "util.aws.sqs", level="WARNING"
+        ) as logging_watcher, patch.object(sqs, "boto3") as mock_boto3:
+            mock_boto3.client.return_value = mock_client
+            actual_number = sqs.get_sqs_approximate_number_of_messages(queue_url)
+
+        self.assertEqual(None, actual_number)
+        self.assertIn("Queue does not exist at", logging_watcher.output[0])
+        mock_client.get_queue_attributes.assert_called_with(
+            QueueUrl=queue_url, AttributeNames=["ApproximateNumberOfMessages"]
+        )
+
+    def test_get_sqs_approximate_number_of_messages_unexpected_aws_error(self):
+        """
+        Test get_sqs_approximate_number_of_messages with unexpected AWS error.
+
+        We expect the AWS error to be logged and raised for the caller to handle.
+        """
+        queue_url = _faker.url()
+        mock_client = Mock()
+        error_response = {"Error": {"Code": f"{_faker.slug()}.{_faker.slug()}"}}
+        exception = ClientError(error_response, Mock())
+        mock_client.get_queue_attributes.side_effect = exception
+
+        with self.assertLogs(
+            "util.aws.sqs", level="ERROR"
+        ) as logging_watcher, patch.object(
+            sqs, "boto3"
+        ) as mock_boto3, self.assertRaises(
+            ClientError
+        ) as exception_context:
+            mock_boto3.client.return_value = mock_client
+            actual_number = sqs.get_sqs_approximate_number_of_messages(queue_url)
+
+        self.assertEqual(exception_context.exception, exception)
+        self.assertIn("Unexpected ClientError", logging_watcher.output[0])
+        mock_client.get_queue_attributes.assert_called_with(
+            QueueUrl=queue_url, AttributeNames=["ApproximateNumberOfMessages"]
+        )
+
+    def test_get_sqs_approximate_number_of_messages_unexpected_exception(self):
+        """
+        Test get_sqs_approximate_number_of_messages with unexpected exception.
+
+        We expect the exception to simply raise to the caller to handle.
+        """
+        queue_url = _faker.url()
+        mock_client = Mock()
+        exception = UnexpectedException()
+        mock_client.get_queue_attributes.side_effect = exception
+
+        with patch.object(sqs, "boto3") as mock_boto3, self.assertRaises(
+            UnexpectedException
+        ) as exception_context:
+            mock_boto3.client.return_value = mock_client
+            sqs.get_sqs_approximate_number_of_messages(queue_url)
+
+        mock_client.get_queue_attributes.assert_called_with(
+            QueueUrl=queue_url, AttributeNames=["ApproximateNumberOfMessages"]
+        )
+        self.assertEqual(exception_context.exception, exception)
 
 
 class ReadMessagesFromQueueTest(TestCase):

@@ -203,6 +203,32 @@ def get_sqs_queue_url(queue_name):
         raise
 
 
+def get_sqs_approximate_number_of_messages(queue_url):
+    """Get approximate number of messages on SQS queue."""
+    region = settings.SQS_DEFAULT_REGION
+    sqs_client = boto3.client("sqs", region_name=region)
+
+    try:
+        response = sqs_client.get_queue_attributes(
+            QueueUrl=queue_url, AttributeNames=["ApproximateNumberOfMessages"]
+        )
+        return int(response["Attributes"]["ApproximateNumberOfMessages"])
+    except ClientError as e:
+        error_code = getattr(e, "response", {}).get("Error", {}).get("Code", None)
+        if str(error_code).endswith(".NonExistentQueue"):
+            logger.warning(_("Queue does not exist at %s"), queue_url)
+            return None
+        else:
+            logger.exception(
+                _(
+                    "Unexpected ClientError %(code)s from "
+                    "get_queue_attributes using queue url: %(queue_url)s %(e)s"
+                ),
+                {"queue_url": queue_url, "code": error_code, "e": e},
+            )
+            raise
+
+
 def create_queue(queue_name, with_dlq=True, retention_period=RETENTION_DEFAULT):
     """
     Create an SQS queue and return its URL.
@@ -312,6 +338,11 @@ def validate_redrive_policy(source_queue_name, redrive_policy):
     return queue_exists
 
 
+def get_sqs_queue_dlq_name(source_queue_name):
+    """Get the standard DLQ queue name for the given queue name."""
+    return "{}-dlq".format(source_queue_name[: QUEUE_NAME_LENGTH_MAX - 4])
+
+
 def create_dlq(source_queue_name):
     """
     Create a DLQ and return its created ARN.
@@ -325,7 +356,7 @@ def create_dlq(source_queue_name):
     """
     region = settings.SQS_DEFAULT_REGION
     sqs = boto3.client("sqs", region_name=region)
-    dlq_name = "{}-dlq".format(source_queue_name[: QUEUE_NAME_LENGTH_MAX - 4])
+    dlq_name = get_sqs_queue_dlq_name(source_queue_name)
     dlq_url = create_queue(dlq_name, with_dlq=False, retention_period=RETENTION_MAXIMUM)
     dlq_arn = sqs.get_queue_attributes(QueueUrl=dlq_url, AttributeNames=["QueueArn"])[
         "Attributes"
