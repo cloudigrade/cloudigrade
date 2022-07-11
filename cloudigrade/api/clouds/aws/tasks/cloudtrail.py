@@ -48,7 +48,8 @@ def analyze_log():
        tuple[list, list]: lists of dicts describing messages that succeeded and failed
        to process. Note that these must be JSON-serializable, not AWS Message objects.
     """
-    queue_url = settings.AWS_CLOUDTRAIL_EVENT_URL
+    queue_name = settings.AWS_CLOUDTRAIL_EVENT_QUEUE_NAME
+    queue_url = aws.get_sqs_queue_url(queue_name)
     successes, failures = [], []
     for message in aws.yield_messages_from_queue(queue_url):
         success = False

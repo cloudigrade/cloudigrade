@@ -1,6 +1,5 @@
 """Settings file meant for production like environments."""
 import sentry_sdk
-from boto3 import client
 from django.urls import reverse
 from sentry_sdk.integrations.django import DjangoIntegration
 
@@ -18,14 +17,6 @@ DJANGO_DEBUG = "False"
 # have fallen back to generic defaults. However, in prod, we *require* that it be set
 # explicitly. By reloading here *without* a default, we halt app startup if not present.
 CLOUDIGRADE_ENVIRONMENT = env("CLOUDIGRADE_ENVIRONMENT")
-
-# Instead of calling util.aws.sts._get_primary_account_id,
-# we use boto here directly to avoid a potential import loop.
-account_id = client("sts").get_caller_identity().get("Account")
-AWS_CLOUDTRAIL_EVENT_URL = (
-    f"https://sqs.us-east-1.amazonaws.com/"
-    f"{account_id}/{CLOUDIGRADE_ENVIRONMENT}-cloudigrade-cloudtrail-s3"
-)
 
 SECRET_KEY = env("DJANGO_SECRET_KEY")
 ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS")

@@ -651,9 +651,9 @@ def check_and_cache_sqs_queues_lengths():
     houndigrade_queue_url = aws.get_sqs_queue_url(houndigrade_queue_name)
     houndigrade_dlq_url = aws.get_sqs_queue_url(houndigrade_dlq_name)
 
-    cloudtrail_queue_url = settings.AWS_CLOUDTRAIL_EVENT_URL
-    cloudtrail_queue_name = cloudtrail_queue_url.split("/")[-1]
+    cloudtrail_queue_name = settings.AWS_CLOUDTRAIL_EVENT_QUEUE_NAME
     cloudtrail_dlq_name = aws.get_sqs_queue_dlq_name(cloudtrail_queue_name)
+    cloudtrail_queue_url = aws.get_sqs_queue_url(cloudtrail_queue_name)
     cloudtrail_dlq_url = aws.get_sqs_queue_url(cloudtrail_dlq_name)
 
     queues = {

@@ -372,13 +372,7 @@ AWS_S3_BUCKET_LC_MAX_AGE = env.int("AWS_S3_BUCKET_LC_MAX_AGE", default=1460)
 #####################################################################
 # AWS SQS (Cloudtrail Notifications)
 #
-# This AWS_CLOUDTRAIL_EVENT_URL has a placeholder where an AWS Account ID should be.
-# That placeholder "000000000000" value is okay for tests but *must* be overridden when
-# actually running cloudigrade, such as in local.py and prod.py.
-AWS_CLOUDTRAIL_EVENT_URL = (
-    f"https://sqs.us-east-1.amazonaws.com/"
-    f"000000000000/{CLOUDIGRADE_ENVIRONMENT}-cloudigrade-cloudtrail-s3"
-)
+AWS_CLOUDTRAIL_EVENT_QUEUE_NAME = f"{CLOUDIGRADE_ENVIRONMENT}-cloudigrade-cloudtrail-s3"
 AWS_DEFAULT_REGION = env("AWS_DEFAULT_REGION", default="us-east-1")
 SQS_DEFAULT_REGION = env("SQS_DEFAULT_REGION", default=AWS_DEFAULT_REGION)
 AWS_SQS_MAX_HOUNDI_YIELD_COUNT = env.int("AWS_SQS_MAX_HOUNDI_YIELD_COUNT", default=10)
