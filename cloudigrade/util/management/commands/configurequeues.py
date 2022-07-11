@@ -18,9 +18,7 @@ class Command(BaseCommand):
     queue_names = [
         "{0}ready_volumes".format(settings.AWS_NAME_PREFIX),
         settings.HOUNDIGRADE_RESULTS_QUEUE_NAME,
-    ]
-    queue_urls = [
-        settings.AWS_CLOUDTRAIL_EVENT_URL,
+        settings.AWS_CLOUDTRAIL_EVENT_QUEUE_NAME,
     ]
 
     def handle(self, *args, **options):
@@ -28,10 +26,6 @@ class Command(BaseCommand):
         for queue_name in self.queue_names:
             self.stdout.write('Configuring SQS queue "{}"'.format(queue_name))
             queue_url = aws.get_sqs_queue_url(queue_name)
-            aws.ensure_queue_has_dlq(queue_name, queue_url)
-        for queue_url in self.queue_urls:
-            queue_name = queue_url.split("/")[-1]
-            self.stdout.write('Configuring SQS queue "{}"'.format(queue_name))
             try:
                 aws.ensure_queue_has_dlq(queue_name, queue_url)
             except:  # noqa: E722

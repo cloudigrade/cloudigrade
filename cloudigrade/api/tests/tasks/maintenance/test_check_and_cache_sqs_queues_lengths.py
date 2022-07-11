@@ -58,8 +58,8 @@ class CheckAndCacheSqsQueueLengthsTest(TestCase):
         }
 
         with override_settings(
+            AWS_CLOUDTRAIL_EVENT_QUEUE_NAME=self.cloudtrail_queue_name,
             HOUNDIGRADE_RESULTS_QUEUE_NAME=self.houndigrade_queue_name,
-            AWS_CLOUDTRAIL_EVENT_URL=self.cloudtrail_queue_url,
         ), patch.object(maintenance, "aws") as mock_aws:
             mock_aws.get_sqs_approximate_number_of_messages.side_effect = (
                 expected_counts.values()
@@ -107,8 +107,8 @@ class CheckAndCacheSqsQueueLengthsTest(TestCase):
         aws_counts[2] = None
 
         with override_settings(
+            AWS_CLOUDTRAIL_EVENT_QUEUE_NAME=self.cloudtrail_queue_name,
             HOUNDIGRADE_RESULTS_QUEUE_NAME=self.houndigrade_queue_name,
-            AWS_CLOUDTRAIL_EVENT_URL=self.cloudtrail_queue_url,
         ), self.assertLogs(
             "api.tasks.maintenance", level="ERROR"
         ) as logging_watcher, patch.object(
