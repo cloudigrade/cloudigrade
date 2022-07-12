@@ -1476,7 +1476,7 @@ parameters:
 - name: CELERY_METRICS_IMAGE_TAG
   displayName: Celery Metrics Image Tag
   required: true
-  value: latest
+  value: 7729ce8
 - name: CELERY_METRICS_READINESS_TIMEOUT
   displayName: Celery Metrics readiness probe timeout in seconds
   required: true
