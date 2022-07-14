@@ -22,3 +22,8 @@ def get_cache_key_timeout(key):
         return 0
     delta = expiration_date_time - now
     return delta.seconds
+
+
+def get_sqs_message_count_cache_key(key):
+    """Get the cache key for an SQS queue's message count."""
+    return f"sqs_message_count_{key}"

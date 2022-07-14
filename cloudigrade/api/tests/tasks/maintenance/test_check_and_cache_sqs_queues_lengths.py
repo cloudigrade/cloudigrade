@@ -7,6 +7,7 @@ from django.test import TestCase, override_settings
 
 from api.tasks import maintenance
 from util import aws
+from util.cache import get_sqs_message_count_cache_key
 
 _faker = faker.Faker()
 _base_sqs_url = "http://localhost/sqs/"
@@ -72,7 +73,7 @@ class CheckAndCacheSqsQueueLengthsTest(TestCase):
             maintenance.check_and_cache_sqs_queues_lengths()
 
         for key, value in expected_counts.items():
-            cache_key = maintenance.get_sqs_message_count_cache_key(key)
+            cache_key = get_sqs_message_count_cache_key(key)
             cache_value = cache.get(cache_key)
             self.assertEqual(
                 value,
@@ -90,7 +91,7 @@ class CheckAndCacheSqsQueueLengthsTest(TestCase):
         # Preload the cache with an "old" value that should not be replaced.
         old_cloudtrail_notifications_count = _faker.random_int()
         cache.set(
-            maintenance.get_sqs_message_count_cache_key("cloudtrail_notifications"),
+            get_sqs_message_count_cache_key("cloudtrail_notifications"),
             old_cloudtrail_notifications_count,
         )
 
@@ -130,7 +131,7 @@ class CheckAndCacheSqsQueueLengthsTest(TestCase):
         self.assertIn(self.cloudtrail_queue_url, logging_watcher.output[1])
 
         for key, value in expected_counts.items():
-            cache_key = maintenance.get_sqs_message_count_cache_key(key)
+            cache_key = get_sqs_message_count_cache_key(key)
             cache_value = cache.get(cache_key)
             self.assertEqual(
                 value,

@@ -26,6 +26,7 @@ from api.models import (
 )
 from api.models import User
 from util import aws
+from util.cache import get_sqs_message_count_cache_key
 from util.celery import retriable_shared_task
 from util.exceptions import AwsThrottlingException
 from util.misc import get_now, lock_task_for_user_ids
@@ -627,11 +628,6 @@ def migrate_account_numbers_to_org_ids():
             f"Failed to migrate account_numbers to org_ids - {e}", exc_info=True
         )
         return
-
-
-def get_sqs_message_count_cache_key(key):
-    """Get the cache key for an SQS queue's message count."""
-    return f"sqs_message_count_{key}"
 
 
 @shared_task(name="api.tasks.check_and_cache_sqs_queues_lengths")
