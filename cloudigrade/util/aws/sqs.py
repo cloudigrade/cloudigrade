@@ -7,6 +7,7 @@ import uuid
 import boto3
 import jsonpickle
 from botocore.exceptions import ClientError
+from cache_memoize import cache_memoize
 from django.conf import settings
 from django.utils.translation import gettext as _
 
@@ -180,7 +181,8 @@ def extract_sqs_message(message, service="s3"):
     return extracted_records
 
 
-def get_sqs_queue_url(queue_name):
+@cache_memoize(settings.CACHE_TTL_DEFAULT)
+def get_sqs_queue_url(queue_name, region=settings.SQS_DEFAULT_REGION):
     """
     Get the SQS queue URL for the given queue name.
 
@@ -188,12 +190,12 @@ def get_sqs_queue_url(queue_name):
 
     Args:
         queue_name (str): the name of the target SQS queue
+        region (str): AWS region hosting the target SQS queue
 
     Returns:
         str: the queue's URL.
 
     """
-    region = settings.SQS_DEFAULT_REGION
     sqs = boto3.client("sqs", region_name=region)
     try:
         return sqs.get_queue_url(QueueName=queue_name)["QueueUrl"]

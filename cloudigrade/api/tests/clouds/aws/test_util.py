@@ -95,7 +95,7 @@ class CloudsAwsUtilTest(TestCase):
         queue_name = "Test Queue"
         messages, wrapped_messages, __ = api_helper.create_messages_for_sqs()
         mock_sqs = mock_boto3.client.return_value
-        mock_queue_url = Mock()
+        mock_queue_url = _faker.url()
         mock_boto3.client.return_value.get_queue_url.return_value = {
             "QueueUrl": mock_queue_url
         }
