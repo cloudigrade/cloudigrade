@@ -217,8 +217,8 @@ class UtilAwsSqsTest(TestCase):
 
     def test_get_sqs_queue_url_for_existing_queue(self):
         """Test getting URL for existing SQS queue."""
-        queue_name = Mock()
-        expected_url = Mock()
+        queue_name = _faker.slug()
+        expected_url = _faker.url()
         mock_client = Mock()
 
         with patch.object(sqs, "boto3") as mock_boto3:
@@ -231,8 +231,8 @@ class UtilAwsSqsTest(TestCase):
 
     def test_get_sqs_queue_url_creates_new_queue(self):
         """Test getting URL for a SQS queue that does not yet exist."""
-        queue_name = Mock()
-        expected_url = Mock()
+        queue_name = _faker.slug()
+        expected_url = _faker.url()
         mock_client = Mock()
 
         error_response = {"Error": {"Code": ".NonExistentQueue"}}
@@ -277,7 +277,7 @@ class UtilAwsSqsTest(TestCase):
     def test_create_queue_without_dlq(self):
         """Test creating an SQS queue with retention period and no DLQ."""
         queue_name = _faker.slug()
-        queue_url = Mock()
+        queue_url = _faker.url()
         retention = random.randint(1, sqs.RETENTION_MAXIMUM)
 
         mock_client = Mock()
@@ -538,6 +538,7 @@ class ReadMessagesFromQueueTest(TestCase):
             actual_count
         )
         mock_sqs = mock_boto3.client.return_value
+        mock_sqs.get_queue_url.return_value = {"QueueUrl": _faker.url()}
         mock_sqs.receive_message = Mock()
         mock_sqs.receive_message.side_effect = [
             {"Messages": wrapped_messages[:requested_count]},
@@ -557,6 +558,7 @@ class ReadMessagesFromQueueTest(TestCase):
             actual_count
         )
         mock_sqs = mock_boto3.client.return_value
+        mock_sqs.get_queue_url.return_value = {"QueueUrl": _faker.url()}
         mock_sqs.receive_message = Mock()
         mock_sqs.receive_message.side_effect = [
             {"Messages": wrapped_messages[:SQS_RECEIVE_BATCH_SIZE]},
@@ -576,6 +578,7 @@ class ReadMessagesFromQueueTest(TestCase):
             actual_count
         )
         mock_sqs = mock_boto3.client.return_value
+        mock_sqs.get_queue_url.return_value = {"QueueUrl": _faker.url()}
         mock_sqs.receive_message = Mock()
         mock_sqs.receive_message.side_effect = [
             {"Messages": wrapped_messages[:requested_count]},
@@ -595,6 +598,7 @@ class ReadMessagesFromQueueTest(TestCase):
             actual_count
         )
         mock_sqs = mock_boto3.client.return_value
+        mock_sqs.get_queue_url.return_value = {"QueueUrl": _faker.url()}
         mock_sqs.receive_message = Mock()
         mock_sqs.receive_message.side_effect = [
             {"Messages": wrapped_messages[:requested_count]},

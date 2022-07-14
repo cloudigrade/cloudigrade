@@ -16,7 +16,7 @@ class UnexpectedException(Exception):
     """Dummy exception for testing."""
 
 
-def get_sqs_queue_url(queue_name):
+def get_sqs_queue_url(queue_name, *args, **kwargs):
     """Override behavior of sqs.get_sqs_queue_url."""
     return f"{_base_sqs_url}{queue_name}"
 
