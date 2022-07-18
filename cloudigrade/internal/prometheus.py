@@ -50,19 +50,32 @@ CACHED_GAUGE_METRICS_INFO = [
     ),
 ]
 
-CUSTOM_GAUGE_METRICS = {}
 
-
-def initialize_cached_metrics():
+class CachedMetricsRegistry:
     """
-    Initialize custom Prometheus metrics.
+    Registry of cached metrics.
 
-    This function should only be called once at app startup.
+    This class has a singleton-like class variable to ensure that underlying Prometheus
+    client's metrics objects are only ever created once because the Prometheus client
+    itself also requires that metrics are unique and only created and registered once.
     """
-    if CUSTOM_GAUGE_METRICS:
-        logger.warning("Cannot reinitialize CUSTOM_GAUGE_METRICS")
-        return
-    for info in CACHED_GAUGE_METRICS_INFO:
-        gauge = Gauge(info.metric_name, info.metric_description)
-        gauge.set_function(partial(cache.get, info.cache_key, info.default))
-        CUSTOM_GAUGE_METRICS[info.metric_name] = gauge
+
+    _gauge_metrics = {}
+
+    def initialize(self):
+        """
+        Initialize custom Prometheus metrics.
+
+        This function should only be called once at app startup.
+        """
+        if self._gauge_metrics:
+            logger.warning("Cannot reinitialize gauge metrics")
+            return
+        for info in CACHED_GAUGE_METRICS_INFO:
+            gauge = Gauge(info.metric_name, info.metric_description)
+            gauge.set_function(partial(cache.get, info.cache_key, info.default))
+            self._gauge_metrics[info.metric_name] = gauge
+
+    def get_registered_metrics_names(self):
+        """Get list of registered metrics names."""
+        return self._gauge_metrics.keys()

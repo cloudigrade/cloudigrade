@@ -32,7 +32,7 @@ class InternalPrometheusTestCase(TestCase):
 
         self.assertEqual(
             len(prometheus.CACHED_GAUGE_METRICS_INFO),
-            len(prometheus.CUSTOM_GAUGE_METRICS),
+            len(prometheus.CachedMetricsRegistry().get_registered_metrics_names()),
         )
 
         # Yes, _collector_to_names is pseudo-protected, but I couldn't find any other
@@ -48,7 +48,7 @@ class InternalPrometheusTestCase(TestCase):
         Test initialize_cached_metrics only creates the Gauge objects once.
 
         Since we assume that "ready" may already have been called, we patch two things:
-        the CUSTOM_GAUGE_METRICS dict that contains known created metrics and the
+        the _gauge_metrics dict that contains known created metrics and the
         imported Gauge class. The former requires patching because it was already
         populated with entries by the ready function, and the latter requires patching
         because instantiating a new Gauge instance affects a *global* registry within
@@ -56,26 +56,30 @@ class InternalPrometheusTestCase(TestCase):
         """
         patched_custom_gauge_metrics = {}
         with patch(
-            "internal.prometheus.CUSTOM_GAUGE_METRICS", patched_custom_gauge_metrics
+            "internal.prometheus.CachedMetricsRegistry._gauge_metrics",
+            patched_custom_gauge_metrics,
         ), patch("internal.prometheus.Gauge") as mock_gauge:
             from internal import prometheus
 
             expected_final_count = len(prometheus.CACHED_GAUGE_METRICS_INFO)
 
-            # Initially CUSTOM_GAUGE_METRICS should be empty.
-            self.assertEqual(0, len(prometheus.CUSTOM_GAUGE_METRICS))
+            registry = prometheus.CachedMetricsRegistry()
 
-            prometheus.initialize_cached_metrics()
-            # After one call, CUSTOM_GAUGE_METRICS should be fully loaded.
-            self.assertEqual(expected_final_count, len(prometheus.CUSTOM_GAUGE_METRICS))
+            # Initially _gauge_metrics should be empty.
+            self.assertEqual(0, len(registry.get_registered_metrics_names()))
+
+            registry.initialize()
+            metrics_after_first_call = registry.get_registered_metrics_names()
+            # After one call, _gauge_metrics should be fully loaded.
+            self.assertEqual(expected_final_count, len(metrics_after_first_call))
             self.assertEqual(expected_final_count, mock_gauge.call_count)
 
-            metrics_after_first_call = prometheus.CUSTOM_GAUGE_METRICS.copy()
             mock_gauge.reset_mock()
 
-            prometheus.initialize_cached_metrics()
-            # After the second call, CUSTOM_GAUGE_METRICS should be unchanged,
+            registry.initialize()
+            # After the second call, _gauge_metrics should be unchanged,
             # and there should be no more Gauge calls.
-            self.assertEqual(expected_final_count, len(prometheus.CUSTOM_GAUGE_METRICS))
-            self.assertEqual(metrics_after_first_call, prometheus.CUSTOM_GAUGE_METRICS)
+            metrics_after_second_call = registry.get_registered_metrics_names()
+            self.assertEqual(expected_final_count, len(metrics_after_second_call))
+            self.assertEqual(metrics_after_first_call, metrics_after_second_call)
             self.assertEqual(0, mock_gauge.call_count)
