@@ -1,10 +1,13 @@
 from django.apps import AppConfig
 
+from internal.prometheus import CachedMetricsRegistry
+
 
 class InternalConfig(AppConfig):
     name = "internal"
+    _cached_metrics_registry = None
 
     def ready(self):
-        from internal.prometheus import initialize_cached_metrics
-
-        initialize_cached_metrics()
+        if not self._cached_metrics_registry:
+            self._cached_metrics_registry = CachedMetricsRegistry()
+            self._cached_metrics_registry.initialize()
