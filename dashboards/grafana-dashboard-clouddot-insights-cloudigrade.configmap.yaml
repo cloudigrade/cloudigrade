@@ -6,7 +6,10 @@ data:
         "list": [
           {
             "builtIn": 1,
-            "datasource": "-- Grafana --",
+            "datasource": {
+              "type": "datasource",
+              "uid": "grafana"
+            },
             "enable": true,
             "hide": true,
             "iconColor": "rgba(0, 211, 255, 1)",
@@ -26,8 +29,8 @@ data:
       "fiscalYearStartMonth": 0,
       "gnetId": 9528,
       "graphTooltip": 0,
-      "id": 223,
-      "iteration": 1639422167567,
+      "id": 95,
+      "iteration": 1658242186276,
       "links": [
         {
           "icon": "external link",
@@ -48,7 +51,10 @@ data:
       "panels": [
         {
           "collapsed": false,
-          "datasource": null,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "tuHy3WB7z"
+          },
           "gridPos": {
             "h": 1,
             "w": 24,
@@ -57,11 +63,23 @@ data:
           },
           "id": 74,
           "panels": [],
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "tuHy3WB7z"
+              },
+              "refId": "A"
+            }
+          ],
           "title": "Ready Pods",
           "type": "row"
         },
         {
-          "datasource": null,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "tuHy3WB7z"
+          },
           "gridPos": {
             "h": 1,
             "w": 6,
@@ -73,12 +91,23 @@ data:
             "content": "",
             "mode": "markdown"
           },
-          "pluginVersion": "8.2.7",
+          "pluginVersion": "9.0.1",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "tuHy3WB7z"
+              },
+              "refId": "A"
+            }
+          ],
           "title": "Current Ready Pod Counts",
           "type": "text"
         },
         {
-          "datasource": "$datasource",
+          "datasource": {
+            "uid": "$datasource"
+          },
           "description": "This displays the percentage of pods currently ready out of the requested replica count.",
           "fieldConfig": {
             "defaults": {
@@ -130,9 +159,12 @@ data:
             "showThresholdMarkers": true,
             "text": {}
           },
-          "pluginVersion": "8.2.7",
+          "pluginVersion": "9.0.1",
           "targets": [
             {
+              "datasource": {
+                "uid": "$datasource"
+              },
               "exemplar": true,
               "expr": "sum (kube_pod_container_status_ready{namespace=\"$namespace\", pod=~\"cloudigrade-api.*\"}) / ignoring () group_left sum(kube_deployment_spec_replicas{namespace=\"$namespace\", deployment=\"cloudigrade-api\"})",
               "format": "time_series",
@@ -142,6 +174,9 @@ data:
               "refId": "api"
             },
             {
+              "datasource": {
+                "uid": "$datasource"
+              },
               "exemplar": true,
               "expr": "sum (kube_pod_container_status_ready{namespace=\"$namespace\", pod=~\"cloudigrade-worker.*\"}) / ignoring () group_left sum(kube_deployment_spec_replicas{namespace=\"$namespace\", deployment=\"cloudigrade-worker\"})",
               "format": "time_series",
@@ -152,6 +187,9 @@ data:
               "refId": "worker"
             },
             {
+              "datasource": {
+                "uid": "$datasource"
+              },
               "exemplar": true,
               "expr": "sum (kube_pod_container_status_ready{namespace=\"$namespace\", pod=~\"cloudigrade-listener.*\"}) / ignoring () group_left sum(kube_deployment_spec_replicas{namespace=\"$namespace\", deployment=\"cloudigrade-listener\"})",
               "format": "time_series",
@@ -162,6 +200,9 @@ data:
               "refId": "listener"
             },
             {
+              "datasource": {
+                "uid": "$datasource"
+              },
               "exemplar": true,
               "expr": "sum (kube_pod_container_status_ready{namespace=\"$namespace\", pod=~\"cloudigrade-beat.*\"}) / ignoring () group_left sum(kube_deployment_spec_replicas{namespace=\"$namespace\", deployment=\"cloudigrade-beat\"})",
               "format": "time_series",
@@ -172,13 +213,13 @@ data:
               "refId": "beat"
             }
           ],
-          "timeFrom": null,
-          "timeShift": null,
           "title": "% Pods Currently Ready of Replica Count",
           "type": "gauge"
         },
         {
-          "datasource": "$datasource",
+          "datasource": {
+            "uid": "$datasource"
+          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -228,9 +269,12 @@ data:
             "showThresholdMarkers": true,
             "text": {}
           },
-          "pluginVersion": "8.2.7",
+          "pluginVersion": "9.0.1",
           "targets": [
             {
+              "datasource": {
+                "uid": "$datasource"
+              },
               "exemplar": true,
               "expr": "avg(avg_over_time(kube_pod_container_status_ready{namespace=\"$namespace\", pod=~\"cloudigrade-api.*\"}[24h]))",
               "format": "time_series",
@@ -239,6 +283,9 @@ data:
               "refId": "A"
             },
             {
+              "datasource": {
+                "uid": "$datasource"
+              },
               "exemplar": true,
               "expr": "avg(avg_over_time(kube_pod_container_status_ready{namespace=\"$namespace\", pod=~\"cloudigrade-worker.*\"}[24h]))",
               "interval": "",
@@ -246,6 +293,9 @@ data:
               "refId": "C"
             },
             {
+              "datasource": {
+                "uid": "$datasource"
+              },
               "exemplar": true,
               "expr": "avg(avg_over_time(kube_pod_container_status_ready{namespace=\"$namespace\", pod=~\"cloudigrade-listener.*\"}[24h]))",
               "interval": "",
@@ -253,6 +303,9 @@ data:
               "refId": "D"
             },
             {
+              "datasource": {
+                "uid": "$datasource"
+              },
               "exemplar": true,
               "expr": "avg(avg_over_time(kube_pod_container_status_ready{namespace=\"$namespace\", pod=~\"cloudigrade-beat.*\"}[24h]))",
               "interval": "",
@@ -260,13 +313,14 @@ data:
               "refId": "B"
             }
           ],
-          "timeFrom": null,
-          "timeShift": null,
           "title": "% Pods Ready Status last 24 hours",
           "type": "gauge"
         },
         {
-          "datasource": "${datasource}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -315,9 +369,12 @@ data:
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "8.2.7",
+          "pluginVersion": "9.0.1",
           "targets": [
             {
+              "datasource": {
+                "uid": "${datasource}"
+              },
               "exemplar": true,
               "expr": "sum(kube_pod_container_status_ready{namespace=\"$namespace\", pod=~\"cloudigrade-api.*\"})",
               "instant": true,
@@ -330,7 +387,10 @@ data:
           "type": "stat"
         },
         {
-          "datasource": "${datasource}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -379,9 +439,12 @@ data:
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "8.2.7",
+          "pluginVersion": "9.0.1",
           "targets": [
             {
+              "datasource": {
+                "uid": "${datasource}"
+              },
               "exemplar": true,
               "expr": "sum(kube_pod_container_status_ready{namespace=\"$namespace\", pod=~\"cloudigrade-beat.*\"})",
               "instant": true,
@@ -394,7 +457,9 @@ data:
           "type": "stat"
         },
         {
-          "datasource": "${datasource}",
+          "datasource": {
+            "uid": "${datasource}"
+          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -443,9 +508,12 @@ data:
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "8.2.7",
+          "pluginVersion": "9.0.1",
           "targets": [
             {
+              "datasource": {
+                "uid": "${datasource}"
+              },
               "exemplar": true,
               "expr": "sum(kube_pod_container_status_ready{namespace=\"$namespace\", pod=~\"cloudigrade-worker.*\"})",
               "instant": true,
@@ -458,7 +526,9 @@ data:
           "type": "stat"
         },
         {
-          "datasource": "${datasource}",
+          "datasource": {
+            "uid": "${datasource}"
+          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -507,9 +577,12 @@ data:
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "8.2.7",
+          "pluginVersion": "9.0.1",
           "targets": [
             {
+              "datasource": {
+                "uid": "${datasource}"
+              },
               "exemplar": true,
               "expr": "sum(kube_pod_container_status_ready{namespace=\"$namespace\", pod=~\"cloudigrade-listener.*\"})",
               "instant": true,
@@ -523,7 +596,10 @@ data:
         },
         {
           "collapsed": false,
-          "datasource": null,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "tuHy3WB7z"
+          },
           "gridPos": {
             "h": 1,
             "w": 24,
@@ -532,12 +608,22 @@ data:
           },
           "id": 59,
           "panels": [],
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "tuHy3WB7z"
+              },
+              "refId": "A"
+            }
+          ],
           "title": "Pod Resources",
           "type": "row"
         },
         {
-          "cacheTimeout": null,
-          "datasource": "$datasource",
+          "datasource": {
+            "uid": "$datasource"
+          },
           "description": "",
           "fieldConfig": {
             "defaults": {
@@ -593,7 +679,6 @@ data:
             "y": 9
           },
           "id": 96,
-          "interval": null,
           "links": [],
           "options": {
             "legend": {
@@ -602,12 +687,16 @@ data:
               "placement": "bottom"
             },
             "tooltip": {
-              "mode": "single"
+              "mode": "single",
+              "sort": "none"
             }
           },
           "pluginVersion": "8.2.1",
           "targets": [
             {
+              "datasource": {
+                "uid": "$datasource"
+              },
               "exemplar": true,
               "expr": "sum by (container) (rate(container_cpu_usage_seconds_total{namespace=\"$namespace\", pod=~\".*igrade-.*\", container!=\"POD\", container!=\"\"}[1m]))",
               "interval": "",
@@ -615,14 +704,13 @@ data:
               "refId": "A"
             }
           ],
-          "timeFrom": null,
-          "timeShift": null,
           "title": "CPU usage",
           "type": "timeseries"
         },
         {
-          "cacheTimeout": null,
-          "datasource": "$datasource",
+          "datasource": {
+            "uid": "$datasource"
+          },
           "description": "",
           "fieldConfig": {
             "defaults": {
@@ -678,7 +766,6 @@ data:
             "y": 9
           },
           "id": 94,
-          "interval": null,
           "links": [],
           "options": {
             "legend": {
@@ -687,12 +774,16 @@ data:
               "placement": "bottom"
             },
             "tooltip": {
-              "mode": "single"
+              "mode": "single",
+              "sort": "none"
             }
           },
           "pluginVersion": "8.2.1",
           "targets": [
             {
+              "datasource": {
+                "uid": "$datasource"
+              },
               "exemplar": true,
               "expr": "sum by (container) (container_memory_working_set_bytes{namespace=\"$namespace\", pod=~\".*igrade-.*\", container!=\"POD\", container!=\"\"})",
               "interval": "",
@@ -700,18 +791,17 @@ data:
               "refId": "A"
             }
           ],
-          "timeFrom": null,
-          "timeShift": null,
           "title": "Memory usage",
           "type": "timeseries"
         },
         {
           "aliasColors": {},
           "bars": false,
-          "cacheTimeout": null,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "$datasource",
+          "datasource": {
+            "uid": "$datasource"
+          },
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -722,7 +812,6 @@ data:
           },
           "hiddenSeries": false,
           "id": 100,
-          "interval": null,
           "legend": {
             "avg": false,
             "current": false,
@@ -740,7 +829,7 @@ data:
             "alertThreshold": true
           },
           "percentage": false,
-          "pluginVersion": "8.2.7",
+          "pluginVersion": "9.0.1",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -750,6 +839,9 @@ data:
           "steppedLine": false,
           "targets": [
             {
+              "datasource": {
+                "uid": "$datasource"
+              },
               "exemplar": true,
               "expr": "sum by (container) (rate(container_cpu_usage_seconds_total{namespace=\"$namespace\", pod=~\".*igrade-.*\", container!=\"POD\", container!=\"\"}[$__rate_interval])) / sum by (container) (kube_pod_container_resource_limits{resource=\"cpu\", namespace=\"$namespace\", pod=~\".*grade-.*\", container!=\"POD\", container!=\"\"})",
               "interval": "",
@@ -758,9 +850,7 @@ data:
             }
           ],
           "thresholds": [],
-          "timeFrom": null,
           "timeRegions": [],
-          "timeShift": null,
           "title": "% of CPU limit consumed",
           "tooltip": {
             "shared": true,
@@ -769,9 +859,7 @@ data:
           },
           "type": "graph",
           "xaxis": {
-            "buckets": null,
             "mode": "time",
-            "name": null,
             "show": true,
             "values": []
           },
@@ -779,25 +867,18 @@ data:
             {
               "$$hashKey": "object:263",
               "format": "percentunit",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             },
             {
               "$$hashKey": "object:264",
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             }
           ],
           "yaxis": {
-            "align": false,
-            "alignLevel": null
+            "align": false
           }
         },
         {
@@ -805,7 +886,9 @@ data:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "$datasource",
+          "datasource": {
+            "uid": "$datasource"
+          },
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -832,7 +915,7 @@ data:
             "alertThreshold": true
           },
           "percentage": false,
-          "pluginVersion": "8.2.7",
+          "pluginVersion": "9.0.1",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -842,6 +925,9 @@ data:
           "steppedLine": false,
           "targets": [
             {
+              "datasource": {
+                "uid": "$datasource"
+              },
               "exemplar": true,
               "expr": "sum by (container) (container_memory_working_set_bytes{namespace=\"$namespace\"}) / sum by (container) (kube_pod_container_resource_limits{namespace=\"$namespace\",resource=\"memory\",pod=~\".*igrade-.*\"})",
               "instant": false,
@@ -851,9 +937,7 @@ data:
             }
           ],
           "thresholds": [],
-          "timeFrom": null,
           "timeRegions": [],
-          "timeShift": null,
           "title": "% of Memory limit consumed",
           "tooltip": {
             "shared": true,
@@ -862,9 +946,7 @@ data:
           },
           "type": "graph",
           "xaxis": {
-            "buckets": null,
             "mode": "time",
-            "name": null,
             "show": true,
             "values": []
           },
@@ -872,30 +954,27 @@ data:
             {
               "$$hashKey": "object:200",
               "format": "percentunit",
-              "label": null,
               "logBase": 1,
               "max": "1.0",
-              "min": null,
               "show": true
             },
             {
               "$$hashKey": "object:201",
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             }
           ],
           "yaxis": {
-            "align": false,
-            "alignLevel": null
+            "align": false
           }
         },
         {
           "collapsed": false,
-          "datasource": null,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "tuHy3WB7z"
+          },
           "gridPos": {
             "h": 1,
             "w": 24,
@@ -904,12 +983,22 @@ data:
           },
           "id": 51,
           "panels": [],
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "tuHy3WB7z"
+              },
+              "refId": "A"
+            }
+          ],
           "title": "HTTP Responses",
           "type": "row"
         },
         {
-          "cacheTimeout": null,
-          "datasource": "$datasource",
+          "datasource": {
+            "uid": "$datasource"
+          },
           "description": "",
           "fieldConfig": {
             "defaults": {
@@ -948,9 +1037,7 @@ data:
             "y": 30
           },
           "id": 86,
-          "interval": null,
           "links": [],
-          "maxDataPoints": null,
           "options": {
             "colorMode": "none",
             "graphMode": "none",
@@ -966,9 +1053,12 @@ data:
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "8.2.7",
+          "pluginVersion": "9.0.1",
           "targets": [
             {
+              "datasource": {
+                "uid": "$datasource"
+              },
               "exemplar": true,
               "expr": "sum(increase(api_3scale_gateway_api_status{exported_service=\"cloudigrade\"}[$__range]))",
               "format": "time_series",
@@ -979,14 +1069,14 @@ data:
               "refId": "A"
             }
           ],
-          "timeFrom": null,
           "title": "Total Responses",
           "transformations": [],
           "type": "stat"
         },
         {
-          "cacheTimeout": null,
-          "datasource": "$datasource",
+          "datasource": {
+            "uid": "$datasource"
+          },
           "description": "",
           "fieldConfig": {
             "defaults": {
@@ -1029,9 +1119,7 @@ data:
             "y": 30
           },
           "id": 87,
-          "interval": null,
           "links": [],
-          "maxDataPoints": null,
           "options": {
             "colorMode": "value",
             "graphMode": "none",
@@ -1047,9 +1135,12 @@ data:
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "8.2.7",
+          "pluginVersion": "9.0.1",
           "targets": [
             {
+              "datasource": {
+                "uid": "$datasource"
+              },
               "exemplar": true,
               "expr": "sum(increase(api_3scale_gateway_api_status{exported_service=\"cloudigrade\",status=\"2xx\"}[$__range]))",
               "format": "time_series",
@@ -1060,14 +1151,14 @@ data:
               "refId": "A"
             }
           ],
-          "timeFrom": null,
           "title": "2xx Responses",
           "transformations": [],
           "type": "stat"
         },
         {
-          "cacheTimeout": null,
-          "datasource": "$datasource",
+          "datasource": {
+            "uid": "$datasource"
+          },
           "description": "",
           "fieldConfig": {
             "defaults": {
@@ -1106,9 +1197,7 @@ data:
             "y": 30
           },
           "id": 88,
-          "interval": null,
           "links": [],
-          "maxDataPoints": null,
           "options": {
             "colorMode": "none",
             "graphMode": "none",
@@ -1124,9 +1213,12 @@ data:
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "8.2.7",
+          "pluginVersion": "9.0.1",
           "targets": [
             {
+              "datasource": {
+                "uid": "$datasource"
+              },
               "exemplar": true,
               "expr": "sum(increase(api_3scale_gateway_api_status{exported_service=\"cloudigrade\",status=\"3xx\"}[$__range]))",
               "format": "time_series",
@@ -1137,14 +1229,14 @@ data:
               "refId": "A"
             }
           ],
-          "timeFrom": null,
           "title": "3xx Responses",
           "transformations": [],
           "type": "stat"
         },
         {
-          "cacheTimeout": null,
-          "datasource": "$datasource",
+          "datasource": {
+            "uid": "$datasource"
+          },
           "description": "",
           "fieldConfig": {
             "defaults": {
@@ -1183,9 +1275,7 @@ data:
             "y": 30
           },
           "id": 89,
-          "interval": null,
           "links": [],
-          "maxDataPoints": null,
           "options": {
             "colorMode": "none",
             "graphMode": "none",
@@ -1201,9 +1291,12 @@ data:
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "8.2.7",
+          "pluginVersion": "9.0.1",
           "targets": [
             {
+              "datasource": {
+                "uid": "$datasource"
+              },
               "exemplar": true,
               "expr": "sum(increase(api_3scale_gateway_api_status{exported_service=\"cloudigrade\",status=\"4xx\"}[$__range]))",
               "format": "time_series",
@@ -1214,14 +1307,14 @@ data:
               "refId": "A"
             }
           ],
-          "timeFrom": null,
           "title": "4xx Responses",
           "transformations": [],
           "type": "stat"
         },
         {
-          "cacheTimeout": null,
-          "datasource": "$datasource",
+          "datasource": {
+            "uid": "$datasource"
+          },
           "description": "",
           "fieldConfig": {
             "defaults": {
@@ -1264,9 +1357,7 @@ data:
             "y": 30
           },
           "id": 90,
-          "interval": null,
           "links": [],
-          "maxDataPoints": null,
           "options": {
             "colorMode": "value",
             "graphMode": "none",
@@ -1282,9 +1373,12 @@ data:
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "8.2.7",
+          "pluginVersion": "9.0.1",
           "targets": [
             {
+              "datasource": {
+                "uid": "$datasource"
+              },
               "exemplar": true,
               "expr": "sum(increase(api_3scale_gateway_api_status{exported_service=\"cloudigrade\",status=\"5xx\"}[$__range]))",
               "format": "time_series",
@@ -1295,13 +1389,14 @@ data:
               "refId": "A"
             }
           ],
-          "timeFrom": null,
           "title": "5xx Responses",
           "transformations": [],
           "type": "stat"
         },
         {
-          "datasource": "$datasource",
+          "datasource": {
+            "uid": "$datasource"
+          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1365,12 +1460,16 @@ data:
               "placement": "bottom"
             },
             "tooltip": {
-              "mode": "single"
+              "mode": "single",
+              "sort": "none"
             }
           },
           "pluginVersion": "8.2.1",
           "targets": [
             {
+              "datasource": {
+                "uid": "$datasource"
+              },
               "exemplar": false,
               "expr": "sum(rate(api_3scale_gateway_api_status{exported_service=\"cloudigrade\",status=\"2xx\"}[5m])) / sum(rate(api_3scale_gateway_api_status{exported_service=\"cloudigrade\"}[5m]))",
               "interval": "15s",
@@ -1378,13 +1477,13 @@ data:
               "refId": "A"
             }
           ],
-          "timeFrom": null,
-          "timeShift": null,
           "title": "2xx Success Rate",
           "type": "timeseries"
         },
         {
-          "datasource": "$datasource",
+          "datasource": {
+            "uid": "$datasource"
+          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1452,12 +1551,16 @@ data:
               "placement": "bottom"
             },
             "tooltip": {
-              "mode": "single"
+              "mode": "single",
+              "sort": "none"
             }
           },
           "pluginVersion": "8.2.1",
           "targets": [
             {
+              "datasource": {
+                "uid": "$datasource"
+              },
               "exemplar": true,
               "expr": "sum(rate(api_3scale_gateway_api_status{exported_service=\"cloudigrade\",status=\"5xx\"}[5m])) / sum(0.0001 + rate(api_3scale_gateway_api_status{exported_service=\"cloudigrade\"}[5m]))",
               "interval": "15s",
@@ -1465,13 +1568,13 @@ data:
               "refId": "A"
             }
           ],
-          "timeFrom": null,
-          "timeShift": null,
           "title": "5xx Error Rate",
           "type": "timeseries"
         },
         {
-          "datasource": "$datasource",
+          "datasource": {
+            "uid": "$datasource"
+          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1529,7 +1632,6 @@ data:
             "y": 43
           },
           "id": 11,
-          "interval": null,
           "links": [],
           "options": {
             "legend": {
@@ -1538,12 +1640,16 @@ data:
               "placement": "bottom"
             },
             "tooltip": {
-              "mode": "single"
+              "mode": "single",
+              "sort": "none"
             }
           },
           "pluginVersion": "8.2.1",
           "targets": [
             {
+              "datasource": {
+                "uid": "$datasource"
+              },
               "exemplar": true,
               "expr": "sum(increase(api_3scale_gateway_api_status{exported_service=\"cloudigrade\"}[$__rate_interval])) by(status)",
               "format": "time_series",
@@ -1554,6 +1660,9 @@ data:
               "refId": "A"
             },
             {
+              "datasource": {
+                "uid": "$datasource"
+              },
               "exemplar": true,
               "expr": "sum(increase(api_3scale_gateway_api_status{exported_service=\"cloudigrade\"}[$__rate_interval]))",
               "hide": false,
@@ -1562,13 +1671,13 @@ data:
               "refId": "B"
             }
           ],
-          "timeFrom": null,
-          "timeShift": null,
           "title": "HTTP responses by status",
           "type": "timeseries"
         },
         {
-          "datasource": "$datasource",
+          "datasource": {
+            "uid": "$datasource"
+          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1640,12 +1749,16 @@ data:
               "placement": "bottom"
             },
             "tooltip": {
-              "mode": "single"
+              "mode": "single",
+              "sort": "none"
             }
           },
           "pluginVersion": "8.2.1",
           "targets": [
             {
+              "datasource": {
+                "uid": "$datasource"
+              },
               "exemplar": true,
               "expr": "avg(rate(api_3scale_gateway_api_time_count{exported_service=\"cloudigrade\"}[$__rate_interval]))",
               "format": "time_series",
@@ -1656,6 +1769,9 @@ data:
               "refId": "A"
             },
             {
+              "datasource": {
+                "uid": "$datasource"
+              },
               "exemplar": true,
               "expr": "max(rate(api_3scale_gateway_api_time_count{exported_service=\"cloudigrade\"}[$__rate_interval]))",
               "hide": false,
@@ -1664,6 +1780,9 @@ data:
               "refId": "B"
             },
             {
+              "datasource": {
+                "uid": "$datasource"
+              },
               "exemplar": true,
               "expr": "min(rate(api_3scale_gateway_api_time_count{exported_service=\"cloudigrade\"}[$__rate_interval]))",
               "hide": false,
@@ -1672,14 +1791,139 @@ data:
               "refId": "C"
             }
           ],
-          "timeFrom": null,
-          "timeShift": null,
           "title": "Response time in seconds",
           "type": "timeseries"
+        },
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 51
+          },
+          "id": 104,
+          "panels": [],
+          "title": "Other Runtime Metrics",
+          "type": "row"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "approximate numbers of messages on SQS queues",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "max": 10,
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 3
+                  },
+                  {
+                    "color": "orange",
+                    "value": 10
+                  },
+                  {
+                    "color": "red",
+                    "value": 20
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 52
+          },
+          "id": 102,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "text": {},
+            "textMode": "auto"
+          },
+          "pluginVersion": "9.0.1",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "avg(cloudtrail_notifications_message_count{namespace=\"$namespace\"})",
+              "hide": false,
+              "legendFormat": "cloudtrail",
+              "range": true,
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "avg(cloudtrail_notifications_dlq_message_count{namespace=\"$namespace\"})",
+              "hide": false,
+              "legendFormat": "cloudtrail DLQ",
+              "range": true,
+              "refId": "B"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "avg(houndigrade_results_message_count{namespace=\"$namespace\"})",
+              "hide": false,
+              "legendFormat": "houndigrade",
+              "range": true,
+              "refId": "C"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "avg(houndigrade_results_dlq_message_count{namespace=\"$namespace\"})",
+              "hide": false,
+              "legendFormat": "houndigrade DLQ",
+              "range": true,
+              "refId": "D"
+            }
+          ],
+          "title": "SQS queue sizes",
+          "type": "stat"
         }
       ],
       "refresh": false,
-      "schemaVersion": 32,
+      "schemaVersion": 36,
       "style": "dark",
       "tags": [],
       "templating": {
@@ -1690,11 +1934,8 @@ data:
               "text": "crcp01ue1-prometheus",
               "value": "crcp01ue1-prometheus"
             },
-            "description": null,
-            "error": null,
             "hide": 0,
             "includeAll": false,
-            "label": null,
             "multi": false,
             "name": "datasource",
             "options": [],
@@ -1706,14 +1947,11 @@ data:
             "type": "datasource"
           },
           {
-            "allValue": null,
             "current": {
               "selected": true,
               "text": "cloudigrade-prod",
               "value": "cloudigrade-prod"
             },
-            "description": null,
-            "error": null,
             "hide": 0,
             "includeAll": false,
             "label": "",
@@ -1770,7 +2008,8 @@ data:
       "timezone": "",
       "title": "Cloudigrade",
       "uid": "O6v4rMpizda",
-      "version": 2
+      "version": 1,
+      "weekStart": ""
     }
 
 kind: ConfigMap
