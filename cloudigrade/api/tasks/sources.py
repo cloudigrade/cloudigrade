@@ -2,6 +2,7 @@
 import logging
 
 from django.conf import settings
+from django.db import transaction
 from django.db.models import Q
 from django.utils.translation import gettext as _
 from requests.exceptions import BaseHTTPError, RequestException
@@ -102,24 +103,24 @@ def create_from_sources_kafka_message(message, headers):
 
     user = get_or_create_user(account_number, org_id)
 
-    # Conditionalize the logic for different cloud providers
+    # Conditionalize the cloud account creation logic for different cloud providers.
+    create_cloud_account_task = None
+
     if authtype == settings.SOURCES_CLOUDMETER_ARN_AUTHTYPE:
-        configure_customer_aws_and_create_cloud_account.delay(
-            user.account_number,
-            user.org_id,
-            authentication_token,
-            authentication_id,
-            application_id,
-            source_id,
-        )
+        create_cloud_account_task = configure_customer_aws_and_create_cloud_account
     elif authtype == settings.SOURCES_CLOUDMETER_LIGHTHOUSE_AUTHTYPE:
-        check_azure_subscription_and_create_cloud_account.delay(
-            user.account_number,
-            user.org_id,
-            authentication_token,
-            authentication_id,
-            application_id,
-            source_id,
+        create_cloud_account_task = check_azure_subscription_and_create_cloud_account
+
+    if create_cloud_account_task:
+        transaction.on_commit(
+            lambda: create_cloud_account_task.delay(
+                user.account_number,
+                user.org_id,
+                authentication_token,
+                authentication_id,
+                application_id,
+                source_id,
+            )
         )
 
 
