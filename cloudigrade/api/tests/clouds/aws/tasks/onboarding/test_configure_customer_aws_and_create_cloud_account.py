@@ -151,4 +151,4 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
                 application_id,
                 source_id,
             )
-        self.assertIn("Invalid ARN.", cm.output[1])
+        self.assertIn("Invalid ARN.", cm.output[2])
