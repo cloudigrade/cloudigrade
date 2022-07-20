@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import faker
 from django.conf import settings
-from django.test import TestCase
+from django.test import TransactionTestCase
 
 from api.models import User
 from api.tasks import sources
@@ -14,7 +14,7 @@ from util.tests import helper as util_helper
 _faker = faker.Faker()
 
 
-class CreateFromSourcesKafkaMessageTest(TestCase):
+class CreateFromSourcesKafkaMessageTest(TransactionTestCase):
     """Celery task 'create_from_sources_kafka_message' test cases."""
 
     def setUp(self):
