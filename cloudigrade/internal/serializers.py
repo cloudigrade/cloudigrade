@@ -3,8 +3,8 @@ from django.utils.translation import gettext as _
 from django_celery_beat.models import PeriodicTask
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-from rest_framework.fields import BooleanField, CharField
-from rest_framework.serializers import ModelSerializer
+from rest_framework.fields import BooleanField, CharField, ChoiceField
+from rest_framework.serializers import ModelSerializer, Serializer
 
 from api import models
 from api.clouds.aws import models as aws_models
@@ -324,3 +324,21 @@ class InternalSyntheticDataRequestSerializer(ModelSerializer):
         if errors:
             raise ValidationError(errors)
         return super().update(instance, validated_data)
+
+
+class InternalRedisRawInputSerializer(Serializer):
+    """Serializer to validate input for the internal redis_raw API."""
+
+    allowed_commands = [
+        "keys",  # find all keys matching the given pattern
+        "type",  # get the type of a key
+        "get",  # get the value of a key
+        "llen",  # get the length of a list
+        "lrange",  # get a range of elements from a list
+        "scard",  # get the number of members in a set
+        "smembers",  # list members of the set with the given key
+        "sismember",  # determine if a given value is a member of a set
+    ]
+
+    command = ChoiceField(allowed_commands, required=True)
+    args = CharField(required=True, min_length=1)

@@ -6,11 +6,13 @@ from dateutil.parser import parse
 from django.core.cache import cache
 from django.http import Http404, JsonResponse
 from django.utils.translation import gettext as _
+from django_redis import get_redis_connection
 from rest_framework import exceptions, permissions, status
 from rest_framework.decorators import (
     api_view,
     authentication_classes,
     permission_classes,
+    renderer_classes,
     schema,
 )
 from rest_framework.response import Response
@@ -23,6 +25,7 @@ from internal import serializers
 from internal.authentication import (
     IdentityHeaderAuthenticationInternal,
 )
+from internal.renderers import JsonBytesRenderer
 from util import exceptions as util_exceptions
 from util.cache import get_cache_key_timeout
 from util.redhatcloud import identity
@@ -403,3 +406,33 @@ class ProblematicRunList(APIView):
                 _("fix_problematic_runs task is %(task)s"), {"task": task_result}
             )
         return Response(status=status.HTTP_202_ACCEPTED)
+
+
+@api_view(["POST"])
+@authentication_classes([IdentityHeaderAuthenticationInternal])
+@permission_classes([permissions.AllowAny])
+@renderer_classes([JsonBytesRenderer])
+@schema(None)
+def redis_raw(request):
+    """
+    Perform raw commands against the underlying Redis cache.
+
+    This is an internal only API, so we do not want it to be in the openapi.spec.
+    """
+    serializer = serializers.InternalRedisRawInputSerializer(data=request.data)
+    if serializer.is_valid(raise_exception=True):
+        command = serializer.validated_data["command"]
+        args = serializer.validated_data["args"].split(" ")
+
+        try:
+            with get_redis_connection("default") as connection:
+                func = getattr(connection, command)
+                results = func(*args)
+        except TypeError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response(
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        return Response({"results": results}, status=status.HTTP_200_OK)
