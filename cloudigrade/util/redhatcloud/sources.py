@@ -266,6 +266,23 @@ def notify_application_availability(
         availability_status (string): Availability status to set
         availability_status_error (string): Optional status error
     """
+    logger.info(
+        _(
+            "Notifying sources application availability for "
+            "account_number '%(account_number)s' "
+            "org_id '%(org_id)s' "
+            "application_id '%(application_id)s' "
+            "availability_status '%(availability_status)s' "
+            "availability_status_error '%(availability_status_error)s' "
+        ),
+        {
+            "account_number": account_number,
+            "org_id": org_id,
+            "application_id": application_id,
+            "availability_status": availability_status,
+            "availability_status_error": availability_status_error,
+        },
+    )
     if (
         not settings.SOURCES_ENABLE_DATA_MANAGEMENT
         or not settings.SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA
@@ -289,14 +306,6 @@ def notify_application_availability(
         "status": availability_status,
         "error": availability_status_error,
     }
-
-    logger.info(
-        _(
-            "Requesting the update of the availability status for application "
-            "%(application_id)s as %(status)s"
-        ),
-        {"application_id": application_id, "status": availability_status},
-    )
 
     try:
         if settings.VERBOSE_SOURCES_NOTIFICATION_LOGGING:
@@ -346,6 +355,20 @@ def notify_application_availability(
         message = f"KafkaException: {exception.args[0].str()}"
         logger.exception(exception)
         raise KafkaProducerException(message)
+
+    logger.info(
+        _(
+            "Successfully notified sources application availability for "
+            "account_number '%(account_number)s' "
+            "org_id '%(org_id)s' "
+            "application_id '%(application_id)s' "
+        ),
+        {
+            "account_number": account_number,
+            "org_id": org_id,
+            "application_id": application_id,
+        },
+    )
 
 
 def _check_response(error, message):
