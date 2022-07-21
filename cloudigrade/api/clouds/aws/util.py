@@ -1025,6 +1025,7 @@ def create_aws_cloud_account(
                 }
             )
 
+    logger.info(_("Successfully created %(account)s"), {"account": cloud_account})
     return cloud_account
 
 

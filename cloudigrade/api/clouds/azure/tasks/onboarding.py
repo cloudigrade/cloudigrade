@@ -76,3 +76,23 @@ def check_azure_subscription_and_create_cloud_account(
         )
     except ValidationError as e:
         logger.info(_("Unable to create cloud account: error %s"), e.detail)
+
+    logger.info(
+        _(
+            "Finished check_azure_subscription_and_create_cloud_account for "
+            "username='%(username)s' "
+            "org_id='%(org_id)s' "
+            "subscription_id='%(subscription_id)s' "
+            "authentication_id='%(authentication_id)s' "
+            "application_id='%(application_id)s' "
+            "source_id='%(source_id)s'"
+        ),
+        {
+            "username": username,
+            "org_id": org_id,
+            "subscription_id": subscription_id,
+            "authentication_id": authentication_id,
+            "application_id": application_id,
+            "source_id": source_id,
+        },
+    )
