@@ -120,6 +120,7 @@ urlpatterns += [
         name="internal-recalculate-concurrent-usage",
     ),
     path("recalculate_runs/", views.recalculate_runs, name="internal-recalculate-runs"),
+    path("redis_raw/", views.redis_raw, name="internal-redis-raw"),
     path("sources_kafka/", views.sources_kafka, name="internal-sources-kafka"),
 ]
 
