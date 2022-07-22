@@ -51,9 +51,36 @@ def configure_customer_aws_and_create_cloud_account(
         application_id (str): Platform Sources' Application object id
         source_id (str): Platform Sources' Source object id
     """
+    logger.info(
+        _(
+            "Starting configure_customer_aws_and_create_cloud_account for "
+            "username='%(username)s' "
+            "org_id='%(org_id)s' "
+            "customer_arn='%(customer_arn)s' "
+            "authentication_id='%(authentication_id)s' "
+            "application_id='%(application_id)s' "
+            "source_id='%(source_id)s'"
+        ),
+        {
+            "username": username,
+            "org_id": org_id,
+            "customer_arn": customer_arn,
+            "authentication_id": authentication_id,
+            "application_id": application_id,
+            "source_id": source_id,
+        },
+    )
     try:
         user = get_user_by_account(account_number=username, org_id=org_id)
     except User.DoesNotExist:
+        logger.exception(
+            _(
+                "Missing user (account_number='%(username)s', org_id='%(org_id)s') "
+                "for configure_customer_aws_and_create_cloud_account. "
+                "This should never happen and may indicate a database failure!"
+            ),
+            {"username": username, "org_id": org_id},
+        )
         error = error_codes.CG1000
         error.log_internal_message(
             logger, {"application_id": application_id, "username": username}
@@ -78,6 +105,26 @@ def configure_customer_aws_and_create_cloud_account(
         )
     except ValidationError as e:
         logger.info("Unable to create cloud account: error %s", e.detail)
+
+    logger.info(
+        _(
+            "Finished configure_customer_aws_and_create_cloud_account for "
+            "username='%(username)s' "
+            "org_id='%(org_id)s' "
+            "customer_arn='%(customer_arn)s' "
+            "authentication_id='%(authentication_id)s' "
+            "application_id='%(application_id)s' "
+            "source_id='%(source_id)s'"
+        ),
+        {
+            "username": username,
+            "org_id": org_id,
+            "customer_arn": customer_arn,
+            "authentication_id": authentication_id,
+            "application_id": application_id,
+            "source_id": source_id,
+        },
+    )
 
 
 @retriable_shared_task(name="api.clouds.aws.tasks.initial_aws_describe_instances")

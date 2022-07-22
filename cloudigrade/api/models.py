@@ -238,6 +238,18 @@ class CloudAccount(BaseGenericModel):
         if enabled_successfully and not self.is_synthetic:
             from api.tasks.sources import notify_application_availability_task
 
+            logger.info(
+                _(
+                    "Enabled CloudAccount %(id)s and will notify sources "
+                    "(%(account_number)s, %(org_id)s, %(application_id)s)"
+                ),
+                {
+                    "id": self.id,
+                    "account_number": self.user.account_number,
+                    "org_id": self.user.org_id,
+                    "application_id": self.platform_application_id,
+                },
+            )
             notify_application_availability_task.delay(
                 self.user.account_number,
                 self.user.org_id,
@@ -247,8 +259,20 @@ class CloudAccount(BaseGenericModel):
         elif disable_upon_failure and not previously_enabled:
             # We do not need to notify sources when calling self.disable() here because
             # self.content_object.enable() should have already notified with its error.
+            logger.info(
+                _("Failed to enable CloudAccount %(id)s; explicitly disabling."),
+                {"id": self.id},
+            )
             self.disable(notify_sources=False)
 
+        if enabled_successfully:
+            logger.info(
+                _("CloudAccount %(id)s was enabled successfully"), {"id": self.id}
+            )
+        else:
+            logger.info(
+                _("CloudAccount %(id)s was not enabled successfully"), {"id": self.id}
+            )
         return enabled_successfully
 
     @transaction.atomic
