@@ -10,8 +10,6 @@ from django.conf import settings
 from django.db import IntegrityError, transaction
 from django.db.models import Q
 from django.utils.translation import gettext as _
-from tqdm import tqdm
-
 
 from api.models import (
     ConcurrentUsage,
@@ -699,9 +697,7 @@ def recalculate_runs_for_instance_id(instance_id):
     return recalculated_runs
 
 
-def recalculate_runs_for_cloud_account_id(
-    cloud_account_id, since=None, show_progress=False
-):
+def recalculate_runs_for_cloud_account_id(cloud_account_id, since=None):
     """
     Recalculate recent Runs for the given cloud account id.
 
@@ -715,7 +711,6 @@ def recalculate_runs_for_cloud_account_id(
     Args:
         cloud_account_id (int): CloudAccount id
         since (datetime.datetime): optional starting time to search for events
-        show_progress (bool): optional show progress to stdout via tdqm
 
     """
     if not since:
@@ -750,15 +745,6 @@ def recalculate_runs_for_cloud_account_id(
     instance_ids = (record["instance_id"] for record in relevant_instance_ids)
     instance_count = 0
     run_count = 0
-    instance_ids = (
-        tqdm(
-            instance_ids,
-            desc=f"Recalculating Runs for CloudAccount {cloud_account_id}'s Instances",
-            total=len(relevant_instance_ids),
-        )
-        if show_progress
-        else instance_ids
-    )
     for instance_count, instance_id in enumerate(instance_ids):
         recalculated_runs = recalculate_runs_for_instance_id(instance_id)
         run_count += len(recalculated_runs)
