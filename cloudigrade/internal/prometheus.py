@@ -1,9 +1,7 @@
 """Custom Prometheus metrics definitions."""
 
 import logging
-from dataclasses import dataclass
 from functools import partial
-from typing import Any
 
 from django.conf import settings
 from django.core.cache import cache
@@ -14,44 +12,13 @@ from util.cache import get_sqs_message_count_cache_key
 
 logger = logging.getLogger(__name__)
 
-
-@dataclass
-class CachedGaugeMetricInfo:
-    """Describe the relationship between a cache key and Prometheus gauge metric."""
-
-    metric_name: str
-    metric_description: str
-    cache_key: str
-    default: Any
-
-
-CACHED_GAUGE_METRICS_INFO = [
-    CachedGaugeMetricInfo(
-        "houndigrade_results_message_count",
-        "approximate message count for houndigrade results queue",
-        get_sqs_message_count_cache_key("houndigrade_results"),
-        0,
-    ),
-    CachedGaugeMetricInfo(
-        "houndigrade_results_dlq_message_count",
-        "approximate message count for houndigrade results DLQ",
-        get_sqs_message_count_cache_key("houndigrade_results_dlq"),
-        0,
-    ),
-    CachedGaugeMetricInfo(
-        "cloudtrail_notifications_message_count",
-        "approximate message count for CloudTrail notifications queue",
-        get_sqs_message_count_cache_key("cloudtrail_notifications"),
-        0,
-    ),
-    CachedGaugeMetricInfo(
-        "cloudtrail_notifications_dlq_message_count",
-        "approximate message count for CloudTrail notifications DLQ",
-        get_sqs_message_count_cache_key("cloudtrail_notifications_dlq"),
-        0,
-    ),
+CACHED_SQS_QUEUE_LENGTH_LABELS = [
+    "houndigrade_results",
+    "houndigrade_results_dlq",
+    "cloudtrail_notifications",
+    "cloudtrail_notifications_dlq",
 ]
-
+CACHED_SQS_QUEUE_LENGTH_METRIC_NAME = "cloudigrade_sqs_queue_length"
 CELERY_QUEUE_LENGTH_METRIC_NAME = "cloudigrade_celery_queue_length"
 
 
@@ -75,15 +42,23 @@ class CachedMetricsRegistry:
         if self._gauge_metrics:
             logger.warning("Cannot reinitialize gauge metrics")
             return
-        self._initialize_cached_metrics()
+        self._initialize_cached_sqs_queue_length_metrics()
         self._initialize_celery_queue_length_metrics()
 
-    def _initialize_cached_metrics(self):
-        """Initialize cached metrics."""
-        for info in CACHED_GAUGE_METRICS_INFO:
-            gauge = Gauge(info.metric_name, info.metric_description)
-            gauge.set_function(partial(cache.get, info.cache_key, info.default))
-            self._gauge_metrics[info.metric_name] = gauge
+    def _initialize_cached_sqs_queue_length_metrics(self):
+        """Initialize cached SQS queue length metrics."""
+        gauge = Gauge(
+            CACHED_SQS_QUEUE_LENGTH_METRIC_NAME,
+            "The approximate number of messages in AWS SQS queue.",
+            labelnames=["queue_name"],
+        )
+        self._gauge_metrics[CACHED_SQS_QUEUE_LENGTH_METRIC_NAME] = gauge
+
+        for label in CACHED_SQS_QUEUE_LENGTH_LABELS:
+            cache_key = get_sqs_message_count_cache_key(label)
+            gauge.labels(queue_name=label).set_function(
+                partial(cache.get, cache_key, 0)
+            )
 
     def _initialize_celery_queue_length_metrics(self):
         """Initialize Celery queue length metrics."""
