@@ -18,7 +18,7 @@ class RedisRawViewTest(TestCase):
     def setUp(self):
         """Set up shared test data."""
         self.factory = APIRequestFactory()
-        get_redis_connection_patch = patch("internal.views.get_redis_connection")
+        get_redis_connection_patch = patch("internal.views.redis.get_redis_connection")
         mock_get_redis_connection = get_redis_connection_patch.start()
         self.mock_connection = (
             mock_get_redis_connection.return_value.__enter__.return_value
