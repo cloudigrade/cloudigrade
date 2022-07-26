@@ -130,43 +130,68 @@ def recalculate_concurrent_usage_for_user_id_on_date(user_id, date):
         user_id (int): user id
         date (datetime.date): date of the calculated concurrent usage
     """
+    needs_calculation = False
     try:
         usage = ConcurrentUsage.objects.get(user_id=user_id, date=date)
-        # **Django internal leaky abstraction warning!!**
-        # The following querysets have a seemingly useless "order_by()" on their ends,
-        # but these are important because Django's "difference" query builder refuses
-        # to build a working query if the compound querysets are ordered. Applying the
-        # empty "order_by()" forces those querysets *not* to have an ORDER BY clause.
-        # If you don't explicitly clear the order, Django always orders as defined in
-        # the model, and our BaseModel defines `ordering = ("created_at",)`.
-        # See also django.db.utils.DatabaseError:
-        # ORDER BY not allowed in subqueries of compound statements.
-        runs_queryset = get_runs_for_user_id_on_date(user_id, date).order_by()
-        difference = runs_queryset.difference(usage.potentially_related_runs.order_by())
-        needs_calculation = difference.exists()
-        logger.debug(
-            _(
-                "ConcurrentUsage needs calculation for user %(user_id)s on %(date)s "
-                "because %(difference_count)s Runs are not in potentially_related_runs"
-            ),
-            {
-                "difference_count": difference.count(),
-                "user_id": user_id,
-                "date": date,
-            },
+
+        # Sanity-check the dates on our objects to try avoiding needless recalculation.
+        last_updated_run = (
+            get_runs_for_user_id_on_date(user_id, date).order_by("-updated_at").first()
         )
+
+        # Pad the comparison by an hour just to be extra safe in case we were creating
+        # and saving ConcurrentUsage just as a Run was also being created.
+        # If the ConcurrentUsage is *newer* than the most recent Run (plus padding),
+        # then we can skip calculation because the results would be the same.
+        if (
+            last_updated_run
+            and usage.updated_at >= last_updated_run.updated_at + timedelta(hours=1)
+        ):
+            needs_calculation = False
+        elif not last_updated_run:
+            needs_calculation = False
+        else:
+            # **Django internal leaky abstraction warning!!**
+            # The following querysets have a seemingly useless "order_by()" on their
+            # ends, but these are important because Django's "difference" query builder
+            # refuses to build a working query if the compound querysets are ordered.
+            # Applying the empty "order_by()" forces those querysets *not* to have an
+            # ORDER BY clause. If you don't explicitly clear the order, Django always
+            # orders as defined in the model, and our BaseModel defines
+            # `ordering = ("created_at",)`.
+            # See also django.db.utils.DatabaseError:
+            # ORDER BY not allowed in subqueries of compound statements.
+            runs_queryset = get_runs_for_user_id_on_date(user_id, date).order_by()
+            difference = runs_queryset.difference(
+                usage.potentially_related_runs.order_by()
+            )
+            if difference.exists():
+                logger.debug(
+                    _(
+                        "ConcurrentUsage needs calculation for user %(user_id)s on "
+                        "%(date)s because some Runs are not in potentially_related_runs"
+                    ),
+                    {"user_id": user_id, "date": date},
+                )
+                needs_calculation = True
     except ConcurrentUsage.DoesNotExist:
         logger.debug(
             _(
-                "ConcurrentUsage needs calculation for user %(user_id)s on %(date)s "
-                "because ConcurrentUsage.DoesNotExist"
+                "ConcurrentUsage needs calculation for user %(user_id)s on "
+                "%(date)s because ConcurrentUsage.DoesNotExist"
             ),
-            {
-                "user_id": user_id,
-                "date": date,
-            },
+            {"user_id": user_id, "date": date},
         )
         needs_calculation = True
+    except Run.DoesNotExist:
+        logger.debug(
+            _(
+                "ConcurrentUsage does not need calculation for user %(user_id)s on "
+                "%(date)s because Run.DoesNotExist"
+            ),
+            {"user_id": user_id, "date": date},
+        )
+        needs_calculation = False
 
     if needs_calculation:
         calculate_max_concurrent_usage(date, user_id)
