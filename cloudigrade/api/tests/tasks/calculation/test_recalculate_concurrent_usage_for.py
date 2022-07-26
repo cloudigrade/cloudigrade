@@ -181,3 +181,45 @@ class RecalculateConcurrentUsageForUserIdOnDateTest(TestCase):
             self.user.id, target_date
         )
         mock_calculate.assert_not_called()
+
+    @patch("api.tasks.calculation.calculate_max_concurrent_usage")
+    def test_run_does_not_exist_does_not_needs_calculation(self, mock_calculate):
+        """Test not calculating because a relevant Run does not exist."""
+        target_date = self.account_setup_time.date()
+
+        # Ensure there are no existing runs.
+        models.Run.objects.all().delete()
+
+        # Create an empty ConcurrentUsage object.
+        models.ConcurrentUsage.objects.create(date=target_date, user=self.user)
+
+        target_date = self.account_setup_time.date()
+        calculation.recalculate_concurrent_usage_for_user_id_on_date(
+            self.user.id, target_date
+        )
+        mock_calculate.assert_not_called()
+
+    @patch("api.tasks.calculation.calculate_max_concurrent_usage")
+    def test_run_is_older_does_not_needs_calculation(self, mock_calculate):
+        """Test not calculating because latest Run is older than the ConcurrentUsage."""
+        target_date = self.account_setup_time.date()
+
+        # Create an empty ConcurrentUsage object.
+        concurrent_usage = models.ConcurrentUsage.objects.create(
+            date=target_date, user=self.user
+        )
+
+        # If all the runs are significantly older than the ConcurrentUsage object,
+        # then we infer that calculation should not be necessary.
+        long_ago = concurrent_usage.updated_at - datetime.timedelta(days=30)
+        with util_helper.clouditardis(long_ago):
+            for run in self.runs:
+                run.updated_at = long_ago
+                run.save()
+                run.refresh_from_db()
+
+        target_date = self.account_setup_time.date()
+        calculation.recalculate_concurrent_usage_for_user_id_on_date(
+            self.user.id, target_date
+        )
+        mock_calculate.assert_not_called()
