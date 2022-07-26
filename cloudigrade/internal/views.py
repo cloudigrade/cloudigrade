@@ -6,7 +6,6 @@ from dateutil.parser import parse
 from django.core.cache import cache
 from django.http import Http404, JsonResponse
 from django.utils.translation import gettext as _
-from django_redis import get_redis_connection
 from rest_framework import exceptions, permissions, status
 from rest_framework.decorators import (
     api_view,
@@ -21,7 +20,7 @@ from rest_framework.views import APIView
 from api import models, tasks
 from api.tasks import enable_account
 from api.util import find_problematic_runs
-from internal import serializers
+from internal import redis, serializers
 from internal.authentication import (
     IdentityHeaderAuthenticationInternal,
 )
@@ -425,9 +424,7 @@ def redis_raw(request):
         args = serializer.validated_data["args"].split(" ")
 
         try:
-            with get_redis_connection("default") as connection:
-                func = getattr(connection, command)
-                results = func(*args)
+            results = redis.execute_command(command, *args)
         except TypeError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
