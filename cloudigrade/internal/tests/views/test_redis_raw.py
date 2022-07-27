@@ -111,3 +111,24 @@ class RedisRawViewTest(TestCase):
         response = redis_raw(request)
         self.assertEqual(response.status_code, 200)
         self.assertExpectedJsonResponse(response, expected_response_data)
+
+    def test_destructive_command_is_logged(self):
+        """Test logging a destructive command."""
+        command = _faker.random_element(
+            InternalRedisRawInputSerializer.destructive_commands
+        )
+        args = _faker.paragraphs(nb=5)
+        request = self.factory.post(
+            "/redis_raw/",
+            data={"command": command, "args": args},
+            format="json",
+        )
+
+        redis_command_results = _faker.sentence()
+        mock_func = getattr(self.mock_connection, command)
+        mock_func.return_value = redis_command_results
+
+        with self.assertLogs("internal.views", level="WARNING") as logging_watcher:
+            redis_raw(request)
+
+        self.assertIn(command, logging_watcher.records[0].message)
