@@ -281,10 +281,14 @@ objects:
             secretKeyRef:
               key: slack-token
               name: cloudigrade-app-secret
+        - name: RECALCULATE_CONCURRENT_USAGE_SINCE_DAYS_AGO
+          value: ${RECALCULATE_CONCURRENT_USAGE_SINCE_DAYS_AGO}
         - name: RECALCULATE_CONCURRENT_USAGE_FOR_ALL_USERS_SCHEDULE
           value: ${RECALCULATE_CONCURRENT_USAGE_FOR_ALL_USERS_SCHEDULE}
         - name: RECALCULATE_RUNS_FOR_ALL_CLOUD_ACCOUNTS_SCHEDULE
           value: ${RECALCULATE_RUNS_FOR_ALL_CLOUD_ACCOUNTS_SCHEDULE}
+        - name: RECALCULATE_RUNS_SINCE_DAYS_AGO
+          value: ${RECALCULATE_RUNS_SINCE_DAYS_AGO}
         - name: TENANT_TRANSLATOR_HOST
           value: ${TENANT_TRANSLATOR_HOST}
         - name: TENANT_TRANSLATOR_PORT
@@ -540,10 +544,14 @@ objects:
           value: ${OSD_REDEPLOY_TRIGGER}
         - name: IMAGE_TAG
           value: ${IMAGE_TAG}
+        - name: RECALCULATE_CONCURRENT_USAGE_SINCE_DAYS_AGO
+          value: ${RECALCULATE_CONCURRENT_USAGE_SINCE_DAYS_AGO}
         - name: RECALCULATE_CONCURRENT_USAGE_FOR_ALL_USERS_SCHEDULE
           value: ${RECALCULATE_CONCURRENT_USAGE_FOR_ALL_USERS_SCHEDULE}
         - name: RECALCULATE_RUNS_FOR_ALL_CLOUD_ACCOUNTS_SCHEDULE
           value: ${RECALCULATE_RUNS_FOR_ALL_CLOUD_ACCOUNTS_SCHEDULE}
+        - name: RECALCULATE_RUNS_SINCE_DAYS_AGO
+          value: ${RECALCULATE_RUNS_SINCE_DAYS_AGO}
         - name: VERBOSE_SOURCES_NOTIFICATION_LOGGING
           value: ${VERBOSE_SOURCES_NOTIFICATION_LOGGING}
         - name: CACHE_TTL_DEFAULT
@@ -795,10 +803,14 @@ objects:
           value: ${OSD_REDEPLOY_TRIGGER}
         - name: IMAGE_TAG
           value: ${IMAGE_TAG}
+        - name: RECALCULATE_CONCURRENT_USAGE_SINCE_DAYS_AGO
+          value: ${RECALCULATE_CONCURRENT_USAGE_SINCE_DAYS_AGO}
         - name: RECALCULATE_CONCURRENT_USAGE_FOR_ALL_USERS_SCHEDULE
           value: ${RECALCULATE_CONCURRENT_USAGE_FOR_ALL_USERS_SCHEDULE}
         - name: RECALCULATE_RUNS_FOR_ALL_CLOUD_ACCOUNTS_SCHEDULE
           value: ${RECALCULATE_RUNS_FOR_ALL_CLOUD_ACCOUNTS_SCHEDULE}
+        - name: RECALCULATE_RUNS_SINCE_DAYS_AGO
+          value: ${RECALCULATE_RUNS_SINCE_DAYS_AGO}
         - name: VERBOSE_SOURCES_NOTIFICATION_LOGGING
           value: ${VERBOSE_SOURCES_NOTIFICATION_LOGGING}
         - name: CACHE_TTL_DEFAULT
@@ -1115,10 +1127,14 @@ objects:
           value: ${OSD_REDEPLOY_TRIGGER}
         - name: IMAGE_TAG
           value: ${IMAGE_TAG}
+        - name: RECALCULATE_CONCURRENT_USAGE_SINCE_DAYS_AGO
+          value: ${RECALCULATE_CONCURRENT_USAGE_SINCE_DAYS_AGO}
         - name: RECALCULATE_CONCURRENT_USAGE_FOR_ALL_USERS_SCHEDULE
           value: ${RECALCULATE_CONCURRENT_USAGE_FOR_ALL_USERS_SCHEDULE}
         - name: RECALCULATE_RUNS_FOR_ALL_CLOUD_ACCOUNTS_SCHEDULE
           value: ${RECALCULATE_RUNS_FOR_ALL_CLOUD_ACCOUNTS_SCHEDULE}
+        - name: RECALCULATE_RUNS_SINCE_DAYS_AGO
+          value: ${RECALCULATE_RUNS_SINCE_DAYS_AGO}
         - name: VERBOSE_SOURCES_NOTIFICATION_LOGGING
           value: ${VERBOSE_SOURCES_NOTIFICATION_LOGGING}
         - name: CACHE_TTL_DEFAULT
@@ -1818,6 +1834,10 @@ parameters:
   displayName: Change this value to trigger OSD to redeploy
   required: true
   value: '1'
+- name: RECALCULATE_CONCURRENT_USAGE_SINCE_DAYS_AGO
+  displayName: Recalculate ConcurrentUsage since this many days ago
+  required: true
+  value: '2'
 - name: RECALCULATE_CONCURRENT_USAGE_FOR_ALL_USERS_SCHEDULE
   displayName: Recalculate Concurrent Usage For All Users Schedule
   required: true
@@ -1826,6 +1846,10 @@ parameters:
   displayName: Recalculate Runs For All Cloud Accounts Schedule
   required: true
   value: '3600'
+- name: RECALCULATE_RUNS_SINCE_DAYS_AGO
+  displayName: Recalculate Runs since this many days ago
+  required: true
+  value: '2'
 - name: REPOPULATE_AZURE_INSTANCE_MAPPING_SCHEDULE
   displayName: Repopulate Azure Instance Mapping Schedule
   required: true
