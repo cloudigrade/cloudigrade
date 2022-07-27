@@ -329,7 +329,7 @@ class InternalSyntheticDataRequestSerializer(ModelSerializer):
 class InternalRedisRawInputSerializer(Serializer):
     """Serializer to validate input for the internal redis_raw API."""
 
-    allowed_commands = [
+    nondestructive_commands = [
         # generic commands
         "exists",  # determine if a key exists
         "expiretime",  # get the expiration unix timestamp for a key
@@ -345,6 +345,23 @@ class InternalRedisRawInputSerializer(Serializer):
         "sismember",  # determine if a given value is a member of a set
         "smembers",  # list members of the set with the given key
     ]
+
+    destructive_commands = [
+        # generic commands
+        "delete",  # delete a key
+        "expire",  # set a key's time to live in seconds
+        "mset",  # set multiple values to multiple keys
+        "set",  # set the string value of a key
+        # list commands
+        "lmove",  # pop an element from a list, push it to another list, and return it
+        "lmpop",  # pop elements from a list
+        "lpop",  # remove and get the first elements from a list
+        "lpush",  # prepend one or multiple elements to a list
+        "rpop",  # remove and get the last elements from a list
+        "rpush",  # append one or multiple elements to a list
+    ]
+
+    allowed_commands = nondestructive_commands + destructive_commands
 
     command = ChoiceField(allowed_commands, required=True)
     args = ListField(

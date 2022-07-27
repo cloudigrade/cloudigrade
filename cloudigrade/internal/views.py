@@ -423,6 +423,15 @@ def redis_raw(request):
         command = serializer.validated_data["command"]
         args = serializer.validated_data["args"]
 
+        if command in serializer.destructive_commands:
+            logger.warning(
+                _(
+                    "potentially destructive redis command via internal api: "
+                    "%(command)s"
+                ),
+                {"command": command},
+            )
+
         try:
             results = redis.execute_command(command, args)
         except TypeError as e:
