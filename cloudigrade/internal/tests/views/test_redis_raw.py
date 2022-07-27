@@ -36,9 +36,10 @@ class RedisRawViewTest(TestCase):
         command = _faker.random_element(
             InternalRedisRawInputSerializer.allowed_commands
         )
-        args = _faker.word()
+        individual_args = [_faker.word(), _faker.word()]
+        args_string = " ".join(individual_args)
         request = self.factory.post(
-            "/redis_raw/", data={"command": command, "args": args}, format="json"
+            "/redis_raw/", data={"command": command, "args": args_string}, format="json"
         )
 
         redis_command_results = _faker.sentence()
@@ -48,6 +49,7 @@ class RedisRawViewTest(TestCase):
         expected_response_data = {"results": redis_command_results}
 
         response = redis_raw(request)
+        mock_func.assert_called_with(*individual_args)
         self.assertEqual(response.status_code, 200)
         self.assertExpectedJsonResponse(response, expected_response_data)
 

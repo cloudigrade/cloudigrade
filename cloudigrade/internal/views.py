@@ -424,7 +424,7 @@ def redis_raw(request):
         args = serializer.validated_data["args"].split(" ")
 
         try:
-            results = redis.execute_command(command, *args)
+            results = redis.execute_command(command, args)
         except TypeError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
