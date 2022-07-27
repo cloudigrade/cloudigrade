@@ -330,14 +330,20 @@ class InternalRedisRawInputSerializer(Serializer):
     """Serializer to validate input for the internal redis_raw API."""
 
     allowed_commands = [
-        "keys",  # find all keys matching the given pattern
-        "type",  # get the type of a key
+        # generic commands
+        "exists",  # determine if a key exists
+        "expiretime",  # get the expiration unix timestamp for a key
         "get",  # get the value of a key
+        "keys",  # find all keys matching the given pattern
+        "ttl",  # get the time to live for a key in seconds
+        "type",  # get the type of a key
+        # list commands
         "llen",  # get the length of a list
         "lrange",  # get a range of elements from a list
+        # set commands
         "scard",  # get the number of members in a set
-        "smembers",  # list members of the set with the given key
         "sismember",  # determine if a given value is a member of a set
+        "smembers",  # list members of the set with the given key
     ]
 
     command = ChoiceField(allowed_commands, required=True)
