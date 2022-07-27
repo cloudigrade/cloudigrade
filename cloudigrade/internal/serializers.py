@@ -3,7 +3,7 @@ from django.utils.translation import gettext as _
 from django_celery_beat.models import PeriodicTask
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-from rest_framework.fields import BooleanField, CharField, ChoiceField
+from rest_framework.fields import BooleanField, CharField, ChoiceField, ListField
 from rest_framework.serializers import ModelSerializer, Serializer
 
 from api import models
@@ -347,4 +347,6 @@ class InternalRedisRawInputSerializer(Serializer):
     ]
 
     command = ChoiceField(allowed_commands, required=True)
-    args = CharField(required=True, min_length=1)
+    args = ListField(
+        required=True, allow_empty=False, min_length=1, child=CharField(min_length=1)
+    )

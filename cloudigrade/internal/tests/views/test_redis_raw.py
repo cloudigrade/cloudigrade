@@ -36,10 +36,11 @@ class RedisRawViewTest(TestCase):
         command = _faker.random_element(
             InternalRedisRawInputSerializer.allowed_commands
         )
-        individual_args = [_faker.word(), _faker.word()]
-        args_string = " ".join(individual_args)
+        args = [_faker.word(), _faker.word()]
         request = self.factory.post(
-            "/redis_raw/", data={"command": command, "args": args_string}, format="json"
+            "/redis_raw/",
+            data={"command": command, "args": args},
+            format="json",
         )
 
         redis_command_results = _faker.sentence()
@@ -49,14 +50,14 @@ class RedisRawViewTest(TestCase):
         expected_response_data = {"results": redis_command_results}
 
         response = redis_raw(request)
-        mock_func.assert_called_with(*individual_args)
+        mock_func.assert_called_with(*args)
         self.assertEqual(response.status_code, 200)
         self.assertExpectedJsonResponse(response, expected_response_data)
 
     def test_unsupported_command_fails(self):
         """Test failure path for an unsupported command."""
         command = _faker.word()
-        args = _faker.word()
+        args = [_faker.word()]
         request = self.factory.post(
             "/redis_raw/", data={"command": command, "args": args}, format="json"
         )
@@ -76,7 +77,7 @@ class RedisRawViewTest(TestCase):
         command = _faker.random_element(
             InternalRedisRawInputSerializer.allowed_commands
         )
-        args = _faker.word()
+        args = [_faker.word()]
         request = self.factory.post(
             "/redis_raw/", data={"command": command, "args": args}, format="json"
         )
@@ -96,7 +97,7 @@ class RedisRawViewTest(TestCase):
         command = _faker.random_element(
             InternalRedisRawInputSerializer.allowed_commands
         )
-        args = _faker.word()
+        args = [_faker.word()]
         request = self.factory.post(
             "/redis_raw/", data={"command": command, "args": args}, format="json"
         )

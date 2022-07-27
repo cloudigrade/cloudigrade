@@ -421,7 +421,7 @@ def redis_raw(request):
     serializer = serializers.InternalRedisRawInputSerializer(data=request.data)
     if serializer.is_valid(raise_exception=True):
         command = serializer.validated_data["command"]
-        args = serializer.validated_data["args"].split(" ")
+        args = serializer.validated_data["args"]
 
         try:
             results = redis.execute_command(command, args)
