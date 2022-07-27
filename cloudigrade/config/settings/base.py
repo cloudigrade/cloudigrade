@@ -584,11 +584,14 @@ CACHE_TTL_SOURCES_APPLICATION_TYPE_ID = env.int(
 
 CACHES = {
     "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+    },
+    "redis": {
         "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": REDIS_URL,
         "KEY_PREFIX": f"{CLOUDIGRADE_ENVIRONMENT}-cloudigrade",
         "TIMEOUT": CACHE_TTL_DEFAULT,
-    }
+    },
 }
 
 # How far back should we look for related data when recalculating runs
