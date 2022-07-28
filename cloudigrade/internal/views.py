@@ -421,7 +421,7 @@ def redis_raw(request):
     serializer = serializers.InternalRedisRawInputSerializer(data=request.data)
     if serializer.is_valid(raise_exception=True):
         command = serializer.validated_data["command"]
-        args = serializer.validated_data["args"]
+        args = serializer.validated_data.get("args", [])
 
         if command in serializer.destructive_commands:
             logger.warning(
