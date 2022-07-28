@@ -330,6 +330,14 @@ class InternalRedisRawInputSerializer(Serializer):
     """Serializer to validate input for the internal redis_raw API."""
 
     nondestructive_commands = [
+        # server management commands
+        "config_get",  # get the values of configuration parameters
+        "dbsize",  # return the number of keys in the database
+        "info",  # get information and statistics about the server
+        "lolwut",  # display the redis version
+        "memory_stats",  # show memory usage details
+        "memory_usage",  # estimate the memory usage of a key
+        "slowlog_get",  # get the slow log's entries
         # generic commands
         "exists",  # determine if a key exists
         "expiretime",  # get the expiration unix timestamp for a key
@@ -364,6 +372,4 @@ class InternalRedisRawInputSerializer(Serializer):
     allowed_commands = nondestructive_commands + destructive_commands
 
     command = ChoiceField(allowed_commands, required=True)
-    args = ListField(
-        required=True, allow_empty=False, min_length=1, child=CharField(min_length=1)
-    )
+    args = ListField(required=False, allow_empty=True, child=CharField(min_length=1))
