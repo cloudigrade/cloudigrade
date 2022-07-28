@@ -919,6 +919,7 @@ objects:
             --app config
             worker
             --loglevel info
+            --pool solo
             --concurrency 1
             --task-events
             --queues ${CELERY_QUEUE_NAMES}
@@ -938,7 +939,7 @@ objects:
             command:
               - /bin/sh
               - -c
-              - '[[ $(ps axo command | grep "[p]ython" | grep celery | grep -c worker) -eq 2 ]]'
+              - '[[ $(ps axo command | grep "[p]ython" | grep celery | grep -c worker) -eq 1 ]]'
           failureThreshold: 3
           initialDelaySeconds: 5
           periodSeconds: 10
