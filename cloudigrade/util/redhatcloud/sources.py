@@ -229,7 +229,7 @@ def get_sources_account_number_from_headers(headers):
     return None
 
 
-@cache_memoize(settings.CACHE_TTL_SOURCES_APPLICATION_TYPE_ID)
+@cache_memoize(settings.CACHE_TTL_SOURCES_APPLICATION_TYPE_ID, cache_alias="locmem")
 def get_cloudigrade_application_type_id(account_number, org_id):
     """Get the cloudigrade application type id from sources."""
     url = (

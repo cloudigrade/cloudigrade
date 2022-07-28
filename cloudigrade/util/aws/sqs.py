@@ -181,7 +181,7 @@ def extract_sqs_message(message, service="s3"):
     return extracted_records
 
 
-@cache_memoize(settings.CACHE_TTL_DEFAULT)
+@cache_memoize(settings.CACHE_TTL_DEFAULT, cache_alias="locmem")
 def get_sqs_queue_url(queue_name, region=settings.SQS_DEFAULT_REGION):
     """
     Get the SQS queue URL for the given queue name.

@@ -24,5 +24,8 @@ ENABLE_SYNTHETIC_DATA_REQUEST_HTTP_API = True
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-    }
+    },
+    "locmem": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+    },
 }

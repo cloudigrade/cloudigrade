@@ -588,7 +588,10 @@ CACHES = {
         "LOCATION": REDIS_URL,
         "KEY_PREFIX": f"{CLOUDIGRADE_ENVIRONMENT}-cloudigrade",
         "TIMEOUT": CACHE_TTL_DEFAULT,
-    }
+    },
+    "locmem": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+    },
 }
 
 # How far back should we look for related data when recalculating runs
