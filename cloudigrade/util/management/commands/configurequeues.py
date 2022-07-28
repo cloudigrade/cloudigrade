@@ -38,3 +38,7 @@ class Command(BaseCommand):
                     {"name": queue_name, "url": queue_url},
                 )
                 raise
+        aws.set_visibility_timeout(
+            settings.AWS_CLOUDTRAIL_EVENT_QUEUE_NAME,
+            settings.AWS_CLOUDTRAIL_EVENT_QUEUE_VISIBILITY_TIMEOUT,
+        )

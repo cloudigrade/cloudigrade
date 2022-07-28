@@ -51,6 +51,7 @@ from util.aws.sqs import (
     get_sqs_queue_url,
     read_messages_from_queue,
     receive_messages_from_queue,
+    set_visibility_timeout,
     yield_messages_from_queue,
 )
 from util.aws.sts import get_session, get_session_account_id
