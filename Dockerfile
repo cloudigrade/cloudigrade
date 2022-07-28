@@ -1,10 +1,10 @@
 ### Base Image
-FROM registry.access.redhat.com/ubi9/ubi-minimal:9.0.0 as base
+FROM registry.access.redhat.com/ubi8/ubi-minimal:8.6 as base
 
 WORKDIR /opt/cloudigrade
 
-RUN rpm -iv https://download.postgresql.org/pub/repos/yum/reporpms/EL-9-x86_64/pgdg-redhat-repo-latest.noarch.rpm \
-    && microdnf update -y \
+RUN rpm -iv https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm \
+    && microdnf update \
     && microdnf install -y \
         git \
         jq \
@@ -12,11 +12,11 @@ RUN rpm -iv https://download.postgresql.org/pub/repos/yum/reporpms/EL-9-x86_64/p
         nmap-ncat \
         postgresql14-libs \
         procps-ng \
-        python3 \
+        python39 \
         redhat-rpm-config \
         shadow-utils \
         which \
-    && if [[ ! -e /usr/bin/python ]]; then ln -sf /usr/bin/python3 /usr/bin/python; fi
+    && if [[ ! -e /usr/bin/python ]]; then ln -sf /usr/bin/python3.9 /usr/bin/python; fi
 
 
 ### Build virtualenv
@@ -26,9 +26,9 @@ COPY pyproject.toml poetry.lock ./
 RUN microdnf install -y \
         gcc \
         postgresql14-devel \
-        python3-devel \
-        python3-pip \
-    && if [ ! -e /usr/bin/pip ]; then ln -s /usr/bin/pip3 /usr/bin/pip ; fi \
+        python39-devel \
+        python39-pip \
+    && if [ ! -e /usr/bin/pip ]; then ln -s /usr/bin/pip3.9 /usr/bin/pip ; fi \
     && pip install -U pip \
     && pip install poetry \
     && poetry config virtualenvs.in-project true \
