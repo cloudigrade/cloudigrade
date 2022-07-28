@@ -14,8 +14,8 @@ logger = logging.getLogger(__name__)
 class BaseModel(models.Model):
     """Abstract model to add automatic created_at and updated_at fields."""
 
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    updated_at = models.DateTimeField(auto_now=True, db_index=True)
 
     class Meta:
         abstract = True
