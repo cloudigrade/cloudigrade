@@ -267,6 +267,17 @@ def create_queue(queue_name, with_dlq=True, retention_period=RETENTION_DEFAULT):
     return queue_url
 
 
+def set_visibility_timeout(queue_name, timeout):
+    """Set the SQS queue visibility timeout."""
+    region = settings.SQS_DEFAULT_REGION
+    sqs_client = boto3.client("sqs", region_name=region)
+    attributes = {
+        "VisibilityTimeout": str(timeout),  # AWS wants a str.
+    }
+    queue_url = get_sqs_queue_url(queue_name)
+    sqs_client.set_queue_attributes(QueueUrl=queue_url, Attributes=attributes)
+
+
 def ensure_queue_has_dlq(source_queue_name, source_queue_url):
     """
     Ensure that the given SQS queue is configured with a DLQ redrive policy.

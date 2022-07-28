@@ -523,6 +523,26 @@ class UtilAwsSqsTest(TestCase):
             QueueUrl=queue_url, AttributeNames=["ApproximateNumberOfMessages"]
         )
 
+    def test_set_visibility_timeout(self):
+        """Test setting an SQS queue's visibility timeout attribute."""
+        queue_name = _faker.slug()
+        timeout = _faker.random_int()
+
+        expected_queue_attributes = {"VisibilityTimeout": str(timeout)}
+
+        with patch.object(sqs, "boto3") as mock_boto3, patch.object(
+            sqs, "get_sqs_queue_url"
+        ) as mock_get_sqs_queue_url:
+            mock_client = mock_boto3.client.return_value
+            queue_url = mock_get_sqs_queue_url.return_value
+
+            sqs.set_visibility_timeout(queue_name, timeout)
+
+            mock_get_sqs_queue_url.assert_called_with(queue_name)
+            mock_client.set_queue_attributes.assert_called_with(
+                QueueUrl=queue_url, Attributes=expected_queue_attributes
+            )
+
 
 class ReadMessagesFromQueueTest(TestCase):
     """Test cases for util.aws.read_messages_from_queue."""
