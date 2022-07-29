@@ -328,12 +328,12 @@ objects:
       webServices:
         public:
           enabled: false
-      metadata:
-        annotations:
-          ignore-check.kube-linter.io/minimum-three-replicas: "cloudigrade-beat must only run with 1 replica"
       podSpec:
         image: ${IMAGE}:${IMAGE_TAG}
         imagePullPolicy: Always
+        metadata:
+          annotations:
+            ignore-check.kube-linter.io/minimum-three-replicas: "cloudigrade-beat must only run with 1 replica"
         command:
           - /bin/sh
           - -c
@@ -596,12 +596,12 @@ objects:
       webServices:
         public:
           enabled: false
-      metadata:
-        annotations:
-          ignore-check.kube-linter.io/minimum-three-replicas: "cloudigrade-listener must only run with 1 replica"
       podSpec:
         image: ${IMAGE}:${IMAGE_TAG}
         imagePullPolicy: Always
+        metadata:
+          annotations:
+            ignore-check.kube-linter.io/minimum-three-replicas: "cloudigrade-listener must only run with 1 replica"
         command:
         - /bin/sh
         - -c
