@@ -1922,7 +1922,7 @@ parameters:
 - name: WATCHTOWER_USE_QUEUES
   displayName: Watchtower use queues
   required: true
-  value: 'false'
+  value: 'true'
 - name: DELETE_ORPHANED_ACCOUNTS_UPDATED_MORE_THAN_SECONDS_AGO
   displayName: Delete orphaned accounts updated more than seconds ago
   required: true
