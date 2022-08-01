@@ -1920,11 +1920,11 @@ parameters:
 - name: WATCHTOWER_SEND_INTERVAL
   displayName: Watchtower send interval (seconds)
   required: true
-  value: '0.0'
+  value: '1.0'
 - name: WATCHTOWER_USE_QUEUES
   displayName: Watchtower use queues
   required: true
-  value: 'false'
+  value: 'true'
 - name: DELETE_ORPHANED_ACCOUNTS_UPDATED_MORE_THAN_SECONDS_AGO
   displayName: Delete orphaned accounts updated more than seconds ago
   required: true
