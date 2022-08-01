@@ -920,6 +920,8 @@ objects:
             worker
             --loglevel info
             --pool solo
+            --without-gossip
+            --without-mingle
             --concurrency 1
             --task-events
             --queues ${CELERY_QUEUE_NAMES}
