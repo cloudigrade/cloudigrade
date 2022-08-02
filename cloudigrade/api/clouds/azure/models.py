@@ -283,7 +283,7 @@ def delete_lighthouse_registration(*args, **kwargs):
 
 def _delete_lighthouse_subscription(scoped_subscription_id):
     """Delete the lighthouse registration for the given subscription id scope."""
-    ms_client = ManagedServicesClient(azure.get_cloudigrade_credentials())
+    ms_client = ManagedServicesClient(credential=azure.get_cloudigrade_credentials())
 
     # example
     # "id": "/subscriptions/<subscription_id>/providers/
@@ -306,7 +306,7 @@ def _delete_lighthouse_subscription(scoped_subscription_id):
             principal_id_display_name = authorization["principal_id_display_name"]
             role_definition_id = authorization["role_definition_id"]
             found_rd = True
-            logger.debug(
+            logger.info(
                 _(
                     "\nFound a registration definition "
                     "name=%(name)s, "
@@ -325,11 +325,26 @@ def _delete_lighthouse_subscription(scoped_subscription_id):
                     "role_definition_id": role_definition_id,
                 },
             )
+            logger.info(
+                _(
+                    "\nComparing with"
+                    "\nsettings.AZURE_TENANT_ID         = %(tenant_id)s, "
+                    "\nsettings.AZURE_SP_OBJECT_ID      = %(sp_object_id)s, "
+                    "\nsettings.CLOUDIGRADE_ENVIRONMENT = %(cloudigrade_env)s, "
+                    "\nazure.AZURE_READER_ROLE_ID       = %(reader_role_id)s, "
+                    "\nsettings.AZURE_SUBSCRIPTION_ID   = %(subscription_id)s, ",
+                ),
+                {
+                    "tenant_id": settings.AZURE_TENANT_ID,
+                    "sp_object_id": settings.AZURE_SP_OBJECT_ID,
+                    "cloudigrade_env": settings.CLOUDIGRADE_ENVIRONMENT,
+                    "reader_role_id": azure.AZURE_READER_ROLE_ID,
+                    "subscription_id": settings.AZURE_SUBSCRIPTION_ID,
+                },
+            )
             if (
                 managed_by_tenant_id == settings.AZURE_TENANT_ID
                 and principal_id == settings.AZURE_SP_OBJECT_ID
-                and principal_id_display_name
-                == f"cloudigrade-{settings.CLOUDIGRADE_ENVIRONMENT}"
                 and role_definition_id == azure.AZURE_READER_ROLE_ID
             ):
                 logger.info(
@@ -381,8 +396,8 @@ def _delete_managed_service(ms_client, ms_scope, registration_name):
     logger.info(
         _(
             "Attempting to delete the managed service assignment for %s",
-            registration_name,
-        )
+        ),
+        registration_name,
     )
     try:
         ms_client.registration_assignments.begin_delete(
@@ -400,10 +415,8 @@ def _delete_managed_service(ms_client, ms_scope, registration_name):
 
     # Finally, delete the definition
     logger.info(
-        _(
-            "Attempting to delete the managed service definition for %s",
-            registration_name,
-        )
+        _("Attempting to delete the managed service definition for %s"),
+        registration_name,
     )
 
     try:
