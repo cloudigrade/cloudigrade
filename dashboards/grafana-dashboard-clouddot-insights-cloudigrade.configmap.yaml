@@ -29,8 +29,7 @@ data:
       "fiscalYearStartMonth": 0,
       "gnetId": 9528,
       "graphTooltip": 0,
-      "id": 95,
-      "iteration": 1658242186276,
+      "iteration": 1659454320747,
       "links": [
         {
           "icon": "external link",
@@ -91,7 +90,7 @@ data:
             "content": "",
             "mode": "markdown"
           },
-          "pluginVersion": "9.0.1",
+          "pluginVersion": "9.0.3",
           "targets": [
             {
               "datasource": {
@@ -159,7 +158,7 @@ data:
             "showThresholdMarkers": true,
             "text": {}
           },
-          "pluginVersion": "9.0.1",
+          "pluginVersion": "9.0.3",
           "targets": [
             {
               "datasource": {
@@ -269,7 +268,7 @@ data:
             "showThresholdMarkers": true,
             "text": {}
           },
-          "pluginVersion": "9.0.1",
+          "pluginVersion": "9.0.3",
           "targets": [
             {
               "datasource": {
@@ -369,7 +368,7 @@ data:
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "9.0.1",
+          "pluginVersion": "9.0.3",
           "targets": [
             {
               "datasource": {
@@ -439,7 +438,7 @@ data:
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "9.0.1",
+          "pluginVersion": "9.0.3",
           "targets": [
             {
               "datasource": {
@@ -508,7 +507,7 @@ data:
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "9.0.1",
+          "pluginVersion": "9.0.3",
           "targets": [
             {
               "datasource": {
@@ -577,7 +576,7 @@ data:
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "9.0.1",
+          "pluginVersion": "9.0.3",
           "targets": [
             {
               "datasource": {
@@ -829,7 +828,7 @@ data:
             "alertThreshold": true
           },
           "percentage": false,
-          "pluginVersion": "9.0.1",
+          "pluginVersion": "9.0.3",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -915,7 +914,7 @@ data:
             "alertThreshold": true
           },
           "percentage": false,
-          "pluginVersion": "9.0.1",
+          "pluginVersion": "9.0.3",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -1053,7 +1052,7 @@ data:
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "9.0.1",
+          "pluginVersion": "9.0.3",
           "targets": [
             {
               "datasource": {
@@ -1135,7 +1134,7 @@ data:
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "9.0.1",
+          "pluginVersion": "9.0.3",
           "targets": [
             {
               "datasource": {
@@ -1213,7 +1212,7 @@ data:
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "9.0.1",
+          "pluginVersion": "9.0.3",
           "targets": [
             {
               "datasource": {
@@ -1291,7 +1290,7 @@ data:
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "9.0.1",
+          "pluginVersion": "9.0.3",
           "targets": [
             {
               "datasource": {
@@ -1373,7 +1372,7 @@ data:
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "9.0.1",
+          "pluginVersion": "9.0.3",
           "targets": [
             {
               "datasource": {
@@ -1804,7 +1803,7 @@ data:
           },
           "id": 104,
           "panels": [],
-          "title": "Other Runtime Metrics",
+          "title": "Task and message queues",
           "type": "row"
         },
         {
@@ -1812,33 +1811,64 @@ data:
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "description": "approximate numbers of messages on SQS queues",
+          "description": "Numbers of messages on Redis queues for Celery tasks.",
           "fieldConfig": {
             "defaults": {
               "color": {
-                "mode": "thresholds"
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
               },
               "mappings": [],
-              "max": 10,
               "min": 0,
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
+                    "color": "blue",
                     "value": null
                   },
                   {
+                    "color": "green",
+                    "value": 200
+                  },
+                  {
                     "color": "yellow",
-                    "value": 3
+                    "value": 400
                   },
                   {
                     "color": "orange",
-                    "value": 10
+                    "value": 800
                   },
                   {
                     "color": "red",
-                    "value": 20
+                    "value": 1600
                   }
                 ]
               }
@@ -1846,28 +1876,24 @@ data:
             "overrides": []
           },
           "gridPos": {
-            "h": 8,
+            "h": 11,
             "w": 12,
             "x": 0,
             "y": 52
           },
           "id": 102,
           "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom"
             },
-            "text": {},
-            "textMode": "auto"
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
           },
-          "pluginVersion": "9.0.1",
+          "pluginVersion": "9.0.3",
           "targets": [
             {
               "datasource": {
@@ -1875,51 +1901,343 @@ data:
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "avg(cloudtrail_notifications_message_count{namespace=\"$namespace\"})",
+              "exemplar": false,
+              "expr": "avg by (queue_name) (cloudigrade_celery_queue_length{namespace=\"$namespace\"})",
+              "format": "time_series",
               "hide": false,
-              "legendFormat": "cloudtrail",
+              "instant": false,
+              "interval": "$__rate_interval",
+              "legendFormat": "__auto",
               "range": true,
               "refId": "A"
-            },
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "editorMode": "code",
-              "expr": "avg(cloudtrail_notifications_dlq_message_count{namespace=\"$namespace\"})",
-              "hide": false,
-              "legendFormat": "cloudtrail DLQ",
-              "range": true,
-              "refId": "B"
-            },
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "editorMode": "code",
-              "expr": "avg(houndigrade_results_message_count{namespace=\"$namespace\"})",
-              "hide": false,
-              "legendFormat": "houndigrade",
-              "range": true,
-              "refId": "C"
-            },
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "editorMode": "code",
-              "expr": "avg(houndigrade_results_dlq_message_count{namespace=\"$namespace\"})",
-              "hide": false,
-              "legendFormat": "houndigrade DLQ",
-              "range": true,
-              "refId": "D"
             }
           ],
-          "title": "SQS queue sizes",
-          "type": "stat"
+          "title": "Celery task queue lengths",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "First-derivative rate of change for numbers of messages on Redis queues for Celery tasks.\n\nIdeal values are 0 for most of the time with any positive rate change quickly followed by a negative rate change.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "blue",
+                    "value": null
+                  },
+                  {
+                    "color": "green",
+                    "value": 200
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 400
+                  },
+                  {
+                    "color": "orange",
+                    "value": 800
+                  },
+                  {
+                    "color": "red",
+                    "value": 1600
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 11,
+            "w": 12,
+            "x": 12,
+            "y": 52
+          },
+          "id": 106,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "desc"
+            }
+          },
+          "pluginVersion": "9.0.3",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "exemplar": false,
+              "expr": "avg by (queue_name) (deriv(cloudigrade_celery_queue_length{namespace=\"$namespace\"}[1m]))",
+              "format": "time_series",
+              "hide": false,
+              "instant": false,
+              "interval": "$__rate_interval",
+              "legendFormat": "__auto",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Celery task queue rates of change",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Approximate numbers of messages on AWS SQS queues.\n\nUnderlying values are periodically fetched and cached for reporting, and they may be slightly out of date (by only a few minutes).",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "blue",
+                    "value": null
+                  },
+                  {
+                    "color": "green",
+                    "value": 20
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 40
+                  },
+                  {
+                    "color": "orange",
+                    "value": 80
+                  },
+                  {
+                    "color": "red",
+                    "value": 160
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 12,
+            "x": 0,
+            "y": 63
+          },
+          "id": 105,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "9.0.3",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "exemplar": false,
+              "expr": "avg by (queue_name) (cloudigrade_sqs_queue_length{namespace=\"$namespace\"})",
+              "format": "time_series",
+              "hide": false,
+              "instant": false,
+              "interval": "$__rate_interval",
+              "legendFormat": "__auto",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "SQS message queue lengths",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "First-derivative rate of change for approximate numbers of messages on AWS SQS queues.\n\nIdeal values are 0 for most of the time with any positive rate change quickly followed by a negative rate change.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "blue",
+                    "value": null
+                  },
+                  {
+                    "color": "green",
+                    "value": 20
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 40
+                  },
+                  {
+                    "color": "orange",
+                    "value": 80
+                  },
+                  {
+                    "color": "red",
+                    "value": 160
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 12,
+            "x": 12,
+            "y": 63
+          },
+          "id": 107,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "9.0.3",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "exemplar": false,
+              "expr": "avg by (queue_name) (deriv(cloudigrade_sqs_queue_length{namespace=\"$namespace\"}[1m]))",
+              "format": "time_series",
+              "hide": false,
+              "instant": false,
+              "interval": "$__rate_interval",
+              "legendFormat": "__auto",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "SQS message queue rates of change",
+          "type": "timeseries"
         }
       ],
       "refresh": false,
@@ -2008,7 +2326,7 @@ data:
       "timezone": "",
       "title": "Cloudigrade",
       "uid": "O6v4rMpizda",
-      "version": 1,
+      "version": 2,
       "weekStart": ""
     }
 
