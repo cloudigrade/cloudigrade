@@ -8,6 +8,9 @@ objects:
   kind: ClowdJobInvocation
   metadata:
     name: cloudigrade-smoke-${IMAGE_TAG}-${UID}
+    annotations:
+      "ignore-check.kube-linter.io/no-liveness-probe": "probes not required on Job pods"
+      "ignore-check.kube-linter.io/no-readiness-probe": "probes not required on Job pods
   spec:
     appName: cloudigrade
     testing:
