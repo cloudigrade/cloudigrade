@@ -73,6 +73,7 @@ class DocsApiHandler(object):
         api_helper.generate_instance_type_definitions(cloud_type="azure")
 
         self.customer_account_number = "100001"
+        self.customer_org_id = "200002"
         self.customer_user = util_helper.get_test_user(
             self.customer_account_number, is_superuser=False
         )
@@ -80,7 +81,9 @@ class DocsApiHandler(object):
         self.customer_user.save()
 
         self.x_rh_identity = util_helper.get_identity_auth_header(
-            self.customer_account_number
+            self.customer_account_number,
+            is_org_admin=False,
+            org_id=self.customer_org_id,
         ).decode("utf-8")
 
         # Create the fake HTTP clients
