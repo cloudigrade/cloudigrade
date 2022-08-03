@@ -38,11 +38,11 @@ def parse_psk_header(request):
     Get relevant information from the given request's PSK and account number headers.
 
     Returns:
-        (str, str, str): the tuple of psk, account_number and/or org_id fields.
+        (str, str, str): the tuple of psk, account_number, and org_id fields.
             If the psk header is not present and the account_number or org_id
             header is specified, this function returns (None, None, None).
             Otherwise, it will return (str, str|None, str|None) with the valid
-            PSK and the account_number and/or org_id if specified.
+            PSK and the account_number and org_id if specified.
 
     Raises:
         AuthenticationFailed: If an invalid PSK is specified.
@@ -137,7 +137,7 @@ def get_or_create_user(account_number, org_id):
             user.save()
             logger.info(
                 _(
-                    "account_number '%s' and org_id '%s'"
+                    "User with account_number '%s' and org_id '%s'"
                     "was not found and has been created."
                 ),
                 account_number,
@@ -227,25 +227,25 @@ def parse_requests_header(request, allow_internal_fake_identity_header=False):
 
 class IdentityHeaderAuthentication(BaseAuthentication):
     """
-    Authentication class that uses identity headers to find Django Users.
+    Authentication class that uses an identity HTTP header to find a matching User.
 
-    This authentication requires the identity header to exist with an identity having
-    an account_number. If we cannot find a User matching the identity, then
+    This authentication requires the header to exist and contain identity JSON that has
+    an account_number or org_id. If we cannot find a User matching the identity, then
     authentication fails and returns None.
     """
 
-    require_account_number = True
+    require_account_number_or_org_id = True
     require_user = True
     create_user = False
     allow_internal_fake_identity_header = False
 
     def assert_account_number(self, account_number, org_id):
         """Assert account_number or org_id is set if required."""
-        if not account_number and not org_id and self.require_account_number:
+        if not account_number and not org_id and self.require_account_number_or_org_id:
             raise exceptions.AuthenticationFailed(
                 _(
-                    "Authentication Failed: identity account number is required "
-                    "but account_number or org_id was not present in request."
+                    "Authentication Failed: identity account number or org id is "
+                    "required, but neither is present in request."
                 )
             )
 
@@ -282,7 +282,7 @@ class IdentityHeaderAuthentication(BaseAuthentication):
         else:
             logger.info(
                 _(
-                    "account_number '%s' or org_id '%s'"
+                    "User with account_number '%s' or org_id '%s'"
                     " was not found but is not required."
                 ),
                 account_number,
@@ -311,7 +311,7 @@ class IdentityHeaderAuthentication(BaseAuthentication):
 
             # Can't authenticate if there isn't a header
             if not auth_header:
-                if not self.require_account_number:
+                if not self.require_account_number_or_org_id:
                     return None
                 else:
                     raise exceptions.AuthenticationFailed
@@ -324,17 +324,18 @@ class IdentityHeaderAuthentication(BaseAuthentication):
 
 class IdentityHeaderAuthenticationUserNotRequired(IdentityHeaderAuthentication):
     """
-    Authentication class that does not require a User to exist for the account number.
+    Authentication class that requires an identity HTTP header but not a matching User.
 
-    This authentication checks for the identity header and requires the identity to
-    exist with an account number. However, this does not require that a User matching
-    the identity's account number exists.
+    This authentication requires the header to exist and contain identity JSON that has
+    an account_number or org_id. However, this does not require that a User matching the
+    identity's account_number or org_id exists.
 
     This variant exists because at least one public API (sysconfig) needs to have access
     restricted to an authenticated Red Hat identity before a corresponding User may have
-    been created within our system.
+    been created within our system. We want to enforce that an identity is included with
+    the request, but we don't need to enforce that we have a User for that identity.
     """
 
-    require_account_number = True
+    require_account_number_or_org_id = True
     require_user = False
     create_user = False
