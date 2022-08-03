@@ -2534,7 +2534,7 @@ Request:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 394
+    Content-Length: 415
     Content-Type: application/json
     Referrer-Policy: same-origin
     X-CLOUDIGRADE-REQUEST-ID: f653b840-145a-421f-9bb1-0758592d02d4
@@ -2547,6 +2547,7 @@ Request:
                 "account_number": "100001",
                 "date_joined": "2019-01-01T00:00:00Z",
                 "id": 1,
+                "is_permanent": false,
                 "org_id": "200002",
                 "username": "100001",
                 "uuid": "d862c2e3-6b0a-42f7-827c-67ebc8d44df7"

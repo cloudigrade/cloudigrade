@@ -67,6 +67,7 @@ def synthesize_user(request_id: int) -> Optional[int]:
         org_id=org_id,
         is_active=False,
         date_joined=user_date_joined,
+        is_permanent=False,
     )
     request.user = user
     request.save()

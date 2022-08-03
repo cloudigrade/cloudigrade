@@ -27,6 +27,7 @@ class InternalUserSerializer(ModelSerializer):
             "username",
             "account_number",
             "org_id",
+            "is_permanent",
         )
 
 
