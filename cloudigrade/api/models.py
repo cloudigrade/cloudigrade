@@ -32,6 +32,7 @@ class UserManager(BaseUserManager):
         date_joined=None,
         is_active=True,
         is_superuser=False,
+        is_permanent=False,
     ):
         """create_user creates a user, requires at least an account_number or org_id."""
         if not account_number and not org_id:
@@ -48,6 +49,7 @@ class UserManager(BaseUserManager):
 
         user.is_active = is_active
         user.is_superuser = is_superuser
+        user.is_permanent = is_permanent
         user.save(using=self._db)
         return user
 
@@ -78,6 +80,7 @@ class User(AbstractBaseUser):
     )
     is_active = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
+    is_permanent = models.BooleanField(default=False)
     date_joined = models.DateTimeField(verbose_name="Date Joined", default=now)
 
     objects = UserManager()
