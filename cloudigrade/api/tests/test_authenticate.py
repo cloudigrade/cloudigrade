@@ -205,14 +205,17 @@ class IdentityHeaderAuthenticateTestCase(TestCase):
                 self.assertEqual(self.account_number, user.account_number)
                 self.assertIn("Decoded identity header: ", logging_watcher.output[1])
 
-    def test_authenticate_not_org_admin_fails(self):
-        """Test that header without org admin user fails."""
+    def test_authenticate_not_org_admin_succeeds(self):
+        """Test that header without org admin user succeeds."""
         request = Mock()
         request.META = {settings.INSIGHTS_IDENTITY_HEADER: self.rh_header_not_admin}
 
-        with self.assertRaises(exceptions.PermissionDenied) as e:
-            self.auth_class.authenticate(request)
-        self.assertIn("User must be an org admin", e.exception.args[0])
+        user, auth = self.auth_class.authenticate(request)
+
+        self.assertTrue(auth)
+        self.assertEqual(self.account_number, user.account_number)
+        self.assertEqual(self.org_id, user.org_id)
+        self.assertEqual(user, self.user)
 
     def test_authenticate_bad_b64_padding(self):
         """Test authentication fails when the identity header has bad b64 padding."""

@@ -157,7 +157,7 @@ def parse_requests_header(request, allow_internal_fake_identity_header=False):
     Get relevant information from the given request's identity header.
 
     Returns:
-        (str, str, str, bool): the tuple of psk, account_number and org_id fields.
+        (str, str, str): the tuple of psk, account_number and org_id fields.
             Both psk and either account_number or org_id headers must be specified
             in the request. If the psk header is not present or invalid and
             the account_number or org_id header is missing, this function
@@ -174,7 +174,7 @@ def parse_requests_header(request, allow_internal_fake_identity_header=False):
 
     # Can't authenticate if there isn't a header
     if not auth_header:
-        return None, None, None, False
+        return None, None, None
     try:
         auth = json.loads(base64.b64decode(auth_header).decode(HTTP_HEADER_ENCODING))
 
@@ -205,7 +205,6 @@ def parse_requests_header(request, allow_internal_fake_identity_header=False):
         )
 
     user = identity.get("user", {})
-    is_org_admin = user.get("is_org_admin")
     username = user.get("username")
     email = user.get("email")
     logger.info(
@@ -213,19 +212,17 @@ def parse_requests_header(request, allow_internal_fake_identity_header=False):
             "identity header has "
             "account_number '%(account_number)s', "
             "org_id '%(org_id)s', "
-            "is_org_admin '%(is_org_admin)s', "
             "username '%(username)s', "
             "email '%(email)s'"
         ),
         {
             "account_number": account_number,
             "org_id": org_id,
-            "is_org_admin": is_org_admin,
             "username": username,
             "email": email,
         },
     )
-    return auth_header, account_number, org_id, is_org_admin
+    return auth_header, account_number, org_id
 
 
 class IdentityHeaderAuthentication(BaseAuthentication):
@@ -233,11 +230,10 @@ class IdentityHeaderAuthentication(BaseAuthentication):
     Authentication class that uses identity headers to find Django Users.
 
     This authentication requires the identity header to exist with an identity having
-    org_admin enabled. If we cannot find a User matching the identity, then
+    an account_number. If we cannot find a User matching the identity, then
     authentication fails and returns None.
     """
 
-    require_org_admin = True
     require_account_number = True
     require_user = True
     create_user = False
@@ -252,27 +248,6 @@ class IdentityHeaderAuthentication(BaseAuthentication):
                     "but account_number or org_id was not present in request."
                 )
             )
-
-    def assert_org_admin(self, account_number, org_id, is_org_admin):
-        """
-        Assert org_admin is set if required.
-
-        This functionality arguably belongs in a Permission class, not an Authentication
-        class, but it's simply convenient to include here because this assertion
-        requires parsing the identity header, and we've already done that here to get
-        the identity account number.
-        """
-        if self.require_org_admin and not is_org_admin:
-            logger.info(
-                _(
-                    "Authentication Failed: identity "
-                    "account_number '%(account_number)s' "
-                    "or org_id '%(org_id)s'"
-                    "is not org admin in identity header."
-                ),
-                {"account_number": account_number, "org_id": org_id},
-            )
-            raise exceptions.PermissionDenied(_("User must be an org admin."))
 
     def get_user(self, account_number, org_id):
         """Get the Django User for the account_number or org_id specified."""
@@ -330,19 +305,18 @@ class IdentityHeaderAuthentication(BaseAuthentication):
         if psk:
             self.assert_account_number(account_number, org_id)
         else:
-            auth_header, account_number, org_id, is_org_admin = parse_requests_header(
+            auth_header, account_number, org_id = parse_requests_header(
                 request, self.allow_internal_fake_identity_header
             )
 
             # Can't authenticate if there isn't a header
             if not auth_header:
-                if not self.require_account_number and not self.require_org_admin:
+                if not self.require_account_number:
                     return None
                 else:
                     raise exceptions.AuthenticationFailed
 
             self.assert_account_number(account_number, org_id)
-            self.assert_org_admin(account_number, org_id, is_org_admin)
         if user := self.get_user(account_number, org_id):
             return user, True
         return None
@@ -353,15 +327,14 @@ class IdentityHeaderAuthenticationUserNotRequired(IdentityHeaderAuthentication):
     Authentication class that does not require a User to exist for the account number.
 
     This authentication checks for the identity header and requires the identity to
-    exist with an account number and with org_admin enabled. However, this does not
-    require that a User matching the identity's account number exists.
+    exist with an account number. However, this does not require that a User matching
+    the identity's account number exists.
 
     This variant exists because at least one public API (sysconfig) needs to have access
     restricted to an authenticated Red Hat identity before a corresponding User may have
     been created within our system.
     """
 
-    require_org_admin = True
     require_account_number = True
     require_user = False
     create_user = False
