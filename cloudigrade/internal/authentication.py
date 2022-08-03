@@ -7,16 +7,16 @@ class IdentityHeaderAuthenticationInternal(IdentityHeaderAuthentication):
     Authentication class that only optionally uses the identity header.
 
     This authentication checks for the identity header but does not require the identity
-    to exist or to have org_admin enabled. If we cannot find a User matching the header
-    identity, then authentication fails and returns None. We expect the downstream view
-    to determine if access should be allowed if no authentication exists.
+    to exist. If we cannot find a User matching the header identity, then authentication
+    fails and gracefully returns None. We expect the downstream view to determine if
+    access should be allowed if no authentication exists.
 
     This "optional" variant exists because internal Red Hat console services do not
     consistently set the identity header, and we want to grant generally broad access
     to some of our internal APIs.
     """
 
-    require_account_number = False
+    require_account_number_or_org_id = False
     require_user = False
     create_user = False
 
@@ -29,7 +29,7 @@ class IdentityHeaderAuthenticationInternalCreateUser(IdentityHeaderAuthenticatio
     header, but if a matching User is not found, then we create a new User.
     """
 
-    require_account_number = True
+    require_account_number_or_org_id = True
     require_user = False
     create_user = True
 
@@ -46,7 +46,7 @@ class IdentityHeaderAuthenticationInternalAllowFakeIdentityHeader(
     normal INSIGHTS_IDENTITY_HEADER header which we cannot override.
     """
 
-    require_account_number = True
+    require_account_number_or_org_id = True
     require_user = True
     create_user = False
     allow_internal_fake_identity_header = True
