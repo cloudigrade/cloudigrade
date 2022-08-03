@@ -86,6 +86,7 @@ class InternalDailyConcurrentUsageViewSetTest(SharedDailyConcurrentUsageViewSetT
         )
         response = client.get(self.concurrent_api_url, data={}, format="json")
         body = response.json()
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(body["meta"]["count"], 1)
         self.assertEqual(len(body["data"]), 1)
         self.assertEqual(body["data"][0]["date"], str(yesterday))
@@ -120,7 +121,7 @@ class InternalDailyConcurrentUsageViewSetTest(SharedDailyConcurrentUsageViewSetT
         Test with a False is_org_admin parameter.
 
         Test with an internal account header, a valid account_number and False
-        org_admin headers, expect an authentication error.
+        org_admin headers, and expect success because org_admin is not required.
         """
         yesterday = get_today() - datetime.timedelta(days=1)
         today = get_today()
@@ -137,5 +138,7 @@ class InternalDailyConcurrentUsageViewSetTest(SharedDailyConcurrentUsageViewSetT
         )
         response = client.get(self.concurrent_api_url, data={}, format="json")
         body = response.json()
-        self.assertEqual(response.status_code, 403)
-        self.assertEqual(body["detail"], "User must be an org admin.")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(body["meta"]["count"], 1)
+        self.assertEqual(len(body["data"]), 1)
+        self.assertEqual(body["data"][0]["date"], str(yesterday))

@@ -155,7 +155,7 @@ class IdentityHeaderAuthenticationInternalConcurrentCase(TestCase):
         )
 
     def test_authenticate_with_valid_account_number_and_not_org_admin_fake_header(self):
-        """Test authentication with valid account_number and without org admin fails."""
+        """Test authentication with valid account_number but no org admin succeeds."""
         request = Mock()
         fake_header = util_helper.get_identity_auth_header(
             account_number=self.account_number,
@@ -165,9 +165,11 @@ class IdentityHeaderAuthenticationInternalConcurrentCase(TestCase):
             settings.INSIGHTS_IDENTITY_HEADER: self.internal_rh_header,
             settings.INSIGHTS_INTERNAL_FAKE_IDENTITY_HEADER: fake_header,
         }
-        with self.assertRaises(exceptions.PermissionDenied) as e:
-            self.auth_class.authenticate(request)
-        self.assertIn("User must be an org admin.", str(e.exception))
+
+        user, auth = self.auth_class.authenticate(request)
+
+        self.assertTrue(auth)
+        self.assertEqual(self.account_number, user.account_number)
 
     def test_authenticate_with_invalid_account_number_and_org_admin_fake_header(self):
         """Test authentication with invalid account_number and org admin fails."""
@@ -197,9 +199,8 @@ class IdentityHeaderAuthenticationInternalConcurrentCase(TestCase):
             settings.INSIGHTS_IDENTITY_HEADER: self.internal_rh_header,
             settings.INSIGHTS_INTERNAL_FAKE_IDENTITY_HEADER: fake_header,
         }
-        with self.assertRaises(exceptions.PermissionDenied) as e:
+        with self.assertRaises(exceptions.AuthenticationFailed):
             self.auth_class.authenticate(request)
-        self.assertIn("User must be an org admin.", str(e.exception))
 
     def test_authenticate_with_valid_account_number_and_org_admin_headers(self):
         """Test authentication with valid account_number and org admin succeeds."""

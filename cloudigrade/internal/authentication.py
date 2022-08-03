@@ -11,12 +11,11 @@ class IdentityHeaderAuthenticationInternal(IdentityHeaderAuthentication):
     identity, then authentication fails and returns None. We expect the downstream view
     to determine if access should be allowed if no authentication exists.
 
-    This "optional" variant exists because internal Red Hat Cloud services do not
-    consistently set the org_admin value, and we want to grant generally broad access to
-    our internal APIs.
+    This "optional" variant exists because internal Red Hat console services do not
+    consistently set the identity header, and we want to grant generally broad access
+    to some of our internal APIs.
     """
 
-    require_org_admin = False
     require_account_number = False
     require_user = False
     create_user = False
@@ -24,14 +23,12 @@ class IdentityHeaderAuthenticationInternal(IdentityHeaderAuthentication):
 
 class IdentityHeaderAuthenticationInternalCreateUser(IdentityHeaderAuthentication):
     """
-    Authentication class that uses identity header to creates Users.
+    Authentication class that uses identity header to create Users.
 
-    This authentication checks for the identity header but does not require the identity
-    to have org_admin enabled. If we cannot find a User matching the header's identity,
-    then we create a new User from the identity header's account number.
+    This authentication checks for a User matching the attributes in the identity
+    header, but if a matching User is not found, then we create a new User.
     """
 
-    require_org_admin = False
     require_account_number = True
     require_user = False
     create_user = True
@@ -41,13 +38,14 @@ class IdentityHeaderAuthenticationInternalAllowFakeIdentityHeader(
     IdentityHeaderAuthentication
 ):
     """
-    Authentication class that uses identity header to query/trigger concurrent reports.
+    Authentication class that uses an alternate HTTP header for the identity definition.
 
-    This authentication checks for the identity header and requires the identity
-    to have org_admin enabled.
+    This authentication checks the custom INSIGHTS_INTERNAL_FAKE_IDENTITY_HEADER header
+    before checking the normal INSIGHTS_IDENTITY_HEADER header. This enables us to make
+    internal requests simulating other users because the 3scale gateway populates the
+    normal INSIGHTS_IDENTITY_HEADER header which we cannot override.
     """
 
-    require_org_admin = True
     require_account_number = True
     require_user = True
     create_user = False
