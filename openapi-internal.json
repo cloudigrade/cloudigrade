@@ -419,7 +419,7 @@
     "/internal/api/cloudigrade/v1/users/": {
       "get": {
         "operationId": "listUsers",
-        "description": "Retrieve or list Users for internal use.",
+        "description": "Create, retrieve, update, delete or list an api.User for internal use.",
         "parameters": [
           {
             "name": "limit",
@@ -564,12 +564,51 @@
         "tags": [
           "api"
         ]
+      },
+      "post": {
+        "operationId": "createUser",
+        "description": "Create, retrieve, update, delete or list an api.User for internal use.",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InternalUser"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/InternalUser"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/InternalUser"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalUser"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "api"
+        ]
       }
     },
     "/internal/api/cloudigrade/v1/users/{id}/": {
       "get": {
         "operationId": "retrieveUser",
-        "description": "Retrieve or list Users for internal use.",
+        "description": "Create, retrieve, update, delete or list an api.User for internal use.",
         "parameters": [
           {
             "name": "id",
@@ -653,6 +692,316 @@
                 }
               }
             },
+            "description": ""
+          }
+        },
+        "tags": [
+          "api"
+        ]
+      },
+      "put": {
+        "operationId": "updateUser",
+        "description": "Create, retrieve, update, delete or list an api.User for internal use.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "A unique integer value identifying this user.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "account_number",
+            "required": false,
+            "in": "query",
+            "description": "account_number",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "date_joined__lt",
+            "required": false,
+            "in": "query",
+            "description": "date_joined__lt",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "date_joined",
+            "required": false,
+            "in": "query",
+            "description": "date_joined",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "date_joined__gt",
+            "required": false,
+            "in": "query",
+            "description": "date_joined__gt",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "org_id",
+            "required": false,
+            "in": "query",
+            "description": "org_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "uuid",
+            "required": false,
+            "in": "query",
+            "description": "uuid",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "username",
+            "required": false,
+            "in": "query",
+            "description": "username",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InternalUser"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/InternalUser"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/InternalUser"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalUser"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "api"
+        ]
+      },
+      "patch": {
+        "operationId": "partialUpdateUser",
+        "description": "Create, retrieve, update, delete or list an api.User for internal use.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "A unique integer value identifying this user.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "account_number",
+            "required": false,
+            "in": "query",
+            "description": "account_number",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "date_joined__lt",
+            "required": false,
+            "in": "query",
+            "description": "date_joined__lt",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "date_joined",
+            "required": false,
+            "in": "query",
+            "description": "date_joined",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "date_joined__gt",
+            "required": false,
+            "in": "query",
+            "description": "date_joined__gt",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "org_id",
+            "required": false,
+            "in": "query",
+            "description": "org_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "uuid",
+            "required": false,
+            "in": "query",
+            "description": "uuid",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "username",
+            "required": false,
+            "in": "query",
+            "description": "username",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InternalUser"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/InternalUser"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/InternalUser"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalUser"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "api"
+        ]
+      },
+      "delete": {
+        "operationId": "destroyUser",
+        "description": "Destroy the User only if it has no cloud accounts, otherwise return a 400.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "A unique integer value identifying this user.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "account_number",
+            "required": false,
+            "in": "query",
+            "description": "account_number",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "date_joined__lt",
+            "required": false,
+            "in": "query",
+            "description": "date_joined__lt",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "date_joined",
+            "required": false,
+            "in": "query",
+            "description": "date_joined",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "date_joined__gt",
+            "required": false,
+            "in": "query",
+            "description": "date_joined__gt",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "org_id",
+            "required": false,
+            "in": "query",
+            "description": "org_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "uuid",
+            "required": false,
+            "in": "query",
+            "description": "uuid",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "username",
+            "required": false,
+            "in": "query",
+            "description": "username",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
             "description": ""
           }
         },
@@ -7543,6 +7892,9 @@
             "type": "string",
             "nullable": true,
             "maxLength": 150
+          },
+          "is_permanent": {
+            "type": "boolean"
           }
         }
       },
