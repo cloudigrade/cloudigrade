@@ -825,6 +825,7 @@ def generate_test_user(
     is_superuser=False,
     date_joined=None,
     org_id=None,
+    is_permanent=False,
 ):
     """
     Generate and save a user for testing.
@@ -835,6 +836,7 @@ def generate_test_user(
         is_superuser (bool): create as a superuser if True
         date_joined (datetime.datetime): optional when the user joined
         org_id (str): optional org_id
+        is_permanent (bool): makes the new user permanent if True
 
     Returns:
         User: created Django auth User
@@ -846,6 +848,7 @@ def generate_test_user(
         "account_number": account_number,
         "password": password,
         "is_superuser": is_superuser,
+        "is_permanent": is_permanent,
     }
     if org_id:
         kwargs["org_id"] = org_id
