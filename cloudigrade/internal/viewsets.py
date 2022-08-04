@@ -93,12 +93,32 @@ class InternalAccountViewSet(
         tasks.delete_cloud_account.delay(instance.id)
 
 
-class InternalUserViewSet(InternalViewSetMixin, viewsets.ReadOnlyModelViewSet):
-    """Retrieve or list Users for internal use."""
+class InternalUserViewSet(
+    InternalViewSetMixin,
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.ReadOnlyModelViewSet,
+):
+    """Create, retrieve, update, delete or list an api.User for internal use."""
 
     queryset = User.objects.all()
     serializer_class = serializers.InternalUserSerializer
     filterset_class = filters.InternalUserFilterSet
+
+    def destroy(self, request, *args, **kwargs):
+        """Destroy the User only if it has no cloud accounts, otherwise return a 400."""
+        user = self.get_object()
+        if models.CloudAccount.objects.filter(user_id=user.id).exists():
+            return Response(
+                {
+                    "error": f"User id {user.id} has related"
+                    " CloudAccounts and cannot be deleted"
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        user.delete(force=True)
+        return Response(status=status.HTTP_202_ACCEPTED)
 
 
 class InternalUserTaskLockViewSet(

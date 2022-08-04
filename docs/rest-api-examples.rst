@@ -2533,8 +2533,8 @@ Request:
 ::
 
     HTTP/1.1 200 OK
-    Allow: GET, HEAD, OPTIONS
-    Content-Length: 415
+    Allow: GET, POST, HEAD, OPTIONS
+    Content-Length: 411
     Content-Type: application/json
     Referrer-Policy: same-origin
     X-CLOUDIGRADE-REQUEST-ID: f653b840-145a-421f-9bb1-0758592d02d4
