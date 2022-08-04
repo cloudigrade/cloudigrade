@@ -211,7 +211,8 @@ class UserModelTest(TestCase):
 
         self.assertEqual(
             str(user),
-            f"User(uuid={user_uuid},"
+            f"User(id={user.id},"
+            f" uuid={user_uuid},"
             f" account_number={user_account_number},"
             f" org_id={user_org_id})",
         )

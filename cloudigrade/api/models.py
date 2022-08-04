@@ -95,11 +95,18 @@ class User(AbstractBaseUser):
         """Return the friendly string representation for the Api User."""
         return (
             f"{self.__class__.__name__}("
+            f"id={self.id}, "
             f"uuid={self.uuid}, "
             f"account_number={self.account_number}, "
             f"org_id={self.org_id}"
             f")"
         )
+
+    def delete(self, force=False):
+        """Only delete a user if not permanent or force is True."""
+        if force is False and self.is_permanent:
+            return 0, {}
+        return super(User, self).delete()
 
 
 class UserTaskLock(BaseModel):
