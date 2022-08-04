@@ -2,6 +2,7 @@
 import faker
 from django.test import TestCase
 
+from api.models import User
 from api.tests import helper as api_helper
 from util.tests import helper as util_helper
 
@@ -101,3 +102,82 @@ class InternalUserViewSetTest(TestCase):
         self.assertEqual(response.status_code, 200)
         response_dict = response.json()
         self.assertJsonDictMatchesUsersList(response_dict, [])
+
+    def test_create_user(self):
+        """Assert a post creates a new user."""
+        user_account_number = _faker.uuid4()
+        user_org_id = _faker.uuid4()
+        post_args = {"account_number": user_account_number, "org_id": user_org_id}
+        response = self.client.post_users(data=post_args)
+        self.assertEqual(response.status_code, 201)
+        response_dict = response.json()
+        self.assertTrue(
+            User.objects.filter(account_number=user_account_number).exists()
+        )
+        user = User.objects.get(id=response_dict["id"])
+        self.assertEqual(user.account_number, user_account_number)
+        self.assertEqual(user.org_id, user_org_id)
+
+    def test_update_user(self):
+        """Assert a put updates the user."""
+        user_org_id = str(_faker.uuid4())
+        test_user = util_helper.generate_test_user(
+            org_id=user_org_id, is_permanent=False
+        )
+        response = self.client.put_users(test_user.id, data={"is_permanent": True})
+        self.assertEqual(response.status_code, 200)
+        response_dict = response.json()
+        self.assertEqual(response_dict["id"], test_user.id)
+        self.assertEqual(response_dict["org_id"], user_org_id)
+        self.assertTrue(response_dict["is_permanent"])
+        test_user.refresh_from_db()
+        self.assertTrue(test_user.is_permanent)
+
+    def test_patch_update_user(self):
+        """Assert a patch updates the user."""
+        user_org_id = str(_faker.uuid4())
+        test_user = util_helper.generate_test_user(
+            org_id=user_org_id, is_permanent=True
+        )
+        response = self.client.patch_users(test_user.id, data={"is_permanent": False})
+        self.assertEqual(response.status_code, 200)
+        response_dict = response.json()
+        self.assertEqual(response_dict["id"], test_user.id)
+        self.assertEqual(response_dict["org_id"], user_org_id)
+        self.assertFalse(response_dict["is_permanent"])
+        test_user.refresh_from_db()
+        self.assertFalse(test_user.is_permanent)
+
+    def test_delete_user_succeeds_with_non_permanent_users(self):
+        """Assert a delete succeeds with non permanent users."""
+        user_org_id = str(_faker.uuid4())
+        test_user = util_helper.generate_test_user(
+            org_id=user_org_id, is_permanent=False
+        )
+        response = self.client.delete_users(test_user.id)
+        self.assertEqual(response.status_code, 202)
+        self.assertFalse(User.objects.filter(org_id=user_org_id).exists())
+
+    def test_delete_user_succeeds_with_permanent_users(self):
+        """Assert a delete succeeds with permanent users."""
+        user_org_id = str(_faker.uuid4())
+        test_user = util_helper.generate_test_user(
+            org_id=user_org_id, is_permanent=True
+        )
+        response = self.client.delete_users(test_user.id)
+        self.assertEqual(response.status_code, 202)
+        self.assertFalse(User.objects.filter(org_id=user_org_id).exists())
+
+    def test_delete_user_fails_if_user_has_accounts(self):
+        """Assert a delete fails for users with accounts."""
+        test_user = util_helper.generate_test_user(
+            org_id=str(_faker.uuid4()), is_permanent=False
+        )
+        api_helper.generate_cloud_account_aws(user=test_user)
+        response = self.client.delete_users(test_user.id)
+        response_dict = response.json()
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response_dict["error"],
+            f"User id {test_user.id} has related CloudAccounts and cannot be deleted",
+        )

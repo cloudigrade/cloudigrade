@@ -225,3 +225,60 @@ class UserModelTest(TestCase):
         self.assertEquals(
             "Users must have at least an account_number or org_id", str(ve.exception)
         )
+
+    def test_delete_user_does_not_delete_permanent_users(self):
+        """Test that a delete user does not delete permanent users."""
+        user_uuid = str(uuid.uuid4())
+        user_account_number = str(_faker.random_int(min=100000, max=999999))
+        user_org_id = str(_faker.random_int(min=100000, max=999999))
+
+        user = User.objects.create(
+            uuid=user_uuid,
+            account_number=user_account_number,
+            org_id=user_org_id,
+            is_permanent=True,
+        )
+
+        deleted, __ = user.delete()
+        self.assertEqual(deleted, 0)
+        self.assertTrue(
+            User.objects.filter(account_number=user_account_number).exists()
+        )
+
+    def test_delete_user_delete_non_permanent_users(self):
+        """Test that a delete user does delete non permanent users."""
+        user_uuid = str(uuid.uuid4())
+        user_account_number = str(_faker.random_int(min=100000, max=999999))
+        user_org_id = str(_faker.random_int(min=100000, max=999999))
+
+        user = User.objects.create(
+            uuid=user_uuid,
+            account_number=user_account_number,
+            org_id=user_org_id,
+            is_permanent=False,
+        )
+
+        deleted, __ = user.delete()
+        self.assertEqual(deleted, 1)
+        self.assertFalse(
+            User.objects.filter(account_number=user_account_number).exists()
+        )
+
+    def test_delete_user_with_force_does_delete_permanent_users(self):
+        """Test that a force delete user does delete permanent users."""
+        user_uuid = str(uuid.uuid4())
+        user_account_number = str(_faker.random_int(min=100000, max=999999))
+        user_org_id = str(_faker.random_int(min=100000, max=999999))
+
+        user = User.objects.create(
+            uuid=user_uuid,
+            account_number=user_account_number,
+            org_id=user_org_id,
+            is_permanent=True,
+        )
+
+        deleted, __ = user.delete(force=True)
+        self.assertEqual(deleted, 1)
+        self.assertFalse(
+            User.objects.filter(account_number=user_account_number).exists()
+        )
