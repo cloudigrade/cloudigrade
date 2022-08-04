@@ -67,12 +67,12 @@ Overview
 
 The following resource paths are currently available:
 
--  ``/api/v2/accounts/`` returns accounts data
--  ``/api/v2/instances/`` returns instances data
--  ``/api/v2/images/`` returns images data
--  ``/api/v2/sysconfig/`` returns sysconfig data
--  ``/api/v2/azure-offer-template/`` returns azure offer template data
--  ``/api/v2/concurrent/`` returns concurrency data
+-  ``/api/cloudigrade/v2/accounts/`` returns accounts data
+-  ``/api/cloudigrade/v2/instances/`` returns instances data
+-  ``/api/cloudigrade/v2/images/`` returns images data
+-  ``/api/cloudigrade/v2/sysconfig/`` returns sysconfig data
+-  ``/api/cloudigrade/v2/azure-offer-template/`` returns azure offer template data
+-  ``/api/cloudigrade/v2/concurrent/`` returns concurrency data
 
 
 User Setup
