@@ -3,9 +3,19 @@
 export RUN_DIR="${PWD}"
 
 echo "SonarQube Scan"
-echo "Directory: ${RUN_DIR}"
-echo "JAVA_HOME: ${JAVA_HOME}"
-echo "Workspace: ${WORKSPACE}"
+echo "Directory:     ${RUN_DIR}"
+echo "Workspace:     ${WORKSPACE}"
+echo "JAVA_HOME:     ${JAVA_HOME}"
+if [ -n "$JAVA_HOME" ]; then
+  java_cmd="$JAVA_HOME/bin/java"
+else
+  java_cmd="`which java`"
+fi
+echo "Java Command:  ${java_cmd}"
+if [ -n "${java_cmd}" ]; then
+  echo "Java Version:"
+  ${java_cmd} -version 2>&1 | sed 's/^/    /'
+fi
 
 mkdir "${RUN_DIR}/sonarqube/"
 mkdir "${RUN_DIR}/sonarqube/download/"
