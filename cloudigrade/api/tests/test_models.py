@@ -214,7 +214,9 @@ class UserModelTest(TestCase):
             f"User(id={user.id},"
             f" uuid={user_uuid},"
             f" account_number={user_account_number},"
-            f" org_id={user_org_id})",
+            f" org_id={user_org_id},"
+            f" is_permanent={user.is_permanent},"
+            f" date_joined={user.date_joined})",
         )
 
     def test_create_user_raises_value_error_with_no_account_number_or_org_id(self):

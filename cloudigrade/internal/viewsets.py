@@ -95,10 +95,7 @@ class InternalAccountViewSet(
 
 class InternalUserViewSet(
     InternalViewSetMixin,
-    mixins.CreateModelMixin,
-    mixins.UpdateModelMixin,
-    mixins.DestroyModelMixin,
-    viewsets.ReadOnlyModelViewSet,
+    viewsets.ModelViewSet,
 ):
     """Create, retrieve, update, delete or list an api.User for internal use."""
 
