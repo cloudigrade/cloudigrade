@@ -98,7 +98,9 @@ class User(AbstractBaseUser):
             f"id={self.id}, "
             f"uuid={self.uuid}, "
             f"account_number={self.account_number}, "
-            f"org_id={self.org_id}"
+            f"org_id={self.org_id}, "
+            f"is_permanent={self.is_permanent}, "
+            f"date_joined={self.date_joined}"
             f")"
         )
 
