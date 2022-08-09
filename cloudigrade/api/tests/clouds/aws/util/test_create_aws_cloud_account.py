@@ -12,7 +12,7 @@ from util.tests import helper as util_helper
 _faker = faker.Faker()
 
 
-class CreateAWSClountTest(TestCase):
+class CreateAWSCloudAccountTest(TestCase):
     """Test cases for api.cloud.aws.util.create_aws_cloud_account."""
 
     def setUp(self):
@@ -25,7 +25,7 @@ class CreateAWSClountTest(TestCase):
         self.source_id = _faker.pyint()
 
     @patch.object(CloudAccount, "enable")
-    def test_create_aws_clount_success(self, mock_enable):
+    def test_create_aws_cloud_account_success(self, mock_enable):
         """Test create_aws_cloud_account success."""
         util.create_aws_cloud_account(
             self.user, self.arn, self.auth_id, self.app_id, self.source_id
@@ -35,7 +35,7 @@ class CreateAWSClountTest(TestCase):
 
     @patch("api.tasks.sources.notify_application_availability_task")
     @patch.object(CloudAccount, "enable")
-    def test_create_aws_clount_fails_same_aws_account_different_arn(
+    def test_create_aws_cloud_account_fails_same_aws_account_different_arn(
         self, mock_enable, mock_notify_sources
     ):
         """
@@ -70,7 +70,7 @@ class CreateAWSClountTest(TestCase):
 
     @patch("api.tasks.sources.notify_application_availability_task")
     @patch.object(CloudAccount, "enable")
-    def test_create_aws_clount_fails_with_same_arn_different_user(
+    def test_create_aws_cloud_account_fails_with_same_arn_different_user(
         self, mock_enable, mock_notify_sources
     ):
         """Test create_aws_cloud_account fails with same ARN and a different user."""
@@ -97,7 +97,7 @@ class CreateAWSClountTest(TestCase):
 
     @patch("api.tasks.sources.notify_application_availability_task")
     @patch.object(CloudAccount, "enable")
-    def test_create_aws_clount_fails_with_same_arn_same_user(
+    def test_create_aws_cloud_account_fails_with_same_arn_same_user(
         self, mock_enable, mock_notify_sources
     ):
         """Test create_aws_cloud_account failure message for same user."""
@@ -122,7 +122,7 @@ class CreateAWSClountTest(TestCase):
 
     @patch("api.tasks.sources.notify_application_availability_task")
     @patch.object(CloudAccount, "enable")
-    def test_create_aws_clount_fails_with_different_user_same_account_id(
+    def test_create_aws_cloud_account_fails_with_different_user_same_account_id(
         self, mock_enable, mock_notify_sources
     ):
         """Test create_aws_cloud_account failure message for different user."""

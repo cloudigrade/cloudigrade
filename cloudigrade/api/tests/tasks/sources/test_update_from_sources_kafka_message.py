@@ -25,7 +25,7 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
         self.account_id = util_helper.generate_dummy_aws_account_id()
         self.arn = util_helper.generate_dummy_arn(account_id=self.account_id)
 
-        self.clount = api_helper.generate_cloud_account(
+        self.cloud_account = api_helper.generate_cloud_account(
             arn=self.arn, platform_authentication_id=self.authentication_id
         )
 
@@ -64,7 +64,7 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
         sources.update_from_sources_kafka_message(message, headers)
 
         mock_update_account.assert_called_with(
-            self.clount,
+            self.cloud_account,
             self.arn,
             self.account_number,
             self.org_id,
@@ -78,7 +78,7 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
     def test_update_from_sources_kafka_message_updates_arn(
         self, mock_get_auth, mock_notify_sources, mock_get_app
     ):
-        """Assert update_from_sources_kafka_message updates the arn on the clount."""
+        """Assert update_from_sources_kafka_message updates the arn on the account."""
         message, headers = util_helper.generate_authentication_create_message_value(
             self.account_number, self.username, self.authentication_id
         )
@@ -92,9 +92,9 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
             sources.update_from_sources_kafka_message(message, headers)
             mock_verify_permissions.assert_called()
 
-        self.clount.refresh_from_db()
-        self.assertEqual(self.clount.content_object.account_arn, new_arn)
-        self.assertTrue(self.clount.is_enabled)
+        self.cloud_account.refresh_from_db()
+        self.assertEqual(self.cloud_account.content_object.account_arn, new_arn)
+        self.assertTrue(self.cloud_account.is_enabled)
         mock_notify_sources.delay.assert_called()
 
     @patch("util.redhatcloud.sources.get_application")
@@ -104,7 +104,7 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
         self, mock_get_auth, mock_notify_sources, mock_get_app
     ):
         """
-        Assert update_from_sources_kafka_message updates the arn and disables clount.
+        Assert update_from_sources_kafka_message updates the arn and disables account.
 
         This can happen if we get a well-formed ARN, but the AWS-side verification fails
         due to something like badly configured IAM Role or Policy. In this case, we do
@@ -126,14 +126,14 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
             sources.update_from_sources_kafka_message(message, headers)
             mock_verify_permissions.assert_called()
 
-        self.clount.refresh_from_db()
-        self.assertEqual(self.clount.content_object.account_arn, new_arn)
-        self.assertFalse(self.clount.is_enabled)
+        self.cloud_account.refresh_from_db()
+        self.assertEqual(self.cloud_account.content_object.account_arn, new_arn)
+        self.assertFalse(self.cloud_account.is_enabled)
 
         mock_notify_sources.delay.assert_called_once_with(
-            self.clount.user.account_number,
-            self.clount.user.org_id,
-            self.clount.platform_application_id,
+            self.cloud_account.user.account_number,
+            self.cloud_account.user.org_id,
+            self.cloud_account.platform_application_id,
             "unavailable",
             str(validation_error),
         )
@@ -315,9 +315,9 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
             sources.update_from_sources_kafka_message(message, headers)
             mock_verify_permissions.assert_called()
 
-        self.clount.refresh_from_db()
-        self.assertEqual(self.clount.content_object.account_arn, new_arn)
-        self.assertTrue(self.clount.is_enabled)
+        self.cloud_account.refresh_from_db()
+        self.assertEqual(self.cloud_account.content_object.account_arn, new_arn)
+        self.assertTrue(self.cloud_account.is_enabled)
         mock_notify_sources.delay.assert_called()
 
     @patch("api.tasks.sources.notify_application_availability_task")

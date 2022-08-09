@@ -161,8 +161,8 @@ class CloudAccountSerializer(ModelSerializer):
         """
         Create an AWS flavored CloudAccount.
 
-        Validate that we have the right access to the customer's AWS clount,
-        set up Cloud Trail on their clount.
+        Validate that we have the right access to the customer's AWS cloud account,
+        set up Cloud Trail on their cloud account.
 
         """
         arn = validated_data["account_arn"]

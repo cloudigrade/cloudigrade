@@ -14,7 +14,7 @@ from util.tests import helper as util_helper
 _faker = faker.Faker()
 
 
-class UpdateAWSClountTest(TestCase):
+class UpdateAWSCloudAccountTest(TestCase):
     """Test cases for api.cloud.aws.util.update_aws_cloud_account."""
 
     def setUp(self):
@@ -28,7 +28,7 @@ class UpdateAWSClountTest(TestCase):
         self.app_id = _faker.pyint()
         self.source_id = _faker.pyint()
 
-        self.clount = api_helper.generate_cloud_account(
+        self.cloud_account = api_helper.generate_cloud_account(
             arn=self.arn,
             aws_account_id=self.aws_account_id,
             user=self.user,
@@ -38,10 +38,12 @@ class UpdateAWSClountTest(TestCase):
         )
 
     @patch("api.tasks.sources.notify_application_availability_task")
-    def test_update_aws_clount_notifies_sources_invalid_arn(self, mock_notify_sources):
+    def test_update_aws_cloud_account_notifies_sources_invalid_arn(
+        self, mock_notify_sources
+    ):
         """Test update_aws_cloud_account notifies sources if ARN is invalid."""
         util.update_aws_cloud_account(
-            self.clount,
+            self.cloud_account,
             "INVALID",
             self.account_number,
             self.org_id,
@@ -52,17 +54,17 @@ class UpdateAWSClountTest(TestCase):
 
     @patch.object(CloudAccount, "disable")
     @patch.object(CloudAccount, "enable")
-    def test_update_aws_clount_different_aws_account_id_success(
+    def test_update_aws_cloud_account_different_aws_account_id_success(
         self, mock_enable, mock_disable
     ):
         """Test update_aws_cloud_account works."""
         aws_account_id2 = util_helper.generate_dummy_aws_account_id()
         arn2 = util_helper.generate_dummy_arn(account_id=aws_account_id2)
 
-        api_helper.generate_instance(self.clount)
+        api_helper.generate_instance(self.cloud_account)
 
         util.update_aws_cloud_account(
-            self.clount,
+            self.cloud_account,
             arn2,
             self.account_number,
             self.org_id,
@@ -78,7 +80,7 @@ class UpdateAWSClountTest(TestCase):
     @patch("api.tasks.sources.notify_application_availability_task")
     @patch.object(CloudAccount, "disable")
     @patch.object(CloudAccount, "enable")
-    def test_update_aws_clount_different_aws_account_id_fails_arn_already_exists(
+    def test_update_aws_cloud_account_different_aws_account_id_fails_arn_already_exists(
         self, mock_enable, mock_disable, mock_notify_error
     ):
         """Test update_aws_cloud_account fails for duplicate arn."""
@@ -88,7 +90,7 @@ class UpdateAWSClountTest(TestCase):
         api_helper.generate_cloud_account(arn=arn2, aws_account_id=aws_account_id2)
 
         util.update_aws_cloud_account(
-            self.clount,
+            self.cloud_account,
             arn2,
             self.account_number,
             self.org_id,
@@ -104,7 +106,7 @@ class UpdateAWSClountTest(TestCase):
     @patch("api.tasks.sources.notify_application_availability_task")
     @patch.object(CloudAccount, "disable")
     @patch.object(CloudAccount, "enable")
-    def test_update_aws_clount_different_aws_account_id_fails_account_id_already_exists(
+    def test_update_aws_cloud_account_different_aws_account_id_fails_account_id_exists(
         self, mock_enable, mock_disable, mock_notify_error
     ):
         """Test update_aws_cloud_account fails for duplicate aws_account_id."""
@@ -115,7 +117,7 @@ class UpdateAWSClountTest(TestCase):
         api_helper.generate_cloud_account(arn=arn2, aws_account_id=aws_account_id2)
 
         util.update_aws_cloud_account(
-            self.clount,
+            self.cloud_account,
             arn3,
             self.account_number,
             self.org_id,

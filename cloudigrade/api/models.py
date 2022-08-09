@@ -136,7 +136,7 @@ class CloudAccount(BaseGenericModel):
     enabled_at = models.DateTimeField(null=True, blank=True)
 
     # We must store the platform authentication_id in order to know things
-    # like when to delete the Clount.
+    # like when to delete the CloudAccount.
     # Unfortunately because of the way platform Sources is designed
     # we must also keep track of the source_id and application_id.
     # Why? see https://github.com/RedHatInsights/sources-api/issues/179
@@ -402,7 +402,7 @@ def cloud_account_post_delete_callback(*args, **kwargs):
     """
     instance = kwargs["instance"]
 
-    # When multiple clounts are deleted at the same time django will
+    # When multiple cloud accounts are deleted at the same time django will
     # attempt to delete the user multiple times.
     # Catch and log the raised DoesNotExist error from the additional
     # attempts.
@@ -418,7 +418,9 @@ def cloud_account_post_delete_callback(*args, **kwargs):
             )
             instance.user.delete()
     except User.DoesNotExist:
-        logger.info(_("User for clount id %s has already been deleted."), instance.id)
+        logger.info(
+            _("User for cloud account id %s has already been deleted."), instance.id
+        )
 
 
 class MachineImage(BaseGenericModel):

@@ -69,8 +69,10 @@ class LockUserTaskTest(TransactionTestCase):
 
     @patch("api.clouds.aws.util.delete_cloudtrail")
     @patch("api.tasks.sources.notify_application_availability_task")
-    def test_delete_clount_lock(self, mock_notify_sources, mock_delete_cloudtrail):
-        """Test that deleting an clount inside a lock is successful."""
+    def test_delete_cloud_account_lock(
+        self, mock_notify_sources, mock_delete_cloudtrail
+    ):
+        """Test that deleting an account inside a lock is successful."""
         aws_account_id = util_helper.generate_dummy_aws_account_id()
         arn = util_helper.generate_dummy_arn(account_id=aws_account_id)
         account = api_helper.generate_cloud_account(
@@ -85,8 +87,8 @@ class LockUserTaskTest(TransactionTestCase):
         self.assertFalse(UserTaskLock.objects.filter(user=account.user).exists())
 
     @patch("api.tasks.sources.notify_application_availability_task")
-    def test_delete_clount_lock_exception(self, mock_notify_sources):
-        """Test that an exception when deleting a clount inside a lock rolls back."""
+    def test_delete_cloud_account_lock_exception(self, mock_notify_sources):
+        """Test that an exception when deleting an account inside a lock rolls back."""
         aws_account_id = util_helper.generate_dummy_aws_account_id()
         arn = util_helper.generate_dummy_arn(account_id=aws_account_id)
         account = api_helper.generate_cloud_account(

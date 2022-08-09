@@ -106,8 +106,8 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         # Delete should not have been called.
         self.assertEqual(CloudAccount.objects.count(), 1)
 
-    def test_delete_from_sources_kafka_message_fail_no_clount(self):
-        """Assert delete fails from nonexistent clount."""
+    def test_delete_from_sources_kafka_message_fail_no_cloud_account(self):
+        """Assert delete fails from nonexistent cloud account."""
         self.assertEqual(CloudAccount.objects.count(), 1)
 
         account_number = str(self.user.account_number)
