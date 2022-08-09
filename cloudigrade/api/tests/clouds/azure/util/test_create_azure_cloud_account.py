@@ -34,3 +34,36 @@ class CreateAzureCloudAccountTest(TestCase):
         self.assertEqual(cloud_account, CloudAccount.objects.get())
         azure_cloud_account = cloud_account.content_object
         self.assertEqual(azure_cloud_account, AzureCloudAccount.objects.get())
+
+    @patch("api.tasks.sources.notify_application_availability_task")
+    @patch.object(CloudAccount, "enable")
+    def test_create_azure_cloud_account_fails_duplicate_subscription_id(
+        self, mock_enable, mock_notify_sources
+    ):
+        """Test create_azure_cloud_account when the subscription ID is already used."""
+        util.create_azure_cloud_account(
+            self.user, self.subscription_id, self.auth_id, self.app_id, self.source_id
+        )
+        mock_enable.assert_called()
+        mock_notify_sources.delay.assert_not_called()
+
+        mock_enable.reset_mock()
+        mock_notify_sources.reset_mock()
+
+        with self.assertRaises(ValidationError) as raise_context:
+            util.create_azure_cloud_account(
+                self.user,
+                self.subscription_id,
+                self.auth_id,
+                self.app_id,
+                self.source_id,
+            )
+        exception_detail = raise_context.exception.detail
+        self.assertIn("subscription_id", exception_detail)
+        self.assertIn(
+            "Could not enable cloud metering.", exception_detail["subscription_id"]
+        )
+        self.assertIn("CG1005", exception_detail["subscription_id"])
+
+        mock_enable.assert_not_called()
+        mock_notify_sources.delay.assert_called()

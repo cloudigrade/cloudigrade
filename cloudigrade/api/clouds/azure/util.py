@@ -1,10 +1,11 @@
 """Utility functions for AWS models and use cases."""
 import logging
 
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.utils.translation import gettext as _
 from rest_framework.serializers import ValidationError
 
+from api import error_codes
 from api.clouds.azure.models import AzureCloudAccount
 from api.models import CloudAccount
 
@@ -60,9 +61,17 @@ def create_azure_cloud_account(
     )
 
     with transaction.atomic():
-        azure_cloud_account = AzureCloudAccount.objects.create(
-            subscription_id=subscription_id
-        )
+        try:
+            azure_cloud_account = AzureCloudAccount.objects.create(
+                subscription_id=subscription_id
+            )
+        except IntegrityError:
+            # create can raise IntegrityError if the given
+            # subscription_id already exists in an account
+            error_code = error_codes.CG1005
+            error_code.notify(user.account_number, user.org_id, platform_application_id)
+            raise ValidationError({"subscription_id": error_code.get_message()})
+
         cloud_account = CloudAccount.objects.create(
             user=user,
             content_object=azure_cloud_account,
