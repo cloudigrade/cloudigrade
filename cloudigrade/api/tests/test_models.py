@@ -121,8 +121,8 @@ class CloudAccountTest(TestCase):
     """Test cases for api.models.CloudAccount."""
 
     @patch("api.tasks.sources.notify_application_availability_task")
-    def test_delete_clount_deletes_user(self, mock_notify_sources):
-        """Test User is deleted if last clount is deleted."""
+    def test_delete_cloud_account_deletes_user(self, mock_notify_sources):
+        """Test User is deleted if last cloud account is deleted."""
         user = util_helper.generate_test_user()
         account_number = user.account_number
         aws_account_id = util_helper.generate_dummy_aws_account_id()
@@ -135,10 +135,10 @@ class CloudAccountTest(TestCase):
         self.assertFalse(User.objects.filter(account_number=account_number).exists())
 
     @patch("api.tasks.sources.notify_application_availability_task")
-    def test_delete_clount_doesnt_delete_user_for_two_clounts(
+    def test_delete_cloud_account_doesnt_delete_user_for_two_cloud_accounts(
         self, mock_notify_sources
     ):
-        """Test User is not deleted if it has more clounts left."""
+        """Test User is not deleted if it has more cloud accounts left."""
         user = util_helper.generate_test_user()
         account_number = user.account_number
         aws_account_id = util_helper.generate_dummy_aws_account_id()

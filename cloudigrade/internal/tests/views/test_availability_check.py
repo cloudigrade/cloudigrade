@@ -64,7 +64,7 @@ class AvailabilityCheckViewTest(TestCase):
         self.assertTrue(self.account2.is_enabled)
         mock_notify_sources.delay.assert_called()
 
-    def test_availability_check_task_bad_clount_id(self):
+    def test_availability_check_task_bad_cloud_account_id(self):
         """Test that task properly handles deleted accounts."""
         with self.assertLogs("api.tasks", level="WARNING") as logs:
             enable_account(123456)

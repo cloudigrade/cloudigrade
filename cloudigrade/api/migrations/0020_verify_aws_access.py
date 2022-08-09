@@ -10,23 +10,23 @@ def create_verify_tasks(apps, schema_editor):
     IntervalSchedule = apps.get_model("django_celery_beat", "IntervalSchedule")
     PeriodicTask = apps.get_model("django_celery_beat", "PeriodicTask")
 
-    aws_clounts = AwsCloudAccount.objects.filter(verify_task_id__isnull=True)
+    aws_cloud_accounts = AwsCloudAccount.objects.filter(verify_task_id__isnull=True)
 
-    for aws_clount in aws_clounts:
+    for aws_cloud_account in aws_cloud_accounts:
         schedule, _ = IntervalSchedule.objects.get_or_create(every=1, period="days")
         verify_task = PeriodicTask.objects.create(
             interval=schedule,
-            name=f"Verify {aws_clount.account_arn}.",
-            start_time=aws_clount.created_at,
+            name=f"Verify {aws_cloud_account.account_arn}.",
+            start_time=aws_cloud_account.created_at,
             task="api.clouds.aws.tasks.verify_account_permissions",
             kwargs=json.dumps(
                 {
-                    "account_arn": aws_clount.account_arn,
+                    "account_arn": aws_cloud_account.account_arn,
                 }
             ),
         )
-        aws_clount.verify_task = verify_task
-        aws_clount.save()
+        aws_cloud_account.verify_task = verify_task
+        aws_cloud_account.save()
 
 
 class Migration(migrations.Migration):

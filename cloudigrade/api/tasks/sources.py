@@ -268,7 +268,9 @@ def update_from_sources_kafka_message(message, headers):
         return
 
     try:
-        clount = CloudAccount.objects.get(platform_authentication_id=authentication_id)
+        cloud_account = CloudAccount.objects.get(
+            platform_authentication_id=authentication_id
+        )
 
         authentication = sources.get_authentication(
             account_number, org_id, authentication_id
@@ -324,7 +326,7 @@ def update_from_sources_kafka_message(message, headers):
         # the sources API call
         if authentication.get("authtype") == settings.SOURCES_CLOUDMETER_ARN_AUTHTYPE:
             update_aws_cloud_account(
-                clount,
+                cloud_account,
                 arn,
                 account_number,
                 org_id,

@@ -272,12 +272,12 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
             },
         ]
 
-    def test_one_clount_one_run_one_day(self):
+    def test_one_cloud_account_one_run_one_day(self):
         """
-        Test with one clount having one run in one day.
+        Test with one cloud account having one run in one day.
 
-        This should result in two usages: one is for the user+clount and one is
-        for the user+no clount.
+        This should result in two usages: one is for the user+cloud account and one is
+        for the user+no cloud account.
         """
         instance = api_helper.generate_instance(self.account, image=self.image_rhel)
         run = api_helper.generate_single_run(
@@ -309,15 +309,15 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
             expected_counts=expected_counts,
         )
 
-    def test_one_clount_one_run_two_days(self):
+    def test_one_cloud_account_one_run_two_days(self):
         """
-        Test with one clount having one run spanning two days.
+        Test with one cloud account having one run spanning two days.
 
         This should result in four usages:
-        - day 1 user and clount
-        - day 1 user and no clount
-        - day 2 user and clount
-        - day 2 user and no clount
+        - day 1 user and cloud account
+        - day 1 user and no cloud account
+        - day 2 user and cloud account
+        - day 2 user and no cloud account
         """
         instance = api_helper.generate_instance(self.account, image=self.image_rhel)
         run = api_helper.generate_single_run(
@@ -356,17 +356,17 @@ class CalculateMaxConcurrentUsageFromRunsTest(TestCase):
             expected_counts=expected_counts,
         )
 
-    def test_one_clount_one_run_with_no_end_two_days(self):
+    def test_one_cloud_account_one_run_with_no_end_two_days(self):
         """
-        Test with one clount having one run starting yesterday and no end.
+        Test with one cloud account having one run starting yesterday and no end.
 
         Since there is no known end date, we can only calculate dates to today.
 
         This should result in four usages:
-        - yesterday user and clount
-        - yesterday user and no clount
-        - today user and clount
-        - today user and no clount
+        - yesterday user and cloud account
+        - yesterday user and no cloud account
+        - today user and cloud account
+        - today user and no cloud account
         """
         instance = api_helper.generate_instance(self.account, image=self.image_rhel)
         today = get_today()

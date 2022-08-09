@@ -1080,15 +1080,16 @@ def update_aws_cloud_account(
     if cloud_account.content_object.aws_account_id != customer_aws_account_id:
         logger.info(
             _(
-                "Cloud Account with ID %(clount_id)s and aws_account_id "
+                "Cloud Account with ID %(cloud_account_id)s and aws_account_id "
                 "%(old_aws_account_id)s has received an update request for ARN "
                 "%(new_arn)s and aws_account_id %(new_aws_account_id)s. "
                 "Since the aws_account_id is different, Cloud Account ID "
-                "%(clount_id)s will be deleted. A new Cloud Account will be created "
-                "with aws_account_id %(new_aws_account_id)s and arn %(new_arn)s."
+                "%(cloud_account_id)s will be deleted. A new Cloud Account will be "
+                "created with aws_account_id %(new_aws_account_id)s and arn "
+                "%(new_arn)s."
             ),
             {
-                "clount_id": cloud_account.id,
+                "cloud_account_id": cloud_account.id,
                 "old_aws_account_id": cloud_account.content_object.aws_account_id,
                 "new_aws_account_id": customer_aws_account_id,
                 "new_arn": customer_arn,
@@ -1100,7 +1101,7 @@ def update_aws_cloud_account(
         # we already have explicit calls to notify if we can't create the CloudAccount.
         cloud_account.disable(power_off_instances=False, notify_sources=False)
 
-        # Remove instances associated with the clount
+        # Remove instances associated with the cloud account
         # TODO instead of deleting instances here, delete the original CloudAccount.
         # We can't delete it here due to 7b02f90fc643533246e51f20078e8ae2366df32b, but
         # we could delete it after we've created the new CloudAccount a few lines later.
