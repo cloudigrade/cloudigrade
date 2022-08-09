@@ -87,6 +87,20 @@ CG1004 = CloudigradeError(
     _(f"{GENERIC_ERROR_MESSAGE_WITH_CODE} Invalid ARN."),
 )
 
+# Duplicate Azure subscription ID
+CG1005 = CloudigradeError(
+    "CG1005",
+    _(
+        "Failed to create cloud account for Sources Application ID %(application_id)s "
+        "because a cloud account already exists with Azure subscription ID "
+        "%(subscription_id)s."
+    ),
+    _(
+        f"{GENERIC_ERROR_MESSAGE_WITH_CODE} Azure subscription ID must be unique, but "
+        "another cloud account with the same Azure subscription ID already exists."
+    ),
+)
+
 
 # Use CG2*** for sources specific issues
 SOURCES_API_ERROR_MESSAGE = "This is likely the result of an error in sources-api."
