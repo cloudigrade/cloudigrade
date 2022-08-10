@@ -99,6 +99,9 @@ urlpatterns += [
 # URL patterns for general debugging.
 urlpatterns += [
     path("error/", views.fake_error, name="internal-fake-error"),
+    path(
+        "cdappconfig.json", views.get_cdappconfig_json, name="internal-cdappconfig-json"
+    ),
 ]
 
 # URL patterns for potentially-destructive custom commands.

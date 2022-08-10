@@ -1,8 +1,12 @@
 """Internal views for cloudigrade API."""
+import json
 import logging
+import os
 
+from app_common_python import isClowderEnabled
 from dateutil import tz
 from dateutil.parser import parse
+from django.conf import settings
 from django.core.cache import cache
 from django.http import Http404, JsonResponse
 from django.utils.translation import gettext as _
@@ -27,6 +31,7 @@ from internal.authentication import (
 from internal.renderers import JsonBytesRenderer
 from util import exceptions as util_exceptions
 from util.cache import get_cache_key_timeout
+from util.misc import redact_json_dict_secrets
 from util.redhatcloud import identity
 
 logger = logging.getLogger(__name__)
@@ -374,6 +379,27 @@ def cache_keys(request, key):
         else:
             cache.set(key, value)
         return Response(data=None)
+
+
+@api_view(["GET"])
+@authentication_classes([IdentityHeaderAuthenticationInternal])
+@permission_classes([permissions.AllowAny])
+@schema(None)
+def get_cdappconfig_json(request):
+    """Get the Clowder-provided cdappconfig.json for troubleshooting."""
+    if not isClowderEnabled():
+        raise Http404
+    try:
+        with open(os.environ.get("ACG_CONFIG")) as config_file:
+            data = json.load(config_file)
+    except FileNotFoundError:
+        raise Http404
+    except Exception as e:
+        logger.exception(e)
+        raise
+    if settings.IS_PRODUCTION:
+        redact_json_dict_secrets(data)
+    return Response(data)
 
 
 class ProblematicRunList(APIView):
