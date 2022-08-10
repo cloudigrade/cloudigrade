@@ -666,12 +666,12 @@ if isClowderEnabled():
         KAFKA_SERVER_CA_LOCATION = clowder_cfg.kafka_ca()
         __print("Clowder: Kafka server CA defined")
 
-        if kafka_broker.sasl and kafka_broker.sasl.username:
-            KAFKA_SERVER_SECURITY_PROTOCOL = kafka_broker.sasl.securityProtocol
-            KAFKA_SERVER_SASL_MECHANISM = kafka_broker.sasl.saslMechanism
-            KAFKA_SERVER_SASL_USERNAME = kafka_broker.sasl.username
-            KAFKA_SERVER_SASL_PASSWORD = kafka_broker.sasl.password
-            __print("Clowder: Kafka server SASL enabled")
+    if kafka_broker.sasl and kafka_broker.sasl.username:
+        KAFKA_SERVER_SECURITY_PROTOCOL = kafka_broker.sasl.securityProtocol
+        KAFKA_SERVER_SASL_MECHANISM = kafka_broker.sasl.saslMechanism
+        KAFKA_SERVER_SASL_USERNAME = kafka_broker.sasl.username
+        KAFKA_SERVER_SASL_PASSWORD = kafka_broker.sasl.password
+        __print("Clowder: Kafka server SASL enabled")
 else:
     KAFKA_SERVER_HOST = env(
         "KAFKA_SERVER_HOST", default="platform-mq-ci-kafka-bootstrap.platform-mq-ci.svc"
