@@ -648,8 +648,29 @@ CLOUDIGRADE_ORG_ID_HEADER = "HTTP_X_RH_CLOUDIGRADE_ORG_ID"
 #####################################################################
 # Kafka
 
+# Sometimes we have to fetch the Kafka topic names from Clowder.
+# Sometimes the topic name we think we want (requestedName) isn't what we get (name).
+# Yes, it's complicated. I'd love to clean up and simplify this later.
+# Can just stop using the environment variables entirely? TODO Deal with this later.
+
+# Default values assuming Clowder isn't present.
+KAFKA_TOPIC_NAMES = {
+    "platform.sources.event-stream": env(
+        "LISTENER_TOPIC", default="platform.sources.event-stream"
+    ),
+    "platform.sources.status": env(
+        "SOURCES_STATUS_TOPIC", default="platform.sources.status"
+    ),
+}
+if isClowderEnabled():
+    topics = clowder_cfg.kafka.topics
+    clowder_topic_names = {(topic.requestedName, topic.name) for topic in topics}
+    # Override our defaults with whatever Clowder provided.
+    KAFKA_TOPIC_NAMES.update(clowder_topic_names)
+
+
 # Sources/Kafka Listener Values
-LISTENER_TOPIC = env("LISTENER_TOPIC", default="platform.sources.event-stream")
+LISTENER_TOPIC = KAFKA_TOPIC_NAMES["platform.sources.event-stream"]
 LISTENER_GROUP_ID = env("LISTENER_GROUP_ID", default="cloudmeter_ci")
 
 KAFKA_SERVER_CA_LOCATION = None
@@ -720,7 +741,7 @@ SOURCES_CLOUDMETER_AUTHTYPES = (
 SOURCES_RESOURCE_TYPE = "Application"
 
 # Sources Availability Check Values
-SOURCES_STATUS_TOPIC = env("SOURCES_STATUS_TOPIC", default="platform.sources.status")
+SOURCES_STATUS_TOPIC = KAFKA_TOPIC_NAMES["platform.sources.status"]
 SOURCES_AVAILABILITY_EVENT_TYPE = env(
     "SOURCES_AVAILABILITY_EVENT_TYPE", default="availability_status"
 )
