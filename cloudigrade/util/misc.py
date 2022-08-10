@@ -1,11 +1,31 @@
 """Miscellaneous utility functions."""
 import datetime
 import logging
+import re
 from contextlib import contextmanager
 
 from django.db import transaction
 
 logger = logging.getLogger(__name__)
+REDACT_KEY_PATTERN = ".*(password|secret|cert|key|rdsCa|clientAccessToken).*"
+
+
+def redact_secret(data):
+    """Redact the given secret value."""
+    return "*" * 18 + str(data)[-2:] if data is not None else None
+
+
+def redact_json_dict_secrets(data):
+    """Recursively redact secrets in a JSON-safe dict based on the keys."""
+    if isinstance(data, dict):
+        for key, value in data.copy().items():
+            if re.match(REDACT_KEY_PATTERN.lower(), key.lower()):
+                data[key] = redact_secret(value)
+            elif isinstance(value, list) or isinstance(value, dict):
+                redact_json_dict_secrets(value)
+    elif isinstance(data, list):
+        for item in data:
+            redact_json_dict_secrets(item)
 
 
 def generate_device_name(index, prefix="/dev/xvd"):

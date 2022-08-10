@@ -1,7 +1,9 @@
 """Collection of tests for ``util.misc`` module."""
+import copy
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
+import faker
 from dateutil import tz
 from django.db import transaction
 from django.test import TestCase, TransactionTestCase
@@ -12,9 +14,92 @@ from api.models import (
 )
 from api.tests import helper as api_helper
 from util import misc
-from util.misc import generate_device_name
-from util.misc import lock_task_for_user_ids
+from util.misc import (
+    generate_device_name,
+    lock_task_for_user_ids,
+    redact_json_dict_secrets,
+    redact_secret,
+)
 from util.tests import helper as util_helper
+
+_faker = faker.Faker()
+
+
+class RedactSecretsTest(TestCase):
+    """Test cases for redact_secret and redact_json_dict_secrets."""
+
+    def test_redact_secret_string(self):
+        """Test redacting a secret string value."""
+        original = f"{_faker.slug()}-{_faker.slug()}-{_faker.slug()}"
+        redacted = redact_secret(original)
+        self.assertNotEqual(original, redacted)
+        self.assertEqual(original[-2:], redacted[-2:])
+
+    def test_redact_secret_none(self):
+        """Test redacting None simply returns None."""
+        original = None
+        redacted = redact_secret(original)
+        self.assertIsNone(redacted)
+
+    def test_redact_secret_not_string_not_none(self):
+        """Test redacting a falsy not-string not-None value."""
+        original = False
+        redacted = redact_secret(original)
+        self.assertNotEqual(original, redacted)
+        self.assertIsNotNone(redacted)
+        self.assertEqual("se", redacted[-2:])
+
+    def test_redact_json_dict_secrets_dict(self):
+        """
+        Test redacting secrets from a slightly complex JSON-friendly dict.
+
+        We are not using Faker here because it's much simpler to explicitly compare
+        against the expected output without dynamically rebuilding the expectations
+        around new random values. The example here is a simplified version of a loaded
+        cdappconfig.json file from Clowder.
+        """
+        original = {
+            "BOPURL": "http://example",
+            "database": {
+                "adminPassword": "super secret password!",
+                "adminUsername": "postgres",
+            },
+            "kafka": {
+                "brokers": [
+                    {
+                        "hostname": "kafka-1.svc",
+                        "cacert": "HELLOWORLD\n-----END CERTIFICATE-----",
+                    },
+                    {
+                        "hostname": "kafka-2.svc",
+                        "cacert": "HOLAMUNDO\nEND CERTIFICATE",
+                    },
+                ],
+            },
+        }
+        expected = {
+            "BOPURL": "http://example",
+            "database": {
+                "adminPassword": "******************d!",
+                "adminUsername": "postgres",
+            },
+            "kafka": {
+                "brokers": [
+                    {
+                        "hostname": "kafka-1.svc",
+                        "cacert": "******************--",
+                    },
+                    {
+                        "hostname": "kafka-2.svc",
+                        "cacert": "******************TE",
+                    },
+                ],
+            },
+        }
+        redacted = copy.deepcopy(original)
+        redact_json_dict_secrets(redacted)
+        self.assertNotEqual(original, redacted)
+        self.assertEqual(expected, redacted)
 
 
 class UtilMiscTest(TestCase):
