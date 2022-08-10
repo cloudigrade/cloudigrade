@@ -4,6 +4,8 @@ import os
 from django.apps import AppConfig
 from django.conf import settings
 
+from util.misc import redact_secret
+
 logger = logging.getLogger(__name__)
 
 # A list of application settings that we want logged on app startup
@@ -136,5 +138,5 @@ class ApiConfig(AppConfig):
             value = getattr(settings, setting, None)
             if not value:
                 value = os.environ.get(setting, None)
-            redacted = "*" * 18 + value[-2:] if value else None
+            redacted = redact_secret(value)
             logger.info(f"{setting}: {redacted}")
