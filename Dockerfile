@@ -3,7 +3,11 @@ FROM registry.access.redhat.com/ubi8/ubi-minimal:8.6 as base
 
 WORKDIR /opt/cloudigrade
 
-RUN rpm -iv https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm \
+RUN curl -so 'pgdg-redhat-repo-latest.noarch.rpm' 'https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm' \
+    && md5sum 'pgdg-redhat-repo-latest.noarch.rpm' \
+    && rpm --verbose -K 'pgdg-redhat-repo-latest.noarch.rpm' || true
+
+RUN rpm -iv 'pgdg-redhat-repo-latest.noarch.rpm' \
     && microdnf update \
     && microdnf install -y \
         git \
