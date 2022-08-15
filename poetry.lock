@@ -25,14 +25,14 @@ vine = ">=5.0.0"
 
 [[package]]
 name = "ansible"
-version = "6.0.0"
+version = "6.2.0"
 description = "Radically simple IT automation"
 category = "main"
 optional = false
 python-versions = ">=3.8"
 
 [package.dependencies]
-ansible-core = ">=2.13.0,<2.14.0"
+ansible-core = ">=2.13.2,<2.14.0"
 
 [[package]]
 name = "ansible-core"
@@ -2561,7 +2561,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "bc2f8faac0e89f250aae079a250e7ded105f809819d91531b3a41c59b92afeea"
+content-hash = "167ac0b0bdd50bc9d5934bf415b928fd47a0041ffe3d3a0108863c842b7a96e1"
 
 [metadata.files]
 adal = [
@@ -2572,10 +2572,7 @@ amqp = [
     {file = "amqp-5.1.1-py3-none-any.whl", hash = "sha256:6f0956d2c23d8fa6e7691934d8c3930eadb44972cbbd1a7ae3a520f735d43359"},
     {file = "amqp-5.1.1.tar.gz", hash = "sha256:2c1b13fecc0893e946c65cbd5f36427861cffa4ea2201d8f6fca22e2a373b5e2"},
 ]
-ansible = [
-    {file = "ansible-6.0.0-py3-none-any.whl", hash = "sha256:3a4516072660e34d4647db1627c401dffcbec23c50633d71ac7902e8c934e370"},
-    {file = "ansible-6.0.0.tar.gz", hash = "sha256:641a2c27bc5768f9a8ad14880f1f6e571c1f2af1d45e76f271d76e3f74754c53"},
-]
+ansible = []
 ansible-core = []
 anytree = [
     {file = "anytree-2.8.0-py2.py3-none-any.whl", hash = "sha256:14c55ac77492b11532395049a03b773d14c7e30b22aa012e337b1e983de31521"},
