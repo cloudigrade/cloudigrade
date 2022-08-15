@@ -131,6 +131,8 @@ objects:
           value: ${AWS_SQS_MAX_HOUNDI_YIELD_COUNT}
         - name: AWS_CLOUDTRAIL_EVENT_QUEUE_VISIBILITY_TIMEOUT
           value: ${AWS_CLOUDTRAIL_EVENT_QUEUE_VISIBILITY_TIMEOUT}
+        - name: AZURE_LOG_LEVEL
+          value: ${AZURE_LOG_LEVEL}
         - name: S3_BUCKET_LC_NAME
           value: ${S3_BUCKET_LC_NAME}
         - name: S3_BUCKET_LC_IA_TRANSITION
@@ -421,6 +423,8 @@ objects:
           value: ${AWS_SQS_MAX_HOUNDI_YIELD_COUNT}
         - name: AWS_CLOUDTRAIL_EVENT_QUEUE_VISIBILITY_TIMEOUT
           value: ${AWS_CLOUDTRAIL_EVENT_QUEUE_VISIBILITY_TIMEOUT}
+        - name: AZURE_LOG_LEVEL
+          value: ${AZURE_LOG_LEVEL}
         - name: S3_BUCKET_LC_NAME
           value: ${S3_BUCKET_LC_NAME}
         - name: S3_BUCKET_LC_IA_TRANSITION
@@ -713,6 +717,8 @@ objects:
           value: ${AWS_SQS_MAX_HOUNDI_YIELD_COUNT}
         - name: AWS_CLOUDTRAIL_EVENT_QUEUE_VISIBILITY_TIMEOUT
           value: ${AWS_CLOUDTRAIL_EVENT_QUEUE_VISIBILITY_TIMEOUT}
+        - name: AZURE_LOG_LEVEL
+          value: ${AZURE_LOG_LEVEL}
         - name: S3_BUCKET_LC_NAME
           value: ${S3_BUCKET_LC_NAME}
         - name: S3_BUCKET_LC_IA_TRANSITION
@@ -1006,6 +1012,8 @@ objects:
           value: ${AWS_SQS_MAX_HOUNDI_YIELD_COUNT}
         - name: AWS_CLOUDTRAIL_EVENT_QUEUE_VISIBILITY_TIMEOUT
           value: ${AWS_CLOUDTRAIL_EVENT_QUEUE_VISIBILITY_TIMEOUT}
+        - name: AZURE_LOG_LEVEL
+          value: ${AZURE_LOG_LEVEL}
         - name: S3_BUCKET_LC_NAME
           value: ${S3_BUCKET_LC_NAME}
         - name: S3_BUCKET_LC_IA_TRANSITION
@@ -1678,6 +1686,10 @@ parameters:
   displayName: AWS CloudTrail event queue visibility timeout in seconds
   required: true
   value: '300'
+- name: AZURE_LOG_LEVEL
+  displayName: Azure SDK log level
+  required: true
+  value: 'ERROR'
 - name: CACHE_TTL_DEFAULT
   description: Default time to live in seconds for caches where specific ttl is not specified
   value: '60'
