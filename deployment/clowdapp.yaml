@@ -1689,7 +1689,7 @@ parameters:
 - name: AZURE_LOG_LEVEL
   displayName: Azure SDK log level
   required: true
-  value: 'ERROR'
+  value: 'WARNING'
 - name: CACHE_TTL_DEFAULT
   description: Default time to live in seconds for caches where specific ttl is not specified
   value: '60'

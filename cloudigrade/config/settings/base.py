@@ -317,7 +317,7 @@ LOGGING = {
             "handlers": [
                 "console",
             ],
-            "level": env("AZURE_LOG_LEVEL", default="ERROR"),
+            "level": env("AZURE_LOG_LEVEL", default="WARNING"),
             "propagate": False,
         },
     },
