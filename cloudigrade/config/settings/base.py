@@ -313,6 +313,13 @@ LOGGING = {
             "level": env("DJANGO_LOG_LEVEL", default="INFO"),
             "propagate": False,
         },
+        "azure": {
+            "handlers": [
+                "console",
+            ],
+            "level": env("AZURE_LOG_LEVEL", default="ERROR"),
+            "propagate": False,
+        },
     },
 }
 
