@@ -1603,6 +1603,7 @@ parameters:
     enable_account,\
     fix_problematic_runs,\
     initial_aws_describe_instances,\
+    initial_azure_vm_discovery,\
     inspect_pending_images,\
     launch_inspection_instance,\
     migrate_account_numbers_to_org_ids,\

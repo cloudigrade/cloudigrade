@@ -2,7 +2,7 @@
 import logging
 
 from django.contrib.contenttypes.fields import GenericRelation
-from django.db import models
+from django.db import models, transaction
 from django.utils.translation import gettext as _
 from rest_framework.exceptions import ValidationError
 
@@ -61,8 +61,7 @@ class AzureCloudAccount(BaseModel):
         This method only handles the Azure-specific piece of enabling a cloud account.
         If you want to completely enable a cloud account, use CloudAccount.enable().
 
-        TODO: add logic to verify permissions, do an initial describe instances,
-              and schedule a verification task
+        TODO: add logic to verify permissions, and schedule a verification task
         """
         logger.info(_("Enabling %(account)s"), {"account": self})
         if self.subscription_id not in get_cloudigrade_available_subscriptions():
@@ -72,6 +71,15 @@ class AzureCloudAccount(BaseModel):
             )
             logger.info(message)
             raise ValidationError({"subscription_id": message})
+
+        from api.clouds.azure import tasks  # Avoid circular import.
+
+        cloud_account = self.cloud_account.get()
+        if not cloud_account.platform_application_is_paused:
+            # Only do the vm discovery if the application is *not* paused.
+            transaction.on_commit(
+                lambda: tasks.initial_azure_vm_discovery.delay(self.id)
+            )
 
         logger.info(_("Finished enabling %(account)s"), {"account": self})
         return True
