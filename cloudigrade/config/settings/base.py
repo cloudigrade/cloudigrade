@@ -542,6 +542,9 @@ CELERY_TASK_ROUTES = {
         "queue": "repopulate_ec2_instance_mapping"
     },
     # api.clouds.azure.tasks
+    "api.clouds.azure.tasks.initial_azure_vm_discovery": {
+        "queue": "initial_azure_vm_discovery"
+    },
     "api.clouds.azure.tasks.repopulate_azure_instance_mapping": {
         "queue": "repopulate_azure_instance_mapping"
     },

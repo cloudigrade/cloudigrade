@@ -6,9 +6,12 @@ from rest_framework.serializers import ValidationError
 
 from api import error_codes
 from api.authentication import get_user_by_account
+from api.clouds.azure.models import AzureCloudAccount
 from api.clouds.azure.util import create_azure_cloud_account
 from api.models import User
+from util.azure.vm import get_vms_for_subscription
 from util.celery import retriable_shared_task
+from util.misc import lock_task_for_user_ids
 
 logger = logging.getLogger(__name__)
 
@@ -96,3 +99,67 @@ def check_azure_subscription_and_create_cloud_account(
             "source_id": source_id,
         },
     )
+
+
+@retriable_shared_task(name="api.clouds.azure.tasks.initial_azure_vm_discovery")
+def initial_azure_vm_discovery(azure_cloud_account_id):
+    """
+    Fetch and save instances data found upon enabling an AzureCloudAccount.
+
+    Args:
+        azure_cloud_account_id (int): the AzureCloudAccount id
+    """
+    try:
+        azure_cloud_account = AzureCloudAccount.objects.get(pk=azure_cloud_account_id)
+    except AzureCloudAccount.DoesNotExist:
+        logger.warning(
+            _("AzureCloudAccount id %s could not be found for initial vm discovery"),
+            azure_cloud_account_id,
+        )
+        return
+
+    cloud_account = azure_cloud_account.cloud_account.get()
+    if not cloud_account.is_enabled:
+        logger.warning(
+            _("AzureCloudAccount id %s is not enabled; skipping initial vm discovery"),
+            azure_cloud_account_id,
+        )
+        return
+
+    if cloud_account.platform_application_is_paused:
+        logger.warning(
+            _("AzureCloudAccount id %s is paused; skipping initial vm discovery"),
+            azure_cloud_account_id,
+        )
+        return
+
+    account_subscription_id = azure_cloud_account.subscription_id
+
+    try:
+        user_id = cloud_account.user.id
+    except User.DoesNotExist:
+        logger.info(
+            _(
+                "User for account id %s has already been deleted; "
+                "skipping initial vm discovery."
+            ),
+            azure_cloud_account_id,
+        )
+        return
+
+    # Lock the task at a user level. A user can only run one task at a time.
+    with lock_task_for_user_ids([user_id]):
+        AzureCloudAccount.objects.get(pk=azure_cloud_account_id)
+        logger.info(
+            _(
+                "Initiating an Initial VM Discovery for the "
+                "Azure cloud account id %(azure_cloud_account_id)s "
+                "with the Azure subscription id %(subscription_id)s."
+            ),
+            {
+                "azure_cloud_account_id": azure_cloud_account_id,
+                "subscription_id": account_subscription_id,
+            },
+        )
+        vms = get_vms_for_subscription(account_subscription_id)
+        return vms
