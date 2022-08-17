@@ -7,7 +7,10 @@ from rest_framework.serializers import ValidationError
 from api import error_codes
 from api.authentication import get_user_by_account
 from api.clouds.azure.models import AzureCloudAccount
-from api.clouds.azure.util import create_azure_cloud_account
+from api.clouds.azure.util import (
+    create_azure_cloud_account,
+    create_new_machine_images,
+)
 from api.models import User
 from util.azure.vm import get_vms_for_subscription
 from util.celery import retriable_shared_task
@@ -134,6 +137,7 @@ def initial_azure_vm_discovery(azure_cloud_account_id):
         return
 
     account_subscription_id = azure_cloud_account.subscription_id
+    vms_data = get_vms_for_subscription(account_subscription_id)
 
     try:
         user_id = cloud_account.user.id
@@ -161,5 +165,5 @@ def initial_azure_vm_discovery(azure_cloud_account_id):
                 "subscription_id": account_subscription_id,
             },
         )
-        vms = get_vms_for_subscription(account_subscription_id)
-        return vms
+        new_vms_skus = create_new_machine_images(vms_data)
+        return new_vms_skus
