@@ -1,4 +1,5 @@
 """Utility methods to handle azure virtual machines."""
+import json
 import logging
 
 from azure.core.exceptions import ClientAuthenticationError
@@ -8,6 +9,11 @@ from django.utils.translation import gettext as _
 from util import azure
 
 logger = logging.getLogger(__name__)
+
+# References
+# https://stackoverflow.com/questions/71656714/
+#   how-to-check-os-detailed-information-of-azure-virtual-machine-using-python-sdk
+# https://docs.microsoft.com/en-us/previous-versions/azure/virtual-machines/windows/python#get-information-about-the-vm
 
 
 def get_vms_for_subscription(azure_subscription_id):
@@ -30,17 +36,31 @@ def get_vms_for_subscription(azure_subscription_id):
         for discovered_vm in vm_list:
             vm_with_status = find_vm(vm_list_with_status, discovered_vm.id)
             vm = {}
-            vm["id"] = discovered_vm.id
+            vm["id"] = discovered_vm.vm_id
             vm["name"] = discovered_vm.name
+            vm["region"] = discovered_vm.location
+            vm["azure_marketplace_image"] = is_marketplace_image(discovered_vm)
             vm["resourceGroup"] = resource_group(discovered_vm)
             vm["running"] = is_running(vm_with_status)
-            if vm_with_status and vm_with_status.instance_view:
-                vm["instance_view"] = vars(vm_with_status.instance_view)
+            vm["is_encrypted"] = is_encrypted(discovered_vm)
             vm["license_type"] = discovered_vm.license_type
             vm["vm_size"] = discovered_vm.hardware_profile.vm_size
-            vm["hardware_profile"] = vars(discovered_vm.hardware_profile)
-            vm["os_disk"] = vars(discovered_vm.storage_profile.os_disk)
             vm["image"] = vars(discovered_vm.storage_profile.image_reference)
+            vm["inspection_json"] = inspection_json(discovered_vm)
+            vm["hardware_profile"] = vars(discovered_vm.hardware_profile)
+            vm["storage_profile"] = vars(discovered_vm.storage_profile)
+            vm["os_profile"] = vars(discovered_vm.os_profile)
+            vm["network_profile"] = vars(discovered_vm.network_profile)
+            vm["diagnostics_profile"] = vars(discovered_vm.diagnostics_profile)
+            vm["os_disk"] = vars(discovered_vm.storage_profile.os_disk)
+            vm["managed_disk"] = None
+            if (
+                discovered_vm.storage_profile.os_disk
+                and discovered_vm.storage_profile.os_disk.managed_disk
+            ):
+                vm["managed_disk"] = vars(
+                    discovered_vm.storage_profile.os_disk.managed_disk
+                )
             vms.append(vm)
             return vms
     except ClientAuthenticationError:
@@ -62,6 +82,26 @@ def find_vm(vm_list, vm_id):
     return None
 
 
+def is_marketplace_image(vm):
+    """
+    Return True if the vm's image is from the marketplace.
+
+    As per the plan attribute of a Virtual Machine, defined here by its class
+    https://docs.microsoft.com/en-us/python/api/azure-mgmt-compute/azure.mgmt.compute.v2017_03_30.models.plan?view=azure-python
+    if defined, the image came from the marketplace.
+    """
+    return True if vm.plan else False
+
+
+def inspection_json(vm):
+    """
+    Return the inspection for the vm.
+
+    For now simply the json of the machine image
+    """
+    return json.dumps(vars(vm.storage_profile.image_reference))
+
+
 def is_running(vm):
     """Return true if the vm specified has a PowerState/running state."""
     running = False
@@ -71,6 +111,12 @@ def is_running(vm):
                 running = True
                 break
     return running
+
+
+def is_encrypted(vm):
+    """Return true if the vm specified is encrypted."""
+    is_encrypted = True if vm.storage_profile.os_disk.encryption_settings else False
+    return is_encrypted
 
 
 def resource_group(vm):

@@ -51,9 +51,14 @@ class AzureCloudAccountModelTest(TransactionTestCase, helper.ModelStrTestMixin):
         enable_date = util_helper.utc_dt(2019, 1, 4, 0, 0, 0)
         with patch(
             "api.clouds.azure.models.get_cloudigrade_available_subscriptions"
-        ) as mock_get_subs, util_helper.clouditardis(enable_date):
+        ) as mock_get_subs, patch(
+            "api.clouds.azure.tasks.initial_azure_vm_discovery"
+        ) as mock_initial_azure_vm_discovery, util_helper.clouditardis(
+            enable_date
+        ):
             mock_get_subs.return_value = [self.subscription_id]
             self.account.enable()
+            mock_initial_azure_vm_discovery.delay.assert_called()
 
         self.account.refresh_from_db()
         self.assertTrue(self.account.is_enabled)
