@@ -304,7 +304,9 @@ def _delete_lighthouse_subscription(scoped_subscription_id):
             authorization = properties["authorizations"][0]
             principal_id = authorization["principal_id"]
             principal_id_display_name = authorization["principal_id_display_name"]
-            role_definition_id = authorization["role_definition_id"]
+            role_definition_ids = (
+                auth["roleDefinitionId"] for auth in properties["authorizations"]
+            )
             found_rd = True
             logger.info(
                 _(
@@ -314,7 +316,7 @@ def _delete_lighthouse_subscription(scoped_subscription_id):
                     "\nmanaged_by_tenant_id=%(managed_by_tenant_id)s, "
                     "\nprincipal_id=%(principal_id)s, "
                     "\nprincipal_id_display_name=%(principal_id_display_name)s, "
-                    "\nrole_definition_id=%(role_definition_id)s",
+                    "\nrole_definition_ids=%(role_definition_ids)s",
                 ),
                 {
                     "name": name,
@@ -322,7 +324,7 @@ def _delete_lighthouse_subscription(scoped_subscription_id):
                     "managed_by_tenant_id": managed_by_tenant_id,
                     "principal_id": principal_id,
                     "principal_id_display_name": principal_id_display_name,
-                    "role_definition_id": role_definition_id,
+                    "role_definition_ids": role_definition_ids,
                 },
             )
             logger.info(
@@ -331,21 +333,22 @@ def _delete_lighthouse_subscription(scoped_subscription_id):
                     "\nsettings.AZURE_TENANT_ID         = %(tenant_id)s, "
                     "\nsettings.AZURE_SP_OBJECT_ID      = %(sp_object_id)s, "
                     "\nsettings.CLOUDIGRADE_ENVIRONMENT = %(cloudigrade_env)s, "
-                    "\nazure.AZURE_READER_ROLE_ID       = %(reader_role_id)s, "
                     "\nsettings.AZURE_SUBSCRIPTION_ID   = %(subscription_id)s, ",
                 ),
                 {
                     "tenant_id": settings.AZURE_TENANT_ID,
                     "sp_object_id": settings.AZURE_SP_OBJECT_ID,
                     "cloudigrade_env": settings.CLOUDIGRADE_ENVIRONMENT,
-                    "reader_role_id": azure.AZURE_READER_ROLE_ID,
                     "subscription_id": settings.AZURE_SUBSCRIPTION_ID,
                 },
             )
             if (
                 managed_by_tenant_id == settings.AZURE_TENANT_ID
                 and principal_id == settings.AZURE_SP_OBJECT_ID
-                and role_definition_id == azure.AZURE_READER_ROLE_ID
+                and principal_id_display_name
+                == f"cloudigrade-{settings.CLOUDIGRADE_ENVIRONMENT}"
+                and azure.AZURE_READER_ROLE_ID in role_definition_ids
+                and azure.AZURE_MSREG_DELETE_ROLE_ID in role_definition_ids
             ):
                 logger.info(
                     _(
@@ -356,7 +359,7 @@ def _delete_lighthouse_subscription(scoped_subscription_id):
                         "managed_by_tenant_id=%(managed_by_tenant_id)s, "
                         "principal_id=%(principal_id)s, "
                         "principal_id_display_name=%(principal_id_display_name)s, "
-                        "role_definition_id=%(role_definition_id)s",
+                        "role_definition_ids=%(role_definition_ids)s",
                     ),
                     {
                         "name": name,
@@ -364,7 +367,7 @@ def _delete_lighthouse_subscription(scoped_subscription_id):
                         "managed_by_tenant_id": managed_by_tenant_id,
                         "principal_id": principal_id,
                         "principal_id_display_name": principal_id_display_name,
-                        "role_definition_id": role_definition_id,
+                        "role_definition_ids": role_definition_ids,
                     },
                 )
                 registration_name = name
