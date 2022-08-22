@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0063_auto_20220728_0113'),
+        ("api", "0063_auto_20220728_0113"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='user',
-            name='is_permanent',
+            model_name="user",
+            name="is_permanent",
             field=models.BooleanField(default=False),
         ),
     ]
