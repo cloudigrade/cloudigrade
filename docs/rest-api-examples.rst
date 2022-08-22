@@ -2277,7 +2277,7 @@ Response:
     HTTP/1.1 200 OK
     Access-Control-Allow-Origin: *
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 2017
+    Content-Length: 2357
     Content-Type: application/json
     Referrer-Policy: same-origin
     X-CLOUDIGRADE-REQUEST-ID: f93bd15d-1298-4424-b500-34a8acbbf0e6
@@ -2305,6 +2305,11 @@ Response:
                             "principalId": "691f0b3e-exam-ple3-b03f-6eb5120acabb",
                             "principalIdDisplayName": "cloudigrade-rest-api-examples",
                             "roleDefinitionId": "acdd72a7-3385-48ef-bd42-f606fba81ae7"
+                        },
+                        {
+                            "principalId": "691f0b3e-exam-ple3-b03f-6eb5120acabb",
+                            "principalIdDisplayName": "cloudigrade-rest-api-examples",
+                            "roleDefinitionId": "91c1777a-f3dc-4fae-b103-61d183457e46"
                         }
                     ]
                 ],
@@ -2313,6 +2318,11 @@ Response:
                         "principalId": "691f0b3e-exam-ple3-b03f-6eb5120acabb",
                         "principalIdDisplayName": "cloudigrade-rest-api-examples",
                         "roleDefinitionId": "acdd72a7-3385-48ef-bd42-f606fba81ae7"
+                    },
+                    {
+                        "principalId": "691f0b3e-exam-ple3-b03f-6eb5120acabb",
+                        "principalIdDisplayName": "cloudigrade-rest-api-examples",
+                        "roleDefinitionId": "91c1777a-f3dc-4fae-b103-61d183457e46"
                     }
                 ],
                 "type": "array"

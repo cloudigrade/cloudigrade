@@ -15,6 +15,10 @@ from util.azure.identity import (
 # Reader - acdd72a7-3385-48ef-bd42-f606fba81ae7
 AZURE_READER_ROLE_ID = "acdd72a7-3385-48ef-bd42-f606fba81ae7"
 
+# Managed Services Registration assignment
+# Delete Role - 91c1777a-f3dc-4fae-b103-61d183457e46
+AZURE_MS_REG_ASSIGNMENT_DELETE_ROLE_ID = "91c1777a-f3dc-4fae-b103-61d183457e46"
+
 # Azure Lighthouse ARM Template Offer
 ARM_TEMPLATE_NAME = f"cloudigrade-{settings.CLOUDIGRADE_ENVIRONMENT}"
 ARM_TEMPLATE = {
@@ -42,17 +46,27 @@ ARM_TEMPLATE = {
             "defaultValue": [
                 {
                     "principalId": f"{settings.AZURE_SP_OBJECT_ID}",
-                    "roleDefinitionId": f"{AZURE_READER_ROLE_ID}",
                     "principalIdDisplayName": f"{ARM_TEMPLATE_NAME}",
-                }
+                    "roleDefinitionId": f"{AZURE_READER_ROLE_ID}",
+                },
+                {
+                    "principalId": f"{settings.AZURE_SP_OBJECT_ID}",
+                    "principalIdDisplayName": f"{ARM_TEMPLATE_NAME}",
+                    "roleDefinitionId": f"{AZURE_MS_REG_ASSIGNMENT_DELETE_ROLE_ID}",
+                },
             ],
             "allowedValues": [
                 [
                     {
                         "principalId": f"{settings.AZURE_SP_OBJECT_ID}",
-                        "roleDefinitionId": f"{AZURE_READER_ROLE_ID}",
                         "principalIdDisplayName": f"{ARM_TEMPLATE_NAME}",
-                    }
+                        "roleDefinitionId": f"{AZURE_READER_ROLE_ID}",
+                    },
+                    {
+                        "principalId": f"{settings.AZURE_SP_OBJECT_ID}",
+                        "principalIdDisplayName": f"{ARM_TEMPLATE_NAME}",
+                        "roleDefinitionId": f"{AZURE_MS_REG_ASSIGNMENT_DELETE_ROLE_ID}",
+                    },
                 ]
             ],
         },
