@@ -8,15 +8,28 @@ from util.azure.identity import (
 
 
 # Azure Permissions
+#
 # Azure permissions or roles are defined via their object ids, this
 # unfortunately has the side effect of making it very hard to reference
 # what a specific id is, this section is a way to map these azure ids
 # to a developer readable name to be used in our template.
-# Reader - acdd72a7-3385-48ef-bd42-f606fba81ae7
+#
+# The role definition id's referenced here below are Azure
+# built-in roles. The id's are static in nature and are documented
+# here: https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles
+#
+# The Reader role allows us to view all resources as needed when doing the
+# initial azure vm discovery for managed tenant subscriptions.
+#
+# Reader:
 AZURE_READER_ROLE_ID = "acdd72a7-3385-48ef-bd42-f606fba81ae7"
 
-# Managed Services Registration assignment
-# Delete Role - 91c1777a-f3dc-4fae-b103-61d183457e46
+# The Managed Services Registration assignment Delete Role allows us
+# to view the managed tenant lighthouse registration assignments and
+# provides us the ability to delete the customer managed tenant
+# delegation upon an azure account deletion.
+#
+# Managed Services Registration assignment Delete Role:
 AZURE_MS_REG_ASSIGNMENT_DELETE_ROLE_ID = "91c1777a-f3dc-4fae-b103-61d183457e46"
 
 # Azure Lighthouse ARM Template Offer
