@@ -349,7 +349,7 @@ header in all requests.
 
 API access is restricted to authenticated users.
 
-For more information about this header see `examples. <./docs/rest-api-example.rst#Authorization>`_
+For more information about this header see `examples. <./docs/rest-api-examples.rst#Authorization>`_
 
 
 When accessing any endpoint with the ``HTTP_X_RH_IDENTITY`` header,
