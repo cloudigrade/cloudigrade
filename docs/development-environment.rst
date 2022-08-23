@@ -91,9 +91,10 @@ Set and export the following environment variables with the current ``librdkafka
 
 .. code-block:: sh
 
-    export C_INCLUDE_PATH=/usr/local/Cellar/librdkafka/1.8.2/include
-    export LIBRARY_PATH=/usr/local/Cellar/librdkafka/1.8.2/lib
+    export C_INCLUDE_PATH="$(brew --prefix)/Cellar/librdkafka/*/include"
+    export LIBRARY_PATH="$(brew --prefix)/Cellar/librdkafka/*/lib"
 
+Note that you may need to replace ``*`` in those paths with your latest version if you have multiple versions of ``librdkafka`` installed (this is very unlikely).
 
 macOS Big Sur Troubleshooting
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
