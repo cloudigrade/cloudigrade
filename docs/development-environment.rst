@@ -344,22 +344,40 @@ Authentication
 ==============
 
 Custom HTTP header authentication is used to authenticate users.
-For a local deployment, this means including a ``HTTP_X_RH_IDENTITY``
+For a local deployment, this means including the ``X-RH-IDENTITY``
 header in all requests.
 
 API access is restricted to authenticated users.
 
 For more information about this header see `examples. <./docs/rest-api-examples.rst#Authorization>`_
 
-
-When accessing any endpoint with the ``HTTP_X_RH_IDENTITY`` header,
-if the user found in the header does not exist, it will be created.
-It is also possible to programmatically create users on the command line,
-for instance for testing. To create a user this way, use:
+Users are automatically created as needed when new customer sources are
+defined by interactions with sources-api via Kafka messages. If you want
+to create a user locally without interacting with sources-api and Kafka,
+you may use this internal cloudigrade API:
 
 .. code-block:: sh
 
-    make user
+    http localhost:8000/internal/api/cloudigrade/v1/users/ \
+        account_number=12345 org_id=67890 is_permanent=true
+
+You may give that API whatever ``account_number`` and ``org_id`` values
+are appropriate, but note that setting ``is_permanent`` means that this
+user will not be deleted by cloudigrade's periodic cleanup tasks even
+if the user has no related data. Following this example, after creating
+this user, I could make other API requests using ``X-RH-IDENTITY``
+defined like this:
+
+.. code-block:: sh
+
+    X_RH_IDENTITY=$(echo '{
+        "identity": {
+            "account_number": "12345", "org_id":"67890"
+        }
+    }' | base64)
+
+    http localhost:8000/api/cloudigrade/v2/instances/ \
+        X-RH-IDENTITY:"${X_RH_IDENTITY}"
 
 
 Message Broker

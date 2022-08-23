@@ -12,16 +12,12 @@ help:
 	@echo "  docs-api-examples-test        to verify the API examples .rst file is current."
 	@echo "  openapi                       to regenerate the openapi.json file at the root of the repo."
 	@echo "  openapi-test                  to verify that the openapi.json file at root of the repo is current."
-	@echo "  user                          to create a Django super user."
 
 clean:
 	git clean -fdx -e .idea/ -e *env/
 
 unittest:
 	$(PYTHON) $(PYDIR)/manage.py test --settings=config.settings.local account analyzer util
-
-user:
-	$(PYTHON) $(PYDIR)/manage.py createsuperuser --settings=config.settings.local
 
 docs-api-examples:
 	PYTHONPATH=cloudigrade $(PYTHON) ./docs/rest-api-examples.py > ./docs/rest-api-examples.rst
