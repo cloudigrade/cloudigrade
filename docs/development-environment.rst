@@ -56,7 +56,7 @@ This step is optional, but we recommend you install a local Python version via `
 
 .. code-block:: bash
 
-    pyenv install 3.9.6
+    pyenv install 3.9.7
     pyenv local
 
 
