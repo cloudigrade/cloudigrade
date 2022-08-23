@@ -109,7 +109,7 @@ If you're working with macOS Big Sur you may run into issues around the system v
 AWS account setup
 -----------------
 
-If you haven't already, create an `Amazon Web Services <https://aws.amazon.com/>`_ account for **cloudigrade** to use for its AWS API calls. You will need the AWS Access Key ID, AWS Secret Access Key, and region name where the account operates.
+If you haven't already, work with another team member to gain access to an `Amazon Web Services <https://aws.amazon.com/>`_ account for **cloudigrade** to use for its AWS API calls. You will need the AWS Access Key ID, AWS Secret Access Key, and region name where the account operates.
 
 **IMPORTANT NOTE**: This should *not* be the same AWS account that you use to simulate customer activity for tracking and inspection. **cloudigrade** *itself* requires a dedicated AWS account to perform various actions. We also strongly recommend creating a new AWS IAM user with its own credentials for use here instead of using your personal AWS account credentials.
 
