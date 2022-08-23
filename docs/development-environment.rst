@@ -287,7 +287,8 @@ To spawn a local Jupyter Notebook server with Django integration with your local
 
 .. code-block:: sh
 
-    DJANGO_ALLOW_ASYNC_UNSAFE=true poetry run ./cloudigrade/manage.py shell_plus --notebook
+    ENABLE_DJANGO_EXTENSIONS=true DJANGO_ALLOW_ASYNC_UNSAFE=true \
+      poetry run ./cloudigrade/manage.py shell_plus --notebook
 
 If your other standard environment variables are also set, that command should start a Jupyter Notebook server with kernels that have full access to your local environment with Django preconfigured. Think of this much like if you were using the typical ``manage.py shell`` command.
 
