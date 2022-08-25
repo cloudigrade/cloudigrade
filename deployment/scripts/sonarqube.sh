@@ -6,6 +6,7 @@ set -e
 WORKSPACE="${WORKSPACE:-${PWD}}"
 RH_IT_ROOT_CA_CERT_URL="${RH_IT_ROOT_CA_CERT_URL:-https://password.corp.redhat.com/RH-IT-Root-CA.crt}"
 SONARQUBE_REPORT_URL="${SONARQUBE_REPORT_URL:-https://sonarqube.corp.redhat.com}"
+GIT_BRANCH="${GIT_BRANCH:-master}"
 
 # Set up the environment.
 RUN_DIR="${WORKSPACE}"
@@ -36,6 +37,7 @@ unzip \
 ENV_FILE="${RUN_DIR}/sonarqube/sonarqube.env"
 echo SONARQUBE_REPORT_URL="${SONARQUBE_REPORT_URL}" > "${ENV_FILE}"
 echo COMMIT_SHORT="${COMMIT_SHORT}" >> "${ENV_FILE}"
+echo GIT_BRANCH="${GIT_BRANCH}" >> "${ENV_FILE}"
 echo SONARQUBE_TOKEN="${SONARQUBE_TOKEN}" >> "${ENV_FILE}"
 echo SONAR_SCANNER_NAME="${SONAR_SCANNER_NAME}" >> "${ENV_FILE}"
 

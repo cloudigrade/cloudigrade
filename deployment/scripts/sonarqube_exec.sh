@@ -34,6 +34,7 @@ cp -R "${WORKSPACE}/"{.git,cloudigrade} "${SONAR_USER_HOME}"
 export SONAR_SCANNER_OPTS="-Djavax.net.ssl.trustStore=${KEYSTORE_FILE} -Djavax.net.ssl.trustStorePassword=redhat"
 ${SONARQUBE_BIN_PATH}/sonar-scanner \
   -Dsonar.projectKey=console.redhat.com:cloudigrade \
+  -Dsonar.branch.name="${GIT_BRANCH}" \
   -Dsonar.sources="${SONAR_USER_HOME}" \
   -Dsonar.host.url="${SONARQUBE_REPORT_URL}" \
   -Dsonar.projectVersion="${COMMIT_SHORT}" \
