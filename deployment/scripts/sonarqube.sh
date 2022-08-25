@@ -1,64 +1,51 @@
 #!/bin/bash
+set -e
 
-export RUN_DIR="${PWD}"
+# All of these *should* be set already in the environment,
+# but let's offer probably-reasonable defaults to be safe.
+WORKSPACE="${WORKSPACE:-${PWD}}"
+RH_IT_ROOT_CA_CERT_URL="${RH_IT_ROOT_CA_CERT_URL:-https://password.corp.redhat.com/RH-IT-Root-CA.crt}"
+SONARQUBE_REPORT_URL="${SONARQUBE_REPORT_URL:-https://sonarqube.corp.redhat.com}"
 
-echo "SonarQube Scan"
-echo "Directory:     ${RUN_DIR}"
-echo "Workspace:     ${WORKSPACE}"
-echo "JAVA_HOME:     ${JAVA_HOME}"
-if [ -n "$JAVA_HOME" ]; then
-  java_cmd="$JAVA_HOME/bin/java"
-else
-  java_cmd="`which java`"
-fi
-echo "Java Command:  ${java_cmd}"
-if [ -n "${java_cmd}" ]; then
-  echo "Java Version:"
-  ${java_cmd} -version 2>&1 | sed 's/^/    /'
-fi
-
-mkdir "${RUN_DIR}/sonarqube/"
-mkdir "${RUN_DIR}/sonarqube/download/"
-mkdir "${RUN_DIR}/sonarqube/extract/"
-mkdir "${RUN_DIR}/sonarqube/certs/"
-mkdir "${RUN_DIR}/sonarqube/store/"
-
-curl -o "${RUN_DIR}/sonarqube/certs/RH-IT-Root-CA.crt" "${RH_IT_ROOT_CA_CERT_URL}"
-
-"${JAVA_HOME}/bin/keytool" \
-  -keystore  "${RUN_DIR}/sonarqube/store/RH-IT-Root-CA.keystore" \
-  -import    \
-  -alias     RH-IT-Root-CA \
-  -file      "${RUN_DIR}/sonarqube/certs/RH-IT-Root-CA.crt" \
-  -storepass redhat \
-  -noprompt
-
-export SONAR_SCANNER_OPTS="-Djavax.net.ssl.trustStore=${RUN_DIR}/sonarqube/store/RH-IT-Root-CA.keystore -Djavax.net.ssl.trustStorePassword=redhat"
-
-export SONAR_SCANNER_OS="linux"
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    export SONAR_SCANNER_OS="macosx"
-fi
-
-export SONAR_SCANNER_CLI_VERSION="4.6.2.2472"
-export SONAR_SCANNER_DOWNLOAD_NAME="sonar-scanner-cli-${SONAR_SCANNER_CLI_VERSION-$SONAR_SCANNER_OS}"
-export SONAR_SCANNER_NAME="sonar-scanner-${SONAR_SCANNER_CLI_VERSION-$SONAR_SCANNER_OS}"
-
-curl -o "${RUN_DIR}/sonarqube/download/${SONAR_SCANNER_DOWNLOAD_NAME}.zip" \
-  https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/${SONAR_SCANNER_DOWNLOAD_NAME}.zip
-
-unzip -d "${RUN_DIR}/sonarqube/extract/" "${RUN_DIR}/sonarqube/download/$SONAR_SCANNER_DOWNLOAD_NAME.zip"
-
-export PATH="${RUN_DIR}/sonarqube/extract/$SONAR_SCANNER_NAME/bin:$PATH"
-
+# Set up the environment.
+RUN_DIR="${WORKSPACE}"
+rm -rf "${RUN_DIR}/sonarqube"
+mkdir -p "${RUN_DIR}/sonarqube/"{scripts,download,extract,certs}
+cp "${RUN_DIR}/deployment/scripts/sonarqube_exec.sh" "${RUN_DIR}/sonarqube/scripts"
 COMMIT_SHORT=$(git rev-parse --short=7 HEAD)
+JAVA11_IMAGE="registry.access.redhat.com/openjdk/openjdk-11-rhel7:1.12-1.1658422675"
+SONAR_SCANNER_OS="linux"
+SONAR_SCANNER_CLI_VERSION="4.6.2.2472"
+SONAR_SCANNER_DOWNLOAD_NAME="sonar-scanner-cli-${SONAR_SCANNER_CLI_VERSION-$SONAR_SCANNER_OS}.zip"
+SONAR_SCANNER_NAME="sonar-scanner-${SONAR_SCANNER_CLI_VERSION-$SONAR_SCANNER_OS}"
 
-sonar-scanner \
-  -Dsonar.projectKey=console.redhat.com:cloudigrade \
-  -Dsonar.sources=./cloudigrade \
-  -Dsonar.host.url=https://sonarqube.corp.redhat.com \
-  -Dsonar.projectVersion=$COMMIT_SHORT \
-  -Dsonar.login=$SONARQUBE_TOKEN
+# Fetch the CA cert so the SonarQube scanner can communicate with the internal server.
+curl --silent --show-error \
+  -o "${RUN_DIR}/sonarqube/certs/RH-IT-Root-CA.crt" \
+  "${RH_IT_ROOT_CA_CERT_URL}"
+
+# Fetch and expand the SonarQube binaries.
+curl --silent --show-error \
+  -o "${RUN_DIR}/sonarqube/download/${SONAR_SCANNER_DOWNLOAD_NAME}" \
+  "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/${SONAR_SCANNER_DOWNLOAD_NAME}"
+unzip \
+  -d "${RUN_DIR}/sonarqube/extract/" \
+  "${RUN_DIR}/sonarqube/download/${SONAR_SCANNER_DOWNLOAD_NAME}"
+
+# Create an env file for the SonarQube scanner.
+ENV_FILE="${RUN_DIR}/sonarqube/sonarqube.env"
+echo SONARQUBE_REPORT_URL="${SONARQUBE_REPORT_URL}" > "${ENV_FILE}"
+echo COMMIT_SHORT="${COMMIT_SHORT}" >> "${ENV_FILE}"
+echo SONARQUBE_TOKEN="${SONARQUBE_TOKEN}" >> "${ENV_FILE}"
+echo SONAR_SCANNER_NAME="${SONAR_SCANNER_NAME}" >> "${ENV_FILE}"
+
+# Run the SonarQube scanner in a Docker container.
+docker pull "${JAVA11_IMAGE}"
+docker run \
+  -v"${RUN_DIR}":/workspace \
+  --env-file "${ENV_FILE}" \
+  "${JAVA11_IMAGE}" \
+  bash /workspace/sonarqube/scripts/sonarqube_exec.sh
 
 # The following junit-dummy.xml is needed because the pr-check job always
 # checks for a junit artifact. If not present, the pr-check job will fail.
