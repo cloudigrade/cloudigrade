@@ -33,6 +33,7 @@ def get_vms_for_subscription(azure_subscription_id):
             params={"statusOnly": "true"}
         )
         vms = []
+        image_properties = {}
         for discovered_vm in vm_list:
             vm_with_status = find_vm(vm_list_with_status, discovered_vm.id)
             vm = {}
@@ -43,9 +44,14 @@ def get_vms_for_subscription(azure_subscription_id):
             vm["resourceGroup"] = resource_group(discovered_vm)
             vm["running"] = is_running(vm_with_status)
             vm["is_encrypted"] = is_encrypted(discovered_vm)
+            vm["image"] = vars(discovered_vm.storage_profile.image_reference)
+            image_properties = get_image_properties(
+                cm_client, image_properties, discovered_vm
+            )
+            vm["image_properties"] = image_properties
+            vm["architecture"] = architecture(image_properties)
             vm["license_type"] = discovered_vm.license_type
             vm["vm_size"] = discovered_vm.hardware_profile.vm_size
-            vm["image"] = vars(discovered_vm.storage_profile.image_reference)
             vm["inspection_json"] = inspection_json(discovered_vm)
             vm["hardware_profile"] = vars(discovered_vm.hardware_profile)
             vm["storage_profile"] = vars(discovered_vm.storage_profile)
@@ -80,6 +86,50 @@ def find_vm(vm_list, vm_id):
         if vm.id == vm_id:
             return vm
     return None
+
+
+def get_image_properties(cm_client, image_properties, vm):
+    """
+    Given the vm, get additional image properties.
+
+    Architecture of a disk image is not returned to us by default.
+    We need to explicitely ask for additional properties via the
+    expand parameter.
+
+    {
+      'additional_properties': {'properties': {'hyperVGeneration': 'V2',
+                                               'architecture': 'x64',
+                                               'replicaType': 'Managed',
+                                               'replicaCount': 10}},
+      'id': '/Subscriptions/c2b810d4-e83c-4df5-a728-f1301dd78561/'
+            'Providers/Microsoft.Compute/Locations/eastus/'
+            'Publishers/RedHat/ArtifactTypes/VMImage/Offers/RHEL/'
+            'Skus/82gen2/Versions/8.2.2020050812',
+      'name': '8.2.2020050812',
+      'location': 'eastus',
+      'tags': None,
+      'extended_location': None
+    }
+    """
+    image = vm.storage_profile.image_reference
+    sku = image.sku
+    if sku in image_properties.keys():
+        return image_properties[sku]
+    image_reference = vm.storage_profile.image_reference
+    image_property = cm_client.virtual_machine_images.list(
+        location=vm.location,
+        publisher_name=image_reference.publisher,
+        offer=image_reference.offer,
+        skus=sku,
+        expand="properties",
+    )[0]
+    image_properties[sku] = image_property
+    return image_properties[sku]
+
+
+def architecture(image_properties):
+    """Return the architecture for the image properties specified."""
+    return image_properties.additional_properties["properties"]["architecture"]
 
 
 def is_marketplace_image(vm):

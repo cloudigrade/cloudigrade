@@ -133,7 +133,6 @@ def create_new_machine_images(vms_data):
             rhel_detected_by_tag = False
             status = MachineImage.PENDING
             openshift_detected = False
-            architecture = "none"
             image, new = save_new_azure_machine_image(
                 resource_id=sku,
                 azure_marketplace_image=vm["azure_marketplace_image"],
@@ -144,7 +143,7 @@ def create_new_machine_images(vms_data):
                 status=status,
                 openshift_detected=openshift_detected,
                 rhel_detected_by_tag=rhel_detected_by_tag,
-                architecture=architecture,
+                architecture=vm["architecture"],
             )
             if new:
                 new_skus.append(sku)
