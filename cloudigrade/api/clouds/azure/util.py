@@ -8,13 +8,17 @@ from rest_framework.serializers import ValidationError
 from api import error_codes
 from api.clouds.azure.models import (
     AzureCloudAccount,
+    AzureInstance,
+    AzureInstanceEvent,
     AzureMachineImage,
 )
 from api.models import (
     CloudAccount,
+    Instance,
     InstanceEvent,
     MachineImage,
 )
+from util.misc import get_now
 
 
 logger = logging.getLogger(__name__)
@@ -218,40 +222,120 @@ def create_initial_azure_instance_events(account, vms_data):
     Args:
         account (CloudAccount): The account that owns the vm that spawned
             the data for these InstanceEvents.
-        vms_data (dict): Dict of discovereds vms for the account subscription.
+        vms_data (dict): Dict of discovered vms for the account subscription.
     """
+    for vm in vms_data:
+        instance = save_instance(account, vm)
+        if vm["running"]:
+            save_instance_events(instance, vm)
 
 
 @transaction.atomic()
-def save_instance(account, vm_data, region):
+def save_instance(account, vm):
     """
     Create or Update the instance object for the Azure vm.
 
     Args:
         account (CloudAccount): The account that owns the vm that spawned
             the data for this Instance.
-        vm_data (dict): Dict of the details of this vm
-        region (str): Azure region
+        vm (dict): Dict of the details of this vm
 
     Returns:
         AzureInstance: Object representing the saved instance.
     """
+    region = vm["region"]
+    vm_id = vm["vm_id"]
+    image_id = vm["image"]["sku"]
+    logger.info(
+        _(
+            "saving models for azure vm id %(vm_id)s having azure"
+            "image id %(image_id)s for %(cloud_account)s"
+        ),
+        {
+            "vm_id": vm_id,
+            "image_id": image_id,
+            "cloud_account": account,
+        },
+    )
+
+    azure_instance, created = AzureInstance.objects.get_or_create(
+        resource_id=vm_id,
+        region=region,
+    )
+
+    if created:
+        Instance.objects.create(cloud_account=account, content_object=azure_instance)
+
+    # The following guarantees that the Azure instance's instance object exists.
+    azure_instance.instance.get()
+
+    if image_id is None:
+        machineimage = None
+    else:
+        logger.info(_("AzureMachineImage get_or_create for Azure VM %s"), image_id)
+        azure_machine_image, created = AzureMachineImage.objects.get_or_create(
+            resource_id=vm["vm_id"],
+            defaults={"region": region},
+        )
+        if created:
+            logger.info(
+                _("Missing image data for %s; creating UNAVAILABLE stub image.")
+            )
+            MachineImage.objects.create(
+                status=MachineImage.INSPECTED,
+                content_object=azure_machine_image,
+            )
+        machineimage = azure_machine_image.machine_image.get()
+
+        if machineimage is not None:
+            instance = azure_instance.instance.get()
+            instance.machine_image = machineimage
+            instance.save()
+
+        return azure_instance
 
 
-def save_instance_events(azureinstance, vm_data, events=None):
+def save_instance_events(azureinstance, vm, events=None):
     """
     Save provided events, and create the instance object if it does not exist.
 
     Args:
         azureinstance (AzureInstance): The Instnace associated with these
             InstanceEvents.
-        vm_data (dict): Dictionary containing instance information.
-        region (str): Azure region
-        events(list[dict]): List of dicts representing Evnts to be saved.
+        vm (dict): Dictionary containing instance information.
+        events(list[dict]): List of dicts representing Events to be saved.
 
     Retunrs:
         AzureInstance: Object representing the saved instnace.
     """
+    # for now we only handle events being None, once we wire up with the
+    # Azure Monitor, we can then start handling events passed in.
+    if events is None:
+        with transaction.atomic():
+            occurred_at = get_now()
+            instance = azureinstance.instance.get()
+
+            latest_event = (
+                InstanceEvent.objects.filter(
+                    instance=instance, occurred_at__lte=occurred_at
+                )
+                .order_by("-occurred_at")
+                .first()
+            )
+            # If the most recently occurred event was power_on, then adding another
+            # power_on event here is redundant and can be skipped.
+            if latest_event and latest_event.event_type == InstanceEvent.TYPE.power_on:
+                return
+
+            azureevent = AzureInstanceEvent.objects.create(
+                instance_type=vm["type"],
+            )
+            InstanceEvent.objects.create(
+                event_type=InstanceEvent.TYPE.power_on,
+                occurred_at=occurred_at,
+                instance=azureinstance.instance.get(),
+                content_object=azureevent,
+            )
 
 
 def get_instance_event_type(vm):
