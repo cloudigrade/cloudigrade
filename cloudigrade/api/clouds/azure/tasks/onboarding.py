@@ -9,6 +9,7 @@ from api.authentication import get_user_by_account
 from api.clouds.azure.models import AzureCloudAccount
 from api.clouds.azure.util import (
     create_azure_cloud_account,
+    create_initial_azure_instance_events,
     create_new_machine_images,
 )
 from api.models import User
@@ -165,5 +166,10 @@ def initial_azure_vm_discovery(azure_cloud_account_id):
                 "subscription_id": account_subscription_id,
             },
         )
-        new_vms_skus = create_new_machine_images(vms_data)
-        return new_vms_skus
+        new_vm_skus = create_new_machine_images(vms_data)
+        logger.info(
+            _("New machine image skus created: %(new_vm_skus)s"),
+            {"new_vm_skus": new_vm_skus},
+        )
+        create_initial_azure_instance_events(cloud_account, vms_data)
+        return

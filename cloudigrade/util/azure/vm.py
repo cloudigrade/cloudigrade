@@ -37,8 +37,10 @@ def get_vms_for_subscription(azure_subscription_id):
         for discovered_vm in vm_list:
             vm_with_status = find_vm(vm_list_with_status, discovered_vm.id)
             vm = {}
-            vm["id"] = discovered_vm.vm_id
+            vm["id"] = discovered_vm.id
+            vm["vm_id"] = discovered_vm.vm_id
             vm["name"] = discovered_vm.name
+            vm["type"] = discovered_vm.type
             vm["region"] = discovered_vm.location
             vm["azure_marketplace_image"] = is_marketplace_image(discovered_vm)
             vm["resourceGroup"] = resource_group(discovered_vm)
