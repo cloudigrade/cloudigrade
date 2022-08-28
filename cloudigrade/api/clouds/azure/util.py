@@ -231,23 +231,22 @@ def save_instance(account, vm):
     Returns:
         AzureInstance: Object representing the saved instance.
     """
+    image_sku = vm["image_sku"]
     region = vm["region"]
-    vm_id = vm["vm_id"]
-    image_id = vm["image_sku"]
     logger.info(
         _(
-            "saving models for azure vm id %(vm_id)s having azure"
+            "saving models for azure vm name %(vm_name)s having azure"
             "image id %(image_id)s for %(cloud_account)s"
         ),
         {
-            "vm_id": vm_id,
-            "image_id": image_id,
+            "vm_name": vm["name"],
+            "image_id": image_sku,
             "cloud_account": account,
         },
     )
 
     azure_instance, created = AzureInstance.objects.get_or_create(
-        resource_id=vm_id,
+        resource_id=image_sku,
         region=region,
     )
 
@@ -257,12 +256,14 @@ def save_instance(account, vm):
     # The following guarantees that the Azure instance's instance object exists.
     azure_instance.instance.get()
 
-    if image_id is None:
+    if image_sku is None:
         machineimage = None
     else:
-        logger.info(_("AzureMachineImage get_or_create for Azure VM %s"), image_id)
+        logger.info(
+            _("AzureMachineImage get_or_create for Azure VM image %s"), image_sku
+        )
         azure_machine_image, created = AzureMachineImage.objects.get_or_create(
-            resource_id=vm["vm_id"],
+            resource_id=image_sku,
             defaults={"region": region},
         )
         if created:
@@ -272,12 +273,12 @@ def save_instance(account, vm):
             )
         machineimage = azure_machine_image.machine_image.get()
 
-        if machineimage is not None:
-            instance = azure_instance.instance.get()
-            instance.machine_image = machineimage
-            instance.save()
+    if machineimage is not None:
+        instance = azure_instance.instance.get()
+        instance.machine_image = machineimage
+        instance.save()
 
-        return azure_instance
+    return azure_instance
 
 
 def save_instance_events(azureinstance, vm, events=None):
