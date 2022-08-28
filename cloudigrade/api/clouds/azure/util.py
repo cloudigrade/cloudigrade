@@ -122,7 +122,7 @@ def create_new_machine_images(vms_data):
 
     new_skus = []
     for vm in vms_data:
-        sku = vm["image"]["sku"]
+        sku = vm["image_sku"]
         if sku not in list(known_skus):
             logger.info(
                 _("%(prefix)s: Saving new Azure Machine Image sku: %(sku)s"),
@@ -233,7 +233,7 @@ def save_instance(account, vm):
     """
     region = vm["region"]
     vm_id = vm["vm_id"]
-    image_id = vm["image"]["sku"]
+    image_id = vm["image_sku"]
     logger.info(
         _(
             "saving models for azure vm id %(vm_id)s having azure"
