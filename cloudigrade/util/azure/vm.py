@@ -41,12 +41,12 @@ def get_vms_for_subscription(azure_subscription_id):
             vm["vm_id"] = discovered_vm.vm_id
             vm["name"] = discovered_vm.name
             vm["type"] = discovered_vm.type
+            vm["image_sku"] = discovered_vm.storage_profile.image_reference.sku
             vm["region"] = discovered_vm.location
             vm["azure_marketplace_image"] = is_marketplace_image(discovered_vm)
             vm["resourceGroup"] = resource_group(discovered_vm)
             vm["running"] = is_running(vm_with_status)
             vm["is_encrypted"] = is_encrypted(discovered_vm)
-            vm["image"] = vars(discovered_vm.storage_profile.image_reference)
             image_properties = get_image_properties(
                 cm_client, image_properties, discovered_vm
             )
@@ -135,9 +135,7 @@ def inspection_json(vm):
 
     Include the image reference in the inspection.
     """
-    return json.dumps({
-        "image_reference": vars(vm.storage_profile.image_reference)
-    })
+    return json.dumps({"image_reference": vars(vm.storage_profile.image_reference)})
 
 
 def is_running(vm):
