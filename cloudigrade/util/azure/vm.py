@@ -50,25 +50,9 @@ def get_vms_for_subscription(azure_subscription_id):
             image_properties = get_image_properties(
                 cm_client, image_properties, discovered_vm
             )
-            vm["image_properties"] = image_properties
             vm["architecture"] = architecture(image_properties)
-            vm["license_type"] = discovered_vm.license_type
             vm["vm_size"] = discovered_vm.hardware_profile.vm_size
             vm["inspection_json"] = inspection_json(discovered_vm)
-            vm["hardware_profile"] = vars(discovered_vm.hardware_profile)
-            vm["storage_profile"] = vars(discovered_vm.storage_profile)
-            vm["os_profile"] = vars(discovered_vm.os_profile)
-            vm["network_profile"] = vars(discovered_vm.network_profile)
-            vm["diagnostics_profile"] = vars(discovered_vm.diagnostics_profile)
-            vm["os_disk"] = vars(discovered_vm.storage_profile.os_disk)
-            vm["managed_disk"] = None
-            if (
-                discovered_vm.storage_profile.os_disk
-                and discovered_vm.storage_profile.os_disk.managed_disk
-            ):
-                vm["managed_disk"] = vars(
-                    discovered_vm.storage_profile.os_disk.managed_disk
-                )
             vms.append(vm)
             return vms
     except ClientAuthenticationError:
@@ -149,9 +133,11 @@ def inspection_json(vm):
     """
     Return the inspection for the vm.
 
-    For now simply the json of the machine image
+    Include the image reference in the inspection.
     """
-    return json.dumps(vars(vm.storage_profile.image_reference))
+    return json.dumps({
+        "image_reference": vars(vm.storage_profile.image_reference)
+    })
 
 
 def is_running(vm):

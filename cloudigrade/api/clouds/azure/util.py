@@ -110,11 +110,6 @@ def create_new_machine_images(vms_data):
     """
     Create AzureMachineImage objects that have not been seen before.
 
-    Model AzureMachineImage:
-    resource_id (varchar)                  vm.storage_profile.image_reference.sku
-    azure_marketplace_image (boolean)
-    region (varchar)
-
     Returns:
         list: A list of image ids that were added to the database
     """
@@ -212,13 +207,6 @@ def create_initial_azure_instance_events(account, vms_data):
     """
     Create AzureInstance and AzureInstanceEvent the first time we see a vm.
 
-    Model AzureInstance:
-    resource_id (varchar)               vm.id
-    region (varchar)
-
-    Model AzureInstanceEvent:
-    instance_type (varchar)
-
     Args:
         account (CloudAccount): The account that owns the vm that spawned
             the data for these InstanceEvents.
@@ -278,9 +266,6 @@ def save_instance(account, vm):
             defaults={"region": region},
         )
         if created:
-            logger.info(
-                _("Missing image data for %s; creating UNAVAILABLE stub image.")
-            )
             MachineImage.objects.create(
                 status=MachineImage.INSPECTED,
                 content_object=azure_machine_image,
