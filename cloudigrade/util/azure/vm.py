@@ -36,25 +36,23 @@ def get_vms_for_subscription(azure_subscription_id):
         image_properties = {}
         for discovered_vm in vm_list:
             vm_with_status = find_vm(vm_list_with_status, discovered_vm.id)
-            vm = {}
-            vm["id"] = discovered_vm.id
-            vm["vm_id"] = discovered_vm.vm_id
-            vm["name"] = discovered_vm.name
-            vm["type"] = discovered_vm.type
-            vm["image_sku"] = discovered_vm.storage_profile.image_reference.sku
-            vm["region"] = discovered_vm.location
-            vm["azure_marketplace_image"] = is_marketplace_image(discovered_vm)
-            vm["resourceGroup"] = resource_group(discovered_vm)
-            vm["running"] = is_running(vm_with_status)
-            vm["is_encrypted"] = is_encrypted(discovered_vm)
-            image_properties = get_image_properties(
-                cm_client, image_properties, discovered_vm
+            vms.append(
+                vm_info(cm_client, image_properties, discovered_vm, vm_with_status)
             )
-            vm["architecture"] = architecture(image_properties)
-            vm["vm_size"] = discovered_vm.hardware_profile.vm_size
-            vm["inspection_json"] = inspection_json(discovered_vm)
-            vms.append(vm)
-            return vms
+
+        # Now, let's also query virtual machines that are created via scale sets.
+        vmss_list = cm_client.virtual_machine_scale_sets.list_all()
+        for vmss in vmss_list:
+            vmss_resource_group = resource_group(vmss)
+            vmss_vm_list = cm_client.virtual_machine_scale_set_vms.list(
+                resource_group_name=vmss_resource_group,
+                virtual_machine_scale_set_name=vmss.name,
+                expand="instanceView",
+            )
+            for discovered_vm in vmss_vm_list:
+                vms.append(vm_info(cm_client, image_properties, discovered_vm))
+
+        return vms
     except ClientAuthenticationError:
         logger.error(
             _(
@@ -64,6 +62,29 @@ def get_vms_for_subscription(azure_subscription_id):
             {"subscription_id": azure_subscription_id},
         )
         return []
+
+
+def vm_info(cm_client, image_properties, discovered_vm, vm_with_status=None):
+    """Return the vm dict given the discovered VM and related VM with status."""
+    vm = {}
+    vm["id"] = discovered_vm.id
+    vm["vm_id"] = discovered_vm.vm_id
+    vm["name"] = discovered_vm.name
+    vm["type"] = discovered_vm.type
+    vm["image_sku"] = discovered_vm.storage_profile.image_reference.sku
+    vm["region"] = discovered_vm.location
+    vm["azure_marketplace_image"] = is_marketplace_image(discovered_vm)
+    vm["resourceGroup"] = resource_group(discovered_vm)
+    if vm_with_status:
+        vm["running"] = is_running(vm_with_status)
+    else:
+        vm["running"] = is_running(discovered_vm)
+    vm["is_encrypted"] = is_encrypted(discovered_vm)
+    image_properties = get_image_properties(cm_client, image_properties, discovered_vm)
+    vm["architecture"] = architecture(image_properties)
+    vm["vm_size"] = discovered_vm.hardware_profile.vm_size
+    vm["inspection_json"] = inspection_json(discovered_vm)
+    return vm
 
 
 def find_vm(vm_list, vm_id):
@@ -87,14 +108,7 @@ def get_image_properties(cm_client, image_properties, vm):
                                                'architecture': 'x64',
                                                'replicaType': 'Managed',
                                                'replicaCount': 10}},
-      'id': '/Subscriptions/c2b810d4-e83c-4df5-a728-f1301dd78561/'
-            'Providers/Microsoft.Compute/Locations/eastus/'
-            'Publishers/RedHat/ArtifactTypes/VMImage/Offers/RHEL/'
-            'Skus/82gen2/Versions/8.2.2020050812',
-      'name': '8.2.2020050812',
-      'location': 'eastus',
-      'tags': None,
-      'extended_location': None
+      ...
     }
     """
     image = vm.storage_profile.image_reference
@@ -155,6 +169,6 @@ def is_encrypted(vm):
     return is_encrypted
 
 
-def resource_group(vm):
-    """Return the resourceGroup for the vm object."""
-    return vm.id.split("/")[4]
+def resource_group(resource):
+    """Return the resourceGroup for the vm or vmss object."""
+    return resource.id.split("/")[4]
