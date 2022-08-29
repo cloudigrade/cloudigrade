@@ -231,22 +231,28 @@ def save_instance(account, vm):
     Returns:
         AzureInstance: Object representing the saved instance.
     """
+    # For the instance id, we could use the vm_id (uuid form), but for now
+    # preferring to use the fully qualified device id for easier
+    # identification though the 256 character limit may be an issue at
+    # some point as it's not uncommon to see 200 character long id's.
+    instance_id = vm["id"]
     image_sku = vm["image_sku"]
     region = vm["region"]
     logger.info(
         _(
-            "saving models for azure vm name %(vm_name)s having azure"
-            "image id %(image_id)s for %(cloud_account)s"
+            "saving models for azure vm name %(vm_name)s, id %(vm_id)s, "
+            " image sku %(image_sku)s for %(cloud_account)s"
         ),
         {
             "vm_name": vm["name"],
-            "image_id": image_sku,
+            "vm_id": instance_id,
+            "image_sku": image_sku,
             "cloud_account": account,
         },
     )
 
     azure_instance, created = AzureInstance.objects.get_or_create(
-        resource_id=image_sku,
+        resource_id=instance_id,
         region=region,
     )
 
