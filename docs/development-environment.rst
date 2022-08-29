@@ -25,6 +25,8 @@ The following commands should install everything you need:
     brew update
     brew install python@3.9 gettext awscli azure-cli postgresql librdkafka tox poetry podman
 
+You may also want to ``brew install openshift-cli``. Although the OpenShift CLI is not required for local development and operation, it is required for deploying cloudigrade to OpenShift, including the `Ephemeral Cluster Deployment <https://github.com/cloudigrade/cloudigrade/wiki/Ephemeral-Cluster-Deployment>`_.
+
 To start the podman machine that will be running the commands run:
 
 .. code-block:: bash
