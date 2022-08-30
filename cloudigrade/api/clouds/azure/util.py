@@ -131,8 +131,8 @@ def create_new_machine_images(vms_data):
             name = sku
             rhel_detected_by_tag = False
             # Until we figure out the need/equivalent of houndigrade
-            # on Azure, let's mark the images as inspected.
-            status = MachineImage.INSPECTED
+            # on Azure, let's mark the images as pending.
+            status = MachineImage.PENDING
             openshift_detected = False
             image, new = save_new_azure_machine_image(
                 resource_id=sku,
