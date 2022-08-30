@@ -320,7 +320,7 @@ def save_instance_events(azureinstance, vm, events=None):
                 return
 
             azureevent = AzureInstanceEvent.objects.create(
-                instance_type=vm["type"],
+                instance_type=vm["vm_size"],
             )
             InstanceEvent.objects.create(
                 event_type=InstanceEvent.TYPE.power_on,
