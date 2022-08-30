@@ -10,11 +10,6 @@ from util import azure
 
 logger = logging.getLogger(__name__)
 
-# References
-# https://stackoverflow.com/questions/71656714/
-#   how-to-check-os-detailed-information-of-azure-virtual-machine-using-python-sdk
-# https://docs.microsoft.com/en-us/previous-versions/azure/virtual-machines/windows/python#get-information-about-the-vm
-
 
 def get_vms_for_subscription(azure_subscription_id):
     """Discover vms for a particular subscription."""
