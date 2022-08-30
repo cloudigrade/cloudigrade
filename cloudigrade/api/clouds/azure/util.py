@@ -171,6 +171,16 @@ def save_new_azure_machine_image(
         resource_id (str): The Azure image identifier
         azure_marketplace_image (boolean): True if the image is from the marketplace
         region (str): Region where the image was found
+        inspection_json (str): Details about the machine image reference
+        name (str): Name of the machine image (sku)
+        is_encrypted (bool): Is the image disk encrypted
+        status (str): Inspection status (pending, inspected, ...)
+        openshift_detected (bool): was openshift detected for this image
+        rhel_detected_by_tag (bool): was RHEL detected by tag for this image
+        architecture (str): Architecture for this image (e.g. "x64")
+
+    Returns (AzureMachineImage, bool): The object representing the saved model
+        and a boolean of whether it was just created or not.
     """
     with transaction.atomic():
         azuremachineimage, created = AzureMachineImage.objects.get_or_create(
@@ -297,7 +307,7 @@ def save_instance_events(azureinstance, vm, events=None):
         vm (dict): Dictionary containing instance information.
         events(list[dict]): List of dicts representing Events to be saved.
 
-    Retunrs:
+    Returns:
         AzureInstance: Object representing the saved instnace.
     """
     # for now we only handle events being None, once we wire up with the
