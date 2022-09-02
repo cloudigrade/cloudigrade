@@ -3,7 +3,6 @@ import logging
 
 from azure.core.exceptions import ClientAuthenticationError
 from azure.mgmt.managedservices import ManagedServicesClient
-from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models, transaction
 from django.db.models.signals import post_delete
@@ -256,36 +255,19 @@ class AzureInstanceEvent(BaseModel):
 
 @receiver(post_delete, sender=AzureCloudAccount)
 def delete_lighthouse_registration(*args, **kwargs):
-    """Delete the lighthouse registration upon deleting an Azure cloud account."""
+    """Delete the lighthouse registration assignment for the Azure cloud tenant."""
+    azure_cloud_account = kwargs["instance"]
+    tenant_subscription_id = azure_cloud_account.subscription_id
     logger.info(
         _(
-            "Attempting delete_lighthouse_registration "
-            "for args=%(args)s kwargs=%(kwargs)s "
+            "Attempting to delete the Azure lighthouse registration"
+            " for tenant subscription %s"
         ),
-        {"args": args, "kwargs": kwargs},
-    )
-    azure_cloud_account = kwargs["instance"]
-    azure_subscription_id = azure_cloud_account.subscription_id
-    logger.info(
-        _("Attempting delete_lighthouse_registration for %(account)s"),
-        {"account": azure_cloud_account},
-    )
-    logger.info(
-        _("settings.AZURE_SUBSCRIPTION_ID %(subscription_id)s"),
-        {"subscription_id": settings.AZURE_SUBSCRIPTION_ID},
-    )
-    logger.info(
-        _("Azure Cloud Account subscription_id %(subscription_id)s"),
-        {"subscription_id": azure_subscription_id},
+        tenant_subscription_id,
     )
 
-    _delete_lighthouse_registration_assignment(azure_subscription_id)
-
-
-def _delete_lighthouse_registration_assignment(tenant_subscription_id):
-    """Delete the lighthouse registration assignment for tenant."""
-    ms_client = ManagedServicesClient(credential=azure.get_cloudigrade_credentials())
     tenant_scope = f"subscriptions/{tenant_subscription_id}"
+    ms_client = ManagedServicesClient(credential=azure.get_cloudigrade_credentials())
     registration_name = None
 
     try:
@@ -293,47 +275,49 @@ def _delete_lighthouse_registration_assignment(tenant_subscription_id):
         for reg_assignment in ra_list:
             state = reg_assignment.properties.provisioning_state
             id_list = reg_assignment.id.split("/")
-            if (
-                state == "Succeeded"
-                and id_list[1] == "subscriptions"
-                and id_list[2] == tenant_subscription_id
-            ):
+            if state == "Succeeded" and "/".join(id_list[1:3]) == tenant_scope:
+                if registration_name:
+                    logger.info(
+                        _(
+                            "Found multiple lighthouse registrations for"
+                            " tenant subscription %s, skipping deleting the"
+                            " lighthouse registration."
+                        ),
+                        tenant_subscription_id,
+                    )
+                    return
+
                 registration_name = reg_assignment.name
                 logger.info(
                     _(
-                        "Found a lighthouse registration assignment name=%(name)s "
-                        "for tenant subscripion %(subscription)s, "
-                        "id=%(assignment_id)s"
+                        "Found a lighthouse registration assignment"
+                        " for tenant subscripion %(subscription)s,"
+                        " name %(name)s, id %(assignment_id)s"
                     ),
                     {
-                        "name": registration_name,
                         "subscription": tenant_subscription_id,
+                        "name": registration_name,
                         "assignment_id": reg_assignment.id,
                     },
                 )
-                break
     except ClientAuthenticationError as e:
         logger.warn(
             _(
-                "ClientAuthenticationError while trying to find the lighthouse "
-                "registration assignment for tenant subscription %s: %s"
+                "ClientAuthenticationError while trying to find the lighthouse"
+                " registration assignment for tenant subscription %s - %s"
             ),
-            {
-                tenant_subscription_id,
-                e,
-            },
+            tenant_subscription_id,
+            e,
         )
         return
     except Exception as e:
         logger.error(
             _(
-                "Unexpected error while trying to find the lighthouse "
-                "registration assignment for tenant subscription %s: %s"
+                "Unexpected error while trying to find the lighthouse"
+                " registration assignment for tenant subscription %s - %s"
             ),
-            {
-                tenant_subscription_id,
-                e,
-            },
+            tenant_subscription_id,
+            e,
         )
         return
 
@@ -347,15 +331,12 @@ def _delete_lighthouse_registration_assignment(tenant_subscription_id):
         )
         return
 
-    _delete_registration_assignment(ms_client, tenant_scope, registration_name)
-
-
-def _delete_registration_assignment(ms_client, tenant_scope, registration_name):
-    """Delete the lighthouse registration assignment."""
     logger.info(
         _(
-            "Attempting to delete the lighthouse registration %s",
+            "Deleting the lighthouse registration assignment"
+            " for tenant subscription %s, name %s"
         ),
+        tenant_subscription_id,
         registration_name,
     )
 
@@ -367,8 +348,11 @@ def _delete_registration_assignment(ms_client, tenant_scope, registration_name):
         logger.info(
             _(
                 "Unexpected error while deleting"
-                " the lighthouse registration assignment: %s"
+                " the lighthouse registration assignment"
+                " for tenant subscription %s, name %s - %s"
             ),
+            tenant_subscription_id,
+            registration_name,
             e,
         )
         return
