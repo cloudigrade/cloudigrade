@@ -1,6 +1,7 @@
 """Cloudigrade API v2 Models for Azure."""
 import logging
 
+from azure.core.exceptions import ClientAuthenticationError
 from azure.mgmt.managedservices import ManagedServicesClient
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
@@ -278,133 +279,89 @@ def delete_lighthouse_registration(*args, **kwargs):
         {"subscription_id": azure_subscription_id},
     )
 
-    _delete_lighthouse_subscription(azure_subscription_id)
+    _delete_lighthouse_registration_assignment(azure_subscription_id)
 
 
-def _delete_lighthouse_subscription(scoped_subscription_id):
-    """Delete the lighthouse registration for the given subscription id scope."""
+def _delete_lighthouse_registration_assignment(tenant_subscription_id):
+    """Delete the lighthouse registration assignment for tenant."""
     ms_client = ManagedServicesClient(credential=azure.get_cloudigrade_credentials())
-
-    # example
-    # "id": "/subscriptions/<subscription_id>/providers/
-    #           Microsoft.ManagedServices/registrationDefinitions/<reg_name>
-    # for the above id, the scope is subscriptions/<subscription_id>
-
-    ms_scope = f"subscriptions/{scoped_subscription_id}"
+    tenant_scope = f"subscriptions/{tenant_subscription_id}"
+    registration_name = None
 
     try:
-        rd_list = ms_client.registration_definitions.list(scope=ms_scope)
-        registration_name = None
-        found_rd = False
-        for ms_def in rd_list:
-            ms_definition = ms_def.as_dict()
-            name = ms_definition["name"]
-            properties = ms_definition["properties"]
-            managed_by_tenant_id = properties["managed_by_tenant_id"]
-            authorization = properties["authorizations"][0]
-            principal_id = authorization["principal_id"]
-            principal_id_display_name = authorization["principal_id_display_name"]
-            role_definition_ids = (
-                auth["roleDefinitionId"] for auth in properties["authorizations"]
-            )
-            found_rd = True
-            logger.info(
-                _(
-                    "\nFound a registration definition "
-                    "name=%(name)s, "
-                    "\nproperties=%(properties)s, "
-                    "\nmanaged_by_tenant_id=%(managed_by_tenant_id)s, "
-                    "\nprincipal_id=%(principal_id)s, "
-                    "\nprincipal_id_display_name=%(principal_id_display_name)s, "
-                    "\nrole_definition_ids=%(role_definition_ids)s",
-                ),
-                {
-                    "name": name,
-                    "properties": properties,
-                    "managed_by_tenant_id": managed_by_tenant_id,
-                    "principal_id": principal_id,
-                    "principal_id_display_name": principal_id_display_name,
-                    "role_definition_ids": role_definition_ids,
-                },
-            )
-            logger.info(
-                _(
-                    "\nComparing with"
-                    "\nsettings.AZURE_TENANT_ID         = %(tenant_id)s, "
-                    "\nsettings.AZURE_SP_OBJECT_ID      = %(sp_object_id)s, "
-                    "\nsettings.CLOUDIGRADE_ENVIRONMENT = %(cloudigrade_env)s, "
-                    "\nsettings.AZURE_SUBSCRIPTION_ID   = %(subscription_id)s, ",
-                ),
-                {
-                    "tenant_id": settings.AZURE_TENANT_ID,
-                    "sp_object_id": settings.AZURE_SP_OBJECT_ID,
-                    "cloudigrade_env": settings.CLOUDIGRADE_ENVIRONMENT,
-                    "subscription_id": settings.AZURE_SUBSCRIPTION_ID,
-                },
-            )
+        ra_list = ms_client.registration_assignments.list(scope=tenant_scope)
+        for reg_assignment in ra_list:
+            state = reg_assignment.properties.provisioning_state
+            id_list = reg_assignment.id.split("/")
             if (
-                managed_by_tenant_id == settings.AZURE_TENANT_ID
-                and principal_id == settings.AZURE_SP_OBJECT_ID
-                and principal_id_display_name
-                == f"cloudigrade-{settings.CLOUDIGRADE_ENVIRONMENT}"
-                and azure.AZURE_READER_ROLE_ID in role_definition_ids
-                and azure.AZURE_MSREG_DELETE_ROLE_ID in role_definition_ids
+                state == "Succeeded"
+                and id_list[1] == "subscriptions"
+                and id_list[2] == tenant_subscription_id
             ):
+                registration_name = reg_assignment.name
                 logger.info(
                     _(
-                        "Found matching managed service for deleting"
-                        " the lighthouse registration "
-                        "name=%(name)s, "
-                        "properties=%(properties)s, "
-                        "managed_by_tenant_id=%(managed_by_tenant_id)s, "
-                        "principal_id=%(principal_id)s, "
-                        "principal_id_display_name=%(principal_id_display_name)s, "
-                        "role_definition_ids=%(role_definition_ids)s",
+                        "Found a lighthouse registration assignment name=%(name)s "
+                        "for tenant subscripion %(subscription)s, "
+                        "id=%(assignment_id)s"
                     ),
                     {
-                        "name": name,
-                        "properties": properties,
-                        "managed_by_tenant_id": managed_by_tenant_id,
-                        "principal_id": principal_id,
-                        "principal_id_display_name": principal_id_display_name,
-                        "role_definition_ids": role_definition_ids,
+                        "name": registration_name,
+                        "subscription": tenant_subscription_id,
+                        "assignment_id": reg_assignment.id,
                     },
                 )
-                registration_name = name
                 break
+    except ClientAuthenticationError as e:
+        logger.warn(
+            _(
+                "ClientAuthenticationError while trying to find the lighthouse "
+                "registration assignment for tenant subscription %s: %s"
+            ),
+            {
+                tenant_subscription_id,
+                e,
+            },
+        )
+        return
     except Exception as e:
         logger.error(
             _(
-                "Unexpected error while trying to"
-                " find the lighthouse registration name: %s"
+                "Unexpected error while trying to find the lighthouse "
+                "registration assignment for tenant subscription %s: %s"
             ),
-            e,
+            {
+                tenant_subscription_id,
+                e,
+            },
         )
         return
 
-    if not found_rd:
-        logger.info(_("No lighthouse registration definitions were found"))
-        return
-
     if not registration_name:
-        logger.info(_("Could not find a matching lighthouse registration"))
+        logger.info(
+            _(
+                "Could not find a matching lighthouse registration"
+                " for tenant subscription %s"
+            ),
+            tenant_subscription_id,
+        )
         return
 
-    _delete_managed_service(ms_client, ms_scope, registration_name)
+    _delete_registration_assignment(ms_client, tenant_scope, registration_name)
 
 
-def _delete_managed_service(ms_client, ms_scope, registration_name):
-    """Delete the managed service assignment and definition."""
-    # First, delete the assignment
+def _delete_registration_assignment(ms_client, tenant_scope, registration_name):
+    """Delete the lighthouse registration assignment."""
     logger.info(
         _(
-            "Attempting to delete the managed service assignment for %s",
+            "Attempting to delete the lighthouse registration %s",
         ),
         registration_name,
     )
+
     try:
         ms_client.registration_assignments.begin_delete(
-            scope=ms_scope, registration_assignment_id=registration_name
+            scope=tenant_scope, registration_assignment_id=registration_name
         ).wait()
     except Exception as e:
         logger.info(
@@ -415,22 +372,3 @@ def _delete_managed_service(ms_client, ms_scope, registration_name):
             e,
         )
         return
-
-    # Finally, delete the definition
-    logger.info(
-        _("Attempting to delete the managed service definition for %s"),
-        registration_name,
-    )
-
-    try:
-        ms_client.registration_definitions.delete(
-            scope=ms_scope, registration_definition_id=registration_name
-        )
-    except Exception as e:
-        logger.error(
-            _(
-                "Unexpected error while"
-                " deleting the lighthouse registration definition: %s"
-            ),
-            e,
-        )
