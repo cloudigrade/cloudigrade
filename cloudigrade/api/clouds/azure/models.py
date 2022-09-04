@@ -267,10 +267,12 @@ def delete_lighthouse_registration(*args, **kwargs):
     )
 
     tenant_scope = f"subscriptions/{tenant_subscription_id}"
-    ms_client = ManagedServicesClient(credential=azure.get_cloudigrade_credentials())
     registration_name = None
 
     try:
+        ms_client = ManagedServicesClient(
+            credential=azure.get_cloudigrade_credentials()
+        )
         ra_list = ms_client.registration_assignments.list(scope=tenant_scope)
         for reg_assignment in ra_list:
             state = reg_assignment.properties.provisioning_state
@@ -291,7 +293,7 @@ def delete_lighthouse_registration(*args, **kwargs):
                 logger.info(
                     _(
                         "Found a lighthouse registration assignment"
-                        " for tenant subscripion %(subscription)s,"
+                        " for tenant subscription %(subscription)s,"
                         " name %(name)s, id %(assignment_id)s"
                     ),
                     {
