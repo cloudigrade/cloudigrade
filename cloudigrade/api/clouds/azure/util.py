@@ -338,11 +338,3 @@ def save_instance_events(azureinstance, vm, events=None):
                 instance=azureinstance.instance.get(),
                 content_object=azureevent,
             )
-
-
-def get_instance_event_type(vm):
-    """Return the InstanceEvent type for the vm specified."""
-    if vm and vm["running"]:
-        return InstanceEvent.TYPE.power_on
-    else:
-        return InstanceEvent.TYPE.power_off
