@@ -57,3 +57,17 @@ class InitialAzureVmDiscovery(TestCase):
                 " skipping initial vm discovery",
                 logging_watcher.output[0],
             )
+
+    def test_initial_azure_vm_discovery_account_paused(self):
+        """Test behavior of initial_azure_vm_discovery with paused account."""
+        account = account_helper.generate_cloud_account(
+            cloud_type=AZURE_PROVIDER_STRING, platform_application_is_paused=True
+        )
+
+        with self.assertLogs(log_prefix, level="WARNING") as logging_watcher:
+            initial_azure_vm_discovery(account.id)
+            self.assertIn(
+                f"AzureCloudAccount id {account.id} is paused;"
+                " skipping initial vm discovery",
+                logging_watcher.output[0],
+            )
