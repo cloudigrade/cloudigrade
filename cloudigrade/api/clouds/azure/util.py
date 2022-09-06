@@ -115,15 +115,19 @@ def create_new_machine_images(vms_data):
     """
     log_prefix = "create_new_machine_image"
 
+    discovered_skus = {vm["image_sku"] for vm in vms_data}
     known_skus = {
         azure_machine_image.resource_id
-        for azure_machine_image in AzureMachineImage.objects.all()
+        for azure_machine_image in AzureMachineImage.objects.filter(
+            resource_id__in=list(discovered_skus)
+        )
     }
+    skus_to_create = discovered_skus - known_skus
 
-    new_skus = []
+    skus_created = set()
     for vm in vms_data:
         sku = vm["image_sku"]
-        if sku not in list(known_skus):
+        if sku in skus_to_create and sku not in skus_created:
             logger.info(
                 _("%(prefix)s: Saving new Azure Machine Image sku: %(sku)s"),
                 {"prefix": log_prefix, "sku": sku},
@@ -147,9 +151,9 @@ def create_new_machine_images(vms_data):
                 architecture=vm["architecture"],
             )
             if new:
-                new_skus.append(sku)
+                skus_created.add(sku)
 
-    return new_skus
+    return list(skus_created)
 
 
 def save_new_azure_machine_image(

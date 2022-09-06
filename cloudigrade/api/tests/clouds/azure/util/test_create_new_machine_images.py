@@ -25,7 +25,7 @@ class CreateAzureNewMachineImages(TestCase):
         vm1 = util_helper.generate_vm_data()
         vm2 = util_helper.generate_vm_data()
         new_skus = util.create_new_machine_images([vm1, vm2])
-        self.assertEqual(new_skus, [vm1["image_sku"], vm2["image_sku"]])
+        self.assertSetEqual(set(new_skus), {vm1["image_sku"], vm2["image_sku"]})
         self.assertTrue(AzureMachineImage.objects.count() == 2)
         self.assertTrue(
             AzureMachineImage.objects.filter(resource_id=vm1["image_sku"]).exists()
