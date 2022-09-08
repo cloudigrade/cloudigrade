@@ -21,7 +21,7 @@ source $CICD_ROOT/build.sh
 
 # Deploy cloudigrade to an ephemeral namespace for testing
 source ${CICD_ROOT}/_common_deploy_logic.sh
-export NAMESPACE=$(bonfire namespace reserve)
+export NAMESPACE=$(bonfire namespace reserve --pool "real-managed-kafka")
 
 oc get secret/cloudigrade-aws -o json -n ephemeral-base | jq -r '.data' > aws-creds.json
 oc get secret/cloudigrade-azure -o json -n ephemeral-base | jq -r '.data' > azure-creds.json
