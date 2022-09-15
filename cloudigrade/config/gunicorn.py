@@ -12,3 +12,6 @@ else:
 
 forwarded_allow_ips = "*"
 workers = 2
+
+# https://issues.redhat.com/browse/RHCLOUD-21245
+limit_request_field_size = 16384
