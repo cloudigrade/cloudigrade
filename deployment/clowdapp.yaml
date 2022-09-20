@@ -184,6 +184,10 @@ objects:
           value: ${HOUNDIGRADE_ECS_FAMILY_NAME}
         - name: INSPECTION_CLUSTER_INSTANCE_AGE_LIMIT
           value: ${INSPECTION_CLUSTER_INSTANCE_AGE_LIMIT}
+        - name: LEADER_RUNNING_TTL_DEFAULT
+          value: ${LEADER_RUNNING_TTL_DEFAULT}
+        - name: LEADER_COMPLETED_TTL_DEFAULT
+          value: ${LEADER_COMPLETED_TTL_DEFAULT}
         - name: CLOUDIGRADE_VERSION
           value: ${CLOUDIGRADE_VERSION}
         - name: CLOUDIGRADE_ENVIRONMENT
@@ -1457,6 +1461,14 @@ parameters:
   displayName: Houndigrade Sentry Environment
   required: true
   value: ephemeral
+- name: LEADER_RUNNING_TTL_DEFAULT
+  displayName: Leader Running default TTL in seconds
+  required: true
+  value: '60'
+- name: LEADER_COMPLETED_TTL_DEFAULT
+  displayName: Leader Completed default TTL in seconds
+  required: true
+  value: '300'
 - name: LISTENER_ENABLE_SENTRY
   displayName: Listener Sentry Enabled
   required: true

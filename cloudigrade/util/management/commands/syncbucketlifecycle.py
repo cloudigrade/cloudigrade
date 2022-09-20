@@ -1,8 +1,14 @@
 """Ensure S3 bucket lifecycle settings are up to date."""
+import logging
+
 import boto3
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.utils.translation import gettext as _
+
+from util.leaderrun import LeaderRun
+
+logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
@@ -17,6 +23,17 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """Handle the command execution."""
+        leader = LeaderRun("sync-bucket-lifecycle")
+        if leader.has_completed():
+            logger.info(_("SyncBucketLifeCycle: Already completed, Skipping"))
+            return
+        if leader.is_running():
+            logger.info(_("SyncBucketLifeCycle: Already running, Skipping"))
+            leader.wait_for_completion()
+            return
+
+        logger.info(_("SyncBucketLifeCycle: Executing"))
+        leader.set_as_running()
         s3 = boto3.resource("s3")
         for bucket_name in self.bucket_names:
             bucket_lifecycle_configuration = s3.BucketLifecycleConfiguration(
@@ -48,3 +65,4 @@ class Command(BaseCommand):
                     ]
                 }
             )
+        leader.set_as_completed()
