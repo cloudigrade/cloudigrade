@@ -29,6 +29,7 @@ class LeaderRun(object):
     def set_as_running(self):
         """Set the feature as running."""
         cache.set(self.running_key, self._now(), timeout=self.leader_running_ttl)
+        cache.set(self.completed_key, None)
 
     def is_running(self):
         """Return True if the feature is running."""
@@ -43,11 +44,16 @@ class LeaderRun(object):
 
     def set_as_completed(self):
         """Set the feature as done running and completed."""
+        cache.set(self.completed_key, self._now(), timeout=self.leader_completed_ttl)
         cache.set(self.running_key, None)
-        return cache.set(
-            self.completed_key, self._now(), timeout=self.leader_completed_ttl
-        )
 
     def has_completed(self):
         """Return True if the feature has completed."""
         return cache.get(self.completed_key)
+
+    def reset(self):
+        """Clear the running/completed state of the feature."""
+        # Note: we're using cache.set to None here instead of cache.delete,
+        # wasn't seeing the cache.deletes across the pods somehow.
+        cache.set(self.running_key, None)
+        cache.set(self.completed_key, None)
