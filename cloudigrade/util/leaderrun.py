@@ -32,7 +32,7 @@ class LeaderRun(object):
         cache.set(self.completed_key, None)
 
     def is_running(self):
-        """Return True if the feature is running."""
+        """Return Feature start time if the feature is running, None otherwise."""
         return cache.get(self.running_key)
 
     def wait_for_completion(self):
@@ -48,7 +48,7 @@ class LeaderRun(object):
         cache.set(self.running_key, None)
 
     def has_completed(self):
-        """Return True if the feature has completed."""
+        """Return Feature completion time, None otherwise."""
         return cache.get(self.completed_key)
 
     def reset(self):
