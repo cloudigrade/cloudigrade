@@ -1,6 +1,7 @@
 """Helper methods for helping track running/completed product features as leaders."""
 import datetime
 import time
+from contextlib import contextmanager
 
 from django.conf import settings
 from django.core.cache import cache
@@ -57,3 +58,12 @@ class LeaderRun(object):
         # wasn't seeing the cache.deletes across the pods somehow.
         cache.set(self.running_key, None)
         cache.set(self.completed_key, None)
+
+    @contextmanager
+    def run(self):
+        """Yield caller's block and guarantee the completion state."""
+        self.set_as_running()
+        try:
+            yield
+        finally:
+            self.set_as_completed()
