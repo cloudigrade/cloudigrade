@@ -68,3 +68,11 @@ class LeaderRunTest(TestCase):
         leader = LeaderRun(_faker.slug())
         leader.set_as_completed()
         self.assertIsInstance(leader.has_completed(), datetime.datetime)
+
+    def test_run(self):
+        """Assert the leader.run completes successfully after a failure."""
+        leader = LeaderRun(_faker.slug())
+        with self.assertRaises(RuntimeError):
+            with leader.run():
+                raise RuntimeError("leader exception")
+        self.assertTrue(leader.has_completed())
