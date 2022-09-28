@@ -15,35 +15,37 @@ _faker = faker.Faker()
 class CheckAzureSubscriptionAndCreateCloudAccountTest(TestCase):
     """Task 'check_azure_subscription_and_create_cloud_account' test cases."""
 
-    @patch("api.clouds.azure.tasks.onboarding.create_azure_cloud_account")
-    def test_success(self, mock_create):
-        """Assert the task happy path upon normal operation."""
+    def setUp(self):
+        """Set up common variables for tests."""
         # User that would ultimately own the created objects.
-        user = User.objects.create(
+        self.user = User.objects.create(
             account_number=_faker.random_int(min=100000, max=999999)
         )
 
-        # Dummy values for the various interactions.
-        subscription_id = str(uuid.uuid4())
-        auth_id = _faker.pyint()
-        application_id = _faker.pyint()
-        source_id = _faker.pyint()
+        # Fake inputs that would come from sources-api.
+        self.subscription_id = str(uuid.uuid4())
+        self.auth_id = _faker.pyint()
+        self.application_id = _faker.pyint()
+        self.source_id = _faker.pyint()
 
+    @patch("api.clouds.azure.tasks.onboarding.create_azure_cloud_account")
+    def test_success(self, mock_create):
+        """Assert the task happy path upon normal operation."""
         tasks.check_azure_subscription_and_create_cloud_account(
-            user.account_number,
-            user.org_id,
-            subscription_id,
-            auth_id,
-            application_id,
-            source_id,
+            self.user.account_number,
+            self.user.org_id,
+            self.subscription_id,
+            self.auth_id,
+            self.application_id,
+            self.source_id,
         )
 
         mock_create.assert_called_with(
-            user,
-            subscription_id,
-            auth_id,
-            application_id,
-            source_id,
+            self.user,
+            self.subscription_id,
+            self.auth_id,
+            self.application_id,
+            self.source_id,
         )
 
     @patch("api.tasks.sources.notify_application_availability_task")
@@ -53,18 +55,13 @@ class CheckAzureSubscriptionAndCreateCloudAccountTest(TestCase):
         account_number = -1  # This user should never exist.
         org_id = None
 
-        subscription_id = str(uuid.uuid4())
-        auth_id = _faker.pyint()
-        application_id = _faker.pyint()
-        source_id = _faker.pyint()
-
         tasks.check_azure_subscription_and_create_cloud_account(
             account_number,
             org_id,
-            subscription_id,
-            auth_id,
-            application_id,
-            source_id,
+            self.subscription_id,
+            self.auth_id,
+            self.application_id,
+            self.source_id,
         )
 
         mock_create.assert_not_called()
@@ -75,22 +72,15 @@ class CheckAzureSubscriptionAndCreateCloudAccountTest(TestCase):
         self, mock_get_subs, mock_notify_sources
     ):
         """Assert the account is not created if enable fails."""
-        user = User.objects.create()
-
-        subscription_id = str(uuid.uuid4())
-        auth_id = _faker.pyint()
-        application_id = _faker.pyint()
-        source_id = _faker.pyint()
-
         mock_get_subs.return_value = []
 
         tasks.check_azure_subscription_and_create_cloud_account(
-            user.account_number,
-            user.org_id,
-            subscription_id,
-            auth_id,
-            application_id,
-            source_id,
+            self.user.account_number,
+            self.user.org_id,
+            self.subscription_id,
+            self.auth_id,
+            self.application_id,
+            self.source_id,
         )
 
-        self.assertFalse(CloudAccount.objects.filter(user=user).exists())
+        self.assertFalse(CloudAccount.objects.filter(user=self.user).exists())
