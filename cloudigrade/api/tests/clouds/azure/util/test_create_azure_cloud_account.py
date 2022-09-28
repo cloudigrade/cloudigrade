@@ -67,3 +67,32 @@ class CreateAzureCloudAccountTest(TestCase):
 
         mock_enable.assert_not_called()
         mock_notify_sources.delay.assert_called()
+
+    @patch("api.tasks.sources.notify_application_availability_task")
+    @patch.object(CloudAccount, "enable")
+    def test_create_azure_cloud_account_fails_subscription_id_is_not_uuid(
+        self, mock_enable, mock_notify_sources
+    ):
+        """Test create_azure_cloud_account when the subscription ID is not a UUID."""
+        subscription_id = _faker.slug()  # not a valid UUID!
+
+        with self.assertRaises(ValidationError) as raise_context:
+            util.create_azure_cloud_account(
+                self.user,
+                subscription_id,
+                self.auth_id,
+                self.app_id,
+                self.source_id,
+            )
+        exception_detail = raise_context.exception.detail
+        self.assertIn("subscription_id", exception_detail)
+        self.assertIn(
+            "Could not enable cloud metering.", exception_detail["subscription_id"]
+        )
+        self.assertIn("CG1006", exception_detail["subscription_id"])
+
+        mock_enable.assert_not_called()
+        mock_notify_sources.delay.assert_called_once()
+        call_args = mock_notify_sources.delay.call_args
+        self.assertEqual(call_args.kwargs["availability_status"], "unavailable")
+        self.assertIn("CG1006", call_args.kwargs["availability_status_error"])

@@ -49,6 +49,25 @@ class CheckAzureSubscriptionAndCreateCloudAccountTest(TestCase):
         )
 
     @patch("api.tasks.sources.notify_application_availability_task")
+    def test_fails_if_subscription_id_is_not_a_uuid(self, mock_notify_sources):
+        """Assert the task notifies with an error for an invalid subscription id."""
+        subscription_id = _faker.slug()  # not a valid UUID!
+
+        tasks.check_azure_subscription_and_create_cloud_account(
+            self.user.account_number,
+            self.user.org_id,
+            subscription_id,
+            self.auth_id,
+            self.application_id,
+            self.source_id,
+        )
+
+        mock_notify_sources.delay.assert_called_once()
+        call_args = mock_notify_sources.delay.call_args
+        self.assertEqual(call_args.kwargs["availability_status"], "unavailable")
+        self.assertIn("CG1006", call_args.kwargs["availability_status_error"])
+
+    @patch("api.tasks.sources.notify_application_availability_task")
     @patch("api.clouds.azure.tasks.onboarding.create_azure_cloud_account")
     def test_fails_if_user_not_found(self, mock_create, mock_notify_sources):
         """Assert the task returns early if user is not found."""
