@@ -101,6 +101,16 @@ CG1005 = CloudigradeError(
     ),
 )
 
+# Invalid Azure subscription ID
+CG1006 = CloudigradeError(
+    "CG1006",
+    _(
+        "Failed to create Cloud Account for Sources Application id "
+        "%(application_id)s: Invalid Azure subscription ID."
+    ),
+    _(f"{GENERIC_ERROR_MESSAGE_WITH_CODE} Invalid Azure subscription ID."),
+)
+
 
 # Use CG2*** for sources specific issues
 SOURCES_API_ERROR_MESSAGE = "This is likely the result of an error in sources-api."

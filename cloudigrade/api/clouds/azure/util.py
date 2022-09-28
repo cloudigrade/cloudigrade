@@ -1,5 +1,6 @@
 """Utility functions for Azure models and use cases."""
 import logging
+import uuid
 
 from django.db import IntegrityError, transaction
 from django.utils.translation import gettext as _
@@ -73,8 +74,14 @@ def create_azure_cloud_account(
 
     with transaction.atomic():
         try:
+            subscription_id_as_uuid = uuid.UUID(subscription_id)
+        except ValueError:
+            error_code = error_codes.CG1006
+            error_code.notify(user.account_number, user.org_id, platform_application_id)
+            raise ValidationError({"subscription_id": error_code.get_message()})
+        try:
             azure_cloud_account = AzureCloudAccount.objects.create(
-                subscription_id=subscription_id
+                subscription_id=subscription_id_as_uuid
             )
         except IntegrityError:
             # create can raise IntegrityError if the given
