@@ -40,6 +40,7 @@ class Command(BaseCommand):
         consumer_conf = {
             "bootstrap.servers": bootstrap_servers,
             "group.id": group_id,
+            "broker.address.family": settings.KAFKA_LISTENER_ADDRESS_FAMILY,
         }
 
         logger.info(
