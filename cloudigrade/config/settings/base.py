@@ -697,6 +697,8 @@ KAFKA_SERVER_SECURITY_PROTOCOL = None
 KAFKA_SERVER_SASL_MECHANISM = None
 KAFKA_SERVER_SASL_USERNAME = None
 KAFKA_SERVER_SASL_PASSWORD = None
+KAFKA_LISTENER_ADDRESS_FAMILY = env("KAFKA_LISTENER_ADDRESS_FAMILY", default="any")
+
 if isClowderEnabled():
     kafka_broker = clowder_cfg.kafka.brokers[0]
     KAFKA_SERVER_HOST = kafka_broker.hostname
