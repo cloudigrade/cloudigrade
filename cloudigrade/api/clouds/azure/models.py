@@ -279,7 +279,7 @@ def delete_lighthouse_registration(*args, **kwargs):
             id_list = reg_assignment.id.split("/")
             if state == "Succeeded" and "/".join(id_list[1:3]) == tenant_scope:
                 if registration_name:
-                    logger.warn(
+                    logger.warning(
                         _(
                             "Found multiple lighthouse registrations for"
                             " tenant subscription %s, skipping deleting the"
@@ -303,7 +303,7 @@ def delete_lighthouse_registration(*args, **kwargs):
                     },
                 )
     except ClientAuthenticationError as e:
-        logger.warn(
+        logger.warning(
             _(
                 "ClientAuthenticationError while trying to find the lighthouse"
                 " registration assignment for tenant subscription %s - %s"
