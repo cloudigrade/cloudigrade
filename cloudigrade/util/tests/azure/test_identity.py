@@ -1,5 +1,6 @@
 """Collection of tests for ``util.azure.identity`` module."""
 from unittest.mock import Mock, patch
+from uuid import UUID
 
 from django.test import TestCase
 
@@ -46,8 +47,8 @@ class UtilAzureIdentityTest(TestCase):
         mock_customer_sub.as_dict.return_value = customer_sub_dict
         mock_cloudigrade_sub.as_dict.return_value = cloudigrade_sub_dict
 
-        self.customer_subscription_id = "d9812b28-6286-4501-9cd5-f43b2a455364"
-        self.cloudigrade_subscription_id = "03cd596c-179c-4191-985a-4bc6256f9126"
+        self.customer_subscription_id = UUID("d9812b28-6286-4501-9cd5-f43b2a455364")
+        self.cloudigrade_subscription_id = UUID("03cd596c-179c-4191-985a-4bc6256f9126")
         self.subscriptions_response = [
             mock_customer_sub,
             mock_cloudigrade_sub,
