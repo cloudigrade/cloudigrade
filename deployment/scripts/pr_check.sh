@@ -38,6 +38,7 @@ AZURE_TENANT_ID=$(jq -r '."tenant_id"' < azure-creds.json)
 CW_AWS_REGION_NAME=$(echo -n "us-east-1" | base64)
 CLOUDIGRADE_CW_LOG_GROUP=$(echo -n "ephemeral-${NAMESPACE}" | base64)
 CLOUDIGRADE_CW_RETENTION_DAYS="3"
+CLOUDIGRADE_ENVIRONMENT="ephemeral-pr-check"
 
 bonfire deploy \
     ${APP_NAME} \
@@ -52,7 +53,7 @@ bonfire deploy \
     ${COMPONENTS_RESOURCES_ARG} \
     --set-parameter rbac/MIN_REPLICAS=1 \
     --set-parameter sources-api/SOURCES_ENV=ci \
-    --set-parameter cloudigrade/CLOUDIGRADE_ENVIRONMENT=ephemeral-${NAMESPACE} \
+    --set-parameter cloudigrade/CLOUDIGRADE_ENVIRONMENT="${CLOUDIGRADE_ENVIRONMENT}" \
     --set-parameter cloudigrade/AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
     --set-parameter cloudigrade/AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
     --set-parameter cloudigrade/AWS_SQS_ACCESS_KEY_ID=${AWS_SQS_ACCESS_KEY_ID} \
