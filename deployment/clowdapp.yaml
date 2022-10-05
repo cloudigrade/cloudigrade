@@ -596,6 +596,8 @@ objects:
           value: ${CHECK_AND_CACHE_SQS_QUEUES_LENGTHS_SCHEDULE}
         - name: ENABLE_SYNTHETIC_DATA_REQUEST_HTTP_API
           value: ${ENABLE_SYNTHETIC_DATA_REQUEST_HTTP_API}
+        - name: UPDATE_AZURE_INSTANCE_EVENTS_SCHEDULE
+          value: ${UPDATE_AZURE_INSTANCE_EVENTS_SCHEDULE}
     - name: listener
       #
       # Component cloudigrade-listener deployment:
@@ -1147,6 +1149,8 @@ objects:
           value: ${CHECK_AND_CACHE_SQS_QUEUES_LENGTHS_SCHEDULE}
         - name: ENABLE_SYNTHETIC_DATA_REQUEST_HTTP_API
           value: ${ENABLE_SYNTHETIC_DATA_REQUEST_HTTP_API}
+        - name: UPDATE_AZURE_INSTANCE_EVENTS_SCHEDULE
+          value: ${UPDATE_AZURE_INSTANCE_EVENTS_SCHEDULE}
 # Secrets
 - apiVersion: v1
   data:
@@ -1513,6 +1517,8 @@ parameters:
     synthesize_instances,\
     synthesize_runs_and_usage,\
     synthesize_user,\
+    update_azure_instance_events,\
+    update_azure_instance_events_for_account,\
     update_from_sources_kafka_message,\
     unpause_from_sources_kafka_message"
 - name: CELERY_TARGET_AVERAGE_CPU_UTILIZATION
@@ -1863,3 +1869,7 @@ parameters:
   displayName: Enable the synthetic data internal HTTP API
   required: true
   value: 'false'
+- name: UPDATE_AZURE_INSTANCE_EVENTS_SCHEDULE
+  displayName: Update Azure instance events schedule (hourly)
+  required: true
+  value: '3600'

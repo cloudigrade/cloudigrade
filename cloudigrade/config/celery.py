@@ -92,6 +92,13 @@ app.conf.beat_schedule = {
             default=60 * 60 * 24 * 7,  # 1 week in seconds
         ),
     },
+    "update_azure_instance_events_every_hour": {
+        "task": "api.clouds.azure.tasks.update_azure_instance_events",
+        "schedule": env.int(
+            "UPDATE_AZURE_INSTANCE_EVENTS_SCHEDULE",
+            default=60 * 60,  # hourly
+        ),
+    },
     # Disabled Tasks
     # Important note for future readers! If you intend to disable an existing task,
     # you need to either 1) keep it here and reconfigure with '"schedule": 999999' and

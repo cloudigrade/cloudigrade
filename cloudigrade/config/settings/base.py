@@ -553,6 +553,12 @@ CELERY_TASK_ROUTES = {
     "api.clouds.azure.tasks.check_azure_subscription_and_create_cloud_account": {
         "queue": "check_azure_subscription_and_create_cloud_account"
     },
+    "api.clouds.azure.tasks.update_azure_instance_events": {
+        "queue": "update_azure_instance_events"
+    },
+    "api.clouds.azure.tasks.update_azure_instance_events_for_account": {
+        "queue": "update_azure_instance_events_for_account"
+    },
 }
 
 #####################################################################
