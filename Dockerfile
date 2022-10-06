@@ -54,6 +54,7 @@ COPY --from=build /opt/cloudigrade/.venv/ .venv/
 # Copy in cloudigrade
 COPY deployment/playbooks/ ./playbooks
 COPY deployment/scripts/cloudigrade_init.sh ./scripts/cloudigrade_init.sh
+COPY deployment/scripts/wait_for_migrations.sh ./scripts/wait_for_migrations.sh
 COPY cloudigrade .
 
 EXPOSE 8000
