@@ -344,6 +344,7 @@ objects:
           - /bin/sh
           - -c
           - >
+            /bin/sh /opt/cloudigrade/scripts/wait_for_migrations.sh &&
             celery
             --app config
             beat
@@ -878,6 +879,7 @@ objects:
           - /bin/sh
           - -c
           - >
+            /bin/sh /opt/cloudigrade/scripts/wait_for_migrations.sh &&
             celery
             --app config
             worker
