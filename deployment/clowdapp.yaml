@@ -356,7 +356,7 @@ objects:
             command:
               - /bin/sh
               - -c
-              - 'ps axo command | grep -v grep | grep python'
+              - 'pgrep celery'
           failureThreshold: 3
           initialDelaySeconds: 5
           periodSeconds: 10
@@ -367,7 +367,7 @@ objects:
             command:
               - /bin/sh
               - -c
-              - '[[ $(ps axo command | grep "[p]ython" | grep celery | grep -c beat) -eq 1 ]]'
+              - '[[ $(pgrep -a celery | grep -c beat) -eq 1 ]]'
           failureThreshold: 3
           initialDelaySeconds: 5
           periodSeconds: 10
