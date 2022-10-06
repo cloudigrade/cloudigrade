@@ -16,7 +16,6 @@ cloudigrade deploys to AppSRE-managed projects in OpenShift using [app-interface
 - cloudigrade-worker: asynchronous Celery workers (scaled to many pods)
 - cloudigrade-beat: Celery beat for scheduled tasks (only *exactly one* pod)
 - cloudigrade-listener: Kafka message queue reader (only *exactly one* pod)
-- cloudigrade-metrics: Prometheus metrics exporter for Celery tasks (scaled to many pods)
 - postigrade: PgBouncer proxy/pool to AWS RDS (scaled to many pods)
 
 Upon deployment, cloudigrade automatically configures various resources for its own AWS account using [Ansible](https://www.ansible.com/) playbooks defined in [playbooks](https://github.com/cloudigrade/cloudigrade/tree/master/deployment/playbooks).
@@ -27,8 +26,7 @@ Upon deployment, cloudigrade automatically configures various resources for its 
 - `cloudigrade-api` handles HTTP requests to `api/cloudigrade/v2/` and `internal/` as defined in [urls.py](https://github.com/cloudigrade/cloudigrade/blob/master/cloudigrade/config/urls.py).
   - `api/cloudigrade` is referenced in [Console Service Deployments](https://docs.google.com/spreadsheets/d/188uz04yPb0Oe4rcq6QxLV1rHBjAJtp5UbUNZlPD2pwQ/edit#gid=1930857575) for 3Scale.
   - `internal` is referenced in [deploy.yml](https://gitlab.cee.redhat.com/service/app-interface/-/blob/master/data/services/insights/turnpike/deploy.yml) for Turnpike.
-- `cloudigrade-metrics` handles HTTP requests to `metrics` as defined in [http_server.py](https://github.com/danihodovic/celery-exporter/blob/master/src/http_server.py).
-  - `metrics` is used by Prometheus metrics collection (see: [stage](https://gitlab.cee.redhat.com/service/app-interface/-/blob/master/resources/insights-stage/cloudigrade-stage/cloudigrade-metrics.servicemonitor.yml) and [prod](https://gitlab.cee.redhat.com/service/app-interface/-/blob/master/resources/insights-prod/cloudigrade-prod/cloudigrade-metrics.servicemonitor.yml) configs)
+  - `metrics` is used by Prometheus metrics collection (see: [stage](https://gitlab.cee.redhat.com/service/app-interface/-/blob/master/resources/insights-stage/cloudigrade-stage/cloudigrade.servicemonitor.yml) and [prod](https://gitlab.cee.redhat.com/service/app-interface/-/blob/master/resources/insights-prod/cloudigrade-prod/cloudigrade.servicemonitor.yml) configs)
 
 ## Dependencies
 
@@ -84,7 +82,6 @@ cloudigrade's `clowdapp.yaml` defines several OpenShift deployments, but some of
 - `cloudigrade-worker` runs cloudigrade's [`celery worker`](https://docs.celeryq.dev/en/stable/userguide/workers.html) process. This deployment should have **several** replicas so that tasks can be processed by multiple workers in parallel and be completed in a timely manner.
 - `cloudigrade-beat` runs cloudigrade's [`celery beat`](https://django-celery-beat.readthedocs.io/en/latest/) process. django-celery-beat is a scheduled and periodic task manager and is analogous to cron. This deployment should have **exactly one** replica because running multiple `celery beat` processes would result in the same task being executed multiple times which *at best* would waste resources or *at worst* cause a deadlock as two competing tasks try manipulating the same objects at the same time.
 - `cloudigrade-listener` runs cloudigrade's `listen_to_sources` management command to read messages from sources-api's Kafka topics and call tasks to process them. This deployment should have **exactly one** replica because the order of messages from sources-api is important, and having multiple listeners may result in messages being processed out of order.
-- `cloudigrade-metrics` runs cloudigrade's [`celery-exporter-container`](https://quay.io/repository/cloudservices/celery-exporter-container) process to serve an internal `/metrics` HTTP endpoint for Prometheus metrics gathering. This deployment should have **several** replicas so that they can handle many simultaneous HTTP requests.
 
 Deployments that scale use standard OpenShift HPA definitions to maintain appropriate replica counts by targeting memory or CPU metrics. The minimum and maximum counts vary by deployment and environment. Defaults are defined in [clowdapp.yml](https://github.com/cloudigrade/cloudigrade/blob/master/deployment/clowdapp.yaml), and stage/prod-specific overrides are defined in [deploy-clowder.yml](https://gitlab.cee.redhat.com/service/app-interface/-/blob/master/data/services/insights/cloudigrade/cicd/deploy-clowder.yml).
 
