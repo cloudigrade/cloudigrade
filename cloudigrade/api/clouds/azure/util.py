@@ -231,12 +231,11 @@ def create_initial_azure_instance_events(account, vms_data):
     Args:
         account (CloudAccount): The account that owns the vm that spawned
             the data for these InstanceEvents.
-        vms_data (dict): Dict of discovered vms for the account subscription.
+        vms_data (list): List of Dicts of discovered vms for the account subscription.
     """
     for vm in vms_data:
         instance = save_instance(account, vm)
-        if vm["running"]:
-            save_instance_events(instance, vm)
+        save_instance_events(instance, vm)
 
 
 @transaction.atomic()
@@ -327,6 +326,13 @@ def save_instance_events(azureinstance, vm, events=None):
         with transaction.atomic():
             occurred_at = get_now()
             instance = azureinstance.instance.get()
+            running = vm["running"]
+
+            # determine instance event type
+            if running:
+                power_event_type = InstanceEvent.TYPE.power_on
+            else:
+                power_event_type = InstanceEvent.TYPE.power_off
 
             latest_event = (
                 InstanceEvent.objects.filter(
@@ -335,17 +341,19 @@ def save_instance_events(azureinstance, vm, events=None):
                 .order_by("-occurred_at")
                 .first()
             )
-            # If the most recently occurred event was power_on, then adding another
-            # power_on event here is redundant and can be skipped.
-            if latest_event and latest_event.event_type == InstanceEvent.TYPE.power_on:
+            # If the most recently occurred event matches current event type, then
+            # adding another event here is redundant and can be skipped.
+            if latest_event and latest_event.event_type == power_event_type:
                 return
 
+            # No event in the DB already OR latest event does not match
+            # So create new instance event
             azureevent = AzureInstanceEvent.objects.create(
                 instance_type=vm["vm_size"],
             )
             InstanceEvent.objects.create(
-                event_type=InstanceEvent.TYPE.power_on,
+                event_type=power_event_type,
                 occurred_at=occurred_at,
-                instance=azureinstance.instance.get(),
+                instance=instance,
                 content_object=azureevent,
             )

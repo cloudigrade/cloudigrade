@@ -27,4 +27,6 @@ from api.clouds.azure.tasks.maintenance import repopulate_azure_instance_mapping
 from api.clouds.azure.tasks.onboarding import (
     check_azure_subscription_and_create_cloud_account,
     initial_azure_vm_discovery,
+    update_azure_instance_events,
+    update_azure_instance_events_for_account,
 )

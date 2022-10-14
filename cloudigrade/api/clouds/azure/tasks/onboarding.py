@@ -16,7 +16,7 @@ from api.clouds.azure.util import (
 )
 from api.models import User
 from util.azure.vm import get_vms_for_subscription
-from util.celery import retriable_shared_task
+from util.celery import retriable_shared_task, shared_task
 from util.misc import lock_task_for_user_ids
 
 logger = logging.getLogger(__name__)
@@ -193,3 +193,46 @@ def initial_azure_vm_discovery(azure_cloud_account_id):
         )
         create_initial_azure_instance_events(cloud_account, vms_data)
         return
+
+
+@shared_task(name="api.clouds.azure.tasks.update_azure_instance_events")
+def update_azure_instance_events():
+    """Update the status of VM/VMSS instances across known Azure cloud accounts."""
+    logger.info(
+        _("Starting update_azure_instance_events for known Azure cloud accounts"),
+    )
+
+    # Get the VM info for each cloud account
+    for cloud_account in AzureCloudAccount.objects.all():
+        logger.info(
+            _("Updating instance info for account: %s"), cloud_account.cloud_account_id
+        )
+        update_azure_instance_events_for_account.delay(cloud_account.cloud_account_id)
+
+
+@shared_task(name="api.clouds.azure.tasks.update_azure_instance_events_for_account")
+def update_azure_instance_events_for_account(cloud_account_id):
+    """
+    Update the InstanceEvents for all instances in the specific Azure Cloud Account.
+
+    Args:
+        cloud_account_id (UUID): The subscription ID for the Azure Cloud Account.
+
+    Returns:
+        None: Run as an asynchronous Celery task.
+    """
+    try:
+        cloud_account = AzureCloudAccount.objects.get(subscription_id=cloud_account_id)
+    except AzureCloudAccount.DoesNotExist:
+        # AzureCloudAccount could have been deleted prior to calling/running task
+        logger.info(
+            _(
+                "Azure Cloud Account %(cloud_account_id)s not found; "
+                "skipping instance events update"
+            ),
+            {"cloud_account_id": cloud_account_id},
+        )
+        return
+
+    vms_info = get_vms_for_subscription(cloud_account.subscription_id)
+    create_initial_azure_instance_events(cloud_account, vms_info)
