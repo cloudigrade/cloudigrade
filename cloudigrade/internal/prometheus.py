@@ -92,6 +92,9 @@ class CachedMetricsRegistry:
         """Initialize Database table size metrics."""
         if not self.db_is_pg():
             # Currently only supports the Postgres database.
+            logger.warning(
+                "Database table size metrics is only available with Postgres"
+            )
             return
         gauge = Gauge(
             DB_TABLE_SIZE_METRIC_NAME,
@@ -114,6 +117,9 @@ class CachedMetricsRegistry:
         """Initialize Database table number of rows metrics."""
         if not self.db_is_pg():
             # Currently only supports the Postgres database.
+            logger.warning(
+                "Database table rows metrics is only available with Postgres"
+            )
             return
         gauge = Gauge(
             DB_TABLE_ROWS_METRIC_NAME,
