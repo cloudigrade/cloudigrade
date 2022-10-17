@@ -424,6 +424,7 @@ else:
 
 REDIS_AUTH = f"{REDIS_USERNAME or ''}:{REDIS_PASSWORD}@" if REDIS_PASSWORD else ""
 REDIS_URL = f"redis://{REDIS_AUTH}{REDIS_HOST}:{REDIS_PORT}"
+REDIS_HEALTH_CHECK_INTERVAL = env.int("REDIS_HEALTH_CHECK_INTERVAL", default=30)
 
 #####################################################################
 # Celery broker
@@ -601,6 +602,11 @@ CACHES = {
         "LOCATION": REDIS_URL,
         "KEY_PREFIX": f"{CLOUDIGRADE_ENVIRONMENT}-cloudigrade",
         "TIMEOUT": CACHE_TTL_DEFAULT,
+        "OPTIONS": {
+            "CONNECTION_POOL_KWARGS": {
+                "health_check_interval": REDIS_HEALTH_CHECK_INTERVAL
+            }
+        },
     },
     "locmem": {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
