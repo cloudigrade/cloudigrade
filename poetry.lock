@@ -175,7 +175,7 @@ python-versions = ">=3.5"
 dev = ["cloudpickle", "coverage[toml] (>=5.0.2)", "furo", "hypothesis", "mypy (>=0.900,!=0.940)", "pre-commit", "pympler", "pytest (>=4.3.0)", "pytest-mypy-plugins", "sphinx", "sphinx-notfound-page", "zope.interface"]
 docs = ["furo", "sphinx", "sphinx-notfound-page", "zope.interface"]
 tests = ["cloudpickle", "coverage[toml] (>=5.0.2)", "hypothesis", "mypy (>=0.900,!=0.940)", "pympler", "pytest (>=4.3.0)", "pytest-mypy-plugins", "zope.interface"]
-tests_no_zope = ["cloudpickle", "coverage[toml] (>=5.0.2)", "hypothesis", "mypy (>=0.900,!=0.940)", "pympler", "pytest (>=4.3.0)", "pytest-mypy-plugins"]
+tests-no-zope = ["cloudpickle", "coverage[toml] (>=5.0.2)", "hypothesis", "mypy (>=0.900,!=0.940)", "pympler", "pytest (>=4.3.0)", "pytest-mypy-plugins"]
 
 [[package]]
 name = "azure-cli-core"
@@ -547,7 +547,7 @@ optional = false
 python-versions = ">=3.6.0"
 
 [package.extras]
-unicode_backport = ["unicodedata2"]
+unicode-backport = ["unicodedata2"]
 
 [[package]]
 name = "click"
@@ -898,8 +898,8 @@ optional = false
 python-versions = "*"
 
 [[package]]
-name = "Faker"
-version = "15.0.0"
+name = "faker"
+version = "15.1.1"
 description = "Faker is a Python package that generates fake data for you."
 category = "main"
 optional = false
@@ -993,7 +993,7 @@ six = ">=1.9.0"
 
 [package.extras]
 aiohttp = ["aiohttp (>=3.6.2,<4.0.0dev)", "requests (>=2.20.0,<3.0.0dev)"]
-enterprise_cert = ["cryptography (==36.0.2)", "pyopenssl (==22.0.0)"]
+enterprise-cert = ["cryptography (==36.0.2)", "pyopenssl (==22.0.0)"]
 pyopenssl = ["pyopenssl (>=20.0.0)"]
 reauth = ["pyu2f (>=0.1.5)"]
 
@@ -1015,7 +1015,7 @@ all = ["aiohttp (>=3.7.1,<3.8.0)", "requests (>=2.23,<3)", "websockets (>=9,<10)
 dev = ["aiofiles", "aiohttp (>=3.7.1,<3.8.0)", "black (==19.10b0)", "check-manifest (>=0.42,<1)", "flake8 (==3.8.1)", "isort (==4.3.21)", "mock (==4.0.2)", "mypy (==0.770)", "parse (==1.15.0)", "pytest (==5.4.2)", "pytest-asyncio (==0.11.0)", "pytest-cov (==2.8.1)", "requests (>=2.23,<3)", "sphinx (>=3.0.0,<4)", "sphinx-argparse (==0.2.5)", "sphinx_rtd_theme (>=0.4,<1)", "vcrpy (==4.0.2)", "websockets (>=9,<10)"]
 requests = ["requests (>=2.23,<3)"]
 test = ["aiofiles", "aiohttp (>=3.7.1,<3.8.0)", "mock (==4.0.2)", "parse (==1.15.0)", "pytest (==5.4.2)", "pytest-asyncio (==0.11.0)", "pytest-cov (==2.8.1)", "requests (>=2.23,<3)", "vcrpy (==4.0.2)", "websockets (>=9,<10)"]
-test_no_transport = ["aiofiles", "mock (==4.0.2)", "parse (==1.15.0)", "pytest (==5.4.2)", "pytest-asyncio (==0.11.0)", "pytest-cov (==2.8.1)", "vcrpy (==4.0.2)"]
+test-no-transport = ["aiofiles", "mock (==4.0.2)", "parse (==1.15.0)", "pytest (==5.4.2)", "pytest-asyncio (==0.11.0)", "pytest-cov (==2.8.1)", "vcrpy (==4.0.2)"]
 websockets = ["websockets (>=9,<10)"]
 
 [[package]]
@@ -1150,7 +1150,7 @@ notebook = ["ipywidgets", "notebook"]
 parallel = ["ipyparallel"]
 qtconsole = ["qtconsole"]
 test = ["pytest (<7.1)", "pytest-asyncio", "testpath"]
-test_extra = ["curio", "matplotlib (!=3.2.0)", "nbformat", "numpy (>=1.19)", "pandas", "pytest (<7.1)", "pytest-asyncio", "testpath", "trio"]
+test-extra = ["curio", "matplotlib (!=3.2.0)", "nbformat", "numpy (>=1.19)", "pandas", "pytest (<7.1)", "pytest-asyncio", "testpath", "trio"]
 
 [[package]]
 name = "ipython_genutils"
@@ -1199,9 +1199,9 @@ python-versions = ">=3.6.1,<4.0"
 
 [package.extras]
 colors = ["colorama (>=0.4.3,<0.5.0)"]
-pipfile_deprecated_finder = ["pipreqs", "requirementslib"]
+pipfile-deprecated-finder = ["pipreqs", "requirementslib"]
 plugins = ["setuptools"]
-requirements_deprecated_finder = ["pip-api", "pipreqs"]
+requirements-deprecated-finder = ["pip-api", "pipreqs"]
 
 [[package]]
 name = "jedi"
@@ -1251,7 +1251,7 @@ python-versions = ">=2.7"
 [package.extras]
 docs = ["jaraco.packaging (>=3.2)", "rst.linker (>=1.9)", "sphinx"]
 testing = ["ecdsa", "enum34", "feedparser", "jsonlib", "numpy", "pandas", "pymongo", "pytest (>=3.5,!=3.7.3)", "pytest-black-multipy", "pytest-checkdocs (>=1.2.3)", "pytest-cov", "pytest-flake8 (<1.1.0)", "pytest-flake8 (>=1.1.1)", "scikit-learn", "sqlalchemy"]
-"testing.libs" = ["simplejson", "ujson", "yajl"]
+testing-libs = ["simplejson", "ujson", "yajl"]
 
 [[package]]
 name = "jsonschema"
@@ -2257,7 +2257,7 @@ urllib3 = ">=1.21.1,<1.27"
 
 [package.extras]
 socks = ["PySocks (>=1.5.6,!=1.5.7)"]
-use_chardet_on_py3 = ["chardet (>=3.0.2,<6)"]
+use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
 
 [[package]]
 name = "requests-oauthlib"
@@ -2360,7 +2360,7 @@ falcon = ["falcon (>=1.4)"]
 fastapi = ["fastapi (>=0.79.0)"]
 flask = ["blinker (>=1.1)", "flask (>=0.11)"]
 httpx = ["httpx (>=0.16.0)"]
-pure_eval = ["asttokens", "executing", "pure-eval"]
+pure-eval = ["asttokens", "executing", "pure-eval"]
 pyspark = ["pyspark (>=2.4.4)"]
 quart = ["blinker (>=1.1)", "quart (>=0.16.1)"]
 rq = ["rq (>=0.6)"]
@@ -2674,7 +2674,7 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=6)", "pytest-black (>=
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "7fcdfb5ceb5196dcd4ed2f9512e397ff3be42c8384a8d8a51396e7ea98749932"
+content-hash = "ef787811f133340ef320f25e02c1651d86802527d6c77a65ec407332af50849e"
 
 [metadata.files]
 adal = [
@@ -3178,9 +3178,9 @@ executing = [
     {file = "executing-1.0.0-py2.py3-none-any.whl", hash = "sha256:550d581b497228b572235e633599133eeee67073c65914ca346100ad56775349"},
     {file = "executing-1.0.0.tar.gz", hash = "sha256:98daefa9d1916a4f0d944880d5aeaf079e05585689bebd9ff9b32e31dd5e1017"},
 ]
-Faker = [
-    {file = "Faker-15.0.0-py3-none-any.whl", hash = "sha256:84c83f0ac1a2c8ecabd784c501aa0ef1d082d4aee52c3d797d586081c166434c"},
-    {file = "Faker-15.0.0.tar.gz", hash = "sha256:245fc7d23470dc57164bd9a59b7b1126e16289ffcf813d88a6c8e9b8a37ea3fb"},
+faker = [
+    {file = "Faker-15.1.1-py3-none-any.whl", hash = "sha256:096c15e136adb365db24d8c3964fe26bfc68fe060c9385071a339f8c14e09c8a"},
+    {file = "Faker-15.1.1.tar.gz", hash = "sha256:a741b77f484215c3aab2604100669657189548f440fcb2ed0f8b7ee21c385629"},
 ]
 fastjsonschema = [
     {file = "fastjsonschema-2.16.2-py3-none-any.whl", hash = "sha256:21f918e8d9a1a4ba9c22e09574ba72267a6762d47822db9add95f6454e51cc1c"},
