@@ -1373,3 +1373,51 @@ class ModelStrTestMixin:
         )
         for field_name in field_names:
             self.assertIn(f"{field_name}=", output)
+
+
+def generate_azure_vm(subscription_id):
+    """
+    Generate mock VM info returned from get_vms_for_subscription.
+
+    Args:
+        subscription_id (uuid): The UUID of the subscription.
+
+    Returns:
+        List. List containing the vm info object.
+    """
+    rg_name = _faker.slug()
+    resource_id = (
+        f"/subscriptions/{subscription_id}/resourceGroups/"
+        f"{rg_name}/providers/Microsoft.Compute/virtualMachines/{_faker.name()}"
+    )
+    vm_info = [
+        {
+            "id": resource_id,
+            "vm_id": f"{_faker.uuid4()}",
+            "name": f"{rg_name}",
+            "type": "Microsoft.Compute/virtualMachines",
+            "image_sku": "82gen2",
+            "region": "eastus",
+            "azure_marketplace_image": False,
+            "resourceGroup": f"{rg_name}",
+            "running": False,
+            "is_encrypted": False,
+            "architecture": "x64",
+            "vm_size": "Standard_B1s",
+            "inspection_json": {
+                "image_reference": {
+                    "additional_properties": {},
+                    "id": None,
+                    "publisher": "RedHat",
+                    "offer": "RHEL",
+                    "sku": "82gen2",
+                    "version": "latest",
+                    "exact_version": "8.2.2022031402",
+                    "shared_gallery_image_id": None,
+                    "community_gallery_image_id": None,
+                }
+            },
+        }
+    ]
+
+    return vm_info

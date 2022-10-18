@@ -36,8 +36,12 @@ class CreateInitialAzureInstanceEvents(TestCase):
         self.assertTrue(AzureInstance.objects.count() == 2)
         self.assertTrue(AzureInstance.objects.filter(resource_id=vm1["id"]).exists())
         self.assertTrue(AzureInstance.objects.filter(resource_id=vm2["id"]).exists())
-        self.assertTrue(AzureInstanceEvent.objects.count() == 1)
-        self.assertTrue(InstanceEvent.objects.count() == 1)
+        self.assertTrue(AzureInstanceEvent.objects.count() == 2)
+        self.assertTrue(InstanceEvent.objects.count() == 2)
+        # Both VMs have associated InstanceEvents created
         self.assertEqual(
-            InstanceEvent.objects.first().event_type, InstanceEvent.TYPE.power_on
+            InstanceEvent.objects.first().event_type, InstanceEvent.TYPE.power_off
+        )
+        self.assertEqual(
+            InstanceEvent.objects.last().event_type, InstanceEvent.TYPE.power_on
         )
