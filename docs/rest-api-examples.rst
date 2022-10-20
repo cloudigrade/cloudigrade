@@ -103,6 +103,7 @@ Response:
     Allow: GET, HEAD, OPTIONS
     Content-Length: 1138
     Content-Type: application/json
+    Cross-Origin-Opener-Policy: same-origin
     Referrer-Policy: same-origin
     X-CLOUDIGRADE-REQUEST-ID: fd13bf6d-e7c1-444a-89e6-996ad3f87bd8
     X-Content-Type-Options: nosniff
@@ -178,6 +179,7 @@ Response:
     Allow: GET, HEAD, OPTIONS
     Content-Length: 496
     Content-Type: application/json
+    Cross-Origin-Opener-Policy: same-origin
     Referrer-Policy: same-origin
     X-CLOUDIGRADE-REQUEST-ID: caf8639b-963b-49dd-8c05-a8e200bd2e4d
     X-Content-Type-Options: nosniff
@@ -225,6 +227,7 @@ Response:
     Allow: GET, HEAD, OPTIONS
     Content-Length: 2611
     Content-Type: application/json
+    Cross-Origin-Opener-Policy: same-origin
     Referrer-Policy: same-origin
     X-CLOUDIGRADE-REQUEST-ID: 81914155-107e-4c43-b1d3-4dc56862cf62
     X-Content-Type-Options: nosniff
@@ -353,6 +356,7 @@ Response:
     Allow: GET, HEAD, OPTIONS
     Content-Length: 350
     Content-Type: application/json
+    Cross-Origin-Opener-Policy: same-origin
     Referrer-Policy: same-origin
     X-CLOUDIGRADE-REQUEST-ID: 0f29a4ef-203d-49ba-9455-0ef1097b6a24
     X-Content-Type-Options: nosniff
@@ -397,6 +401,7 @@ Response:
     Allow: GET, HEAD, OPTIONS
     Content-Length: 2365
     Content-Type: application/json
+    Cross-Origin-Opener-Policy: same-origin
     Referrer-Policy: same-origin
     X-CLOUDIGRADE-REQUEST-ID: 7de3dd9a-b714-4cb2-a6cf-fc5a69099c77
     X-Content-Type-Options: nosniff
@@ -515,6 +520,7 @@ Response:
     Allow: GET, HEAD, OPTIONS
     Content-Length: 6922
     Content-Type: application/json
+    Cross-Origin-Opener-Policy: same-origin
     Referrer-Policy: same-origin
     X-CLOUDIGRADE-REQUEST-ID: 62750c19-78c7-4605-8899-9e21a1521ab3
     X-Content-Type-Options: nosniff
@@ -781,6 +787,7 @@ Response:
     Allow: GET, HEAD, OPTIONS
     Content-Length: 1143
     Content-Type: application/json
+    Cross-Origin-Opener-Policy: same-origin
     Referrer-Policy: same-origin
     X-CLOUDIGRADE-REQUEST-ID: 8ca65831-62c8-46c7-bd1c-e10f9cb3779d
     X-Content-Type-Options: nosniff
@@ -863,6 +870,7 @@ Response:
     Allow: GET, HEAD, OPTIONS
     Content-Length: 17102
     Content-Type: application/json
+    Cross-Origin-Opener-Policy: same-origin
     Referrer-Policy: same-origin
     X-CLOUDIGRADE-REQUEST-ID: 7287e27c-e88f-4ac1-80e2-097e534fd677
     X-Content-Type-Options: nosniff
@@ -2087,6 +2095,7 @@ Response:
     Allow: GET, HEAD, OPTIONS
     Content-Length: 64
     Content-Type: application/json
+    Cross-Origin-Opener-Policy: same-origin
     Referrer-Policy: same-origin
     X-CLOUDIGRADE-REQUEST-ID: d761954b-b7b4-4e78-90cc-1584deea0a10
     X-Content-Type-Options: nosniff
@@ -2117,6 +2126,7 @@ Response:
     Allow: GET, HEAD, OPTIONS
     Content-Length: 50
     Content-Type: application/json
+    Cross-Origin-Opener-Policy: same-origin
     Referrer-Policy: same-origin
     X-CLOUDIGRADE-REQUEST-ID: 57b4f6bf-e651-4152-8986-25df419ac827
     X-Content-Type-Options: nosniff
@@ -2149,6 +2159,7 @@ Response:
     Allow: GET, HEAD, OPTIONS
     Content-Length: 112
     Content-Type: application/json
+    Cross-Origin-Opener-Policy: same-origin
     Referrer-Policy: same-origin
     X-CLOUDIGRADE-REQUEST-ID: 39210a4c-03c2-4872-94dc-29cc26dea775
     X-Content-Type-Options: nosniff
@@ -2183,6 +2194,7 @@ Response:
     Allow: GET, HEAD, OPTIONS
     Content-Length: 151
     Content-Type: application/json
+    Cross-Origin-Opener-Policy: same-origin
     Referrer-Policy: same-origin
     X-CLOUDIGRADE-REQUEST-ID: f75f8161-e687-4008-9217-adcbce84c299
     X-Content-Type-Options: nosniff
@@ -2220,6 +2232,7 @@ Response:
     Allow: GET, HEAD, OPTIONS
     Content-Length: 680
     Content-Type: application/json
+    Cross-Origin-Opener-Policy: same-origin
     Referrer-Policy: same-origin
     X-CLOUDIGRADE-REQUEST-ID: a1ef56a6-1ff8-4eb6-9f4b-c9d920f5e963
     X-Content-Type-Options: nosniff
@@ -2279,6 +2292,7 @@ Response:
     Allow: GET, HEAD, OPTIONS
     Content-Length: 2357
     Content-Type: application/json
+    Cross-Origin-Opener-Policy: same-origin
     Referrer-Policy: same-origin
     X-CLOUDIGRADE-REQUEST-ID: f93bd15d-1298-4424-b500-34a8acbbf0e6
     X-Content-Type-Options: nosniff
@@ -2416,6 +2430,7 @@ Response:
     Allow: GET, POST, HEAD, OPTIONS
     Content-Length: 511
     Content-Type: application/json
+    Cross-Origin-Opener-Policy: same-origin
     Referrer-Policy: same-origin
     X-CLOUDIGRADE-REQUEST-ID: dff5aefb-cf1f-44dc-89fe-3009c864715f
     X-Content-Type-Options: nosniff
@@ -2464,6 +2479,7 @@ Response:
     Allow: GET, POST, HEAD, OPTIONS
     Content-Length: 157
     Content-Type: application/json
+    Cross-Origin-Opener-Policy: same-origin
     Referrer-Policy: same-origin
     X-CLOUDIGRADE-REQUEST-ID: 745bcaa1-13f4-4be6-af0a-7c41e606f185
     X-Content-Type-Options: nosniff
@@ -2500,6 +2516,7 @@ Response:
     Allow: GET, POST, HEAD, OPTIONS
     Content-Length: 472
     Content-Type: application/json
+    Cross-Origin-Opener-Policy: same-origin
     Referrer-Policy: same-origin
     X-CLOUDIGRADE-REQUEST-ID: 196ac627-bbf4-47ca-b26e-af6a077febdd
     X-Content-Type-Options: nosniff
@@ -2546,6 +2563,7 @@ Request:
     Allow: GET, POST, HEAD, OPTIONS
     Content-Length: 415
     Content-Type: application/json
+    Cross-Origin-Opener-Policy: same-origin
     Referrer-Policy: same-origin
     X-CLOUDIGRADE-REQUEST-ID: f653b840-145a-421f-9bb1-0758592d02d4
     X-Content-Type-Options: nosniff
