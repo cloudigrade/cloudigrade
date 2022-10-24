@@ -28,10 +28,17 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
+    - name: Install poetry
+      run: pipx install poetry
+
     - name: Setup Python
       uses: actions/setup-python@v4.3.0
       # More info and options at https://github.com/actions/setup-python
       # This step must happen before Initialize CodeQL because it expects the correct verion of Python to be installed already.
+      with:
+        cache: 'poetry'
+        # Caching poetry packages potentially speeds up runs, but the effect is small for us.
+        # See notes at https://github.com/actions/setup-python/blob/main/docs/advanced-usage.md#caching-packages
 
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v2
