@@ -40,6 +40,26 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
+    - name: Setup Python
+      uses: actions/setup-python@v4.3.0
+      with:
+        # # Version range or exact version of Python or PyPy to use, using SemVer's version range syntax. Reads from .python-version if unset.
+        # python-version: # optional
+        # File containing the Python version to use. Example: .python-version
+        python-version-file: .python-version
+        # # Used to specify a package manager for caching in the default directory. Supported values: pip, pipenv, poetry.
+        # cache: # optional
+        # # The target architecture (x86, x64) of the Python or PyPy interpreter.
+        # architecture: # optional
+        # # Set this option if you want the action to check for the latest available version that satisfies the version spec.
+        # check-latest: # optional
+        # # The token used to authenticate when fetching Python distributions from https://github.com/actions/python-versions. When running this action on github.com, the default value is sufficient. When running on GHES, you can pass a personal access token for github.com if you are experiencing rate limiting.
+        # token: # optional, default is ${{ github.server_url == 'https://github.com' && github.token || '' }}
+        # # Used to specify the path to dependency files. Supports wildcards or a list of file names for caching multiple dependencies.
+        # cache-dependency-path: # optional
+        # # Set this option if you want the action to update environment variables.
+        # update-environment: # optional, default is true
+
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v2
@@ -48,11 +68,11 @@ jobs:
         # If you wish to specify custom queries, you can do so here or in a config file.
         # By default, queries listed here will override any specified in a config file.
         # Prefix the list here with "+" to use these queries and those in the config file.
-        
+
         # Details on CodeQL's query packs refer to : https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/configuring-code-scanning#using-queries-in-ql-packs
         # queries: security-extended,security-and-quality
 
-        
+
     # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
     # If this step fails, then you should remove it and run the build manually (see below)
     - name: Autobuild
@@ -61,7 +81,7 @@ jobs:
     # ℹ️ Command-line programs to run using the OS shell.
     # 📚 See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
 
-    #   If the Autobuild fails above, remove it and uncomment the following three lines. 
+    #   If the Autobuild fails above, remove it and uncomment the following three lines.
     #   modify them (or add more) to build your code if your project, please refer to the EXAMPLE below for guidance.
 
     # - run: |
