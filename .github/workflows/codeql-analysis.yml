@@ -1,14 +1,3 @@
-# For most projects, this workflow file will not need changing; you simply need
-# to commit it to your repository.
-#
-# You may wish to alter this file to override the set of languages analyzed,
-# or to provide custom queries or build logic.
-#
-# ******** NOTE ********
-# We have attempted to detect the languages in your repository. Please check
-# the `language` matrix defined below to confirm you have the correct set of
-# supported CodeQL languages.
-#
 name: "CodeQL"
 
 on:
@@ -33,7 +22,6 @@ jobs:
       fail-fast: false
       matrix:
         language: [ 'python' ]
-        # CodeQL supports [ 'cpp', 'csharp', 'go', 'java', 'javascript', 'python', 'ruby' ]
         # Learn more about CodeQL language support at https://aka.ms/codeql-docs/language-support
 
     steps:
@@ -42,25 +30,9 @@ jobs:
 
     - name: Setup Python
       uses: actions/setup-python@v4.3.0
-      with:
-        # # Version range or exact version of Python or PyPy to use, using SemVer's version range syntax. Reads from .python-version if unset.
-        # python-version: # optional
-        # File containing the Python version to use. Example: .python-version
-        python-version-file: .python-version
-        # # Used to specify a package manager for caching in the default directory. Supported values: pip, pipenv, poetry.
-        # cache: # optional
-        # # The target architecture (x86, x64) of the Python or PyPy interpreter.
-        # architecture: # optional
-        # # Set this option if you want the action to check for the latest available version that satisfies the version spec.
-        # check-latest: # optional
-        # # The token used to authenticate when fetching Python distributions from https://github.com/actions/python-versions. When running this action on github.com, the default value is sufficient. When running on GHES, you can pass a personal access token for github.com if you are experiencing rate limiting.
-        # token: # optional, default is ${{ github.server_url == 'https://github.com' && github.token || '' }}
-        # # Used to specify the path to dependency files. Supports wildcards or a list of file names for caching multiple dependencies.
-        # cache-dependency-path: # optional
-        # # Set this option if you want the action to update environment variables.
-        # update-environment: # optional, default is true
+      # More info and options at https://github.com/actions/setup-python
+      # This step must happen before Initialize CodeQL because it expects the correct verion of Python to be installed already.
 
-    # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v2
       with:
