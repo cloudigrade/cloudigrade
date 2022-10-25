@@ -767,7 +767,7 @@ dev = ["black", "flake8", "therapist", "tox", "twine"]
 
 [[package]]
 name = "django-celery-beat"
-version = "2.3.0"
+version = "2.4.0"
 description = "Database-backed Periodic Tasks."
 category = "main"
 optional = false
@@ -775,7 +775,7 @@ python-versions = "*"
 
 [package.dependencies]
 celery = ">=5.2.3,<6.0"
-Django = ">=2.2,<4.1"
+Django = ">=2.2,<4.2"
 django-timezone-field = ">=5.0"
 python-crontab = ">=2.3.4"
 tzdata = "*"
@@ -2759,7 +2759,7 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "e62775e540cb0a4684b65af0d25e6f7e25eb9c5ecf30c6d4ae71fe86e40487c7"
+content-hash = "fa8cf7602c200c804f4a82d300f048ac0caaee7095bf2c5858a22aabb6f60d84"
 
 [metadata.files]
 adal = [
@@ -3223,8 +3223,8 @@ django-cache-memoize = [
     {file = "django_cache_memoize-0.1.10-py3-none-any.whl", hash = "sha256:676299313079cde9242ae84db0160e80b1d44e8dd6bc9b1f4f1247e11b30c9e0"},
 ]
 django-celery-beat = [
-    {file = "django-celery-beat-2.3.0.tar.gz", hash = "sha256:ba24f86ed956ba0ee2b43237a49303ebf5aa7e0fb0ccb7e0542b7e31a463dcba"},
-    {file = "django_celery_beat-2.3.0-py3-none-any.whl", hash = "sha256:ff694e1d30f84de3d2b78822c90005c6c7c1462768e845ae162af71a6a46f1eb"},
+    {file = "django-celery-beat-2.4.0.tar.gz", hash = "sha256:58efe9460e4373a241c2b3d839518f29a28ae19bc80a8dba20da204c7ea50613"},
+    {file = "django_celery_beat-2.4.0-py3-none-any.whl", hash = "sha256:a20b7a7857daaa2eea1f4cfefb2a965456800216f5763c6cf918c2e21372b3c8"},
 ]
 django-environ = [
     {file = "django-environ-0.9.0.tar.gz", hash = "sha256:bff5381533056328c9ac02f71790bd5bf1cea81b1beeb648f28b81c9e83e0a21"},
