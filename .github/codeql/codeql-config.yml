@@ -1,0 +1,4 @@
+paths:
+  - cloudigrade
+paths-ignore:
+  - '**/site-packages'
