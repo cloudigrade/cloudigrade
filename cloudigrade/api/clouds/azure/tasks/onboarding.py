@@ -159,7 +159,18 @@ def initial_azure_vm_discovery(azure_cloud_account_id):
 
     # Lock the task at a user level. A user can only run one task at a time.
     with lock_task_for_user_ids([user_id]):
-        AzureCloudAccount.objects.get(pk=azure_cloud_account_id)
+        try:
+            AzureCloudAccount.objects.get(pk=azure_cloud_account_id)
+        except AzureCloudAccount.DoesNotExist:
+            logger.warning(
+                _(
+                    "AzureCloudAccount id %s no longer exists; "
+                    "skipping initial vm discovery."
+                ),
+                azure_cloud_account_id,
+            )
+            return
+
         logger.info(
             _(
                 "Initiating an Initial VM Discovery for the "
