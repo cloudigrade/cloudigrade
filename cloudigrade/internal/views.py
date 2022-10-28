@@ -241,7 +241,12 @@ def recalculate_runs(request):
         if cloud_account_id := data.get("cloud_account_id"):
             cloud_account_id = int(cloud_account_id)
     except (ValueError, TypeError) as e:
-        raise exceptions.ValidationError({"cloud_account_id": e})
+        logger.debug(
+            _("Failed to parse '%s' as a cloud_account_id. %s"), cloud_account_id, e
+        )
+        raise exceptions.ValidationError(
+            {"cloud_account_id": _("Failed to parse given input.")}
+        )
 
     if since := data.get("since"):
         try:

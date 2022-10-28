@@ -47,12 +47,19 @@ class RecalculateRunsViewTest(TestCase):
     @patch("api.tasks.calculation._recalculate_runs_for_cloud_account_id")
     def test_recalculate_runs_bad_cloud_account_id(self, mock_recalculate):
         """Assert recalculate task not triggered with malformed cloud_account_id."""
-        request = self.factory.post(
-            "/recalculate_runs/", data={"cloud_account_id": "potato"}, format="json"
-        )
-        response = recalculate_runs(request)
-        self.assertEqual(response.status_code, 400)
-        mock_recalculate.assert_not_called()
+        bad_cloud_account_ids = ["potato", {"hello": "world"}, ["potato"]]
+        for bad_cloud_account_id in bad_cloud_account_ids:
+            request = self.factory.post(
+                "/recalculate_runs/", data={"cloud_account_id": "potato"}, format="json"
+            )
+            response = recalculate_runs(request)
+            self.assertEqual(
+                response.status_code,
+                400,
+                f"Unexpected non-400 status code '{response.status_code}' "
+                f"for 'bad_cloud_account_id' value '{bad_cloud_account_id}'",
+            )
+            mock_recalculate.assert_not_called()
 
     @override_settings(CELERY_TASK_ALWAYS_EAGER=True)
     @patch("api.tasks.calculation._recalculate_runs_for_cloud_account_id")
