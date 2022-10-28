@@ -10,6 +10,7 @@ from django.conf import settings
 from django.core.cache import cache
 from django.http import Http404, JsonResponse
 from django.utils.translation import gettext as _
+from redis.exceptions import ConnectionError, ResponseError
 from rest_framework import exceptions, permissions, status
 from rest_framework.decorators import (
     api_view,
@@ -460,11 +461,21 @@ def redis_raw(request):
 
         try:
             results = redis.execute_command(command, args)
-        except TypeError as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
+        except ResponseError as e:
+            # This can happen if the input to redis isn't the expected type.
+            # For example, `lrange keyname 0 potato` because "potato" is not an int.
+            # The ResponseError *should* always include an explanation in args,
+            # but let's include a generic message by default just in case it doesn't.
+            error_message = str(e.args[0]) if getattr(e, "args") else _("Bad request.")
             return Response(
-                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                {"error": error_message}, status=status.HTTP_400_BAD_REQUEST
             )
+        except ConnectionError as e:
+            # This can happen if redis is unreachable, and that should never happen!
+            logger.exception(_("ConnectionError executing redis command. %s"), e)
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as e:
+            logger.exception(e)
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return Response({"results": results}, status=status.HTTP_200_OK)
