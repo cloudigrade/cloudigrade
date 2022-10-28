@@ -5,7 +5,7 @@ import os
 
 from app_common_python import isClowderEnabled
 from dateutil import tz
-from dateutil.parser import parse
+from dateutil.parser import ParserError, parse
 from django.conf import settings
 from django.core.cache import cache
 from django.http import Http404, JsonResponse
@@ -306,18 +306,24 @@ def recalculate_concurrent_usage(request):
     """
     data = request.data
 
-    try:
-        if user_id := data.get("user_id"):
+    if user_id := data.get("user_id"):
+        try:
             user_id = int(user_id)
-    except (ValueError, TypeError) as e:
-        raise exceptions.ValidationError({"user_id": e})
+        except (ValueError, TypeError) as e:
+            logger.debug(_("Failed to parse '%s' as a user_id. %s"), user_id, e)
+            raise exceptions.ValidationError(
+                {"user_id": _("Failed to parse given input.")}
+            )
 
-    try:
-        if since := data.get("since"):
+    if since := data.get("since"):
+        try:
             # We need a date object, not just the input string.
             since = parse(since).date()
-    except ValueError as e:
-        raise exceptions.ValidationError({"since": e})
+        except (ParserError, TypeError) as e:
+            logger.debug(_("Failed to parse '%s' as a date. %s"), since, e)
+            raise exceptions.ValidationError(
+                {"since": _("Failed to parse given input.")}
+            )
 
     if user_id:
         logger.info(
