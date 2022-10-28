@@ -45,12 +45,21 @@ class RecalculateConcurrentUsageViewTest(TestCase):
     @patch("api.tasks.recalculate_concurrent_usage_for_user_id.apply_async")
     def test_recalculate_concurrent_usage_bad_user_id(self, mock_recalculate):
         """Assert recalculate task not triggered with malformed user_id."""
-        request = self.factory.post(
-            "/recalculate_concurrent_usage/", data={"user_id": "potato"}, format="json"
-        )
-        response = recalculate_concurrent_usage(request)
-        self.assertEqual(response.status_code, 400)
-        mock_recalculate.assert_not_called()
+        bad_user_ids = ["potato", {"hello": "world"}, ["potato"]]
+        for bad_user_id in bad_user_ids:
+            request = self.factory.post(
+                "/recalculate_concurrent_usage/",
+                data={"user_id": bad_user_id},
+                format="json",
+            )
+            response = recalculate_concurrent_usage(request)
+            self.assertEqual(
+                response.status_code,
+                400,
+                f"Unexpected non-400 status code '{response.status_code}' "
+                f"for 'user_id' value '{bad_user_id}'",
+            )
+            mock_recalculate.assert_not_called()
 
     @override_settings(CELERY_TASK_ALWAYS_EAGER=True)
     @patch("api.tasks.recalculate_concurrent_usage_for_user_id.apply_async")
@@ -72,9 +81,19 @@ class RecalculateConcurrentUsageViewTest(TestCase):
     @patch("api.tasks.recalculate_concurrent_usage_for_user_id.apply_async")
     def test_recalculate_concurrent_usage_bad_since(self, mock_recalculate):
         """Assert recalculate task not triggered with malformed since."""
-        request = self.factory.post(
-            "/recalculate_concurrent_usage/", data={"since": "potato"}, format="json"
-        )
-        response = recalculate_concurrent_usage(request)
-        self.assertEqual(response.status_code, 400)
-        mock_recalculate.assert_not_called()
+        bad_dates = ["potato", "yesterday", -1, {"hello": "world"}, ["potato"]]
+
+        for bad_date in bad_dates:
+            request = self.factory.post(
+                "/recalculate_concurrent_usage/",
+                data={"since": bad_date},
+                format="json",
+            )
+            response = recalculate_concurrent_usage(request)
+            self.assertEqual(
+                response.status_code,
+                400,
+                f"Unexpected non-400 status code '{response.status_code}' "
+                f"for 'since' value '{bad_date}'",
+            )
+            mock_recalculate.assert_not_called()
