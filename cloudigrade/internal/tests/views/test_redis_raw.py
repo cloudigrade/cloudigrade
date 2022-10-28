@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 import faker
 from django.test import TestCase
+from redis.exceptions import ConnectionError, ResponseError
 from rest_framework.test import APIRequestFactory
 
 from internal.serializers import InternalRedisRawInputSerializer
@@ -73,7 +74,12 @@ class RedisRawViewTest(TestCase):
         self.assertExpectedJsonResponse(response, expected_response_data)
 
     def test_invalid_argument_fails(self):
-        """Test failure path for invalid arguments to the command."""
+        """
+        Test failure path for invalid arguments to the command.
+
+        For example, `lrange keyname 0 potato` could trigger this kind of error
+        because "potato" is not an int, which "lrange" expects for that arg position.
+        """
         command = _faker.random_element(
             InternalRedisRawInputSerializer.allowed_commands
         )
@@ -82,15 +88,37 @@ class RedisRawViewTest(TestCase):
             "/redis_raw/", data={"command": command, "args": args}, format="json"
         )
 
-        error = TypeError()
+        message = _faker.slug()
+        error = ResponseError(message)
         mock_func = getattr(self.mock_connection, command)
         mock_func.side_effect = error
 
-        expected_response_data = {"error": str(error)}
+        expected_response_data = {"error": message}
 
         response = redis_raw(request)
         self.assertEqual(response.status_code, 400)
         self.assertExpectedJsonResponse(response, expected_response_data)
+
+    def test_connection_error_is_logged(self):
+        """Test failure path for redis connection logs error and returns status 500."""
+        command = _faker.random_element(
+            InternalRedisRawInputSerializer.allowed_commands
+        )
+        args = [_faker.word()]
+        request = self.factory.post(
+            "/redis_raw/", data={"command": command, "args": args}, format="json"
+        )
+
+        message = _faker.slug()
+        error = ConnectionError(message)
+        mock_func = getattr(self.mock_connection, command)
+        mock_func.side_effect = error
+
+        with self.assertLogs("internal.views", level="ERROR") as logging_watcher:
+            response = redis_raw(request)
+            self.assertIn(message, logging_watcher.output[0])
+
+        self.assertEqual(response.status_code, 500)
 
     def test_result_bytes_are_stringified(self):
         """Test a command's returned not-utf-8 bytes are stringified as expected."""
