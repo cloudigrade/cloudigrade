@@ -182,7 +182,7 @@ def parse_requests_header(request, allow_internal_fake_identity_header=False):
         logger.info(_("Authentication Failed: identity header parsing error %s"), e)
         logger.info(_("Raw header was: %s"), auth_header)
         raise exceptions.AuthenticationFailed(
-            _("Authentication Failed: invalid identity header- {error}").format(error=e)
+            _("Authentication Failed: invalid identity header failed parsing.")
         )
 
     if settings.VERBOSE_INSIGHTS_IDENTITY_HEADER_LOGGING:
