@@ -243,15 +243,18 @@ def recalculate_runs(request):
     except (ValueError, TypeError) as e:
         raise exceptions.ValidationError({"cloud_account_id": e})
 
-    try:
-        if since := data.get("since"):
+    if since := data.get("since"):
+        try:
             # We need a datetime object, not just the input string.
             since = parse(since)
-        if since and not since.tzinfo:
-            # Force to UTC if no timezone/offset was provided.
-            since = since.replace(tzinfo=tz.tzutc())
-    except ValueError as e:
-        raise exceptions.ValidationError({"since": e})
+            if not since.tzinfo:
+                # Force to UTC if no timezone/offset was provided.
+                since = since.replace(tzinfo=tz.tzutc())
+        except (ParserError, TypeError) as e:
+            logger.debug(_("Failed to parse '%s' as a datetime. %s"), since, e)
+            raise exceptions.ValidationError(
+                {"since": _("Failed to parse given input.")}
+            )
 
     if cloud_account_id:
         logger.info(

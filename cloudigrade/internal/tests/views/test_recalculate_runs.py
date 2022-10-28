@@ -1,7 +1,8 @@
 """Collection of tests for the internal recalculate_runs view."""
-import datetime
+from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
+from dateutil.tz import tzutc
 from django.test import TestCase, override_settings
 from rest_framework.test import APIRequestFactory
 
@@ -69,25 +70,55 @@ class RecalculateRunsViewTest(TestCase):
     @patch("api.tasks.calculation._recalculate_runs_for_cloud_account_id")
     def test_recalculate_runs_since_with_timezone(self, mock_recalculate):
         """Assert recalculate task triggered with valid since datetime+offset."""
-        request = self.factory.post(
-            "/recalculate_runs/",
-            data={"since": "2021-06-09 04:02:00+04"},
-            format="json",
-        )
-        expected_since = datetime.datetime(
-            2021, 6, 9, 4, 2, 0, tzinfo=datetime.timezone(datetime.timedelta(hours=4))
-        )
-        response = recalculate_runs(request)
-        self.assertEqual(response.status_code, 202)
-        mock_recalculate.assert_called_with(self.account.id, expected_since)
+        tzinfo_default = tzutc()
+        valid_datetimes = [
+            ("2021-06-09", datetime(2021, 6, 9, 0, 0, tzinfo=tzinfo_default)),
+            (
+                "2021-06-09 04:02",
+                datetime(2021, 6, 9, 4, 2, 0, 0, tzinfo=tzinfo_default),
+            ),
+            (
+                "2021-06-09 04:02:00",
+                datetime(2021, 6, 9, 4, 2, 0, 0, tzinfo=tzinfo_default),
+            ),
+            (
+                "2021-06-09 04:02:00+04",
+                datetime(2021, 6, 9, 4, 2, 0, tzinfo=timezone(timedelta(hours=4))),
+            ),
+        ]
+        for input_string, expected_datetime in valid_datetimes:
+            request = self.factory.post(
+                "/recalculate_runs/",
+                data={"since": input_string},
+                format="json",
+            )
+            response = recalculate_runs(request)
+            self.assertEqual(response.status_code, 202)
+            mock_recalculate.assert_called_with(self.account.id, expected_datetime)
 
     @override_settings(CELERY_TASK_ALWAYS_EAGER=True)
     @patch("api.tasks.calculation._recalculate_runs_for_cloud_account_id")
     def test_recalculate_runs_bad_since(self, mock_recalculate):
         """Assert recalculate task not triggered with malformed since."""
-        request = self.factory.post(
-            "/recalculate_runs/", data={"since": "potato"}, format="json"
-        )
-        response = recalculate_runs(request)
-        self.assertEqual(response.status_code, 400)
-        mock_recalculate.assert_not_called()
+        bad_datetimes = [
+            "potato",
+            "yesterday",
+            -1,
+            {"hello": "world"},
+            ["potato"],
+            "20-20-20",
+            "2022-69-420",
+            "2022-10-28 12:34:56 +69420",
+        ]
+        for bad_datetime in bad_datetimes:
+            request = self.factory.post(
+                "/recalculate_runs/", data={"since": bad_datetime}, format="json"
+            )
+            response = recalculate_runs(request)
+            self.assertEqual(
+                response.status_code,
+                400,
+                f"Unexpected non-400 status code '{response.status_code}' "
+                f"for 'since' value '{bad_datetime}'",
+            )
+            mock_recalculate.assert_not_called()
