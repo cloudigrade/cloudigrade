@@ -142,9 +142,6 @@ def initial_azure_vm_discovery(azure_cloud_account_id):
         )
         return
 
-    account_subscription_id = azure_cloud_account.subscription_id
-    vms_data = get_vms_for_subscription(account_subscription_id)
-
     try:
         user_id = cloud_account.user.id
     except User.DoesNotExist:
@@ -156,6 +153,9 @@ def initial_azure_vm_discovery(azure_cloud_account_id):
             azure_cloud_account_id,
         )
         return
+
+    account_subscription_id = azure_cloud_account.subscription_id
+    vms_data = get_vms_for_subscription(account_subscription_id)
 
     # Lock the task at a user level. A user can only run one task at a time.
     with lock_task_for_user_ids([user_id]):

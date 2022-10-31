@@ -1,5 +1,5 @@
 """Collection of tests for azure.tasks.onboarding.initial_azure_vm_discovery."""
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 import faker
 from django.test import TestCase
@@ -19,6 +19,24 @@ log_prefix = "api.clouds.azure.tasks.onboarding"
 class InitialAzureVmDiscovery(TestCase):
     """Celery task 'initial_azure_vm_discovery' test cases."""
 
+    def setUp(self):
+        """Set up common variables for tests."""
+        compute_client_patch = patch("util.azure.vm.ComputeManagementClient")
+        self.mock_compute_client = compute_client_patch.start()
+        self.addCleanup(compute_client_patch.stop)
+
+    def assertVirtualMachinesListAllCalls(self, number_of_accounts=1):
+        """Assert that virtual_machines.list_all was called as expected."""
+        expected_list_all_calls = [
+            _call
+            for _call in [call(), call(params={"statusOnly": "true"})]
+            for _ in range(number_of_accounts)
+        ]
+        returned_client = self.mock_compute_client.return_value
+        returned_client.virtual_machines.list_all.assert_has_calls(
+            expected_list_all_calls
+        )
+
     def test_initial_azure_vm_discovery(self):
         """Test happy path of initial_azure_vm_discovery."""
         subscription_id = _faker.uuid4()
@@ -37,6 +55,9 @@ class InitialAzureVmDiscovery(TestCase):
                 logging_watcher.output[0],
             )
 
+        self.mock_compute_client.assert_called()
+        self.assertVirtualMachinesListAllCalls()
+
     def test_initial_azure_vm_discovery_account_does_not_exist(self):
         """Test behavior of initial_azure_vm_discovery with non-existent account."""
         account_id = _faker.pyint()
@@ -48,6 +69,8 @@ class InitialAzureVmDiscovery(TestCase):
                 " could not be found for initial vm discovery",
                 logging_watcher.output[0],
             )
+
+        self.mock_compute_client.assert_not_called()
 
     def test_initial_azure_vm_discovery_account_disabled(self):
         """Test behavior of initial_azure_vm_discovery with disabled account."""
@@ -63,6 +86,8 @@ class InitialAzureVmDiscovery(TestCase):
                 logging_watcher.output[0],
             )
 
+        self.mock_compute_client.assert_not_called()
+
     def test_initial_azure_vm_discovery_account_paused(self):
         """Test behavior of initial_azure_vm_discovery with paused account."""
         account = account_helper.generate_cloud_account(
@@ -76,6 +101,8 @@ class InitialAzureVmDiscovery(TestCase):
                 " skipping initial vm discovery",
                 logging_watcher.output[0],
             )
+
+        self.mock_compute_client.assert_not_called()
 
     @patch("api.clouds.azure.tasks.onboarding.lock_task_for_user_ids")
     @patch("api.clouds.azure.tasks.onboarding.AzureCloudAccount.objects.get")
@@ -111,3 +138,9 @@ class InitialAzureVmDiscovery(TestCase):
             "skipping initial vm discovery.",
             logging_watcher.output[0],
         )
+
+        # This is somewhat expected, but we ask Azure for the VMs *before* we check
+        # that the account was deleted. Why? Because the account may have been deleted
+        # during the time we were asking Azure for the VMs.
+        self.mock_compute_client.assert_called()
+        self.assertVirtualMachinesListAllCalls()
