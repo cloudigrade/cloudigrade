@@ -48,15 +48,15 @@ def get_vms_for_subscription(azure_subscription_id):
                 vms.append(vm_info(cm_client, image_properties, discovered_vm))
 
         return vms
-    except ClientAuthenticationError:
-        logger.error(
+    except ClientAuthenticationError as e:
+        logger.exception(
             _(
                 "Could not discover vms for subscription %(subscription_id)s, "
-                "Failed to authenticate a new client."
+                "Failed to authenticate a new client. %(exception)s"
             ),
-            {"subscription_id": azure_subscription_id},
+            {"subscription_id": azure_subscription_id, "exception": e},
         )
-        return []
+        raise e
 
 
 def vm_info(cm_client, image_properties, discovered_vm, vm_with_status=None):
