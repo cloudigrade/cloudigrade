@@ -1,6 +1,7 @@
 """Celery tasks related to on-boarding new customer Azure cloud accounts."""
 import logging
 
+from azure.core.exceptions import ClientAuthenticationError
 from django.conf import settings
 from django.utils.translation import gettext as _
 from rest_framework.serializers import ValidationError
@@ -106,7 +107,10 @@ def check_azure_subscription_and_create_cloud_account(
     )
 
 
-@retriable_shared_task(name="api.clouds.azure.tasks.initial_azure_vm_discovery")
+@retriable_shared_task(
+    name="api.clouds.azure.tasks.initial_azure_vm_discovery",
+    autoretry_for=(ClientAuthenticationError,),
+)
 def initial_azure_vm_discovery(azure_cloud_account_id):
     """
     Fetch and save instances data found upon enabling an AzureCloudAccount.
