@@ -188,21 +188,27 @@ class UtilAzureVmTest(TestCase):
 
     @patch("util.azure.vm.ComputeManagementClient")
     def test_get_vms_for_subscription_failed_auth(self, mock_cmc):
-        """Tests the get_vms_for_subscription with failed auth."""
+        """
+        Tests the get_vms_for_subscription with failed auth.
+
+        If we cannot talk with Azure, we simply log and re-raise the exception so the
+        caller can decide to retry the operation or not.
+        """
         mock_cmclient = Mock()
         mock_cmc.return_value = mock_cmclient
         mock_cmclient.virtual_machines.list_all.side_effect = ClientAuthenticationError(
             "simulated auth error"
         )
 
-        with self.assertLogs(log_prefix, level="ERROR") as logging_watcher:
-            vms = vm_util.get_vms_for_subscription(self.subscription)
-            self.assertIn(
-                f"Could not discover vms for subscription {self.subscription}, "
-                "Failed to authenticate a new client.",
-                logging_watcher.output[0],
-            )
-        self.assertEqual(vms, [])
+        with self.assertRaises(ClientAuthenticationError), self.assertLogs(
+            log_prefix, level="ERROR"
+        ) as logging_watcher:
+            vm_util.get_vms_for_subscription(self.subscription)
+        self.assertIn(
+            f"Could not discover vms for subscription {self.subscription}, "
+            "Failed to authenticate a new client.",
+            logging_watcher.output[0],
+        )
 
     def test_vm_info(self):
         """Tests that vm_info returns the expected dictionary."""
