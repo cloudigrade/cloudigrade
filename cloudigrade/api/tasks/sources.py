@@ -202,15 +202,17 @@ def delete_from_sources_kafka_message(message, headers):
     logger.info(
         _(
             "delete_from_sources_kafka_message for account_number %(account_number)s, "
+            "org_id %(org_id)s, "
             "platform_id %(platform_id)s"
         ),
         {
             "account_number": account_number,
+            "org_id": org_id,
             "platform_id": platform_id,
         },
     )
 
-    if account_number is None or platform_id is None:
+    if (not account_number and not org_id) or platform_id is None:
         logger.error(_("Aborting deletion. Incorrect message details."))
         return
 

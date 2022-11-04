@@ -40,6 +40,7 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
         self.assertEqual(aws_models.AwsCloudAccount.objects.count(), 1)
 
         account_number = str(self.user.account_number)
+        org_id = None
         (
             message,
             headers,
@@ -52,8 +53,9 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
 
         expected_logger_infos = [
             "INFO:api.tasks.sources:delete_from_sources_kafka_message "
-            "for account_number "
-            f"{account_number}, platform_id {self.application_authentication_id}",
+            f"for account_number {account_number}, "
+            f"org_id {org_id}, "
+            f"platform_id {self.application_authentication_id}",
             "INFO:api.tasks.sources:Deleting CloudAccounts using filter "
             f"(AND: ('platform_application_id', {self.application_id}), "
             f"('platform_authentication_id', {self.authentication_id}))",
