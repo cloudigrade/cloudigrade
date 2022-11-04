@@ -30,3 +30,4 @@ Doppler was an early code name for **cloudigrade**. Cloud Meter is a product-ize
    :target: https://github.com/cloudigrade/cloudigrade/actions?query=branch%3Amaster
 .. |codecov| image:: https://codecov.io/gh/cloudigrade/cloudigrade/branch/master/graph/badge.svg
    :target: https://codecov.io/gh/cloudigrade/cloudigrade
+
