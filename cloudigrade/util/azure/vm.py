@@ -13,6 +13,9 @@ logger = logging.getLogger(__name__)
 
 def get_vms_for_subscription(azure_subscription_id):
     """Discover vms for a particular subscription."""
+    logger.info(
+        _("Attempting to get VMs for Azure subscription %s"), azure_subscription_id
+    )
     try:
         cm_client = ComputeManagementClient(
             azure.get_cloudigrade_credentials(),
@@ -34,6 +37,11 @@ def get_vms_for_subscription(azure_subscription_id):
             vms.append(
                 vm_info(cm_client, image_properties, discovered_vm, vm_with_status)
             )
+        vms_count = len(vms)
+        logger.info(
+            _("Found %(count) regular VMs for Azure subscription %(subscription_id)"),
+            {"count": vms_count, "subscription_id": azure_subscription_id},
+        )
 
         # Now, let's also query virtual machines that are created via scale sets.
         vmss_list = cm_client.virtual_machine_scale_sets.list_all()
@@ -46,6 +54,11 @@ def get_vms_for_subscription(azure_subscription_id):
             )
             for discovered_vm in vmss_vm_list:
                 vms.append(vm_info(cm_client, image_properties, discovered_vm))
+        vmss_vms_count = len(vms) - vms_count
+        logger.info(
+            _("Found %(count) VMSS VMs for Azure subscription %(subscription_id)"),
+            {"count": vmss_vms_count, "subscription_id": azure_subscription_id},
+        )
 
         return vms
     except ClientAuthenticationError as e:

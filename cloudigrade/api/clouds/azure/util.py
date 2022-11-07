@@ -123,13 +123,25 @@ def create_new_machine_images(vms_data):
     log_prefix = "create_new_machine_image"
 
     discovered_skus = {vm["image_sku"] for vm in vms_data}
+    logger.info(
+        _("%(prefix)s: Found %(count)s image SKUs in Azure VMs data"),
+        {"prefix": log_prefix, "count": len(discovered_skus)},
+    )
     known_skus = {
         azure_machine_image.resource_id
         for azure_machine_image in AzureMachineImage.objects.filter(
             resource_id__in=list(discovered_skus)
         )
     }
+    logger.info(
+        _("%(prefix)s: Found %(count)s matching Azure image SKUs in database"),
+        {"prefix": log_prefix, "count": len(known_skus)},
+    )
     skus_to_create = discovered_skus - known_skus
+    logger.info(
+        _("%(prefix)s: Will save info for %(count)s Azure image SKUs"),
+        {"prefix": log_prefix, "count": len(skus_to_create)},
+    )
 
     skus_created = set()
     for vm in vms_data:
