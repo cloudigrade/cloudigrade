@@ -39,7 +39,7 @@ def get_vms_for_subscription(azure_subscription_id):
             )
         vms_count = len(vms)
         logger.info(
-            _("Found %(count) regular VMs for Azure subscription %(subscription_id)"),
+            _("Found %(count)s regular VMs for Azure subscription %(subscription_id)s"),
             {"count": vms_count, "subscription_id": azure_subscription_id},
         )
 
@@ -56,7 +56,7 @@ def get_vms_for_subscription(azure_subscription_id):
                 vms.append(vm_info(cm_client, image_properties, discovered_vm))
         vmss_vms_count = len(vms) - vms_count
         logger.info(
-            _("Found %(count) VMSS VMs for Azure subscription %(subscription_id)"),
+            _("Found %(count)s VMSS VMs for Azure subscription %(subscription_id)s"),
             {"count": vmss_vms_count, "subscription_id": azure_subscription_id},
         )
 
