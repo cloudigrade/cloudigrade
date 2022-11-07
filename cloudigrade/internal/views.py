@@ -396,6 +396,17 @@ def cache_keys(request, key):
         return Response(data=None)
 
 
+@api_view(["POST"])
+@authentication_classes([IdentityHeaderAuthenticationInternal])
+@permission_classes([permissions.AllowAny])
+@schema(None)
+def clear_cache(request):
+    """Clear all cache keys."""
+    logger.info(_("Clearing all cache keys"))
+    cache.clear()
+    return Response(data=None)
+
+
 @api_view(["GET"])
 @authentication_classes([IdentityHeaderAuthenticationInternal])
 @permission_classes([permissions.AllowAny])
