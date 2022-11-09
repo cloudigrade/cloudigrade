@@ -1,9 +1,9 @@
-name: PR
+name: Tests
 
 env:
   IMAGE_NAME: quay.io/cloudservices/cloudigrade
 
-on: [pull_request]
+on: [pull_request, push]
 
 jobs:
   test-py39:
