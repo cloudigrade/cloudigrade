@@ -16,7 +16,7 @@ from django.conf import settings
 
 from api import AWS_PROVIDER_STRING, AZURE_PROVIDER_STRING
 from api.models import User
-from util import aws, misc
+from util import OPENSHIFT_TAG, aws, misc
 
 _faker = faker.Faker()
 
@@ -646,8 +646,8 @@ def generate_dummy_describe_image(
     if openshift:
         tags.append(
             {
-                "Key": aws.OPENSHIFT_TAG,
-                "Value": aws.OPENSHIFT_TAG,
+                "Key": OPENSHIFT_TAG,
+                "Value": OPENSHIFT_TAG,
             }
         )
 

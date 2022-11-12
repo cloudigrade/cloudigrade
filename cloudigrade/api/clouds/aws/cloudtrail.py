@@ -7,7 +7,7 @@ from django.utils.translation import gettext as _
 
 from api.clouds.aws.models import AwsCloudAccount
 from api.models import InstanceEvent
-from util import aws
+from util import OPENSHIFT_TAG, RHEL_TAG
 
 logger = logging.getLogger(__name__)
 
@@ -196,7 +196,7 @@ def extract_ami_tag_events(record):
         for tag_item in record.get("requestParameters", {})
         .get("tagSet", {})
         .get("items", [])
-        if tag_item.get("key", "") in (aws.OPENSHIFT_TAG, aws.RHEL_TAG)
+        if tag_item.get("key", "") in (OPENSHIFT_TAG, RHEL_TAG)
     ]
 
     return [

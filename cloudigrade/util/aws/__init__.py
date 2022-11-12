@@ -56,8 +56,6 @@ from util.aws.sqs import (
 )
 from util.aws.sts import get_session, get_session_account_id
 
-OPENSHIFT_TAG = "cloudigrade-ocp-present"
-RHEL_TAG = "cloudigrade-rhel-present"
 
 ECS_CLUSTER_REGION = "us-east-1"  # For now, our cluster is *always* in us-east-1.
 

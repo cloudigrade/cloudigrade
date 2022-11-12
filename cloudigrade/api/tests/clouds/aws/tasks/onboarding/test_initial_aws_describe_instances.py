@@ -90,7 +90,6 @@ class InitialAwsDescribeInstancesTest(TestCase):
             described_ami_windows,
         ]
         mock_util_aws.is_windows.side_effect = aws.is_windows
-        mock_util_aws.OPENSHIFT_TAG = aws.OPENSHIFT_TAG
         mock_util_aws.InstanceState.is_running = aws.InstanceState.is_running
 
         start_inspection_calls = [

@@ -16,7 +16,7 @@ from api.models import (
     MachineImage,
 )
 from api.tests import helper as helper
-from util import aws
+from util import OPENSHIFT_TAG, RHEL_TAG
 from util.misc import get_now
 from util.tests import helper as util_helper
 
@@ -1107,7 +1107,7 @@ class AnalyzeLogTest(TestCase):
         trail_record = helper.generate_cloudtrail_tag_set_record(
             aws_account_id=self.aws_account_id,
             image_ids=[ami.content_object.ec2_ami_id],
-            tag_names=[_faker.word(), aws.OPENSHIFT_TAG, _faker.word()],
+            tag_names=[_faker.word(), OPENSHIFT_TAG, _faker.word()],
             event_name=cloudtrail.CREATE_TAG,
         )
         s3_content = {"Records": [trail_record]}
@@ -1138,13 +1138,13 @@ class AnalyzeLogTest(TestCase):
         trail_record_1 = helper.generate_cloudtrail_tag_set_record(
             aws_account_id=self.aws_account_id,
             image_ids=[ami.content_object.ec2_ami_id],
-            tag_names=[_faker.word(), aws.OPENSHIFT_TAG],
+            tag_names=[_faker.word(), OPENSHIFT_TAG],
             event_name=cloudtrail.DELETE_TAG,
         )
         trail_record_2 = helper.generate_cloudtrail_tag_set_record(
             aws_account_id=self.aws_account_id,
             image_ids=[ami.content_object.ec2_ami_id],
-            tag_names=[aws.RHEL_TAG, _faker.word()],
+            tag_names=[RHEL_TAG, _faker.word()],
             event_name=cloudtrail.DELETE_TAG,
         )
         s3_content = {"Records": [trail_record_1, trail_record_2]}
@@ -1181,14 +1181,14 @@ class AnalyzeLogTest(TestCase):
         trail_record_1 = helper.generate_cloudtrail_tag_set_record(
             aws_account_id=self.aws_account_id,
             image_ids=[ami.content_object.ec2_ami_id],
-            tag_names=[_faker.word(), aws.RHEL_TAG],
+            tag_names=[_faker.word(), RHEL_TAG],
             event_name=cloudtrail.DELETE_TAG,
             event_time=first_record_time,
         )
         trail_record_2 = helper.generate_cloudtrail_tag_set_record(
             aws_account_id=self.aws_account_id,
             image_ids=[ami.content_object.ec2_ami_id],
-            tag_names=[aws.RHEL_TAG, _faker.word()],
+            tag_names=[RHEL_TAG, _faker.word()],
             event_name=cloudtrail.CREATE_TAG,
             event_time=second_record_time,
         )
@@ -1232,7 +1232,7 @@ class AnalyzeLogTest(TestCase):
         trail_record = helper.generate_cloudtrail_tag_set_record(
             aws_account_id=self.aws_account_id,
             image_ids=[new_ami_id],
-            tag_names=[aws.OPENSHIFT_TAG],
+            tag_names=[OPENSHIFT_TAG],
             event_name=cloudtrail.CREATE_TAG,
             region=region,
         )
@@ -1324,7 +1324,7 @@ class AnalyzeLogTest(TestCase):
         trail_record_image_tag = helper.generate_cloudtrail_tag_set_record(
             aws_account_id=self.aws_account_id,
             image_ids=[util_helper.generate_dummy_image_id()],
-            tag_names=[_faker.word(), aws.OPENSHIFT_TAG, _faker.word()],
+            tag_names=[_faker.word(), OPENSHIFT_TAG, _faker.word()],
             event_name=cloudtrail.CREATE_TAG,
             event_time=event_time,
         )
