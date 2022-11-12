@@ -31,8 +31,8 @@ from api.models import (
     InstanceEvent,
     MachineImage,
 )
-from util import aws
-from util.aws import OPENSHIFT_TAG, RHEL_TAG, is_windows, rewrap_aws_errors
+from util import OPENSHIFT_TAG, RHEL_TAG, aws
+from util.aws import is_windows, rewrap_aws_errors
 from util.misc import lock_task_for_user_ids
 
 logger = logging.getLogger(__name__)

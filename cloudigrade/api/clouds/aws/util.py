@@ -24,7 +24,7 @@ from api.models import (
     MachineImage,
     MachineImageInspectionStart,
 )
-from util import aws
+from util import OPENSHIFT_TAG, RHEL_TAG, aws
 from util.exceptions import (
     InvalidArn,
     InvalidHoundigradeJsonFormat,
@@ -120,8 +120,8 @@ def create_new_machine_images(session, instances_data):
                 )
 
             tag_keys = [tag.get("Key") for tag in described_image.get("Tags", [])]
-            rhel_detected_by_tag = aws.RHEL_TAG in tag_keys
-            openshift = aws.OPENSHIFT_TAG in tag_keys
+            rhel_detected_by_tag = RHEL_TAG in tag_keys
+            openshift = OPENSHIFT_TAG in tag_keys
 
             product_codes = described_image.get("ProductCodes")
             platform_details = described_image.get("PlatformDetails")
