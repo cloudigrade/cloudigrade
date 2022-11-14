@@ -2,7 +2,6 @@
 import logging
 
 from azure.core.exceptions import ClientAuthenticationError
-from django.conf import settings
 from django.utils.translation import gettext as _
 from rest_framework.serializers import ValidationError
 
@@ -118,10 +117,6 @@ def initial_azure_vm_discovery(azure_cloud_account_id):
     Args:
         azure_cloud_account_id (int): the AzureCloudAccount id
     """
-    if settings.IS_PRODUCTION:
-        logger.info(_("Azure VM discovery is disabled in production"))
-        return
-
     try:
         azure_cloud_account = AzureCloudAccount.objects.get(pk=azure_cloud_account_id)
     except AzureCloudAccount.DoesNotExist:
