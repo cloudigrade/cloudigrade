@@ -19,6 +19,7 @@ from api.models import (
     InstanceEvent,
     MachineImage,
 )
+from util import OPENSHIFT_TAG, RHEL_TAG
 from util.misc import get_now
 
 
@@ -146,17 +147,18 @@ def create_new_machine_images(vms_data):
     skus_created = set()
     for vm in vms_data:
         sku = vm["image_sku"]
+        vm_tags = vm["tags"]
         if sku in skus_to_create and sku not in skus_created:
             logger.info(
                 _("%(prefix)s: Saving new Azure Machine Image sku: %(sku)s"),
                 {"prefix": log_prefix, "sku": sku},
             )
             name = sku
-            rhel_detected_by_tag = False
+            rhel_detected_by_tag = RHEL_TAG in vm_tags
             # Until we figure out the need/equivalent of houndigrade
             # on Azure, let's mark the images as pending.
             status = MachineImage.PENDING
-            openshift_detected = False
+            openshift_detected = OPENSHIFT_TAG in vm_tags
             image, new = save_new_azure_machine_image(
                 resource_id=sku,
                 azure_marketplace_image=vm["azure_marketplace_image"],
