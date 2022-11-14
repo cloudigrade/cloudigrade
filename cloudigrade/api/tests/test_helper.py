@@ -3,7 +3,6 @@
 Because even test helpers should be tested!
 """
 import http
-import json
 import re
 import uuid
 from decimal import Decimal
@@ -460,7 +459,7 @@ class GenerateAwsImageTest(TestCase):
 
         self.assertIsInstance(image, MachineImage)
         self.assertIsNotNone(image.inspection_json)
-        inspection_data = json.loads(image.inspection_json)
+        inspection_data = image.inspection_json
         self.assertTrue(inspection_data["rhel_enabled_repos_found"])
         self.assertTrue(inspection_data["rhel_product_certs_found"])
         self.assertTrue(inspection_data["rhel_release_files_found"])

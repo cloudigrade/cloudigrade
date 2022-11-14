@@ -1,5 +1,4 @@
 """Utility functions for AWS models and use cases."""
-import json
 import logging
 from decimal import Decimal
 
@@ -1251,7 +1250,7 @@ def persist_aws_inspection_cluster_results(inspection_results):
                 {"image_id": image_id, "error": error},
             )
         save_success = update_aws_image_status_inspected(
-            image_id, inspection_json=json.dumps(image_json)
+            image_id, inspection_json=image_json
         )
         if not save_success:
             logger.warning(

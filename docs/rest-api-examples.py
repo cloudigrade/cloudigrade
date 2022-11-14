@@ -195,17 +195,15 @@ class DocsApiHandler(object):
             )
         )
         for image in self.images:
-            image.inspection_json = json.dumps(
-                {
-                    "rhel_enabled_repos_found": True,
-                    "rhel_version": "7.7",
-                    "syspurpose": {
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_level_agreement": "Premium",
-                        "usage": "Development/Test",
-                    },
-                }
-            )
+            image.inspection_json = {
+                "rhel_enabled_repos_found": True,
+                "rhel_version": "7.7",
+                "syspurpose": {
+                    "role": "Red Hat Enterprise Linux Server",
+                    "service_level_agreement": "Premium",
+                    "usage": "Development/Test",
+                },
+            }
             image.status = image.INSPECTED
             image.region = "us-east-1"
             image.save()

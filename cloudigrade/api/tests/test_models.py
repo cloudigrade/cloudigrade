@@ -90,7 +90,7 @@ class RunTest(TestCase):
         # with empty counts
         calculate_max_concurrent_usage(request_date, user_id=user.id)
         self.assertEqual(1, ConcurrentUsage.objects.all().count())
-        self.assertEqual("[]", ConcurrentUsage.objects.all()[0]._maximum_counts)
+        self.assertEqual([], ConcurrentUsage.objects.all()[0].maximum_counts)
 
         # Create a run
         run = Run.objects.create(
@@ -105,12 +105,12 @@ class RunTest(TestCase):
         # Creating a run should not delete the empty concurrent usage
         # since that concurrent usage isn't related to this run
         self.assertEqual(1, ConcurrentUsage.objects.all().count())
-        self.assertEqual("[]", ConcurrentUsage.objects.all()[0]._maximum_counts)
+        self.assertEqual([], ConcurrentUsage.objects.all()[0].maximum_counts)
 
         # recalculating the maximum concurrent usage results in a nonempty
         # ConcurrentUsage maximum_counts
         calculate_max_concurrent_usage(request_date, user_id=user.id)
-        self.assertNotEqual("[]", ConcurrentUsage.objects.all()[0]._maximum_counts)
+        self.assertNotEqual([], ConcurrentUsage.objects.all()[0].maximum_counts)
 
         # Re-saving the run should remove the related the concurrent usage.
         run.save()

@@ -43,7 +43,7 @@ class SynthesizeInstanceEventsTest(TestCase):
             # We don't attempt to discern the exact count because of randomness.
             self.assertTrue(
                 models.ConcurrentUsage.objects.filter(user=request.user)
-                .exclude(_maximum_counts="[]")
+                .exclude(maximum_counts="[]")
                 .exists(),
             )
 

@@ -1,5 +1,4 @@
 """Cloudigrade API v2 Models."""
-import json
 import logging
 import uuid
 from datetime import timedelta
@@ -442,7 +441,7 @@ class MachineImage(BaseGenericModel):
     )
     TERMINAL_STATUSES = (INSPECTED, ERROR, UNAVAILABLE)
 
-    inspection_json = models.TextField(null=True, blank=True)
+    inspection_json = models.JSONField(null=True, blank=True)
     is_encrypted = models.BooleanField(default=False)
     status = models.CharField(max_length=32, choices=STATUS_CHOICES, default=PENDING)
     rhel_detected_by_tag = models.BooleanField(default=False)
@@ -471,8 +470,7 @@ class MachineImage(BaseGenericModel):
 
         """
         if self.inspection_json:
-            image_json = json.loads(self.inspection_json)
-            return image_json.get("rhel_version", None)
+            return self.inspection_json.get("rhel_version", None)
         return None
 
     @property
@@ -485,8 +483,7 @@ class MachineImage(BaseGenericModel):
 
         """
         if self.inspection_json:
-            image_json = json.loads(self.inspection_json)
-            return image_json.get("rhel_enabled_repos_found", False)
+            return self.inspection_json.get("rhel_enabled_repos_found", False)
         return False
 
     @property
@@ -499,8 +496,7 @@ class MachineImage(BaseGenericModel):
 
         """
         if self.inspection_json:
-            image_json = json.loads(self.inspection_json)
-            return image_json.get("rhel_product_certs_found", False)
+            return self.inspection_json.get("rhel_product_certs_found", False)
         return False
 
     @property
@@ -513,8 +509,7 @@ class MachineImage(BaseGenericModel):
 
         """
         if self.inspection_json:
-            image_json = json.loads(self.inspection_json)
-            return image_json.get("rhel_release_files_found", False)
+            return self.inspection_json.get("rhel_release_files_found", False)
         return False
 
     @property
@@ -527,8 +522,7 @@ class MachineImage(BaseGenericModel):
 
         """
         if self.inspection_json:
-            image_json = json.loads(self.inspection_json)
-            return image_json.get("rhel_signed_packages_found", False)
+            return self.inspection_json.get("rhel_signed_packages_found", False)
         return False
 
     @property
@@ -560,8 +554,7 @@ class MachineImage(BaseGenericModel):
 
         """
         if self.inspection_json:
-            image_json = json.loads(self.inspection_json)
-            return image_json.get("syspurpose", None)
+            return self.inspection_json.get("syspurpose", None)
         return None
 
     @property
@@ -891,26 +884,27 @@ class MachineImageInspectionStart(BaseModel):
     )
 
 
+def maximum_counts_default():
+    """
+    Return default value for ConcurrentUsage.maximum_counts.
+
+    This is necessary because JSONField.default expects a callable, not just [].
+    """
+    return []
+
+
 class ConcurrentUsage(BaseModel):
     """Saved calculation of max concurrent usage for a date+user."""
 
     date = models.DateField(db_index=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, db_index=True)
-    _maximum_counts = models.TextField(db_column="maximum_counts", default="[]")
+    maximum_counts = models.JSONField(
+        db_column="maximum_counts", default=maximum_counts_default
+    )
     potentially_related_runs = models.ManyToManyField(Run)
 
     class Meta:
         unique_together = (("date", "user"),)
-
-    @property
-    def maximum_counts(self):
-        """Get maximum_counts list."""
-        return json.loads(self._maximum_counts)
-
-    @maximum_counts.setter
-    def maximum_counts(self, value):
-        """Set maximum_counts list."""
-        self._maximum_counts = json.dumps(value)
 
     def __str__(self):
         """Get the string representation."""

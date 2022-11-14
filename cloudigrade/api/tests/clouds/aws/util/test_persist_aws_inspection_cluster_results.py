@@ -1,6 +1,4 @@
 """Collection of tests for api.cloud.aws.util.persist_aws_inspection_cluster_results."""
-import json
-
 import faker
 from django.test import TestCase
 
@@ -53,7 +51,7 @@ class PersistAwsInspectionClusterResultsTest(TestCase):
         machine_image = aws_machine_image.machine_image.get()
         self.assertTrue(machine_image.rhel_detected)
         self.assertEqual(
-            json.loads(machine_image.inspection_json),
+            machine_image.inspection_json,
             inspection_results["images"][ami_id],
         )
         self.assertTrue(machine_image.rhel)
@@ -96,7 +94,7 @@ class PersistAwsInspectionClusterResultsTest(TestCase):
         self.assertFalse(machine_image.rhel_detected)
         self.assertFalse(machine_image.openshift_detected)
         self.assertEqual(
-            json.loads(machine_image.inspection_json),
+            machine_image.inspection_json,
             inspection_results["images"][ami_id],
         )
         self.assertFalse(machine_image.rhel)

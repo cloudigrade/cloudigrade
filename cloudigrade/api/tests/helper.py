@@ -782,23 +782,19 @@ def _generate_image(
                 rhel_detected_signed_packages,
             )
         ):
-            inspection_json = json.dumps(
-                {
-                    "rhel_release_files_found": rhel_detected,
-                    "syspurpose": syspurpose,
-                }
-            )
+            inspection_json = {
+                "rhel_release_files_found": rhel_detected,
+                "syspurpose": syspurpose,
+            }
         else:
-            inspection_json = json.dumps(
-                {
-                    "rhel_enabled_repos_found": rhel_detected_repos,
-                    "rhel_product_certs_found": rhel_detected_certs,
-                    "rhel_release_files_found": rhel_detected_release_files,
-                    "rhel_signed_packages_found": rhel_detected_signed_packages,
-                    "rhel_version": rhel_version,
-                    "syspurpose": syspurpose,
-                }
-            )
+            inspection_json = {
+                "rhel_enabled_repos_found": rhel_detected_repos,
+                "rhel_product_certs_found": rhel_detected_certs,
+                "rhel_release_files_found": rhel_detected_release_files,
+                "rhel_signed_packages_found": rhel_detected_signed_packages,
+                "rhel_version": rhel_version,
+                "syspurpose": syspurpose,
+            }
     else:
         inspection_json = None
 

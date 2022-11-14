@@ -518,7 +518,7 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 6922
+    Content-Length: 6730
     Content-Type: application/json
     Cross-Origin-Opener-Policy: same-origin
     Referrer-Policy: same-origin
@@ -548,7 +548,15 @@ Response:
                 },
                 "created_at": "2020-05-18T13:51:59.722367Z",
                 "image_id": 1,
-                "inspection_json": "{\"rhel_enabled_repos_found\": true, \"rhel_version\": \"7.7\", \"syspurpose\": {\"role\": \"Red Hat Enterprise Linux Server\", \"service_level_agreement\": \"Premium\", \"usage\": \"Development/Test\"}}",
+                "inspection_json": {
+                    "rhel_enabled_repos_found": true,
+                    "rhel_version": "7.7",
+                    "syspurpose": {
+                        "role": "Red Hat Enterprise Linux Server",
+                        "service_level_agreement": "Premium",
+                        "usage": "Development/Test"
+                    }
+                },
                 "is_encrypted": false,
                 "name": null,
                 "openshift": false,
@@ -589,7 +597,15 @@ Response:
                 },
                 "created_at": "2020-05-18T13:51:59.722367Z",
                 "image_id": 2,
-                "inspection_json": "{\"rhel_enabled_repos_found\": true, \"rhel_version\": \"7.7\", \"syspurpose\": {\"role\": \"Red Hat Enterprise Linux Server\", \"service_level_agreement\": \"Premium\", \"usage\": \"Development/Test\"}}",
+                "inspection_json": {
+                    "rhel_enabled_repos_found": true,
+                    "rhel_version": "7.7",
+                    "syspurpose": {
+                        "role": "Red Hat Enterprise Linux Server",
+                        "service_level_agreement": "Premium",
+                        "usage": "Development/Test"
+                    }
+                },
                 "is_encrypted": false,
                 "name": null,
                 "openshift": false,
@@ -630,7 +646,15 @@ Response:
                 },
                 "created_at": "2020-05-18T13:51:59.722367Z",
                 "image_id": 3,
-                "inspection_json": "{\"rhel_enabled_repos_found\": true, \"rhel_version\": \"7.7\", \"syspurpose\": {\"role\": \"Red Hat Enterprise Linux Server\", \"service_level_agreement\": \"Premium\", \"usage\": \"Development/Test\"}}",
+                "inspection_json": {
+                    "rhel_enabled_repos_found": true,
+                    "rhel_version": "7.7",
+                    "syspurpose": {
+                        "role": "Red Hat Enterprise Linux Server",
+                        "service_level_agreement": "Premium",
+                        "usage": "Development/Test"
+                    }
+                },
                 "is_encrypted": false,
                 "name": null,
                 "openshift": false,
@@ -665,7 +689,15 @@ Response:
                 },
                 "created_at": "2020-05-18T13:51:59.722367Z",
                 "image_id": 4,
-                "inspection_json": "{\"rhel_enabled_repos_found\": true, \"rhel_version\": \"7.7\", \"syspurpose\": {\"role\": \"Red Hat Enterprise Linux Server\", \"service_level_agreement\": \"Premium\", \"usage\": \"Development/Test\"}}",
+                "inspection_json": {
+                    "rhel_enabled_repos_found": true,
+                    "rhel_version": "7.7",
+                    "syspurpose": {
+                        "role": "Red Hat Enterprise Linux Server",
+                        "service_level_agreement": "Premium",
+                        "usage": "Development/Test"
+                    }
+                },
                 "is_encrypted": false,
                 "name": null,
                 "openshift": false,
@@ -700,7 +732,15 @@ Response:
                 },
                 "created_at": "2020-05-18T13:51:59.722367Z",
                 "image_id": 5,
-                "inspection_json": "{\"rhel_enabled_repos_found\": true, \"rhel_version\": \"7.7\", \"syspurpose\": {\"role\": \"Red Hat Enterprise Linux Server\", \"service_level_agreement\": \"Premium\", \"usage\": \"Development/Test\"}}",
+                "inspection_json": {
+                    "rhel_enabled_repos_found": true,
+                    "rhel_version": "7.7",
+                    "syspurpose": {
+                        "role": "Red Hat Enterprise Linux Server",
+                        "service_level_agreement": "Premium",
+                        "usage": "Development/Test"
+                    }
+                },
                 "is_encrypted": false,
                 "name": null,
                 "openshift": false,
@@ -735,7 +775,15 @@ Response:
                 },
                 "created_at": "2020-05-18T13:51:59.722367Z",
                 "image_id": 6,
-                "inspection_json": "{\"rhel_enabled_repos_found\": true, \"rhel_version\": \"7.7\", \"syspurpose\": {\"role\": \"Red Hat Enterprise Linux Server\", \"service_level_agreement\": \"Premium\", \"usage\": \"Development/Test\"}}",
+                "inspection_json": {
+                    "rhel_enabled_repos_found": true,
+                    "rhel_version": "7.7",
+                    "syspurpose": {
+                        "role": "Red Hat Enterprise Linux Server",
+                        "service_level_agreement": "Premium",
+                        "usage": "Development/Test"
+                    }
+                },
                 "is_encrypted": false,
                 "name": null,
                 "openshift": false,
@@ -785,7 +833,7 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 1143
+    Content-Length: 1111
     Content-Type: application/json
     Cross-Origin-Opener-Policy: same-origin
     Referrer-Policy: same-origin
@@ -813,7 +861,15 @@ Response:
         },
         "created_at": "2020-05-18T13:51:59.722367Z",
         "image_id": 1,
-        "inspection_json": "{\"rhel_enabled_repos_found\": true, \"rhel_version\": \"7.7\", \"syspurpose\": {\"role\": \"Red Hat Enterprise Linux Server\", \"service_level_agreement\": \"Premium\", \"usage\": \"Development/Test\"}}",
+        "inspection_json": {
+            "rhel_enabled_repos_found": true,
+            "rhel_version": "7.7",
+            "syspurpose": {
+                "role": "Red Hat Enterprise Linux Server",
+                "service_level_agreement": "Premium",
+                "usage": "Development/Test"
+            }
+        },
         "is_encrypted": false,
         "name": null,
         "openshift": false,

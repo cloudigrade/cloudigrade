@@ -942,7 +942,7 @@
             "readOnly": true
           },
           "inspection_json": {
-            "type": "string",
+            "type": "object",
             "readOnly": true,
             "nullable": true
           },
