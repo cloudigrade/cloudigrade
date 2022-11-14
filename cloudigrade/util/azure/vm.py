@@ -87,6 +87,7 @@ def vm_info(cm_client, image_properties, discovered_vm, vm_with_status=None):
         vm["running"] = is_running(vm_with_status)
     else:
         vm["running"] = is_running(discovered_vm)
+    vm["tags"] = getattr(discovered_vm, "tags", {}) or {}
     vm["is_encrypted"] = is_encrypted(discovered_vm)
     image_properties = get_image_properties(cm_client, image_properties, discovered_vm)
     vm["architecture"] = architecture(image_properties)

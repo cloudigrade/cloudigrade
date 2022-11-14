@@ -1114,6 +1114,7 @@ def generate_vm_data(
     rhel_detected_by_tag=False,
     running=False,
     subscription=None,
+    tags=None,
     vm_size=None,
 ):
     """Generate a dict for a single discovered azure vm."""
@@ -1137,6 +1138,7 @@ def generate_vm_data(
     vm_data["openshift_detected"] = openshift_detected
     vm_data["rhel_detected_by_tag"] = rhel_detected_by_tag
     vm_data["architecture"] = architecture or "x64"
+    vm_data["tags"] = tags or {}
     vm_data["vm_size"] = vm_size or get_random_instance_type(
         cloud_type=AZURE_PROVIDER_STRING
     )
