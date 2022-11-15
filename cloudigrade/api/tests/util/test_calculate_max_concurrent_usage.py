@@ -15,11 +15,13 @@ class CalculateMaxConcurrentUsageTest(TestCase):
         """Set up a bunch of test data."""
         self.user1 = util_helper.generate_test_user()
         self.user2 = util_helper.generate_test_user()
+        self.user3 = util_helper.generate_test_user()
         self.superuser = util_helper.generate_test_user(is_superuser=True)
 
         self.user1account1 = api_helper.generate_cloud_account(user=self.user1)
         self.user1account2 = api_helper.generate_cloud_account(user=self.user1)
         self.user2account1 = api_helper.generate_cloud_account(user=self.user2)
+        self.user3account1 = api_helper.generate_cloud_account_azure(user=self.user3)
 
         self.syspurpose1 = {
             "role": "Red Hat Enterprise Linux Server",
@@ -82,6 +84,14 @@ class CalculateMaxConcurrentUsageTest(TestCase):
             rhel_detected=False,
             syspurpose=self.syspurpose5,
             architecture="PowerPC",
+        )
+        self.image_rhel_azure = api_helper.generate_image_azure(
+            rhel_detected_by_tag=True,
+            architecture="x64",
+        )
+        self.image_plain_azure = api_helper.generate_image_azure(
+            rhel_detected_by_tag=False,
+            architecture="x64",
         )
 
     def assertMaxConcurrentUsage(self, results, date, instances):
@@ -373,3 +383,61 @@ class CalculateMaxConcurrentUsageTest(TestCase):
 
         usage = calculate_max_concurrent_usage(request_date, user_id=user_id)
         self.assertMaxConcurrentUsage(usage, expected_date, 0)
+
+    def test_single_not_rhel_run_within_day_azure(self):
+        """
+        Test with a not-RHEL instance run within the day on azure.
+
+        This instance should have zero effect on max calculations.
+        """
+        rhel_instance = api_helper.generate_instance_azure(
+            self.user3account1, image=self.image_plain_azure
+        )
+        api_helper.generate_single_run(
+            rhel_instance,
+            (
+                util_helper.utc_dt(2019, 5, 1, 1, 0, 0),
+                util_helper.utc_dt(2019, 5, 1, 2, 0, 0),
+            ),
+            image=rhel_instance.machine_image,
+        )
+        request_date = datetime.date(2019, 5, 1)
+        expected_date = request_date
+
+        usage = calculate_max_concurrent_usage(request_date, user_id=self.user3.id)
+        self.assertMaxConcurrentUsage(usage, expected_date, 0)
+
+    def test_single_rhel_and_not_rhel_run_within_day_azure(self):
+        """
+        Test with a RHEL and not-RHEL instance run within the day on azure.
+
+        This instance should expect a single instance in the calculations.
+        """
+        rhel_instance1 = api_helper.generate_instance_azure(
+            self.user3account1, image=self.image_rhel_azure
+        )
+        rhel_instance2 = api_helper.generate_instance_azure(
+            self.user3account1, image=self.image_plain_azure
+        )
+        api_helper.generate_single_run(
+            rhel_instance1,
+            (
+                util_helper.utc_dt(2019, 5, 1, 1, 0, 0),
+                util_helper.utc_dt(2019, 5, 1, 2, 0, 0),
+            ),
+            image=rhel_instance1.machine_image,
+        )
+        api_helper.generate_single_run(
+            rhel_instance2,
+            (
+                util_helper.utc_dt(2019, 5, 1, 1, 30, 0),
+                util_helper.utc_dt(2019, 5, 1, 2, 30, 0),
+            ),
+            image=rhel_instance2.machine_image,
+        )
+        request_date = datetime.date(2019, 5, 1)
+        expected_date = request_date
+        expected_instances = 1
+
+        usage = calculate_max_concurrent_usage(request_date, user_id=self.user3.id)
+        self.assertMaxConcurrentUsage(usage, expected_date, expected_instances)
