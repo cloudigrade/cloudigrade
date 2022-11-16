@@ -3,7 +3,13 @@ from django.utils.translation import gettext as _
 from django_celery_beat.models import PeriodicTask
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-from rest_framework.fields import BooleanField, CharField, ChoiceField, ListField
+from rest_framework.fields import (
+    BooleanField,
+    CharField,
+    ChoiceField,
+    JSONField,
+    ListField,
+)
 from rest_framework.serializers import ModelSerializer, Serializer
 
 from api import models
@@ -374,3 +380,10 @@ class InternalRedisRawInputSerializer(Serializer):
 
     command = ChoiceField(allowed_commands, required=True)
     args = ListField(required=False, allow_empty=True, child=CharField(min_length=1))
+
+
+class InternalRunTaskInputSerializer(Serializer):
+    """Serializer to validate input for the internal run_task API."""
+
+    task_name = CharField(required=True)
+    kwargs = JSONField(required=False)
