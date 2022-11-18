@@ -70,6 +70,4 @@ class UpdateAzureInstanceEvents(TestCase):
         mock_get_vms.return_value = vms
 
         update_azure_instance_events_for_account(account.cloud_account_id)
-        mock_create_initial_azure_instance_events.assert_called_with(
-            account.content_object, vms
-        )
+        mock_create_initial_azure_instance_events.assert_called_with(account, vms)
