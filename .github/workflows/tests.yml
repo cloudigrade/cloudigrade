@@ -13,9 +13,12 @@ jobs:
       image: ghcr.io/cloudigrade/build-container:ubi-8.7-923-python-3.9.13
     steps:
       - uses: actions/checkout@v3
-      - run: pip install tox codecov poetry
+      - run: pip install tox poetry
       - run: tox -e py39
-      - run: codecov
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: artifacts/junit-cloudigrade.xml
 
   test-python-version:
     name: python-version
@@ -33,7 +36,7 @@ jobs:
       image: ghcr.io/cloudigrade/build-container:ubi-8.7-923-python-3.9.13
     steps:
       - uses: actions/checkout@v3
-      - run: pip install tox codecov poetry
+      - run: pip install tox poetry
       - run: tox -e flake8
 
   test-vulnerability:
