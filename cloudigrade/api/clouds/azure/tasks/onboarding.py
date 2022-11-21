@@ -222,7 +222,9 @@ def update_azure_instance_events_for_account(cloud_account_id):
         None: Run as an asynchronous Celery task.
     """
     try:
-        cloud_account = AzureCloudAccount.objects.get(subscription_id=cloud_account_id)
+        azure_cloud_account = AzureCloudAccount.objects.get(
+            subscription_id=cloud_account_id
+        )
     except AzureCloudAccount.DoesNotExist:
         # AzureCloudAccount could have been deleted prior to calling/running task
         logger.info(
@@ -234,5 +236,7 @@ def update_azure_instance_events_for_account(cloud_account_id):
         )
         return
 
-    vms_info = get_vms_for_subscription(cloud_account.subscription_id)
-    create_initial_azure_instance_events(cloud_account, vms_info)
+    vms_info = get_vms_for_subscription(azure_cloud_account.subscription_id)
+    create_initial_azure_instance_events(
+        azure_cloud_account.cloud_account.get(), vms_info
+    )
