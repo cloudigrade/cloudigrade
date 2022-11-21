@@ -3,7 +3,13 @@ name: Tests
 env:
   IMAGE_NAME: quay.io/cloudservices/cloudigrade
 
-on: [pull_request, push]
+on:
+  push:
+    branches:
+    - master
+  pull_request:
+    branches:
+    - '*'
 
 jobs:
   test-py39:
