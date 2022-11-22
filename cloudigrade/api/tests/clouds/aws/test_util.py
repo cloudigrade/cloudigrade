@@ -12,7 +12,6 @@ from api.clouds.aws.util import generate_aws_ami_messages
 from api.tests import helper as api_helper
 from util import aws
 from util.aws.sqs import _sqs_unwrap_message, _sqs_wrap_message, add_messages_to_queue
-from util.exceptions import MaximumNumberOfTrailsExceededException
 from util.tests import helper as util_helper
 
 _faker = faker.Faker()
@@ -221,9 +220,7 @@ class CloudsAwsUtilVerifyPermissionsTest(TestCase):
         """Test happy path for verify_permissions."""
         with patch.object(util.aws, "get_session"), patch.object(
             util.aws, "verify_account_access"
-        ) as mock_aws_verify_account_access, patch.object(
-            util.aws, "configure_cloudtrail"
-        ), patch(
+        ) as mock_aws_verify_account_access, patch(
             "api.tasks.sources.notify_application_availability_task"
         ) as mock_notify_sources:
             mock_aws_verify_account_access.return_value = True, []
@@ -291,30 +288,10 @@ class CloudsAwsUtilVerifyPermissionsTest(TestCase):
         """Test handling when aws.verify_account_access does not succeed."""
         with patch.object(util.aws, "get_session"), patch.object(
             util.aws, "verify_account_access"
-        ) as mock_aws_verify_account_access, patch.object(
-            util.aws, "configure_cloudtrail"
-        ), patch(
+        ) as mock_aws_verify_account_access, patch(
             "api.tasks.sources.notify_application_availability_task"
         ) as mock_notify_sources:
             mock_aws_verify_account_access.return_value = False, [_faker.slug()]
-            verified = util.verify_permissions(self.arn)
-
-        self.assertFalse(verified)
-        mock_notify_sources.delay.assert_called()
-
-    def test_verify_permissions_fails_if_too_many_trails(self):
-        """Test handling too many trails error when configuring cloudtrail."""
-        with patch.object(util.aws, "get_session"), patch.object(
-            util.aws, "verify_account_access"
-        ) as mock_verify_access, patch.object(
-            util.aws, "configure_cloudtrail"
-        ) as mock_configure_cloudtrail, patch(
-            "api.tasks.sources.notify_application_availability_task"
-        ) as mock_notify_sources:
-            mock_verify_access.return_value = True, []
-            mock_configure_cloudtrail.side_effect = (
-                MaximumNumberOfTrailsExceededException
-            )
             verified = util.verify_permissions(self.arn)
 
         self.assertFalse(verified)

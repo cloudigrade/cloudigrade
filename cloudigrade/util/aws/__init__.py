@@ -7,7 +7,6 @@ from util.aws.autoscaling import (
     scale_up,
 )
 from util.aws.cloudtrail import (
-    configure_cloudtrail,
     delete_cloudtrail,
     get_cloudtrail_name,
 )

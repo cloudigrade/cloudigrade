@@ -11,8 +11,6 @@ import api.clouds.aws.util
 from api import models
 from api.clouds.aws import models as aws_models
 from api.tests import helper
-from util import aws
-from util.exceptions import MaximumNumberOfTrailsExceededException
 from util.tests import helper as util_helper
 
 logger = logging.getLogger(__name__)
@@ -100,42 +98,6 @@ class AwsCloudAccountModelTest(TransactionTestCase, helper.ModelStrTestMixin):
                 str(mock_verify_permissions.side_effect), log_record.message
             )
             mock_verify_permissions.assert_called()
-            mock_initial_aws_describe_instances.delay.assert_not_called()
-
-        self.account.refresh_from_db()
-        self.assertFalse(self.account.is_enabled)
-        self.assertEqual(self.account.enabled_at, self.account.created_at)
-
-    @patch("api.tasks.sources.notify_application_availability_task")
-    def test_enable_failure_too_many_trails(self, mock_notify_sources):
-        """Test that enabling an account rolls back if too many trails present."""
-        # Normally you shouldn't directly manipulate the is_enabled value,
-        # but here we need to force it down to check that it gets set back.
-        self.account.is_enabled = False
-        self.account.save()
-        self.account.refresh_from_db()
-        self.assertFalse(self.account.is_enabled)
-
-        enable_date = util_helper.utc_dt(2019, 1, 4, 0, 0, 0)
-        with patch.object(aws, "configure_cloudtrail") as mock_cloudtrail, patch.object(
-            aws, "verify_account_access"
-        ) as mock_verify, patch.object(aws, "get_session"), patch(
-            "api.clouds.aws.tasks.initial_aws_describe_instances"
-        ) as mock_initial_aws_describe_instances, util_helper.clouditardis(
-            enable_date
-        ):
-            mock_cloudtrail.side_effect = MaximumNumberOfTrailsExceededException(
-                "MaximumNumberOfTrailsExceededException",
-            )
-            mock_verify.return_value = (True, "")
-            with self.assertLogs("api.clouds.aws.util", level="WARNING") as cm:
-                success = self.account.enable(disable_upon_failure=False)
-                self.assertFalse(success)
-                self.assertIn(
-                    str(mock_cloudtrail.side_effect.detail),
-                    cm.records[1].message,
-                )
-            mock_cloudtrail.assert_called()
             mock_initial_aws_describe_instances.delay.assert_not_called()
 
         self.account.refresh_from_db()
