@@ -50,55 +50,6 @@ app.conf.beat_schedule = {
         "task": "api.tasks.delete_expired_synthetic_data",
         "schedule": env.int("DELETE_EXPIRED_SYNTHETIC_DATA_SCHEDULE", default=60 * 60),
     },
-    "persist_inspection_cluster_results": {
-        "task": "api.tasks.persist_inspection_cluster_results_task",
-        "schedule": env.int(
-            "HOUNDIGRADE_ECS_PERSIST_INSPECTION_RESULTS_SCHEDULE", default=60
-        ),
-    },
-    "inspect_pending_images": {
-        "task": "api.tasks.inspect_pending_images",
-        "schedule": env.int("INSPECT_PENDING_IMAGES_SCHEDULE", default=15 * 60),
-    },
-    "recalculate_runs_for_all_cloud_accounts": {
-        "task": "api.tasks.recalculate_runs_for_all_cloud_accounts",
-        "schedule": env.int(
-            "RECALCULATE_RUNS_FOR_ALL_CLOUD_ACCOUNTS_SCHEDULE",
-            default=60 * 60,  # hourly
-        ),
-    },
-    "recalculate_concurrent_usage_for_all_users": {
-        "task": "api.tasks.recalculate_concurrent_usage_for_all_users",
-        "schedule": env.int(
-            "RECALCULATE_CONCURRENT_USAGE_FOR_ALL_USERS_SCHEDULE",
-            default=60 * 60,  # hourly
-        ),
-    },
-    "analyze_log_every_2_mins": {
-        "task": "api.clouds.aws.tasks.analyze_log",
-        "schedule": env.int("ANALYZE_LOG_SCHEDULE", default=30),
-    },
-    "repopulate_ec2_instance_mapping_every_week": {
-        "task": "api.clouds.aws.tasks.repopulate_ec2_instance_mapping",
-        "schedule": env.int(
-            "AWS_REPOPULATE_EC2_INSTANCE_MAPPING_SCHEDULE",
-            default=60 * 60 * 24 * 7,  # 1 week in seconds
-        ),
-    },
-    "repopulate_azure_instance_mapping_every_week": {
-        "task": "api.clouds.azure.tasks.repopulate_azure_instance_mapping",
-        "schedule": env.int(
-            "REPOPULATE_AZURE_INSTANCE_MAPPING_SCHEDULE",
-            default=60 * 60 * 24 * 7,  # 1 week in seconds
-        ),
-    },
-    "update_azure_instance_events_every_hour": {
-        "task": "api.clouds.azure.tasks.update_azure_instance_events",
-        "schedule": env.int(
-            "UPDATE_AZURE_INSTANCE_EVENTS_SCHEDULE",
-            default=60 * 60,  # hourly
-        ),
-    },
     # Disabled Tasks
     # Important note for future readers! If you intend to disable an existing task,
     # you need to either 1) keep it here and reconfigure with '"schedule": 999999' and
