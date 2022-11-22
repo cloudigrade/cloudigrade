@@ -194,32 +194,3 @@ class AwsAccountSerializerTest(TransactionTestCase):
                 serializer.create(self.validated_data)
             log_record = cm.records[1]
             self.assertIn(expected_error, log_record.msg.detail["account_arn"])
-
-    @patch("api.tasks.sources.notify_application_availability_task")
-    def test_create_fails_cloudtrail_configuration_error(self, mock_notify_sources):
-        """Test that an exception occurs if cloudtrail configuration fails."""
-        mock_request = Mock()
-        mock_request.user = util_helper.generate_test_user()
-        context = {"request": mock_request}
-        serializer = CloudAccountSerializer(context=context)
-
-        client_error = ClientError(
-            error_response={"Error": {"Code": "AccessDeniedException"}},
-            operation_name=Mock(),
-        )
-
-        with patch.object(aws, "verify_account_access") as mock_verify, patch.object(
-            aws.sts, "boto3"
-        ) as mock_boto3, patch.object(aws, "configure_cloudtrail") as mock_cloudtrail:
-            mock_assume_role = mock_boto3.client.return_value.assume_role
-            mock_assume_role.return_value = self.role
-            mock_verify.return_value = True, []
-            mock_cloudtrail.side_effect = client_error
-
-            expected_error = "Could not enable"
-            with self.assertLogs("api.models", level="INFO") as cm, self.assertRaises(
-                ValidationError
-            ):
-                serializer.create(self.validated_data)
-            log_record = cm.records[1]
-            self.assertIn(expected_error, log_record.msg.detail["account_arn"])

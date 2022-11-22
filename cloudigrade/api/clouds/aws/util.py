@@ -28,7 +28,6 @@ from util import OPENSHIFT_TAG, RHEL_TAG, aws
 from util.exceptions import (
     InvalidArn,
     InvalidHoundigradeJsonFormat,
-    MaximumNumberOfTrailsExceededException,
 )
 from util.misc import get_now
 
@@ -845,7 +844,6 @@ def verify_permissions(customer_role_arn):  # noqa: C901
     arn_str = str(customer_role_arn)
 
     access_verified = False
-    cloudtrail_setup_complete = False
 
     try:
         cloud_account = CloudAccount.objects.get(
@@ -867,7 +865,7 @@ def verify_permissions(customer_role_arn):  # noqa: C901
         return True
 
     # Get the username immediately from the related user in case the user is deleted
-    # while we are verifying access and configuring cloudtrail; we'll need it later
+    # while we are verifying access; we'll need it later
     # in order to notify sources of our error.
     account_number = cloud_account.user.account_number
     org_id = cloud_account.user.org_id
@@ -875,10 +873,7 @@ def verify_permissions(customer_role_arn):  # noqa: C901
     try:
         session = aws.get_session(arn_str)
         access_verified, failed_actions = aws.verify_account_access(session)
-        if access_verified:
-            aws.configure_cloudtrail(session, aws_account_id)
-            cloudtrail_setup_complete = True
-        else:
+        if not access_verified:
             for action in failed_actions:
                 logger.info(
                     "Policy action %(action)s failed in verification for via %(arn)s",
@@ -905,12 +900,6 @@ def verify_permissions(customer_role_arn):  # noqa: C901
             logger, {"cloud_account_id": cloud_account.id, "exception": error}
         )
         error_code.notify(account_number, org_id, cloud_account.platform_application_id)
-    except MaximumNumberOfTrailsExceededException as error:
-        error_code = error_codes.CG3001
-        error_code.log_internal_message(
-            logger, {"cloud_account_id": cloud_account.id, "exception": error}
-        )
-        error_code.notify(account_number, org_id, cloud_account.platform_application_id)
     except Exception as error:
         # It's unclear what could cause any other kind of exception to be raised here,
         # but we must handle anything, log/alert ourselves, and notify sources.
@@ -920,7 +909,7 @@ def verify_permissions(customer_role_arn):  # noqa: C901
         error_code = error_codes.CG3000  # TODO Consider a new error code?
         error_code.notify(account_number, org_id, cloud_account.platform_application_id)
 
-    return access_verified and cloudtrail_setup_complete
+    return access_verified
 
 
 def create_aws_cloud_account(
@@ -936,7 +925,7 @@ def create_aws_cloud_account(
     This function may raise ValidationError if certain verification steps fail.
 
     We call CloudAccount.enable after creating it, and that effectively verifies AWS
-    permission and configures CloudTrail. If that fails, we must abort this creation.
+    permission. If that fails, we must abort this creation.
     That is why we put almost everything here in a transaction.atomic() context.
 
     Args:
