@@ -125,6 +125,12 @@ urlpatterns += [
     ),
     path("recalculate_runs/", views.recalculate_runs, name="internal-recalculate-runs"),
     path("redis_raw/", views.redis_raw, name="internal-redis-raw"),
+    path("tasks/", views.task_run, name="internal-task-run"),
+    path(
+        "tasks/<str:async_result_id>/",
+        views.task_get,
+        name="internal-task-collect",
+    ),
     path("sources_kafka/", views.sources_kafka, name="internal-sources-kafka"),
 ]
 

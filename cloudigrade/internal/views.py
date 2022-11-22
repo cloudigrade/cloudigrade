@@ -4,6 +4,9 @@ import logging
 import os
 
 from app_common_python import isClowderEnabled
+from celery import current_app as celery_app
+from celery.exceptions import NotRegistered
+from celery.result import AsyncResult
 from dateutil import tz
 from dateutil.parser import ParserError, parse
 from django.conf import settings
@@ -504,3 +507,82 @@ def redis_raw(request):
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return Response({"results": results}, status=status.HTTP_200_OK)
+
+
+@api_view(["POST"])
+@authentication_classes([IdentityHeaderAuthenticationInternal])
+@permission_classes([permissions.AllowAny])
+@schema(None)
+def task_run(request):
+    """
+    Execute an arbitrary task with optional keyword arguments.
+
+    This is an internal only API, so we do not want it to be in the openapi.spec.
+    Typical calls to this internal HTTP API would look like:
+
+        http localhost:8000/internal/tasks/ \
+            task_name="api.tasks.persist_inspection_cluster_results_task"
+
+        http localhost:8000/internal/tasks/ \
+            task_name="api.tasks.synthesize_concurrent_usage" \
+            kwargs:='{"__": null, "user_id": 1, "on_date": "2022-01-01"}'
+    """
+    serializer = serializers.InternalRunTaskInputSerializer(data=request.data)
+    if serializer.is_valid(raise_exception=True):
+        task_name = serializer.validated_data["task_name"]
+        kwargs = serializer.validated_data.get("kwargs", {})
+
+        signature = celery_app.signature(task_name)
+        try:
+            async_result = signature.delay(**kwargs)
+        except TypeError as e:
+            # TypeError may be raised if you send bad arguments to the delay function.
+            logger.info(e)
+            type_error_arg = e.args[0] if getattr(e, "args") else None
+            return Response(
+                {"error": type_error_arg},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return Response(
+            {"async_result_id": async_result.id}, status=status.HTTP_201_CREATED
+        )
+
+
+@api_view(["GET"])
+@authentication_classes([IdentityHeaderAuthenticationInternal])
+@permission_classes([permissions.AllowAny])
+@schema(None)
+def task_get(request, async_result_id):
+    """
+    Get the async result of a task by its async result ID.
+
+    This is an internal only API, so we do not want it to be in the openapi.spec.
+    Typical calls to this internal HTTP API would look like:
+
+        http localhost:8000/internal/tasks/e5a666a1-dadc-4de8-8f6e-53d4a0bec3a0/
+    """
+    try:
+        async_result = AsyncResult(async_result_id)
+        ready = async_result.ready()
+        result = async_result.get() if ready else None
+        return Response(
+            {"async_result_id": async_result_id, "ready": ready, "result": result}
+        )
+    except NotRegistered as e:
+        task_name = e.args[0] if getattr(e, "args") else None
+        return Response(
+            {
+                "async_result_id": async_result_id,
+                "error": f"not a registered task name: {task_name}",
+            }
+        )
+    except Exception as e:
+        logger.info(e)
+        error_args = [str(arg) for arg in getattr(e, "args", [])]
+        return Response(
+            {
+                "async_result_id": async_result_id,
+                "error_class": f"{e.__class__.__module__}.{e.__class__.__name__}",
+                "error_args": error_args,
+            }
+        )
