@@ -19,7 +19,7 @@ jobs:
       image: ghcr.io/cloudigrade/build-container:ubi-8.7-923-python-3.9.13
     steps:
       - uses: actions/checkout@v3
-      - run: pip install tox==3.27.1 poetry
+      - run: pip install tox==3.27.1
       - run: tox -e py39
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
@@ -43,7 +43,7 @@ jobs:
       image: ghcr.io/cloudigrade/build-container:ubi-8.7-923-python-3.9.13
     steps:
       - uses: actions/checkout@v3
-      - run: pip install tox==3.27.1 poetry
+      - run: pip install tox==3.27.1
       - run: tox -e flake8
 
   test-vulnerability:
