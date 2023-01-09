@@ -428,14 +428,14 @@ msrest = ">=0.6.21"
 
 [[package]]
 name = "azure-mgmt-resource"
-version = "21.2.1"
+version = "22.0.0"
 description = "Microsoft Azure Resource Management Client Library for Python"
 category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "azure-mgmt-resource-21.2.1.zip", hash = "sha256:bd2060d56393ffe6246a8f2ca67e754edd03ec07b975630b30ae03a8860597a7"},
-    {file = "azure_mgmt_resource-21.2.1-py3-none-any.whl", hash = "sha256:c6f6987e6f61f0cb23abc3fb3658770bae8d299a46834d43d4b20251495d3806"},
+    {file = "azure-mgmt-resource-22.0.0.zip", hash = "sha256:feb5d979e18b52f2cfd023b4a0a33e54a6f76cc6a252dc8cd75ece2c63298e94"},
+    {file = "azure_mgmt_resource-22.0.0-py3-none-any.whl", hash = "sha256:5c9712aacb230c7dde59cd7b43a734ed88a326140042ae02746d095fe779ae20"},
 ]
 
 [package.dependencies]
@@ -3276,6 +3276,7 @@ optional = false
 python-versions = "*"
 files = [
     {file = "python-crontab-2.6.0.tar.gz", hash = "sha256:1e35ed7a3cdc3100545b43e196d34754e6551e7f95e4caebbe0e1c0ca41c2f1b"},
+    {file = "python_crontab-2.6.0-py3-none-any.whl", hash = "sha256:f308a64b8b1d072da4a235e9320398a242e92d080c1d8143bd0c600b24e160f8"},
 ]
 
 [package.dependencies]
@@ -4283,4 +4284,4 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "161bb96be704379c190c87dc924992396171f9d8cb3d594a321ae8256cea483a"
+content-hash = "bc33683192839d4478d0da76803a5a653b819c9021f9ee95eb6812762f4826df"
