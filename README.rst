@@ -8,7 +8,12 @@ cloudigrade
 What is cloudigrade?
 ====================
 
-**cloudigrade** is an open-source suite of tools for tracking RHEL use in public cloud platforms. **cloudigrade** actively checks a user's account in a particular cloud for running instances, tracks when instances are powered on, determines if RHEL is installed on them, and provides the ability to generate reports to see how many cloud compute resources have been used in a given time period.
+**cloudigrade** was an open-source suite of tools for tracking RHEL use in public cloud platforms, but in early 2023, its features were stripped-down to support only the minimum needs of other internal Red Hat services. The `1.0.0 <https://github.com/cloudigrade/cloudigrade/releases/tag/1.0.0>`_ tag marks the last fully-functional version of **cloudigrade**.
+
+What did cloudigrade do?
+------------------------
+
+**cloudigrade** actively checked a user's account in a particular cloud for running instances, tracked when instances were powered on, determined if RHEL was installed on them, and provided the ability to generate reports to see how many cloud compute resources had been used in a given time period.
 
 See the `cloudigrade wiki <https://github.com/cloudigrade/cloudigrade/wiki>`_ or the following documents for more details:
 
