@@ -2,7 +2,7 @@
 cloudigrade
 ***********
 
-|license| |Build Status| |codecov|
+|license| |Tests Status| |codecov|
 
 
 What is cloudigrade?
@@ -26,7 +26,7 @@ Doppler was an early code name for **cloudigrade**. Cloud Meter is a product-ize
 
 .. |license| image:: https://img.shields.io/github/license/cloudigrade/cloudigrade.svg
    :target: https://github.com/cloudigrade/cloudigrade/blob/master/LICENSE
-.. |Build Status| image:: https://github.com/cloudigrade/cloudigrade/actions/workflows/push.yml/badge.svg?branch=master
-   :target: https://github.com/cloudigrade/cloudigrade/actions?query=branch%3Amaster
+.. |Tests Status| image:: https://github.com/cloudigrade/cloudigrade/actions/workflows/tests.yml/badge.svg?branch=master
+   :target: https://github.com/cloudigrade/cloudigrade/actions/workflows/tests.yml?query=branch%3Amaster
 .. |codecov| image:: https://codecov.io/gh/cloudigrade/cloudigrade/branch/master/graph/badge.svg
    :target: https://codecov.io/gh/cloudigrade/cloudigrade
