@@ -414,18 +414,6 @@ def generate_dummy_aws_cloud_account_post_data():
     return data
 
 
-def generate_dummy_s3_testevent_message():
-    """Generate a fake s3:TestEvent message for testing."""
-    return (
-        '{"Service":"Amazon S3","Event":"s3:TestEvent",'
-        f'"Time":"{_faker.iso8601(timespec="milliseconds")}Z",'
-        f'"Bucket":"{_faker.slug()}","RequestId":"'
-        f'{_faker.password(length=16, special_chars=False, lower_case=False)}",'
-        f'"HostId":"{base64.b64encode(_faker.binary(length=56)).decode("utf-8")}"'
-        "}"
-    )
-
-
 def generate_dummy_azure_cloud_account_post_data():
     """
     Generate all post data needed for creating an AzureCloudAccount.
