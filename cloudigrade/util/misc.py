@@ -28,20 +28,6 @@ def redact_json_dict_secrets(data):
             redact_json_dict_secrets(item)
 
 
-def generate_device_name(index, prefix="/dev/xvd"):
-    """
-    Generate a linux device name based on provided index and prefix.
-
-    Args:
-        index (int): Index of the device to generate the name for.
-        prefix (str): Prefix for the device name.
-
-    Returns (str): Generated device name.
-
-    """
-    return f"{prefix}" f'{chr(ord("b") + int(index / 26)) + chr(ord("a") + index % 26)}'
-
-
 def truncate_date(original):
     """
     Ensure the date is in the past or present, not the future.

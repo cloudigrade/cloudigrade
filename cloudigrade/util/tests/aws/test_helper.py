@@ -7,7 +7,6 @@ from django.test import TestCase
 
 from util.aws import helper
 from util.exceptions import AwsThrottlingException
-from util.tests import helper as test_helper
 
 
 class UtilAwsHelperTest(TestCase):
@@ -391,21 +390,3 @@ class UtilAwsHelperTest(TestCase):
 
         with self.assertRaises(ClientError):
             helper._verify_policy_action(mock_session, action)
-
-    @patch("util.aws.helper.boto3.client")
-    def test_get_region_from_availability_zone(self, mock_client):
-        """Assert that the proper region is returned for an AZ."""
-        expected_region = test_helper.get_random_region()
-        zone = test_helper.generate_dummy_availability_zone(expected_region)
-
-        az_response = {
-            "AvailabilityZones": [
-                {"State": "available", "RegionName": expected_region, "ZoneName": zone}
-            ]
-        }
-
-        mock_desc = mock_client.return_value.describe_availability_zones
-        mock_desc.return_value = az_response
-
-        actual_region = helper.get_region_from_availability_zone(zone)
-        self.assertEqual(expected_region, actual_region)

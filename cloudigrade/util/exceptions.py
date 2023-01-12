@@ -28,42 +28,6 @@ class NotReadyException(Exception):
         self.message = message
 
 
-class AwsSnapshotCopyLimitError(NotReadyException):
-    """The limit on concurrent snapshot copy operations has been met."""
-
-
-class AwsSnapshotNotOwnedError(NotReadyException):
-    """Raise when our account id does not have permissions on the snapshot."""
-
-
-class AwsSnapshotOwnedError(NotReadyException):
-    """Raise if account id has permissions on the snapshot after removal."""
-
-
-class ImageNotReadyException(NotReadyException):
-    """The requested image was not ready."""
-
-
-class SnapshotNotReadyException(NotReadyException):
-    """The requested snapshot was not ready."""
-
-
-class AwsImageError(Exception):
-    """The requested image is in a failed state."""
-
-
-class AwsSnapshotError(Exception):
-    """The requested snapshot is in an error state."""
-
-
-class AwsVolumeNotReadyError(NotReadyException):
-    """The requested volume was not ready."""
-
-
-class AwsVolumeError(Exception):
-    """The requested volume is not in an acceptable state."""
-
-
 class AwsAutoScalingGroupNotFound(Exception):
     """The requested AutoScaling group was not found."""
 

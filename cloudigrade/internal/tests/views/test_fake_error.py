@@ -70,7 +70,7 @@ class FakeErrorViewTest(TestCase):
 
     def test_fake_error_handles_bad_kwargs(self):
         """Test fake_error returns 400 if invalid kwargs are given for the exception."""
-        name = "SnapshotNotReadyException"
+        name = "NotReadyException"
         kwargs = {"precious": "taters"}
 
         request = self.factory.post(
