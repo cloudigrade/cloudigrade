@@ -25,10 +25,7 @@ from api.models import (
     MachineImageInspectionStart,
 )
 from util import OPENSHIFT_TAG, RHEL_TAG, aws
-from util.exceptions import (
-    InvalidArn,
-    InvalidHoundigradeJsonFormat,
-)
+from util.exceptions import InvalidArn, InvalidHoundigradeJsonFormat
 from util.misc import get_now
 
 logger = logging.getLogger(__name__)
