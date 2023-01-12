@@ -3,7 +3,6 @@ import logging
 import uuid
 from functools import wraps
 
-import boto3
 from botocore.exceptions import ClientError
 from django.utils.translation import gettext as _
 
@@ -239,18 +238,3 @@ def rewrap_aws_errors(original_function):
         return result
 
     return wrapped
-
-
-def get_region_from_availability_zone(zone):
-    """
-    Get the underlying region for an availability zone.
-
-    Args:
-        zone (str): The availability zone to check
-
-    Returns:
-        str: The region associated with the zone
-
-    """
-    response = boto3.client("ec2").describe_availability_zones(ZoneNames=[zone])
-    return response["AvailabilityZones"][0]["RegionName"]

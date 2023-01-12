@@ -12,26 +12,14 @@ from util.aws.cloudtrail import (
 )
 from util.aws.ec2 import (
     InstanceState,
-    add_snapshot_ownership,
-    check_snapshot_state,
-    check_volume_state,
-    copy_ami,
-    copy_snapshot,
-    create_volume,
     describe_image,
     describe_images,
     describe_instances,
     describe_instances_everywhere,
-    get_ami,
-    get_ami_snapshot_id,
-    get_snapshot,
-    get_volume,
     is_windows,
-    remove_snapshot_ownership,
 )
 from util.aws.helper import (
     COMMON_AWS_ACCESS_DENIED_ERROR_CODES,
-    get_region_from_availability_zone,
     get_regions,
     rewrap_aws_errors,
     verify_account_access,

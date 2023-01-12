@@ -16,7 +16,7 @@ from django.conf import settings
 
 from api import AWS_PROVIDER_STRING, AZURE_PROVIDER_STRING
 from api.models import User
-from util import OPENSHIFT_TAG, aws, misc
+from util import OPENSHIFT_TAG, aws
 
 _faker = faker.Faker()
 
@@ -301,13 +301,6 @@ def generate_dummy_aws_account_id():
     return Decimal(random.randrange(MIN_AWS_ACCOUNT_ID, MAX_AWS_ACCOUNT_ID))
 
 
-def generate_dummy_availability_zone(region=None):
-    """Generate a dummy AWS availability zone for testing purposes."""
-    if region is None:
-        region = get_random_region()
-    return "{}{}".format(region, random.choice(string.ascii_lowercase))
-
-
 def generate_dummy_instance_id():
     """Generate a dummy AWS EC2 instance ID for testing purposes."""
     return "i-{}".format(
@@ -342,20 +335,6 @@ def generate_dummy_azure_image_id():
     return (
         f"/subscriptions/{uuid.uuid4()}/resourceGroups/{_faker.word()}"
         f"/providers/Microsoft.Compute/images/{_faker.word()}"
-    )
-
-
-def generate_dummy_snapshot_id():
-    """Generate a dummy AWS snapshot ID for testing purposes."""
-    return "snap-{}".format(
-        "".join(random.choice(string.hexdigits[:16]) for _ in range(17))
-    )
-
-
-def generate_dummy_volume_id():
-    """Generate a dummy AWS volume ID for testing purposes."""
-    return "vol-{}".format(
-        "".join(random.choice(string.hexdigits[:16]) for _ in range(17))
     )
 
 
@@ -465,65 +444,6 @@ def get_random_region(cloud_type=AWS_PROVIDER_STRING):
         return random.choice(SOME_AWS_REGIONS)
 
 
-def generate_dummy_block_device_mapping(
-    device_name=None,
-    device_type="Ebs",
-    attach_time=None,
-    delete_on_termination=True,
-    status="attached",
-    volume_id=None,
-):
-    """
-    Generate block device mapping to imitate part of 'describe instances' API response.
-
-    All arguments are optional, and any not given will be randomly generated.
-
-    Args:
-        device_name (str): Optional known DeviceName value.
-        device_type (str): Optional known device type key for nested status details.
-        attach_time (str): Optional known AttachTime value.
-        delete_on_termination (bool): Optional known DeleteOnTermination value.
-        status (str): Optional known Status.
-        volume_id (str): Optional known VolumeId value.
-
-    Returns:
-        dict: Well-formed BlockDeviceMapping data structure. Example:
-        {
-          "DeviceName": "/dev/xvda",
-          "Ebs": {
-            "AttachTime": "2020-10-08T19:07:23+00:00",
-            "DeleteOnTermination": true,
-            "Status": "attached",
-            "VolumeId": "vol-06c61265cb97c1e1e"
-          }
-        }
-
-    """
-    if device_name is None:
-        device_index = random.randint(0, 100)
-        device_name = misc.generate_device_name(device_index)
-
-    if attach_time is None:
-        attach_time = misc.get_now().isoformat()
-
-    if status is None:
-        status = random.choice(["attaching", "attached", "detaching"])
-
-    if volume_id is None:
-        volume_id = generate_dummy_volume_id()
-
-    mapping = {
-        "DeviceName": device_name,
-        device_type: {
-            "AttachTime": attach_time,
-            "DeleteOnTermination": delete_on_termination,
-            "Status": status,
-            "VolumeId": volume_id,
-        },
-    }
-    return mapping
-
-
 def generate_dummy_describe_instance(
     instance_id=None,
     image_id=None,
@@ -571,10 +491,7 @@ def generate_dummy_describe_instance(
         instance_type = get_random_instance_type()
 
     if device_mappings is None:
-        device_mappings = [
-            generate_dummy_block_device_mapping(),
-            generate_dummy_block_device_mapping(),
-        ]
+        device_mappings = [dict(), dict()]
 
     mock_instance = {
         "BlockDeviceMappings": device_mappings,
@@ -671,105 +588,6 @@ def generate_dummy_role():
         },
         "foo": "bar",
     }
-
-
-def generate_mock_image(image_id=None, encrypted=False, state=None):
-    """
-    Generate a mocked EC2 Image object.
-
-    Args:
-        image_id (str): The AMI image id.
-        encrypted (bool): Is the image's device encrypted.
-        state (str): The state of the image.
-
-    Returns:
-        Mock: A mock object with Image-like attributes.
-
-    """
-    root_device_name = "/dev/sda1"
-    root_device_type = "ebs"
-    volume_types = ("gp2", "io1", "st1", "sc1")
-    block_device_mappings = [
-        {
-            "DeviceName": root_device_name,
-            root_device_type.capitalize(): {
-                "Encrypted": encrypted,
-                "DeleteOnTermination": False,
-                "SnapshotId": generate_dummy_snapshot_id(),
-                "VolumeSize": random.randint(0, 10),
-                "VolumeType": random.choice(volume_types),
-            },
-        }
-    ]
-
-    mock_image = Mock()
-    mock_image.image_id = image_id
-    mock_image.root_device_name = root_device_name
-    mock_image.root_device_type = root_device_type
-    mock_image.block_device_mappings = block_device_mappings
-    mock_image.state = state
-    return mock_image
-
-
-def generate_mock_snapshot(
-    snapshot_id=None, encrypted=False, state=None, owner_id=None
-):
-    """
-    Generate a mocked EC2 Image Snapshot object.
-
-    Args:
-        snapshot_id (str): The AWS snapshot id.
-        encrypted (bool): Indicate if the image is encrypted.
-        state (str): The AWS state of the snapshot.
-        owner_id (str): The AWS account ID that owns this image.
-
-    Returns:
-        Mock: A mock object with Snapshot-like attributes.
-
-    """
-    if snapshot_id is None:
-        snapshot_id = generate_dummy_snapshot_id()
-    if state is None:
-        state = "completed"
-
-    mock_snapshot = Mock()
-    mock_snapshot.snapshot_id = snapshot_id
-    mock_snapshot.encrypted = encrypted
-    mock_snapshot.state = state
-    mock_snapshot.owner_id = owner_id
-    return mock_snapshot
-
-
-def generate_mock_volume(volume_id=None, snapshot_id=None, zone=None, state=None):
-    """
-    Generate a mocked EC2 EBS Volume object.
-
-    Args:
-        volume_id (str): Optional volume id.
-        snapshot_id (str): Optional snapshot id.
-        zone (str): Optional availability zone.
-
-    Returns:
-        Mock: A mock object with Volume-like attributes.
-
-    """
-    if volume_id is None:
-        volume_id = generate_dummy_volume_id()
-    if snapshot_id is None:
-        snapshot_id = generate_dummy_snapshot_id()
-    if zone is None:
-        zone = generate_dummy_availability_zone()
-    if state is None:
-        state = random.choice(
-            ("creating", "available", "in-use", "deleting", "deleted", "error")
-        )
-
-    mock_volume = Mock()
-    mock_volume.id = volume_id
-    mock_volume.snapshot_id = snapshot_id
-    mock_volume.zone = zone
-    mock_volume.state = state
-    return mock_volume
 
 
 def generate_mock_sqs_message(message_id, body, receipt_handle):

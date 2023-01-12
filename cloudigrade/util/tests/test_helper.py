@@ -3,9 +3,7 @@
 Because even test helpers should be tested!
 """
 import datetime
-import random
 import re
-import string
 
 import faker
 from django.db.models.signals import post_save
@@ -45,44 +43,6 @@ class UtilHelperTest(TestCase):
         arn = helper.generate_dummy_arn(resource=resource)
         self.assertTrue(arn.endswith(resource))
 
-    @helper.clouditardis(helper.utc_dt(2020, 1, 2, 3, 4, 5))
-    def test_generate_dummy_block_device_mapping_default(self):
-        """Assert generated block device mapping has values where expected."""
-        device_mapping = helper.generate_dummy_block_device_mapping()
-        self.assertIsNotNone(device_mapping["DeviceName"])
-        self.assertTrue(device_mapping["DeviceName"].startswith("/dev/"))
-        self.assertIsNotNone(device_mapping["Ebs"])
-        self.assertEqual(
-            device_mapping["Ebs"]["AttachTime"], "2020-01-02T03:04:05+00:00"
-        )
-        self.assertTrue(device_mapping["Ebs"]["DeleteOnTermination"])
-        self.assertEqual(device_mapping["Ebs"]["Status"], "attached")
-        self.assertIsNotNone(device_mapping["Ebs"]["VolumeId"])
-        self.assertTrue(device_mapping["Ebs"]["VolumeId"].startswith("vol-"))
-
-    def test_generate_dummy_block_device_mapping_with_values(self):
-        """Assert generated block device mapping contains given values."""
-        device_name = "/dev/potato"
-        device_type = "gem"
-        attach_time = "2020-10-08T16:16:16+00:00"
-        delete_on_termination = False
-        status = "delicious"
-        volume_id = "vol-taters"
-        device_mapping = helper.generate_dummy_block_device_mapping(
-            device_name=device_name,
-            device_type=device_type,
-            attach_time=attach_time,
-            delete_on_termination=delete_on_termination,
-            status=status,
-            volume_id=volume_id,
-        )
-        self.assertEqual(device_mapping["DeviceName"], device_name)
-        self.assertIn(device_type, device_mapping)
-        self.assertEqual(device_mapping[device_type]["AttachTime"], attach_time)
-        self.assertFalse(device_mapping[device_type]["DeleteOnTermination"])
-        self.assertEqual(device_mapping[device_type]["Status"], status)
-        self.assertEqual(device_mapping[device_type]["VolumeId"], volume_id)
-
     def test_generate_dummy_describe_instance_default(self):
         """Assert generated instance has values where expected."""
         instance = helper.generate_dummy_describe_instance()
@@ -102,7 +62,7 @@ class UtilHelperTest(TestCase):
         subnet_id = helper.generate_dummy_subnet_id()
         state = aws.InstanceState.shutting_down
         instance_type = helper.get_random_instance_type()
-        device_mapping = helper.generate_dummy_block_device_mapping()
+        device_mapping = dict()
         instance = helper.generate_dummy_describe_instance(
             instance_id=instance_id,
             image_id=image_id,
@@ -125,68 +85,12 @@ class UtilHelperTest(TestCase):
         instance = helper.generate_dummy_describe_instance(no_subnet=True)
         self.assertNotIn("SubnetId", instance)
 
-    def test_generate_mock_image(self):
-        """Assert generated image contains given value."""
-        image_id = helper.generate_dummy_image_id()
-        encrypted = random.choice((True, False))
-        image = helper.generate_mock_image(image_id, encrypted)
-
-        self.assertEqual(image.image_id, image_id)
-        self.assertIsNotNone(image.root_device_name)
-        self.assertIsNotNone(image.root_device_type)
-        self.assertIsInstance(image.block_device_mappings, list)
-        self.assertIsInstance(image.block_device_mappings[0], dict)
-
-    def test_generate_dummy_snapshot_id(self):
-        """Assert generated id has the appropriate format."""
-        snapshot_id = helper.generate_dummy_snapshot_id()
-        hex_part = snapshot_id.split("snap-")[1]
-
-        self.assertIn("snap-", snapshot_id)
-        self.assertEqual(len(hex_part), 17)
-        for digit in hex_part:
-            self.assertIn(digit, string.hexdigits)
-
-    def test_generate_mock_snapshot_defaults(self):
-        """Assert snapshots are created without provided values."""
-        snapshot = helper.generate_mock_snapshot()
-        self.assertIsNotNone(snapshot.snapshot_id)
-        self.assertIsNotNone(snapshot.encrypted)
-
-    def test_generate_mock_snapshot_id_included(self):
-        """Assert snapshots are created with provided id."""
-        snapshot_id = helper.generate_dummy_snapshot_id()
-        snapshot = helper.generate_mock_snapshot(snapshot_id)
-        self.assertEqual(snapshot.snapshot_id, snapshot_id)
-
-    def test_generate_mock_snapshot_id_encrypted(self):
-        """Assert created snapshots obey the encrypted arg."""
-        snapshot = helper.generate_mock_snapshot(encrypted=True)
-        self.assertTrue(snapshot.encrypted)
-
     def test_utc_dt(self):
         """Assert utc_dt adds timezone info."""
         d_no_tz = datetime.datetime(2018, 1, 1)
         d_helped = helper.utc_dt(2018, 1, 1)
         self.assertNotEqual(d_helped, d_no_tz)
         self.assertIsNotNone(d_helped.tzinfo)
-
-    def test_generate_dummy_availability_zone(self):
-        """Assert generation of an appropriate availability zone."""
-        zone = helper.generate_dummy_availability_zone()
-        self.assertIn(zone[:-1], helper.SOME_AWS_REGIONS)
-
-    def test_generate_dummy_availability_zone_with_region(self):
-        """Assert region is used to generate availability zone."""
-        region = helper.get_random_region()
-        zone = helper.generate_dummy_availability_zone(region)
-        self.assertEqual(zone[:-1], region)
-
-    def test_generate_dummy_volume_id(self):
-        """Assert generation of an appropriate volume ID."""
-        volume_id = helper.generate_dummy_volume_id()
-        self.assertTrue(volume_id.startswith("vol-"))
-        self.assertEqual(len(volume_id), 21)
 
     def test_generate_dummy_image_id(self):
         """Assert generation of an appropriate image ID."""

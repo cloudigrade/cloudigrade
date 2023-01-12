@@ -663,11 +663,6 @@ def start_image_inspection(arn, ami_id, region):
             )
             machine_image.status = machine_image.INSPECTED
             machine_image.save()
-        else:
-            # Local import to get around a circular import issue
-            from api.clouds.aws.tasks import copy_ami_snapshot
-
-            copy_ami_snapshot.delay(arn, ami_id, region)
 
         return machine_image
 
@@ -712,105 +707,6 @@ def create_aws_machine_image_copy(copy_ami_id, reference_ami_id):
         # This should not be necessary, but we really need this to exist.
         # If it doesn't, this will kill the transaction with an exception.
         awsmachineimagecopy.machine_image.get()
-
-
-@transaction.atomic
-def get_aws_machine_image(ec2_ami_id):
-    """
-    Get the AwsMachineImage and its MachineImage for the given EC2 AMI ID.
-
-    If either the AwsMachineImage or its related MachineImage object could not
-    be loaded, return (None, None).
-
-    Args:
-        ec2_ami_id (str): the AWS EC2 AMI ID for the image
-
-    Returns:
-        tuple of AwsMachineImage, MachineImage or tuple None, None.
-
-    """
-    try:
-        aws_machine_image = AwsMachineImage.objects.get(ec2_ami_id=ec2_ami_id)
-        machine_image = aws_machine_image.machine_image.get()
-    except AwsMachineImage.DoesNotExist:
-        logger.warning(
-            _("AwsMachineImage for ec2_ami_id %(ec2_ami_id)s not found"),
-            {"ec2_ami_id": ec2_ami_id},
-        )
-        return None, None
-    except MachineImage.DoesNotExist:
-        logger.warning(
-            _("MachineImage for ec2_ami_id %(ec2_ami_id)s not found"),
-            {"ec2_ami_id": ec2_ami_id},
-        )
-        return None, None
-    return aws_machine_image, machine_image
-
-
-def update_aws_image_status_inspected(
-    ec2_ami_id, aws_marketplace_image=None, inspection_json=None
-):
-    """
-    Set an AwsMachineImage's MachineImage status to INSPECTED.
-
-    Args:
-        ec2_ami_id (str): the AWS EC2 AMI ID of the AwsMachineImage to update.
-        aws_marketplace_image (bool): optional value for aws_marketplace_image.
-        inspection_json (str): optional value for inspection_json.
-
-    Returns:
-        bool True if status is successfully updated, else False.
-
-    """
-    with transaction.atomic():
-        aws_machine_image, machine_image = get_aws_machine_image(ec2_ami_id)
-        if not aws_machine_image:
-            logger.warning(
-                _(
-                    "AwsMachineImage with EC2 AMI ID %(ec2_ami_id)s could not "
-                    "be found for update_aws_image_status_inspected"
-                ),
-                {"ec2_ami_id": ec2_ami_id},
-            )
-            return False
-        if aws_marketplace_image is not None:
-            aws_machine_image.aws_marketplace_image = aws_marketplace_image
-            aws_machine_image.save()
-        machine_image.status = machine_image.INSPECTED
-        if inspection_json is not None:
-            machine_image.inspection_json = inspection_json
-        machine_image.save()
-    return True
-
-
-def update_aws_image_status_error(ec2_ami_id, is_encrypted=None):
-    """
-    Set an AwsMachineImage's MachineImage status to ERROR.
-
-    Args:
-        ec2_ami_id (str): the AWS EC2 AMI ID of the AwsMachineImage to update.
-        is_encrypted (bool): optionally also set MachineImage.encrypted.
-
-    Returns:
-        bool True if status is successfully updated, else False.
-
-    """
-    with transaction.atomic():
-        aws_machine_image, machine_image = get_aws_machine_image(ec2_ami_id)
-        if not aws_machine_image:
-            logger.warning(
-                _(
-                    "AwsMachineImage with EC2 AMI ID %(ec2_ami_id)s could not "
-                    "be found for update_aws_image_status_error"
-                ),
-                {"ec2_ami_id": ec2_ami_id},
-            )
-            return False
-        if is_encrypted is not None:
-            machine_image.is_encrypted = is_encrypted
-        machine_image.status = machine_image.ERROR
-        machine_image.save()
-    return True
 
 
 def verify_permissions(customer_role_arn):  # noqa: C901

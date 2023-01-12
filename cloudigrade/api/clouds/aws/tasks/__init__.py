@@ -30,8 +30,6 @@ decorator even if the function itself is renamed or moved elsewhere.
 from api.clouds.aws.tasks.cloudtrail import analyze_log
 from api.clouds.aws.tasks.inspection import launch_inspection_instance
 from api.clouds.aws.tasks.imageprep import (
-    CLOUD_KEY,
-    CLOUD_TYPE_AWS,
     copy_ami_snapshot,
     copy_ami_to_customer_account,
     delete_snapshot,
