@@ -80,10 +80,6 @@ class AwsTooManyECSInstances(NotReadyException):
     """Raise when there are too many AWS ECS Container Instances."""
 
 
-class InvalidHoundigradeJsonFormat(Exception):
-    """Raise when houndigrade returns json that does not have images."""
-
-
 class AwsPolicyCreationException(Exception):
     """Raise when AWS Policy fails creation unexpectedly."""
 
