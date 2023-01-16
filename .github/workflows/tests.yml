@@ -16,7 +16,7 @@ jobs:
     name: py39
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/cloudigrade/build-container:ubi-8.7-1031-python-3.9.13
+      image: ghcr.io/cloudigrade/build-container:ubi-8.7-1049-python-3.9.13
     steps:
       - uses: actions/checkout@v3
       - run: pip install tox~=4.0.8
