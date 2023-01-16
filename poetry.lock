@@ -3698,14 +3698,14 @@ win32 = ["pywin32"]
 
 [[package]]
 name = "sentry-sdk"
-version = "1.12.1"
+version = "1.13.0"
 description = "Python client for Sentry (https://sentry.io)"
 category = "main"
 optional = false
 python-versions = "*"
 files = [
-    {file = "sentry-sdk-1.12.1.tar.gz", hash = "sha256:5bbe4b72de22f9ac1e67f2a4e6efe8fbd595bb59b7b223443f50fe5802a5551c"},
-    {file = "sentry_sdk-1.12.1-py2.py3-none-any.whl", hash = "sha256:9f0b960694e2d8bb04db4ba6ac2a645040caef4e762c65937998ff06064f10d6"},
+    {file = "sentry-sdk-1.13.0.tar.gz", hash = "sha256:72da0766c3069a3941eadbdfa0996f83f5a33e55902a19ba399557cfee1dddcc"},
+    {file = "sentry_sdk-1.13.0-py2.py3-none-any.whl", hash = "sha256:b7ff6318183e551145b5c4766eb65b59ad5b63ff234dffddc5fb50340cad6729"},
 ]
 
 [package.dependencies]
@@ -3732,6 +3732,7 @@ rq = ["rq (>=0.6)"]
 sanic = ["sanic (>=0.8)"]
 sqlalchemy = ["sqlalchemy (>=1.2)"]
 starlette = ["starlette (>=0.19.1)"]
+starlite = ["starlite (>=1.48)"]
 tornado = ["tornado (>=5)"]
 
 [[package]]
@@ -4284,4 +4285,4 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "bc33683192839d4478d0da76803a5a653b819c9021f9ee95eb6812762f4826df"
+content-hash = "1aaaf6d4b56284f04d895c83c926886cb1fa1017e6d4d506b513adf3509480f3"
