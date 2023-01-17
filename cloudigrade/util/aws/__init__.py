@@ -24,22 +24,13 @@ from util.aws.helper import (
     rewrap_aws_errors,
     verify_account_access,
 )
-from util.aws.s3 import get_object_content_from_s3
 from util.aws.sqs import (
-    SQS_RECEIVE_BATCH_SIZE,
-    SQS_SEND_BATCH_SIZE,
-    add_messages_to_queue,
     create_queue,
-    delete_messages_from_queue,
     ensure_queue_has_dlq,
-    extract_sqs_message,
     get_sqs_approximate_number_of_messages,
     get_sqs_queue_dlq_name,
     get_sqs_queue_url,
-    read_messages_from_queue,
-    receive_messages_from_queue,
     set_visibility_timeout,
-    yield_messages_from_queue,
 )
 from util.aws.sts import get_session, get_session_account_id
 
