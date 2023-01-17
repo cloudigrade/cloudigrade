@@ -590,26 +590,6 @@ def generate_dummy_role():
     }
 
 
-def generate_mock_sqs_message(message_id, body, receipt_handle):
-    """
-    Generate a mocked SQS Message object.
-
-    Args:
-        message_id (str): The SQS message id.
-        body (str): The message contents.
-        receipt_handle (str): The SQS receipt handle.
-
-    Returns:
-        Mock: A mock object with Message-like attributes.
-
-    """
-    mock_message = Mock()
-    mock_message.message_id = message_id
-    mock_message.receipt_handle = receipt_handle
-    mock_message.body = body
-    return mock_message
-
-
 def utc_dt(*args, **kwargs):
     """Wrap datetime construction to force result to UTC.
 
