@@ -23,7 +23,6 @@ def persist_inspection_cluster_results_task():
     This is a placeholder for old in-flight tasks during the shutdown transition.
     """
     # TODO FIXME Delete this function once we're confident no tasks exists.
-    return False
 
 
 @shared_task(name="api.tasks.inspect_pending_images")

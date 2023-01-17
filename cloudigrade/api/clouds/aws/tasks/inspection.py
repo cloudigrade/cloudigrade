@@ -13,4 +13,3 @@ def launch_inspection_instance(ami_id, snapshot_copy_id):
     This is a placeholder for old in-flight tasks during the shutdown transition.
     """
     # TODO FIXME Delete this function once we're confident no tasks exists.
-    return False
