@@ -2,22 +2,14 @@
 import logging
 
 from azure.core.exceptions import ClientAuthenticationError
-from django.conf import settings
 from django.utils.translation import gettext as _
 from rest_framework.serializers import ValidationError
 
 from api import error_codes
 from api.authentication import get_user_by_account
-from api.clouds.azure.models import AzureCloudAccount
-from api.clouds.azure.util import (
-    create_azure_cloud_account,
-    create_initial_azure_instance_events,
-    create_new_machine_images,
-)
+from api.clouds.azure.util import create_azure_cloud_account
 from api.models import User
-from util.azure.vm import get_vms_for_subscription
 from util.celery import retriable_shared_task, shared_task
-from util.misc import lock_task_for_user_ids
 
 logger = logging.getLogger(__name__)
 
@@ -112,87 +104,11 @@ def check_azure_subscription_and_create_cloud_account(
     autoretry_for=(ClientAuthenticationError,),
 )
 def initial_azure_vm_discovery(azure_cloud_account_id):
+    """Do nothing.
+
+    This is a placeholder for old in-flight tasks during the shutdown transition.
     """
-    Fetch and save instances data found upon enabling an AzureCloudAccount.
-
-    Args:
-        azure_cloud_account_id (int): the AzureCloudAccount id
-    """
-    if settings.IS_PRODUCTION:
-        logger.info(_("Azure VM discovery is disabled in production"))
-        return
-
-    try:
-        azure_cloud_account = AzureCloudAccount.objects.get(pk=azure_cloud_account_id)
-    except AzureCloudAccount.DoesNotExist:
-        logger.warning(
-            _("AzureCloudAccount id %s could not be found for initial vm discovery"),
-            azure_cloud_account_id,
-        )
-        return
-
-    cloud_account = azure_cloud_account.cloud_account.get()
-    if not cloud_account.is_enabled:
-        logger.warning(
-            _("AzureCloudAccount id %s is not enabled; skipping initial vm discovery"),
-            azure_cloud_account_id,
-        )
-        return
-
-    if cloud_account.platform_application_is_paused:
-        logger.warning(
-            _("AzureCloudAccount id %s is paused; skipping initial vm discovery"),
-            azure_cloud_account_id,
-        )
-        return
-
-    try:
-        user_id = cloud_account.user.id
-    except User.DoesNotExist:
-        logger.info(
-            _(
-                "User for account id %s has already been deleted; "
-                "skipping initial vm discovery."
-            ),
-            azure_cloud_account_id,
-        )
-        return
-
-    account_subscription_id = azure_cloud_account.subscription_id
-    vms_data = get_vms_for_subscription(account_subscription_id)
-
-    # Lock the task at a user level. A user can only run one task at a time.
-    with lock_task_for_user_ids([user_id]):
-        try:
-            AzureCloudAccount.objects.get(pk=azure_cloud_account_id)
-        except AzureCloudAccount.DoesNotExist:
-            logger.warning(
-                _(
-                    "AzureCloudAccount id %s no longer exists; "
-                    "skipping initial vm discovery."
-                ),
-                azure_cloud_account_id,
-            )
-            return
-
-        logger.info(
-            _(
-                "Initiating an Initial VM Discovery for the "
-                "Azure cloud account id %(azure_cloud_account_id)s "
-                "with the Azure subscription id %(subscription_id)s."
-            ),
-            {
-                "azure_cloud_account_id": azure_cloud_account_id,
-                "subscription_id": account_subscription_id,
-            },
-        )
-        new_vm_skus = create_new_machine_images(vms_data)
-        logger.info(
-            _("New machine image skus created: %(new_vm_skus)s"),
-            {"new_vm_skus": new_vm_skus},
-        )
-        create_initial_azure_instance_events(cloud_account, vms_data)
-        return
+    # TODO FIXME Delete this function once we're confident no tasks exists.
 
 
 @shared_task(name="api.clouds.azure.tasks.update_azure_instance_events")
@@ -202,7 +118,6 @@ def update_azure_instance_events():
     This is a placeholder for old in-flight tasks during the shutdown transition.
     """
     # TODO FIXME Delete this function once we're confident no tasks exists.
-    return False
 
 
 @shared_task(name="api.clouds.azure.tasks.update_azure_instance_events_for_account")
@@ -212,4 +127,3 @@ def update_azure_instance_events_for_account(cloud_account_id):
     This is a placeholder for old in-flight tasks during the shutdown transition.
     """
     # TODO FIXME Delete this function once we're confident no tasks exists.
-    return False
