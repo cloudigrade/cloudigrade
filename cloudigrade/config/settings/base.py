@@ -365,8 +365,6 @@ logging.config.dictConfig(LOGGING)
 #####################################################################
 # AWS S3 (file buckets)
 
-S3_DEFAULT_REGION = env("S3_DEFAULT_REGION", default="us-east-1")
-
 # S3 configs for buckets that handle customer CloudTrail logs
 AWS_S3_BUCKET_NAME = f"{AWS_NAME_PREFIX}cloudigrade-trails"
 AWS_S3_BUCKET_LC_NAME = env("AWS_S3_BUCKET_LC_NAME", default="s3_lifecycle_policy")

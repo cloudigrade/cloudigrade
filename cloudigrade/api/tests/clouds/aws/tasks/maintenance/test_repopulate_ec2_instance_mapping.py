@@ -1,4 +1,4 @@
-"""Collection of tests for aws.tasks.cloudtrail.repopulate_ec2_instance_mapping."""
+"""Collection of tests for aws.tasks.maintenance.repopulate_ec2_instance_mapping."""
 import json
 from unittest.mock import Mock, patch
 
