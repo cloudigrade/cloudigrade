@@ -3,11 +3,10 @@ import collections
 import itertools
 import logging
 from datetime import datetime, timedelta
-from decimal import Decimal
 
 from dateutil import tz
 from django.conf import settings
-from django.db import IntegrityError, transaction
+from django.db import transaction
 from django.db.models import Q
 from django.utils.translation import gettext as _
 
@@ -789,52 +788,3 @@ def find_problematic_runs(user_id=None):
         ).exists():
             problematic_runs.append(run)
     return problematic_runs
-
-
-def save_instance_type_definitions(definitions, cloud_type):
-    """
-    Save instance type definitions to our database.
-
-    Note:
-        If an instance type name already exists in the DB, do NOT overwrite it.
-
-    Args:
-        definitions (dict): dict of dicts where the outer key is the instance
-        type name and the inner dict has keys memory, vcpu and json_definition.
-        For example: {'r5.large': {'memory': 24.0, 'vcpu': 1, 'json_definition': {...}}}
-
-        cloud_type (str): str representing the source cloud of the definition.
-
-    Returns:
-        None
-
-    """
-    for name, attributes in definitions.items():
-        try:
-            obj, created = InstanceDefinition.objects.get_or_create(
-                instance_type=name,
-                cloud_type=cloud_type,
-                defaults={
-                    "memory_mib": attributes["memory"],
-                    "vcpu": Decimal(attributes["vcpu"]),
-                    "json_definition": attributes["json_definition"],
-                },
-            )
-            if created:
-                logger.info(_("Saving new instance type %s"), obj.instance_type)
-            else:
-                logger.info(_("Instance type %s already exists."), obj.instance_type)
-        except IntegrityError as e:
-            logger.exception(
-                _(
-                    "Failed to get_or_create an InstanceDefinition("
-                    'name="%(name)s", memory_mib=%(memory_mib)s, vcpu=%(vcpu)s'
-                    "); this should never happen."
-                ),
-                {
-                    "name": name,
-                    "memory_mib": attributes["memory"],
-                    "vcpu": attributes["vcpu"],
-                },
-            )
-            raise e
