@@ -83,19 +83,13 @@ class AwsCloudAccount(BaseModel):
             logger.info(_("Enabled synthetic AwsCloudAccount %(id)s"), {"id": self.id})
             return True
 
-        from api.clouds.aws import tasks, util  # Avoid circular import.
+        from api.clouds.aws import util  # Avoid circular import.
 
         verified = util.verify_permissions(self.account_arn)
         if not verified:
             message = f"Could not enable {repr(self)}; verify_permissions failed"
             logger.info(message)
             raise ValidationError({"account_arn": message})
-
-        if not cloud_account.platform_application_is_paused:
-            # Only describe if the application is *not* paused.
-            transaction.on_commit(
-                lambda: tasks.initial_aws_describe_instances.delay(self.id)
-            )
 
         logger.info(_("Finished enabling %(account)s"), {"account": self})
         return True

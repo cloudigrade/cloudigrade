@@ -61,14 +61,9 @@ class AwsCloudAccountModelTest(TransactionTestCase, helper.ModelStrTestMixin):
         enable_date = util_helper.utc_dt(2019, 1, 4, 0, 0, 0)
         with patch(
             "api.clouds.aws.util.verify_permissions"
-        ) as mock_verify_permissions, patch(
-            "api.clouds.aws.tasks.initial_aws_describe_instances"
-        ) as mock_initial_aws_describe_instances, util_helper.clouditardis(
-            enable_date
-        ):
+        ) as mock_verify_permissions, util_helper.clouditardis(enable_date):
             self.account.enable()
             mock_verify_permissions.assert_called()
-            mock_initial_aws_describe_instances.delay.assert_called()
 
         self.account.refresh_from_db()
         self.assertTrue(self.account.is_enabled)
@@ -84,11 +79,7 @@ class AwsCloudAccountModelTest(TransactionTestCase, helper.ModelStrTestMixin):
         self.assertFalse(self.account.is_enabled)
         self.assertEqual(self.account.enabled_at, self.account.created_at)
 
-        with patch(
-            "api.clouds.aws.util.verify_permissions"
-        ) as mock_verify_permissions, patch(
-            "api.clouds.aws.tasks.initial_aws_describe_instances"
-        ) as mock_initial_aws_describe_instances:
+        with patch("api.clouds.aws.util.verify_permissions") as mock_verify_permissions:
             mock_verify_permissions.side_effect = Exception("Something broke.")
             with self.assertLogs("api.models", level="INFO") as cm:
                 success = self.account.enable(disable_upon_failure=False)
@@ -98,7 +89,6 @@ class AwsCloudAccountModelTest(TransactionTestCase, helper.ModelStrTestMixin):
                 str(mock_verify_permissions.side_effect), log_record.message
             )
             mock_verify_permissions.assert_called()
-            mock_initial_aws_describe_instances.delay.assert_not_called()
 
         self.account.refresh_from_db()
         self.assertFalse(self.account.is_enabled)
@@ -213,10 +203,7 @@ class AwsCloudAccountModelTest(TransactionTestCase, helper.ModelStrTestMixin):
 
     @patch("api.tasks.sources.notify_application_availability_task")
     @patch("api.clouds.aws.util.verify_permissions")
-    @patch("api.clouds.aws.tasks.initial_aws_describe_instances")
-    def test_delete_cleans_up_related_objects(
-        self, mock_describe, mock_verify, mock_notify_sources
-    ):
+    def test_delete_cleans_up_related_objects(self, mock_verify, mock_notify_sources):
         """
         Verify that deleting an AWS account cleans up related objects.
 

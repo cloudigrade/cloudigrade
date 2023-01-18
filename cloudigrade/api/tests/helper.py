@@ -13,7 +13,6 @@ from django.db.models import ForeignKey
 from rest_framework.test import APIClient
 
 from api import AWS_PROVIDER_STRING, AZURE_PROVIDER_STRING
-from api.clouds.aws import tasks
 from api.clouds.aws.models import (
     AwsCloudAccount,
     AwsInstance,
@@ -84,7 +83,6 @@ class SandboxedRestClient(object):
         - aws.delete_cloudtrail is used in account deletion
         - aws.get_session is used in account deletion
         - aws.sts._get_primary_account_id is used in sysconfig
-        - tasks.initial_aws_describe_instances is used in account creation
 
         Returns:
             rest_framework.response.Response
@@ -97,9 +95,7 @@ class SandboxedRestClient(object):
             aws, "get_session"
         ), patch.object(
             aws.sts, "_get_primary_account_id"
-        ) as mock_get_primary_account_id, patch.object(
-            tasks, "initial_aws_describe_instances"
-        ):
+        ) as mock_get_primary_account_id:
             mock_verify.return_value = self.aws_account_verified, []
             mock_verify_permissions.return_value = True
             mock_get_primary_account_id.return_value = self.aws_primary_account_id
