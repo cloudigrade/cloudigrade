@@ -575,10 +575,6 @@ RHEL_IMAGES_AWS_ACCOUNTS = [
 
 MAX_ALLOWED_INSPECTION_ATTEMPTS = env.int("MAX_ALLOWED_INSPECTION_ATTEMPTS", default=5)
 
-INSPECT_PENDING_IMAGES_MIN_AGE = env.int(
-    "INSPECT_PENDING_IMAGES_MIN_AGE", default=60 * 60 * 12  # 12 hours
-)
-
 # Limit in seconds for how long we expect the inspection snapshots to exist.
 INSPECTION_SNAPSHOT_CLEAN_UP_INITIAL_DELAY = env.int(
     "INSPECTION_SNAPSHOT_CLEAN_UP_INITIAL_DELAY", default=60 * 60

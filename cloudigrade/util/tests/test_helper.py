@@ -43,48 +43,6 @@ class UtilHelperTest(TestCase):
         arn = helper.generate_dummy_arn(resource=resource)
         self.assertTrue(arn.endswith(resource))
 
-    def test_generate_dummy_describe_instance_default(self):
-        """Assert generated instance has values where expected."""
-        instance = helper.generate_dummy_describe_instance()
-        self.assertIsNotNone(instance["ImageId"])
-        self.assertIsNotNone(instance["InstanceId"])
-        self.assertIsNotNone(instance["InstanceType"])
-        self.assertIsNotNone(instance["SubnetId"])
-        self.assertIsNotNone(instance["State"])
-        self.assertIsNotNone(instance["State"]["Code"])
-        self.assertIsNotNone(instance["State"]["Name"])
-        self.assertEqual(len(instance["BlockDeviceMappings"]), 2)
-
-    def test_generate_dummy_describe_instance_with_values(self):
-        """Assert generated instance contains given values."""
-        image_id = helper.generate_dummy_image_id()
-        instance_id = helper.generate_dummy_instance_id()
-        subnet_id = helper.generate_dummy_subnet_id()
-        state = aws.InstanceState.shutting_down
-        instance_type = helper.get_random_instance_type()
-        device_mapping = dict()
-        instance = helper.generate_dummy_describe_instance(
-            instance_id=instance_id,
-            image_id=image_id,
-            subnet_id=subnet_id,
-            state=state,
-            instance_type=instance_type,
-            device_mappings=[device_mapping],
-        )
-        self.assertEqual(instance["ImageId"], image_id)
-        self.assertEqual(instance["InstanceId"], instance_id)
-        self.assertEqual(instance["InstanceType"], instance_type)
-        self.assertEqual(instance["SubnetId"], subnet_id)
-        self.assertEqual(instance["State"]["Code"], state.value)
-        self.assertEqual(instance["State"]["Name"], state.name)
-        self.assertEqual(instance["State"]["Name"], state.name)
-        self.assertEqual(instance["BlockDeviceMappings"], [device_mapping])
-
-    def test_generate_dummy_describe_instance_no_subnet(self):
-        """Assert generated instance has no SubnetId key if no_subnet is True."""
-        instance = helper.generate_dummy_describe_instance(no_subnet=True)
-        self.assertNotIn("SubnetId", instance)
-
     def test_utc_dt(self):
         """Assert utc_dt adds timezone info."""
         d_no_tz = datetime.datetime(2018, 1, 1)

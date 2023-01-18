@@ -10,14 +10,6 @@ from util.aws.cloudtrail import (
     delete_cloudtrail,
     get_cloudtrail_name,
 )
-from util.aws.ec2 import (
-    InstanceState,
-    describe_image,
-    describe_images,
-    describe_instances,
-    describe_instances_everywhere,
-    is_windows,
-)
 from util.aws.helper import (
     COMMON_AWS_ACCESS_DENIED_ERROR_CODES,
     get_regions,

@@ -5,67 +5,12 @@ import faker
 from botocore.exceptions import ClientError
 from django.test import TestCase
 
-from api import AWS_PROVIDER_STRING
 from api.clouds.aws import util
-from api.clouds.aws.util import generate_aws_ami_messages
 from api.tests import helper as api_helper
 from util import aws
 from util.tests import helper as util_helper
 
 _faker = faker.Faker()
-
-
-class CloudsAwsUtilTest(TestCase):
-    """Miscellaneous test cases for api.clouds.aws.util module functions."""
-
-    def test_generate_aws_ami_messages(self):
-        """Test that messages are formatted correctly."""
-        region = util_helper.get_random_region()
-        instance = util_helper.generate_dummy_describe_instance()
-        instances_data = {region: [instance]}
-        ami_list = [instance["ImageId"]]
-
-        expected = [
-            {
-                "cloud_provider": AWS_PROVIDER_STRING,
-                "region": region,
-                "image_id": instance["ImageId"],
-            }
-        ]
-
-        result = generate_aws_ami_messages(instances_data, ami_list)
-
-        self.assertEqual(result, expected)
-
-    def test_generate_aws_ami_messages_deduplicate(self):
-        """Test that messages are also deduplicated."""
-        region = util_helper.get_random_region()
-        image_id_1 = util_helper.generate_dummy_image_id()
-        image_id_2 = util_helper.generate_dummy_image_id()
-        instance_1 = util_helper.generate_dummy_describe_instance(image_id=image_id_1)
-        instance_2 = util_helper.generate_dummy_describe_instance(image_id=image_id_1)
-        instance_3 = util_helper.generate_dummy_describe_instance(image_id=image_id_1)
-        instance_4 = util_helper.generate_dummy_describe_instance(image_id=image_id_2)
-        instances_data = {region: [instance_1, instance_2, instance_3, instance_4]}
-        ami_list = [image_id_1, image_id_2]
-
-        expected = [
-            {
-                "cloud_provider": AWS_PROVIDER_STRING,
-                "region": region,
-                "image_id": image_id_1,
-            },
-            {
-                "cloud_provider": AWS_PROVIDER_STRING,
-                "region": region,
-                "image_id": image_id_2,
-            },
-        ]
-
-        result = generate_aws_ami_messages(instances_data, ami_list)
-        self.assertEqual(len(result), len(expected))
-        for message in expected:
-            self.assertIn(message, result)
 
 
 class CloudsAwsUtilCloudTrailTest(TestCase):
