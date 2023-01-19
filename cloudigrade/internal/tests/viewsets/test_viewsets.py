@@ -169,21 +169,6 @@ class InternalViewSetTest(TestCase):
         self.assertEqual(models.MachineImage.PENDING, response.data["status"])
         self.assertEqual(models.MachineImage.PENDING, self.inspected_image.status)
 
-    def test_list_runs(self):
-        """Assert that a user sees all Run objects."""
-        api_helper.recalculate_runs_from_events(self.events)
-
-        runs = list(models.Run.objects.all())
-        expected_ids = set(run.id for run in runs)
-
-        response = self.client.get_runs()
-        actual_ids = set(item["id"] for item in response.data["data"])
-        count = response.data["meta"]["count"]
-
-        self.assertGreater(count, 0)
-        self.assertEqual(count, len(runs))
-        self.assertEqual(expected_ids, actual_ids)
-
     def test_list_awscloudaccounts(self):
         """Assert that a user sees all AwsCloudAccount objects."""
         accounts = list(aws_models.AwsCloudAccount.objects.all())

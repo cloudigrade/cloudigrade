@@ -4,7 +4,6 @@ import json
 import logging
 import random
 import uuid
-from datetime import timedelta
 from unittest.mock import patch
 
 import faker
@@ -34,11 +33,6 @@ from api.models import (
     InstanceEvent,
     MachineImage,
     Run,
-)
-from api.util import (
-    calculate_max_concurrent_usage,
-    calculate_max_concurrent_usage_from_runs,
-    recalculate_runs,
 )
 from util import aws
 from util.misc import get_now
@@ -928,7 +922,6 @@ def generate_single_run(
     no_image=False,
     instance_type=None,
     no_instance_type=False,
-    calculate_concurrent_usage=True,
 ):
     """
     Generate a single Run (and related events) for testing.
@@ -941,8 +934,6 @@ def generate_single_run(
         no_image (bool): If true, don't create and assign an image.
         instance_type (str): Optional AWS instance type.
         no_instance_type (bool): Optional indication that instance has no type.
-        calculate_concurrent_usage (bool): Optional indicated if after creating
-            the run we should run calculate_max_concurrent_usage_from_runs.
     Returns:
         Run: The created Run.
 
@@ -983,8 +974,6 @@ def generate_single_run(
             instance_type=instance_type,
             no_instance_type=no_instance_type,
         )
-    if calculate_concurrent_usage:
-        calculate_max_concurrent_usage_from_runs([run])
     return run
 
 
@@ -1006,24 +995,10 @@ def generate_instance_type_definitions(cloud_type="aws"):
             logger.warning('"%s" EC2 definition already exists', name)
 
 
-def recalculate_runs_from_events(events):
-    """
-    Run recalculate_runs on multiple events.
-
-    Args:
-        events (list(model.InstanceEvents)): events to recalculate
-
-    """
-    for event in events:
-        recalculate_runs(event)
-
-
 def calculate_concurrent(start_date, end_date, user_id):
     """Calculate the concurrent usage between two dates."""
-    delta = end_date - start_date
-    for i in range(delta.days + 1):
-        day = start_date + timedelta(days=i)
-        calculate_max_concurrent_usage(date=day, user_id=user_id)
+    # TODO FIXME Delete this function once we're confident no calls to it exist.
+    raise NotImplementedError
 
 
 class ModelStrTestMixin:

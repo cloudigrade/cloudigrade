@@ -1,5 +1,4 @@
 """Collection of tests for the api.models module."""
-import datetime
 import uuid
 from unittest.mock import patch
 
@@ -7,114 +6,12 @@ import faker
 from django.test import TestCase, TransactionTestCase, override_settings
 
 from api import AWS_PROVIDER_STRING
-from api.models import (
-    CloudAccount,
-    ConcurrentUsage,
-    MachineImage,
-    Run,
-    SyntheticDataRequest,
-)
+from api.models import CloudAccount, MachineImage, SyntheticDataRequest
 from api.models import User
 from api.tests import helper as api_helper
-from api.util import calculate_max_concurrent_usage
 from util.tests import helper as util_helper
 
 _faker = faker.Faker()
-
-
-class MachineImageTest(TestCase):
-    """Test cases for api.models.MachineImage."""
-
-    def test_save_with_concurrent_usages(self):
-        """Test that save deletes the related concurrent_usages."""
-        user = util_helper.generate_test_user()
-        aws_account_id = util_helper.generate_dummy_aws_account_id()
-        account = api_helper.generate_cloud_account(
-            aws_account_id=aws_account_id,
-            user=user,
-        )
-        image = api_helper.generate_image(
-            owner_aws_account_id=aws_account_id,
-            rhel_detected=True,
-        )
-        instance = api_helper.generate_instance(account, image=image)
-        api_helper.generate_single_run(
-            instance,
-            (
-                util_helper.utc_dt(2019, 5, 1, 1, 0, 0),
-                util_helper.utc_dt(2019, 5, 1, 2, 0, 0),
-            ),
-            image=instance.machine_image,
-        )
-        request_date = datetime.date(2019, 5, 1)
-        calculate_max_concurrent_usage(request_date, user_id=user.id)
-
-        self.assertEquals(1, ConcurrentUsage.objects.count())
-        image.rhel_detected_by_tag = True
-        image.save()
-        self.assertEquals(0, ConcurrentUsage.objects.count())
-
-
-class RunTest(TestCase):
-    """Test cases for api.models.Run."""
-
-    def test_new_run_deletes_concurrent_usage(self):
-        """
-        Test that creating a new run deletes the right ConcurrentUsage.
-
-        When a run is saved that is related to ConcurrentUsage through
-        the potentially_related_runs field, ensure those ConcurrentUsages
-        are deleted. Creating a new Run should not remove ConcurrentUsages
-        with no related runs.
-
-        """
-        user = util_helper.generate_test_user()
-        aws_account_id = util_helper.generate_dummy_aws_account_id()
-        account = api_helper.generate_cloud_account(
-            aws_account_id=aws_account_id,
-            user=user,
-        )
-        image = api_helper.generate_image(
-            owner_aws_account_id=aws_account_id,
-            rhel_detected=True,
-        )
-        instance = api_helper.generate_instance(account, image=image)
-        instance_type = util_helper.get_random_instance_type()
-
-        start_time = util_helper.utc_dt(2019, 5, 1, 1, 0, 0)
-        end_time = util_helper.utc_dt(2019, 5, 1, 2, 0, 0)
-
-        request_date = datetime.date(2019, 5, 1)
-
-        # Calculating maximum usage for no runs generates one concurrent usage
-        # with empty counts
-        calculate_max_concurrent_usage(request_date, user_id=user.id)
-        self.assertEqual(1, ConcurrentUsage.objects.all().count())
-        self.assertEqual("[]", ConcurrentUsage.objects.all()[0]._maximum_counts)
-
-        # Create a run
-        run = Run.objects.create(
-            start_time=start_time,
-            end_time=end_time,
-            instance=instance,
-            machineimage=image,
-            instance_type=instance_type,
-            vcpu=util_helper.SOME_EC2_INSTANCE_TYPES[instance_type]["vcpu"],
-            memory=util_helper.SOME_EC2_INSTANCE_TYPES[instance_type]["memory"],
-        )
-        # Creating a run should not delete the empty concurrent usage
-        # since that concurrent usage isn't related to this run
-        self.assertEqual(1, ConcurrentUsage.objects.all().count())
-        self.assertEqual("[]", ConcurrentUsage.objects.all()[0]._maximum_counts)
-
-        # recalculating the maximum concurrent usage results in a nonempty
-        # ConcurrentUsage maximum_counts
-        calculate_max_concurrent_usage(request_date, user_id=user.id)
-        self.assertNotEqual("[]", ConcurrentUsage.objects.all()[0]._maximum_counts)
-
-        # Re-saving the run should remove the related the concurrent usage.
-        run.save()
-        self.assertEqual(0, ConcurrentUsage.objects.all().count())
 
 
 class CloudAccountTest(TestCase):

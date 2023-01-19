@@ -7,8 +7,6 @@ from app_common_python import isClowderEnabled
 from celery import current_app as celery_app
 from celery.exceptions import NotRegistered
 from celery.result import AsyncResult
-from dateutil import tz
-from dateutil.parser import ParserError, parse
 from django.conf import settings
 from django.core.cache import cache
 from django.http import Http404, JsonResponse
@@ -23,11 +21,9 @@ from rest_framework.decorators import (
     schema,
 )
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from api import models, tasks
 from api.tasks import enable_account
-from api.util import find_problematic_runs
 from internal import redis, serializers
 from internal.authentication import (
     IdentityHeaderAuthenticationInternal,
@@ -213,155 +209,6 @@ def sources_kafka(request):
     return JsonResponse(data=response)
 
 
-@api_view(["POST"])
-@authentication_classes([IdentityHeaderAuthenticationInternal])
-@permission_classes([permissions.AllowAny])
-@schema(None)
-def recalculate_runs(request):
-    """
-    Trigger a recalculate_runs_for_* task function to run.
-
-    Optional POST params include "cloud_account_id" and "since".
-
-    This triggers a Celery task, either `recalculate_runs_for_all_cloud_accounts` or
-    `recalculate_runs_for_cloud_account_id` depending on if `cloud_account_id` is given.
-    Because the task runs asynchronously, a 202 response will be returned immediately
-    even though the task may not actually have completed execution.
-
-    Example request using httpie:
-
-        http :8000/internal/recalculate_runs/ \
-            cloud_account_id="420" \
-            since="2021-06-09"
-
-    And the response for that example:
-
-        HTTP/1.1 202 Accepted
-    """
-    data = request.data
-
-    try:
-        if cloud_account_id := data.get("cloud_account_id"):
-            cloud_account_id = int(cloud_account_id)
-    except (ValueError, TypeError) as e:
-        logger.debug(
-            _("Failed to parse '%s' as a cloud_account_id. %s"), cloud_account_id, e
-        )
-        raise exceptions.ValidationError(
-            {"cloud_account_id": _("Failed to parse given input.")}
-        )
-
-    if since := data.get("since"):
-        try:
-            # We need a datetime object, not just the input string.
-            since = parse(since)
-            if not since.tzinfo:
-                # Force to UTC if no timezone/offset was provided.
-                since = since.replace(tzinfo=tz.tzutc())
-        except (ParserError, TypeError) as e:
-            logger.debug(_("Failed to parse '%s' as a datetime. %s"), since, e)
-            raise exceptions.ValidationError(
-                {"since": _("Failed to parse given input.")}
-            )
-
-    if cloud_account_id:
-        logger.info(
-            _(
-                "internal API calling recalculate_runs_for_cloud_account_id "
-                "with args %(args)s"
-            ),
-            {"args": (cloud_account_id, since)},
-        )
-        tasks.recalculate_runs_for_cloud_account_id.apply_async(
-            args=(cloud_account_id, since), serializer="pickle"
-        )
-    else:
-        logger.info(
-            _(
-                "internal API calling recalculate_runs_for_all_cloud_accounts "
-                "with args %(args)s"
-            ),
-            {"args": (since,)},
-        )
-        tasks.recalculate_runs_for_all_cloud_accounts.apply_async(
-            args=(since,), serializer="pickle"
-        )
-
-    return Response(status=status.HTTP_202_ACCEPTED)
-
-
-@api_view(["POST"])
-@authentication_classes([IdentityHeaderAuthenticationInternal])
-@permission_classes([permissions.AllowAny])
-@schema(None)
-def recalculate_concurrent_usage(request):
-    """
-    Trigger a recalculate_concurrent_usage_for_* task function to run.
-
-    Optional POST params include "user_id" and "since".
-
-    This triggers a Celery task, either `recalculate_concurrent_usage_for_all_users` or
-    `recalculate_concurrent_usage_for_user_id` depending on if `user_id` is given.
-    Because the task runs asynchronously, a 202 response will be returned immediately
-    even though the task may not actually have completed execution.
-
-    Example request using httpie:
-
-        http :8000/internal/recalculate_concurrent_usage/ \
-            user_id="420" \
-            since="2021-06-09"
-
-    And the response for that example:
-
-        HTTP/1.1 202 Accepted
-    """
-    data = request.data
-
-    if user_id := data.get("user_id"):
-        try:
-            user_id = int(user_id)
-        except (ValueError, TypeError) as e:
-            logger.debug(_("Failed to parse '%s' as a user_id. %s"), user_id, e)
-            raise exceptions.ValidationError(
-                {"user_id": _("Failed to parse given input.")}
-            )
-
-    if since := data.get("since"):
-        try:
-            # We need a date object, not just the input string.
-            since = parse(since).date()
-        except (ParserError, TypeError) as e:
-            logger.debug(_("Failed to parse '%s' as a date. %s"), since, e)
-            raise exceptions.ValidationError(
-                {"since": _("Failed to parse given input.")}
-            )
-
-    if user_id:
-        logger.info(
-            _(
-                "internal API calling recalculate_concurrent_usage_for_user_id "
-                "with args %(args)s"
-            ),
-            {"args": (user_id, since)},
-        )
-        tasks.recalculate_concurrent_usage_for_user_id.apply_async(
-            args=(user_id, since), serializer="pickle"
-        )
-    else:
-        logger.info(
-            _(
-                "internal API calling recalculate_concurrent_usage_for_all_users "
-                "with args %(args)s"
-            ),
-            {"args": (since,)},
-        )
-        tasks.recalculate_concurrent_usage_for_all_users.apply_async(
-            args=(since,), serializer="pickle"
-        )
-
-    return Response(status=status.HTTP_202_ACCEPTED)
-
-
 @api_view(["GET", "POST"])
 @authentication_classes([IdentityHeaderAuthenticationInternal])
 @permission_classes([permissions.AllowAny])
@@ -429,37 +276,6 @@ def get_cdappconfig_json(request):
     if settings.IS_PRODUCTION:
         redact_json_dict_secrets(data)
     return Response(data)
-
-
-class ProblematicRunList(APIView):
-    """List all problematic unending Runs or try to fix them."""
-
-    authentication_classes = [IdentityHeaderAuthenticationInternal]
-    permission_classes = [permissions.AllowAny]
-    schema = None
-
-    def get(self, request):
-        """List all problematic unending Runs."""
-        user_id = request.query_params.get("user_id")
-        runs = find_problematic_runs(user_id)
-        serializer = serializers.InternalRunSerializer(runs, many=True)
-        return Response(serializer.data)
-
-    def post(self, request):
-        """Attempt to fix all problematic unending Runs."""
-        user_id = request.data.get("user_id")
-        runs = find_problematic_runs(user_id)
-        run_ids = [run.id for run in runs]
-        if run_ids:
-            logger.info(
-                _("Preparing to fix problematic runs: %(run_ids)s"),
-                {"run_ids": run_ids},
-            )
-            task_result = tasks.fix_problematic_runs.delay(run_ids)
-            logger.info(
-                _("fix_problematic_runs task is %(task)s"), {"task": task_result}
-            )
-        return Response(status=status.HTTP_202_ACCEPTED)
 
 
 @api_view(["POST"])

@@ -12,7 +12,6 @@ routes = [
     ("images", viewsets.MachineImageViewSet, "machineimage"),
     ("sysconfig", viewsets.SysconfigViewSet, "sysconfig"),
     ("azure-offer-template", viewsets.AzureOfferTemplateViewSet, "azure-offer"),
-    ("concurrent", viewsets.DailyConcurrentUsageViewSet, "concurrent"),
 ]
 
 # Register all the DRF ViewSet routes with a common "v2-" basename prefix.

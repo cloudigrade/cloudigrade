@@ -417,22 +417,3 @@ class MachineImageModelTest(TestCase, helper.ModelStrTestMixin):
         aws_machine_image.aws_marketplace_image = True
         aws_machine_image.save()
         self.assertTrue(aws_machine_image.is_marketplace)
-
-
-class RunModelTest(TransactionTestCase):
-    """Run Model Test Cases."""
-
-    def test_delete_run_removes_concurrent_usage(self):
-        """Test when a run is deleted, related concurrent usage are deleted."""
-        account = helper.generate_cloud_account()
-
-        image = helper.generate_image()
-        instance = helper.generate_instance(cloud_account=account, image=image)
-        runtime = (
-            util_helper.utc_dt(2019, 1, 1, 0, 0, 0),
-            util_helper.utc_dt(2019, 1, 2, 0, 0, 0),
-        )
-        helper.generate_single_run(instance=instance, runtime=runtime)
-        self.assertGreater(models.ConcurrentUsage.objects.count(), 0)
-        models.Run.objects.all().delete()
-        self.assertEqual(models.ConcurrentUsage.objects.count(), 0)

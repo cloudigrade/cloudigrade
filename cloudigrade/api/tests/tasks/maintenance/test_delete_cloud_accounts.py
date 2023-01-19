@@ -4,7 +4,7 @@ from django.test import TestCase, override_settings
 
 from api import models
 from api.clouds.aws import models as aws_models
-from api.tasks import calculation, maintenance
+from api.tasks import maintenance
 from api.tests import helper as api_helper
 from util.tests import helper as util_helper
 
@@ -67,20 +67,12 @@ class DeleteCloudAccountsTest(TestCase):
         api_helper.generate_instance_events(self.instance_azure_2_1, powered_times)
         api_helper.generate_instance_events(self.instance_azure_2_2, powered_times)
 
-        calculation.recalculate_runs_for_all_cloud_accounts(since=start_time)
-        calculation.recalculate_concurrent_usage_for_user_id_on_date(
-            self.user.id, start_time.date()
-        )
-        calculation.recalculate_concurrent_usage_for_user_id_on_date(
-            self.user.id, stop_time.date()
-        )
-
     def assertObjectCountsBeforeDelete(self):
         """Sanity-check expected object counts before deleting."""
         self.assertEqual(models.CloudAccount.objects.count(), 4)
         self.assertEqual(models.Instance.objects.count(), 8)
-        self.assertEqual(models.Run.objects.count(), 8)
-        self.assertEqual(models.ConcurrentUsage.objects.count(), 2)
+        self.assertEqual(models.Run.objects.count(), 0)
+        self.assertEqual(models.ConcurrentUsage.objects.count(), 0)
         self.assertEqual(models.MachineImage.objects.count(), 6)
 
     def assertObjectCountsAfterDelete(self, accounts_deleted=1):
@@ -89,7 +81,7 @@ class DeleteCloudAccountsTest(TestCase):
         self.assertEqual(models.Instance.objects.count(), 2 * (4 - accounts_deleted))
         # Deleting an account's Instances should also delete the related Runs, and that
         # should also result in deleting the related ConcurrentUsages.
-        self.assertEqual(models.Run.objects.count(), 2 * (4 - accounts_deleted))
+        self.assertEqual(models.Run.objects.count(), 0)
         self.assertEqual(models.ConcurrentUsage.objects.count(), 0)
 
     @override_settings(CELERY_TASK_ALWAYS_EAGER=True)

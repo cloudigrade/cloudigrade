@@ -12,7 +12,6 @@ routes = []
 # URLs for slightly different internal versions of public viewset routes.
 routes += [
     ("accounts", viewsets.InternalAccountViewSet, "account"),
-    ("concurrent", viewsets.InternalDailyConcurrentUsageViewSet, "concurrent"),
 ]
 
 # URLs for common models
@@ -118,12 +117,6 @@ urlpatterns += [
         views.migrate_account_numbers_to_org_ids,
         name="migrate-account-numbers-to-org-ids",
     ),
-    path(
-        "recalculate_concurrent_usage/",
-        views.recalculate_concurrent_usage,
-        name="internal-recalculate-concurrent-usage",
-    ),
-    path("recalculate_runs/", views.recalculate_runs, name="internal-recalculate-runs"),
     path("redis_raw/", views.redis_raw, name="internal-redis-raw"),
     path("tasks/", views.task_run, name="internal-task-run"),
     path(
@@ -141,10 +134,6 @@ urlpatterns += [
         "api/cloudigrade/v1/availability_status",
         views.availability_check,
         name="internal-availability-status",
-    ),
-    path(
-        "api/cloudigrade/v1/problematic_runs/",
-        views.ProblematicRunList.as_view(),
     ),
     path(
         "openapi.json",
