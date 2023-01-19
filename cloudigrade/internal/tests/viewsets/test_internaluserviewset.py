@@ -10,7 +10,7 @@ _faker = faker.Faker()
 
 
 class InternalUserViewSetTest(TestCase):
-    """InternalDailyConcurrentUsageViewSet test case."""
+    """InternalUserViewSet test case."""
 
     def setUp(self):
         """Set up some test data."""

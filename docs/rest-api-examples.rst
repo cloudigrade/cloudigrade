@@ -70,7 +70,6 @@ The following resource paths are currently available:
 -  ``/api/cloudigrade/v2/images/`` returns images data
 -  ``/api/cloudigrade/v2/sysconfig/`` returns sysconfig data
 -  ``/api/cloudigrade/v2/azure-offer-template/`` returns azure offer template data
--  ``/api/cloudigrade/v2/concurrent/`` returns concurrency data
 
 
 User Setup
@@ -105,7 +104,7 @@ Response:
     Content-Type: application/json
     Cross-Origin-Opener-Policy: same-origin
     Referrer-Policy: same-origin
-    X-CLOUDIGRADE-REQUEST-ID: fd13bf6d-e7c1-444a-89e6-996ad3f87bd8
+    X-CLOUDIGRADE-REQUEST-ID: 7287e27c-e88f-4ac1-80e2-097e534fd677
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -181,7 +180,7 @@ Response:
     Content-Type: application/json
     Cross-Origin-Opener-Policy: same-origin
     Referrer-Policy: same-origin
-    X-CLOUDIGRADE-REQUEST-ID: caf8639b-963b-49dd-8c05-a8e200bd2e4d
+    X-CLOUDIGRADE-REQUEST-ID: 57b4f6bf-e651-4152-8986-25df419ac827
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -229,7 +228,7 @@ Response:
     Content-Type: application/json
     Cross-Origin-Opener-Policy: same-origin
     Referrer-Policy: same-origin
-    X-CLOUDIGRADE-REQUEST-ID: 81914155-107e-4c43-b1d3-4dc56862cf62
+    X-CLOUDIGRADE-REQUEST-ID: d761954b-b7b4-4e78-90cc-1584deea0a10
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -358,7 +357,7 @@ Response:
     Content-Type: application/json
     Cross-Origin-Opener-Policy: same-origin
     Referrer-Policy: same-origin
-    X-CLOUDIGRADE-REQUEST-ID: 0f29a4ef-203d-49ba-9455-0ef1097b6a24
+    X-CLOUDIGRADE-REQUEST-ID: 39210a4c-03c2-4872-94dc-29cc26dea775
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -399,92 +398,16 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 2365
+    Content-Length: 295
     Content-Type: application/json
     Cross-Origin-Opener-Policy: same-origin
     Referrer-Policy: same-origin
-    X-CLOUDIGRADE-REQUEST-ID: 7de3dd9a-b714-4cb2-a6cf-fc5a69099c77
+    X-CLOUDIGRADE-REQUEST-ID: f75f8161-e687-4008-9217-adcbce84c299
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
     {
-        "data": [
-            {
-                "cloud_account_id": 1,
-                "cloud_type": "aws",
-                "content_object": {
-                    "aws_instance_id": 1,
-                    "created_at": "2020-05-18T13:51:59.722367Z",
-                    "ec2_instance_id": "i-f3bda6fe8102c0fa7",
-                    "region": "eu-west-1",
-                    "updated_at": "2020-05-18T13:51:59.722367Z"
-                },
-                "created_at": "2020-05-18T13:51:59.722367Z",
-                "instance_id": 1,
-                "machine_image_id": 1,
-                "updated_at": "2020-05-18T13:51:59.722367Z"
-            },
-            {
-                "cloud_account_id": 1,
-                "cloud_type": "aws",
-                "content_object": {
-                    "aws_instance_id": 2,
-                    "created_at": "2020-05-18T13:51:59.722367Z",
-                    "ec2_instance_id": "i-af3993a69e2ca7956",
-                    "region": "ap-northeast-1",
-                    "updated_at": "2020-05-18T13:51:59.722367Z"
-                },
-                "created_at": "2020-05-18T13:51:59.722367Z",
-                "instance_id": 2,
-                "machine_image_id": 2,
-                "updated_at": "2020-05-18T13:51:59.722367Z"
-            },
-            {
-                "cloud_account_id": 2,
-                "cloud_type": "azure",
-                "content_object": {
-                    "azure_instance_id": 1,
-                    "created_at": "2020-05-18T13:51:59.722367Z",
-                    "region": "East US",
-                    "resource_id": "/subscriptions/19c825da-b238-4bd1-92a2-e8ef889aae12/resourceGroups/interview/providers/Microsoft.Compute/virtualMachines/why",
-                    "updated_at": "2020-05-18T13:51:59.722367Z"
-                },
-                "created_at": "2020-05-18T13:51:59.722367Z",
-                "instance_id": 4,
-                "machine_image_id": 4,
-                "updated_at": "2020-05-18T13:51:59.722367Z"
-            },
-            {
-                "cloud_account_id": 2,
-                "cloud_type": "azure",
-                "content_object": {
-                    "azure_instance_id": 2,
-                    "created_at": "2020-05-18T13:51:59.722367Z",
-                    "region": "East US",
-                    "resource_id": "/subscriptions/31f6f82f-b71f-4a35-bacc-0fefad058b6c/resourceGroups/floor/providers/Microsoft.Compute/virtualMachines/me",
-                    "updated_at": "2020-05-18T13:51:59.722367Z"
-                },
-                "created_at": "2020-05-18T13:51:59.722367Z",
-                "instance_id": 5,
-                "machine_image_id": 5,
-                "updated_at": "2020-05-18T13:51:59.722367Z"
-            },
-            {
-                "cloud_account_id": 2,
-                "cloud_type": "azure",
-                "content_object": {
-                    "azure_instance_id": 3,
-                    "created_at": "2020-05-18T13:51:59.722367Z",
-                    "region": "EAST US 2 EUAP",
-                    "resource_id": "/subscriptions/19b3fc64-3342-4be7-bb78-d6e6eb912bb2/resourceGroups/wait/providers/Microsoft.Compute/virtualMachines/whatever",
-                    "updated_at": "2020-05-18T13:51:59.722367Z"
-                },
-                "created_at": "2020-05-18T13:51:59.722367Z",
-                "instance_id": 6,
-                "machine_image_id": 6,
-                "updated_at": "2020-05-18T13:51:59.722367Z"
-            }
-        ],
+        "data": [],
         "links": {
             "first": "/api/cloudigrade/v2/instances/?limit=10&offset=0&running_since=2020-05-18+13%3A51%3A59.722367%2B00%3A00",
             "last": "/api/cloudigrade/v2/instances/?limit=10&offset=0&running_since=2020-05-18+13%3A51%3A59.722367%2B00%3A00",
@@ -492,7 +415,7 @@ Response:
             "previous": null
         },
         "meta": {
-            "count": 5
+            "count": 0
         }
     }
 
@@ -522,7 +445,7 @@ Response:
     Content-Type: application/json
     Cross-Origin-Opener-Policy: same-origin
     Referrer-Policy: same-origin
-    X-CLOUDIGRADE-REQUEST-ID: 62750c19-78c7-4605-8899-9e21a1521ab3
+    X-CLOUDIGRADE-REQUEST-ID: fd13bf6d-e7c1-444a-89e6-996ad3f87bd8
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -789,7 +712,7 @@ Response:
     Content-Type: application/json
     Cross-Origin-Opener-Policy: same-origin
     Referrer-Policy: same-origin
-    X-CLOUDIGRADE-REQUEST-ID: 8ca65831-62c8-46c7-bd1c-e10f9cb3779d
+    X-CLOUDIGRADE-REQUEST-ID: caf8639b-963b-49dd-8c05-a8e200bd2e4d
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -836,1379 +759,6 @@ Response:
     }
 
 
-Report Commands
----------------
-
-These APIs may be used to generate calculated and aggregated report data.
-
-Daily Max Concurrency
-~~~~~~~~~~~~~~~~~~~~~
-
-The concurrency API returns a paginated list of days, and each day includes the
-maximum concurrent number of instances, grouped by various combinations of role,
-sla, and architecture seen concurrently in use during that day.
-
-Optional ``start_date`` is an ISO-8601 date that is the inclusive start of the
-reporting period. If not defined, default is "yesterday".
-
-Optional ``end_date`` is an ISO-8601 date that is the exclusive end of the
-reporting period. If not defined, default is "today".
-
-Request:
-
-.. code:: bash
-
-    http localhost:8080/api/cloudigrade/v2/concurrent/ \
-        "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
-        start_date=="2020-05-11"
-
-Response:
-
-::
-
-    HTTP/1.1 200 OK
-    Allow: GET, HEAD, OPTIONS
-    Content-Length: 17102
-    Content-Type: application/json
-    Cross-Origin-Opener-Policy: same-origin
-    Referrer-Policy: same-origin
-    X-CLOUDIGRADE-REQUEST-ID: 7287e27c-e88f-4ac1-80e2-097e534fd677
-    X-Content-Type-Options: nosniff
-    X-Frame-Options: DENY
-
-    {
-        "data": [
-            {
-                "date": "2020-05-11",
-                "maximum_counts": [
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    }
-                ]
-            },
-            {
-                "date": "2020-05-12",
-                "maximum_counts": [
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    }
-                ]
-            },
-            {
-                "date": "2020-05-13",
-                "maximum_counts": [
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    }
-                ]
-            },
-            {
-                "date": "2020-05-14",
-                "maximum_counts": [
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    }
-                ]
-            },
-            {
-                "date": "2020-05-15",
-                "maximum_counts": [
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    }
-                ]
-            },
-            {
-                "date": "2020-05-16",
-                "maximum_counts": []
-            },
-            {
-                "date": "2020-05-17",
-                "maximum_counts": [
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "x86_64",
-                        "instances_count": 5,
-                        "role": "_ANY",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "_ANY",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "",
-                        "sla": "_ANY",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "_ANY"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "_ANY",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    },
-                    {
-                        "arch": "_ANY",
-                        "instances_count": 5,
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_type": "",
-                        "sla": "Premium",
-                        "usage": "Development/Test"
-                    }
-                ]
-            }
-        ],
-        "links": {
-            "first": "/api/cloudigrade/v2/concurrent/?limit=10&offset=0&start_date=2020-05-11",
-            "last": "/api/cloudigrade/v2/concurrent/?limit=10&offset=0&start_date=2020-05-11",
-            "next": null,
-            "previous": null
-        },
-        "meta": {
-            "count": 7
-        }
-    }
-
-If your requested ``start_date`` and ``end_date`` values would result in some
-dates that not completed their calculations, the server will return ``425 Too Early``.
-
-Request:
-
-.. code:: bash
-
-    http localhost:8080/api/cloudigrade/v2/concurrent/ \
-        "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
-        start_date=="2020-04-17"
-
-Response:
-
-::
-
-    HTTP/1.1 425 Too Early
-    Allow: GET, HEAD, OPTIONS
-    Content-Length: 64
-    Content-Type: application/json
-    Cross-Origin-Opener-Policy: same-origin
-    Referrer-Policy: same-origin
-    X-CLOUDIGRADE-REQUEST-ID: d761954b-b7b4-4e78-90cc-1584deea0a10
-    X-Content-Type-Options: nosniff
-    X-Frame-Options: DENY
-
-    {
-        "detail": "Results are currently unavailable, try again later."
-    }
-
-If your requested ``start_date`` and ``end_date`` values would result in some
-future dates beyond "yesterday", the API will return a 400 with the relevant errors.
-Daily max concurrency results will end "yesterday" at the latest.
-
-Request:
-
-.. code:: bash
-
-    http localhost:8080/api/cloudigrade/v2/concurrent/ \
-        "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
-        start_date=="2020-05-17" \
-        end_date=="2020-05-25"
-
-Response:
-
-::
-
-    HTTP/1.1 400 Bad Request
-    Allow: GET, HEAD, OPTIONS
-    Content-Length: 50
-    Content-Type: application/json
-    Cross-Origin-Opener-Policy: same-origin
-    Referrer-Policy: same-origin
-    X-CLOUDIGRADE-REQUEST-ID: 57b4f6bf-e651-4152-8986-25df419ac827
-    X-Content-Type-Options: nosniff
-    X-Frame-Options: DENY
-
-    {
-        "end_date": [
-            "end_date cannot be in the future."
-        ]
-    }
-
-If your requested ``start_date`` and ``end_date`` values would result in exclusively
-future dates beyond "yesterday", the API will also return a 400 with the relevant errors.
- In the following example, the request is for dates "tomorrow" through "one week from today".
-
-Request:
-
-.. code:: bash
-
-    http localhost:8080/api/cloudigrade/v2/concurrent/ \
-        "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
-        start_date=="2020-05-19" \
-        end_date=="2020-05-25"
-
-Response:
-
-::
-
-    HTTP/1.1 400 Bad Request
-    Allow: GET, HEAD, OPTIONS
-    Content-Length: 112
-    Content-Type: application/json
-    Cross-Origin-Opener-Policy: same-origin
-    Referrer-Policy: same-origin
-    X-CLOUDIGRADE-REQUEST-ID: 39210a4c-03c2-4872-94dc-29cc26dea775
-    X-Content-Type-Options: nosniff
-    X-Frame-Options: DENY
-
-    {
-        "end_date": [
-            "end_date cannot be in the future."
-        ],
-        "start_date": [
-            "start_date cannot be today or in the future."
-        ]
-    }
-
-If your requested ``end_date`` value is not greater then that of the user
-``date_joined``, the api will return a 400 with the relevant error.
-
-Request:
-
-.. code:: bash
-
-    http localhost:8080/api/cloudigrade/v2/concurrent/ \
-        "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
-        start_date=="2018-12-18 00:00:00+00:00" \
-        end_date=="2018-12-25 00:00:00+00:00"
-
-Response:
-
-::
-
-    HTTP/1.1 400 Bad Request
-    Allow: GET, HEAD, OPTIONS
-    Content-Length: 151
-    Content-Type: application/json
-    Cross-Origin-Opener-Policy: same-origin
-    Referrer-Policy: same-origin
-    X-CLOUDIGRADE-REQUEST-ID: f75f8161-e687-4008-9217-adcbce84c299
-    X-Content-Type-Options: nosniff
-    X-Frame-Options: DENY
-
-    {
-        "end_date": [
-            "end_date must be same as or after the user creation date."
-        ],
-        "start_date": [
-            "start_date must be same as or after the user creation date."
-        ]
-    }
-
 Miscellaneous Commands
 ----------------------
 
@@ -2234,7 +784,7 @@ Response:
     Content-Type: application/json
     Cross-Origin-Opener-Policy: same-origin
     Referrer-Policy: same-origin
-    X-CLOUDIGRADE-REQUEST-ID: a1ef56a6-1ff8-4eb6-9f4b-c9d920f5e963
+    X-CLOUDIGRADE-REQUEST-ID: 81914155-107e-4c43-b1d3-4dc56862cf62
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -2294,7 +844,7 @@ Response:
     Content-Type: application/json
     Cross-Origin-Opener-Policy: same-origin
     Referrer-Policy: same-origin
-    X-CLOUDIGRADE-REQUEST-ID: f93bd15d-1298-4424-b500-34a8acbbf0e6
+    X-CLOUDIGRADE-REQUEST-ID: caa113f4-0be6-4f0a-bc41-e606f185aa91
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -2417,7 +967,7 @@ Request:
     http post localhost:8080/internal/api/cloudigrade/v1/accounts/ \
         "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
         cloud_type="aws" \
-        account_arn="arn:aws:iam::335555691572:role/role-for-cloudigrade" \
+        account_arn="arn:aws:iam::186361058488:role/role-for-cloudigrade" \
         platform_authentication_id="4104" \
         platform_application_id="8725" \
         platform_source_id="9861"
@@ -2432,7 +982,7 @@ Response:
     Content-Type: application/json
     Cross-Origin-Opener-Policy: same-origin
     Referrer-Policy: same-origin
-    X-CLOUDIGRADE-REQUEST-ID: dff5aefb-cf1f-44dc-89fe-3009c864715f
+    X-CLOUDIGRADE-REQUEST-ID: 49bad455-0ef1-497b-aa24-7de3dd9ab714
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -2440,8 +990,8 @@ Response:
         "account_id": 3,
         "cloud_type": "aws",
         "content_object": {
-            "account_arn": "arn:aws:iam::335555691572:role/role-for-cloudigrade",
-            "aws_account_id": "335555691572",
+            "account_arn": "arn:aws:iam::186361058488:role/role-for-cloudigrade",
+            "aws_account_id": "186361058488",
             "aws_cloud_account_id": 2,
             "created_at": "2020-05-18T13:51:59.722367Z",
             "updated_at": "2020-05-18T13:51:59.722367Z"
@@ -2466,7 +1016,7 @@ Request:
     http post localhost:8080/internal/api/cloudigrade/v1/accounts/ \
         "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
         cloud_type="aws" \
-        account_arn="arn:aws:iam::335555691572:role/role-for-cloudigrade" \
+        account_arn="arn:aws:iam::186361058488:role/role-for-cloudigrade" \
         platform_authentication_id="2407" \
         platform_application_id="5081" \
         platform_source_id="1618"
@@ -2481,7 +1031,7 @@ Response:
     Content-Type: application/json
     Cross-Origin-Opener-Policy: same-origin
     Referrer-Policy: same-origin
-    X-CLOUDIGRADE-REQUEST-ID: 745bcaa1-13f4-4be6-af0a-7c41e606f185
+    X-CLOUDIGRADE-REQUEST-ID: 26cffc5a-6909-4c77-a275-0c1978c72605
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -2503,7 +1053,7 @@ Request:
     http post localhost:8080/internal/api/cloudigrade/v1/accounts/ \
         "X-RH-IDENTITY:${HTTP_X_RH_IDENTITY}" \
         cloud_type="azure" \
-        subscription_id="aa9192e0-373a-47c6-91e2-e3a0c780b286" \
+        subscription_id="08999e21-a152-4ab3-8ca6-583162c8c6c7" \
         platform_authentication_id="1208" \
         platform_application_id="5409" \
         platform_source_id="7735"
@@ -2518,7 +1068,7 @@ Response:
     Content-Type: application/json
     Cross-Origin-Opener-Policy: same-origin
     Referrer-Policy: same-origin
-    X-CLOUDIGRADE-REQUEST-ID: 196ac627-bbf4-47ca-b26e-af6a077febdd
+    X-CLOUDIGRADE-REQUEST-ID: 9f4bc9d9-20f5-4963-8c4b-eabedff5aefb
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 
@@ -2528,7 +1078,7 @@ Response:
         "content_object": {
             "azure_cloud_account_id": 2,
             "created_at": "2020-05-18T13:51:59.722367Z",
-            "subscription_id": "aa9192e0-373a-47c6-91e2-e3a0c780b286",
+            "subscription_id": "08999e21-a152-4ab3-8ca6-583162c8c6c7",
             "updated_at": "2020-05-18T13:51:59.722367Z"
         },
         "created_at": "2020-05-18T13:51:59.722367Z",
@@ -2565,7 +1115,7 @@ Request:
     Content-Type: application/json
     Cross-Origin-Opener-Policy: same-origin
     Referrer-Policy: same-origin
-    X-CLOUDIGRADE-REQUEST-ID: f653b840-145a-421f-9bb1-0758592d02d4
+    X-CLOUDIGRADE-REQUEST-ID: cf1f84dc-c9fe-4009-8864-715fc130745b
     X-Content-Type-Options: nosniff
     X-Frame-Options: DENY
 

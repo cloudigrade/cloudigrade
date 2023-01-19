@@ -41,7 +41,7 @@ from django.conf import settings
 from api.models import User
 from api import models
 from api.tests import helper as api_helper
-from api.util import calculate_max_concurrent_usage, denormalize_runs
+
 from util import filters
 from util.misc import get_now
 from util.tests import helper as util_helper
@@ -169,23 +169,6 @@ class DocsApiHandler(object):
                 )
             )
 
-        # Build the runs for the created events.
-        # Note: this crude and *direct* implementation of Run-saving should be
-        # replaced as we continue porting pilot functionality and (eventually)
-        # better general-purpose Run-handling functions materialize.
-        denormalized_runs = denormalize_runs(models.InstanceEvent.objects.all())
-        for denormalized_run in denormalized_runs:
-            run = models.Run(
-                start_time=denormalized_run.start_time,
-                end_time=denormalized_run.end_time,
-                machineimage_id=denormalized_run.image_id,
-                instance_id=denormalized_run.instance_id,
-                instance_type=denormalized_run.instance_type,
-                memory=denormalized_run.instance_memory,
-                vcpu=denormalized_run.instance_vcpu,
-            )
-            run.save()
-
         # Force all images to have RHEL detected ("7.7")
         self.images = list(
             set(
@@ -210,15 +193,6 @@ class DocsApiHandler(object):
             image.region = "us-east-1"
             image.save()
 
-        # Pre-calculate concurrent usage data for upcoming requests.
-        # Calculate each day since "last week" (oldest date we use in example requests).
-        the_date = self.last_week.date()
-        one_day_delta = timedelta(days=1)
-        # while the_date <= self.this_morning.date():
-        while the_date <= self.next_week.date():
-            calculate_max_concurrent_usage(the_date, self.customer_user.id)
-            the_date = the_date + one_day_delta
-
     def gather_api_responses(self):
         """
         Call the API and collect all the responses to be output.
@@ -236,56 +210,6 @@ class DocsApiHandler(object):
         )
         # convert from binary string to string.
         responses["v2_header"] = self.x_rh_identity
-
-        #######################
-        # Report Commands
-        # IMPORTANT NOTE!
-        # These requests must come FIRST since they rely on calculated concurrent usage
-        # data that might be clobbered by other subsequent operations.
-
-        # Daily Max Concurrency
-        response = self.customer_client.list_concurrent(
-            data={"start_date": self.last_week.date()}
-        )
-        assert_status(response, 200)
-        responses["v2_list_concurrent"] = response
-
-        response = self.customer_client.list_concurrent(
-            data={
-                "start_date": self.yesterday.date(),
-                "end_date": self.next_week.date(),
-            }
-        )
-        assert_status(response, 400)
-        responses["v2_list_concurrent_partial_future"] = response
-
-        response = self.customer_client.list_concurrent(
-            data={"start_date": self.last_month.date()}
-        )
-        assert_status(response, 425)
-        responses["v2_list_concurrent_too_early"] = response
-        # IMPORTANT NOTE FOR THIS SCRIPT!
-        # Because that request raised a 425 and would *normally* trigger a rollback,
-        # we need to squash that rollback here and let the transaction continue.
-        transaction.set_rollback(False)
-
-        response = self.customer_client.list_concurrent(
-            data={
-                "start_date": self.tomorrow.date(),
-                "end_date": self.next_week.date(),
-            }
-        )
-        assert_status(response, 400)
-        responses["v2_list_concurrent_all_future"] = response
-
-        response = self.customer_client.list_concurrent(
-            data={
-                "start_date": self.customer_user.date_joined - timedelta(days=14),
-                "end_date": self.customer_user.date_joined - timedelta(days=7),
-            }
-        )
-        assert_status(response, 400)
-        responses["v2_list_concurrent_past_end_date"] = response
 
         ##########################
         # v2 Customer Account Info

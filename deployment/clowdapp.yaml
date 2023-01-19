@@ -1678,7 +1678,6 @@ parameters:
   required: true
   value: |
     {
-    "v2-concurrent-list":0.01,
     "internal-availability-status":0.02,
     "health_check:health_check_home":0.0,
     "prometheus-django-metrics":0.0

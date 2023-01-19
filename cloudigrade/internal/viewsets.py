@@ -1,7 +1,5 @@
 """Internal viewset classes for cloudigrade API."""
-from datetime import timedelta
 
-from django.utils.translation import gettext as _
 from django_celery_beat.models import PeriodicTask
 from django_filters import rest_framework as django_filters
 from rest_framework import mixins, permissions, status, viewsets
@@ -13,14 +11,12 @@ from api.clouds.aws import models as aws_models
 from api.clouds.azure import models as azure_models
 from api.models import User
 from api.serializers import CloudAccountSerializer
-from api.viewsets import AccountViewSet, DailyConcurrentUsageViewSet
+from api.viewsets import AccountViewSet
 from internal import filters, serializers
 from internal.authentication import (
     IdentityHeaderAuthenticationInternal,
-    IdentityHeaderAuthenticationInternalAllowFakeIdentityHeader,
     IdentityHeaderAuthenticationInternalCreateUser,
 )
-from util.misc import get_today
 
 
 class InternalViewSetMixin:
@@ -364,29 +360,6 @@ class InternalAzureMachineImageViewSet(
         "created_at": ["lt", "exact", "gt"],
         "updated_at": ["lt", "exact", "gt"],
     }
-
-
-class InternalDailyConcurrentUsageViewSet(DailyConcurrentUsageViewSet):
-    """Generate report of concurrent usage within a time frame."""
-
-    def get_authenticators(self):
-        """Instantiate and return the list of authenticators that this view can use."""
-        authentication_classes = [
-            IdentityHeaderAuthenticationInternalAllowFakeIdentityHeader
-        ]
-        return [auth() for auth in authentication_classes]
-
-    def latest_start_date(self):
-        """Return the latest allowed start_date."""
-        return get_today()
-
-    def latest_end_date(self):
-        """Return the latest allowed end_date."""
-        return get_today() + timedelta(days=1)
-
-    def late_start_date_error(self):
-        """Return the error message for specifying a late start_date."""
-        return _("start_date cannot be in the future.")
 
 
 @schema(None)

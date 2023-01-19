@@ -63,7 +63,6 @@ The following resource paths are currently available:
 -  ``/api/cloudigrade/v2/images/`` returns images data
 -  ``/api/cloudigrade/v2/sysconfig/`` returns sysconfig data
 -  ``/api/cloudigrade/v2/azure-offer-template/`` returns azure offer template data
--  ``/api/cloudigrade/v2/concurrent/`` returns concurrency data
 
 
 User Setup
@@ -172,78 +171,6 @@ Response:
 
 {{ v2_get_image | stringify_http_response | rst_codeblock }}
 
-
-Report Commands
----------------
-
-These APIs may be used to generate calculated and aggregated report data.
-
-Daily Max Concurrency
-~~~~~~~~~~~~~~~~~~~~~
-
-The concurrency API returns a paginated list of days, and each day includes the
-maximum concurrent number of instances, grouped by various combinations of role,
-sla, and architecture seen concurrently in use during that day.
-
-Optional ``start_date`` is an ISO-8601 date that is the inclusive start of the
-reporting period. If not defined, default is "yesterday".
-
-Optional ``end_date`` is an ISO-8601 date that is the exclusive end of the
-reporting period. If not defined, default is "today".
-
-Request:
-
-{{ v2_list_concurrent.wsgi_request | httpied_command() | rst_codeblock("bash") }}
-
-Response:
-
-{{ v2_list_concurrent | stringify_http_response | rst_codeblock }}
-
-If your requested ``start_date`` and ``end_date`` values would result in some
-dates that not completed their calculations, the server will return ``425 Too Early``.
-
-Request:
-
-{{ v2_list_concurrent_too_early.wsgi_request | httpied_command() | rst_codeblock("bash") }}
-
-Response:
-
-{{ v2_list_concurrent_too_early | stringify_http_response | rst_codeblock }}
-
-If your requested ``start_date`` and ``end_date`` values would result in some
-future dates beyond "yesterday", the API will return a 400 with the relevant errors.
-Daily max concurrency results will end "yesterday" at the latest.
-
-Request:
-
-{{ v2_list_concurrent_partial_future.wsgi_request | httpied_command() | rst_codeblock("bash") }}
-
-Response:
-
-{{ v2_list_concurrent_partial_future | stringify_http_response | rst_codeblock }}
-
-If your requested ``start_date`` and ``end_date`` values would result in exclusively
-future dates beyond "yesterday", the API will also return a 400 with the relevant errors.
- In the following example, the request is for dates "tomorrow" through "one week from today".
-
-Request:
-
-{{ v2_list_concurrent_all_future.wsgi_request | httpied_command() | rst_codeblock("bash") }}
-
-Response:
-
-{{ v2_list_concurrent_all_future | stringify_http_response | rst_codeblock }}
-
-If your requested ``end_date`` value is not greater then that of the user
-``date_joined``, the api will return a 400 with the relevant error.
-
-Request:
-
-{{ v2_list_concurrent_past_end_date.wsgi_request | httpied_command() | rst_codeblock("bash") }}
-
-Response:
-
-{{ v2_list_concurrent_past_end_date | stringify_http_response | rst_codeblock }}
 
 Miscellaneous Commands
 ----------------------

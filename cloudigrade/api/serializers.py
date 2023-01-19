@@ -1,9 +1,7 @@
 """DRF serializers for the cloudigrade public API."""
-from datetime import timedelta
 
 from django.utils.translation import gettext as _
 from generic_relations.relations import GenericRelatedField
-from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import (
     CharField,
@@ -11,7 +9,7 @@ from rest_framework.fields import (
     Field,
     IntegerField,
 )
-from rest_framework.serializers import ModelSerializer, Serializer
+from rest_framework.serializers import ModelSerializer
 
 from api import AWS_PROVIDER_STRING, AZURE_PROVIDER_STRING, CLOUD_PROVIDERS
 from api.clouds.aws.models import AwsCloudAccount, AwsInstance, AwsMachineImage
@@ -33,10 +31,8 @@ from api.models import (
     Instance,
     MachineImage,
 )
-from api.util import get_max_concurrent_usage
 from util import aws
-from util.exceptions import InvalidArn, ResultsUnavailable
-from util.misc import get_today
+from util.exceptions import InvalidArn
 
 
 class CloudAccountSerializer(ModelSerializer):
@@ -303,58 +299,3 @@ class InstanceSerializer(ModelSerializer):
     def update(self, instance, validated_data):
         """Update a Instance."""
         raise NotImplementedError
-
-
-class DailyConcurrentUsageDummyQueryset(object):
-    """Dummy queryset for getting days with their max concurrent usage."""
-
-    def __init__(
-        self,
-        start_date=None,
-        end_date=None,
-        user_id=None,
-    ):
-        """Initialize parameters."""
-        self.start_date = start_date
-        self.end_date = end_date
-        self.user_id = user_id
-        self._days = None
-
-    @property
-    def days(self):
-        """Get all days."""
-        if self._days is None:
-            tomorrow = get_today() + timedelta(days=1)
-            days = []
-            current = self.start_date
-            delta_day = timedelta(days=1)
-            end_date = min(self.end_date, tomorrow)
-            while current < end_date:
-                days.append(current)
-                current += delta_day
-            self._days = days
-        return self._days
-
-    def count(self):
-        """Count the available days."""
-        return len(self.days)
-
-    def __getitem__(self, index):
-        """Get a specific day."""
-        days = self.days[index]
-        concurrent_usages = []
-
-        # Try to get data for each day, but raise ResultsUnavailable if data is missing.
-        for date in days:
-            if concurrent_usage := get_max_concurrent_usage(date, self.user_id):
-                concurrent_usages.append(concurrent_usage)
-            else:
-                raise ResultsUnavailable
-        return concurrent_usages
-
-
-class DailyConcurrentUsageSerializer(Serializer):
-    """Serialize a report of daily RHEL concurrency over time for the API."""
-
-    date = serializers.DateField(required=True)
-    maximum_counts = serializers.ReadOnlyField()
