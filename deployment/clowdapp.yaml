@@ -1548,7 +1548,7 @@ parameters:
 - name: CELERY_WORKER_REPLICA_COUNT_MAX
   displayName: Cloudigrade Worker Replica Count Max
   required: true
-  value: '16'
+  value: '4'
 #
 # Parameters shared between components
 #
