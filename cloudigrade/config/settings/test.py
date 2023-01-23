@@ -16,9 +16,6 @@ DATABASES = {
 LOGGING["handlers"]["console"]["level"] = "CRITICAL"
 logging.config.dictConfig(LOGGING)
 
-# Always enable SyntheticDataRequest HTTP API for tests.
-ENABLE_SYNTHETIC_DATA_REQUEST_HTTP_API = True
-
 # We never want to interact with a real Redis cache server during unit tests.
 # Override the Redis server configured in `base.py` with the in-memory cache.
 CACHES = {

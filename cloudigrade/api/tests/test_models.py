@@ -3,10 +3,8 @@ import uuid
 from unittest.mock import patch
 
 import faker
-from django.test import TestCase, TransactionTestCase, override_settings
+from django.test import TestCase
 
-from api import AWS_PROVIDER_STRING
-from api.models import CloudAccount, MachineImage, SyntheticDataRequest
 from api.models import User
 from api.tests import helper as api_helper
 from util.tests import helper as util_helper
@@ -50,47 +48,6 @@ class CloudAccountTest(TestCase):
         )
         account.delete()
         self.assertTrue(User.objects.filter(account_number=account_number).exists())
-
-
-class SyntheticDataRequestModelTest(TestCase, api_helper.ModelStrTestMixin):
-    """SyntheticDataRequest tests."""
-
-    def setUp(self):
-        """Set up basic SyntheticDataRequest."""
-        self.request = SyntheticDataRequest.objects.create()
-
-    def test_synthetic_data_request_str(self):
-        """Test that the SyntheticDataRequest str and repr are valid."""
-        self.assertTypicalStrOutput(
-            self.request, exclude_field_names=("machine_images",)
-        )
-
-    def test_synthetic_data_request_pre_delete_callback(self):
-        """Test the SyntheticDataRequest pre-delete callback deletes images."""
-        image = api_helper.generate_image_aws()
-        self.request.machine_images.add(image)
-        self.request.delete()
-        with self.assertRaises(MachineImage.DoesNotExist):
-            image.refresh_from_db()
-
-
-@override_settings(CELERY_TASK_ALWAYS_EAGER=True)
-class SyntheticDataRequestModelTransactionTest(TransactionTestCase):
-    """SyntheticDataRequest tests that require transaction.on_commit handling."""
-
-    def setUp(self):
-        """Set up basic SyntheticDataRequest."""
-        self.request = SyntheticDataRequest.objects.create(
-            cloud_type=AWS_PROVIDER_STRING
-        )
-
-    def test_synthetic_data_request_post_delete_callback(self):
-        """Test the SyntheticDataRequest post-delete callback deletes accounts."""
-        self.request.refresh_from_db()  # because user is assigned during post_create
-        user_id = self.request.user_id
-        self.assertTrue(CloudAccount.objects.filter(user_id=user_id).exists())
-        self.request.delete()
-        self.assertFalse(CloudAccount.objects.filter(user_id=user_id).exists())
 
 
 class UserModelTest(TestCase):

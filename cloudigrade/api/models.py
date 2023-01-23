@@ -5,11 +5,10 @@ import uuid
 from datetime import timedelta
 
 import model_utils
-from celery import chain
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.core import validators
 from django.db import models, transaction
-from django.db.models.signals import post_delete, post_save, pre_delete
+from django.db.models.signals import post_delete, pre_delete
 from django.dispatch import receiver
 from django.utils.timezone import now
 from django.utils.translation import gettext as _
@@ -1079,65 +1078,3 @@ class SyntheticDataRequest(BaseModel):
             f"updated_at={updated_at}"
             f")"
         )
-
-
-@receiver(post_save, sender=SyntheticDataRequest)
-def synthetic_data_request_post_save_callback(*args, **kwargs):
-    """After creation, start the async tasks to synthesize activity."""
-    instance = kwargs["instance"]
-    created = kwargs["created"]
-    if created:
-        from api.tasks import (
-            synthesize_cloud_accounts,
-            synthesize_images,
-            synthesize_instance_events,
-            synthesize_instances,
-            synthesize_runs_and_usage,
-            synthesize_user,
-        )
-
-        transaction.on_commit(
-            lambda: chain(
-                synthesize_user.s(instance.id),
-                synthesize_cloud_accounts.s(),
-                synthesize_images.s(),
-                synthesize_instances.s(),
-                synthesize_instance_events.s(),
-                synthesize_runs_and_usage.s(),
-            ).apply_async()
-        )
-
-
-@receiver(pre_delete, sender=SyntheticDataRequest)
-def synthetic_data_request_pre_delete_callback(*args, **kwargs):
-    """
-    Delete related but unused MachineImage objects when deleting SyntheticDataRequest.
-
-    This must happen in the pre_delete signal because the instance.machine_images
-    relationship doesn't return anything in post_delete.
-    """
-    instance = kwargs["instance"]
-    # Immediately delete any related images that are not currently in use.
-    # Images being used by Instances will be deleted automatically later as a
-    # side-effect of deleting the related CloudAccounts.
-    for machine_image in instance.machine_images.all():
-        if not Instance.objects.filter(machine_image=machine_image).exists():
-            machine_image.delete()
-
-
-@receiver(post_delete, sender=SyntheticDataRequest)
-def synthetic_data_request_post_delete_callback(*args, **kwargs):
-    """
-    Delete related CloudAccount objects when deleting SyntheticDataRequest.
-
-    Note that we don't delete the related User object here because we would have to wait
-    until the CloudAccounts were deleted first. We already have a periodic task that
-    deletes inactive Users that no longer relate to any CloudAccount objects, and we
-    simply expect this User will be handled by that task.
-    """
-    instance = kwargs["instance"]
-
-    from api.tasks.maintenance import delete_cloud_account
-
-    for cloud_account in CloudAccount.objects.filter(user=instance.user):
-        transaction.on_commit(lambda: delete_cloud_account.delay(cloud_account.id))
