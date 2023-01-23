@@ -4,7 +4,6 @@ from django_filters import rest_framework as django_filters
 from api import models
 from api.clouds.aws import models as aws_models
 from api.clouds.azure import models as azure_models
-from api.filters import InstanceRunningSinceFilter
 
 
 class InternalCloudAccountFilterSet(django_filters.FilterSet):
@@ -30,54 +29,6 @@ class InternalCloudAccountFilterSet(django_filters.FilterSet):
         }
 
 
-class InternalInstanceFilterSet(django_filters.FilterSet):
-    """FilterSet for limiting Instances for the internal API."""
-
-    account_number = django_filters.CharFilter(
-        field_name="cloud_account__user__account_number"
-    )
-    org_id = django_filters.CharFilter(field_name="cloud_account__user__org_id")
-    running_since = InstanceRunningSinceFilter()
-    username = django_filters.CharFilter(
-        field_name="cloud_account__user__account_number"
-    )
-
-    class Meta:
-        model = models.Instance
-        fields = {
-            "cloud_account": ["exact"],
-            "machine_image": ["exact"],
-            "object_id": ["exact"],
-            "created_at": ["lt", "exact", "gt"],
-            "updated_at": ["lt", "exact", "gt"],
-        }
-
-
-class InternalInstanceEventFilterSet(django_filters.FilterSet):
-    """FilterSet for limiting InstanceEvents for the internal API."""
-
-    account_number = django_filters.CharFilter(
-        field_name="instance__cloud_account__user__account_number"
-    )
-    org_id = django_filters.CharFilter(
-        field_name="instance__cloud_account__user__org_id"
-    )
-    username = django_filters.CharFilter(
-        field_name="instance__cloud_account__user__account_number"
-    )
-    cloud_account = django_filters.NumberFilter(field_name="instance__cloud_account")
-
-    class Meta:
-        model = models.InstanceEvent
-        fields = {
-            "event_type": ["exact"],
-            "instance": ["exact"],
-            "object_id": ["exact"],
-            "created_at": ["lt", "exact", "gt"],
-            "updated_at": ["lt", "exact", "gt"],
-        }
-
-
 class InternalUserFilterSet(django_filters.FilterSet):
     """FilterSet for limiting api.User for the internal API."""
 
@@ -90,52 +41,6 @@ class InternalUserFilterSet(django_filters.FilterSet):
             "date_joined": ["lt", "exact", "gt"],
             "org_id": ["exact"],
             "uuid": ["exact"],
-        }
-
-
-class InternalRunFilterSet(django_filters.FilterSet):
-    """FilterSet for limiting Runs for the internal API."""
-
-    account_number = django_filters.CharFilter(
-        field_name="instance__cloud_account__user__account_number"
-    )
-    org_id = django_filters.CharFilter(
-        field_name="instance__cloud_account__user__org_id"
-    )
-    username = django_filters.CharFilter(
-        field_name="instance__cloud_account__user__account_number"
-    )
-    cloud_account = django_filters.NumberFilter(field_name="instance__cloud_account")
-
-    class Meta:
-        model = models.Run
-        fields = {
-            "instance": ["exact"],
-            "instance_type": ["exact"],
-            "machineimage": ["exact"],
-            "memory": ["exact"],
-            "vcpu": ["exact"],
-            "start_time": ["lt", "exact", "gt"],
-            "end_time": ["lt", "exact", "gt"],
-            "created_at": ["lt", "exact", "gt"],
-            "updated_at": ["lt", "exact", "gt"],
-        }
-
-
-class InternalConcurrentUsageFilterSet(django_filters.FilterSet):
-    """FilterSet for limiting ConcurrentUsages for the internal API."""
-
-    account_number = django_filters.CharFilter(field_name="user__account_number")
-    org_id = django_filters.CharFilter(field_name="user__org_id")
-    username = django_filters.CharFilter(field_name="user__account_number")
-    run = django_filters.NumberFilter(field_name="potentially_related_runs")
-
-    class Meta:
-        model = models.ConcurrentUsage
-        fields = {
-            "date": ["lt", "exact", "gt"],
-            "created_at": ["lt", "exact", "gt"],
-            "updated_at": ["lt", "exact", "gt"],
         }
 
 

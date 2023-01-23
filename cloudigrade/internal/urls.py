@@ -21,17 +21,6 @@ routes += [
     ("periodictasks", viewsets.InternalPeriodicTaskViewSet, None),
     ("usertasklocks", viewsets.InternalUserTaskLockViewSet, None),
     ("cloudaccounts", viewsets.InternalCloudAccountViewSet, None),
-    ("instances", viewsets.InternalInstanceViewSet, None),
-    ("instanceevents", viewsets.InternalInstanceEventViewSet, None),
-    ("machineimages", viewsets.InternalMachineImageViewSet, None),
-    (r"runs", viewsets.InternalRunViewSet, None),
-    (
-        "machineimageinspectionstarts",
-        viewsets.InternalMachineImageInspectionStartViewSet,
-        None,
-    ),
-    ("concurrentusages", viewsets.InternalConcurrentUsageViewSet, None),
-    ("instancedefinitions", viewsets.InternalInstanceDefinitionViewSet, None),
 ]
 
 if settings.ENABLE_SYNTHETIC_DATA_REQUEST_HTTP_API:
@@ -42,22 +31,11 @@ if settings.ENABLE_SYNTHETIC_DATA_REQUEST_HTTP_API:
 # URLs for AWS models
 routes += [
     ("awscloudaccounts", viewsets.InternalAwsCloudAccountViewSet, None),
-    ("awsinstances", viewsets.InternalAwsInstanceViewSet, None),
-    ("awsmachineimages", viewsets.InternalAwsMachineImageViewSet, None),
-    (
-        "awsmachineimagecopies",
-        viewsets.InternalAwsMachineImageCopyViewSet,
-        None,
-    ),
-    ("awsinstanceevents", viewsets.InternalAwsInstanceEventViewSet, None),
 ]
 
 # URLs for Azure models
 routes += [
     ("azurecloudaccounts", viewsets.InternalAzureCloudAccountViewSet, None),
-    ("azureinstances", viewsets.InternalAzureInstanceViewSet, None),
-    ("azuremachineimages", viewsets.InternalAzureMachineImageViewSet, None),
-    ("azureinstanceevents", viewsets.InternalAzureInstanceEventViewSet, None),
 ]
 
 

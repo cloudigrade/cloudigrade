@@ -12,24 +12,14 @@ from rest_framework.fields import (
 from rest_framework.serializers import ModelSerializer
 
 from api import AWS_PROVIDER_STRING, AZURE_PROVIDER_STRING, CLOUD_PROVIDERS
-from api.clouds.aws.models import AwsCloudAccount, AwsInstance, AwsMachineImage
-from api.clouds.aws.serializers import (
-    AwsCloudAccountSerializer,
-    AwsInstanceSerializer,
-    AwsMachineImageSerializer,
-)
+from api.clouds.aws.models import AwsCloudAccount
+from api.clouds.aws.serializers import AwsCloudAccountSerializer
 from api.clouds.aws.util import create_aws_cloud_account
-from api.clouds.azure.models import AzureCloudAccount, AzureInstance, AzureMachineImage
-from api.clouds.azure.serializers import (
-    AzureCloudAccountSerializer,
-    AzureInstanceSerializer,
-    AzureMachineImageSerializer,
-)
+from api.clouds.azure.models import AzureCloudAccount
+from api.clouds.azure.serializers import AzureCloudAccountSerializer
 from api.clouds.azure.util import create_azure_cloud_account
 from api.models import (
     CloudAccount,
-    Instance,
-    MachineImage,
 )
 from util import aws
 from util.exceptions import InvalidArn
@@ -191,111 +181,3 @@ class CloudAccountSerializer(ModelSerializer):
             platform_source_id,
         )
         return cloud_account
-
-
-class MachineImageSerializer(ModelSerializer):
-    """Serialize a customer AwsMachineImage for API v2."""
-
-    cloud_type = ChoiceField(CLOUD_PROVIDERS, required=False)
-    content_object = GenericRelatedField(
-        {
-            AwsMachineImage: AwsMachineImageSerializer(),
-            AzureMachineImage: AzureMachineImageSerializer(),
-        },
-        required=False,
-    )
-
-    image_id = IntegerField(source="id", read_only=True)
-
-    class Meta:
-        model = MachineImage
-        fields = (
-            "architecture",
-            "created_at",
-            "image_id",
-            "inspection_json",
-            "is_encrypted",
-            "name",
-            "openshift",
-            "openshift_detected",
-            "rhel",
-            "rhel_detected",
-            "rhel_detected_by_tag",
-            "rhel_enabled_repos_found",
-            "rhel_product_certs_found",
-            "rhel_release_files_found",
-            "rhel_signed_packages_found",
-            "rhel_version",
-            "status",
-            "syspurpose",
-            "updated_at",
-            "cloud_type",
-            "content_object",
-        )
-        read_only_fields = (
-            "architecture",
-            "created_at",
-            "id",
-            "inspection_json",
-            "is_encrypted",
-            "name",
-            "openshift",
-            "openshift_detected",
-            "rhel",
-            "rhel_detected",
-            "rhel_detected_by_tag",
-            "rhel_enabled_repos_found",
-            "rhel_product_certs_found",
-            "rhel_release_files_found",
-            "rhel_signed_packages_found",
-            "rhel_version",
-            "status",
-            "syspurpose",
-            "updated_at",
-            "cloud_type",
-        )
-
-
-class InstanceSerializer(ModelSerializer):
-    """Serialize a customer AwsInstance for API v2."""
-
-    cloud_type = ChoiceField(choices=CLOUD_PROVIDERS, required=False)
-    content_object = GenericRelatedField(
-        {
-            AwsInstance: AwsInstanceSerializer(),
-            AzureInstance: AzureInstanceSerializer(),
-        },
-        required=False,
-    )
-    instance_id = IntegerField(source="id", read_only=True)
-
-    # Foreign key non-string properties
-    cloud_account_id = IntegerField(read_only=True)
-    machine_image_id = IntegerField(read_only=True)
-
-    class Meta:
-        model = Instance
-        fields = (
-            "cloud_account_id",
-            "created_at",
-            "instance_id",
-            "machine_image_id",
-            "updated_at",
-            "cloud_type",
-            "content_object",
-        )
-        read_only_fields = (
-            "cloud_account_id",
-            "created_at",
-            "id",
-            "machine_image_id",
-            "updated_at",
-        )
-
-    def create(self, validated_data):
-        """Create a Instance."""
-        raise NotImplementedError
-
-    def update(self, instance, validated_data):
-        """Update a Instance."""
-        raise NotImplementedError
