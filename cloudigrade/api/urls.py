@@ -8,8 +8,6 @@ from api import viewsets
 # Prepare a list of DRF ViewSet routes.
 routes = [
     ("accounts", viewsets.AccountViewSet, "account"),
-    ("instances", viewsets.InstanceViewSet, "instance"),
-    ("images", viewsets.MachineImageViewSet, "machineimage"),
     ("sysconfig", viewsets.SysconfigViewSet, "sysconfig"),
     ("azure-offer-template", viewsets.AzureOfferTemplateViewSet, "azure-offer"),
 ]

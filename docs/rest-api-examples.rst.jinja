@@ -59,8 +59,6 @@ Overview
 The following resource paths are currently available:
 
 -  ``/api/cloudigrade/v2/accounts/`` returns accounts data
--  ``/api/cloudigrade/v2/instances/`` returns instances data
--  ``/api/cloudigrade/v2/images/`` returns images data
 -  ``/api/cloudigrade/v2/sysconfig/`` returns sysconfig data
 -  ``/api/cloudigrade/v2/azure-offer-template/`` returns azure offer template data
 
@@ -99,77 +97,6 @@ Request:
 Response:
 
 {{ v2_account_get | stringify_http_response | rst_codeblock }}
-
-
-Instance Info
--------------
-
-List all instances
-~~~~~~~~~~~~~~~~~~
-
-Request:
-
-{{ v2_instance_list.wsgi_request | httpied_command() | rst_codeblock("bash") }}
-
-Response:
-
-{{ v2_instance_list | stringify_http_response | rst_codeblock }}
-
-
-Retrieve a specific instance
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Request:
-
-{{ v2_instance_get.wsgi_request | httpied_command() | rst_codeblock("bash") }}
-
-Response:
-
-{{ v2_instance_get | stringify_http_response | rst_codeblock }}
-
-
-Filtering instances
-~~~~~~~~~~~~~~~~~~~
-
-You may also include an optional "running_since" query string argument to filter for only
-instances that have been running uninterrupted since the given time.
-
-Request:
-
-{{ v2_instance_filter_running.wsgi_request | httpied_command() | rst_codeblock("bash") }}
-
-Response:
-
-{{ v2_instance_filter_running | stringify_http_response | rst_codeblock }}
-
-
-Machine Images
---------------
-
-List all images
-~~~~~~~~~~~~~~~
-
-Below command will return all images that have been seen used by any instance for any account belonging to the user that makes the request.
-
-Request:
-
-{{ v2_list_images.wsgi_request | httpied_command() | rst_codeblock("bash") }}
-
-Response:
-
-{{ v2_list_images | stringify_http_response | rst_codeblock }}
-
-
-Retrieve a specific image
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Request:
-
-{{ v2_get_image.wsgi_request | httpied_command() | rst_codeblock("bash") }}
-
-Response:
-
-{{ v2_get_image | stringify_http_response | rst_codeblock }}
 
 
 Miscellaneous Commands

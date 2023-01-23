@@ -69,9 +69,6 @@ class DocsApiHandler(object):
 
     def __init__(self):
         """Initialize all the data for the examples."""
-        api_helper.generate_instance_type_definitions(cloud_type="aws")
-        api_helper.generate_instance_type_definitions(cloud_type="azure")
-
         self.customer_account_number = "100001"
         self.customer_org_id = "200002"
         self.customer_user = util_helper.get_test_user(
@@ -113,14 +110,7 @@ class DocsApiHandler(object):
         # Times to use for various account and event activity.
         self.now = get_now()
         self.this_morning = self.now.replace(hour=0, minute=0, second=0, microsecond=0)
-        self.yesterday = self.this_morning - timedelta(days=1)
-        self.last_month = self.this_morning - timedelta(days=31)
-        self.last_week = self.this_morning - timedelta(days=7)
-        self.three_days_ago = self.this_morning - timedelta(days=3)
-        self.two_days_ago = self.this_morning - timedelta(days=2)
         self.two_weeks_ago = self.this_morning - timedelta(weeks=2)
-        self.tomorrow = self.this_morning + timedelta(days=1)
-        self.next_week = self.this_morning + timedelta(weeks=1)
 
         ######################################
         # Generate AWS data for the customer user.
@@ -134,64 +124,6 @@ class DocsApiHandler(object):
             created_at=self.two_weeks_ago,
             azure_subscription_id=str(seeded_uuid4()),
         )
-        self.customer_instances = [
-            api_helper.generate_instance(self.aws_customer_account),
-            api_helper.generate_instance(self.aws_customer_account),
-            api_helper.generate_instance(self.aws_customer_account),
-            api_helper.generate_instance(self.azure_customer_account),
-            api_helper.generate_instance(self.azure_customer_account),
-            api_helper.generate_instance(self.azure_customer_account),
-        ]
-
-        # Generate events so we can see customer activity in the responses.
-        # These events represent all customer instances starting one week ago,
-        # stopping two days ago, and starting again yesterday.
-        self.events = []
-        for instance in self.customer_instances[:2]:
-            self.events.extend(
-                api_helper.generate_instance_events(
-                    instance,
-                    [
-                        (self.last_week, self.three_days_ago),
-                        (self.yesterday, None),
-                    ],
-                )
-            )
-        for instance in self.customer_instances[3:6]:
-            self.events.extend(
-                api_helper.generate_instance_events(
-                    instance,
-                    [
-                        (self.last_week, self.three_days_ago),
-                        (self.yesterday, None),
-                    ],
-                    cloud_type="azure",
-                )
-            )
-
-        # Force all images to have RHEL detected ("7.7")
-        self.images = list(
-            set(
-                instance.machine_image
-                for instance in self.customer_instances
-                if instance.machine_image is not None
-            )
-        )
-        for image in self.images:
-            image.inspection_json = json.dumps(
-                {
-                    "rhel_enabled_repos_found": True,
-                    "rhel_version": "7.7",
-                    "syspurpose": {
-                        "role": "Red Hat Enterprise Linux Server",
-                        "service_level_agreement": "Premium",
-                        "usage": "Development/Test",
-                    },
-                }
-            )
-            image.status = image.INSPECTED
-            image.region = "us-east-1"
-            image.save()
 
     def gather_api_responses(self):
         """
@@ -223,37 +155,6 @@ class DocsApiHandler(object):
         response = self.customer_client.get_accounts(self.aws_customer_account.id)
         assert_status(response, 200)
         responses["v2_account_get"] = response
-
-        ##################
-        # V2 Instance Info
-
-        # List all instances
-        response = self.customer_client.list_instances()
-        assert_status(response, 200)
-        responses["v2_instance_list"] = response
-
-        # Retrieve a specific instance
-        response = self.customer_client.get_instances(self.customer_instances[0].id)
-        assert_status(response, 200)
-        responses["v2_instance_get"] = response
-
-        # Filtering instances on running
-        response = self.customer_client.list_instances(data={"running_since": self.now})
-        assert_status(response, 200)
-        responses["v2_instance_filter_running"] = response
-
-        #######################
-        # V2 Machine Image Info
-
-        # List all images
-        response = self.customer_client.list_images()
-        assert_status(response, 200)
-        responses["v2_list_images"] = response
-
-        # Retrieve a specific image
-        response = self.customer_client.get_images(self.images[0].id)
-        assert_status(response, 200)
-        responses["v2_get_image"] = response
 
         ########################
         # V2 Miscellaneous Commands

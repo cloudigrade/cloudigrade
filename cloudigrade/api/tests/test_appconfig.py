@@ -14,28 +14,9 @@ class AppConfigSetTest(TestCase):
     def setUp(self):
         """Set up a bunch of test data."""
         self.user1 = util_helper.generate_test_user()
-        self.user2 = util_helper.generate_test_user()
 
         self.account1 = api_helper.generate_cloud_account(user=self.user1)
-        self.account2 = api_helper.generate_cloud_account(user=self.user2)
-
-        self.image_plain = api_helper.generate_image()
-        self.image_windows = api_helper.generate_image(is_windows=True)
-        self.image_rhel = api_helper.generate_image(rhel_detected=True)
-        self.image_ocp = api_helper.generate_image(openshift_detected=True)
-
-        self.instance1 = api_helper.generate_instance(
-            cloud_account=self.account1, image=self.image_plain
-        )
-        self.instance2 = api_helper.generate_instance(
-            cloud_account=self.account1, image=self.image_windows
-        )
-        self.instance3 = api_helper.generate_instance(
-            cloud_account=self.account1, image=self.image_rhel
-        )
-        self.instance4 = api_helper.generate_instance(
-            cloud_account=self.account1, image=self.image_ocp
-        )
+        self.account2 = api_helper.generate_cloud_account(user=self.user1)
 
     def test_pagination_links(self):
         """
@@ -47,12 +28,10 @@ class AppConfigSetTest(TestCase):
         client = APIClient()
         client.force_authenticate(user=self.user1)
         data = {"limit": 1}
-        response = client.get(
-            "/api/cloudigrade/v2/instances/", data=data, format="json"
-        )
+        response = client.get("/api/cloudigrade/v2/accounts/", data=data, format="json")
         body = response.json()
 
-        self.assertEquals(body["meta"]["count"], 4)
+        self.assertEquals(body["meta"]["count"], 2)
         self.assertEquals(len(body["data"]), 1)
 
         link_first = body["links"]["first"]
@@ -74,12 +53,10 @@ class AppConfigSetTest(TestCase):
         client = APIClient()
         client.force_authenticate(user=self.user1)
         data = {"limit": 1}
-        response = client.get(
-            "/api/cloudigrade/v2/instances/", data=data, format="json"
-        )
+        response = client.get("/api/cloudigrade/v2/accounts/", data=data, format="json")
         body = response.json()
 
-        self.assertEquals(body["meta"]["count"], 4)
+        self.assertEquals(body["meta"]["count"], 2)
         self.assertEquals(len(body["data"]), 1)
 
         link_next = body["links"]["next"]

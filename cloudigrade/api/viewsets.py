@@ -25,32 +25,6 @@ class AccountViewSet(viewsets.ReadOnlyModelViewSet):
     )
 
 
-class InstanceViewSet(viewsets.ReadOnlyModelViewSet):
-    """List all or retrieve a single instance."""
-
-    schema = schemas.DescriptiveAutoSchema("instance", tags=["api-v2"])
-    serializer_class = serializers.InstanceSerializer
-    queryset = models.Instance.objects.all()
-    filter_backends = (
-        django_filters.DjangoFilterBackend,
-        filters.InstanceRequestIsUserFilterBackend,
-    )
-    filterset_class = filters.InstanceFilterSet
-
-
-class MachineImageViewSet(viewsets.ReadOnlyModelViewSet):
-    """List all or retrieve a single machine image."""
-
-    schema = schemas.DescriptiveAutoSchema("image", tags=["api-v2"])
-    serializer_class = serializers.MachineImageSerializer
-    queryset = models.MachineImage.objects.all()
-    filter_backends = (
-        django_filters.DjangoFilterBackend,
-        filters.MachineImageRequestIsUserFilterBackend,
-    )
-    filterset_fields = ("architecture", "status")
-
-
 class SysconfigViewSet(viewsets.ViewSet):
     """Retrieve dynamic sysconfig data including cloud-specific IDs and policies."""
 

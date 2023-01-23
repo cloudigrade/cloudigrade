@@ -101,25 +101,6 @@ class SandboxedRestClientTest(TestCase):
         with self.assertRaises(AttributeError):
             client.foo_bar()
 
-    def test_action_noun_verb_detail(self):
-        """Assert "detail" requests work."""
-        client = helper.SandboxedRestClient()
-        client._force_authenticate(
-            self.user, {"HTTP_X_RH_IDENTITY": self.x_rh_identity}
-        )
-
-        account = helper.generate_cloud_account(user=self.user)
-        image = helper.generate_image(status=MachineImage.INSPECTED)
-        helper.generate_instance(account, image=image)
-
-        response = client.post_machineimages(
-            noun_id=image.id,
-            detail="reinspect",
-            api_root="/internal/api/cloudigrade/v1",
-        )
-        self.assertEqual(response.status_code, http.HTTPStatus.OK)
-        self.assertEqual(MachineImage.PENDING, response.data["status"])
-
 
 class GenerateCloudAccountTest(TestCase):
     """generate_cloud_account tests."""
