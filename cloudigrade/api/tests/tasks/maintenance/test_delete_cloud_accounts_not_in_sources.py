@@ -1,9 +1,9 @@
 """Collection of tests for tasks.maintenance.delete_cloud_accounts_not_in_sources."""
 from unittest.mock import patch
 
-from django.test import TestCase, TransactionTestCase, override_settings
+from django.test import TestCase, override_settings
 
-from api import AWS_PROVIDER_STRING, models
+from api import models
 from api.tasks import maintenance
 from api.tests import helper as api_helper
 from util.exceptions import SourcesAPINotOkStatus
@@ -297,48 +297,3 @@ class DeleteCloudAccountsNotInSourcesTest(TestCase):
                 id__in=[account.id for account in expected_cloud_accounts_after]
             ).count(),
         )
-
-
-class DeleteCloudAccountsNotInSourcesIgnoresSyntheticTest(TransactionTestCase):
-    """
-    tasks.delete_cloud_accounts_not_in_sources test case for synthetic accounts.
-
-    This test must use TransactionTestCase because related objects are synthesized by
-    SyntheticDataRequest in transaction.on_commit that is never reached by TestCase.
-    """
-
-    @override_settings(CELERY_TASK_ALWAYS_EAGER=True)
-    @override_settings(SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA=False)
-    def test_delete_cloud_accounts_not_in_sources_ignores_synthetic_data(self):
-        """
-        Test cloud accounts related to synthetic data requests are skipped.
-
-        Cloud accounts created for synthetic data requests will never have corresponding
-        objects in sources-api, and *other* processes exist to delete them on a specific
-        schedule. Therefore, delete_cloud_accounts_not_in_sources must ignore them.
-        """
-        long_ago = util_helper.utc_dt(2018, 1, 5, 0, 0, 0)
-        recently = util_helper.utc_dt(2021, 11, 17, 0, 0, 0)
-
-        with util_helper.clouditardis(long_ago):
-            # We need to generate in the past so they are old enough to be considered.
-            # This has the side-effect of creating a CloudAccount with is_synthetic=True
-            # that should, however, be ignored by delete_cloud_accounts_not_in_sources.
-            # Also, we can feed it small values so we don't waste time synthesizing more
-            # data that we're just going to ignore.
-            models.SyntheticDataRequest.objects.create(
-                cloud_type=AWS_PROVIDER_STRING,
-                since_days_ago=1,
-                image_count=0,
-                instance_count=0,
-            )
-
-        self.assertEqual(1, models.CloudAccount.objects.count())
-
-        with util_helper.clouditardis(recently), patch(
-            "util.redhatcloud.sources.get_source"
-        ) as mock_get_source:
-            maintenance.delete_cloud_accounts_not_in_sources()
-            mock_get_source.assert_not_called()
-
-        self.assertEqual(1, models.CloudAccount.objects.count())

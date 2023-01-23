@@ -619,11 +619,6 @@ CACHED_SQS_QUEUE_LENGTH_EXPIRATION_TTL = env.int(
     "CACHED_SQS_QUEUE_LENGTH_EXPIRATION_TTL", default=30 * 60
 )
 
-# Should the internal HTTP API for SyntheticDataRequest objects be available?
-ENABLE_SYNTHETIC_DATA_REQUEST_HTTP_API = env.bool(
-    "ENABLE_SYNTHETIC_DATA_REQUEST_HTTP_API", default=False
-)
-
 #####################################################################
 # leader run cached timing related configs for features
 

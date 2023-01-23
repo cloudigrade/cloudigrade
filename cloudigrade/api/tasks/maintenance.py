@@ -22,7 +22,6 @@ from api.models import (
     InstanceEvent,
     MachineImage,
     Run,
-    SyntheticDataRequest,
 )
 from api.models import User
 from util import aws
@@ -574,10 +573,12 @@ def delete_cloud_accounts_not_in_sources():
 
 
 @shared_task(name="api.tasks.delete_expired_synthetic_data")
-@transaction.atomic
 def delete_expired_synthetic_data():
-    """Delete expired SyntheticDataRequest objects."""
-    SyntheticDataRequest.objects.filter(expires_at__lte=get_now()).delete()
+    """Do nothing.
+
+    This is a placeholder for old in-flight tasks during the shutdown transition.
+    """
+    # TODO FIXME Delete this function once we're confident no tasks exists.
 
 
 @shared_task(name="api.tasks.migrate_account_numbers_to_org_ids")
