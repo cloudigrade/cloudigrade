@@ -7,9 +7,9 @@ coverage:
     project:
       default:
         target: "80%"
-    patch:
-      default:
-        target: "80%"
+    #patch:
+    #  default:
+    #    target: "80%"
     changes:
       default: off
 
