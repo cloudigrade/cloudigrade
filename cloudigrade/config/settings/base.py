@@ -10,20 +10,10 @@ from app_common_python import LoadedConfig as clowder_cfg
 from app_common_python import isClowderEnabled
 
 
-def __print(*args, **kwargs):
-    """
-    Print to *both* stdout *and* stderr.
-
-    This is a horrible kludge because different OpenShift environments inconsistently
-    show and preserve stdout in the pod consoles. I hope that this is only temporary,
-    but I have no real expectation that OpenShift will resolve this inconsistency.
-
-    USE THIS FUNCTION ONLY IN THIS MODULE. DO NOT LET THIS CANCER SPREAD.
-    """
-    stdout_args = (f"stdout: {args[0] if args else ''}",) + args[1:]
-    print(*stdout_args, **kwargs)
-    stderr_args = (f"stderr: {args[0] if args else ''}",) + args[1:]
-    print(*stderr_args, file=sys.stderr, **kwargs)
+def __print_stderr(*args, **kwargs):
+    """Print to stderr."""
+    kwargs["file"] = sys.stderr
+    print(*args, **kwargs)
 
 
 #####################################################################
@@ -36,10 +26,10 @@ env = environ.Env()
 ENV_FILE_PATH = env("ENV_FILE_PATH", default="/mnt/secret_store/.env")
 if environ.os.path.isfile(ENV_FILE_PATH):
     env.read_env(ENV_FILE_PATH)
-    __print("The .env file has been loaded. See base.py for more information")
+    __print_stderr("The .env file has been loaded. See base.py for more information")
 
 if isClowderEnabled():
-    __print("Clowder: Enabled")
+    __print_stderr("Clowder: Enabled")
 
 # Used to derive several other configs' default values later.
 CLOUDIGRADE_ENVIRONMENT = env("CLOUDIGRADE_ENVIRONMENT")
@@ -171,7 +161,7 @@ if isClowderEnabled():
             "PASSWORD": CLOWDER_DATABASE_PASSWORD,
         },
     }
-    __print(
+    __print_stderr(
         f"Clowder: Database name: {CLOWDER_DATABASE_NAME} "
         f"host: {CLOWDER_DATABASE_HOST}:{CLOWDER_DATABASE_PORT}"
     )
@@ -334,7 +324,7 @@ WATCHTOWER_SEND_INTERVAL = env.float("WATCHTOWER_SEND_INTERVAL", default=1.0)
 WATCHTOWER_MAX_BATCH_COUNT = env.int("WATCHTOWER_MAX_BATCH_COUNT", default=1000)
 
 if CLOUDIGRADE_ENABLE_CLOUDWATCH:
-    __print("Configuring CloudWatch...")
+    __print_stderr("Configuring CloudWatch...")
     cw_boto3_client = boto3.client(
         "logs",
         aws_access_key_id=env("CW_AWS_ACCESS_KEY_ID"),
@@ -354,10 +344,10 @@ if CLOUDIGRADE_ENABLE_CLOUDWATCH:
         "max_batch_count": WATCHTOWER_MAX_BATCH_COUNT,
     }
     for logger_name, logger in LOGGING["loggers"].items():
-        __print(f"Appending watchtower to handlers for '{logger_name}'")
+        __print_stderr(f"Appending watchtower to handlers for '{logger_name}'")
         logger["handlers"].append("watchtower")
-    __print("Configured CloudWatch.")
-    __print(f"LOGGING with CloudWatch is {LOGGING}")
+    __print_stderr("Configured CloudWatch.")
+    __print_stderr(f"LOGGING with CloudWatch is {LOGGING}")
 
 # Important note: dictConfig must happen *after* adding the Watchtower handlers above.
 logging.config.dictConfig(LOGGING)
@@ -413,7 +403,7 @@ if isClowderEnabled():
     REDIS_PASSWORD = clowder_cfg.inMemoryDb.password
     REDIS_HOST = clowder_cfg.inMemoryDb.hostname
     REDIS_PORT = clowder_cfg.inMemoryDb.port
-    __print(f"Clowder: Redis: {REDIS_HOST}:{REDIS_PORT}")
+    __print_stderr(f"Clowder: Redis: {REDIS_HOST}:{REDIS_PORT}")
 else:
     REDIS_USERNAME = env("REDIS_USERNAME", default="")
     REDIS_PASSWORD = env("REDIS_PASSWORD", default="")
@@ -703,17 +693,17 @@ if isClowderEnabled():
     kafka_broker = clowder_cfg.kafka.brokers[0]
     KAFKA_SERVER_HOST = kafka_broker.hostname
     KAFKA_SERVER_PORT = kafka_broker.port
-    __print(f"Clowder: Kafka server: {KAFKA_SERVER_HOST}:{KAFKA_SERVER_PORT}")
+    __print_stderr(f"Clowder: Kafka server: {KAFKA_SERVER_HOST}:{KAFKA_SERVER_PORT}")
     if kafka_broker.cacert:
         KAFKA_SERVER_CA_LOCATION = clowder_cfg.kafka_ca()
-        __print("Clowder: Kafka server CA defined")
+        __print_stderr("Clowder: Kafka server CA defined")
 
     if kafka_broker.sasl and kafka_broker.sasl.username:
         KAFKA_SERVER_SECURITY_PROTOCOL = kafka_broker.sasl.securityProtocol
         KAFKA_SERVER_SASL_MECHANISM = kafka_broker.sasl.saslMechanism
         KAFKA_SERVER_SASL_USERNAME = kafka_broker.sasl.username
         KAFKA_SERVER_SASL_PASSWORD = kafka_broker.sasl.password
-        __print("Clowder: Kafka server SASL enabled")
+        __print_stderr("Clowder: Kafka server SASL enabled")
 else:
     KAFKA_SERVER_HOST = env(
         "KAFKA_SERVER_HOST", default="platform-mq-ci-kafka-bootstrap.platform-mq-ci.svc"
@@ -740,13 +730,13 @@ if isClowderEnabled():
         if endpoint.app == "sources-api":
             CLOWDER_SOURCES_API_BASE_URL = f"http://{endpoint.hostname}:{endpoint.port}"
     if CLOWDER_SOURCES_API_BASE_URL == "":
-        __print(
+        __print_stderr(
             f"Clowder: Sources api service was not found, "
             f"using default url: {SOURCES_API_BASE_URL}"
         )
     else:
         SOURCES_API_BASE_URL = CLOWDER_SOURCES_API_BASE_URL
-        __print(f"Clowder: Sources api service url: {SOURCES_API_BASE_URL}")
+        __print_stderr(f"Clowder: Sources api service url: {SOURCES_API_BASE_URL}")
 
 SOURCES_PSK = env("SOURCES_PSK", default="")
 
