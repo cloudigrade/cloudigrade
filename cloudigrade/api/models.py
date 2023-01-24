@@ -652,13 +652,15 @@ class Instance(BaseGenericModel):
     cloud_account = models.ForeignKey(
         CloudAccount,
         on_delete=models.CASCADE,
-        db_index=True,
-        null=False,
+        db_constraint=False,
+        db_index=False,
+        null=True,
     )
     machine_image = models.ForeignKey(
         MachineImage,
         on_delete=models.CASCADE,
-        db_index=True,
+        db_constraint=False,
+        db_index=False,
         null=True,
     )
 
@@ -751,8 +753,9 @@ class InstanceEvent(BaseGenericModel):
     instance = models.ForeignKey(
         Instance,
         on_delete=models.CASCADE,
-        db_index=True,
-        null=False,
+        db_constraint=False,
+        db_index=False,
+        null=True,
     )
     event_type = models.CharField(
         max_length=32,
@@ -808,14 +811,16 @@ class Run(BaseModel):
     machineimage = models.ForeignKey(
         MachineImage,
         on_delete=models.CASCADE,
-        db_index=True,
+        db_constraint=False,
+        db_index=False,
         null=True,
     )
     instance = models.ForeignKey(
         Instance,
         on_delete=models.CASCADE,
-        db_index=True,
-        null=False,
+        db_constraint=False,
+        db_index=False,
+        null=True,
     )
     instance_type = models.CharField(max_length=64, null=True, blank=True)
     memory = models.FloatField(default=0, blank=True, null=True)
@@ -885,8 +890,9 @@ class MachineImageInspectionStart(BaseModel):
     machineimage = models.ForeignKey(
         MachineImage,
         on_delete=models.CASCADE,
-        db_index=True,
-        null=False,
+        db_constraint=False,
+        db_index=False,
+        null=True,
     )
 
 
@@ -894,12 +900,15 @@ class ConcurrentUsage(BaseModel):
     """Saved calculation of max concurrent usage for a date+user."""
 
     date = models.DateField(db_index=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, db_index=True)
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        db_constraint=False,
+        db_index=False,
+        null=True,
+    )
     _maximum_counts = models.TextField(db_column="maximum_counts", default="[]")
     potentially_related_runs = models.ManyToManyField(Run)
-
-    class Meta:
-        unique_together = (("date", "user"),)
 
     @property
     def maximum_counts(self):

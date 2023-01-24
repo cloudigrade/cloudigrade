@@ -266,8 +266,9 @@ class AwsMachineImageCopy(AwsMachineImage):
     reference_awsmachineimage = models.ForeignKey(
         AwsMachineImage,
         on_delete=models.CASCADE,
-        db_index=True,
-        null=False,
+        db_constraint=False,
+        db_index=False,
+        null=True,
         related_name="+",
     )
 
