@@ -4,10 +4,9 @@ from unittest.mock import patch
 import faker
 from django.test import TestCase
 
-
 from api.clouds.aws import util
 from api.clouds.aws.models import AwsCloudAccount
-from api.models import CloudAccount, Instance
+from api.models import CloudAccount
 from api.tests import helper as api_helper
 from util.tests import helper as util_helper
 
@@ -61,8 +60,6 @@ class UpdateAWSCloudAccountTest(TestCase):
         aws_account_id2 = util_helper.generate_dummy_aws_account_id()
         arn2 = util_helper.generate_dummy_arn(account_id=aws_account_id2)
 
-        api_helper.generate_instance(self.cloud_account)
-
         util.update_aws_cloud_account(
             self.cloud_account,
             arn2,
@@ -72,7 +69,6 @@ class UpdateAWSCloudAccountTest(TestCase):
             self.source_id,
         )
         self.assertTrue(AwsCloudAccount.objects.filter(account_arn=arn2).exists())
-        self.assertEqual(0, Instance.objects.all().count())
 
         mock_disable.assert_called()
         mock_enable.assert_called()

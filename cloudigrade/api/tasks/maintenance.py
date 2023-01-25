@@ -235,7 +235,7 @@ def __delete_events(cloud_account, instance_event_cloud_class):
         )
         cloud_instance_events._raw_delete(cloud_instance_events.db)
     else:
-        logger.info(
+        logger.debug(
             "Could not delete cloud-specific InstanceEvent class related to "
             "%(cloud_account)s. Orphaned objects might exist.",
             {"cloud_account": cloud_account},
@@ -275,7 +275,7 @@ def __delete_instance_and_images(cloud_account, instance_cloud_class):
         cloud_instances = instance_cloud_class.objects.filter(id__in=cloud_instance_ids)
         cloud_instances._raw_delete(cloud_instances.db)
     else:
-        logger.info(
+        logger.debug(
             "Could not delete cloud-specific Instance class related to "
             "%(cloud_account)s. Orphaned objects might exist.",
             {"cloud_account": cloud_account},
