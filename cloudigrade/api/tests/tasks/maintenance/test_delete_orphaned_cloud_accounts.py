@@ -129,19 +129,6 @@ class DeleteOrphanedCloudAccountsTest(TestCase):
         for expected_info_message in expected_info_messages:
             self.assertIn(expected_info_message, info_messages)
 
-        expected_error_messages = {
-            "cloud_account.content_object is None in "
-            "_delete_cloud_account_related_objects. This should not happen, and some "
-            f"objects may be orphaned that related to {account}"
-            for account in old_orphaned_accounts
-        }
-        error_messages = {
-            record.message
-            for record in logging_watcher.records
-            if record.levelname == "ERROR"
-        }
-        self.assertEqual(expected_error_messages, error_messages)
-
         self.assertEqual(
             len(expected_cloud_accounts_after), models.CloudAccount.objects.count()
         )

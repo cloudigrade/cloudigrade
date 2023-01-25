@@ -469,20 +469,9 @@ class MachineImage(BaseGenericModel):
 class Instance(BaseGenericModel):
     """Base model for a compute/VM instance in a cloud."""
 
-    cloud_account = models.ForeignKey(
-        CloudAccount,
-        on_delete=models.CASCADE,
-        db_constraint=False,
-        db_index=False,
-        null=True,
-    )
-    machine_image = models.ForeignKey(
-        MachineImage,
-        on_delete=models.CASCADE,
-        db_constraint=False,
-        db_index=False,
-        null=True,
-    )
+    # Placeholder fields while breaking foreign keys for database cleanup.
+    cloud_account_id = models.IntegerField(db_index=False, null=True)
+    machine_image_id = models.IntegerField(db_index=False, null=True)
 
     def __str__(self):
         """Get the string representation."""
@@ -550,13 +539,8 @@ class InstanceEvent(BaseGenericModel):
     """Base model for an event triggered by a Instance."""
 
     TYPE = model_utils.Choices("power_on", "power_off", "attribute_change")
-    instance = models.ForeignKey(
-        Instance,
-        on_delete=models.CASCADE,
-        db_constraint=False,
-        db_index=False,
-        null=True,
-    )
+    # Placeholder field while breaking foreign keys for database cleanup.
+    instance_id = models.IntegerField(db_index=False, null=True)
     event_type = models.CharField(
         max_length=32,
         choices=TYPE,
@@ -598,20 +582,11 @@ class Run(BaseModel):
 
     start_time = models.DateTimeField(null=False, db_index=True)
     end_time = models.DateTimeField(blank=True, null=True, db_index=True)
-    machineimage = models.ForeignKey(
-        MachineImage,
-        on_delete=models.CASCADE,
-        db_constraint=False,
-        db_index=False,
-        null=True,
-    )
-    instance = models.ForeignKey(
-        Instance,
-        on_delete=models.CASCADE,
-        db_constraint=False,
-        db_index=False,
-        null=True,
-    )
+
+    # Placeholder fields while breaking foreign keys for database cleanup.
+    machineimage_id = models.IntegerField(db_index=False, null=True)
+    instance_id = models.IntegerField(db_index=False, null=True)
+
     instance_type = models.CharField(max_length=64, null=True, blank=True)
     memory = models.FloatField(default=0, blank=True, null=True)
     vcpu = models.IntegerField(default=0, blank=True, null=True)
@@ -677,26 +652,18 @@ def run_pre_delete_callback(*args, **kwargs):
 class MachineImageInspectionStart(BaseModel):
     """Model to track any time an image starts inspection."""
 
-    machineimage = models.ForeignKey(
-        MachineImage,
-        on_delete=models.CASCADE,
-        db_constraint=False,
-        db_index=False,
-        null=True,
-    )
+    # Placeholder fields while breaking foreign keys for database cleanup.
+    machineimage_id = models.IntegerField(db_index=False, null=True)
 
 
 class ConcurrentUsage(BaseModel):
     """Saved calculation of max concurrent usage for a date+user."""
 
     date = models.DateField(db_index=True)
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        db_constraint=False,
-        db_index=False,
-        null=True,
-    )
+
+    # Placeholder fields while breaking foreign keys for database cleanup.
+    user_id = models.IntegerField(db_index=False, null=True)
+
     _maximum_counts = models.TextField(db_column="maximum_counts", default="[]")
     potentially_related_runs = models.ManyToManyField(Run)
 

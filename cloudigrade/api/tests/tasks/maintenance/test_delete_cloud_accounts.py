@@ -121,10 +121,9 @@ class DeleteCloudAccountsTest(TestCase):
             r.getMessage() for r in logs_models.records if r.levelname == "ERROR"
         ]
         self.assertEqual(len(maintenance_infos), 1)
-        self.assertEqual(len(maintenance_errors), 1)
+        self.assertEqual(len(maintenance_errors), 0)
         self.assertEqual(len(model_errors), 1)
         self.assertIn("Deleting CloudAccount with ID", maintenance_infos[0])
-        self.assertIn("cloud_account.content_object is None", maintenance_errors[0])
         self.assertIn("content_object is missing", model_errors[0])
 
     @override_settings(CELERY_TASK_ALWAYS_EAGER=True)
@@ -152,6 +151,5 @@ class DeleteCloudAccountsTest(TestCase):
             r.getMessage() for r in logs_maintenance.records if r.levelname == "ERROR"
         ]
         self.assertEqual(len(maintenance_infos), 1)
-        self.assertEqual(len(maintenance_errors), 1)
+        self.assertEqual(len(maintenance_errors), 0)
         self.assertIn("Deleting CloudAccount with ID", maintenance_infos[0])
-        self.assertIn("cloud_account.content_object is None", maintenance_errors[0])
