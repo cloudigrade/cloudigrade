@@ -1,5 +1,4 @@
 """Cloudigrade API v2 Models."""
-import json
 import logging
 import uuid
 from datetime import timedelta
@@ -415,151 +414,6 @@ class MachineImage(BaseGenericModel):
     name = models.CharField(max_length=256, null=True, blank=True)
     architecture = models.CharField(max_length=32, null=True, blank=True)
 
-    @property
-    def rhel(self):
-        """
-        Indicate if the image contains RHEL.
-
-        Returns:
-            bool: calculated using the `rhel_detected` property.
-
-        """
-        return self.rhel_detected
-
-    @property
-    def rhel_version(self):
-        """
-        Get the detected version of RHEL.
-
-        Returns:
-            str of the detected version or None if not set.
-
-        """
-        if self.inspection_json:
-            image_json = json.loads(self.inspection_json)
-            return image_json.get("rhel_version", None)
-        return None
-
-    @property
-    def rhel_enabled_repos_found(self):
-        """
-        Indicate if the image contains RHEL enabled repos.
-
-        Returns:
-            bool: Value of `rhel_enabled_repos_found` from inspection_json.
-
-        """
-        if self.inspection_json:
-            image_json = json.loads(self.inspection_json)
-            return image_json.get("rhel_enabled_repos_found", False)
-        return False
-
-    @property
-    def rhel_product_certs_found(self):
-        """
-        Indicate if the image contains Red Hat product certs.
-
-        Returns:
-            bool: Value of `rhel_product_certs_found` from inspection_json.
-
-        """
-        if self.inspection_json:
-            image_json = json.loads(self.inspection_json)
-            return image_json.get("rhel_product_certs_found", False)
-        return False
-
-    @property
-    def rhel_release_files_found(self):
-        """
-        Indicate if the image contains RHEL release files.
-
-        Returns:
-            bool: Value of `rhel_release_files_found` from inspection_json.
-
-        """
-        if self.inspection_json:
-            image_json = json.loads(self.inspection_json)
-            return image_json.get("rhel_release_files_found", False)
-        return False
-
-    @property
-    def rhel_signed_packages_found(self):
-        """
-        Indicate if the image contains Red Hat signed packages.
-
-        Returns:
-            bool: Value of `rhel_signed_packages_found` from inspection_json.
-
-        """
-        if self.inspection_json:
-            image_json = json.loads(self.inspection_json)
-            return image_json.get("rhel_signed_packages_found", False)
-        return False
-
-    @property
-    def rhel_detected(self):
-        """
-        Indicate if the image detected RHEL.
-
-        Returns:
-            bool: combination of various image properties that results in our
-                canonical definition of whether the image is marked for RHEL.
-
-        """
-        return (
-            self.rhel_detected_by_tag
-            or getattr(self.content_object, "is_cloud_access", False)
-            or self.rhel_enabled_repos_found
-            or self.rhel_product_certs_found
-            or self.rhel_release_files_found
-            or self.rhel_signed_packages_found
-        )
-
-    @property
-    def syspurpose(self):
-        """
-        Get the detected system purpose (syspurpose).
-
-        Returns:
-            str of the detected system purpose or None if not set.
-
-        """
-        if self.inspection_json:
-            image_json = json.loads(self.inspection_json)
-            return image_json.get("syspurpose", None)
-        return None
-
-    @property
-    def openshift(self):
-        """
-        Indicate if the image contains OpenShift.
-
-        Returns:
-            bool: the `openshift_detected` property.
-
-        """
-        return self.openshift_detected
-
-    @property
-    def cloud_image_id(self):
-        """Get the external cloud provider's ID for this image."""
-        return getattr(self.content_object, "is_cloud_access", None)
-
-    @property
-    def is_cloud_access(self):
-        """Indicate if the image is provided by Red Hat Cloud Access."""
-        return getattr(self.content_object, "is_cloud_access", False)
-
-    @property
-    def is_marketplace(self):
-        """Indicate if the image is from AWS/Azure/GCP/etc. Marketplace."""
-        return getattr(self.content_object, "is_marketplace", False)
-
-    @property
-    def cloud_type(self):
-        """Get the external cloud provider type."""
-        return getattr(self.content_object, "cloud_type", None)
-
     def __str__(self):
         """Get the string representation."""
         return repr(self)
@@ -658,26 +512,6 @@ class Instance(BaseGenericModel):
             f")"
         )
 
-    @property
-    def cloud_type(self):
-        """
-        Get the external cloud provider type.
-
-        This should be treated like an abstract method, but we can't actually
-        extend ABC here because it conflicts with Django's Meta class.
-        """
-        return getattr(self.content_object, "cloud_type", None)
-
-    @property
-    def cloud_instance_id(self):
-        """
-        Get the external cloud instance id.
-
-        This should be treated like an abstract method, but we can't actually
-        extend ABC here because it conflicts with Django's Meta class.
-        """
-        return getattr(self.content_object, "cloud_instance_id", None)
-
 
 @receiver(post_delete, sender=Instance)
 def instance_post_delete_callback(*args, **kwargs):
@@ -730,16 +564,6 @@ class InstanceEvent(BaseGenericModel):
         blank=False,
     )
     occurred_at = models.DateTimeField(null=False, db_index=True)
-
-    @property
-    def cloud_type(self):
-        """
-        Get the external cloud provider type.
-
-        This should be treated like an abstract method, but we can't actually
-        extend ABC here because it conflicts with Django's Meta class.
-        """
-        return getattr(self.content_object, "cloud_type", None)
 
     def __str__(self):
         """Get the string representation."""
@@ -875,16 +699,6 @@ class ConcurrentUsage(BaseModel):
     )
     _maximum_counts = models.TextField(db_column="maximum_counts", default="[]")
     potentially_related_runs = models.ManyToManyField(Run)
-
-    @property
-    def maximum_counts(self):
-        """Get maximum_counts list."""
-        return json.loads(self._maximum_counts)
-
-    @maximum_counts.setter
-    def maximum_counts(self, value):
-        """Set maximum_counts list."""
-        self._maximum_counts = json.dumps(value)
 
     def __str__(self):
         """Get the string representation."""

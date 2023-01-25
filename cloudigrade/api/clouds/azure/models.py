@@ -118,25 +118,6 @@ class AzureMachineImage(BaseModel):
     )
     azure_marketplace_image = models.BooleanField(default=False)
 
-    @property
-    def is_marketplace(self):
-        """Indicate if the image is from Azure Marketplace."""
-        return self.azure_marketplace_image
-
-    @property
-    def is_cloud_access(self):
-        """
-        Indicate if the image is from Cloud Access.
-
-        TODO: determine if Azure has a concept of cloud access.
-        """
-        return False
-
-    @property
-    def cloud_type(self):
-        """Get the cloud type to indicate this account uses Azure."""
-        return AZURE_PROVIDER_STRING
-
     def __str__(self):
         """Get the string representation."""
         return repr(self)
@@ -203,16 +184,6 @@ class AzureInstance(BaseModel):
             f")"
         )
 
-    @property
-    def cloud_type(self):
-        """Get the cloud type to indicate this account uses Azure."""
-        return AZURE_PROVIDER_STRING
-
-    @property
-    def cloud_instance_id(self):
-        """Get the cloud instance id."""
-        return self.resource_id
-
 
 class AzureInstanceEvent(BaseModel):
     """Event model for an event triggered by an AzureInstance."""
@@ -221,11 +192,6 @@ class AzureInstanceEvent(BaseModel):
         InstanceEvent, related_query_name="azure_instance_event"
     )
     instance_type = models.CharField(max_length=256, null=True, blank=True)
-
-    @property
-    def cloud_type(self):
-        """Get the cloud type to indicate this account uses Azure."""
-        return AZURE_PROVIDER_STRING
 
     def __str__(self):
         """Get the string representation."""
