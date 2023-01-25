@@ -36,7 +36,7 @@ class Command(BaseCommand):
     def disable_cloud_account(self, account):
         """Attempt to disable the CloudAccount gracefully."""
         try:
-            account.disable(power_off_instances=False)
+            account.disable()
             return True
         except KafkaProducerException as e:
             logger.error(
@@ -53,7 +53,7 @@ class Command(BaseCommand):
             # previous account.disable() failed to commit its transaction but likely
             # succeeded in updating its local representation of is_enabled=False.
             account.refresh_from_db()
-            account.disable(power_off_instances=False, notify_sources=False)
+            account.disable(notify_sources=False)
             return True
         except Exception as e:
             logger.error(f"Error when deleting {account}. {e}", exc_info=True)

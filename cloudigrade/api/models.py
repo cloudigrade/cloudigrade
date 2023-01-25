@@ -287,7 +287,7 @@ class CloudAccount(BaseGenericModel):
         return enabled_successfully
 
     @transaction.atomic
-    def disable(self, message="", power_off_instances=True, notify_sources=True):
+    def disable(self, message="", notify_sources=True):
         """
         Mark this CloudAccount as disabled and perform operations to make it so.
 
@@ -300,12 +300,6 @@ class CloudAccount(BaseGenericModel):
 
         Args:
             message (string): status message to set on the Sources Application
-            power_off_instances (bool): if this is set to false, we do not create
-                power_off instance events when disabling the account. This is used on
-                account deletion, when we still want to run the rest of the account
-                disable logic, but should not be creating power_off instance events.
-                Since creating the instance event in the same transaction as deleting
-                the account causes Django errors.
             notify_sources (bool): determines if we notify sources about this operation.
                 This should always be true except for very special cases.
         """
@@ -313,8 +307,6 @@ class CloudAccount(BaseGenericModel):
         if self.is_enabled:
             self.is_enabled = False
             self.save()
-        if power_off_instances:
-            self._power_off_instances(power_off_time=get_now())
         if self.content_object:
             self.content_object.disable()
         else:
@@ -337,30 +329,6 @@ class CloudAccount(BaseGenericModel):
             )
         logger.info(_("Finished disabling %(account)s"), {"account": self})
 
-    def _power_off_instances(self, power_off_time):
-        """
-        Mark all running instances belonging to this CloudAccount as powered off.
-
-        Args:
-            power_off_time (datetime.datetime): time to set when stopping the instances
-        """
-        instances = self.instance_set.all()
-        for instance in instances:
-            last_event = (
-                InstanceEvent.objects.filter(instance=instance)
-                .order_by("-occurred_at")
-                .first()
-            )
-            if last_event and last_event.event_type != InstanceEvent.TYPE.power_off:
-                content_object_class = last_event.content_object.__class__
-                cloud_specific_event = content_object_class.objects.create()
-                InstanceEvent.objects.create(
-                    event_type=InstanceEvent.TYPE.power_off,
-                    occurred_at=power_off_time,
-                    instance=instance,
-                    content_object=cloud_specific_event,
-                )
-
 
 @receiver(pre_delete, sender=CloudAccount)
 def cloud_account_pre_delete_callback(*args, **kwargs):
@@ -368,8 +336,6 @@ def cloud_account_pre_delete_callback(*args, **kwargs):
     Disable CloudAccount before deleting it.
 
     This runs the logic to notify sources of application availability.
-    This additionally runs the cloud specific disable function with the
-    power_off_instances set to False.
 
     Note: Signal receivers must accept keyword arguments (**kwargs).
 
@@ -381,7 +347,7 @@ def cloud_account_pre_delete_callback(*args, **kwargs):
     instance = kwargs["instance"]
     try:
         instance.refresh_from_db()
-        instance.disable(power_off_instances=False)
+        instance.disable()
     except CloudAccount.DoesNotExist:
         logger.info(
             _(
