@@ -1,7 +1,6 @@
 """Cloudigrade API v2 Models for AWS."""
 import logging
 
-from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models, transaction
 from django.utils.translation import gettext as _
@@ -190,34 +189,6 @@ class AwsMachineImage(BaseModel):
     platform_details = models.CharField(max_length=256, null=True, blank=True)
     usage_operation = models.CharField(max_length=256, null=True, blank=True)
 
-    @property
-    def is_cloud_access(self):
-        """Indicate if the image is from Cloud Access."""
-        return (
-            self.machine_image.get().name is not None
-            and CLOUD_ACCESS_NAME_TOKEN.lower() in self.machine_image.get().name.lower()
-            and self.owner_aws_account_id in settings.RHEL_IMAGES_AWS_ACCOUNTS
-        )
-
-    @property
-    def is_marketplace(self):
-        """Indicate if the image is from AWS Marketplace."""
-        return self.aws_marketplace_image or (
-            self.machine_image.get().name is not None
-            and MARKETPLACE_NAME_TOKEN.lower() in self.machine_image.get().name.lower()
-            and self.owner_aws_account_id in settings.RHEL_IMAGES_AWS_ACCOUNTS
-        )
-
-    @property
-    def cloud_image_id(self):
-        """Get the AWS EC2 AMI ID."""
-        return self.ec2_ami_id
-
-    @property
-    def cloud_type(self):
-        """Get the cloud type to indicate this account uses AWS."""
-        return AWS_PROVIDER_STRING
-
     def __str__(self):
         """Get the string representation."""
         return repr(self)
@@ -336,16 +307,6 @@ class AwsInstance(BaseModel):
             f")"
         )
 
-    @property
-    def cloud_type(self):
-        """Get the cloud type to indicate this account uses AWS."""
-        return AWS_PROVIDER_STRING
-
-    @property
-    def cloud_instance_id(self):
-        """Get the cloud instance id."""
-        return self.ec2_instance_id
-
 
 class AwsInstanceEvent(BaseModel):
     """Event model for an event triggered by an AwsInstance."""
@@ -355,11 +316,6 @@ class AwsInstanceEvent(BaseModel):
     )
     subnet = models.CharField(max_length=256, null=True, blank=True)
     instance_type = models.CharField(max_length=64, null=True, blank=True)
-
-    @property
-    def cloud_type(self):
-        """Get the cloud type to indicate this account uses AWS."""
-        return AWS_PROVIDER_STRING
 
     def __str__(self):
         """Get the string representation."""
