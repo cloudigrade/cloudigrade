@@ -5,7 +5,7 @@ import faker
 from django.conf import settings
 from django.test import TestCase
 
-from api.models import CloudAccount, ConcurrentUsage
+from api.models import CloudAccount
 from api.models import User
 from api.tasks import maintenance
 from api.tests import helper as api_helper
@@ -23,15 +23,10 @@ class DeleteInactiveUsersTest(TestCase):
         age = settings.DELETE_INACTIVE_USERS_MIN_AGE + 10
         old_date = misc.get_now() - timedelta(seconds=age)
         for account_number in range(1, USERS_COUNT + 1):
-            user = User.objects.create_user(account_number, date_joined=old_date)
-            ConcurrentUsage.objects.create(
-                date=old_date, user_id=user.id, maximum_counts=[]
-            )
+            User.objects.create_user(account_number, date_joined=old_date)
         self.assertEqual(User.objects.count(), USERS_COUNT)
-        self.assertEqual(ConcurrentUsage.objects.count(), USERS_COUNT)
         maintenance.delete_inactive_users()
         self.assertEqual(User.objects.count(), 0)
-        self.assertEqual(ConcurrentUsage.objects.count(), 0)
 
     def test_delete_inactive_users_ignores_users_with_cloudaccount(self):
         """Test delete_inactive_users ignores Users having any CloudAccount."""

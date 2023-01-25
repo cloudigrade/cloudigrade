@@ -1,13 +1,10 @@
 """Collection of tests for custom Django model logic."""
 import logging
-from random import choice
 from unittest.mock import Mock, patch
 
 from botocore.exceptions import ClientError
-from django.conf import settings
-from django.test import TestCase, TransactionTestCase
+from django.test import TransactionTestCase
 
-import api.clouds.aws.util
 from api import models
 from api.clouds.aws import models as aws_models
 from api.tests import helper
@@ -107,23 +104,9 @@ class AwsCloudAccountModelTest(TransactionTestCase, helper.ModelStrTestMixin):
         """
         self.assertTrue(self.account.is_enabled)
         self.assertEqual(self.account.enabled_at, self.account.created_at)
-        instance = helper.generate_instance(cloud_account=self.account)
-        runtimes = [
-            (
-                util_helper.utc_dt(2019, 1, 1, 0, 0, 0),
-                util_helper.utc_dt(2019, 1, 2, 0, 0, 0),
-            ),
-            (util_helper.utc_dt(2019, 1, 3, 0, 0, 0), None),
-        ]
 
         disable_date = util_helper.utc_dt(2019, 1, 4, 0, 0, 0)
         with util_helper.clouditardis(disable_date):
-            # We need to generate the runs while inside the clouditardis because we
-            # don't need an ever-growing number of daily ConcurrentUsage objects being
-            # created as the real-world clock ticks forward.
-            for runtime in runtimes:
-                helper.generate_single_run(instance=instance, runtime=runtime)
-            self.assertEqual(3, aws_models.AwsInstanceEvent.objects.count())
             with patch(
                 "api.clouds.aws.util.delete_cloudtrail"
             ) as mock_delete_cloudtrail:
@@ -134,14 +117,6 @@ class AwsCloudAccountModelTest(TransactionTestCase, helper.ModelStrTestMixin):
         self.account.refresh_from_db()
         self.assertFalse(self.account.is_enabled)
         self.assertEqual(self.account.enabled_at, self.created_at)
-        self.assertEqual(4, aws_models.AwsInstanceEvent.objects.count())
-
-        last_event = (
-            models.InstanceEvent.objects.filter(instance=instance)
-            .order_by("-occurred_at")
-            .first()
-        )
-        self.assertEqual(last_event.event_type, models.InstanceEvent.TYPE.power_off)
 
     @patch("api.tasks.sources.notify_application_availability_task")
     def test_disable_with_notify_sources_false_succeeds(self, mock_notify_sources):
@@ -160,25 +135,9 @@ class AwsCloudAccountModelTest(TransactionTestCase, helper.ModelStrTestMixin):
         self.account.refresh_from_db()
         self.assertFalse(self.account.is_enabled)
 
-    @patch("api.tasks.sources.notify_application_availability_task")
-    def test_disable_succeeds_if_no_instance_events(self, mock_notify_sources):
-        """Test that disabling an account works despite having no instance events."""
-        self.assertTrue(self.account.is_enabled)
-        helper.generate_instance(cloud_account=self.account)
-
-        with patch("api.clouds.aws.util.delete_cloudtrail") as mock_delete_cloudtrail:
-            mock_delete_cloudtrail.return_value = True
-            self.account.disable()
-            mock_delete_cloudtrail.assert_called()
-
-        self.account.refresh_from_db()
-        self.assertFalse(self.account.is_enabled)
-        self.assertEqual(0, aws_models.AwsInstanceEvent.objects.count())
-
     def test_disable_returns_early_if_account_is_enabled(self):
         """Test that AwsCloudAccount.disable returns early if is_enabled."""
         self.assertTrue(self.account.is_enabled)
-        helper.generate_instance(cloud_account=self.account)
 
         with patch("api.clouds.aws.util.delete_cloudtrail") as mock_delete_cloudtrail:
             mock_delete_cloudtrail.return_value = True
@@ -210,34 +169,17 @@ class AwsCloudAccountModelTest(TransactionTestCase, helper.ModelStrTestMixin):
         Deleting the account should also delete instances, events, runs, and the
         periodic verify task related to it.
         """
-        instance = helper.generate_instance(cloud_account=self.account)
-        runtime = (
-            util_helper.utc_dt(2019, 1, 1, 0, 0, 0),
-            util_helper.utc_dt(2019, 1, 2, 0, 0, 0),
-        )
-
         self.account.enable()
-        helper.generate_single_run(instance=instance, runtime=runtime)
 
         # First, verify that objects exist *before* deleting the AwsCloudAccount.
         self.assertGreater(aws_models.AwsCloudAccount.objects.count(), 0)
         self.assertGreater(models.CloudAccount.objects.count(), 0)
-        self.assertGreater(aws_models.AwsInstanceEvent.objects.count(), 0)
-        self.assertGreater(models.InstanceEvent.objects.count(), 0)
-        self.assertGreater(models.Run.objects.count(), 0)
-        self.assertGreater(aws_models.AwsInstance.objects.count(), 0)
-        self.assertGreater(models.Instance.objects.count(), 0)
 
         with patch("api.clouds.aws.util.delete_cloudtrail") as mock_delete_cloudtrail:
             mock_delete_cloudtrail.return_value = True
             self.account.delete()
         self.assertEqual(0, aws_models.AwsCloudAccount.objects.count())
         self.assertEqual(0, models.CloudAccount.objects.count())
-        self.assertEqual(0, aws_models.AwsInstanceEvent.objects.count())
-        self.assertEqual(0, models.InstanceEvent.objects.count())
-        self.assertEqual(0, models.Run.objects.count())
-        self.assertEqual(0, aws_models.AwsInstance.objects.count())
-        self.assertEqual(0, models.Instance.objects.count())
 
     @patch("api.tasks.sources.notify_application_availability_task")
     def test_delete_via_queryset_succeeds_if_delete_cloudtrail_fails(
@@ -250,48 +192,13 @@ class AwsCloudAccountModelTest(TransactionTestCase, helper.ModelStrTestMixin):
         self.assertEqual(0, aws_models.AwsCloudAccount.objects.count())
 
     @patch("api.tasks.sources.notify_application_availability_task")
-    def test_delete_via_queryset_cleans_up_instance_events_run(
-        self, mock_notify_sources
-    ):
-        """Deleting an account via queryset cleans up instances/events/runs."""
-        instance = helper.generate_instance(cloud_account=self.account)
-        runtime = (
-            util_helper.utc_dt(2019, 1, 1, 0, 0, 0),
-            util_helper.utc_dt(2019, 1, 2, 0, 0, 0),
-        )
-        helper.generate_single_run(instance=instance, runtime=runtime)
+    def test_delete_via_queryset_cleans_up_related_objects(self, mock_notify_sources):
+        """Deleting an account via queryset cleans up related objects."""
         with patch("api.clouds.aws.util.delete_cloudtrail") as mock_delete_cloudtrail:
             mock_delete_cloudtrail.return_value = True
             aws_models.AwsCloudAccount.objects.all().delete()
         self.assertEqual(0, aws_models.AwsCloudAccount.objects.count())
         self.assertEqual(0, models.CloudAccount.objects.count())
-        self.assertEqual(0, aws_models.AwsInstanceEvent.objects.count())
-        self.assertEqual(0, models.InstanceEvent.objects.count())
-        self.assertEqual(0, models.Run.objects.count())
-        self.assertEqual(0, aws_models.AwsInstance.objects.count())
-        self.assertEqual(0, models.Instance.objects.count())
-
-    @patch("api.tasks.sources.notify_application_availability_task")
-    def test_delete_account_with_instance_event_succeeds(self, mock_notify_sources):
-        """
-        Test that the account deleted succeeds when account has power_on instance event.
-
-        When account is deleted, we call disable() on the account with the
-        power_off_instances flag set to false. This prevents the disable from
-        attempting to create an instance event in the same transaction as the delete,
-        since doing so will fail.
-        """
-        image = helper.generate_image()
-        instance = helper.generate_instance(cloud_account=self.account, image=image)
-        helper.generate_single_instance_event(
-            instance=instance,
-            occurred_at=util_helper.utc_dt(2019, 1, 1, 0, 0, 0),
-            event_type=models.InstanceEvent.TYPE.power_on,
-        )
-        with patch("api.clouds.aws.util.delete_cloudtrail") as mock_delete_cloudtrail:
-            mock_delete_cloudtrail.return_value = True
-            self.account.delete()
-        self.assertEqual(0, aws_models.AwsCloudAccount.objects.count())
 
     @patch("api.tasks.sources.notify_application_availability_task")
     def test_delete_account_when_aws_access_denied(self, mock_notify_sources):
@@ -315,105 +222,3 @@ class AwsCloudAccountModelTest(TransactionTestCase, helper.ModelStrTestMixin):
             mock_get_session.side_effect = client_error
             self.account.delete()
         self.assertEqual(0, aws_models.AwsCloudAccount.objects.count())
-
-
-class InstanceModelTest(TestCase, helper.ModelStrTestMixin):
-    """Instance Model Test Cases."""
-
-    def setUp(self):
-        """Set up basic aws account."""
-        self.account = helper.generate_cloud_account()
-
-        self.image = helper.generate_image()
-        self.instance = helper.generate_instance(
-            cloud_account=self.account, image=self.image
-        )
-        self.instance_without_image = helper.generate_instance(
-            cloud_account=self.account, no_image=True
-        )
-
-    def test_instance_str(self):
-        """Test that the Instance str (and repr) is valid."""
-        excluded_field_names = ("content_type", "object_id")
-        self.assertTypicalStrOutput(self.instance, excluded_field_names)
-
-    def test_aws_instance_str(self):
-        """Test that the AwsInstance str (and repr) is valid."""
-        self.assertTypicalStrOutput(self.instance.content_object)
-
-    def test_delete_instance_cleans_up_machineimage(self):
-        """Test that deleting an instance cleans up its associated image."""
-        self.instance.delete()
-        self.instance_without_image.delete()
-        self.assertEqual(0, aws_models.AwsMachineImage.objects.count())
-        self.assertEqual(0, models.MachineImage.objects.count())
-
-    def test_delete_instance_does_not_clean_up_shared_machineimage(self):
-        """Test that deleting an instance does not clean up an shared image."""
-        helper.generate_instance(cloud_account=self.account, image=self.image)
-        self.instance.delete()
-        self.instance_without_image.delete()
-
-        self.assertEqual(1, aws_models.AwsMachineImage.objects.count())
-        self.assertEqual(1, models.MachineImage.objects.count())
-
-    def test_delete_instance_from_queryset_cleans_up_machineimage(self):
-        """Test that deleting instances via queryset cleans up its images."""
-        aws_models.AwsInstance.objects.all().delete()
-        self.assertEqual(0, aws_models.AwsMachineImage.objects.count())
-        self.assertEqual(0, models.MachineImage.objects.count())
-        self.assertEqual(0, aws_models.AwsInstance.objects.count())
-        self.assertEqual(0, models.Instance.objects.count())
-
-    def test_delete_multiple_instance_from_queryset_cleans_up_image(self):
-        """Deleting instances that share an image cleans up the image."""
-        helper.generate_instance(cloud_account=self.account, image=self.image)
-        aws_models.AwsInstance.objects.all().delete()
-        self.assertEqual(0, aws_models.AwsMachineImage.objects.count())
-        self.assertEqual(0, models.MachineImage.objects.count())
-        self.assertEqual(0, aws_models.AwsInstance.objects.count())
-        self.assertEqual(0, models.Instance.objects.count())
-
-
-class MachineImageModelTest(TestCase, helper.ModelStrTestMixin):
-    """Instance Model Test Cases."""
-
-    def setUp(self):
-        """Set up basic image objects."""
-        self.machine_image = helper.generate_image()
-        copy_ec2_ami_id = util_helper.generate_dummy_image_id()
-        api.clouds.aws.util.create_aws_machine_image_copy(
-            copy_ec2_ami_id, self.machine_image.content_object.ec2_ami_id
-        )
-        self.aws_machine_image_copy = aws_models.AwsMachineImageCopy.objects.get(
-            reference_awsmachineimage=self.machine_image.content_object
-        )
-
-    def test_machine_image_str(self):
-        """Test that the MachineImage str (and repr) is valid."""
-        excluded_field_names = ("content_type", "object_id", "inspection_json")
-        self.assertTypicalStrOutput(self.machine_image, excluded_field_names)
-
-    def test_aws_machine_image_str(self):
-        """Test that the AwsMachineImage str (and repr) is valid."""
-        self.assertTypicalStrOutput(self.machine_image.content_object)
-
-    def test_aws_machine_image_copy_str(self):
-        """Test that the AwsMachineImageCopy str (and repr) is valid."""
-        excluded_field_names = {"awsmachineimage_ptr"}
-        self.assertTypicalStrOutput(self.aws_machine_image_copy, excluded_field_names)
-
-    def test_is_marketplace_name_check(self):
-        """Test that is_marketplace is True if image name and owner matches."""
-        machine_image = helper.generate_image(
-            name="marketplace-hourly2",
-            owner_aws_account_id=choice(settings.RHEL_IMAGES_AWS_ACCOUNTS),
-        )
-        self.assertTrue(machine_image.content_object.is_marketplace)
-
-    def test_is_marketplace_true_if_aws_marketplace_image(self):
-        """Test that the AwsMachineImageCopy str (and repr) is valid."""
-        aws_machine_image = helper.generate_image().content_object
-        aws_machine_image.aws_marketplace_image = True
-        aws_machine_image.save()
-        self.assertTrue(aws_machine_image.is_marketplace)
