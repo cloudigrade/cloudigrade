@@ -6,8 +6,8 @@ from botocore.exceptions import ClientError
 from django.test import TransactionTestCase
 from rest_framework.serializers import ValidationError
 
-from api.clouds.aws.models import AwsCloudAccount, AwsMachineImage
-from api.models import CloudAccount, Instance
+from api.clouds.aws.models import AwsCloudAccount
+from api.models import CloudAccount
 from api.serializers import CloudAccountSerializer, aws
 from util.tests import helper as util_helper
 
@@ -133,16 +133,6 @@ class AwsAccountSerializerTest(TransactionTestCase):
         account = AwsCloudAccount.objects.get(aws_account_id=self.aws_account_id)
         self.assertEqual(self.aws_account_id, account.aws_account_id)
         self.assertEqual(self.arn, account.account_arn)
-
-        # Verify that we created no instances yet.
-        instances = Instance.objects.filter(
-            cloud_account=account.cloud_account.get()
-        ).all()
-        self.assertEqual(len(instances), 0)
-
-        # Verify that we created no images yet.
-        amis = AwsMachineImage.objects.all()
-        self.assertEqual(len(amis), 0)
 
     @patch("api.tasks.sources.notify_application_availability_task")
     def test_create_fails_access_denied(self, mock_notify_sources):

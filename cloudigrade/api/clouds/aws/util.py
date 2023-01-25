@@ -7,16 +7,8 @@ from django.utils.translation import gettext as _
 from rest_framework.serializers import ValidationError
 
 from api import error_codes
-from api.clouds.aws.models import (
-    AwsCloudAccount,
-    AwsMachineImage,
-    AwsMachineImageCopy,
-)
-from api.models import (
-    CloudAccount,
-    Instance,
-    MachineImage,
-)
+from api.clouds.aws.models import AwsCloudAccount, AwsMachineImage, AwsMachineImageCopy
+from api.models import CloudAccount, MachineImage
 from util import aws
 from util.exceptions import InvalidArn
 
@@ -317,12 +309,6 @@ def update_aws_cloud_account(
         # new replacement CloudAccount which will also notify sources when enabled, and
         # we already have explicit calls to notify if we can't create the CloudAccount.
         cloud_account.disable(notify_sources=False)
-
-        # Remove instances associated with the cloud account
-        # TODO instead of deleting instances here, delete the original CloudAccount.
-        # We can't delete it here due to 7b02f90fc643533246e51f20078e8ae2366df32b, but
-        # we could delete it after we've created the new CloudAccount a few lines later.
-        Instance.objects.filter(cloud_account=cloud_account).delete()
 
         try:
             customer_aws_account_id = aws.AwsArn(customer_arn).account_id

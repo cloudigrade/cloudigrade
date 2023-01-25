@@ -234,14 +234,8 @@ class AwsMachineImageCopy(AwsMachineImage):
     copy was made.
     """
 
-    reference_awsmachineimage = models.ForeignKey(
-        AwsMachineImage,
-        on_delete=models.CASCADE,
-        db_constraint=False,
-        db_index=False,
-        null=True,
-        related_name="+",
-    )
+    # Placeholder field while breaking foreign keys for database cleanup.
+    reference_awsmachineimage_id = models.IntegerField(db_index=False, null=True)
 
     def __str__(self):
         """Get the string representation."""
