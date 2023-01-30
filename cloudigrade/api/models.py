@@ -782,14 +782,10 @@ class SyntheticDataRequest(BaseModel):
 
     expires_at = models.DateTimeField(default=syntheticdatarequest_expires_at_default)
 
+    # Placeholder field while breaking foreign keys for database cleanup.
+    user_id = models.IntegerField(db_index=False, null=True)
+
     # References to objects that may be synthesized after initial creation:
-    user = models.OneToOneField(
-        User,
-        on_delete=models.CASCADE,
-        db_constraint=False,
-        db_index=False,
-        null=True,
-    )
     machine_images = models.ManyToManyField(
         MachineImage,
         db_constraint=False,
