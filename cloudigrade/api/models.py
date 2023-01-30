@@ -552,47 +552,6 @@ class InstanceEvent(BaseGenericModel):
         )
 
 
-class Run(BaseModel):
-    """Base model for a Run object."""
-
-    start_time = models.DateTimeField(null=False, db_index=True)
-    end_time = models.DateTimeField(blank=True, null=True, db_index=True)
-
-    # Placeholder fields while breaking foreign keys for database cleanup.
-    machineimage_id = models.IntegerField(db_index=False, null=True)
-    instance_id = models.IntegerField(db_index=False, null=True)
-
-    instance_type = models.CharField(max_length=64, null=True, blank=True)
-    memory = models.FloatField(default=0, blank=True, null=True)
-    vcpu = models.IntegerField(default=0, blank=True, null=True)
-
-    def __str__(self):
-        """Get the string representation."""
-        return repr(self)
-
-    def __repr__(self):
-        """Get an unambiguous string representation."""
-        start_time = (
-            repr(self.start_time.isoformat()) if self.start_time is not None else None
-        )
-        end_time = (
-            repr(self.end_time.isoformat()) if self.end_time is not None else None
-        )
-
-        return (
-            f"{self.__class__.__name__}("
-            f"id={self.id}, "
-            f"machineimage={self.machineimage_id}, "
-            f"instance={self.instance_id}, "
-            f"instance_type={self.instance_type}, "
-            f"memory={self.memory}, "
-            f"vcpu={self.vcpu}, "
-            f"start_time=parse({start_time}), "
-            f"end_time=parse({end_time})"
-            f")"
-        )
-
-
 class MachineImageInspectionStart(BaseModel):
     """Model to track any time an image starts inspection."""
 
