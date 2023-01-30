@@ -2157,7 +2157,7 @@
     "/internal/api/cloudigrade/v1/azurecloudaccounts/": {
       "get": {
         "operationId": "listAzureCloudAccounts",
-        "description": "Retrieve or list AzureMachineImages for internal use.",
+        "description": "Retrieve or list AzureCloudAccounts for internal use.",
         "parameters": [
           {
             "name": "limit",
@@ -2334,7 +2334,7 @@
     "/internal/api/cloudigrade/v1/azurecloudaccounts/{id}/": {
       "get": {
         "operationId": "retrieveAzureCloudAccount",
-        "description": "Retrieve or list AzureMachineImages for internal use.",
+        "description": "Retrieve or list AzureCloudAccounts for internal use.",
         "parameters": [
           {
             "name": "id",

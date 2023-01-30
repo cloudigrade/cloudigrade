@@ -154,7 +154,7 @@ class InternalAwsCloudAccountViewSet(
 class InternalAzureCloudAccountViewSet(
     InternalViewSetMixin, viewsets.ReadOnlyModelViewSet
 ):
-    """Retrieve or list AzureMachineImages for internal use."""
+    """Retrieve or list AzureCloudAccounts for internal use."""
 
     queryset = azure_models.AzureCloudAccount.objects.all()
     serializer_class = serializers.InternalAzureCloudAccountSerializer
