@@ -665,7 +665,11 @@ class ConcurrentUsage(BaseModel):
     user_id = models.IntegerField(db_index=False, null=True)
 
     _maximum_counts = models.TextField(db_column="maximum_counts", default="[]")
-    potentially_related_runs = models.ManyToManyField(Run)
+    potentially_related_runs = models.ManyToManyField(
+        Run,
+        db_constraint=False,
+        db_index=False,
+    )
 
     def __str__(self):
         """Get the string representation."""
@@ -780,21 +784,17 @@ class SyntheticDataRequest(BaseModel):
 
     # References to objects that may be synthesized after initial creation:
     user = models.OneToOneField(
-        User, on_delete=models.CASCADE, db_index=True, null=True
+        User,
+        on_delete=models.CASCADE,
+        db_constraint=False,
+        db_index=False,
+        null=True,
     )
-    machine_images = models.ManyToManyField(MachineImage)
-
-    def is_ready(self):
-        """Determine if the synthetic data is ready to use."""
-        if not self.user:
-            return False
-        start_date = self.user.date_joined.date()
-        created_date = self.created_at.date()
-        days_active = (created_date - start_date).days + 1
-        concurrent_usages_count = ConcurrentUsage.objects.filter(
-            user=self.user, date__gte=start_date, date__lte=created_date
-        ).count()
-        return concurrent_usages_count == days_active
+    machine_images = models.ManyToManyField(
+        MachineImage,
+        db_constraint=False,
+        db_index=False,
+    )
 
     def __str__(self):
         """Get the string representation."""
