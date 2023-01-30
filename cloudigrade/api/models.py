@@ -11,7 +11,7 @@ from django.utils.timezone import now
 from django.utils.translation import gettext as _
 
 from api import AWS_PROVIDER_STRING, AZURE_PROVIDER_STRING
-from util.misc import get_now, lock_task_for_user_ids
+from util.misc import get_now
 from util.models import BaseGenericModel, BaseModel
 
 logger = logging.getLogger(__name__)
@@ -440,29 +440,6 @@ class MachineImage(BaseGenericModel):
             f")"
         )
 
-    @transaction.atomic
-    def save(self, *args, **kwargs):
-        """Save this image and delete any related ConcurrentUsage objects."""
-        concurrent_usages = ConcurrentUsage.objects.filter(
-            potentially_related_runs__in=Run.objects.filter(machineimage=self)
-        )
-        if concurrent_usages.exists():
-            # Lock all users that depend on this machineimage
-            user_ids = set(
-                Instance.objects.filter(machine_image=self).values_list(
-                    "cloud_account__user__id", flat=True
-                )
-            )
-
-            with lock_task_for_user_ids(user_ids):
-                logger.info(
-                    "Removing %(num_usages)d related ConcurrentUsage objects "
-                    "related to Run %(run)s.",
-                    {"num_usages": concurrent_usages.count(), "run": str(self)},
-                )
-                concurrent_usages.delete()
-        return super().save(*args, **kwargs)
-
 
 class Instance(BaseGenericModel):
     """Base model for a compute/VM instance in a cloud."""
@@ -589,21 +566,6 @@ class Run(BaseModel):
     memory = models.FloatField(default=0, blank=True, null=True)
     vcpu = models.IntegerField(default=0, blank=True, null=True)
 
-    @transaction.atomic
-    def save(self, *args, **kwargs):
-        """Save this run and delete any related ConcurrentUsage objects."""
-        super().save(*args, **kwargs)
-        concurrent_usages = ConcurrentUsage.objects.filter(
-            potentially_related_runs=self
-        )
-        if concurrent_usages_count := concurrent_usages.count():
-            logger.info(
-                "Removing %(num_usages)d related ConcurrentUsage objects "
-                "related to Run %(run)s.",
-                {"num_usages": concurrent_usages_count, "run": str(self)},
-            )
-            concurrent_usages.delete()
-
     def __str__(self):
         """Get the string representation."""
         return repr(self)
@@ -631,67 +593,11 @@ class Run(BaseModel):
         )
 
 
-@receiver(pre_delete, sender=Run)
-def run_pre_delete_callback(*args, **kwargs):
-    """
-    Delete any related ConcurrentUsage prior to deleting the Run.
-
-    This must be pre_delete not post_delete because the ManyToMany relationship's
-    "through" table row may have already deleted by post_delete, and that leaves us no
-    way to find the related ConcurrentUsage.
-
-    Note: Signal receivers must accept keyword arguments (**kwargs).
-    """
-    run = kwargs["instance"]
-    concurrent_usages = ConcurrentUsage.objects.filter(potentially_related_runs=run)
-    concurrent_usages.delete()
-
-
 class MachineImageInspectionStart(BaseModel):
     """Model to track any time an image starts inspection."""
 
     # Placeholder fields while breaking foreign keys for database cleanup.
     machineimage_id = models.IntegerField(db_index=False, null=True)
-
-
-class ConcurrentUsage(BaseModel):
-    """Saved calculation of max concurrent usage for a date+user."""
-
-    date = models.DateField(db_index=True)
-
-    # Placeholder fields while breaking foreign keys for database cleanup.
-    user_id = models.IntegerField(db_index=False, null=True)
-
-    _maximum_counts = models.TextField(db_column="maximum_counts", default="[]")
-    potentially_related_runs = models.ManyToManyField(
-        Run,
-        db_constraint=False,
-        db_index=False,
-    )
-
-    def __str__(self):
-        """Get the string representation."""
-        return repr(self)
-
-    def __repr__(self):
-        """Get an unambiguous string representation."""
-        date = repr(self.date.isoformat()) if self.date is not None else None
-        created_at = (
-            repr(self.created_at.isoformat()) if self.created_at is not None else None
-        )
-        updated_at = (
-            repr(self.updated_at.isoformat()) if self.updated_at is not None else None
-        )
-
-        return (
-            f"{self.__class__.__name__}("
-            f"id={self.id}, "
-            f"date={date}, "
-            f"user_id={self.user_id}, "
-            f"created_at={created_at}, "
-            f"updated_at={updated_at}"
-            f")"
-        )
 
 
 class InstanceDefinition(BaseModel):
