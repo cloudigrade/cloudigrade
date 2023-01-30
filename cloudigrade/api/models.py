@@ -1,11 +1,9 @@
 """Cloudigrade API v2 Models."""
 import logging
 import uuid
-from datetime import timedelta
 
 import model_utils
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
-from django.core import validators
 from django.db import models, transaction
 from django.db.models.signals import post_delete, pre_delete
 from django.dispatch import receiver
@@ -723,110 +721,3 @@ class InstanceDefinition(BaseModel):
 
     class Meta:
         unique_together = (("instance_type", "cloud_type"),)
-
-
-def syntheticdatarequest_expires_at_default():
-    """
-    Get default value for SyntheticDataRequest.expires_at.
-
-    We always want synthetic data to expire within one day. If someone has not
-    already explicitly deleted it by then, a periodic process will delete it soon.
-    """
-    return get_now() + timedelta(days=1)
-
-
-class SyntheticDataRequest(BaseModel):
-    """
-    Synthetic data request definition which may be used for "live" test operations.
-
-    All other objects referenced by a SyntheticDataRequest object should be treated as
-    volatile, temporary data that may be destroyed soon after their creation.
-    """
-
-    # Requested inputs that can *only* be set at creation:
-    cloud_type = models.CharField(
-        max_length=32,
-        choices=((AWS_PROVIDER_STRING, "AWS"), (AZURE_PROVIDER_STRING, "Azure")),
-    )
-    since_days_ago = models.PositiveIntegerField(default=7)
-    account_count = models.PositiveIntegerField(default=1)
-    image_count = models.PositiveIntegerField(default=10)
-    image_ocp_chance = models.FloatField(
-        default=0.5,
-        validators=[validators.MinValueValidator(0), validators.MaxValueValidator(1)],
-    )
-    image_rhel_chance = models.FloatField(
-        default=0.5,
-        validators=[validators.MinValueValidator(0), validators.MaxValueValidator(1)],
-    )
-    image_other_owner_chance = models.FloatField(
-        default=0.5,
-        validators=[validators.MinValueValidator(0), validators.MaxValueValidator(1)],
-    )
-    instance_count = models.PositiveIntegerField(default=100)
-    run_count_per_instance_min = models.IntegerField(
-        default=1, validators=[validators.MinValueValidator(0)]
-    )
-    run_count_per_instance_mean = models.FloatField(
-        default=1.0, validators=[validators.MinValueValidator(0)]
-    )
-    hours_per_run_min = models.FloatField(
-        default=1.0, validators=[validators.MinValueValidator(0)]
-    )
-    hours_per_run_mean = models.FloatField(
-        default=2.0, validators=[validators.MinValueValidator(0)]
-    )
-    hours_between_runs_mean = models.FloatField(
-        default=8.0, validators=[validators.MinValueValidator(0)]
-    )
-
-    expires_at = models.DateTimeField(default=syntheticdatarequest_expires_at_default)
-
-    # Placeholder field while breaking foreign keys for database cleanup.
-    user_id = models.IntegerField(db_index=False, null=True)
-
-    # References to objects that may be synthesized after initial creation:
-    machine_images = models.ManyToManyField(
-        MachineImage,
-        db_constraint=False,
-        db_index=False,
-    )
-
-    def __str__(self):
-        """Get the string representation."""
-        return repr(self)
-
-    def __repr__(self):
-        """Get an unambiguous string representation."""
-        expires_at = (
-            repr(self.expires_at.isoformat()) if self.expires_at is not None else None
-        )
-        created_at = (
-            repr(self.created_at.isoformat()) if self.created_at is not None else None
-        )
-        updated_at = (
-            repr(self.updated_at.isoformat()) if self.updated_at is not None else None
-        )
-
-        return (
-            f"{self.__class__.__name__}("
-            f"id={self.id}, "
-            f"expires_at={expires_at}, "
-            f"user_id={self.user_id}, "
-            f"cloud_type={self.cloud_type}, "
-            f"since_days_ago={self.since_days_ago}, "
-            f"account_count={self.account_count}, "
-            f"image_count={self.image_count}, "
-            f"image_ocp_chance={self.image_ocp_chance}, "
-            f"image_rhel_chance={self.image_rhel_chance}, "
-            f"image_other_owner_chance={self.image_other_owner_chance}, "
-            f"instance_count={self.instance_count}, "
-            f"run_count_per_instance_min={self.run_count_per_instance_min}, "
-            f"run_count_per_instance_mean={self.run_count_per_instance_mean}, "
-            f"hours_per_run_min={self.hours_per_run_min}, "
-            f"hours_per_run_mean={self.hours_per_run_mean}, "
-            f"hours_between_runs_mean={self.hours_between_runs_mean}, "
-            f"created_at={created_at}, "
-            f"updated_at={updated_at}"
-            f")"
-        )
