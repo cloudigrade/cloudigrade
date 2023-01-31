@@ -59,5 +59,4 @@ else
 fi
 
 python3 ./manage.py configurequeues
-python3 ./manage.py syncbucketlifecycle
 python3 ./manage.py migrate
