@@ -16,7 +16,7 @@ jobs:
     name: py39
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/cloudigrade/build-container:ubi-8.7-1049-python-3.9.13
+      image: ghcr.io/cloudigrade/build-container:ubi-8.7-1049-python-3.9.13-2
     steps:
       - uses: actions/checkout@v3
       - run: pip install tox~=4.0.8
@@ -31,7 +31,7 @@ jobs:
     name: python-version
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/cloudigrade/build-container:ubi-8.7-923-python-3.9.13
+      image: ghcr.io/cloudigrade/build-container:ubi-8.7-1049-python-3.9.13-2
     steps:
       - uses: actions/checkout@v3
       - run: python --version | grep '^Python '$(cat .python-version)'$'
@@ -40,7 +40,7 @@ jobs:
     name: flake8
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/cloudigrade/build-container:ubi-8.7-923-python-3.9.13
+      image: ghcr.io/cloudigrade/build-container:ubi-8.7-1049-python-3.9.13-2
     steps:
       - uses: actions/checkout@v3
       - run: pip install tox~=4.0.8
@@ -50,7 +50,7 @@ jobs:
     name: Vulnerability
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/cloudigrade/build-container:ubi-8.7-923-python-3.9.13
+      image: ghcr.io/cloudigrade/build-container:ubi-8.7-1049-python-3.9.13-2
     steps:
       - uses: actions/checkout@v3
       - run: pip install poetry safety
@@ -61,7 +61,7 @@ jobs:
     name: Verify docs and openapi.json
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/cloudigrade/build-container:ubi-8.7-923-python-3.9.13
+      image: ghcr.io/cloudigrade/build-container:ubi-8.7-1049-python-3.9.13-2
     steps:
       - uses: actions/checkout@v3
       - run: pip install poetry
@@ -75,7 +75,7 @@ jobs:
     name: Verify Celery task configs
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/cloudigrade/build-container:ubi-8.7-923-python-3.9.13
+      image: ghcr.io/cloudigrade/build-container:ubi-8.7-1049-python-3.9.13-2
     steps:
       - uses: actions/checkout@v3
       - run: pip install poetry
