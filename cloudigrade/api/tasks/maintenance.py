@@ -8,7 +8,6 @@ from datetime import timedelta
 import requests
 from celery import shared_task
 from django.conf import settings
-from django.core.cache import cache
 from django.db import transaction
 from django.utils.translation import gettext as _
 
@@ -17,7 +16,6 @@ from api.clouds.azure import models as azure_models
 from api.models import CloudAccount
 from api.models import User
 from util import aws
-from util.cache import get_sqs_message_count_cache_key
 from util.celery import retriable_shared_task
 from util.exceptions import AwsThrottlingException
 from util.misc import get_now, lock_task_for_user_ids
@@ -426,54 +424,8 @@ def migrate_account_numbers_to_org_ids():
 
 @shared_task(name="api.tasks.check_and_cache_sqs_queues_lengths")
 def check_and_cache_sqs_queues_lengths():
+    """Do nothing.
+
+    This is a placeholder for old in-flight tasks during the shutdown transition.
     """
-    Check and cache the lengths of specific SQS queues.
-
-    Specifically, check lengths of the houndigrade inspection results queue, its DLQ,
-    the S3 CloudTrail notification queue, and its DLQ. Because these are each treated
-    somewhat differently in cloudigrade, the construction of names and URLs and their
-    processing logic here is somewhat bespoke.
-    """
-    expiration_ttl = settings.CACHED_SQS_QUEUE_LENGTH_EXPIRATION_TTL
-
-    houndigrade_queue_name = settings.HOUNDIGRADE_RESULTS_QUEUE_NAME
-    houndigrade_dlq_name = aws.get_sqs_queue_dlq_name(houndigrade_queue_name)
-    houndigrade_queue_url = aws.get_sqs_queue_url(houndigrade_queue_name)
-    houndigrade_dlq_url = aws.get_sqs_queue_url(houndigrade_dlq_name)
-
-    cloudtrail_queue_name = settings.AWS_CLOUDTRAIL_EVENT_QUEUE_NAME
-    cloudtrail_dlq_name = aws.get_sqs_queue_dlq_name(cloudtrail_queue_name)
-    cloudtrail_queue_url = aws.get_sqs_queue_url(cloudtrail_queue_name)
-    cloudtrail_dlq_url = aws.get_sqs_queue_url(cloudtrail_dlq_name)
-
-    queues = {
-        "houndigrade_results": (houndigrade_queue_name, houndigrade_queue_url),
-        "houndigrade_results_dlq": (houndigrade_dlq_name, houndigrade_dlq_url),
-        "cloudtrail_notifications": (cloudtrail_queue_name, cloudtrail_queue_url),
-        "cloudtrail_notifications_dlq": (cloudtrail_dlq_name, cloudtrail_dlq_url),
-    }
-
-    for key, (queue_name, queue_url) in queues.items():
-        number_of_messages = aws.get_sqs_approximate_number_of_messages(queue_url)
-        if number_of_messages is None:
-            logger.error(
-                _(
-                    "Could not get approximate number of messages "
-                    "for %(queue_name)s using %(queue_url)s"
-                ),
-                {"queue_name": queue_name, "queue_url": queue_url},
-            )
-            continue
-        cache_key = get_sqs_message_count_cache_key(key)
-        logger.info(
-            _(
-                "approximate count for %(queue_name)s is %(number_of_messages)s "
-                "(%(queue_url)s)"
-            ),
-            {
-                "queue_name": queue_name,
-                "number_of_messages": number_of_messages,
-                "queue_url": queue_url,
-            },
-        )
-        cache.set(cache_key, number_of_messages, expiration_ttl)
+    # TODO FIXME Delete this function once we're confident no tasks exists.
