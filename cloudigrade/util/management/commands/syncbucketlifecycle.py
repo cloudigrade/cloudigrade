@@ -16,10 +16,7 @@ class Command(BaseCommand):
 
     help = _("Ensures S3 bucket lifecycle settings are up to date.")
 
-    bucket_names = [
-        settings.AWS_S3_BUCKET_NAME,
-        settings.HOUNDIGRADE_RESULTS_BUCKET_NAME,
-    ]
+    bucket_names = [settings.AWS_S3_BUCKET_NAME]
 
     def handle(self, *args, **options):
         """Handle the command execution."""

@@ -26,14 +26,6 @@ APPLICATION_SETTINGS_TO_LOG = [
     "TENANT_TRANSLATOR_SCHEME",
 ]
 
-# A list of houndigrade settings that we want logged on app startup
-HOUNDIGRADE_SETTINGS_TO_LOG = [
-    "HOUNDIGRADE_ECS_IMAGE_NAME",
-    "HOUNDIGRADE_ECS_IMAGE_TAG",
-    "HOUNDIGRADE_EXCHANGE_NAME",
-    "HOUNDIGRADE_RESULTS_QUEUE_NAME",
-]
-
 # A list of AWS settings that we want logged on app startup
 AWS_SETTINGS_TO_LOG = [
     "AWS_CLOUDTRAIL_EVENT_QUEUE_NAME",
@@ -101,10 +93,6 @@ class ApiConfig(AppConfig):
         """Log a subset of non secret environment settings."""
         logger.info("Application Settings:")
         for setting in APPLICATION_SETTINGS_TO_LOG:
-            logger.info(f"{setting}: {getattr(settings, setting, None)}")
-
-        logger.info("Houndigrade Settings:")
-        for setting in HOUNDIGRADE_SETTINGS_TO_LOG:
             logger.info(f"{setting}: {getattr(settings, setting, None)}")
 
         logger.info("AWS Settings:")

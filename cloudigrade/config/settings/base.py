@@ -378,24 +378,6 @@ AWS_SQS_MAX_RECEIVE_COUNT = env.int("AWS_SQS_MAX_RECEIVE_COUNT", default=5)
 AWS_SQS_MAX_YIELD_COUNT = env.int("AWS_SQS_MAX_YIELD_COUNT", default=25)
 
 #####################################################################
-# Configs used for running houndigrade and accessing its results
-
-HOUNDIGRADE_CW_RETENTION_DAYS = env.int("HOUNDIGRADE_CW_RETENTION_DAYS", default=90)
-HOUNDIGRADE_ECS_IMAGE_NAME = env(
-    "HOUNDIGRADE_ECS_IMAGE_NAME", default="cloudigrade/houndigrade"
-)
-HOUNDIGRADE_ECS_IMAGE_TAG = env("HOUNDIGRADE_ECS_IMAGE_TAG", default="latest")
-HOUNDIGRADE_RESULTS_QUEUE_NAME = f"{CLOUDIGRADE_ENVIRONMENT}-cloudigrade-inspections-s3"
-HOUNDIGRADE_RESULTS_BUCKET_NAME = f"{CLOUDIGRADE_ENVIRONMENT}-cloudigrade-inspections"
-HOUNDIGRADE_SENTRY_DSN = env("HOUNDIGRADE_SENTRY_DSN", default="")
-HOUNDIGRADE_SENTRY_RELEASE = (
-    HOUNDIGRADE_ECS_IMAGE_TAG
-    if HOUNDIGRADE_ECS_IMAGE_TAG
-    else env("HOUNDIGRADE_SENTRY_RELEASE", default="")
-)
-HOUNDIGRADE_SENTRY_ENVIRONMENT = env("HOUNDIGRADE_SENTRY_ENVIRONMENT", default="")
-
-#####################################################################
 # Redis (message queues)
 
 if isClowderEnabled():
