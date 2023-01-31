@@ -40,10 +40,6 @@ app.conf.beat_schedule = {
         "task": "api.tasks.delete_orphaned_cloud_accounts",
         "schedule": env.int("DELETE_ORPHANED_ACCOUNTS_SCHEDULE", default=24 * 60 * 60),
     },
-    "delete_expired_synthetic_data": {
-        "task": "api.tasks.delete_expired_synthetic_data",
-        "schedule": env.int("DELETE_EXPIRED_SYNTHETIC_DATA_SCHEDULE", default=60 * 60),
-    },
     # Disabled Tasks
     # Important note for future readers! If you intend to disable an existing task,
     # you need to either 1) keep it here and reconfigure with '"schedule": 999999' and
@@ -51,6 +47,11 @@ app.conf.beat_schedule = {
     # Simply removing it from this schedule config will **not** remove it from the DB.
     "check_and_cache_sqs_queues_lengths": {
         "task": "api.tasks.check_and_cache_sqs_queues_lengths",
+        "schedule": 999999,  # never
+        "enabled": False,
+    },
+    "delete_expired_synthetic_data": {
+        "task": "api.tasks.delete_expired_synthetic_data",
         "schedule": 999999,  # never
         "enabled": False,
     },
