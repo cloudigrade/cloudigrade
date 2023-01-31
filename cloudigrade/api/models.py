@@ -2,7 +2,6 @@
 import logging
 import uuid
 
-import model_utils
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db import models, transaction
 from django.db.models.signals import post_delete, pre_delete
@@ -507,48 +506,6 @@ def instance_post_delete_callback(*args, **kwargs):
         logger.info(
             _("Machine image associated with instance %s has already been deleted."),
             instance,
-        )
-
-
-class InstanceEvent(BaseGenericModel):
-    """Base model for an event triggered by a Instance."""
-
-    TYPE = model_utils.Choices("power_on", "power_off", "attribute_change")
-    # Placeholder field while breaking foreign keys for database cleanup.
-    instance_id = models.IntegerField(db_index=False, null=True)
-    event_type = models.CharField(
-        max_length=32,
-        choices=TYPE,
-        null=False,
-        blank=False,
-    )
-    occurred_at = models.DateTimeField(null=False, db_index=True)
-
-    def __str__(self):
-        """Get the string representation."""
-        return repr(self)
-
-    def __repr__(self):
-        """Get an unambiguous string representation."""
-        occurred_at = (
-            repr(self.occurred_at.isoformat()) if self.occurred_at is not None else None
-        )
-        created_at = (
-            repr(self.created_at.isoformat()) if self.created_at is not None else None
-        )
-        updated_at = (
-            repr(self.updated_at.isoformat()) if self.updated_at is not None else None
-        )
-
-        return (
-            f"{self.__class__.__name__}("
-            f"id={self.id}, "
-            f"instance_id={self.instance_id}, "
-            f"event_type={self.event_type}, "
-            f"occurred_at=parse({occurred_at}), "
-            f"created_at=parse({created_at}), "
-            f"updated_at=parse({updated_at})"
-            f")"
         )
 
 

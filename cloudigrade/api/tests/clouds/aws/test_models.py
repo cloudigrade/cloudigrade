@@ -99,7 +99,6 @@ class AwsCloudAccountModelTest(TransactionTestCase, helper.ModelStrTestMixin):
         Disabling a CloudAccount having an AwsCloudAccount should:
 
         - set the CloudAccount.is_enabled to False
-        - create a power_off InstanceEvent for any powered-on instances
         - disable the CloudTrail (via AwsCloudAccount.disable)
         """
         self.assertTrue(self.account.is_enabled)
