@@ -42,7 +42,7 @@ django-prometheus = "~=2.2.0"
 redis = "^4.2.2"
 django-redis = "^5.2.0"
 azure-mgmt-managedservices = "^6.0.0"
-setuptools = "^66.0.0"
+setuptools = "^67.0.0"
 
 
 [tool.poetry.dev-dependencies]
