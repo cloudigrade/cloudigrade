@@ -16,14 +16,6 @@ from util.aws.helper import (
     rewrap_aws_errors,
     verify_account_access,
 )
-from util.aws.sqs import (
-    create_queue,
-    ensure_queue_has_dlq,
-    get_sqs_approximate_number_of_messages,
-    get_sqs_queue_dlq_name,
-    get_sqs_queue_url,
-    set_visibility_timeout,
-)
 from util.aws.sts import get_session, get_session_account_id
 
 

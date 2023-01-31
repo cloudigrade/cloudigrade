@@ -353,19 +353,6 @@ if CLOUDIGRADE_ENABLE_CLOUDWATCH:
 logging.config.dictConfig(LOGGING)
 
 #####################################################################
-# AWS SQS (Cloudtrail Notifications)
-#
-AWS_CLOUDTRAIL_EVENT_QUEUE_NAME = f"{CLOUDIGRADE_ENVIRONMENT}-cloudigrade-cloudtrail-s3"
-AWS_CLOUDTRAIL_EVENT_QUEUE_VISIBILITY_TIMEOUT = env(
-    "AWS_CLOUDTRAIL_EVENT_QUEUE_VISIBILITY_TIMEOUT", default="300"
-)
-AWS_DEFAULT_REGION = env("AWS_DEFAULT_REGION", default="us-east-1")
-SQS_DEFAULT_REGION = env("SQS_DEFAULT_REGION", default=AWS_DEFAULT_REGION)
-AWS_SQS_MAX_HOUNDI_YIELD_COUNT = env.int("AWS_SQS_MAX_HOUNDI_YIELD_COUNT", default=10)
-AWS_SQS_MAX_RECEIVE_COUNT = env.int("AWS_SQS_MAX_RECEIVE_COUNT", default=5)
-AWS_SQS_MAX_YIELD_COUNT = env.int("AWS_SQS_MAX_YIELD_COUNT", default=25)
-
-#####################################################################
 # Redis (message queues)
 
 if isClowderEnabled():
@@ -582,11 +569,6 @@ DELETE_ORPHANED_ACCOUNTS_UPDATED_MORE_THAN_SECONDS_AGO = env.int(
 # How far back should we look for CloudAccounts not in sources to delete
 DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_UPDATED_MORE_THAN_SECONDS_AGO = env.int(
     "DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_UPDATED_MORE_THAN_SECONDS_AGO", default=5 * 60
-)
-
-# How long should we keep cached SQS queue lengths (only used for metrics monitoring)
-CACHED_SQS_QUEUE_LENGTH_EXPIRATION_TTL = env.int(
-    "CACHED_SQS_QUEUE_LENGTH_EXPIRATION_TTL", default=30 * 60
 )
 
 #####################################################################

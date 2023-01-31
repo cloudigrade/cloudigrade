@@ -28,14 +28,7 @@ APPLICATION_SETTINGS_TO_LOG = [
 
 # A list of AWS settings that we want logged on app startup
 AWS_SETTINGS_TO_LOG = [
-    "AWS_CLOUDTRAIL_EVENT_QUEUE_NAME",
-    "AWS_CLOUDTRAIL_EVENT_QUEUE_VISIBILITY_TIMEOUT",
     "AWS_NAME_PREFIX",
-    "AWS_SQS_MAX_HOUNDI_YIELD_COUNT",
-    "AWS_SQS_MAX_RECEIVE_COUNT",
-    "AWS_SQS_MAX_YIELD_COUNT",
-    "AWS_DEFAULT_REGION",
-    "SQS_DEFAULT_REGION",
 ]
 
 # A list of Kafka settings that we want logged on app startup
