@@ -58,5 +58,4 @@ else
   curl -X POST --data-urlencode "payload={\"channel\": \"#cloudmeter-deployments\", \"text\": \"$slack_payload\"}" ${SLACK_TOKEN}
 fi
 
-python3 ./manage.py configurequeues
 python3 ./manage.py migrate

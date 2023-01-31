@@ -28,8 +28,6 @@ oc get secret/cloudigrade-azure -o json -n ephemeral-base | jq -r '.data' > azur
 
 AWS_ACCESS_KEY_ID=$(jq -r '."aws-access-key-id"' < aws-creds.json)
 AWS_SECRET_ACCESS_KEY=$(jq -r '."aws-secret-access-key"' < aws-creds.json)
-AWS_SQS_ACCESS_KEY_ID=$(jq -r '."aws-sqs-access-key-id"' < aws-creds.json)
-AWS_SQS_SECRET_ACCESS_KEY=$(jq -r '."aws-sqs-secret-access-key"' < aws-creds.json)
 AZURE_CLIENT_ID=$(jq -r '."client_id"' < azure-creds.json)
 AZURE_CLIENT_SECRET=$(jq -r '."client_secret"' < azure-creds.json)
 AZURE_SP_OBJECT_ID=$(jq -r '."sp_object_id"' < azure-creds.json)
@@ -56,8 +54,6 @@ bonfire deploy \
     --set-parameter cloudigrade/CLOUDIGRADE_ENVIRONMENT="${CLOUDIGRADE_ENVIRONMENT}" \
     --set-parameter cloudigrade/AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
     --set-parameter cloudigrade/AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
-    --set-parameter cloudigrade/AWS_SQS_ACCESS_KEY_ID=${AWS_SQS_ACCESS_KEY_ID} \
-    --set-parameter cloudigrade/AWS_SQS_SECRET_ACCESS_KEY=${AWS_SQS_SECRET_ACCESS_KEY} \
     --set-parameter cloudigrade/CW_AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
     --set-parameter cloudigrade/CW_AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
     --set-parameter cloudigrade/CW_AWS_REGION_NAME=${CW_AWS_REGION_NAME} \
