@@ -7,7 +7,7 @@ from django.utils.translation import gettext as _
 from rest_framework.exceptions import ValidationError
 
 from api import AWS_PROVIDER_STRING
-from api.models import CloudAccount, Instance, InstanceEvent, MachineImage
+from api.models import CloudAccount, Instance, MachineImage
 from util.models import BaseModel
 
 logger = logging.getLogger(__name__)
@@ -296,43 +296,6 @@ class AwsInstance(BaseModel):
             f"id={self.id}, "
             f"ec2_instance_id='{self.ec2_instance_id}', "
             f"region='{self.region}', "
-            f"created_at=parse({created_at}), "
-            f"updated_at=parse({updated_at})"
-            f")"
-        )
-
-
-class AwsInstanceEvent(BaseModel):
-    """Event model for an event triggered by an AwsInstance."""
-
-    instance_event = GenericRelation(
-        InstanceEvent, related_query_name="aws_instance_event"
-    )
-    subnet = models.CharField(max_length=256, null=True, blank=True)
-    instance_type = models.CharField(max_length=64, null=True, blank=True)
-
-    def __str__(self):
-        """Get the string representation."""
-        return repr(self)
-
-    def __repr__(self):
-        """Get an unambiguous string representation."""
-        subnet = str(repr(self.subnet)) if self.subnet is not None else None
-        instance_type = (
-            str(repr(self.instance_type)) if self.instance_type is not None else None
-        )
-        created_at = (
-            repr(self.created_at.isoformat()) if self.created_at is not None else None
-        )
-        updated_at = (
-            repr(self.updated_at.isoformat()) if self.updated_at is not None else None
-        )
-
-        return (
-            f"{self.__class__.__name__}("
-            f"id={self.id}, "
-            f"subnet={subnet}, "
-            f"instance_type={instance_type}, "
             f"created_at=parse({created_at}), "
             f"updated_at=parse({updated_at})"
             f")"
