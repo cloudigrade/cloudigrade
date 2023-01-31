@@ -353,18 +353,6 @@ if CLOUDIGRADE_ENABLE_CLOUDWATCH:
 logging.config.dictConfig(LOGGING)
 
 #####################################################################
-# AWS S3 (file buckets)
-
-# S3 configs for buckets that handle customer CloudTrail logs
-AWS_S3_BUCKET_NAME = f"{AWS_NAME_PREFIX}cloudigrade-trails"
-AWS_S3_BUCKET_LC_NAME = env("AWS_S3_BUCKET_LC_NAME", default="s3_lifecycle_policy")
-AWS_S3_BUCKET_LC_IA_TRANSITION = env.int("AWS_S3_BUCKET_LC_IA_TRANSITION", default=30)
-AWS_S3_BUCKET_LC_GLACIER_TRANSITION = env.int(
-    "AWS_S3_BUCKET_LC_GLACIER_TRANSITION", default=60
-)
-AWS_S3_BUCKET_LC_MAX_AGE = env.int("AWS_S3_BUCKET_LC_MAX_AGE", default=1460)
-
-#####################################################################
 # AWS SQS (Cloudtrail Notifications)
 #
 AWS_CLOUDTRAIL_EVENT_QUEUE_NAME = f"{CLOUDIGRADE_ENVIRONMENT}-cloudigrade-cloudtrail-s3"
