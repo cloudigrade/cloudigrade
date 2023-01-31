@@ -7,7 +7,7 @@ from django.utils.translation import gettext as _
 from rest_framework.exceptions import ValidationError
 
 from api import AWS_PROVIDER_STRING
-from api.models import CloudAccount, Instance, MachineImage
+from api.models import CloudAccount, MachineImage
 from util.models import BaseModel
 
 logger = logging.getLogger(__name__)
@@ -255,47 +255,6 @@ class AwsMachineImageCopy(AwsMachineImage):
             f"{self.__class__.__name__}("
             f"id={self.id}, "
             f"reference_awsmachineimage_id={reference_awsmachineimage_id}, "
-            f"created_at=parse({created_at}), "
-            f"updated_at=parse({updated_at})"
-            f")"
-        )
-
-
-class AwsInstance(BaseModel):
-    """Amazon Web Services EC2 instance model."""
-
-    instance = GenericRelation(Instance, related_query_name="aws_instance")
-    ec2_instance_id = models.CharField(
-        max_length=256,
-        unique=True,
-        db_index=True,
-        null=False,
-        blank=False,
-    )
-    region = models.CharField(
-        max_length=256,
-        null=False,
-        blank=False,
-    )
-
-    def __str__(self):
-        """Get the string representation."""
-        return repr(self)
-
-    def __repr__(self):
-        """Get an unambiguous string representation."""
-        created_at = (
-            repr(self.created_at.isoformat()) if self.created_at is not None else None
-        )
-        updated_at = (
-            repr(self.updated_at.isoformat()) if self.updated_at is not None else None
-        )
-
-        return (
-            f"{self.__class__.__name__}("
-            f"id={self.id}, "
-            f"ec2_instance_id='{self.ec2_instance_id}', "
-            f"region='{self.region}', "
             f"created_at=parse({created_at}), "
             f"updated_at=parse({updated_at})"
             f")"
