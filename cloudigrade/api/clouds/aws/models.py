@@ -11,8 +11,6 @@ from api.models import CloudAccount
 from util.models import BaseModel
 
 logger = logging.getLogger(__name__)
-CLOUD_ACCESS_NAME_TOKEN = "-Access2"
-MARKETPLACE_NAME_TOKEN = "-hourly2"
 
 
 class AwsCloudAccount(BaseModel):
