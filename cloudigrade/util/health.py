@@ -2,11 +2,8 @@
 import logging
 
 from botocore.exceptions import ClientError
-from django.conf import settings
 from django.utils.translation import gettext as _
 from health_check.backends import BaseHealthCheckBackend
-
-from util import aws
 
 logger = logging.getLogger(__name__)
 
@@ -36,19 +33,3 @@ class CeleryHealthCheckBackend(BaseHealthCheckBackend):
         except Exception as e:
             logger.exception(e)
             self.add_error(_("Celery heartbeat failed due to unknown error."))
-
-
-class SqsHealthCheckBackend(BaseHealthCheckBackend):
-    """SQS health check."""
-
-    def check_status(self):
-        """Check SQS health by using looking up a known queue's URL'."""
-        try:
-            queue_name = settings.HOUNDIGRADE_RESULTS_QUEUE_NAME
-            aws.get_sqs_queue_url(queue_name)
-        except ClientError as e:
-            logger.exception(e)
-            self.add_error(_("SQS check failed due to boto3 error."))
-        except Exception as e:
-            logger.exception(e)
-            self.add_error(_("SQS check failed due to unknown error."))

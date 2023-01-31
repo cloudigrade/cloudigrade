@@ -17,7 +17,6 @@ class Command(BaseCommand):
 
     queue_names = [
         "{0}ready_volumes".format(settings.AWS_NAME_PREFIX),
-        settings.HOUNDIGRADE_RESULTS_QUEUE_NAME,
         settings.AWS_CLOUDTRAIL_EVENT_QUEUE_NAME,
     ]
 
