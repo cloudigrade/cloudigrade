@@ -9,7 +9,6 @@ from django.dispatch import receiver
 from django.utils.timezone import now
 from django.utils.translation import gettext as _
 
-from api import AWS_PROVIDER_STRING, AZURE_PROVIDER_STRING
 from util.misc import get_now
 from util.models import BaseGenericModel, BaseModel
 
@@ -440,106 +439,8 @@ class MachineImage(BaseGenericModel):
         )
 
 
-class Instance(BaseGenericModel):
-    """Base model for a compute/VM instance in a cloud."""
-
-    # Placeholder fields while breaking foreign keys for database cleanup.
-    cloud_account_id = models.IntegerField(db_index=False, null=True)
-    machine_image_id = models.IntegerField(db_index=False, null=True)
-
-    def __str__(self):
-        """Get the string representation."""
-        return repr(self)
-
-    def __repr__(self):
-        """Get an unambiguous string representation."""
-        machine_image_id = (
-            str(repr(self.machine_image_id))
-            if self.machine_image_id is not None
-            else None
-        )
-        created_at = (
-            repr(self.created_at.isoformat()) if self.created_at is not None else None
-        )
-        updated_at = (
-            repr(self.updated_at.isoformat()) if self.updated_at is not None else None
-        )
-
-        return (
-            f"{self.__class__.__name__}("
-            f"id={self.id}, "
-            f"cloud_account_id={self.cloud_account_id}, "
-            f"machine_image_id={machine_image_id}, "
-            f"created_at=parse({created_at}), "
-            f"updated_at=parse({updated_at})"
-            f")"
-        )
-
-
-@receiver(post_delete, sender=Instance)
-def instance_post_delete_callback(*args, **kwargs):
-    """
-    Delete the instance's machine image if no other instances use it.
-
-    Note: Signal receivers must accept keyword arguments (**kwargs).
-    """
-    instance = kwargs["instance"]
-
-    # When multiple instances are deleted at the same time django will
-    # attempt to delete the machine image multiple times since instance
-    # objects will no longer appear to be in the database.
-    # Catch and log the raised DoesNotExist error from the additional
-    # attempts to remove a machine image.
-    try:
-        if (
-            instance.machine_image is not None
-            and not Instance.objects.filter(machine_image=instance.machine_image)
-            .exclude(id=instance.id)
-            .exists()
-        ):
-            logger.info(
-                _("%s is no longer used by any instances and will be deleted"),
-                instance.machine_image,
-            )
-            instance.machine_image.delete()
-    except MachineImage.DoesNotExist:
-        logger.info(
-            _("Machine image associated with instance %s has already been deleted."),
-            instance,
-        )
-
-
 class MachineImageInspectionStart(BaseModel):
     """Model to track any time an image starts inspection."""
 
     # Placeholder fields while breaking foreign keys for database cleanup.
     machineimage_id = models.IntegerField(db_index=False, null=True)
-
-
-class InstanceDefinition(BaseModel):
-    """
-    Lookup table for cloud provider instance definitions.
-
-    Data should be retrieved from this table using the helper function
-    get_instance_type_definition.
-    """
-
-    AWS = AWS_PROVIDER_STRING
-    AZURE = AZURE_PROVIDER_STRING
-    CLOUD_TYPE_CHOICES = (
-        (AWS, "AWS EC2 instance definitions."),
-        (AZURE, "Azure VM instance definitions."),
-    )
-
-    instance_type = models.CharField(
-        max_length=256, null=False, blank=False, db_index=True
-    )
-    memory_mib = models.IntegerField(default=0)  # MiB to be precise.
-    vcpu = models.DecimalField(max_digits=32, decimal_places=2, default=0.00)
-    json_definition = models.JSONField()
-    cloud_type = models.CharField(
-        max_length=32, choices=CLOUD_TYPE_CHOICES, null=False, blank=False
-    )
-
-    class Meta:
-        unique_together = (("instance_type", "cloud_type"),)
