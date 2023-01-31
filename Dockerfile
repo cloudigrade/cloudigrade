@@ -36,6 +36,7 @@ RUN microdnf install -y \
     && pip install -U pip \
     && pip install poetry \
     && poetry config virtualenvs.in-project true \
+    && poetry config installer.max-workers 10
     && PATH="$PATH:/usr/pgsql-14/bin" poetry install -n --no-dev
 
 
