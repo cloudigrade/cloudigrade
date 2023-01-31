@@ -4,22 +4,13 @@ import logging
 from functools import partial
 
 from django.conf import settings
-from django.core.cache import cache
 from django.db import connection
 from prometheus_client import Gauge
 
 from internal import redis
-from util.cache import get_sqs_message_count_cache_key
 
 logger = logging.getLogger(__name__)
 
-CACHED_SQS_QUEUE_LENGTH_LABELS = [
-    "houndigrade_results",
-    "houndigrade_results_dlq",
-    "cloudtrail_notifications",
-    "cloudtrail_notifications_dlq",
-]
-CACHED_SQS_QUEUE_LENGTH_METRIC_NAME = "cloudigrade_sqs_queue_length"
 CELERY_QUEUE_LENGTH_METRIC_NAME = "cloudigrade_celery_queue_length"
 DB_TABLE_SIZE_METRIC_NAME = "cloudigrade_db_table_size"
 DB_TABLE_ROWS_METRIC_NAME = "cloudigrade_db_table_rows"
@@ -45,25 +36,9 @@ class CachedMetricsRegistry:
         if self._gauge_metrics:
             logger.warning("Cannot reinitialize gauge metrics")
             return
-        self._initialize_cached_sqs_queue_length_metrics()
         self._initialize_celery_queue_length_metrics()
         self._initialize_db_table_size_metrics()
         self._initialize_db_table_rows_metrics()
-
-    def _initialize_cached_sqs_queue_length_metrics(self):
-        """Initialize cached SQS queue length metrics."""
-        gauge = Gauge(
-            CACHED_SQS_QUEUE_LENGTH_METRIC_NAME,
-            "The approximate number of messages in AWS SQS queue.",
-            labelnames=["queue_name"],
-        )
-        self._gauge_metrics[CACHED_SQS_QUEUE_LENGTH_METRIC_NAME] = gauge
-
-        for label in CACHED_SQS_QUEUE_LENGTH_LABELS:
-            cache_key = get_sqs_message_count_cache_key(label)
-            gauge.labels(queue_name=label).set_function(
-                partial(cache.get, cache_key, 0)
-            )
 
     def _initialize_celery_queue_length_metrics(self):
         """Initialize Celery queue length metrics."""
