@@ -50,24 +50,6 @@ class UtilHelperTest(TestCase):
         self.assertNotEqual(d_helped, d_no_tz)
         self.assertIsNotNone(d_helped.tzinfo)
 
-    def test_generate_dummy_image_id(self):
-        """Assert generation of an appropriate image ID."""
-        volume_id = helper.generate_dummy_image_id()
-        self.assertTrue(volume_id.startswith("ami-"))
-        self.assertEqual(len(volume_id), 12)
-
-    def test_generate_dummy_instance_id(self):
-        """Assert generation of an appropriate EC2 instance ID."""
-        volume_id = helper.generate_dummy_instance_id()
-        self.assertTrue(volume_id.startswith("i-"))
-        self.assertEqual(len(volume_id), 19)
-
-    def test_generate_dummy_subnet_id(self):
-        """Assert generation of an appropriate EC2 subnet ID."""
-        volume_id = helper.generate_dummy_subnet_id()
-        self.assertTrue(volume_id.startswith("subnet-"))
-        self.assertEqual(len(volume_id), 15)
-
     def test_generate_test_user(self):
         """Assert generation of test user with appropriate defaults."""
         user = helper.generate_test_user()
@@ -126,28 +108,6 @@ class UtilHelperTest(TestCase):
 
         self.assertLess(the_past_time, the_present_time)
         self.assertLess(the_past_date, the_present_date)
-
-    def test_generate_dummy_azure_instance_id(self):
-        """Assert generation of an appropriate Azure Instance ID."""
-        instance_id = str(helper.generate_dummy_azure_instance_id())
-        self.assertIsNotNone(
-            re.fullmatch(
-                r"\/subscriptions\/[\w\-]*\/resourceGroups\/[\w]*\/providers"
-                r"\/Microsoft.Compute\/virtualMachines/[\w]*",
-                instance_id,
-            )
-        )
-
-    def test_generate_dummy_azure_image_id(self):
-        """Assert generation of an appropriate Azure Image ID."""
-        instance_id = str(helper.generate_dummy_azure_image_id())
-        self.assertIsNotNone(
-            re.fullmatch(
-                r"\/subscriptions\/[\w\-]*\/resourceGroups\/[\w]*\/providers"
-                r"\/Microsoft.Compute\/images/[\w]*",
-                instance_id,
-            )
-        )
 
     def test_mock_signal_handler(self):
         """Assert mock_signal_handler temporarily bypasses original signal handler."""
