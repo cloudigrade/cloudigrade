@@ -562,15 +562,6 @@ DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_UPDATED_MORE_THAN_SECONDS_AGO = env.int(
 )
 
 #####################################################################
-# leader run cached timing related configs for features
-
-# How long for a feature to expect to be running as a leader for
-LEADER_RUNNING_TTL_DEFAULT = env.int("LEADER_RUNNING_TTL_DEFAULT", default=60)
-
-# How long do we take a feature completed as a leader for
-LEADER_COMPLETED_TTL_DEFAULT = env.int("LEADER_COMPLETED_TTL_DEFAULT", default=300)
-
-#####################################################################
 # cloudigrade authentication-related configs
 
 VERBOSE_INSIGHTS_IDENTITY_HEADER_LOGGING = env.bool(
