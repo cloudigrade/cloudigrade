@@ -46,9 +46,6 @@ FROM base as release
 ENV VIRTUAL_ENV=/opt/cloudigrade/.venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
-# Make Ansible happy with arbitrary UID/GID in OpenShift.
-RUN chmod g=u /etc/passwd /etc/group
-
 # Grab our built virtualenv
 COPY --from=build /opt/cloudigrade/.venv/ .venv/
 

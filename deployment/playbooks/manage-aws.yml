@@ -1,8 +1,0 @@
----
-- hosts: localhost
-  connection: local
-  gather_facts: no
-  roles:
-    - aws
-  vars:
-    aws_state: present
