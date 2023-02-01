@@ -11,6 +11,3 @@ from util.aws.helper import (
     verify_account_access,
 )
 from util.aws.sts import get_session, get_session_account_id
-
-
-AWS_PRODUCT_CODE_TYPE_MARKETPLACE = "marketplace"
