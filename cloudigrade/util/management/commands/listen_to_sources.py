@@ -131,7 +131,7 @@ def extract_raw_sources_kafka_message(message):
     message_headers = [
         (
             key,
-            value.decode("utf-8"),
+            value.decode("utf-8") if value else None,
         )
         for key, value in message.headers()
     ]
