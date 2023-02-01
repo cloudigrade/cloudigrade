@@ -475,6 +475,10 @@ CELERY_TASK_ROUTES = {
     "api.clouds.aws.tasks.copy_ami_to_customer_account": {
         "queue": "copy_ami_to_customer_account"
     },
+    "api.clouds.aws.tasks.delete_all_cloudtrails": {"queue": "delete_all_cloudtrails"},
+    "api.clouds.aws.tasks.delete_cloudtrail_for_aws_cloud_account_id": {
+        "queue": "delete_cloudtrail_for_aws_cloud_account_id"
+    },
     "api.clouds.aws.tasks.delete_snapshot": {"queue": "delete_snapshot"},
     "api.clouds.aws.tasks.initial_aws_describe_instances": {
         "queue": "initial_aws_describe_instances"

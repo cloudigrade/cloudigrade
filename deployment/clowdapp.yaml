@@ -1484,8 +1484,10 @@ parameters:
     copy_ami_snapshot,\
     copy_ami_to_customer_account,\
     create_from_sources_kafka_message,\
+    delete_all_cloudtrails,\
     delete_cloud_account,\
     delete_cloud_accounts_not_in_sources,\
+    delete_cloudtrail_for_aws_cloud_account_id,\
     delete_expired_synthetic_data,\
     delete_from_sources_kafka_message,\
     delete_inactive_users,\
