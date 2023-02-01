@@ -35,7 +35,11 @@ from api.clouds.aws.tasks.imageprep import (
     delete_snapshot,
     remove_snapshot_ownership,
 )
-from api.clouds.aws.tasks.maintenance import repopulate_ec2_instance_mapping
+from api.clouds.aws.tasks.maintenance import (
+    delete_all_cloudtrails,
+    delete_cloudtrail_for_aws_cloud_account_id,
+    repopulate_ec2_instance_mapping,
+)
 from api.clouds.aws.tasks.onboarding import (
     configure_customer_aws_and_create_cloud_account,
     initial_aws_describe_instances,
