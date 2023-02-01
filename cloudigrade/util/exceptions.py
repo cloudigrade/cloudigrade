@@ -28,14 +28,6 @@ class NotReadyException(Exception):
         self.message = message
 
 
-class AwsPolicyCreationException(Exception):
-    """Raise when AWS Policy fails creation unexpectedly."""
-
-
-class AwsRoleCreationException(Exception):
-    """Raise when AWS Role fails creation unexpectedly."""
-
-
 class AwsThrottlingException(Exception):
     """Raise when AWS call fails because of throttling."""
 
@@ -45,18 +37,6 @@ class NotImplementedAPIException(APIException):
     """Raise when we encounter NotImplementedError."""
 
     status_code = http.HTTPStatus.NOT_IMPLEMENTED
-
-
-class ResultsUnavailable(APIException):
-    """
-    Raise when results are temporarily unavailable.
-
-    See https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/425
-    """
-
-    status_code = 425
-    default_detail = "Results are currently unavailable, try again later."
-    default_code = "result_unavailable"
 
 
 # Sources Exceptions:
