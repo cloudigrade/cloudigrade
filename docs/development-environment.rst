@@ -282,24 +282,6 @@ If a file is not readable at that path, its loading will be skipped at startup, 
 Common developer commands
 =========================
 
-Jupyter Notebook
-----------------
-
-To spawn a local Jupyter Notebook server with Django integration with your local environment, use a command like:
-
-.. code-block:: sh
-
-    ENABLE_DJANGO_EXTENSIONS=true DJANGO_ALLOW_ASYNC_UNSAFE=true \
-      poetry run ./cloudigrade/manage.py shell_plus --notebook
-
-If your other standard environment variables are also set, that command should start a Jupyter Notebook server with kernels that have full access to your local environment with Django preconfigured. Think of this much like if you were using the typical ``manage.py shell`` command.
-
-The additional ``DJANGO_ALLOW_ASYNC_UNSAFE`` variable is not strictly required, but it *should be* declared before starting because not all Django, its middleware, and our code project are completely async safe, and executing many commands in the Jupyter Notebook will fail without it. If you do not set that variable correctly, many commands will fail and produce errors like:
-
-.. code-block::
-
-    SynchronousOnlyOperation: You cannot call this from an async context - use a thread or sync_to_async.
-
 Testing
 -------
 
