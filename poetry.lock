@@ -37,7 +37,7 @@ vine = ">=5.0.0"
 name = "ansible"
 version = "7.1.0"
 description = "Radically simple IT automation"
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.9"
 files = [
@@ -52,7 +52,7 @@ ansible-core = ">=2.14.1,<2.15.0"
 name = "ansible-core"
 version = "2.14.2"
 description = "Radically simple IT automation"
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.9"
 files = [
@@ -1928,7 +1928,7 @@ testing = ["Django (<3.1)", "attrs", "colorama", "docopt", "pytest (<7.0.0)"]
 name = "jinja2"
 version = "3.1.2"
 description = "A very fast and expressive template engine."
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -2365,7 +2365,7 @@ files = [
 name = "markupsafe"
 version = "2.1.2"
 description = "Safely add untrusted strings to HTML/XML markup."
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -3809,7 +3809,7 @@ rsa = ["oauthlib[signedtoken] (>=3.0.0)"]
 name = "resolvelib"
 version = "0.8.1"
 description = "Resolve abstract dependencies into concrete ones"
-category = "main"
+category = "dev"
 optional = false
 python-versions = "*"
 files = [
@@ -4472,4 +4472,4 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "cd996742274db5db54bd08f2a66c6ab30f2ae4c9829eee642e5fb37c80155009"
+content-hash = "e663ca3ec6849a3a0f8af230ff8b8e07ab1e21a54cbe68c9a021163e42bb67a3"
