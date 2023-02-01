@@ -83,7 +83,7 @@ def process_message(message):
     """
     try:
         event_type, headers, value = extract_raw_sources_kafka_message(message)
-    except (json.JSONDecodeError, UnicodeDecodeError) as e:
+    except (json.JSONDecodeError, UnicodeDecodeError, AttributeError) as e:
         logger.exception(e)
         logger.warning(
             _("Malformed sources kafka message's raw value: %(value)s"),
