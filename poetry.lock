@@ -525,14 +525,14 @@ typecheck = ["mypy"]
 
 [[package]]
 name = "beautifulsoup4"
-version = "4.11.1"
+version = "4.11.2"
 description = "Screen-scraping library"
 category = "dev"
 optional = false
 python-versions = ">=3.6.0"
 files = [
-    {file = "beautifulsoup4-4.11.1-py3-none-any.whl", hash = "sha256:58d5c3d29f5a36ffeb94f02f0d786cd53014cf9b3b3951d42e0080d8a9498d30"},
-    {file = "beautifulsoup4-4.11.1.tar.gz", hash = "sha256:ad9aa55b65ef2808eb405f46cf74df7fcb7044d5cbc26487f96eb2ef2e436693"},
+    {file = "beautifulsoup4-4.11.2-py3-none-any.whl", hash = "sha256:0e79446b10b3ecb499c1556f7e228a53e64a2bfcebd455f370d8927cb5b59e39"},
+    {file = "beautifulsoup4-4.11.2.tar.gz", hash = "sha256:bc4bdda6717de5a2987436fb8d72f45dc90dd856bdfd512a1314ce90349a0106"},
 ]
 
 [package.dependencies]
@@ -634,18 +634,18 @@ files = [
 
 [[package]]
 name = "boto3"
-version = "1.26.60"
+version = "1.26.61"
 description = "The AWS SDK for Python"
 category = "main"
 optional = false
 python-versions = ">= 3.7"
 files = [
-    {file = "boto3-1.26.60-py3-none-any.whl", hash = "sha256:5fd2810217a74a38078a19fb85a9e5d6934d0c146eb060967a3ffd7ab33cdf00"},
-    {file = "boto3-1.26.60.tar.gz", hash = "sha256:f0824b3bcf803800d3ecef903b4840427e4b3d37a069f6fc9a86310f7e036ad5"},
+    {file = "boto3-1.26.61-py3-none-any.whl", hash = "sha256:5194c16e1f2371c25ee038e8291faf99117b4f2d272d70f48851ba47bcea44b4"},
+    {file = "boto3-1.26.61.tar.gz", hash = "sha256:78d75f6a08c33618d9ce37acca78e4f80e316a8ce3ac040c562f8054afe6451e"},
 ]
 
 [package.dependencies]
-botocore = ">=1.29.60,<1.30.0"
+botocore = ">=1.29.61,<1.30.0"
 jmespath = ">=0.7.1,<2.0.0"
 s3transfer = ">=0.6.0,<0.7.0"
 
@@ -654,14 +654,14 @@ crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
 
 [[package]]
 name = "botocore"
-version = "1.29.60"
+version = "1.29.61"
 description = "Low-level, data-driven core of boto 3."
 category = "main"
 optional = false
 python-versions = ">= 3.7"
 files = [
-    {file = "botocore-1.29.60-py3-none-any.whl", hash = "sha256:c4ae251e7df0cf01d893eb945bc8f23c14989ed349775a8e16c949f08a068f9a"},
-    {file = "botocore-1.29.60.tar.gz", hash = "sha256:a21217ccf4613c9ebbe4c3192e13ba91d46be642560e39a16406662a398a107b"},
+    {file = "botocore-1.29.61-py3-none-any.whl", hash = "sha256:c7a7133d02c5e9a8fcc9e5a238bf15bde2d5369366553520332a88bc05b7358a"},
+    {file = "botocore-1.29.61.tar.gz", hash = "sha256:22ead51f900e3465d0e4e670d02d091e613c88be8b333c47bfda727f8988eef3"},
 ]
 
 [package.dependencies]
@@ -1285,14 +1285,14 @@ files = [
 
 [[package]]
 name = "django"
-version = "4.1.5"
+version = "4.1.6"
 description = "A high-level Python web framework that encourages rapid development and clean, pragmatic design."
 category = "main"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "Django-4.1.5-py3-none-any.whl", hash = "sha256:4b214a05fe4c99476e99e2445c8b978c8369c18d4dea8e22ec412862715ad763"},
-    {file = "Django-4.1.5.tar.gz", hash = "sha256:ff56ebd7ead0fd5dbe06fe157b0024a7aaea2e0593bb3785fb594cf94dad58ef"},
+    {file = "Django-4.1.6-py3-none-any.whl", hash = "sha256:c6fe7ebe7c017fe59f1029821dae0acb5a2ddcd6c9a0138fd20a8bfefac914bc"},
+    {file = "Django-4.1.6.tar.gz", hash = "sha256:bceb0fe1a386781af0788cae4108622756cd05e7775448deec04a71ddf87685d"},
 ]
 
 [package.dependencies]
@@ -2013,14 +2013,14 @@ format-nongpl = ["fqdn", "idna", "isoduration", "jsonpointer (>1.13)", "rfc3339-
 
 [[package]]
 name = "jsonschema-spec"
-version = "0.1.2"
+version = "0.1.3"
 description = "JSONSchema Spec with object-oriented paths"
 category = "dev"
 optional = false
 python-versions = ">=3.7.0,<4.0.0"
 files = [
-    {file = "jsonschema-spec-0.1.2.tar.gz", hash = "sha256:780a22d517cdc857d9714a80d8349c546945063f20853ea32ba7f85bc643ec7d"},
-    {file = "jsonschema_spec-0.1.2-py3-none-any.whl", hash = "sha256:1e525177574c23ae0f55cd62382632a083a0339928f0ca846a975a4da9851cec"},
+    {file = "jsonschema_spec-0.1.3-py3-none-any.whl", hash = "sha256:b3cde007ad65c2e631e2f8653cf187124a2c714d02d9fafbab68ad64bf5745d6"},
+    {file = "jsonschema_spec-0.1.3.tar.gz", hash = "sha256:8d8db7c255e524fab1016a952a9143e5b6e3c074f4ed25d1878f8e97806caec0"},
 ]
 
 [package.dependencies]
@@ -2159,14 +2159,14 @@ test = ["click", "coverage", "pre-commit", "pytest (>=7.0)", "pytest-asyncio (>=
 
 [[package]]
 name = "jupyter-server"
-version = "2.1.0"
+version = "2.2.0"
 description = "The backend—i.e. core services, APIs, and REST endpoints—to Jupyter web applications."
 category = "dev"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "jupyter_server-2.1.0-py3-none-any.whl", hash = "sha256:90cd6f2bd0581ddd9b2dbe82026a0f4c228a1d95c86e22460efbfdfc931fcf56"},
-    {file = "jupyter_server-2.1.0.tar.gz", hash = "sha256:efaae5e4f0d5f22c7f2f2dc848635036ee74a2df02abed52d30d9d95121ad382"},
+    {file = "jupyter_server-2.2.0-py3-none-any.whl", hash = "sha256:9c79b7227a7e3974856265908da40715ab49b7014ac39478d80b07e164b5a70e"},
+    {file = "jupyter_server-2.2.0.tar.gz", hash = "sha256:f901efcb4adce2370c64dc5942be587bd181119644660a1eb123435c3cd01f95"},
 ]
 
 [package.dependencies]
@@ -2879,14 +2879,14 @@ rfc3339-validator = ["rfc3339-validator"]
 
 [[package]]
 name = "openapi-spec-validator"
-version = "0.5.2"
+version = "0.5.3"
 description = "OpenAPI 2.0 (aka Swagger) and OpenAPI 3 spec validator"
 category = "dev"
 optional = false
 python-versions = ">=3.7.0,<4.0.0"
 files = [
-    {file = "openapi_spec_validator-0.5.2-py3-none-any.whl", hash = "sha256:1f8db08ecbcf4ec8c558d65b65b3b7b428f81da6642f2f163e992ae3e17b229c"},
-    {file = "openapi_spec_validator-0.5.2.tar.gz", hash = "sha256:ebed7f1c567780859402ad64b128e17f519d15f605f1b41d1e9a4a7a1690be07"},
+    {file = "openapi_spec_validator-0.5.3-py3-none-any.whl", hash = "sha256:983185f85046f957099798defc613f0ab1d36497f8ecefcfe82e3a7aae82f94a"},
+    {file = "openapi_spec_validator-0.5.3.tar.gz", hash = "sha256:7535225525f0378eb304f81098280f17ce989a74588171c9ed9b592d6c4d895a"},
 ]
 
 [package.dependencies]
@@ -3956,14 +3956,14 @@ tornado = ["tornado (>=5)"]
 
 [[package]]
 name = "setuptools"
-version = "67.0.0"
+version = "67.1.0"
 description = "Easily download, build, install, upgrade, and uninstall Python packages"
 category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "setuptools-67.0.0-py3-none-any.whl", hash = "sha256:9d790961ba6219e9ff7d9557622d2fe136816a264dd01d5997cfc057d804853d"},
-    {file = "setuptools-67.0.0.tar.gz", hash = "sha256:883131c5b6efa70b9101c7ef30b2b7b780a4283d5fc1616383cdf22c83cbefe6"},
+    {file = "setuptools-67.1.0-py3-none-any.whl", hash = "sha256:a7687c12b444eaac951ea87a9627c4f904ac757e7abdc5aac32833234af90378"},
+    {file = "setuptools-67.1.0.tar.gz", hash = "sha256:e261cdf010c11a41cb5cb5f1bf3338a7433832029f559a6a7614bd42a967c300"},
 ]
 
 [package.extras]
