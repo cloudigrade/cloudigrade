@@ -59,7 +59,6 @@ jupyter = "^1.0.0"
 ipython = "^8.0.0"
 django-extensions = "^3.1.5"
 crc-bonfire = "^4.7.2"
-ansible = "~=7.1.0"
 
 [build-system]
 requires = ["poetry>=0.12"]
