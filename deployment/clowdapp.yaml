@@ -1511,7 +1511,6 @@ parameters:
     recalculate_runs_for_instance_id,\
     remove_snapshot_ownership,\
     repopulate_azure_instance_mapping,\
-    repopulate_ec2_instance_mapping,\
     synthesize_cloud_accounts,\
     synthesize_concurrent_usage,\
     synthesize_images,\

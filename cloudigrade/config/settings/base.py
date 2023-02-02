@@ -489,9 +489,6 @@ CELERY_TASK_ROUTES = {
     "api.clouds.aws.tasks.remove_snapshot_ownership": {
         "queue": "remove_snapshot_ownership"
     },
-    "api.clouds.aws.tasks.repopulate_ec2_instance_mapping": {
-        "queue": "repopulate_ec2_instance_mapping"
-    },
     # api.clouds.azure.tasks
     "api.clouds.azure.tasks.initial_azure_vm_discovery": {
         "queue": "initial_azure_vm_discovery"
