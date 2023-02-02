@@ -24,10 +24,6 @@ Therefore, we should always preserve the original name in each task function's
 decorator even if the function itself is renamed or moved elsewhere.
 """
 
-# IMPORTANT NOTE: DO NOT LET PYCHARM, ISORT, etc REARRANGE api.clouds.aws.tasks IMPORTS.
-# There are still, as of the time of this comment, interdependencies among these tasks,
-# and rearranging these imports *may* result in problematic circular imports.
-from api.clouds.aws.tasks.cloudtrail import analyze_log
 from api.clouds.aws.tasks.maintenance import (
     delete_all_cloudtrails,
     delete_cloudtrail_for_aws_cloud_account_id,

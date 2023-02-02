@@ -437,7 +437,6 @@ CELERY_TASK_ROUTES = {
         "queue": "delete_expired_synthetic_data"
     },
     # api.clouds.aws.tasks
-    "api.clouds.aws.tasks.analyze_log": {"queue": "analyze_log"},
     "api.clouds.aws.tasks.configure_customer_aws_and_create_cloud_account": {
         "queue": "configure_customer_aws_and_create_cloud_account"
     },
