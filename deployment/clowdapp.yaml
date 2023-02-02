@@ -1512,7 +1512,6 @@ parameters:
     synthesize_images,\
     synthesize_instance_events,\
     synthesize_instances,\
-    synthesize_runs_and_usage,\
     synthesize_user,\
     update_azure_instance_events,\
     update_azure_instance_events_for_account,\
@@ -1611,8 +1610,7 @@ parameters:
     "api.tasks.synthesize_cloud_accounts": "0",
     "api.tasks.synthesize_images": "0",
     "api.tasks.synthesize_instances": "0",
-    "api.tasks.synthesize_instance_events": "0",
-    "api.tasks.synthesize_runs_and_usage": "0"
+    "api.tasks.synthesize_instance_events": "0"
   }'
 - name: CLOUDIGRADE_ENABLE_CLOUDWATCH
   displayName: Enable Cloudwatch
