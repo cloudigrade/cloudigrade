@@ -450,9 +450,6 @@ CELERY_TASK_ROUTES = {
         "queue": "delete_cloudtrail_for_aws_cloud_account_id"
     },
     "api.clouds.aws.tasks.delete_snapshot": {"queue": "delete_snapshot"},
-    "api.clouds.aws.tasks.initial_aws_describe_instances": {
-        "queue": "initial_aws_describe_instances"
-    },
     "api.clouds.aws.tasks.launch_inspection_instance": {
         "queue": "launch_inspection_instance"
     },

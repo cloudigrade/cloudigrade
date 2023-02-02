@@ -116,12 +116,3 @@ def configure_customer_aws_and_create_cloud_account(
             "source_id": source_id,
         },
     )
-
-
-@retriable_shared_task(name="api.clouds.aws.tasks.initial_aws_describe_instances")
-def initial_aws_describe_instances(aws_cloud_account_id):
-    """Do nothing.
-
-    This is a placeholder for old in-flight tasks during the shutdown transition.
-    """
-    # TODO FIXME Delete this function once we're confident no tasks exists.

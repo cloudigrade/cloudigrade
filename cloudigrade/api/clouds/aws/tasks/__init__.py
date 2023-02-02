@@ -41,5 +41,4 @@ from api.clouds.aws.tasks.maintenance import (
 )
 from api.clouds.aws.tasks.onboarding import (
     configure_customer_aws_and_create_cloud_account,
-    initial_aws_describe_instances,
 )
