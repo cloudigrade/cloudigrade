@@ -144,12 +144,6 @@ class CloudAccount(BaseGenericModel):
     # data for this CloudAccount.
     platform_application_is_paused = models.BooleanField(null=False, default=False)
 
-    # Some CloudAccounts are created synthetically for internal testing without any
-    # real corresponding objects in external services like sources-api. We need to know
-    # if that's true so we can bypass various operations that would expect valid
-    # responses from interacting with those external services.
-    is_synthetic = models.BooleanField(default=False)
-
     class Meta:
         unique_together = (("platform_authentication_id", "platform_application_id"),)
 
@@ -199,7 +193,6 @@ class CloudAccount(BaseGenericModel):
             f"platform_application_id={self.platform_application_id}, "
             f"platform_application_is_paused={self.platform_application_is_paused}, "
             f"platform_source_id={self.platform_source_id}, "
-            f"is_synthetic={self.is_synthetic}, "
             f"created_at=parse({created_at}), "
             f"updated_at=parse({updated_at})"
             f")"
@@ -241,7 +234,7 @@ class CloudAccount(BaseGenericModel):
                 if not enabled_successfully:
                     transaction.set_rollback(True)
 
-        if enabled_successfully and not self.is_synthetic:
+        if enabled_successfully:
             from api.tasks.sources import notify_application_availability_task
 
             logger.info(
@@ -312,7 +305,7 @@ class CloudAccount(BaseGenericModel):
                 ),
                 {"cloud_account": self},
             )
-        if notify_sources and not self.is_synthetic:
+        if notify_sources:
             from api.tasks.sources import notify_application_availability_task
 
             notify_application_availability_task.delay(
