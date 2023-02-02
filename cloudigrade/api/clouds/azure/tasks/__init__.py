@@ -23,7 +23,6 @@ the new automatic name, and Celery cannot know that the two were once the same.
 Therefore, we should always preserve the original name in each task function's
 decorator even if the function itself is renamed or moved elsewhere.
 """
-from api.clouds.azure.tasks.maintenance import repopulate_azure_instance_mapping
 from api.clouds.azure.tasks.onboarding import (
     check_azure_subscription_and_create_cloud_account,
 )
