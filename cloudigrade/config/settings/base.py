@@ -407,7 +407,6 @@ CELERY_TASK_ROUTES = {
     "api.tasks.delete_orphaned_cloud_accounts": {
         "queue": "delete_orphaned_cloud_accounts"
     },
-    "api.tasks.inspect_pending_images": {"queue": "inspect_pending_images"},
     "api.tasks.migrate_account_numbers_to_org_ids": {
         "queue": "migrate_account_numbers_to_org_ids"
     },
