@@ -21,9 +21,6 @@ Therefore, we should always preserve the original name in each task function's
 decorator even if the function itself is renamed or moved elsewhere.
 """
 
-from api.tasks.calculation import (
-    fix_problematic_runs,
-)
 from api.tasks.inspection import (
     inspect_pending_images,
     persist_inspection_cluster_results_task,
