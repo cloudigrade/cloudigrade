@@ -1494,7 +1494,6 @@ parameters:
     delete_orphaned_cloud_accounts,\
     delete_snapshot,\
     enable_account,\
-    fix_problematic_runs,\
     initial_aws_describe_instances,\
     initial_azure_vm_discovery,\
     inspect_pending_images,\
