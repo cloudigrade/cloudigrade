@@ -472,9 +472,6 @@ CELERY_TASK_ROUTES = {
     "api.clouds.azure.tasks.update_azure_instance_events": {
         "queue": "update_azure_instance_events"
     },
-    "api.clouds.azure.tasks.update_azure_instance_events_for_account": {
-        "queue": "update_azure_instance_events_for_account"
-    },
 }
 
 #####################################################################

@@ -118,12 +118,3 @@ def update_azure_instance_events():
     This is a placeholder for old in-flight tasks during the shutdown transition.
     """
     # TODO FIXME Delete this function once we're confident no tasks exists.
-
-
-@shared_task(name="api.clouds.azure.tasks.update_azure_instance_events_for_account")
-def update_azure_instance_events_for_account(cloud_account_id):
-    """Do nothing.
-
-    This is a placeholder for old in-flight tasks during the shutdown transition.
-    """
-    # TODO FIXME Delete this function once we're confident no tasks exists.
