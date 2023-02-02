@@ -1494,7 +1494,6 @@ parameters:
     delete_orphaned_cloud_accounts,\
     delete_snapshot,\
     enable_account,\
-    initial_aws_describe_instances,\
     launch_inspection_instance,\
     migrate_account_numbers_to_org_ids,\
     notify_application_availability_task,\
