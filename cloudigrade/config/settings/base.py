@@ -418,9 +418,6 @@ CELERY_TASK_ROUTES = {
     "api.tasks.persist_inspection_cluster_results_task": {
         "queue": "persist_inspection_cluster_results_task"
     },
-    "api.tasks.recalculate_concurrent_usage_for_all_users": {
-        "queue": "recalculate_concurrent_usage_for_all_users"
-    },
     "api.tasks.recalculate_concurrent_usage_for_user_id": {
         "queue": "recalculate_concurrent_usage_for_user_id"
     },
