@@ -1508,7 +1508,6 @@ parameters:
     recalculate_runs_for_cloud_account_id,\
     remove_snapshot_ownership,\
     repopulate_azure_instance_mapping,\
-    synthesize_cloud_accounts,\
     synthesize_user,\
     update_azure_instance_events,\
     update_azure_instance_events_for_account,\
@@ -1603,8 +1602,7 @@ parameters:
   displayName: Sentry performance sample rates for specific Celery task names
   required: true
   value: '{
-    "api.tasks.synthesize_user": "0",
-    "api.tasks.synthesize_cloud_accounts": "0"
+    "api.tasks.synthesize_user": "0"
   }'
 - name: CLOUDIGRADE_ENABLE_CLOUDWATCH
   displayName: Enable Cloudwatch

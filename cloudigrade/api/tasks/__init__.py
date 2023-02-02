@@ -50,6 +50,5 @@ from api.tasks.sources import (
     update_from_sources_kafka_message,
 )
 from api.tasks.synthesize import (
-    synthesize_cloud_accounts,
     synthesize_user,
 )
