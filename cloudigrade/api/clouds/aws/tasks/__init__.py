@@ -31,7 +31,6 @@ from api.clouds.aws.tasks.cloudtrail import analyze_log
 from api.clouds.aws.tasks.imageprep import (
     copy_ami_snapshot,
     copy_ami_to_customer_account,
-    remove_snapshot_ownership,
 )
 from api.clouds.aws.tasks.maintenance import (
     delete_all_cloudtrails,

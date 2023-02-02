@@ -1496,7 +1496,6 @@ parameters:
     migrate_account_numbers_to_org_ids,\
     notify_application_availability_task,\
     pause_from_sources_kafka_message,\
-    remove_snapshot_ownership,\
     update_from_sources_kafka_message,\
     unpause_from_sources_kafka_message"
 - name: CELERY_TARGET_AVERAGE_CPU_UTILIZATION

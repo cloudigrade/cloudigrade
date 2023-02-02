@@ -22,14 +22,3 @@ def copy_ami_to_customer_account(arn, reference_ami_id, snapshot_region):
     This is a placeholder for old in-flight tasks during the shutdown transition.
     """
     # TODO FIXME Delete this function once we're confident no tasks exists.
-
-
-@retriable_shared_task(name="api.clouds.aws.tasks.remove_snapshot_ownership")
-def remove_snapshot_ownership(
-    arn, customer_snapshot_id, customer_snapshot_region, snapshot_copy_id
-):
-    """Do nothing.
-
-    This is a placeholder for old in-flight tasks during the shutdown transition.
-    """
-    # TODO FIXME Delete this function once we're confident no tasks exists.
