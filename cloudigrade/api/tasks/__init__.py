@@ -23,7 +23,6 @@ decorator even if the function itself is renamed or moved elsewhere.
 
 from api.tasks.calculation import (
     fix_problematic_runs,
-    recalculate_concurrent_usage_for_user_id,
     recalculate_runs_for_all_cloud_accounts,
     recalculate_runs_for_cloud_account_id,
 )
