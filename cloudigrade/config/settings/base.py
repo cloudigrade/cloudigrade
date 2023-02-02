@@ -460,9 +460,6 @@ CELERY_TASK_ROUTES = {
         "queue": "remove_snapshot_ownership"
     },
     # api.clouds.azure.tasks
-    "api.clouds.azure.tasks.repopulate_azure_instance_mapping": {
-        "queue": "repopulate_azure_instance_mapping"
-    },
     "api.clouds.azure.tasks.check_azure_subscription_and_create_cloud_account": {
         "queue": "check_azure_subscription_and_create_cloud_account"
     },
