@@ -1501,7 +1501,6 @@ parameters:
     migrate_account_numbers_to_org_ids,\
     notify_application_availability_task,\
     pause_from_sources_kafka_message,\
-    persist_inspection_cluster_results_task,\
     remove_snapshot_ownership,\
     repopulate_azure_instance_mapping,\
     update_azure_instance_events,\

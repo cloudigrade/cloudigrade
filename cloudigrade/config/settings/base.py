@@ -414,9 +414,6 @@ CELERY_TASK_ROUTES = {
     "api.tasks.notify_application_availability_task": {
         "queue": "notify_application_availability_task"
     },
-    "api.tasks.persist_inspection_cluster_results_task": {
-        "queue": "persist_inspection_cluster_results_task"
-    },
     "api.tasks.check_and_cache_sqs_queues_lengths": {
         "queue": "check_and_cache_sqs_queues_lengths"
     },

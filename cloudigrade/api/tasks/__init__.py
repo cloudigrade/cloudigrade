@@ -23,7 +23,6 @@ decorator even if the function itself is renamed or moved elsewhere.
 
 from api.tasks.inspection import (
     inspect_pending_images,
-    persist_inspection_cluster_results_task,
 )
 from api.tasks.maintenance import (
     check_and_cache_sqs_queues_lengths,
