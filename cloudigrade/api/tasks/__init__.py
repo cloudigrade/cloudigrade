@@ -26,7 +26,6 @@ from api.tasks.calculation import (
     recalculate_concurrent_usage_for_user_id,
     recalculate_runs_for_all_cloud_accounts,
     recalculate_runs_for_cloud_account_id,
-    recalculate_runs_for_instance_id,
 )
 from api.tasks.inspection import (
     inspect_pending_images,

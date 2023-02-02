@@ -1506,7 +1506,6 @@ parameters:
     recalculate_concurrent_usage_for_user_id,\
     recalculate_runs_for_all_cloud_accounts,\
     recalculate_runs_for_cloud_account_id,\
-    recalculate_runs_for_instance_id,\
     remove_snapshot_ownership,\
     repopulate_azure_instance_mapping,\
     synthesize_cloud_accounts,\
@@ -1615,8 +1614,7 @@ parameters:
     "api.tasks.synthesize_instances": "0",
     "api.tasks.synthesize_instance_events": "0",
     "api.tasks.synthesize_runs_and_usage": "0",
-    "api.tasks.synthesize_concurrent_usage": "0",
-    "api.tasks.recalculate_runs_for_instance_id": "0"
+    "api.tasks.synthesize_concurrent_usage": "0"
   }'
 - name: CLOUDIGRADE_ENABLE_CLOUDWATCH
   displayName: Enable Cloudwatch
