@@ -28,9 +28,6 @@ decorator even if the function itself is renamed or moved elsewhere.
 # There are still, as of the time of this comment, interdependencies among these tasks,
 # and rearranging these imports *may* result in problematic circular imports.
 from api.clouds.aws.tasks.cloudtrail import analyze_log
-from api.clouds.aws.tasks.imageprep import (
-    copy_ami_snapshot,
-)
 from api.clouds.aws.tasks.maintenance import (
     delete_all_cloudtrails,
     delete_cloudtrail_for_aws_cloud_account_id,
