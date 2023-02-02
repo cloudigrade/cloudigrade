@@ -1503,7 +1503,6 @@ parameters:
     remove_snapshot_ownership,\
     repopulate_azure_instance_mapping,\
     update_azure_instance_events,\
-    update_azure_instance_events_for_account,\
     update_from_sources_kafka_message,\
     unpause_from_sources_kafka_message"
 - name: CELERY_TARGET_AVERAGE_CPU_UTILIZATION
