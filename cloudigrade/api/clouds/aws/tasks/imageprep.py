@@ -33,12 +33,3 @@ def remove_snapshot_ownership(
     This is a placeholder for old in-flight tasks during the shutdown transition.
     """
     # TODO FIXME Delete this function once we're confident no tasks exists.
-
-
-@retriable_shared_task(name="api.clouds.aws.tasks.delete_snapshot")
-def delete_snapshot(snapshot_copy_id, ami_id, snapshot_region):
-    """Do nothing.
-
-    This is a placeholder for old in-flight tasks during the shutdown transition.
-    """
-    # TODO FIXME Delete this function once we're confident no tasks exists.

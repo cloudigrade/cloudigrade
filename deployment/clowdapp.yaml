@@ -1492,7 +1492,6 @@ parameters:
     delete_from_sources_kafka_message,\
     delete_inactive_users,\
     delete_orphaned_cloud_accounts,\
-    delete_snapshot,\
     enable_account,\
     migrate_account_numbers_to_org_ids,\
     notify_application_availability_task,\

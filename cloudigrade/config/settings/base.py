@@ -449,7 +449,6 @@ CELERY_TASK_ROUTES = {
     "api.clouds.aws.tasks.delete_cloudtrail_for_aws_cloud_account_id": {
         "queue": "delete_cloudtrail_for_aws_cloud_account_id"
     },
-    "api.clouds.aws.tasks.delete_snapshot": {"queue": "delete_snapshot"},
     "api.clouds.aws.tasks.remove_snapshot_ownership": {
         "queue": "remove_snapshot_ownership"
     },
