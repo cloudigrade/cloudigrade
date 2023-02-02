@@ -1,7 +1,6 @@
 """Celery tasks related to on-boarding new customer Azure cloud accounts."""
 import logging
 
-from azure.core.exceptions import ClientAuthenticationError
 from django.utils.translation import gettext as _
 from rest_framework.serializers import ValidationError
 
@@ -97,15 +96,3 @@ def check_azure_subscription_and_create_cloud_account(
             "source_id": source_id,
         },
     )
-
-
-@retriable_shared_task(
-    name="api.clouds.azure.tasks.initial_azure_vm_discovery",
-    autoretry_for=(ClientAuthenticationError,),
-)
-def initial_azure_vm_discovery(azure_cloud_account_id):
-    """Do nothing.
-
-    This is a placeholder for old in-flight tasks during the shutdown transition.
-    """
-    # TODO FIXME Delete this function once we're confident no tasks exists.

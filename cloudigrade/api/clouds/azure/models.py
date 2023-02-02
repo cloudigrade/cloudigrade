@@ -4,7 +4,7 @@ import logging
 from azure.core.exceptions import ClientAuthenticationError
 from azure.mgmt.managedservices import ManagedServicesClient
 from django.contrib.contenttypes.fields import GenericRelation
-from django.db import models, transaction
+from django.db import models
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 from django.utils.translation import gettext as _
@@ -76,15 +76,6 @@ class AzureCloudAccount(BaseModel):
             )
             logger.info(message)
             raise ValidationError({"subscription_id": message})
-
-        from api.clouds.azure import tasks  # Avoid circular import.
-
-        cloud_account = self.cloud_account.get()
-        if not cloud_account.platform_application_is_paused:
-            # Only do the vm discovery if the application is *not* paused.
-            transaction.on_commit(
-                lambda: tasks.initial_azure_vm_discovery.delay(self.id)
-            )
 
         logger.info(_("Finished enabling %(account)s"), {"account": self})
         return True
