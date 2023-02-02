@@ -421,9 +421,6 @@ CELERY_TASK_ROUTES = {
     "api.tasks.recalculate_concurrent_usage_for_user_id": {
         "queue": "recalculate_concurrent_usage_for_user_id"
     },
-    "api.tasks.recalculate_concurrent_usage_for_user_id_on_date": {
-        "queue": "recalculate_concurrent_usage_for_user_id_on_date"
-    },
     "api.tasks.recalculate_runs_for_all_cloud_accounts": {
         "queue": "recalculate_runs_for_all_cloud_accounts"
     },

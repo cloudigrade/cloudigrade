@@ -38,15 +38,6 @@ def recalculate_runs_for_all_cloud_accounts(since=None):
     # TODO FIXME Delete this function once we're confident no tasks exists.
 
 
-@shared_task(name="api.tasks.recalculate_concurrent_usage_for_user_id_on_date")
-def recalculate_concurrent_usage_for_user_id_on_date(user_id, date):
-    """Do nothing.
-
-    This is a placeholder for old in-flight tasks during the shutdown transition.
-    """
-    # TODO FIXME Delete this function once we're confident no tasks exists.
-
-
 @shared_task(
     name="api.tasks.recalculate_concurrent_usage_for_user_id", serializer="pickle"
 )
