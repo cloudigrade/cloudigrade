@@ -418,9 +418,6 @@ CELERY_TASK_ROUTES = {
     "api.tasks.persist_inspection_cluster_results_task": {
         "queue": "persist_inspection_cluster_results_task"
     },
-    "api.tasks.recalculate_runs_for_cloud_account_id": {
-        "queue": "recalculate_runs_for_cloud_account_id"
-    },
     "api.tasks.check_and_cache_sqs_queues_lengths": {
         "queue": "check_and_cache_sqs_queues_lengths"
     },
