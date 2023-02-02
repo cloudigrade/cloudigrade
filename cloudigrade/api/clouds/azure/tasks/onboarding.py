@@ -9,7 +9,7 @@ from api import error_codes
 from api.authentication import get_user_by_account
 from api.clouds.azure.util import create_azure_cloud_account
 from api.models import User
-from util.celery import retriable_shared_task, shared_task
+from util.celery import retriable_shared_task
 
 logger = logging.getLogger(__name__)
 
@@ -104,15 +104,6 @@ def check_azure_subscription_and_create_cloud_account(
     autoretry_for=(ClientAuthenticationError,),
 )
 def initial_azure_vm_discovery(azure_cloud_account_id):
-    """Do nothing.
-
-    This is a placeholder for old in-flight tasks during the shutdown transition.
-    """
-    # TODO FIXME Delete this function once we're confident no tasks exists.
-
-
-@shared_task(name="api.clouds.azure.tasks.update_azure_instance_events")
-def update_azure_instance_events():
     """Do nothing.
 
     This is a placeholder for old in-flight tasks during the shutdown transition.
