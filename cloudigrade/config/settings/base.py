@@ -447,7 +447,6 @@ CELERY_TASK_ROUTES = {
         "queue": "unpause_from_sources_kafka_message"
     },
     # api.tasks supporting synthetic data generation
-    "api.tasks.synthesize_user": {"queue": "synthesize_user"},
     "api.tasks.delete_expired_synthetic_data": {
         "queue": "delete_expired_synthetic_data"
     },
