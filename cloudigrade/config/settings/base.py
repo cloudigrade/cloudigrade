@@ -451,7 +451,6 @@ CELERY_TASK_ROUTES = {
     "api.tasks.synthesize_cloud_accounts": {"queue": "synthesize_cloud_accounts"},
     "api.tasks.synthesize_images": {"queue": "synthesize_images"},
     "api.tasks.synthesize_instances": {"queue": "synthesize_instances"},
-    "api.tasks.synthesize_instance_events": {"queue": "synthesize_instance_events"},
     "api.tasks.delete_expired_synthetic_data": {
         "queue": "delete_expired_synthetic_data"
     },

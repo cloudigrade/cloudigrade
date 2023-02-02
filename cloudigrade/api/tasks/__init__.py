@@ -52,7 +52,6 @@ from api.tasks.sources import (
 from api.tasks.synthesize import (
     synthesize_cloud_accounts,
     synthesize_images,
-    synthesize_instance_events,
     synthesize_instances,
     synthesize_user,
 )
