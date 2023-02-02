@@ -11,15 +11,6 @@ def fix_problematic_runs(run_ids):
     # TODO FIXME Delete this function once we're confident no tasks exists.
 
 
-@shared_task(name="api.tasks.recalculate_runs_for_instance_id")
-def recalculate_runs_for_instance_id(instance_id):
-    """Do nothing.
-
-    This is a placeholder for old in-flight tasks during the shutdown transition.
-    """
-    # TODO FIXME Delete this function once we're confident no tasks exists.
-
-
 @shared_task(name="api.tasks.recalculate_runs_for_cloud_account_id")
 def recalculate_runs_for_cloud_account_id(cloud_account_id, since=None):
     """Do nothing.

@@ -427,9 +427,6 @@ CELERY_TASK_ROUTES = {
     "api.tasks.recalculate_runs_for_cloud_account_id": {
         "queue": "recalculate_runs_for_cloud_account_id"
     },
-    "api.tasks.recalculate_runs_for_instance_id": {
-        "queue": "recalculate_runs_for_instance_id"
-    },
     "api.tasks.check_and_cache_sqs_queues_lengths": {
         "queue": "check_and_cache_sqs_queues_lengths"
     },
