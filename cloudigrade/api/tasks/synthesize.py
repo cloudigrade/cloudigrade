@@ -40,12 +40,3 @@ def synthesize_images(request_id: int) -> Optional[int]:
     This is a placeholder for old in-flight tasks during the shutdown transition.
     """
     # TODO FIXME Delete this function once we're confident no tasks exists.
-
-
-@shared_task(name="api.tasks.synthesize_instances")
-def synthesize_instances(request_id: int) -> Optional[int]:
-    """Do nothing.
-
-    This is a placeholder for old in-flight tasks during the shutdown transition.
-    """
-    # TODO FIXME Delete this function once we're confident no tasks exists.
