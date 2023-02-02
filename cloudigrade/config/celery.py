@@ -45,16 +45,6 @@ app.conf.beat_schedule = {
     # you need to either 1) keep it here and reconfigure with '"schedule": 999999' and
     # '"enabled": False', or 2) write a migration to remove it from the database.
     # Simply removing it from this schedule config will **not** remove it from the DB.
-    "check_and_cache_sqs_queues_lengths": {
-        "task": "api.tasks.check_and_cache_sqs_queues_lengths",
-        "schedule": 999999,  # never
-        "enabled": False,
-    },
-    "delete_expired_synthetic_data": {
-        "task": "api.tasks.delete_expired_synthetic_data",
-        "schedule": 999999,  # never
-        "enabled": False,
-    },
 }
 task_packages = ["api.clouds.aws.tasks", "api.clouds.azure.tasks", "api.tasks"]
 app.autodiscover_tasks(task_packages)
