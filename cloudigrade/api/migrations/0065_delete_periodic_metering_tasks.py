@@ -10,7 +10,6 @@ def delete_periodic_metering_tasks(apps, schema_editor):
         "api.tasks.inspect_pending_images",
         "api.tasks.recalculate_runs_for_all_cloud_accounts",
         "api.tasks.recalculate_concurrent_usage_for_all_users",
-        "api.clouds.aws.tasks.analyze_log",
         "api.clouds.aws.tasks.repopulate_ec2_instance_mapping",
         "api.clouds.azure.tasks.repopulate_azure_instance_mapping",
         "api.clouds.azure.tasks.update_azure_instance_events",

@@ -1476,7 +1476,6 @@ parameters:
   displayname: List of Celery Queue Names
   required true:
   value: "celery,\
-    analyze_log,\
     calculate_max_concurrent_usage,\
     check_and_cache_sqs_queues_lengths,\
     check_azure_subscription_and_create_cloud_account,\
