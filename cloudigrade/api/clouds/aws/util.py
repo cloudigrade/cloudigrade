@@ -57,11 +57,6 @@ def verify_permissions(customer_role_arn):  # noqa: C901
         # is what has the required platform_application_id.
         return False
 
-    if cloud_account.is_synthetic:
-        # Synthetic accounts should never have real AWS accounts, CloudTrail, etc.
-        # but we should return early and treat them as if all systems are go.
-        return True
-
     # Get the username immediately from the related user in case the user is deleted
     # while we are verifying access; we'll need it later
     # in order to notify sources of our error.

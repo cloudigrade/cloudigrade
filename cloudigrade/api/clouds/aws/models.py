@@ -74,11 +74,6 @@ class AwsCloudAccount(BaseModel):
             ValidationError or ClientError from verify_permissions if it fails.
         """
         logger.info(_("Enabling %(account)s"), {"account": self})
-        cloud_account = self.cloud_account.get()
-        if cloud_account.is_synthetic:
-            # Bypass permission verify, describe, etc. if this is a synthetic account.
-            logger.info(_("Enabled synthetic AwsCloudAccount %(id)s"), {"id": self.id})
-            return True
 
         from api.clouds.aws import util  # Avoid circular import.
 
@@ -103,15 +98,6 @@ class AwsCloudAccount(BaseModel):
         CloudTrail, we simply log a message and proceed regardless.
         """
         logger.info(_("Attempting to disable %(account)s"), {"account": self})
-        try:
-            if self.cloud_account.get().is_synthetic:
-                # Bypass cloudtrail operations if this is a synthetic account.
-                return
-        except CloudAccount.DoesNotExist:
-            # The related CloudAccount normally should always exist, but it might not if
-            # we are in the middle of deleting this account and/or the AwsCloudAccount
-            # has been (temporarily?) orphaned from its CloudAccount.
-            pass
         transaction.on_commit(lambda: _delete_cloudtrail(self))
         logger.info(_("Finished disabling %(account)s"), {"account": self})
 
