@@ -146,11 +146,8 @@ class LockUserTaskTest(TransactionTestCase):
         lock = UserTaskLock.objects.get(user=user)
         self.assertEqual(lock.locked, False)
 
-    @patch("api.clouds.aws.util.delete_cloudtrail")
     @patch("api.tasks.sources.notify_application_availability_task")
-    def test_delete_cloud_account_lock(
-        self, mock_notify_sources, mock_delete_cloudtrail
-    ):
+    def test_delete_cloud_account_lock(self, mock_notify_sources):
         """Test that deleting an account inside a lock is successful."""
         aws_account_id = util_helper.generate_dummy_aws_account_id()
         arn = util_helper.generate_dummy_arn(account_id=aws_account_id)

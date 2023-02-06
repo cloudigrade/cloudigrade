@@ -35,10 +35,9 @@ if isClowderEnabled():
 CLOUDIGRADE_ENVIRONMENT = env("CLOUDIGRADE_ENVIRONMENT")
 
 # TODO refactor our app to use exclusively only one of these configs
-# CLOUDIGRADE_ENVIRONMENT, AWS_NAME_PREFIX, and CLOUDTRAIL_NAME_PREFIX don't all need to
+# CLOUDIGRADE_ENVIRONMENT and AWS_NAME_PREFIX don't both need to
 # exist since they're all basically the same; these are artifacts from older code.
 AWS_NAME_PREFIX = f"{CLOUDIGRADE_ENVIRONMENT}-"
-CLOUDTRAIL_NAME_PREFIX = AWS_NAME_PREFIX
 
 #####################################################################
 # Standard Django project configs
@@ -439,10 +438,6 @@ CELERY_TASK_ROUTES = {
     # api.clouds.aws.tasks
     "api.clouds.aws.tasks.configure_customer_aws_and_create_cloud_account": {
         "queue": "configure_customer_aws_and_create_cloud_account"
-    },
-    "api.clouds.aws.tasks.delete_all_cloudtrails": {"queue": "delete_all_cloudtrails"},
-    "api.clouds.aws.tasks.delete_cloudtrail_for_aws_cloud_account_id": {
-        "queue": "delete_cloudtrail_for_aws_cloud_account_id"
     },
     # api.clouds.azure.tasks
     "api.clouds.azure.tasks.check_azure_subscription_and_create_cloud_account": {

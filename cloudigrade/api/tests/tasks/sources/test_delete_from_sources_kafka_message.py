@@ -61,9 +61,9 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
             f"('platform_authentication_id', {self.authentication_id}))",
         ]
 
-        with patch.object(sts, "boto3") as mock_boto3, patch.object(
-            aws_models, "_delete_cloudtrail"
-        ), self.assertLogs("api.tasks.sources", level="INFO") as logging_watcher:
+        with patch.object(sts, "boto3") as mock_boto3, self.assertLogs(
+            "api.tasks.sources", level="INFO"
+        ) as logging_watcher:
             role = util_helper.generate_dummy_role()
             mock_assume_role = mock_boto3.client.return_value.assume_role
             mock_assume_role.return_value = role

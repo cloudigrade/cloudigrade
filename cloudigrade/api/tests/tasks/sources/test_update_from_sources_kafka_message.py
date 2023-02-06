@@ -6,7 +6,6 @@ from django.conf import settings
 from django.test import TestCase
 from rest_framework.serializers import ValidationError
 
-from api.clouds.aws import models as aws_models
 from api.models import CloudAccount
 from api.tasks import sources
 from api.tests import helper as api_helper
@@ -192,9 +191,9 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
         mock_get_auth.return_value = self.auth_return_value
         mock_get_app.return_value = self.app_return_value
 
-        with patch.object(sts, "boto3") as mock_boto3, patch.object(
-            aws_models, "_delete_cloudtrail"
-        ), patch("api.clouds.aws.util.verify_permissions"):
+        with patch.object(sts, "boto3") as mock_boto3, patch(
+            "api.clouds.aws.util.verify_permissions"
+        ):
             mock_assume_role = mock_boto3.client.return_value.assume_role
             mock_assume_role.return_value = util_helper.generate_dummy_role()
             sources.update_from_sources_kafka_message(message, headers)
