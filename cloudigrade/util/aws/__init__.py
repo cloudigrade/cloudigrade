@@ -6,7 +6,6 @@ from util.aws.cloudtrail import (
 )
 from util.aws.helper import (
     COMMON_AWS_ACCESS_DENIED_ERROR_CODES,
-    get_regions,
     rewrap_aws_errors,
     verify_account_access,
 )
