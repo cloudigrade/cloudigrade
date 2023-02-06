@@ -28,9 +28,7 @@ class BaseGenericModelTest(TestCase):
         self, mock_notify_sources
     ):
         """Deleting a generic model removes its more specific counterpart."""
-        with patch.object(sts, "boto3") as mock_boto3, patch.object(
-            aws_models, "_delete_cloudtrail"
-        ):
+        with patch.object(sts, "boto3") as mock_boto3:
             mock_assume_role = mock_boto3.client.return_value.assume_role
             mock_assume_role.return_value = self.role
             models.CloudAccount.objects.all().delete()

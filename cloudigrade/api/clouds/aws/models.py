@@ -2,7 +2,7 @@
 import logging
 
 from django.contrib.contenttypes.fields import GenericRelation
-from django.db import models, transaction
+from django.db import models
 from django.utils.translation import gettext as _
 from rest_framework.exceptions import ValidationError
 
@@ -65,10 +65,8 @@ class AwsCloudAccount(BaseModel):
         If you want to completely enable a cloud account, use CloudAccount.enable().
 
         Enabling an AwsCloudAccount has the side effect of attempting to verify our
-        expected IAM permissions in the customer's AWS account and then to configure and
-        enable CloudTrail in the customer's AWS account. If either of these fails, we
-        raise an exception for the caller to handle. Otherwise, we proceed to perform
-        the "initial" describe to discover current EC2 instances.
+        expected IAM permissions in the customer's AWS account. If this fails, we
+        raise an exception for the caller to handle.
 
         Raises:
             ValidationError or ClientError from verify_permissions if it fails.
@@ -92,46 +90,6 @@ class AwsCloudAccount(BaseModel):
 
         This method only handles the AWS-specific piece of disabling a cloud account.
         If you want to completely disable a cloud account, use CloudAccount.disable().
-
-        Disabling an AwsCloudAccount has the side effect of attempting to delete the
-        AWS CloudTrail only upon committing the transaction.  If we cannot delete the
-        CloudTrail, we simply log a message and proceed regardless.
         """
         logger.info(_("Attempting to disable %(account)s"), {"account": self})
-        transaction.on_commit(lambda: _delete_cloudtrail(self))
         logger.info(_("Finished disabling %(account)s"), {"account": self})
-
-
-def _delete_cloudtrail(aws_cloud_account):
-    """Delete the given AwsCloudAccount's AWS CloudTrail."""
-    logger.info(
-        _("Attempting _delete_cloudtrail for %(account)s"),
-        {"account": aws_cloud_account},
-    )
-    try:
-        cloud_account = aws_cloud_account.cloud_account.get()
-        if cloud_account.is_enabled:
-            logger.warning(
-                _(
-                    "Aborting _delete_cloudtrail because CloudAccount ID "
-                    "%(cloud_account_id)s is enabled."
-                ),
-                {"cloud_account_id": cloud_account.id},
-            )
-            return
-    except CloudAccount.DoesNotExist:
-        pass
-
-    from api.clouds.aws import util  # Avoid circular import.
-
-    if not util.delete_cloudtrail(aws_cloud_account):
-        logger.info(
-            _(
-                "Failed to delete CloudTrail when disabling AwsCloudAccount ID "
-                "%(aws_cloud_account_id)s (AWS account ID %(aws_account_id)s)"
-            ),
-            {
-                "aws_cloud_account_id": aws_cloud_account.id,
-                "aws_account_id": aws_cloud_account.aws_account_id,
-            },
-        )

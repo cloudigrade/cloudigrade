@@ -202,10 +202,6 @@ class CloudAccount(BaseGenericModel):
         """
         Mark this CloudAccount as enabled and perform operations to make it so.
 
-        Setting "is_enabled" to True here means that we start accepting and recording
-        any new activity from the cloud (e.g. via CloudTrail for AWS), and we may also
-        perform a full describe of the cloud account to capture the current state.
-
         This has the side effect of calling the related content_object (e.g.
         AwsCloudAccount) to make any cloud-specific changes. If any that cloud-specific
         function fails, we rollback our state change and re-raise the exception for the
@@ -278,13 +274,6 @@ class CloudAccount(BaseGenericModel):
     def disable(self, message="", notify_sources=True):
         """
         Mark this CloudAccount as disabled and perform operations to make it so.
-
-        Setting "is_enabled" to False here means that we have stopped accepting and
-        recording any new activity from the cloud (e.g. via CloudTrail for AWS).
-
-        This has the side effect of finding all related powered-on instances and
-        recording a new "power_off" event them. It also calls the related content_object
-        (e.g. AwsCloudAccount) to make any cloud-specific changes.
 
         Args:
             message (string): status message to set on the Sources Application

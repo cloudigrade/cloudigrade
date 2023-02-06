@@ -24,10 +24,6 @@ Therefore, we should always preserve the original name in each task function's
 decorator even if the function itself is renamed or moved elsewhere.
 """
 
-from api.clouds.aws.tasks.maintenance import (
-    delete_all_cloudtrails,
-    delete_cloudtrail_for_aws_cloud_account_id,
-)
 from api.clouds.aws.tasks.onboarding import (
     configure_customer_aws_and_create_cloud_account,
 )

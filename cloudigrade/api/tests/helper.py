@@ -52,7 +52,6 @@ class SandboxedRestClient(object):
         - aws.verify_account_access is used in account creation
         - aws.sts.boto3 is used in account creation
         - api.serializers.verify_permissions is used in account creation
-        - aws.delete_cloudtrail is used in account deletion
         - aws.get_session is used in account deletion
         - aws.sts._get_primary_account_id is used in sysconfig
 
@@ -62,8 +61,6 @@ class SandboxedRestClient(object):
         with patch.object(aws, "verify_account_access") as mock_verify, patch(
             "api.clouds.aws.util.verify_permissions"
         ) as mock_verify_permissions, patch.object(aws.sts, "boto3"), patch.object(
-            aws, "delete_cloudtrail"
-        ), patch.object(
             aws, "get_session"
         ), patch.object(
             aws.sts, "_get_primary_account_id"

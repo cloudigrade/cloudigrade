@@ -99,19 +99,13 @@ class AwsCloudAccountModelTest(TransactionTestCase, helper.ModelStrTestMixin):
         Disabling a CloudAccount having an AwsCloudAccount should:
 
         - set the CloudAccount.is_enabled to False
-        - disable the CloudTrail (via AwsCloudAccount.disable)
         """
         self.assertTrue(self.account.is_enabled)
         self.assertEqual(self.account.enabled_at, self.account.created_at)
 
         disable_date = util_helper.utc_dt(2019, 1, 4, 0, 0, 0)
         with util_helper.clouditardis(disable_date):
-            with patch(
-                "api.clouds.aws.util.delete_cloudtrail"
-            ) as mock_delete_cloudtrail:
-                mock_delete_cloudtrail.return_value = True
-                self.account.disable()
-                mock_delete_cloudtrail.assert_called()
+            self.account.disable()
 
         self.account.refresh_from_db()
         self.assertFalse(self.account.is_enabled)
@@ -125,38 +119,16 @@ class AwsCloudAccountModelTest(TransactionTestCase, helper.ModelStrTestMixin):
         Setting notify_sources=False should *only* affect sources-api interactions.
         """
         self.assertTrue(self.account.is_enabled)
-        with patch("api.clouds.aws.util.delete_cloudtrail") as mock_delete_cloudtrail:
-            mock_delete_cloudtrail.return_value = True
-            self.account.disable(notify_sources=False)
-            mock_delete_cloudtrail.assert_called()
+        self.account.disable(notify_sources=False)
         mock_notify_sources.delay.assert_not_called()
 
         self.account.refresh_from_db()
         self.assertFalse(self.account.is_enabled)
 
-    def test_disable_returns_early_if_account_is_enabled(self):
-        """Test that AwsCloudAccount.disable returns early if is_enabled."""
-        self.assertTrue(self.account.is_enabled)
-
-        with patch("api.clouds.aws.util.delete_cloudtrail") as mock_delete_cloudtrail:
-            mock_delete_cloudtrail.return_value = True
-            self.account.content_object.disable()
-            mock_delete_cloudtrail.assert_not_called()
-
     @patch("api.tasks.sources.notify_application_availability_task")
     def test_delete_succeeds(self, mock_notify_sources):
         """Test that an account is deleted if there are no errors."""
-        with patch("api.clouds.aws.util.delete_cloudtrail") as mock_delete_cloudtrail:
-            mock_delete_cloudtrail.return_value = True
-            self.account.delete()
-        self.assertEqual(0, aws_models.AwsCloudAccount.objects.count())
-
-    @patch("api.tasks.sources.notify_application_availability_task")
-    def test_delete_succeeds_if_delete_cloudtrail_fails(self, mock_notify_sources):
-        """Test that the account is deleted even if the CloudTrail is not disabled."""
-        with patch("api.clouds.aws.util.delete_cloudtrail") as mock_delete_cloudtrail:
-            mock_delete_cloudtrail.return_value = False
-            self.account.delete()
+        self.account.delete()
         self.assertEqual(0, aws_models.AwsCloudAccount.objects.count())
 
     @patch("api.tasks.sources.notify_application_availability_task")
@@ -174,28 +146,14 @@ class AwsCloudAccountModelTest(TransactionTestCase, helper.ModelStrTestMixin):
         self.assertGreater(aws_models.AwsCloudAccount.objects.count(), 0)
         self.assertGreater(models.CloudAccount.objects.count(), 0)
 
-        with patch("api.clouds.aws.util.delete_cloudtrail") as mock_delete_cloudtrail:
-            mock_delete_cloudtrail.return_value = True
-            self.account.delete()
+        self.account.delete()
         self.assertEqual(0, aws_models.AwsCloudAccount.objects.count())
         self.assertEqual(0, models.CloudAccount.objects.count())
 
     @patch("api.tasks.sources.notify_application_availability_task")
-    def test_delete_via_queryset_succeeds_if_delete_cloudtrail_fails(
-        self, mock_notify_sources
-    ):
-        """Account is deleted via queryset even if the CloudTrail is not disabled."""
-        with patch("api.clouds.aws.util.delete_cloudtrail") as mock_delete_cloudtrail:
-            mock_delete_cloudtrail.return_value = False
-            aws_models.AwsCloudAccount.objects.all().delete()
-        self.assertEqual(0, aws_models.AwsCloudAccount.objects.count())
-
-    @patch("api.tasks.sources.notify_application_availability_task")
     def test_delete_via_queryset_cleans_up_related_objects(self, mock_notify_sources):
         """Deleting an account via queryset cleans up related objects."""
-        with patch("api.clouds.aws.util.delete_cloudtrail") as mock_delete_cloudtrail:
-            mock_delete_cloudtrail.return_value = True
-            aws_models.AwsCloudAccount.objects.all().delete()
+        aws_models.AwsCloudAccount.objects.all().delete()
         self.assertEqual(0, aws_models.AwsCloudAccount.objects.count())
         self.assertEqual(0, models.CloudAccount.objects.count())
 
