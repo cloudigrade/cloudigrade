@@ -123,42 +123,6 @@ Use the AWS CLI to save that configuration to your local system:
 
 You can verify that settings were stored correctly by checking the files at ``~/.aws/{config,credentials}``. We *strongly* recommend using separate profiles for **cloudigrade** and any other personal or testing AWS accounts.
 
-**cloudigrade** requires several entities to exist in its AWS account to track data and perform inspection of images that originated from other customer AWS accounts. Use commands like the following to run our included Ansible playbook to ensure the required AWS entities exist in **cloudigrade**'s AWS account:
-
-.. code-block:: sh
-
-    # start from the top level of the project repo
-    cd ~/projects/cloudigrade
-
-    # clear any existing AWS credentials to ensure you use the correct ones
-    unset AWS_PROFILE AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY
-
-    # set the AWS_PROFILE you defined earlier for cloudigrade,
-    # or set the AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY directly
-    export AWS_PROFILE="my-aws-cloudigrade-profile"
-
-    # used to template various AWS entity names
-    export CLOUDIGRADE_ENVIRONMENT="${USER}"
-
-    # required in some macOS versions. YMMV.
-    export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
-
-    # run the playbook to configure everything!
-    ANSIBLE_CONFIG=./deployment/playbooks/ansible.cfg poetry run ansible-playbook \
-        -e env=${CLOUDIGRADE_ENVIRONMENT}\
-        deployment/playbooks/manage-cloudigrade.yml
-
-Running the Ansible playbook should be an idempotent operation. It should always try to put the entities in the AWS account in the same desired state, and it should be safe to run repeatedly.
-
-If you want to undo that operation and effectively *remove* everything the playbook created and configured for you, set the same environment variables but add the ``-e aws_state=absent`` argument to the ``ansible-playbook`` command like the following:
-
-.. code-block:: sh
-
-    ANSIBLE_CONFIG=./deployment/playbooks/ansible.cfg poetry run ansible-playbook \
-        -e env=${CLOUDIGRADE_ENVIRONMENT} \
-        -e aws_state=absent \
-        deployment/playbooks/manage-cloudigrade.yml
-
 
 Azure Account Setup
 -------------------
