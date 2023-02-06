@@ -1,5 +1,9 @@
 # cloudigrade Architecture Document
 
+## Deprecation notice
+
+In early 2023, cloudigrade was stripped of most of its functionality, and it no longer describes instances, inspects images, monitors usage, or reports RHEL activity. The majority of this document is no longer relevant to the newly stripped-down cloudigrade, and it only correctly describes [1.0.0](https://github.com/cloudigrade/cloudigrade/releases/tag/1.0.0).
+
 ## Overview
 
 cloudigrade is a service that monitors, tracks, and reports on RHEL instance activity in public clouds for Red Hat customers. See [README.md](https://github.com/cloudigrade/cloudigrade/blob/master/README.rst) and [Adding sources for public cloud metering](https://access.redhat.com/documentation/en-us/subscription_central/2021/html/getting_started_with_the_subscriptions_service/assembly-adding-sources-publiccloudmetering) for more general information.
