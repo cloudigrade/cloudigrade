@@ -7,6 +7,7 @@ from django.test import TestCase
 
 from util.aws import helper
 from util.exceptions import AwsThrottlingException
+from util.tests import helper as util_helper
 
 
 class UtilAwsHelperTest(TestCase):
@@ -130,38 +131,8 @@ class UtilAwsHelperTest(TestCase):
     def test_verify_account_access_success(self, mock_verify_policy_action):
         """Assert that account access is verified when all actions are OK."""
         mock_session = Mock()
-        expected_calls = [
-            call(mock_session, "ec2:DescribeImages"),
-            call(mock_session, "ec2:DescribeInstances"),
-            call(mock_session, "ec2:ModifySnapshotAttribute"),
-            call(mock_session, "ec2:DescribeSnapshotAttribute"),
-            call(mock_session, "ec2:DescribeSnapshots"),
-            call(mock_session, "ec2:CopyImage"),
-            call(mock_session, "ec2:CreateTags"),
-            call(mock_session, "ec2:DescribeRegions"),
-            call(mock_session, "cloudtrail:CreateTrail"),
-            call(mock_session, "cloudtrail:UpdateTrail"),
-            call(mock_session, "cloudtrail:PutEventSelectors"),
-            call(mock_session, "cloudtrail:DescribeTrails"),
-            call(mock_session, "cloudtrail:StartLogging"),
-            call(mock_session, "cloudtrail:DeleteTrail"),
-        ]
-        mock_verify_policy_action.side_effect = [
-            True,
-            True,
-            True,
-            True,
-            True,
-            True,
-            True,
-            True,
-            True,
-            True,
-            True,
-            True,
-            True,
-            True,
-        ]
+        expected_calls = [call(mock_session, "sts:GetCallerIdentity")]
+        mock_verify_policy_action.side_effect = [True]
         verified, failed_actions = helper.verify_account_access(mock_session)
         self.assertTrue(verified)
         self.assertEqual(len(failed_actions), 0)
@@ -171,154 +142,48 @@ class UtilAwsHelperTest(TestCase):
     def test_verify_account_access_failure(self, mock_verify_policy_action):
         """Assert that account access fails when some actions are not OK."""
         mock_session = Mock()
-        expected_calls = [
-            call(mock_session, "ec2:DescribeImages"),
-            call(mock_session, "ec2:DescribeInstances"),
-            call(mock_session, "ec2:ModifySnapshotAttribute"),
-            call(mock_session, "ec2:DescribeSnapshotAttribute"),
-            call(mock_session, "ec2:DescribeSnapshots"),
-            call(mock_session, "ec2:CopyImage"),
-            call(mock_session, "ec2:CreateTags"),
-            call(mock_session, "ec2:DescribeRegions"),
-            call(mock_session, "cloudtrail:CreateTrail"),
-            call(mock_session, "cloudtrail:UpdateTrail"),
-            call(mock_session, "cloudtrail:PutEventSelectors"),
-            call(mock_session, "cloudtrail:DescribeTrails"),
-            call(mock_session, "cloudtrail:StartLogging"),
-            call(mock_session, "cloudtrail:DeleteTrail"),
-        ]
-        mock_verify_policy_action.side_effect = [
-            True,
-            True,
-            True,
-            False,
-            True,
-            True,
-            True,
-            True,
-            True,
-            True,
-            True,
-            True,
-            True,
-            True,
-        ]
+        expected_calls = [call(mock_session, "sts:GetCallerIdentity")]
+        mock_verify_policy_action.side_effect = [False]
         verified, failed_actions = helper.verify_account_access(mock_session)
         self.assertFalse(verified)
-        self.assertEqual(len(failed_actions), 1)
+        self.assertEqual(failed_actions, ["sts:GetCallerIdentity"])
         mock_verify_policy_action.assert_has_calls(expected_calls)
 
-    def assert_verify_policy_action_success(
-        self, action, function_name, func_args=(), func_kwargs=dict()
-    ):
-        """
-        Assert _verify_policy_action succeeds with dry run "exception".
+    @patch("util.aws.helper._get_primary_account_id")
+    def test_verify_policy_success(self, mock_get_primary_account_id):
+        """Assert successful sts:GetCallerIdentity verification returns True."""
+        server_aws_account_id = util_helper.generate_dummy_aws_account_id()
+        mock_get_primary_account_id.return_value = server_aws_account_id
+        customer_aws_account_id = util_helper.generate_dummy_aws_account_id()
+        self.assertNotEqual(customer_aws_account_id, server_aws_account_id)
 
-        This helper function is intended to simplify testing
-        _verify_policy_action by offloading all the mocking and DryRun
-        assertion stuff.
-
-        Args:
-            action (str): the action to verify
-            function_name (str): the ec2 method name that would be called
-            func_args (list): positional arguments that would be sent to the
-                ec2 method called by _verify_policy_action
-            func_kwargs (dict): keyword arguments that would be sent to the ec2
-                method called by _verify_policy_action
-        """
-        mock_dryrun_function = Mock()
-        mock_dryrun_function.side_effect = ClientError(
-            error_response={"Error": {"Code": "DryRunOperation"}},
-            operation_name=action,
-        )
         mock_session = Mock()
         mock_client = mock_session.client.return_value
-        mock_client.attach_mock(mock_dryrun_function, function_name)
-
-        result = helper._verify_policy_action(mock_session, action)
+        dummy_arn = util_helper.generate_dummy_arn(
+            account_id=customer_aws_account_id,
+            service="sts",
+            resource_type="assumed-role",
+            resource=f"customer-arn-name/cloudigrade-{customer_aws_account_id}",
+        )
+        mock_client.get_caller_identity.return_value = {
+            "UserId": str(uuid.uuid4()),
+            "Account": customer_aws_account_id,
+            "Arn": dummy_arn,
+        }
+        result = helper._verify_policy_action(mock_session, "sts:GetCallerIdentity")
         self.assertTrue(result)
-        if not action.startswith("cloudtrail:"):
-            mock_dryrun_function.assert_called_once_with(*func_args, **func_kwargs)
 
-    def test_verify_policy_action_describe_images(self):
-        """Assert appropriate calls to verify ec2:DescribeImages."""
-        self.assert_verify_policy_action_success(
-            "ec2:DescribeImages", "describe_images", func_kwargs={"DryRun": True}
-        )
+    @patch("util.aws.helper._get_primary_account_id")
+    def test_verify_policy_invalid_arn_fails(self, mock_get_primary_account_id):
+        """Assert verifying sts:GetCallerIdentity with an invalid ARN returns False."""
+        server_aws_account_id = util_helper.generate_dummy_aws_account_id()
+        mock_get_primary_account_id.return_value = server_aws_account_id
 
-    def test_verify_policy_action_describe_instances(self):
-        """Assert appropriate calls to verify ec2:DescribeInstances."""
-        self.assert_verify_policy_action_success(
-            "ec2:DescribeInstances", "describe_instances", func_kwargs={"DryRun": True}
-        )
-
-    def test_verify_policy_action_describe_snapshot_attribute(self):
-        """Assert appropriate calls to verify ec2:DescribeSnapshotAttribute."""
-        self.assert_verify_policy_action_success(
-            "ec2:DescribeSnapshotAttribute",
-            "describe_snapshot_attribute",
-            func_kwargs={
-                "DryRun": True,
-                "SnapshotId": helper.DRYRUN_SNAPSHOT_ID,
-                "Attribute": "productCodes",
-            },
-        )
-
-    def test_verify_policy_action_describe_regions(self):
-        """Assert appropriate calls to verify ec2:DescribeRegions."""
-        self.assert_verify_policy_action_success(
-            "ec2:DescribeRegions", "describe_regions", func_kwargs={"DryRun": True}
-        )
-
-    def test_verify_policy_action_describe_snapshots(self):
-        """Assert appropriate calls to verify ec2:describe_snapshots."""
-        self.assert_verify_policy_action_success(
-            "ec2:DescribeSnapshots", "describe_snapshots", func_kwargs={"DryRun": True}
-        )
-
-    def test_verify_policy_action_modify_snapshot_attribute(self):
-        """Assert appropriate calls to verify ec2:ModifySnapshotAttribute."""
-        self.assert_verify_policy_action_success(
-            "ec2:ModifySnapshotAttribute",
-            "modify_snapshot_attribute",
-            func_kwargs={
-                "SnapshotId": helper.DRYRUN_SNAPSHOT_ID,
-                "DryRun": True,
-                "Attribute": "createVolumePermission",
-                "OperationType": "add",
-            },
-        )
-
-    def test_verify_policy_action_copy_image(self):
-        """Assert appropriate calls to verify ec2:CopyImage."""
-        with patch.object(helper, "uuid") as mock_uuid:
-            self.assert_verify_policy_action_success(
-                "ec2:CopyImage",
-                "copy_image",
-                func_kwargs={
-                    "Name": f"{mock_uuid.uuid4.return_value}",
-                    "DryRun": True,
-                    "SourceImageId": helper.DRYRUN_IMAGE_ID,
-                    "SourceRegion": helper.DRYRUN_IMAGE_REGION,
-                },
-            )
-
-    def test_verify_policy_action_create_tags(self):
-        """Assert appropriate calls to verify ec2:CreateTags."""
-        self.assert_verify_policy_action_success(
-            "ec2:CreateTags",
-            "create_tags",
-            func_kwargs={
-                "DryRun": True,
-                "Resources": [helper.DRYRUN_IMAGE_ID],
-                "Tags": [
-                    {
-                        "Key": "Example",
-                        "Value": "Hello world",
-                    },
-                ],
-            },
-        )
+        mock_session = Mock()
+        mock_client = mock_session.client.return_value
+        mock_client.get_caller_identity.return_value = {"Arn": str(uuid.uuid4())}
+        result = helper._verify_policy_action(mock_session, "sts:GetCallerIdentity")
+        self.assertFalse(result)
 
     def test_verify_policy_action_unknown(self):
         """Assert trying to verify an unknown action returns False."""
@@ -327,40 +192,10 @@ class UtilAwsHelperTest(TestCase):
         result = helper._verify_policy_action(mock_session, bogus_action)
         self.assertFalse(result)
 
-    def test_verify_policy_action_create_trail(self):
-        """Assert appropriate calls to verify cloudtrail:create_trail."""
-        self.assert_verify_policy_action_success(
-            "cloudtrail:CreateTrail", "create_trail"
-        )
-
-    def test_verify_policy_action_update_trail(self):
-        """Assert appropriate calls to verify cloudtrail:update_trail."""
-        self.assert_verify_policy_action_success(
-            "cloudtrail:UpdateTrail", "update_trail"
-        )
-
-    def test_verify_policy_action_describe_trails(self):
-        """Assert appropriate calls to verify cloudtrail:describe_trails."""
-        self.assert_verify_policy_action_success(
-            "cloudtrail:DescribeTrails", "describe_trails"
-        )
-
-    def test_verify_policy_action_put_event_selectors(self):
-        """Assert calls to verify cloudtrail:put_event_selectors."""
-        self.assert_verify_policy_action_success(
-            "cloudtrail:PutEventSelectors", "put_event_selectors"
-        )
-
-    def test_verify_policy_action_start_logging(self):
-        """Assert appropriate calls to verify cloudtrail:start_logging."""
-        self.assert_verify_policy_action_success(
-            "cloudtrail:StartLogging", "start_logging"
-        )
-
     def test_verify_account_access_failure_unauthorized(self):
         """Assert that account access fails for an unauthorized operation."""
-        action = "ec2:DescribeSnapshots"
-        function_name = "describe_snapshots"
+        action = "sts:GetCallerIdentity"
+        function_name = "get_caller_identity"
 
         mock_function = Mock()
         mock_function.side_effect = ClientError(
@@ -373,20 +208,3 @@ class UtilAwsHelperTest(TestCase):
 
         result = helper._verify_policy_action(mock_session, action)
         self.assertFalse(result)
-
-    def test_verify_account_access_failure_unknown_reason(self):
-        """Assert that account access fails for an unknown reason."""
-        action = "ec2:DescribeSnapshots"
-        function_name = "describe_snapshots"
-
-        mock_function = Mock()
-        mock_function.side_effect = ClientError(
-            error_response={"Error": {"Code": "itisamystery.gif"}},
-            operation_name=action,
-        )
-        mock_session = Mock()
-        mock_client = mock_session.client.return_value
-        mock_client.attach_mock(mock_function, function_name)
-
-        with self.assertRaises(ClientError):
-            helper._verify_policy_action(mock_session, action)

@@ -10,29 +10,13 @@ from util.aws.arn import AwsArn
 
 logger = logging.getLogger(__name__)
 
-
 cloudigrade_policy = {
     "Version": "2012-10-17",
     "Statement": [
         {
             "Sid": "CloudigradePolicy",
             "Effect": "Allow",
-            "Action": [
-                "ec2:DescribeImages",
-                "ec2:DescribeInstances",
-                "ec2:ModifySnapshotAttribute",
-                "ec2:DescribeSnapshotAttribute",
-                "ec2:DescribeSnapshots",
-                "ec2:CopyImage",
-                "ec2:CreateTags",
-                "ec2:DescribeRegions",
-                "cloudtrail:CreateTrail",
-                "cloudtrail:UpdateTrail",
-                "cloudtrail:PutEventSelectors",
-                "cloudtrail:DescribeTrails",
-                "cloudtrail:StartLogging",
-                "cloudtrail:DeleteTrail",
-            ],
+            "Action": ["sts:GetCallerIdentity"],
             "Resource": "*",
         }
     ],

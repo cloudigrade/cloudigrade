@@ -25,17 +25,11 @@ def verify_permissions(customer_role_arn):  # noqa: C901
         customer_role_arn (str): ARN to access the customer's AWS account
 
     Note:
-        This function not only verifies; it also has the side effect of configuring
-        the AWS CloudTrail. This should be refactored into a more explicit operation,
-        but at the time of this writing, there is no "dry run" check for CloudTrail
-        operations. Callers should be aware of the risk that we may configure CloudTrail
-        but somewhere else rollback our transaction, leaving that Trail orphaned.
-
-        This function also has the side-effect of notifying sources and updating the
+        This function also has the side effect of notifying sources and updating the
         application status to unavailable if we cannot complete processing normally.
 
     Returns:
-        boolean indicating if the verification and CloudTrail setup succeeded.
+        boolean True if customer AWS account is appropriately accessible.
 
     """
     aws_account_id = aws.AwsArn(customer_role_arn).account_id

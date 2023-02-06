@@ -224,7 +224,7 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 680
+    Content-Length: 358
     Content-Type: application/json
     Cross-Origin-Opener-Policy: same-origin
     Referrer-Policy: same-origin
@@ -239,20 +239,7 @@ Response:
                 "Statement": [
                     {
                         "Action": [
-                            "ec2:DescribeImages",
-                            "ec2:DescribeInstances",
-                            "ec2:ModifySnapshotAttribute",
-                            "ec2:DescribeSnapshotAttribute",
-                            "ec2:DescribeSnapshots",
-                            "ec2:CopyImage",
-                            "ec2:CreateTags",
-                            "ec2:DescribeRegions",
-                            "cloudtrail:CreateTrail",
-                            "cloudtrail:UpdateTrail",
-                            "cloudtrail:PutEventSelectors",
-                            "cloudtrail:DescribeTrails",
-                            "cloudtrail:StartLogging",
-                            "cloudtrail:DeleteTrail"
+                            "sts:GetCallerIdentity"
                         ],
                         "Effect": "Allow",
                         "Resource": "*",
