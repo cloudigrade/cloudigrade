@@ -21,27 +21,6 @@ COMMON_AWS_ACCESS_DENIED_ERROR_CODES = (
 )
 
 
-def get_regions(session, service_name="ec2"):
-    """
-    Get the full list of available AWS regions for the given service.
-
-    Args:
-        session (boto3.Session): A temporary session tied to a customer account
-        service_name (str): Name of AWS service. Default is 'ec2'.
-
-    Returns:
-        list: The available AWS region names.
-
-    """
-    client = session.client(service_name)
-    available_regions = client.describe_regions()
-    region_list = []
-    for region in available_regions["Regions"]:
-        region_list.append(region["RegionName"])
-
-    return region_list
-
-
 def verify_account_access(session):
     """
     Check role for proper access to AWS APIs.

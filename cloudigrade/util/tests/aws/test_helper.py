@@ -81,52 +81,6 @@ class UtilAwsHelperTest(TestCase):
         with self.assertRaises(AwsThrottlingException):
             dummy_adder()
 
-    def test_get_regions_with_no_args(self):
-        """Assert get_regions with no args returns expected regions."""
-        mock_region_names = [
-            f"region-{uuid.uuid4()}",
-            f"region-{uuid.uuid4()}",
-        ]
-
-        mock_regions = {
-            "Regions": [
-                {"RegionName": mock_region_names[0]},
-                {"RegionName": mock_region_names[1]},
-            ]
-        }
-
-        mock_client = Mock()
-        mock_client.describe_regions.return_value = mock_regions
-        mock_session = Mock()
-        mock_session.client.return_value = mock_client
-        actual_regions = helper.get_regions(mock_session)
-        self.assertTrue(mock_client.describe_regions.called)
-        mock_session.client.assert_called_with("ec2")
-        self.assertListEqual(mock_region_names, actual_regions)
-
-    def test_get_regions_with_custom_service(self):
-        """Assert get_regions with service name returns expected regions."""
-        mock_region_names = [
-            f"region-{uuid.uuid4()}",
-            f"region-{uuid.uuid4()}",
-        ]
-
-        mock_regions = {
-            "Regions": [
-                {"RegionName": mock_region_names[0]},
-                {"RegionName": mock_region_names[1]},
-            ]
-        }
-
-        mock_client = Mock()
-        mock_client.describe_regions.return_value = mock_regions
-        mock_session = Mock()
-        mock_session.client.return_value = mock_client
-        actual_regions = helper.get_regions(mock_session, "tng")
-        self.assertTrue(mock_client.describe_regions.called)
-        mock_session.client.assert_called_with("tng")
-        self.assertListEqual(mock_region_names, actual_regions)
-
     @patch("util.aws.helper._verify_policy_action")
     def test_verify_account_access_success(self, mock_verify_policy_action):
         """Assert that account access is verified when all actions are OK."""
