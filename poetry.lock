@@ -236,23 +236,6 @@ msal-extensions = ">=0.3.0,<2.0.0"
 six = ">=1.12.0"
 
 [[package]]
-name = "azure-mgmt-compute"
-version = "29.1.0"
-description = "Microsoft Azure Compute Management Client Library for Python"
-category = "main"
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "azure-mgmt-compute-29.1.0.zip", hash = "sha256:2d5a1bae7f5d307ca1e850d7e83fed9c839d4f635b10a4b8d3f8bc6098ac2888"},
-    {file = "azure_mgmt_compute-29.1.0-py3-none-any.whl", hash = "sha256:2dfc9a812e28fec65105a3d14ff22e1650e3ddd56a5afbe82ef5009974301f9b"},
-]
-
-[package.dependencies]
-azure-common = ">=1.1,<2.0"
-azure-mgmt-core = ">=1.3.2,<2.0.0"
-msrest = ">=0.7.1"
-
-[[package]]
 name = "azure-mgmt-core"
 version = "1.3.2"
 description = "Microsoft Azure Management Core Library for Python"
@@ -300,23 +283,6 @@ files = [
 azure-common = ">=1.1,<2.0"
 azure-mgmt-core = ">=1.3.2,<2.0.0"
 msrest = ">=0.7.1"
-
-[[package]]
-name = "azure-mgmt-resourcegraph"
-version = "8.0.0"
-description = "Microsoft Azure Resource Graph Client Library for Python"
-category = "main"
-optional = false
-python-versions = "*"
-files = [
-    {file = "azure-mgmt-resourcegraph-8.0.0.zip", hash = "sha256:d25f01dae3897780fb3ddca16d1625b6347c32f1b581c767fba5ef3b24443f11"},
-    {file = "azure_mgmt_resourcegraph-8.0.0-py2.py3-none-any.whl", hash = "sha256:0cf55f7ea82dc03e69d0fae0f1606e09b08b80b6ae23bd597d8b62b1ed938ace"},
-]
-
-[package.dependencies]
-azure-common = ">=1.1,<2.0"
-azure-mgmt-core = ">=1.2.0,<2.0.0"
-msrest = ">=0.6.21"
 
 [[package]]
 name = "bcrypt"
@@ -3021,4 +2987,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "1e7c6dd0dabf8245ed7c133db8eda982450b166829a15fba3b47a1e8ec4a4c0c"
+content-hash = "879cc11f2ea6ae62bf3d7c0b76c198f708e2413b3602f5424ab1fc1b40805d30"
