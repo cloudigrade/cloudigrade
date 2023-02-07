@@ -54,14 +54,14 @@ test = ["coverage"]
 
 [[package]]
 name = "app-common-python"
-version = "0.2.3"
+version = "0.2.4"
 description = ""
 category = "main"
 optional = false
 python-versions = "*"
 files = [
-    {file = "app-common-python-0.2.3.tar.gz", hash = "sha256:ac4156343d84c2504deb6816eb7f7a5b68d25678234b5a03deb46d153eb3f622"},
-    {file = "app_common_python-0.2.3-py3-none-any.whl", hash = "sha256:a28e599ab569f6f5fb104a2e9f0e12996320191d9216e5854212e2612fb74db2"},
+    {file = "app-common-python-0.2.4.tar.gz", hash = "sha256:fbca4d3ea83d5c5961ed17e8bd53a63a1cda8670eb670a64b54e05759ef235cc"},
+    {file = "app_common_python-0.2.4-py3-none-any.whl", hash = "sha256:2f8f2fac83db19506e9b0d4d2521b7518f61a6c183ae958a1a1347ce1d1cf0e4"},
 ]
 
 [[package]]
@@ -139,14 +139,14 @@ tests-no-zope = ["cloudpickle", "cloudpickle", "hypothesis", "hypothesis", "mypy
 
 [[package]]
 name = "azure-cli-core"
-version = "2.44.1"
+version = "2.45.0"
 description = "Microsoft Azure Command-Line Tools Core Module"
 category = "main"
 optional = false
 python-versions = ">=3.7.0"
 files = [
-    {file = "azure-cli-core-2.44.1.tar.gz", hash = "sha256:693cc0ff2f2e7857fc5048a5d1782074919d80b5efeb53812def50586aa52810"},
-    {file = "azure_cli_core-2.44.1-py3-none-any.whl", hash = "sha256:17c336699ff918353691fec341b958c2ff2d49cafe5f26420809a151eeef4784"},
+    {file = "azure-cli-core-2.45.0.tar.gz", hash = "sha256:102ce360cd98b0990715d8cddb017940287ae1bf4bdb962a74cdaa88919b4b82"},
+    {file = "azure_cli_core-2.45.0-py3-none-any.whl", hash = "sha256:25699373bf415b14dd1ff14c2ccc26d1c94b30a0bf6ea980d781a1e13026dc80"},
 ]
 
 [package.dependencies]
@@ -198,14 +198,14 @@ files = [
 
 [[package]]
 name = "azure-core"
-version = "1.26.2"
+version = "1.26.3"
 description = "Microsoft Azure Core Library for Python"
 category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "azure-core-1.26.2.zip", hash = "sha256:986bfd8687889782d79481d4c5d0af04ab4a18ca2f210364804a88e4eaa1586a"},
-    {file = "azure_core-1.26.2-py3-none-any.whl", hash = "sha256:df306e6e4abc145610ca6744aef943129a6fd7a11977e56731f69ac0e00724f9"},
+    {file = "azure-core-1.26.3.zip", hash = "sha256:acbd0daa9675ce88623da35c80d819cdafa91731dee6b2695c64d7ca9da82db4"},
+    {file = "azure_core-1.26.3-py3-none-any.whl", hash = "sha256:f7bad0a7b4d800d6e73733ea7e13a616016221ac111ff9a344fe4cba41e51bbe"},
 ]
 
 [package.dependencies]
@@ -415,18 +415,18 @@ files = [
 
 [[package]]
 name = "boto3"
-version = "1.26.62"
+version = "1.26.65"
 description = "The AWS SDK for Python"
 category = "main"
 optional = false
 python-versions = ">= 3.7"
 files = [
-    {file = "boto3-1.26.62-py3-none-any.whl", hash = "sha256:0a0171c648da81916e6f5badebfefdbd15280118f69462eb9425f7bff4c1323f"},
-    {file = "boto3-1.26.62.tar.gz", hash = "sha256:0271e05cf962de53deb4ee5c6e37433c8284584a26f45275cf43de3f99410aa4"},
+    {file = "boto3-1.26.65-py3-none-any.whl", hash = "sha256:9e23ec51e1fe162ecb5efee41bd9346d90ebbb8ff094ef8088223305d48ffaec"},
+    {file = "boto3-1.26.65.tar.gz", hash = "sha256:9fc94b3078f5047c1fc40529fa12eb82a2432bb1dca0ee37b1c54f902f46191f"},
 ]
 
 [package.dependencies]
-botocore = ">=1.29.62,<1.30.0"
+botocore = ">=1.29.65,<1.30.0"
 jmespath = ">=0.7.1,<2.0.0"
 s3transfer = ">=0.6.0,<0.7.0"
 
@@ -435,14 +435,14 @@ crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
 
 [[package]]
 name = "botocore"
-version = "1.29.62"
+version = "1.29.65"
 description = "Low-level, data-driven core of boto 3."
 category = "main"
 optional = false
 python-versions = ">= 3.7"
 files = [
-    {file = "botocore-1.29.62-py3-none-any.whl", hash = "sha256:11730086c8acc33372f438dd9ae3e960e6fc1c0dfa2801768b0585c8c874977e"},
-    {file = "botocore-1.29.62.tar.gz", hash = "sha256:8c7fdc6b14d9ef48ee8d1070700ab4204c121bc04ee57874e8419a9cdbe51144"},
+    {file = "botocore-1.29.65-py3-none-any.whl", hash = "sha256:f566a9aa1b477cd1bdedb8f694f99fc257240eacdd7a73cc7d19d43cb20870b9"},
+    {file = "botocore-1.29.65.tar.gz", hash = "sha256:6b7ae2dee621cb863935461ba4b8aa32420e945f5b7d94bb2852b79f90b9f8de"},
 ]
 
 [package.dependencies]
@@ -451,7 +451,7 @@ python-dateutil = ">=2.1,<3.0.0"
 urllib3 = ">=1.25.4,<1.27"
 
 [package.extras]
-crt = ["awscrt (==0.15.3)"]
+crt = ["awscrt (==0.16.9)"]
 
 [[package]]
 name = "cached-property"
@@ -1861,14 +1861,14 @@ files = [
 
 [[package]]
 name = "mypy-extensions"
-version = "0.4.3"
-description = "Experimental type system extensions for programs checked with the mypy typechecker."
+version = "1.0.0"
+description = "Type system extensions for programs checked with the mypy type checker."
 category = "dev"
 optional = false
-python-versions = "*"
+python-versions = ">=3.5"
 files = [
-    {file = "mypy_extensions-0.4.3-py2.py3-none-any.whl", hash = "sha256:090fedd75945a69ae91ce1303b5824f428daf5a028d2f6ab8a299250a846f15d"},
-    {file = "mypy_extensions-0.4.3.tar.gz", hash = "sha256:2d82818f5bb3e369420cb3c4060a7970edba416647068eb4c5343488a6c604a8"},
+    {file = "mypy_extensions-1.0.0-py3-none-any.whl", hash = "sha256:4392f6c0eb8a5668a69e23d168ffa70f0be9ccfd32b5cc2d26a34ae5b844552d"},
+    {file = "mypy_extensions-1.0.0.tar.gz", hash = "sha256:75dbf8955dc00442a438fc4d0666508a9a97b6bd41aa2f0ffe9d2f2725af0782"},
 ]
 
 [[package]]
@@ -1912,39 +1912,37 @@ test = ["flake8", "pytest", "pytest-mock"]
 
 [[package]]
 name = "openapi-schema-validator"
-version = "0.4.2"
+version = "0.4.3"
 description = "OpenAPI schema validation for Python"
 category = "dev"
 optional = false
 python-versions = ">=3.7.0,<4.0.0"
 files = [
-    {file = "openapi_schema_validator-0.4.2-py3-none-any.whl", hash = "sha256:a7978f231244e167819607e15f821546a381e469577de47428cb3fe5af59c737"},
-    {file = "openapi_schema_validator-0.4.2.tar.gz", hash = "sha256:6613714d6a9aee10b4268c47ba85b5b0b3ce87ac0e51e6b290e837994a6c61b7"},
+    {file = "openapi_schema_validator-0.4.3-py3-none-any.whl", hash = "sha256:f1eff2a7936546a3ce62b88a17d09de93c9bd229cbc43cb696c988a61a382548"},
+    {file = "openapi_schema_validator-0.4.3.tar.gz", hash = "sha256:6940dba9f4906c97078fea6fd9d5a3a3384207db368c4e32f6af6abd7c5c560b"},
 ]
 
 [package.dependencies]
 jsonschema = ">=4.0.0,<5.0.0"
-
-[package.extras]
-rfc3339-validator = ["rfc3339-validator"]
+rfc3339-validator = "*"
 
 [[package]]
 name = "openapi-spec-validator"
-version = "0.5.3"
+version = "0.5.5"
 description = "OpenAPI 2.0 (aka Swagger) and OpenAPI 3 spec validator"
 category = "dev"
 optional = false
 python-versions = ">=3.7.0,<4.0.0"
 files = [
-    {file = "openapi_spec_validator-0.5.3-py3-none-any.whl", hash = "sha256:983185f85046f957099798defc613f0ab1d36497f8ecefcfe82e3a7aae82f94a"},
-    {file = "openapi_spec_validator-0.5.3.tar.gz", hash = "sha256:7535225525f0378eb304f81098280f17ce989a74588171c9ed9b592d6c4d895a"},
+    {file = "openapi_spec_validator-0.5.5-py3-none-any.whl", hash = "sha256:93ba247f585e1447214b4207728a7cce3726d148238217be69e6b8725c118fbe"},
+    {file = "openapi_spec_validator-0.5.5.tar.gz", hash = "sha256:3010df5237748e25d7fac2b2aaf13457c1afd02735b2bd6f008a10079c8f443a"},
 ]
 
 [package.dependencies]
 jsonschema = ">=4.0.0,<5.0.0"
 jsonschema-spec = ">=0.1.1,<0.2.0"
 lazy-object-proxy = ">=1.7.1,<2.0.0"
-openapi-schema-validator = ">=0.3.2,<0.5"
+openapi-schema-validator = ">=0.4.2,<0.5.0"
 
 [package.extras]
 requests = ["requests"]
@@ -2041,19 +2039,19 @@ testing = ["pytest", "pytest-cov"]
 
 [[package]]
 name = "platformdirs"
-version = "2.6.2"
+version = "3.0.0"
 description = "A small Python package for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
 category = "dev"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "platformdirs-2.6.2-py3-none-any.whl", hash = "sha256:83c8f6d04389165de7c9b6f0c682439697887bca0aa2f1c87ef1826be3584490"},
-    {file = "platformdirs-2.6.2.tar.gz", hash = "sha256:e1fea1fe471b9ff8332e229df3cb7de4f53eeea4998d3b6bfff542115e998bd2"},
+    {file = "platformdirs-3.0.0-py3-none-any.whl", hash = "sha256:b1d5eb14f221506f50d6604a561f4c5786d9e80355219694a1b244bcd96f4567"},
+    {file = "platformdirs-3.0.0.tar.gz", hash = "sha256:8a1228abb1ef82d788f74139988b137e78692984ec7b08eaa6c65f1723af28f9"},
 ]
 
 [package.extras]
-docs = ["furo (>=2022.12.7)", "proselint (>=0.13)", "sphinx (>=5.3)", "sphinx-autodoc-typehints (>=1.19.5)"]
-test = ["appdirs (==1.4.4)", "covdefaults (>=2.2.2)", "pytest (>=7.2)", "pytest-cov (>=4)", "pytest-mock (>=3.10)"]
+docs = ["furo (>=2022.12.7)", "proselint (>=0.13)", "sphinx (>=6.1.3)", "sphinx-autodoc-typehints (>=1.22,!=1.23.4)"]
+test = ["appdirs (==1.4.4)", "covdefaults (>=2.2.2)", "pytest (>=7.2.1)", "pytest-cov (>=4)", "pytest-mock (>=3.10)"]
 
 [[package]]
 name = "portalocker"
@@ -2553,14 +2551,14 @@ files = [
 
 [[package]]
 name = "redis"
-version = "4.4.2"
+version = "4.5.0"
 description = "Python client for Redis database and key-value store"
 category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "redis-4.4.2-py3-none-any.whl", hash = "sha256:e6206448e2f8a432871d07d432c13ed6c2abcf6b74edb436c99752b1371be387"},
-    {file = "redis-4.4.2.tar.gz", hash = "sha256:a010f6cb7378065040a02839c3f75c7e0fb37a87116fb4a95be82a95552776c7"},
+    {file = "redis-4.5.0-py3-none-any.whl", hash = "sha256:98d265eea4d2255f4d0ea98c53326adf30c0a581b6cfba9d77eefb341ed8145c"},
+    {file = "redis-4.5.0.tar.gz", hash = "sha256:16135483fd35fb6c3927e4bb056780a0ad11234f61e0aa81f1db89292129c714"},
 ]
 
 [package.dependencies]
@@ -2626,6 +2624,21 @@ files = [
 
 [package.dependencies]
 djangorestframework = ">=3.11.0"
+
+[[package]]
+name = "rfc3339-validator"
+version = "0.1.4"
+description = "A pure python RFC3339 validator"
+category = "dev"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
+files = [
+    {file = "rfc3339_validator-0.1.4-py2.py3-none-any.whl", hash = "sha256:24f6ec1eda14ef823da9e36ec7113124b39c04d50a4d3d3a3c2859577e7791fa"},
+    {file = "rfc3339_validator-0.1.4.tar.gz", hash = "sha256:138a2abdf93304ad60530167e51d2dfb9549521a836871b88d7f4695d0022f6b"},
+]
+
+[package.dependencies]
+six = "*"
 
 [[package]]
 name = "rsa"
@@ -2701,14 +2714,14 @@ tornado = ["tornado (>=5)"]
 
 [[package]]
 name = "setuptools"
-version = "67.1.0"
+version = "67.2.0"
 description = "Easily download, build, install, upgrade, and uninstall Python packages"
 category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "setuptools-67.1.0-py3-none-any.whl", hash = "sha256:a7687c12b444eaac951ea87a9627c4f904ac757e7abdc5aac32833234af90378"},
-    {file = "setuptools-67.1.0.tar.gz", hash = "sha256:e261cdf010c11a41cb5cb5f1bf3338a7433832029f559a6a7614bd42a967c300"},
+    {file = "setuptools-67.2.0-py3-none-any.whl", hash = "sha256:16ccf598aab3b506593c17378473978908a2734d7336755a8769b480906bec1c"},
+    {file = "setuptools-67.2.0.tar.gz", hash = "sha256:b440ee5f7e607bb8c9de15259dba2583dd41a38879a7abc1d43a71c59524da48"},
 ]
 
 [package.extras]
@@ -2902,14 +2915,14 @@ files = [
 
 [[package]]
 name = "websocket-client"
-version = "1.5.0"
+version = "1.5.1"
 description = "WebSocket client for Python with low level API options"
 category = "dev"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "websocket-client-1.5.0.tar.gz", hash = "sha256:561ca949e5bbb5d33409a37235db55c279235c78ee407802f1d2314fff8a8536"},
-    {file = "websocket_client-1.5.0-py3-none-any.whl", hash = "sha256:fb5d81b95d350f3a54838ebcb4c68a5353bbd1412ae8f068b1e5280faeb13074"},
+    {file = "websocket-client-1.5.1.tar.gz", hash = "sha256:3f09e6d8230892547132177f575a4e3e73cfdf06526e20cc02aa1c3b47184d40"},
+    {file = "websocket_client-1.5.1-py3-none-any.whl", hash = "sha256:cdf5877568b7e83aa7cf2244ab56a3213de587bbe0ce9d8b9600fc77b455d89e"},
 ]
 
 [package.extras]
