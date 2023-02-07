@@ -412,9 +412,6 @@ CELERY_TASK_ROUTES = {
     "api.tasks.notify_application_availability_task": {
         "queue": "notify_application_availability_task"
     },
-    "api.tasks.check_and_cache_sqs_queues_lengths": {
-        "queue": "check_and_cache_sqs_queues_lengths"
-    },
     # api.tasks supporting source kafka message handling
     "api.tasks.create_from_sources_kafka_message": {
         "queue": "create_from_sources_kafka_message"
@@ -430,10 +427,6 @@ CELERY_TASK_ROUTES = {
     },
     "api.tasks.unpause_from_sources_kafka_message": {
         "queue": "unpause_from_sources_kafka_message"
-    },
-    # api.tasks supporting synthetic data generation
-    "api.tasks.delete_expired_synthetic_data": {
-        "queue": "delete_expired_synthetic_data"
     },
     # api.clouds.aws.tasks
     "api.clouds.aws.tasks.configure_customer_aws_and_create_cloud_account": {

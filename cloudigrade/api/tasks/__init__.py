@@ -22,10 +22,8 @@ decorator even if the function itself is renamed or moved elsewhere.
 """
 
 from api.tasks.maintenance import (
-    check_and_cache_sqs_queues_lengths,
     delete_cloud_account,
     delete_cloud_accounts_not_in_sources,
-    delete_expired_synthetic_data,
     delete_inactive_users,
     delete_orphaned_cloud_accounts,
     enable_account,
