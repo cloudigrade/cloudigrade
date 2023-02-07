@@ -123,24 +123,8 @@ objects:
               name: cloudigrade-aws
         - name: AWS_DEFAULT_REGION
           value: ${AWS_DEFAULT_REGION}
-        - name: AWS_SQS_MAX_RECEIVE_COUNT
-          value: ${AWS_SQS_MAX_RECEIVE_COUNT}
-        - name: AWS_SQS_MAX_YIELD_COUNT
-          value: ${AWS_SQS_MAX_YIELD_COUNT}
-        - name: AWS_SQS_MAX_HOUNDI_YIELD_COUNT
-          value: ${AWS_SQS_MAX_HOUNDI_YIELD_COUNT}
-        - name: AWS_CLOUDTRAIL_EVENT_QUEUE_VISIBILITY_TIMEOUT
-          value: ${AWS_CLOUDTRAIL_EVENT_QUEUE_VISIBILITY_TIMEOUT}
         - name: AZURE_LOG_LEVEL
           value: ${AZURE_LOG_LEVEL}
-        - name: S3_BUCKET_LC_NAME
-          value: ${S3_BUCKET_LC_NAME}
-        - name: S3_BUCKET_LC_IA_TRANSITION
-          value: ${S3_BUCKET_LC_IA_TRANSITION}
-        - name: S3_BUCKET_LC_GLACIER_TRANSITION
-          value: ${S3_BUCKET_LC_GLACIER_TRANSITION}
-        - name: S3_BUCKET_LC_MAX_AGE
-          value: ${S3_BUCKET_LC_MAX_AGE}
         - name: DJANGO_SETTINGS_MODULE
           value: ${DJANGO_SETTINGS_MODULE}
         - name: DJANGO_SECRET_KEY
@@ -172,22 +156,6 @@ objects:
           value: ${DJANGO_CONSOLE_LOG_LEVEL}
         - name: CLOUDIGRADE_LOG_LEVEL
           value: ${CLOUDIGRADE_LOG_LEVEL}
-        - name: SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY
-          value: ${SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY}
-        - name: HOUNDIGRADE_CW_RETENTION_DAYS
-          value: ${HOUNDIGRADE_CW_RETENTION_DAYS}
-        - name: HOUNDIGRADE_ECS_IMAGE_NAME
-          value: ${HOUNDIGRADE_ECS_IMAGE_NAME}
-        - name: HOUNDIGRADE_ECS_IMAGE_TAG
-          value: ${HOUNDIGRADE_ECS_IMAGE_TAG}
-        - name: HOUNDIGRADE_ECS_FAMILY_NAME
-          value: ${HOUNDIGRADE_ECS_FAMILY_NAME}
-        - name: INSPECTION_CLUSTER_INSTANCE_AGE_LIMIT
-          value: ${INSPECTION_CLUSTER_INSTANCE_AGE_LIMIT}
-        - name: LEADER_RUNNING_TTL_DEFAULT
-          value: ${LEADER_RUNNING_TTL_DEFAULT}
-        - name: LEADER_COMPLETED_TTL_DEFAULT
-          value: ${LEADER_COMPLETED_TTL_DEFAULT}
         - name: CLOUDIGRADE_VERSION
           value: ${CLOUDIGRADE_VERSION}
         - name: CLOUDIGRADE_ENVIRONMENT
@@ -212,17 +180,6 @@ objects:
               name: cloudigrade-app-secret
         - name: DJANGO_SENTRY_ENVIRONMENT
           value: ${API_SENTRY_ENVIRONMENT}
-        - name: HOUNDIGRADE_ENABLE_SENTRY
-          value: ${HOUNDIGRADE_ENABLE_SENTRY}
-        - name: HOUNDIGRADE_SENTRY_DSN
-          valueFrom:
-            secretKeyRef:
-              key: houndigrade-sentry-dsn
-              name: cloudigrade-app-secret
-        - name: HOUNDIGRADE_SENTRY_RELEASE
-          value: ${HOUNDIGRADE_SENTRY_RELEASE}
-        - name: HOUNDIGRADE_SENTRY_ENVIRONMENT
-          value: ${HOUNDIGRADE_SENTRY_ENVIRONMENT}
         - name: SOURCES_ENABLE_DATA_MANAGEMENT
           value: ${SOURCES_ENABLE_DATA_MANAGEMENT}
         - name: SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA
@@ -289,14 +246,6 @@ objects:
             secretKeyRef:
               key: slack-token
               name: cloudigrade-app-secret
-        - name: RECALCULATE_CONCURRENT_USAGE_SINCE_DAYS_AGO
-          value: ${RECALCULATE_CONCURRENT_USAGE_SINCE_DAYS_AGO}
-        - name: RECALCULATE_CONCURRENT_USAGE_FOR_ALL_USERS_SCHEDULE
-          value: ${RECALCULATE_CONCURRENT_USAGE_FOR_ALL_USERS_SCHEDULE}
-        - name: RECALCULATE_RUNS_FOR_ALL_CLOUD_ACCOUNTS_SCHEDULE
-          value: ${RECALCULATE_RUNS_FOR_ALL_CLOUD_ACCOUNTS_SCHEDULE}
-        - name: RECALCULATE_RUNS_SINCE_DAYS_AGO
-          value: ${RECALCULATE_RUNS_SINCE_DAYS_AGO}
         - name: TENANT_TRANSLATOR_HOST
           value: ${TENANT_TRANSLATOR_HOST}
         - name: TENANT_TRANSLATOR_PORT
@@ -317,14 +266,6 @@ objects:
           value: ${DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_UPDATED_MORE_THAN_SECONDS_AGO}
         - name: DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_SCHEDULE
           value: ${DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_SCHEDULE}
-        - name: DELETE_EXPIRED_SYNTHETIC_DATA_SCHEDULE
-          value: ${DELETE_EXPIRED_SYNTHETIC_DATA_SCHEDULE}
-        - name: CACHED_SQS_QUEUE_LENGTH_EXPIRATION_TTL
-          value: ${CACHED_SQS_QUEUE_LENGTH_EXPIRATION_TTL}
-        - name: CHECK_AND_CACHE_SQS_QUEUES_LENGTHS_SCHEDULE
-          value: ${CHECK_AND_CACHE_SQS_QUEUES_LENGTHS_SCHEDULE}
-        - name: ENABLE_SYNTHETIC_DATA_REQUEST_HTTP_API
-          value: ${ENABLE_SYNTHETIC_DATA_REQUEST_HTTP_API}
     - name: beat
       #
       # Component cloudigrade-beat deployment:
@@ -420,24 +361,8 @@ objects:
               name: cloudigrade-aws
         - name: AWS_DEFAULT_REGION
           value: ${AWS_DEFAULT_REGION}
-        - name: AWS_SQS_MAX_RECEIVE_COUNT
-          value: ${AWS_SQS_MAX_RECEIVE_COUNT}
-        - name: AWS_SQS_MAX_YIELD_COUNT
-          value: ${AWS_SQS_MAX_YIELD_COUNT}
-        - name: AWS_SQS_MAX_HOUNDI_YIELD_COUNT
-          value: ${AWS_SQS_MAX_HOUNDI_YIELD_COUNT}
-        - name: AWS_CLOUDTRAIL_EVENT_QUEUE_VISIBILITY_TIMEOUT
-          value: ${AWS_CLOUDTRAIL_EVENT_QUEUE_VISIBILITY_TIMEOUT}
         - name: AZURE_LOG_LEVEL
           value: ${AZURE_LOG_LEVEL}
-        - name: S3_BUCKET_LC_NAME
-          value: ${S3_BUCKET_LC_NAME}
-        - name: S3_BUCKET_LC_IA_TRANSITION
-          value: ${S3_BUCKET_LC_IA_TRANSITION}
-        - name: S3_BUCKET_LC_GLACIER_TRANSITION
-          value: ${S3_BUCKET_LC_GLACIER_TRANSITION}
-        - name: S3_BUCKET_LC_MAX_AGE
-          value: ${S3_BUCKET_LC_MAX_AGE}
         - name: DJANGO_SETTINGS_MODULE
           value: ${DJANGO_SETTINGS_MODULE}
         - name: DJANGO_SECRET_KEY
@@ -467,30 +392,8 @@ objects:
           value: ${DJANGO_ALL_LOG_LEVEL}
         - name: CLOUDIGRADE_LOG_LEVEL
           value: ${CLOUDIGRADE_LOG_LEVEL}
-        - name: SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY
-          value: ${SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY}
         - name: DJANGO_CONSOLE_LOG_LEVEL
           value: ${DJANGO_CONSOLE_LOG_LEVEL}
-        - name: HOUNDIGRADE_CW_RETENTION_DAYS
-          value: ${HOUNDIGRADE_CW_RETENTION_DAYS}
-        - name: HOUNDIGRADE_ECS_IMAGE_NAME
-          value: ${HOUNDIGRADE_ECS_IMAGE_NAME}
-        - name: HOUNDIGRADE_ECS_IMAGE_TAG
-          value: ${HOUNDIGRADE_ECS_IMAGE_TAG}
-        - name: HOUNDIGRADE_ECS_FAMILY_NAME
-          value: ${HOUNDIGRADE_ECS_FAMILY_NAME}
-        - name: INSPECT_PENDING_IMAGES_MIN_AGE
-          value: ${INSPECT_PENDING_IMAGES_MIN_AGE}
-        - name: INSPECT_PENDING_IMAGES_SCHEDULE
-          value: ${INSPECT_PENDING_IMAGES_SCHEDULE}
-        - name: INSPECTION_CLUSTER_INSTANCE_AGE_LIMIT
-          value: ${INSPECTION_CLUSTER_INSTANCE_AGE_LIMIT}
-        - name: HOUNDIGRADE_ECS_PERSIST_INSPECTION_RESULTS_SCHEDULE
-          value: ${HOUNDIGRADE_ECS_PERSIST_INSPECTION_RESULTS_SCHEDULE}
-        - name: REPOPULATE_AZURE_INSTANCE_MAPPING_SCHEDULE
-          value: ${REPOPULATE_AZURE_INSTANCE_MAPPING_SCHEDULE}
-        - name: AWS_REPOPULATE_EC2_INSTANCE_MAPPING_SCHEDULE
-          value: ${AWS_REPOPULATE_EC2_INSTANCE_MAPPING_SCHEDULE}
         - name: CLOUDIGRADE_VERSION
           value: ${CLOUDIGRADE_VERSION}
         - name: CLOUDIGRADE_ENVIRONMENT
@@ -560,14 +463,6 @@ objects:
           value: ${OSD_REDEPLOY_TRIGGER}
         - name: IMAGE_TAG
           value: ${IMAGE_TAG}
-        - name: RECALCULATE_CONCURRENT_USAGE_SINCE_DAYS_AGO
-          value: ${RECALCULATE_CONCURRENT_USAGE_SINCE_DAYS_AGO}
-        - name: RECALCULATE_CONCURRENT_USAGE_FOR_ALL_USERS_SCHEDULE
-          value: ${RECALCULATE_CONCURRENT_USAGE_FOR_ALL_USERS_SCHEDULE}
-        - name: RECALCULATE_RUNS_FOR_ALL_CLOUD_ACCOUNTS_SCHEDULE
-          value: ${RECALCULATE_RUNS_FOR_ALL_CLOUD_ACCOUNTS_SCHEDULE}
-        - name: RECALCULATE_RUNS_SINCE_DAYS_AGO
-          value: ${RECALCULATE_RUNS_SINCE_DAYS_AGO}
         - name: VERBOSE_SOURCES_NOTIFICATION_LOGGING
           value: ${VERBOSE_SOURCES_NOTIFICATION_LOGGING}
         - name: CACHE_TTL_DEFAULT
@@ -588,16 +483,6 @@ objects:
           value: ${DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_UPDATED_MORE_THAN_SECONDS_AGO}
         - name: DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_SCHEDULE
           value: ${DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_SCHEDULE}
-        - name: DELETE_EXPIRED_SYNTHETIC_DATA_SCHEDULE
-          value: ${DELETE_EXPIRED_SYNTHETIC_DATA_SCHEDULE}
-        - name: CACHED_SQS_QUEUE_LENGTH_EXPIRATION_TTL
-          value: ${CACHED_SQS_QUEUE_LENGTH_EXPIRATION_TTL}
-        - name: CHECK_AND_CACHE_SQS_QUEUES_LENGTHS_SCHEDULE
-          value: ${CHECK_AND_CACHE_SQS_QUEUES_LENGTHS_SCHEDULE}
-        - name: ENABLE_SYNTHETIC_DATA_REQUEST_HTTP_API
-          value: ${ENABLE_SYNTHETIC_DATA_REQUEST_HTTP_API}
-        - name: UPDATE_AZURE_INSTANCE_EVENTS_SCHEDULE
-          value: ${UPDATE_AZURE_INSTANCE_EVENTS_SCHEDULE}
     - name: listener
       #
       # Component cloudigrade-listener deployment:
@@ -716,24 +601,8 @@ objects:
               name: cloudigrade-aws
         - name: AWS_DEFAULT_REGION
           value: ${AWS_DEFAULT_REGION}
-        - name: AWS_SQS_MAX_RECEIVE_COUNT
-          value: ${AWS_SQS_MAX_RECEIVE_COUNT}
-        - name: AWS_SQS_MAX_YIELD_COUNT
-          value: ${AWS_SQS_MAX_YIELD_COUNT}
-        - name: AWS_SQS_MAX_HOUNDI_YIELD_COUNT
-          value: ${AWS_SQS_MAX_HOUNDI_YIELD_COUNT}
-        - name: AWS_CLOUDTRAIL_EVENT_QUEUE_VISIBILITY_TIMEOUT
-          value: ${AWS_CLOUDTRAIL_EVENT_QUEUE_VISIBILITY_TIMEOUT}
         - name: AZURE_LOG_LEVEL
           value: ${AZURE_LOG_LEVEL}
-        - name: S3_BUCKET_LC_NAME
-          value: ${S3_BUCKET_LC_NAME}
-        - name: S3_BUCKET_LC_IA_TRANSITION
-          value: ${S3_BUCKET_LC_IA_TRANSITION}
-        - name: S3_BUCKET_LC_GLACIER_TRANSITION
-          value: ${S3_BUCKET_LC_GLACIER_TRANSITION}
-        - name: S3_BUCKET_LC_MAX_AGE
-          value: ${S3_BUCKET_LC_MAX_AGE}
         - name: DJANGO_SETTINGS_MODULE
           value: ${DJANGO_SETTINGS_MODULE}
         - name: DJANGO_SECRET_KEY
@@ -765,28 +634,6 @@ objects:
           value: ${DJANGO_CONSOLE_LOG_LEVEL}
         - name: CLOUDIGRADE_LOG_LEVEL
           value: ${CLOUDIGRADE_LOG_LEVEL}
-        - name: SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY
-          value: ${SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY}
-        - name: HOUNDIGRADE_CW_RETENTION_DAYS
-          value: ${HOUNDIGRADE_CW_RETENTION_DAYS}
-        - name: HOUNDIGRADE_ECS_IMAGE_NAME
-          value: ${HOUNDIGRADE_ECS_IMAGE_NAME}
-        - name: HOUNDIGRADE_ECS_IMAGE_TAG
-          value: ${HOUNDIGRADE_ECS_IMAGE_TAG}
-        - name: HOUNDIGRADE_ECS_FAMILY_NAME
-          value: ${HOUNDIGRADE_ECS_FAMILY_NAME}
-        - name: INSPECT_PENDING_IMAGES_MIN_AGE
-          value: ${INSPECT_PENDING_IMAGES_MIN_AGE}
-        - name: INSPECT_PENDING_IMAGES_SCHEDULE
-          value: ${INSPECT_PENDING_IMAGES_SCHEDULE}
-        - name: INSPECTION_CLUSTER_INSTANCE_AGE_LIMIT
-          value: ${INSPECTION_CLUSTER_INSTANCE_AGE_LIMIT}
-        - name: HOUNDIGRADE_ECS_PERSIST_INSPECTION_RESULTS_SCHEDULE
-          value: ${HOUNDIGRADE_ECS_PERSIST_INSPECTION_RESULTS_SCHEDULE}
-        - name: REPOPULATE_AZURE_INSTANCE_MAPPING_SCHEDULE
-          value: ${REPOPULATE_AZURE_INSTANCE_MAPPING_SCHEDULE}
-        - name: AWS_REPOPULATE_EC2_INSTANCE_MAPPING_SCHEDULE
-          value: ${AWS_REPOPULATE_EC2_INSTANCE_MAPPING_SCHEDULE}
         - name: CLOUDIGRADE_VERSION
           value: ${CLOUDIGRADE_VERSION}
         - name: CLOUDIGRADE_ENVIRONMENT
@@ -828,14 +675,6 @@ objects:
           value: ${OSD_REDEPLOY_TRIGGER}
         - name: IMAGE_TAG
           value: ${IMAGE_TAG}
-        - name: RECALCULATE_CONCURRENT_USAGE_SINCE_DAYS_AGO
-          value: ${RECALCULATE_CONCURRENT_USAGE_SINCE_DAYS_AGO}
-        - name: RECALCULATE_CONCURRENT_USAGE_FOR_ALL_USERS_SCHEDULE
-          value: ${RECALCULATE_CONCURRENT_USAGE_FOR_ALL_USERS_SCHEDULE}
-        - name: RECALCULATE_RUNS_FOR_ALL_CLOUD_ACCOUNTS_SCHEDULE
-          value: ${RECALCULATE_RUNS_FOR_ALL_CLOUD_ACCOUNTS_SCHEDULE}
-        - name: RECALCULATE_RUNS_SINCE_DAYS_AGO
-          value: ${RECALCULATE_RUNS_SINCE_DAYS_AGO}
         - name: VERBOSE_SOURCES_NOTIFICATION_LOGGING
           value: ${VERBOSE_SOURCES_NOTIFICATION_LOGGING}
         - name: CACHE_TTL_DEFAULT
@@ -856,14 +695,6 @@ objects:
           value: ${DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_UPDATED_MORE_THAN_SECONDS_AGO}
         - name: DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_SCHEDULE
           value: ${DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_SCHEDULE}
-        - name: DELETE_EXPIRED_SYNTHETIC_DATA_SCHEDULE
-          value: ${DELETE_EXPIRED_SYNTHETIC_DATA_SCHEDULE}
-        - name: CACHED_SQS_QUEUE_LENGTH_EXPIRATION_TTL
-          value: ${CACHED_SQS_QUEUE_LENGTH_EXPIRATION_TTL}
-        - name: CHECK_AND_CACHE_SQS_QUEUES_LENGTHS_SCHEDULE
-          value: ${CHECK_AND_CACHE_SQS_QUEUES_LENGTHS_SCHEDULE}
-        - name: ENABLE_SYNTHETIC_DATA_REQUEST_HTTP_API
-          value: ${ENABLE_SYNTHETIC_DATA_REQUEST_HTTP_API}
     - name: worker
       #
       # Component cloudigrade-worker deployment:
@@ -959,24 +790,8 @@ objects:
               name: cloudigrade-aws
         - name: AWS_DEFAULT_REGION
           value: ${AWS_DEFAULT_REGION}
-        - name: AWS_SQS_MAX_RECEIVE_COUNT
-          value: ${AWS_SQS_MAX_RECEIVE_COUNT}
-        - name: AWS_SQS_MAX_YIELD_COUNT
-          value: ${AWS_SQS_MAX_YIELD_COUNT}
-        - name: AWS_SQS_MAX_HOUNDI_YIELD_COUNT
-          value: ${AWS_SQS_MAX_HOUNDI_YIELD_COUNT}
-        - name: AWS_CLOUDTRAIL_EVENT_QUEUE_VISIBILITY_TIMEOUT
-          value: ${AWS_CLOUDTRAIL_EVENT_QUEUE_VISIBILITY_TIMEOUT}
         - name: AZURE_LOG_LEVEL
           value: ${AZURE_LOG_LEVEL}
-        - name: S3_BUCKET_LC_NAME
-          value: ${S3_BUCKET_LC_NAME}
-        - name: S3_BUCKET_LC_IA_TRANSITION
-          value: ${S3_BUCKET_LC_IA_TRANSITION}
-        - name: S3_BUCKET_LC_GLACIER_TRANSITION
-          value: ${S3_BUCKET_LC_GLACIER_TRANSITION}
-        - name: S3_BUCKET_LC_MAX_AGE
-          value: ${S3_BUCKET_LC_MAX_AGE}
         - name: DJANGO_SETTINGS_MODULE
           value: ${DJANGO_SETTINGS_MODULE}
         - name: DJANGO_SECRET_KEY
@@ -1008,28 +823,6 @@ objects:
           value: ${DJANGO_CONSOLE_LOG_LEVEL}
         - name: CLOUDIGRADE_LOG_LEVEL
           value: ${CLOUDIGRADE_LOG_LEVEL}
-        - name: SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY
-          value: ${SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY}
-        - name: HOUNDIGRADE_CW_RETENTION_DAYS
-          value: ${HOUNDIGRADE_CW_RETENTION_DAYS}
-        - name: HOUNDIGRADE_ECS_IMAGE_NAME
-          value: ${HOUNDIGRADE_ECS_IMAGE_NAME}
-        - name: HOUNDIGRADE_ECS_IMAGE_TAG
-          value: ${HOUNDIGRADE_ECS_IMAGE_TAG}
-        - name: HOUNDIGRADE_ECS_FAMILY_NAME
-          value: ${HOUNDIGRADE_ECS_FAMILY_NAME}
-        - name: INSPECT_PENDING_IMAGES_MIN_AGE
-          value: ${INSPECT_PENDING_IMAGES_MIN_AGE}
-        - name: INSPECT_PENDING_IMAGES_SCHEDULE
-          value: ${INSPECT_PENDING_IMAGES_SCHEDULE}
-        - name: INSPECTION_CLUSTER_INSTANCE_AGE_LIMIT
-          value: ${INSPECTION_CLUSTER_INSTANCE_AGE_LIMIT}
-        - name: HOUNDIGRADE_ECS_PERSIST_INSPECTION_RESULTS_SCHEDULE
-          value: ${HOUNDIGRADE_ECS_PERSIST_INSPECTION_RESULTS_SCHEDULE}
-        - name: REPOPULATE_AZURE_INSTANCE_MAPPING_SCHEDULE
-          value: ${REPOPULATE_AZURE_INSTANCE_MAPPING_SCHEDULE}
-        - name: AWS_REPOPULATE_EC2_INSTANCE_MAPPING_SCHEDULE
-          value: ${AWS_REPOPULATE_EC2_INSTANCE_MAPPING_SCHEDULE}
         - name: CLOUDIGRADE_VERSION
           value: ${CLOUDIGRADE_VERSION}
         - name: CLOUDIGRADE_ENVIRONMENT
@@ -1107,14 +900,6 @@ objects:
           value: ${OSD_REDEPLOY_TRIGGER}
         - name: IMAGE_TAG
           value: ${IMAGE_TAG}
-        - name: RECALCULATE_CONCURRENT_USAGE_SINCE_DAYS_AGO
-          value: ${RECALCULATE_CONCURRENT_USAGE_SINCE_DAYS_AGO}
-        - name: RECALCULATE_CONCURRENT_USAGE_FOR_ALL_USERS_SCHEDULE
-          value: ${RECALCULATE_CONCURRENT_USAGE_FOR_ALL_USERS_SCHEDULE}
-        - name: RECALCULATE_RUNS_FOR_ALL_CLOUD_ACCOUNTS_SCHEDULE
-          value: ${RECALCULATE_RUNS_FOR_ALL_CLOUD_ACCOUNTS_SCHEDULE}
-        - name: RECALCULATE_RUNS_SINCE_DAYS_AGO
-          value: ${RECALCULATE_RUNS_SINCE_DAYS_AGO}
         - name: VERBOSE_SOURCES_NOTIFICATION_LOGGING
           value: ${VERBOSE_SOURCES_NOTIFICATION_LOGGING}
         - name: CACHE_TTL_DEFAULT
@@ -1141,22 +926,11 @@ objects:
           value: ${DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_UPDATED_MORE_THAN_SECONDS_AGO}
         - name: DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_SCHEDULE
           value: ${DELETE_CLOUD_ACCOUNTS_NOT_IN_SOURCES_SCHEDULE}
-        - name: DELETE_EXPIRED_SYNTHETIC_DATA_SCHEDULE
-          value: ${DELETE_EXPIRED_SYNTHETIC_DATA_SCHEDULE}
-        - name: CACHED_SQS_QUEUE_LENGTH_EXPIRATION_TTL
-          value: ${CACHED_SQS_QUEUE_LENGTH_EXPIRATION_TTL}
-        - name: CHECK_AND_CACHE_SQS_QUEUES_LENGTHS_SCHEDULE
-          value: ${CHECK_AND_CACHE_SQS_QUEUES_LENGTHS_SCHEDULE}
-        - name: ENABLE_SYNTHETIC_DATA_REQUEST_HTTP_API
-          value: ${ENABLE_SYNTHETIC_DATA_REQUEST_HTTP_API}
-        - name: UPDATE_AZURE_INSTANCE_EVENTS_SCHEDULE
-          value: ${UPDATE_AZURE_INSTANCE_EVENTS_SCHEDULE}
 # Secrets
 - apiVersion: v1
   data:
     api-sentry-dsn: ${DJANGO_SENTRY_DSN}
     listener-sentry-dsn: ${LISTENER_SENTRY_DSN}
-    houndigrade-sentry-dsn: ${HOUNDIGRADE_SENTRY_DSN}
     django-secret-key: ${DJANGO_SECRET_KEY}
     celery-sentry-dsn: ${CELERY_SENTRY_DSN}
     slack-token: ${SLACK_TOKEN}
@@ -1242,10 +1016,6 @@ parameters:
   value: ''
 - name: LISTENER_SENTRY_DSN
   displayName: Django (Listener) Sentry DSN
-  required: false
-  value: ''
-- name: HOUNDIGRADE_SENTRY_DSN
-  displayName: Houndigrade Sentry DSN
   required: false
   value: ''
 - name: DJANGO_SECRET_KEY
@@ -1367,42 +1137,10 @@ parameters:
   displayName: Application Name
   description: Application name to be used in request paths. Only used when PATH_PREFIX is also specified.
   value: cloudigrade
-- name: AWS_S3_BUCKET_LC_NAME
-  displayName: AWS S3 Bucket Lifecycle Name
-  required: true
-  value: s3_lifecycle_policy
-- name: AWS_S3_BUCKET_LC_IA_TRANSITION
-  displayName: AWS S3 Bucket Lifecycle IA Transition
-  required: true
-  value: '30'
-- name: AWS_S3_BUCKET_LC_GLACIER_TRANSITION
-  displayName: AWS S3 Bucket Lifecycle Glacier Transition
-  required: true
-  value: '60'
-- name: AWS_S3_BUCKET_LC_MAX_AGE
-  displayName: AWS S3 Bucket Lifecycle Max Age
-  required: true
-  value: '1460'
 - name: COMMIT_REF
   displayName: Cloudigrade Commit Ref
   required: true
   value: latest
-- name: HOUNDIGRADE_ENABLE_SENTRY
-  displayName: Houndigrade Sentry Enabled
-  required: true
-  value: 'true'
-- name: HOUNDIGRADE_SENTRY_ENVIRONMENT
-  displayName: Houndigrade Sentry Environment
-  required: true
-  value: ephemeral
-- name: LEADER_RUNNING_TTL_DEFAULT
-  displayName: Leader Running default TTL in seconds
-  required: true
-  value: '60'
-- name: LEADER_COMPLETED_TTL_DEFAULT
-  displayName: Leader Completed default TTL in seconds
-  required: true
-  value: '300'
 - name: LISTENER_ENABLE_SENTRY
   displayName: Listener Sentry Enabled
   required: true
@@ -1476,7 +1214,6 @@ parameters:
   displayname: List of Celery Queue Names
   required true:
   value: "celery,\
-    calculate_max_concurrent_usage,\
     check_azure_subscription_and_create_cloud_account,\
     configure_customer_aws_and_create_cloud_account,\
     create_from_sources_kafka_message,\
@@ -1530,26 +1267,6 @@ parameters:
   displayName: AWS Default Region
   required: true
   value: us-east-1
-- name: AWS_REPOPULATE_EC2_INSTANCE_MAPPING_SCHEDULE
-  displayName: AWS Repopulate EC2 Instance Mapping Schedule
-  required: true
-  value: '604800'
-- name: AWS_SQS_MAX_RECEIVE_COUNT
-  displayName: AWS SQS Max Receive Count
-  required: true
-  value: '5'
-- name: AWS_SQS_MAX_YIELD_COUNT
-  displayName: AWS SQS Max Yield Count
-  required: true
-  value: '25'
-- name: AWS_SQS_MAX_HOUNDI_YIELD_COUNT
-  displayName: AWS SQS Max Houndigrade Yield Count
-  required: true
-  value: '10'
-- name: AWS_CLOUDTRAIL_EVENT_QUEUE_VISIBILITY_TIMEOUT
-  displayName: AWS CloudTrail event queue visibility timeout in seconds
-  required: true
-  value: '300'
 - name: AZURE_LOG_LEVEL
   displayName: Azure SDK log level
   required: true
@@ -1654,26 +1371,6 @@ parameters:
   displayName: Health Check Host Header
   required: true
   value: health.cloudigrade.insights.openshiftapps.com
-- name: HOUNDIGRADE_CW_RETENTION_DAYS
-  displayName: How long should cloudigrade inspection logs be stored in cloudwatch
-  required: true
-  value: '90'
-- name: HOUNDIGRADE_ECS_FAMILY_NAME
-  displayName: AWS Houndigrade ECS Image Tag
-  required: true
-  value: Houndigrade
-- name: HOUNDIGRADE_ECS_IMAGE_NAME
-  displayName: AWS Houndigrade ECS Image Name
-  required: true
-  value: quay.io/cloudservices/houndigrade
-- name: HOUNDIGRADE_ECS_IMAGE_TAG
-  displayName: AWS Houndigrade ECS Image Tag
-  required: true
-  value: '1.0.0'
-- name: HOUNDIGRADE_ECS_PERSIST_INSPECTION_RESULTS_SCHEDULE
-  displayName: AWS Houndigrade ECS Persist Inspection Results Schedule
-  required: true
-  value: '120'
 - name: IMAGE
   displayName: Cloudigrade Image
   required: true
@@ -1682,18 +1379,6 @@ parameters:
   displayName: Cloudigrade Image tag
   required: true
   value: latest
-- name: INSPECT_PENDING_IMAGES_MIN_AGE
-  displayName: Minimum age of images to inspect
-  required: true
-  value: '43200'
-- name: INSPECT_PENDING_IMAGES_SCHEDULE
-  displayName: Schedule to inspect pending images
-  required: true
-  value: '900'
-- name: INSPECTION_CLUSTER_INSTANCE_AGE_LIMIT
-  displayName: Inspection cluster instance age limit
-  requires: true
-  value: '600'
 - name: LISTENER_GROUP_ID
   displayName: Listener Group ID
   required: true
@@ -1721,30 +1406,6 @@ parameters:
   displayName: Change this value to trigger OSD to redeploy
   required: true
   value: '1'
-- name: RECALCULATE_CONCURRENT_USAGE_SINCE_DAYS_AGO
-  displayName: Recalculate ConcurrentUsage since this many days ago
-  required: true
-  value: '2'
-- name: RECALCULATE_CONCURRENT_USAGE_FOR_ALL_USERS_SCHEDULE
-  displayName: Recalculate Concurrent Usage For All Users Schedule
-  required: true
-  value: '3600'
-- name: RECALCULATE_RUNS_FOR_ALL_CLOUD_ACCOUNTS_SCHEDULE
-  displayName: Recalculate Runs For All Cloud Accounts Schedule
-  required: true
-  value: '3600'
-- name: RECALCULATE_RUNS_SINCE_DAYS_AGO
-  displayName: Recalculate Runs since this many days ago
-  required: true
-  value: '2'
-- name: REPOPULATE_AZURE_INSTANCE_MAPPING_SCHEDULE
-  displayName: Repopulate Azure Instance Mapping Schedule
-  required: true
-  value: '604800'
-- name: SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY
-  displayName: SCHEDULE_CONCURRENT_USAGE_CALCULATION_DELAY
-  required: true
-  value: '1800'
 - name: SENTRY_TRACES_SAMPLE_RATE
   displayName: Sentry Performance Sample Rate
   required: true
@@ -1813,23 +1474,3 @@ parameters:
   displayName: Delete cloud accounts not in sources schedule (seconds)
   required: true
   value: '86400'
-- name: DELETE_EXPIRED_SYNTHETIC_DATA_SCHEDULE
-  displayName: Delete expired synthetic data schedule (seconds)
-  required: true
-  value: '3600'
-- name: CACHED_SQS_QUEUE_LENGTH_EXPIRATION_TTL
-  displayName: Expiration TTL for cached SQS queue lengths (seconds)
-  required: true
-  value: '1800'
-- name: CHECK_AND_CACHE_SQS_QUEUES_LENGTHS_SCHEDULE
-  displayName: Check and cache SQS queue lengths schedule (seconds)
-  required: true
-  value: '300'
-- name: ENABLE_SYNTHETIC_DATA_REQUEST_HTTP_API
-  displayName: Enable the synthetic data internal HTTP API
-  required: true
-  value: 'false'
-- name: UPDATE_AZURE_INSTANCE_EVENTS_SCHEDULE
-  displayName: Update Azure instance events schedule (hourly)
-  required: true
-  value: '3600'
