@@ -363,15 +363,6 @@ def delete_cloud_accounts_not_in_sources():
     )
 
 
-@shared_task(name="api.tasks.delete_expired_synthetic_data")
-def delete_expired_synthetic_data():
-    """Do nothing.
-
-    This is a placeholder for old in-flight tasks during the shutdown transition.
-    """
-    # TODO FIXME Delete this function once we're confident no tasks exists.
-
-
 @shared_task(name="api.tasks.migrate_account_numbers_to_org_ids")
 def migrate_account_numbers_to_org_ids():
     """
@@ -420,12 +411,3 @@ def migrate_account_numbers_to_org_ids():
             f"Failed to migrate account_numbers to org_ids - {e}", exc_info=True
         )
         return
-
-
-@shared_task(name="api.tasks.check_and_cache_sqs_queues_lengths")
-def check_and_cache_sqs_queues_lengths():
-    """Do nothing.
-
-    This is a placeholder for old in-flight tasks during the shutdown transition.
-    """
-    # TODO FIXME Delete this function once we're confident no tasks exists.

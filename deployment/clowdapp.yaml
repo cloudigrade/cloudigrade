@@ -1477,13 +1477,11 @@ parameters:
   required true:
   value: "celery,\
     calculate_max_concurrent_usage,\
-    check_and_cache_sqs_queues_lengths,\
     check_azure_subscription_and_create_cloud_account,\
     configure_customer_aws_and_create_cloud_account,\
     create_from_sources_kafka_message,\
     delete_cloud_account,\
     delete_cloud_accounts_not_in_sources,\
-    delete_expired_synthetic_data,\
     delete_from_sources_kafka_message,\
     delete_inactive_users,\
     delete_orphaned_cloud_accounts,\
