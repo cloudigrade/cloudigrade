@@ -266,6 +266,7 @@ def _delete_orphaned_cloud_account_content_objects(max_updated_at):
         ).order_by("id"),
     )
 
+    index = 0
     found_orphans = collections.defaultdict(list)
     for index, content_object in enumerate(all_content_objects):
         if index > 0 and index % 100 == 0:
