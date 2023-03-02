@@ -292,6 +292,14 @@ objects:
             --loglevel info
             --pidfile=
             --scheduler django_celery_beat.schedulers:DatabaseScheduler
+        startupProbe:
+          exec:
+            command:
+              - /bin/sh
+              - -c
+              - '[[ $(pgrep -a celery | grep -c beat) -eq 1 ]]'
+          failureThreshold: 6
+          periodSeconds: 10
         livenessProbe:
           exec:
             command:
