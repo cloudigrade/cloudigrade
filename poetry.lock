@@ -54,14 +54,14 @@ test = ["coverage"]
 
 [[package]]
 name = "app-common-python"
-version = "0.2.4"
+version = "0.2.5"
 description = ""
 category = "main"
 optional = false
 python-versions = "*"
 files = [
-    {file = "app-common-python-0.2.4.tar.gz", hash = "sha256:fbca4d3ea83d5c5961ed17e8bd53a63a1cda8670eb670a64b54e05759ef235cc"},
-    {file = "app_common_python-0.2.4-py3-none-any.whl", hash = "sha256:2f8f2fac83db19506e9b0d4d2521b7518f61a6c183ae958a1a1347ce1d1cf0e4"},
+    {file = "app-common-python-0.2.5.tar.gz", hash = "sha256:d3b6f050b7f171172bf8fa7b92faaab16a3c8e37f594e8aebb6a1549f3380269"},
+    {file = "app_common_python-0.2.5-py3-none-any.whl", hash = "sha256:fd39d1c49b930b3162a0c4e9f62f0b43944cdd032703948cdf5de49dc7dc45bb"},
 ]
 
 [[package]]
