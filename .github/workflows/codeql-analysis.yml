@@ -26,7 +26,7 @@ jobs:
       run: pipx install poetry
 
     - name: Setup Python
-      uses: actions/setup-python@v4.6.0
+      uses: actions/setup-python@v4.6.1
       # More info and options at https://github.com/actions/setup-python
       # This step must happen before Initialize CodeQL because it expects the correct verion of Python to be installed already.
       with:
