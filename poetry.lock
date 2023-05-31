@@ -130,13 +130,13 @@ tests-no-zope = ["cloudpickle", "cloudpickle", "hypothesis", "hypothesis", "mypy
 
 [[package]]
 name = "azure-cli-core"
-version = "2.45.0"
+version = "2.49.0"
 description = "Microsoft Azure Command-Line Tools Core Module"
 optional = false
 python-versions = ">=3.7.0"
 files = [
-    {file = "azure-cli-core-2.45.0.tar.gz", hash = "sha256:102ce360cd98b0990715d8cddb017940287ae1bf4bdb962a74cdaa88919b4b82"},
-    {file = "azure_cli_core-2.45.0-py3-none-any.whl", hash = "sha256:25699373bf415b14dd1ff14c2ccc26d1c94b30a0bf6ea980d781a1e13026dc80"},
+    {file = "azure-cli-core-2.49.0.tar.gz", hash = "sha256:c8dc31dff20db94f465e3a89ab84edbe28675ba65fc79793673c3d177409fa3f"},
+    {file = "azure_cli_core-2.49.0-py3-none-any.whl", hash = "sha256:628d1008d80e0459be2a48c5c7c434b713e8e57e5662eacfdd08fe6eb6caa18c"},
 ]
 
 [package.dependencies]
@@ -144,14 +144,15 @@ argcomplete = ">=2.0,<3.0"
 azure-cli-telemetry = "==1.0.8.*"
 azure-mgmt-core = ">=1.2.0,<2"
 cryptography = "*"
+distro = {version = "*", markers = "sys_platform == \"linux\""}
 humanfriendly = ">=10.0,<11.0"
 jmespath = "*"
 knack = ">=0.10.1,<0.11.0"
 msal = {version = "1.20.0", extras = ["broker"]}
 msal-extensions = ">=1.0.0,<1.1.0"
 msrestazure = ">=0.6.4,<0.7.0"
-packaging = ">=20.9,<22.0"
-paramiko = ">=2.0.8,<3.0.0"
+packaging = ">=20.9"
+paramiko = ">=2.0.8,<4.0.0"
 pkginfo = ">=1.5.0.1"
 psutil = {version = ">=5.9,<6.0", markers = "sys_platform != \"cygwin\""}
 PyJWT = ">=2.1.0"
@@ -922,6 +923,17 @@ ssh = ["bcrypt (>=3.1.5)"]
 test = ["hypothesis (>=1.11.4,!=3.79.2)", "iso8601", "pretend", "pytest (>=6.2.0)", "pytest-benchmark", "pytest-cov", "pytest-shard (>=0.1.2)", "pytest-subtests", "pytest-xdist", "pytz"]
 test-randomorder = ["pytest-randomly"]
 tox = ["tox"]
+
+[[package]]
+name = "distro"
+version = "1.8.0"
+description = "Distro - an OS platform information API"
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "distro-1.8.0-py3-none-any.whl", hash = "sha256:99522ca3e365cac527b44bde033f64c6945d90eb9f769703caaec52b09bbd3ff"},
+    {file = "distro-1.8.0.tar.gz", hash = "sha256:02e111d1dc6a50abb8eed6bf31c3e48ed8b0830d1ea2a1b78c61765c2513fdd8"},
+]
 
 [[package]]
 name = "django"
