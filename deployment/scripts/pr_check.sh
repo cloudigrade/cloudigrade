@@ -50,7 +50,7 @@ bonfire deploy \
     ${COMPONENTS_ARG} \
     ${COMPONENTS_RESOURCES_ARG} \
     --set-parameter rbac/MIN_REPLICAS=1 \
-    --set-parameter sources-api/SOURCES_ENV=ci \
+    --set-parameter sources-api/SOURCES_ENV=eph \
     --set-parameter cloudigrade/CLOUDIGRADE_ENVIRONMENT="${CLOUDIGRADE_ENVIRONMENT}" \
     --set-parameter cloudigrade/AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
     --set-parameter cloudigrade/AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
