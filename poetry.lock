@@ -130,25 +130,25 @@ tests-no-zope = ["cloudpickle", "cloudpickle", "hypothesis", "hypothesis", "mypy
 
 [[package]]
 name = "azure-cli-core"
-version = "2.50.0"
+version = "2.51.0"
 description = "Microsoft Azure Command-Line Tools Core Module"
 optional = false
-python-versions = ">=3.7.0"
+python-versions = ">=3.8.0"
 files = [
-    {file = "azure-cli-core-2.50.0.tar.gz", hash = "sha256:9536049fbc7ec00a112de51ee720afc000069ccb404ad6d452d868f450dfc17a"},
-    {file = "azure_cli_core-2.50.0-py3-none-any.whl", hash = "sha256:7fbeb0e18e341182ca0caeab8c89f60d28a8cc243a7ae2f8cf9670705582333c"},
+    {file = "azure-cli-core-2.51.0.tar.gz", hash = "sha256:dfcd62ffb77a9fb32447fc85af9e3aaeffc0e95bb1d9e373f61b5c3a40974a29"},
+    {file = "azure_cli_core-2.51.0-py3-none-any.whl", hash = "sha256:180ddddaefe12dac7b9a7775f25c2898f785230ca43352f61cba8dc5722d4cef"},
 ]
 
 [package.dependencies]
 argcomplete = ">=3.1.1,<3.2.0"
-azure-cli-telemetry = "==1.0.8.*"
+azure-cli-telemetry = "==1.1.0.*"
 azure-mgmt-core = ">=1.2.0,<2"
 cryptography = "*"
 distro = {version = "*", markers = "sys_platform == \"linux\""}
 humanfriendly = ">=10.0,<11.0"
 jmespath = "*"
-knack = ">=0.10.1,<0.11.0"
-msal = {version = "1.22.0", extras = ["broker"]}
+knack = ">=0.11.0,<0.12.0"
+msal = {version = "1.24.0b1", extras = ["broker"]}
 msal-extensions = ">=1.0.0,<1.1.0"
 msrestazure = ">=0.6.4,<0.7.0"
 packaging = ">=20.9"
@@ -161,13 +161,13 @@ requests = {version = "*", extras = ["socks"]}
 
 [[package]]
 name = "azure-cli-telemetry"
-version = "1.0.8"
+version = "1.1.0"
 description = "Microsoft Azure CLI Telemetry Package"
 optional = false
 python-versions = "*"
 files = [
-    {file = "azure-cli-telemetry-1.0.8.tar.gz", hash = "sha256:ca996d162ab689c865f6b60be23b9757c26c3d97928e3319858eea83462df08d"},
-    {file = "azure_cli_telemetry-1.0.8-py3-none-any.whl", hash = "sha256:502cbd90723a16603822909befd096ca0b1707de1e70cf730e7b4700ddd7a456"},
+    {file = "azure-cli-telemetry-1.1.0.tar.gz", hash = "sha256:d922379cda1b48952be75fb3bd2ac5e7ceecf569492a6088bab77894c624a278"},
+    {file = "azure_cli_telemetry-1.1.0-py3-none-any.whl", hash = "sha256:2fc12608c0cf0ea6e69b392af9cab92f1249340b8caff7e9674cf91b3becb337"},
 ]
 
 [package.dependencies]
@@ -1452,18 +1452,19 @@ future = "*"
 
 [[package]]
 name = "knack"
-version = "0.10.1"
+version = "0.11.0"
 description = "A Command-Line Interface framework"
 optional = false
 python-versions = "*"
 files = [
-    {file = "knack-0.10.1-py3-none-any.whl", hash = "sha256:67bd5121b39ddb2683448aa7ccc9de46b2a2a3114a973239865d542b916e25b9"},
-    {file = "knack-0.10.1.tar.gz", hash = "sha256:c5728128297e6d269791085cf96c2ffdfcef58cf83c634a5cb92eb03b2929838"},
+    {file = "knack-0.11.0-py3-none-any.whl", hash = "sha256:6704c867840978a119a193914a90e2e98c7be7dff764c8fcd8a2286c5a978d00"},
+    {file = "knack-0.11.0.tar.gz", hash = "sha256:eb6568001e9110b1b320941431c51033d104cc98cda2254a5c2b09ba569fd494"},
 ]
 
 [package.dependencies]
 argcomplete = "*"
 jmespath = "*"
+packaging = "*"
 pygments = "*"
 pyyaml = "*"
 tabulate = "*"
@@ -1644,17 +1645,17 @@ files = [
 
 [[package]]
 name = "msal"
-version = "1.22.0"
-description = "The Microsoft Authentication Library (MSAL) for Python library enables your app to access the Microsoft Cloud by supporting authentication of users with Microsoft Azure Active Directory accounts (AAD) and Microsoft Accounts (MSA) using industry standard OAuth2 and OpenID Connect."
+version = "1.24.0b1"
+description = "The Microsoft Authentication Library (MSAL) for Python library"
 optional = false
-python-versions = "*"
+python-versions = ">=2.7"
 files = [
-    {file = "msal-1.22.0-py2.py3-none-any.whl", hash = "sha256:9120b7eafdf061c92f7b3d744e5f325fca35873445fa8ffebb40b1086a13dd58"},
-    {file = "msal-1.22.0.tar.gz", hash = "sha256:8a82f5375642c1625c89058018430294c109440dce42ea667d466c2cab520acd"},
+    {file = "msal-1.24.0b1-py2.py3-none-any.whl", hash = "sha256:55a232e106c144c42f2fef05d3613ddc354e254338fc2ffb326a0d08878ebad6"},
+    {file = "msal-1.24.0b1.tar.gz", hash = "sha256:cdee42a97fa6f171f83541022f64a0353f445d5e304bfd0380ee573031e8fd4a"},
 ]
 
 [package.dependencies]
-cryptography = ">=0.6,<43"
+cryptography = ">=0.6,<44"
 PyJWT = {version = ">=1.0.0,<3", extras = ["crypto"]}
 pymsalruntime = {version = ">=0.13.2,<0.14", optional = true, markers = "python_version >= \"3.6\" and platform_system == \"Windows\" and extra == \"broker\""}
 requests = ">=2.0.0,<3"
