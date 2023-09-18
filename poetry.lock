@@ -130,13 +130,13 @@ tests-no-zope = ["cloudpickle", "cloudpickle", "hypothesis", "hypothesis", "mypy
 
 [[package]]
 name = "azure-cli-core"
-version = "2.51.0"
+version = "2.52.0"
 description = "Microsoft Azure Command-Line Tools Core Module"
 optional = false
 python-versions = ">=3.8.0"
 files = [
-    {file = "azure-cli-core-2.51.0.tar.gz", hash = "sha256:dfcd62ffb77a9fb32447fc85af9e3aaeffc0e95bb1d9e373f61b5c3a40974a29"},
-    {file = "azure_cli_core-2.51.0-py3-none-any.whl", hash = "sha256:180ddddaefe12dac7b9a7775f25c2898f785230ca43352f61cba8dc5722d4cef"},
+    {file = "azure-cli-core-2.52.0.tar.gz", hash = "sha256:2ac2976dece1c8798b91606f38b7d7b8d06599ba295243276bc3496f3ca177ae"},
+    {file = "azure_cli_core-2.52.0-py3-none-any.whl", hash = "sha256:582cd82d79d312ee66d326f83dac3cf2a6ebb5a8a8fbaff6556e93b9d8dfc8b9"},
 ]
 
 [package.dependencies]
@@ -1981,7 +1981,6 @@ optional = false
 python-versions = ">=3.5"
 files = [
     {file = "portalocker-2.7.0-py2.py3-none-any.whl", hash = "sha256:a07c5b4f3985c3cf4798369631fb7011adb498e2a46d8440efc75a8f29a0f983"},
-    {file = "portalocker-2.7.0-py3-none-any.whl", hash = "sha256:769c394f934f3459fab9f0989c17aa8158334f1898b9bb8407432bdc3f44be6d"},
     {file = "portalocker-2.7.0.tar.gz", hash = "sha256:032e81d534a88ec1736d03f780ba073f047a06c478b06e2937486f334e955c51"},
 ]
 
