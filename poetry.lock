@@ -130,13 +130,13 @@ tests-no-zope = ["cloudpickle", "cloudpickle", "hypothesis", "hypothesis", "mypy
 
 [[package]]
 name = "azure-cli-core"
-version = "2.52.0"
+version = "2.53.0"
 description = "Microsoft Azure Command-Line Tools Core Module"
 optional = false
 python-versions = ">=3.8.0"
 files = [
-    {file = "azure-cli-core-2.52.0.tar.gz", hash = "sha256:2ac2976dece1c8798b91606f38b7d7b8d06599ba295243276bc3496f3ca177ae"},
-    {file = "azure_cli_core-2.52.0-py3-none-any.whl", hash = "sha256:582cd82d79d312ee66d326f83dac3cf2a6ebb5a8a8fbaff6556e93b9d8dfc8b9"},
+    {file = "azure-cli-core-2.53.0.tar.gz", hash = "sha256:724cd745533a43ee0cee3467e8e594afb075b1807a68ff1c122c2b3ffd374176"},
+    {file = "azure_cli_core-2.53.0-py3-none-any.whl", hash = "sha256:c214f2fcb270037a06ec4287629dea124519a5c12d529a944ce4ff83932fe5a0"},
 ]
 
 [package.dependencies]
@@ -148,7 +148,7 @@ distro = {version = "*", markers = "sys_platform == \"linux\""}
 humanfriendly = ">=10.0,<11.0"
 jmespath = "*"
 knack = ">=0.11.0,<0.12.0"
-msal = {version = "1.24.0b1", extras = ["broker"]}
+msal = {version = "1.24.0b2", extras = ["broker"]}
 msal-extensions = ">=1.0.0,<1.1.0"
 msrestazure = ">=0.6.4,<0.7.0"
 packaging = ">=20.9"
@@ -1637,13 +1637,13 @@ files = [
 
 [[package]]
 name = "msal"
-version = "1.24.0b1"
+version = "1.24.0b2"
 description = "The Microsoft Authentication Library (MSAL) for Python library"
 optional = false
 python-versions = ">=2.7"
 files = [
-    {file = "msal-1.24.0b1-py2.py3-none-any.whl", hash = "sha256:55a232e106c144c42f2fef05d3613ddc354e254338fc2ffb326a0d08878ebad6"},
-    {file = "msal-1.24.0b1.tar.gz", hash = "sha256:cdee42a97fa6f171f83541022f64a0353f445d5e304bfd0380ee573031e8fd4a"},
+    {file = "msal-1.24.0b2-py2.py3-none-any.whl", hash = "sha256:008d4bc3e456f6878ea1722ab6aa0a1ca3da77cc22bef324a261eafcffe8ddda"},
+    {file = "msal-1.24.0b2.tar.gz", hash = "sha256:a0e6e3f1b099ed29a39e167e83a069ab84d9a7712627f72950030b56791b7cbc"},
 ]
 
 [package.dependencies]
