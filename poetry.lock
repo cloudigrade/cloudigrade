@@ -971,13 +971,13 @@ bcrypt = ["bcrypt"]
 
 [[package]]
 name = "django-cache-memoize"
-version = "0.1.10"
+version = "0.2.0"
 description = "Django utility for a memoization decorator that uses the Django cache framework."
 optional = false
-python-versions = ">=3.5"
+python-versions = ">=3.8"
 files = [
-    {file = "django-cache-memoize-0.1.10.tar.gz", hash = "sha256:63e8faa245a41c0dbad843807e9f21a6e59eba8e6e50df310fdf6485a6749843"},
-    {file = "django_cache_memoize-0.1.10-py3-none-any.whl", hash = "sha256:676299313079cde9242ae84db0160e80b1d44e8dd6bc9b1f4f1247e11b30c9e0"},
+    {file = "django-cache-memoize-0.2.0.tar.gz", hash = "sha256:79950a027ba40e4aff4efed587b76036bf5ba1f59329d7b158797b832be72ca6"},
+    {file = "django_cache_memoize-0.2.0-py3-none-any.whl", hash = "sha256:a6bfd112da699d1fa85955a1e15b7c48ee25e58044398958e269678db10736f3"},
 ]
 
 [package.extras]
@@ -2985,4 +2985,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "6e61271f7884e92fc89f180d2e81f881800293a5f36cda816b4e73fc79e211d9"
+content-hash = "041601118a3d89b4f38ef841533a2c0a3be630a867b8e98513838963176bd041"
