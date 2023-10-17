@@ -4,7 +4,7 @@ set -e
 # All of these *should* be set already in the environment,
 # but let's offer probably-reasonable defaults to be safe.
 WORKSPACE="${WORKSPACE:-${PWD}}"
-RH_IT_ROOT_CA_CERT_URL="${RH_IT_ROOT_CA_CERT_URL:-https://password.corp.redhat.com/RH-IT-Root-CA.crt}"
+RH_IT_ROOT_CA_CERT_URL="${RH_IT_ROOT_CA_CERT_URL:-https://certs.corp.redhat.com/certs/Current-IT-Root-CAs.pem}"
 SONARQUBE_REPORT_URL="${SONARQUBE_REPORT_URL:-https://sonarqube.corp.redhat.com}"
 GIT_BRANCH="${GIT_BRANCH:-master}"
 
