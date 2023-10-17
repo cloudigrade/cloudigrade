@@ -2,7 +2,7 @@
 set -e
 
 WORKSPACE="/workspace"
-CA_CERT_FILE="${WORKSPACE}/sonarqube/certs/RH-IT-Root-CA.crt"
+CA_CERT_FILE="${WORKSPACE}/sonarqube/certs/Current-IT-Root-CAs.pem"
 KEYSTORE_FILE="/tmp/RH-IT-Root-CA.keystore"
 SONARQUBE_BIN_PATH="${WORKSPACE}/sonarqube/extract/${SONAR_SCANNER_NAME}/bin"
 

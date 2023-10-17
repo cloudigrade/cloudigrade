@@ -4,7 +4,6 @@ set -e
 # All of these *should* be set already in the environment,
 # but let's offer probably-reasonable defaults to be safe.
 WORKSPACE="${WORKSPACE:-${PWD}}"
-RH_IT_ROOT_CA_CERT_URL="${RH_IT_ROOT_CA_CERT_URL:-https://certs.corp.redhat.com/certs/Current-IT-Root-CAs.pem}"
 SONARQUBE_REPORT_URL="${SONARQUBE_REPORT_URL:-https://sonarqube.corp.redhat.com}"
 GIT_BRANCH="${GIT_BRANCH:-master}"
 
@@ -21,8 +20,7 @@ SONAR_SCANNER_DOWNLOAD_NAME="sonar-scanner-cli-${SONAR_SCANNER_CLI_VERSION-$SONA
 SONAR_SCANNER_NAME="sonar-scanner-${SONAR_SCANNER_CLI_VERSION-$SONAR_SCANNER_OS}"
 
 # Copy the CA cert so the SonarQube scanner can communicate with the internal server.
-cp ${WORKSPACE}/deployment/2015-IT-Root-CA.pem ${RUN_DIR}/sonarqube/certs/2015-IT-Root-CA.pem
-cp ${WORKSPACE}/deployment/2022-IT-Root-CA.pem ${RUN_DIR}/sonarqube/certs/2022-IT-Root-CA.pem
+cp ${WORKSPACE}/deployment/Current-IT-Root-CAs.pem ${RUN_DIR}/sonarqube/certs/Current-IT-Root-CAs.pem
 
 # Fetch and expand the SonarQube binaries.
 curl --silent --show-error \
