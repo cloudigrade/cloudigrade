@@ -130,13 +130,13 @@ tests-no-zope = ["cloudpickle", "cloudpickle", "hypothesis", "hypothesis", "mypy
 
 [[package]]
 name = "azure-cli-core"
-version = "2.53.0"
+version = "2.53.1"
 description = "Microsoft Azure Command-Line Tools Core Module"
 optional = false
 python-versions = ">=3.8.0"
 files = [
-    {file = "azure-cli-core-2.53.0.tar.gz", hash = "sha256:724cd745533a43ee0cee3467e8e594afb075b1807a68ff1c122c2b3ffd374176"},
-    {file = "azure_cli_core-2.53.0-py3-none-any.whl", hash = "sha256:c214f2fcb270037a06ec4287629dea124519a5c12d529a944ce4ff83932fe5a0"},
+    {file = "azure-cli-core-2.53.1.tar.gz", hash = "sha256:35e739e5c37642437d1a475e4b0657d7a11b54b62309ed196090e90b31c9cd56"},
+    {file = "azure_cli_core-2.53.1-py3-none-any.whl", hash = "sha256:b4ce4210997d96987a099d1fb65470a21bb31116048f46dcef0c9378b3209f5c"},
 ]
 
 [package.dependencies]
@@ -852,13 +852,13 @@ toml = ["tomli"]
 
 [[package]]
 name = "crc-bonfire"
-version = "4.19.0"
+version = "4.19.1"
 description = "A CLI tool used to deploy ephemeral environments for testing cloud.redhat.com applications"
 optional = false
 python-versions = ">=3.6"
 files = [
-    {file = "crc-bonfire-4.19.0.tar.gz", hash = "sha256:f85c961dfb0c607b39963db6d93e0019f3c429e4a4de5bf917cac174cf6b1f04"},
-    {file = "crc_bonfire-4.19.0-py3-none-any.whl", hash = "sha256:3999b6224c138a4f2777cd13d6879525b0596ab2c5efdbd827325566137a6ae8"},
+    {file = "crc-bonfire-4.19.1.tar.gz", hash = "sha256:738113aa893410cd8cbf7f8052937cc753f2a1cc18e5509b071fea2be1deb579"},
+    {file = "crc_bonfire-4.19.1-py3-none-any.whl", hash = "sha256:3dfdcbb4fd0aa7013cc496815d91881b268480ba0003e13dbf906f76e40e7014"},
 ]
 
 [package.dependencies]
@@ -951,13 +951,13 @@ files = [
 
 [[package]]
 name = "django"
-version = "4.2.6"
+version = "4.2.7"
 description = "A high-level Python web framework that encourages rapid development and clean, pragmatic design."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "Django-4.2.6-py3-none-any.whl", hash = "sha256:a64d2487cdb00ad7461434320ccc38e60af9c404773a2f95ab0093b4453a3215"},
-    {file = "Django-4.2.6.tar.gz", hash = "sha256:08f41f468b63335aea0d904c5729e0250300f6a1907bf293a65499496cdbc68f"},
+    {file = "Django-4.2.7-py3-none-any.whl", hash = "sha256:e1d37c51ad26186de355cbcec16613ebdabfa9689bbade9c538835205a8abbe9"},
+    {file = "Django-4.2.7.tar.gz", hash = "sha256:8e0f1c2c2786b5c0e39fe1afce24c926040fad47c8ea8ad30aaf1188df29fc41"},
 ]
 
 [package.dependencies]
@@ -1398,20 +1398,20 @@ format = ["fqdn", "idna", "isoduration", "jsonpointer (>1.13)", "rfc3339-validat
 format-nongpl = ["fqdn", "idna", "isoduration", "jsonpointer (>1.13)", "rfc3339-validator", "rfc3986-validator (>0.1.0)", "uri-template", "webcolors (>=1.11)"]
 
 [[package]]
-name = "jsonschema-spec"
-version = "0.2.3"
+name = "jsonschema-path"
+version = "0.3.1"
 description = "JSONSchema Spec with object-oriented paths"
 optional = false
 python-versions = ">=3.8.0,<4.0.0"
 files = [
-    {file = "jsonschema_spec-0.2.3-py3-none-any.whl", hash = "sha256:ee005ddeca73229560ac2b8f1849590929c4b2cd17a932b229b03566e517f2a6"},
-    {file = "jsonschema_spec-0.2.3.tar.gz", hash = "sha256:e01b8b100f0676177b0b39027a5cab7e7a16ce4316a3d0d15e576293d954fafc"},
+    {file = "jsonschema_path-0.3.1-py3-none-any.whl", hash = "sha256:06f01b1848a28963f49a17730e11204d252aa6ff5db4ef84ec77e5ac93cfa831"},
+    {file = "jsonschema_path-0.3.1.tar.gz", hash = "sha256:07ea584b5c9b41a614b4d011c5575955676f48d0abbfd93d9ea8e933018d716d"},
 ]
 
 [package.dependencies]
 pathable = ">=0.4.1,<0.5.0"
 PyYAML = ">=5.1"
-referencing = ">=0.28.0,<0.30.0"
+referencing = ">=0.28.0,<0.31.0"
 requests = ">=2.31.0,<3.0.0"
 
 [[package]]
@@ -1859,18 +1859,18 @@ rfc3339-validator = "*"
 
 [[package]]
 name = "openapi-spec-validator"
-version = "0.6.0"
+version = "0.7.1"
 description = "OpenAPI 2.0 (aka Swagger) and OpenAPI 3 spec validator"
 optional = false
 python-versions = ">=3.8.0,<4.0.0"
 files = [
-    {file = "openapi_spec_validator-0.6.0-py3-none-any.whl", hash = "sha256:675f1a3c0d0d8eff9116694acde88bcd4613a95bf5240270724d9d78c78f26d6"},
-    {file = "openapi_spec_validator-0.6.0.tar.gz", hash = "sha256:68c4c212c88ef14c6b1a591b895bf742c455783c7ebba2507abd7dbc1365a616"},
+    {file = "openapi_spec_validator-0.7.1-py3-none-any.whl", hash = "sha256:3c81825043f24ccbcd2f4b149b11e8231abce5ba84f37065e14ec947d8f4e959"},
+    {file = "openapi_spec_validator-0.7.1.tar.gz", hash = "sha256:8577b85a8268685da6f8aa30990b83b7960d4d1117e901d451b5d572605e5ec7"},
 ]
 
 [package.dependencies]
 jsonschema = ">=4.18.0,<5.0.0"
-jsonschema-spec = ">=0.2.3,<0.3.0"
+jsonschema-path = ">=0.3.1,<0.4.0"
 lazy-object-proxy = ">=1.7.1,<2.0.0"
 openapi-schema-validator = ">=0.6.0,<0.7.0"
 
@@ -2057,6 +2057,8 @@ files = [
     {file = "psycopg2-2.9.9-cp310-cp310-win_amd64.whl", hash = "sha256:426f9f29bde126913a20a96ff8ce7d73fd8a216cfb323b1f04da402d452853c3"},
     {file = "psycopg2-2.9.9-cp311-cp311-win32.whl", hash = "sha256:ade01303ccf7ae12c356a5e10911c9e1c51136003a9a1d92f7aa9d010fb98372"},
     {file = "psycopg2-2.9.9-cp311-cp311-win_amd64.whl", hash = "sha256:121081ea2e76729acfb0673ff33755e8703d45e926e416cb59bae3a86c6a4981"},
+    {file = "psycopg2-2.9.9-cp312-cp312-win32.whl", hash = "sha256:d735786acc7dd25815e89cc4ad529a43af779db2e25aa7c626de864127e5a024"},
+    {file = "psycopg2-2.9.9-cp312-cp312-win_amd64.whl", hash = "sha256:a7653d00b732afb6fc597e29c50ad28087dcb4fbfb28e86092277a559ae4e693"},
     {file = "psycopg2-2.9.9-cp37-cp37m-win32.whl", hash = "sha256:5e0d98cade4f0e0304d7d6f25bbfbc5bd186e07b38eac65379309c4ca3193efa"},
     {file = "psycopg2-2.9.9-cp37-cp37m-win_amd64.whl", hash = "sha256:7e2dacf8b009a1c1e843b5213a87f7c544b2b042476ed7755be813eaf4e8347a"},
     {file = "psycopg2-2.9.9-cp38-cp38-win32.whl", hash = "sha256:ff432630e510709564c01dafdbe996cb552e0b9f3f065eb89bdce5bd31fabf4c"},
@@ -2985,4 +2987,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "fc3a6c62a2b84ec4c20280796d2aa5bb4fece3cb079a5493ca127f2f6cc8e618"
+content-hash = "4652ac374f3a766757d950116c5df5aa3d241e6b9113a4db5c47267a8c870f16"
