@@ -1,5 +1,5 @@
 ### Base Image
-FROM registry.access.redhat.com/ubi8/ubi-minimal:8.7-1107 as base
+FROM registry.access.redhat.com/ubi8/ubi-minimal:8.9-1029 as base
 
 WORKDIR /opt/cloudigrade
 
