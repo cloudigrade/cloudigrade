@@ -130,13 +130,13 @@ tests-no-zope = ["cloudpickle", "cloudpickle", "hypothesis", "hypothesis", "mypy
 
 [[package]]
 name = "azure-cli-core"
-version = "2.53.1"
+version = "2.54.0"
 description = "Microsoft Azure Command-Line Tools Core Module"
 optional = false
 python-versions = ">=3.8.0"
 files = [
-    {file = "azure-cli-core-2.53.1.tar.gz", hash = "sha256:35e739e5c37642437d1a475e4b0657d7a11b54b62309ed196090e90b31c9cd56"},
-    {file = "azure_cli_core-2.53.1-py3-none-any.whl", hash = "sha256:b4ce4210997d96987a099d1fb65470a21bb31116048f46dcef0c9378b3209f5c"},
+    {file = "azure-cli-core-2.54.0.tar.gz", hash = "sha256:fc653c7a63e0ea1c21d866a1316f1364ee51d9b896cb47f6771dd8033ccf9e8d"},
+    {file = "azure_cli_core-2.54.0-py3-none-any.whl", hash = "sha256:19179f2363634dbfedb89fe938db31e714df79c4e2e4fdd62c3ec60ed47e8358"},
 ]
 
 [package.dependencies]
