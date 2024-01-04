@@ -1,6 +1,17 @@
 {
   "extends": [
     "config:base",
-    "schedule:earlyMondays"
-  ]
+    "schedule:earlyMondays",
+    ":disableDependencyDashboard"
+  ],
+  "packageRules": [
+    {
+      "enabled": false,
+      "matchPackagePatterns": ["*"]
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "enabled": true
+  },
+  "osvVulnerabilityAlerts": true
 }
