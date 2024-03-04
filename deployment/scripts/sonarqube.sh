@@ -13,7 +13,7 @@ rm -rf "${RUN_DIR}/sonarqube"
 mkdir -p "${RUN_DIR}/sonarqube/"{scripts,download,extract,certs}
 cp "${RUN_DIR}/deployment/scripts/sonarqube_exec.sh" "${RUN_DIR}/sonarqube/scripts"
 COMMIT_SHORT=$(git rev-parse --short=7 HEAD)
-JAVA11_IMAGE="registry.access.redhat.com/openjdk/openjdk-11-rhel7:1.12-1.1658422675"
+JAVA_IMAGE="registry.access.redhat.com/ubi9/openjdk-17"
 SONAR_SCANNER_OS="linux"
 SONAR_SCANNER_CLI_VERSION="4.6.2.2472"
 SONAR_SCANNER_DOWNLOAD_NAME="sonar-scanner-cli-${SONAR_SCANNER_CLI_VERSION-$SONAR_SCANNER_OS}.zip"
@@ -39,11 +39,11 @@ echo SONARQUBE_TOKEN="${SONARQUBE_TOKEN}" >> "${ENV_FILE}"
 echo SONAR_SCANNER_NAME="${SONAR_SCANNER_NAME}" >> "${ENV_FILE}"
 
 # Run the SonarQube scanner in a Docker container.
-docker pull "${JAVA11_IMAGE}"
+docker pull "${JAVA_IMAGE}"
 docker run \
   -v"${RUN_DIR}":/workspace \
   --env-file "${ENV_FILE}" \
-  "${JAVA11_IMAGE}" \
+  "${JAVA_IMAGE}" \
   bash /workspace/sonarqube/scripts/sonarqube_exec.sh
 
 # The following junit-dummy.xml is needed because the pr-check job always
