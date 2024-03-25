@@ -1,4 +1,5 @@
 """Tasks for various sources-api operations."""
+
 import logging
 
 from django.conf import settings

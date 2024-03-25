@@ -1,4 +1,5 @@
 """Collection of tests for the Sources Listener."""
+
 import json
 import signal
 from unittest.mock import Mock, patch

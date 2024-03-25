@@ -1,4 +1,5 @@
 """Collection of tests for internal viewsets."""
+
 import decimal
 
 from django.test import TestCase

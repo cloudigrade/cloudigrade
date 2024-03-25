@@ -1,4 +1,5 @@
 """Collection of tests for the 'delete_accounts' management command."""
+
 from io import StringIO
 from unittest.mock import patch
 

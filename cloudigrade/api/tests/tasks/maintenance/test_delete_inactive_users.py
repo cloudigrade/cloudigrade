@@ -1,4 +1,5 @@
 """Collection of tests for tasks.maintenance.delete_inactive_users."""
+
 from datetime import timedelta
 
 import faker

@@ -2,6 +2,7 @@
 
 Because even test helpers should be tested!
 """
+
 import http
 import re
 from unittest.mock import patch

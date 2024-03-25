@@ -1,4 +1,5 @@
 """Collection of tests for the internal.prometheus module."""
+
 from unittest.mock import MagicMock, call, patch
 
 import faker

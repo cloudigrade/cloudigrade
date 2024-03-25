@@ -1,4 +1,5 @@
 """Collection of tests for tasks.maintenance.delete_orphaned_cloud_accounts."""
+
 from unittest.mock import patch
 
 from django.test import TestCase, override_settings

@@ -1,4 +1,5 @@
 """Collection of tests for custom DRF serializers in the account app."""
+
 from unittest.mock import Mock, patch
 
 import faker

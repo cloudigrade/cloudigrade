@@ -1,4 +1,5 @@
 """Cloudigrade API v2 Models for Azure."""
+
 import logging
 
 from azure.core.exceptions import ClientAuthenticationError

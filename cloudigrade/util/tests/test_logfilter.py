@@ -1,4 +1,5 @@
 """Tests for Cloudigrade's custom log filters."""
+
 import uuid
 from unittest.mock import Mock, patch
 

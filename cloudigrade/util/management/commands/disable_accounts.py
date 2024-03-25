@@ -1,4 +1,5 @@
 """Disable all currently-enabled CloudAccount objects."""
+
 import logging
 
 from django.conf import settings

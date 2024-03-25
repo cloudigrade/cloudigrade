@@ -1,4 +1,5 @@
 """Collection of tests for custom Jinja2 filters."""
+
 import textwrap
 from unittest.mock import MagicMock, Mock
 

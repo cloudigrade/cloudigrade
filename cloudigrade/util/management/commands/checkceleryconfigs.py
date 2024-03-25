@@ -1,4 +1,5 @@
 """Ensure Celery tasks are reasonable configured for cloudigrade."""
+
 import os
 import sys
 

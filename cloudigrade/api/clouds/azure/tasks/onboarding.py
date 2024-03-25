@@ -1,4 +1,5 @@
 """Celery tasks related to on-boarding new customer Azure cloud accounts."""
+
 import logging
 
 from django.utils.translation import gettext as _

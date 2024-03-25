@@ -1,4 +1,5 @@
 """Cloudigrade Base Models."""
+
 import logging
 
 from django.contrib.contenttypes.fields import GenericForeignKey

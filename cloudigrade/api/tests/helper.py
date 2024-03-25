@@ -1,4 +1,5 @@
 """Helper functions for generating test data."""
+
 import functools
 import logging
 import uuid

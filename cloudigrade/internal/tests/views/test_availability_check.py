@@ -1,4 +1,5 @@
 """Collection of tests for Availability Check."""
+
 from unittest.mock import patch
 
 import faker

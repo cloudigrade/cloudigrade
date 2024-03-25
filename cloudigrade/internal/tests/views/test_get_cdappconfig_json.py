@@ -1,4 +1,5 @@
 """Collection of tests for the internal cdappconfig.json view."""
+
 import json
 import tempfile
 from unittest.mock import patch

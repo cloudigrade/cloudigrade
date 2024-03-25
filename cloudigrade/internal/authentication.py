@@ -1,4 +1,5 @@
 """Authentication classes for cloudigrade internal APIs."""
+
 from api.authentication import IdentityHeaderAuthentication
 
 

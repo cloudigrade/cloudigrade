@@ -1,4 +1,5 @@
 """Collection of tests for ``util.health`` module."""
+
 from unittest.mock import Mock
 
 from botocore.exceptions import ClientError

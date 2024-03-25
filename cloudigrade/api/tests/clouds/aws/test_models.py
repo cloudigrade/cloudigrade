@@ -1,4 +1,5 @@
 """Collection of tests for custom Django model logic."""
+
 import logging
 from unittest.mock import Mock, patch
 

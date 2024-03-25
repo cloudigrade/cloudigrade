@@ -1,4 +1,5 @@
 """util.exceptions module."""
+
 import http
 import logging
 

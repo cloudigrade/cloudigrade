@@ -1,4 +1,5 @@
 """Custom permission classes for the rest of the application."""
+
 from rest_framework import permissions
 
 

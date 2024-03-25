@@ -1,4 +1,5 @@
 """Collection of tests for ``util.misc`` module."""
+
 import copy
 from datetime import datetime, timedelta
 from unittest.mock import patch

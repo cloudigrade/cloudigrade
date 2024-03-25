@@ -1,4 +1,5 @@
 """Custom DRF encoders."""
+
 from rest_framework.utils.encoders import JSONEncoder
 
 

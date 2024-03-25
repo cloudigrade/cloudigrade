@@ -1,4 +1,5 @@
 """Collection of tests for ``util.aws.sts`` module."""
+
 import json
 from unittest.mock import Mock, patch
 

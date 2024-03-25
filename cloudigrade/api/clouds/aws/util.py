@@ -1,4 +1,5 @@
 """Utility functions for AWS models and use cases."""
+
 import logging
 
 from botocore.exceptions import ClientError

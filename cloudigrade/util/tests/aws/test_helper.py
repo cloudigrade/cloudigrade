@@ -1,4 +1,5 @@
 """Collection of tests for ``util.aws.helper`` module."""
+
 import uuid
 from unittest.mock import Mock, call, patch
 

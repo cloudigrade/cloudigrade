@@ -1,4 +1,5 @@
 """Listens to the platform kafka instance."""
+
 import json
 import logging
 import signal

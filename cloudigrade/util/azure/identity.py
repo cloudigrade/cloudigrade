@@ -1,4 +1,5 @@
 """Helper utility module to wrap up common Azure Identity operations."""
+
 from uuid import UUID
 
 from azure.identity import EnvironmentCredential

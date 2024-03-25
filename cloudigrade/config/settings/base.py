@@ -1,4 +1,5 @@
 """Base settings file."""
+
 import json
 import logging.config
 import sys

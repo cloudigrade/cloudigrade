@@ -1,4 +1,5 @@
 """Collection of tests for custom Django model logic."""
+
 import uuid
 from unittest.mock import Mock, patch
 

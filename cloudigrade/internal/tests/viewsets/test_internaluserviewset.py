@@ -1,4 +1,5 @@
 """Collection of tests for InternalUserViewSet."""
+
 import faker
 from django.test import TestCase
 

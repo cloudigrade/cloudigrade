@@ -1,4 +1,5 @@
 """Settings file meant for running tests."""
+
 from .base import *
 
 DEBUG = env.bool("DJANGO_DEBUG", default=False)

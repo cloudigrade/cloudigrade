@@ -1,4 +1,5 @@
 """Collection of tests for tasks.delete_from_sources_kafka_message."""
+
 from unittest.mock import patch
 
 import faker

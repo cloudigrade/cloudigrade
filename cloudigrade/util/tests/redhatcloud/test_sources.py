@@ -1,4 +1,5 @@
 """Collection of tests for ``util.redhatcloud.sources`` module."""
+
 import http
 import json
 from unittest.mock import MagicMock, Mock, patch

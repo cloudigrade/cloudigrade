@@ -1,4 +1,5 @@
 """Custom DRF renderers."""
+
 from rest_framework.renderers import JSONRenderer
 
 from internal.encoders import JsonBytesEncoder

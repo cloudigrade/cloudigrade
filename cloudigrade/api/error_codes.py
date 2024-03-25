@@ -1,4 +1,5 @@
 """Collection of Cloudigrade error codes."""
+
 from dataclasses import dataclass
 from gettext import gettext as _
 
