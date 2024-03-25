@@ -1,4 +1,5 @@
 """Collection of tests targeting custom authentication modules."""
+
 import base64
 import json
 from unittest.mock import Mock

@@ -1,4 +1,5 @@
 """Internal API URL configuration for cloudigrade."""
+
 from django.urls import include, path
 from rest_framework import permissions, renderers, routers
 from rest_framework.schemas import get_schema_view
@@ -52,7 +53,7 @@ router = routers.DefaultRouter()
 router.APIRootView = PermissiveAPIRootView
 
 # Register all the DRF ViewSet routes with a common "internal-" basename prefix.
-for (prefix, viewset, basename) in routes:
+for prefix, viewset, basename in routes:
     if not basename:
         basename = router.get_default_basename(viewset)
     basename = f"internal-{basename}"

@@ -1,4 +1,5 @@
 """Collection of helper methods for the Internal caching."""
+
 import datetime
 
 from django.core.cache import cache, caches

@@ -2,6 +2,7 @@
 
 Because even test helpers should be tested!
 """
+
 import datetime
 import re
 

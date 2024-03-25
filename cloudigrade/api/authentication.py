@@ -1,4 +1,5 @@
 """Authentication classes for cloudigrade APIs."""
+
 import base64
 import binascii
 import json

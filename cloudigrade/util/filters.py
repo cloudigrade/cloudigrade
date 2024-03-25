@@ -1,4 +1,5 @@
 """Custom Jinja2 filters for use in generated documentation."""
+
 import json
 import textwrap
 

@@ -1,4 +1,5 @@
 """Collection of tests for internal Redis raw command API."""
+
 import json
 from unittest.mock import patch
 

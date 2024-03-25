@@ -1,4 +1,5 @@
 """Collection of tests for ``util.azure.identity`` module."""
+
 from unittest.mock import Mock, patch
 from uuid import UUID
 

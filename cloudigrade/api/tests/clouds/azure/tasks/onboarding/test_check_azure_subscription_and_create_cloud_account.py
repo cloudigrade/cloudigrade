@@ -1,4 +1,5 @@
 """Collection of tests for check_azure_subscription_and_create_cloud_account."""
+
 import uuid
 from unittest.mock import patch
 

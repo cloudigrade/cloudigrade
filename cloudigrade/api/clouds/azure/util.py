@@ -1,4 +1,5 @@
 """Utility functions for Azure models and use cases."""
+
 import logging
 import uuid
 

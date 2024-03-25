@@ -1,4 +1,5 @@
 """Collection of tests for running tasks from the internal API."""
+
 from unittest.mock import patch
 
 import faker

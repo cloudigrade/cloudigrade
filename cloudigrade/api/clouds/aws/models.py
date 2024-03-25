@@ -1,4 +1,5 @@
 """Cloudigrade API v2 Models for AWS."""
+
 import logging
 
 from django.contrib.contenttypes.fields import GenericRelation

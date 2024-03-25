@@ -1,4 +1,5 @@
 """Collection of tests for ``util.redhatcloud.identity`` module."""
+
 import base64
 import json
 
