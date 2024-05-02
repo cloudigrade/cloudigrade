@@ -1,4 +1,5 @@
 """Settings file meant for production like environments."""
+
 import sentry_sdk
 from django.urls import reverse
 from sentry_sdk.integrations.django import DjangoIntegration

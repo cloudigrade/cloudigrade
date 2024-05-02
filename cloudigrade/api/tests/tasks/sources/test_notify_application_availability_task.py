@@ -1,4 +1,5 @@
 """Collection of tests for ``api.tasks.notify_application_availability_task``."""
+
 from unittest.mock import patch
 
 import faker

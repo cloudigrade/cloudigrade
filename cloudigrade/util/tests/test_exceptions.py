@@ -1,4 +1,5 @@
 """Collection of tests for ``util.exceptions`` module."""
+
 from unittest.mock import Mock, patch
 
 from django.core.exceptions import PermissionDenied

@@ -1,4 +1,5 @@
 """Helper functions for generating test data."""
+
 import base64
 import copy
 import datetime

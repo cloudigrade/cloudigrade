@@ -1,4 +1,5 @@
 """Collection of tests targeting cloudigrade error codes."""
+
 import logging
 from unittest.mock import patch
 

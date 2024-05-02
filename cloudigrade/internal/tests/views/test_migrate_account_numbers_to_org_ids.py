@@ -1,4 +1,5 @@
 """Collection of tests for Migrating Account Numbers to Org Ids."""
+
 from unittest.mock import patch
 
 from django.test import TestCase

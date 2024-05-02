@@ -1,4 +1,5 @@
 """Helper utility package to wrap up common Azure operations."""
+
 from django.conf import settings
 
 from util.azure.identity import (

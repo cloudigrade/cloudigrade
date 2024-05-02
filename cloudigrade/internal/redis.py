@@ -1,4 +1,5 @@
 """Internal Redis helper functions."""
+
 from django.core.cache import caches
 from django_redis import get_redis_connection
 from django_redis.cache import RedisCache

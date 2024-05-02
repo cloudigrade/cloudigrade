@@ -1,4 +1,5 @@
 """Collection of tests targeting custom schema generation."""
+
 from django.test import TestCase
 
 from api.schemas import AzureOfferTemplateSchema, SysconfigSchema

@@ -1,4 +1,5 @@
 """Collection of tests for Internal cache."""
+
 from unittest.mock import patch
 
 import faker

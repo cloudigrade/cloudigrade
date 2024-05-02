@@ -1,4 +1,5 @@
 """Celery app for use in Django project."""
+
 import json
 import logging
 import uuid

@@ -1,4 +1,5 @@
 """DRF serializers for the cloudigrade internal API."""
+
 from django_celery_beat.models import PeriodicTask
 from rest_framework import serializers
 from rest_framework.fields import CharField, ChoiceField, JSONField, ListField

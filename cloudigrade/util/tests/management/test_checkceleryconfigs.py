@@ -1,4 +1,5 @@
 """Collection of tests for the 'checkceleryconfigs' management command."""
+
 from contextlib import contextmanager
 from io import StringIO
 from unittest.mock import patch

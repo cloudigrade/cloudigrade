@@ -1,4 +1,5 @@
 """API URL configuration for cloudigrade."""
+
 from django.urls import include, path
 from rest_framework import permissions, renderers, routers
 from rest_framework.schemas import get_schema_view
@@ -14,7 +15,7 @@ routes = [
 
 # Register all the DRF ViewSet routes with a common "v2-" basename prefix.
 router = routers.DefaultRouter()
-for (prefix, viewset, basename) in routes:
+for prefix, viewset, basename in routes:
     basename = f"v2-{basename}"
     router.register(prefix, viewset, basename)
 

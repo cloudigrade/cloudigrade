@@ -1,4 +1,5 @@
 """Utility module to aid Celery functionality."""
+
 from celery import shared_task
 from celery.utils.time import get_exponential_backoff_interval
 

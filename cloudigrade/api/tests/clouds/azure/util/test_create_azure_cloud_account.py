@@ -1,4 +1,5 @@
 """Collection of tests for api.cloud.azure.util.create_azure_cloud_account."""
+
 from unittest.mock import patch
 
 import faker

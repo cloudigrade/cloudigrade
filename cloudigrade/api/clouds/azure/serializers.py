@@ -1,4 +1,5 @@
 """Cloudigrade API DRF Serializers for Azure."""
+
 from rest_framework.fields import IntegerField
 from rest_framework.serializers import ModelSerializer
 

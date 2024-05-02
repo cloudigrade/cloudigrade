@@ -1,4 +1,5 @@
 """Helper utility module to wrap up common AWS operations."""
+
 import logging
 from functools import wraps
 

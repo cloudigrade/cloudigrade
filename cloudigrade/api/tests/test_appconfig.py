@@ -1,4 +1,5 @@
 """Collection of tests for application configuration, IPP12, etc."""
+
 import http
 
 from django.test import TestCase

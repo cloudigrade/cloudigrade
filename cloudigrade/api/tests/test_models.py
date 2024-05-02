@@ -1,4 +1,5 @@
 """Collection of tests for the api.models module."""
+
 import uuid
 from unittest.mock import patch
 

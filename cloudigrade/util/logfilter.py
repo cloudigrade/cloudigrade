@@ -1,4 +1,5 @@
 """Custom LogFilters for Cloudigrade."""
+
 import logging
 
 from util.middleware import local

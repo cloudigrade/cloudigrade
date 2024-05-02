@@ -1,4 +1,5 @@
 """Collection of custom backends to plug into ``django-health-check``."""
+
 import logging
 
 from botocore.exceptions import ClientError

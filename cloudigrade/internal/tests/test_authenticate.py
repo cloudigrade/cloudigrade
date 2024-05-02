@@ -1,4 +1,5 @@
 """Collection of tests targeting custom internal authentication modules."""
+
 from unittest.mock import Mock
 
 import faker
