@@ -2,7 +2,6 @@
 set -e
 
 WORKSPACE="/workspace"
-CA_CERT_FILE="${WORKSPACE}/sonarqube/certs/Current-IT-Root-CAs.pem"
 KEYSTORE_FILE="/tmp/RH-IT-Root-CA.keystore"
 SONARQUBE_BIN_PATH="${WORKSPACE}/sonarqube/extract/${SONAR_SCANNER_NAME}/bin"
 
@@ -14,8 +13,15 @@ echo "JAVA_HOME=${JAVA_HOME}"
 "${JAVA_HOME}"/bin/keytool \
   -keystore "${KEYSTORE_FILE}" \
   -import \
-  -alias RH-IT-Root-CA \
-  -file "${CA_CERT_FILE}" \
+  -alias RHIT-CA-2015 \
+  -file "${WORKSPACE}/deployment/RHIT-CA-2015.crt" \
+  -storepass redhat \
+  -noprompt
+"${JAVA_HOME}"/bin/keytool \
+  -keystore "${KEYSTORE_FILE}" \
+  -import \
+  -alias RHIT-CA-2022 \
+  -file "${WORKSPACE}/deployment/RHIT-CA-2022.crt" \
   -storepass redhat \
   -noprompt
 
