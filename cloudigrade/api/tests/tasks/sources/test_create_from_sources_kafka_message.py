@@ -1,4 +1,5 @@
 """Collection of tests for tasks.create_from_sources_kafka_message."""
+
 import uuid
 from unittest.mock import patch
 

@@ -1,4 +1,5 @@
 """Collection of tests for Clearing Internal cache."""
+
 import faker
 from django.core.cache import cache
 from django.test import TestCase

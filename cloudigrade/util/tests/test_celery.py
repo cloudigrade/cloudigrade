@@ -1,4 +1,5 @@
 """Collection of tests for ``util.celery`` module."""
+
 from unittest.mock import patch
 
 from django.test import TestCase

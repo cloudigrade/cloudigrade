@@ -19,8 +19,9 @@ SONAR_SCANNER_CLI_VERSION="4.6.2.2472"
 SONAR_SCANNER_DOWNLOAD_NAME="sonar-scanner-cli-${SONAR_SCANNER_CLI_VERSION-$SONAR_SCANNER_OS}.zip"
 SONAR_SCANNER_NAME="sonar-scanner-${SONAR_SCANNER_CLI_VERSION-$SONAR_SCANNER_OS}"
 
-# Copy the CA cert so the SonarQube scanner can communicate with the internal server.
-cp ${WORKSPACE}/deployment/Current-IT-Root-CAs.pem ${RUN_DIR}/sonarqube/certs/Current-IT-Root-CAs.pem
+# Copy the CA certs so the SonarQube scanner can communicate with the internal server.
+cp ${WORKSPACE}/deployment/RHIT-CA-2015.crt ${RUN_DIR}/sonarqube/certs/RHIT-CA-2015.crt
+cp ${WORKSPACE}/deployment/RHIT-CA-2022.crt ${RUN_DIR}/sonarqube/certs/RHIT-CA-2022.crt
 
 # Fetch and expand the SonarQube binaries.
 curl --silent --show-error \

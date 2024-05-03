@@ -1,4 +1,5 @@
 """Cloudigrade API v2 Models."""
+
 import logging
 import uuid
 

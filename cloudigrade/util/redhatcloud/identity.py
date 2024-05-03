@@ -1,4 +1,5 @@
 """Functions for interacting with and handling platform identity headers."""
+
 import base64
 import json
 import logging

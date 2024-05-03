@@ -1,4 +1,5 @@
 """Helper utility module to wrap up common AWS ARN operations."""
+
 import re
 from decimal import Decimal
 

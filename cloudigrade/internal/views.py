@@ -1,4 +1,5 @@
 """Internal views for cloudigrade API."""
+
 import json
 import logging
 import os

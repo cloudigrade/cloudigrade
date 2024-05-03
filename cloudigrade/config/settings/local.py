@@ -1,4 +1,5 @@
 """Settings file meant for local development."""
+
 from .base import *
 
 DEBUG = env.bool("DJANGO_DEBUG", default=True)

@@ -1,4 +1,5 @@
 """Collection of tests for Deleting Cloud Accounts Not In Sources."""
+
 from unittest.mock import patch
 
 from django.test import TestCase, override_settings

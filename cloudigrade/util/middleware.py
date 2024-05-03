@@ -1,4 +1,5 @@
 """Custom Middleware for Cloudigrade."""
+
 import threading
 import uuid
 

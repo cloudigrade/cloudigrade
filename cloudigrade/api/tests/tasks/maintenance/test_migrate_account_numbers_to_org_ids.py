@@ -1,4 +1,5 @@
 """Collection of tests for tasks.maintenance.delete_cloud_accounts_not_in_sources."""
+
 import http
 import json
 from unittest.mock import patch

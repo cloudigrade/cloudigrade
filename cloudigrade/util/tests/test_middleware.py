@@ -1,4 +1,5 @@
 """Tests for cloudigrade's custom middleware."""
+
 from unittest.mock import Mock
 
 from django.conf import settings
