@@ -15,7 +15,6 @@ objects:
     appName: cloudigrade
     testing:
       iqe:
-        debug: true
         dynaconfEnvName: stage_post_deploy
         filter: ''
         marker: 'smoke'
