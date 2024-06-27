@@ -130,13 +130,13 @@ tests-no-zope = ["cloudpickle", "cloudpickle", "hypothesis", "hypothesis", "mypy
 
 [[package]]
 name = "azure-cli-core"
-version = "2.54.0"
+version = "2.59.0"
 description = "Microsoft Azure Command-Line Tools Core Module"
 optional = false
 python-versions = ">=3.8.0"
 files = [
-    {file = "azure-cli-core-2.54.0.tar.gz", hash = "sha256:fc653c7a63e0ea1c21d866a1316f1364ee51d9b896cb47f6771dd8033ccf9e8d"},
-    {file = "azure_cli_core-2.54.0-py3-none-any.whl", hash = "sha256:19179f2363634dbfedb89fe938db31e714df79c4e2e4fdd62c3ec60ed47e8358"},
+    {file = "azure-cli-core-2.59.0.tar.gz", hash = "sha256:560fee308654f851435ece9cc9d6412e10fa72cd3b00a5fc327efe029b052caf"},
+    {file = "azure_cli_core-2.59.0-py3-none-any.whl", hash = "sha256:879733b55309e5ce23739a3f6bfa2198ea8e232015e10477021eaedef3965f23"},
 ]
 
 [package.dependencies]
@@ -148,7 +148,7 @@ distro = {version = "*", markers = "sys_platform == \"linux\""}
 humanfriendly = ">=10.0,<11.0"
 jmespath = "*"
 knack = ">=0.11.0,<0.12.0"
-msal = {version = "1.24.0b2", extras = ["broker"]}
+msal = {version = "1.27.0", extras = ["broker"]}
 msal-extensions = ">=1.0.0,<1.1.0"
 msrestazure = ">=0.6.4,<0.7.0"
 packaging = ">=20.9"
@@ -206,20 +206,21 @@ aio = ["aiohttp (>=3.0)"]
 
 [[package]]
 name = "azure-identity"
-version = "1.14.1"
+version = "1.17.1"
 description = "Microsoft Azure Identity Library for Python"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "azure-identity-1.14.1.zip", hash = "sha256:48e2a9dbdc59b4f095f841d867d9a8cbe4c1cdbbad8251e055561afd47b4a9b8"},
-    {file = "azure_identity-1.14.1-py3-none-any.whl", hash = "sha256:3a5bef8e9c3281e864e869739be8d67424bff616cddae96b546ca2a5168d863d"},
+    {file = "azure-identity-1.17.1.tar.gz", hash = "sha256:32ecc67cc73f4bd0595e4f64b1ca65cd05186f4fe6f98ed2ae9f1aa32646efea"},
+    {file = "azure_identity-1.17.1-py3-none-any.whl", hash = "sha256:db8d59c183b680e763722bfe8ebc45930e6c57df510620985939f7f3191e0382"},
 ]
 
 [package.dependencies]
-azure-core = ">=1.11.0,<2.0.0"
+azure-core = ">=1.23.0"
 cryptography = ">=2.5"
-msal = ">=1.20.0,<2.0.0"
-msal-extensions = ">=0.3.0,<2.0.0"
+msal = ">=1.24.0"
+msal-extensions = ">=0.3.0"
+typing-extensions = ">=4.0.0"
 
 [[package]]
 name = "azure-mgmt-core"
@@ -1666,23 +1667,23 @@ files = [
 
 [[package]]
 name = "msal"
-version = "1.24.0b2"
-description = "The Microsoft Authentication Library (MSAL) for Python library"
+version = "1.27.0"
+description = "The Microsoft Authentication Library (MSAL) for Python library enables your app to access the Microsoft Cloud by supporting authentication of users with Microsoft Azure Active Directory accounts (AAD) and Microsoft Accounts (MSA) using industry standard OAuth2 and OpenID Connect."
 optional = false
 python-versions = ">=2.7"
 files = [
-    {file = "msal-1.24.0b2-py2.py3-none-any.whl", hash = "sha256:008d4bc3e456f6878ea1722ab6aa0a1ca3da77cc22bef324a261eafcffe8ddda"},
-    {file = "msal-1.24.0b2.tar.gz", hash = "sha256:a0e6e3f1b099ed29a39e167e83a069ab84d9a7712627f72950030b56791b7cbc"},
+    {file = "msal-1.27.0-py2.py3-none-any.whl", hash = "sha256:572d07149b83e7343a85a3bcef8e581167b4ac76befcbbb6eef0c0e19643cdc0"},
+    {file = "msal-1.27.0.tar.gz", hash = "sha256:3109503c038ba6b307152b0e8d34f98113f2e7a78986e28d0baf5b5303afda52"},
 ]
 
 [package.dependencies]
-cryptography = ">=0.6,<44"
+cryptography = ">=0.6,<45"
 PyJWT = {version = ">=1.0.0,<3", extras = ["crypto"]}
-pymsalruntime = {version = ">=0.13.2,<0.14", optional = true, markers = "python_version >= \"3.6\" and platform_system == \"Windows\" and extra == \"broker\""}
+pymsalruntime = {version = ">=0.13.2,<0.15", optional = true, markers = "python_version >= \"3.6\" and platform_system == \"Windows\" and extra == \"broker\""}
 requests = ">=2.0.0,<3"
 
 [package.extras]
-broker = ["pymsalruntime (>=0.13.2,<0.14)"]
+broker = ["pymsalruntime (>=0.13.2,<0.15)"]
 
 [[package]]
 name = "msal-extensions"
