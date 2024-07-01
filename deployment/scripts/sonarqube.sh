@@ -13,7 +13,7 @@ rm -rf "${RUN_DIR}/sonarqube"
 mkdir -p "${RUN_DIR}/sonarqube/"{scripts,download,extract,certs}
 cp "${RUN_DIR}/deployment/scripts/sonarqube_exec.sh" "${RUN_DIR}/sonarqube/scripts"
 whoami
-ls -alh ${RUN_DIR}/sonarqube/
+ls -alh ${RUN_DIR}/sonarqube/scripts
 chmod +x "${RUN_DIR}/sonarqube/scripts/sonarqube_exec.sh"
 COMMIT_SHORT=$(git rev-parse --short=7 HEAD)
 JAVA_IMAGE="registry.access.redhat.com/ubi9/openjdk-17"
