@@ -44,6 +44,7 @@ black = "^24.4.2"
 typing-extensions = "^4.11.0"
 crc-bonfire = "^5.7.2"
 urllib3 = "1.26.19"
+inflection = "^0.5.1"
 
 
 [tool.poetry.dev-dependencies]
