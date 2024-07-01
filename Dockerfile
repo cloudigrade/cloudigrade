@@ -1,5 +1,5 @@
 ### Base Image
-FROM registry.access.redhat.com/ubi8/ubi-minimal:8.9-1029 as base
+FROM registry.access.redhat.com/ubi8/ubi-minimal:8.10-896.1717584414 as base
 
 WORKDIR /opt/cloudigrade
 
@@ -8,6 +8,7 @@ RUN curl -so 'pgdg-redhat-repo-latest.noarch.rpm' 'https://download.postgresql.o
     && rpm --verbose -K 'pgdg-redhat-repo-latest.noarch.rpm' || true
 
 RUN rpm -iv 'pgdg-redhat-repo-latest.noarch.rpm' \
+    && microdnf module disable -y postgresql \
     && microdnf update \
     && microdnf install -y \
         git \
