@@ -342,8 +342,7 @@ Kafka Listener
 
 Several environment variables may override defaults from ``config.settings`` to configure this command:
 
-- ``KAFKA_SERVER_HOST`` - Kafka server host
-- ``KAFKA_SERVER_PORT`` -  Kafka server port
+- ``KAFKA_SERVER_HOSTS`` - Kafka server hostports
 - ``LISTENER_TOPIC`` - The topic to listen to
 - ``LISTENER_GROUP_ID`` - The listener group
 - ``LISTENER_AUTO_COMMIT`` - Whether the messages being received should be marked as so

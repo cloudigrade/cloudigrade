@@ -296,9 +296,7 @@ def notify_application_availability(
         return
 
     sources_kafka_config = {
-        "bootstrap.servers": (
-            f"{settings.KAFKA_SERVER_HOST}:{settings.KAFKA_SERVER_PORT}"
-        )
+        "bootstrap.servers": set(settings.KAFKA_SERVER_HOSTS)
     }
 
     payload = {

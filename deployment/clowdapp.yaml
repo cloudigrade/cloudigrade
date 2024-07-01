@@ -225,10 +225,8 @@ objects:
           value: ${LISTENER_TOPIC}
         - name: LISTENER_GROUP_ID
           value: ${LISTENER_GROUP_ID}
-        - name: KAFKA_SERVER_HOST
-          value: ${KAFKA_SERVER_HOST}
-        - name: KAFKA_SERVER_PORT
-          value: ${KAFKA_SERVER_PORT}
+        - name: KAFKA_SERVER_HOSTS
+          value: ${KAFKA_SERVER_HOSTS}
         - name: VERBOSE_INSIGHTS_IDENTITY_HEADER_LOGGING
           value: ${VERBOSE_INSIGHTS_IDENTITY_HEADER_LOGGING}
         - name: VERBOSE_SOURCES_NOTIFICATION_LOGGING
@@ -538,10 +536,8 @@ objects:
           value: ${LISTENER_TOPIC}
         - name: LISTENER_GROUP_ID
           value: ${LISTENER_GROUP_ID}
-        - name: KAFKA_SERVER_HOST
-          value: ${KAFKA_SERVER_HOST}
-        - name: KAFKA_SERVER_PORT
-          value: ${KAFKA_SERVER_PORT}
+        - name: KAFKA_SERVER_HOSTS
+          value: ${KAFKA_SERVER_HOSTS}
         - name: SOURCES_ENABLE_DATA_MANAGEMENT
           value: ${SOURCES_ENABLE_DATA_MANAGEMENT}
         - name: SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA
@@ -853,10 +849,8 @@ objects:
           value: ${LISTENER_TOPIC}
         - name: LISTENER_GROUP_ID
           value: ${LISTENER_GROUP_ID}
-        - name: KAFKA_SERVER_HOST
-          value: ${KAFKA_SERVER_HOST}
-        - name: KAFKA_SERVER_PORT
-          value: ${KAFKA_SERVER_PORT}
+        - name: KAFKA_SERVER_HOSTS
+          value: ${KAFKA_SERVER_HOSTS}
         - name: SOURCES_ENABLE_DATA_MANAGEMENT
           value: ${SOURCES_ENABLE_DATA_MANAGEMENT}
         - name: SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA
@@ -1387,14 +1381,10 @@ parameters:
   displayName: Listener Log Level
   required: true
   value: INFO
-- name: KAFKA_SERVER_HOST
-  displayName: Kafka Server Host
+- name: KAFKA_SERVER_HOSTS
+  displayName: Kafka Server Hosts
   required: true
-  value: platform-mq-ephemeral-kafka-bootstrap.platform-mq-ephemeral.svc
-- name: KAFKA_SERVER_PORT
-  displayName: Kafka Server Port
-  required: true
-  value: '9092'
+  value: platform-mq-ephemeral-kafka-bootstrap.platform-mq-ephemeral.svc:9092
 - name: LISTENER_TOPIC
   displayName: Listener Topic
   required: true
