@@ -45,7 +45,7 @@ echo SONAR_SCANNER_NAME="${SONAR_SCANNER_NAME}" >> "${ENV_FILE}"
 # Run the SonarQube scanner in a Docker container.
 docker pull "${JAVA_IMAGE}"
 docker run \
-  -v"${RUN_DIR}":/workspace \
+  -v"${RUN_DIR}":/workspace:z \
   --env-file "${ENV_FILE}" \
   "${JAVA_IMAGE}" \
   bash /workspace/sonarqube/scripts/sonarqube_exec.sh

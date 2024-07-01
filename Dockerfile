@@ -8,6 +8,7 @@ RUN curl -so 'pgdg-redhat-repo-latest.noarch.rpm' 'https://download.postgresql.o
     && rpm --verbose -K 'pgdg-redhat-repo-latest.noarch.rpm' || true
 
 RUN rpm -iv 'pgdg-redhat-repo-latest.noarch.rpm' \
+    && microdnf module disable -y postgresql \
     && microdnf update \
     && microdnf install -y \
         git \
