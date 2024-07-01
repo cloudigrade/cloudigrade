@@ -217,8 +217,7 @@ class SourcesTest(TestCase):
         kafka_producer = mock_kafka_producer(self.sources_kafka_config)
 
         with override_settings(
-            KAFKA_SERVER_HOST=self.kafka_server_host,
-            KAFKA_SERVER_PORT=self.kafka_server_port,
+            KAFKA_SERVER_HOSTS=self.kafka_server_hosts,
             SOURCES_STATUS_TOPIC=self.sources_kafka_topic,
             SOURCES_RESOURCE_TYPE=self.sources_resource_type,
             SOURCES_AVAILABILITY_EVENT_TYPE=self.sources_availability_event_type,
@@ -268,8 +267,7 @@ class SourcesTest(TestCase):
         kafka_producer.produce.side_effect = BufferError("bad error")
 
         with override_settings(
-            KAFKA_SERVER_HOST=self.kafka_server_host,
-            KAFKA_SERVER_PORT=self.kafka_server_port,
+            KAFKA_SERVER_HOSTS=self.kafka_server_hosts,
             SOURCES_STATUS_TOPIC=self.sources_kafka_topic,
             SOURCES_RESOURCE_TYPE=self.sources_resource_type,
             SOURCES_AVAILABILITY_EVENT_TYPE=self.sources_availability_event_type,
@@ -304,8 +302,7 @@ class SourcesTest(TestCase):
         kafka_producer.produce.side_effect = KafkaException(KafkaError(5))
 
         with override_settings(
-            KAFKA_SERVER_HOST=self.kafka_server_host,
-            KAFKA_SERVER_PORT=self.kafka_server_port,
+            KAFKA_SERVER_HOSTS=self.kafka_server_hosts,
             SOURCES_STATUS_TOPIC=self.sources_kafka_topic,
             SOURCES_RESOURCE_TYPE=self.sources_resource_type,
             SOURCES_AVAILABILITY_EVENT_TYPE=self.sources_availability_event_type,
