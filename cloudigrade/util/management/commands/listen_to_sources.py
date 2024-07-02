@@ -36,7 +36,10 @@ class Command(BaseCommand):
         group_id = settings.LISTENER_GROUP_ID
         bootstrap_server_host = settings.KAFKA_SERVER_HOST
         bootstrap_server_port = settings.KAFKA_SERVER_PORT
-        bootstrap_servers = f"{bootstrap_server_host}:{bootstrap_server_port}"
+        if hasattr(settings, "KAFKA_BROKERS"):
+            bootstrap_servers = ",".join(settings.KAFKA_BROKERS)
+        else:
+            bootstrap_servers = f"{bootstrap_server_host}:{bootstrap_server_port}"
 
         consumer_conf = {
             "bootstrap.servers": bootstrap_servers,
