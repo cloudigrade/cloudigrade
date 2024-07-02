@@ -554,11 +554,16 @@ if isClowderEnabled():
 
     kafka_broker = clowder_cfg.kafka.brokers[0]
     if len(clowder_cfg.kafka.brokers) > 1:
-        KAFKA_BROKERS = [f"{i.get('hostname')}:{i.get('port')}" for i in clowder_cfg.kafka.brokers]
+        KAFKA_BROKERS = [
+            f"{i.get('hostname')}:{i.get('port')}" for i in clowder_cfg.kafka.brokers
+        ]
+        __print_stderr(f"Clowder: Kafka servers: {KAFKA_BROKERS}")
     else:
         KAFKA_SERVER_HOST = kafka_broker.hostname
         KAFKA_SERVER_PORT = kafka_broker.port
-        __print_stderr(f"Clowder: Kafka server: {KAFKA_SERVER_HOST}:{KAFKA_SERVER_PORT}")
+        __print_stderr(
+            f"Clowder: Kafka server: {KAFKA_SERVER_HOST}:{KAFKA_SERVER_PORT}"
+        )
 
     if kafka_broker.cacert:
         KAFKA_SERVER_CA_LOCATION = clowder_cfg.kafka_ca()
