@@ -551,10 +551,15 @@ KAFKA_SERVER_SASL_PASSWORD = None
 KAFKA_LISTENER_ADDRESS_FAMILY = env("KAFKA_LISTENER_ADDRESS_FAMILY", default="any")
 
 if isClowderEnabled():
+
     kafka_broker = clowder_cfg.kafka.brokers[0]
-    KAFKA_SERVER_HOST = kafka_broker.hostname
-    KAFKA_SERVER_PORT = kafka_broker.port
-    __print_stderr(f"Clowder: Kafka server: {KAFKA_SERVER_HOST}:{KAFKA_SERVER_PORT}")
+    if len(clowder_cfg.kafka.brokers) > 1:
+        KAFKA_BROKERS = [f"{i.get('hostname')}:{i.get('port')}" for i in clowder_cfg.kafka.brokers]
+    else:
+        KAFKA_SERVER_HOST = kafka_broker.hostname
+        KAFKA_SERVER_PORT = kafka_broker.port
+        __print_stderr(f"Clowder: Kafka server: {KAFKA_SERVER_HOST}:{KAFKA_SERVER_PORT}")
+
     if kafka_broker.cacert:
         KAFKA_SERVER_CA_LOCATION = clowder_cfg.kafka_ca()
         __print_stderr("Clowder: Kafka server CA defined")
