@@ -36,6 +36,9 @@ class SourcesTest(TestCase):
         self.application_id = _faker.pyint()
         self.kafka_server_host = _faker.hostname()
         self.kafka_server_port = str(_faker.pyint())
+        self.kafka_brokers = [
+            f"{_faker.hostname()}:{str(_faker.pyint())}" for _ in range(3)
+        ]
         self.kafka_ca_location = _faker.file_path(depth=2)
         self.kafka_security_protocol = _faker.slug()
         self.kafka_sasl_mechanism = _faker.slug()
@@ -219,6 +222,40 @@ class SourcesTest(TestCase):
         with override_settings(
             KAFKA_SERVER_HOST=self.kafka_server_host,
             KAFKA_SERVER_PORT=self.kafka_server_port,
+            SOURCES_STATUS_TOPIC=self.sources_kafka_topic,
+            SOURCES_RESOURCE_TYPE=self.sources_resource_type,
+            SOURCES_AVAILABILITY_EVENT_TYPE=self.sources_availability_event_type,
+            SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA=True,
+            VERBOSE_SOURCES_NOTIFICATION_LOGGING=True,
+        ):
+            sources.notify_application_availability(
+                self.account_number,
+                self.org_id,
+                self.application_id,
+                availability_status=self.available_status,
+            )
+
+        kafka_producer.produce.assert_called_with(
+            topic=self.sources_kafka_topic,
+            value=json.dumps(self.kafka_payload),
+            headers={
+                "x-rh-sources-account-number": self.account_number,
+                "event_type": self.sources_availability_event_type,
+            },
+            callback=_check_response,
+        )
+        kafka_producer.flush.assert_called()
+
+    @patch("util.redhatcloud.sources.KafkaProducer")
+    def test_notify_sources_application_multiple_brokers(
+        self,
+        mock_kafka_producer,
+    ):
+        """Test notify sources happy path success."""
+        kafka_producer = mock_kafka_producer(self.sources_kafka_config)
+
+        with override_settings(
+            KAFKA_BROKERS=self.kafka_brokers,
             SOURCES_STATUS_TOPIC=self.sources_kafka_topic,
             SOURCES_RESOURCE_TYPE=self.sources_resource_type,
             SOURCES_AVAILABILITY_EVENT_TYPE=self.sources_availability_event_type,
