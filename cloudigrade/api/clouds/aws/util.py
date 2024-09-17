@@ -16,7 +16,7 @@ from util.exceptions import InvalidArn
 logger = logging.getLogger(__name__)
 
 
-def verify_permissions(customer_role_arn):  # noqa: C901
+def verify_permissions(customer_role_arn, external_id):  # noqa: C901
     """
     Verify AWS permissions.
 
@@ -24,6 +24,7 @@ def verify_permissions(customer_role_arn):  # noqa: C901
 
     Args:
         customer_role_arn (str): ARN to access the customer's AWS account
+        external_id (str): External Id supplied to us by sources unique to each customer.
 
     Note:
         This function also has the side effect of notifying sources and updating the
@@ -59,7 +60,7 @@ def verify_permissions(customer_role_arn):  # noqa: C901
     org_id = cloud_account.user.org_id
 
     try:
-        session = aws.get_session(arn_str)
+        session = aws.get_session(arn_str,external_id)
         access_verified, failed_actions = aws.verify_account_access(session)
         if not access_verified:
             for action in failed_actions:
@@ -106,6 +107,7 @@ def create_aws_cloud_account(
     platform_authentication_id,
     platform_application_id,
     platform_source_id,
+    external_id,
 ):
     """
     Create AwsCloudAccount for the customer user.
@@ -135,6 +137,7 @@ def create_aws_cloud_account(
             "platform_authentication_id=%(platform_authentication_id)s, "
             "platform_application_id=%(platform_application_id)s, "
             "platform_source_id=%(platform_source_id)s"
+            "external_id=%(external_id)s"
         ),
         {
             "user": user.account_number,
@@ -142,6 +145,7 @@ def create_aws_cloud_account(
             "platform_authentication_id": platform_authentication_id,
             "platform_application_id": platform_application_id,
             "platform_source_id": platform_source_id,
+            "external_id": external_id,
         },
     )
     aws_account_id = aws.AwsArn(customer_role_arn).account_id
@@ -164,7 +168,7 @@ def create_aws_cloud_account(
             # Use get_or_create here in case there is another task running concurrently
             # that created the AwsCloudAccount at the same time.
             aws_cloud_account, created = AwsCloudAccount.objects.get_or_create(
-                aws_account_id=aws_account_id, account_arn=arn_str
+                aws_account_id=aws_account_id, account_arn=arn_str, external_id= external_id
             )
         except IntegrityError:
             # get_or_create can throw integrity error in the case that

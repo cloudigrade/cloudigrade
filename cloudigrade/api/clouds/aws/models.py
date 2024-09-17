@@ -24,6 +24,7 @@ class AwsCloudAccount(BaseModel):
         max_digits=12, decimal_places=0, db_index=True, unique=True
     )
     account_arn = models.CharField(max_length=256, unique=True)
+    external_id = models.CharField(max_length=256, blank=True)
 
     @property
     def cloud_account_id(self):
@@ -53,6 +54,7 @@ class AwsCloudAccount(BaseModel):
             f"id={self.id}, "
             f"aws_account_id={self.aws_account_id}, "
             f"account_arn='{self.account_arn}', "
+            f"external_id='{self.external_id}', "
             f"created_at=parse({created_at}), "
             f"updated_at=parse({updated_at})"
             f")"
@@ -76,7 +78,7 @@ class AwsCloudAccount(BaseModel):
 
         from api.clouds.aws import util  # Avoid circular import.
 
-        verified = util.verify_permissions(self.account_arn)
+        verified = util.verify_permissions(self.account_arn, self.external_id)
         if not verified:
             message = f"Could not enable {repr(self)}; verify_permissions failed"
             logger.info(message)

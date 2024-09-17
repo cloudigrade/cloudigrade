@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
     name="api.clouds.azure.tasks.check_azure_subscription_and_create_cloud_account",
 )
 def check_azure_subscription_and_create_cloud_account(
-    username, org_id, subscription_id, authentication_id, application_id, source_id
+    username, org_id, subscription_id, authentication_id, application_id, source_id, extras
 ):
     """
     Configure the customer's Azure account and create our CloudAccount.

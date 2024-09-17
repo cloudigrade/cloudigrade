@@ -24,12 +24,13 @@ cloudigrade_policy = {
 }
 
 
-def get_session(arn, region_name="us-east-1"):
+def get_session(arn, external_id, region_name="us-east-1"):
     """
     Return a session using the customer AWS account role ARN.
 
     Args:
         arn (str): Amazon Resource Name to use for assuming a role.
+        external_id (str): External Id unique to the customer provided by Red Hat.
         region_name (str): Default AWS Region to associate newly
         created clients with.
 
@@ -43,6 +44,7 @@ def get_session(arn, region_name="us-east-1"):
         Policy=json.dumps(cloudigrade_policy),
         RoleArn="{0}".format(awsarn),
         RoleSessionName="cloudigrade-{0}".format(awsarn.account_id),
+        ExternalId = external_id,
     )
     response = response["Credentials"]
     return boto3.Session(

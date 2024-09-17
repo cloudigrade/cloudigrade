@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 )
 @rewrap_aws_errors
 def configure_customer_aws_and_create_cloud_account(
-    username, org_id, customer_arn, authentication_id, application_id, source_id
+    username, org_id, customer_arn, authentication_id, application_id, source_id, extras
 ):
     """
     Configure the customer's AWS account and create our CloudAccount.
@@ -52,6 +52,7 @@ def configure_customer_aws_and_create_cloud_account(
             "authentication_id='%(authentication_id)s' "
             "application_id='%(application_id)s' "
             "source_id='%(source_id)s'"
+            "extras='%(extras)s' "
         ),
         {
             "username": username,
@@ -60,6 +61,7 @@ def configure_customer_aws_and_create_cloud_account(
             "authentication_id": authentication_id,
             "application_id": application_id,
             "source_id": source_id,
+            "extras" :  extras,
         },
     )
     try:
@@ -88,12 +90,14 @@ def configure_customer_aws_and_create_cloud_account(
         return
 
     try:
+        external_id = extras.get("external_id", None)
         create_aws_cloud_account(
             user,
             customer_arn,
             authentication_id,
             application_id,
             source_id,
+            external_id,
         )
     except ValidationError as e:
         logger.info("Unable to create cloud account: error %s", e.detail)
@@ -107,6 +111,7 @@ def configure_customer_aws_and_create_cloud_account(
             "authentication_id='%(authentication_id)s' "
             "application_id='%(application_id)s' "
             "source_id='%(source_id)s'"
+            "extras='%(extras)s' "
         ),
         {
             "username": username,
@@ -115,5 +120,6 @@ def configure_customer_aws_and_create_cloud_account(
             "authentication_id": authentication_id,
             "application_id": application_id,
             "source_id": source_id,
+            "extras" :  extras,
         },
     )

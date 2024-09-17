@@ -50,6 +50,7 @@ def create_from_sources_kafka_message(message, headers):
     """
     authentication_id = message.get("authentication_id", None)
     application_id = message.get("application_id", None)
+    extras = message.get("extras", None)
     (
         account_number,
         org_id,
@@ -121,6 +122,7 @@ def create_from_sources_kafka_message(message, headers):
                 authentication_id,
                 application_id,
                 source_id,
+                extras,
             )
         )
 
