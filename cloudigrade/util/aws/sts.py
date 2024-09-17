@@ -40,13 +40,20 @@ def get_session(arn, external_id, region_name="us-east-1"):
     """
     sts = boto3.client("sts")
     awsarn = AwsArn(arn)
-    response = sts.assume_role(
-        Policy=json.dumps(cloudigrade_policy),
-        RoleArn="{0}".format(awsarn),
-        RoleSessionName="cloudigrade-{0}".format(awsarn.account_id),
-        ExternalId = external_id,
-    )
+
+    assume_role_params = {
+        'Policy': json.dumps(cloudigrade_policy),
+        'RoleArn': "{0}".format(awsarn),
+        'RoleSessionName': "cloudigrade-{0}".format(awsarn.account_id)
+    }
+
+    # we add external id only if it is not None or not empty
+    if external_id and external_id.strip():
+        assume_role_params['ExternalId'] = external_id
+
+    response = sts.assume_role(**assume_role_params)
     response = response["Credentials"]
+
     return boto3.Session(
         aws_access_key_id=response["AccessKeyId"],
         aws_secret_access_key=response["SecretAccessKey"],
