@@ -61,7 +61,7 @@ def configure_customer_aws_and_create_cloud_account(
             "authentication_id": authentication_id,
             "application_id": application_id,
             "source_id": source_id,
-            "extras" :  extras,
+            "extras": extras,
         },
     )
     try:
@@ -120,6 +120,6 @@ def configure_customer_aws_and_create_cloud_account(
             "authentication_id": authentication_id,
             "application_id": application_id,
             "source_id": source_id,
-            "extras" :  extras,
+            "extras": extras,
         },
     )

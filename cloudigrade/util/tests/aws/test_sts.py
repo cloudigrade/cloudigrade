@@ -33,7 +33,7 @@ class UtilAwsStsTest(TestCase):
             Policy=json.dumps(sts.cloudigrade_policy),
             RoleArn="{0}".format(mock_arn),
             RoleSessionName="cloudigrade-{0}".format(mock_account_id),
-            ExternalId = mock_external_id,
+            ExternalId=mock_external_id,
         )
 
         self.assertEqual(creds[0], mock_role["Credentials"]["AccessKeyId"])

@@ -1,4 +1,5 @@
 """Public viewset classes for cloudigrade API."""
+
 import logging
 
 from django.conf import settings

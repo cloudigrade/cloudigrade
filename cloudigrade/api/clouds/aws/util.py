@@ -24,8 +24,7 @@ def verify_permissions(customer_role_arn, external_id):  # noqa: C901
 
     Args:
         customer_role_arn (str): ARN to access the customer's AWS account
-        external_id (str): External Id supplied to us by sources unique to each customer.
-
+        external_id (str): External Id supplied to us by sources
     Note:
         This function also has the side effect of notifying sources and updating the
         application status to unavailable if we cannot complete processing normally.
@@ -60,7 +59,7 @@ def verify_permissions(customer_role_arn, external_id):  # noqa: C901
     org_id = cloud_account.user.org_id
 
     try:
-        session = aws.get_session(arn_str,external_id)
+        session = aws.get_session(arn_str, external_id)
         access_verified, failed_actions = aws.verify_account_access(session)
         if not access_verified:
             for action in failed_actions:
@@ -168,7 +167,9 @@ def create_aws_cloud_account(
             # Use get_or_create here in case there is another task running concurrently
             # that created the AwsCloudAccount at the same time.
             aws_cloud_account, created = AwsCloudAccount.objects.get_or_create(
-                aws_account_id=aws_account_id, account_arn=arn_str, external_id= external_id
+                aws_account_id=aws_account_id,
+                account_arn=arn_str,
+                external_id=external_id,
             )
         except IntegrityError:
             # get_or_create can throw integrity error in the case that

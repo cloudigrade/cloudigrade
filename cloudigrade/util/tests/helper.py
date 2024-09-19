@@ -40,6 +40,7 @@ def generate_dummy_aws_account_id():
     """Generate a dummy AWS AwsAccount ID for testing purposes."""
     return Decimal(random.randrange(MIN_AWS_ACCOUNT_ID, MAX_AWS_ACCOUNT_ID))
 
+
 def generate_dummy_external_id():
     """Generate a dummy external id for testing purposes."""
     return str(uuid.uuid4())
