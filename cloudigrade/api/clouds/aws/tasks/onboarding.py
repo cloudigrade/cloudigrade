@@ -90,7 +90,9 @@ def configure_customer_aws_and_create_cloud_account(
         return
 
     try:
-        external_id = extras.get("external_id", None)
+        external_id = None
+        if extras is not None:
+            external_id = extras.get("external_id", None)
         create_aws_cloud_account(
             user,
             customer_arn,

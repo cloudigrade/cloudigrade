@@ -50,7 +50,6 @@ def create_from_sources_kafka_message(message, headers):
     """
     authentication_id = message.get("authentication_id", None)
     application_id = message.get("application_id", None)
-    extras = message.get("extras", None)
     (
         account_number,
         org_id,
@@ -112,6 +111,8 @@ def create_from_sources_kafka_message(message, headers):
         create_cloud_account_task = configure_customer_aws_and_create_cloud_account
     elif authtype == settings.SOURCES_CLOUDMETER_LIGHTHOUSE_AUTHTYPE:
         create_cloud_account_task = check_azure_subscription_and_create_cloud_account
+
+    extras = authentication.get('extra', None)
 
     if create_cloud_account_task:
         transaction.on_commit(
