@@ -112,7 +112,7 @@ def create_from_sources_kafka_message(message, headers):
     elif authtype == settings.SOURCES_CLOUDMETER_LIGHTHOUSE_AUTHTYPE:
         create_cloud_account_task = check_azure_subscription_and_create_cloud_account
 
-    extras = authentication.get('extra', None)
+    extras = authentication.get("extra", None)
 
     if create_cloud_account_task:
         transaction.on_commit(
