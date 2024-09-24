@@ -98,7 +98,7 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 1138
+    Content-Length: 1157
     Content-Type: application/json
     Cross-Origin-Opener-Policy: same-origin
     Referrer-Policy: same-origin
@@ -116,6 +116,7 @@ Response:
                     "aws_account_id": "116325369465",
                     "aws_cloud_account_id": 1,
                     "created_at": "2020-05-04T00:00:00Z",
+                    "external_id": null,
                     "updated_at": "2020-05-18T13:51:59.722367Z"
                 },
                 "created_at": "2020-05-04T00:00:00Z",
@@ -174,7 +175,7 @@ Response:
 
     HTTP/1.1 200 OK
     Allow: GET, HEAD, OPTIONS
-    Content-Length: 496
+    Content-Length: 515
     Content-Type: application/json
     Cross-Origin-Opener-Policy: same-origin
     Referrer-Policy: same-origin
@@ -190,6 +191,7 @@ Response:
             "aws_account_id": "116325369465",
             "aws_cloud_account_id": 1,
             "created_at": "2020-05-04T00:00:00Z",
+            "external_id": null,
             "updated_at": "2020-05-18T13:51:59.722367Z"
         },
         "created_at": "2020-05-04T00:00:00Z",
@@ -409,7 +411,7 @@ Response:
 
     HTTP/1.1 201 Created
     Allow: GET, POST, HEAD, OPTIONS
-    Content-Length: 511
+    Content-Length: 530
     Content-Type: application/json
     Cross-Origin-Opener-Policy: same-origin
     Referrer-Policy: same-origin
@@ -425,6 +427,7 @@ Response:
             "aws_account_id": "197130730991",
             "aws_cloud_account_id": 2,
             "created_at": "2020-05-18T13:51:59.722367Z",
+            "external_id": null,
             "updated_at": "2020-05-18T13:51:59.722367Z"
         },
         "created_at": "2020-05-18T13:51:59.722367Z",
