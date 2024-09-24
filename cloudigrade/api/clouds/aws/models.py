@@ -24,7 +24,7 @@ class AwsCloudAccount(BaseModel):
         max_digits=12, decimal_places=0, db_index=True, unique=True
     )
     account_arn = models.CharField(max_length=256, unique=True)
-    external_id = models.CharField(max_length=256, blank=True)
+    external_id = models.CharField(max_length=256, null=True)
 
     @property
     def cloud_account_id(self):
