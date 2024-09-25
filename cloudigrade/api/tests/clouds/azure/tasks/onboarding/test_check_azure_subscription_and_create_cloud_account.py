@@ -39,6 +39,7 @@ class CheckAzureSubscriptionAndCreateCloudAccountTest(TestCase):
             self.auth_id,
             self.application_id,
             self.source_id,
+            None,
         )
 
         mock_create.assert_called_with(
@@ -61,6 +62,7 @@ class CheckAzureSubscriptionAndCreateCloudAccountTest(TestCase):
             self.auth_id,
             self.application_id,
             self.source_id,
+            None,
         )
 
         mock_notify_sources.delay.assert_called_once()
@@ -82,6 +84,7 @@ class CheckAzureSubscriptionAndCreateCloudAccountTest(TestCase):
             self.auth_id,
             self.application_id,
             self.source_id,
+            None,
         )
 
         mock_create.assert_not_called()
@@ -101,6 +104,7 @@ class CheckAzureSubscriptionAndCreateCloudAccountTest(TestCase):
             self.auth_id,
             self.application_id,
             self.source_id,
+            None,
         )
 
         self.assertFalse(CloudAccount.objects.filter(user=self.user).exists())

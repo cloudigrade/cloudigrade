@@ -86,6 +86,7 @@ class CreateFromSourcesKafkaMessageTest(TransactionTestCase):
             self.authentication_id,
             self.application_id,
             self.source_id,
+            None,
         )
 
     @patch("util.redhatcloud.sources.get_authentication")
@@ -117,6 +118,7 @@ class CreateFromSourcesKafkaMessageTest(TransactionTestCase):
             self.authentication_id,
             self.application_id,
             self.source_id,
+            None,
         )
 
     @patch("util.redhatcloud.sources.get_application")
@@ -336,4 +338,5 @@ class CreateFromSourcesKafkaMessageTest(TransactionTestCase):
             self.authentication_id,
             self.application_id,
             self.source_id,
+            None,
         )

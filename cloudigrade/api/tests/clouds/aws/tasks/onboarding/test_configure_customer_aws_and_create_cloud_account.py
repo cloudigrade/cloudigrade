@@ -61,6 +61,7 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
             auth_id,
             application_id,
             source_id,
+            None
         )
 
         mock_create.assert_called_with(
@@ -69,6 +70,7 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
             auth_id,
             application_id,
             source_id,
+            None,
         )
 
     @patch("api.tasks.sources.notify_application_availability_task")
@@ -93,6 +95,7 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
             auth_id,
             application_id,
             source_id,
+            None
         )
 
         mock_tasks_aws.get_session_account_id.assert_not_called()
@@ -129,6 +132,7 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
             auth_id,
             application_id,
             source_id,
+            None
         )
 
         self.assertFalse(CloudAccount.objects.filter(user=user).exists())
@@ -151,5 +155,6 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
                 auth_id,
                 application_id,
                 source_id,
+                None
             )
         self.assertIn("Invalid ARN.", cm.output[2])

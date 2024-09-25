@@ -25,6 +25,7 @@ class CloudsAwsUtilVerifyPermissionsTest(TestCase):
             aws_account_id=self.aws_account_id, user=self.user
         )
         self.arn = util_helper.generate_dummy_arn(account_id=self.aws_account_id)
+        self.external_id = _faker.uuid4()
 
     def test_verify_permissions_success(self):
         """Test happy path for verify_permissions."""
@@ -34,7 +35,7 @@ class CloudsAwsUtilVerifyPermissionsTest(TestCase):
             "api.tasks.sources.notify_application_availability_task"
         ) as mock_notify_sources:
             mock_aws_verify_account_access.return_value = True, []
-            verified = util.verify_permissions(self.arn)
+            verified = util.verify_permissions(self.arn, None)
 
         self.assertTrue(verified)
         mock_notify_sources.delay.assert_not_called()
@@ -42,10 +43,11 @@ class CloudsAwsUtilVerifyPermissionsTest(TestCase):
     def test_verify_permissions_fails_if_cloud_account_does_not_exist(self):
         """Test handling when the CloudAccount is missing."""
         arn = util_helper.generate_dummy_arn()
+        external_id = _faker.uuid4()
         with patch(
             "api.tasks.sources.notify_application_availability_task"
         ) as mock_notify_sources:
-            verified = util.verify_permissions(arn)
+            verified = util.verify_permissions(arn, external_id)
 
         self.assertFalse(verified)
         # We do not notify sources because we do not have the CloudAccount which has
@@ -63,7 +65,7 @@ class CloudsAwsUtilVerifyPermissionsTest(TestCase):
                 "api.tasks.sources.notify_application_availability_task"
             ) as mock_notify_sources:
                 mock_get_session.side_effect = client_error
-                verified = util.verify_permissions(self.arn)
+                verified = util.verify_permissions(self.arn, None)
 
             self.assertFalse(verified)
             mock_notify_sources.delay.assert_called()
@@ -81,7 +83,7 @@ class CloudsAwsUtilVerifyPermissionsTest(TestCase):
             "api.tasks.sources.notify_application_availability_task"
         ) as mock_notify_sources:
             mock_get_session.side_effect = client_error
-            verified = util.verify_permissions(self.arn)
+            verified = util.verify_permissions(self.arn, None)
 
         self.assertFalse(verified)
         mock_notify_sources.delay.assert_called()
@@ -102,7 +104,7 @@ class CloudsAwsUtilVerifyPermissionsTest(TestCase):
             "api.tasks.sources.notify_application_availability_task"
         ) as mock_notify_sources:
             mock_aws_verify_account_access.return_value = False, [_faker.slug()]
-            verified = util.verify_permissions(self.arn)
+            verified = util.verify_permissions(self.arn, None)
 
         self.assertFalse(verified)
         mock_notify_sources.delay.assert_called()
@@ -115,7 +117,7 @@ class CloudsAwsUtilVerifyPermissionsTest(TestCase):
             "api.tasks.sources.notify_application_availability_task"
         ) as mock_notify_sources:
             mock_verify_access.side_effect = Exception
-            verified = util.verify_permissions(self.arn)
+            verified = util.verify_permissions(self.arn, None)
 
         self.assertFalse(verified)
         mock_notify_sources.delay.assert_called()

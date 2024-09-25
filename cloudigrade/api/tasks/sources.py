@@ -299,6 +299,7 @@ def update_from_sources_kafka_message(message, headers):
 
         resource_type = authentication.get("resource_type")
         application_id = authentication.get("resource_id")
+        extra = authentication.get("extra", None)
         if resource_type != settings.SOURCES_RESOURCE_TYPE:
             logger.info(
                 _(
@@ -338,6 +339,7 @@ def update_from_sources_kafka_message(message, headers):
                 org_id,
                 authentication_id,
                 source_id,
+                extra
             )
     except CloudAccount.DoesNotExist:
         # Is this authentication meant to be for us? We should check.

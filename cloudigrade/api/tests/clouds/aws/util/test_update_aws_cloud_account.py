@@ -49,6 +49,7 @@ class UpdateAWSCloudAccountTest(TestCase):
             self.org_id,
             self.auth_id,
             self.source_id,
+            None,
         )
         mock_notify_sources.delay.assert_called()
 
@@ -68,6 +69,7 @@ class UpdateAWSCloudAccountTest(TestCase):
             self.org_id,
             self.auth_id,
             self.source_id,
+            None,
         )
         self.assertTrue(AwsCloudAccount.objects.filter(account_arn=arn2).exists())
 
@@ -93,6 +95,7 @@ class UpdateAWSCloudAccountTest(TestCase):
             self.org_id,
             self.auth_id,
             self.source_id,
+            None,
         )
 
         # The old CloudAccount should be disabled regardless of the new one's success.
@@ -120,6 +123,7 @@ class UpdateAWSCloudAccountTest(TestCase):
             self.org_id,
             self.auth_id,
             self.source_id,
+            None,
         )
 
         # The old CloudAccount should be disabled regardless of the new one's success.

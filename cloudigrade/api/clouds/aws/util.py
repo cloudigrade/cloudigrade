@@ -218,6 +218,7 @@ def update_aws_cloud_account(
     org_id,
     authentication_id,
     source_id,
+    extra
 ):
     """
     Update aws_cloud_account with the new arn.
@@ -247,6 +248,9 @@ def update_aws_cloud_account(
         },
     )
     application_id = cloud_account.platform_application_id
+    external_id = None
+    if extra is not None:
+        external_id = extra.get("external_id")
 
     try:
         customer_aws_account_id = aws.AwsArn(customer_arn).account_id
@@ -314,7 +318,7 @@ def update_aws_cloud_account(
         try:
             cloud_account.content_object.account_arn = customer_arn
             cloud_account.content_object.save()
-            verify_permissions(customer_arn)
+            verify_permissions(customer_arn, external_id)
             cloud_account.enable()
         except ValidationError as e:
             logger.info(
