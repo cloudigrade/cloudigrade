@@ -76,6 +76,31 @@ class UpdateAWSCloudAccountTest(TestCase):
         mock_disable.assert_called()
         mock_enable.assert_called()
 
+    @patch.object(CloudAccount, "disable")
+    @patch.object(CloudAccount, "enable")
+    def test_update_aws_cloud_account_different_aws_account_id_ext_id_success(
+        self, mock_enable, mock_disable
+    ):
+        """Test update_aws_cloud_account works."""
+        aws_account_id2 = util_helper.generate_dummy_aws_account_id()
+        arn2 = util_helper.generate_dummy_arn(account_id=aws_account_id2)
+        mock_external_id = _faker.uuid4()
+        mock_extra = {"external_id": mock_external_id}
+
+        util.update_aws_cloud_account(
+            self.cloud_account,
+            arn2,
+            self.account_number,
+            self.org_id,
+            self.auth_id,
+            self.source_id,
+            mock_extra,
+        )
+        self.assertTrue(AwsCloudAccount.objects.filter(account_arn=arn2).exists())
+
+        mock_disable.assert_called()
+        mock_enable.assert_called()
+
     @patch("api.tasks.sources.notify_application_availability_task")
     @patch.object(CloudAccount, "disable")
     @patch.object(CloudAccount, "enable")

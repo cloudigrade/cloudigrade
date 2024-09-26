@@ -339,7 +339,7 @@ def update_from_sources_kafka_message(message, headers):
                 org_id,
                 authentication_id,
                 source_id,
-                extra
+                extra,
             )
     except CloudAccount.DoesNotExist:
         # Is this authentication meant to be for us? We should check.

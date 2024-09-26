@@ -218,7 +218,7 @@ def update_aws_cloud_account(
     org_id,
     authentication_id,
     source_id,
-    extra
+    extra,
 ):
     """
     Update aws_cloud_account with the new arn.
@@ -229,6 +229,7 @@ def update_aws_cloud_account(
         account_number (str): customer's account number
         authentication_id (str): Platform Sources' Authentication object id
         source_id (str): Platform Sources' Source object id
+        extra (str): extras in auth object
     """
     logger.info(
         _(

@@ -29,7 +29,12 @@ class CreateAWSCloudAccountTest(TestCase):
     def test_create_aws_cloud_account_success(self, mock_enable):
         """Test create_aws_cloud_account success."""
         util.create_aws_cloud_account(
-            self.user, self.arn, self.auth_id, self.app_id, self.source_id, None,
+            self.user,
+            self.arn,
+            self.auth_id,
+            self.app_id,
+            self.source_id,
+            None,
         )
 
         mock_enable.assert_called()
@@ -46,7 +51,12 @@ class CreateAWSCloudAccountTest(TestCase):
         this test and its underlying logic must be rewritten.
         """
         util.create_aws_cloud_account(
-            self.user, self.arn, self.auth_id, self.app_id, self.source_id, None,
+            self.user,
+            self.arn,
+            self.auth_id,
+            self.app_id,
+            self.source_id,
+            None,
         )
 
         other_arn = util_helper.generate_dummy_arn(
@@ -77,7 +87,12 @@ class CreateAWSCloudAccountTest(TestCase):
     ):
         """Test create_aws_cloud_account fails with same ARN and a different user."""
         util.create_aws_cloud_account(
-            self.user, self.arn, self.auth_id, self.app_id, self.source_id, None,
+            self.user,
+            self.arn,
+            self.auth_id,
+            self.app_id,
+            self.source_id,
+            None,
         )
 
         other_user = util_helper.generate_test_user()
@@ -132,7 +147,12 @@ class CreateAWSCloudAccountTest(TestCase):
         """Test create_aws_cloud_account failure message for different user."""
         # The first call just creates the existing objects.
         util.create_aws_cloud_account(
-            self.user, self.arn, self.auth_id, self.app_id, self.source_id, None,
+            self.user,
+            self.arn,
+            self.auth_id,
+            self.app_id,
+            self.source_id,
+            None,
         )
 
         other_arn = util_helper.generate_dummy_arn(
