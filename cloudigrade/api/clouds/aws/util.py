@@ -211,7 +211,7 @@ def create_aws_cloud_account(
     return cloud_account
 
 
-def update_aws_cloud_account(
+def update_aws_cloud_account(  # noqa: C901
     cloud_account,
     customer_arn,
     account_number,
