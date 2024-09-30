@@ -19,4 +19,5 @@ class AwsCloudAccountSerializer(ModelSerializer):
             "aws_cloud_account_id",
             "created_at",
             "updated_at",
+            "external_id",
         )

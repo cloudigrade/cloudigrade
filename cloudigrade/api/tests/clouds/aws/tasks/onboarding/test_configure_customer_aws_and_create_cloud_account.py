@@ -61,6 +61,7 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
             auth_id,
             application_id,
             source_id,
+            None,
         )
 
         mock_create.assert_called_with(
@@ -69,6 +70,64 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
             auth_id,
             application_id,
             source_id,
+            None,
+        )
+
+    @patch("api.clouds.aws.tasks.onboarding.create_aws_cloud_account")
+    @patch("api.clouds.aws.tasks.onboarding.aws")
+    @patch("util.aws.sts._get_primary_account_id")
+    def test_success_ext_id(self, mock_primary_id, mock_tasks_aws, mock_create):
+        """Assert the task happy path upon normal operation."""
+        # User that would ultimately own the created objects.
+        user = User.objects.create(
+            account_number=_faker.random_int(min=100000, max=999999)
+        )
+
+        # Dummy values for the various interactions.
+        session_account_id = util_helper.generate_dummy_aws_account_id()
+        auth_id = _faker.pyint()
+        application_id = _faker.pyint()
+        source_id = _faker.pyint()
+
+        customer_secret_access_key = util_helper.generate_dummy_arn(
+            account_id=session_account_id
+        )
+        primary_account_id = util_helper.generate_dummy_aws_account_id()
+        mock_primary_id.return_value = primary_account_id
+        mock_tasks_aws.get_session_account_id.return_value = session_account_id
+        mock_tasks_aws.AwsArn.return_value.account_id = session_account_id
+
+        # Fake out the policy verification.
+        policy_name = _faker.slug()
+        policy_arn = util_helper.generate_dummy_arn(account_id=session_account_id)
+        mock_ensure_policy = mock_tasks_aws.ensure_cloudigrade_policy
+        mock_ensure_policy.return_value = (policy_name, policy_arn)
+
+        # Fake out the role verification.
+        role_name = _faker.slug()
+        role_arn = util_helper.generate_dummy_arn(account_id=session_account_id)
+        mock_ensure_role = mock_tasks_aws.ensure_cloudigrade_role
+        mock_ensure_role.return_value = (role_name, role_arn)
+        mock_external_id = _faker.uuid4()
+        mock_extra = {"external_id": mock_external_id}
+
+        tasks.configure_customer_aws_and_create_cloud_account(
+            user.account_number,
+            user.org_id,
+            customer_secret_access_key,
+            auth_id,
+            application_id,
+            source_id,
+            mock_extra,
+        )
+
+        mock_create.assert_called_with(
+            user,
+            role_arn,
+            auth_id,
+            application_id,
+            source_id,
+            mock_external_id,
         )
 
     @patch("api.tasks.sources.notify_application_availability_task")
@@ -93,6 +152,7 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
             auth_id,
             application_id,
             source_id,
+            None,
         )
 
         mock_tasks_aws.get_session_account_id.assert_not_called()
@@ -129,6 +189,7 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
             auth_id,
             application_id,
             source_id,
+            None,
         )
 
         self.assertFalse(CloudAccount.objects.filter(user=user).exists())
@@ -151,5 +212,6 @@ class ConfigureCustomerAwsAndCreateCloudAccountTest(TestCase):
                 auth_id,
                 application_id,
                 source_id,
+                None,
             )
         self.assertIn("Invalid ARN.", cm.output[2])

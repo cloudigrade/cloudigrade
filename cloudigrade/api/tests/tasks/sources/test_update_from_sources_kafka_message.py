@@ -70,6 +70,7 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
             self.org_id,
             self.authentication_id,
             self.source_id,
+            None,
         )
 
     @patch("util.redhatcloud.sources.get_application")

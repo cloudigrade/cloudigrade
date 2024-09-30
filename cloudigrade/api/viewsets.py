@@ -1,5 +1,7 @@
 """Public viewset classes for cloudigrade API."""
 
+import logging
+
 from django.conf import settings
 from django.urls import reverse
 from django_filters import rest_framework as django_filters
@@ -11,6 +13,8 @@ from api import schemas
 from api.authentication import IdentityHeaderAuthenticationUserNotRequired
 from util.aws.sts import _get_primary_account_id, cloudigrade_policy
 from util.azure import ARM_TEMPLATE
+
+logger = logging.getLogger(__name__)
 
 
 class AccountViewSet(viewsets.ReadOnlyModelViewSet):
@@ -42,6 +46,7 @@ class SysconfigViewSet(viewsets.ViewSet):
             "azure_offer_template_path": reverse("v2-azure-offer-list"),
             "version": settings.CLOUDIGRADE_VERSION,
         }
+        logger.info("Returning sysconfig data")
         return Response(response)
 
 
@@ -56,4 +61,5 @@ class AzureOfferTemplateViewSet(viewsets.ViewSet):
 
     def list(self, *args, **kwargs):
         """Get ARM offer template populated with ids used by this installation."""
+        logger.info("Returning azure offer template")
         return Response(ARM_TEMPLATE, headers={"Access-Control-Allow-Origin": "*"})

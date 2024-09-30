@@ -41,6 +41,11 @@ def generate_dummy_aws_account_id():
     return Decimal(random.randrange(MIN_AWS_ACCOUNT_ID, MAX_AWS_ACCOUNT_ID))
 
 
+def generate_dummy_external_id():
+    """Generate a dummy external id for testing purposes."""
+    return str(uuid.uuid4())
+
+
 def generate_dummy_arn(
     account_id=None,
     region="",

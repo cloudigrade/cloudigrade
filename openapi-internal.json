@@ -2484,6 +2484,9 @@
           },
           "platform_source_id": {
             "type": "integer"
+          },
+          "external_id": {
+            "type": "string"
           }
         },
         "required": [
@@ -2636,6 +2639,11 @@
           },
           "account_arn": {
             "type": "string",
+            "maxLength": 256
+          },
+          "external_id": {
+            "type": "string",
+            "nullable": true,
             "maxLength": 256
           }
         },

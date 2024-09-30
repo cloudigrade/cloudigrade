@@ -20,11 +20,37 @@ class UtilAwsStsTest(TestCase):
         mock_arn = AwsArn(helper.generate_dummy_arn())
         mock_account_id = mock_arn.account_id
         mock_role = helper.generate_dummy_role()
+        mock_external_id = helper.generate_dummy_external_id()
 
         mock_assume_role = mock_client.return_value.assume_role
         mock_assume_role.return_value = mock_role
 
-        session = sts.get_session(str(mock_arn))
+        session = sts.get_session(str(mock_arn), mock_external_id)
+        creds = session.get_credentials().get_frozen_credentials()
+
+        mock_client.assert_called_with("sts")
+        mock_assume_role.assert_called_with(
+            Policy=json.dumps(sts.cloudigrade_policy),
+            RoleArn="{0}".format(mock_arn),
+            RoleSessionName="cloudigrade-{0}".format(mock_account_id),
+            ExternalId=mock_external_id,
+        )
+
+        self.assertEqual(creds[0], mock_role["Credentials"]["AccessKeyId"])
+        self.assertEqual(creds[1], mock_role["Credentials"]["SecretAccessKey"])
+        self.assertEqual(creds[2], mock_role["Credentials"]["SessionToken"])
+
+    @patch("util.aws.sts.boto3.client")
+    def test_get_session_no_ext_id(self, mock_client):
+        """Assert get_session returns session object."""
+        mock_arn = AwsArn(helper.generate_dummy_arn())
+        mock_account_id = mock_arn.account_id
+        mock_role = helper.generate_dummy_role()
+
+        mock_assume_role = mock_client.return_value.assume_role
+        mock_assume_role.return_value = mock_role
+
+        session = sts.get_session(str(mock_arn), "")
         creds = session.get_credentials().get_frozen_credentials()
 
         mock_client.assert_called_with("sts")

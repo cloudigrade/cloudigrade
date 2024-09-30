@@ -112,6 +112,8 @@ def create_from_sources_kafka_message(message, headers):
     elif authtype == settings.SOURCES_CLOUDMETER_LIGHTHOUSE_AUTHTYPE:
         create_cloud_account_task = check_azure_subscription_and_create_cloud_account
 
+    extras = authentication.get("extra", None)
+
     if create_cloud_account_task:
         transaction.on_commit(
             lambda: create_cloud_account_task.delay(
@@ -121,6 +123,7 @@ def create_from_sources_kafka_message(message, headers):
                 authentication_id,
                 application_id,
                 source_id,
+                extras,
             )
         )
 
@@ -296,6 +299,7 @@ def update_from_sources_kafka_message(message, headers):
 
         resource_type = authentication.get("resource_type")
         application_id = authentication.get("resource_id")
+        extra = authentication.get("extra", None)
         if resource_type != settings.SOURCES_RESOURCE_TYPE:
             logger.info(
                 _(
@@ -335,6 +339,7 @@ def update_from_sources_kafka_message(message, headers):
                 org_id,
                 authentication_id,
                 source_id,
+                extra,
             )
     except CloudAccount.DoesNotExist:
         # Is this authentication meant to be for us? We should check.
