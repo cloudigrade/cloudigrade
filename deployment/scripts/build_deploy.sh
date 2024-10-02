@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -euxo pipefail
+
 IMAGE_NAME="quay.io/cloudservices/cloudigrade"
 IMAGE_TAG=$(git rev-parse --short=7 HEAD)
 DOCKER_CONF="${PWD}/.docker"
