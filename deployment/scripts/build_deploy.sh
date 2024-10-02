@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -euxo pipefail
+
 IMAGE_NAME="quay.io/cloudservices/cloudigrade"
 IMAGE_TAG=$(git rev-parse --short=7 HEAD)
 DOCKER_CONF="${PWD}/.docker"
@@ -22,7 +24,7 @@ docker --config="${DOCKER_CONF}" login -u="$RH_REGISTRY_USER" -p="$RH_REGISTRY_T
 # Pull 'Latest' Image
 docker --config="${DOCKER_CONF}" pull ${IMAGE_NAME}:latest || true
 # Build and Tag
-docker --config="${DOCKER_CONF}" build --cache-from ${IMAGE_NAME}:latest --tag ${IMAGE_NAME}:${IMAGE_TAG} .
+docker --config="${DOCKER_CONF}" build --tag ${IMAGE_NAME}:${IMAGE_TAG} .
 docker --config="${DOCKER_CONF}" tag "${IMAGE_NAME}:${IMAGE_TAG}" "${IMAGE_NAME}:latest"
 # Push images
 docker --config="${DOCKER_CONF}" push "${IMAGE_NAME}:latest"
