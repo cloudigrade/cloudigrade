@@ -35,7 +35,9 @@ class Command(BaseCommand):
         topic = settings.LISTENER_TOPIC
         group_id = settings.LISTENER_GROUP_ID
         if hasattr(settings, "KAFKA_BROKERS"):
-            bootstrap_servers = [f'{i.get("hostname")}:{i.get("port")}' for i in settings.KAFKA_BROKERS]
+            bootstrap_servers = [
+                f'{i.get("hostname")}:{i.get("port")}' for i in settings.KAFKA_BROKERS
+            ]
         else:
             bootstrap_server_host = settings.KAFKA_SERVER_HOST
             bootstrap_server_port = settings.KAFKA_SERVER_PORT
