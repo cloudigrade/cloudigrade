@@ -295,10 +295,17 @@ def notify_application_availability(
         )
         return
 
-    sources_kafka_config = {
-        "bootstrap.servers": (
-            f"{settings.KAFKA_SERVER_HOST}:{settings.KAFKA_SERVER_PORT}"
+    if hasattr(settings, "KAFKA_BROKERS"):
+        bootstrap_servers = ",".join(
+            [f"{b.hostname}:{b.port}" for b in settings.KAFKA_BROKERS]
         )
+    else:
+        bootstrap_server_host = settings.KAFKA_SERVER_HOST
+        bootstrap_server_port = settings.KAFKA_SERVER_PORT
+        bootstrap_servers = f"{bootstrap_server_host}:{bootstrap_server_port}"
+
+    sources_kafka_config = {
+        "bootstrap.servers": bootstrap_servers
     }
 
     payload = {
