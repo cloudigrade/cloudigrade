@@ -18,7 +18,7 @@ drf-insights-pagination = "~=1.0.1"
 gunicorn = "23.0.0"
 django-health-check = "~=3.17.0"
 sentry-sdk = "2.8.0"
-Django = "4.2.16"
+Django = "4.2.18"
 django_celery_beat = "~=2.5.0"
 Faker = "~=16.9.0"
 requests = "^2.32.3"
@@ -46,6 +46,8 @@ crc-bonfire = "^5.7.2"
 urllib3 = "1.26.19"
 inflection = "^0.5.1"
 cryptography = "42.0.8"
+jinja2 = "3.1.6"
+pyjwt = "2.10.1"
 
 
 [tool.poetry.dev-dependencies]

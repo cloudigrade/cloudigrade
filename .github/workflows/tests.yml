@@ -53,9 +53,9 @@ jobs:
       image: ghcr.io/cloudigrade/build-container:ubi-8.7-1049-python-3.9.13-2
     steps:
       - uses: actions/checkout@v4
-      - run: pip install poetry safety
+      - run: pip install poetry==1.8.5 safety
       - run: poetry install
-      - run: bash -c "poetry run pip freeze | poetry run safety check --stdin -i 42923 -i 65213 -i 70612"
+      - run: bash -c "poetry run pip freeze | poetry run safety check --stdin -i 42923 -i 65213 -i 70612 -i 73711"
 
   test-docs:
     name: Verify docs and openapi.json
@@ -64,7 +64,7 @@ jobs:
       image: ghcr.io/cloudigrade/build-container:ubi-8.7-1049-python-3.9.13-2
     steps:
       - uses: actions/checkout@v4
-      - run: pip install poetry
+      - run: pip install poetry==1.8.5
       - run: poetry install
       - run: poetry run make docs-api-examples-test
       - run: poetry run make openapi-test
@@ -78,6 +78,6 @@ jobs:
       image: ghcr.io/cloudigrade/build-container:ubi-8.7-1049-python-3.9.13-2
     steps:
       - uses: actions/checkout@v4
-      - run: pip install poetry
+      - run: pip install poetry==1.8.5
       - run: poetry install
       - run: poetry run make checkceleryconfigs

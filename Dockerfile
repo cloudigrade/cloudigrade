@@ -35,7 +35,7 @@ RUN microdnf install -y \
         python39-pip \
     && if [ ! -e /usr/bin/pip ]; then ln -s /usr/bin/pip3.9 /usr/bin/pip ; fi \
     && pip install -U pip \
-    && pip install poetry \
+    && pip install poetry==1.8.5 \
     && poetry config virtualenvs.in-project true \
     && poetry config installer.max-workers 10 \
     && PATH="$PATH:/usr/pgsql-14/bin" poetry install -n --no-dev
