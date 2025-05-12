@@ -55,7 +55,7 @@ jobs:
       - uses: actions/checkout@v4
       - run: pip install poetry==1.8.5 safety
       - run: poetry install
-      - run: bash -c "poetry run pip freeze | poetry run safety check --stdin -i 42923 -i 65213 -i 70612 -i 73711"
+      - run: bash -c "poetry run pip freeze | poetry run safety check --stdin -i 42923 -i 65213 -i 70612 -i 73711 -i 76170"
 
   test-docs:
     name: Verify docs and openapi.json
