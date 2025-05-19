@@ -1,5 +1,5 @@
 ### Base Image
-FROM registry.access.redhat.com/ubi8/ubi-minimal:8.10-896.1717584414 as base
+FROM registry.access.redhat.com/ubi8-minimal:8.10-1255 as base
 
 WORKDIR /opt/cloudigrade
 
@@ -60,3 +60,4 @@ EXPOSE 8000
 
 ENTRYPOINT ["gunicorn"]
 CMD ["-c","config/gunicorn.py","config.wsgi"]
+
