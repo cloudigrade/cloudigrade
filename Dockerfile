@@ -56,4 +56,3 @@ EXPOSE 8000
 
 ENTRYPOINT ["gunicorn"]
 CMD ["-c","config/gunicorn.py","config.wsgi"]
-
