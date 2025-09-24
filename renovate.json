@@ -1,13 +1,15 @@
 {
   "extends": [
-    "config:base",
+    "config:recommended",
     "schedule:earlyMondays",
     ":disableDependencyDashboard"
   ],
   "packageRules": [
     {
       "enabled": false,
-      "matchPackagePatterns": ["*"]
+      "matchPackageNames": [
+        "*"
+      ]
     }
   ],
   "vulnerabilityAlerts": {
