@@ -8,7 +8,7 @@ from django.db.models import Q
 from django.utils.translation import gettext as _
 from requests.exceptions import BaseHTTPError, RequestException
 
-from api import AWS_PROVIDER_STRING, error_codes
+from api import AWS_PROVIDER_STRING, AZURE_PROVIDER_STRING, error_codes
 from api.authentication import get_or_create_user
 from api.clouds.aws.tasks import configure_customer_aws_and_create_cloud_account
 from api.clouds.aws.util import update_aws_cloud_account
@@ -242,6 +242,13 @@ def delete_from_sources_kafka_message(message, headers):
         if aws_accounts:
             logger.info(_("AWS processing is disabled. Ignoring delete message."))
             return
+    if not settings.ENABLE_AZURE_PROCESSING:
+        azure_accounts = [
+            ca for ca in cloud_accounts if ca.cloud_type == AZURE_PROVIDER_STRING
+        ]
+        if azure_accounts:
+            logger.info(_("Azure processing is disabled. Ignoring delete message."))
+            return
     _delete_cloud_accounts(cloud_accounts)
 
 
@@ -440,6 +447,12 @@ def pause_from_sources_kafka_message(message, headers):
         ):
             logger.info(_("AWS processing is disabled. Ignoring pause message."))
             return
+        if (
+            not settings.ENABLE_AZURE_PROCESSING
+            and cloud_account.cloud_type == AZURE_PROVIDER_STRING
+        ):
+            logger.info(_("Azure processing is disabled. Ignoring pause message."))
+            return
         with lock_task_for_user_ids([cloud_account.user.id]):
             cloud_account.platform_application_is_paused = True
             cloud_account.save()
@@ -509,6 +522,12 @@ def unpause_from_sources_kafka_message(message, headers):
             and cloud_account.cloud_type == AWS_PROVIDER_STRING
         ):
             logger.info(_("AWS processing is disabled. Ignoring unpause message."))
+            return
+        if (
+            not settings.ENABLE_AZURE_PROCESSING
+            and cloud_account.cloud_type == AZURE_PROVIDER_STRING
+        ):
+            logger.info(_("Azure processing is disabled. Ignoring unpause message."))
             return
         with lock_task_for_user_ids([cloud_account.user.id]):
             cloud_account.platform_application_is_paused = False
