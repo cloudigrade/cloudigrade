@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import faker
 from django.conf import settings
-from django.test import TransactionTestCase
+from django.test import TransactionTestCase, override_settings
 
 from api.models import User
 from api.tasks import sources
@@ -340,3 +340,51 @@ class CreateFromSourcesKafkaMessageTest(TransactionTestCase):
             self.source_id,
             None,
         )
+
+    @override_settings(ENABLE_AWS_PROCESSING=False)
+    @patch("util.redhatcloud.sources.get_authentication")
+    @patch("util.redhatcloud.sources.get_cloudigrade_application_type_id")
+    @patch("util.redhatcloud.sources.get_application")
+    @patch("api.tasks.sources.configure_customer_aws_and_create_cloud_account")
+    def test_create_ignores_aws_when_processing_disabled(
+        self,
+        mock_task,
+        mock_get_app,
+        mock_get_app_type_id,
+        mock_get_auth,
+    ):
+        """Assert AWS create message is silently ignored when disabled."""
+        mock_get_app.return_value = {
+            "application_type_id": self.cloudigrade_sources_app_id,
+            "source_id": self.source_id,
+        }
+        mock_get_app_type_id.return_value = self.cloudigrade_sources_app_id
+        mock_get_auth.return_value = self.auth_return_value
+        sources.create_from_sources_kafka_message(self.message, self.headers)
+
+        self.assertEqual(User.objects.all().count(), 0)
+        mock_task.delay.assert_not_called()
+
+    @override_settings(ENABLE_AZURE_PROCESSING=False)
+    @patch("util.redhatcloud.sources.get_authentication")
+    @patch("util.redhatcloud.sources.get_cloudigrade_application_type_id")
+    @patch("util.redhatcloud.sources.get_application")
+    @patch("api.tasks.sources.check_azure_subscription_and_create_cloud_account")
+    def test_create_ignores_azure_when_processing_disabled(
+        self,
+        mock_task,
+        mock_get_app,
+        mock_get_app_type_id,
+        mock_get_auth,
+    ):
+        """Assert Azure create message is silently ignored when disabled."""
+        mock_get_app.return_value = {
+            "application_type_id": self.cloudigrade_sources_app_id,
+            "source_id": self.source_id,
+        }
+        mock_get_app_type_id.return_value = self.cloudigrade_sources_app_id
+        mock_get_auth.return_value = self.auth_azure_return_value
+        sources.create_from_sources_kafka_message(self.message, self.headers)
+
+        self.assertEqual(User.objects.all().count(), 0)
+        mock_task.delay.assert_not_called()

@@ -3,7 +3,7 @@
 from unittest.mock import patch
 
 import faker
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from api.clouds.aws import models as aws_models
 from api.models import CloudAccount
@@ -131,3 +131,26 @@ class DeleteFromSourcesKafkaMessageTest(TestCase):
 
         # Delete should not have been called.
         self.assertEqual(CloudAccount.objects.count(), 1)
+
+    @override_settings(ENABLE_AWS_PROCESSING=False)
+    @patch("api.tasks.sources.notify_application_availability_task")
+    def test_delete_ignores_aws_when_processing_disabled(self, mock_notify_sources):
+        """Assert AWS delete message is silently ignored when disabled."""
+        self.assertEqual(CloudAccount.objects.count(), 1)
+
+        account_number = str(self.user.account_number)
+        (
+            message,
+            headers,
+        ) = util_helper.generate_applicationauthentication_create_message_value(
+            account_number,
+            platform_id=self.application_authentication_id,
+            application_id=self.application_id,
+            authentication_id=self.authentication_id,
+        )
+
+        with self.assertLogs("api.tasks.sources", level="INFO"):
+            sources.delete_from_sources_kafka_message(message, headers)
+
+        self.assertEqual(CloudAccount.objects.count(), 1)
+        mock_notify_sources.delay.assert_not_called()

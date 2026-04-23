@@ -8,7 +8,7 @@ from django.db.models import Q
 from django.utils.translation import gettext as _
 from requests.exceptions import BaseHTTPError, RequestException
 
-from api import error_codes
+from api import AWS_PROVIDER_STRING, error_codes
 from api.authentication import get_or_create_user
 from api.clouds.aws.tasks import configure_customer_aws_and_create_cloud_account
 from api.clouds.aws.util import update_aws_cloud_account
@@ -108,8 +108,14 @@ def create_from_sources_kafka_message(message, headers):
     create_cloud_account_task = None
 
     if authtype == settings.SOURCES_CLOUDMETER_ARN_AUTHTYPE:
+        if not settings.ENABLE_AWS_PROCESSING:
+            logger.info(_("AWS processing is disabled. Ignoring create message."))
+            return
         create_cloud_account_task = configure_customer_aws_and_create_cloud_account
     elif authtype == settings.SOURCES_CLOUDMETER_LIGHTHOUSE_AUTHTYPE:
+        if not settings.ENABLE_AZURE_PROCESSING:
+            logger.info(_("Azure processing is disabled. Ignoring create message."))
+            return
         create_cloud_account_task = check_azure_subscription_and_create_cloud_account
 
     extras = authentication.get("extra", None)
@@ -229,6 +235,13 @@ def delete_from_sources_kafka_message(message, headers):
 
     logger.info(_("Deleting CloudAccounts using filter %s"), query_filter)
     cloud_accounts = CloudAccount.objects.filter(query_filter)
+    if not settings.ENABLE_AWS_PROCESSING:
+        aws_accounts = [
+            ca for ca in cloud_accounts if ca.cloud_type == AWS_PROVIDER_STRING
+        ]
+        if aws_accounts:
+            logger.info(_("AWS processing is disabled. Ignoring delete message."))
+            return
     _delete_cloud_accounts(cloud_accounts)
 
 
@@ -331,7 +344,13 @@ def update_from_sources_kafka_message(message, headers):
         # If the Authentication being updated is arn, do arn things.
         # The kafka message does not always include authtype, so we get this from
         # the sources API call
-        if authentication.get("authtype") == settings.SOURCES_CLOUDMETER_ARN_AUTHTYPE:
+        authtype = authentication.get("authtype")
+        if authtype == settings.SOURCES_CLOUDMETER_ARN_AUTHTYPE:
+            if not settings.ENABLE_AWS_PROCESSING:
+                logger.info(
+                    _("AWS processing is disabled. Ignoring update message.")
+                )
+                return
             update_aws_cloud_account(
                 cloud_account,
                 arn,
@@ -341,6 +360,12 @@ def update_from_sources_kafka_message(message, headers):
                 source_id,
                 extra,
             )
+        elif authtype == settings.SOURCES_CLOUDMETER_LIGHTHOUSE_AUTHTYPE:
+            if not settings.ENABLE_AZURE_PROCESSING:
+                logger.info(
+                    _("Azure processing is disabled. Ignoring update message.")
+                )
+                return
     except CloudAccount.DoesNotExist:
         # Is this authentication meant to be for us? We should check.
         # Get list of all app-auth objects and filter by our authentication
@@ -409,6 +434,12 @@ def pause_from_sources_kafka_message(message, headers):
 
     try:
         cloud_account = CloudAccount.objects.get(platform_application_id=application_id)
+        if (
+            not settings.ENABLE_AWS_PROCESSING
+            and cloud_account.cloud_type == AWS_PROVIDER_STRING
+        ):
+            logger.info(_("AWS processing is disabled. Ignoring pause message."))
+            return
         with lock_task_for_user_ids([cloud_account.user.id]):
             cloud_account.platform_application_is_paused = True
             cloud_account.save()
@@ -473,6 +504,12 @@ def unpause_from_sources_kafka_message(message, headers):
 
     try:
         cloud_account = CloudAccount.objects.get(platform_application_id=application_id)
+        if (
+            not settings.ENABLE_AWS_PROCESSING
+            and cloud_account.cloud_type == AWS_PROVIDER_STRING
+        ):
+            logger.info(_("AWS processing is disabled. Ignoring unpause message."))
+            return
         with lock_task_for_user_ids([cloud_account.user.id]):
             cloud_account.platform_application_is_paused = False
             cloud_account.save()
