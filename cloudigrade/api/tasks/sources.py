@@ -144,10 +144,10 @@ def create_from_sources_kafka_message(message, headers):
         error_code.notify(account_number, org_id, application_id)
         return
 
-    user = get_or_create_user(account_number, org_id)
-
     if _is_cloud_processing_disabled(authtype, "create"):
         return
+
+    user = get_or_create_user(account_number, org_id)
 
     # Conditionalize the cloud account creation logic for different cloud providers.
     create_cloud_account_task = None
