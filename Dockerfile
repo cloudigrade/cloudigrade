@@ -54,5 +54,7 @@ COPY cloudigrade .
 
 EXPOSE 8000
 
+USER 65534
+
 ENTRYPOINT ["gunicorn"]
 CMD ["-c","config/gunicorn.py","config.wsgi"]
