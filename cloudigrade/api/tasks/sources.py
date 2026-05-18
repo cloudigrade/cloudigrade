@@ -186,7 +186,7 @@ def _get_and_verify_sources_data(
 
     Returns:
         (dict, dict): application and authentication dicts if present and valid,
-            otherwise None.
+            otherwise None
     """
     application = sources.get_application(account_number, org_id, application_id)
     if not application:
