@@ -861,6 +861,10 @@ objects:
           value: ${SOURCES_ENABLE_DATA_MANAGEMENT}
         - name: SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA
           value: ${SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA}
+        - name: ENABLE_AWS_PROCESSING
+          value: ${ENABLE_AWS_PROCESSING}
+        - name: ENABLE_AZURE_PROCESSING
+          value: ${ENABLE_AZURE_PROCESSING}
         - name: SOURCES_API_BASE_URL
           value: ${SOURCES_API_BASE_URL}
         - name: SOURCES_PSK
@@ -1416,6 +1420,14 @@ parameters:
   value: 'true'
 - name: SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA
   displayName: Enable Data Management From Sources Kafka
+  required: true
+  value: 'true'
+- name: ENABLE_AWS_PROCESSING
+  displayName: Enable AWS Cloud Provider Processing
+  required: true
+  value: 'true'
+- name: ENABLE_AZURE_PROCESSING
+  displayName: Enable Azure Cloud Provider Processing
   required: true
   value: 'true'
 - name: SOURCES_API_BASE_URL

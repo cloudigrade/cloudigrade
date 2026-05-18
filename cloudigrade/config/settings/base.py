@@ -620,6 +620,11 @@ SOURCES_CLOUDMETER_AUTHTYPES = (
 )
 SOURCES_RESOURCE_TYPE = "Application"
 
+# Feature flags to enable/disable processing for specific cloud providers.
+# When set to False, messages for that provider are silently ignored.
+ENABLE_AWS_PROCESSING = env.bool("ENABLE_AWS_PROCESSING", default=True)
+ENABLE_AZURE_PROCESSING = env.bool("ENABLE_AZURE_PROCESSING", default=True)
+
 # Sources Availability Check Values
 SOURCES_STATUS_TOPIC = KAFKA_TOPIC_NAMES["platform.sources.status"]
 SOURCES_AVAILABILITY_EVENT_TYPE = env(

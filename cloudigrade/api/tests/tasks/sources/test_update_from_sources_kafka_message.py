@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import faker
 from django.conf import settings
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from rest_framework.serializers import ValidationError
 
 from api.models import CloudAccount
@@ -320,6 +320,23 @@ class UpdateFromSourcesKafkaMessageTest(TestCase):
         self.assertEqual(self.cloud_account.content_object.account_arn, new_arn)
         self.assertTrue(self.cloud_account.is_enabled)
         mock_notify_sources.delay.assert_called()
+
+    @override_settings(ENABLE_AWS_PROCESSING=False)
+    @patch("util.redhatcloud.sources.get_application")
+    @patch("util.redhatcloud.sources.get_authentication")
+    @patch("api.tasks.sources.update_aws_cloud_account")
+    def test_update_ignores_aws_when_processing_disabled(
+        self, mock_update_account, mock_get_auth, mock_get_app
+    ):
+        """Assert AWS update message is silently ignored when disabled."""
+        message, headers = util_helper.generate_authentication_create_message_value(
+            self.account_number, self.username, self.authentication_id
+        )
+        mock_get_auth.return_value = self.auth_return_value
+        mock_get_app.return_value = self.app_return_value
+
+        sources.update_from_sources_kafka_message(message, headers)
+        mock_update_account.assert_not_called()
 
     @patch("api.tasks.sources.notify_application_availability_task")
     @patch("util.redhatcloud.sources.get_application")

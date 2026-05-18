@@ -3,7 +3,7 @@
 from unittest.mock import patch
 
 import faker
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from api.models import CloudAccount
 from api.tasks import sources
@@ -64,3 +64,18 @@ class PauseFromSourcesKafkaMessageTest(TestCase):
         self.assertEqual(len(log_context.records), 1)
         self.assertEqual(log_context.records[0].levelname, "INFO")
         self.assertIn("does not exist", log_context.records[0].message)
+
+    @override_settings(ENABLE_AWS_PROCESSING=False)
+    def test_pause_ignores_aws_when_processing_disabled(self):
+        """Assert AWS pause message is silently ignored when disabled."""
+        message, headers = util_helper.generate_application_event_message_value(
+            "pause", self.application_id, self.account_number
+        )
+        self.assertFalse(self.cloud_account.platform_application_is_paused)
+        with patch.object(CloudAccount, "disable") as mock_disable, self.assertLogs(
+            "api.tasks.sources", level="INFO"
+        ):
+            sources.pause_from_sources_kafka_message(message, headers)
+        mock_disable.assert_not_called()
+        self.cloud_account.refresh_from_db()
+        self.assertFalse(self.cloud_account.platform_application_is_paused)
