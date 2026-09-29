@@ -8,6 +8,7 @@ from decimal import Decimal
 import boto3
 import environ
 from app_common_python import LoadedConfig as clowder_cfg
+from app_common_python import get_v2_dependency_endpoint
 from app_common_python import isClowderEnabled
 
 
@@ -593,19 +594,41 @@ SOURCES_ENABLE_DATA_MANAGEMENT_FROM_KAFKA = env.bool(
 SOURCES_API_BASE_URL = env(
     "SOURCES_API_BASE_URL", default="http://sources-api.sources-ci.svc:8080"
 ).rstrip("/")
-if isClowderEnabled():
-    CLOWDER_SOURCES_API_BASE_URL = ""
-    for endpoint in clowder_cfg.endpoints:
+
+
+def _resolve_sources_v2_url(fallback_url, v1_endpoints):
+    """
+    Resolve the Sources API base URL using Clowder V2 dependency endpoints.
+
+    Tries V2 ``get_v2_dependency_endpoint('sources-api', 'svc')`` first.
+    Falls back to the V1 flat endpoints map, then to the provided fallback URL.
+
+    Args:
+        fallback_url (str): The default/env-based URL to use when Clowder
+            does not provide Sources.
+        v1_endpoints (list): The V1 ``clowder_cfg.endpoints`` list for
+            legacy fallback.
+
+    Returns:
+        str: The resolved Sources API base URL (without trailing slash).
+    """
+    v2_ep = get_v2_dependency_endpoint("sources-api", "svc")
+    if v2_ep and v2_ep.uri:
+        return v2_ep.uri.rstrip("/")
+
+    # Fall back to V1 flat endpoints map.
+    for endpoint in v1_endpoints:
         if endpoint.app == "sources-api":
-            CLOWDER_SOURCES_API_BASE_URL = f"http://{endpoint.hostname}:{endpoint.port}"
-    if CLOWDER_SOURCES_API_BASE_URL == "":
-        __print_stderr(
-            f"Clowder: Sources api service was not found, "
-            f"using default url: {SOURCES_API_BASE_URL}"
-        )
-    else:
-        SOURCES_API_BASE_URL = CLOWDER_SOURCES_API_BASE_URL
-        __print_stderr(f"Clowder: Sources api service url: {SOURCES_API_BASE_URL}")
+            return f"http://{endpoint.hostname}:{endpoint.port}"
+
+    return fallback_url
+
+
+if isClowderEnabled():
+    _resolved = _resolve_sources_v2_url(SOURCES_API_BASE_URL, clowder_cfg.endpoints)
+    if _resolved != SOURCES_API_BASE_URL:
+        SOURCES_API_BASE_URL = _resolved
+    __print_stderr(f"Clowder: Sources api service url: {SOURCES_API_BASE_URL}")
 
 SOURCES_PSK = env("SOURCES_PSK", default="")
 
